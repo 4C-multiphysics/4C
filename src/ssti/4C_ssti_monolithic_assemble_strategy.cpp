@@ -82,8 +82,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_scatra(
       auto& systemmatrix_block_iscatra_jscatra = systemmatrix_block->matrix(
           block_position_scatra().at(iblock), block_position_scatra().at(jblock));
 
-      systemmatrix_block_iscatra_jscatra.add(
-          scatradomain_block->matrix(iblock, jblock), false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(scatradomain_block->matrix(iblock, jblock), false, 1.0,
+          systemmatrix_block_iscatra_jscatra, 1.0);
     }
   }
 }
@@ -102,7 +102,7 @@ void SSTI::AssembleStrategyBlockSparse::assemble_scatra(
   auto& systemmatrix_block_scatra_scatra =
       systemmatrix_block->matrix(block_position_scatra().at(0), block_position_scatra().at(0));
 
-  systemmatrix_block_scatra_scatra.add(*scatradomain_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*scatradomain_sparse, false, 1.0, systemmatrix_block_scatra_scatra, 1.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -116,7 +116,7 @@ void SSTI::AssembleStrategySparse::assemble_scatra(
       Core::LinAlg::cast_to_const_sparse_matrix_and_check_success(scatradomain);
 
   // add scalar transport system matrix to global system matrix
-  systemmatrix_sparse->add(*scatradomain_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*scatradomain_sparse, false, 1.0, *systemmatrix_sparse, 1.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -139,7 +139,7 @@ void SSTI::AssembleStrategyBlockBlock::assemble_structure(
     auto& systemmatrix_block_struct_struct =
         systemmatrix_block->matrix(position_structure(), position_structure());
 
-    systemmatrix_block_struct_struct.add(*structuredomain, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*structuredomain, false, 1.0, systemmatrix_block_struct_struct, 1.0);
   }
 }
 
@@ -163,7 +163,7 @@ void SSTI::AssembleStrategyBlockSparse::assemble_structure(
     auto& systemmatrix_block_struct_struct =
         systemmatrix_block->matrix(position_structure(), position_structure());
 
-    systemmatrix_block_struct_struct.add(*structuredomain, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*structuredomain, false, 1.0, systemmatrix_block_struct_struct, 1.0);
   }
 }
 
@@ -179,7 +179,7 @@ void SSTI::AssembleStrategySparse::assemble_structure(
   if (interface_meshtying())
     assemble_structure_meshtying(*systemmatrix_sparse, structuredomain);
   else
-    systemmatrix_sparse->add(*structuredomain, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*structuredomain, false, 1.0, *systemmatrix_sparse, 1.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -282,8 +282,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_thermo(
       auto& systemmatrix_block_ithermo_jthermo = systemmatrix_block->matrix(
           block_position_thermo().at(iblock), block_position_thermo().at(jblock));
 
-      systemmatrix_block_ithermo_jthermo.add(
-          thermodomain_block->matrix(iblock, jblock), false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(thermodomain_block->matrix(iblock, jblock), false, 1.0,
+          systemmatrix_block_ithermo_jthermo, 1.0);
     }
   }
 }
@@ -302,7 +302,7 @@ void SSTI::AssembleStrategyBlockSparse::assemble_thermo(
   auto& systemmatrix_block_thermo_thermo =
       systemmatrix_block->matrix(block_position_thermo().at(0), block_position_thermo().at(0));
 
-  systemmatrix_block_thermo_thermo.add(*thermodomain_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*thermodomain_sparse, false, 1.0, systemmatrix_block_thermo_thermo, 1.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -316,7 +316,7 @@ void SSTI::AssembleStrategySparse::assemble_thermo(
       Core::LinAlg::cast_to_const_sparse_matrix_and_check_success(thermodomain);
 
   // add scalar transport system matrix to global system matrix
-  systemmatrix_sparse->add(*thermodomain_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*thermodomain_sparse, false, 1.0, *systemmatrix_sparse, 1.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -356,7 +356,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_scatra_structure(
       auto& systemmatrix_block_iscatra_struct =
           systemmatrix_block->matrix(block_position_scatra().at(iblock), position_structure());
 
-      systemmatrix_block_iscatra_struct.add(scatrastructuredomain_subblock, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(
+          scatrastructuredomain_subblock, false, 1.0, systemmatrix_block_iscatra_struct, 1.0);
     }
   }
 }
@@ -393,7 +394,8 @@ void SSTI::AssembleStrategyBlockSparse::assemble_scatra_structure(
     auto& systemmatrix_block_scatra_struct =
         systemmatrix_block->matrix(block_position_scatra().at(0), position_structure());
 
-    systemmatrix_block_scatra_struct.add(*scatrastructuredomain_sparse, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(
+        *scatrastructuredomain_sparse, false, 1.0, systemmatrix_block_scatra_struct, 1.0);
   }
 }
 
@@ -420,7 +422,7 @@ void SSTI::AssembleStrategySparse::assemble_scatra_structure(
   }
 
   else
-    systemmatrix_sparse->add(*scatrastructuredomain_sparse, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*scatrastructuredomain_sparse, false, 1.0, *systemmatrix_sparse, 1.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -474,7 +476,7 @@ void SSTI::AssembleStrategyBlockBlock::assemble_scatra_thermo_domain(
       auto systemmatrix_subblock = systemmatrix_block->matrix(
           block_position_scatra().at(iblock), block_position_thermo().at(jblock));
       systemmatrix_subblock.un_complete();
-      systemmatrix_subblock.add(scatrathermodomain_subblock, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(scatrathermodomain_subblock, false, 1.0, systemmatrix_subblock, 1.0);
     }
   }
 }
@@ -492,7 +494,7 @@ void SSTI::AssembleStrategyBlockSparse::assemble_scatra_thermo_domain(
       Core::LinAlg::cast_to_sparse_matrix_and_check_success(scatrathermodomain);
 
   systemmatrix_subblock.un_complete();
-  systemmatrix_subblock.add(*scatrathermodomain_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*scatrathermodomain_sparse, false, 1.0, systemmatrix_subblock, 1.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -506,7 +508,7 @@ void SSTI::AssembleStrategySparse::assemble_scatra_thermo_domain(
       Core::LinAlg::cast_to_sparse_matrix_and_check_success(scatrathermodomain);
 
   // add scalar transport-thermo matrix into global system matrix
-  systemmatrix_sparse->add(*scatrathermodomain_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*scatrathermodomain_sparse, false, 1.0, *systemmatrix_sparse, 1.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -533,7 +535,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_scatra_thermo_interface(
       // into system matrix
       auto& systemmatrix_block_iscatra_jthermo =
           systemmatrix_block->matrix(block_position_scatra().at(i), block_position_thermo().at(j));
-      systemmatrix_block_iscatra_jthermo.add(scatrathermointerface_subblock, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(
+          scatrathermointerface_subblock, false, 1.0, systemmatrix_block_iscatra_jthermo, 1.0);
 
       // assemble linearizations of slave- and master side scatra fluxes w.r.t. master temperatures
       // into system matrix
@@ -564,7 +567,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_scatra_thermo_interface(
       // into system matrix
       auto& systemmatrix_block_iscatra_jthermo =
           systemmatrix_block->matrix(block_position_scatra().at(i), block_position_thermo().at(j));
-      systemmatrix_block_iscatra_jthermo.add(blockmasterderiv->matrix(i, j), false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(
+          blockmasterderiv->matrix(i, j), false, 1.0, systemmatrix_block_iscatra_jthermo, 1.0);
     }
   }
 }
@@ -584,7 +588,8 @@ void SSTI::AssembleStrategyBlockSparse::assemble_scatra_thermo_interface(
   // system matrix
   auto& systemmatrix_block_scatra_thermo =
       systemmatrix_block->matrix(block_position_scatra().at(0), block_position_thermo().at(0));
-  systemmatrix_block_scatra_thermo.add(*scatrathermointerface_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(
+      *scatrathermointerface_sparse, false, 1.0, systemmatrix_block_scatra_thermo, 1.0);
 
   // assemble linearizations of slave- and master side scatra fluxes w.r.t. master temperatures into
   // system matrix
@@ -610,7 +615,7 @@ void SSTI::AssembleStrategySparse::assemble_scatra_thermo_interface(
 
   // assemble linearizations of slave- and master side scatra fluxes w.r.t. slave temperatures into
   // system matrix
-  systemmatrix_sparse->add(*scatrathermointerface_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*scatrathermointerface_sparse, false, 1.0, *systemmatrix_sparse, 1.0);
 
   // assemble linearizations of slave- and master side scatra fluxes w.r.t. master temperatures into
   // system matrix
@@ -651,7 +656,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_structure_scatra(
       auto& systemmatrix_block_struct_iscatra =
           systemmatrix_block->matrix(position_structure(), block_position_scatra().at(iblock));
 
-      systemmatrix_block_struct_iscatra.add(structurescatradomain_subblock, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(
+          structurescatradomain_subblock, false, 1.0, systemmatrix_block_struct_iscatra, 1.0);
     }
   }
 }
@@ -679,7 +685,8 @@ void SSTI::AssembleStrategyBlockSparse::assemble_structure_scatra(
     auto& systemmatrix_block_struct_scatra =
         systemmatrix_block->matrix(position_structure(), block_position_scatra().at(0));
 
-    systemmatrix_block_struct_scatra.add(*structurescatradomain_sparse, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(
+        *structurescatradomain_sparse, false, 1.0, systemmatrix_block_struct_scatra, 1.0);
   }
 }
 
@@ -697,7 +704,7 @@ void SSTI::AssembleStrategySparse::assemble_structure_scatra(
   if (interface_meshtying())
     assemble_structure_xxx_meshtying(*systemmatrix_sparse, *structurescatradomain_sparse);
   else
-    systemmatrix_sparse->add(*structurescatradomain_sparse, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*structurescatradomain_sparse, false, 1.0, *systemmatrix_sparse, 1.0);
 }
 
 
@@ -751,8 +758,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_thermo_scatra(
       auto systemmatrix_block_ithermo_jscatra = systemmatrix_block->matrix(
           block_position_thermo().at(iblock), block_position_scatra().at(jblock));
       systemmatrix_block_ithermo_jscatra.un_complete();
-      systemmatrix_block_ithermo_jscatra.add(
-          thermoscatradomain_block->matrix(iblock, jblock), false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(thermoscatradomain_block->matrix(iblock, jblock), false, 1.0,
+          systemmatrix_block_ithermo_jscatra, 1.0);
     }
   }
 
@@ -774,7 +781,8 @@ void SSTI::AssembleStrategyBlockSparse::assemble_thermo_scatra(
   auto& systemmatrix_block_thermo_scatra =
       systemmatrix_block->matrix(block_position_thermo().at(0), block_position_scatra().at(0));
   systemmatrix_block_thermo_scatra.un_complete();
-  systemmatrix_block_thermo_scatra.add(*thermoscatradomain_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(
+      *thermoscatradomain_sparse, false, 1.0, systemmatrix_block_thermo_scatra, 1.0);
 
   if (interface_meshtying()) assemble_thermo_scatra_interface(systemmatrix, thermoscatrainterface);
 }
@@ -791,7 +799,7 @@ void SSTI::AssembleStrategySparse::assemble_thermo_scatra(
       Core::LinAlg::cast_to_const_sparse_matrix_and_check_success(thermoscatradomain);
 
   // add scalar transport system matrix to global system matrix
-  systemmatrix_sparse->add(*thermoscatradomain_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*thermoscatradomain_sparse, false, 1.0, *systemmatrix_sparse, 1.0);
 
   if (interface_meshtying()) assemble_thermo_scatra_interface(systemmatrix, thermoscatrainterface);
 }
@@ -821,7 +829,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_thermo_scatra_interface(
       // into system matrix
       auto& systemmatrix_block_ithermo_jscatra =
           systemmatrix_block->matrix(block_position_thermo().at(i), block_position_scatra().at(j));
-      systemmatrix_block_ithermo_jscatra.add(thermoscatrainterface_subblock, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(
+          thermoscatrainterface_subblock, false, 1.0, systemmatrix_block_ithermo_jscatra, 1.0);
 
       // assemble linearizations of master side thermo fluxes w.r.t. slave and master side elch
       // into system matrix
@@ -861,7 +870,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_thermo_scatra_interface(
       auto& systemmatrix_block_ithermo_jscatra =
           systemmatrix_block->matrix(block_position_thermo().at(i), block_position_scatra().at(j));
 
-      systemmatrix_block_ithermo_jscatra.add(blockmasterflux->matrix(i, j), false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(
+          blockmasterflux->matrix(i, j), false, 1.0, systemmatrix_block_ithermo_jscatra, 1.0);
     }
   }
 }
@@ -882,7 +892,8 @@ void SSTI::AssembleStrategyBlockSparse::assemble_thermo_scatra_interface(
   // into system matrix
   auto& systemmatrix_block_thermo_scatra =
       systemmatrix_block->matrix(block_position_thermo().at(0), block_position_scatra().at(0));
-  systemmatrix_block_thermo_scatra.add(*thermoscatrainterface_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(
+      *thermoscatrainterface_sparse, false, 1.0, systemmatrix_block_thermo_scatra, 1.0);
 
   // assemble linearizations of master side thermo fluxes w.r.t. slave and master side elch
   // into system matrix
@@ -909,7 +920,7 @@ void SSTI::AssembleStrategySparse::assemble_thermo_scatra_interface(
 
   // assemble linearizations of slave side scatra fluxes w.r.t. slave and master side elch
   // into system matrix
-  systemmatrix_sparse->add(*thermoscatrainterface_sparse, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*thermoscatrainterface_sparse, false, 1.0, *systemmatrix_sparse, 1.0);
 
   // assemble linearizations of master side scatra fluxes w.r.t. slave and master side elch
   // into system matrix
@@ -959,7 +970,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_thermo_structure(
       auto& systemmatrix_block_ithermo_struct =
           systemmatrix_block->matrix(block_position_thermo().at(iblock), position_structure());
 
-      systemmatrix_block_ithermo_struct.add(thermostructuredomain_subblock, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(
+          thermostructuredomain_subblock, false, 1.0, systemmatrix_block_ithermo_struct, 1.0);
     }
   }
 }
@@ -995,7 +1007,8 @@ void SSTI::AssembleStrategyBlockSparse::assemble_thermo_structure(
     auto& sytemmatrix_block_thermo_structure =
         systemmatrix_block->matrix(block_position_thermo().at(0), position_structure());
 
-    sytemmatrix_block_thermo_structure.add(*thermostructuredomain_sparse, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(
+        *thermostructuredomain_sparse, false, 1.0, sytemmatrix_block_thermo_structure, 1.0);
   }
 }
 
@@ -1020,7 +1033,7 @@ void SSTI::AssembleStrategySparse::assemble_thermo_structure(
     assemble_xxx_structure_meshtying(*systemmatrix_sparse, *thermostructureinterface_sparse);
   }
   else
-    systemmatrix_sparse->add(*thermostructuredomain_sparse, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*thermostructuredomain_sparse, false, 1.0, *systemmatrix_sparse, 1.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -1051,7 +1064,8 @@ void SSTI::AssembleStrategyBlockBlock::assemble_structure_thermo(
       auto& systemmatrix_block_struct_ithermo =
           systemmatrix_block->matrix(position_structure(), block_position_thermo().at(iblock));
 
-      systemmatrix_block_struct_ithermo.add(structurethermodomain_subblock, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(
+          structurethermodomain_subblock, false, 1.0, systemmatrix_block_struct_ithermo, 1.0);
     }
   }
 }
@@ -1079,7 +1093,8 @@ void SSTI::AssembleStrategyBlockSparse::assemble_structure_thermo(
     auto& systemmatrix_block_struct_thermo =
         systemmatrix_block->matrix(position_structure(), block_position_thermo().at(0));
 
-    systemmatrix_block_struct_thermo.add(*structurethermodomain_sparse, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(
+        *structurethermodomain_sparse, false, 1.0, systemmatrix_block_struct_thermo, 1.0);
   }
 }
 
@@ -1097,7 +1112,7 @@ void SSTI::AssembleStrategySparse::assemble_structure_thermo(
   if (interface_meshtying())
     assemble_structure_xxx_meshtying(*systemmatrix_sparse, *structurethermodomain_sparse);
   else
-    systemmatrix_sparse->add(*structurethermodomain_sparse, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*structurethermodomain_sparse, false, 1.0, *systemmatrix_sparse, 1.0);
 }
 
 /*----------------------------------------------------------------------*

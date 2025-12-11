@@ -313,8 +313,8 @@ void Adapter::CouplingEhlMortar::condense_contact(
 
   // add to kss
   kss->un_complete();
-  kss->add(linDcontactLM, false, 1. - alphaf_, 1.);
-  kss->add(linMcontactLM, false, 1. - alphaf_, 1.);
+  Core::LinAlg::matrix_add(linDcontactLM, false, 1. - alphaf_, *kss, 1.);
+  Core::LinAlg::matrix_add(linMcontactLM, false, 1. - alphaf_, *kss, 1.);
 
   // complete the matrix blocks again, now that we have added
   // the additional displacement linearizations
@@ -529,26 +529,28 @@ void Adapter::CouplingEhlMortar::condense_contact(
   // **********************************************************************
 
   // (1) add the blocks, we do nothing with (i.e. (Inactive+others))
-  kss_new.add(*kss_ni, false, 1., 1.);
-  kst_new.add(*kst_ni, false, 1., 1.);
+  Core::LinAlg::matrix_add(*kss_ni, false, 1., kss_new, 1.);
+  Core::LinAlg::matrix_add(*kst_ni, false, 1., kst_new, 1.);
   CONTACT::Utils::add_vector(rsni, *combined_RHS);
 
   // (2) add the 'uncondensed' blocks (i.e. everything w/o a D^-1
   // (2)a actual stiffness blocks of the master-rows
-  kss_new.add(*kss_m, false, 1., 1.);
-  kst_new.add(*kst_m, false, 1., 1.);
+  Core::LinAlg::matrix_add(*kss_m, false, 1., kss_new, 1.);
+  Core::LinAlg::matrix_add(*kst_m, false, 1., kst_new, 1.);
   CONTACT::Utils::add_vector(rsm, *combined_RHS);
 
   // (2)b active constraints in the active slave rows
-  kss_new.add(*dcsdd, false, 1., 1.);
+  Core::LinAlg::matrix_add(*dcsdd, false, 1., kss_new, 1.);
   CONTACT::Utils::add_vector(*fcsa, *combined_RHS);
 
   // (3) condensed parts
   // second row
-  kss_new.add(*Core::LinAlg::matrix_multiply(*dInvMa, true, *kss_a, false, false, false, true),
-      false, 1., 1.);
-  kst_new.add(*Core::LinAlg::matrix_multiply(*dInvMa, true, *kst_a, false, false, false, true),
-      false, 1., 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*dInvMa, true, *kss_a, false, false, false, true), false, 1.,
+      kss_new, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*dInvMa, true, *kst_a, false, false, false, true), false, 1.,
+      kst_new, 1.);
   tmpv = std::make_shared<Core::LinAlg::Vector<double>>(*interface_->master_row_dofs());
   dInvMa->multiply(true, *rsa, *tmpv);
   CONTACT::Utils::add_vector(*tmpv, *combined_RHS);
@@ -557,10 +559,12 @@ void Adapter::CouplingEhlMortar::condense_contact(
   // third row
   std::shared_ptr<Core::LinAlg::SparseMatrix> wDinv =
       Core::LinAlg::matrix_multiply(*dcsdLMc, false, *dInvA, true, false, false, true);
-  kss_new.add(*Core::LinAlg::matrix_multiply(*wDinv, false, *kss_a, false, false, false, true),
-      false, -1. / (1. - alphaf_), 1.);
-  kst_new.add(*Core::LinAlg::matrix_multiply(*wDinv, false, *kst_a, false, false, false, true),
-      false, -1. / (1. - alphaf_), 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*wDinv, false, *kss_a, false, false, false, true), false,
+      -1. / (1. - alphaf_), kss_new, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*wDinv, false, *kst_a, false, false, false, true), false,
+      -1. / (1. - alphaf_), kst_new, 1.);
   tmpv = std::make_shared<Core::LinAlg::Vector<double>>(*interface_->active_dofs());
   wDinv->multiply(false, *rsa, *tmpv);
   tmpv->scale(-1. / (1. - alphaf_));

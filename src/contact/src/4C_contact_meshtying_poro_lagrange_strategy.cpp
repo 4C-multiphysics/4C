@@ -123,10 +123,10 @@ void CONTACT::PoroMtLagrangeStrategy::evaluate_meshtying_poro_off_diag(
 
     // cm: add T(mbar)*cs
     Core::LinAlg::SparseMatrix cmmod(*gmdofrowmap_, 100);
-    cmmod.add(*cm, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*cm, false, 1.0, cmmod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> cmadd =
         Core::LinAlg::matrix_multiply(*get_m_hat(), true, *cs, false, false, false, true);
-    cmmod.add(*cmadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*cmadd, false, 1.0, cmmod, 1.0);
     cmmod.complete(cm->domain_map(), cm->row_map());
 
     // cs: nothing to do as it remains zero
@@ -139,10 +139,10 @@ void CONTACT::PoroMtLagrangeStrategy::evaluate_meshtying_poro_off_diag(
             *problem_dofs(), 81, true, false, kteffmatrix->get_matrixtype());
 
     // add n matrix row
-    kteffoffdiagnew->add(*cn, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*cn, false, 1.0, *kteffoffdiagnew, 1.0);
 
     // add m matrix row
-    kteffoffdiagnew->add(cmmod, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(cmmod, false, 1.0, *kteffoffdiagnew, 1.0);
 
     // s matrix row remains zero (thats what it was all about)
 

@@ -887,19 +887,19 @@ void Wear::LagrangeStrategyWear::condense_wear_impl_expl(
   // kmn: add T(mhataam)*kan
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmnmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-  kmnmod->add(*kmn, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmn, false, 1.0, *kmnmod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmnadd =
       Core::LinAlg::matrix_multiply(*mhataam, true, *kan, false, false, false, true);
-  kmnmod->add(*kmnadd, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmnadd, false, 1.0, *kmnmod, 1.0);
   kmnmod->complete(kmn->domain_map(), kmn->row_map());
 
   // kmm: add T(mhataam)*kam
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmmmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-  kmmmod->add(*kmm, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmm, false, 1.0, *kmmmod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmmadd =
       Core::LinAlg::matrix_multiply(*mhataam, true, *kam, false, false, false, true);
-  kmmmod->add(*kmmadd, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmmadd, false, 1.0, *kmmmod, 1.0);
   kmmmod->complete(kmm->domain_map(), kmm->row_map());
 
   // kmi: add T(mhataam)*kai
@@ -907,10 +907,10 @@ void Wear::LagrangeStrategyWear::condense_wear_impl_expl(
   if (iset)
   {
     kmimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmimod->add(*kmi, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmi, false, 1.0, *kmimod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmiadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kai, false, false, false, true);
-    kmimod->add(*kmiadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmiadd, false, 1.0, *kmimod, 1.0);
     kmimod->complete(kmi->domain_map(), kmi->row_map());
   }
 
@@ -919,10 +919,10 @@ void Wear::LagrangeStrategyWear::condense_wear_impl_expl(
   if (aset)
   {
     kmamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmamod->add(*kma, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kma, false, 1.0, *kmamod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmaadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kaa, false, false, false, true);
-    kmamod->add(*kmaadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmaadd, false, 1.0, *kmamod, 1.0);
     kmamod->complete(kma->domain_map(), kma->row_map());
   }
 
@@ -930,24 +930,24 @@ void Wear::LagrangeStrategyWear::condense_wear_impl_expl(
   // kin: subtract T(dhat)*kan
   std::shared_ptr<Core::LinAlg::SparseMatrix> kinmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-  kinmod->add(*kin, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kin, false, 1.0, *kinmod, 1.0);
   if (aset && iset)
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> kinadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kan, false, false, false, true);
-    kinmod->add(*kinadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kinadd, false, -1.0, *kinmod, 1.0);
   }
   kinmod->complete(kin->domain_map(), kin->row_map());
 
   // kim: subtract T(dhat)*kam
   std::shared_ptr<Core::LinAlg::SparseMatrix> kimmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-  kimmod->add(*kim, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kim, false, 1.0, *kimmod, 1.0);
   if (aset && iset)
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> kimadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kam, false, false, false, true);
-    kimmod->add(*kimadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kimadd, false, -1.0, *kimmod, 1.0);
   }
   kimmod->complete(kim->domain_map(), kim->row_map());
 
@@ -956,12 +956,12 @@ void Wear::LagrangeStrategyWear::condense_wear_impl_expl(
   if (iset)
   {
     kiimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kiimod->add(*kii, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kii, false, 1.0, *kiimod, 1.0);
     if (aset)
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> kiiadd =
           Core::LinAlg::matrix_multiply(*dhat, true, *kai, false, false, false, true);
-      kiimod->add(*kiiadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kiiadd, false, -1.0, *kiimod, 1.0);
     }
     kiimod->complete(kii->domain_map(), kii->row_map());
   }
@@ -971,10 +971,10 @@ void Wear::LagrangeStrategyWear::condense_wear_impl_expl(
   if (iset && aset)
   {
     kiamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kiamod->add(*kia, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kia, false, 1.0, *kiamod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kiaadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kaa, false, false, false, true);
-    kiamod->add(*kiaadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kiaadd, false, -1.0, *kiamod, 1.0);
     kiamod->complete(kia->domain_map(), kia->row_map());
   }
 
@@ -1375,70 +1375,70 @@ void Wear::LagrangeStrategyWear::condense_wear_impl_expl(
 
   //--------------------------------------------------------- FIRST LINE
   // add n submatrices to kteffnew
-  kteffnew->add(*knn, false, 1.0, 1.0);
-  kteffnew->add(*knm, false, 1.0, 1.0);
-  if (sset) kteffnew->add(*kns, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*knn, false, 1.0, *kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*knm, false, 1.0, *kteffnew, 1.0);
+  if (sset) Core::LinAlg::matrix_add(*kns, false, 1.0, *kteffnew, 1.0);
 
   //-------------------------------------------------------- SECOND LINE
   // add m submatrices to kteffnew
-  kteffnew->add(*kmnmod, false, 1.0, 1.0);
-  kteffnew->add(*kmmmod, false, 1.0, 1.0);
-  if (iset) kteffnew->add(*kmimod, false, 1.0, 1.0);
-  if (aset) kteffnew->add(*kmamod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmnmod, false, 1.0, *kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*kmmmod, false, 1.0, *kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kmimod, false, 1.0, *kteffnew, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*kmamod, false, 1.0, *kteffnew, 1.0);
 
   //--------------------------------------------------------- THIRD LINE
   // add i submatrices to kteffnew
-  if (iset) kteffnew->add(*kinmod, false, 1.0, 1.0);
-  if (iset) kteffnew->add(*kimmod, false, 1.0, 1.0);
-  if (iset) kteffnew->add(*kiimod, false, 1.0, 1.0);
-  if (iset && aset) kteffnew->add(*kiamod, false, 1.0, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kinmod, false, 1.0, *kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kimmod, false, 1.0, *kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kiimod, false, 1.0, *kteffnew, 1.0);
+  if (iset && aset) Core::LinAlg::matrix_add(*kiamod, false, 1.0, *kteffnew, 1.0);
 
   //-------------------------------------------------------- FOURTH LINE
 
   // add a submatrices to kteffnew
-  if (aset) kteffnew->add(*smatrix_, false, 1.0, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*smatrix_, false, 1.0, *kteffnew, 1.0);
 
   // implicit wear
   if (wearimpl_)
   {
     // if (aset) kteffnew->Add(*wlinmatrix_,false,1.0,1.0);
-    if (aset) kteffnew->add(*kgnmod, false, -1.0, 1.0);
-    if (aset) kteffnew->add(*kgmmod, false, -1.0, 1.0);
-    if (aset and iset) kteffnew->add(*kgimod, false, -1.0, 1.0);
-    if (aset) kteffnew->add(*kgaamod, false, -1.0, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*kgnmod, false, -1.0, *kteffnew, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*kgmmod, false, -1.0, *kteffnew, 1.0);
+    if (aset and iset) Core::LinAlg::matrix_add(*kgimod, false, -1.0, *kteffnew, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*kgaamod, false, -1.0, *kteffnew, 1.0);
     // if (aset and stickset) kteffnew->Add(*kgstmod,false,1.0,1.0);
   }
 
   //--------------------------------------------------------- FIFTH LINE
   // add st submatrices to kteffnew
-  if (stickset) kteffnew->add(*kstnmod, false, 1.0, 1.0);
-  if (stickset) kteffnew->add(*kstmmod, false, 1.0, 1.0);
-  if (stickset && iset) kteffnew->add(*kstimod, false, 1.0, 1.0);
-  if (stickset && slipset) kteffnew->add(*kstslmod, false, 1.0, 1.0);
-  if (stickset) kteffnew->add(*kststmod, false, 1.0, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*kstnmod, false, 1.0, *kteffnew, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*kstmmod, false, 1.0, *kteffnew, 1.0);
+  if (stickset && iset) Core::LinAlg::matrix_add(*kstimod, false, 1.0, *kteffnew, 1.0);
+  if (stickset && slipset) Core::LinAlg::matrix_add(*kstslmod, false, 1.0, *kteffnew, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*kststmod, false, 1.0, *kteffnew, 1.0);
 
   // add terms of linearization of sick condition to kteffnew
-  if (stickset) kteffnew->add(*linstickDIS_, false, -1.0, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*linstickDIS_, false, -1.0, *kteffnew, 1.0);
 
   //--------------------------------------------------------- SIXTH LINE
   // add sl submatrices to kteffnew
-  if (slipset) kteffnew->add(*kslnmod, false, 1.0, 1.0);
-  if (slipset) kteffnew->add(*kslmmod, false, 1.0, 1.0);
-  if (slipset && iset) kteffnew->add(*kslimod, false, 1.0, 1.0);
-  if (slipset) kteffnew->add(*kslslmod, false, 1.0, 1.0);
-  if (slipset && stickset) kteffnew->add(*kslstmod, false, 1.0, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslnmod, false, 1.0, *kteffnew, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslmmod, false, 1.0, *kteffnew, 1.0);
+  if (slipset && iset) Core::LinAlg::matrix_add(*kslimod, false, 1.0, *kteffnew, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslslmod, false, 1.0, *kteffnew, 1.0);
+  if (slipset && stickset) Core::LinAlg::matrix_add(*kslstmod, false, 1.0, *kteffnew, 1.0);
 
   // add terms of linearization of slip condition to kteffnew and feffnew
-  if (slipset) kteffnew->add(*linslipDIS_, false, -1.0, +1.0);
+  if (slipset) Core::LinAlg::matrix_add(*linslipDIS_, false, -1.0, *kteffnew, +1.0);
 
   // implicit wear
   if (wearimpl_)
   {
     // if (slipset) kteffnew->Add(*wlinmatrixsl_,false,1.0,1.0);
-    if (slipset) kteffnew->add(*kslwnmod, false, 1.0, 1.0);
-    if (slipset) kteffnew->add(*kslwmmod, false, 1.0, 1.0);
-    if (slipset and iset) kteffnew->add(*kslwimod, false, 1.0, 1.0);
-    if (slipset) kteffnew->add(*kslwaamod, false, 1.0, 1.0);
+    if (slipset) Core::LinAlg::matrix_add(*kslwnmod, false, 1.0, *kteffnew, 1.0);
+    if (slipset) Core::LinAlg::matrix_add(*kslwmmod, false, 1.0, *kteffnew, 1.0);
+    if (slipset and iset) Core::LinAlg::matrix_add(*kslwimod, false, 1.0, *kteffnew, 1.0);
+    if (slipset) Core::LinAlg::matrix_add(*kslwaamod, false, 1.0, *kteffnew, 1.0);
     // if (slipset and stickset) kteffnew->Add(*kslwstmod,false,1.0,1.0);
   }
 
@@ -1888,7 +1888,7 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
   linetdis->un_complete();
 
   // add E-part
-  linetdis->add(*linedis_, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*linedis_, false, 1.0, *linetdis, 1.0);
 
   // complete
   linetdis->complete(*gsmdofrowmap_, *gslipn_);
@@ -1966,7 +1966,7 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
       std::shared_ptr<Core::LinAlg::SparseMatrix> inve_te;
       inve_te = Core::LinAlg::matrix_multiply(inve, false, *linte_a, false, false, false, true);
 
-      wear_da->add(*inve_te, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*inve_te, false, 1.0, *wear_da, 1.0);
       wear_da->complete(*gactivedofs_, *gslipn_);
       wear_da->scale(-1.0);
     }
@@ -1979,7 +1979,7 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
       std::shared_ptr<Core::LinAlg::SparseMatrix> inve_te;
       inve_te = Core::LinAlg::matrix_multiply(inve, false, *linte_i, false, false, false, true);
 
-      wear_di->add(*inve_te, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*inve_te, false, 1.0, *wear_di, 1.0);
       wear_di->complete(*gidofs, *gslipn_);
       wear_di->scale(-1.0);
     }
@@ -2044,19 +2044,19 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
   // kmn: add T(mhataam)*kan
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmnmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-  kmnmod->add(*kmn, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmn, false, 1.0, *kmnmod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmnadd =
       Core::LinAlg::matrix_multiply(*mhataam, true, *kan, false, false, false, true);
-  kmnmod->add(*kmnadd, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmnadd, false, 1.0, *kmnmod, 1.0);
   kmnmod->complete(kmn->domain_map(), kmn->row_map());
 
   // kmm: add T(mhataam)*kam
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmmmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-  kmmmod->add(*kmm, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmm, false, 1.0, *kmmmod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmmadd =
       Core::LinAlg::matrix_multiply(*mhataam, true, *kam, false, false, false, true);
-  kmmmod->add(*kmmadd, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmmadd, false, 1.0, *kmmmod, 1.0);
   kmmmod->complete(kmm->domain_map(), kmm->row_map());
 
   // kmi: add T(mhataam)*kai
@@ -2064,10 +2064,10 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
   if (iset)
   {
     kmimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmimod->add(*kmi, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmi, false, 1.0, *kmimod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmiadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kai, false, false, false, true);
-    kmimod->add(*kmiadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmiadd, false, 1.0, *kmimod, 1.0);
     kmimod->complete(kmi->domain_map(), kmi->row_map());
   }
 
@@ -2076,10 +2076,10 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
   if (aset)
   {
     kmamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmamod->add(*kma, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kma, false, 1.0, *kmamod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmaadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kaa, false, false, false, true);
-    kmamod->add(*kmaadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmaadd, false, 1.0, *kmamod, 1.0);
     kmamod->complete(kma->domain_map(), kma->row_map());
   }
 
@@ -2088,24 +2088,24 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
   // kin: subtract T(dhat)*kan
   std::shared_ptr<Core::LinAlg::SparseMatrix> kinmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-  kinmod->add(*kin, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kin, false, 1.0, *kinmod, 1.0);
   if (aset && iset)
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> kinadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kan, false, false, false, true);
-    kinmod->add(*kinadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kinadd, false, -1.0, *kinmod, 1.0);
   }
   kinmod->complete(Core::LinAlg::Map(kin->domain_map()), kin->row_map());
 
   // kim: subtract T(dhat)*kam
   std::shared_ptr<Core::LinAlg::SparseMatrix> kimmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-  kimmod->add(*kim, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kim, false, 1.0, *kimmod, 1.0);
   if (aset && iset)
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> kimadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kam, false, false, false, true);
-    kimmod->add(*kimadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kimadd, false, -1.0, *kimmod, 1.0);
   }
   kimmod->complete(Core::LinAlg::Map(kim->domain_map()), kim->row_map());
 
@@ -2114,12 +2114,12 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
   if (iset)
   {
     kiimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kiimod->add(*kii, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kii, false, 1.0, *kiimod, 1.0);
     if (aset)
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> kiiadd =
           Core::LinAlg::matrix_multiply(*dhat, true, *kai, false, false, false, true);
-      kiimod->add(*kiiadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kiiadd, false, -1.0, *kiimod, 1.0);
     }
     kiimod->complete(Core::LinAlg::Map(kii->domain_map()), kii->row_map());
   }
@@ -2129,10 +2129,10 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
   if (iset && aset)
   {
     kiamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kiamod->add(*kia, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kia, false, 1.0, *kiamod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kiaadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kaa, false, false, false, true);
-    kiamod->add(*kiaadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kiaadd, false, -1.0, *kiamod, 1.0);
     kiamod->complete(Core::LinAlg::Map(kia->domain_map()), kia->row_map());
   }
 
@@ -2482,60 +2482,60 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
 
   //--------------------------------------------------------- FIRST LINE
   // add n submatrices to kteffnew
-  kteffnew->add(*knn, false, 1.0, 1.0);
-  kteffnew->add(*knm, false, 1.0, 1.0);
-  if (sset) kteffnew->add(*kns, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*knn, false, 1.0, *kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*knm, false, 1.0, *kteffnew, 1.0);
+  if (sset) Core::LinAlg::matrix_add(*kns, false, 1.0, *kteffnew, 1.0);
 
   //-------------------------------------------------------- SECOND LINE
   // add m submatrices to kteffnew
-  kteffnew->add(*kmnmod, false, 1.0, 1.0);
-  kteffnew->add(*kmmmod, false, 1.0, 1.0);
-  if (iset) kteffnew->add(*kmimod, false, 1.0, 1.0);
-  if (aset) kteffnew->add(*kmamod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmnmod, false, 1.0, *kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*kmmmod, false, 1.0, *kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kmimod, false, 1.0, *kteffnew, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*kmamod, false, 1.0, *kteffnew, 1.0);
 
   //--------------------------------------------------------- THIRD LINE
   // add i submatrices to kteffnew
-  if (iset) kteffnew->add(*kinmod, false, 1.0, 1.0);
-  if (iset) kteffnew->add(*kimmod, false, 1.0, 1.0);
-  if (iset) kteffnew->add(*kiimod, false, 1.0, 1.0);
-  if (iset && aset) kteffnew->add(*kiamod, false, 1.0, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kinmod, false, 1.0, *kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kimmod, false, 1.0, *kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kiimod, false, 1.0, *kteffnew, 1.0);
+  if (iset && aset) Core::LinAlg::matrix_add(*kiamod, false, 1.0, *kteffnew, 1.0);
 
   //-------------------------------------------------------- FOURTH LINE
   // WEAR - STUFF
   // add a submatrices to kteffnew
-  if (aset) kteffnew->add(*smatrix_, false, 1.0, 1.0);
-  if (aset && slipset) kteffnew->add(*kgnw, false, 1.0, 1.0);
-  if (aset && slipset) kteffnew->add(*kgmw, false, 1.0, 1.0);
-  if (aset && slipset && iset) kteffnew->add(*kgiw, false, 1.0, 1.0);
-  if (aset && slipset) kteffnew->add(*kgaw, false, 1.0, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*smatrix_, false, 1.0, *kteffnew, 1.0);
+  if (aset && slipset) Core::LinAlg::matrix_add(*kgnw, false, 1.0, *kteffnew, 1.0);
+  if (aset && slipset) Core::LinAlg::matrix_add(*kgmw, false, 1.0, *kteffnew, 1.0);
+  if (aset && slipset && iset) Core::LinAlg::matrix_add(*kgiw, false, 1.0, *kteffnew, 1.0);
+  if (aset && slipset) Core::LinAlg::matrix_add(*kgaw, false, 1.0, *kteffnew, 1.0);
 
   //--------------------------------------------------------- FIFTH LINE
   // add st submatrices to kteffnew
-  if (stickset) kteffnew->add(*kstnmod, false, 1.0, 1.0);
-  if (stickset) kteffnew->add(*kstmmod, false, 1.0, 1.0);
-  if (stickset && iset) kteffnew->add(*kstimod, false, 1.0, 1.0);
-  if (stickset && slipset) kteffnew->add(*kstslmod, false, 1.0, 1.0);
-  if (stickset) kteffnew->add(*kststmod, false, 1.0, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*kstnmod, false, 1.0, *kteffnew, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*kstmmod, false, 1.0, *kteffnew, 1.0);
+  if (stickset && iset) Core::LinAlg::matrix_add(*kstimod, false, 1.0, *kteffnew, 1.0);
+  if (stickset && slipset) Core::LinAlg::matrix_add(*kstslmod, false, 1.0, *kteffnew, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*kststmod, false, 1.0, *kteffnew, 1.0);
 
   // add terms of linearization of sick condition to kteffnew
-  if (stickset) kteffnew->add(*linstickDIS_, false, -1.0, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*linstickDIS_, false, -1.0, *kteffnew, 1.0);
 
   //--------------------------------------------------------- SIXTH LINE
   // add sl submatrices to kteffnew
-  if (slipset) kteffnew->add(*kslnmod, false, 1.0, 1.0);
-  if (slipset) kteffnew->add(*kslmmod, false, 1.0, 1.0);
-  if (slipset && iset) kteffnew->add(*kslimod, false, 1.0, 1.0);
-  if (slipset) kteffnew->add(*kslslmod, false, 1.0, 1.0);
-  if (slipset && stickset) kteffnew->add(*kslstmod, false, 1.0, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslnmod, false, 1.0, *kteffnew, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslmmod, false, 1.0, *kteffnew, 1.0);
+  if (slipset && iset) Core::LinAlg::matrix_add(*kslimod, false, 1.0, *kteffnew, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslslmod, false, 1.0, *kteffnew, 1.0);
+  if (slipset && stickset) Core::LinAlg::matrix_add(*kslstmod, false, 1.0, *kteffnew, 1.0);
 
   // add terms of linearization of slip condition to kteffnew and feffnew
-  if (slipset) kteffnew->add(*linslipDIS_, false, -1.0, +1.0);
+  if (slipset) Core::LinAlg::matrix_add(*linslipDIS_, false, -1.0, *kteffnew, +1.0);
 
   // WEAR - STUFF
-  if (slipset) kteffnew->add(*kslnw, false, -1.0, 1.0);
-  if (slipset) kteffnew->add(*kslmw, false, -1.0, 1.0);
-  if (slipset && (iset)) kteffnew->add(*ksliw, false, -1.0, 1.0);
-  if (slipset) kteffnew->add(*kslaw, false, -1.0, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslnw, false, -1.0, *kteffnew, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslmw, false, -1.0, *kteffnew, 1.0);
+  if (slipset && (iset)) Core::LinAlg::matrix_add(*ksliw, false, -1.0, *kteffnew, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslaw, false, -1.0, *kteffnew, 1.0);
 
   // fill_complete kteffnew (square)
   kteffnew->complete();
@@ -3262,8 +3262,8 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
 
     // build constraint matrix kdz
     Core::LinAlg::SparseMatrix kdz(*gdisprowmap_, 100, false, true);
-    kdz.add(*dmatrix_, true, 1.0 - alphaf_, 1.0);
-    kdz.add(*mmatrix_, true, -(1.0 - alphaf_), 1.0);
+    Core::LinAlg::matrix_add(*dmatrix_, true, 1.0 - alphaf_, kdz, 1.0);
+    Core::LinAlg::matrix_add(*mmatrix_, true, -(1.0 - alphaf_), kdz, 1.0);
     kdz.complete(*gsdofrowmap_, *gdisprowmap_);
 
     // transform constraint matrix kzd to lmdofmap (matrix_col_transform)
@@ -3276,9 +3276,11 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
 
     // build constraint matrix kzd
     Core::LinAlg::SparseMatrix kzd(*gsdofrowmap_, 100, false, true);
-    if (gactiven_->num_global_elements()) kzd.add(*smatrix_, false, 1.0, 1.0);
-    if (gstickt->num_global_elements()) kzd.add(*linstickDIS_, false, 1.0, 1.0);
-    if (gslipt_->num_global_elements()) kzd.add(*linslipDIS_, false, 1.0, 1.0);
+    if (gactiven_->num_global_elements()) Core::LinAlg::matrix_add(*smatrix_, false, 1.0, kzd, 1.0);
+    if (gstickt->num_global_elements())
+      Core::LinAlg::matrix_add(*linstickDIS_, false, 1.0, kzd, 1.0);
+    if (gslipt_->num_global_elements())
+      Core::LinAlg::matrix_add(*linslipDIS_, false, 1.0, kzd, 1.0);
     kzd.complete(*gdisprowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
@@ -3299,15 +3301,18 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
 
     // build constraint matrix kzz
     Core::LinAlg::SparseMatrix kzz(*gsdofrowmap_, 100, false, true);
-    if (gidofs->num_global_elements()) kzz.add(onesdiag, false, 1.0, 1.0);
-    if (gstickt->num_global_elements()) kzz.add(*linstickLM_, false, 1.0, 1.0);
-    if (gslipt_->num_global_elements()) kzz.add(*linslipLM_, false, 1.0, 1.0);
+    if (gidofs->num_global_elements()) Core::LinAlg::matrix_add(onesdiag, false, 1.0, kzz, 1.0);
+    if (gstickt->num_global_elements())
+      Core::LinAlg::matrix_add(*linstickLM_, false, 1.0, kzz, 1.0);
+    if (gslipt_->num_global_elements()) Core::LinAlg::matrix_add(*linslipLM_, false, 1.0, kzz, 1.0);
 
     if (wearimpl_)
     {
       // add C-fnc. derivatives w.r.t. lm-values to kzz
-      if (gactiven_->num_global_elements()) kzz.add(*wlinmatrix_, false, 1.0, 1.0);
-      if (gslipt_->num_global_elements()) kzz.add(*wlinmatrixsl_, false, 1.0, 1.0);
+      if (gactiven_->num_global_elements())
+        Core::LinAlg::matrix_add(*wlinmatrix_, false, 1.0, kzz, 1.0);
+      if (gslipt_->num_global_elements())
+        Core::LinAlg::matrix_add(*wlinmatrixsl_, false, 1.0, kzz, 1.0);
 
 #ifdef CONSISTENTSTICK
       if (gstickt->NumGlobalElements()) kzz->Add(*wlinmatrixst_, false, 1.0, 1.0);
@@ -3372,8 +3377,8 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
 
     // build constraint matrix kdz
     Core::LinAlg::SparseMatrix kdz(*gdisprowmap_, 100, false, true);
-    kdz.add(*dmatrix_, true, 1.0 - alphaf_, 1.0);
-    kdz.add(*mmatrix_, true, -(1.0 - alphaf_), 1.0);
+    Core::LinAlg::matrix_add(*dmatrix_, true, 1.0 - alphaf_, kdz, 1.0);
+    Core::LinAlg::matrix_add(*mmatrix_, true, -(1.0 - alphaf_), kdz, 1.0);
     kdz.complete(*gsdofrowmap_, *gdisprowmap_);
 
     // transform constraint matrix kzd to lmdofmap (matrix_col_transform)
@@ -3386,9 +3391,11 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
 
     // build constraint matrix kzd
     Core::LinAlg::SparseMatrix kzd(*gsdofrowmap_, 100, false, true);
-    if (gactiven_->num_global_elements()) kzd.add(*smatrix_, false, 1.0, 1.0);
-    if (gstickt->num_global_elements()) kzd.add(*linstickDIS_, false, 1.0, 1.0);
-    if (gslipt_->num_global_elements()) kzd.add(*linslipDIS_, false, 1.0, 1.0);
+    if (gactiven_->num_global_elements()) Core::LinAlg::matrix_add(*smatrix_, false, 1.0, kzd, 1.0);
+    if (gstickt->num_global_elements())
+      Core::LinAlg::matrix_add(*linstickDIS_, false, 1.0, kzd, 1.0);
+    if (gslipt_->num_global_elements())
+      Core::LinAlg::matrix_add(*linslipDIS_, false, 1.0, kzd, 1.0);
     kzd.complete(*gdisprowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
@@ -3409,9 +3416,10 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
 
     // build constraint matrix kzz
     Core::LinAlg::SparseMatrix kzz(*gsdofrowmap_, 100, false, true);
-    if (gidofs->num_global_elements()) kzz.add(onesdiag, false, 1.0, 1.0);
-    if (gstickt->num_global_elements()) kzz.add(*linstickLM_, false, 1.0, 1.0);
-    if (gslipt_->num_global_elements()) kzz.add(*linslipLM_, false, 1.0, 1.0);
+    if (gidofs->num_global_elements()) Core::LinAlg::matrix_add(onesdiag, false, 1.0, kzz, 1.0);
+    if (gstickt->num_global_elements())
+      Core::LinAlg::matrix_add(*linstickLM_, false, 1.0, kzz, 1.0);
+    if (gslipt_->num_global_elements()) Core::LinAlg::matrix_add(*linslipLM_, false, 1.0, kzz, 1.0);
 
     kzz.complete(*gsdofrowmap_, *gsdofrowmap_);
 
@@ -3426,14 +3434,17 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     Core::LinAlg::SparseMatrix kwd(*gsdofnrowmap_, 100, false, true);
     if (sswear_)
     {
-      if (gactiven_->num_global_elements()) kwd.add(*lintdis_, false, -wcoeff, 1.0);
-      if (gactiven_->num_global_elements()) kwd.add(*linedis_, false, 1.0, 1.0);
+      if (gactiven_->num_global_elements())
+        Core::LinAlg::matrix_add(*lintdis_, false, -wcoeff, kwd, 1.0);
+      if (gactiven_->num_global_elements())
+        Core::LinAlg::matrix_add(*linedis_, false, 1.0, kwd, 1.0);
       if (gactiven_->num_global_elements()) kwd.complete(*gdisprowmap_, *gsdofnrowmap_);
     }
     else
     {
-      if (gslipn_->num_global_elements()) kwd.add(*lintdis_, false, -wcoeff, 1.0);
-      if (gslipn_->num_global_elements()) kwd.add(*linedis_, false, 1.0, 1.0);
+      if (gslipn_->num_global_elements())
+        Core::LinAlg::matrix_add(*lintdis_, false, -wcoeff, kwd, 1.0);
+      if (gslipn_->num_global_elements()) Core::LinAlg::matrix_add(*linedis_, false, 1.0, kwd, 1.0);
       if (gslipn_->num_global_elements()) kwd.complete(*gdisprowmap_, *gsdofnrowmap_);
     }
 
@@ -3450,11 +3461,13 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     Core::LinAlg::SparseMatrix kwz(*gsdofnrowmap_, 100, false, true);
     if (sswear_)
     {
-      if (gactiven_->num_global_elements()) kwz.add(*lintlm_, false, -wcoeff, 1.0);
+      if (gactiven_->num_global_elements())
+        Core::LinAlg::matrix_add(*lintlm_, false, -wcoeff, kwz, 1.0);
     }
     else
     {
-      if (gslipn_->num_global_elements()) kwz.add(*lintlm_, false, -wcoeff, 1.0);
+      if (gslipn_->num_global_elements())
+        Core::LinAlg::matrix_add(*lintlm_, false, -wcoeff, kwz, 1.0);
     }
 
     kwz.complete(*gsdofrowmap_, *gsdofnrowmap_);
@@ -3467,11 +3480,12 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     Core::LinAlg::SparseMatrix kww(*gsdofnrowmap_, 100, false, true);
     if (sswear_)
     {
-      if (gactiven_->num_global_elements()) kww.add(*ematrix_, false, 1.0, 1.0);
+      if (gactiven_->num_global_elements())
+        Core::LinAlg::matrix_add(*ematrix_, false, 1.0, kww, 1.0);
     }
     else
     {
-      if (gslipn_->num_global_elements()) kww.add(*ematrix_, false, 1.0, 1.0);
+      if (gslipn_->num_global_elements()) Core::LinAlg::matrix_add(*ematrix_, false, 1.0, kww, 1.0);
     }
 
     // build unity matrix for inactive dofs
@@ -3480,7 +3494,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     Core::LinAlg::SparseMatrix onesdiagw(onesw);
     onesdiagw.complete();
     // build constraint matrix kzz
-    if (gwinact_->num_global_elements()) kww.add(onesdiagw, false, 1.0, 1.0);
+    if (gwinact_->num_global_elements()) Core::LinAlg::matrix_add(onesdiagw, false, 1.0, kww, 1.0);
 
     kww.complete(*gsdofnrowmap_, *gsdofnrowmap_);
 
@@ -3490,8 +3504,9 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     // *********************************
     // build wear matrix kzw
     Core::LinAlg::SparseMatrix kzw(*gsdofrowmap_, 100, false, true);
-    if (gactiven_->num_global_elements()) kzw.add(*smatrixW_, false, 1.0, 1.0);
-    if (gslipt_->num_global_elements()) kzw.add(*linslip_w_, false, 1.0, 1.0);
+    if (gactiven_->num_global_elements())
+      Core::LinAlg::matrix_add(*smatrixW_, false, 1.0, kzw, 1.0);
+    if (gslipt_->num_global_elements()) Core::LinAlg::matrix_add(*linslip_w_, false, 1.0, kzw, 1.0);
     kzw.complete(*gsdofnrowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
@@ -3569,8 +3584,8 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
 
     // build constraint matrix kdz
     Core::LinAlg::SparseMatrix kdz(*gdisprowmap_, 100, false, true);
-    kdz.add(*dmatrix_, true, 1.0 - alphaf_, 1.0);
-    kdz.add(*mmatrix_, true, -(1.0 - alphaf_), 1.0);
+    Core::LinAlg::matrix_add(*dmatrix_, true, 1.0 - alphaf_, kdz, 1.0);
+    Core::LinAlg::matrix_add(*mmatrix_, true, -(1.0 - alphaf_), kdz, 1.0);
     kdz.complete(*gsdofrowmap_, *gdisprowmap_);
 
     // transform constraint matrix kzd to lmdofmap (matrix_col_transform)
@@ -3583,9 +3598,11 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
 
     // build constraint matrix kzd
     Core::LinAlg::SparseMatrix kzd(*gsdofrowmap_, 100, false, true);
-    if (gactiven_->num_global_elements()) kzd.add(*smatrix_, false, 1.0, 1.0);
-    if (gstickt->num_global_elements()) kzd.add(*linstickDIS_, false, 1.0, 1.0);
-    if (gslipt_->num_global_elements()) kzd.add(*linslipDIS_, false, 1.0, 1.0);
+    if (gactiven_->num_global_elements()) Core::LinAlg::matrix_add(*smatrix_, false, 1.0, kzd, 1.0);
+    if (gstickt->num_global_elements())
+      Core::LinAlg::matrix_add(*linstickDIS_, false, 1.0, kzd, 1.0);
+    if (gslipt_->num_global_elements())
+      Core::LinAlg::matrix_add(*linslipDIS_, false, 1.0, kzd, 1.0);
     kzd.complete(*gdisprowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
@@ -3606,9 +3623,10 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
 
     // build constraint matrix kzz
     Core::LinAlg::SparseMatrix kzz(*gsdofrowmap_, 100, false, true);
-    if (gidofs->num_global_elements()) kzz.add(onesdiag, false, 1.0, 1.0);
-    if (gstickt->num_global_elements()) kzz.add(*linstickLM_, false, 1.0, 1.0);
-    if (gslipt_->num_global_elements()) kzz.add(*linslipLM_, false, 1.0, 1.0);
+    if (gidofs->num_global_elements()) Core::LinAlg::matrix_add(onesdiag, false, 1.0, kzz, 1.0);
+    if (gstickt->num_global_elements())
+      Core::LinAlg::matrix_add(*linstickLM_, false, 1.0, kzz, 1.0);
+    if (gslipt_->num_global_elements()) Core::LinAlg::matrix_add(*linslipLM_, false, 1.0, kzz, 1.0);
 
     kzz.complete(*gsdofrowmap_, *gsdofrowmap_);
 
@@ -3621,8 +3639,9 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     // ***************************************************************************************************
     // build wear matrix kwd
     Core::LinAlg::SparseMatrix kwd(*gsdofnrowmap_, 100, false, true);
-    if (gslipn_->num_global_elements()) kwd.add(*lintdis_, false, -wcoeff, 1.0);
-    if (gslipn_->num_global_elements()) kwd.add(*linedis_, false, 1.0, 1.0);
+    if (gslipn_->num_global_elements())
+      Core::LinAlg::matrix_add(*lintdis_, false, -wcoeff, kwd, 1.0);
+    if (gslipn_->num_global_elements()) Core::LinAlg::matrix_add(*linedis_, false, 1.0, kwd, 1.0);
     if (gslipn_->num_global_elements()) kwd.complete(*gdisprowmap_, *gsdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
@@ -3636,7 +3655,8 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     // *********************************
     // build wear matrix kwz
     Core::LinAlg::SparseMatrix kwz(*gsdofnrowmap_, 100, false, true);
-    if (gslipn_->num_global_elements()) kwz.add(*lintlm_, false, -wcoeff, 1.0);
+    if (gslipn_->num_global_elements())
+      Core::LinAlg::matrix_add(*lintlm_, false, -wcoeff, kwz, 1.0);
     kwz.complete(*gsdofrowmap_, *gsdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
@@ -3645,7 +3665,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     // *********************************
     // build wear matrix kww
     Core::LinAlg::SparseMatrix kww(*gsdofnrowmap_, 100, false, true);
-    if (gslipn_->num_global_elements()) kww.add(*ematrix_, false, 1.0, 1.0);
+    if (gslipn_->num_global_elements()) Core::LinAlg::matrix_add(*ematrix_, false, 1.0, kww, 1.0);
 
     // build unity matrix for inactive dofs
     Core::LinAlg::Vector<double> onesw(*gwinact_);
@@ -3653,7 +3673,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     Core::LinAlg::SparseMatrix onesdiagw(onesw);
     onesdiagw.complete();
     // build constraint matrix kzz
-    if (gwinact_->num_global_elements()) kww.add(onesdiagw, false, 1.0, 1.0);
+    if (gwinact_->num_global_elements()) Core::LinAlg::matrix_add(onesdiagw, false, 1.0, kww, 1.0);
 
     kww.complete(*gsdofnrowmap_, *gsdofnrowmap_);
 
@@ -3664,8 +3684,9 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     // ********************************* S+M
     // build wear matrix kzw
     Core::LinAlg::SparseMatrix kzw(*gsdofrowmap_, 100, false, true);
-    if (gactiven_->num_global_elements()) kzw.add(*smatrixW_, false, 1.0, 1.0);
-    if (gslipt_->num_global_elements()) kzw.add(*linslip_w_, false, 1.0, 1.0);
+    if (gactiven_->num_global_elements())
+      Core::LinAlg::matrix_add(*smatrixW_, false, 1.0, kzw, 1.0);
+    if (gslipt_->num_global_elements()) Core::LinAlg::matrix_add(*linslip_w_, false, 1.0, kzw, 1.0);
     kzw.complete(*galldofnrowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
@@ -3676,8 +3697,10 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     // ***************************************************************************************************
     // build wear matrix kwmd
     Core::LinAlg::SparseMatrix kwmd(*gmdofnrowmap_, 100, false, true);
-    if (gmslipn_->num_global_elements()) kwmd.add(*lintdis_m_, false, -wcoeffM, 1.0);
-    if (gmslipn_->num_global_elements()) kwmd.add(*linedis_m_, false, 1.0, 1.0);
+    if (gmslipn_->num_global_elements())
+      Core::LinAlg::matrix_add(*lintdis_m_, false, -wcoeffM, kwmd, 1.0);
+    if (gmslipn_->num_global_elements())
+      Core::LinAlg::matrix_add(*linedis_m_, false, 1.0, kwmd, 1.0);
     if (gmslipn_->num_global_elements()) kwmd.complete(*gdisprowmap_, *gmdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
@@ -3691,7 +3714,8 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     // *********************************
     // build wear matrix kwmz
     Core::LinAlg::SparseMatrix kwmz(*gmdofnrowmap_, 100, false, true);
-    if (gmslipn_->num_global_elements()) kwmz.add(*lintlm_m_, false, -wcoeffM, 1.0);
+    if (gmslipn_->num_global_elements())
+      Core::LinAlg::matrix_add(*lintlm_m_, false, -wcoeffM, kwmz, 1.0);
     kwmz.complete(*gsdofrowmap_, *gmdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
@@ -3700,7 +3724,8 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     // *********************************
     // build wear matrix kwmwm
     Core::LinAlg::SparseMatrix kwmwm(*gmdofnrowmap_, 100, false, true);
-    if (gmslipn_->num_global_elements()) kwmwm.add(*ematrix_m_, false, 1.0, 1.0);
+    if (gmslipn_->num_global_elements())
+      Core::LinAlg::matrix_add(*ematrix_m_, false, 1.0, kwmwm, 1.0);
 
     // build unity matrix for inactive dofs
     Core::LinAlg::Vector<double> oneswm(*gwminact_);
@@ -3708,7 +3733,8 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     Core::LinAlg::SparseMatrix onesdiagwm(oneswm);
     onesdiagwm.complete();
     // build constraint matrix kzz
-    if (gwminact_->num_global_elements()) kwmwm.add(onesdiagwm, false, 1.0, 1.0);
+    if (gwminact_->num_global_elements())
+      Core::LinAlg::matrix_add(onesdiagwm, false, 1.0, kwmwm, 1.0);
 
     kwmwm.complete(*gmdofnrowmap_, *gmdofnrowmap_);
 
@@ -3852,13 +3878,13 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
         trkgd = std::make_shared<Core::LinAlg::SparseMatrix>(*gmap, 100, false, true);
         trkgg = std::make_shared<Core::LinAlg::SparseMatrix>(*gmap, 100, false, true);
 
-        trkgd->add(*trkzd, false, 1.0, 1.0);
-        trkgd->add(*trkwd, false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*trkzd, false, 1.0, *trkgd, 1.0);
+        Core::LinAlg::matrix_add(*trkwd, false, 1.0, *trkgd, 1.0);
 
-        trkgg->add(*trkzz, false, 1.0, 1.0);
-        trkgg->add(*trkwz, false, 1.0, 1.0);
-        trkgg->add(*trkww, false, 1.0, 1.0);
-        trkgg->add(*trkzw, false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*trkzz, false, 1.0, *trkgg, 1.0);
+        Core::LinAlg::matrix_add(*trkwz, false, 1.0, *trkgg, 1.0);
+        Core::LinAlg::matrix_add(*trkww, false, 1.0, *trkgg, 1.0);
+        Core::LinAlg::matrix_add(*trkzw, false, 1.0, *trkgg, 1.0);
 
         trkgd->complete(*problem_dofs(), *gmap);
         trkgg->complete(*gmap, *gmap);
@@ -3897,16 +3923,16 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
         trkgd = std::make_shared<Core::LinAlg::SparseMatrix>(*gmap, 100, false, true);
         trkgg = std::make_shared<Core::LinAlg::SparseMatrix>(*gmap, 100, false, true);
 
-        trkgd->add(*trkzd, false, 1.0, 1.0);
-        trkgd->add(*trkwd, false, 1.0, 1.0);
-        trkgd->add(*trkwmd, false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*trkzd, false, 1.0, *trkgd, 1.0);
+        Core::LinAlg::matrix_add(*trkwd, false, 1.0, *trkgd, 1.0);
+        Core::LinAlg::matrix_add(*trkwmd, false, 1.0, *trkgd, 1.0);
 
-        trkgg->add(*trkzz, false, 1.0, 1.0);
-        trkgg->add(*trkwz, false, 1.0, 1.0);
-        trkgg->add(*trkww, false, 1.0, 1.0);
-        trkgg->add(*trkzw, false, 1.0, 1.0);
-        trkgg->add(*trkwmz, false, 1.0, 1.0);
-        trkgg->add(*trkwmwm, false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*trkzz, false, 1.0, *trkgg, 1.0);
+        Core::LinAlg::matrix_add(*trkwz, false, 1.0, *trkgg, 1.0);
+        Core::LinAlg::matrix_add(*trkww, false, 1.0, *trkgg, 1.0);
+        Core::LinAlg::matrix_add(*trkzw, false, 1.0, *trkgg, 1.0);
+        Core::LinAlg::matrix_add(*trkwmz, false, 1.0, *trkgg, 1.0);
+        Core::LinAlg::matrix_add(*trkwmwm, false, 1.0, *trkgg, 1.0);
 
         trkgd->complete(*problem_dofs(), *gmap);
         trkgg->complete(*gmap, *gmap);
@@ -4397,7 +4423,7 @@ void Wear::LagrangeStrategyWear::recover(std::shared_ptr<Core::LinAlg::Vector<do
     Core::LinAlg::split_matrix2x2(
         invd_, gactivedofs_, tempmap, gactivedofs_, tempmap, invda, tempmtx1, tempmtx2, tempmtx3);
     Core::LinAlg::SparseMatrix invdmod(*gsdofrowmap_, 10);
-    invdmod.add(*invda, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*invda, false, 1.0, invdmod, 1.0);
     invdmod.complete();
 
     // approximate update
@@ -4509,7 +4535,7 @@ void Wear::LagrangeStrategyWear::recover(std::shared_ptr<Core::LinAlg::Vector<do
     Core::LinAlg::split_matrix2x2(
         invd_, gactivedofs_, tempmap, gactivedofs_, tempmap, invda, tempmtx1, tempmtx2, tempmtx3);
     Core::LinAlg::SparseMatrix invdmod(*gsdofrowmap_, 10);
-    invdmod.add(*invda, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*invda, false, 1.0, invdmod, 1.0);
     invdmod.complete();
 
     /**********************************************************************/

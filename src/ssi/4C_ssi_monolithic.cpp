@@ -21,6 +21,7 @@
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_utils_sparse_algebra_print.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_linear_solver_method_parameters.hpp"
@@ -182,7 +183,8 @@ void SSI::SsiMono::apply_meshtying_to_sub_problems() const
   else
   {
     ssi_vectors_->structure_residual()->update(1.0, *(structure_field()->rhs()), 1.0);
-    ssi_matrices_->structure_matrix()->add(*structure_field()->system_matrix(), false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(
+        *structure_field()->system_matrix(), false, 1.0, *ssi_matrices_->structure_matrix(), 1.0);
   }
 }
 
@@ -1404,8 +1406,8 @@ void SSI::SsiMono::calc_initial_time_derivative()
           for (int i = 0; i < static_cast<int>(positions_scatra.size()); ++i)
           {
             const int position_scatra = positions_scatra.at(i);
-            massmatrix_system_block->matrix(position_scatra, position_scatra)
-                .add(massmatrix_scatra_block->matrix(i, i), false, 1.0, 1.0);
+            Core::LinAlg::matrix_add(massmatrix_scatra_block->matrix(i, i), false, 1.0,
+                massmatrix_system_block->matrix(position_scatra, position_scatra), 1.0);
           }
           if (is_scatra_manifold())
           {
@@ -1417,8 +1419,8 @@ void SSI::SsiMono::calc_initial_time_derivative()
             for (int i = 0; i < static_cast<int>(positions_manifold.size()); ++i)
             {
               const int position_manifold = positions_manifold.at(i);
-              massmatrix_system_block->matrix(position_manifold, position_manifold)
-                  .add(massmatrix_manifold_block->matrix(i, i), false, 1.0, 1.0);
+              Core::LinAlg::matrix_add(massmatrix_manifold_block->matrix(i, i), false, 1.0,
+                  massmatrix_system_block->matrix(position_manifold, position_manifold), 1.0);
             }
           }
 
@@ -1433,17 +1435,17 @@ void SSI::SsiMono::calc_initial_time_derivative()
           const int position_scatra =
               ssi_maps_->get_block_positions(Subproblem::scalar_transport).at(0);
 
-          massmatrix_system_block->matrix(position_scatra, position_scatra)
-              .add(*cast_to_sparse_matrix_and_check_success(massmatrix_scatra), false, 1.0, 1.0);
+          Core::LinAlg::matrix_add(*cast_to_sparse_matrix_and_check_success(massmatrix_scatra),
+              false, 1.0, massmatrix_system_block->matrix(position_scatra, position_scatra), 1.0);
 
           if (is_scatra_manifold())
           {
             const int position_manifold =
                 ssi_maps_->get_block_positions(Subproblem::manifold).at(0);
 
-            massmatrix_system_block->matrix(position_manifold, position_manifold)
-                .add(
-                    *cast_to_sparse_matrix_and_check_success(massmatrix_manifold), false, 1.0, 1.0);
+            Core::LinAlg::matrix_add(*cast_to_sparse_matrix_and_check_success(massmatrix_manifold),
+                false, 1.0, massmatrix_system_block->matrix(position_manifold, position_manifold),
+                1.0);
           }
           break;
         }
@@ -1459,13 +1461,13 @@ void SSI::SsiMono::calc_initial_time_derivative()
     case Core::LinAlg::MatrixType::sparse:
     {
       auto massmatrix_system_sparse = cast_to_sparse_matrix_and_check_success(massmatrix_system);
-      massmatrix_system_sparse->add(
-          *cast_to_sparse_matrix_and_check_success(massmatrix_scatra), false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*cast_to_sparse_matrix_and_check_success(massmatrix_scatra), false,
+          1.0, *massmatrix_system_sparse, 1.0);
 
       if (is_scatra_manifold())
       {
-        massmatrix_system_sparse->add(
-            *cast_to_sparse_matrix_and_check_success(massmatrix_manifold), false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*cast_to_sparse_matrix_and_check_success(massmatrix_manifold),
+            false, 1.0, *massmatrix_system_sparse, 1.0);
       }
 
       massmatrix_system->complete(*dof_row_map(), *dof_row_map());

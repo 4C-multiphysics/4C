@@ -10,8 +10,10 @@
 #include "4C_fluid_xfluid.hpp"
 #include "4C_linalg_mapextractor.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_xfem_condition_manager.hpp"
 #include "4C_xfem_discretization.hpp"
+
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -101,13 +103,13 @@ void XFEM::XffCouplingManager::add_coupling_matrix(
   /*----------------------------------------------------------------------*/
 
   // add the coupling block C_ss on the already existing diagonal block
-  C_ff_block.add(*xfluid_->c_ss_matrix(cond_name_), false, scaling, 1.0);
+  Core::LinAlg::matrix_add(*xfluid_->c_ss_matrix(cond_name_), false, scaling, C_ff_block, 1.0);
 
   Core::LinAlg::SparseMatrix& C_xff_block = (systemmatrix)(idx_[1], idx_[0]);
   Core::LinAlg::SparseMatrix& C_fxf_block = (systemmatrix)(idx_[0], idx_[1]);
 
-  C_fxf_block.add(*xfluid_->c_sx_matrix(cond_name_), false, scaling, 1.0);
-  C_xff_block.add(*xfluid_->c_xs_matrix(cond_name_), false, scaling, 1.0);
+  Core::LinAlg::matrix_add(*xfluid_->c_sx_matrix(cond_name_), false, scaling, C_fxf_block, 1.0);
+  Core::LinAlg::matrix_add(*xfluid_->c_xs_matrix(cond_name_), false, scaling, C_xff_block, 1.0);
 }
 
 /*-----------------------------------------------------------------------------------------*

@@ -246,7 +246,7 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
   m_LinDissContactLM.complete(*gactivedofs_, *gmdofrowmap_);
   s.complete(*gsmdofrowmap_, *gactivedofs_);
 
-  dcsdd->add(s, false, 1., -1.);
+  Core::LinAlg::matrix_add(s, false, 1., *dcsdd, -1.);
   dcsdLMc->scale(-1.);
   dcsdT.scale(-1.);
   rcsa->scale(1.);
@@ -326,8 +326,8 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
   std::shared_ptr<Core::LinAlg::Map> thermo_gni_dofs = coupST->master_to_slave_map(*str_gni_dofs);
 
   // add to kss
-  kss->add(linDcontactLM, false, 1. - alphaf_, 1.);
-  kss->add(linMcontactLM, false, 1. - alphaf_, 1.);
+  Core::LinAlg::matrix_add(linDcontactLM, false, 1. - alphaf_, *kss, 1.);
+  Core::LinAlg::matrix_add(linMcontactLM, false, 1. - alphaf_, *kss, 1.);
 
   // transform and add to kts
   Coupling::Adapter::MatrixRowTransform()(
@@ -689,24 +689,24 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
   // **********************************************************************
 
   // (1) add the blocks, we do nothing with (i.e. (Inactive+others))
-  kss_new.add(*kss_ni, false, 1., 1.);
-  kst_new.add(*kst_ni, false, 1., 1.);
-  kts_new.add(*kts_ni, false, 1., 1.);
-  ktt_new.add(*ktt_ni, false, 1., 1.);
+  Core::LinAlg::matrix_add(*kss_ni, false, 1., kss_new, 1.);
+  Core::LinAlg::matrix_add(*kst_ni, false, 1., kst_new, 1.);
+  Core::LinAlg::matrix_add(*kts_ni, false, 1., kts_new, 1.);
+  Core::LinAlg::matrix_add(*ktt_ni, false, 1., ktt_new, 1.);
   CONTACT::Utils::add_vector(rsni, *combined_RHS);
   CONTACT::Utils::add_vector(rtni, *combined_RHS);
 
   // (2) add the 'uncondensed' blocks (i.e. everything w/o a D^-1
   // (2)a actual stiffness blocks of the master-rows
-  kss_new.add(*kss_m, false, 1., 1.);
-  kst_new.add(*kst_m, false, 1., 1.);
-  kts_new.add(*kts_m, false, 1., 1.);
-  ktt_new.add(*ktt_m, false, 1., 1.);
+  Core::LinAlg::matrix_add(*kss_m, false, 1., kss_new, 1.);
+  Core::LinAlg::matrix_add(*kst_m, false, 1., kst_new, 1.);
+  Core::LinAlg::matrix_add(*kts_m, false, 1., kts_new, 1.);
+  Core::LinAlg::matrix_add(*ktt_m, false, 1., ktt_new, 1.);
   CONTACT::Utils::add_vector(rsm, *combined_RHS);
   CONTACT::Utils::add_vector(rtm, *combined_RHS);
 
   // (2)b active constraints in the active slave rows
-  kss_new.add(*dcsdd, false, 1., 1.);
+  Core::LinAlg::matrix_add(*dcsdd, false, 1., kss_new, 1.);
 
   Coupling::Adapter::MatrixColTransform()(*gactivedofs_, *gsmdofrowmap_, dcsdT, 1.,
       Coupling::Adapter::CouplingMasterConverter(*coupST), kst_new, false, true);
@@ -719,10 +719,12 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
 
   // (3) condensed parts
   // second row
-  kss_new.add(*Core::LinAlg::matrix_multiply(*dInvMa, true, *kss_a, false, false, false, true),
-      false, 1., 1.);
-  kst_new.add(*Core::LinAlg::matrix_multiply(*dInvMa, true, *kst_a, false, false, false, true),
-      false, 1., 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*dInvMa, true, *kss_a, false, false, false, true), false, 1.,
+      kss_new, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*dInvMa, true, *kst_a, false, false, false, true), false, 1.,
+      kst_new, 1.);
   tmpv = std::make_shared<Core::LinAlg::Vector<double>>(*gmdofrowmap_);
   dInvMa->multiply(true, *rsa, *tmpv);
   CONTACT::Utils::add_vector(*tmpv, *combined_RHS);
@@ -731,10 +733,12 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
   // third row
   std::shared_ptr<Core::LinAlg::SparseMatrix> wDinv =
       Core::LinAlg::matrix_multiply(*dcsdLMc, false, *dInvA, true, false, false, true);
-  kss_new.add(*Core::LinAlg::matrix_multiply(*wDinv, false, *kss_a, false, false, false, true),
-      false, -1. / (1. - alphaf_), 1.);
-  kst_new.add(*Core::LinAlg::matrix_multiply(*wDinv, false, *kst_a, false, false, false, true),
-      false, -1. / (1. - alphaf_), 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*wDinv, false, *kss_a, false, false, false, true), false,
+      -1. / (1. - alphaf_), kss_new, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*wDinv, false, *kst_a, false, false, false, true), false,
+      -1. / (1. - alphaf_), kst_new, 1.);
   tmpv = std::make_shared<Core::LinAlg::Vector<double>>(*gactivedofs_);
   wDinv->multiply(false, *rsa, *tmpv);
   tmpv->scale(-1. / (1. - alphaf_));
@@ -748,20 +752,24 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
   tmp = nullptr;
   tmp = Core::LinAlg::matrix_multiply(
       m_LinDissContactLM_thermoRow, false, *dInvA, false, false, false, true);
-  kts_new.add(*Core::LinAlg::matrix_multiply(*tmp, false, *kss_a, false, false, false, true), false,
-      -tsi_alpha_ / (1. - alphaf_), 1.);
-  ktt_new.add(*Core::LinAlg::matrix_multiply(*tmp, false, *kst_a, false, false, false, true), false,
-      -tsi_alpha_ / (1. - alphaf_), 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*tmp, false, *kss_a, false, false, false, true), false,
+      -tsi_alpha_ / (1. - alphaf_), kts_new, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*tmp, false, *kst_a, false, false, false, true), false,
+      -tsi_alpha_ / (1. - alphaf_), ktt_new, 1.);
   tmpv = std::make_shared<Core::LinAlg::Vector<double>>(*thermo_m_dofs);
   tmp->multiply(false, *rsa, *tmpv);
   tmpv->scale(-tsi_alpha_ / (1. - alphaf_));
   CONTACT::Utils::add_vector(*tmpv, *combined_RHS);
   tmpv = nullptr;
 
-  kts_new.add(*Core::LinAlg::matrix_multiply(dInvMaThermo, true, *kts_a, false, false, false, true),
-      false, 1., 1.);
-  ktt_new.add(*Core::LinAlg::matrix_multiply(dInvMaThermo, true, *ktt_a, false, false, false, true),
-      false, 1., 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(dInvMaThermo, true, *kts_a, false, false, false, true), false,
+      1., kts_new, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(dInvMaThermo, true, *ktt_a, false, false, false, true), false,
+      1., ktt_new, 1.);
   tmpv = std::make_shared<Core::LinAlg::Vector<double>>(*thermo_m_dofs);
   dInvMaThermo.multiply(true, *rta, *tmpv);
   CONTACT::Utils::add_vector(*tmpv, *combined_RHS);
@@ -770,10 +778,12 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
   // sixth row
   std::shared_ptr<Core::LinAlg::SparseMatrix> yDinv =
       Core::LinAlg::matrix_multiply(dcTdLMc_thermo, false, *dInvA, false, false, false, true);
-  kts_new.add(*Core::LinAlg::matrix_multiply(*yDinv, false, *kss_a, false, false, false, true),
-      false, -1. / (1. - alphaf_), 1.);
-  ktt_new.add(*Core::LinAlg::matrix_multiply(*yDinv, false, *kst_a, false, false, false, true),
-      false, -1. / (1. - alphaf_), 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*yDinv, false, *kss_a, false, false, false, true), false,
+      -1. / (1. - alphaf_), kts_new, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*yDinv, false, *kst_a, false, false, false, true), false,
+      -1. / (1. - alphaf_), ktt_new, 1.);
   tmpv = std::make_shared<Core::LinAlg::Vector<double>>(*thermo_act_dofs);
   yDinv->multiply(false, *rsa, *tmpv);
   tmpv->scale(-1. / (1. - alphaf_));
@@ -782,10 +792,12 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> gDinv =
       Core::LinAlg::matrix_multiply(dcTdLMt_thermo, false, *dInvaThermo, false, false, false, true);
-  kts_new.add(*Core::LinAlg::matrix_multiply(*gDinv, false, *kts_a, false, false, false, true),
-      false, -1. / (tsi_alpha_), 1.);
-  ktt_new.add(*Core::LinAlg::matrix_multiply(*gDinv, false, *ktt_a, false, false, false, true),
-      false, -1. / (tsi_alpha_), 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*gDinv, false, *kts_a, false, false, false, true), false,
+      -1. / (tsi_alpha_), kts_new, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*gDinv, false, *ktt_a, false, false, false, true), false,
+      -1. / (tsi_alpha_), ktt_new, 1.);
   tmpv = std::make_shared<Core::LinAlg::Vector<double>>(*thermo_act_dofs);
   gDinv->multiply(false, *rta, *tmpv);
   tmpv->scale(-1. / tsi_alpha_);

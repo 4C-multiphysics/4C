@@ -834,10 +834,9 @@ void STI::Monolithic::assemble_mat_and_rhs()
 
                   // transform and assemble temporary matrix for slave-side columns of current
                   // matrix block
-                  blocksystemmatrix->matrix(iblock, nblockmapsscatra)
-                      .add(*Core::LinAlg::matrix_multiply(
-                               scatrathermocolsslave, false, *strategythermo_->p(), false, true),
-                          false, 1.0, 1.0);
+                  Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(scatrathermocolsslave,
+                                               false, *strategythermo_->p(), false, true),
+                      false, 1.0, blocksystemmatrix->matrix(iblock, nblockmapsscatra), 1.0);
 
                   break;
                 }
@@ -907,10 +906,9 @@ void STI::Monolithic::assemble_mat_and_rhs()
 
                 // transform and assemble temporary matrix for slave-side columns of thermo-thermo
                 // matrix block
-                blocksystemmatrix->matrix(nblockmapsscatra, nblockmapsscatra)
-                    .add(*Core::LinAlg::matrix_multiply(
-                             thermothermocolsslave, false, *strategythermo_->p(), false, true),
-                        false, 1.0, 1.0);
+                Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(thermothermocolsslave,
+                                             false, *strategythermo_->p(), false, true),
+                    false, 1.0, blocksystemmatrix->matrix(nblockmapsscatra, nblockmapsscatra), 1.0);
                 break;
               }
               default:
@@ -991,10 +989,9 @@ void STI::Monolithic::assemble_mat_and_rhs()
 
                 // transform and assemble temporary matrix for slave-side columns of scatra-thermo
                 // matrix block
-                blocksystemmatrix->matrix(0, 1).add(
-                    *Core::LinAlg::matrix_multiply(
-                        scatrathermocolsslave, false, *strategythermo_->p(), false, true),
-                    false, 1.0, 1.0);
+                Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(scatrathermocolsslave,
+                                             false, *strategythermo_->p(), false, true),
+                    false, 1.0, blocksystemmatrix->matrix(0, 1), 1.0);
 
                 // initialize temporary matrix for slave-side columns of thermo-thermo matrix block
                 Core::LinAlg::SparseMatrix thermothermocolsslave(*maps_->map(1), 81);
@@ -1011,10 +1008,9 @@ void STI::Monolithic::assemble_mat_and_rhs()
 
                 // transform and assemble temporary matrix for slave-side columns of thermo-thermo
                 // matrix block
-                blocksystemmatrix->matrix(1, 1).add(
-                    *Core::LinAlg::matrix_multiply(
-                        thermothermocolsslave, false, *strategythermo_->p(), false, true),
-                    false, 1.0, 1.0);
+                Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(thermothermocolsslave,
+                                             false, *strategythermo_->p(), false, true),
+                    false, 1.0, blocksystemmatrix->matrix(1, 1), 1.0);
                 break;
               }
 
@@ -1063,7 +1059,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
       if (systemmatrix == nullptr) FOUR_C_THROW("System matrix is not a sparse matrix!");
 
       // construct global system matrix by adding matrix blocks
-      systemmatrix->add(*scatra_field()->system_matrix(), false, 1.0, 0.0);
+      Core::LinAlg::matrix_add(*scatra_field()->system_matrix(), false, 1.0, *systemmatrix, 0.0);
 
       // perform second condensation before adding matrix blocks
       if (condensationthermo_)
@@ -1120,9 +1116,9 @@ void STI::Monolithic::assemble_mat_and_rhs()
 
             // transform and assemble temporary matrix for slave-side columns of global system
             // matrix
-            systemmatrix->add(*Core::LinAlg::matrix_multiply(
-                                  systemmatrixcolsslave, false, *strategythermo_->p(), false, true),
-                false, 1.0, 1.0);
+            Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(systemmatrixcolsslave, false,
+                                         *strategythermo_->p(), false, true),
+                false, 1.0, *systemmatrix, 1.0);
             break;
           }
 
@@ -1139,7 +1135,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
       {
         systemmatrix->add(*scatrathermo_domain_interface, false, 1.0, 1.0);
         systemmatrix->add(*thermoscatra_domain_interface, false, 1.0, 1.0);
-        systemmatrix->add(*thermo_field()->system_matrix(), false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*thermo_field()->system_matrix(), false, 1.0, *systemmatrix, 1.0);
       }
       break;
     }
@@ -1725,9 +1721,9 @@ void STI::Monolithic::assemble_domain_interface_off_diag(
 
       // add projected slave-side rows of thermo-scatra matrix block to corresponding
       // master-side rows
-      thermoscatrablock.add(*Core::LinAlg::matrix_multiply(*strategythermo_->p(), true,
-                                thermoscatrarowsslave, false, false, false, true),
-          false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(*strategythermo_->p(), true,
+                                   thermoscatrarowsslave, false, false, false, true),
+          false, 1.0, thermoscatrablock, 1.0);
     }
   }
 

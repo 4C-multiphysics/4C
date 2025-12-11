@@ -913,10 +913,10 @@ void FLD::Meshtying::condensation_operation_sparse_matrix(
   /*--------------------------------------------------------------------*/
   // knm: add kns*P
   Core::LinAlg::SparseMatrix knm_mod(*gndofrowmap_, 100);
-  knm_mod.add(splitmatrix.matrix(0, 1), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(splitmatrix.matrix(0, 1), false, 1.0, knm_mod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> knm_add =
       matrix_multiply(splitmatrix.matrix(0, 2), false, *P, false, false, false, true);
-  knm_mod.add(*knm_add, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*knm_add, false, 1.0, knm_mod, 1.0);
   knm_mod.complete(splitmatrix.matrix(0, 1).domain_map(), splitmatrix.matrix(0, 1).row_map());
 
   sysmat.add(knm_mod, false, 1.0, 1.0);
@@ -928,10 +928,10 @@ void FLD::Meshtying::condensation_operation_sparse_matrix(
   /*--------------------------------------------------------------------*/
   // kmn: add P^T*ksn
   Core::LinAlg::SparseMatrix kmn_mod(*gmdofrowmap_, 100);
-  kmn_mod.add(splitmatrix.matrix(1, 0), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(splitmatrix.matrix(1, 0), false, 1.0, kmn_mod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmn_add =
       matrix_multiply(*P, true, splitmatrix.matrix(2, 0), false, false, false, true);
-  kmn_mod.add(*kmn_add, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmn_add, false, 1.0, kmn_mod, 1.0);
   kmn_mod.complete(splitmatrix.matrix(1, 0).domain_map(), splitmatrix.matrix(1, 0).row_map());
 
   sysmat.add(kmn_mod, false, 1.0, 1.0);
@@ -941,12 +941,12 @@ void FLD::Meshtying::condensation_operation_sparse_matrix(
   /*--------------------------------------------------------------------*/
   // kms: add P^T*kss, kmm: add kms*P + kmm
   Core::LinAlg::SparseMatrix kmm_mod(*gmdofrowmap_, 100);
-  kmm_mod.add(splitmatrix.matrix(1, 1), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(splitmatrix.matrix(1, 1), false, 1.0, kmm_mod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kms =
       matrix_multiply(*P, true, splitmatrix.matrix(2, 2), false, false, false, true);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmm_add =
       matrix_multiply(*kms, false, *P, false, false, false, true);
-  kmm_mod.add(*kmm_add, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmm_add, false, 1.0, kmm_mod, 1.0);
   kmm_mod.complete(splitmatrix.matrix(1, 1).domain_map(), splitmatrix.matrix(1, 1).row_map());
 
   sysmat.add(kmm_mod, false, 1.0, 1.0);
@@ -1100,7 +1100,7 @@ void FLD::Meshtying::condensation_operation_block_matrix(
 
   // Add transformation matrix to nm
   sysmatnew->matrix(0, 1).un_complete();
-  sysmatnew->matrix(0, 1).add(*knm_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*knm_mod, false, 1.0, sysmatnew->matrix(0, 1), 1.0);
 
   if (dconmaster_ and firstnonliniter_) knm_mod->multiply(false, *(splitdcmaster[1]), *dcnm);
 
@@ -1113,7 +1113,7 @@ void FLD::Meshtying::condensation_operation_block_matrix(
 
   // Add transformation matrix to mn
   sysmatnew->matrix(1, 0).un_complete();
-  sysmatnew->matrix(1, 0).add(*kmn_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmn_mod, false, 1.0, sysmatnew->matrix(1, 0), 1.0);
 
   /*--------------------------------------------------------------------*/
   // block mm
@@ -1126,7 +1126,7 @@ void FLD::Meshtying::condensation_operation_block_matrix(
 
   // Add transformation matrix to mm
   sysmatnew->matrix(1, 1).un_complete();
-  sysmatnew->matrix(1, 1).add(*kmm_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmm_mod, false, 1.0, sysmatnew->matrix(1, 1), 1.0);
 
   if (dconmaster_ and firstnonliniter_) kmm_mod->multiply(false, *(splitdcmaster[1]), *dcmm);
 
@@ -1496,7 +1496,7 @@ void FLD::Meshtying::multifield_split(std::shared_ptr<Core::LinAlg::SparseOperat
 
     sysmatnew->matrix(2, 2).un_complete();
     sysmatnew->matrix(2, 2).zero();
-    sysmatnew->matrix(2, 2).add(onesdiag, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(onesdiag, false, 1.0, sysmatnew->matrix(2, 2), 1.0);
 
     sysmatnew->matrix(2, 0).un_complete();
     sysmatnew->matrix(2, 0).zero();
@@ -1549,7 +1549,7 @@ void FLD::Meshtying::multifield_split_shape(
 
     shapederivatives->matrix(2, 2).un_complete();
     shapederivatives->matrix(2, 2).zero();
-    shapederivatives->matrix(2, 2).add(onesdiag, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(onesdiag, false, 1.0, shapederivatives->matrix(2, 2), 1.0);
 
     shapederivatives->matrix(2, 0).un_complete();
     shapederivatives->matrix(2, 0).zero();
@@ -1630,7 +1630,7 @@ void FLD::Meshtying::condensation_operation_block_matrix_shape(
 
   // Add transformation matrix to nm
   shapederivatives.matrix(0, 1).un_complete();
-  shapederivatives.matrix(0, 1).add(*knm_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*knm_mod, false, 1.0, shapederivatives.matrix(0, 1), 1.0);
 
   if (dconmaster_ and firstnonliniter_) knm_mod->multiply(false, *(splitdcmaster[1]), *dcnm);  //???
 
@@ -1643,7 +1643,7 @@ void FLD::Meshtying::condensation_operation_block_matrix_shape(
 
   // Add transformation matrix to mn
   shapederivatives.matrix(1, 0).un_complete();
-  shapederivatives.matrix(1, 0).add(*kmn_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmn_mod, false, 1.0, shapederivatives.matrix(1, 0), 1.0);
 
   /*--------------------------------------------------------------------*/
   // block mm
@@ -1656,7 +1656,7 @@ void FLD::Meshtying::condensation_operation_block_matrix_shape(
 
   // Add transformation matrix to mm
   shapederivatives.matrix(1, 1).un_complete();
-  shapederivatives.matrix(1, 1).add(*kmm_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmm_mod, false, 1.0, shapederivatives.matrix(1, 1), 1.0);
 
   if (dconmaster_ and firstnonliniter_) kmm_mod->multiply(false, *(splitdcmaster[1]), *dcmm);
 

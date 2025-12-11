@@ -145,16 +145,16 @@ void ALE::Meshsliding::condensation_operation_block_matrix(
   /**********************************************************************/
 
   sysmatnew->matrix(1, 1).un_complete();
-  sysmatnew->matrix(1, 1).add(*Aco_mm, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*Aco_mm, false, 1.0, sysmatnew->matrix(1, 1), 1.0);
 
   sysmatnew->matrix(1, 2).un_complete();
-  sysmatnew->matrix(1, 2).add(*Aco_ms, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*Aco_ms, false, 1.0, sysmatnew->matrix(1, 2), 1.0);
 
   sysmatnew->matrix(2, 1).un_complete();
-  sysmatnew->matrix(2, 1).add(*Aco_sm, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*Aco_sm, false, 1.0, sysmatnew->matrix(2, 1), 1.0);
 
   sysmatnew->matrix(2, 2).un_complete();
-  sysmatnew->matrix(2, 2).add(*Aco_ss, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*Aco_ss, false, 1.0, sysmatnew->matrix(2, 2), 1.0);
 
   sysmatnew->complete();
 
@@ -191,7 +191,7 @@ void ALE::Meshsliding::condensation_operation_block_matrix(
 
   // Add modification block to mn
   sysmatnew->matrix(1, 0).un_complete();  // sonst kann ich auf den Block nichts neues draufaddieren
-  sysmatnew->matrix(1, 0).add(*Amn_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*Amn_mod, false, 1.0, sysmatnew->matrix(1, 0), 1.0);
 
   // compute modification for block mm       (+ P^T * A_sm)
   std::shared_ptr<Core::LinAlg::SparseMatrix> Amm_mod =
@@ -199,7 +199,7 @@ void ALE::Meshsliding::condensation_operation_block_matrix(
 
   // Add modification block to mm
   sysmatnew->matrix(1, 1).un_complete();
-  sysmatnew->matrix(1, 1).add(*Amm_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*Amm_mod, false, 1.0, sysmatnew->matrix(1, 1), 1.0);
 
   // compute modification for block ms       (+ P^T * A_ss)
   std::shared_ptr<Core::LinAlg::SparseMatrix> Ams_mod =
@@ -207,7 +207,7 @@ void ALE::Meshsliding::condensation_operation_block_matrix(
 
   // Add modification block to ms
   sysmatnew->matrix(1, 2).un_complete();
-  sysmatnew->matrix(1, 2).add(*Ams_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*Ams_mod, false, 1.0, sysmatnew->matrix(1, 2), 1.0);
 
   //----------------------------------------------------------- THIRD LINE
 
@@ -219,7 +219,8 @@ void ALE::Meshsliding::condensation_operation_block_matrix(
 
   // Replace sn block with (negative) modification block
   sysmatnew->matrix(2, 0).un_complete();
-  sysmatnew->matrix(2, 0).add(*Asn_mod, false, -1.0, 0.0);
+  Core::LinAlg::matrix_add(*Asn_mod, false, -1.0, sysmatnew->matrix(2, 0), 0.0);
+
 
   // compute replacement for block sm      - (T * D^(-1) * A_sm)   +  N_m
   std::shared_ptr<Core::LinAlg::SparseMatrix> Asm_mod_intermediate =
@@ -229,8 +230,8 @@ void ALE::Meshsliding::condensation_operation_block_matrix(
 
   // Replace sm block with (negative) modification block
   sysmatnew->matrix(2, 1).un_complete();
-  sysmatnew->matrix(2, 1).add(*Asm_mod, false, -1.0, 0.0);
-  sysmatnew->matrix(2, 1).add(*N_m, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*Asm_mod, false, -1.0, sysmatnew->matrix(2, 1), 0.0);
+  Core::LinAlg::matrix_add(*N_m, false, 1.0, sysmatnew->matrix(2, 1), 1.0);
 
   // compute replacement for block ss      (- T * D^(-1) *A_ss)   +  H  +  N_s
   std::shared_ptr<Core::LinAlg::SparseMatrix> Ass_mod_intermediate =
@@ -240,9 +241,9 @@ void ALE::Meshsliding::condensation_operation_block_matrix(
 
   // Replace ss block with (negative) modification block
   sysmatnew->matrix(2, 2).un_complete();
-  sysmatnew->matrix(2, 2).add(*Ass_mod, false, -1.0, 0.0);
-  sysmatnew->matrix(2, 2).add(*N_s, false, 1.0, 1.0);
-  sysmatnew->matrix(2, 2).add(*H, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*Ass_mod, false, -1.0, sysmatnew->matrix(2, 2), 0.0);
+  Core::LinAlg::matrix_add(*N_s, false, 1.0, sysmatnew->matrix(2, 2), 1.0);
+  Core::LinAlg::matrix_add(*H, false, 1.0, sysmatnew->matrix(2, 2), 1.0);
 
   // complete matrix
   sysmatnew->complete();

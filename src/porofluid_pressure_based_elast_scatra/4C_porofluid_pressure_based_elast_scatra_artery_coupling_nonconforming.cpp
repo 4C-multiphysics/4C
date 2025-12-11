@@ -208,8 +208,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   sysmat.matrix(1, 0).apply_dirichlet((dbcmap_artery_with_collapsed), false);
 
   // 3) add the main-diagonal terms into the global sysmat
-  sysmat.matrix(0, 0).add(sysmat_homogenized, false, 1.0, 1.0);
-  sysmat.matrix(1, 1).add(sysmat_artery, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(sysmat_homogenized, false, 1.0, sysmat.matrix(0, 0), 1.0);
+  Core::LinAlg::matrix_add(sysmat_artery, false, 1.0, sysmat.matrix(1, 1), 1.0);
   sysmat.matrix(0, 0).complete();
   sysmat.matrix(1, 1).complete();
   // and apply DBC
@@ -502,10 +502,10 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
           *coupling_matrix_, *global_extractor_, *global_extractor_);
 
   artery_block->complete();
-  sysmat->matrix(1, 0).add(artery_block->matrix(1, 0), false, 1.0, 0.0);
-  sysmat->matrix(0, 1).add(artery_block->matrix(0, 1), false, 1.0, 0.0);
-  sysmat->matrix(0, 0).add(artery_block->matrix(0, 0), false, 1.0, 0.0);
-  sysmat->matrix(1, 1).add(artery_block->matrix(1, 1), false, 1.0, 0.0);
+  Core::LinAlg::matrix_add(artery_block->matrix(1, 0), false, 1.0, sysmat->matrix(1, 0), 0.0);
+  Core::LinAlg::matrix_add(artery_block->matrix(0, 1), false, 1.0, sysmat->matrix(0, 1), 0.0);
+  Core::LinAlg::matrix_add(artery_block->matrix(0, 0), false, 1.0, sysmat->matrix(0, 0), 0.0);
+  Core::LinAlg::matrix_add(artery_block->matrix(1, 1), false, 1.0, sysmat->matrix(1, 1), 0.0);
 
   // assemble D and M contributions into global force and stiffness
   if (artery_coupling_method_ ==
@@ -621,14 +621,14 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
       *mortar_matrix_m_, true, *kappa_inv_M, false, false, false, true);
 
   // add matrices
-  sysmat.matrix(0, 0).add(
-      *M_transpose_kappa_inv_M, false, penalty_parameter_ * timefacrhs_homogenized_, 1.0);
-  sysmat.matrix(1, 1).add(
-      *D_transpose_kappa_inv_D, false, penalty_parameter_ * timefacrhs_artery_, 1.0);
-  sysmat.matrix(1, 0).add(
-      *D_transpose_kappa_inv_M, false, -penalty_parameter_ * timefacrhs_artery_, 1.0);
-  sysmat.matrix(0, 1).add(
-      *D_transpose_kappa_inv_M, true, -penalty_parameter_ * timefacrhs_homogenized_, 1.0);
+  Core::LinAlg::matrix_add(*M_transpose_kappa_inv_M, false,
+      penalty_parameter_ * timefacrhs_homogenized_, sysmat.matrix(0, 0), 1.0);
+  Core::LinAlg::matrix_add(*D_transpose_kappa_inv_D, false, penalty_parameter_ * timefacrhs_artery_,
+      sysmat.matrix(1, 1), 1.0);
+  Core::LinAlg::matrix_add(*D_transpose_kappa_inv_M, false,
+      -penalty_parameter_ * timefacrhs_artery_, sysmat.matrix(1, 0), 1.0);
+  Core::LinAlg::matrix_add(*D_transpose_kappa_inv_M, true,
+      -penalty_parameter_ * timefacrhs_homogenized_, sysmat.matrix(0, 1), 1.0);
 
   // add vector
   const auto artery_contribution =

@@ -141,8 +141,8 @@ void CONTACT::MtLagrangeStrategy::mortar_coupling(
     // first setup
     std::shared_ptr<Core::LinAlg::SparseMatrix> constrmt =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gdisprowmap_, 100, false, true);
-    constrmt->add(*dmatrix_, true, 1.0, 1.0);
-    constrmt->add(*mmatrix_, true, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*dmatrix_, true, 1.0, *constrmt, 1.0);
+    Core::LinAlg::matrix_add(*mmatrix_, true, -1.0, *constrmt, 1.0);
     constrmt->complete(*gsdofrowmap_, *gdisprowmap_);
 
     // transform parallel row distribution
@@ -229,8 +229,8 @@ CONTACT::MtLagrangeStrategy::mesh_initialization()
           Core::LinAlg::matrix_multiply(*dmatrix_, false, *it_ss, false, false, false, true);
       std::shared_ptr<Core::LinAlg::SparseMatrix> mixed =
           Core::LinAlg::matrix_multiply(*mmatrix_, false, *it_ms, false, false, false, true);
-      lhs.add(*direct, false, 1.0, 1.0);
-      lhs.add(*mixed, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*direct, false, 1.0, lhs, 1.0);
+      Core::LinAlg::matrix_add(*mixed, false, -1.0, lhs, 1.0);
       lhs.complete();
 
       // build rhs
@@ -402,11 +402,11 @@ void CONTACT::MtLagrangeStrategy::evaluate_meshtying(
       Core::LinAlg::SparseMatrix systrafo(*problem_dofs(), 100, false, true);
       std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
           Core::LinAlg::create_identity_matrix(*gndofrowmap_);
-      systrafo.add(*eye, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*eye, false, 1.0, systrafo, 1.0);
       if (par_redist())
         trafo_ = Core::LinAlg::matrix_row_col_transform(
             *trafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-      systrafo.add(*trafo_, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*trafo_, false, 1.0, systrafo, 1.0);
       systrafo.complete();
 
       // apply basis transformation to K and f
@@ -493,40 +493,40 @@ void CONTACT::MtLagrangeStrategy::evaluate_meshtying(
     {
       // knm: add kns*mbar
       knmmod = std::make_shared<Core::LinAlg::SparseMatrix>(*gndofrowmap_, 100);
-      knmmod->add(*knm, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*knm, false, 1.0, *knmmod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> knmadd =
           Core::LinAlg::matrix_multiply(*kns, false, *mhatmatrix_, false, false, false, true);
-      knmmod->add(*knmadd, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*knmadd, false, 1.0, *knmmod, 1.0);
       knmmod->complete(knm->domain_map(), knm->row_map());
     }
 
     // kmn: add T(mbar)*ksn
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmnmod =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmnmod->add(*kmn, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmn, false, 1.0, *kmnmod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmnadd =
         Core::LinAlg::matrix_multiply(*mhatmatrix_, true, *ksn, false, false, false, true);
-    kmnmod->add(*kmnadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmnadd, false, 1.0, *kmnmod, 1.0);
     kmnmod->complete(kmn->domain_map(), kmn->row_map());
 
     // kmm: add T(mbar)*ksm
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmmmod =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmmmod->add(*kmm, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmm, false, 1.0, *kmmmod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmmadd =
         Core::LinAlg::matrix_multiply(*mhatmatrix_, true, *ksm, false, false, false, true);
-    kmmmod->add(*kmmadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmmadd, false, 1.0, *kmmmod, 1.0);
     if (systype == CONTACT::SystemType::condensed)
     {
       // kmm: add kms*mbar + T(mbar)*kss*mbar - additionally
       std::shared_ptr<Core::LinAlg::SparseMatrix> kmmadd2 =
           Core::LinAlg::matrix_multiply(*kms, false, *mhatmatrix_, false, false, false, true);
-      kmmmod->add(*kmmadd2, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kmmadd2, false, 1.0, *kmmmod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> kmmtemp =
           Core::LinAlg::matrix_multiply(*kss, false, *mhatmatrix_, false, false, false, true);
       std::shared_ptr<Core::LinAlg::SparseMatrix> kmmadd3 =
           Core::LinAlg::matrix_multiply(*mhatmatrix_, true, *kmmtemp, false, false, false, true);
-      kmmmod->add(*kmmadd3, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kmmadd3, false, 1.0, *kmmmod, 1.0);
     }
     kmmmod->complete(kmm->domain_map(), kmm->row_map());
 
@@ -540,10 +540,10 @@ void CONTACT::MtLagrangeStrategy::evaluate_meshtying(
     if (systype == CONTACT::SystemType::condensed_lagmult)
     {
       kmsmod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-      kmsmod->add(*kms, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kms, false, 1.0, *kmsmod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> kmsadd =
           Core::LinAlg::matrix_multiply(*mhatmatrix_, true, *kss, false, false, false, true);
-      kmsmod->add(*kmsadd, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kmsadd, false, 1.0, *kmsmod, 1.0);
       kmsmod->complete(kms->domain_map(), kms->row_map());
     }
 
@@ -554,7 +554,8 @@ void CONTACT::MtLagrangeStrategy::evaluate_meshtying(
     if (systype == CONTACT::SystemType::condensed_lagmult)
     {
       ksmmod = std::make_shared<Core::LinAlg::SparseMatrix>(*gsdofrowmap_, 100);
-      ksmmod->add(*mmatrix_, false, -1.0, 1.0);  //<---- causes problems in parallel
+      Core::LinAlg::matrix_add(
+          *mmatrix_, false, -1.0, *ksmmod, 1.0);  //<---- causes problems in parallel
       ksmmod->complete(ksm->domain_map(), ksm->row_map());
     }
 
@@ -563,7 +564,8 @@ void CONTACT::MtLagrangeStrategy::evaluate_meshtying(
     if (systype == CONTACT::SystemType::condensed_lagmult)
     {
       kssmod = std::make_shared<Core::LinAlg::SparseMatrix>(*gsdofrowmap_, 100);
-      kssmod->add(*dmatrix_, false, 1.0, 1.0);  //<---- causes problems in parallel
+      Core::LinAlg::matrix_add(
+          *dmatrix_, false, 1.0, *kssmod, 1.0);  //<---- causes problems in parallel
       kssmod->complete(kss->domain_map(), kss->row_map());
     }
 
@@ -621,32 +623,33 @@ void CONTACT::MtLagrangeStrategy::evaluate_meshtying(
         std::make_shared<Core::LinAlg::Vector<double>>(*problem_dofs());
 
     // add n submatrices to kteffnew
-    kteffnew->add(*knn, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*knn, false, 1.0, *kteffnew, 1.0);
     if (systype == CONTACT::SystemType::condensed)
     {
-      kteffnew->add(*knmmod, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*knmmod, false, 1.0, *kteffnew, 1.0);
     }
     else if (systype == CONTACT::SystemType::condensed_lagmult)
     {
-      kteffnew->add(*knm, false, 1.0, 1.0);
-      kteffnew->add(*kns, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*knm, false, 1.0, *kteffnew, 1.0);
+      Core::LinAlg::matrix_add(*kns, false, 1.0, *kteffnew, 1.0);
     }
 
     // add m submatrices to kteffnew
-    kteffnew->add(*kmnmod, false, 1.0, 1.0);
-    kteffnew->add(*kmmmod, false, 1.0, 1.0);
-    if (systype == CONTACT::SystemType::condensed_lagmult) kteffnew->add(*kmsmod, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmnmod, false, 1.0, *kteffnew, 1.0);
+    Core::LinAlg::matrix_add(*kmmmod, false, 1.0, *kteffnew, 1.0);
+    if (systype == CONTACT::SystemType::condensed_lagmult)
+      Core::LinAlg::matrix_add(*kmsmod, false, 1.0, *kteffnew, 1.0);
 
     // add s submatrices to kteffnew
     if (systype == CONTACT::SystemType::condensed)
     {
       // add identity for slave increments
-      kteffnew->add(*onesdiag, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*onesdiag, false, 1.0, *kteffnew, 1.0);
     }
     else
     {
-      kteffnew->add(*ksmmod, false, 1.0, 1.0);
-      kteffnew->add(*kssmod, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*ksmmod, false, 1.0, *kteffnew, 1.0);
+      Core::LinAlg::matrix_add(*kssmod, false, 1.0, *kteffnew, 1.0);
     }
 
     // fill_complete kteffnew (square)
@@ -686,11 +689,11 @@ void CONTACT::MtLagrangeStrategy::evaluate_meshtying(
       Core::LinAlg::SparseMatrix systrafo(*problem_dofs(), 100, false, true);
       std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
           Core::LinAlg::create_identity_matrix(*gndofrowmap_);
-      systrafo.add(*eye, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*eye, false, 1.0, systrafo, 1.0);
       if (par_redist())
         trafo_ = Core::LinAlg::matrix_row_col_transform(
             *trafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-      systrafo.add(*trafo_, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*trafo_, false, 1.0, systrafo, 1.0);
       systrafo.complete();
 
       // apply basis transformation to K and f
@@ -794,7 +797,7 @@ void CONTACT::MtLagrangeStrategy::build_saddle_point_system(
   {
     // build transposed constraint matrix
     Core::LinAlg::SparseMatrix trconstrmt(*glmdofrowmap_, 100, false, true);
-    trconstrmt.add(*constrmt, true, 1.0, 0.0);
+    Core::LinAlg::matrix_add(*constrmt, true, 1.0, trconstrmt, 0.0);
     trconstrmt.complete(*problem_dofs(), *glmdofrowmap_);
 
     // apply Dirichlet conditions to (0,1) block
@@ -928,11 +931,11 @@ void CONTACT::MtLagrangeStrategy::recover(std::shared_ptr<Core::LinAlg::Vector<d
       Core::LinAlg::SparseMatrix systrafo(*problem_dofs(), 100, false, true);
       std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
           Core::LinAlg::create_identity_matrix(*gndofrowmap_);
-      systrafo.add(*eye, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*eye, false, 1.0, systrafo, 1.0);
       if (par_redist())
         trafo_ = Core::LinAlg::matrix_row_col_transform(
             *trafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-      systrafo.add(*trafo_, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*trafo_, false, 1.0, systrafo, 1.0);
       systrafo.complete();
       Core::LinAlg::Vector<double> disinew(*disi);
       systrafo.multiply(false, disinew, *disi);
@@ -979,11 +982,11 @@ void CONTACT::MtLagrangeStrategy::recover(std::shared_ptr<Core::LinAlg::Vector<d
       Core::LinAlg::SparseMatrix systrafo(*problem_dofs(), 100, false, true);
       std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
           Core::LinAlg::create_identity_matrix(*gndofrowmap_);
-      systrafo.add(*eye, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*eye, false, 1.0, systrafo, 1.0);
       if (par_redist())
         trafo_ = Core::LinAlg::matrix_row_col_transform(
             *trafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-      systrafo.add(*trafo_, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*trafo_, false, 1.0, systrafo, 1.0);
       systrafo.complete();
       Core::LinAlg::Vector<double> disinew(*disi);
       systrafo.multiply(false, disinew, *disi);
@@ -1030,8 +1033,8 @@ bool CONTACT::MtLagrangeStrategy::evaluate_stiff(
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> constrmt =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gdisprowmap_, 100, false, true);
-  constrmt->add(*dmatrix_, true, 1.0, 1.0);
-  constrmt->add(*mmatrix_, true, -1.0, 1.0);
+  Core::LinAlg::matrix_add(*dmatrix_, true, 1.0, *constrmt, 1.0);
+  Core::LinAlg::matrix_add(*mmatrix_, true, -1.0, *constrmt, 1.0);
   constrmt->complete(*gsdofrowmap_, *gdisprowmap_);
 
   // transform parallel row distribution
@@ -1046,7 +1049,7 @@ bool CONTACT::MtLagrangeStrategy::evaluate_stiff(
   dm_matrix_ = Core::LinAlg::matrix_col_transform_gids(*temp, *lm_dof_row_map_ptr());
   dm_matrix_t_ =
       std::make_shared<Core::LinAlg::SparseMatrix>(*lm_dof_row_map_ptr(), 100, false, true);
-  dm_matrix_t_->add(*dm_matrix_, true, 1., 0.);
+  Core::LinAlg::matrix_add(*dm_matrix_, true, 1., *dm_matrix_t_, 0.);
   dm_matrix_t_->complete(*problem_dofs(), *lm_dof_row_map_ptr());
 
   dm_matrix_->scale(1. - alphaf_);
@@ -1062,11 +1065,11 @@ bool CONTACT::MtLagrangeStrategy::evaluate_stiff(
     systrafo_ = std::make_shared<Core::LinAlg::SparseMatrix>(*problem_dofs(), 100, false, true);
     std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
         Core::LinAlg::create_identity_matrix(*gndofrowmap_);
-    systrafo_->add(*eye, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*eye, false, 1.0, *systrafo_, 1.0);
     if (par_redist())
       trafo_ = Core::LinAlg::matrix_row_col_transform(
           *trafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-    systrafo_->add(*trafo_, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*trafo_, false, 1.0, *systrafo_, 1.0);
     systrafo_->complete();
   }
 

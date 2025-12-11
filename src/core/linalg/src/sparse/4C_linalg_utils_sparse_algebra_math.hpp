@@ -52,7 +52,7 @@ namespace Core::LinAlg
    \param B          (in/out) : Matrix to be added to (must have Filled()==false)
    \param scalarB    (in)     : scaling factor for B
    */
-  void add(const Core::LinAlg::SparseMatrix& A, const bool transposeA, const double scalarA,
+  void matrix_add(const Core::LinAlg::SparseMatrix& A, const bool transposeA, const double scalarA,
       Core::LinAlg::SparseMatrix& B, const double scalarB);
 
   /*!

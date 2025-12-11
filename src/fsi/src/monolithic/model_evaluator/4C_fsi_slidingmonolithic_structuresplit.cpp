@@ -734,7 +734,7 @@ void FSI::SlidingMonolithicStructureSplit::setup_system_matrix(
       matrix_multiply(s->matrix(0, 1), false, *mortarp, false, false, false, true);
   Core::LinAlg::SparseMatrix lsig(sig->row_map(), 81, false);
 
-  lsig.add(*sig, false, 1. / timescale, 0.0);
+  Core::LinAlg::matrix_add(*sig, false, 1. / timescale, lsig, 0.0);
   lsig.complete(f->domain_map(), sig->range_map());
 
   mat.assign(0, 1, Core::LinAlg::DataAccess::Share, lsig);
@@ -744,7 +744,7 @@ void FSI::SlidingMonolithicStructureSplit::setup_system_matrix(
       matrix_multiply(*mortarp, true, s->matrix(1, 0), false, false, false, true);
   Core::LinAlg::SparseMatrix lsgi(f->row_map(), 81, false);
 
-  lsgi.add(*sgi, false, (1. - ftiparam) / ((1. - stiparam) * scale), 0.0);
+  Core::LinAlg::matrix_add(*sgi, false, (1. - ftiparam) / ((1. - stiparam) * scale), lsgi, 0.0);
   lsgi.complete(sgi->domain_map(), f->range_map());
 
   mat.assign(1, 0, Core::LinAlg::DataAccess::Share, lsgi);
@@ -754,7 +754,8 @@ void FSI::SlidingMonolithicStructureSplit::setup_system_matrix(
       matrix_multiply(s->matrix(1, 1), false, *mortarp, false, false, false, true);
   sgg = matrix_multiply(*mortarp, true, *sgg, false, false, false, true);
 
-  f->add(*sgg, false, (1. - ftiparam) / ((1. - stiparam) * scale * timescale), 1.0);
+  Core::LinAlg::matrix_add(
+      *sgg, false, (1. - ftiparam) / ((1. - stiparam) * scale * timescale), *f, 1.0);
   mat.assign(1, 1, Core::LinAlg::DataAccess::Share, *f);
 
   (*aigtransform_)(a->full_row_map(), a->full_col_map(), aig, 1. / timescale,
@@ -774,10 +775,10 @@ void FSI::SlidingMonolithicStructureSplit::setup_system_matrix(
     const Core::LinAlg::SparseMatrix& fmgg = mmm->matrix(1, 1);
 
     // ----------Addressing contribution to block (3,3)
-    mat.matrix(1, 1).add(fmgg, false, 1. / timescale, 1.0);
+    Core::LinAlg::matrix_add(fmgg, false, 1. / timescale, mat.matrix(1, 1), 1.0);
 
     // ----------Addressing contribution to block (2,3)
-    mat.matrix(1, 1).add(fmig, false, 1. / timescale, 1.0);
+    Core::LinAlg::matrix_add(fmig, false, 1. / timescale, mat.matrix(1, 1), 1.0);
 
     const Coupling::Adapter::Coupling& coupfa = fluid_ale_coupling();
 

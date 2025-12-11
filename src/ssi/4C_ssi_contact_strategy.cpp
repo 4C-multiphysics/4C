@@ -10,6 +10,7 @@
 #include "4C_contact_nitsche_strategy_ssi.hpp"
 #include "4C_linalg_blocksparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_ssi_utils.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -61,7 +62,8 @@ void SSI::ContactStrategySparse::apply_contact_to_scatra_scatra(
   const auto& scatra_scatra_sparsematrix =
       nitsche_strategy_ssi()->get_matrix_block_ptr(CONTACT::MatBlockType::scatra_scatra);
 
-  scatra_scatra_matrix_sparse->add(*scatra_scatra_sparsematrix, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(
+      *scatra_scatra_sparsematrix, false, 1.0, *scatra_scatra_matrix_sparse, 1.0);
 }
 
 /*-------------------------------------------------------------------------*
@@ -95,7 +97,7 @@ void SSI::ContactStrategySparse::apply_contact_to_scatra_structure(
   const auto& scatra_struct_matrix =
       nitsche_strategy_ssi()->get_matrix_block_ptr(CONTACT::MatBlockType::scatra_displ);
 
-  scatra_structure_matrix_sparse->add(*scatra_struct_matrix, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*scatra_struct_matrix, false, 1.0, *scatra_structure_matrix_sparse, 1.0);
 }
 
 /*-------------------------------------------------------------------------*
@@ -130,7 +132,7 @@ void SSI::ContactStrategySparse::apply_contact_to_structure_scatra(
   const auto& struct_scatra_matrix =
       nitsche_strategy_ssi()->get_matrix_block_ptr(CONTACT::MatBlockType::displ_scatra);
 
-  structure_scatra_matrix_sparse->add(*struct_scatra_matrix, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*struct_scatra_matrix, false, 1.0, *structure_scatra_matrix_sparse, 1.0);
 }
 
 /*-------------------------------------------------------------------------*

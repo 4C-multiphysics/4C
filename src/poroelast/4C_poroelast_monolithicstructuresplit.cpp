@@ -13,6 +13,7 @@
 #include "4C_fluid_utils_mapextractor.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_structure_aux.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
@@ -174,18 +175,18 @@ void PoroElast::MonolithicStructureSplit::setup_system_matrix(
 
   /*----------------------------------------------------------------------*/
   // pure structural part
-  mat.matrix(0, 0).add(s->matrix(0, 0), false, 1., 0.0);
+  Core::LinAlg::matrix_add(s->matrix(0, 0), false, 1., mat.matrix(0, 0), 0.0);
 
   // structure coupling part
-  mat.matrix(0, 1).add(k_sf->matrix(0, 0), false, 1.0, 0.0);
-  mat.matrix(0, 1).add(k_sf->matrix(0, 1), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(k_sf->matrix(0, 0), false, 1.0, mat.matrix(0, 1), 0.0);
+  Core::LinAlg::matrix_add(k_sf->matrix(0, 1), false, 1.0, mat.matrix(0, 1), 1.0);
 
   // pure fluid part
   mat.assign(1, 1, Core::LinAlg::DataAccess::Share, *f);
 
   // fluid coupling part
-  mat.matrix(1, 0).add(k_fs->matrix(0, 0), false, 1.0, 0.0);
-  mat.matrix(1, 0).add(k_fs->matrix(1, 0), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(k_fs->matrix(0, 0), false, 1.0, mat.matrix(1, 0), 0.0);
+  Core::LinAlg::matrix_add(k_fs->matrix(1, 0), false, 1.0, mat.matrix(1, 0), 1.0);
   /*----------------------------------------------------------------------*/
   // done. make sure all blocks are filled.
   mat.complete();

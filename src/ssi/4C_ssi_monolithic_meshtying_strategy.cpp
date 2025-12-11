@@ -13,6 +13,7 @@
 #include "4C_linalg_blocksparsematrix.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_scatra_timint_meshtying_strategy_s2i.hpp"
 #include "4C_ssi_monolithic.hpp"
 #include "4C_ssi_utils.hpp"
@@ -236,7 +237,8 @@ void SSI::MeshtyingStrategySparse::apply_meshtying_to_scatra_manifold_structure(
       *ssi_maps.structure_dof_row_map(), *ssi_maps.scatra_manifold_dof_row_map());
 
   if (do_uncomplete) manifold_structure_sparse_matrix->un_complete();
-  manifold_structure_sparse_matrix->add(*temp_scatramanifold_struct_sparse_matrix, false, 1.0, 0.0);
+  Core::LinAlg::matrix_add(*temp_scatramanifold_struct_sparse_matrix, false, 1.0,
+      *manifold_structure_sparse_matrix, 0.0);
 }
 
 /*-------------------------------------------------------------------------*
@@ -286,7 +288,8 @@ void SSI::MeshtyingStrategySparse::apply_meshtying_to_scatra_structure(
       *ssi_maps.structure_dof_row_map(), *ssi_maps.scatra_dof_row_map());
 
   if (do_uncomplete) scatra_structure_matrix_sparse->un_complete();
-  scatra_structure_matrix_sparse->add(*temp_scatra_struct_domain_sparse_matrix, false, 1.0, 0.0);
+  Core::LinAlg::matrix_add(
+      *temp_scatra_struct_domain_sparse_matrix, false, 1.0, *scatra_structure_matrix_sparse, 0.0);
 }
 
 /*-------------------------------------------------------------------------*
@@ -337,7 +340,8 @@ void SSI::MeshtyingStrategySparse::apply_meshtying_to_structure_scatra(
       *ssi_maps.scatra_dof_row_map(), *ssi_maps.structure_dof_row_map());
 
   if (do_uncomplete) struct_scatra_sparse_matrix->un_complete();
-  struct_scatra_sparse_matrix->add(*temp_struct_scatra_sparse_matrix, false, 1.0, 0.0);
+  Core::LinAlg::matrix_add(
+      *temp_struct_scatra_sparse_matrix, false, 1.0, *struct_scatra_sparse_matrix, 0.0);
 }
 
 /*-------------------------------------------------------------------------*

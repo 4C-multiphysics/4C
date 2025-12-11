@@ -1282,8 +1282,8 @@ void Solid::TimInt::update_step_contact_vum()
         M = Mmat;
         D = Dmat;
       }
-      Bc.add(*M, true, -1.0, 1.0);
-      Bc.add(*D, true, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*M, true, -1.0, Bc, 1.0);
+      Core::LinAlg::matrix_add(*D, true, 1.0, Bc, 1.0);
       Bc.complete(slavedofmap, *dofmap);
       Bc.apply_dirichlet(*(dbcmaps_->cond_map()), false);
 

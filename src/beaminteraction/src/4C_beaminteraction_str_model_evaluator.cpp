@@ -33,6 +33,7 @@
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_rebalance_print.hpp"
 #include "4C_rigidsphere.hpp"
 #include "4C_scatra_ele.hpp"
@@ -781,7 +782,7 @@ bool Solid::ModelEvaluator::BeamInteraction::assemble_jacobian(
   check_init_setup();
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr = global_state().extract_displ_block(jac);
-  jac_dd_ptr->add(*stiff_beaminteraction_, false, timefac_np, 1.0);
+  Core::LinAlg::matrix_add(*stiff_beaminteraction_, false, timefac_np, *jac_dd_ptr, 1.0);
 
   if (have_lagrange_dofs())
   {

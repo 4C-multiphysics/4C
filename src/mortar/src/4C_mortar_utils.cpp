@@ -643,23 +643,31 @@ void Mortar::Utils::mortar_matrix_condensation(std::shared_ptr<Core::LinAlg::Spa
           k->row_map(), 81, true, false, k->get_matrixtype());
 
   // build new stiffness matrix
-  kteffnew->add(*knn, false, 1.0, 1.0);
-  kteffnew->add(*knm, false, 1.0, 1.0);
-  kteffnew->add(*kmn, false, 1.0, 1.0);
-  kteffnew->add(*kmm, false, 1.0, 1.0);
-  kteffnew->add(
-      *Core::LinAlg::matrix_multiply(*kns, false, *p_col, false, true, false, true), false, 1., 1.);
-  kteffnew->add(
-      *Core::LinAlg::matrix_multiply(*p_row, true, *ksn, false, true, false, true), false, 1., 1.);
-  kteffnew->add(
-      *Core::LinAlg::matrix_multiply(*kms, false, *p_col, false, true, false, true), false, 1., 1.);
-  kteffnew->add(
-      *Core::LinAlg::matrix_multiply(*p_row, true, *ksm, false, true, false, true), false, 1., 1.);
-  kteffnew->add(*Core::LinAlg::matrix_multiply(*p_row, true,
-                    *Core::LinAlg::matrix_multiply(*kss, false, *p_col, false, true, false, true),
-                    false, true, false, true),
-      false, 1., 1.);
-  if (p_row == p_col) kteffnew->add(*Core::LinAlg::create_identity_matrix(*gsrow), false, 1., 1.);
+  Core::LinAlg::matrix_add(*knn, false, 1.0, *kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*knm, false, 1.0, *kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*kmn, false, 1.0, *kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*kmm, false, 1.0, *kteffnew, 1.0);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*kns, false, *p_col, false, true, false, true), false, 1.,
+      *kteffnew, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*p_row, true, *ksn, false, true, false, true), false, 1.,
+      *kteffnew, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*kms, false, *p_col, false, true, false, true), false, 1.,
+      *kteffnew, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*p_row, true, *ksm, false, true, false, true), false, 1.,
+      *kteffnew, 1.);
+  Core::LinAlg::matrix_add(
+      *Core::LinAlg::matrix_multiply(*p_row, true,
+          *Core::LinAlg::matrix_multiply(*kss, false, *p_col, false, true, false, true), false,
+          true, false, true),
+      false, 1., *kteffnew, 1.);
+
+  if (p_row == p_col)
+    Core::LinAlg::matrix_add(
+        *Core::LinAlg::create_identity_matrix(*gsrow), false, 1., *kteffnew, 1.);
 
   kteffnew->complete(k->domain_map(), k->range_map());
 

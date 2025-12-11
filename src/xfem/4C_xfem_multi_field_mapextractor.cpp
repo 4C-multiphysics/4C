@@ -14,6 +14,7 @@
 #include "4C_global_data.hpp"
 #include "4C_linalg_mapextractor.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_xfem_discretization.hpp"
 #include "4C_xfem_xfield_field_coupling.hpp"
@@ -1114,8 +1115,9 @@ void XFEM::MultiFieldMapExtractor::add_matrix(
    *      of direct assignment for the non-interface DoF's? The current
    *      implementation makes it necessary to allocate almost the double
    *      amount of memory!                                        hiermeier */
-  full_mat.add(partial_mat.matrix(MultiField::block_non_interface, MultiField::block_non_interface),
-      false, scale, 1.0);
+  Core::LinAlg::matrix_add(
+      partial_mat.matrix(MultiField::block_non_interface, MultiField::block_non_interface), false,
+      scale, full_mat, 1.0);
 
   // --------------------------------------------------------------------------
   // interface DoF's

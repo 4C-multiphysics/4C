@@ -17,6 +17,7 @@
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_poroelast_scatra_utils.hpp"
@@ -1331,7 +1332,7 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
 
   Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
 
-  stiff_approx_sparse.add(sparse_copy, false, -1.0, 1.0);
+  Core::LinAlg::matrix_add(sparse_copy, false, -1.0, stiff_approx_sparse, 1.0);
 
   Core::LinAlg::SparseMatrix sparse_crs(sparse_copy);
   Core::LinAlg::SparseMatrix error_crs(stiff_approx_sparse);

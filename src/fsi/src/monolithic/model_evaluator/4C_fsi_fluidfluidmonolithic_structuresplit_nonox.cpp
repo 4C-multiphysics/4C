@@ -25,6 +25,7 @@
 #include "4C_io_control.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_structure_aux.hpp"
 
@@ -399,8 +400,8 @@ void FSI::FluidFluidMonolithicStructureSplitNoNOX::setup_system_matrix()
     Core::LinAlg::SparseMatrix& fmgi = mmm->matrix(1, 0);
     Core::LinAlg::SparseMatrix& fmgg = mmm->matrix(1, 1);
 
-    systemmatrix_->matrix(1, 1).add(fmgg, false, 1. / timescale, 1.0);
-    systemmatrix_->matrix(1, 1).add(fmig, false, 1. / timescale, 1.0);
+    Core::LinAlg::matrix_add(fmgg, false, 1. / timescale, systemmatrix_->matrix(1, 1), 1.0);
+    Core::LinAlg::matrix_add(fmig, false, 1. / timescale, systemmatrix_->matrix(1, 1), 1.0);
 
     Core::LinAlg::SparseMatrix lfmgi(f->row_map(), 81, false);
     (*fmgitransform_)(mmm->full_row_map(), mmm->full_col_map(), fmgi, 1.,

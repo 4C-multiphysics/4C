@@ -1997,10 +1997,10 @@ void FLD::FluidImplicitTimeInt::evaluate_fluid_edge_based(
     Core::LinAlg::split_matrix2x2(
         sysmat_linalg, domainmap_00, domainmap_11, domainmap_00, domainmap_11, f00, f01, f10, f11);
     // add the blocks subsequently
-    block_sysmat->matrix(0, 0).add(*f00, false, 1.0, 1.0);
-    block_sysmat->matrix(0, 1).add(*f01, false, 1.0, 1.0);
-    block_sysmat->matrix(1, 0).add(*f10, false, 1.0, 1.0);
-    block_sysmat->matrix(1, 1).add(*f11, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*f00, false, 1.0, block_sysmat->matrix(0, 0), 1.0);
+    Core::LinAlg::matrix_add(*f01, false, 1.0, block_sysmat->matrix(0, 1), 1.0);
+    Core::LinAlg::matrix_add(*f10, false, 1.0, block_sysmat->matrix(1, 0), 1.0);
+    Core::LinAlg::matrix_add(*f11, false, 1.0, block_sysmat->matrix(1, 1), 1.0);
   }
 
   //------------------------------------------------------------

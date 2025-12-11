@@ -22,6 +22,7 @@
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_structure_aux.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
@@ -680,8 +681,8 @@ void FSI::MonolithicStructureSplit::setup_system_matrix(Core::LinAlg::BlockSpars
     const Core::LinAlg::SparseMatrix& fmgi = mmm->matrix(1, 0);
     const Core::LinAlg::SparseMatrix& fmgg = mmm->matrix(1, 1);
 
-    f->add(fmgg, false, 1. / timescale, 1.0);
-    f->add(fmig, false, 1. / timescale, 1.0);
+    Core::LinAlg::matrix_add(fmgg, false, 1. / timescale, *f, 1.0);
+    Core::LinAlg::matrix_add(fmig, false, 1. / timescale, *f, 1.0);
 
     Core::LinAlg::SparseMatrix lfmgi(f->row_map(), 81, false);
     (*fmgitransform_)(mmm->full_row_map(), mmm->full_col_map(), fmgi, 1.,

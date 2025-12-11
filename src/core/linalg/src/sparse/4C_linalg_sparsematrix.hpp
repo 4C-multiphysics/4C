@@ -614,10 +614,6 @@ namespace Core::LinAlg
     void add(const Core::LinAlg::SparseOperator& A, const bool transposeA, const double scalarA,
         const double scalarB) override;
 
-    void add(
-        const SparseMatrix& A, const bool transposeA, const double scalarA, const double scalarB);
-
-
     /// Add one SparseMatrixBase to another
     void add_other(Core::LinAlg::SparseMatrix& B, const bool transposeA, const double scalarA,
         const double scalarB) const override;

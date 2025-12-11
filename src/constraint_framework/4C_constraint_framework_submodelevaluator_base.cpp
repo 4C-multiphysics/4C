@@ -47,11 +47,11 @@ bool Constraints::SubmodelEvaluator::ConstraintBase::evaluate_force_stiff(
     // evaluate the stiffness contribution of this some:
     auto some_stiff_ptr = Core::LinAlg::matrix_multiply(*Q_dL_, false, *Q_Ld_, false, false);
     some_stiff_ptr->scale(penalty_parameter_);
-    some_stiff_ptr->add(*Q_dd_, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*Q_dd_, false, 1.0, *some_stiff_ptr, 1.0);
     some_stiff_ptr->complete();
 
     // add it to the modelevaluator stiffness
-    me_stiff_ptr->add(*some_stiff_ptr, false, 1., 1.);
+    Core::LinAlg::matrix_add(*some_stiff_ptr, false, 1., *me_stiff_ptr, 1.);
   }
 
   if (me_force_ptr != nullptr)

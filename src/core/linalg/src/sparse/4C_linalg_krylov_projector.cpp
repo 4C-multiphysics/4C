@@ -316,15 +316,15 @@ Core::LinAlg::SparseMatrix Core::LinAlg::KrylovProjector::to_reduced(
     // here: matvec = A^T c_;
     A.multiply(true, *c_, matvec);
     Core::LinAlg::SparseMatrix mat2 = multiply_multi_vector_multi_vector(w_invwTc, matvec, 2, true);
-    mat1.add(mat2, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(mat2, false, 1.0, mat1, 1.0);
     mat1.complete();
   }
 
   // here: matvec = w (c^T w)^-1 (c^T A c);
   matvec = multiply_multi_vector_dense_matrix(w_invwTc, cTAc);
   Core::LinAlg::SparseMatrix mat3 = multiply_multi_vector_multi_vector(matvec, w_invwTc, 1, false);
-  mat3.add(mat1, false, -1.0, 1.0);
-  mat3.add(A, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(mat1, false, -1.0, mat3, 1.0);
+  Core::LinAlg::matrix_add(A, false, 1.0, mat3, 1.0);
 
   mat3.complete();
   return mat3;

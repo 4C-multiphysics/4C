@@ -296,10 +296,10 @@ void PoroElast::MonolithicSplitNoPenetration::setup_system_matrix(
   mat.assign(0, 0, Core::LinAlg::DataAccess::Share, *s);
 
   // structure coupling part
-  mat.matrix(0, 1).add(k_sf->matrix(sidx_other, fidx_other), false, 1.0, 0.0);
-  mat.matrix(0, 1).add(k_sf->matrix(sidx_other, fidx_nopen), false, 1.0, 1.0);
-  mat.matrix(0, 1).add(k_sf->matrix(sidx_nopen, fidx_other), false, 1.0, 1.0);
-  mat.matrix(0, 1).add(k_sf->matrix(sidx_nopen, fidx_nopen), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(k_sf->matrix(sidx_other, fidx_other), false, 1.0, mat.matrix(0, 1), 0.0);
+  Core::LinAlg::matrix_add(k_sf->matrix(sidx_other, fidx_nopen), false, 1.0, mat.matrix(0, 1), 1.0);
+  Core::LinAlg::matrix_add(k_sf->matrix(sidx_nopen, fidx_other), false, 1.0, mat.matrix(0, 1), 1.0);
+  Core::LinAlg::matrix_add(k_sf->matrix(sidx_nopen, fidx_nopen), false, 1.0, mat.matrix(0, 1), 1.0);
   /*----------------------------------------------------------------------*/
   // pure fluid part
   // uncomplete because the fluid interface can have more connections than the
@@ -307,12 +307,12 @@ void PoroElast::MonolithicSplitNoPenetration::setup_system_matrix(
   // this just once...
   // f->UnComplete();
 
-  mat.matrix(1, 1).add(f->matrix(fidx_other, fidx_other), false, 1.0, 0.0);
-  mat.matrix(1, 1).add(f->matrix(fidx_other, fidx_nopen), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(f->matrix(fidx_other, fidx_other), false, 1.0, mat.matrix(1, 1), 0.0);
+  Core::LinAlg::matrix_add(f->matrix(fidx_other, fidx_nopen), false, 1.0, mat.matrix(1, 1), 1.0);
 
   // fluid coupling part
-  mat.matrix(1, 0).add(k_fs->matrix(fidx_other, fidx_other), false, 1.0, 0.0);
-  mat.matrix(1, 0).add(k_fs->matrix(fidx_other, fidx_nopen), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(k_fs->matrix(fidx_other, fidx_other), false, 1.0, mat.matrix(1, 0), 0.0);
+  Core::LinAlg::matrix_add(k_fs->matrix(fidx_other, fidx_nopen), false, 1.0, mat.matrix(1, 0), 1.0);
 
   /*----------------------------------------------------------------------*/
   /*Add lines for poro nopenetration condition*/
@@ -331,14 +331,14 @@ void PoroElast::MonolithicSplitNoPenetration::setup_system_matrix(
   std::shared_ptr<Core::LinAlg::SparseMatrix> tanginvDkfsgg = Core::LinAlg::matrix_multiply(
       *k_lambdainv_d_, false, *cfsggcur_, false, true);  // T*D^-1*K^FS_gg;
 
-  mat.matrix(1, 0).add(*tanginvDkfsgi, false, -1.0, 1.0);
-  mat.matrix(1, 0).add(*tanginvDkfsgg, false, -1.0, 1.0);
+  Core::LinAlg::matrix_add(*tanginvDkfsgi, false, -1.0, mat.matrix(1, 0), 1.0);
+  Core::LinAlg::matrix_add(*tanginvDkfsgg, false, -1.0, mat.matrix(1, 0), 1.0);
   mat.matrix(1, 0).add(*k_struct_, false, 1.0, 1.0);
-  mat.matrix(1, 0).add(k_porodisp_->matrix(1, 0), false, 1.0, 1.0);
-  mat.matrix(1, 0).add(k_porodisp_->matrix(1, 1), false, 1.0, 1.0);
-  mat.matrix(1, 1).add(*tanginvDfgi, false, -1.0, 1.0);
+  Core::LinAlg::matrix_add(k_porodisp_->matrix(1, 0), false, 1.0, mat.matrix(1, 0), 1.0);
+  Core::LinAlg::matrix_add(k_porodisp_->matrix(1, 1), false, 1.0, mat.matrix(1, 0), 1.0);
+  Core::LinAlg::matrix_add(*tanginvDfgi, false, -1.0, mat.matrix(1, 1), 1.0);
   mat.matrix(1, 1).add(*k_fluid_, false, 1.0, 1.0);
-  mat.matrix(1, 1).add(*tanginvDfgg, false, -1.0, 1.0);
+  Core::LinAlg::matrix_add(*tanginvDfgg, false, -1.0, mat.matrix(1, 1), 1.0);
   mat.matrix(1, 1).add(*k_porofluid_, false, 1.0, 1.0);
 
   /*----------------------------------------------------------------------*/

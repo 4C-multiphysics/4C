@@ -183,12 +183,12 @@ void CONTACT::MonoCoupledLagrangeStrategy::evaluate_off_diag_contact(
     //---------------------------------------------------------- SECOND LINE
     // km: add T(mhataam)*kan
     Core::LinAlg::SparseMatrix kmmod(*gmdofrowmap_, 100);
-    kmmod.add(*km, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*km, false, 1.0, kmmod, 1.0);
     if (aset)
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> kmadd =
           Core::LinAlg::matrix_multiply(*mhataam_, true, *ka, false, false, false, true);
-      kmmod.add(*kmadd, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kmadd, false, 1.0, kmmod, 1.0);
     }
     kmmod.complete(Core::LinAlg::Map(kteff->domain_map()), km->row_map());
 
@@ -200,12 +200,12 @@ void CONTACT::MonoCoupledLagrangeStrategy::evaluate_off_diag_contact(
 
     // kin: subtract T(dhat)*kan --
     Core::LinAlg::SparseMatrix kimod(*gidofs, 100);
-    kimod.add(*ki, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*ki, false, 1.0, kimod, 1.0);
     if (aset)
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> kiadd =
           Core::LinAlg::matrix_multiply(*dhat_, true, *ka, false, false, false, true);
-      kimod.add(*kiadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kiadd, false, -1.0, kimod, 1.0);
     }
     kimod.complete(Core::LinAlg::Map(kteff->domain_map()), ki->row_map());
 
@@ -245,20 +245,20 @@ void CONTACT::MonoCoupledLagrangeStrategy::evaluate_off_diag_contact(
 
     //----------------------------------------------------------- FIRST LINE
     // add n submatrices to kteffnew
-    kteffnew->add(*kn, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kn, false, 1.0, *kteffnew, 1.0);
     //---------------------------------------------------------- SECOND LINE
     // add m submatrices to kteffnew
-    kteffnew->add(kmmod, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(kmmod, false, 1.0, *kteffnew, 1.0);
     //----------------------------------------------------------- THIRD LINE
     // add i submatrices to kteffnew
-    if (iset) kteffnew->add(kimod, false, 1.0, 1.0);
+    if (iset) Core::LinAlg::matrix_add(kimod, false, 1.0, *kteffnew, 1.0);
 
     //---------------------------------------------------------- FOURTH LINE
     // for off diag blocks this line is empty (weighted normal = f(disp))
 
     //----------------------------------------------------------- FIFTH LINE
     // add a submatrices to kteffnew
-    if (aset) kteffnew->add(*kamod, false, 1.0, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*kamod, false, 1.0, *kteffnew, 1.0);
 
     // fill_complete kteffnew (square)
     kteffnew->complete(*domainmap, *gdisprowmap_);
@@ -321,7 +321,7 @@ void CONTACT::MonoCoupledLagrangeStrategy::recover_coupled(
     Core::LinAlg::split_matrix2x2(
         invd_, gactivedofs_, tempmap, gactivedofs_, tempmap, invda, tempmtx1, tempmtx2, tempmtx3);
     Core::LinAlg::SparseMatrix invdmod(*gsdofrowmap_, 10);
-    invdmod.add(*invda, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*invda, false, 1.0, invdmod, 1.0);
     invdmod.complete();
 
     std::map<int, std::shared_ptr<Core::LinAlg::SparseOperator>>::iterator matiter;

@@ -433,7 +433,8 @@ void FLD::XFluidFluid::assemble_mat_and_rhs(int itnum  ///< iteration number
     sysmat_block->assign(1, 0, Core::LinAlg::DataAccess::Share, *coup_state->C_xs_);
     sysmat_block->assign(0, 1, Core::LinAlg::DataAccess::Share, *coup_state->C_sx_);
     embedded_fluid_->system_matrix()->un_complete();
-    embedded_fluid_->system_matrix()->add(*coup_state->C_ss_, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(
+        *coup_state->C_ss_, false, 1.0, *(embedded_fluid_->system_matrix()), 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> alesysmat_sparse =
         std::dynamic_pointer_cast<Core::LinAlg::SparseMatrix>(embedded_fluid_->system_matrix());
     sysmat_block->assign(0, 0, Core::LinAlg::DataAccess::Share, *alesysmat_sparse);
@@ -528,7 +529,7 @@ void FLD::XFluidFluid::add_eos_pres_stab_to_emb_layer()
   sysmat_linalg->complete();
   embedded_fluid_->system_matrix()->un_complete();
 
-  (embedded_fluid_->system_matrix())->add(*sysmat_linalg, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*sysmat_linalg, false, 1.0, *(embedded_fluid_->system_matrix()), 1.0);
   embedded_fluid_->system_matrix()->complete();
   //------------------------------------------------------------
   // need to export residual_col to embedded fluid residual

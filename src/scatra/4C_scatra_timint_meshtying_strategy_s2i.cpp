@@ -162,25 +162,26 @@ void ScaTra::MeshtyingStrategyS2I::condense_mat_and_rhs(
         {
           // replace slave-side rows of global system matrix by projected slave-side rows including
           // interface contributions
-          sparsematrix->add(*Core::LinAlg::matrix_multiply(
-                                *Q_, true, sparsematrixrowsslave, false, false, false, true),
-              false, 1., 1.);
+          Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(
+                                       *Q_, true, sparsematrixrowsslave, false, false, false, true),
+              false, 1., *sparsematrix, 1.);
           // during calculation of initial time derivative, standard global system matrix is
           // replaced by global mass matrix, and hence interface contributions must not be included
-          if (!calcinittimederiv) sparsematrix->add(*islavematrix_, false, 1., 1.);
+          if (!calcinittimederiv)
+            Core::LinAlg::matrix_add(*islavematrix_, false, 1., *sparsematrix, 1.);
         }
 
         // apply standard meshtying
         else
         {
-          sparsematrix->add(*D_, false, 1., 1.);
-          sparsematrix->add(*M_, false, -1., 1.);
+          Core::LinAlg::matrix_add(*D_, false, 1., *sparsematrix, 1.);
+          Core::LinAlg::matrix_add(*M_, false, -1., *sparsematrix, 1.);
         }
 
         // add projected slave-side rows to master-side rows of global system matrix
-        sparsematrix->add(*Core::LinAlg::matrix_multiply(
-                              *P_, true, sparsematrixrowsslave, false, false, false, true),
-            false, 1., 1.);
+        Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(
+                                     *P_, true, sparsematrixrowsslave, false, false, false, true),
+            false, 1., *sparsematrix, 1.);
 
         // extract slave-side entries of global residual vector
         std::shared_ptr<Core::LinAlg::Vector<double>> residualslave =
@@ -226,17 +227,18 @@ void ScaTra::MeshtyingStrategyS2I::condense_mat_and_rhs(
         // contributions
         sparsematrix->complete();
         sparsematrix->apply_dirichlet(*interfacemaps_->map(2), false);
-        sparsematrix->add(*Core::LinAlg::matrix_multiply(
-                              *Q_, true, sparsematrixrowsmaster, false, false, false, true),
-            false, 1., 1.);
+        Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(
+                                     *Q_, true, sparsematrixrowsmaster, false, false, false, true),
+            false, 1., *sparsematrix, 1.);
         // during calculation of initial time derivative, standard global system matrix is replaced
         // by global mass matrix, and hence interface contributions must not be included
-        if (!calcinittimederiv) sparsematrix->add(*imastermatrix_, false, 1., 1.);
+        if (!calcinittimederiv)
+          Core::LinAlg::matrix_add(*imastermatrix_, false, 1., *sparsematrix, 1.);
 
         // add projected master-side rows to slave-side rows of global system matrix
-        sparsematrix->add(*Core::LinAlg::matrix_multiply(
-                              *P_, true, sparsematrixrowsmaster, false, false, false, true),
-            false, 1., 1.);
+        Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(
+                                     *P_, true, sparsematrixrowsmaster, false, false, false, true),
+            false, 1., *sparsematrix, 1.);
 
         // extract master-side entries of global residual vector
         std::shared_ptr<Core::LinAlg::Vector<double>> residualmaster =
@@ -351,7 +353,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
           FOUR_C_ASSERT(systemmatrix != nullptr, "System matrix is not a sparse matrix!");
 
           // assemble linearizations of slave fluxes w.r.t. slave dofs into global system matrix
-          systemmatrix->add(*islavematrix_, false, 1., 1.);
+          Core::LinAlg::matrix_add(*islavematrix_, false, 1., *systemmatrix, 1.);
 
           if (not slaveonly_)
           {
@@ -666,8 +668,8 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
                   not imortarredistribution_
                       ? imastermatrix_
                       : Core::LinAlg::matrix_row_transform(*imastermatrix_, *imastermap_);
-              systemmatrix->add(*islavematrix, false, 1., 1.);
-              systemmatrix->add(*imastermatrix, false, 1., 1.);
+              Core::LinAlg::matrix_add(*islavematrix, false, 1., *systemmatrix, 1.);
+              Core::LinAlg::matrix_add(*imastermatrix, false, 1., *systemmatrix, 1.);
               interfacemaps_->add_vector(*islaveresidual_, 1, *scatratimint_->residual());
               interfacemaps_->add_vector(
                   Core::LinAlg::MultiVector<double>(imasterresidual_->get_ref_of_epetra_fevector()),
@@ -725,10 +727,10 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
             {
               if (lmside_ == Inpar::S2I::side_slave)
               {
-                systemmatrix->add(*islavematrix_, false, 1., 1.);
-                systemmatrix->add(*Core::LinAlg::matrix_multiply(
-                                      *P_, true, *islavematrix_, false, false, false, true),
-                    false, -1., 1.);
+                Core::LinAlg::matrix_add(*islavematrix_, false, 1., *systemmatrix, 1.);
+                Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(
+                                             *P_, true, *islavematrix_, false, false, false, true),
+                    false, -1., *systemmatrix, 1.);
                 interfacemaps_->add_vector(*islaveresidual_, 1, *scatratimint_->residual());
                 Core::LinAlg::Vector<double> imasterresidual(*interfacemaps_->map(2));
                 P_->multiply(true, *islaveresidual_, imasterresidual);
@@ -736,10 +738,10 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
               }
               else
               {
-                systemmatrix->add(*Core::LinAlg::matrix_multiply(
-                                      *P_, true, *imastermatrix_, false, false, false, true),
-                    false, -1., 1.);
-                systemmatrix->add(*imastermatrix_, false, 1., 1.);
+                Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(
+                                             *P_, true, *imastermatrix_, false, false, false, true),
+                    false, -1., *systemmatrix, 1.);
+                Core::LinAlg::matrix_add(*imastermatrix_, false, 1., *systemmatrix, 1.);
                 Core::LinAlg::Vector<double> islaveresidual(*interfacemaps_->map(1));
                 if (P_->multiply(true,
                         Core::LinAlg::MultiVector<double>(
@@ -760,7 +762,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
               // assemble interface contributions into global system of equations
               if (slaveonly_)
               {
-                systemmatrix->add(*islavematrix_, false, 1., 1.);
+                Core::LinAlg::matrix_add(*islavematrix_, false, 1., *systemmatrix, 1.);
                 interfacemaps_->add_vector(*islaveresidual_, 1, *scatratimint_->residual());
               }
 
@@ -1050,7 +1052,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
                 // assemble linearizations of slave fluxes associated with scatra-scatra interface
                 // coupling w.r.t. scatra-scatra interface layer thicknesses into global matrix
                 // block
-                scatragrowthblock->add(*islavematrix, false, 1., 0.);
+                Core::LinAlg::matrix_add(*islavematrix, false, 1., *scatragrowthblock, 0.);
 
                 // derive linearizations of master fluxes associated with scatra-scatra interface
                 // coupling w.r.t. scatra-scatra interface layer thicknesses and assemble into
@@ -1133,7 +1135,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
 
                 // assemble linearizations of scatra-scatra interface layer growth residuals w.r.t.
                 // slave-side scalar transport degrees of freedom into global matrix block
-                growthscatrablock->add(*islavematrix, false, 1., 0.);
+                Core::LinAlg::matrix_add(*islavematrix, false, 1., *growthscatrablock, 0.);
 
                 // derive linearizations of scatra-scatra interface layer growth residuals w.r.t.
                 // master-side scalar transport degrees of freedom and assemble into global matrix
@@ -1401,7 +1403,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_and_assemble_capacitive_contribution
 
       // assemble additional components of linearizations of slave fluxes due to capacitance
       // w.r.t. slave dofs into the global system matrix
-      systemmatrix->add(*islavematrix_, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*islavematrix_, false, 1.0, *systemmatrix, 1.0);
 
       // assemble additional components of linearizations of slave fluxes due to capacitance
       // w.r.t. master dofs into the global system matrix
@@ -3727,21 +3729,21 @@ void ScaTra::MeshtyingStrategyS2I::solve(const std::shared_ptr<Core::LinAlg::Sol
           extendedsystemmatrix.assign(0, 0, Core::LinAlg::DataAccess::Share, *sparsematrix);
           if (lmside_ == Inpar::S2I::side_slave)
           {
-            extendedsystemmatrix.matrix(0, 1).add(*D_, true, 1., 0.);
-            extendedsystemmatrix.matrix(0, 1).add(*M_, true, -1., 1.);
-            extendedsystemmatrix.matrix(1, 0).add(
+            Core::LinAlg::matrix_add(*D_, true, 1., extendedsystemmatrix.matrix(0, 1), 0.);
+            Core::LinAlg::matrix_add(*M_, true, -1., extendedsystemmatrix.matrix(0, 1), 1.);
+            Core::LinAlg::matrix_add(
                 *Core::LinAlg::matrix_row_transform_gids(*islavematrix_, *extendedmaps_->map(1)),
-                false, 1., 0.);
+                false, 1., extendedsystemmatrix.matrix(1, 0), 0.);
           }
           else
           {
-            extendedsystemmatrix.matrix(0, 1).add(*M_, true, -1., 0.);
-            extendedsystemmatrix.matrix(0, 1).add(*D_, true, 1., 1.);
-            extendedsystemmatrix.matrix(1, 0).add(
+            Core::LinAlg::matrix_add(*M_, true, -1., extendedsystemmatrix.matrix(0, 1), 0.);
+            Core::LinAlg::matrix_add(*D_, true, 1., extendedsystemmatrix.matrix(0, 1), 1.);
+            Core::LinAlg::matrix_add(
                 *Core::LinAlg::matrix_row_transform_gids(*imastermatrix_, *extendedmaps_->map(1)),
-                false, 1., 0.);
+                false, 1., extendedsystemmatrix.matrix(1, 0), 0.);
           }
-          extendedsystemmatrix.matrix(1, 1).add(*E_, true, -1., 0.);
+          Core::LinAlg::matrix_add(*E_, true, -1., extendedsystemmatrix.matrix(1, 1), 0.);
           extendedsystemmatrix.complete();
           extendedsystemmatrix.matrix(0, 1).apply_dirichlet(
               *scatratimint_->dirich_maps()->cond_map(), false);

@@ -802,7 +802,8 @@ void FSI::SlidingMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSp
       matrix_multiply(f->matrix(1, 1), false, *mortarp, false, false, false, true);
   fgg = matrix_multiply(*mortarp, true, *fgg, false, false, false, true);
 
-  s->add(*fgg, false, scale * timescale * (1. - stiparam) / (1. - ftiparam), 1.0);
+  Core::LinAlg::matrix_add(
+      *fgg, false, scale * timescale * (1. - stiparam) / (1. - ftiparam), *s, 1.0);
 
   // ---------Addressing contribution to block (2,3)
   std::shared_ptr<Core::LinAlg::SparseMatrix> fgi =
@@ -810,14 +811,14 @@ void FSI::SlidingMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSp
   std::shared_ptr<Core::LinAlg::SparseMatrix> lfgi =
       std::make_shared<Core::LinAlg::SparseMatrix>(s->row_map(), 81, false);
 
-  lfgi->add(*fgi, false, scale, 0.0);
+  Core::LinAlg::matrix_add(*fgi, false, scale, *lfgi, 0.0);
   lfgi->complete(fgi->domain_map(), s->range_map());
 
   if (stcalgo == Inpar::Solid::stc_currsym)
     lfgi = Core::LinAlg::matrix_multiply(*stcmat, true, *lfgi, false, true, true, true);
 
   mat.matrix(0, 1).un_complete();
-  mat.matrix(0, 1).add(*lfgi, false, (1. - stiparam) / (1. - ftiparam), 0.0);
+  Core::LinAlg::matrix_add(*lfgi, false, (1. - stiparam) / (1. - ftiparam), mat.matrix(0, 1), 0.0);
 
   // ---------Addressing contribution to block (3,2)
   std::shared_ptr<Core::LinAlg::SparseMatrix> fig =
@@ -825,7 +826,7 @@ void FSI::SlidingMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSp
   std::shared_ptr<Core::LinAlg::SparseMatrix> lfig =
       std::make_shared<Core::LinAlg::SparseMatrix>(fig->row_map(), 81, false);
 
-  lfig->add(*fig, false, timescale, 0.0);
+  Core::LinAlg::matrix_add(*fig, false, timescale, *lfig, 0.0);
   lfig->complete(s->domain_map(), fig->range_map());
 
   if (stcalgo != Inpar::Solid::stc_inactive)
@@ -834,14 +835,14 @@ void FSI::SlidingMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSp
   }
 
   mat.matrix(1, 0).un_complete();
-  mat.matrix(1, 0).add(*lfig, false, 1., 0.0);
+  Core::LinAlg::matrix_add(*lfig, false, 1., mat.matrix(1, 0), 0.0);
 
   // ---------Addressing contribution to block (3,3)
   mat.matrix(1, 1).un_complete();
-  mat.matrix(1, 1).add(fii, false, 1., 0.0);
+  Core::LinAlg::matrix_add(fii, false, 1., mat.matrix(1, 1), 0.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
       Core::LinAlg::create_identity_matrix(*fluid_field()->interface()->fsi_cond_map());
-  mat.matrix(1, 1).add(*eye, false, 1., 1.0);
+  Core::LinAlg::matrix_add(*eye, false, 1., mat.matrix(1, 1), 1.0);
 
   // ---------Addressing contribution to block (4,2)
   std::shared_ptr<Core::LinAlg::SparseMatrix> laig =
@@ -854,7 +855,7 @@ void FSI::SlidingMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSp
       matrix_multiply(*laig, false, *mortarp, false, false, false, true);
   laig = std::make_shared<Core::LinAlg::SparseMatrix>(llaig->row_map(), 81, false);
 
-  laig->add(*llaig, false, 1.0, 0.0);
+  Core::LinAlg::matrix_add(*llaig, false, 1.0, *laig, 0.0);
   laig->complete(s->domain_map(), llaig->range_map());
 
   if (stcalgo != Inpar::Solid::stc_inactive)
@@ -884,10 +885,10 @@ void FSI::SlidingMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSp
     fmgg = matrix_multiply(*mortarp, true, *fmgg, false, false, false, true);
 
     Core::LinAlg::SparseMatrix lfmgg(fmgg->row_map(), 81, false);
-    lfmgg.add(*fmgg, false, 1.0, 0.0);
+    Core::LinAlg::matrix_add(*fmgg, false, 1.0, lfmgg, 0.0);
     lfmgg.complete(s->domain_map(), fmgg->range_map());
 
-    s->add(lfmgg, false, scale * (1. - stiparam) / (1. - ftiparam), 1.0);
+    Core::LinAlg::matrix_add(lfmgg, false, scale * (1. - stiparam) / (1. - ftiparam), *s, 1.0);
 
     // ---------Addressing contribution to block (3,2)
     std::shared_ptr<Core::LinAlg::SparseMatrix> fmig =
@@ -895,7 +896,7 @@ void FSI::SlidingMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSp
     std::shared_ptr<Core::LinAlg::SparseMatrix> lfmig =
         std::make_shared<Core::LinAlg::SparseMatrix>(fmig->row_map(), 81, false);
 
-    lfmig->add(*fmig, false, 1.0, 0.0);
+    Core::LinAlg::matrix_add(*fmig, false, 1.0, *lfmig, 0.0);
     lfmig->complete(s->domain_map(), fmig->range_map());
 
     if (stcalgo != Inpar::Solid::stc_inactive)
@@ -903,7 +904,7 @@ void FSI::SlidingMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSp
       lfmig = Core::LinAlg::matrix_multiply(*lfmig, false, *stcmat, false, false, false, true);
     }
 
-    mat.matrix(1, 0).add(*lfmig, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*lfmig, false, 1.0, mat.matrix(1, 0), 1.0);
 
     // We cannot copy the pressure value. It is not used anyway. So no exact
     // match here.
@@ -921,7 +922,7 @@ void FSI::SlidingMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSp
         matrix_multiply(*mortarp, true, *lfmgi, false, false, false, true);
     lfmgi = std::make_shared<Core::LinAlg::SparseMatrix>(s->row_map(), 81, false);
 
-    lfmgi->add(*llfmgi, false, scale, 0.0);
+    Core::LinAlg::matrix_add(*llfmgi, false, scale, *lfmgi, 0.0);
     lfmgi->complete(aii.domain_map(), s->range_map());
 
     if (stcalgo == Inpar::Solid::stc_currsym)

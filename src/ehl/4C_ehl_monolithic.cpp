@@ -495,8 +495,8 @@ void EHL::Monolithic::setup_system_matrix()
   masteriforce_derivd1->scale(-1.0);
 
   // Add the negative midpoint values (remember, we are linearizing an extforce-like term)
-  k_ss->add(*slaveiforce_derivd1, false, -(1.0 - alphaf), 1.0);
-  k_ss->add(*masteriforce_derivd1, false, -(1.0 - alphaf), 1.0);
+  Core::LinAlg::matrix_add(*slaveiforce_derivd1, false, -(1.0 - alphaf), *k_ss, 1.0);
+  Core::LinAlg::matrix_add(*masteriforce_derivd1, false, -(1.0 - alphaf), *k_ss, 1.0);
 
   // linearization of D.t and M.t (the part with D.(dt/dd))
   std::shared_ptr<Core::LinAlg::SparseMatrix> ds_dd =
@@ -516,8 +516,8 @@ void EHL::Monolithic::setup_system_matrix()
   dm_dd->complete(*mortaradapter_->s_mdof_map(), *mortaradapter_->master_dof_map());
 
   // Add the negative midpoint values (remember, we are linearizing an extforce-like term)
-  k_ss->add(*ds_dd, false, -(1.0 - alphaf), 1.0);
-  k_ss->add(*dm_dd, false, -(1.0 - alphaf), 1.0);
+  Core::LinAlg::matrix_add(*ds_dd, false, -(1.0 - alphaf), *k_ss, 1.0);
+  Core::LinAlg::matrix_add(*dm_dd, false, -(1.0 - alphaf), *k_ss, 1.0);
 
   k_ss->complete();
   k_ss->apply_dirichlet(*structure_field()->get_dbc_map_extractor()->cond_map(), true);
@@ -558,8 +558,8 @@ void EHL::Monolithic::setup_system_matrix()
       *lubrication_->lubrication_field()->dof_row_map(), *mortaradapter_->master_dof_map());
 
   // Add the negative midpoint values (remember, we are linearizing an extforce-like term)
-  k_sl_->add(*slaveiforce_derivp, false, -(1.0 - alphaf), 1.0);
-  k_sl_->add(*masteriforce_derivp, false, -(1.0 - alphaf), 1.0);
+  Core::LinAlg::matrix_add(*slaveiforce_derivp, false, -(1.0 - alphaf), *k_sl_, 1.0);
+  Core::LinAlg::matrix_add(*masteriforce_derivp, false, -(1.0 - alphaf), *k_sl_, 1.0);
 
   k_sl_->complete(*(extractor()->map(1)),  // pressure dof map
       *(extractor()->map(0))               // displacement dof map
@@ -639,7 +639,7 @@ void EHL::Monolithic::setup_system_matrix()
       Core::LinAlg::matrix_multiply(*k_ls_linH, false, *dh_dd, false, false, false, true);
 
   // Add the contribution of film height derivative to the stiffness matrix
-  k_ls_->add(*k_ls_H, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*k_ls_H, false, 1.0, *k_ls_, 1.0);
 
   //-------------------------------------------
   // 4.2 Discrete tangential velocity derivative
@@ -653,7 +653,7 @@ void EHL::Monolithic::setup_system_matrix()
       *lubrication_->lubrication_field()->discretization()->dof_row_map(1));
   std::shared_ptr<Core::LinAlg::SparseMatrix> tmp =
       Core::LinAlg::matrix_multiply(*k_ls_linV, false, *dst, false, true);
-  k_ls_->add(*tmp, false, -1.0, 1.0);
+  Core::LinAlg::matrix_add(*tmp, false, -1.0, *k_ls_, 1.0);
 
 
   k_ls_->complete(*(extractor()->map(0)),  // displacement dof map
@@ -1616,13 +1616,13 @@ void EHL::Monolithic::lin_pressure_force_disp(
   std::shared_ptr<Core::LinAlg::SparseMatrix> tmp = Core::LinAlg::matrix_multiply(
       *mortaradapter_->get_mortar_matrix_d(), true, *p_deriv_normal, false, false, false, true);
   if (!tmp) FOUR_C_THROW("matrix_multiply failed");
-  ds_dd.add(*tmp, false, +1., 1.);
+  Core::LinAlg::matrix_add(*tmp, false, +1., ds_dd, 1.);
 
   tmp = nullptr;
   tmp = Core::LinAlg::matrix_multiply(
       *mortaradapter_->get_mortar_matrix_m(), true, *p_deriv_normal, false, false, false, true);
   if (!tmp) FOUR_C_THROW("matrix_multiply failed");
-  dm_dd.add(*tmp, false, -1., 1.);
+  Core::LinAlg::matrix_add(*tmp, false, -1., dm_dd, 1.);
 
   return;
 }
@@ -1647,27 +1647,27 @@ void EHL::Monolithic::lin_poiseuille_force_disp(
 
   Core::LinAlg::SparseMatrix derivH_gradP(*mortaradapter_->nodal_gap_deriv());
   derivH_gradP.left_scale(grad_p);
-  deriv_Poiseuille->add(derivH_gradP, false, -.5, 1.);
+  Core::LinAlg::matrix_add(derivH_gradP, false, -.5, *deriv_Poiseuille, 1.);
 
   Core::LinAlg::Vector<double> p_int_full_col(*mortaradapter_->interface()->slave_col_dofs());
   Core::LinAlg::export_to(p_int_full, p_int_full_col);
   std::shared_ptr<Core::LinAlg::SparseMatrix> h_derivGrad_nodalP =
       mortaradapter_->assemble_surf_grad_deriv(p_int_full_col);
   h_derivGrad_nodalP->left_scale(nodal_gap);
-  deriv_Poiseuille->add(*h_derivGrad_nodalP, false, -.5, 1.);
+  Core::LinAlg::matrix_add(*h_derivGrad_nodalP, false, -.5, *deriv_Poiseuille, 1.);
 
   deriv_Poiseuille->complete(*mortaradapter_->s_mdof_map(), *mortaradapter_->slave_dof_map());
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> tmp = Core::LinAlg::matrix_multiply(
       *mortaradapter_->get_mortar_matrix_d(), true, *deriv_Poiseuille, false, false, false, true);
   if (!tmp) FOUR_C_THROW("matrix_multiply failed");
-  ds_dd.add(*tmp, false, +1., 1.);
+  Core::LinAlg::matrix_add(*tmp, false, +1., ds_dd, 1.);
 
   tmp = nullptr;
   tmp = Core::LinAlg::matrix_multiply(
       *mortaradapter_->get_mortar_matrix_m(), true, *deriv_Poiseuille, false, false, false, true);
   if (!tmp) FOUR_C_THROW("matrix_multiply failed");
-  dm_dd.add(*tmp, false, +1., 1.);
+  Core::LinAlg::matrix_add(*tmp, false, +1., dm_dd, 1.);
 }
 
 void EHL::Monolithic::lin_couette_force_disp(
@@ -1710,7 +1710,7 @@ void EHL::Monolithic::lin_couette_force_disp(
     Core::LinAlg::SparseMatrix tmp(*mortaradapter_->rel_tang_vel_deriv());
     tmp.left_scale(hinv_visc);
     tmp.scale(-1.);
-    deriv_Couette->add(tmp, false, 1., 1.);
+    Core::LinAlg::matrix_add(tmp, false, 1., *deriv_Couette, 1.);
   }
   {
     Core::LinAlg::Vector<double> hinv_hinv_visc(*mortaradapter_->slave_dof_map());
@@ -1719,20 +1719,20 @@ void EHL::Monolithic::lin_couette_force_disp(
     hinv_hinv_visc_vel.multiply(1., hinv_hinv_visc, *mortaradapter_->rel_tang_vel(), 0.);
     Core::LinAlg::SparseMatrix tmp(*mortaradapter_->nodal_gap_deriv());
     tmp.left_scale(hinv_hinv_visc_vel);
-    deriv_Couette->add(tmp, false, 1., 1.);
+    Core::LinAlg::matrix_add(tmp, false, 1., *deriv_Couette, 1.);
   }
   deriv_Couette->complete(*mortaradapter_->s_mdof_map(), *mortaradapter_->slave_dof_map());
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> tmp = Core::LinAlg::matrix_multiply(
       *mortaradapter_->get_mortar_matrix_d(), true, *deriv_Couette, false, false, false, true);
   if (!tmp) FOUR_C_THROW("matrix_multiply failed");
-  ds_dd.add(*tmp, false, +1., 1.);
+  Core::LinAlg::matrix_add(*tmp, false, +1., ds_dd, 1.);
 
   tmp = nullptr;
   tmp = Core::LinAlg::matrix_multiply(
       *mortaradapter_->get_mortar_matrix_m(), true, *deriv_Couette, false, false, false, true);
   if (!tmp) FOUR_C_THROW("matrix_multiply failed");
-  dm_dd.add(*tmp, false, -1., 1.);
+  Core::LinAlg::matrix_add(*tmp, false, -1., dm_dd, 1.);
 }
 
 void EHL::Monolithic::lin_pressure_force_pres(
@@ -1753,13 +1753,13 @@ void EHL::Monolithic::lin_pressure_force_pres(
   std::shared_ptr<Core::LinAlg::SparseMatrix> a = Core::LinAlg::matrix_multiply(
       *mortaradapter_->get_mortar_matrix_d(), true, *tmp, false, false, false, true);
   if (!a) FOUR_C_THROW("matrix_multiply failed");
-  ds_dp.add(*a, false, +1., 1.);
+  Core::LinAlg::matrix_add(*a, false, +1., ds_dp, 1.);
 
   a = nullptr;
   a = Core::LinAlg::matrix_multiply(
       *mortaradapter_->get_mortar_matrix_m(), true, *tmp, false, false, false, true);
   if (!a) FOUR_C_THROW("matrix_multiply failed");
-  dm_dp.add(*a, false, -1., 1.);
+  Core::LinAlg::matrix_add(*a, false, -1., dm_dp, 1.);
 }
 
 void EHL::Monolithic::lin_poiseuille_force_pres(
@@ -1785,7 +1785,7 @@ void EHL::Monolithic::lin_poiseuille_force_pres(
     b.complete(*d, *r);
 
     ds_dp.un_complete();
-    ds_dp.add(b, false, 1., 1.);
+    Core::LinAlg::matrix_add(b, false, 1., ds_dp, 1.);
     ds_dp.complete(*d, *r);
   }
 
@@ -1802,7 +1802,7 @@ void EHL::Monolithic::lin_poiseuille_force_pres(
     b.complete(*d, *r);
 
     dm_dp.un_complete();
-    dm_dp.add(b, false, 1., 1.);
+    Core::LinAlg::matrix_add(b, false, 1., dm_dp, 1.);
     dm_dp.complete(*d, *r);
   }
   return;
@@ -1858,9 +1858,9 @@ void EHL::Monolithic::lin_couette_force_pres(
     std::shared_ptr<const Core::LinAlg::Map> d = lubrication_->lubrication_field()->dof_row_map(0);
 
     ds_dp.un_complete();
-    ds_dp.add(*Core::LinAlg::matrix_multiply(*mortaradapter_->get_mortar_matrix_d(), true,
-                  *dVisc_str_dp, false, true, false, true),
-        false, 1., 1.);
+    Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(*mortaradapter_->get_mortar_matrix_d(),
+                                 true, *dVisc_str_dp, false, true, false, true),
+        false, 1., ds_dp, 1.);
     ds_dp.complete(*d, *r);
   }
 
@@ -1869,9 +1869,9 @@ void EHL::Monolithic::lin_couette_force_pres(
     std::shared_ptr<const Core::LinAlg::Map> d = lubrication_->lubrication_field()->dof_row_map(0);
 
     dm_dp.un_complete();
-    dm_dp.add(*Core::LinAlg::matrix_multiply(*mortaradapter_->get_mortar_matrix_m(), true,
-                  *dVisc_str_dp, false, true, false, true),
-        false, -1., 1.);
+    Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(*mortaradapter_->get_mortar_matrix_m(),
+                                 true, *dVisc_str_dp, false, true, false, true),
+        false, -1., dm_dp, 1.);
     dm_dp.complete(*d, *r);
   }
 }

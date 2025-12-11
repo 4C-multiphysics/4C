@@ -9,6 +9,7 @@
 
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
 
@@ -45,7 +46,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::BlockSparseMatrixBase:
       std::make_shared<SparseMatrix>(*fullrowmap_, m00.max_num_entries(), explicitdirichlet);
   for (const auto& block : blocks_)
   {
-    sparse->add(block, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(block, false, 1.0, *sparse, 1.0);
   }
   if (filled())
   {
@@ -299,9 +300,9 @@ void Core::LinAlg::BlockSparseMatrixBase::add(const Core::LinAlg::BlockSparseMat
     for (int j = 0; j < cols(); j++)
     {
       if (transposeA)
-        matrix(i, j).add(A.matrix(j, i), transposeA, scalarA, scalarB);
+        Core::LinAlg::matrix_add(A.matrix(j, i), transposeA, scalarA, matrix(i, j), scalarB);
       else
-        matrix(i, j).add(A.matrix(i, j), transposeA, scalarA, scalarB);
+        Core::LinAlg::matrix_add(A.matrix(i, j), transposeA, scalarA, matrix(i, j), scalarB);
     }
   }
 }

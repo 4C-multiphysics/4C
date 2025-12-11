@@ -367,7 +367,7 @@ void ALE::Meshtying::multifield_split(std::shared_ptr<Core::LinAlg::SparseOperat
 
     sysmatnew->matrix(2, 2).un_complete();
     sysmatnew->matrix(2, 2).zero();
-    sysmatnew->matrix(2, 2).add(onesdiag, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(onesdiag, false, 1.0, sysmatnew->matrix(2, 2), 1.0);
 
     sysmatnew->matrix(2, 0).un_complete();
     sysmatnew->matrix(2, 0).zero();
@@ -529,7 +529,7 @@ void ALE::Meshtying::condensation_operation_block_matrix(
 
   // Add transformation matrix to nm
   sysmatnew->matrix(0, 1).un_complete();
-  sysmatnew->matrix(0, 1).add(*knm_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*knm_mod, false, 1.0, sysmatnew->matrix(0, 1), 1.0);
 
   if (dconmaster_ == true and firstnonliniter_ == true)
     knm_mod->multiply(false, *(splitdcmaster[1]), *dcnm);
@@ -543,7 +543,7 @@ void ALE::Meshtying::condensation_operation_block_matrix(
 
   // Add transformation matrix to mn
   sysmatnew->matrix(1, 0).un_complete();
-  sysmatnew->matrix(1, 0).add(*kmn_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmn_mod, false, 1.0, sysmatnew->matrix(1, 0), 1.0);
 
   /*--------------------------------------------------------------------*/
   // block mm
@@ -556,7 +556,7 @@ void ALE::Meshtying::condensation_operation_block_matrix(
 
   // Add transformation matrix to mm
   sysmatnew->matrix(1, 1).un_complete();
-  sysmatnew->matrix(1, 1).add(*kmm_mod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmm_mod, false, 1.0, sysmatnew->matrix(1, 1), 1.0);
 
   if (dconmaster_ == true and firstnonliniter_ == true)
     kmm_mod->multiply(false, *(splitdcmaster[1]), *dcmm);
