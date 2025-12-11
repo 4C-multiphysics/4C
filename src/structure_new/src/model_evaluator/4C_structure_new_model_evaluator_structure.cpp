@@ -950,12 +950,12 @@ void Solid::ModelEvaluator::Structure::output_runtime_structure_postprocess_opti
       [&](const std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>& map_data,
           Core::LinAlg::MultiVector<double>& assembled_data)
   {
-    discret_ptr()->evaluate(
-        [&](Core::Elements::Element& ele)
-        {
-          extrapolate_gauss_point_quantity_to_nodes(
-              ele, *map_data.at(ele.id()), discret(), assembled_data);
-        });
+    // discret_ptr()->evaluate(
+    //     [&](Core::Elements::Element& ele)
+    //     {
+    //       extrapolate_gauss_point_quantity_to_nodes(
+    //           ele, *map_data.at(ele.id()), discret(), assembled_data);
+    //     });
   };
 
   // do the actual post processing
@@ -1011,13 +1011,13 @@ void Solid::ModelEvaluator::Structure::output_runtime_structure_postprocess_stre
       [&](const std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>& map_data,
           Core::LinAlg::MultiVector<double>& assembled_data)
   {
-    discret_ptr()->evaluate(
-        [&](Core::Elements::Element& ele)
-        {
-          if (do_postprocessing_on_element(ele))
-            Core::FE::extrapolate_gauss_point_quantity_to_nodes(
-                ele, *map_data.at(ele.id()), discret(), assembled_data);
-        });
+    // discret_ptr()->evaluate(
+    //     [&](Core::Elements::Element& ele)
+    //     {
+    //       if (do_postprocessing_on_element(ele))
+    //         Core::FE::extrapolate_gauss_point_quantity_to_nodes(
+    //             ele, *map_data.at(ele.id()), discret(), assembled_data);
+    //     });
   };
 
   auto postprocess_gauss_point_data_to_element_center =
