@@ -47,23 +47,25 @@ Restarting an analysis
 -----------------------
 
 For restarting an analysis one has to provide restart information in the first simulation by including the parameter
-``RESTARTEVERY  <numsteps>`` in the ``STRUCTURAL DYNAMICS`` section,
-so that the information is written every *numsteps* step.
+``RESTARTEVERY  <numsteps>`` in the relevant section,
+such that the information is written every *numsteps* step.
 
-In the second simulation, no additional parameters have be included. The information that it is a restart, is
+In the second simulation, no additional parameters have to be included. The information that it is a restart, is
 given on the command line:
 
 ::
 
-   ./4C <restart_input_file> <output_basename> [restartfrom=<restart_filename>] restart=<step>
+   ./4C <restart_input_file> <output_basename> [restartfrom=<restart_file_basename>] restart=<step>
 
-Here, one has to provide the step, at which the restart is started from the previous simulation.
-If the parameter ``restartfrom`` is given, the initial configuration is read from this file,
+Here, one has to provide the step at which the restart is started from the previous simulation.
+Note that for a successful restart from step ``n``, there must be a field entry at step ``n``, followed by a result entry at step ``n``, for all relevant fields.
+If ``restart=last_possible``, the last possible restart step is detected automatically.
+If the parameter ``restartfrom`` is given, the initial configuration is read from this simulation,
 otherwise it is read from ``<output_basename>``. In the latter case the filename of the new output is the same with an appended number, e.g., ``outfile-1``.
-Note that the value for ``step`` must be given in the file ``<output_basename>.control`` in one of the step lines: ``step = <step>``.
 
 .. note::
 
+   - If you set ``restart=0``, a regular run is performed and the ``<restartfrom>`` argument is ignored.
    - The parameters RESTART and RESTARTTIME in the PROBLEM TYPE section
      are not needed anymore, and will probably vanish soon.
    - The parameter MAXTIME indicates the maximum time of all simulations,

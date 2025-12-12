@@ -277,10 +277,23 @@ namespace Core::IO
 
     /**
      * A control file contains a list of entries which may contain the same key. This function
-     * returns the last entry (i.e., the most recent one) with the given key. If no such entry
-     * exists, an invalid ControlFileEntry is returned.
+     * returns the nth last entry (i.e., the nth most recent one) with the given key. If no such
+     * entry exists, an invalid ControlFileEntry is returned.
+     * Defaults to the very last entry (n=1).
      */
-    [[nodiscard]] ControlFileEntry last_entry(const std::string& key) const;
+    [[nodiscard]] ControlFileEntry nth_last_entry(
+        std::optional<std::string> key, size_t n = 1) const;
+
+    /**
+     * A control file contains a list of entries. This function returns the last key in the control
+     * file. If no last key exists, an empty optional is returned.
+     */
+    [[nodiscard]] std::optional<std::string> last_key() const;
+
+    /**
+     * Return the last entry in the control file.
+     */
+    // [[nodiscard]] ControlFileEntry last_entry() const;
 
     /**
      * Find the control file entries for the given discretization and step.
