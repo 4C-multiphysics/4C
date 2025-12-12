@@ -134,9 +134,6 @@ double Discret::Elements::Shell7pEleCalc<distype>::calculate_internal_energy(
   Shell::BasisVectorsAndMetrics<distype> g_reference;
   Shell::BasisVectorsAndMetrics<distype> g_current;
 
-  // init enhanced strains for shell
-  Core::LinAlg::SerialDenseVector strain_enh(Shell::Internal::num_internal_variables);
-
   const double* total_time =
       params.isParameter("total time") ? &params.get<double>("total time") : nullptr;
   const double* time_step_size =
@@ -160,14 +157,19 @@ double Discret::Elements::Shell7pEleCalc<distype>::calculate_internal_energy(
 
           Shell::evaluate_metrics(shape_functions, g_reference, g_current, nodal_coordinates, zeta);
 
-          // modify the current kovariant metric tensor to neglect the quadratic terms in thickness
+          // modify the current covariant metric tensor to neglect the quadratic terms in thickness
           // directions
-          Shell::modify_kovariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
+          Shell::modify_covariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
               shape_functions_ans, metrics_collocation_reference, metrics_collocation_current,
               shell_data_.num_ans);
 
-          // evaluate Green-Lagrange strains and deformation gradient in cartesian coordinate system
+          // evaluate Green-Lagrange strains and deformation gradient in curvilinear coordinate
+          // system
           auto strains = evaluate_strains(g_reference, g_current);
+
+          // transform gl strains to cartesian system
+          strains.gl_strain_ =
+              Shell::transform_green_lagrange_strain_to_cartesian(strains.gl_strain_, g_reference);
 
           // call material for evaluation of strain energy function
           Core::LinAlg::Tensor<double, 3> xi = {{xi_gp[0], xi_gp[1], 0.0}};
@@ -253,9 +255,6 @@ void Discret::Elements::Shell7pEleCalc<distype>::calculate_stresses_strains(
   Shell::BasisVectorsAndMetrics<distype> g_reference;
   Shell::BasisVectorsAndMetrics<distype> g_current;
 
-  // init enhanced strains for shell:
-  Core::LinAlg::SerialDenseVector strain_enh(Shell::Internal::num_internal_variables);
-
   const double* total_time =
       params.isParameter("total time") ? &params.get<double>("total time") : nullptr;
   const double* time_step_size =
@@ -275,18 +274,19 @@ void Discret::Elements::Shell7pEleCalc<distype>::calculate_stresses_strains(
           zeta = intpoints_thickness_.qxg[gpt][0] / condfac;
           Shell::evaluate_metrics(shape_functions, g_reference, g_current, nodal_coordinates, zeta);
 
-          // modify the current kovariant metric tensor to neglect the quadratic terms in thickness
+          // modify the current covariant metric tensor to neglect the quadratic terms in thickness
           // directions
-          Shell::modify_kovariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
+          Shell::modify_covariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
               shape_functions_ans, metrics_collocation_reference, metrics_collocation_current,
               shell_data_.num_ans);
 
-          // evaluate Green-Lagrange strains and deformation gradient in global cartesian coordinate
+          // evaluate Green-Lagrange strains and deformation gradient in curvilinear coordinate
           // system
-          auto strains = Shell::evaluate_strains(g_reference, g_current);
+          auto strains = evaluate_strains(g_reference, g_current);
 
-          // compute the consistent deformation gradient based on enhanced gl strains
-          strains.defgrd_ = Shell::calc_consistent_defgrd(strains.defgrd_, strains.gl_strain_);
+          // transform gl strains to cartesian system
+          strains.gl_strain_ =
+              Shell::transform_green_lagrange_strain_to_cartesian(strains.gl_strain_, g_reference);
 
           Core::LinAlg::Tensor<double, 3> xi = {{xi_gp[0], xi_gp[1], 0.0}};
           Mat::EvaluationContext context{.total_time = total_time,
@@ -295,10 +295,11 @@ void Discret::Elements::Shell7pEleCalc<distype>::calculate_stresses_strains(
               .ref_coords = nullptr};
           // evaluate stress in global cartesian system
           auto stress = Shell::evaluate_material_stress_cartesian_system<Shell::Internal::num_dim>(
-              solid_material, strains, params, context, gp, ele.id());
-          Shell::assemble_strain_type_to_matrix_row(strains, strainIO.type, strain_data, gp, 0.5);
+              solid_material, strains.defgrd_, strains.gl_strain_, params, context, gp, ele.id());
+          Shell::assemble_strain_type_to_matrix_row(
+              strains.gl_strain_, strains.defgrd_, strainIO.type, strain_data, gp, 0.5);
           Shell::assemble_stress_type_to_matrix_row(
-              strains, stress, stressIO.type, stress_data, gp, 0.5);
+              strains.defgrd_, stress, stressIO.type, stress_data, gp, 0.5);
         }
       });
   Shell::serialize(stress_data, serialized_stress_data);
@@ -354,10 +355,9 @@ void Discret::Elements::Shell7pEleCalc<distype>::evaluate_nonlinear_force_stiffn
   Shell::BasisVectorsAndMetrics<distype> g_reference;
   Shell::BasisVectorsAndMetrics<distype> g_current;
 
-  // init enhanced strain for shell
   constexpr auto num_internal_variables = Shell::Internal::num_internal_variables;
-  Core::LinAlg::SerialDenseVector strain_enh(num_internal_variables);
-  Shell::StressEnhanced stress_enh;
+
+  Shell::StressResultants stress_resultants{};
 
   const double* total_time =
       params.isParameter("total time") ? &params.get<double>("total time") : nullptr;
@@ -376,15 +376,15 @@ void Discret::Elements::Shell7pEleCalc<distype>::evaluate_nonlinear_force_stiffn
             nodal_coordinates.a3_curr_, shape_functions.shapefunctions_);
 
         // reset mid-surface material tensor and stress resultants to zero
-        stress_enh.dmat_.shape(num_internal_variables, num_internal_variables);
-        stress_enh.stress_.size(num_internal_variables);
+        stress_resultants.dmat_.shape(num_internal_variables, num_internal_variables);
+        stress_resultants.stress_.size(num_internal_variables);
 
         // init mass matrix variables
         Shell::MassMatrixVariables mass_matrix_variables;
 
         // calculate B-operator for compatible strains (displacement)
         Core::LinAlg::SerialDenseMatrix Bop = Shell::calc_b_operator<distype>(
-            a_current.kovariant_, a_current.partial_derivative_, shape_functions);
+            a_current.covariant_, a_current.partial_derivative_, shape_functions);
 
         const std::vector<double> shape_functions_ans =
             Shell::get_shapefunctions_for_ans<distype>(xi_gp, shell_data_.num_ans);
@@ -409,9 +409,9 @@ void Discret::Elements::Shell7pEleCalc<distype>::evaluate_nonlinear_force_stiffn
 
           Shell::evaluate_metrics(shape_functions, g_reference, g_current, nodal_coordinates, zeta);
 
-          // modify the current kovariant metric tensor to neglect the quadratic terms in thickness
+          // modify the current covariant metric tensor to neglect the quadratic terms in thickness
           // directions
-          Shell::modify_kovariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
+          Shell::modify_covariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
               shape_functions_ans, metrics_collocation_reference, metrics_collocation_current,
               shell_data_.num_ans);
 
@@ -419,21 +419,24 @@ void Discret::Elements::Shell7pEleCalc<distype>::evaluate_nonlinear_force_stiffn
           const double shifter = (1.0 / condfac) * (g_reference.detJ_ / da);
           factor *= shifter;
 
-          // evaluate Green-Lagrange strains and deformation gradient in cartesian coordinate system
+          // evaluate Green-Lagrange strains and deformation gradient in curvilinear coordinate
+          // system
           auto strains = evaluate_strains(g_reference, g_current);
 
-          // compute the consistent deformation gradient based on enhanced gl strains
-          strains.defgrd_ = Shell::calc_consistent_defgrd(strains.defgrd_, strains.gl_strain_);
+          // transform gl strains to cartesian system
+          strains.gl_strain_ =
+              Shell::transform_green_lagrange_strain_to_cartesian(strains.gl_strain_, g_reference);
 
           Core::LinAlg::Tensor<double, 3> xi = {{xi_gp[0], xi_gp[1], 0.0}};
           Mat::EvaluationContext context{.total_time = total_time,
               .time_step_size = time_step_size,
               .xi = &xi,
               .ref_coords = nullptr};
+
           auto stress = Shell::evaluate_material_stress_cartesian_system<Shell::Internal::num_dim>(
-              solid_material, strains, params, context, gp, ele.id());
+              solid_material, strains.defgrd_, strains.gl_strain_, params, context, gp, ele.id());
           Shell::map_material_stress_to_curvilinear_system(stress, g_reference);
-          Shell::thickness_integration<distype>(stress_enh, stress, factor, zeta);
+          Shell::thickness_integration<distype>(stress_resultants, stress, factor, zeta);
 
           // thickness integration of mass matrix variables
           if (mass_matrix != nullptr)
@@ -452,17 +455,17 @@ void Discret::Elements::Shell7pEleCalc<distype>::evaluate_nonlinear_force_stiffn
         {
           // elastic stiffness matrix Ke
           Shell::add_elastic_stiffness_matrix<distype>(
-              Bop, stress_enh.dmat_, integration_factor, *stiffness_matrix);
+              Bop, stress_resultants.dmat_, integration_factor, *stiffness_matrix);
           // geometric stiffness matrix Kg
           Shell::add_geometric_stiffness_matrix<distype>(shapefunctions_collocation,
-              shape_functions_ans, shape_functions, stress_enh.stress_, shell_data_.num_ans,
+              shape_functions_ans, shape_functions, stress_resultants.stress_, shell_data_.num_ans,
               integration_factor, *stiffness_matrix);
         }
         // add internal force vector
         if (force_vector != nullptr)
         {
           Shell::add_internal_force_vector<distype>(
-              Bop, stress_enh.stress_, integration_factor, *force_vector);
+              Bop, stress_resultants.stress_, integration_factor, *force_vector);
         }
         // add internal mass_matrix
         if (mass_matrix != nullptr)
@@ -529,9 +532,6 @@ void Discret::Elements::Shell7pEleCalc<distype>::update(Core::Elements::Element&
     Shell::BasisVectorsAndMetrics<distype> g_reference;
     Shell::BasisVectorsAndMetrics<distype> g_current;
 
-    // enhanced strains
-    Core::LinAlg::SerialDenseVector strain_enh(Shell::Internal::num_internal_variables);
-
     const double* total_time =
         params.isParameter("total time") ? &params.get<double>("total time") : nullptr;
     const double* time_step_size =
@@ -553,16 +553,19 @@ void Discret::Elements::Shell7pEleCalc<distype>::update(Core::Elements::Element&
             Shell::evaluate_metrics(
                 shape_functions, g_reference, g_current, nodal_coordinates, zeta);
 
-            // modify the current kovariant metric tensor to neglect the quadratic terms in
+            // modify the current covariant metric tensor to neglect the quadratic terms in
             // thickness directions
-            Shell::modify_kovariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
+            Shell::modify_covariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
                 shape_functions_ans, metrics_collocation_reference, metrics_collocation_current,
                 shell_data_.num_ans);
 
+            // evaluate Green-Lagrange strains and deformation gradient in curvilinear coordinate
+            // system
             auto strains = evaluate_strains(g_reference, g_current);
 
-            // compute the consistent deformation gradient based on enhanced gl strains
-            strains.defgrd_ = Shell::calc_consistent_defgrd(strains.defgrd_, strains.gl_strain_);
+            // transform gl strains to cartesian system
+            strains.gl_strain_ = Shell::transform_green_lagrange_strain_to_cartesian(
+                strains.gl_strain_, g_reference);
 
             Core::LinAlg::Tensor<double, 3> xi = {{xi_gp[0], xi_gp[1], 0.0}};
             Mat::EvaluationContext context{.total_time = total_time,

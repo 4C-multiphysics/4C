@@ -98,10 +98,6 @@ namespace Discret
       *  The element supports the use of 3D Solid Materials, however only St. Venant Kirchhoff,
       *  Coupled NeoHooke, IsoNeoHooke were tested now.
       *
-      *  In this shell formulation the strains and stresses are not sorted as usual in the
-      *  voigt notation, instead they are sorted as follows: alpha = {alpha_11 alpha_12 alpha_13
-      *  alpha_22 alpha_23 alpha_33 beta_11 beta_12 beta_13 beta_22 beta_23 beta_33 }
-      *
 
       *  References:
       *  [1] Theorie und Numerik einer dreidimensionalen Schalenformulierung (1999), M.Bischoff,

@@ -398,8 +398,8 @@ void Solid::Utils::Shell::Director::setup_director_for_element(
   {
     for (int dim = 0; dim < num_dim; ++dim) xrefe(i, dim) = ele.nodes()[i]->x()[dim];
   }
-  // allocate matrix for kovariant metric vectors
-  Core::LinAlg::SerialDenseMatrix metrics_kovariant(num_dim, num_dim);
+  // allocate matrix for covariant metric vectors
+  Core::LinAlg::SerialDenseMatrix metrics_covariant(num_dim, num_dim);
   for (int i = 0; i < num_node; ++i)
   {
     // get shape functions and derivatives at nodes
@@ -410,17 +410,17 @@ void Solid::Utils::Shell::Director::setup_director_for_element(
         derivatives, nodal_coordinates(0), nodal_coordinates(1), ele.shape());
 
     // get a1, a2 direction derivatives in r and s direction
-    Core::LinAlg::multiply(metrics_kovariant, derivatives, xrefe);
+    Core::LinAlg::multiply(metrics_covariant, derivatives, xrefe);
 
     // get thickness direction derivative perpendicular to a1 and a2
     // -> a3 = (a1 x a2) / (|a1 x a2 |)
     Core::LinAlg::Matrix<num_dim, 1> a1a2crossprod(Core::LinAlg::Initialization::zero);
-    a1a2crossprod(0) = metrics_kovariant(0, 1) * metrics_kovariant(1, 2) -
-                       metrics_kovariant(0, 2) * metrics_kovariant(1, 1);
-    a1a2crossprod(1) = metrics_kovariant(0, 2) * metrics_kovariant(1, 0) -
-                       metrics_kovariant(0, 0) * metrics_kovariant(1, 2);
-    a1a2crossprod(2) = metrics_kovariant(0, 0) * metrics_kovariant(1, 1) -
-                       metrics_kovariant(0, 1) * metrics_kovariant(1, 0);
+    a1a2crossprod(0) = metrics_covariant(0, 1) * metrics_covariant(1, 2) -
+                       metrics_covariant(0, 2) * metrics_covariant(1, 1);
+    a1a2crossprod(1) = metrics_covariant(0, 2) * metrics_covariant(1, 0) -
+                       metrics_covariant(0, 0) * metrics_covariant(1, 2);
+    a1a2crossprod(2) = metrics_covariant(0, 0) * metrics_covariant(1, 1) -
+                       metrics_covariant(0, 1) * metrics_covariant(1, 0);
     double a1a2crossnorm = a1a2crossprod.norm2();
     if (a1a2crossnorm > 1.0e-14) a1a2crossprod.scale(1.0 / a1a2crossnorm);
 

@@ -10,87 +10,18 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
-#include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_shell7p_ele.hpp"
-#include "4C_shell7p_ele_calc_eas_utils.hpp"
+#include "4C_shell7p_ele_calc_lib.hpp"
 #include "4C_shell7p_utils.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_ParameterList.hpp>
 
 FOUR_C_NAMESPACE_OPEN
-
-namespace
-{
-
-  /*!
-   * @brief Evaluates the enhanced strains scalar increment alpha
-   *
-   * @tparam distype : discretization type
-   * @param old_eas_data (in) : EAS iteration data
-   * @param neas (in) : Number of EAS parameter
-   * @param residual (in) : Residual displacement increment
-   * @param alpha_inc (out) : Enhanced strains scalar increment
-   */
-  template <Core::FE::CellType distype>
-  void evaluate_alpha_increment(Discret::Elements::ShellEASIterationData& old_eas_data,
-      const int& neas, const std::vector<double>& residual,
-      Core::LinAlg::SerialDenseMatrix& delta_alpha)
-  {
-    // we need the (residual) displacement at the previous step
-    Core::LinAlg::SerialDenseVector disp_inc(
-        Discret::Elements::Shell::Internal::numdofperelement<distype>);
-    for (int i = 0; i < Discret::Elements::Shell::Internal::numdofperelement<distype>; ++i)
-      disp_inc(i) = residual[i];
-
-    Core::LinAlg::SerialDenseMatrix eashelp(neas, 1);
-    // make multiplication eashelp = - old L^T * disp_incr[kstep]
-    Core::LinAlg::multiply(eashelp, old_eas_data.transL_, disp_inc);
-    // add old RTilde to eashelp
-    eashelp += old_eas_data.RTilde_;
-    // make multiplication alpha_inc = - old invDTilde * eashelp
-    Core::LinAlg::multiply(0.0, delta_alpha, -1.0, old_eas_data.invDTilde_, eashelp);
-  }  // end of EvaluateAlphaIncrement
-
-  /*!
-   * @brief Integrate the EAS data
-   *
-   *  Function needs to be called for every gaussian point
-   *
-   * @tparam distype : discretization type
-   * @param stress_enh (in) : An object holding the enhanced stress resultants
-   * @param M (in) : EAS shapefunctions
-   * @param Bop (in) : B-operator matrix
-   * @param eas_data (in/out) : An object holding the EAS data
-   * @param integration_factor (in) : Integration factor
-   */
-  template <Core::FE::CellType distype>
-  void integrate_eas(const Discret::Elements::Shell::StressEnhanced& stress_enh,
-      const Core::LinAlg::SerialDenseMatrix& M, const Core::LinAlg::SerialDenseMatrix& Bop,
-      Discret::Elements::ShellEASIterationData& eas_data, const double& integration_factor,
-      const int& neas)
-  {
-    // integrate D_Tilde += M^T * D * M  * detJ * w(gp)
-    // IMPORTANT: here we save D_Tilde in invDTilde_, since after the loop over all Gaussian points,
-    // we invert the matrix. At this point, this is still D_Tilde and NOT invD_Tilde
-    Core::LinAlg::SerialDenseMatrix MTDmat(
-        neas, Discret::Elements::Shell::Internal::num_internal_variables);
-    Core::LinAlg::multiply_tn(MTDmat, M, stress_enh.dmat_);
-
-    Core::LinAlg::multiply(1.0, eas_data.invDTilde_, integration_factor, MTDmat, M);
-
-    //  integrate transL (L^T) += M^T * D * B * detJ * w(gp)
-    Core::LinAlg::multiply(1.0, eas_data.transL_, integration_factor, MTDmat, Bop);
-
-    //  integrate Rtilde (R_Tilde) : Rtilde  += M^T * stress_r * detJ * w(gp)
-    Core::LinAlg::multiply_tn(1.0, eas_data.RTilde_, integration_factor, M, stress_enh.stress_);
-  }
-}  // namespace
-
 
 template <Core::FE::CellType distype>
 Discret::Elements::Shell7pEleCalcEas<distype>::Shell7pEleCalcEas()
@@ -225,7 +156,7 @@ double Discret::Elements::Shell7pEleCalcEas<distype>::calculate_internal_energy(
   if (not ele.is_params_interface())
   {
     // compute the EAS increment delta_alpha
-    evaluate_alpha_increment<distype>(
+    Shell::evaluate_alpha_increment<distype>(
         eas_iteration_data_, locking_types_.total, residual, delta_alpha);
     // update alpha += 1.0 * delta_alpha
     eas_iteration_data_.alpha_ += delta_alpha;
@@ -261,12 +192,9 @@ double Discret::Elements::Shell7pEleCalcEas<distype>::calculate_internal_energy(
   Shell::BasisVectorsAndMetrics<distype> g_reference;
   Shell::BasisVectorsAndMetrics<distype> g_current;
 
-  Shell::Strains strains{};
-  // init enhanced strain for shell
-  Core::LinAlg::SerialDenseVector strain_enh(Shell::Internal::num_internal_variables);
-
-  // init EAS shape function matrix
-  Core::LinAlg::SerialDenseMatrix M(Shell::Internal::num_internal_variables, locking_types_.total);
+  // init enhanced kinematic struct for storing EAS parameters
+  Shell::EASKinematics eas_kinematics{};
+  eas_kinematics.M.shape(Shell::Internal::num_internal_variables, locking_types_.total);
 
   const double* total_time =
       params.isParameter("total time") ? &params.get<double>("total time") : nullptr;
@@ -281,9 +209,8 @@ double Discret::Elements::Shell7pEleCalcEas<distype>::calculate_internal_energy(
         double integration_factor = gpweight * da;
 
         //  make shape functions for incompatible strains
-        M = Shell::EAS::evaluate_eas_shape_functions(
+        eas_kinematics.M = Shell::evaluate_eas_shape_functions(
             xi_gp, locking_types_, a_reference, metrics_centroid_reference);
-        Shell::EAS::evaluate_eas_strains(strain_enh, eas_iteration_data_.alpha_, M);
 
         const std::vector<double> shape_functions_ans =
             Shell::get_shapefunctions_for_ans<distype>(xi_gp, shell_data_.num_ans);
@@ -295,25 +222,36 @@ double Discret::Elements::Shell7pEleCalcEas<distype>::calculate_internal_energy(
 
           Shell::evaluate_metrics(shape_functions, g_reference, g_current, nodal_coordinates, zeta);
 
-          // modify the current kovariant metric tensor to neglect the quadratic terms in thickness
-          // directions
-          Shell::modify_kovariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
+          // modify the current covariant metric tensor to neglect the quadratic terms in
+          // thickness directions
+          Shell::modify_covariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
               shape_functions_ans, metrics_collocation_reference, metrics_collocation_current,
               shell_data_.num_ans);
 
-          // change to current metrics due to eas
-          Shell::EAS::update_current_metrics_eas(g_current, strain_enh, zeta);
+          // evaluate displacement deformation gradient and GL strain
+          Shell::Strains strains = Shell::evaluate_strains(g_reference, g_current);
 
-          // evaluate Green-Lagrange strains and deformation gradient in cartesian coordinate system
-          strains = Shell::evaluate_strains(g_reference, g_current);
+          // compute the enhanced GL strain (displacement + EAS) in curvilinear coordinates
+          eas_kinematics.enhanced_gl_strain_ = Shell::compute_total_enhanced_gl_strain(
+              eas_iteration_data_.alpha_, eas_kinematics.M, zeta, strains.gl_strain_);
 
-          // call material for evaluation of strain energy function
+          // transform enhanced GL strain to cartesian coordinate system
+          eas_kinematics.enhanced_gl_strain_ = Shell::transform_green_lagrange_strain_to_cartesian(
+              eas_kinematics.enhanced_gl_strain_, g_reference);
+
+          // compute the enhanced (consistent deformation gradient) in cartesian system
+          // Note: We do not need to transform F^{enh} between curvilinear and cartesian bases,
+          // because the rotation part extracted from F is invariant under coordinate changes.
+          eas_kinematics.enhanced_defgrd_ =
+              Shell::calc_consistent_defgrd(strains.defgrd_, eas_kinematics.enhanced_gl_strain_);
+
           Core::LinAlg::Tensor<double, 3> xi = {{xi_gp[0], xi_gp[1], 0.0}};
           Mat::EvaluationContext context{.total_time = total_time,
               .time_step_size = time_step_size,
               .xi = &xi,
               .ref_coords = nullptr};
-          double psi = solid_material.strain_energy(strains.gl_strain_, context, gp, ele.id());
+          double psi = solid_material.strain_energy(
+              eas_kinematics.enhanced_gl_strain_, context, gp, ele.id());
 
           double thickness = 0.0;
           for (int i = 0; i < Shell::Internal::num_node<distype>; ++i)
@@ -367,7 +305,7 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::calculate_stresses_strains(
   if (not ele.is_params_interface())
   {
     // compute the EAS increment delta_alpha
-    evaluate_alpha_increment<distype>(
+    Shell::evaluate_alpha_increment<distype>(
         eas_iteration_data_, locking_types_.total, residual, delta_alpha);
     // update alpha += 1.0 * delta_alpha
     eas_iteration_data_.alpha_ += delta_alpha;
@@ -404,12 +342,10 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::calculate_stresses_strains(
   Shell::BasisVectorsAndMetrics<distype> g_reference;
   Shell::BasisVectorsAndMetrics<distype> g_current;
 
-  // init enhanced strains for shell
-  Core::LinAlg::SerialDenseVector strain_enh(Shell::Internal::num_internal_variables);
-  Shell::StressEnhanced stress_enh;
-
-  // init EAS shape function matrix
-  Core::LinAlg::SerialDenseMatrix M(Shell::Internal::num_internal_variables, locking_types_.total);
+  // init enhanced kinematic struct for storing EAS parameters
+  Shell::EASKinematics eas_kinematics{};
+  eas_kinematics.M.shape(Shell::Internal::num_internal_variables, locking_types_.total);
+  Shell::StressResultants stress_resultants{};
 
   const double* total_time =
       params.isParameter("total time") ? &params.get<double>("total time") : nullptr;
@@ -422,10 +358,8 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::calculate_stresses_strains(
           Shell::BasisVectorsAndMetrics<distype>& a_reference, double gpweight, double da, int gp)
       {
         //  evaluate shape functions for incompatible strains
-        M = Shell::EAS::evaluate_eas_shape_functions(
+        eas_kinematics.M = Shell::evaluate_eas_shape_functions(
             xi_gp, locking_types_, a_reference, metrics_centroid_reference);
-
-        Shell::EAS::evaluate_eas_strains(strain_enh, eas_iteration_data_.alpha_, M);
 
         const std::vector<double> shape_functions_ans =
             Shell::get_shapefunctions_for_ans<distype>(xi_gp, shell_data_.num_ans);
@@ -437,32 +371,41 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::calculate_stresses_strains(
           zeta = intpoints_thickness_.qxg[gpt][0] / condfac;
           Shell::evaluate_metrics(shape_functions, g_reference, g_current, nodal_coordinates, zeta);
 
-          // modify the current kovariant metric tensor to neglect the quadratic terms in thickness
+          // modify the current covariant metric tensor to neglect the quadratic terms in thickness
           // directions
-          Shell::modify_kovariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
+          Shell::modify_covariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
               shape_functions_ans, metrics_collocation_reference, metrics_collocation_current,
               shell_data_.num_ans);
 
-          // change to current metrics due to eas
-          Shell::EAS::update_current_metrics_eas(g_current, strain_enh, zeta);
+          // evaluate displacement deformation gradient and GL strain
+          Shell::Strains strains = Shell::evaluate_strains(g_reference, g_current);
 
-          // evaluate Green-Lagrange strains and deformationgradient in cartesian coordinate system
-          auto strains = Shell::evaluate_strains(g_reference, g_current);
+          // compute the enhanced GL strain (displacement + EAS) in curvilinear coordinates
+          eas_kinematics.enhanced_gl_strain_ = Shell::compute_total_enhanced_gl_strain(
+              eas_iteration_data_.alpha_, eas_kinematics.M, zeta, strains.gl_strain_);
 
-          // compute the consistent deformation gradient based on enhanced gl strains
-          strains.defgrd_ = Shell::calc_consistent_defgrd(strains.defgrd_, strains.gl_strain_);
+          // transform enhanced GL strain to cartesian coordinate system
+          eas_kinematics.enhanced_gl_strain_ = Shell::transform_green_lagrange_strain_to_cartesian(
+              eas_kinematics.enhanced_gl_strain_, g_reference);
+
+          // compute the enhanced (consistent deformation gradient) in cartesian system
+          // Note: We do not need to transform F^{enh} between curvilinear and cartesian bases,
+          // because the rotation part extracted from F is invariant under coordinate changes.
+          eas_kinematics.enhanced_defgrd_ =
+              Shell::calc_consistent_defgrd(strains.defgrd_, eas_kinematics.enhanced_gl_strain_);
 
           Core::LinAlg::Tensor<double, 3> xi = {{xi_gp[0], xi_gp[1], 0.0}};
           Mat::EvaluationContext context{.total_time = total_time,
               .time_step_size = time_step_size,
               .xi = &xi,
               .ref_coords = nullptr};
-          // evaluate stress in local cartesian system
           auto stress = Shell::evaluate_material_stress_cartesian_system<Shell::Internal::num_dim>(
-              solid_material, strains, params, context, gp, ele.id());
-          Shell::assemble_strain_type_to_matrix_row(strains, strainIO.type, strain_data, gp, 0.5);
+              solid_material, eas_kinematics.enhanced_defgrd_, eas_kinematics.enhanced_gl_strain_,
+              params, context, gp, ele.id());
+          Shell::assemble_strain_type_to_matrix_row(eas_kinematics.enhanced_gl_strain_,
+              eas_kinematics.enhanced_defgrd_, strainIO.type, strain_data, gp, 0.5);
           Shell::assemble_stress_type_to_matrix_row(
-              strains, stress, stressIO.type, stress_data, gp, 0.5);
+              eas_kinematics.enhanced_defgrd_, stress, stressIO.type, stress_data, gp, 0.5);
         }
       });
   Shell::serialize(stress_data, serialized_stress_data);
@@ -503,7 +446,7 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::evaluate_nonlinear_force_sti
   if (not ele.is_params_interface())
   {
     // compute the EAS increment delta_alpha
-    evaluate_alpha_increment<distype>(
+    Shell::evaluate_alpha_increment<distype>(
         eas_iteration_data_, locking_types_.total, residual, delta_alpha);
     // update alpha += 1.0 * delta_alpha
     eas_iteration_data_.alpha_ += delta_alpha;
@@ -546,13 +489,11 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::evaluate_nonlinear_force_sti
   Shell::BasisVectorsAndMetrics<distype> g_reference;
   Shell::BasisVectorsAndMetrics<distype> g_current;
 
-  // init enhanced strain for shell
+  // init enhanced kinematic struct for storing EAS parameters
   constexpr auto num_internal_variables = Shell::Internal::num_internal_variables;
-  Core::LinAlg::SerialDenseVector strain_enh(num_internal_variables);
-  Shell::StressEnhanced stress_enh;
-
-  // init EAS shape function matrix
-  Core::LinAlg::SerialDenseMatrix M(num_internal_variables, locking_types_.total);
+  Shell::EASKinematics eas_kinematics{};
+  eas_kinematics.M.shape(num_internal_variables, locking_types_.total);
+  Shell::StressResultants stress_resultants{};
 
   Shell::for_each_gauss_point<distype>(nodal_coordinates, intpoints_midsurface_,
       [&](const std::array<double, 2>& xi_gp,
@@ -567,20 +508,19 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::evaluate_nonlinear_force_sti
             nodal_coordinates.a3_curr_, shape_functions.shapefunctions_);
 
         // reset mid-surface material tensor and stress resultants to zero
-        stress_enh.dmat_.shape(num_internal_variables, num_internal_variables);
-        stress_enh.stress_.size(num_internal_variables);
+        stress_resultants.dmat_.shape(num_internal_variables, num_internal_variables);
+        stress_resultants.stress_.size(num_internal_variables);
 
         // init mass matrix variables
         Shell::MassMatrixVariables mass_matrix_variables;
 
         //  evaluate shape functions for incompatible strains
-        M = Shell::EAS::evaluate_eas_shape_functions(
+        eas_kinematics.M = Shell::evaluate_eas_shape_functions(
             xi_gp, locking_types_, a_reference, metrics_centroid_reference);
-        Shell::EAS::evaluate_eas_strains(strain_enh, eas_iteration_data_.alpha_, M);
 
         // calculate B-operator for compatible strains (displacement)
         Core::LinAlg::SerialDenseMatrix Bop = Shell::calc_b_operator<distype>(
-            a_current.kovariant_, a_current.partial_derivative_, shape_functions);
+            a_current.covariant_, a_current.partial_derivative_, shape_functions);
 
         const std::vector<double> shape_functions_ans =
             Shell::get_shapefunctions_for_ans<distype>(xi_gp, shell_data_.num_ans);
@@ -609,32 +549,42 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::evaluate_nonlinear_force_sti
           // evaluate metric tensor at gp in shell body
           Shell::evaluate_metrics(shape_functions, g_reference, g_current, nodal_coordinates, zeta);
 
-          Shell::modify_kovariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
+          Shell::modify_covariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
               shape_functions_ans, metrics_collocation_reference, metrics_collocation_current,
               shell_data_.num_ans);
-
 
           // calc shell shifter and put it in the integration factor
           factor *= (1.0 / condfac) * (g_reference.detJ_ / da);
 
-          // change to current metrics due to EAS
-          Shell::EAS::update_current_metrics_eas(g_current, strain_enh, zeta);
+          // evaluate displacement deformation gradient and GL strain
+          Shell::Strains strains = Shell::evaluate_strains(g_reference, g_current);
 
-          // evaluate Green-Lagrange strains and deformation gradient in cartesian coordinate system
-          auto strains = Shell::evaluate_strains(g_reference, g_current);
+          // compute the enhanced GL strain (displacement + EAS) in curvilinear coordinates
+          eas_kinematics.enhanced_gl_strain_ = Shell::compute_total_enhanced_gl_strain(
+              eas_iteration_data_.alpha_, eas_kinematics.M, zeta, strains.gl_strain_);
 
-          // compute the consistent deformation gradient based on enhanced gl strains
-          strains.defgrd_ = Shell::calc_consistent_defgrd(strains.defgrd_, strains.gl_strain_);
+          // transform enhanced GL strain to cartesian coordinate system
+          eas_kinematics.enhanced_gl_strain_ = Shell::transform_green_lagrange_strain_to_cartesian(
+              eas_kinematics.enhanced_gl_strain_, g_reference);
+
+          // compute the enhanced (consistent deformation gradient) in cartesian system
+          // Note: We do not need to transform F^{enh} between curvilinear and cartesian bases,
+          // because the rotation part extracted from F is invariant under coordinate changes.
+          eas_kinematics.enhanced_defgrd_ =
+              Shell::calc_consistent_defgrd(strains.defgrd_, eas_kinematics.enhanced_gl_strain_);
 
           Core::LinAlg::Tensor<double, 3> xi = {{xi_gp[0], xi_gp[1], 0.0}};
           Mat::EvaluationContext context{.total_time = total_time,
               .time_step_size = time_step_size,
               .xi = &xi,
               .ref_coords = nullptr};
+
           auto stress = Shell::evaluate_material_stress_cartesian_system<Shell::Internal::num_dim>(
-              solid_material, strains, params, context, gp, ele.id());
+              solid_material, eas_kinematics.enhanced_defgrd_, eas_kinematics.enhanced_gl_strain_,
+              params, context, gp, ele.id());
+
           Shell::map_material_stress_to_curvilinear_system(stress, g_reference);
-          Shell::thickness_integration<distype>(stress_enh, stress, factor, zeta);
+          Shell::thickness_integration<distype>(stress_resultants, stress, factor, zeta);
           // thickness integration of mass matrix variables
           if (mass_matrix != nullptr)
           {
@@ -649,25 +599,25 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::evaluate_nonlinear_force_sti
         }
 
         // integration of EAS matrices
-        integrate_eas<distype>(
-            stress_enh, M, Bop, eas_iteration_data_, integration_factor, locking_types_.total);
+        Shell::integrate_eas<distype>(stress_resultants, eas_kinematics.M, Bop, eas_iteration_data_,
+            integration_factor, locking_types_.total);
 
         // add stiffness matrix
         if (stiffness_matrix != nullptr)
         {
           // elastic stiffness matrix Ke
           Shell::add_elastic_stiffness_matrix<distype>(
-              Bop, stress_enh.dmat_, integration_factor, *stiffness_matrix);
+              Bop, stress_resultants.dmat_, integration_factor, *stiffness_matrix);
           // geometric stiffness matrix Kg
           Shell::add_geometric_stiffness_matrix(shapefunctions_collocation, shape_functions_ans,
-              shape_functions, stress_enh.stress_, shell_data_.num_ans, integration_factor,
+              shape_functions, stress_resultants.stress_, shell_data_.num_ans, integration_factor,
               *stiffness_matrix);
         }
         // add internal force vector
         if (force_vector != nullptr)
         {
           Shell::add_internal_force_vector<distype>(
-              Bop, stress_enh.stress_, integration_factor, *force_vector);
+              Bop, stress_resultants.stress_, integration_factor, *force_vector);
         }
         // add internal mass_matrix
         if (mass_matrix != nullptr)
@@ -691,13 +641,12 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::evaluate_nonlinear_force_sti
       LinvDTilde, eas_iteration_data_.transL_, eas_iteration_data_.invDTilde_);
   if (stiffness_matrix != nullptr)
   {
-    Shell::EAS::add_eas_stiffness_matrix(
-        LinvDTilde, eas_iteration_data_.transL_, *stiffness_matrix);
+    Shell::add_eas_stiffness_matrix(LinvDTilde, eas_iteration_data_.transL_, *stiffness_matrix);
   }
 
   if (force_vector != nullptr)
   {
-    Shell::EAS::add_eas_internal_force(LinvDTilde, eas_iteration_data_.RTilde_, *force_vector);
+    Shell::add_eas_internal_force(LinvDTilde, eas_iteration_data_.RTilde_, *force_vector);
   }
 }
 
@@ -727,7 +676,7 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::recover(Core::Elements::Elem
         locking_types_.total, eas_iteration_data_.alpha_.values(), ele.owner());
 
     // compute the EAS increment delta_alpha
-    evaluate_alpha_increment<distype>(
+    Shell::evaluate_alpha_increment<distype>(
         eas_iteration_data_, locking_types_.total, residual, delta_alpha);
     // update alpha += step_length * delta_alpha
     delta_alpha.scale(step_length);
@@ -818,12 +767,10 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::update(Core::Elements::Eleme
     Shell::BasisVectorsAndMetrics<distype> g_reference;
     Shell::BasisVectorsAndMetrics<distype> g_current;
 
-    // enhanced strain for shell
+    // enhanced kinematic struct for storing EAS parameters
     constexpr auto num_internal_variables = Shell::Internal::num_internal_variables;
-    Core::LinAlg::SerialDenseVector strain_enh(num_internal_variables);
-
-    // init EAS shape function matrix
-    Core::LinAlg::SerialDenseMatrix M(num_internal_variables, num_internal_variables);
+    Shell::EASKinematics eas_kinematics{};
+    eas_kinematics.M.shape(num_internal_variables, locking_types_.total);
 
     const double* total_time =
         params.isParameter("total time") ? &params.get<double>("total time") : nullptr;
@@ -836,9 +783,8 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::update(Core::Elements::Eleme
             Shell::BasisVectorsAndMetrics<distype>& a_reference, double gpweight, double da, int gp)
         {
           //  make shape functions for incompatible strains  M
-          M = Shell::EAS::evaluate_eas_shape_functions(
+          eas_kinematics.M = Shell::evaluate_eas_shape_functions(
               xi_gp, locking_types_, a_reference, metrics_centroid_reference);
-          Shell::EAS::evaluate_eas_strains(strain_enh, eas_iteration_data_.alpha_, M);
 
           const std::vector<double> shape_functions_ans =
               Shell::get_shapefunctions_for_ans<distype>(xi_gp, shell_data_.num_ans);
@@ -851,26 +797,37 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::update(Core::Elements::Eleme
             Shell::evaluate_metrics(
                 shape_functions, g_reference, g_current, nodal_coordinates, zeta);
 
-            // modify the current kovariant metric tensor to neglect the quadratic terms in
+            // modify the current covariant metric tensor to neglect the quadratic terms in
             // thickness directions
-            Shell::modify_kovariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
+            Shell::modify_covariant_metrics(g_reference, g_current, a_reference, a_current, zeta,
                 shape_functions_ans, metrics_collocation_reference, metrics_collocation_current,
                 shell_data_.num_ans);
 
+            // evaluate displacement deformation gradient and GL strain
+            Shell::Strains strains = Shell::evaluate_strains(g_reference, g_current);
 
-            Shell::EAS::update_current_metrics_eas(g_current, strain_enh, zeta);
+            // compute the enhanced GL strain (displacement + EAS) in curvilinear coordinates
+            eas_kinematics.enhanced_gl_strain_ = Shell::compute_total_enhanced_gl_strain(
+                eas_iteration_data_.alpha_, eas_kinematics.M, zeta, strains.gl_strain_);
 
-            auto strains = evaluate_strains(g_reference, g_current);
+            // transform enhanced GL strain to cartesian coordinate system
+            eas_kinematics.enhanced_gl_strain_ =
+                Shell::transform_green_lagrange_strain_to_cartesian(
+                    eas_kinematics.enhanced_gl_strain_, g_reference);
 
-            // compute the consistent deformation gradient based on enhanced gl strains
-            strains.defgrd_ = Shell::calc_consistent_defgrd(strains.defgrd_, strains.gl_strain_);
+            // compute the enhanced (consistent deformation gradient) in cartesian system
+            // Note: We do not need to transform F^{enh} between curvilinear and cartesian bases,
+            // because the rotation part extracted from F is invariant under coordinate changes.
+            eas_kinematics.enhanced_defgrd_ =
+                Shell::calc_consistent_defgrd(strains.defgrd_, eas_kinematics.enhanced_gl_strain_);
 
             Core::LinAlg::Tensor<double, 3> xi = {{xi_gp[0], xi_gp[1], 0.0}};
             Mat::EvaluationContext context{.total_time = total_time,
                 .time_step_size = time_step_size,
                 .xi = &xi,
                 .ref_coords = nullptr};
-            solid_material.update(strains.defgrd_, gp, params, context, ele.id());
+
+            solid_material.update(eas_kinematics.enhanced_defgrd_, gp, params, context, ele.id());
           }
         });
   }

@@ -14,6 +14,7 @@
 #include "4C_fem_general_utils_gausspoints.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
+#include "4C_shell7p_ele_calc_eas_utils.hpp"
 #include "4C_shell7p_ele_calc_interface.hpp"
 #include "4C_shell7p_ele_calc_lib.hpp"
 #include "4C_shell7p_ele_interface_serializable.hpp"
@@ -35,22 +36,6 @@ namespace Discret
 {
   namespace Elements
   {
-    /*!
-    \brief A struct holding the iteration data used within the Enhanced Assumed Strain element
-    technology
-    */
-    struct ShellEASIterationData
-    {
-      // EAS portion of internal forces Rtilde (dimension neas x 1)
-      Core::LinAlg::SerialDenseMatrix RTilde_;
-      // inverse EAS matrix Dtilde (dimension neas x neas)
-      Core::LinAlg::SerialDenseMatrix invDTilde_;
-      // transposed EAS matrix  L^T (dimension neas x numdofperelement)
-      Core::LinAlg::SerialDenseMatrix transL_;
-      // alpha (dimension neas x 1)
-      Core::LinAlg::SerialDenseMatrix alpha_;
-    };
-
     template <Core::FE::CellType distype>
     class Shell7pEleCalcEas : public Shell7pEleCalcInterface, public Shell::Serializable
     {
@@ -104,7 +89,7 @@ namespace Discret
 
      private:
       //! EAS matrices and vectors to be stored between iterations
-      Discret::Elements::ShellEASIterationData eas_iteration_data_ = {};
+      Discret::Elements::Shell::EASIterationData eas_iteration_data_ = {};
 
       //! number of integration points in thickness direction (note: currently they are fixed to 2,
       //! otherwise the element would suffer from nonlinear poisson stiffening)

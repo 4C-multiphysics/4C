@@ -142,7 +142,7 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
     // get shape functions and derivatives at gaussian points
     ShapefunctionsAndDerivatives<distype> shapefunctions =
         evaluate_shapefunctions_and_derivs<distype>(xi_gp);
-    Core::LinAlg::Matrix<num_dim, num_dim> g_metrics_kovariant(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<num_dim, num_dim> g_metrics_covariant(Core::LinAlg::Initialization::zero);
 
     Core::LinAlg::Matrix<numnod, num_dim> x_refe(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<numnod, num_dim> x_curr(Core::LinAlg::Initialization::zero);
@@ -160,7 +160,7 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
       {
         // no linearization needed for load in material configuration
         loadlin = false;
-        g_metrics_kovariant.multiply_nn(1.0, shapefunctions.derivatives_, x_refe, 0.0);
+        g_metrics_covariant.multiply_nn(1.0, shapefunctions.derivatives_, x_refe, 0.0);
       }
       break;
       case config_lastconverged:
@@ -172,7 +172,7 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
 
         spatial_configuration<distype>(x_curr, x_refe, displacements, 0);
 
-        g_metrics_kovariant.multiply_nn(1.0, shapefunctions.derivatives_, x_curr, 0.0);
+        g_metrics_covariant.multiply_nn(1.0, shapefunctions.derivatives_, x_curr, 0.0);
       }
       break;
       case config_spatial:
@@ -182,7 +182,7 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
 
         spatial_configuration<distype>(x_curr, x_refe, displacements, 0);
 
-        g_metrics_kovariant.multiply_nn(1.0, shapefunctions.derivatives_, x_curr, 0.0);
+        g_metrics_covariant.multiply_nn(1.0, shapefunctions.derivatives_, x_curr, 0.0);
       }
       break;
       default:
@@ -192,12 +192,12 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
     // get thickness direction derivative perpendicular to g1 and g2 (with area as length)
     // -> g3 = (g1 x g2) / (|g1 x g2 |)
     Core::LinAlg::Matrix<num_dim, 1> g3(Core::LinAlg::Initialization::zero);
-    g3(0) = g_metrics_kovariant(0, 1) * g_metrics_kovariant(1, 2) -
-            g_metrics_kovariant(0, 2) * g_metrics_kovariant(1, 1);
-    g3(1) = g_metrics_kovariant(0, 2) * g_metrics_kovariant(1, 0) -
-            g_metrics_kovariant(0, 0) * g_metrics_kovariant(1, 2);
-    g3(2) = g_metrics_kovariant(0, 0) * g_metrics_kovariant(1, 1) -
-            g_metrics_kovariant(0, 1) * g_metrics_kovariant(1, 0);
+    g3(0) = g_metrics_covariant(0, 1) * g_metrics_covariant(1, 2) -
+            g_metrics_covariant(0, 2) * g_metrics_covariant(1, 1);
+    g3(1) = g_metrics_covariant(0, 2) * g_metrics_covariant(1, 0) -
+            g_metrics_covariant(0, 0) * g_metrics_covariant(1, 2);
+    g3(2) = g_metrics_covariant(0, 0) * g_metrics_covariant(1, 1) -
+            g_metrics_covariant(0, 1) * g_metrics_covariant(1, 0);
     // compute line increment ds
     double ds = g3.norm2();
     if (ds <= 1.0e-14) FOUR_C_THROW("Element Area equal 0.0 or negative detected");
@@ -281,14 +281,14 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
       for (int dof = 0; dof < numdof; ++dof)
       {
         dnormal(0, dof) =
-            dg1(1, dof) * g_metrics_kovariant(1, 2) + g_metrics_kovariant(0, 1) * dg2(2, dof) -
-            dg1(2, dof) * g_metrics_kovariant(1, 1) - g_metrics_kovariant(0, 2) * dg2(1, dof);
+            dg1(1, dof) * g_metrics_covariant(1, 2) + g_metrics_covariant(0, 1) * dg2(2, dof) -
+            dg1(2, dof) * g_metrics_covariant(1, 1) - g_metrics_covariant(0, 2) * dg2(1, dof);
         dnormal(1, dof) =
-            dg1(2, dof) * g_metrics_kovariant(1, 0) + g_metrics_kovariant(0, 2) * dg2(0, dof) -
-            dg1(0, dof) * g_metrics_kovariant(1, 2) - g_metrics_kovariant(0, 0) * dg2(2, dof);
+            dg1(2, dof) * g_metrics_covariant(1, 0) + g_metrics_covariant(0, 2) * dg2(0, dof) -
+            dg1(0, dof) * g_metrics_covariant(1, 2) - g_metrics_covariant(0, 0) * dg2(2, dof);
         dnormal(2, dof) =
-            dg1(0, dof) * g_metrics_kovariant(1, 1) + g_metrics_kovariant(0, 0) * dg2(1, dof) -
-            dg1(1, dof) * g_metrics_kovariant(1, 0) - g_metrics_kovariant(0, 1) * dg2(0, dof);
+            dg1(0, dof) * g_metrics_covariant(1, 1) + g_metrics_covariant(0, 0) * dg2(1, dof) -
+            dg1(1, dof) * g_metrics_covariant(1, 0) - g_metrics_covariant(0, 1) * dg2(0, dof);
       }
       // build surface element load linearization matrix
       // (CAREFUL: Minus sign due to the fact that external forces enter the global

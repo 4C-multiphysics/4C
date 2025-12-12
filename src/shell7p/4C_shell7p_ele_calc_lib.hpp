@@ -52,9 +52,9 @@ namespace Discret::Elements::Shell
    *
    * @tparam distype :  The discretization type known at compile time
    * @param x       (out)  : Nodal coords in spatial frame
-   * @param x_refe  (out)  : Nodal coords in reference frame
-   * @param disp    (int)  : Displacements
-   * @param index   (int)  : Integer to consider either displacements or director displacmenets
+   * @param x_refe  (in)  : Nodal coords in reference frame
+   * @param disp    (in)  : Displacements
+   * @param index   (in)  : Integer to consider either displacements or director displacmenets
    */
   template <Core::FE::CellType distype>
   void spatial_configuration(
@@ -77,9 +77,9 @@ namespace Discret::Elements::Shell
    * @tparam distype :  The discretization type known at compile time
    * @param nodes (in)  : Nodal coords in reference frame
    * @param disp (in)  : Displacements
-   * @param thicknesss (int)  : Nodal thickness values in reference frame
-   * @param a3_reference (int)  : Nodal directors in reference frame
-   * @param factor (int)  : Scaling factor due to SDC
+   * @param thickness (in)  : Nodal thickness values in reference frame
+   * @param a3_reference (in)  : Nodal directors in reference frame
+   * @param factor (in)  : Scaling factor due to SDC
    */
   template <Core::FE::CellType distype>
   Discret::Elements::Shell::NodalCoordinates<distype> evaluate_nodal_coordinates(
@@ -118,8 +118,8 @@ namespace Discret::Elements::Shell
    */
   struct Strains
   {
-    Core::LinAlg::Tensor<double, Internal::num_dim, Internal::num_dim> defgrd_;
-    Core::LinAlg::SymmetricTensor<double, Internal::num_dim, Internal::num_dim> gl_strain_;
+    Core::LinAlg::Tensor<double, Internal::num_dim, Internal::num_dim> defgrd_{};
+    Core::LinAlg::SymmetricTensor<double, Internal::num_dim, Internal::num_dim> gl_strain_{};
   };
 
   /*!
@@ -136,10 +136,10 @@ namespace Discret::Elements::Shell
   };
 
   /*!
-   * @brief A struct holding the enhanced stress measures (2-Piola-Kirchhoff stresses and
-   * enhanced material matrix)
+   * @brief A struct holding the thickness-integrated stress resultants (membrane forces and
+   * bending moments) and the thickness-integrated material tangent
    */
-  struct StressEnhanced
+  struct StressResultants
   {
     Core::LinAlg::SerialDenseVector stress_;
     Core::LinAlg::SerialDenseMatrix dmat_;
@@ -155,20 +155,21 @@ namespace Discret::Elements::Shell
    * @param strains (in) : Strain measures of the element
    * @param params (in) : List of additional parameter to pass quantities from the time integrator
    * to the material
+   * @param context (in) : Material evaluation context
    * @param gp (in) : Gauss point
    * @param eleGID (in) : Global element id
-   * @return Stress<Mat::NUM_STRESS_3D> : Object holding the 2. Piola Kirchhoff stress tensor and
+   * @return Stress : Object holding the 2. Piola Kirchhoff stress tensor and
    * the linearization w.r.t. Green Lagrange strain tensor
    */
   template <int dim>
   Stress evaluate_material_stress_cartesian_system(Mat::So3Material& material,
-      const Strains& strains, Teuchos::ParameterList& params, const Mat::EvaluationContext& context,
-      int gp, int eleGID)
+      const Core::LinAlg::Tensor<double, 3, 3>& defgrd,
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& gl_strain, Teuchos::ParameterList& params,
+      const Mat::EvaluationContext& context, int gp, int eleGID)
   {
     Stress stress{};
 
-    material.evaluate(&strains.defgrd_, strains.gl_strain_, params, context, stress.pk2_,
-        stress.cmat_, gp, eleGID);
+    material.evaluate(&defgrd, gl_strain, params, context, stress.pk2_, stress.cmat_, gp, eleGID);
 
     return stress;
   }
@@ -186,7 +187,8 @@ namespace Discret::Elements::Shell
    * @brief Returns the gauss integration based on the optimal gauss integration rule
    *
    * @tparam distype : The discretization type known at compile time
-   * @tparam GaussRuleType (in) : Optimal gauss rule integration type
+   * @tparam GaussRuleType : Optimal gauss rule integration type
+   * @param gaussrule (in) : Gauss rule
    * @return Core::FE::IntegrationPoints2D : Integration points
    */
   template <Core::FE::CellType distype, typename GaussRuleType>
@@ -284,10 +286,10 @@ namespace Discret::Elements::Shell
   template <Core::FE::CellType distype>
   struct BasisVectorsAndMetrics
   {
-    Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> kovariant_;
-    Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> kontravariant_;
-    Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> metric_kovariant_;
-    Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> metric_kontravariant_;
+    Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> covariant_;
+    Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> contravariant_;
+    Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> metric_covariant_;
+    Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> metric_contravariant_;
     Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> partial_derivative_;
     double detJ_;
   };
@@ -296,8 +298,8 @@ namespace Discret::Elements::Shell
    * @brief Evaluates the strain gradient (B-Operator) of the specified element
    *
    * @tparam distype :  The discretization type known at compile time
-   * @param akov (in) : kovariant basis vectors
-   * @param da3kov (in) : Partial derivatives of the kovariant basis vectors w.r.t spatial
+   * @param a_cov (in) : covariant basis vectors
+   * @param da3_cov (in) : Partial derivatives of the covariant basis vectors w.r.t spatial
    * coordinates
    * @param shapefunctions_derivatives (in) : An object holding the shape functions and the
    * first derivatives w.r.t spatial coordinates evaluated at the respective point in the parameter
@@ -306,7 +308,7 @@ namespace Discret::Elements::Shell
    */
   template <Core::FE::CellType distype>
   Core::LinAlg::SerialDenseMatrix calc_b_operator(
-      const Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim>& akov,
+      const Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim>& a_cov,
       const Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim>& da3kov,
       const Discret::Elements::Shell::ShapefunctionsAndDerivatives<distype>&
           shapefunctions_derivatives)
@@ -320,89 +322,89 @@ namespace Discret::Elements::Shell
     const int nodedof = Internal::node_dof;
     for (int i = 0; i < Internal::num_node<distype>; ++i)
     {
-      Bop(0, nodedof * i + 0) = derivs(0, i) * akov(0, 0);
-      Bop(0, nodedof * i + 1) = derivs(0, i) * akov(0, 1);
-      Bop(0, nodedof * i + 2) = derivs(0, i) * akov(0, 2);
+      Bop(0, nodedof * i + 0) = derivs(0, i) * a_cov(0, 0);
+      Bop(0, nodedof * i + 1) = derivs(0, i) * a_cov(0, 1);
+      Bop(0, nodedof * i + 2) = derivs(0, i) * a_cov(0, 2);
       Bop(0, nodedof * i + 3) = 0.0;
       Bop(0, nodedof * i + 4) = 0.0;
       Bop(0, nodedof * i + 5) = 0.0;
 
-      Bop(1, nodedof * i + 0) = derivs(1, i) * akov(0, 0) + derivs(0, i) * akov(1, 0);
-      Bop(1, nodedof * i + 1) = derivs(1, i) * akov(0, 1) + derivs(0, i) * akov(1, 1);
-      Bop(1, nodedof * i + 2) = derivs(1, i) * akov(0, 2) + derivs(0, i) * akov(1, 2);
+      Bop(1, nodedof * i + 0) = derivs(1, i) * a_cov(1, 0);
+      Bop(1, nodedof * i + 1) = derivs(1, i) * a_cov(1, 1);
+      Bop(1, nodedof * i + 2) = derivs(1, i) * a_cov(1, 2);
       Bop(1, nodedof * i + 3) = 0.0;
       Bop(1, nodedof * i + 4) = 0.0;
       Bop(1, nodedof * i + 5) = 0.0;
 
-      Bop(2, nodedof * i + 0) = derivs(0, i) * akov(2, 0);
-      Bop(2, nodedof * i + 1) = derivs(0, i) * akov(2, 1);
-      Bop(2, nodedof * i + 2) = derivs(0, i) * akov(2, 2);
-      Bop(2, nodedof * i + 3) = shapefunctions(i) * akov(0, 0);
-      Bop(2, nodedof * i + 4) = shapefunctions(i) * akov(0, 1);
-      Bop(2, nodedof * i + 5) = shapefunctions(i) * akov(0, 2);
+      Bop(2, nodedof * i + 0) = 0.0;
+      Bop(2, nodedof * i + 1) = 0.0;
+      Bop(2, nodedof * i + 2) = 0.0;
+      Bop(2, nodedof * i + 3) = shapefunctions(i) * a_cov(2, 0);
+      Bop(2, nodedof * i + 4) = shapefunctions(i) * a_cov(2, 1);
+      Bop(2, nodedof * i + 5) = shapefunctions(i) * a_cov(2, 2);
 
-      Bop(3, nodedof * i + 0) = derivs(1, i) * akov(1, 0);
-      Bop(3, nodedof * i + 1) = derivs(1, i) * akov(1, 1);
-      Bop(3, nodedof * i + 2) = derivs(1, i) * akov(1, 2);
+      Bop(3, nodedof * i + 0) = derivs(1, i) * a_cov(0, 0) + derivs(0, i) * a_cov(1, 0);
+      Bop(3, nodedof * i + 1) = derivs(1, i) * a_cov(0, 1) + derivs(0, i) * a_cov(1, 1);
+      Bop(3, nodedof * i + 2) = derivs(1, i) * a_cov(0, 2) + derivs(0, i) * a_cov(1, 2);
       Bop(3, nodedof * i + 3) = 0.0;
       Bop(3, nodedof * i + 4) = 0.0;
       Bop(3, nodedof * i + 5) = 0.0;
 
-      Bop(4, nodedof * i + 0) = derivs(1, i) * akov(2, 0);
-      Bop(4, nodedof * i + 1) = derivs(1, i) * akov(2, 1);
-      Bop(4, nodedof * i + 2) = derivs(1, i) * akov(2, 2);
-      Bop(4, nodedof * i + 3) = shapefunctions(i) * akov(1, 0);
-      Bop(4, nodedof * i + 4) = shapefunctions(i) * akov(1, 1);
-      Bop(4, nodedof * i + 5) = shapefunctions(i) * akov(1, 2);
+      Bop(4, nodedof * i + 0) = derivs(1, i) * a_cov(2, 0);
+      Bop(4, nodedof * i + 1) = derivs(1, i) * a_cov(2, 1);
+      Bop(4, nodedof * i + 2) = derivs(1, i) * a_cov(2, 2);
+      Bop(4, nodedof * i + 3) = shapefunctions(i) * a_cov(1, 0);
+      Bop(4, nodedof * i + 4) = shapefunctions(i) * a_cov(1, 1);
+      Bop(4, nodedof * i + 5) = shapefunctions(i) * a_cov(1, 2);
 
-      Bop(5, nodedof * i + 0) = 0.0;
-      Bop(5, nodedof * i + 1) = 0.0;
-      Bop(5, nodedof * i + 2) = 0.0;
-      Bop(5, nodedof * i + 3) = shapefunctions(i) * akov(2, 0);
-      Bop(5, nodedof * i + 4) = shapefunctions(i) * akov(2, 1);
-      Bop(5, nodedof * i + 5) = shapefunctions(i) * akov(2, 2);
+      Bop(5, nodedof * i + 0) = derivs(0, i) * a_cov(2, 0);
+      Bop(5, nodedof * i + 1) = derivs(0, i) * a_cov(2, 1);
+      Bop(5, nodedof * i + 2) = derivs(0, i) * a_cov(2, 2);
+      Bop(5, nodedof * i + 3) = shapefunctions(i) * a_cov(0, 0);
+      Bop(5, nodedof * i + 4) = shapefunctions(i) * a_cov(0, 1);
+      Bop(5, nodedof * i + 5) = shapefunctions(i) * a_cov(0, 2);
 
       Bop(6, nodedof * i + 0) = derivs(0, i) * da3kov(0, 0);
       Bop(6, nodedof * i + 1) = derivs(0, i) * da3kov(0, 1);
       Bop(6, nodedof * i + 2) = derivs(0, i) * da3kov(0, 2);
-      Bop(6, nodedof * i + 3) = derivs(0, i) * akov(0, 0);
-      Bop(6, nodedof * i + 4) = derivs(0, i) * akov(0, 1);
-      Bop(6, nodedof * i + 5) = derivs(0, i) * akov(0, 2);
+      Bop(6, nodedof * i + 3) = derivs(0, i) * a_cov(0, 0);
+      Bop(6, nodedof * i + 4) = derivs(0, i) * a_cov(0, 1);
+      Bop(6, nodedof * i + 5) = derivs(0, i) * a_cov(0, 2);
 
-      Bop(7, nodedof * i + 0) = derivs(0, i) * da3kov(1, 0) + derivs(1, i) * da3kov(0, 0);
-      Bop(7, nodedof * i + 1) = derivs(0, i) * da3kov(1, 1) + derivs(1, i) * da3kov(0, 1);
-      Bop(7, nodedof * i + 2) = derivs(0, i) * da3kov(1, 2) + derivs(1, i) * da3kov(0, 2);
-      Bop(7, nodedof * i + 3) = derivs(0, i) * akov(1, 0) + derivs(1, i) * akov(0, 0);
-      Bop(7, nodedof * i + 4) = derivs(0, i) * akov(1, 1) + derivs(1, i) * akov(0, 1);
-      Bop(7, nodedof * i + 5) = derivs(0, i) * akov(1, 2) + derivs(1, i) * akov(0, 2);
+      Bop(7, nodedof * i + 0) = derivs(1, i) * da3kov(1, 0);
+      Bop(7, nodedof * i + 1) = derivs(1, i) * da3kov(1, 1);
+      Bop(7, nodedof * i + 2) = derivs(1, i) * da3kov(1, 2);
+      Bop(7, nodedof * i + 3) = derivs(1, i) * a_cov(1, 0);
+      Bop(7, nodedof * i + 4) = derivs(1, i) * a_cov(1, 1);
+      Bop(7, nodedof * i + 5) = derivs(1, i) * a_cov(1, 2);
 
       Bop(8, nodedof * i + 0) = 0.0;
       Bop(8, nodedof * i + 1) = 0.0;
       Bop(8, nodedof * i + 2) = 0.0;
-      Bop(8, nodedof * i + 3) = shapefunctions(i) * da3kov(0, 0) + derivs(0, i) * akov(2, 0);
-      Bop(8, nodedof * i + 4) = shapefunctions(i) * da3kov(0, 1) + derivs(0, i) * akov(2, 1);
-      Bop(8, nodedof * i + 5) = shapefunctions(i) * da3kov(0, 2) + derivs(0, i) * akov(2, 2);
+      Bop(8, nodedof * i + 3) = 0.0;
+      Bop(8, nodedof * i + 4) = 0.0;
+      Bop(8, nodedof * i + 5) = 0.0;
 
-      Bop(9, nodedof * i + 0) = derivs(1, i) * da3kov(1, 0);
-      Bop(9, nodedof * i + 1) = derivs(1, i) * da3kov(1, 1);
-      Bop(9, nodedof * i + 2) = derivs(1, i) * da3kov(1, 2);
-      Bop(9, nodedof * i + 3) = derivs(1, i) * akov(1, 0);
-      Bop(9, nodedof * i + 4) = derivs(1, i) * akov(1, 1);
-      Bop(9, nodedof * i + 5) = derivs(1, i) * akov(1, 2);
+      Bop(9, nodedof * i + 0) = derivs(0, i) * da3kov(1, 0) + derivs(1, i) * da3kov(0, 0);
+      Bop(9, nodedof * i + 1) = derivs(0, i) * da3kov(1, 1) + derivs(1, i) * da3kov(0, 1);
+      Bop(9, nodedof * i + 2) = derivs(0, i) * da3kov(1, 2) + derivs(1, i) * da3kov(0, 2);
+      Bop(9, nodedof * i + 3) = derivs(0, i) * a_cov(1, 0) + derivs(1, i) * a_cov(0, 0);
+      Bop(9, nodedof * i + 4) = derivs(0, i) * a_cov(1, 1) + derivs(1, i) * a_cov(0, 1);
+      Bop(9, nodedof * i + 5) = derivs(0, i) * a_cov(1, 2) + derivs(1, i) * a_cov(0, 2);
 
       Bop(10, nodedof * i + 0) = 0.0;
       Bop(10, nodedof * i + 1) = 0.0;
       Bop(10, nodedof * i + 2) = 0.0;
-      Bop(10, nodedof * i + 3) = shapefunctions(i) * da3kov(1, 0) + derivs(1, i) * akov(2, 0);
-      Bop(10, nodedof * i + 4) = shapefunctions(i) * da3kov(1, 1) + derivs(1, i) * akov(2, 1);
-      Bop(10, nodedof * i + 5) = shapefunctions(i) * da3kov(1, 2) + derivs(1, i) * akov(2, 2);
+      Bop(10, nodedof * i + 3) = shapefunctions(i) * da3kov(1, 0) + derivs(1, i) * a_cov(2, 0);
+      Bop(10, nodedof * i + 4) = shapefunctions(i) * da3kov(1, 1) + derivs(1, i) * a_cov(2, 1);
+      Bop(10, nodedof * i + 5) = shapefunctions(i) * da3kov(1, 2) + derivs(1, i) * a_cov(2, 2);
 
       Bop(11, nodedof * i + 0) = 0.0;
       Bop(11, nodedof * i + 1) = 0.0;
       Bop(11, nodedof * i + 2) = 0.0;
-      Bop(11, nodedof * i + 3) = 0.0;
-      Bop(11, nodedof * i + 4) = 0.0;
-      Bop(11, nodedof * i + 5) = 0.0;
+      Bop(11, nodedof * i + 3) = shapefunctions(i) * da3kov(0, 0) + derivs(0, i) * a_cov(2, 0);
+      Bop(11, nodedof * i + 4) = shapefunctions(i) * da3kov(0, 1) + derivs(0, i) * a_cov(2, 1);
+      Bop(11, nodedof * i + 5) = shapefunctions(i) * da3kov(0, 2) + derivs(0, i) * a_cov(2, 2);
     }
     return Bop;
   }
@@ -430,13 +432,13 @@ namespace Discret::Elements::Shell
     const int nodedof = Internal::node_dof;
     for (int i = 0; i < Internal::num_node<distype>; ++i)
     {
-      Bop(2, nodedof * i + 0) = 0.0;
-      Bop(2, nodedof * i + 1) = 0.0;
-      Bop(2, nodedof * i + 2) = 0.0;
-      Bop(2, nodedof * i + 3) = 0.0;
-      Bop(2, nodedof * i + 4) = 0.0;
-      Bop(2, nodedof * i + 5) = 0.0;
-      //
+      Bop(5, nodedof * i + 0) = 0.0;
+      Bop(5, nodedof * i + 1) = 0.0;
+      Bop(5, nodedof * i + 2) = 0.0;
+      Bop(5, nodedof * i + 3) = 0.0;
+      Bop(5, nodedof * i + 4) = 0.0;
+      Bop(5, nodedof * i + 5) = 0.0;
+
       Bop(4, nodedof * i + 0) = 0.0;
       Bop(4, nodedof * i + 1) = 0.0;
       Bop(4, nodedof * i + 2) = 0.0;
@@ -446,21 +448,21 @@ namespace Discret::Elements::Shell
 
       for (int j = 0; j < numans; ++j)
       {
-        const double a1x1 = metric_currq[j].kovariant_(0, 0);
-        const double a1y1 = metric_currq[j].kovariant_(0, 1);
-        const double a1z1 = metric_currq[j].kovariant_(0, 2);
+        const double a1x1 = metric_currq[j].covariant_(0, 0);
+        const double a1y1 = metric_currq[j].covariant_(0, 1);
+        const double a1z1 = metric_currq[j].covariant_(0, 2);
 
-        const double a3x1 = metric_currq[j].kovariant_(2, 0);
-        const double a3y1 = metric_currq[j].kovariant_(2, 1);
-        const double a3z1 = metric_currq[j].kovariant_(2, 2);
+        const double a3x1 = metric_currq[j].covariant_(2, 0);
+        const double a3y1 = metric_currq[j].covariant_(2, 1);
+        const double a3z1 = metric_currq[j].covariant_(2, 2);
 
-        const double a2x2 = metric_currq[j + numans].kovariant_(1, 0);
-        const double a2y2 = metric_currq[j + numans].kovariant_(1, 1);
-        const double a2z2 = metric_currq[j + numans].kovariant_(1, 2);
+        const double a2x2 = metric_currq[j + numans].covariant_(1, 0);
+        const double a2y2 = metric_currq[j + numans].covariant_(1, 1);
+        const double a2z2 = metric_currq[j + numans].covariant_(1, 2);
 
-        const double a3x2 = metric_currq[j + numans].kovariant_(2, 0);
-        const double a3y2 = metric_currq[j + numans].kovariant_(2, 1);
-        const double a3z2 = metric_currq[j + numans].kovariant_(2, 2);
+        const double a3x2 = metric_currq[j + numans].covariant_(2, 0);
+        const double a3y2 = metric_currq[j + numans].covariant_(2, 1);
+        const double a3z2 = metric_currq[j + numans].covariant_(2, 2);
 
         const double N1 = shapefunctions_q[j].shapefunctions_(i);
         const double N2 = shapefunctions_q[j + numans].shapefunctions_(i);
@@ -471,15 +473,13 @@ namespace Discret::Elements::Shell
         const double Nans1 = shapefunctions_ans[j];
         const double Nans2 = shapefunctions_ans[j + numans];
 
-        // E_13 const remedy of transverse shear locking
-        Bop(2, nodedof * i + 0) += dN1d1 * a3x1 * Nans1;
-        Bop(2, nodedof * i + 1) += dN1d1 * a3y1 * Nans1;
-        Bop(2, nodedof * i + 2) += dN1d1 * a3z1 * Nans1;
-        Bop(2, nodedof * i + 3) += N1 * a1x1 * Nans1;
-        Bop(2, nodedof * i + 4) += N1 * a1y1 * Nans1;
-        Bop(2, nodedof * i + 5) += N1 * a1z1 * Nans1;
+        Bop(5, nodedof * i + 0) += dN1d1 * a3x1 * Nans1;
+        Bop(5, nodedof * i + 1) += dN1d1 * a3y1 * Nans1;
+        Bop(5, nodedof * i + 2) += dN1d1 * a3z1 * Nans1;
+        Bop(5, nodedof * i + 3) += N1 * a1x1 * Nans1;
+        Bop(5, nodedof * i + 4) += N1 * a1y1 * Nans1;
+        Bop(5, nodedof * i + 5) += N1 * a1z1 * Nans1;
 
-        // E_23 const remedy of transverse shear locking
         Bop(4, nodedof * i + 0) += dN2d2 * a3x2 * Nans2;
         Bop(4, nodedof * i + 1) += dN2d2 * a3y2 * Nans2;
         Bop(4, nodedof * i + 2) += dN2d2 * a3z2 * Nans2;
@@ -516,7 +516,7 @@ namespace Discret::Elements::Shell
   }
 
   /*!
-   * @brief Evaluates the kovariant basis vectors and metric tensors of the element
+   * @brief Evaluates the covariant basis vectors and metric tensors of the element
    *
    * @tparam distype :  The discretization type known at compile time
    * @param shape_functions (in) : Shape functions and derivatives evaluated at the respective point
@@ -536,16 +536,16 @@ namespace Discret::Elements::Shell
       const Discret::Elements::Shell::NodalCoordinates<distype>& nodal_coordinates,
       const double zeta)
   {
-    evaluate_kovariant_vectors_and_metrics(shape_functions, basis_and_metrics_reference,
+    evaluate_covariant_vectors_and_metrics(shape_functions, basis_and_metrics_reference,
         nodal_coordinates.x_refe_, nodal_coordinates.a3_refe_, zeta);
-    evaluate_kontravariant_vectors_and_metrics(basis_and_metrics_reference);
-    evaluate_kovariant_vectors_and_metrics(shape_functions, basis_and_metrics_current,
+    evaluate_contravariant_vectors_and_metrics(basis_and_metrics_reference);
+    evaluate_covariant_vectors_and_metrics(shape_functions, basis_and_metrics_current,
         nodal_coordinates.x_curr_, nodal_coordinates.a3_curr_, zeta);
-    evaluate_kontravariant_vectors_and_metrics(basis_and_metrics_current);
+    evaluate_contravariant_vectors_and_metrics(basis_and_metrics_current);
   }
 
   /*!
-   * @brief Evaluates the kovariant basis vectors and metric tensors of the element
+   * @brief Evaluates the covariant basis vectors and metric tensors of the element
    *
    * @tparam distype :  The discretization type known at compile time
    * @param shape_functions(in) : Shape functions and derivatives evaluated at the respective point
@@ -557,15 +557,15 @@ namespace Discret::Elements::Shell
    * @param zeta (in) : Thickness coordinate of gaussian point (scaled via SDC)
    */
   template <Core::FE::CellType distype>
-  void evaluate_kovariant_vectors_and_metrics(
+  void evaluate_covariant_vectors_and_metrics(
       const Discret::Elements::Shell::ShapefunctionsAndDerivatives<distype>& shape_functions,
       Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& basis_and_metrics,
       const Core::LinAlg::Matrix<Internal::num_node<distype>, Internal::num_dim>& x,
       const Core::LinAlg::Matrix<Internal::num_node<distype>, Internal::num_dim>& a3,
       const double zeta)
   {
-    // interpolation of kovariant a1,a2
-    basis_and_metrics.kovariant_.multiply_nn(1.0, shape_functions.derivatives_, x, 0.0);
+    // interpolation of covariant a1,a2
+    basis_and_metrics.covariant_.multiply_nn(1.0, shape_functions.derivatives_, x, 0.0);
 
     // displacement field in the third dimension is approximated by assuming a linear variation of
     // the displacements across the thickness
@@ -574,57 +574,57 @@ namespace Discret::Elements::Shell
       Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> tmp(
           Core::LinAlg::Initialization::zero);
       tmp.multiply_nn(zeta, shape_functions.derivatives_, a3, 0.0);
-      basis_and_metrics.kovariant_.update(1.0, tmp, 1.0);
+      basis_and_metrics.covariant_.update(1.0, tmp, 1.0);
     }
 
     // interpolation of a3
     for (int idim = 0; idim < Internal::num_dim; idim++)
     {
-      basis_and_metrics.kovariant_(2, idim) = 0.0;
+      basis_and_metrics.covariant_(2, idim) = 0.0;
       for (int inode = 0; inode < Internal::num_node<distype>; inode++)
-        basis_and_metrics.kovariant_(2, idim) +=
+        basis_and_metrics.covariant_(2, idim) +=
             shape_functions.shapefunctions_(inode) * a3(inode, idim);
     }
-    // get kovariant metric tensor
-    basis_and_metrics.metric_kovariant_.multiply_nt(
-        1.0, basis_and_metrics.kovariant_, basis_and_metrics.kovariant_, 0.0);
+    // get covariant metric tensor
+    basis_and_metrics.metric_covariant_.multiply_nt(
+        1.0, basis_and_metrics.covariant_, basis_and_metrics.covariant_, 0.0);
 
     // get partial derivatives of the basis vector in thickness direction
     basis_and_metrics.partial_derivative_.multiply_nn(1.0, shape_functions.derivatives_, a3, 0.0);
   }
 
   /*!
-   * @brief Evaluates the kontravariant basis vectors and metric tensors of the element
+   * @brief Evaluates the contravariant basis vectors and metric tensors of the element
    *
    * @tparam distype : The discretization type known at compile time
    *
    * @param metrics (in/out) : An object holding the basis vectors and metric tensors of the element
    */
   template <Core::FE::CellType distype>
-  void evaluate_kontravariant_vectors_and_metrics(
+  void evaluate_contravariant_vectors_and_metrics(
       Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& metrics)
   {
-    // get kontravariant basis vectors g1,g2,g3 (inverse transpose of kov)
-    metrics.kontravariant_ = metrics.kovariant_;
-    metrics.detJ_ = metrics.kontravariant_.invert();
+    // get contravariant basis vectors g1,g2,g3 (inverse transpose of cov)
+    metrics.contravariant_ = metrics.covariant_;
+    metrics.detJ_ = metrics.contravariant_.invert();
 
     // get the transpose
     for (int i = 0; i < Internal::num_dim; ++i)
     {
       for (int j = i + 1; j < Internal::num_dim; ++j)
       {
-        const double tmp = metrics.kontravariant_(j, i);
-        metrics.kontravariant_(j, i) = metrics.kontravariant_(i, j);
-        metrics.kontravariant_(i, j) = tmp;
+        const double tmp = metrics.contravariant_(j, i);
+        metrics.contravariant_(j, i) = metrics.contravariant_(i, j);
+        metrics.contravariant_(i, j) = tmp;
       }
     }
-    metrics.metric_kontravariant_ = metrics.metric_kovariant_;
-    // get  kontravariant metrictensor
-    metrics.metric_kontravariant_.invert();
+    metrics.metric_contravariant_ = metrics.metric_covariant_;
+    // get contravariant metrictensor
+    metrics.metric_contravariant_.invert();
   }
 
   /*!
-   * @brief Modify the kovariant metric tensors of the element to neglect the quadratic terms of the
+   * @brief Modify the covariant metric tensors of the element to neglect the quadratic terms of the
    * normal strain in thickness direction.
    *
    * @Note : After the modification for the current metric tensor holds g_ij != g_i*g_j
@@ -641,7 +641,7 @@ namespace Discret::Elements::Shell
    * @param zeta (in) : Thickness coordinate of gaussian point (scaled via SDC)
    */
   template <Core::FE::CellType distype>
-  void modify_kovariant_metrics_standard(
+  void modify_covariant_metrics_standard(
       Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& g_reference,
       Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& g_current,
       const Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& a_reference,
@@ -663,59 +663,59 @@ namespace Discret::Elements::Shell
 
     for (int i = 0; i < Internal::num_dim; ++i)
     {
-      b11c += a_current.kovariant_(0, i) * a_current.partial_derivative_(0, i);
-      b12c += a_current.kovariant_(0, i) * a_current.partial_derivative_(1, i);
-      b21c += a_current.kovariant_(1, i) * a_current.partial_derivative_(0, i);
-      b22c += a_current.kovariant_(1, i) * a_current.partial_derivative_(1, i);
-      b31c += a_current.kovariant_(2, i) * a_current.partial_derivative_(0, i);
-      b32c += a_current.kovariant_(2, i) * a_current.partial_derivative_(1, i);
+      b11c += a_current.covariant_(0, i) * a_current.partial_derivative_(0, i);
+      b12c += a_current.covariant_(0, i) * a_current.partial_derivative_(1, i);
+      b21c += a_current.covariant_(1, i) * a_current.partial_derivative_(0, i);
+      b22c += a_current.covariant_(1, i) * a_current.partial_derivative_(1, i);
+      b31c += a_current.covariant_(2, i) * a_current.partial_derivative_(0, i);
+      b32c += a_current.covariant_(2, i) * a_current.partial_derivative_(1, i);
 
-      b11r += a_reference.kovariant_(0, i) * a_reference.partial_derivative_(0, i);
-      b12r += a_reference.kovariant_(0, i) * a_reference.partial_derivative_(1, i);
-      b21r += a_reference.kovariant_(1, i) * a_reference.partial_derivative_(0, i);
-      b22r += a_reference.kovariant_(1, i) * a_reference.partial_derivative_(1, i);
-      b31r += a_reference.kovariant_(2, i) * a_reference.partial_derivative_(0, i);
-      b32r += a_reference.kovariant_(2, i) * a_reference.partial_derivative_(1, i);
+      b11r += a_reference.covariant_(0, i) * a_reference.partial_derivative_(0, i);
+      b12r += a_reference.covariant_(0, i) * a_reference.partial_derivative_(1, i);
+      b21r += a_reference.covariant_(1, i) * a_reference.partial_derivative_(0, i);
+      b22r += a_reference.covariant_(1, i) * a_reference.partial_derivative_(1, i);
+      b31r += a_reference.covariant_(2, i) * a_reference.partial_derivative_(0, i);
+      b32r += a_reference.covariant_(2, i) * a_reference.partial_derivative_(1, i);
     }
-    g_current.metric_kovariant_(0, 0) =
-        g_reference.metric_kovariant_(0, 0) +
-        (a_current.metric_kovariant_(0, 0) - a_reference.metric_kovariant_(0, 0)) +
+    g_current.metric_covariant_(0, 0) =
+        g_reference.metric_covariant_(0, 0) +
+        (a_current.metric_covariant_(0, 0) - a_reference.metric_covariant_(0, 0)) +
         zeta * 2.0 * (b11c - b11r);
-    g_current.metric_kovariant_(1, 1) =
-        g_reference.metric_kovariant_(1, 1) +
-        (a_current.metric_kovariant_(1, 1) - a_reference.metric_kovariant_(1, 1)) +
+    g_current.metric_covariant_(1, 1) =
+        g_reference.metric_covariant_(1, 1) +
+        (a_current.metric_covariant_(1, 1) - a_reference.metric_covariant_(1, 1)) +
         zeta * 2.0 * (b22c - b22r);
-    g_current.metric_kovariant_(2, 2) =
-        g_reference.metric_kovariant_(2, 2) +
-        (a_current.metric_kovariant_(2, 2) - a_reference.metric_kovariant_(2, 2));
+    g_current.metric_covariant_(2, 2) =
+        g_reference.metric_covariant_(2, 2) +
+        (a_current.metric_covariant_(2, 2) - a_reference.metric_covariant_(2, 2));
 
-    g_current.metric_kovariant_(0, 1) =
-        g_reference.metric_kovariant_(0, 1) +
-        (a_current.metric_kovariant_(0, 1) - a_reference.metric_kovariant_(0, 1)) +
+    g_current.metric_covariant_(0, 1) =
+        g_reference.metric_covariant_(0, 1) +
+        (a_current.metric_covariant_(0, 1) - a_reference.metric_covariant_(0, 1)) +
         zeta * (b21c + b12c - b21r - b12r);
-    g_current.metric_kovariant_(0, 2) =
-        g_reference.metric_kovariant_(0, 2) +
-        (a_current.metric_kovariant_(0, 2) - a_reference.metric_kovariant_(0, 2)) +
+    g_current.metric_covariant_(0, 2) =
+        g_reference.metric_covariant_(0, 2) +
+        (a_current.metric_covariant_(0, 2) - a_reference.metric_covariant_(0, 2)) +
         zeta * (b31c - b31r);
-    g_current.metric_kovariant_(1, 2) =
-        g_reference.metric_kovariant_(1, 2) +
-        (a_current.metric_kovariant_(1, 2) - a_reference.metric_kovariant_(1, 2)) +
+    g_current.metric_covariant_(1, 2) =
+        g_reference.metric_covariant_(1, 2) +
+        (a_current.metric_covariant_(1, 2) - a_reference.metric_covariant_(1, 2)) +
         zeta * (b32c - b32r);
 
-    g_current.metric_kovariant_(2, 0) = g_current.metric_kovariant_(0, 2);
-    g_current.metric_kovariant_(2, 1) = g_current.metric_kovariant_(1, 2);
-    g_current.metric_kovariant_(1, 0) = g_current.metric_kovariant_(0, 1);
+    g_current.metric_covariant_(2, 0) = g_current.metric_covariant_(0, 2);
+    g_current.metric_covariant_(2, 1) = g_current.metric_covariant_(1, 2);
+    g_current.metric_covariant_(1, 0) = g_current.metric_covariant_(0, 1);
 
-    g_current.metric_kontravariant_.update(g_current.metric_kovariant_);
-    double detJ = g_current.metric_kontravariant_.invert();
+    g_current.metric_contravariant_.update(g_current.metric_covariant_);
+    double detJ = g_current.metric_contravariant_.invert();
     g_current.detJ_ = std::sqrt(detJ);
-    g_reference.metric_kontravariant_.update(g_reference.metric_kovariant_);
-    detJ = g_reference.metric_kontravariant_.invert();
+    g_reference.metric_contravariant_.update(g_reference.metric_covariant_);
+    detJ = g_reference.metric_contravariant_.invert();
     g_reference.detJ_ = std::sqrt(detJ);
   }
 
   /*!
-   * @brief Modify the kovariant metric tensors of the element due to transverse shear strain ANS
+   * @brief Modify the covariant metric tensors of the element due to transverse shear strain ANS
    *
    * @Note : After the modification: g_ij != g_i*g_j
    *
@@ -737,7 +737,7 @@ namespace Discret::Elements::Shell
    * @param numansq (in) : Number of ANS collocation points
    */
   template <Core::FE::CellType distype>
-  void modify_kovariant_metrics_ans(
+  void modify_covariant_metrics_ans(
       Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& g_reference,
       Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& g_current,
       const Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& a_reference,
@@ -764,64 +764,64 @@ namespace Discret::Elements::Shell
 
     for (int i = 0; i < Internal::num_dim; ++i)
     {
-      b11c += a_current.kovariant_(0, i) * a_current.partial_derivative_(0, i);
-      b12c += a_current.kovariant_(0, i) * a_current.partial_derivative_(1, i);
-      b21c += a_current.kovariant_(1, i) * a_current.partial_derivative_(0, i);
-      b22c += a_current.kovariant_(1, i) * a_current.partial_derivative_(1, i);
-      b31c += a_current.kovariant_(2, i) * a_current.partial_derivative_(0, i);
-      b32c += a_current.kovariant_(2, i) * a_current.partial_derivative_(1, i);
+      b11c += a_current.covariant_(0, i) * a_current.partial_derivative_(0, i);
+      b12c += a_current.covariant_(0, i) * a_current.partial_derivative_(1, i);
+      b21c += a_current.covariant_(1, i) * a_current.partial_derivative_(0, i);
+      b22c += a_current.covariant_(1, i) * a_current.partial_derivative_(1, i);
+      b31c += a_current.covariant_(2, i) * a_current.partial_derivative_(0, i);
+      b32c += a_current.covariant_(2, i) * a_current.partial_derivative_(1, i);
 
-      b11r += a_reference.kovariant_(0, i) * a_reference.partial_derivative_(0, i);
-      b12r += a_reference.kovariant_(0, i) * a_reference.partial_derivative_(1, i);
-      b21r += a_reference.kovariant_(1, i) * a_reference.partial_derivative_(0, i);
-      b22r += a_reference.kovariant_(1, i) * a_reference.partial_derivative_(1, i);
-      b31r += a_reference.kovariant_(2, i) * a_reference.partial_derivative_(0, i);
-      b32r += a_reference.kovariant_(2, i) * a_reference.partial_derivative_(1, i);
+      b11r += a_reference.covariant_(0, i) * a_reference.partial_derivative_(0, i);
+      b12r += a_reference.covariant_(0, i) * a_reference.partial_derivative_(1, i);
+      b21r += a_reference.covariant_(1, i) * a_reference.partial_derivative_(0, i);
+      b22r += a_reference.covariant_(1, i) * a_reference.partial_derivative_(1, i);
+      b31r += a_reference.covariant_(2, i) * a_reference.partial_derivative_(0, i);
+      b32r += a_reference.covariant_(2, i) * a_reference.partial_derivative_(1, i);
     }
-    g_current.metric_kovariant_(0, 0) =
-        g_reference.metric_kovariant_(0, 0) +
-        (a_current.metric_kovariant_(0, 0) - a_reference.metric_kovariant_(0, 0)) +
+    g_current.metric_covariant_(0, 0) =
+        g_reference.metric_covariant_(0, 0) +
+        (a_current.metric_covariant_(0, 0) - a_reference.metric_covariant_(0, 0)) +
         zeta * 2.0 * (b11c - b11r);
-    g_current.metric_kovariant_(1, 1) =
-        g_reference.metric_kovariant_(1, 1) +
-        (a_current.metric_kovariant_(1, 1) - a_reference.metric_kovariant_(1, 1)) +
+    g_current.metric_covariant_(1, 1) =
+        g_reference.metric_covariant_(1, 1) +
+        (a_current.metric_covariant_(1, 1) - a_reference.metric_covariant_(1, 1)) +
         zeta * 2.0 * (b22c - b22r);
-    g_current.metric_kovariant_(2, 2) =
-        g_reference.metric_kovariant_(2, 2) +
-        (a_current.metric_kovariant_(2, 2) - a_reference.metric_kovariant_(2, 2));
+    g_current.metric_covariant_(2, 2) =
+        g_reference.metric_covariant_(2, 2) +
+        (a_current.metric_covariant_(2, 2) - a_reference.metric_covariant_(2, 2));
 
-    g_current.metric_kovariant_(0, 1) =
-        g_reference.metric_kovariant_(0, 1) +
-        (a_current.metric_kovariant_(0, 1) - a_reference.metric_kovariant_(0, 1)) +
+    g_current.metric_covariant_(0, 1) =
+        g_reference.metric_covariant_(0, 1) +
+        (a_current.metric_covariant_(0, 1) - a_reference.metric_covariant_(0, 1)) +
         zeta * (b21c + b12c - b21r - b12r);
-    g_current.metric_kovariant_(0, 2) = g_reference.metric_kovariant_(0, 2) + zeta * (b31c - b31r);
-    g_current.metric_kovariant_(1, 2) = g_reference.metric_kovariant_(1, 2) + zeta * (b32c - b32r);
+    g_current.metric_covariant_(0, 2) = g_reference.metric_covariant_(0, 2) + zeta * (b31c - b31r);
+    g_current.metric_covariant_(1, 2) = g_reference.metric_covariant_(1, 2) + zeta * (b32c - b32r);
     for (int qp = 0; qp < numansq; ++qp)
     {
-      g_current.metric_kovariant_(0, 2) +=
-          (metrics_collocation_current[qp].metric_kovariant_(0, 2) -
-              metrics_collocation_reference[qp].metric_kovariant_(0, 2)) *
+      g_current.metric_covariant_(0, 2) +=
+          (metrics_collocation_current[qp].metric_covariant_(0, 2) -
+              metrics_collocation_reference[qp].metric_covariant_(0, 2)) *
           shapefunctions_ans[qp];
-      g_current.metric_kovariant_(1, 2) +=
-          (metrics_collocation_current[qp + numansq].metric_kovariant_(1, 2) -
-              metrics_collocation_reference[qp + numansq].metric_kovariant_(1, 2)) *
+      g_current.metric_covariant_(1, 2) +=
+          (metrics_collocation_current[qp + numansq].metric_covariant_(1, 2) -
+              metrics_collocation_reference[qp + numansq].metric_covariant_(1, 2)) *
           shapefunctions_ans[qp + numansq];
     }
-    g_current.metric_kovariant_(2, 0) = g_current.metric_kovariant_(0, 2);
-    g_current.metric_kovariant_(2, 1) = g_current.metric_kovariant_(1, 2);
-    g_current.metric_kovariant_(1, 0) = g_current.metric_kovariant_(0, 1);
+    g_current.metric_covariant_(2, 0) = g_current.metric_covariant_(0, 2);
+    g_current.metric_covariant_(2, 1) = g_current.metric_covariant_(1, 2);
+    g_current.metric_covariant_(1, 0) = g_current.metric_covariant_(0, 1);
 
-    g_current.metric_kontravariant_.update(g_current.metric_kovariant_);
-    double detJ = g_current.metric_kontravariant_.invert();
+    g_current.metric_contravariant_.update(g_current.metric_covariant_);
+    double detJ = g_current.metric_contravariant_.invert();
     g_current.detJ_ = std::sqrt(detJ);
-    g_reference.metric_kontravariant_.update(g_reference.metric_kovariant_);
-    detJ = g_reference.metric_kontravariant_.invert();
+    g_reference.metric_contravariant_.update(g_reference.metric_covariant_);
+    detJ = g_reference.metric_contravariant_.invert();
     g_reference.detJ_ = std::sqrt(detJ);
   }
 
 
   /*!
-   * @brief Modify the kovariant metric tensors of the element
+   * @brief Modify the covariant metric tensors of the element
    *
    *
    * @tparam distype :  The discretization type known at compile time
@@ -842,7 +842,7 @@ namespace Discret::Elements::Shell
    * @param numansq (in) : Number of ANS collocation points
    */
   template <Core::FE::CellType distype>
-  void modify_kovariant_metrics(
+  void modify_covariant_metrics(
       Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& g_reference,
       Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& g_current,
       const Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& a_reference,
@@ -859,12 +859,12 @@ namespace Discret::Elements::Shell
         {
           if (numansq == 0)
           {
-            modify_kovariant_metrics_standard(g_reference, g_current, a_reference, a_current, zeta);
+            modify_covariant_metrics_standard(g_reference, g_current, a_reference, a_current, zeta);
           }
           else
           {
-            // modify the current kovariant metric tensor due to transverse shear strain ANS
-            modify_kovariant_metrics_ans(g_reference, g_current, a_reference, a_current, zeta,
+            // modify the current covariant metric tensor due to transverse shear strain ANS
+            modify_covariant_metrics_ans(g_reference, g_current, a_reference, a_current, zeta,
                 shapefunctions_ans, metrics_collocation_reference, metrics_collocation_current,
                 numansq);
           }
@@ -883,58 +883,71 @@ namespace Discret::Elements::Shell
    * 0]^T, E_2=[0, 1, 0]^T, E_3=[0, 0, 1]^T$\f, no transformation is necessary
    *
    * @tparam distype : The discretization type known at compile time
-   * @param strains (in/out) :  Strain measures of the element (deformation gradient,
-   * Green-Lagrange strain tensor)
    * @param g_reference (in) : An object holding the reference basis vectors and metric
    * tensors of the shell body
    * @param g_current (in) : An object holding the current basis vectors and metric
    * tensors of the shell body
+   * @return Core::LinAlg::Tensor<double,3,3> : Deformation gradient tensor
    */
   template <Core::FE::CellType distype>
-  void evaluate_deformation_gradient(Discret::Elements::Shell::Strains& strains,
+  Core::LinAlg::Tensor<double, 3, 3> evaluate_deformation_gradient(
       const Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& g_reference,
       const Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& g_current)
   {
     Core::LinAlg::Matrix<3, 3> deformation_gradient(Core::LinAlg::Initialization::zero);
-    deformation_gradient.multiply_nt(1.0, g_current.kovariant_, g_reference.kontravariant_);
-    strains.defgrd_ = Core::LinAlg::make_tensor(deformation_gradient);
+    deformation_gradient.multiply_nt(1.0, g_current.covariant_, g_reference.contravariant_);
+    return Core::LinAlg::make_tensor(deformation_gradient);
   }
 
   /*!
-   * @brief Evaluates Green-Lagrange strains from metrics
+   * @brief Evaluates Green-Lagrange strains in curvilinear coordinate system
    *
-   *  The reen-Lagrange strains are defined as :
+   *  The Green-Lagrange strains in curvilinear coordinates are defined as:
    * \f[
-   *    \mathbf{E} = E_{ij} \mathbf{G}^i \otimes \mathbf{G}^j
+   *    E_{ij} = \frac{1}{2} (g_{ij} - G_{ij})
    * \f]
-   * GL strain vector glstrain = [E_{11},E_{22}, E_{33}, 2*E_{12}, 2*E_{23}, 2*E_{31}]^T
+   * where g_ij is the current metric and G_ij is the reference metric.
+   *
    * @tparam distype : The discretization type known at compile time
-   * @param strains (in/out) : Strain measures (deformation gradient tensor, Green-Lagrange strain
-   * tensor)
-   * @param g_reference (in) : An object holding the reference basis vectors and metric
-   * tensors of the shell body
-   * @param g_current (in) : An object holding the current basis vectors and metric
-   * tensors of the shell body
+   * @param g_reference (in) : Reference basis vectors and metric tensors
+   * @param g_current (in) : Current basis vectors and metric tensors
+   * @return Core::LinAlg::SymmetricTensor<double, 3, 3> : Green-Lagrange strain tensor in
+   * curvilinear coordinates
    */
   template <Core::FE::CellType distype>
-  void evaluate_green_lagrange_strain(Strains& strains,
+  Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_green_lagrange_strain(
       const BasisVectorsAndMetrics<distype>& g_reference,
       const BasisVectorsAndMetrics<distype>& g_current)
   {
-    //  evaluate strain tensor in curvilinear coordinate system E_ij = 0.5 (g_ij-G_ij)
-    Core::LinAlg::SymmetricTensor<double, 3, 3> gl_strain_curvilinear =
-        Core::LinAlg::assume_symmetry(
-            0.5 * (Core::LinAlg::make_tensor_view(g_current.metric_kovariant_) -
-                      Core::LinAlg::make_tensor_view(g_reference.metric_kovariant_)));
-
-    // map gl strains from curvilinear system to global cartesian system
-    Core::LinAlg::TensorView<const double, 3, 3> kontravariant_tensor =
-        Core::LinAlg::make_tensor_view(g_reference.kontravariant_);
-    Core::LinAlg::Tensor<double, 3, 3> gl_strain_tensor_cartesian =
-        Core::LinAlg::transpose(kontravariant_tensor) * gl_strain_curvilinear *
-        kontravariant_tensor;
-    strains.gl_strain_ = Core::LinAlg::assume_symmetry(gl_strain_tensor_cartesian);
+    return Core::LinAlg::assume_symmetry(
+        0.5 * (Core::LinAlg::make_tensor_view(g_current.metric_covariant_) -
+                  Core::LinAlg::make_tensor_view(g_reference.metric_covariant_)));
   }
+
+  /*!
+   * @brief Transform Green-Lagrange strain from curvilinear to Cartesian coordinates
+   *
+   * Applies the transformation: E_cart = G^T * E_curv * G
+   * where G is the contravariant basis tensor from reference configuration.
+   *
+   * @tparam distype : The discretization type known at compile time
+   * @param gl_strain_curvilinear (in) : GL strain in curvilinear coordinates
+   * @param g_reference (in) : Reference metric tensors (provides contravariant basis)
+   * @return Green-Lagrange strain tensor in Cartesian coordinates
+   */
+  template <Core::FE::CellType distype>
+  inline Core::LinAlg::SymmetricTensor<double, 3, 3> transform_green_lagrange_strain_to_cartesian(
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& gl_strain_curvilinear,
+      const BasisVectorsAndMetrics<distype>& g_reference)
+  {
+    Core::LinAlg::TensorView<const double, 3, 3> contravariant_tensor =
+        Core::LinAlg::make_tensor_view(g_reference.contravariant_);
+    Core::LinAlg::Tensor<double, 3, 3> gl_strain_tensor_cartesian =
+        Core::LinAlg::transpose(contravariant_tensor) * gl_strain_curvilinear *
+        contravariant_tensor;
+    return Core::LinAlg::assume_symmetry(gl_strain_tensor_cartesian);
+  }
+
 
   /*!
    * @brief Maps the stress quantities (2. Piola-Kirchoff stress tensor and the linearization
@@ -958,16 +971,16 @@ namespace Discret::Elements::Shell
   {
     // transform Piola-Kirchhoff-stresses from global cartesian coordinate system back to local
     // curvilinear coordinate system
-    Core::LinAlg::TensorView<const double, 3, 3> kontravariant_tensor =
-        Core::LinAlg::make_tensor_view(g_reference.kontravariant_);
+    Core::LinAlg::TensorView<const double, 3, 3> contravariant_tensor =
+        Core::LinAlg::make_tensor_view(g_reference.contravariant_);
     Core::LinAlg::Tensor<double, 3, 3> pk2_curvilinear =
-        kontravariant_tensor * stress.pk2_ * Core::LinAlg::transpose(kontravariant_tensor);
+        contravariant_tensor * stress.pk2_ * Core::LinAlg::transpose(contravariant_tensor);
     stress.pk2_ = Core::LinAlg::assume_symmetry(pk2_curvilinear);
 
     //  transform elasticity tensor from global cartesian coordinate system back to local
     //  curvilinear coordinate system
-    stress.cmat_ = Core::LinAlg::einsum_sym<"iI", "jJ", "kK", "lL", "IJKL">(kontravariant_tensor,
-        kontravariant_tensor, kontravariant_tensor, kontravariant_tensor, stress.cmat_);
+    stress.cmat_ = Core::LinAlg::einsum_sym<"iI", "jJ", "kK", "lL", "IJKL">(contravariant_tensor,
+        contravariant_tensor, contravariant_tensor, contravariant_tensor, stress.cmat_);
   }
 
   /*!
@@ -1115,27 +1128,29 @@ namespace Discret::Elements::Shell
    * @brief Assembles Green-Lagrange strains to the desired strain type and assemble to a given
    * matrix row
    *
-   * @param strains (in) : Strain data
-   * @param strains_type (in) : Strain type
+   * @param gl_strain (in) : Green-Lagrange strain tensor
+   * @param defgrd (in) : Deformation gradient tensor
+   * @param strain_type (in) : Strain type
    * @param data (in) : Data to which the vector will be assembled
    * @param row (in) : Row number
    * @param thickness_weight (in) : Weighting factor to consider thickness integration
    */
-  inline void assemble_strain_type_to_matrix_row(const Strains& strains,
-      Inpar::Solid::StrainType strain_type, Core::LinAlg::SerialDenseMatrix& data, int row,
-      const double thickness_weight)
+  inline void assemble_strain_type_to_matrix_row(
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& gl_strain,
+      const Core::LinAlg::Tensor<double, 3, 3>& defgrd, Inpar::Solid::StrainType strain_type,
+      Core::LinAlg::SerialDenseMatrix& data, int row, const double thickness_weight)
   {
     switch (strain_type)
     {
       case Inpar::Solid::strain_gl:
       {
-        assemble_symmetric_tensor_to_matrix_row(strains.gl_strain_, data, row, thickness_weight);
+        assemble_symmetric_tensor_to_matrix_row(gl_strain, data, row, thickness_weight);
         return;
       }
       case Inpar::Solid::strain_ea:
       {
         const Core::LinAlg::SymmetricTensor<double, Internal::num_dim, Internal::num_dim> ea =
-            green_lagrange_to_euler_almansi(strains.gl_strain_, strains.defgrd_);
+            green_lagrange_to_euler_almansi(gl_strain, defgrd);
         assemble_symmetric_tensor_to_matrix_row(ea, data, row, thickness_weight);
         return;
       }
@@ -1148,15 +1163,16 @@ namespace Discret::Elements::Shell
   /*!
    * @brief Assembles 2nd Piola-Kirchhoff stresses to the desired stress type in matrix row
    *
+   * @param defgrd (in) : Deformation gradient tensor
    * @param stress (in) : Stress data
    * @param stress_type (in) : Stress type
    * @param data (in) : Data to which the vector will be assembled
    * @param row (in) : Row number
    * @param thickness_weight (in) : Weighting factor to consider thickness integration
    */
-  inline void assemble_stress_type_to_matrix_row(const Strains& strains, const Stress stress,
-      Inpar::Solid::StressType stress_type, Core::LinAlg::SerialDenseMatrix& data, int row,
-      const double thickness_weight)
+  inline void assemble_stress_type_to_matrix_row(const Core::LinAlg::Tensor<double, 3, 3>& defgrd,
+      const Stress stress, Inpar::Solid::StressType stress_type,
+      Core::LinAlg::SerialDenseMatrix& data, int row, const double thickness_weight)
   {
     switch (stress_type)
     {
@@ -1168,7 +1184,7 @@ namespace Discret::Elements::Shell
       case Inpar::Solid::stress_cauchy:
       {
         Core::LinAlg::SymmetricTensor<double, Internal::num_dim, Internal::num_dim> cauchy =
-            pk2_to_cauchy(stress.pk2_, strains.defgrd_);
+            pk2_to_cauchy(stress.pk2_, defgrd);
         assemble_symmetric_tensor_to_matrix_row(cauchy, data, row, thickness_weight);
         return;
       }
@@ -1272,7 +1288,7 @@ namespace Discret::Elements::Shell
    * the material tensor through the shell thickness.
    *
    * @tparam distype : The discretization type known at compile time
-   * @param stress_enh (in/out) : An object holding the enhanced stress resultants
+   * @param stress_resultants (in/out) : An object holding the stress resultants
    * @param stress (in) :  An object holding the stress measures
    * @param integration_fac (in) : Integration factor (Gauss point weight times the determinant
    * of the jacobian)
@@ -1280,40 +1296,36 @@ namespace Discret::Elements::Shell
    * to
    */
   template <Core::FE::CellType distype>
-  void thickness_integration(Discret::Elements::Shell::StressEnhanced& stress_enh,
+  void thickness_integration(Discret::Elements::Shell::StressResultants& stress_resultants,
       const Discret::Elements::Shell::Stress& stress, const double& integration_factor,
       const double& zeta)
   {
-    // shell-specific voigt ordering: {S11, S12, S13, S22, S23, S33}
-    static constexpr std::array<int, 6> voigt_inconsistent = {0, 3, 5, 1, 4, 2};
-
     const auto pk2_view = Core::LinAlg::make_stress_like_voigt_view(stress.pk2_);
     const auto cmat_view = Core::LinAlg::make_stress_like_voigt_view(stress.cmat_);
 
     for (int i = 0; i < Internal::node_dof; ++i)
     {
-      const double shell_index_i = voigt_inconsistent[i];
-      const double stress_fact = pk2_view(shell_index_i) * integration_factor;
-      stress_enh.stress_(i) += stress_fact;
-      stress_enh.stress_(i + Internal::node_dof) += stress_fact * zeta;
+      const double stress_fact = pk2_view(i) * integration_factor;
+      stress_resultants.stress_(i) += stress_fact;
+      stress_resultants.stress_(i + Internal::node_dof) += stress_fact * zeta;
 
       for (int j = 0; j < Internal::node_dof; ++j)
       {
-        const double shell_index_j = voigt_inconsistent[j];
-        const double C_fact = cmat_view(shell_index_i, shell_index_j) * integration_factor;
-        stress_enh.dmat_(i, j) += C_fact;
-        stress_enh.dmat_(i + Internal::node_dof, j) += C_fact * zeta;
-        stress_enh.dmat_(i + Internal::node_dof, j + Internal::node_dof) += C_fact * zeta * zeta;
+        const double C_fact = cmat_view(i, j) * integration_factor;
+        stress_resultants.dmat_(i, j) += C_fact;
+        stress_resultants.dmat_(i + Internal::node_dof, j) += C_fact * zeta;
+        stress_resultants.dmat_(i + Internal::node_dof, j + Internal::node_dof) +=
+            C_fact * zeta * zeta;
       }
     }
     // symmetrize enhanced material tensor
     for (int i = 0; i < Internal::num_internal_variables; i++)
       for (int j = i + 1; j < Internal::num_internal_variables; j++)
-        stress_enh.dmat_(i, j) = stress_enh.dmat_(j, i);
+        stress_resultants.dmat_(i, j) = stress_resultants.dmat_(j, i);
   }
 
   /*!
-   * @brief Evaluates strain measures
+   * @brief Evaluates strain measures in curvilinear coordinate system
    *
    * @tparam distype : The discretization type known at compile time
    * @param g_reference (in) : An object holding the reference basis vectors and metric
@@ -1329,8 +1341,8 @@ namespace Discret::Elements::Shell
       const Discret::Elements::Shell::BasisVectorsAndMetrics<distype>& g_metric_current)
   {
     Strains strains{};
-    evaluate_deformation_gradient(strains, g_metric_reference, g_metric_current);
-    evaluate_green_lagrange_strain(strains, g_metric_reference, g_metric_current);
+    strains.defgrd_ = evaluate_deformation_gradient(g_metric_reference, g_metric_current);
+    strains.gl_strain_ = evaluate_green_lagrange_strain(g_metric_reference, g_metric_current);
     return strains;
   }
 
@@ -1367,7 +1379,7 @@ namespace Discret::Elements::Shell
    * @param shapefunctions_ans (in) : Shapefunctions for transverse shear strain ANS
    * @param shapefunctions (in) : Shapefunctions and the first derivatives w.r.t spatial coordinates
    * (midsurface)
-   * @param stress_enh (in) :  An object holding the enhanced stress resultants
+   * @param stress_resultant_vector (in) : Stress resultant vector (membrane forces and moments)
    * @param numansq (in) : Number of ANS collocation points
    * @param integration_fac (in) : Integration factor (Gauss point weight times the determinant
    * of the jacobian)
@@ -1380,7 +1392,7 @@ namespace Discret::Elements::Shell
           shapefunctions_q,
       const std::vector<double>& shapefunctions_ans,
       const Discret::Elements::Shell::ShapefunctionsAndDerivatives<distype>& shapefunctions,
-      const Core::LinAlg::SerialDenseVector& stress_enh, const int& numans,
+      const Core::LinAlg::SerialDenseVector& stress_resultant_vector, const int& numans,
       const double& integration_fac, Core::LinAlg::SerialDenseMatrix& stiffness_matrix)
   {
     const int nodedof = Internal::node_dof;
@@ -1401,10 +1413,12 @@ namespace Discret::Elements::Shell
             shapefunctions.derivatives_(1, inod) * shapefunctions.derivatives_(1, jnod);
 
         const double tmp1 =
-            (dN11 * stress_enh(0) + (dN12 + dN21) * stress_enh(1) + dN22 * stress_enh(3)) *
+            (dN11 * stress_resultant_vector(0) + (dN12 + dN21) * stress_resultant_vector(3) +
+                dN22 * stress_resultant_vector(1)) *
             integration_fac;
         const double tmp2 =
-            (dN11 * stress_enh(6) + (dN12 + dN21) * stress_enh(7) + dN22 * stress_enh(9)) *
+            (dN11 * stress_resultant_vector(6) + (dN12 + dN21) * stress_resultant_vector(9) +
+                dN22 * stress_resultant_vector(7)) *
             integration_fac;
 
         double tmp3 = 0.0;
@@ -1416,8 +1430,10 @@ namespace Discret::Elements::Shell
 
         if (!numans)
         {
-          tmp3 = (dN1dji * stress_enh(2) + dN2dji * stress_enh(4)) * integration_fac;
-          tmp4 = (dN1dij * stress_enh(2) + dN2dij * stress_enh(4)) * integration_fac;
+          tmp3 = (dN1dji * stress_resultant_vector(5) + dN2dji * stress_resultant_vector(4)) *
+                 integration_fac;
+          tmp4 = (dN1dij * stress_resultant_vector(5) + dN2dij * stress_resultant_vector(4)) *
+                 integration_fac;
         }
         // modification due to transverse shear strain ANS
         else
@@ -1435,15 +1451,17 @@ namespace Discret::Elements::Shell
             double dNq2dji = shapefunctions_q[index_q23].derivatives_(1, jnod) *
                              shapefunctions_q[index_q23].shapefunctions_(inod) *
                              shapefunctions_ans[index_q23];
-            tmp3 += (dNq1dji * stress_enh(2) + dNq2dji * stress_enh(4)) * integration_fac;
-            tmp4 += (dNq1dij * stress_enh(2) + dNq2dij * stress_enh(4)) * integration_fac;
+            tmp3 += (dNq1dji * stress_resultant_vector(5) + dNq2dji * stress_resultant_vector(4)) *
+                    integration_fac;
+            tmp4 += (dNq1dij * stress_resultant_vector(5) + dNq2dij * stress_resultant_vector(4)) *
+                    integration_fac;
           }
         }
 
-        const double tmp5 =
-            ((dN1dij + dN1dji) * stress_enh(8) + (dN2dij + dN2dji) * stress_enh(10)) *
-            integration_fac;
-        const double tmp6 = (Ni * Nj * stress_enh(5)) * integration_fac;
+        const double tmp5 = ((dN1dij + dN1dji) * stress_resultant_vector(11) +
+                                (dN2dij + dN2dji) * stress_resultant_vector(10)) *
+                            integration_fac;
+        const double tmp6 = (Ni * Nj * stress_resultant_vector(2)) * integration_fac;
 
         for (int d = 0; d < num_dim; ++d)
         {
@@ -1473,17 +1491,17 @@ namespace Discret::Elements::Shell
    *
    * @tparam distype : The discretization type known at compile time
    * @param Bop (in) : Strain gradient (B-Operator)
-   * @param stress_enh (in) :  An object holding the enhanced stress resultants
+   * @param stress_resultant_vector (in) : Stress resultant vector (membrane forces and moments)
    * @param integration_fac (in) : Integration factor (Gauss point weight times the determinant
    * of the jacobian)
    * @param force_vector (in/out) : Force vector where the local contribution is added to
    */
   template <Core::FE::CellType distype>
   void add_internal_force_vector(const Core::LinAlg::SerialDenseMatrix& Bop,
-      const Core::LinAlg::SerialDenseVector& stress_enh, const double integration_fac,
+      const Core::LinAlg::SerialDenseVector& stress_resultant_vector, const double integration_fac,
       Core::LinAlg::SerialDenseVector& force_vector)
   {
-    Core::LinAlg::multiply_tn(1.0, force_vector, integration_fac, Bop, stress_enh);
+    Core::LinAlg::multiply_tn(1.0, force_vector, integration_fac, Bop, stress_resultant_vector);
   }
   /*!
    * @brief Adds mass matrix contribution of one Gauss point
@@ -1582,11 +1600,11 @@ namespace Discret::Elements::Shell
       // make h as cross product in ref configuration to get area da on shell mid-surface
       Core::LinAlg::Matrix<Internal::num_dim, 1> h(Core::LinAlg::Initialization::zero);
       {
-        Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> akovrefe =
-            a_reference.kovariant_;
-        h(0) = akovrefe(0, 1) * akovrefe(1, 2) - akovrefe(0, 2) * akovrefe(1, 1);
-        h(1) = akovrefe(0, 2) * akovrefe(1, 0) - akovrefe(0, 0) * akovrefe(1, 2);
-        h(2) = akovrefe(0, 0) * akovrefe(1, 1) - akovrefe(0, 1) * akovrefe(1, 0);
+        Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> a_cov_refe =
+            a_reference.covariant_;
+        h(0) = a_cov_refe(0, 1) * a_cov_refe(1, 2) - a_cov_refe(0, 2) * a_cov_refe(1, 1);
+        h(1) = a_cov_refe(0, 2) * a_cov_refe(1, 0) - a_cov_refe(0, 0) * a_cov_refe(1, 2);
+        h(2) = a_cov_refe(0, 0) * a_cov_refe(1, 1) - a_cov_refe(0, 1) * a_cov_refe(1, 0);
       }
       // make director unit length and get mid-surface area da from it
       double da = h.norm2();
