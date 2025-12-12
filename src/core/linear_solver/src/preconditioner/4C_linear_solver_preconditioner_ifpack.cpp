@@ -55,14 +55,15 @@ void Core::LinearSolver::IFPACKPreconditioner::setup(
     ifpack_params.set("Prec Type", "ILU");
   }
 
-  // setup preconditioner builder and enable relevant packages
-  Stratimikos::LinearSolverBuilder<double> builder;
 
   // get preconditioner parameter list
   Teuchos::ParameterList stratimikos_params;
   Teuchos::ParameterList& ifpack_list =
       stratimikos_params.sublist("Preconditioner Types").sublist("Ifpack");
   ifpack_list.setParameters(ifpack_params);
+
+  // setup preconditioner builder and enable relevant packages
+  Stratimikos::LinearSolverBuilder<double> builder;
   builder.setParameterList(Teuchos::rcpFromRef(stratimikos_params));
 
   // construct preconditioning operator
