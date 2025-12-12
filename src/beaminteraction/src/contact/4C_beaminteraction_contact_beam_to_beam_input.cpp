@@ -42,6 +42,12 @@ std::vector<Core::IO::InputSpec> BeamInteraction::Contact::BeamToBeam::valid_par
           parameter<double>("BEAMS_BTBLINEPENALTYPARAM",
               {.description = "Penalty parameter per unit length for beam-to-beam line contact",
                   .default_value = -1.0}),
+          parameter<int>("BEAMS_BTBPENALTYPARAM_BY_FUNCT",
+              {.description = "Penalty parameter for beam-to-beam point contact by function id",
+                  .default_value = -1}),
+          parameter<int>("BEAMS_BTBLINEPENALTYPARAM_BY_FUNCT",
+              {.description = "Penalty parameter for beam-to-beam line contact by function id",
+                  .default_value = -1}),
           parameter<double>("BEAMS_PERPSHIFTANGLE1",
               {.description =
                       "Lower shift angle (in degrees) for penalty scaling of large-angle-contact",
