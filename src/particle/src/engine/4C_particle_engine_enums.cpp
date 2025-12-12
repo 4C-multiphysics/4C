@@ -35,6 +35,12 @@ int Particle::enum_to_state_dim(const ParticleState& state)
     case WallColorfield:
     case LastIterDensity:
     case LastIterTemperature:
+    case Young:
+    case CriticalStretch:
+    case PDBodyId:
+    case InitialConnectedBonds:
+    case CurrentConnectedBonds:
+    case PDDamageVariable:
       dim = 1;
       break;
 
@@ -198,6 +204,24 @@ std::string Particle::enum_to_state_name(const ParticleState& state)
       break;
     case LastIterTemperature:
       name = "temperature last iteration";
+      break;
+    case PDBodyId:
+      name = "peridynamics body id";
+      break;
+    case CriticalStretch:
+      name = "critical stretch";
+      break;
+    case Young:
+      name = "Youngs modulus";
+      break;
+    case InitialConnectedBonds:
+      name = "initial active bonds";
+      break;
+    case CurrentConnectedBonds:
+      name = "remained active bonds";
+      break;
+    case PDDamageVariable:
+      name = "phi";
       break;
     default:
       FOUR_C_THROW("particle state unknown!");

@@ -14,8 +14,8 @@
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_particle_engine_container.hpp"
 #include "4C_particle_engine_interface.hpp"
+#include "4C_particle_interaction_dem_neighbor_pairs.hpp"
 #include "4C_particle_interaction_runtime_writer.hpp"
-#include "4C_particle_interaction_sph_neighbor_pairs.hpp"
 #include "4C_particle_interaction_utils.hpp"
 #include "4C_particle_wall_datastate.hpp"
 #include "4C_particle_wall_interface.hpp"
@@ -41,7 +41,7 @@ void Particle::SPHRigidParticleContactBase::setup(
     const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
     const std::shared_ptr<Particle::WallHandlerInterface> particlewallinterface,
     const std::shared_ptr<Particle::InteractionWriter> particleinteractionwriter,
-    const std::shared_ptr<Particle::SPHNeighborPairs> neighborpairs)
+    const std::shared_ptr<Particle::DEMNeighborPairs> neighborpairs)
 {
   // set interface to particle engine
   particleengineinterface_ = particleengineinterface;
@@ -68,7 +68,7 @@ void Particle::SPHRigidParticleContactBase::setup(
       boundarytypes_.erase(type_i);
 
   // safety check
-  if (not boundarytypes_.count(Particle::RigidPhase))
+  if (not boundarytypes_.contains(Particle::RigidPhase))
     FOUR_C_THROW("no rigid particles defined but a rigid particle contact formulation is set!");
 }
 
@@ -93,7 +93,7 @@ void Particle::SPHRigidParticleContactElastic::setup(
     const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
     const std::shared_ptr<Particle::WallHandlerInterface> particlewallinterface,
     const std::shared_ptr<Particle::InteractionWriter> particleinteractionwriter,
-    const std::shared_ptr<Particle::SPHNeighborPairs> neighborpairs)
+    const std::shared_ptr<Particle::DEMNeighborPairs> neighborpairs)
 {
   // call base class setup
   SPHRigidParticleContactBase::setup(
@@ -121,21 +121,14 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_contribu
       "Particle::SPHRigidParticleContactElastic::elastic_contact_particle_contribution");
 
   // get initial particle spacing
-  const double initialparticlespacing = params_sph_.get<double>("INITIALPARTICLESPACING");
-
-  // get relevant particle pair indices
-  std::vector<int> relindices;
-  neighborpairs_->get_relevant_particle_pair_indices_for_equal_combination(
-      boundarytypes_, relindices);
+  // const double initialparticlespacing = params_sph_.get<double>("INITIALPARTICLESPACING");
 
   // iterate over relevant particle pairs
-  for (const int particlepairindex : relindices)
+  for (const DEMParticlePair& particlepair : neighborpairs_->get_ref_to_particle_pair_data())
   {
-    const SPHParticlePair& particlepair =
-        neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
-
     // evaluate contact condition
-    if (not(particlepair.absdist_ < initialparticlespacing)) continue;
+    // if (not(particlepair.absdist_ < initialparticlespacing)) continue;
+    if (particlepair.gap_ > 0.0) continue;
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
@@ -167,16 +160,17 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_contribu
       force_j = container_j->cond_get_ptr_to_state(Particle::Force, particle_j);
 
     // compute normal gap and rate of normal gap
-    const double gap = particlepair.absdist_ - initialparticlespacing;
-    const double gapdot = ParticleUtils::vec_dot(vel_i, particlepair.e_ij_) -
-                          ParticleUtils::vec_dot(vel_j, particlepair.e_ij_);
+    const double gap = particlepair.gap_;
+    // const double gap = particlepair.absdist_ - initialparticlespacing;
+    const double gapdot = -1.0 * (ParticleUtils::vec_dot(vel_i, particlepair.e_ji_) -
+                                     ParticleUtils::vec_dot(vel_j, particlepair.e_ji_));
 
     // magnitude of rigid particle contact force
     const double fac = std::min(0.0, (stiff_ * gap + damp_ * gapdot));
 
     // add contributions
-    if (force_i) ParticleUtils::vec_add_scale(force_i, -fac, particlepair.e_ij_);
-    if (force_j) ParticleUtils::vec_add_scale(force_j, fac, particlepair.e_ij_);
+    if (force_i) ParticleUtils::vec_add_scale(force_i, fac, particlepair.e_ji_);
+    if (force_j) ParticleUtils::vec_add_scale(force_j, -fac, particlepair.e_ji_);
   }
 }
 
@@ -186,15 +180,12 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
       "Particle::SPHRigidParticleContactElastic::"
       "elastic_contact_particle_wall_contribution");
 
-  // get initial particle spacing
-  const double initialparticlespacing = params_sph_.get<double>("INITIALPARTICLESPACING");
-
   // get wall data state container
   std::shared_ptr<Particle::WallDataState> walldatastate =
       particlewallinterface_->get_wall_data_state();
 
   // get reference to particle-wall pair data
-  const SPHParticleWallPairData& particlewallpairdata =
+  const DEMParticleWallPairData& particlewallpairdata =
       neighborpairs_->get_ref_to_particle_wall_pair_data();
 
   // get number of particle-wall pairs
@@ -217,17 +208,12 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
     normaldirection.reserve(3 * numparticlewallpairs);
   }
 
-  // get relevant particle wall pair indices for specific particle types
-  std::vector<int> relindices;
-  neighborpairs_->get_relevant_particle_wall_pair_indices({Particle::RigidPhase}, relindices);
-
   // iterate over relevant particle-wall pairs
-  for (const int particlewallpairindex : relindices)
+  for (const DEMParticleWallPair& particlewallpair :
+      neighborpairs_->get_ref_to_particle_wall_pair_data())
   {
-    const SPHParticleWallPair& particlewallpair = particlewallpairdata[particlewallpairindex];
-
     // evaluate contact condition
-    if (not(particlewallpair.absdist_ < 0.5 * initialparticlespacing)) continue;
+    if (particlewallpair.gap_ > 0.0) continue;
 
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
@@ -283,27 +269,29 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
     }
 
     // compute normal gap and rate of normal gap
-    const double gap = particlewallpair.absdist_ - 0.5 * initialparticlespacing;
-    const double gapdot = ParticleUtils::vec_dot(vel_i, particlewallpair.e_ij_) -
-                          ParticleUtils::vec_dot(vel_j, particlewallpair.e_ij_);
+    const double gap = particlewallpair.gap_;
+    // const double gap = particlewallpair.absdist_ - 0.5 * initialparticlespacing;
+    const double gapdot = -1.0 * (ParticleUtils::vec_dot(vel_i, particlewallpair.e_ji_) -
+                                     ParticleUtils::vec_dot(vel_j, particlewallpair.e_ji_));
 
     // magnitude of rigid particle contact force
     const double fac = std::min(0.0, (stiff_ * gap + damp_ * gapdot));
 
     // add contributions
-    if (force_i) ParticleUtils::vec_add_scale(force_i, -fac, particlewallpair.e_ij_);
+    if (force_i) ParticleUtils::vec_add_scale(force_i, fac, particlewallpair.e_ji_);
 
     // calculation of wall contact force
     double wallcontactforce[3] = {0.0, 0.0, 0.0};
     if (writeinteractionoutput or walldatastate->get_force_col() != nullptr)
-      ParticleUtils::vec_set_scale(wallcontactforce, fac, particlewallpair.e_ij_);
+      ParticleUtils::vec_set_scale(wallcontactforce, -fac, particlewallpair.e_ji_);
 
     // write interaction output
     if (writeinteractionoutput)
     {
       // compute vector from wall contact point j to particle i
       double r_ij[3];
-      ParticleUtils::vec_set_scale(r_ij, particlewallpair.absdist_, particlewallpair.e_ij_);
+      ParticleUtils::vec_set_scale(r_ij, -1.0 * particlewallpair.gap_, particlewallpair.e_ji_);
+      // ParticleUtils::vec_set_scale(r_ij, particlewallpair.absdist_, particlewallpair.e_ij_);
 
       // calculate wall contact point
       double wallcontactpoint[3];
@@ -313,7 +301,8 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
       // set wall attack point and states
       for (int dim = 0; dim < 3; ++dim) attackpoints.push_back(wallcontactpoint[dim]);
       for (int dim = 0; dim < 3; ++dim) contactforces.push_back(wallcontactforce[dim]);
-      for (int dim = 0; dim < 3; ++dim) normaldirection.push_back(particlewallpair.e_ij_[dim]);
+      for (int dim = 0; dim < 3; ++dim)
+        normaldirection.push_back(-1.0 * particlewallpair.e_ji_[dim]);
     }
 
     // assemble contact force acting on wall element

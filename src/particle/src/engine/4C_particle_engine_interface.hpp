@@ -19,7 +19,6 @@
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 
 #include <memory>
-#include <unordered_map>
 
 FOUR_C_NAMESPACE_OPEN
 
