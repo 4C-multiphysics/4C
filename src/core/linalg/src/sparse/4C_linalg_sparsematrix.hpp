@@ -18,6 +18,7 @@
 
 #include <Epetra_CrsMatrix.h>
 #include <Epetra_FECrsMatrix.h>
+#include <Thyra_EpetraLinearOp.hpp>
 
 
 FOUR_C_NAMESPACE_OPEN
@@ -383,6 +384,7 @@ namespace Core::LinAlg
     /// return the internal Epetra_CrsMatrix or Epetra_FECrsMatrix
     /// (down-cast from Epetra_CrsMatrix !) (you should not need this!)
     const Epetra_CrsMatrix& epetra_matrix() const { return *sysmat_; }
+
 
     /** \name Attribute set methods */
     //@{
