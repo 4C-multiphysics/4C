@@ -1168,7 +1168,7 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::poro_fd_check()
 
   auto stiff_approx_sparse = std::make_shared<Core::LinAlg::SparseMatrix>(stiff_approx);
 
-  stiff_approx_sparse->add(sparse_copy, false, -1.0, 1.0);
+  Core::LinAlg::matrix_add(sparse_copy, false, -1.0, *stiff_approx_sparse, 1.0);
 
   Core::LinAlg::SparseMatrix sparse_crs(sparse_copy);
   std::shared_ptr<Core::LinAlg::SparseMatrix> error_crs = stiff_approx_sparse;

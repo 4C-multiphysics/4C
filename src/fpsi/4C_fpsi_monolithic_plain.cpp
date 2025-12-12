@@ -23,6 +23,7 @@
 #include "4C_io_control.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_poroelast_base.hpp"
 #include "4C_poroelast_monolithic.hpp"
@@ -283,10 +284,11 @@ void FPSI::MonolithicPlain::setup_system_matrix(Core::LinAlg::BlockSparseMatrixB
   p->add(fpsi_coupl()->c_pp(), false, 1.0, 1.0);
 
   // Fluid Coupling Matrix is created as BlockMatrix, to enable condensation procedure ...
-  f->add(fpsi_coupl()->c_ff().matrix(fidx_other, fidx_other), false, 1.0, 1.0);
-  f->add(fpsi_coupl()->c_ff().matrix(fidx_other, fidx_fsi), false, 1.0, 1.0);
-  f->add(fpsi_coupl()->c_ff().matrix(fidx_fsi, fidx_other), false, 1.0, 1.0);
-  f->add(fpsi_coupl()->c_ff().matrix(fidx_fsi, fidx_fsi), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(
+      fpsi_coupl()->c_ff().matrix(fidx_other, fidx_other), false, 1.0, *f, 1.0);
+  Core::LinAlg::matrix_add(fpsi_coupl()->c_ff().matrix(fidx_other, fidx_fsi), false, 1.0, *f, 1.0);
+  Core::LinAlg::matrix_add(fpsi_coupl()->c_ff().matrix(fidx_fsi, fidx_other), false, 1.0, *f, 1.0);
+  Core::LinAlg::matrix_add(fpsi_coupl()->c_ff().matrix(fidx_fsi, fidx_fsi), false, 1.0, *f, 1.0);
 
   f->complete();
 
@@ -358,7 +360,7 @@ void FPSI::MonolithicPlain::setup_system_matrix(Core::LinAlg::BlockSparseMatrixB
 
     // As the Fluid Block Matrix is used here, the already to the f-SparseMatrix
     // added FPSI-Coupling terms have to be added again!!!
-    fgi.add(fpsi_coupl()->c_ff().matrix(fidx_fsi, fidx_other), false, 1.0,
+    Core::LinAlg::matrix_add(fpsi_coupl()->c_ff().matrix(fidx_fsi, fidx_other), false, 1.0, fgi,
         1.0);  // is missing in old implementation
     // fg_gfpsi.Add(FPSICoupl()->C_ff().Matrix(fidx_fsi,fidx_fpsi),false,1.0,1.0);  //is missing in
     // old implementation fgg.Add(FPSICoupl()->C_ff().Matrix(fidx_fsi,fidx_fsi),false,1.0,1.0);

@@ -581,8 +581,10 @@ void BeamInteraction::BeamToSolidMortarManager::add_global_force_stiffness_penal
           penalty_regularization_lin_kappa, false, *kappa_lin_beam_, false, false, false, true);
       const auto kappa_lin_solid_scaled = Core::LinAlg::matrix_multiply(
           penalty_regularization_lin_kappa, false, *kappa_lin_solid_, false, false, false, true);
-      regularized_constraint_lin_beam->add(*kappa_lin_beam_scaled, false, 1.0, 1.0);
-      regularized_constraint_lin_solid->add(*kappa_lin_solid_scaled, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(
+          *kappa_lin_beam_scaled, false, 1.0, *regularized_constraint_lin_beam, 1.0);
+      Core::LinAlg::matrix_add(
+          *kappa_lin_solid_scaled, false, 1.0, *regularized_constraint_lin_solid, 1.0);
     }
 
     // Calculate the needed submatrices
@@ -600,10 +602,14 @@ void BeamInteraction::BeamToSolidMortarManager::add_global_force_stiffness_penal
             *regularized_constraint_lin_solid, false, false, false, true);
 
     // Add contributions to the global stiffness matrix
-    stiff->add(*force_beam_lin_lambda_times_constraint_lin_beam, false, 1.0, 1.0);
-    stiff->add(*force_beam_lin_lambda_times_constraint_lin_solid, false, 1.0, 1.0);
-    stiff->add(*force_solid_lin_lambda_times_constraint_lin_beam, false, 1.0, 1.0);
-    stiff->add(*force_solid_lin_lambda_times_constraint_lin_solid, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(
+        *force_beam_lin_lambda_times_constraint_lin_beam, false, 1.0, *stiff, 1.0);
+    Core::LinAlg::matrix_add(
+        *force_beam_lin_lambda_times_constraint_lin_solid, false, 1.0, *stiff, 1.0);
+    Core::LinAlg::matrix_add(
+        *force_solid_lin_lambda_times_constraint_lin_beam, false, 1.0, *stiff, 1.0);
+    Core::LinAlg::matrix_add(
+        *force_solid_lin_lambda_times_constraint_lin_solid, false, 1.0, *stiff, 1.0);
   }
 
   if (force != nullptr)
@@ -790,8 +796,8 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
 
   Core::LinAlg::SparseMatrix lm_displ =
       Core::LinAlg::SparseMatrix(*lambda_dof_rowmap_, 81, true, true);
-  lm_displ.add(*constraint_lin_beam_, false, 1.0, 0.0);
-  lm_displ.add(*constraint_lin_solid_, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*constraint_lin_beam_, false, 1.0, lm_displ, 0.0);
+  Core::LinAlg::matrix_add(*constraint_lin_solid_, false, 1.0, lm_displ, 1.0);
   lm_displ.complete(*discret_->dof_row_map(), *lambda_dof_rowmap_);
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> lm_displ_in_global_layout =
@@ -802,8 +808,8 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
 
   Core::LinAlg::SparseMatrix displ_lm =
       Core::LinAlg::SparseMatrix(*discret_->dof_row_map(), 81, true, true);
-  displ_lm.add(*force_beam_lin_lambda_, false, 1.0, 0.0);
-  displ_lm.add(*force_solid_lin_lambda_, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*force_beam_lin_lambda_, false, 1.0, displ_lm, 0.0);
+  Core::LinAlg::matrix_add(*force_solid_lin_lambda_, false, 1.0, displ_lm, 1.0);
   displ_lm.complete(*lambda_dof_rowmap_, *discret_->dof_row_map());
   std::shared_ptr<Core::LinAlg::SparseMatrix> displ_lm_in_global_layout =
       Core::LinAlg::matrix_row_col_transform(

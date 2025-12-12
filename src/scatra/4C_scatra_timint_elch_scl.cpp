@@ -20,6 +20,7 @@
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_linear_solver_method_parameters.hpp"
 #include "4C_scatra_ele_action.hpp"
@@ -933,7 +934,7 @@ void ScaTra::ScaTraTimIntElchSCL::assemble_and_apply_mesh_tying()
       auto sparse_systemmatrix =
           Core::LinAlg::cast_to_sparse_matrix_and_check_success(system_matrix_elch_scl_);
 
-      sparse_systemmatrix->add(*system_matrix(), false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*system_matrix(), false, 1.0, *sparse_systemmatrix, 1.0);
 
       Coupling::Adapter::CouplingSlaveConverter micro_side_converter(
           *macro_micro_coupling_adapter_);
@@ -964,7 +965,7 @@ void ScaTra::ScaTraTimIntElchSCL::assemble_and_apply_mesh_tying()
       auto block_systemmatrix =
           Core::LinAlg::cast_to_block_sparse_matrix_base_and_check_success(system_matrix_elch_scl_);
 
-      block_systemmatrix->matrix(0, 0).add(*system_matrix(), false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*system_matrix(), false, 1.0, block_systemmatrix->matrix(0, 0), 1.0);
 
       Coupling::Adapter::CouplingSlaveConverter micro_side_converter(
           *macro_micro_coupling_adapter_);

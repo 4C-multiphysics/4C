@@ -13,6 +13,7 @@
 #include "4C_fluid_xfluid.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_poroelast_base.hpp"
 #include "4C_xfem_condition_manager.hpp"
 
@@ -142,9 +143,12 @@ void XFEM::XfpCouplingManager::add_coupling_matrix(
     Core::LinAlg::SparseMatrix& C_sf_block = (systemmatrix)(idx_[0], idx_[1]);
 
     // 1// Add Blocks f-ps(2), ps-f(3), ps-ps(4)
-    C_ss_block.add(*xfluid_->c_ss_matrix(cond_name_ps_ps_), false, scaling * scaling_disp_vel, 1.0);
-    C_sf_block.add(*xfluid_->c_sx_matrix(cond_name_ps_ps_), false, scaling, 1.0);
-    C_fs_block.add(*xfluid_->c_xs_matrix(cond_name_ps_ps_), false, scaling * scaling_disp_vel, 1.0);
+    Core::LinAlg::matrix_add(*xfluid_->c_ss_matrix(cond_name_ps_ps_), false,
+        scaling * scaling_disp_vel, C_ss_block, 1.0);
+    Core::LinAlg::matrix_add(
+        *xfluid_->c_sx_matrix(cond_name_ps_ps_), false, scaling, C_sf_block, 1.0);
+    Core::LinAlg::matrix_add(*xfluid_->c_xs_matrix(cond_name_ps_ps_), false,
+        scaling * scaling_disp_vel, C_fs_block, 1.0);
 
     // 2// Add Blocks f-pf(5), ps-pf(6)
     Core::LinAlg::SparseMatrix C_ps_pf(
@@ -156,8 +160,8 @@ void XFEM::XfpCouplingManager::add_coupling_matrix(
     insert_matrix(-1, 0, *xfluid_->c_xs_matrix(cond_name_ps_pf_), 1, C_f_pf,
         CouplingCommManager::col, 1, true, false);
     C_f_pf.complete(*get_map_extractor(1)->map(1), C_fs_block.range_map());
-    C_fs_block.add(C_f_pf, false, scaling, 1.0);
-    C_ss_block.add(C_ps_pf, false, scaling, 1.0);
+    Core::LinAlg::matrix_add(C_f_pf, false, scaling, C_fs_block, 1.0);
+    Core::LinAlg::matrix_add(C_ps_pf, false, scaling, C_ss_block, 1.0);
 
     // 3// Add Blocks pf-f(7), pf-ps(8)
     Core::LinAlg::SparseMatrix C_pf_ps(*get_map_extractor(1)->map(1), 81, false);
@@ -168,15 +172,15 @@ void XFEM::XfpCouplingManager::add_coupling_matrix(
     insert_matrix(-1, 0, *xfluid_->c_sx_matrix(cond_name_pf_ps_), 1, C_pf_f,
         CouplingCommManager::row, 1, true, false);
     C_pf_f.complete(*xfluid_->dof_row_map(), *get_map_extractor(1)->map(1));
-    C_ss_block.add(C_pf_ps, false, scaling * scaling_disp_vel * dt, 1.0);
-    C_sf_block.add(C_pf_f, false, scaling * dt, 1.0);
+    Core::LinAlg::matrix_add(C_pf_ps, false, scaling * scaling_disp_vel * dt, C_ss_block, 1.0);
+    Core::LinAlg::matrix_add(C_pf_f, false, scaling * dt, C_sf_block, 1.0);
 
     // 4// Add Block pf-pf(9)
     Core::LinAlg::SparseMatrix C_pf_pf(*get_map_extractor(1)->map(1), 81, false);
     insert_matrix(-1, 0, *xfluid_->c_ss_matrix(cond_name_pf_pf_), 1, C_pf_pf,
         CouplingCommManager::row_and_col);
     C_pf_pf.complete(*get_map_extractor(1)->map(1), *get_map_extractor(1)->map(1));
-    C_ss_block.add(C_pf_pf, false, scaling * dt, 1.0);
+    Core::LinAlg::matrix_add(C_pf_pf, false, scaling * dt, C_ss_block, 1.0);
   }
   else if (idx_.size() == 3)
   {
@@ -192,9 +196,12 @@ void XFEM::XfpCouplingManager::add_coupling_matrix(
     Core::LinAlg::SparseMatrix& C_spf_block = (systemmatrix)(idx_[0], idx_[2]);
 
     // 1// Add Blocks f-ps(2), ps-f(3), ps-ps(4)
-    C_ss_block.add(*xfluid_->c_ss_matrix(cond_name_ps_ps_), false, scaling * scaling_disp_vel, 1.0);
-    C_sf_block.add(*xfluid_->c_sx_matrix(cond_name_ps_ps_), false, scaling, 1.0);
-    C_fs_block.add(*xfluid_->c_xs_matrix(cond_name_ps_ps_), false, scaling * scaling_disp_vel, 1.0);
+    Core::LinAlg::matrix_add(*xfluid_->c_ss_matrix(cond_name_ps_ps_), false,
+        scaling * scaling_disp_vel, C_ss_block, 1.0);
+    Core::LinAlg::matrix_add(
+        *xfluid_->c_sx_matrix(cond_name_ps_ps_), false, scaling, C_sf_block, 1.0);
+    Core::LinAlg::matrix_add(*xfluid_->c_xs_matrix(cond_name_ps_ps_), false,
+        scaling * scaling_disp_vel, C_fs_block, 1.0);
 
     // 2// Add Blocks f-pf(5), ps-pf(6)
     insert_matrix(-1, 0, *xfluid_->c_ss_matrix(cond_name_ps_pf_), 1, C_spf_block,

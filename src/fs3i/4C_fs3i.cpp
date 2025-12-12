@@ -21,6 +21,7 @@
 #include "4C_inpar_fs3i.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_scatra_algorithm.hpp"
 #include "4C_scatra_timint_implicit.hpp"
@@ -690,8 +691,8 @@ void FS3I::FS3IBase::setup_coupled_scatra_matrix() const
     std::shared_ptr<Core::LinAlg::SparseMatrix> coup1 = scatracoupmat_[0];
     std::shared_ptr<Core::LinAlg::SparseMatrix> coup2 = scatracoupmat_[1];
 
-    scatrasystemmatrix_->matrix(0, 0).add(*coup1, false, 1.0, 1.0);
-    scatrasystemmatrix_->matrix(1, 1).add(*coup2, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*coup1, false, 1.0, scatrasystemmatrix_->matrix(0, 0), 1.0);
+    Core::LinAlg::matrix_add(*coup2, false, 1.0, scatrasystemmatrix_->matrix(1, 1), 1.0);
 
     // contribution of the respective other field
     // first split the matrix into 2x2 blocks (boundary vs. inner dofs)

@@ -15,6 +15,7 @@
 #include "4C_io_visualization_parameters.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_structure_new_model_evaluator_data.hpp"
 #include "4C_structure_new_timint_base.hpp"
@@ -223,7 +224,7 @@ bool Solid::ModelEvaluator::SpringDashpot::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr = global_state().extract_displ_block(jac);
-  jac_dd_ptr->add(*stiff_spring_ptr_, false, timefac_np, 1.0);
+  Core::LinAlg::matrix_add(*stiff_spring_ptr_, false, timefac_np, *jac_dd_ptr, 1.0);
   // no need to keep it
   stiff_spring_ptr_->zero();
   // nothing to do

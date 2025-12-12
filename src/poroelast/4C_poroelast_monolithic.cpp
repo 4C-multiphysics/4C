@@ -25,6 +25,7 @@
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method.hpp"
 #include "4C_linear_solver_method_input.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
@@ -1288,7 +1289,7 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
   stiff_approx.complete();
 
   Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
-  stiff_approx_sparse.add(sparse, false, -1.0, 1.0);
+  Core::LinAlg::matrix_add(sparse, false, -1.0, stiff_approx_sparse, 1.0);
 
   stiff_approx_sparse.complete();
   sparse.complete();
@@ -1434,7 +1435,7 @@ void PoroElast::Monolithic::evaluate_condition(
     struct_vel_constraint_matrix->scale(timescale);
     struct_vel_constraint_matrix->complete(structure_field()->system_matrix()->range_map(),
         fluid_field()->system_matrix()->range_map());
-    ConstraintMatrix->add(*struct_vel_constraint_matrix, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*struct_vel_constraint_matrix, false, 1.0, *ConstraintMatrix, 1.0);
     ConstraintMatrix->complete(structure_field()->system_matrix()->range_map(),
         fluid_field()->system_matrix()->range_map());
   }
@@ -1942,15 +1943,15 @@ void PoroElast::Monolithic::eval_poro_mortar()
               &structure_field()->meshtying_contact_bridge()->contact_manager()->get_strategy());
 
           systemmatrix_->un_complete();
-          systemmatrix_->matrix(0, 1).add(
+          Core::LinAlg::matrix_add(
               *pstrat->get_matrix_block_ptr(CONTACT::MatBlockType::displ_porofluid), false, 1.0,
-              1.0);
-          systemmatrix_->matrix(1, 1).add(
+              systemmatrix_->matrix(0, 1), 1.0);
+          Core::LinAlg::matrix_add(
               *pstrat->get_matrix_block_ptr(CONTACT::MatBlockType::porofluid_porofluid), false, 1.0,
-              1.0);
-          systemmatrix_->matrix(1, 0).add(
+              systemmatrix_->matrix(1, 1), 1.0);
+          Core::LinAlg::matrix_add(
               *pstrat->get_matrix_block_ptr(CONTACT::MatBlockType::porofluid_displ), false, 1.0,
-              1.0);
+              systemmatrix_->matrix(1, 0), 1.0);
           systemmatrix_->complete();
 
           extractor()->add_vector(
@@ -1993,15 +1994,15 @@ void PoroElast::Monolithic::eval_poro_mortar()
     if (contact_strategy_nitsche_poro != nullptr)
     {
       systemmatrix_->un_complete();
-      systemmatrix_->matrix(0, 1).add(*contact_strategy_nitsche_poro->get_matrix_block_ptr(
-                                          CONTACT::MatBlockType::displ_porofluid),
-          false, 1.0, 1.0);
-      systemmatrix_->matrix(1, 1).add(*contact_strategy_nitsche_poro->get_matrix_block_ptr(
-                                          CONTACT::MatBlockType::porofluid_porofluid),
-          false, 1.0, 1.0);
-      systemmatrix_->matrix(1, 0).add(*contact_strategy_nitsche_poro->get_matrix_block_ptr(
-                                          CONTACT::MatBlockType::porofluid_displ),
-          false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*contact_strategy_nitsche_poro->get_matrix_block_ptr(
+                                   CONTACT::MatBlockType::displ_porofluid),
+          false, 1.0, systemmatrix_->matrix(0, 1), 1.0);
+      Core::LinAlg::matrix_add(*contact_strategy_nitsche_poro->get_matrix_block_ptr(
+                                   CONTACT::MatBlockType::porofluid_porofluid),
+          false, 1.0, systemmatrix_->matrix(1, 1), 1.0);
+      Core::LinAlg::matrix_add(*contact_strategy_nitsche_poro->get_matrix_block_ptr(
+                                   CONTACT::MatBlockType::porofluid_displ),
+          false, 1.0, systemmatrix_->matrix(1, 0), 1.0);
       systemmatrix_->complete();
 
       extractor()->add_vector(

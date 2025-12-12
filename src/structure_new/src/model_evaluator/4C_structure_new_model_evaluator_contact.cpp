@@ -13,6 +13,7 @@
 #include "4C_io.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_solver_nonlin_nox_group.hpp"
 #include "4C_solver_nonlin_nox_solver_linesearchbased.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
@@ -270,7 +271,7 @@ bool Solid::ModelEvaluator::Contact::assemble_jacobian(
         strategy().get_matrix_block_ptr(CONTACT::MatBlockType::displ_displ, &eval_contact());
     if (strategy().is_penalty() && block_ptr == nullptr) return true;
     std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd = global_state().extract_displ_block(jac);
-    jac_dd->add(*block_ptr, false, timefac_np, 1.0);
+    Core::LinAlg::matrix_add(*block_ptr, false, timefac_np, *jac_dd, 1.0);
   }
   // ---------------------------------------------------------------------
   // condensed system of equations
@@ -284,7 +285,7 @@ bool Solid::ModelEvaluator::Contact::assemble_jacobian(
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr =
           global_state().extract_displ_block(jac);
-      jac_dd_ptr->add(*block_ptr, false, timefac_np, 1.0);
+      Core::LinAlg::matrix_add(*block_ptr, false, timefac_np, *jac_dd_ptr, 1.0);
       // reset the block pointers, just to be on the safe side
       block_ptr = nullptr;
     }
@@ -301,7 +302,7 @@ bool Solid::ModelEvaluator::Contact::assemble_jacobian(
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr =
           global_state().extract_displ_block(jac);
-      jac_dd_ptr->add(*block_ptr, false, timefac_np, 1.0);
+      Core::LinAlg::matrix_add(*block_ptr, false, timefac_np, *jac_dd_ptr, 1.0);
       // reset the block pointers, just to be on the safe side
       block_ptr = nullptr;
     }

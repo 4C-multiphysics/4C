@@ -13,6 +13,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_xfem_condition_manager.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -132,7 +133,8 @@ void XFEM::XfsCouplingManager::add_coupling_matrix(
 
   // C_ss_block scaled with 1/(theta_f*dt) * 1/(theta_FSI*dt) = 1/weight(t^f_np) *
   // 1/weight(t^FSI_np) add the coupling block C_ss on the already existing diagonal block
-  C_ss_block.add(*xfluid_->c_ss_matrix(cond_name_), false, scaling * scaling_FSI, 1.0);
+  Core::LinAlg::matrix_add(
+      *xfluid_->c_ss_matrix(cond_name_), false, scaling * scaling_FSI, C_ss_block, 1.0);
 
 
   Core::ProblemType probtype = Global::Problem::instance()->get_problem_type();
@@ -161,8 +163,9 @@ void XFEM::XfsCouplingManager::add_coupling_matrix(
     Core::LinAlg::SparseMatrix& C_fs_block = (systemmatrix)(idx_[1], idx_[0]);
     Core::LinAlg::SparseMatrix& C_sf_block = (systemmatrix)(idx_[0], idx_[1]);
 
-    C_sf_block.add(*xfluid_->c_sx_matrix(cond_name_), false, scaling, 1.0);
-    C_fs_block.add(*xfluid_->c_xs_matrix(cond_name_), false, scaling * scaling_FSI, 1.0);
+    Core::LinAlg::matrix_add(*xfluid_->c_sx_matrix(cond_name_), false, scaling, C_sf_block, 1.0);
+    Core::LinAlg::matrix_add(
+        *xfluid_->c_xs_matrix(cond_name_), false, scaling * scaling_FSI, C_fs_block, 1.0);
   }
   else
   {

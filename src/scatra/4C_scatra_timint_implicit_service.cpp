@@ -1390,7 +1390,7 @@ void ScaTra::ScaTraTimIntImpl::avm3_scaling(Teuchos::ParameterList& eleparams)
 
   // add the subgrid-viscosity-scaled fine-scale matrix to obtain complete matrix
   std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat = system_matrix();
-  sysmat->add(*sysmat_sd_, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*sysmat_sd_, false, 1.0, *sysmat, 1.0);
 
   // set subgrid-diffusivity vector to zero after scaling procedure
   subgrdiff_->put_scalar(0.0);

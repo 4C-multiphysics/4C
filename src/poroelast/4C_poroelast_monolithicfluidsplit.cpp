@@ -13,6 +13,7 @@
 #include "4C_fluid_utils_mapextractor.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_structure_aux.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
@@ -227,25 +228,25 @@ void PoroElast::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSpa
   // structural one. (Tet elements in fluid can cause this.) We should do
   // this just once...
 #ifdef FLUIDSPLITAMG
-  mat.matrix(1, 1).add(f->matrix(0, 0), false, 1., 0.0);
+  Core::LinAlg::matrix_add(f->matrix(0, 0), false, 1., mat.matrix(1, 1), 0.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
       Core::LinAlg::create_identity_matrix(*fluid_field()->interface()->fsi_cond_map());
-  mat.matrix(1, 1).add(*eye, false, 1., 1.0);
+  Core::LinAlg::matrix_add(*eye, false, 1., mat.matrix(1, 1), 1.0);
 #else
   f->Matrix(0, 0).UnComplete();
   mat.Assign(1, 1, View, f->Matrix(0, 0));
 #endif
 
   // fluid coupling part
-  mat.matrix(1, 0).add(k_fs->matrix(0, 0), false, 1.0, 0.0);
-  mat.matrix(1, 0).add(k_fs->matrix(0, 1), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(k_fs->matrix(0, 0), false, 1.0, mat.matrix(1, 0), 0.0);
+  Core::LinAlg::matrix_add(k_fs->matrix(0, 1), false, 1.0, mat.matrix(1, 0), 1.0);
 
   // pure structure part
   mat.assign(0, 0, Core::LinAlg::DataAccess::Share, *s);
 
   // structure coupling part
-  mat.matrix(0, 1).add(k_sf->matrix(0, 0), false, 1.0, 0.0);
-  mat.matrix(0, 1).add(k_sf->matrix(1, 0), false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(k_sf->matrix(0, 0), false, 1.0, mat.matrix(0, 1), 0.0);
+  Core::LinAlg::matrix_add(k_sf->matrix(1, 0), false, 1.0, mat.matrix(0, 1), 1.0);
   /*----------------------------------------------------------------------*/
   // done. make sure all blocks are filled.
   mat.complete();

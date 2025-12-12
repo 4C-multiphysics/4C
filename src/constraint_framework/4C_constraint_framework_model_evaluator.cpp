@@ -18,6 +18,7 @@
 #include "4C_io.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_structure_new_model_evaluator_data.hpp"
 #include "4C_structure_new_timint_base.hpp"
 
@@ -251,7 +252,7 @@ bool Solid::ModelEvaluator::Constraint::assemble_jacobian(
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr = global_state().extract_displ_block(jac);
 
-  jac_dd_ptr->add(*constraint_stiff_ptr_, false, timefac_np, 1.0);
+  Core::LinAlg::matrix_add(*constraint_stiff_ptr_, false, timefac_np, *jac_dd_ptr, 1.0);
 
   constraint_stiff_ptr_->zero();
   return true;

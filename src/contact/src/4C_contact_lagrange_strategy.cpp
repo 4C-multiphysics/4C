@@ -382,14 +382,14 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
       dinv_dsv2 = Core::LinAlg::matrix_multiply(invdS, false, *inv_det6, false, false, false, true);
 
       // diagonal entries
-      invd->add(invdS, false, 1.0, 1.0);
-      invd->add(invdE, false, 1.0, 1.0);
-      invd->add(invdV, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(invdS, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(invdE, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(invdV, false, 1.0, *invd, 1.0);
 
-      invd->add(*dinv_dev, false, 1.0, 1.0);
-      invd->add(*dinv_dse, false, 1.0, 1.0);
-      invd->add(*dinv_dsv1, false, 1.0, 1.0);
-      invd->add(*dinv_dsv2, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dev, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dse, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dsv1, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dsv2, false, 1.0, *invd, 1.0);
 
       // complete
       invd->complete();
@@ -681,19 +681,19 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
     // kmn: add T(mhataam)*kan
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmnmod =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmnmod->add(*kmn, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmn, false, 1.0, *kmnmod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmnadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kan, false, false, false, true);
-    kmnmod->add(*kmnadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmnadd, false, 1.0, *kmnmod, 1.0);
     kmnmod->complete(kmn->domain_map(), kmn->row_map());
 
     // kmm: add T(mhataam)*kam
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmmmod =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmmmod->add(*kmm, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmm, false, 1.0, *kmmmod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmmadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kam, false, false, false, true);
-    kmmmod->add(*kmmadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmmadd, false, 1.0, *kmmmod, 1.0);
     kmmmod->complete(kmm->domain_map(), kmm->row_map());
 
     // kmi: add T(mhataam)*kai
@@ -701,10 +701,10 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
     if (iset)
     {
       kmimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-      kmimod->add(*kmi, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kmi, false, 1.0, *kmimod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> kmiadd =
           Core::LinAlg::matrix_multiply(*mhataam, true, *kai, false, false, false, true);
-      kmimod->add(*kmiadd, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kmiadd, false, 1.0, *kmimod, 1.0);
       kmimod->complete(kmi->domain_map(), kmi->row_map());
     }
 
@@ -713,10 +713,10 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
     if (aset)
     {
       kmamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-      kmamod->add(*kma, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kma, false, 1.0, *kmamod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> kmaadd =
           Core::LinAlg::matrix_multiply(*mhataam, true, *kaa, false, false, false, true);
-      kmamod->add(*kmaadd, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kmaadd, false, 1.0, *kmamod, 1.0);
       kmamod->complete(kma->domain_map(), kma->row_map());
     }
 
@@ -724,24 +724,24 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
     // kin: subtract T(dhat)*kan
     std::shared_ptr<Core::LinAlg::SparseMatrix> kinmod =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kinmod->add(*kin, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kin, false, 1.0, *kinmod, 1.0);
     if (aset && iset)
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> kinadd =
           Core::LinAlg::matrix_multiply(*dhat, true, *kan, false, false, false, true);
-      kinmod->add(*kinadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kinadd, false, -1.0, *kinmod, 1.0);
     }
     kinmod->complete(kin->domain_map(), kin->row_map());
 
     // kim: subtract T(dhat)*kam
     std::shared_ptr<Core::LinAlg::SparseMatrix> kimmod =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kimmod->add(*kim, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kim, false, 1.0, *kimmod, 1.0);
     if (aset && iset)
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> kimadd =
           Core::LinAlg::matrix_multiply(*dhat, true, *kam, false, false, false, true);
-      kimmod->add(*kimadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kimadd, false, -1.0, *kimmod, 1.0);
     }
     kimmod->complete(kim->domain_map(), kim->row_map());
 
@@ -750,12 +750,12 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
     if (iset)
     {
       kiimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-      kiimod->add(*kii, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kii, false, 1.0, *kiimod, 1.0);
       if (aset)
       {
         std::shared_ptr<Core::LinAlg::SparseMatrix> kiiadd =
             Core::LinAlg::matrix_multiply(*dhat, true, *kai, false, false, false, true);
-        kiimod->add(*kiiadd, false, -1.0, 1.0);
+        Core::LinAlg::matrix_add(*kiiadd, false, -1.0, *kiimod, 1.0);
       }
       kiimod->complete(kii->domain_map(), kii->row_map());
     }
@@ -765,10 +765,10 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
     if (iset && aset)
     {
       kiamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-      kiamod->add(*kia, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kia, false, 1.0, *kiamod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> kiaadd =
           Core::LinAlg::matrix_multiply(*dhat, true, *kaa, false, false, false, true);
-      kiamod->add(*kiaadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kiaadd, false, -1.0, *kiamod, 1.0);
       kiamod->complete(kia->domain_map(), kia->row_map());
     }
 
@@ -1083,50 +1083,50 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
 
     //--------------------------------------------------------- FIRST LINE
     // add n submatrices to kteffnew
-    kteffnew->add(*knn, false, 1.0, 1.0);
-    kteffnew->add(*knm, false, 1.0, 1.0);
-    if (sset) kteffnew->add(*kns, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*knn, false, 1.0, *kteffnew, 1.0);
+    Core::LinAlg::matrix_add(*knm, false, 1.0, *kteffnew, 1.0);
+    if (sset) Core::LinAlg::matrix_add(*kns, false, 1.0, *kteffnew, 1.0);
 
     //-------------------------------------------------------- SECOND LINE
     // add m submatrices to kteffnew
-    kteffnew->add(*kmnmod, false, 1.0, 1.0);
-    kteffnew->add(*kmmmod, false, 1.0, 1.0);
-    if (iset) kteffnew->add(*kmimod, false, 1.0, 1.0);
-    if (aset) kteffnew->add(*kmamod, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmnmod, false, 1.0, *kteffnew, 1.0);
+    Core::LinAlg::matrix_add(*kmmmod, false, 1.0, *kteffnew, 1.0);
+    if (iset) Core::LinAlg::matrix_add(*kmimod, false, 1.0, *kteffnew, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*kmamod, false, 1.0, *kteffnew, 1.0);
 
     //--------------------------------------------------------- THIRD LINE
     // add i submatrices to kteffnew
-    if (iset) kteffnew->add(*kinmod, false, 1.0, 1.0);
-    if (iset) kteffnew->add(*kimmod, false, 1.0, 1.0);
-    if (iset) kteffnew->add(*kiimod, false, 1.0, 1.0);
-    if (iset && aset) kteffnew->add(*kiamod, false, 1.0, 1.0);
+    if (iset) Core::LinAlg::matrix_add(*kinmod, false, 1.0, *kteffnew, 1.0);
+    if (iset) Core::LinAlg::matrix_add(*kimmod, false, 1.0, *kteffnew, 1.0);
+    if (iset) Core::LinAlg::matrix_add(*kiimod, false, 1.0, *kteffnew, 1.0);
+    if (iset && aset) Core::LinAlg::matrix_add(*kiamod, false, 1.0, *kteffnew, 1.0);
 
     //-------------------------------------------------------- FOURTH LINE
 
     // add a submatrices to kteffnew
-    if (aset) kteffnew->add(*smatrix_, false, 1.0, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*smatrix_, false, 1.0, *kteffnew, 1.0);
 
     //--------------------------------------------------------- FIFTH LINE
     // add st submatrices to kteffnew
-    if (stickset) kteffnew->add(*kstnmod, false, 1.0, 1.0);
-    if (stickset) kteffnew->add(*kstmmod, false, 1.0, 1.0);
-    if (stickset && iset) kteffnew->add(*kstimod, false, 1.0, 1.0);
-    if (stickset && slipset) kteffnew->add(*kstslmod, false, 1.0, 1.0);
-    if (stickset) kteffnew->add(*kststmod, false, 1.0, 1.0);
+    if (stickset) Core::LinAlg::matrix_add(*kstnmod, false, 1.0, *kteffnew, 1.0);
+    if (stickset) Core::LinAlg::matrix_add(*kstmmod, false, 1.0, *kteffnew, 1.0);
+    if (stickset && iset) Core::LinAlg::matrix_add(*kstimod, false, 1.0, *kteffnew, 1.0);
+    if (stickset && slipset) Core::LinAlg::matrix_add(*kstslmod, false, 1.0, *kteffnew, 1.0);
+    if (stickset) Core::LinAlg::matrix_add(*kststmod, false, 1.0, *kteffnew, 1.0);
 
     // add terms of linearization of sick condition to kteffnew
-    if (stickset) kteffnew->add(*linstickDIS_, false, -1.0, 1.0);
+    if (stickset) Core::LinAlg::matrix_add(*linstickDIS_, false, -1.0, *kteffnew, 1.0);
 
     //--------------------------------------------------------- SIXTH LINE
     // add sl submatrices to kteffnew
-    if (slipset) kteffnew->add(*kslnmod, false, 1.0, 1.0);
-    if (slipset) kteffnew->add(*kslmmod, false, 1.0, 1.0);
-    if (slipset && iset) kteffnew->add(*kslimod, false, 1.0, 1.0);
-    if (slipset) kteffnew->add(*kslslmod, false, 1.0, 1.0);
-    if (slipset && stickset) kteffnew->add(*kslstmod, false, 1.0, 1.0);
+    if (slipset) Core::LinAlg::matrix_add(*kslnmod, false, 1.0, *kteffnew, 1.0);
+    if (slipset) Core::LinAlg::matrix_add(*kslmmod, false, 1.0, *kteffnew, 1.0);
+    if (slipset && iset) Core::LinAlg::matrix_add(*kslimod, false, 1.0, *kteffnew, 1.0);
+    if (slipset) Core::LinAlg::matrix_add(*kslslmod, false, 1.0, *kteffnew, 1.0);
+    if (slipset && stickset) Core::LinAlg::matrix_add(*kslstmod, false, 1.0, *kteffnew, 1.0);
 
     // add terms of linearization of slip condition to kteffnew and feffnew
-    if (slipset) kteffnew->add(*linslipDIS_, false, -1.0, +1.0);
+    if (slipset) Core::LinAlg::matrix_add(*linslipDIS_, false, -1.0, *kteffnew, +1.0);
 
     // fill_complete kteffnew (square)
     kteffnew->complete();
@@ -2144,14 +2144,14 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
       dinv_dsv2 = Core::LinAlg::matrix_multiply(invdS, false, *inv_det6, false, false, false, true);
 
       // diagonal entries
-      invd->add(invdS, false, 1.0, 1.0);
-      invd->add(invdE, false, 1.0, 1.0);
-      invd->add(invdV, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(invdS, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(invdE, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(invdV, false, 1.0, *invd, 1.0);
 
-      invd->add(*dinv_dev, false, 1.0, 1.0);
-      invd->add(*dinv_dse, false, 1.0, 1.0);
-      invd->add(*dinv_dsv1, false, 1.0, 1.0);
-      invd->add(*dinv_dsv2, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dev, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dse, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dsv1, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dsv2, false, 1.0, *invd, 1.0);
 
       invd->complete();
     }
@@ -2201,11 +2201,11 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
       Core::LinAlg::SparseMatrix systrafo(*problem_dofs(), 100, false, true);
       std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
           Core::LinAlg::create_identity_matrix(*gndofrowmap_);
-      systrafo.add(*eye, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*eye, false, 1.0, systrafo, 1.0);
       if (parallel_redistribution_status())
         trafo_ = Core::LinAlg::matrix_row_col_transform(
             *trafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-      systrafo.add(*trafo_, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*trafo_, false, 1.0, systrafo, 1.0);
       systrafo.complete();
 
       // apply basis transformation to K and f
@@ -2225,8 +2225,8 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
     }
 
     kteffmatrix->un_complete();
-    kteffmatrix->add(*lindmatrix_, false, 1.0 - alphaf_, 1.0);
-    kteffmatrix->add(*linmmatrix_, false, 1.0 - alphaf_, 1.0);
+    Core::LinAlg::matrix_add(*lindmatrix_, false, 1.0 - alphaf_, *kteffmatrix, 1.0);
+    Core::LinAlg::matrix_add(*linmmatrix_, false, 1.0 - alphaf_, *kteffmatrix, 1.0);
     kteffmatrix->complete();
 
     /**********************************************************************/
@@ -2430,19 +2430,19 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
     // kmn: add T(mhataam)*kan
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmnmod =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmnmod->add(*kmn, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmn, false, 1.0, *kmnmod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmnadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kan, false, false, false, true);
-    kmnmod->add(*kmnadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmnadd, false, 1.0, *kmnmod, 1.0);
     kmnmod->complete(kmn->domain_map(), kmn->row_map());
 
     // kmm: add T(mhataam)*kam
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmmmod =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmmmod->add(*kmm, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmm, false, 1.0, *kmmmod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmmadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kam, false, false, false, true);
-    kmmmod->add(*kmmadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmmadd, false, 1.0, *kmmmod, 1.0);
     kmmmod->complete(kmm->domain_map(), kmm->row_map());
 
     // kmi: add T(mhataam)*kai
@@ -2450,10 +2450,10 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
     if (iset)
     {
       kmimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-      kmimod->add(*kmi, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kmi, false, 1.0, *kmimod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> kmiadd =
           Core::LinAlg::matrix_multiply(*mhataam, true, *kai, false, false, false, true);
-      kmimod->add(*kmiadd, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kmiadd, false, 1.0, *kmimod, 1.0);
       kmimod->complete(kmi->domain_map(), kmi->row_map());
     }
 
@@ -2462,10 +2462,10 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
     if (aset)
     {
       kmamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-      kmamod->add(*kma, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kma, false, 1.0, *kmamod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> kmaadd =
           Core::LinAlg::matrix_multiply(*mhataam, true, *kaa, false, false, false, true);
-      kmamod->add(*kmaadd, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kmaadd, false, 1.0, *kmamod, 1.0);
       kmamod->complete(kma->domain_map(), kma->row_map());
     }
 
@@ -2474,24 +2474,24 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
     // kin: subtract T(dhat)*kan --
     std::shared_ptr<Core::LinAlg::SparseMatrix> kinmod =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kinmod->add(*kin, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kin, false, 1.0, *kinmod, 1.0);
     if (aset && iset)
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> kinadd =
           Core::LinAlg::matrix_multiply(*dhat, true, *kan, false, false, false, true);
-      kinmod->add(*kinadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kinadd, false, -1.0, *kinmod, 1.0);
     }
     kinmod->complete(kin->domain_map(), kin->row_map());
 
     // kim: subtract T(dhat)*kam
     std::shared_ptr<Core::LinAlg::SparseMatrix> kimmod =
         std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kimmod->add(*kim, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kim, false, 1.0, *kimmod, 1.0);
     if (aset && iset)
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> kimadd =
           Core::LinAlg::matrix_multiply(*dhat, true, *kam, false, false, false, true);
-      kimmod->add(*kimadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kimadd, false, -1.0, *kimmod, 1.0);
     }
     kimmod->complete(kim->domain_map(), kim->row_map());
 
@@ -2500,12 +2500,12 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
     if (iset)
     {
       kiimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-      kiimod->add(*kii, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kii, false, 1.0, *kiimod, 1.0);
       if (aset)
       {
         std::shared_ptr<Core::LinAlg::SparseMatrix> kiiadd =
             Core::LinAlg::matrix_multiply(*dhat, true, *kai, false, false, false, true);
-        kiimod->add(*kiiadd, false, -1.0, 1.0);
+        Core::LinAlg::matrix_add(*kiiadd, false, -1.0, *kiimod, 1.0);
       }
       kiimod->complete(kii->domain_map(), kii->row_map());
     }
@@ -2515,10 +2515,10 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
     if (iset && aset)
     {
       kiamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-      kiamod->add(*kia, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*kia, false, 1.0, *kiamod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> kiaadd =
           Core::LinAlg::matrix_multiply(*dhat, true, *kaa, false, false, false, true);
-      kiamod->add(*kiaadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kiaadd, false, -1.0, *kiamod, 1.0);
       kiamod->complete(kia->domain_map(), kia->row_map());
     }
 
@@ -2707,35 +2707,35 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
 
     //----------------------------------------------------------- FIRST LINE
     // add n submatrices to kteffnew
-    kteffnew->add(*knn, false, 1.0, 1.0);
-    kteffnew->add(*knm, false, 1.0, 1.0);
-    if (sset) kteffnew->add(*kns, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*knn, false, 1.0, *kteffnew, 1.0);
+    Core::LinAlg::matrix_add(*knn, false, 1.0, *kteffnew, 1.0);
+    if (sset) Core::LinAlg::matrix_add(*kns, false, 1.0, *kteffnew, 1.0);
 
     //---------------------------------------------------------- SECOND LINE
     // add m submatrices to kteffnew
-    kteffnew->add(*kmnmod, false, 1.0, 1.0);
-    kteffnew->add(*kmmmod, false, 1.0, 1.0);
-    if (iset) kteffnew->add(*kmimod, false, 1.0, 1.0);
-    if (aset) kteffnew->add(*kmamod, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmnmod, false, 1.0, *kteffnew, 1.0);
+    Core::LinAlg::matrix_add(*kmmmod, false, 1.0, *kteffnew, 1.0);
+    if (iset) Core::LinAlg::matrix_add(*kmimod, false, 1.0, *kteffnew, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*kmamod, false, 1.0, *kteffnew, 1.0);
 
     //----------------------------------------------------------- THIRD LINE
     // add i submatrices to kteffnew
-    if (iset) kteffnew->add(*kinmod, false, 1.0, 1.0);
-    if (iset) kteffnew->add(*kimmod, false, 1.0, 1.0);
-    if (iset) kteffnew->add(*kiimod, false, 1.0, 1.0);
-    if (iset && aset) kteffnew->add(*kiamod, false, 1.0, 1.0);
+    if (iset) Core::LinAlg::matrix_add(*kinmod, false, 1.0, *kteffnew, 1.0);
+    if (iset) Core::LinAlg::matrix_add(*kimmod, false, 1.0, *kteffnew, 1.0);
+    if (iset) Core::LinAlg::matrix_add(*kiimod, false, 1.0, *kteffnew, 1.0);
+    if (iset && aset) Core::LinAlg::matrix_add(*kiamod, false, 1.0, *kteffnew, 1.0);
 
     //---------------------------------------------------------- FOURTH LINE
     // add a submatrices to kteffnew
-    if (aset) kteffnew->add(*smatrix_, false, 1.0, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*smatrix_, false, 1.0, *kteffnew, 1.0);
 
     //----------------------------------------------------------- FIFTH LINE
     // add a submatrices to kteffnew
-    if (aset) kteffnew->add(*kanmod, false, 1.0, 1.0);
-    if (aset) kteffnew->add(*kammod, false, 1.0, 1.0);
-    if (aset && iset) kteffnew->add(*kaimod, false, 1.0, 1.0);
-    if (aset) kteffnew->add(*kaamod, false, 1.0, 1.0);
-    if (aset) kteffnew->add(*tderivmatrix_, false, -1.0, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*kanmod, false, 1.0, *kteffnew, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*kammod, false, 1.0, *kteffnew, 1.0);
+    if (aset && iset) Core::LinAlg::matrix_add(*kaimod, false, 1.0, *kteffnew, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*kaamod, false, 1.0, *kteffnew, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*tderivmatrix_, false, -1.0, *kteffnew, 1.0);
 
     // fill_complete kteffnew (square)
     kteffnew->complete();
@@ -2812,11 +2812,11 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
         Core::LinAlg::SparseMatrix systrafo(*problem_dofs(), 100, false, true);
         std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
             Core::LinAlg::create_identity_matrix(*gndofrowmap_);
-        systrafo.add(*eye, false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*eye, false, 1.0, systrafo, 1.0);
         if (parallel_redistribution_status())
           trafo_ = Core::LinAlg::matrix_row_col_transform(
               *trafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-        systrafo.add(*trafo_, false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*trafo_, false, 1.0, systrafo, 1.0);
         systrafo.complete();
 
         // apply basis transformation to K and f
@@ -2978,8 +2978,8 @@ void CONTACT::LagrangeStrategy::build_saddle_point_system(
   // build matrix and vector blocks
   //**********************************************************************
   // build constraint matrix kdz
-  kdz.add(*dmatrix_, true, 1.0 - alphaf_, 1.0);
-  kdz.add(*mmatrix_, true, -(1.0 - alphaf_), 1.0);
+  Core::LinAlg::matrix_add(*dmatrix_, true, 1.0 - alphaf_, kdz, 1.0);
+  Core::LinAlg::matrix_add(*mmatrix_, true, -(1.0 - alphaf_), kdz, 1.0);
   kdz.complete(*gsdofrowmap_, *gdisprowmap_);
 
   // *** CASE 1: FRICTIONLESS CONTACT ************************************
@@ -2990,14 +2990,16 @@ void CONTACT::LagrangeStrategy::build_saddle_point_system(
     {
       if (gactivedofs_->num_global_elements())
       {
-        kzd.add(*smatrix_, false, 1.0, 1.0);
-        kzd.add(*tderivmatrix_, false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*smatrix_, false, 1.0, kzd, 1.0);
+        Core::LinAlg::matrix_add(*tderivmatrix_, false, 1.0, kzd, 1.0);
       }
     }
     else
     {
-      if (gactiven_->num_global_elements()) kzd.add(*smatrix_, false, 1.0, 1.0);
-      if (gactivet_->num_global_elements()) kzd.add(*tderivmatrix_, false, 1.0, 1.0);
+      if (gactiven_->num_global_elements())
+        Core::LinAlg::matrix_add(*smatrix_, false, 1.0, kzd, 1.0);
+      if (gactivet_->num_global_elements())
+        Core::LinAlg::matrix_add(*tderivmatrix_, false, 1.0, kzd, 1.0);
     }
     kzd.complete(*gdisprowmap_, *gsdofrowmap_);
 
@@ -3010,8 +3012,8 @@ void CONTACT::LagrangeStrategy::build_saddle_point_system(
     onesdiag.complete();
 
     // build constraint matrix kzz
-    if (gidofs->num_global_elements()) kzz.add(onesdiag, false, 1.0, 1.0);
-    if (gactivet_->num_global_elements()) kzz.add(*tmatrix_, false, 1.0, 1.0);
+    if (gidofs->num_global_elements()) Core::LinAlg::matrix_add(onesdiag, false, 1.0, kzz, 1.0);
+    if (gactivet_->num_global_elements()) Core::LinAlg::matrix_add(*tmatrix_, false, 1.0, kzz, 1.0);
     kzz.complete(*gsdofrowmap_, *gsdofrowmap_);
   }
 
@@ -3029,15 +3031,21 @@ void CONTACT::LagrangeStrategy::build_saddle_point_system(
     // build constraint matrix kzd
     if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
     {
-      if (gactivedofs_->num_global_elements()) kzd.add(*smatrix_, false, 1.0, 1.0);
-      if (gstickdofs->num_global_elements()) kzd.add(*linstickDIS_, false, 1.0, 1.0);
-      if (gslipdofs_->num_global_elements()) kzd.add(*linslipDIS_, false, 1.0, 1.0);
+      if (gactivedofs_->num_global_elements())
+        Core::LinAlg::matrix_add(*smatrix_, false, 1.0, kzd, 1.0);
+      if (gstickdofs->num_global_elements())
+        Core::LinAlg::matrix_add(*linstickDIS_, false, 1.0, kzd, 1.0);
+      if (gslipdofs_->num_global_elements())
+        Core::LinAlg::matrix_add(*linslipDIS_, false, 1.0, kzd, 1.0);
     }
     else
     {
-      if (gactiven_->num_global_elements()) kzd.add(*smatrix_, false, 1.0, 1.0);
-      if (gstickt->num_global_elements()) kzd.add(*linstickDIS_, false, 1.0, 1.0);
-      if (gslipt_->num_global_elements()) kzd.add(*linslipDIS_, false, 1.0, 1.0);
+      if (gactiven_->num_global_elements())
+        Core::LinAlg::matrix_add(*smatrix_, false, 1.0, kzd, 1.0);
+      if (gstickt->num_global_elements())
+        Core::LinAlg::matrix_add(*linstickDIS_, false, 1.0, kzd, 1.0);
+      if (gslipt_->num_global_elements())
+        Core::LinAlg::matrix_add(*linslipDIS_, false, 1.0, kzd, 1.0);
     }
     kzd.complete(*gdisprowmap_, *gsdofrowmap_);
 
@@ -3052,15 +3060,19 @@ void CONTACT::LagrangeStrategy::build_saddle_point_system(
     // build constraint matrix kzz
     if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
     {
-      if (gidofs->num_global_elements()) kzz.add(onesdiag, false, 1.0, 1.0);
-      if (gstickdofs->num_global_elements()) kzz.add(*linstickLM_, false, 1.0, 1.0);
-      if (gslipdofs_->num_global_elements()) kzz.add(*linslipLM_, false, 1.0, 1.0);
+      if (gidofs->num_global_elements()) Core::LinAlg::matrix_add(onesdiag, false, 1.0, kzz, 1.0);
+      if (gstickdofs->num_global_elements())
+        Core::LinAlg::matrix_add(*linstickLM_, false, 1.0, kzz, 1.0);
+      if (gslipdofs_->num_global_elements())
+        Core::LinAlg::matrix_add(*linslipLM_, false, 1.0, kzz, 1.0);
     }
     else
     {
-      if (gidofs->num_global_elements()) kzz.add(onesdiag, false, 1.0, 1.0);
-      if (gstickt->num_global_elements()) kzz.add(*linstickLM_, false, 1.0, 1.0);
-      if (gslipt_->num_global_elements()) kzz.add(*linslipLM_, false, 1.0, 1.0);
+      if (gidofs->num_global_elements()) Core::LinAlg::matrix_add(onesdiag, false, 1.0, kzz, 1.0);
+      if (gstickt->num_global_elements())
+        Core::LinAlg::matrix_add(*linstickLM_, false, 1.0, kzz, 1.0);
+      if (gslipt_->num_global_elements())
+        Core::LinAlg::matrix_add(*linslipLM_, false, 1.0, kzz, 1.0);
     }
     kzz.complete(*gsdofrowmap_, *gsdofrowmap_);
   }
@@ -3402,19 +3414,19 @@ void CONTACT::LagrangeStrategy::evaluate_force(CONTACT::ParamsInterface& cparams
     systrafo_ = std::make_shared<Core::LinAlg::SparseMatrix>(*problem_dofs(), 100, false, true);
     std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
         Core::LinAlg::create_identity_matrix(*gndofrowmap_);
-    systrafo_->add(*eye, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*eye, false, 1.0, *systrafo_, 1.0);
     if (parallel_redistribution_status())
       trafo_ = Core::LinAlg::matrix_row_col_transform(
           *trafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-    systrafo_->add(*trafo_, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*trafo_, false, 1.0, *systrafo_, 1.0);
     systrafo_->complete();
 
     invsystrafo_ = std::make_shared<Core::LinAlg::SparseMatrix>(*problem_dofs(), 100, false, true);
-    invsystrafo_->add(*eye, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*eye, false, 1.0, *invsystrafo_, 1.0);
     if (parallel_redistribution_status())
       invtrafo_ = Core::LinAlg::matrix_row_col_transform(
           *invtrafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-    invsystrafo_->add(*invtrafo_, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*invtrafo_, false, 1.0, *invsystrafo_, 1.0);
     invsystrafo_->complete();
   }
 
@@ -3645,14 +3657,14 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_friction()
       dinv_dsv2 = Core::LinAlg::matrix_multiply(invdS, false, *inv_det6, false, false, false, true);
 
       // diagonal entries
-      invd->add(invdS, false, 1.0, 1.0);
-      invd->add(invdE, false, 1.0, 1.0);
-      invd->add(invdV, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(invdS, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(invdE, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(invdV, false, 1.0, *invd, 1.0);
 
-      invd->add(*dinv_dev, false, 1.0, 1.0);
-      invd->add(*dinv_dse, false, 1.0, 1.0);
-      invd->add(*dinv_dsv1, false, 1.0, 1.0);
-      invd->add(*dinv_dsv2, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dev, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dse, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dsv1, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dsv2, false, 1.0, *invd, 1.0);
 
       // complete
       invd->complete();
@@ -3903,14 +3915,14 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_frictionless()
       dinv_dsv2 = Core::LinAlg::matrix_multiply(invdS, false, *inv_det6, false, false, false, true);
 
       // diagonal entries
-      invd->add(invdS, false, 1.0, 1.0);
-      invd->add(invdE, false, 1.0, 1.0);
-      invd->add(invdV, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(invdS, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(invdE, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(invdV, false, 1.0, *invd, 1.0);
 
-      invd->add(*dinv_dev, false, 1.0, 1.0);
-      invd->add(*dinv_dse, false, 1.0, 1.0);
-      invd->add(*dinv_dsv1, false, 1.0, 1.0);
-      invd->add(*dinv_dsv2, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dev, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dse, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dsv1, false, 1.0, *invd, 1.0);
+      Core::LinAlg::matrix_add(*dinv_dsv2, false, 1.0, *invd, 1.0);
 
       invd->complete();
     }
@@ -4134,10 +4146,10 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::LagrangeStrategy::get_matri
           slave_master_dof_row_map(true), 100, false, true);
 
       // build matrix kdd
-      mat_ptr->add(*lindmatrix_, false, 1.0, 1.0);
-      mat_ptr->add(*linmmatrix_, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*lindmatrix_, false, 1.0, *mat_ptr, 1.0);
+      Core::LinAlg::matrix_add(*linmmatrix_, false, 1.0, *mat_ptr, 1.0);
       if (nonSmoothContact_ && nonsmooth_Penalty_stiff_)
-        mat_ptr->add(*nonsmooth_Penalty_stiff_, false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*nonsmooth_Penalty_stiff_, false, 1.0, *mat_ptr, 1.0);
       mat_ptr->complete();
 
       // transform parallel row/column distribution of matrix kdd
@@ -4148,7 +4160,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::LagrangeStrategy::get_matri
 
       std::shared_ptr<Core::LinAlg::SparseMatrix> full_mat_ptr =
           std::make_shared<Core::LinAlg::SparseMatrix>(*problem_dofs(), 100, false, true);
-      full_mat_ptr->add(*mat_ptr, false, 1., 1.);
+      Core::LinAlg::matrix_add(*mat_ptr, false, 1., *full_mat_ptr, 1.);
       full_mat_ptr->complete();
       if (is_dual_quad_slave_trafo() && lagmultquad == Inpar::Mortar::lagmult_lin)
         full_mat_ptr = Core::LinAlg::matrix_multiply(
@@ -4163,8 +4175,8 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::LagrangeStrategy::get_matri
       // build constraint matrix kdz
       Core::LinAlg::SparseMatrix kdz_ptr(*gdisprowmap_, 100, false, true);
 
-      kdz_ptr.add(*dmatrix_, true, 1.0, 1.0);
-      kdz_ptr.add(*mmatrix_, true, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*dmatrix_, true, 1.0, kdz_ptr, 1.0);
+      Core::LinAlg::matrix_add(*mmatrix_, true, -1.0, kdz_ptr, 1.0);
       kdz_ptr.complete(*gsdofrowmap_, *gdisprowmap_);
 
       // transform constraint matrix kzd to lmdofmap (matrix_col_transform)
@@ -4186,16 +4198,16 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::LagrangeStrategy::get_matri
       // build constraint matrix kzd
       if (gactiven_->num_global_elements())
       {
-        kzd_ptr.add(*smatrix_, false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(*smatrix_, false, 1.0, kzd_ptr, 1.0);
 
         // frictionless contact
-        if (!is_friction()) kzd_ptr.add(*tderivmatrix_, false, 1.0, 1.0);
+        if (!is_friction()) Core::LinAlg::matrix_add(*tderivmatrix_, false, 1.0, kzd_ptr, 1.0);
 
         // frictional contact
         else
         {
-          kzd_ptr.add(*linslipDIS_, false, 1.0, 1.0);
-          kzd_ptr.add(*linstickDIS_, false, 1.0, 1.0);
+          Core::LinAlg::matrix_add(*linslipDIS_, false, 1.0, kzd_ptr, 1.0);
+          Core::LinAlg::matrix_add(*linstickDIS_, false, 1.0, kzd_ptr, 1.0);
         }
       }
       kzd_ptr.complete(*gdisprowmap_, *gsdofrowmap_);
@@ -4241,16 +4253,18 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::LagrangeStrategy::get_matri
       onesdiag.complete();
 
       // build constraint matrix kzz
-      if (gidofs->num_global_elements()) kzz_ptr->add(onesdiag, false, 1.0, 1.0);
+      if (gidofs->num_global_elements())
+        Core::LinAlg::matrix_add(onesdiag, false, 1.0, *kzz_ptr, 1.0);
 
       if (!is_friction())
       {
-        if (gactivet_->num_global_elements()) kzz_ptr->add(*tmatrix_, false, 1.0, 1.0);
+        if (gactivet_->num_global_elements())
+          Core::LinAlg::matrix_add(*tmatrix_, false, 1.0, *kzz_ptr, 1.0);
       }
       else
       {
-        kzz_ptr->add(*linslipLM_, false, 1., 1.);
-        kzz_ptr->add(*linstickLM_, false, 1., 1.);
+        Core::LinAlg::matrix_add(*linslipLM_, false, 1., *kzz_ptr, 1.);
+        Core::LinAlg::matrix_add(*linstickLM_, false, 1., *kzz_ptr, 1.);
       }
 
       // transform constraint matrix kzz to lmdofmap
@@ -4455,7 +4469,7 @@ void CONTACT::LagrangeStrategy::recover(std::shared_ptr<Core::LinAlg::Vector<dou
     Core::LinAlg::split_matrix2x2(
         invd_, gactivedofs_, tempmap, gactivedofs_, tempmap, invda, tempmtx1, tempmtx2, tempmtx3);
     Core::LinAlg::SparseMatrix invdmod(*gsdofrowmap_, 10);
-    invdmod.add(*invda, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*invda, false, 1.0, invdmod, 1.0);
     invdmod.complete();
 
     /**********************************************************************/
@@ -4468,11 +4482,11 @@ void CONTACT::LagrangeStrategy::recover(std::shared_ptr<Core::LinAlg::Vector<dou
       Core::LinAlg::SparseMatrix systrafo(*problem_dofs(), 100, false, true);
       std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
           Core::LinAlg::create_identity_matrix(*gndofrowmap_);
-      systrafo.add(*eye, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*eye, false, 1.0, systrafo, 1.0);
       if (parallel_redistribution_status())
         trafo_ = Core::LinAlg::matrix_row_col_transform(
             *trafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-      systrafo.add(*trafo_, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*trafo_, false, 1.0, systrafo, 1.0);
       systrafo.complete();
       Core::LinAlg::Vector<double> disinew(*disi);
       systrafo.multiply(false, disinew, *disi);
@@ -4551,11 +4565,11 @@ void CONTACT::LagrangeStrategy::recover(std::shared_ptr<Core::LinAlg::Vector<dou
       Core::LinAlg::SparseMatrix systrafo(*problem_dofs(), 100, false, true);
       std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
           Core::LinAlg::create_identity_matrix(*gndofrowmap_);
-      systrafo.add(*eye, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*eye, false, 1.0, systrafo, 1.0);
       if (parallel_redistribution_status())
         trafo_ = Core::LinAlg::matrix_row_col_transform(
             *trafo_, *non_redist_gsmdofrowmap_, *non_redist_gsmdofrowmap_);
-      systrafo.add(*trafo_, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*trafo_, false, 1.0, systrafo, 1.0);
       systrafo.complete();
       Core::LinAlg::Vector<double> disinew(*disi);
       systrafo.multiply(false, disinew, *disi);
@@ -5467,19 +5481,19 @@ void CONTACT::LagrangeStrategy::condense_friction(
   // kmn: add T(mhataam)*kan
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmnmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-  kmnmod->add(*kmn, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmn, false, 1.0, *kmnmod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmnadd =
       Core::LinAlg::matrix_multiply(*mhataam, true, *kan, false, false, false, true);
-  kmnmod->add(*kmnadd, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmnadd, false, 1.0, *kmnmod, 1.0);
   kmnmod->complete(kmn->domain_map(), kmn->row_map());
 
   // kmm: add T(mhataam)*kam
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmmmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-  kmmmod->add(*kmm, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmm, false, 1.0, *kmmmod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmmadd =
       Core::LinAlg::matrix_multiply(*mhataam, true, *kam, false, false, false, true);
-  kmmmod->add(*kmmadd, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmmadd, false, 1.0, *kmmmod, 1.0);
   kmmmod->complete(kmm->domain_map(), kmm->row_map());
 
   // kmi: add T(mhataam)*kai
@@ -5487,10 +5501,10 @@ void CONTACT::LagrangeStrategy::condense_friction(
   if (iset)
   {
     kmimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmimod->add(*kmi, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmi, false, 1.0, *kmimod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmiadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kai, false, false, false, true);
-    kmimod->add(*kmiadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmiadd, false, 1.0, *kmimod, 1.0);
     kmimod->complete(kmi->domain_map(), kmi->row_map());
   }
 
@@ -5499,10 +5513,10 @@ void CONTACT::LagrangeStrategy::condense_friction(
   if (aset)
   {
     kmamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmamod->add(*kma, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kma, false, 1.0, *kmamod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmaadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kaa, false, false, false, true);
-    kmamod->add(*kmaadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmaadd, false, 1.0, *kmamod, 1.0);
     kmamod->complete(kma->domain_map(), kma->row_map());
   }
 
@@ -5510,24 +5524,24 @@ void CONTACT::LagrangeStrategy::condense_friction(
   // kin: subtract T(dhat)*kan
   std::shared_ptr<Core::LinAlg::SparseMatrix> kinmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-  kinmod->add(*kin, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kin, false, 1.0, *kinmod, 1.0);
   if (aset && iset)
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> kinadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kan, false, false, false, true);
-    kinmod->add(*kinadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kinadd, false, -1.0, *kinmod, 1.0);
   }
   kinmod->complete(kin->domain_map(), kin->row_map());
 
   // kim: subtract T(dhat)*kam
   std::shared_ptr<Core::LinAlg::SparseMatrix> kimmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-  kimmod->add(*kim, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kim, false, 1.0, *kimmod, 1.0);
   if (aset && iset)
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> kimadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kam, false, false, false, true);
-    kimmod->add(*kimadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kimadd, false, -1.0, *kimmod, 1.0);
   }
   kimmod->complete(kim->domain_map(), kim->row_map());
 
@@ -5536,12 +5550,12 @@ void CONTACT::LagrangeStrategy::condense_friction(
   if (iset)
   {
     kiimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kiimod->add(*kii, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kii, false, 1.0, *kiimod, 1.0);
     if (aset)
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> kiiadd =
           Core::LinAlg::matrix_multiply(*dhat, true, *kai, false, false, false, true);
-      kiimod->add(*kiiadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kiiadd, false, -1.0, *kiimod, 1.0);
     }
     kiimod->complete(kii->domain_map(), kii->row_map());
   }
@@ -5551,10 +5565,10 @@ void CONTACT::LagrangeStrategy::condense_friction(
   if (iset && aset)
   {
     kiamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kiamod->add(*kia, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kia, false, 1.0, *kiamod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kiaadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kaa, false, false, false, true);
-    kiamod->add(*kiaadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kiaadd, false, -1.0, *kiamod, 1.0);
     kiamod->complete(kia->domain_map(), kia->row_map());
   }
 
@@ -5804,50 +5818,50 @@ void CONTACT::LagrangeStrategy::condense_friction(
 
   //--------------------------------------------------------- FIRST LINE
   // add n submatrices to kteffnew
-  kteffnew.add(*knn, false, 1.0, 1.0);
-  kteffnew.add(*knm, false, 1.0, 1.0);
-  if (sset) kteffnew.add(*kns, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*knn, false, 1.0, kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*knm, false, 1.0, kteffnew, 1.0);
+  if (sset) Core::LinAlg::matrix_add(*kns, false, 1.0, kteffnew, 1.0);
 
   //-------------------------------------------------------- SECOND LINE
   // add m submatrices to kteffnew
-  kteffnew.add(*kmnmod, false, 1.0, 1.0);
-  kteffnew.add(*kmmmod, false, 1.0, 1.0);
-  if (iset) kteffnew.add(*kmimod, false, 1.0, 1.0);
-  if (aset) kteffnew.add(*kmamod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmnmod, false, 1.0, kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*kmmmod, false, 1.0, kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kmimod, false, 1.0, kteffnew, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*kmamod, false, 1.0, kteffnew, 1.0);
 
   //--------------------------------------------------------- THIRD LINE
   // add i submatrices to kteffnew
-  if (iset) kteffnew.add(*kinmod, false, 1.0, 1.0);
-  if (iset) kteffnew.add(*kimmod, false, 1.0, 1.0);
-  if (iset) kteffnew.add(*kiimod, false, 1.0, 1.0);
-  if (iset && aset) kteffnew.add(*kiamod, false, 1.0, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kinmod, false, 1.0, kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kimmod, false, 1.0, kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kiimod, false, 1.0, kteffnew, 1.0);
+  if (iset && aset) Core::LinAlg::matrix_add(*kiamod, false, 1.0, kteffnew, 1.0);
 
   //-------------------------------------------------------- FOURTH LINE
 
   // add a submatrices to kteffnew
-  if (aset) kteffnew.add(*smatrix_, false, 1.0, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*smatrix_, false, 1.0, kteffnew, 1.0);
 
   //--------------------------------------------------------- FIFTH LINE
   // add st submatrices to kteffnew
-  if (stickset) kteffnew.add(*kstnmod, false, 1.0, 1.0);
-  if (stickset) kteffnew.add(*kstmmod, false, 1.0, 1.0);
-  if (stickset && iset) kteffnew.add(*kstimod, false, 1.0, 1.0);
-  if (stickset && slipset) kteffnew.add(*kstslmod, false, 1.0, 1.0);
-  if (stickset) kteffnew.add(*kststmod, false, 1.0, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*kstnmod, false, 1.0, kteffnew, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*kstmmod, false, 1.0, kteffnew, 1.0);
+  if (stickset && iset) Core::LinAlg::matrix_add(*kstimod, false, 1.0, kteffnew, 1.0);
+  if (stickset && slipset) Core::LinAlg::matrix_add(*kstslmod, false, 1.0, kteffnew, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*kststmod, false, 1.0, kteffnew, 1.0);
 
   // add terms of linearization of sick condition to kteffnew
-  if (stickset) kteffnew.add(*linstickDIS_, false, -1.0, 1.0);
+  if (stickset) Core::LinAlg::matrix_add(*linstickDIS_, false, -1.0, kteffnew, 1.0);
 
   //--------------------------------------------------------- SIXTH LINE
   // add sl submatrices to kteffnew
-  if (slipset) kteffnew.add(*kslnmod, false, 1.0, 1.0);
-  if (slipset) kteffnew.add(*kslmmod, false, 1.0, 1.0);
-  if (slipset && iset) kteffnew.add(*kslimod, false, 1.0, 1.0);
-  if (slipset) kteffnew.add(*kslslmod, false, 1.0, 1.0);
-  if (slipset && stickset) kteffnew.add(*kslstmod, false, 1.0, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslnmod, false, 1.0, kteffnew, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslmmod, false, 1.0, kteffnew, 1.0);
+  if (slipset && iset) Core::LinAlg::matrix_add(*kslimod, false, 1.0, kteffnew, 1.0);
+  if (slipset) Core::LinAlg::matrix_add(*kslslmod, false, 1.0, kteffnew, 1.0);
+  if (slipset && stickset) Core::LinAlg::matrix_add(*kslstmod, false, 1.0, kteffnew, 1.0);
 
   // add terms of linearization of slip condition to kteffnew and feffnew
-  if (slipset) kteffnew.add(*linslipDIS_, false, -1.0, +1.0);
+  if (slipset) Core::LinAlg::matrix_add(*linslipDIS_, false, -1.0, kteffnew, +1.0);
 
   // add diagonal entries to sparsity pattern for dbc
   for (int i = 0; i < kteffnew.row_map().num_my_elements(); ++i)
@@ -6278,19 +6292,19 @@ void CONTACT::LagrangeStrategy::condense_frictionless(
   // kmn: add T(mhataam)*kan
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmnmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-  kmnmod->add(*kmn, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmn, false, 1.0, *kmnmod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmnadd =
       Core::LinAlg::matrix_multiply(*mhataam, true, *kan, false, false, false, true);
-  kmnmod->add(*kmnadd, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmnadd, false, 1.0, *kmnmod, 1.0);
   kmnmod->complete(kmn->domain_map(), kmn->row_map());
 
   // kmm: add T(mhataam)*kam
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmmmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-  kmmmod->add(*kmm, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmm, false, 1.0, *kmnmod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> kmmadd =
       Core::LinAlg::matrix_multiply(*mhataam, true, *kam, false, false, false, true);
-  kmmmod->add(*kmmadd, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmmadd, false, 1.0, *kmnmod, 1.0);
   kmmmod->complete(kmm->domain_map(), kmm->row_map());
 
   // kmi: add T(mhataam)*kai
@@ -6298,10 +6312,10 @@ void CONTACT::LagrangeStrategy::condense_frictionless(
   if (iset)
   {
     kmimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmimod->add(*kmi, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmi, false, 1.0, *kmimod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmiadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kai, false, false, false, true);
-    kmimod->add(*kmiadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmiadd, false, 1.0, *kmimod, 1.0);
     kmimod->complete(kmi->domain_map(), kmi->row_map());
   }
 
@@ -6310,10 +6324,10 @@ void CONTACT::LagrangeStrategy::condense_frictionless(
   if (aset)
   {
     kmamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gmdofrowmap_, 100);
-    kmamod->add(*kma, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kma, false, 1.0, *kmnmod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kmaadd =
         Core::LinAlg::matrix_multiply(*mhataam, true, *kaa, false, false, false, true);
-    kmamod->add(*kmaadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kmaadd, false, 1.0, *kmamod, 1.0);
     kmamod->complete(kma->domain_map(), kma->row_map());
   }
 
@@ -6322,24 +6336,24 @@ void CONTACT::LagrangeStrategy::condense_frictionless(
   // kin: subtract T(dhat)*kan --
   std::shared_ptr<Core::LinAlg::SparseMatrix> kinmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-  kinmod->add(*kin, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kin, false, 1.0, *kinmod, 1.0);
   if (aset && iset)
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> kinadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kan, false, false, false, true);
-    kinmod->add(*kinadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kinadd, false, -1.0, *kinmod, 1.0);
   }
   kinmod->complete(kin->domain_map(), kin->row_map());
 
   // kim: subtract T(dhat)*kam
   std::shared_ptr<Core::LinAlg::SparseMatrix> kimmod =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-  kimmod->add(*kim, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kim, false, 1.0, *kimmod, 1.0);
   if (aset && iset)
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> kimadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kam, false, false, false, true);
-    kimmod->add(*kimadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kimadd, false, -1.0, *kimmod, 1.0);
   }
   kimmod->complete(kim->domain_map(), kim->row_map());
 
@@ -6348,12 +6362,12 @@ void CONTACT::LagrangeStrategy::condense_frictionless(
   if (iset)
   {
     kiimod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kiimod->add(*kii, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kii, false, 1.0, *kiimod, 1.0);
     if (aset)
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> kiiadd =
           Core::LinAlg::matrix_multiply(*dhat, true, *kai, false, false, false, true);
-      kiimod->add(*kiiadd, false, -1.0, 1.0);
+      Core::LinAlg::matrix_add(*kiiadd, false, -1.0, *kiimod, 1.0);
     }
     kiimod->complete(kii->domain_map(), kii->row_map());
   }
@@ -6363,10 +6377,10 @@ void CONTACT::LagrangeStrategy::condense_frictionless(
   if (iset && aset)
   {
     kiamod = std::make_shared<Core::LinAlg::SparseMatrix>(*gidofs, 100);
-    kiamod->add(*kia, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*kia, false, 1.0, *kiamod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> kiaadd =
         Core::LinAlg::matrix_multiply(*dhat, true, *kaa, false, false, false, true);
-    kiamod->add(*kiaadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*kiaadd, false, -1.0, *kiamod, 1.0);
     kiamod->complete(kia->domain_map(), kia->row_map());
   }
 
@@ -6498,35 +6512,35 @@ void CONTACT::LagrangeStrategy::condense_frictionless(
 
   //----------------------------------------------------------- FIRST LINE
   // add n submatrices to kteffnew
-  kteffnew.add(*knn, false, 1.0, 1.0);
-  kteffnew.add(*knm, false, 1.0, 1.0);
-  if (sset) kteffnew.add(*kns, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*knn, false, 1.0, kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*knm, false, 1.0, kteffnew, 1.0);
+  if (sset) Core::LinAlg::matrix_add(*kns, false, 1.0, kteffnew, 1.0);
 
   //---------------------------------------------------------- SECOND LINE
   // add m submatrices to kteffnew
-  kteffnew.add(*kmnmod, false, 1.0, 1.0);
-  kteffnew.add(*kmmmod, false, 1.0, 1.0);
-  if (iset) kteffnew.add(*kmimod, false, 1.0, 1.0);
-  if (aset) kteffnew.add(*kmamod, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*kmnmod, false, 1.0, kteffnew, 1.0);
+  Core::LinAlg::matrix_add(*kmmmod, false, 1.0, kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kmimod, false, 1.0, kteffnew, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*kmamod, false, 1.0, kteffnew, 1.0);
 
   //----------------------------------------------------------- THIRD LINE
   // add i submatrices to kteffnew
-  if (iset) kteffnew.add(*kinmod, false, 1.0, 1.0);
-  if (iset) kteffnew.add(*kimmod, false, 1.0, 1.0);
-  if (iset) kteffnew.add(*kiimod, false, 1.0, 1.0);
-  if (iset && aset) kteffnew.add(*kiamod, false, 1.0, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kinmod, false, 1.0, kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kimmod, false, 1.0, kteffnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*kiimod, false, 1.0, kteffnew, 1.0);
+  if (iset && aset) Core::LinAlg::matrix_add(*kiamod, false, 1.0, kteffnew, 1.0);
 
   //---------------------------------------------------------- FOURTH LINE
   // add a submatrices to kteffnew
-  if (aset) kteffnew.add(*smatrix_, false, 1.0, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*smatrix_, false, 1.0, kteffnew, 1.0);
 
   //----------------------------------------------------------- FIFTH LINE
   // add a submatrices to kteffnew
-  if (aset) kteffnew.add(*kanmod, false, 1.0, 1.0);
-  if (aset) kteffnew.add(*kammod, false, 1.0, 1.0);
-  if (aset && iset) kteffnew.add(*kaimod, false, 1.0, 1.0);
-  if (aset) kteffnew.add(*kaamod, false, 1.0, 1.0);
-  if (aset) kteffnew.add(*tderivmatrix_, false, -1.0, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*kanmod, false, 1.0, kteffnew, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*kammod, false, 1.0, kteffnew, 1.0);
+  if (aset && iset) Core::LinAlg::matrix_add(*kaimod, false, 1.0, kteffnew, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*kaamod, false, 1.0, kteffnew, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*tderivmatrix_, false, -1.0, kteffnew, 1.0);
 
   // fill_complete kteffnew (square)
   kteffnew.complete();
@@ -6690,7 +6704,7 @@ void CONTACT::LagrangeStrategy::run_post_apply_jacobian_inverse(
     Core::LinAlg::split_matrix2x2(
         invd_, gactivedofs_, tempmap, gactivedofs_, tempmap, invda, tempmtx1, tempmtx2, tempmtx3);
     Core::LinAlg::SparseMatrix invdmod(*gsdofrowmap_, 10);
-    invdmod.add(*invda, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*invda, false, 1.0, invdmod, 1.0);
     invdmod.complete();
 
     /**********************************************************************/

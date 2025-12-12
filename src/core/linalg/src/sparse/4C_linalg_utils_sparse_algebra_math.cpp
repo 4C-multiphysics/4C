@@ -136,7 +136,7 @@ namespace Core::LinAlg
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Core::LinAlg::add(const Core::LinAlg::SparseMatrix& A, const bool transposeA,
+void Core::LinAlg::matrix_add(const Core::LinAlg::SparseMatrix& A, const bool transposeA,
     const double scalarA, Core::LinAlg::SparseMatrix& B, const double scalarB)
 {
   if (!A.filled()) FOUR_C_THROW("fill_complete was not called on A");

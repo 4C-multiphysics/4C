@@ -10,6 +10,7 @@
 #include "4C_fem_geometry_intersection_math.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_solver_nonlin_nox_aux.hpp"
 #include "4C_solver_nonlin_nox_direction_factory.hpp"
@@ -854,7 +855,7 @@ void NOX::Nln::LinSystem::PrePostOp::PseudoTransient::modify_jacobian(
        *        (\delta^{-1} \boldsymbol{V} + \boldsymbol{J}) */
 
       scaling_matrix_op_ptr_->complete();
-      jac.add(*scaling_matrix_op_ptr_, false, scaleFactor * deltaInv, 1.0);
+      Core::LinAlg::matrix_add(*scaling_matrix_op_ptr_, false, scaleFactor * deltaInv, jac, 1.0);
       jac.complete();
 
       break;

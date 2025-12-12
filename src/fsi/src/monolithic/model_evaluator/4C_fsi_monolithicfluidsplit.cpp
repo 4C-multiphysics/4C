@@ -659,7 +659,7 @@ void FSI::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSparseMat
     lfgi = Core::LinAlg::matrix_multiply(*stcmat, true, *lfgi, false, true, true, true);
 
   mat.matrix(0, 1).un_complete();
-  mat.matrix(0, 1).add(*lfgi, false, 1., 0.0);
+  Core::LinAlg::matrix_add(*lfgi, false, 1., mat.matrix(0, 1), 0.0);
 
   if (stcalgo == Inpar::Solid::stc_inactive)
   {
@@ -679,13 +679,13 @@ void FSI::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSparseMat
     lfig = Core::LinAlg::matrix_multiply(*lfig, false, *stcmat, false, false, false, true);
 
     mat.matrix(1, 0).un_complete();
-    mat.matrix(1, 0).add(*lfig, false, 1., 0.0);
+    Core::LinAlg::matrix_add(*lfig, false, 1., mat.matrix(1, 0), 0.0);
   }
 
-  mat.matrix(1, 1).add(fii, false, 1., 0.0);
+  Core::LinAlg::matrix_add(fii, false, 1., mat.matrix(1, 1), 0.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> eye =
       Core::LinAlg::create_identity_matrix(*fluid_field()->interface()->fsi_cond_map());
-  mat.matrix(1, 1).add(*eye, false, 1., 1.0);
+  Core::LinAlg::matrix_add(*eye, false, 1., mat.matrix(1, 1), 1.0);
 
   if (stcalgo == Inpar::Solid::stc_inactive)
   {
@@ -745,7 +745,7 @@ void FSI::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSparseMat
         lfmig = Core::LinAlg::matrix_multiply(*lfmig, false, *stcmat, false, false, false, true);
       }
 
-      mat.matrix(1, 0).add(*lfmig, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*lfmig, false, 1.0, mat.matrix(1, 0), 1.0);
     }
 
     (*fmggtransform_)(fmgg, (1.0 - stiparam) / (1.0 - ftiparam) * scale,
@@ -770,7 +770,7 @@ void FSI::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSparseMat
         lfmgi = Core::LinAlg::matrix_multiply(*stcmat, true, *lfmgi, false, true, true, true);
 
       mat.matrix(0, 2).un_complete();
-      mat.matrix(0, 2).add(*lfmgi, false, 1., 0.0);
+      Core::LinAlg::matrix_add(*lfmgi, false, 1., mat.matrix(0, 2), 0.0);
     }
   }
 

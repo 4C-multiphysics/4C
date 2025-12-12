@@ -871,8 +871,8 @@ void CONTACT::PenaltyStrategy::assemble()
   }
 
   // add to kteff
-  kc_->add(*lindmatrix_, false, 1.0, 1.0);
-  kc_->add(*linmmatrix_, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*lindmatrix_, false, 1.0, *kc_, 1.0);
+  Core::LinAlg::matrix_add(*linmmatrix_, false, 1.0, *kc_, 1.0);
 
   // **********************************************************************
   // Build Contact Stiffness #2
@@ -894,8 +894,8 @@ void CONTACT::PenaltyStrategy::assemble()
   }
 
   // add to kteff
-  kc_->add(*dtilde, false, 1.0, 1.0);
-  kc_->add(*mtilde, false, -(1.0), 1.0);
+  Core::LinAlg::matrix_add(*dtilde, false, 1.0, *kc_, 1.0);
+  Core::LinAlg::matrix_add(*mtilde, false, -(1.0), *kc_, 1.0);
 
   // **********************************************************************
   // Build RHS

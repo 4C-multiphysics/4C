@@ -514,13 +514,13 @@ void BeamInteraction::BeamToFluidMortarManager::add_global_force_stiffness_contr
   std::shared_ptr<Core::LinAlg::SparseMatrix> Mt_kappa_M =
       Core::LinAlg::matrix_multiply(*global_m_, true, *global_M_scaled, false, false, false, true);
 
-  if (kff != nullptr) kff->add(*Mt_kappa_M, false, 1.0, 1.0);
+  if (kff != nullptr) Core::LinAlg::matrix_add(*Mt_kappa_M, false, 1.0, *kff, 1.0);
 
-  if (kfb != nullptr) kbf->add(*Dt_kappa_M, true, -1.0, 1.0);
+  if (kfb != nullptr) Core::LinAlg::matrix_add(*Dt_kappa_M, true, -1.0, *kbf, 1.0);
 
-  if (kbf != nullptr) kfb->add(*Dt_kappa_M, false, -1.0, 1.0);
+  if (kfb != nullptr) Core::LinAlg::matrix_add(*Dt_kappa_M, false, -1.0, *kfb, 1.0);
 
-  if (kbb != nullptr) kbb->add(*Dt_kappa_D, false, 1.0, 1.0);
+  if (kbb != nullptr) Core::LinAlg::matrix_add(*Dt_kappa_D, false, 1.0, *kbb, 1.0);
 
 
   if (fluid_force != nullptr)

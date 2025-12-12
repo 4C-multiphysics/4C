@@ -18,6 +18,7 @@
 #include "4C_io_runtime_csv_writer.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_scatra_ele_action.hpp"
 #include "4C_scatra_ele_parameter_boundary.hpp"
 #include "4C_scatra_timint_implicit.hpp"
@@ -470,8 +471,8 @@ void SSI::ScaTraManifoldScaTraFluxEvaluator::evaluate_bulk_side(
           *full_map_structure_, *full_map_scatra_);
 
       // Add slave side disp. contributions
-      matrix_scatra_structure_cond_->add(
-          matrix_scatra_structure_cond_slave_side_disp, false, 1.0, 0.0);
+      Core::LinAlg::matrix_add(matrix_scatra_structure_cond_slave_side_disp, false, 1.0,
+          *matrix_scatra_structure_cond_, 0.0);
 
       // Add master side disp. contributions
       for (const auto& meshtying : ssi_structure_meshtying_->mesh_tying_handlers())
@@ -1253,7 +1254,8 @@ void SSI::ManifoldMeshTyingStrategySparse::apply_meshtying_to_manifold_structure
   if (do_uncomplete) ssi_manifold_structure_sparse->un_complete();
   temp_manifold_structure->complete(
       *ssi_maps_->structure_dof_row_map(), *ssi_maps_->scatra_manifold_dof_row_map());
-  ssi_manifold_structure_sparse->add(*temp_manifold_structure, false, 1.0, 0.0);
+  Core::LinAlg::matrix_add(
+      *temp_manifold_structure, false, 1.0, *ssi_manifold_structure_sparse, 0.0);
 }
 
 /*----------------------------------------------------------------------*

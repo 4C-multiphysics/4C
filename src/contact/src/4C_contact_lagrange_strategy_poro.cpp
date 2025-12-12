@@ -463,10 +463,10 @@ void CONTACT::LagrangeStrategyPoro::evaluate_mat_poro_no_pen(
   }
 
   k_fseff->un_complete();
-  k_fseff->add(*fporolindmatrix_, false, (1.0 - nopenalpha_) * 1.0, 1.0);
+  Core::LinAlg::matrix_add(*fporolindmatrix_, false, (1.0 - nopenalpha_) * 1.0, *k_fseff, 1.0);
 
   if (poromaster_)
-    k_fseff->add(*fporolinmmatrix_, false, (1.0 - nopenalpha_) * 1.0,
+    Core::LinAlg::matrix_add(*fporolinmmatrix_, false, (1.0 - nopenalpha_) * 1.0, *k_fseff,
         1.0);  // is needed only for twosided poro contact or meshtying
 
   k_fseff->complete(*problem_dofs(), *falldofrowmap_);  // gets bigger because of linearisation
@@ -623,28 +623,28 @@ void CONTACT::LagrangeStrategyPoro::evaluate_mat_poro_no_pen(
   {
     // kmn: add T(mhataam)*kan
     k_fs_mnmod = std::make_shared<Core::LinAlg::SparseMatrix>(*fgmdofrowmap_, 100);
-    k_fs_mnmod->add(*k_fs_mn, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*k_fs_mn, false, 1.0, *k_fs_mnmod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> k_fs_mnadd =
         Core::LinAlg::matrix_multiply(*fmhataam_, true, *k_fs_an, false, false, false, true);
-    k_fs_mnmod->add(*k_fs_mnadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*k_fs_mnadd, false, 1.0, *k_fs_mnmod, 1.0);
     k_fs_mnmod->complete(k_fs_mn->domain_map(), k_fs_mn->row_map());
 
     // kmm: add T(mhataam)*kam
     k_fs_mmmod = std::make_shared<Core::LinAlg::SparseMatrix>(*fgmdofrowmap_, 100);
-    k_fs_mmmod->add(*k_fs_mm, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*k_fs_mm, false, 1.0, *k_fs_mmmod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> k_fs_mmadd =
         Core::LinAlg::matrix_multiply(*fmhataam_, true, *k_fs_am, false, false, false, true);
-    k_fs_mmmod->add(*k_fs_mmadd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*k_fs_mmadd, false, 1.0, *k_fs_mmmod, 1.0);
     k_fs_mmmod->complete(k_fs_mm->domain_map(), k_fs_mm->row_map());
 
     // kmi: add T(mhataam)*kai
     if (iset)
     {
       k_fs_mimod = std::make_shared<Core::LinAlg::SparseMatrix>(*fgmdofrowmap_, 100);
-      k_fs_mimod->add(*k_fs_mi, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*k_fs_mi, false, 1.0, *k_fs_mimod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> k_fs_miadd =
           Core::LinAlg::matrix_multiply(*fmhataam_, true, *k_fs_ai, false, false, false, true);
-      k_fs_mimod->add(*k_fs_miadd, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*k_fs_miadd, false, 1.0, *k_fs_mimod, 1.0);
       k_fs_mimod->complete(k_fs_mi->domain_map(), k_fs_mi->row_map());
     }
 
@@ -652,10 +652,10 @@ void CONTACT::LagrangeStrategyPoro::evaluate_mat_poro_no_pen(
     if (aset)
     {
       k_fs_mamod = std::make_shared<Core::LinAlg::SparseMatrix>(*fgmdofrowmap_, 100);
-      k_fs_mamod->add(*k_fs_ma, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*k_fs_ma, false, 1.0, *k_fs_mamod, 1.0);
       std::shared_ptr<Core::LinAlg::SparseMatrix> k_fs_maadd =
           Core::LinAlg::matrix_multiply(*fmhataam_, true, *k_fs_aa, false, false, false, true);
-      k_fs_mamod->add(*k_fs_maadd, false, 1.0, 1.0);
+      Core::LinAlg::matrix_add(*k_fs_maadd, false, 1.0, *k_fs_mamod, 1.0);
       k_fs_mamod->complete(k_fs_ma->domain_map(), k_fs_ma->row_map());
     }
   }
@@ -665,18 +665,18 @@ void CONTACT::LagrangeStrategyPoro::evaluate_mat_poro_no_pen(
   // fdhat is expected to be zero here but still used for condensation
   // kin: subtract T(dhat)*kan --
   Core::LinAlg::SparseMatrix k_fs_inmod(*fgidofs, 100);
-  k_fs_inmod.add(*k_fs_in, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*k_fs_in, false, 1.0, k_fs_inmod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> k_fs_inadd =
       Core::LinAlg::matrix_multiply(*fdhat_, true, *k_fs_an, false, false, false, true);
-  k_fs_inmod.add(*k_fs_inadd, false, -1.0, 1.0);
+  Core::LinAlg::matrix_add(*k_fs_inadd, false, -1.0, k_fs_inmod, 1.0);
   k_fs_inmod.complete(k_fs_in->domain_map(), k_fs_in->row_map());
 
   // kim: subtract T(dhat)*kam
   Core::LinAlg::SparseMatrix k_fs_immod(*fgidofs, 100);
-  k_fs_immod.add(*k_fs_im, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*k_fs_im, false, 1.0, k_fs_immod, 1.0);
   std::shared_ptr<Core::LinAlg::SparseMatrix> k_fs_imadd =
       Core::LinAlg::matrix_multiply(*fdhat_, true, *k_fs_am, false, false, false, true);
-  k_fs_immod.add(*k_fs_imadd, false, -1.0, 1.0);
+  Core::LinAlg::matrix_add(*k_fs_imadd, false, -1.0, k_fs_immod, 1.0);
   k_fs_immod.complete(k_fs_im->domain_map(), k_fs_im->row_map());
 
   // kii: subtract T(dhat)*kai
@@ -684,10 +684,10 @@ void CONTACT::LagrangeStrategyPoro::evaluate_mat_poro_no_pen(
   if (iset)
   {
     k_fs_iimod = std::make_shared<Core::LinAlg::SparseMatrix>(*fgidofs, 100);
-    k_fs_iimod->add(*k_fs_ii, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*k_fs_ii, false, 1.0, *k_fs_iimod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> k_fs_iiadd =
         Core::LinAlg::matrix_multiply(*fdhat_, true, *k_fs_ai, false, false, false, true);
-    k_fs_iimod->add(*k_fs_iiadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*k_fs_iiadd, false, -1.0, *k_fs_iimod, 1.0);
     k_fs_iimod->complete(k_fs_ii->domain_map(), k_fs_ii->row_map());
   }
 
@@ -696,10 +696,10 @@ void CONTACT::LagrangeStrategyPoro::evaluate_mat_poro_no_pen(
   if (iset && aset)
   {
     k_fs_iamod = std::make_shared<Core::LinAlg::SparseMatrix>(*fgidofs, 100);
-    k_fs_iamod->add(*k_fs_ia, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*k_fs_ia, false, 1.0, *k_fs_iamod, 1.0);
     std::shared_ptr<Core::LinAlg::SparseMatrix> k_fs_iaadd =
         Core::LinAlg::matrix_multiply(*fdhat_, true, *k_fs_aa, false, false, false, true);
-    k_fs_iamod->add(*k_fs_iaadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*k_fs_iaadd, false, -1.0, *k_fs_iamod, 1.0);
     k_fs_iamod->complete(k_fs_ia->domain_map(), k_fs_ia->row_map());
   }
 
@@ -851,38 +851,38 @@ void CONTACT::LagrangeStrategyPoro::evaluate_mat_poro_no_pen(
 
   //----------------------------------------------------------- FIRST LINE
   // add n submatrices to kteffnew
-  k_fs_effnew->add(*k_fs_nn, false, 1.0, 1.0);
-  k_fs_effnew->add(*k_fs_nm, false, 1.0, 1.0);
-  if (sset) k_fs_effnew->add(*k_fs_ns, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*k_fs_nn, false, 1.0, *k_fs_effnew, 1.0);
+  Core::LinAlg::matrix_add(*k_fs_nm, false, 1.0, *k_fs_effnew, 1.0);
+  if (sset) Core::LinAlg::matrix_add(*k_fs_ns, false, 1.0, *k_fs_effnew, 1.0);
 
   //---------------------------------------------------------- SECOND LINE
   // add m submatrices to kteffnew
   if (mset)
   {
-    k_fs_effnew->add(*k_fs_mnmod, false, 1.0, 1.0);
-    k_fs_effnew->add(*k_fs_mmmod, false, 1.0, 1.0);
-    if (iset) k_fs_effnew->add(*k_fs_mimod, false, 1.0, 1.0);
-    if (aset) k_fs_effnew->add(*k_fs_mamod, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*k_fs_mnmod, false, 1.0, *k_fs_effnew, 1.0);
+    Core::LinAlg::matrix_add(*k_fs_mmmod, false, 1.0, *k_fs_effnew, 1.0);
+    if (iset) Core::LinAlg::matrix_add(*k_fs_mimod, false, 1.0, *k_fs_effnew, 1.0);
+    if (aset) Core::LinAlg::matrix_add(*k_fs_mamod, false, 1.0, *k_fs_effnew, 1.0);
   }
 
   //----------------------------------------------------------- THIRD LINE
   // add i submatrices to kteffnew
-  if (iset) k_fs_effnew->add(k_fs_inmod, false, 1.0, 1.0);
-  if (iset) k_fs_effnew->add(k_fs_immod, false, 1.0, 1.0);
-  if (iset) k_fs_effnew->add(*k_fs_iimod, false, 1.0, 1.0);
-  if (iset && aset) k_fs_effnew->add(*k_fs_iamod, false, 1.0, 1.0);
+  if (iset) Core::LinAlg::matrix_add(k_fs_inmod, false, 1.0, *k_fs_effnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(k_fs_immod, false, 1.0, *k_fs_effnew, 1.0);
+  if (iset) Core::LinAlg::matrix_add(*k_fs_iimod, false, 1.0, *k_fs_effnew, 1.0);
+  if (iset && aset) Core::LinAlg::matrix_add(*k_fs_iamod, false, 1.0, *k_fs_effnew, 1.0);
 
   //---------------------------------------------------------- FOURTH LINE
   // add a submatrices to kteffnew
-  if (aset) k_fs_effnew->add(*fNCoup_lindisp_, false, 1.0, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*fNCoup_lindisp_, false, 1.0, *k_fs_effnew, 1.0);
 
   //----------------------------------------------------------- FIFTH LINE
   // add a submatrices to kteffnew
-  if (aset) k_fs_effnew->add(*k_fs_anmod, false, -1.0, 1.0);
-  if (aset) k_fs_effnew->add(*k_fs_ammod, false, -1.0, 1.0);
-  if (aset && iset) k_fs_effnew->add(*k_fs_aimod, false, -1.0, 1.0);
-  if (aset) k_fs_effnew->add(*k_fs_aamod, false, -1.0, 1.0);
-  if (aset) k_fs_effnew->add(*flinTangentiallambda_, false, 1.0, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*k_fs_anmod, false, -1.0, *k_fs_effnew, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*k_fs_ammod, false, -1.0, *k_fs_effnew, 1.0);
+  if (aset && iset) Core::LinAlg::matrix_add(*k_fs_aimod, false, -1.0, *k_fs_effnew, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*k_fs_aamod, false, -1.0, *k_fs_effnew, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*flinTangentiallambda_, false, 1.0, *k_fs_effnew, 1.0);
 
   // fill_complete kteffnew (square)
   k_fs_effnew->complete(*problem_dofs(), *falldofrowmap_);
@@ -1052,12 +1052,12 @@ void CONTACT::LagrangeStrategyPoro::evaluate_other_mat_poro_no_pen(
   // starting with two-sided poro contact!!!
   // km: add T(mhataam)*kan
   Core::LinAlg::SparseMatrix F_mmod(*fgmdofrowmap_, 100);
-  F_mmod.add(*F_m, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*F_m, false, 1.0, F_mmod, 1.0);
   if (aset && mset)
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> F_madd =
         Core::LinAlg::matrix_multiply(*fmhataam_, true, *F_a, false, false, false, true);
-    F_mmod.add(*F_madd, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*F_madd, false, 1.0, F_mmod, 1.0);
   }
   F_mmod.complete(F_m->domain_map(), F_m->row_map());
 
@@ -1069,12 +1069,12 @@ void CONTACT::LagrangeStrategyPoro::evaluate_other_mat_poro_no_pen(
 
   // kin: subtract T(dhat)*kan --
   Core::LinAlg::SparseMatrix F_imod(*fgidofs, 100);
-  F_imod.add(*F_i, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*F_i, false, 1.0, F_imod, 1.0);
   if (aset)
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> F_iadd =
         Core::LinAlg::matrix_multiply(*fdhat_, true, *F_a, false, false, false, true);
-    F_imod.add(*F_iadd, false, -1.0, 1.0);
+    Core::LinAlg::matrix_add(*F_iadd, false, -1.0, F_imod, 1.0);
   }
   F_imod.complete(F_i->domain_map(), F_i->row_map());
 
@@ -1111,21 +1111,22 @@ void CONTACT::LagrangeStrategyPoro::evaluate_other_mat_poro_no_pen(
 
   //----------------------------------------------------------- FIRST LINE
   // add n submatrices to kteffnew
-  F_effnew->add(*F_n, false, 1.0, 1.0);
+  Core::LinAlg::matrix_add(*F_n, false, 1.0, *F_effnew, 1.0);
 
   //---------------------------------------------------------- SECOND LINE
   // add m submatrices to kteffnew
-  if (mset) F_effnew->add(F_mmod, false, 1.0, 1.0);
+  if (mset) Core::LinAlg::matrix_add(F_mmod, false, 1.0, *F_effnew, 1.0);
   //----------------------------------------------------------- THIRD LINE
   // add i submatrices to kteffnew
-  if (iset) F_effnew->add(F_imod, false, 1.0, 1.0);
+  if (iset) Core::LinAlg::matrix_add(F_imod, false, 1.0, *F_effnew, 1.0);
   //---------------------------------------------------------- FOURTH LINE
   // add a submatrices to kteffnew //assume that Column_Block_Id==0 is the porofluid coupling
   // block!!!
-  if (Column_Block_Id == 0 && aset) F_effnew->add(*fNCoup_linvel_, false, 1.0, 1.0);
+  if (Column_Block_Id == 0 && aset)
+    Core::LinAlg::matrix_add(*fNCoup_linvel_, false, 1.0, *F_effnew, 1.0);
   //----------------------------------------------------------- FIFTH LINE
   // add a submatrices to kteffnew
-  if (aset) F_effnew->add(*F_amod, false, -1.0, 1.0);
+  if (aset) Core::LinAlg::matrix_add(*F_amod, false, -1.0, *F_effnew, 1.0);
 
   // fill_complete kteffnew (square)
   F_effnew->complete(*domainmap, *falldofrowmap_);
@@ -1194,7 +1195,7 @@ void CONTACT::LagrangeStrategyPoro::recover_poro_no_pen(Core::LinAlg::Vector<dou
     Core::LinAlg::split_matrix2x2(finvda_, fgactivedofs_, tempmap1, gactivedofs_, tempmap2, finvda,
         tempmtx1, tempmtx2, tempmtx3);
     Core::LinAlg::SparseMatrix finvdmod(*fgsdofrowmap_, 10);
-    finvdmod.add(*finvda, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*finvda, false, 1.0, finvdmod, 1.0);
     finvdmod.complete(*gsdofrowmap_, *fgsdofrowmap_);
 
     /**********************************************************************/

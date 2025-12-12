@@ -405,10 +405,10 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::
         *global_fbg_l_, false, *global_G_BG_scaled, false, false, false, true);
 
     // Add contributions to the global stiffness matrix.
-    stiff->add(*FBL_L_times_G_BL, false, 1.0, 1.0);
-    stiff->add(*FBL_L_times_G_BG, false, 1.0, 1.0);
-    stiff->add(*FBG_L_times_G_BL, false, 1.0, 1.0);
-    stiff->add(*FBG_L_times_G_BG, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(*FBL_L_times_G_BL, false, 1.0, *stiff, 1.0);
+    Core::LinAlg::matrix_add(*FBL_L_times_G_BG, false, 1.0, *stiff, 1.0);
+    Core::LinAlg::matrix_add(*FBG_L_times_G_BL, false, 1.0, *stiff, 1.0);
+    Core::LinAlg::matrix_add(*FBG_L_times_G_BG, false, 1.0, *stiff, 1.0);
   }
 
   if (force != nullptr)

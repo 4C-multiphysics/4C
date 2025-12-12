@@ -178,7 +178,7 @@ bool Solid::ModelEvaluator::LagPenConstraint::assemble_jacobian(
 
   // --- Kdd - block ---------------------------------------------------
   std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr = global_state().extract_displ_block(jac);
-  jac_dd_ptr->add(*stiff_constr_ptr_, false, timefac_np, 1.0);
+  Core::LinAlg::matrix_add(*stiff_constr_ptr_, false, timefac_np, *jac_dd_ptr, 1.0);
   // no need to keep it
   stiff_constr_ptr_->zero();
 

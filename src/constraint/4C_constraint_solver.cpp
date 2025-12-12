@@ -11,6 +11,7 @@
 #include "4C_global_data.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_linear_solver_method_parameters.hpp"
@@ -274,9 +275,9 @@ void Constraints::ConstraintSolver::solve_direct(Core::LinAlg::SparseMatrix& sti
   if (dirichtoggle_ != nullptr)
     dbcmaps_ = Core::LinAlg::convert_dirichlet_toggle_vector_to_maps(*dirichtoggle_);
   // fill merged matrix using Add
-  mergedmatrix->add(stiff, false, 1.0, 1.0);
-  mergedmatrix->add(constr, false, 1.0, 1.0);
-  mergedmatrix->add(constrT, true, 1.0, 1.0);
+  Core::LinAlg::matrix_add(stiff, false, 1.0, *mergedmatrix, 1.0);
+  Core::LinAlg::matrix_add(constr, false, 1.0, *mergedmatrix, 1.0);
+  Core::LinAlg::matrix_add(constrT, true, 1.0, *mergedmatrix, 1.0);
   mergedmatrix->complete(*mergedmap, *mergedmap);
   // fill merged vectors using Export
   Core::LinAlg::export_to(rhsconstr, *mergedrhs);
@@ -322,7 +323,7 @@ void Constraints::ConstraintSolver::solve_simple(Core::LinAlg::SparseMatrix& sti
 
   // cast constraint operators to matrices and save transpose of constraint matrix
   Core::LinAlg::SparseMatrix constrTrans(*conrowmap, 81, false, true);
-  constrTrans.add(constrT, true, 1.0, 0.0);
+  Core::LinAlg::matrix_add(constrT, true, 1.0, constrTrans, 0.0);
   constrTrans.complete(constrT.range_map(), constrT.domain_map());
 
   // ONLY compatibility

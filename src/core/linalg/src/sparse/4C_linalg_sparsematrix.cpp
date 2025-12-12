@@ -1558,18 +1558,10 @@ void Core::LinAlg::SparseMatrix::add(const Core::LinAlg::SparseOperator& A, cons
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Core::LinAlg::SparseMatrix::add(const Core::LinAlg::SparseMatrix& A, const bool transposeA,
-    const double scalarA, const double scalarB)
-{
-  Core::LinAlg::add(A, transposeA, scalarA, *this, scalarB);
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
 void Core::LinAlg::SparseMatrix::add_other(Core::LinAlg::SparseMatrix& B, const bool transposeA,
     const double scalarA, const double scalarB) const
 {
-  B.add(*this, transposeA, scalarA, scalarB);
+  Core::LinAlg::matrix_add(*this, transposeA, scalarA, B, scalarB);
 }
 
 /*----------------------------------------------------------------------*

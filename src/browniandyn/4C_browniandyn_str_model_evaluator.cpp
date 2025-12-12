@@ -15,6 +15,7 @@
 #include "4C_io.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_rigidsphere.hpp"
 #include "4C_structure_new_integrator.hpp"
@@ -233,7 +234,7 @@ bool Solid::ModelEvaluator::BrownianDyn::assemble_jacobian(
   check_init_setup();
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr = global_state().extract_displ_block(jac);
-  jac_dd_ptr->add(*stiff_brownian_ptr_, false, timefac_np, 1.0);
+  Core::LinAlg::matrix_add(*stiff_brownian_ptr_, false, timefac_np, *jac_dd_ptr, 1.0);
   // no need to keep it
   stiff_brownian_ptr_->zero();
 

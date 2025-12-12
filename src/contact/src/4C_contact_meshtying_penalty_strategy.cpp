@@ -110,10 +110,10 @@ void CONTACT::MtPenaltyStrategy::mortar_coupling(
   double pp = params().get<double>("PENALTYPARAM");
 
   // add penalty meshtying stiffness terms
-  stiff_->add(*mtm_, false, pp, 1.0);
-  stiff_->add(*mtd_, false, -pp, 1.0);
-  stiff_->add(*dtm_, false, -pp, 1.0);
-  stiff_->add(*dtd_, false, pp, 1.0);
+  Core::LinAlg::matrix_add(*mtm_, false, pp, *stiff_, 1.0);
+  Core::LinAlg::matrix_add(*mtd_, false, -pp, *stiff_, 1.0);
+  Core::LinAlg::matrix_add(*dtm_, false, -pp, *stiff_, 1.0);
+  Core::LinAlg::matrix_add(*dtd_, false, pp, *stiff_, 1.0);
   stiff_->complete();
 
   // time measurement

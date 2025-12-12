@@ -23,6 +23,7 @@
 #include "4C_inpar_fpsi.hpp"
 #include "4C_linalg_blocksparsematrix.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_poroelast_monolithic.hpp"
 #include "4C_structure_aux.hpp"
 
@@ -678,12 +679,12 @@ void FPSI::FpsiCoupling::evaluate_coupling_matrixes_rhs()
         tmp_c_fa->complete();
 
         // Add all inner ale parts to c_fa_ directly
-        c_fa_->add(tmp_c_fa->matrix(
-                       FLD::Utils::MapExtractor::cond_other, ALE::Utils::MapExtractor::cond_other),
-            false, 1.0, 0.0);
-        c_fa_->add(tmp_c_fa->matrix(
-                       FLD::Utils::MapExtractor::cond_fsi, ALE::Utils::MapExtractor::cond_other),
-            false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(tmp_c_fa->matrix(FLD::Utils::MapExtractor::cond_other,
+                                     ALE::Utils::MapExtractor::cond_other),
+            false, 1.0, *c_fa_, 0.0);
+        Core::LinAlg::matrix_add(tmp_c_fa->matrix(FLD::Utils::MapExtractor::cond_fsi,
+                                     ALE::Utils::MapExtractor::cond_other),
+            false, 1.0, *c_fa_, 1.0);
 
         //-->now transform ale fpsi block to structure (is condensed)!!!
         // still in ale domain map!!!
@@ -691,18 +692,18 @@ void FPSI::FpsiCoupling::evaluate_coupling_matrixes_rhs()
             Core::LinAlg::SparseMatrix(*fluid_field()->dof_row_map(), 81);
 
         // Add all condensed parts to tmp_c_fa...
-        tmp_c_fp.add(tmp_c_fa->matrix(
-                         FLD::Utils::MapExtractor::cond_other, ALE::Utils::MapExtractor::cond_fpsi),
-            false, 1.0, 0.0);
-        tmp_c_fp.add(tmp_c_fa->matrix(
-                         FLD::Utils::MapExtractor::cond_fsi, ALE::Utils::MapExtractor::cond_fpsi),
-            false, 1.0, 1.0);
-        tmp_c_fp.add(tmp_c_fa->matrix(
-                         FLD::Utils::MapExtractor::cond_other, ALE::Utils::MapExtractor::cond_fsi),
-            false, 1.0, 1.0);
-        tmp_c_fp.add(tmp_c_fa->matrix(
-                         FLD::Utils::MapExtractor::cond_fsi, ALE::Utils::MapExtractor::cond_fsi),
-            false, 1.0, 1.0);
+        Core::LinAlg::matrix_add(tmp_c_fa->matrix(FLD::Utils::MapExtractor::cond_other,
+                                     ALE::Utils::MapExtractor::cond_fpsi),
+            false, 1.0, tmp_c_fp, 0.0);
+        Core::LinAlg::matrix_add(tmp_c_fa->matrix(FLD::Utils::MapExtractor::cond_fsi,
+                                     ALE::Utils::MapExtractor::cond_fpsi),
+            false, 1.0, tmp_c_fp, 1.0);
+        Core::LinAlg::matrix_add(tmp_c_fa->matrix(FLD::Utils::MapExtractor::cond_other,
+                                     ALE::Utils::MapExtractor::cond_fsi),
+            false, 1.0, tmp_c_fp, 1.0);
+        Core::LinAlg::matrix_add(tmp_c_fa->matrix(FLD::Utils::MapExtractor::cond_fsi,
+                                     ALE::Utils::MapExtractor::cond_fsi),
+            false, 1.0, tmp_c_fp, 1.0);
         tmp_c_fp.complete(
             *ale_field()->interface()->fpsi_cond_map(), *fluid_field()->dof_row_map());
 

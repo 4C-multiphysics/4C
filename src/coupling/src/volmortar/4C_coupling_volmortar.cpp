@@ -1365,16 +1365,16 @@ void Coupling::VolMortar::VolMortarCoupl::mesh_init()
     omega = 1.0;
 
     Core::LinAlg::SparseMatrix k(*mergedmap_, 100, false, true);
-    k.add(*dmatrix_xa_, false, -1.0 * omega, 1.0);
-    k.add(*mmatrix_xa_, false, 1.0 * omega, 1.0);
-    k.add(*dmatrix_xb_, false, -1.0 * omega, 1.0);
-    k.add(*mmatrix_xb_, false, 1.0 * omega, 1.0);
+    Core::LinAlg::matrix_add(*dmatrix_xa_, false, -1.0 * omega, k, 1.0);
+    Core::LinAlg::matrix_add(*mmatrix_xa_, false, 1.0 * omega, k, 1.0);
+    Core::LinAlg::matrix_add(*dmatrix_xb_, false, -1.0 * omega, k, 1.0);
+    Core::LinAlg::matrix_add(*mmatrix_xb_, false, 1.0 * omega, k, 1.0);
 
     Core::LinAlg::Vector<double> ones(*mergedmap_);
     ones.put_scalar(1.0);
     Core::LinAlg::SparseMatrix onesdiag(ones);
     onesdiag.complete();
-    k.add(onesdiag, false, 1.0, 1.0);
+    Core::LinAlg::matrix_add(onesdiag, false, 1.0, k, 1.0);
     k.complete();
 
     // solve with default solver

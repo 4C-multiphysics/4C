@@ -12,6 +12,7 @@
 #include "4C_global_data.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_structure_aux.hpp"
 #include "4C_structure_timint_create.hpp"
 
@@ -192,7 +193,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Adapter::StructureConstrMerged::syst
   constiff->complete();
 
   // Add matrices together
-  mergedmatrix->add(*strustiff, false, 1.0, 0.0);
+  Core::LinAlg::matrix_add(*strustiff, false, 1.0, *mergedmatrix, 0.0);
   mergedmatrix->add(*constiff, false, 1.0, 1.0);
   mergedmatrix->add(*constiff, true, 1.0, 1.0);
   mergedmatrix->complete(*dofrowmap_, *dofrowmap_);
