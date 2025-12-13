@@ -361,7 +361,7 @@ endfunction()
 #
 # required parameters:
 #   BASED_ON:                name of the base test that created the restart files
-#   RESTART_STEP:            number of the restart step to restart from
+#   RESTART_STEP:            number of the restart step to restart from or last_possible
 #   SAME_FILE or TEST_FILE:  either SAME_FILE to indicate that the restart should be done from the same input file
 #                            as the base test, or TEST_FILE to indicate that a different input file should be used for the restart
 #

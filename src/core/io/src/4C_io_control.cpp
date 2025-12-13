@@ -13,6 +13,7 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_io_yaml.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <pwd.h>
 #include <unistd.h>
@@ -434,12 +435,13 @@ Core::IO::InputControl::~InputControl() = default;
 
 const std::string& Core::IO::InputControl::file_name() const { return pimpl_->filename; }
 
-
-Core::IO::ControlFileEntry Core::IO::InputControl::last_entry(const std::string& key) const
+Core::IO::ControlFileEntry Core::IO::InputControl::nth_last_entry(
+    std::optional<std::string> key, size_t n) const
 {
   auto root = pimpl_->tree.rootref();
   FOUR_C_ASSERT(root.is_seq(), "Internal error: expected top-level sequence in control file");
 
+  size_t count = 0;
   for (int i = root.num_children() - 1; i >= 0; --i)
   {
     ryml::NodeRef entry = root[i];
@@ -448,12 +450,41 @@ Core::IO::ControlFileEntry Core::IO::InputControl::last_entry(const std::string&
 
     ryml::NodeRef symbol_node = entry.child(0);
     FOUR_C_ASSERT(symbol_node.is_map(), "Internal error: expected a map");
-    auto symbol_key = symbol_node.key();
-    if (symbol_key == ryml::to_csubstr(key)) return {this, symbol_node.id()};
+
+    if (!key || symbol_node.key() == ryml::to_csubstr(*key))
+    {
+      ++count;
+      if (count == n)
+      {
+        return {this, symbol_node.id()};
+      }
+    }
   }
 
-  return {};
+  return {};  // not found
 }
+
+
+std::optional<std::string> Core::IO::InputControl::last_key() const
+{
+  auto root = pimpl_->tree.rootref();
+  FOUR_C_ASSERT(root.is_seq(), "Internal error: expected top-level sequence in control file");
+
+  if (root.num_children() == 0) return std::nullopt;
+
+  // last entry in the sequence
+  ryml::ConstNodeRef entry = root[root.num_children() - 1];
+  FOUR_C_ASSERT(entry.is_map(), "Internal error: sequence items must be maps");
+  FOUR_C_ASSERT(
+      entry.num_children() == 1, "Internal error: each entry must have exactly one child");
+
+  ryml::ConstNodeRef symbol_node = entry.child(0);
+  FOUR_C_ASSERT(symbol_node.is_map(), "Internal error: entry child must be a map");
+
+  auto key = symbol_node.key();
+  return std::string(key.data(), key.size());
+}
+
 
 
 std::pair<Core::IO::ControlFileEntry, Core::IO::ControlFileEntry>
@@ -520,15 +551,59 @@ Core::IO::InputControl::find_group(int step, const std::string& discretization_n
 /*----------------------------------------------------------------------*/
 int Core::IO::get_last_possible_restart_step(Core::IO::InputControl& inputcontrol)
 {
-  auto last_possible = inputcontrol.last_entry("field")["step"].as<int>();
-  if (!last_possible)
+  // field entries indicate a step with restart information
+  auto last_possible = inputcontrol.nth_last_entry("field")["step"].as<int>();
+
+  if (!last_possible.has_value())  // throw if no field entry exists
   {
     FOUR_C_THROW(
         "No restart entry in symbol table. "
         "Control file corrupt?\n\nLooking for control file at: {}",
         inputcontrol.file_name());
   }
-  return last_possible.value();
+
+  // If the very last entry is not a field entry, return the last possible restart step directly.
+  // Otherwise there is an accompanying result description missing.
+  if (inputcontrol.last_key() != "field")
+  {
+    return last_possible.value();
+  }
+  else  // try to find the second last possible restart step
+  {
+    // only on first processor print warning
+    if (Core::Communication::my_mpi_rank(MPI_COMM_WORLD) == 0)
+    {
+      std::cout << "Warning: Restart information at step " << last_possible.value()
+                << " is incomplete. Attempting to find the second last restart step...\n";
+    }
+    // Start looking at the second last field entry
+    int counter = 2;
+    while (true)
+    {
+      auto second_last_possible = inputcontrol.nth_last_entry("field", counter)["step"].as<int>();
+      // throw if no more field entries exist
+      if (!second_last_possible.has_value())
+      {
+        FOUR_C_THROW(
+            "No restart entry in symbol table. "
+            "Control file corrupt?\n\nLooking for control file at: {}",
+            inputcontrol.file_name());
+      }
+      // Return the step of the first field entry with a step smaller than the previously found one.
+      // This ensures that restart information is complete at that step (for all fields).
+      if (second_last_possible.value() < last_possible.value())
+      {
+        if (Core::Communication::my_mpi_rank(MPI_COMM_WORLD) == 0)
+        {
+          std::cout << "Attempting to restart from the second last restart step "
+                    << second_last_possible.value() << " instead.\n";
+        }
+        return second_last_possible.value();
+      }
+      // increment counter
+      ++counter;
+    }
+  }
 }
 
 template bool Core::IO::ControlFileEntry::is_a<int>() const;

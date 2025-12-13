@@ -120,7 +120,7 @@ Core::Communication::Communicators& Global::Problem::get_communicators() const
 void Global::Problem::open_control_file(MPI_Comm comm, const std::string& inputfile,
     std::string prefix, const std::string& restartkenner)
 {
-  if (restart())
+  if (restartstep_ != 0)
   {
     inputcontrol_ = std::make_shared<Core::IO::InputControl>(restartkenner, comm);
 
