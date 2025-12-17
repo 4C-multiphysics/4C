@@ -205,8 +205,8 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
         *global_virtual_disp_interface_stress_background_,
         *global_virtual_disp_background_stress_interface_,
         *global_virtual_disp_background_stress_background_, *global_constraint_,
-        embedded_mesh_coupling_params_.nitsche_penalty_param_,
-        embedded_mesh_coupling_params_.nitsche_average_weight_gamma_);
+        embedded_mesh_coupling_params_.nitsche_stabilization_param_,
+        embedded_mesh_coupling_params_.nitsche_average_weight_param_);
   }
 
   // Complete the global matrices.
@@ -235,21 +235,29 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
     scale_contributions_nitsche_stiffness_matrices() const
 {
   // Get the penalty parameter.
-  const double penalty_param = embedded_mesh_coupling_params_.nitsche_penalty_param_;
+  const double penalty_param = embedded_mesh_coupling_params_.nitsche_stabilization_param_;
 
   // Scale penalty contributions
   global_penalty_interface_->scale(penalty_param);
   global_penalty_background_->scale(penalty_param);
   global_penalty_interface_background_->scale(-penalty_param);
 
-  // Get the average weight parameter.
-  const double average_weight_gamma = embedded_mesh_coupling_params_.nitsche_average_weight_gamma_;
+  if (embedded_mesh_coupling_params_.nitsche_weighting_type_ == NitscheWeightingType::undefined)
+  {
+    // Get the average weight parameter.
+    const double average_weight_gamma =
+        embedded_mesh_coupling_params_.nitsche_average_weight_param_;
 
-  // Scale stress contributions
-  global_virtual_disp_interface_stress_interface_->scale(-average_weight_gamma);
-  global_virtual_disp_interface_stress_background_->scale(-(1.0 - average_weight_gamma));
-  global_virtual_disp_background_stress_interface_->scale(average_weight_gamma);
-  global_virtual_disp_background_stress_background_->scale(1.0 - average_weight_gamma);
+    // Scale stress contributions
+    global_virtual_disp_interface_stress_interface_->scale(-average_weight_gamma);
+    global_virtual_disp_interface_stress_background_->scale(-(1.0 - average_weight_gamma));
+    global_virtual_disp_background_stress_interface_->scale(average_weight_gamma);
+    global_virtual_disp_background_stress_background_->scale(1.0 - average_weight_gamma);
+  }
+  else
+  {
+    // ToDO
+  }
 }
 
 /**

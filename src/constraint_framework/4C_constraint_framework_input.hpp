@@ -60,6 +60,20 @@ namespace Constraints
       quad9,      ///< Quadratic Lagrange elements
       nurbs9      ///< Quadratic NURBS elements
     };
+
+    /**
+     * \brief Weighting type used for calculating the weighting and stabilization parameter used for
+     * the Nitsche method
+     */
+    enum class NitscheWeightingType
+    {
+      undefined,  ///< default, the user can specify the weighting and stabilization parameter
+      overlapping_mesh,  ///< only the overlapping mesh contribution are be considered
+      underlying_mesh,   ///< only the underlying mesh contribution are be considered
+      harmonic  ///< the weighting and stabilization parameter are calculated using harmonic weights
+                ///< (et.al. Burman and Zunino in "Numerical approximation of large contrast
+                ///< problems with the unfitted Nitsche method")
+    };
   }  // namespace EmbeddedMesh
 
 
