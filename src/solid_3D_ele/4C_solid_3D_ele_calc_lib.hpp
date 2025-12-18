@@ -159,7 +159,7 @@ namespace Discret::Elements
   template <Core::FE::CellType celltype, std::ranges::contiguous_range R>
     requires std::ranges::sized_range<R>
   ElementNodes<celltype> evaluate_element_nodes(const Core::Elements::Element& ele, const R& disp,
-      std::optional<std::reference_wrapper<const Core::FE::Discretization>> discret = std::nullopt)
+      const Core::FE::Discretization* discret = nullptr)
   {
     Discret::Elements::ElementNodes<celltype> element_nodes;
     for (int i = 0; i < Internal::num_nodes<celltype>; ++i)
@@ -177,12 +177,11 @@ namespace Discret::Elements
 
     if constexpr (Core::FE::is_nurbs<celltype>)
     {
-      FOUR_C_ASSERT(
-          discret != std::nullopt, "For NURBS elements, the discretization must be given.");
+      FOUR_C_ASSERT(discret != nullptr, "For NURBS elements, the discretization must be given.");
 
       // Obtain the information required for a NURBS element
       bool zero_size = Core::FE::Nurbs::get_my_nurbs_knots_and_weights(
-          discret->get(), &ele, element_nodes.knots, element_nodes.weights);
+          discret, &ele, element_nodes.knots, element_nodes.weights);
       if (zero_size)
         FOUR_C_THROW("get_my_nurbs_knots_and_weights has to return a non zero size NURBS element.");
     }
@@ -208,7 +207,7 @@ namespace Discret::Elements
         Core::FE::extract_values_as_array<num_dofs>(displacements, lm);
 
     Discret::Elements::ElementNodes<celltype> element_nodes =
-        evaluate_element_nodes<celltype>(ele, mydisp, discretization);
+        evaluate_element_nodes<celltype>(ele, mydisp, &discretization);
 
     return element_nodes;
   }

@@ -329,7 +329,7 @@ void evaluate_cauchy_stress_tensor_at_xi(const Core::FE::Discretization& discret
       traction_vector(i_dir) = solid_ele->get_normal_cauchy_stress_at_xi(ele_displacement,
           Core::LinAlg::reinterpret_as_tensor<3>(xi),
           Core::LinAlg::reinterpret_as_tensor<3>(normal_vector),
-          Core::LinAlg::reinterpret_as_tensor<3>(dirs[i_dir]), cauchy_linearizations, discret);
+          Core::LinAlg::reinterpret_as_tensor<3>(dirs[i_dir]), cauchy_linearizations, &discret);
     }
   }
   else
