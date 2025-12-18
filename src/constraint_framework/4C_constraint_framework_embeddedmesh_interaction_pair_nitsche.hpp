@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_CONSTRAINT_FRAMEWORK_EMBEDDEDMESH_INTERACTION_PAIR_MORTAR_HPP
-#define FOUR_C_CONSTRAINT_FRAMEWORK_EMBEDDEDMESH_INTERACTION_PAIR_MORTAR_HPP
+#ifndef FOUR_C_CONSTRAINT_FRAMEWORK_EMBEDDEDMESH_INTERACTION_PAIR_NITSCHE_HPP
+#define FOUR_C_CONSTRAINT_FRAMEWORK_EMBEDDEDMESH_INTERACTION_PAIR_NITSCHE_HPP
 
 #include "4C_config.hpp"
 
@@ -20,16 +20,17 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Constraints::EmbeddedMesh
 {
-  class SolidToSolidMortarManager;
+  class SolidToSolidNitscheManager;
+  class SolidToSolidNitscheManager;
 
-  template <typename Interface, typename Background, typename Mortar>
-  class SurfaceToBackgroundCouplingPairMortar : public SolidInteractionPair
+  template <typename Interface, typename Background>
+  class SurfaceToBackgroundCouplingPairNitsche : public SolidInteractionPair
   {
    public:
     /**
      * \brief Standard Constructor
      */
-    SurfaceToBackgroundCouplingPairMortar(std::shared_ptr<Core::Elements::Element> element1,
+    SurfaceToBackgroundCouplingPairNitsche(std::shared_ptr<Core::Elements::Element> element1,
         Core::Elements::Element* element2,
         Constraints::EmbeddedMesh::EmbeddedMeshParams& params_ptr,
         std::shared_ptr<Cut::CutWizard>& cutwizard_ptr,
@@ -38,27 +39,14 @@ namespace Constraints::EmbeddedMesh
     /**
      * \brief Destructor.
      */
-    ~SurfaceToBackgroundCouplingPairMortar() override {};
+    ~SurfaceToBackgroundCouplingPairNitsche() override {};
 
-    //! @name Visualization methods
-    void get_projected_gauss_rule_in_cut_element(
-        Core::IO::VisualizationData& cut_element_integration_points_visualization_data) override;
-
-    void get_projected_gauss_rule_on_interface(
-        Core::IO::VisualizationData& background_integration_points_visualization_data,
-        Core::IO::VisualizationData& interface_integration_points_visualization_data) override;
-
-    void get_pair_visualization(
-        Core::IO::VisualizationData& lagrange_multipliers_visualization_data,
-        std::shared_ptr<Core::LinAlg::Vector<double>> lambda,
-        const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
-        std::shared_ptr<std::unordered_set<int>> interface_tracker) override;
 
     //! @name Evaluation methods
     /**
-     * \brief Evaluate the global matrices and vectors resulting from mortar coupling.
+     * \brief Evaluate the global matrices and vectors resulting from Nitsche coupling.
      * @param discret (in) Discretization, used to get the interface GIDs.
-     * @param mortar_manager (in) Mortar manager, used to get the Lagrange multiplier GIDs.
+     * @param nitsche_manager (in) Nitsche manager, used to get the Lagrange multiplier GIDs.
      * @param global_g_bl (in/out) Constraint equations derived w.r.t the interface DOFs.
      * @param global_g_bg (in/out) Constraint equations derived w.r.t the background DOFs.
      * @param global_fbl_l (in/out) Interface force vector derived w.r.t the Lagrange multipliers.
@@ -73,7 +61,10 @@ namespace Constraints::EmbeddedMesh
         Core::LinAlg::SparseMatrix& global_fbl_l, Core::LinAlg::SparseMatrix& global_fbg_l,
         Core::LinAlg::FEVector<double>& global_constraint,
         Core::LinAlg::FEVector<double>& global_kappa,
-        Core::LinAlg::FEVector<double>& global_lambda_active) override;
+        Core::LinAlg::FEVector<double>& global_lambda_active) override
+    {
+      FOUR_C_THROW("The evaluation of Mortar contributions cannot be called from a Nitsche pair.");
+    }
 
     void evaluate_and_assemble_nitsche_contributions(const Core::FE::Discretization& discret,
         const Constraints::EmbeddedMesh::SolidToSolidNitscheManager* nitsche_manager,
@@ -85,10 +76,7 @@ namespace Constraints::EmbeddedMesh
         Core::LinAlg::SparseMatrix& global_virtual_disp_background_stress_interface,
         Core::LinAlg::SparseMatrix& global_virtual_disp_background_stress_background,
         Core::LinAlg::FEVector<double>& global_constraint, double& nitsche_stabilization_param,
-        double& nitsche_average_weight_param) override
-    {
-      FOUR_C_THROW("The evaluation of Nitsche contributions cannot be called from a mortar pair.");
-    }
+        double& nitsche_average_weight_param) override;
 
     /**
      * \brief Set the Gauss rule over the interface for element1_ and element2_.
@@ -103,12 +91,66 @@ namespace Constraints::EmbeddedMesh
 
    private:
     /**
-     * \brief Evaluate the local mortar matrices for this coupling element pair.
+     * \brief Evaluate the local penalty contributions of the Nitsche method for this coupling
+     * element pair.
      */
-    void evaluate_dm(Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double>& local_D,
-        Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double>& local_M,
-        Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_kappa,
-        Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_constraint);
+    void evaluate_penalty_contributions_nitsche(
+        Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
+            local_stiffness_penalty_interface,
+        Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
+            local_stiffness_penalty_background,
+        Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
+            local_stiffness_penalty_interface_background,
+        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint,
+        double& nitsche_stabilization_param);
+
+    void evaluate_stress_contributions_nitsche(const Core::FE::Discretization& discret,
+        Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
+            local_stiffness_disp_interface_stress_interface,
+        Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
+            local_stiffness_disp_interface_stress_background,
+        Core::LinAlg::Matrix<Background::n_dof_, Interface::n_dof_, double>&
+            local_stiffness_disp_background_stress_interface,
+        Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
+            local_stiffness_disp_background_stress_background,
+        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
+            local_constraint_stresses,
+        double& nitsche_average_weight_param);
+
+    //! @name Visualization methods
+    /*!
+    \brief Get the Gauss points of element2_ after cut for visualization.
+    */
+    void get_projected_gauss_rule_in_cut_element(
+        Core::IO::VisualizationData& cut_element_integration_points_visualization_data)
+    {
+      FOUR_C_THROW(
+          "This function is not implemented for the SurfaceToBackgroundCouplingPairNitsche.");
+    }
+
+    /*!
+    \brief Get the Gauss points of element1_ and element2_ for the evaluation of mortar matrices.
+    */
+    void get_projected_gauss_rule_on_interface(
+        Core::IO::VisualizationData& background_integration_points_visualization_data,
+        Core::IO::VisualizationData& interface_integration_points_visualization_data)
+    {
+      FOUR_C_THROW(
+          "This function is not implemented for the SurfaceToBackgroundCouplingPairNitsche.");
+    }
+
+    /*!
+    \brief Get the Lagrange multiplier field evaluated on the interface nodes for visualization.
+    */
+    void get_pair_visualization(
+        Core::IO::VisualizationData& lagrange_multipliers_visualization_data,
+        std::shared_ptr<Core::LinAlg::Vector<double>> lambda,
+        const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
+        std::shared_ptr<std::unordered_set<int>> interface_tracker)
+    {
+      FOUR_C_THROW(
+          "This function is not implemented for the SurfaceToBackgroundCouplingPairNitsche.");
+    }
 
     //! Initial nodal positions (and tangents) of the interface element.
     GeometryPair::ElementData<Interface, double> ele1pos_;

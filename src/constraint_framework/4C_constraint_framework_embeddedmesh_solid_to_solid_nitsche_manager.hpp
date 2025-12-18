@@ -70,7 +70,7 @@ namespace Constraints::EmbeddedMesh
     void setup(const Core::LinAlg::Vector<double>& displacement_vector);
 
     /**
-     * \brief Evaluate mortar coupling contributions on all pairs and assemble them into the
+     * \brief Evaluate Nitsche coupling contributions on all pairs and assemble them into the
      * global matrices.
      * @param displacement_vector (in) global displacement vector.
      */
@@ -90,24 +90,13 @@ namespace Constraints::EmbeddedMesh
     void set_state(const Core::LinAlg::Vector<double>& displacement_vector);
 
     /**
-     * \brief Write output obtained in the embedded mesh
-     */
-    // void write_output(double time, int timestep_number);
-
-    /**
-     * \brief Write the integration points on the interface elements and cut elements
-     * after the cut operation and save it in the visualization manager
-     */
-    void collect_output_integration_points();
-
-    /**
      * \brief Scale contributions from the Nitsche method with the penalty parameter and weighting
      * average parameter
      */
     void scale_contributions_nitsche_stiffness_matrices() const;
 
     /**
-     * \brief Get the communicator associated to the mortar manager
+     * \brief Get the communicator associated to the Nitsche manager
      */
     MPI_Comm get_my_comm();
 
@@ -117,7 +106,7 @@ namespace Constraints::EmbeddedMesh
      */
     inline void check_setup() const
     {
-      if (!is_setup_) FOUR_C_THROW("Setup not called on SolidToSolidMortarManager!");
+      if (!is_setup_) FOUR_C_THROW("Setup not called on SolidToSolidNitscheManager!");
     }
 
     /**
@@ -126,7 +115,7 @@ namespace Constraints::EmbeddedMesh
     inline void check_global_maps() const
     {
       if (!is_global_maps_build_)
-        FOUR_C_THROW("Global maps are not build in SolidToSolidMortarManager!");
+        FOUR_C_THROW("Global maps are not build in SolidToSolidNitscheManager!");
     }
 
     /**
@@ -137,26 +126,9 @@ namespace Constraints::EmbeddedMesh
    private:
     /**
      * \brief Calculate the maps for the solid interface and background dofs. The calculated
-     * maps are used to complete the mortar matrices.
+     * maps are used to complete the Nitsche matrices.
      */
     void set_global_maps();
-
-    /**
-     * \brief This method builds the local maps from the global multi vector created in Setup. The
-     * global mortar matrices are also created.
-     *
-     * Since some nodes of this pair, that have Lagrange multipliers may not be on this processor,
-     * we need to get the node ID to Lagrange multiplier ID form the processor that holds the
-     * node. All relevant global node / element to global Lagrange multiplier maps for the given
-     * contact pairs are stored in a standard maps in this object. The keys in those maps are the
-     * global node / element id and the value is a vector with the corresponding Lagrange
-     * multiplier gids. By doing so we only have to communicate between the ranks once per
-     * timestep (to be more precise: only once for each set of contact pairs. If they do not
-     * change between timesteps and do not switch rank, we can keep the created maps).
-     *
-     * @param displacement_vector (in) global displacement vector.
-     */
-    // void set_local_maps(const Core::LinAlg::Vector<double>& displacement_vector);
 
     //! Pointer to the discretization containing the solid and interface elements.
     std::shared_ptr<Core::FE::Discretization> discret_;
@@ -213,7 +185,7 @@ namespace Constraints::EmbeddedMesh
     //! Global constraint vector.
     std::shared_ptr<Core::LinAlg::FEVector<double>> global_constraint_ = nullptr;
 
-    //! Vector with all contact pairs to be evaluated by this mortar manager.
+    //! Vector with all contact pairs to be evaluated by this Nitsche manager.
     std::vector<std::shared_ptr<Constraints::EmbeddedMesh::SolidInteractionPair>>
         embedded_mesh_solid_pairs_;
 

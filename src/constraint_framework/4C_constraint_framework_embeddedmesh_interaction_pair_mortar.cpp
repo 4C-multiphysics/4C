@@ -8,7 +8,6 @@
 #include "4C_constraint_framework_embeddedmesh_interaction_pair_mortar.hpp"
 
 #include "4C_constraint_framework_embeddedmesh_solid_to_solid_mortar_manager.hpp"
-#include "4C_constraint_framework_embeddedmesh_solid_to_solid_nitsche_manager.hpp"
 #include "4C_constraint_framework_embeddedmesh_solid_to_solid_utils.hpp"
 #include "4C_cut_boundarycell.hpp"
 #include "4C_cut_cutwizard.hpp"
@@ -17,40 +16,11 @@
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_geometry_pair_element.hpp"
 #include "4C_geometry_pair_element_evaluation_functions.hpp"
-#include "4C_geometry_pair_line_to_surface.hpp"
 #include "4C_geometry_pair_line_to_volume.hpp"
 #include "4C_solid_3D_ele.hpp"
-#include "4C_solid_3D_ele_calc_lib_nitsche.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
-namespace
-{
-  //! Helper function to map a point from the element's parametric space to the
-  //! physical space
-  template <typename Pointtype>
-  void map_from_parametric_to_physical_space(
-      GeometryPair::ElementData<Pointtype, double> element_data,
-      Core::LinAlg::Matrix<Pointtype::element_dim_, 1>& point_param_space,
-      Core::LinAlg::Matrix<Pointtype::n_dof_, 1, double> nodal_values,
-      Core::LinAlg::Matrix<Pointtype::spatial_dim_, 1, double>& point_physical_space)
-  {
-    // Evaluate the shape functions on the given point
-    Core::LinAlg::Matrix<1, Pointtype::n_nodes_ * Pointtype::n_val_, double> shape_fun(
-        Core::LinAlg::Initialization::zero);
-
-    GeometryPair::EvaluateShapeFunction<Pointtype>::evaluate(
-        shape_fun, point_param_space, element_data.shape_function_data_);
-
-    // Map the point to the physical system by multiplying the shape
-    // functions with the element nodes
-    for (unsigned int node = 0; node < Pointtype::n_nodes_; node++)
-      for (unsigned int dim = 0; dim < Pointtype::spatial_dim_; dim++)
-        for (unsigned int val = 0; val < Pointtype::n_val_; val++)
-          point_physical_space(dim) += nodal_values(3 * Pointtype::n_val_ * node + 3 * val + dim) *
-                                       shape_fun(Pointtype::n_val_ * node + val);
-  }
-}  // namespace
 
 template <typename Interface, typename Background, typename Mortar>
 Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
@@ -92,7 +62,7 @@ Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Back
   }
 
   // For the surface elements, evaluate the normal vectors on the nodes
-  evaluate_interface_element_nodal_normals(ele1pos_);
+  Constraints::EmbeddedMesh::evaluate_interface_element_nodal_normals(ele1pos_);
 
   for (int node_ele2 = 0; node_ele2 < element_2().num_point(); node_ele2++)
   {
@@ -153,10 +123,10 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
       xi_mortar_node(0) = node_coordinates(0);
       xi_mortar_node(1) = node_coordinates(1);
 
-      map_from_parametric_to_physical_space<Mortar>(
+      Constraints::EmbeddedMesh::map_from_parametric_to_physical_space<Mortar>(
           ele1pos_, xi_mortar_node, this->ele1pos_.element_position_, X);
 
-      map_from_parametric_to_physical_space<Mortar>(
+      Constraints::EmbeddedMesh::map_from_parametric_to_physical_space<Mortar>(
           ele1pos_, xi_mortar_node, q_lambda, lambda_discret);
 
       // Add to output data.
@@ -221,70 +191,6 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
   }
 }
 
-template <typename Surface, Core::FE::CellType boundarycell_distype>
-std::shared_ptr<Core::FE::GaussPoints> project_boundary_cell_gauss_rule_on_interface(
-    Cut::BoundaryCell* boundary_cell, GeometryPair::ElementData<Surface, double>& ele1pos)
-{
-  // Get the coordinates of the vertices of the boundary cell
-  const Core::LinAlg::SerialDenseMatrix vertices_boundary_cell = boundary_cell->coordinates();
-  const unsigned num_vertices = Core::FE::num_nodes(boundarycell_distype);
-  Core::LinAlg::Matrix<2, num_vertices> projected_vertices_xi;
-
-  for (unsigned i_vertex = 0; i_vertex < num_vertices; i_vertex++)
-  {
-    Core::LinAlg::Matrix<3, 1> vertex_to_project;
-    Core::LinAlg::Matrix<3, 1> xi_interface;
-
-    for (int i_dim = 0; i_dim < 3; i_dim++)
-      vertex_to_project(i_dim) = vertices_boundary_cell(i_dim, i_vertex);
-
-    GeometryPair::ProjectionResult temp_projection_result;
-    GeometryPair::project_point_to_surface(
-        vertex_to_project, ele1pos, xi_interface, temp_projection_result);
-
-    if (temp_projection_result == GeometryPair::ProjectionResult::projection_not_found)
-      FOUR_C_THROW("No projection was found. ");
-    else if (temp_projection_result == GeometryPair::ProjectionResult::projection_found_not_valid)
-      std::cout << "WARNING: a projection was found but it is not valid\n";
-
-    projected_vertices_xi(0, i_vertex) = xi_interface(0);
-    projected_vertices_xi(1, i_vertex) = xi_interface(1);
-  }
-
-  // Check if the points are arranged in a counterclockwise. This is to avoid
-  // getting negative gauss points weights in CreateProjected(..). This is the case if:
-  // (y3 - y1)(x2 - x1) > (y2 - y1)(x3 - x1). If this is not the case, the points
-  // should be rearranged
-  if ((projected_vertices_xi(1, 2) - projected_vertices_xi(1, 0)) *
-          (projected_vertices_xi(0, 1) - projected_vertices_xi(0, 0)) <
-      (projected_vertices_xi(1, 1) - projected_vertices_xi(1, 0)) *
-          (projected_vertices_xi(0, 2) - projected_vertices_xi(0, 0)))
-  {
-    Core::LinAlg::Matrix<2, num_vertices> temp_xie;
-
-    for (size_t i = 0; i < num_vertices; ++i)
-    {
-      temp_xie(0, i) = projected_vertices_xi(0, num_vertices - 1 - i);
-      temp_xie(1, i) = projected_vertices_xi(1, num_vertices - 1 - i);
-    }
-
-    projected_vertices_xi = temp_xie;
-  }
-
-  std::shared_ptr<Core::FE::GaussPoints> gp =
-      Core::FE::GaussIntegration::create_projected<boundarycell_distype>(
-          projected_vertices_xi, boundary_cell->get_cubature_degree());
-
-  // Check if the weights of the obtained Gauss Points are positive
-  for (int it_gp = 0; it_gp < gp->num_points(); it_gp++)
-  {
-    FOUR_C_ASSERT_ALWAYS(
-        gp->weight(it_gp) > 0.0, "The Gauss rule for this boundary cell has negative weights.");
-  }
-
-  return gp;
-}
-
 template <typename Interface, typename Background, typename Mortar>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
     Mortar>::set_gauss_rule_for_interface_and_background()
@@ -307,8 +213,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
 
     // Project the gauss points of the boundary cell segment to the interface
     const std::shared_ptr<Core::FE::GaussPoints> gps_boundarycell =
-        project_boundary_cell_gauss_rule_on_interface<Interface, Core::FE::CellType::tri3>(
-            it_boundarycell->get(), ele1pos_);
+        Constraints::EmbeddedMesh::project_boundary_cell_gauss_rule_on_interface<Interface,
+            Core::FE::CellType::tri3>(it_boundarycell->get(), ele1pos_);
 
     // Save the number of gauss points per boundary cell. The check is done only in
     // the first boundary cell since all the boundary cells have the same cubature
@@ -370,66 +276,6 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
       global_lambda_active, local_D, local_M, local_kappa, local_constraint);
 }
 
-template <typename Interface, typename Background, typename Mortar>
-void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
-    Mortar>::evaluate_and_assemble_nitsche_contributions(const Core::FE::Discretization& discret,
-    const Constraints::EmbeddedMesh::SolidToSolidNitscheManager* nitsche_manager,
-    Core::LinAlg::SparseMatrix& global_penalty_interface,
-    Core::LinAlg::SparseMatrix& global_penalty_background,
-    Core::LinAlg::SparseMatrix& global_penalty_interface_background,
-    Core::LinAlg::SparseMatrix& global_disp_interface_stress_interface,
-    Core::LinAlg::SparseMatrix& global_disp_interface_stress_background,
-    Core::LinAlg::SparseMatrix& global_disp_background_stress_interface,
-    Core::LinAlg::SparseMatrix& global_disp_background_stress_background,
-    Core::LinAlg::FEVector<double>& global_constraint, double& nitsche_penalty_param,
-    double& nitsche_average_weight_gamma)
-{
-  // Initialize variables for local penalty contributions.
-  Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>
-      local_stiffness_penalty_interface(Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>
-      local_stiffness_penalty_background(Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>
-      local_stiffness_penalty_interface_background(Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double> local_constraint_penalty(
-      Core::LinAlg::Initialization::uninitialized);
-
-  // Initialize variables for local stress contributions.
-  Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>
-      local_stiffness_disp_interface_stress_interface(Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>
-      local_stiffness_disp_interface_stress_background(Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<Background::n_dof_, Interface::n_dof_, double>
-      local_stiffness_disp_background_stress_interface(Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>
-      local_stiffness_disp_background_stress_background(
-          Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double> local_constraint_stresses(
-      Core::LinAlg::Initialization::uninitialized);
-
-  // Evaluate the local penalty contributions of Nitsche method
-  evaluate_penalty_contributions_nitsche(local_stiffness_penalty_interface,
-      local_stiffness_penalty_background, local_stiffness_penalty_interface_background,
-      local_constraint_penalty, nitsche_penalty_param);
-
-  evaluate_stress_contributions_nitsche(discret, local_stiffness_disp_interface_stress_interface,
-      local_stiffness_disp_interface_stress_background,
-      local_stiffness_disp_background_stress_interface,
-      local_stiffness_disp_background_stress_background, local_constraint_stresses,
-      nitsche_average_weight_gamma);
-
-  // Assemble into global matrices.
-  assemble_local_nitsche_contributions<Interface, Background>(this, discret,
-      global_penalty_interface, global_penalty_background, global_penalty_interface_background,
-      global_disp_interface_stress_interface, global_disp_interface_stress_background,
-      global_disp_background_stress_interface, global_disp_background_stress_background,
-      global_constraint, local_stiffness_penalty_interface, local_stiffness_penalty_background,
-      local_stiffness_penalty_interface_background, local_stiffness_disp_interface_stress_interface,
-      local_stiffness_disp_interface_stress_background,
-      local_stiffness_disp_background_stress_interface,
-      local_stiffness_disp_background_stress_background, local_constraint_penalty,
-      local_constraint_stresses);
-}
 
 template <typename Interface, typename Background, typename Mortar>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
@@ -464,7 +310,7 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
 
       Core::LinAlg::Matrix<3, 1, double> point_coord(Core::LinAlg::Initialization::zero);
 
-      map_from_parametric_to_physical_space<Background>(
+      Constraints::EmbeddedMesh::map_from_parametric_to_physical_space<Background>(
           ele2pos_, gp_projected_cutelement, this->ele2pos_.element_position_, point_coord);
 
       // Write gauss point coordinates
@@ -526,10 +372,10 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
     Core::LinAlg::Matrix<3, 1, double> interface_point_coord(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<3, 1, double> background_point_coord(Core::LinAlg::Initialization::zero);
 
-    map_from_parametric_to_physical_space<Interface>(
+    Constraints::EmbeddedMesh::map_from_parametric_to_physical_space<Interface>(
         ele1pos_, xi_interface, this->ele1pos_.element_position_, interface_point_coord);
 
-    map_from_parametric_to_physical_space<Background>(
+    Constraints::EmbeddedMesh::map_from_parametric_to_physical_space<Background>(
         ele2pos_, xi_background, this->ele2pos_.element_position_, background_point_coord);
 
     // Do check to see if the physical position of the gauss point of interface
@@ -586,495 +432,6 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
   }
 }
 
-void get_nurbs_information(const Core::Elements::Element& interface_element,
-    Core::LinAlg::Matrix<9, 1, double>& cp_weights,
-    std::vector<Core::LinAlg::SerialDenseVector>& myknots,
-    std::vector<Core::LinAlg::SerialDenseVector>& mypknots)
-{
-  const auto* face_element = dynamic_cast<const Core::Elements::FaceElement*>(&interface_element);
-  if (!face_element) FOUR_C_THROW("Cast to FaceElement failed!");
-
-  // Factor for surface orientation.
-  double normalfac = 1.0;
-
-  // Get the knots and weights for this element.
-  const bool zero_size = Core::FE::Nurbs::get_knot_vector_and_weights_for_nurbs_boundary(
-      &interface_element, face_element->face_master_number(), face_element->parent_element_id(),
-      *(Global::Problem::instance()->get_dis("structure")), mypknots, myknots, cp_weights,
-      normalfac);
-  if (zero_size)
-    FOUR_C_THROW(
-        "get_knot_vector_and_weights_for_nurbs_boundary has to return a non "
-        "zero size.");
-}
-
-template <Core::FE::CellType celldistype>
-double calculate_determinant_interface_element(
-    const Core::LinAlg::Matrix<2, 1>& eta, const Core::Elements::Element& interface_element)
-{
-  const int numnodes = Core::FE::num_nodes(celldistype);
-  Core::LinAlg::Matrix<3, numnodes> xyze;
-
-  // Get the position of the nodes of the interface element
-  for (int i_dim = 0; i_dim < 3; ++i_dim)
-  {
-    for (int i_node = 0; i_node < numnodes; ++i_node)
-      xyze(i_dim, i_node) = (interface_element.nodes()[i_node])->x()[i_dim];
-  }
-
-  Core::LinAlg::Matrix<numnodes, 1> funct;
-  Core::LinAlg::Matrix<2, numnodes> deriv;
-
-  // Evaluate the shape functions and its derivatives on eta
-  if (celldistype == Core::FE::CellType::nurbs9)
-  {
-    Core::LinAlg::Matrix<9, 1, double> cp_weights(Core::LinAlg::Initialization::zero);
-    std::vector<Core::LinAlg::SerialDenseVector> myknots(2);
-    std::vector<Core::LinAlg::SerialDenseVector> mypknots(3);
-
-    get_nurbs_information(interface_element, cp_weights, myknots, mypknots);
-
-    Core::FE::Nurbs::nurbs_get_2d_funct_deriv(funct, deriv, eta, myknots, cp_weights, celldistype);
-  }
-  else
-  {
-    Core::FE::shape_function_2d(funct, eta(0), eta(1), celldistype);
-    Core::FE::shape_function_2d_deriv1(deriv, eta(0), eta(1), celldistype);
-  }
-
-  // Calculate the metric tensor and obtain its determinant
-  Core::LinAlg::Matrix<2, 2> metrictensor;
-  Core::LinAlg::Matrix<2, 3> dxyzdrs;
-  dxyzdrs.multiply_nt(deriv, xyze);
-  metrictensor.multiply_nt(dxyzdrs, dxyzdrs);
-  double determinant =
-      std::sqrt(metrictensor(0, 0) * metrictensor(1, 1) - metrictensor(0, 1) * metrictensor(1, 0));
-
-  return determinant;
-}
-
-double get_determinant_interface_element(
-    Core::LinAlg::Matrix<2, 1> eta, const Core::Elements::Element& element)
-{
-  double determinant_interface;
-
-  switch (element.shape())
-  {
-    case Core::FE::CellType::nurbs9:
-    {
-      determinant_interface =
-          calculate_determinant_interface_element<Core::FE::CellType::nurbs9>(eta, element);
-      break;
-    }
-    case Core::FE::CellType::quad4:
-    {
-      determinant_interface =
-          calculate_determinant_interface_element<Core::FE::CellType::quad4>(eta, element);
-      break;
-    }
-    default:
-      FOUR_C_THROW(
-          "The evaluation of the determinant hasn't been implemented "
-          "for other type of "
-          "elements. ");
-      break;
-  }
-
-  return determinant_interface;
-}
-
-
-/*!
- * \brief Return the Gauss points of a face element in its parent element
- */
-template <int dim>
-void interface_element_gp_in_solid(Core::Elements::FaceElement& face_element, const double wgt,
-    const double* gp_coord_face, Core::LinAlg::Matrix<dim, 1>& gp_coord_parent,
-    Core::LinAlg::Matrix<dim, dim>& derivtrafo)
-{
-  Core::FE::CollectedGaussPoints intpoints =
-      Core::FE::CollectedGaussPoints(1);  // reserve just for 1 entry ...
-  intpoints.append(gp_coord_face[0], gp_coord_face[1], 0.0, wgt);
-
-  // get coordinates of gauss point w.r.t. local parent coordinate system
-  Core::LinAlg::SerialDenseMatrix temp_gp_coord_parent(1, dim);
-  derivtrafo.clear();
-
-  Core::FE::boundary_gp_to_parent_gp<dim>(temp_gp_coord_parent, derivtrafo, intpoints,
-      face_element.parent_element()->shape(), face_element.shape(),
-      face_element.face_parent_number());
-
-  // coordinates of the current integration point in parent coordinate system
-  for (int idim = 0; idim < dim; idim++) gp_coord_parent(idim) = temp_gp_coord_parent(0, idim);
-}
-
-template <int dim>
-Core::LinAlg::Tensor<double, dim, dim> calculate_deformation_gradient(
-    Core::LinAlg::Matrix<3, 1>& xi, Core::Elements::Element& element,
-    const Core::FE::Discretization& discret)
-{
-  const Core::LinAlg::Tensor<double, dim> xi_tensor = Core::LinAlg::reinterpret_as_tensor<dim>(xi);
-
-  // calculate defgrad based on element discretization type
-  Core::LinAlg::Tensor<double, dim, dim> deformation_gradient = Core::FE::cell_type_switch<
-      Core::FE::CelltypeSequence<Core::FE::CellType::hex8, Core::FE::CellType::nurbs27>>(
-      element.shape(),
-      [&](auto celltype_t)
-      {
-        constexpr Core::FE::CellType celltype = celltype_t();
-
-        const Discret::Elements::ElementNodes<celltype> element_nodes =
-            Discret::Elements::evaluate_element_nodes<celltype, dim>(discret, element);
-
-        const Discret::Elements::ShapeFunctionsAndDerivatives<celltype> shape_functions =
-            evaluate_shape_functions_and_derivs<celltype>(xi_tensor, element_nodes);
-
-        const Discret::Elements::JacobianMapping<celltype> jacobian_mapping =
-            Discret::Elements::evaluate_jacobian_mapping(shape_functions, element_nodes);
-
-        return Discret::Elements::evaluate_deformation_gradient(jacobian_mapping, element_nodes);
-      });
-
-  // Core::LinAlg::det(defgrd);
-  return deformation_gradient;
-}
-
-void evaluate_cauchy_stress_tensor_at_xi(const Core::FE::Discretization& discret,
-    std::vector<double>& ele_displacement, Core::Elements::Element& element,
-    Core::LinAlg::Matrix<3, 1>& xi, Core::LinAlg::Matrix<3, 1, double>& normal_vector,
-    Core::LinAlg::Matrix<3, 1, double>& traction_vector,
-    std::vector<Core::LinAlg::SerialDenseMatrix>& d_cauchyndir_dd)
-{
-  // Define directions
-  Core::LinAlg::Matrix<3, 1, double> e_x(Core::LinAlg::Initialization::zero),
-      e_y(Core::LinAlg::Initialization::zero), e_z(Core::LinAlg::Initialization::zero);
-  e_x(0, 0) = 1.0;
-  e_y(1, 0) = 1.0;
-  e_z(2, 0) = 1.0;
-  const std::array<Core::LinAlg::Matrix<3, 1, double>, 3> dirs = {e_x, e_y, e_z};
-
-  // Obtain the traction vector at xi
-  if (auto* solid_ele = dynamic_cast<Discret::Elements::Solid*>(&element); solid_ele != nullptr)
-  {
-    // Fill out the Cauchy stress tensor of the interface
-    for (int i_dir = 0; i_dir < 3; ++i_dir)
-    {
-      Discret::Elements::CauchyNDirLinearizations<3> cauchy_linearizations{};
-      cauchy_linearizations.d_cauchyndir_dd = &d_cauchyndir_dd[i_dir];
-
-      traction_vector(i_dir) = solid_ele->get_normal_cauchy_stress_at_xi(ele_displacement,
-          Core::LinAlg::reinterpret_as_tensor<3>(xi),
-          Core::LinAlg::reinterpret_as_tensor<3>(normal_vector),
-          Core::LinAlg::reinterpret_as_tensor<3>(dirs[i_dir]), cauchy_linearizations, discret);
-    }
-  }
-  else
-  {
-    FOUR_C_THROW("Unsupported solid element type");
-  }
-}
-
-template <typename Interface, typename Background, typename Mortar>
-void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
-    Mortar>::evaluate_stress_contributions_nitsche(const Core::FE::Discretization& discret,
-    Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
-        local_stiffness_disp_interface_stress_interface,
-    Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
-        local_stiffness_disp_interface_stress_background,
-    Core::LinAlg::Matrix<Background::n_dof_, Interface::n_dof_, double>&
-        local_stiffness_disp_background_stress_interface,
-    Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
-        local_stiffness_disp_background_stress_background,
-    Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
-        local_constraint_stresses,
-    double& nitsche_average_weight_gamma)
-{
-  // Initialize the local stress matrices.
-  local_stiffness_disp_interface_stress_interface.put_scalar(0.0);
-  local_stiffness_disp_interface_stress_background.put_scalar(0.0);
-  local_stiffness_disp_background_stress_interface.put_scalar(0.0);
-  local_stiffness_disp_background_stress_background.put_scalar(0.0);
-  local_constraint_stresses.put_scalar(0.0);
-
-  // Initialize variables for shape function values.
-  Core::LinAlg::Matrix<1, Interface::n_nodes_ * Interface::n_val_, double> N_interface(
-      Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<1, Background::n_nodes_ * Background::n_val_, double> N_background(
-      Core::LinAlg::Initialization::zero);
-
-  // The traction vector is the result of multiplying the Cauchy stress with the normal vector of
-  // the interface
-  Core::LinAlg::Matrix<3, 1, double> traction_vector_interface(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<3, 1, double> traction_vector_background(Core::LinAlg::Initialization::zero);
-
-  // Calculate the stress contributions to stiffness.
-  // Gauss point loop
-  for (size_t it_gp = 0; it_gp < interface_integration_points_.size(); it_gp++)
-  {
-    auto& [xi_interface, xi_background, weight] = interface_integration_points_[it_gp];
-    double determinant_interface =
-        get_determinant_interface_element(xi_interface, this->element_1());
-
-    // Clear the shape function matrices
-    N_interface.clear();
-    N_background.clear();
-    traction_vector_interface.clear();
-    traction_vector_background.clear();
-
-    GeometryPair::EvaluateShapeFunction<Interface>::evaluate(
-        N_interface, xi_interface, ele1pos_.shape_function_data_);
-    GeometryPair::EvaluateShapeFunction<Background>::evaluate(
-        N_background, xi_background, ele2pos_.shape_function_data_);
-
-    // Obtain the normal in the current configuration of the interface at xi
-    Core::LinAlg::Matrix<3, 1, double> normal_interface;
-    GeometryPair::evaluate_face_normal<Interface>(xi_interface, ele1pos_current_, normal_interface);
-
-    // To evaluate the Cauchy stresses in the parent element of the face element, we need to obtain
-    // the corresponding coordinates of the Gauss points of the face element projected into its
-    // parent element
-    auto face_element = dynamic_cast<Core::Elements::FaceElement*>(&element_1());
-    if (!face_element) FOUR_C_THROW("Cast to FaceElement failed!");
-
-    Core::LinAlg::Matrix<3, 1> xi_interface_in_solid(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<3, 3> temp;
-    interface_element_gp_in_solid<Interface::spatial_dim_>(
-        *face_element, 1., xi_interface.data(), xi_interface_in_solid, temp);
-
-    // The following calculations are meant for 3D elements, therefore check the dimension of the
-    // interface parent element and the background element.
-    FOUR_C_ASSERT(Interface::spatial_dim_ + 1 != 3 or Background::spatial_dim_ != 3,
-        "The following implementation for obtaining the Cauchy stresses is only for 3d elements.");
-    FOUR_C_ASSERT(Interface::spatial_dim_ + 1 != 3 or Background::spatial_dim_ != 3,
-        "The following implementation for obtaining the Cauchy stresses is only for 3d elements.");
-
-    // define linearizations for each direction
-    std::vector<Core::LinAlg::SerialDenseMatrix> d_cauchyndir_dd_interface(3);
-    std::vector<Core::LinAlg::SerialDenseMatrix> d_cauchyndir_dd_background(3);
-
-    evaluate_cauchy_stress_tensor_at_xi(discret, ele1_parent_dis_, *face_element->parent_element(),
-        xi_interface_in_solid, normal_interface, traction_vector_interface,
-        d_cauchyndir_dd_interface);
-
-    // obtain the displacements of the background elements
-    std::vector<double> background_displacement;
-    for (unsigned int i_n_dof = 0; i_n_dof < Background::n_dof_; i_n_dof++)
-      background_displacement.push_back(ele2dis_.element_position_(i_n_dof));
-
-    evaluate_cauchy_stress_tensor_at_xi(discret, background_displacement, element_2(),
-        xi_background, normal_interface, traction_vector_background, d_cauchyndir_dd_background);
-
-    // As the calculations of the Cauchy stresses are done in the parent element of the face
-    // element, we need the locations of the dofs of the interface in its parent element.
-    // These locations are saved in a vector and used for calculating the contributions to the
-    // stiffness matrix.
-    std::vector<int> lm_interface;
-    std::vector<int> lm_parent_interface;
-    std::vector<int> dummy_1;
-    std::vector<int> dummy_2;
-    face_element->location_vector(discret, lm_interface, dummy_1, dummy_2);
-    face_element->parent_element()->location_vector(discret, lm_parent_interface, dummy_1, dummy_2);
-
-    std::unordered_map<int, int> interface_solid_index;
-    interface_solid_index.reserve(lm_parent_interface.size());
-    for (int i = 0; i < static_cast<int>(lm_parent_interface.size()); ++i)
-    {
-      interface_solid_index[lm_parent_interface[i]] = i;
-    }
-
-    std::vector<int> dofs_interface_locations;
-    dofs_interface_locations.reserve(Interface::n_dof_);
-
-    for (int dof : lm_interface)
-    {
-      auto it = interface_solid_index.find(dof);
-      if (it != interface_solid_index.end())
-      {
-        dofs_interface_locations.push_back(it->second);
-      }
-    }
-
-    // Fill in the local matrix K_nitsche_disp_interface_stress_interface.
-    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
-        i_interface_node++)
-      for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
-          j_interface_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-          local_stiffness_disp_interface_stress_interface(
-              i_interface_node * 3 + i_dim, j_interface_node * 3 + i_dim) +=
-              N_interface(i_interface_node) *
-              d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
-              weight * determinant_interface;
-
-    // Fill in the local matrix K_nitsche_disp_interface_stress_background.
-    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
-        i_interface_node++)
-      for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
-          j_background_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-          local_stiffness_disp_interface_stress_background(
-              i_interface_node * 3 + i_dim, j_background_node * 3 + i_dim) +=
-              N_interface(i_interface_node) *
-              d_cauchyndir_dd_background[i_dim](j_background_node, 0) * weight *
-              determinant_interface;
-
-    // Fill in the local matrix K_nitsche_disp_background_stress_interface.
-    for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
-        i_background_node++)
-      for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
-          j_interface_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-          local_stiffness_disp_background_stress_interface(
-              i_background_node * 3 + i_dim, j_interface_node * 3 + i_dim) +=
-              N_background(i_background_node) *
-              d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
-              weight * determinant_interface;
-
-    // Fill in the local matrix K_nitsche_disp_background_stress_background.
-    for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
-        i_background_node++)
-      for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
-          j_background_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-          local_stiffness_disp_background_stress_background(
-              i_background_node * 3 + i_dim, j_background_node * 3 + i_dim) +=
-              N_background(i_background_node) *
-              d_cauchyndir_dd_background[i_dim](j_background_node, 0) * weight *
-              determinant_interface;
-
-    // Add the local constraint contributions of Nitsche contributions
-    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
-        i_interface_node++)
-      for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-        local_constraint_stresses(i_interface_node * 3 + i_dim) -=
-            (nitsche_average_weight_gamma * traction_vector_interface(i_dim) +
-                (1.0 - nitsche_average_weight_gamma) * traction_vector_background(i_dim)) *
-            N_interface(i_interface_node) * weight * determinant_interface;
-
-    for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
-        i_background_node++)
-      for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-        local_constraint_stresses(Interface::n_dof_ + i_background_node * 3 + i_dim) +=
-            (nitsche_average_weight_gamma * traction_vector_interface(i_dim) +
-                (1.0 - nitsche_average_weight_gamma) * traction_vector_background(i_dim)) *
-            N_background(i_background_node) * weight * determinant_interface;
-  }
-}
-
-template <typename Interface, typename Background, typename Mortar>
-void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
-    Mortar>::evaluate_penalty_contributions_nitsche(Core::LinAlg::Matrix<Interface::n_dof_,
-                                                        Interface::n_dof_, double>&
-                                                        local_stiffness_penalty_interface,
-    Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
-        local_stiffness_penalty_background,
-    Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
-        local_stiffness_penalty_interface_background,
-    Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint,
-    double& nitsche_penalty_param)
-{
-  // Initialize the local penalty matrices.
-  local_stiffness_penalty_interface.put_scalar(0.0);
-  local_stiffness_penalty_background.put_scalar(0.0);
-  local_stiffness_penalty_interface_background.put_scalar(0.0);
-  local_constraint.put_scalar(0.0);
-
-  // Initialize variables for shape function values.
-  Core::LinAlg::Matrix<1, Interface::n_nodes_ * Interface::n_val_, double> N_interface(
-      Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<1, Background::n_nodes_ * Background::n_val_, double> N_background(
-      Core::LinAlg::Initialization::zero);
-
-  // Calculate the penalty matrices.
-  // Gauss point loop
-  for (size_t it_gp = 0; it_gp < interface_integration_points_.size(); it_gp++)
-  {
-    auto& [xi_interface, xi_background, weight] = interface_integration_points_[it_gp];
-
-    double determinant_interface =
-        get_determinant_interface_element(xi_interface, this->element_1());
-
-    // Get the shape function matrices
-    N_interface.clear();
-    N_background.clear();
-
-    GeometryPair::EvaluateShapeFunction<Interface>::evaluate(
-        N_interface, xi_interface, ele1pos_.shape_function_data_);
-    GeometryPair::EvaluateShapeFunction<Background>::evaluate(
-        N_background, xi_background, ele2pos_.shape_function_data_);
-
-    // Fill in the local penalty matrix K_penalty_interface.
-    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
-        i_interface_node++)
-      for (unsigned int i_interface_val = 0; i_interface_val < Interface::n_val_; i_interface_val++)
-        for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
-            j_interface_node++)
-          for (unsigned int j_interface_val = 0; j_interface_val < Interface::n_val_;
-              j_interface_val++)
-            for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-              local_stiffness_penalty_interface(
-                  i_interface_node * Interface::n_val_ * 3 + i_interface_val * 3 + i_dim,
-                  j_interface_node * Interface::n_val_ * 3 + j_interface_val * 3 + i_dim) +=
-                  N_interface(i_interface_node * Interface::n_val_ + i_interface_val) *
-                  N_interface(j_interface_node * Interface::n_val_ + j_interface_val) * weight *
-                  determinant_interface;
-
-    // Fill in the local penalty matrix K_penalty_background.
-    for (unsigned int i_solid_node = 0; i_solid_node < Background::n_nodes_; i_solid_node++)
-      for (unsigned int i_solid_val = 0; i_solid_val < Background::n_val_; i_solid_val++)
-        for (unsigned int j_solid_node = 0; j_solid_node < Background::n_nodes_; j_solid_node++)
-          for (unsigned int j_solid_val = 0; j_solid_val < Background::n_val_; j_solid_val++)
-            for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-              local_stiffness_penalty_background(
-                  i_solid_node * Background::n_val_ * 3 + i_solid_val * 3 + i_dim,
-                  j_solid_node * Background::n_val_ * 3 + j_solid_val * 3 + i_dim) +=
-                  N_background(i_solid_node * Background::n_val_ + i_solid_val) *
-                  N_background(j_solid_node * Background::n_val_ + j_solid_val) * weight *
-                  determinant_interface;
-
-    // Fill in the local penalty matrix K_penalty_interface_background.
-    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
-        i_interface_node++)
-      for (unsigned int i_interface_val = 0; i_interface_val < Interface::n_val_; i_interface_val++)
-        for (unsigned int i_solid_node = 0; i_solid_node < Background::n_nodes_; i_solid_node++)
-          for (unsigned int i_solid_val = 0; i_solid_val < Background::n_val_; i_solid_val++)
-            for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-              local_stiffness_penalty_interface_background(
-                  i_interface_node * Interface::n_val_ * 3 + i_interface_val * 3 + i_dim,
-                  i_solid_node * Background::n_val_ * 3 + i_solid_val * 3 + i_dim) +=
-                  N_interface(i_interface_node * Interface::n_val_ + i_interface_val) *
-                  N_background(i_solid_node * Background::n_val_ + i_solid_val) * weight *
-                  determinant_interface;
-  }
-
-  // Add the local constraint contributions.
-  for (unsigned int i_interface = 0; i_interface < Interface::n_dof_; i_interface++)
-  {
-    for (unsigned int j_interface = 0; j_interface < Interface::n_dof_; j_interface++)
-      local_constraint(i_interface) += local_stiffness_penalty_interface(i_interface, j_interface) *
-                                       this->ele1dis_.element_position_(j_interface);
-    for (unsigned int i_background = 0; i_background < Background::n_dof_; i_background++)
-      local_constraint(i_interface) -=
-          local_stiffness_penalty_interface_background(i_interface, i_background) *
-          this->ele2dis_.element_position_(i_background);
-  }
-
-  for (unsigned int i_background = 0; i_background < Background::n_dof_; i_background++)
-  {
-    for (unsigned int j_background = 0; j_background < Background::n_dof_; j_background++)
-      local_constraint(Interface::n_dof_ + i_background) +=
-          local_stiffness_penalty_background(i_background, j_background) *
-          this->ele2dis_.element_position_(j_background);
-    for (unsigned int i_interface = 0; i_interface < Interface::n_dof_; i_interface++)
-      local_constraint(Interface::n_dof_ + i_background) -=
-          local_stiffness_penalty_interface_background(i_interface, i_background) *
-          this->ele1dis_.element_position_(i_interface);
-  }
-
-  local_constraint.scale(nitsche_penalty_param);
-}
-
-
 template <typename Interface, typename Background, typename Mortar>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
     Mortar>::evaluate_dm(Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double>& local_D,
@@ -1102,8 +459,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
   {
     auto& [xi_interface, xi_background, weight] = interface_integration_points_[it_gp];
 
-    double determinant_interface =
-        get_determinant_interface_element(xi_interface, this->element_1());
+    double determinant_interface = Constraints::EmbeddedMesh::get_determinant_interface_element(
+        xi_interface, this->element_1());
 
     // Get the shape function matrices
     N_mortar.clear();
