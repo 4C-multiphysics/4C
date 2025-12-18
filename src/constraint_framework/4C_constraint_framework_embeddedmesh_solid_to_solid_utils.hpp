@@ -13,6 +13,8 @@
 #include "4C_constraint_framework_embeddedmesh_params.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_utils_gausspoints.hpp"
+#include "4C_geometry_pair_element.hpp"
+#include "4C_geometry_pair_line_to_surface.hpp"
 #include "4C_linalg_fevector.hpp"
 
 #include <memory>
@@ -203,6 +205,62 @@ namespace Constraints::EmbeddedMesh
           local_constraint_penalty,
       const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
           local_constraint_stresses);
+
+  /**
+   * \brief Map a point from the element's parametric space to the physical space
+   */
+  template <typename Pointtype>
+  void map_from_parametric_to_physical_space(
+      GeometryPair::ElementData<Pointtype, double> element_data,
+      Core::LinAlg::Matrix<Pointtype::element_dim_, 1>& point_param_space,
+      Core::LinAlg::Matrix<Pointtype::n_dof_, 1, double> nodal_values,
+      Core::LinAlg::Matrix<Pointtype::spatial_dim_, 1, double>& point_physical_space);
+
+  template <typename Surface, Core::FE::CellType boundarycell_distype>
+  std::shared_ptr<Core::FE::GaussPoints> project_boundary_cell_gauss_rule_on_interface(
+      Cut::BoundaryCell* boundary_cell, GeometryPair::ElementData<Surface, double>& ele1pos);
+
+  double get_determinant_interface_element(
+      Core::LinAlg::Matrix<2, 1> eta, const Core::Elements::Element& element);
+
+  /**
+   * \brief Evaluate the normal vector at the nodes of an interface element
+   */
+  template <typename ElementType>
+  typename std::enable_if<GeometryPair::IsSurfaceAveragedNormalsElement<ElementType>::value_>::type
+  evaluate_interface_element_nodal_normals(
+      GeometryPair::ElementData<ElementType, double>& element_data_surface)
+  {
+    Core::LinAlg::SerialDenseMatrix nodal_coordinates =
+        Core::FE::get_ele_node_numbering_nodes_paramspace(ElementType::discretization_);
+    Core::LinAlg::Matrix<3, 1, double> xi(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1, double> temp_normal;
+    Core::LinAlg::Matrix<ElementType::n_nodes_, 1, Core::LinAlg::Matrix<3, 1, double>> normals;
+
+    for (size_t iter_node = 0; iter_node < ElementType::n_nodes_; iter_node++)
+    {
+      for (unsigned int i_dim = 0; i_dim < 2; i_dim++)
+        xi(i_dim) = nodal_coordinates(i_dim, iter_node);
+      GeometryPair::evaluate_face_normal<ElementType>(xi, element_data_surface, temp_normal);
+      for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+        normals(iter_node)(i_dim) += temp_normal(i_dim);
+    }
+
+    for (size_t iter_node = 0; iter_node < ElementType::n_nodes_; iter_node++)
+    {
+      normals(iter_node).scale(1.0 / Core::FADUtils::vector_norm(normals(iter_node)));
+      element_data_surface.nodal_normals_(0 + 3 * iter_node) = normals(iter_node)(0);
+      element_data_surface.nodal_normals_(1 + 3 * iter_node) = normals(iter_node)(1);
+      element_data_surface.nodal_normals_(2 + 3 * iter_node) = normals(iter_node)(2);
+    }
+  }
+
+  template <typename ElementType>
+  std::enable_if_t<!GeometryPair::IsSurfaceAveragedNormalsElement<ElementType>::value_>
+  evaluate_interface_element_nodal_normals(
+      GeometryPair::ElementData<ElementType, double>& element_data_surface)
+  {
+  }
 
   /**
    * \brief Get the GIDs of the Lagrange multiplicator unknowns for a beam-to-solid pair.

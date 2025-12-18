@@ -172,9 +172,6 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::set_global_maps()
 }
 
 
-/**
- * here I have to evaluate the contributions
- */
 void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coupling_contributions(
     const Core::LinAlg::Vector<double>& displacement_vector)
 {
