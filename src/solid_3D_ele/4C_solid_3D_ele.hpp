@@ -196,8 +196,7 @@ namespace Discret::Elements
     double get_normal_cauchy_stress_at_xi(const std::vector<double>& disp,
         const Core::LinAlg::Tensor<double, 3>& xi, const Core::LinAlg::Tensor<double, 3>& n,
         const Core::LinAlg::Tensor<double, 3>& dir, CauchyNDirLinearizations<3>& linearizations,
-        std::optional<std::reference_wrapper<const Core::FE::Discretization>> discret =
-            std::nullopt);
+        const Core::FE::Discretization* discret = nullptr);
 
     void for_each_gauss_point(Core::FE::Discretization& discretization, std::vector<int>& lm,
         const std::function<void(Mat::So3Material&, double integration_factor, int gp)>& integrator)

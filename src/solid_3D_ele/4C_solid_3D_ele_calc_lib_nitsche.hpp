@@ -403,8 +403,7 @@ namespace Discret::Elements
           std::declval<const Core::LinAlg::Tensor<double, dim>&>(),
           std::declval<const Core::LinAlg::Tensor<double, dim>&>(),
           std::declval<CauchyNDirLinearizations<dim>&>(),
-          std::declval<
-              std::optional<std::reference_wrapper<const Core::FE::Discretization>>>()))>> = true;
+          std::declval<const Core::FE::Discretization*>()))>> = true;
 
   namespace Internal
   {
@@ -415,8 +414,7 @@ namespace Discret::Elements
           const std::vector<double>& d, const Core::LinAlg::Tensor<double, dim>& x,
           const Core::LinAlg::Tensor<double, dim>& normal,
           const Core::LinAlg::Tensor<double, dim>& direction, CauchyNDirLinearizations<dim>& lins,
-          std::optional<std::reference_wrapper<const Core::FE::Discretization>> dscrt =
-              std::nullopt)
+          const Core::FE::Discretization* dscrt = nullptr)
           : element(e),
             mat(m),
             disp(d),
@@ -453,7 +451,7 @@ namespace Discret::Elements
       const Core::LinAlg::Tensor<double, dim>& n;
       const Core::LinAlg::Tensor<double, dim>& dir;
       CauchyNDirLinearizations<dim>& linearizations;
-      std::optional<std::reference_wrapper<const Core::FE::Discretization>> discret;
+      const Core::FE::Discretization* discret;
     };
   }  // namespace Internal
 
@@ -468,8 +466,7 @@ namespace Discret::Elements
       const Core::Elements::Element& element, Mat::So3Material& mat,
       const std::vector<double>& disp, const Core::LinAlg::Tensor<double, 3>& xi,
       const Core::LinAlg::Tensor<double, 3>& n, const Core::LinAlg::Tensor<double, 3>& dir,
-      CauchyNDirLinearizations<3>& linearizations,
-      std::optional<std::reference_wrapper<const Core::FE::Discretization>> discretization)
+      CauchyNDirLinearizations<3>& linearizations, const Core::FE::Discretization* discretization)
   {
     return std::visit(Internal::EvaluateCauchyNDirAction<3>(
                           element, mat, disp, xi, n, dir, linearizations, discretization),

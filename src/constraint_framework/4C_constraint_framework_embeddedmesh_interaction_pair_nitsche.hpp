@@ -122,7 +122,7 @@ namespace Constraints::EmbeddedMesh
     \brief Get the Gauss points of element2_ after cut for visualization.
     */
     void get_projected_gauss_rule_in_cut_element(
-        Core::IO::VisualizationData& cut_element_integration_points_visualization_data)
+        Core::IO::VisualizationData& cut_element_integration_points_visualization_data) override
     {
       FOUR_C_THROW(
           "This function is not implemented for the SurfaceToBackgroundCouplingPairNitsche.");
@@ -133,7 +133,7 @@ namespace Constraints::EmbeddedMesh
     */
     void get_projected_gauss_rule_on_interface(
         Core::IO::VisualizationData& background_integration_points_visualization_data,
-        Core::IO::VisualizationData& interface_integration_points_visualization_data)
+        Core::IO::VisualizationData& interface_integration_points_visualization_data) override
     {
       FOUR_C_THROW(
           "This function is not implemented for the SurfaceToBackgroundCouplingPairNitsche.");
@@ -146,7 +146,7 @@ namespace Constraints::EmbeddedMesh
         Core::IO::VisualizationData& lagrange_multipliers_visualization_data,
         std::shared_ptr<Core::LinAlg::Vector<double>> lambda,
         const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
-        std::shared_ptr<std::unordered_set<int>> interface_tracker)
+        std::shared_ptr<std::unordered_set<int>> interface_tracker) override
     {
       FOUR_C_THROW(
           "This function is not implemented for the SurfaceToBackgroundCouplingPairNitsche.");

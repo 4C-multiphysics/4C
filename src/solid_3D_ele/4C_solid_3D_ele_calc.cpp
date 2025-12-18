@@ -544,8 +544,7 @@ Discret::Elements::SolidEleCalc<celltype, ElementFormulation>::get_normal_cauchy
     const Core::Elements::Element& ele, Mat::So3Material& solid_material,
     const std::vector<double>& disp, const Core::LinAlg::Tensor<double, 3>& xi,
     const Core::LinAlg::Tensor<double, 3>& n, const Core::LinAlg::Tensor<double, 3>& dir,
-    CauchyNDirLinearizations<3>& linearizations,
-    std::optional<std::reference_wrapper<const Core::FE::Discretization>> discret)
+    CauchyNDirLinearizations<3>& linearizations, const Core::FE::Discretization* discret)
 {
   if constexpr (has_gauss_point_history<ElementFormulation>)
   {

@@ -117,8 +117,7 @@ namespace Discret::Elements
         Mat::So3Material& solid_material, const std::vector<double>& disp,
         const Core::LinAlg::Tensor<double, 3>& xi, const Core::LinAlg::Tensor<double, 3>& n,
         const Core::LinAlg::Tensor<double, 3>& dir, CauchyNDirLinearizations<3>& linearizations,
-        std::optional<std::reference_wrapper<const Core::FE::Discretization>> discret =
-            std::nullopt);
+        const Core::FE::Discretization* discret = nullptr);
 
     void for_each_gauss_point(const Core::Elements::Element& ele, Mat::So3Material& solid_material,
         const Core::FE::Discretization& discretization, const std::vector<int>& lm,
