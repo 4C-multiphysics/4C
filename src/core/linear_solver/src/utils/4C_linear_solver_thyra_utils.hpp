@@ -25,11 +25,23 @@ namespace Core::LinearSolver::Utils
   Teuchos::RCP<Thyra::MultiVectorBase<double>> create_thyra_multi_vector(
       const LinAlg::MultiVector<double>& multi_vector, const LinAlg::Map& map);
 
+  Teuchos::RCP<Thyra::MultiVectorBase<double>> create_thyra_multi_vector(
+      const LinAlg::MultiVector<double>& multi_vector,
+      Teuchos::RCP<const Thyra::VectorSpaceBase<double>> map);
+
   Teuchos::RCP<const Thyra::LinearOpBase<double>> create_thyra_linear_op(
       const LinAlg::SparseMatrix& matrix, LinAlg::DataAccess access);
 
   Teuchos::RCP<const Thyra::LinearOpBase<double>> create_thyra_linear_op(
       const LinAlg::BlockSparseMatrixBase& matrix, LinAlg::DataAccess access);
+
+  Teuchos::RCP<const Thyra::LinearOpBase<double>> create_thyra_linear_op(
+      LinAlg::SparseOperator& matrix, Core::LinAlg::DataAccess access);
+
+  Core::LinAlg::MultiVector<double> create_epetra_multivector(
+      const Teuchos::RCP<const Thyra::MultiVectorBase<double>>& thyraX,
+      const Core::LinAlg::Map& map);
+
 }  // namespace Core::LinearSolver::Utils
 
 FOUR_C_NAMESPACE_CLOSE
