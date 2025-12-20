@@ -13,6 +13,7 @@
 #include "4C_io_input_field.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
+#include "4C_linalg_utils_tensor_interpolation.hpp"
 #include "4C_mixture_elastin_membrane_prestress_strategy.hpp"
 #include "4C_mixture_prestress_strategy.hpp"
 
@@ -42,7 +43,9 @@ namespace Mixture
 
       /// @name parameters of the prestress strategy
       /// @{
-      Core::IO::InterpolatedInputField<Core::LinAlg::SymmetricTensor<double, 3, 3>> prestretch_;
+      Core::IO::InterpolatedInputField<Core::LinAlg::SymmetricTensor<double, 3, 3>,
+          Core::LinAlg::SymmetricPositiveDefiniteInterpolation<double>>
+          prestretch_;
       /// @}
     };
   }  // namespace PAR
