@@ -1103,7 +1103,7 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::create_beam_contact_elemen
 
       for (auto& pair : newbeaminteractionpairs)
       {
-        pair->init(beam_contact_params_ptr_, ele_ptrs);
+        pair->init(beam_contact_params_ptr_, ele_ptrs, g_state().get_time_n());
         pair->setup();
 
         // add to list of current contact pairs

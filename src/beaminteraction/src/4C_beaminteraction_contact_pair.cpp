@@ -42,7 +42,7 @@ BeamInteraction::BeamContactPair::BeamContactPair()
  *----------------------------------------------------------------------------*/
 void BeamInteraction::BeamContactPair::init(
     const std::shared_ptr<BeamInteraction::BeamContactParams> params_ptr,
-    std::vector<Core::Elements::Element const*> elements)
+    std::vector<Core::Elements::Element const*> elements, double time)
 {
   issetup_ = false;
 
@@ -52,6 +52,8 @@ void BeamInteraction::BeamContactPair::init(
   element2_ = elements[1];
 
   isinit_ = true;
+
+  time_ = time;
 }
 
 /*----------------------------------------------------------------------------*
