@@ -44,7 +44,8 @@ namespace Core::LinAlg
      * @param A The input sparse matrix.
      * @return LinAlg::SparseMatrix The projected sparse matrix.
      */
-    [[nodiscard]] virtual LinAlg::SparseMatrix to_reduced(const LinAlg::SparseMatrix& A) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<LinAlg::SparseOperator> to_reduced(
+        const LinAlg::SparseOperator& A) const = 0;
 
     /*!
      * @brief Apply the projector to a vector, i.e., transforming the vector from the original space
