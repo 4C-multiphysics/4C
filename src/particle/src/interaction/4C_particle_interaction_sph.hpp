@@ -36,6 +36,8 @@ namespace Particle
   class SPHVirtualWallParticle;
   class SPHPhaseChangeBase;
   class SPHRigidParticleContactBase;
+  class DEMNeighborPairs;
+  class SPHPeridynamic;
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*
@@ -106,6 +108,9 @@ namespace Particle
     //! set current step size
     void set_current_step_size(const double currentstepsize) override;
 
+    //! build the peridynamic bond list
+    void build_peridynamic_relation() override;
+
    private:
     /*!
      * Initialize the members by assigning the respective derived classes based on the input
@@ -155,6 +160,9 @@ namespace Particle
     //! init rigid particle contact handler
     void init_rigid_particle_contact_handler();
 
+    //! init peridynamic interaction handler
+    void init_peridynamic_interaction_handler();
+
     //! smoothed particle hydrodynamics specific parameter list
     const Teuchos::ParameterList& params_sph_;
 
@@ -166,6 +174,9 @@ namespace Particle
 
     //! neighbor pair handler
     std::shared_ptr<Particle::SPHNeighborPairs> neighborpairs_;
+
+    //! neighbor pair handler solid-like
+    std::shared_ptr<Particle::DEMNeighborPairs> neighborpairs_solid_type_;
 
     //! density handler
     std::unique_ptr<Particle::SPHDensityBase> density_;
@@ -199,6 +210,9 @@ namespace Particle
 
     //! rigid particle contact handler
     std::unique_ptr<Particle::SPHRigidParticleContactBase> rigidparticlecontact_;
+
+    //! peridynamic handler
+    std::unique_ptr<Particle::SPHPeridynamic> peridynamics_;
   };
 
 }  // namespace Particle

@@ -36,6 +36,9 @@ namespace Particle
     //! gap between particles
     double gap_;
 
+    //! absolute distance between particles
+    double absdist_;
+
     //! versor from particle i to j
     double e_ji_[3];
 

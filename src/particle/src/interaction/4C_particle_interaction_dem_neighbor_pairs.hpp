@@ -47,11 +47,14 @@ namespace Particle
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
-  class DEMNeighborPairs final
+  class DEMNeighborPairs
   {
    public:
     //! constructor
     explicit DEMNeighborPairs();
+
+    //! virtual destructor
+    virtual ~DEMNeighborPairs() = default;
 
     //! setup neighbor pair handler
     void setup(const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
@@ -82,26 +85,36 @@ namespace Particle
     };
 
     //! evaluate neighbor pairs
-    void evaluate_neighbor_pairs();
+    virtual void evaluate_neighbor_pairs();
 
     //! evaluate adhesion neighbor pairs
     void evaluate_neighbor_pairs_adhesion(const double& adhesion_distance);
 
-   private:
+   protected:
     //! evaluate particle pairs
     void evaluate_particle_pairs();
 
     //! evaluate particle-wall pairs
     void evaluate_particle_wall_pairs();
 
+    //! particle pair data with evaluated quantities
+    DEMParticlePairData particlepairdata_;
+
+    //! particle container bundle
+    Particle::ParticleContainerBundleShrdPtr particlecontainerbundle_;
+
+    //! interface to particle engine
+    std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface_;
+
+    //! interface to particle wall handler
+    std::shared_ptr<Particle::WallHandlerInterface> particlewallinterface_;
+
+   private:
     //! evaluate adhesion particle pairs
     void evaluate_particle_pairs_adhesion(const double& adhesion_distance);
 
     //! evaluate adhesion particle-wall pairs
     void evaluate_particle_wall_pairs_adhesion(const double& adhesion_distance);
-
-    //! particle pair data with evaluated quantities
-    DEMParticlePairData particlepairdata_;
 
     //! particle-wall pair data with evaluated quantities
     DEMParticleWallPairData particlewallpairdata_;
@@ -111,15 +124,6 @@ namespace Particle
 
     //! adhesion particle-wall pair data with evaluated quantities
     DEMParticleWallPairData particlewallpairadhesiondata_;
-
-    //! interface to particle engine
-    std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface_;
-
-    //! particle container bundle
-    Particle::ParticleContainerBundleShrdPtr particlecontainerbundle_;
-
-    //! interface to particle wall handler
-    std::shared_ptr<Particle::WallHandlerInterface> particlewallinterface_;
   };
 
 }  // namespace Particle

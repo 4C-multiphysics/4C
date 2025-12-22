@@ -37,7 +37,7 @@ namespace Particle
 namespace Particle
 {
   class InteractionWriter;
-  class SPHNeighborPairs;
+  class DEMNeighborPairs;
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*
@@ -59,7 +59,7 @@ namespace Particle
         const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
         const std::shared_ptr<Particle::WallHandlerInterface> particlewallinterface,
         const std::shared_ptr<Particle::InteractionWriter> particleinteractionwriter,
-        const std::shared_ptr<Particle::SPHNeighborPairs> neighborpairs);
+        const std::shared_ptr<Particle::DEMNeighborPairs> neighborpairs);
 
     //! add rigid particle contact contribution to force field
     virtual void add_force_contribution() = 0;
@@ -85,7 +85,7 @@ namespace Particle
     std::shared_ptr<Particle::InteractionWriter> particleinteractionwriter_;
 
     //! neighbor pair handler
-    std::shared_ptr<Particle::SPHNeighborPairs> neighborpairs_;
+    std::shared_ptr<Particle::DEMNeighborPairs> neighborpairs_;
 
     //! write particle-wall interaction output
     const bool writeparticlewallinteraction_;
@@ -104,7 +104,7 @@ namespace Particle
     void setup(const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
         const std::shared_ptr<Particle::WallHandlerInterface> particlewallinterface,
         const std::shared_ptr<Particle::InteractionWriter> particleinteractionwriter,
-        const std::shared_ptr<Particle::SPHNeighborPairs> neighborpairs) override;
+        const std::shared_ptr<Particle::DEMNeighborPairs> neighborpairs) override;
 
     //! add rigid particle contact contribution to force field
     void add_force_contribution() override;

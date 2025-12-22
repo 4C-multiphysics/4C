@@ -133,8 +133,12 @@ void Particle::ParticleAlgorithm::setup()
   // build global id to local index map
   particleengine_->build_global_id_to_local_index_map();
 
-  // build potential neighbor relation
-  if (particleinteraction_) build_potential_neighbor_relation();
+  // build potential neighbor relation & build the peridynamic bond list
+  if (particleinteraction_)
+  {
+    build_potential_neighbor_relation();
+    if (not isrestarted_) particleinteraction_->build_peridynamic_relation();
+  }
 
   // setup initial states
   if (not isrestarted_) setup_initial_states();
