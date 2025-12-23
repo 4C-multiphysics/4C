@@ -1482,7 +1482,8 @@ void CONTACT::AbstractStrategy::evaluate_relative_movement()
   for (int i = 0; i < (int)interfaces().size(); ++i) interfaces()[i]->assemble_slave_coord(xsmod);
 
   // in case of 3D dual quadratic case, slave coordinates xs are modified
-  if (is_dual_quad_slave_trafo()) invtrafo_->Apply(*xsmod, *xsmod);
+  if (is_dual_quad_slave_trafo())
+    invtrafo_->Apply(xsmod->as_multi_vector(), xsmod->as_multi_vector());
 
   // ATTENTION: for evaluate_relative_movement() we need the vector xsmod in
   // fully overlapping layout. Thus, export here. First, allreduce

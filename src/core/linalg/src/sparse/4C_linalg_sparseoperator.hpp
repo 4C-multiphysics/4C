@@ -70,9 +70,11 @@ namespace Core::LinAlg
     is BlockSparseMatrix, a block matrix build from a list of SparseMatrix.
 
    */
-  class SparseOperator : public Epetra_Operator
+  class SparseOperator
   {
    public:
+    virtual ~SparseOperator() = default;
+
     /// return the internal Epetra_Operator
     /*!
       By default the SparseOperator is its own Epetra_Operator. However
@@ -88,6 +90,10 @@ namespace Core::LinAlg
 
     /// throw away the matrix and its graph and start anew
     virtual void reset() = 0;
+
+    virtual const Epetra_Comm& Comm() const = 0;
+
+    virtual int Apply(const Epetra_MultiVector& X, Epetra_MultiVector& Y) const = 0;
 
     /// Assemble a Core::LinAlg::SerialDenseMatrix into a matrix with striding
     /*!
@@ -196,7 +202,7 @@ namespace Core::LinAlg
     ///  manner.
     virtual void apply_dirichlet(const Core::LinAlg::Map& dbcmap, bool diagonalblock = true) = 0;
 
-
+    virtual int SetUseTranspose(bool transpose) = 0;
 
     /// Returns the Epetra_Map object associated with the (full) domain of this operator.
     virtual const Map& domain_map() const = 0;

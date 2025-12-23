@@ -187,8 +187,8 @@ namespace Core::LinAlg
     }
 
     /// assemble method, if ONLY local values are assembled
-    virtual void assemble(int eid, const Core::LinAlg::SerialDenseMatrix& Aele,
-        const std::vector<int>& lm, const std::vector<int>& lmowner)
+    void assemble(int eid, const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lm,
+        const std::vector<int>& lmowner)
     {
       assemble(eid, Aele, lm, lmowner, lm);
     }
@@ -336,7 +336,7 @@ namespace Core::LinAlg
     //@{
 
     /// Returns a character string describing the operator.
-    const char* Label() const override;
+    const char* Label() const;
 
     //@}
 
@@ -420,11 +420,16 @@ namespace Core::LinAlg
     /// Returns the result of a Epetra_Operator applied to a Epetra_MultiVector X in Y.
     int Apply(const Epetra_MultiVector& X, Epetra_MultiVector& Y) const override;
 
+    int Apply(
+        const Core::LinAlg::MultiVector<double>& X, Core::LinAlg::MultiVector<double>& Y) const;
+
+    int Apply(const Core::LinAlg::Vector<double>& X, Core::LinAlg::Vector<double>& Y) const;
+
     /// Returns the result of a Epetra_Operator inverse applied to an Epetra_MultiVector X in Y.
-    int ApplyInverse(const Epetra_MultiVector& X, Epetra_MultiVector& Y) const override;
+    int ApplyInverse(const Epetra_MultiVector& X, Epetra_MultiVector& Y) const;
 
     /// Returns the infinity norm of the global matrix.
-    double NormInf() const override;
+    double NormInf() const;
 
     /// Returns the one norm of the global matrix.
     double norm_one() const;
@@ -493,19 +498,19 @@ namespace Core::LinAlg
 
 
     /// Returns the current UseTranspose setting.
-    bool UseTranspose() const override;
+    bool UseTranspose() const;
 
     /// Returns true if the this object can provide an approximate Inf-norm, false otherwise.
-    bool HasNormInf() const override;
+    bool HasNormInf() const;
 
     /// Returns a pointer to the Epetra_Comm communicator associated with this operator.
     const Epetra_Comm& Comm() const override;
 
     /// Returns the Epetra_Map object associated with the domain of this operator.
-    const Epetra_Map& OperatorDomainMap() const override;
+    const Epetra_Map& OperatorDomainMap() const;
 
     /// Returns the Epetra_Map object associated with the range of this operator.
-    const Epetra_Map& OperatorRangeMap() const override;
+    const Epetra_Map& OperatorRangeMap() const;
 
     //@}
 

@@ -63,7 +63,7 @@ namespace NOX
         Teuchos::RCP<const ::Thyra::VectorSpaceBase<double>> vector_space_;
       };
 
-      class SparseOperatorWrapper : public Core::LinAlg::SparseOperator
+      class SparseOperatorWrapper : public Core::LinAlg::SparseOperator, public Epetra_Operator
       {
        public:
         SparseOperatorWrapper(const ::Thyra::LinearOpBase<double>& op,

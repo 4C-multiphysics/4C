@@ -28,7 +28,7 @@ namespace Core::LinAlg
     implemented in terms of the matrix blocks.
 
    */
-  class BlockSparseMatrixBase : public SparseOperator
+  class BlockSparseMatrixBase : public SparseOperator, public Epetra_Operator
   {
    public:
     /// constructor

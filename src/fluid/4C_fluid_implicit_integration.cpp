@@ -6338,7 +6338,7 @@ void FLD::FluidImplicitTimeInt::write_output_kinetic_energy()
   // compute kinetic energy
   double energy = 0.0;
   Core::LinAlg::Vector<double> mtimesu(massmat_->domain_map(), true);
-  massmat_->Apply(*velnp_, mtimesu);
+  massmat_->Apply(velnp_->get_ref_of_epetra_vector(), mtimesu.get_ref_of_epetra_vector());
   velnp_->dot(mtimesu, &energy);
   energy *= 0.5;
 

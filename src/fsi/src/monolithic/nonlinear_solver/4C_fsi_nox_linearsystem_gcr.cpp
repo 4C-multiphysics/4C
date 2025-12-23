@@ -368,7 +368,7 @@ void NOX::FSI::LinearSystemGCR::apply_plane_rotation(double& dx, double& dy, dou
 
 bool NOX::FSI::LinearSystemGCR::compute_jacobian(const NOX::Nln::Vector& x)
 {
-  bool success = jacInterfacePtr->computeJacobian(x.get_linalg_vector(), *jacPtr);
+  bool success = jacInterfacePtr->computeJacobian(x.get_linalg_vector(), jacPtr->epetra_operator());
   return success;
 }
 
