@@ -28,76 +28,27 @@ Constraints::EmbeddedMesh::SolidToSolidMortarManager::SolidToSolidMortarManager(
     Constraints::EmbeddedMesh::EmbeddedMeshParams& embedded_mesh_coupling_params,
     std::shared_ptr<Core::IO::VisualizationManager> visualization_manager,
     int start_value_lambda_gid)
-    : discret_(discret),
-      start_value_lambda_gid_(start_value_lambda_gid),
-      embedded_mesh_coupling_params_(embedded_mesh_coupling_params),
-      visualization_manager_(visualization_manager)
+    : SolidToSolidCouplingManager(discret, embedded_mesh_coupling_params, visualization_manager),
+      start_value_lambda_gid_(start_value_lambda_gid)
 {
-  // Initialize cutwizard instance and perform the cut
-  std::shared_ptr<Cut::CutWizard> cutwizard = std::make_shared<Cut::CutWizard>(discret_);
-  Constraints::EmbeddedMesh::prepare_and_perform_cut(
-      cutwizard, discret_, embedded_mesh_coupling_params_);
+  // Register visualization data of Lagrange multipliers for the visualization manager
+  visualization_manager_->register_visualization_data("lagrange_multipliers");
 
-  // Obtain the information of the background and its related interface elements
-  std::vector<BackgroundInterfaceInfo> info_background_interface_elements =
-      get_information_background_and_interface_elements(
-          *cutwizard, *discret_, ids_cut_elements_col_, cut_elements_col_vector_);
-
-  // Get the coupling pairs and cut elements
-  get_coupling_pairs_and_background_elements(info_background_interface_elements, cutwizard,
-      embedded_mesh_coupling_params_, *discret_, embedded_mesh_solid_pairs_);
-
-  // Change integration rule of elements if they are cut
-  Constraints::EmbeddedMesh::change_gauss_rule_of_cut_elements(
-      cut_elements_col_vector_, *cutwizard);
+  // Register the point data for the visualization of Lagrange multipliers
+  auto& lagrange_multipliers_visualization_data =
+      visualization_manager_->get_visualization_data("lagrange_multipliers");
+  lagrange_multipliers_visualization_data.register_point_data<double>("lambda", 3);
 
   // Get the number of Lagrange multiplier DOF on a solid node and on a solid element
   unsigned int n_lambda_node_temp = 0;
   mortar_shape_functions_to_number_of_lagrange_values(
       embedded_mesh_coupling_params_.mortar_shape_function_, n_lambda_node_temp);
-
   n_lambda_node_ = n_lambda_node_temp;
-
-  visualization_manager_->register_visualization_data("background_integration_points");
-  visualization_manager_->register_visualization_data("interface_integration_points");
-  visualization_manager_->register_visualization_data("cut_element_integration_points");
-  visualization_manager_->register_visualization_data("lagrange_multipliers");
-
-  auto& background_integration_points_visualization_data =
-      visualization_manager_->get_visualization_data("background_integration_points");
-  background_integration_points_visualization_data.register_point_data<double>("weights", 1);
-  background_integration_points_visualization_data.register_point_data<int>("interface_id", 1);
-  background_integration_points_visualization_data.register_point_data<int>("background_id", 1);
-  background_integration_points_visualization_data.register_point_data<int>("boundary_cell_id", 1);
-
-  auto& interface_integration_points_visualization_data =
-      visualization_manager_->get_visualization_data("interface_integration_points");
-  interface_integration_points_visualization_data.register_point_data<double>("weights", 1);
-  interface_integration_points_visualization_data.register_point_data<int>("interface_id", 1);
-  interface_integration_points_visualization_data.register_point_data<int>("background_id", 1);
-  interface_integration_points_visualization_data.register_point_data<int>("boundary_cell_id", 1);
-
-  auto& cut_element_integration_points_visualization_data =
-      visualization_manager_->get_visualization_data("cut_element_integration_points");
-  cut_element_integration_points_visualization_data.register_point_data<double>("weights", 1);
-  cut_element_integration_points_visualization_data.register_point_data<int>(
-      "integration_cell_id", 1);
-
-  auto& lagrange_multipliers_visualization_data =
-      visualization_manager_->get_visualization_data("lagrange_multipliers");
-  lagrange_multipliers_visualization_data.register_point_data<double>("lambda", 3);
 
   // Setup the solid to solid mortar manager
   Core::LinAlg::Vector<double> disp_col_vec(*discret_->dof_col_map());
   Core::LinAlg::export_to(displacement_vector, disp_col_vec);
-  setup(disp_col_vec);
-}
-
-void Constraints::EmbeddedMesh::SolidToSolidMortarManager::set_state(
-    const Core::LinAlg::Vector<double>& displacement_vector)
-{
-  for (auto couplig_pair_iter : embedded_mesh_solid_pairs_)
-    couplig_pair_iter->set_current_element_position(*discret_, displacement_vector);
+  SolidToSolidMortarManager::setup(disp_col_vec);
 }
 
 void Constraints::EmbeddedMesh::SolidToSolidMortarManager::setup(
@@ -373,11 +324,10 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::evaluate_global_coupl
   global_constraint_->complete();
 }
 
-void Constraints::EmbeddedMesh::SolidToSolidMortarManager::
-    add_global_force_stiffness_penalty_contributions(
-        Solid::TimeInt::BaseDataGlobalState& data_state,
-        std::shared_ptr<Core::LinAlg::SparseMatrix> stiff,
-        std::shared_ptr<Core::LinAlg::Vector<double>> force) const
+void Constraints::EmbeddedMesh::SolidToSolidMortarManager::add_global_force_stiffness_contributions(
+    Solid::TimeInt::BaseDataGlobalState& data_state,
+    std::shared_ptr<Core::LinAlg::SparseMatrix> stiff,
+    std::shared_ptr<Core::LinAlg::Vector<double>> force) const
 {
   check_setup();
   check_global_maps();
@@ -544,54 +494,6 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::collect_output_lagran
   }
 }
 
-void Constraints::EmbeddedMesh::SolidToSolidMortarManager::collect_output_integration_points()
-{
-  auto& background_integration_points_visualization_data =
-      visualization_manager_->get_visualization_data("background_integration_points");
-
-  auto& interface_integration_points_visualization_data =
-      visualization_manager_->get_visualization_data("interface_integration_points");
-
-  auto& cut_element_integration_points_visualization_data =
-      visualization_manager_->get_visualization_data("cut_element_integration_points");
-
-  // Loop over pairs
-  for (auto& elepairptr : embedded_mesh_solid_pairs_)
-  {
-    unsigned int n_segments = elepairptr->get_num_segments();
-    for (size_t iter_segments = 0; iter_segments < n_segments; iter_segments++)
-    {
-      elepairptr->get_projected_gauss_rule_on_interface(
-          background_integration_points_visualization_data,
-          interface_integration_points_visualization_data);
-    }
-
-    elepairptr->get_projected_gauss_rule_in_cut_element(
-        cut_element_integration_points_visualization_data);
-  }
-}
-
-bool Constraints::EmbeddedMesh::SolidToSolidMortarManager::is_cut_node(
-    Core::Nodes::Node const& node)
-{
-  bool is_cut_node = false;
-
-  // Check if the node belongs to an element that is cut
-  for (int num_ele = 0; num_ele < node.num_element(); num_ele++)
-  {
-    bool is_node_in_cut_ele =
-        std::find(cut_elements_col_vector_.begin(), cut_elements_col_vector_.end(),
-            node.adjacent_elements()[num_ele].user_element()) != cut_elements_col_vector_.end();
-    if (is_node_in_cut_ele) is_cut_node = true;
-  }
-
-  return is_cut_node;
-}
-
-MPI_Comm Constraints::EmbeddedMesh::SolidToSolidMortarManager::get_my_comm()
-{
-  return discret_->get_comm();
-}
 
 double Constraints::EmbeddedMesh::SolidToSolidMortarManager::get_energy() const
 {
