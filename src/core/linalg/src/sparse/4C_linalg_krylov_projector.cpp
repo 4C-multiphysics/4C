@@ -279,8 +279,8 @@ Core::LinAlg::Vector<double> Core::LinAlg::KrylovProjector::to_reduced(
 /* --------------------------------------------------------------------
                   give out projection P^T A P
    -------------------------------------------------------------------- */
-Core::LinAlg::SparseMatrix Core::LinAlg::KrylovProjector::to_reduced(
-    const Core::LinAlg::SparseMatrix& A) const
+std::unique_ptr<Core::LinAlg::SparseOperator> Core::LinAlg::KrylovProjector::to_reduced(
+    const Core::LinAlg::SparseOperator& A) const
 {
   /*
    * P^T A P = A - { A c (w^T c)^-1 w^T + w (c^T w)^-1 c^T A } + w (c^T w)^-1 (c^T A c) (w^T c)^-1
@@ -324,10 +324,10 @@ Core::LinAlg::SparseMatrix Core::LinAlg::KrylovProjector::to_reduced(
   matvec = multiply_multi_vector_dense_matrix(w_invwTc, cTAc);
   Core::LinAlg::SparseMatrix mat3 = multiply_multi_vector_multi_vector(matvec, w_invwTc, 1, false);
   Core::LinAlg::matrix_add(mat1, false, -1.0, mat3, 1.0);
-  Core::LinAlg::matrix_add(A, false, 1.0, mat3, 1.0);
+  Core::LinAlg::matrix_add(dynamic_cast<const SparseMatrix&>(A), false, 1.0, mat3, 1.0);
 
   mat3.complete();
-  return mat3;
+  return std::make_unique<Core::LinAlg::SparseMatrix>(std::move(mat3));
 }
 
 /* ====================================================================

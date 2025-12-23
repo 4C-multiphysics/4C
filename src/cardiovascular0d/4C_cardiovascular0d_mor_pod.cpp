@@ -23,14 +23,13 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------*/
 Cardiovascular0D::ProperOrthogonalDecomposition::ProperOrthogonalDecomposition(
     std::shared_ptr<const Core::LinAlg::Map> full_model_dof_row_map,
-    const std::string& pod_matrix_file_name, const std::string& absolute_path_to_input_file)
+    const std::optional<std::filesystem::path>& pod_matrix_file_name,
+    const std::string& absolute_path_to_input_file)
     : full_model_dof_row_map_(full_model_dof_row_map)
 {
   // check if model order reduction is given in input file
   {
-    std::vector<std::string> components_of_absolute_path =
-        Core::Utils::split_string_list(pod_matrix_file_name, "/");
-    if (components_of_absolute_path.back() != std::string("none")) havemor_ = true;
+    havemor_ = pod_matrix_file_name.has_value();
   }
 
   // no mor? -> exit
@@ -41,21 +40,7 @@ Cardiovascular0D::ProperOrthogonalDecomposition::ProperOrthogonalDecomposition(
 
   // read projection matrix from binary file
   {
-    std::string absolute_path_to_pod_file = pod_matrix_file_name;
-
-    // Make sure that we have the absolute path to the file
-    if (pod_matrix_file_name[0] != '/')
-    {
-      std::string::size_type pos = absolute_path_to_input_file.rfind('/');
-      if (pos != std::string::npos)
-      {
-        std::string path = absolute_path_to_input_file.substr(0, pos + 1);
-        absolute_path_to_pod_file.insert(
-            absolute_path_to_pod_file.begin(), path.begin(), path.end());
-      }
-    }
-
-    read_pod_basis_vectors_from_file(absolute_path_to_pod_file, reduced_basis);
+    read_pod_basis_vectors_from_file(*pod_matrix_file_name, reduced_basis);
   }
 
   // build an importer
@@ -185,7 +170,7 @@ Cardiovascular0D::ProperOrthogonalDecomposition::extend_solution(
  |                                                                      |
  *----------------------------------------------------------------------*/
 void Cardiovascular0D::ProperOrthogonalDecomposition::read_pod_basis_vectors_from_file(
-    const std::string& absolute_path_to_pod_file,
+    const std::filesystem::path& absolute_path_to_pod_file,
     std::shared_ptr<Core::LinAlg::MultiVector<double>>& projmatrix)
 {
   // ***************************

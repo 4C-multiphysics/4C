@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_linalg_multi_vector.hpp"
+#include "4C_linalg_sparseoperator.hpp"
 #include "4C_linear_solver_method_projector.hpp"
 
 #include <memory>
@@ -74,8 +75,8 @@ namespace Core::LinAlg
         const Core::LinAlg::Vector<double>& Y) const override;
 
     //! give out projection P^T A P
-    [[nodiscard]] Core::LinAlg::SparseMatrix to_reduced(
-        const Core::LinAlg::SparseMatrix& A) const override;
+    [[nodiscard]] std::unique_ptr<Core::LinAlg::SparseOperator> to_reduced(
+        const Core::LinAlg::SparseOperator& A) const override;
 
     //! return dimension of nullspace
     int nsdim() const { return nsdim_; }

@@ -9,10 +9,15 @@
 
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
+#include "4C_inpar_structure.hpp"
 #include "4C_io.hpp"
+#include "4C_linalg.hpp"
+#include "4C_linalg_block_pod_projector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_sparseoperator.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
+#include "4C_linalg_utils_sparse_algebra_io.hpp"
+#include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_linear_solver_method.hpp"
@@ -25,7 +30,65 @@
 
 #include <Teuchos_ParameterList.hpp>
 
+#include <filesystem>
+
+
 FOUR_C_NAMESPACE_OPEN
+
+namespace
+{
+  bool is_pod_basis_orthogonal(const Core::LinAlg::MultiVector<double>& M, const double tol = 1e-7)
+  {
+    const int n = M.num_vectors();
+
+    // calculate V^T * V (should be an nxn identity matrix)
+    Core::LinAlg::Map map = Core::LinAlg::Map(n, n, 0, M.get_map().get_comm());
+    Core::LinAlg::MultiVector<double> identity = Core::LinAlg::MultiVector<double>(map, n, true);
+    identity.multiply('T', 'N', 1.0, M, M, 0.0);
+
+    // subtract one from diagonal
+    for (int i = 0; i < n; ++i) identity.sum_into_global_value(i, i, -1.0);
+
+    // inf norm of columns
+    std::vector<double> norms(n, 0.0);
+    identity.norm_inf(norms.data());
+
+    for (int i = 0; i < n; ++i)
+      if (norms[i] > tol) return false;
+
+    return true;
+  }
+
+  Core::LinAlg::SparseMatrix make_projection_matrix(
+      const std::filesystem::path& pod_matrix_file_name, const Core::LinAlg::Map& full_map)
+  {
+    Core::LinAlg::MultiVector<double> reduced_basis =
+        Core::LinAlg::read_matrix_market_file_as_multi_vector(pod_matrix_file_name, full_map);
+
+    Core::LinAlg::MultiVector<double> projection_matrix(
+        full_map, reduced_basis.num_vectors(), true);
+
+    Core::LinAlg::Import dofrowimporter(full_map, reduced_basis.get_map());
+    projection_matrix.import(reduced_basis, dofrowimporter, Core::LinAlg::CombineMode::insert);
+
+    // check row dimension
+    FOUR_C_ASSERT_ALWAYS(projection_matrix.global_length() == full_map.num_global_elements(),
+        "Projection matrix does not match discretization.");
+
+    // check orthogonality
+    FOUR_C_ASSERT_ALWAYS(
+        is_pod_basis_orthogonal(projection_matrix), "Projection matrix is not orthogonal.");
+
+    const Core::LinAlg::Map reduced_map(projection_matrix.num_vectors(), 0, full_map.get_comm());
+
+    Core::LinAlg::SparseMatrix projection_sparse_matrix{
+        full_map, reduced_basis.num_vectors(), false, true};
+    Core::LinAlg::multi_vector_to_linalg_sparse_matrix(
+        projection_matrix, full_map, reduced_map, projection_sparse_matrix);
+
+    return projection_sparse_matrix;
+  }
+}  // namespace
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
@@ -66,6 +129,28 @@ void Solid::ModelEvaluator::Cardiovascular0D::setup()
       Global::Problem::instance()->structural_dynamic_params(),
       Global::Problem::instance()->cardiovascular0_d_structural_params(), *dummysolver, nullptr);
 
+  const auto& pod_matrix =
+      Global::Problem::instance()->mor_params().get<std::optional<std::filesystem::path>>(
+          "POD_MATRIX");
+  if (pod_matrix.has_value())
+  {
+    // build block POD projector
+    std::vector<std::variant<Core::LinAlg::PODProjectionBlock, Core::LinAlg::NoProjectionBlock>>
+        block_projections;
+    block_projections.reserve(2);
+
+    block_projections.emplace_back(Core::LinAlg::PODProjectionBlock{
+        make_projection_matrix(*pod_matrix, *global_state().dof_row_map())});
+    block_projections.emplace_back(
+        Core::LinAlg::NoProjectionBlock{.range_map = *cardvasc0dman_->get_cardiovascular0_d_map(),
+            .domain_map = *cardvasc0dman_->get_cardiovascular0_d_map()});
+
+    // Add pod projector to the solver parameters
+    [[maybe_unused]] Core::LinAlg::Solver& solver =
+        *eval_data().sdyn().get_lin_solvers().at(Inpar::Solid::model_cardiovascular0d);
+    solver.params().set<std::shared_ptr<Core::LinAlg::LinearSystemProjector>>(
+        "Projector", std::make_shared<Core::LinAlg::BlockPODProjector>(block_projections));
+  }
   // set flag
   issetup_ = true;
 }
@@ -337,5 +422,6 @@ void Solid::ModelEvaluator::Cardiovascular0D::post_output()
 
   return;
 }  // post_output()
+
 
 FOUR_C_NAMESPACE_CLOSE

@@ -227,7 +227,8 @@ void Solid::TimInt::setup()
 
   // model order reduction
   mor_ = std::make_shared<Cardiovascular0D::ProperOrthogonalDecomposition>(dof_row_map(),
-      Global::Problem::instance()->mor_params().get<std::string>("POD_MATRIX"),
+      Global::Problem::instance()->mor_params().get<std::optional<std::filesystem::path>>(
+          "POD_MATRIX"),
       Global::Problem::instance()->output_control_file()->input_file_name());
 
   // initialize 0D cardiovascular manager

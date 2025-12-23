@@ -7,7 +7,10 @@
 
 #include "4C_linear_solver_method_direct.hpp"
 
-#include "4C_linalg_utils_sparse_algebra_math.hpp"
+#include "4C_linalg_blocksparsematrix.hpp"
+#include "4C_linalg_multi_vector.hpp"
+#include "4C_linalg_sparseoperator.hpp"
+#include "4C_linalg_vector.hpp"
 #include "4C_linear_solver_method_projector.hpp"
 
 #include <memory>
@@ -27,9 +30,23 @@ void Core::LinearSolver::DirectSolver::setup(std::shared_ptr<Core::LinAlg::Spars
     std::shared_ptr<Core::LinAlg::MultiVector<double>> b, const bool refactor, const bool reset,
     std::shared_ptr<Core::LinAlg::LinearSystemProjector> projector)
 {
-  auto crsA = std::dynamic_pointer_cast<Core::LinAlg::SparseMatrix>(matrix);
+  // 1. project the linear system if close to being singular and set the final matrix and vectors
+  projector_ = projector;
+  std::shared_ptr<Core::LinAlg::MultiVector<double>> rhs = b;
+  if (projector_ != nullptr)
+  {
+    FOUR_C_ASSERT_ALWAYS(b->num_vectors() == 1,
+        "Expecting only one solution vector during projector call! Got {} vectors.",
+        b->num_vectors());
+    LinAlg::Vector<double> projected_b = projector_->to_reduced(b->get_vector(0));
+    rhs = std::make_shared<Core::LinAlg::MultiVector<double>>(projected_b.as_multi_vector());
 
-  // 1. merge the block system matrix into a standard sparse matrix if necessary
+    matrix = projector_->to_reduced(*matrix);
+  }
+
+
+  // 2. merge the block system matrix into a standard sparse matrix if necessary
+  auto crsA = std::dynamic_pointer_cast<Core::LinAlg::SparseMatrix>(matrix);
   if (!crsA)
   {
     std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> Ablock =
@@ -42,21 +59,7 @@ void Core::LinearSolver::DirectSolver::setup(std::shared_ptr<Core::LinAlg::Spars
     crsA = Ablock->merge();
   }
 
-  // 2. project the linear system if close to being singular and set the final matrix and vectors
-  projector_ = projector;
-  if (projector_ != nullptr)
-  {
-    Core::LinAlg::SparseMatrix A_view(*crsA);
-    crsA = std::make_shared<Core::LinAlg::SparseMatrix>(projector_->to_reduced(A_view));
-
-
-    FOUR_C_ASSERT_ALWAYS(b->num_vectors() == 1,
-        "Expecting only one solution vector during projector call! Got {} vectors.",
-        b->num_vectors());
-    b->get_vector(0) = projector_->to_reduced(b->get_vector(0));
-  }
-
-  b_ = b;
+  b_ = rhs;
   a_ = crsA;
 
   // 3. create linear solver
@@ -101,7 +104,20 @@ void Core::LinearSolver::DirectSolver::setup(std::shared_ptr<Core::LinAlg::Spars
 //----------------------------------------------------------------------------------
 int Core::LinearSolver::DirectSolver::solve(Core::LinAlg::MultiVector<double>& x)
 {
-  solver_->setX(Teuchos::rcpFromRef(x.get_epetra_multi_vector()));
+  std::unique_ptr<LinAlg::Vector<double>> projected_x = nullptr;
+  if (projector_ != nullptr)
+  {
+    FOUR_C_ASSERT_ALWAYS(x.num_vectors() == 1,
+        "Expecting only one solution vector during projector call! Got {} vectors.",
+        x.num_vectors());
+    projected_x = std::make_unique<LinAlg::Vector<double>>(projector_->to_reduced(x.get_vector(0)));
+
+    solver_->setX(Teuchos::rcpFromRef(projected_x->as_multi_vector().get_epetra_multi_vector()));
+  }
+  else
+  {
+    solver_->setX(Teuchos::rcpFromRef(x.get_epetra_multi_vector()));
+  }
 
   if (not is_factored())
   {
@@ -118,7 +134,7 @@ int Core::LinearSolver::DirectSolver::solve(Core::LinAlg::MultiVector<double>& x
     FOUR_C_ASSERT_ALWAYS(x.num_vectors() == 1,
         "Expecting only one solution vector during projector call! Got {} vectors.",
         x.num_vectors());
-    x.get_vector(0) = projector_->to_full(x.get_vector(0));
+    x.get_vector(0) = projector_->to_full(*projected_x);
   }
 
   return 0;

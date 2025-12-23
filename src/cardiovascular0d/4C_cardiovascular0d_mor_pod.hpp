@@ -13,6 +13,7 @@
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
+#include <filesystem>
 #include <memory>
 
 FOUR_C_NAMESPACE_OPEN
@@ -35,7 +36,8 @@ namespace Cardiovascular0D
         \brief Constructor
      */
     ProperOrthogonalDecomposition(std::shared_ptr<const Core::LinAlg::Map> full_model_dof_row_map_,
-        const std::string& pod_matrix_file_name, const std::string& absolute_path_to_input_file);
+        const std::optional<std::filesystem::path>& pod_matrix_file_name,
+        const std::string& absolute_path_to_input_file);
 
     //! M_red = V^T * M * V
     std::shared_ptr<Core::LinAlg::SparseMatrix> reduce_diagonal(Core::LinAlg::SparseMatrix& M);
@@ -66,7 +68,7 @@ namespace Cardiovascular0D
      * Number of Columns: int
      * Values (row-wise): float
      */
-    void read_pod_basis_vectors_from_file(const std::string& absolute_path_to_pod_file,
+    void read_pod_basis_vectors_from_file(const std::filesystem::path& absolute_path_to_pod_file,
         std::shared_ptr<Core::LinAlg::MultiVector<double>>& projmatrix);
 
     //! Check orthogonality of POD basis vectors with M^T * M - I == 0
