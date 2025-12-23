@@ -37,7 +37,8 @@ namespace NOX
   {
     /// Matrix Free Newton Krylov based on an approximation of the residuum derivatives
     class FSIMatrixFree : public Core::LinAlg::SparseOperator,
-                          public virtual NOX::Nln::Interface::JacobianBase
+                          public virtual NOX::Nln::Interface::JacobianBase,
+                          public Epetra_Operator
     {
      public:
       /*! \brief Constructor

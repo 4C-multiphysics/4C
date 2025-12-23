@@ -335,7 +335,8 @@ bool NOX::Nln::LinearSystem::apply_jacobian_inverse(Teuchos::ParameterList& line
 bool NOX::Nln::LinearSystem::compute_jacobian(const NOX::Nln::Vector& x)
 {
   prePostOperatorPtr_->run_pre_compute_jacobian(jacobian(), x.get_linalg_vector(), *this);
-  const bool success = jacInterfacePtr_->computeJacobian(x.get_linalg_vector(), jacobian());
+  const bool success =
+      jacInterfacePtr_->computeJacobian(x.get_linalg_vector(), jacobian().epetra_operator());
   prePostOperatorPtr_->run_post_compute_jacobian(jacobian(), x.get_linalg_vector(), *this);
 
   return success;
@@ -349,9 +350,9 @@ bool NOX::Nln::LinearSystem::compute_f_and_jacobian(
   prePostOperatorPtr_->run_pre_compute_f_and_jacobian(
       rhs.get_linalg_vector(), jacobian(), x.get_linalg_vector(), *this);
 
-  const bool success =
-      std::dynamic_pointer_cast<NOX::Nln::Interface::Jacobian>(jacInterfacePtr_)
-          ->compute_f_and_jacobian(x.get_linalg_vector(), rhs.get_linalg_vector(), jacobian());
+  const bool success = std::dynamic_pointer_cast<NOX::Nln::Interface::Jacobian>(jacInterfacePtr_)
+                           ->compute_f_and_jacobian(x.get_linalg_vector(), rhs.get_linalg_vector(),
+                               jacobian().epetra_operator());
 
   prePostOperatorPtr_->run_post_compute_f_and_jacobian(
       rhs.get_linalg_vector(), jacobian(), x.get_linalg_vector(), *this);
@@ -369,7 +370,7 @@ bool NOX::Nln::LinearSystem::compute_correction_system(const CorrectionType type
 
   const bool success = std::dynamic_pointer_cast<NOX::Nln::Interface::Jacobian>(jacInterfacePtr_)
                            ->compute_correction_system(type, grp, x.get_linalg_vector(),
-                               rhs.get_linalg_vector(), jacobian());
+                               rhs.get_linalg_vector(), jacobian().epetra_operator());
 
   prePostOperatorPtr_->run_post_compute_f_and_jacobian(
       rhs.get_linalg_vector(), jacobian(), x.get_linalg_vector(), *this);

@@ -887,7 +887,7 @@ void ALE::AleLinear::evaluate_elements()
     validsysmat_ = true;
   }
   else if (system_matrix())
-    system_matrix()->Apply(*dispnp(), *write_access_residual());
+    system_matrix()->Apply(dispnp()->as_multi_vector(), write_access_residual()->as_multi_vector());
   else if (block_system_matrix())
     block_system_matrix()->Apply(*dispnp(), *write_access_residual());
   else

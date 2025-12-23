@@ -123,6 +123,7 @@ bool Solid::TimeInt::NoxInterface::compute_f_and_jacobian(
 {
   check_init_setup();
 
+  // TODO: This can't work right now
   Core::LinAlg::SparseOperator* jac_ptr = dynamic_cast<Core::LinAlg::SparseOperator*>(&jac);
   FOUR_C_ASSERT(jac_ptr != nullptr, "Dynamic cast failed!");
 

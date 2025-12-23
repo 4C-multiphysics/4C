@@ -511,7 +511,7 @@ void Adapter::FluidFSI::proj_vel_to_div_zero()
 
   std::shared_ptr<Core::LinAlg::Vector<double>> vmod =
       std::make_shared<Core::LinAlg::Vector<double>>(velnp()->get_map(), true);
-  B->Apply(*x, *vmod);
+  B->Apply(x->as_multi_vector(), vmod->as_multi_vector());
   write_access_velnp()->update(-1.0, *vmod, 1.0);
 }
 

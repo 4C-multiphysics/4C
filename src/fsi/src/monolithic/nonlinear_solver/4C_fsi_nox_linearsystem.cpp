@@ -124,7 +124,8 @@ bool NOX::FSI::LinearSystem::apply_jacobian_inverse(
  *----------------------------------------------------------------------*/
 bool NOX::FSI::LinearSystem::compute_jacobian(const NOX::Nln::Vector& x)
 {
-  bool success = jac_interface_ptr_->computeJacobian(x.get_linalg_vector(), *jac_ptr_);
+  bool success =
+      jac_interface_ptr_->computeJacobian(x.get_linalg_vector(), jac_ptr_->epetra_operator());
   return success;
 }
 
