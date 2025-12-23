@@ -626,9 +626,8 @@ std::vector<Core::IO::InputSpec> Inpar::Cardiovascular0D::valid_parameters()
   specs.push_back(group("MOR",
       {
 
-          parameter<std::string>(
-              "POD_MATRIX", {.description = "filename of file containing projection matrix",
-                                .default_value = "none"})},
+          parameter<std::optional<std::filesystem::path>>(
+              "POD_MATRIX", {.description = "filename of file containing the projection matrix"})},
       {.required = false}));
   return specs;
 }

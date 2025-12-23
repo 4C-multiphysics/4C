@@ -13,9 +13,6 @@
 #include "4C_linalg_vector.hpp"
 #include "4C_linear_solver_method_projector.hpp"
 
-#include <unistd.h>
-
-#include <iostream>
 #include <memory>
 
 FOUR_C_NAMESPACE_OPEN
