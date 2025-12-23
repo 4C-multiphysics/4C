@@ -783,19 +783,21 @@ void Core::LinAlg::multi_vector_to_linalg_sparse_matrix(
     const Core::LinAlg::MultiVector<double>& multivect, const Core::LinAlg::Map& rangemap,
     const Core::LinAlg::Map& domainmap, Core::LinAlg::SparseMatrix& sparsemat)
 {
-  const double* Values = multivect.get_values();
+  FOUR_C_ASSERT(multivect.num_vectors() == domainmap.num_global_elements(),
+      "Number of vectors in multivector must equal number of global elements in domain map");
 
-  double value;
   for (int i = 0; i < multivect.num_vectors(); i++)
   {
+    const Core::LinAlg::Vector<double>& col_view = multivect.get_vector(i);
     for (int j = 0; j < multivect.local_length(); j++)
     {
-      value = Values[i * multivect.local_length() + j];
+      double value = col_view.local_values_as_span()[j];
 
       // if we have a zero value, just continue
       if (std::abs(value) < std::numeric_limits<double>::min()) continue;
 
-      sparsemat.assemble(value, rangemap.gid(j), domainmap.min_all_gid() + i);
+      int col = domainmap.min_all_gid() + i;
+      sparsemat.insert_global_values(rangemap.gid(j), 1, &value, &col);
     }
   }
 
