@@ -2,13 +2,13 @@ name: coverage
 
 on:
   schedule:
-    - cron: '0 1 * * *'
+    - cron: "0 1 * * *"
 
 jobs:
   clang18_coverage_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:4d0c2ab2
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:7821acef
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -45,7 +45,7 @@ jobs:
     needs: clang18_coverage_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:4d0c2ab2
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:7821acef
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     strategy:
       matrix:
@@ -111,7 +111,7 @@ jobs:
     needs: [clang18_coverage_test, clang18_coverage_build]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:4d0c2ab2
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:7821acef
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     steps:
       - uses: actions/checkout@v6

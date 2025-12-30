@@ -433,7 +433,7 @@ void FLD::Boxfilter::apply_box_filter(
     double expression_val;
     double alpha2_val;
 
-    std::map<int, std::vector<int>>* pbcmapmastertoslave =
+    const std::map<int, std::vector<int>>* pbcmapmastertoslave =
         discret_->get_all_pbc_coupled_col_nodes();
     // loop all master nodes on this proc
     if (pbcmapmastertoslave)
@@ -1170,7 +1170,7 @@ void FLD::Boxfilter::apply_box_filter_scatra(
     double phiexpression_val = 0.0;
 
     // loop all master nodes on this proc
-    std::map<int, std::vector<int>>* pbcmapmastertoslave =
+    const std::map<int, std::vector<int>>* pbcmapmastertoslave =
         scatradiscret_->get_all_pbc_coupled_col_nodes();
     // loop all master nodes on this proc
     if (pbcmapmastertoslave)

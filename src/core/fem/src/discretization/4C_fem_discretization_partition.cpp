@@ -569,7 +569,7 @@ void Core::FE::Discretization::extended_ghosting(const Core::LinAlg::Map& elecol
     {
       have_pbc = true;
       // fill content of pbcmap int std::map<int, std::set<int> > in preparation for gather_all
-      std::map<int, std::vector<int>>* tmp = pbcdofset->get_coupled_nodes();
+      const std::map<int, std::vector<int>>* tmp = pbcdofset->get_coupled_nodes();
       for (auto& [gid, nodes] : *tmp) pbcmap[gid].insert(nodes.begin(), nodes.end());
 
       // it is assumed that, if one pbc set is available, all other potential dofsets hold the same

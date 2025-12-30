@@ -622,12 +622,12 @@ namespace Core::FE
     /*!
     \brief Get master to slave coupling in case of periodic boundary conditions
     */
-    std::map<int, std::vector<int>>* get_all_pbc_coupled_col_nodes();
+    const std::map<int, std::vector<int>>* get_all_pbc_coupled_col_nodes() const;
 
     /*!
     \brief Get slave to master connectivity in case of periodic boundary conditions
     */
-    std::shared_ptr<std::map<int, int>> get_pbc_slave_to_master_node_connectivity();
+    std::shared_ptr<const std::map<int, int>> get_pbc_slave_to_master_node_connectivity() const;
 
     //@}
 

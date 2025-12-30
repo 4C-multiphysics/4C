@@ -868,7 +868,7 @@ namespace Discret
               lm_masterNodeToPatch,  ///< local map between master nodes and nodes in patch
           std::vector<int>&
               lm_slaveNodeToPatch,  ///< local map between slave nodes and nodes in patch
-          std::shared_ptr<std::map<int, int>>
+          std::shared_ptr<const std::map<int, int>>
               pbcconnectivity  ///< connectivity between slave and PBC's master nodes
       );
 
@@ -892,7 +892,7 @@ namespace Discret
               lm_masterNodeToPatch,  ///< local map between master nodes and nodes in patch
           std::vector<int>&
               lm_slaveNodeToPatch,  ///< local map between slave nodes and nodes in patch
-          std::shared_ptr<std::map<int, int>>
+          std::shared_ptr<const std::map<int, int>>
               pbcconnectivity  ///< connectivity between slave and PBC's master nodes
       );
 

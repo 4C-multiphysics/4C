@@ -86,9 +86,9 @@ void Core::LinearSolver::Parameters::compute_solver_parameters(
   {
     std::shared_ptr<Core::LinAlg::MultiVector<double>> coordinates;
     if (nullspace_node_map == nullptr)
-      coordinates = extract_node_coordinates(dis);
+      coordinates = extract_retained_node_coordinates(dis, *dis.node_row_map());
     else
-      coordinates = extract_node_coordinates(dis, *nullspace_node_map);
+      coordinates = extract_retained_node_coordinates(dis, *nullspace_node_map);
 
     solverlist.set<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("Coordinates", coordinates);
   }

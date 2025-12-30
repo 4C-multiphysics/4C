@@ -1240,7 +1240,8 @@ void STI::Monolithic::compute_null_space_if_necessary(Teuchos::ParameterList& so
     mllist.set<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("nullspace", nullspace);
 
     std::shared_ptr<Core::LinAlg::MultiVector<double>> coordinates =
-        extract_node_coordinates(*scatra_field()->discretization());
+        extract_retained_node_coordinates(
+            *scatra_field()->discretization(), *scatra_field()->discretization()->node_row_map());
 
     mllist.set<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("Coordinates", coordinates);
   }

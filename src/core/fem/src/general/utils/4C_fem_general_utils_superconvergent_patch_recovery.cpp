@@ -41,7 +41,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
   // handle pbcs if existing
   // build inverse map from slave to master nodes
   std::map<int, int> slavetomastercolnodesmap;
-  std::map<int, std::vector<int>>* allcoupledcolnodes = dis.get_all_pbc_coupled_col_nodes();
+  const std::map<int, std::vector<int>>* allcoupledcolnodes = dis.get_all_pbc_coupled_col_nodes();
 
   if (allcoupledcolnodes)
   {
@@ -432,8 +432,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
         // this will result in off processor assembling (boundary node as ghost node)
         if (closestnode->owner() != myrank) continue;
 
-        std::map<int, std::vector<int>>::iterator masternode =
-            allcoupledcolnodes->find(closestnodeid);
+        auto masternode = allcoupledcolnodes->find(closestnodeid);
 
         int numslavenodes = -1;
         if (masternode != allcoupledcolnodes->end())

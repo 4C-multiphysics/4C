@@ -563,12 +563,13 @@ void Core::FE::Discretization::replace_dof_set(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-std::map<int, std::vector<int>>* Core::FE::Discretization::get_all_pbc_coupled_col_nodes()
+const std::map<int, std::vector<int>>* Core::FE::Discretization::get_all_pbc_coupled_col_nodes()
+    const
 {
   // check for pbcs
   for (int nds = 0; nds < num_dof_sets(); nds++)
   {
-    std::shared_ptr<Core::DOFSets::PBCDofSet> pbcdofset =
+    std::shared_ptr<const Core::DOFSets::PBCDofSet> pbcdofset =
         std::dynamic_pointer_cast<Core::DOFSets::PBCDofSet>(dofsets_[nds]);
 
     if (pbcdofset != nullptr)
@@ -584,8 +585,8 @@ std::map<int, std::vector<int>>* Core::FE::Discretization::get_all_pbc_coupled_c
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-std::shared_ptr<std::map<int, int>>
-Core::FE::Discretization::get_pbc_slave_to_master_node_connectivity()
+std::shared_ptr<const std::map<int, int>>
+Core::FE::Discretization::get_pbc_slave_to_master_node_connectivity() const
 {
   // check for pbcs
   for (int nds = 0; nds < num_dof_sets(); nds++)
