@@ -40,7 +40,7 @@ Core::Communication::ParObject* BeamInteraction::BeamLinkTrussType::create(
 BeamInteraction::BeamLinkTruss::BeamLinkTruss()
     : BeamLinkPinJointed(),
       linkele_(nullptr),
-      bspotforces_(2, Core::LinAlg::SerialDenseVector(true))
+      bspotforces_(2, Core::LinAlg::SerialDenseVector(3, true))
 {
 }
 
@@ -48,7 +48,7 @@ BeamInteraction::BeamLinkTruss::BeamLinkTruss()
  *----------------------------------------------------------------------*/
 BeamInteraction::BeamLinkTruss::BeamLinkTruss(const BeamInteraction::BeamLinkTruss& old)
     : BeamInteraction::BeamLinkPinJointed(old),
-      bspotforces_(2, Core::LinAlg::SerialDenseVector(true))
+      bspotforces_(2, Core::LinAlg::SerialDenseVector(3, true))
 {
   if (linkele_ != nullptr)
     linkele_ = std::dynamic_pointer_cast<Discret::Elements::Truss3>(

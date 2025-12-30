@@ -43,7 +43,7 @@ BeamInteraction::BeamLinkBeam3rLine2PinJointed::BeamLinkBeam3rLine2PinJointed()
     : BeamLinkPinJointed(),
       triad_(Core::LinAlg::Initialization::zero),
       linkele_(nullptr),
-      bspotforces_(2, Core::LinAlg::SerialDenseVector(true))
+      bspotforces_(2, Core::LinAlg::SerialDenseVector(3, true))
 {
 }
 
@@ -53,7 +53,7 @@ BeamInteraction::BeamLinkBeam3rLine2PinJointed::BeamLinkBeam3rLine2PinJointed(
     const BeamInteraction::BeamLinkBeam3rLine2PinJointed& old)
     : BeamInteraction::BeamLinkPinJointed(old),
       triad_(old.triad_),
-      bspotforces_(2, Core::LinAlg::SerialDenseVector(true))
+      bspotforces_(2, Core::LinAlg::SerialDenseVector(3, true))
 {
   if (linkele_ != nullptr)
     linkele_ = std::dynamic_pointer_cast<Discret::Elements::Beam3r>(

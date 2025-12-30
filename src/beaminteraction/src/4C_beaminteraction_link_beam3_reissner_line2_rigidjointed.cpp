@@ -43,7 +43,7 @@ Core::Communication::ParObject* BeamInteraction::BeamLinkBeam3rLine2RigidJointed
 BeamInteraction::BeamLinkBeam3rLine2RigidJointed::BeamLinkBeam3rLine2RigidJointed()
     : BeamLinkRigidJointed(),
       linkele_(nullptr),
-      bspotforces_(2, Core::LinAlg::SerialDenseVector(true))
+      bspotforces_(2, Core::LinAlg::SerialDenseVector(3, true))
 {
 }
 
@@ -52,7 +52,7 @@ BeamInteraction::BeamLinkBeam3rLine2RigidJointed::BeamLinkBeam3rLine2RigidJointe
 BeamInteraction::BeamLinkBeam3rLine2RigidJointed::BeamLinkBeam3rLine2RigidJointed(
     const BeamInteraction::BeamLinkBeam3rLine2RigidJointed& old)
     : BeamInteraction::BeamLinkRigidJointed(old),
-      bspotforces_(2, Core::LinAlg::SerialDenseVector(true))
+      bspotforces_(2, Core::LinAlg::SerialDenseVector(3, true))
 {
   if (linkele_ != nullptr)
     linkele_ = std::dynamic_pointer_cast<Discret::Elements::Beam3r>(
