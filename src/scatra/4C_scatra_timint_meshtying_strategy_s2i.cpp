@@ -3661,8 +3661,9 @@ void ScaTra::MeshtyingStrategyS2I::equip_extended_solver_with_null_space_info() 
     // build the coordinate object related to the growth dofs
     const auto growth_cond_node_row_map = Core::Conditions::condition_node_row_map(
         *scatratimint_->discretization(), "S2IKineticsGrowth");
-    const auto coordinates =
-        extract_node_coordinates(*scatratimint_->discretization(), *growth_cond_node_row_map);
+    const std::shared_ptr<Core::LinAlg::MultiVector<double>> coordinates =
+        extract_retained_node_coordinates(
+            *scatratimint_->discretization(), *growth_cond_node_row_map);
     mllist.set<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("Coordinates", coordinates);
 
     mllist.set<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("nullspace", nullspace);

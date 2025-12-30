@@ -135,7 +135,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_nodal_l2_pr
   // build inverse map from slave to master nodes
   std::map<int, int> slavetomastercolnodesmap;
 
-  std::map<int, std::vector<int>>* allcoupledcolnodes = dis.get_all_pbc_coupled_col_nodes();
+  const std::map<int, std::vector<int>>* allcoupledcolnodes = dis.get_all_pbc_coupled_col_nodes();
   if (allcoupledcolnodes)
   {
     for (auto [master_gid, slave_gids] : *allcoupledcolnodes)

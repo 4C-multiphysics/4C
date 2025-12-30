@@ -70,10 +70,14 @@ namespace Core::DOFSets
     virtual void set_coupled_nodes(std::shared_ptr<std::map<int, std::vector<int>>> couplednodes);
 
     /// Get coupled nodes map (corresponding col format)
-    std::map<int, std::vector<int>>* get_coupled_nodes() { return perbndcouples_.get(); }
+    [[nodiscard]] const std::map<int, std::vector<int>>* get_coupled_nodes() const
+    {
+      return perbndcouples_.get();
+    }
 
     /// Get connectivity map between slave node and its master node
-    virtual std::shared_ptr<std::map<int, int>> get_slave_to_master_node_connectivity()
+    [[nodiscard]] virtual std::shared_ptr<const std::map<int, int>>
+    get_slave_to_master_node_connectivity() const
     {
       return perbnd_slavetomaster_;
     };

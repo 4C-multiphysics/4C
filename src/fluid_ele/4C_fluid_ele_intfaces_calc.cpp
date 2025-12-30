@@ -134,7 +134,7 @@ void Discret::Elements::FluidIntFaceImpl<distype>::assemble_internal_faces_using
 
 
   //---------------------- check for PBCS ------------------
-  std::shared_ptr<std::map<int, int>> pbcconnectivity =
+  std::shared_ptr<const std::map<int, int>> pbcconnectivity =
       discretization.get_pbc_slave_to_master_node_connectivity();
 
   //----------------------- create patchlm -----------------

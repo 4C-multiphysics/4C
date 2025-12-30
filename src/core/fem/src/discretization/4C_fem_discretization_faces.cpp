@@ -239,7 +239,7 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
   std::map<std::vector<int>, std::shared_ptr<Core::Elements::Element>> faces;
 
   // get pbcs
-  std::map<int, std::vector<int>>* col_pbcmapmastertoslave = get_all_pbc_coupled_col_nodes();
+  const std::map<int, std::vector<int>>* col_pbcmapmastertoslave = get_all_pbc_coupled_col_nodes();
 
   std::map<std::vector<int>, InternalFacesData>::iterator face_it;
   for (face_it = surfmapdata.begin(); face_it != surfmapdata.end(); ++face_it)
@@ -383,11 +383,11 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
             for (std::size_t rr = 0; rr < mymasternodeids.size(); rr++)
             {
               // this master node has one slave node
-              if (((*col_pbcmapmastertoslave)[mymasternodeids[rr]]).size() == 1)
+              if (((*col_pbcmapmastertoslave).at(mymasternodeids[rr])).size() == 1)
               {
-                myslavenodeids.push_back(((*col_pbcmapmastertoslave)[mymasternodeids[rr]])[0]);
+                myslavenodeids.push_back(((*col_pbcmapmastertoslave).at(mymasternodeids[rr]))[0]);
                 local_pbcmapmastertoslave[mymasternodeids[rr]] =
-                    ((*col_pbcmapmastertoslave)[mymasternodeids[rr]])[0];
+                    ((*col_pbcmapmastertoslave).at(mymasternodeids[rr]))[0];
               }
               // this master node has several slave nodes
               // it is a corner or edge node of two or three pbc sets
@@ -443,7 +443,7 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
                 //  this special case is marked by flag
                 bool three_sets_edge_node = false;
                 if (numpbcpairs == 3 and
-                    ((*col_pbcmapmastertoslave)[mymasternodeids[rr]]).size() == 3)
+                    ((*col_pbcmapmastertoslave).at(mymasternodeids[rr])).size() == 3)
                   three_sets_edge_node = true;
 
                 // pbc id of master face also for the slave
@@ -459,10 +459,10 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
                 // check which node fulfills above conditions
                 int actslaveid = -999;
                 for (std::size_t islave = 0;
-                    islave < ((*col_pbcmapmastertoslave)[mymasternodeids[rr]]).size(); islave++)
+                    islave < ((*col_pbcmapmastertoslave).at(mymasternodeids[rr])).size(); islave++)
                 {
                   // get id
-                  actslaveid = ((*col_pbcmapmastertoslave)[mymasternodeids[rr]])[islave];
+                  actslaveid = ((*col_pbcmapmastertoslave).at(mymasternodeids[rr]))[islave];
 
                   // check first criterion -> (i)
                   if ((slavetopbcset[slavepbcid]).find(actslaveid) !=
@@ -547,7 +547,7 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
 
                 // first, look for masters with more than one slave
                 // then, check whether node id (i.e. actnodeid) is contained in slave list
-                std::map<int, std::vector<int>>::iterator master_it;
+                std::map<int, std::vector<int>>::const_iterator master_it;
                 for (master_it = col_pbcmapmastertoslave->begin();
                     master_it != col_pbcmapmastertoslave->end(); master_it++)
                 {

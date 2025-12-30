@@ -7,6 +7,7 @@
 
 #include "4C_fem_discretization_utils.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
@@ -33,6 +34,57 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::extract_node_coordi
   for (int lid = 0; lid < node_row_map.num_my_elements(); ++lid)
   {
     const int gid = node_row_map.gid(lid);
+    if (!discretization.have_global_node(gid)) continue;
+
+    auto x = discretization.g_node(gid)->x();
+    for (size_t dim = 0; dim < 3; ++dim)
+    {
+      if (dim >= discretization.n_dim())
+        coordinates->replace_local_value(lid, dim, 0.0);
+      else
+        coordinates->replace_local_value(lid, dim, x[dim]);
+    }
+  }
+
+  return coordinates;
+}
+
+std::unique_ptr<Core::LinAlg::MultiVector<double>> Core::FE::extract_retained_node_coordinates(
+    const Discretization& discretization, const Core::LinAlg::Map& node_row_map)
+{
+  std::set<int> skipped_nodes = {};
+  if (discretization.get_pbc_slave_to_master_node_connectivity())
+  {
+    const auto& pbcconnectivity = *(discretization.get_pbc_slave_to_master_node_connectivity());
+    for (const auto& [slave, _] : pbcconnectivity)
+    {
+      skipped_nodes.insert(slave);
+    }
+  }
+  std::set<int> fully_redundant_skipped_nodes =
+      Core::Communication::all_reduce(skipped_nodes, node_row_map.get_comm());
+
+  std::vector<int> my_filtered_global_node_ids{};
+  my_filtered_global_node_ids.reserve(node_row_map.num_my_elements());
+  for (int lid = 0; lid < node_row_map.num_my_elements(); ++lid)
+  {
+    const int gid = node_row_map.gid(lid);
+
+    // filter pbc slave nodes
+    if (fully_redundant_skipped_nodes.contains(gid)) continue;
+    my_filtered_global_node_ids.emplace_back(gid);
+  }
+  Core::LinAlg::Map filtered_row_map(
+      node_row_map.num_global_elements() - static_cast<int>(fully_redundant_skipped_nodes.size()),
+      static_cast<int>(my_filtered_global_node_ids.size()), my_filtered_global_node_ids.data(), 0,
+      node_row_map.get_comm());
+
+  std::unique_ptr<Core::LinAlg::MultiVector<double>> coordinates =
+      std::make_unique<Core::LinAlg::MultiVector<double>>(filtered_row_map, 3, true);
+
+  for (int lid = 0; lid < filtered_row_map.num_my_elements(); ++lid)
+  {
+    const int gid = filtered_row_map.gid(lid);
     if (!discretization.have_global_node(gid)) continue;
 
     auto x = discretization.g_node(gid)->x();

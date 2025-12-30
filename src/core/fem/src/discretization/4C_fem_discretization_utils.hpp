@@ -60,6 +60,17 @@ namespace Core::FE
   std::shared_ptr<Core::LinAlg::MultiVector<double>> extract_node_coordinates(
       const Core::FE::Discretization& discretization, const Core::LinAlg::Map& node_row_map);
 
+  /**
+   * Similar to the other extract_node_coordinates function, but allows to specify a node row map
+   * and filters all eliminated nodes (e.g., in periodic boundary conditions).
+   *
+   * @note Eliminated nodes (e.g., when using periodic boundary conditions) are skipped.
+   *
+   * The map has to be a submap of the overall full node rowmap of this discretization.
+   */
+  std::unique_ptr<Core::LinAlg::MultiVector<double>> extract_retained_node_coordinates(
+      const Core::FE::Discretization& discretization, const Core::LinAlg::Map& node_row_map);
+
 
   /** \brief Evaluate the elements of the given discretization and fill the
    *         system matrix and vector

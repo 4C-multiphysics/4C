@@ -122,7 +122,7 @@ void Discret::Elements::FluidIntFace::patch_location_vector(
     std::vector<int>& lm_faceToPatch,          ///< local map between lm_face and lm_patch
     std::vector<int>& lm_masterNodeToPatch,  ///< local map between master nodes and nodes in patch
     std::vector<int>& lm_slaveNodeToPatch,   ///< local map between slave nodes and nodes in patch
-    std::shared_ptr<std::map<int, int>>
+    std::shared_ptr<const std::map<int, int>>
         pbcconnectivity  ///< connectivity between slave and PBC's master nodes
 )
 {
@@ -185,7 +185,7 @@ void Discret::Elements::FluidIntFace::patch_location_vector(
 
     if (has_PBC)  // set the id of the master node if the node is a PBC node
     {
-      std::map<int, int>::iterator slave_it = pbcconnectivity->find(
+      const auto slave_it = pbcconnectivity->find(
           nid);  // find the slave node id, is there a corresponding pbc master node?
 
       if (slave_it != pbcconnectivity->end()) nid = slave_it->second;
@@ -222,7 +222,7 @@ void Discret::Elements::FluidIntFace::patch_location_vector(
 
     if (has_PBC)  // set the id of the master node if the node is a PBC node
     {
-      std::map<int, int>::iterator slave_it = pbcconnectivity->find(
+      const auto slave_it = pbcconnectivity->find(
           nid);  // find the slave node id, is there a corresponding pbc master node?
 
       if (slave_it != pbcconnectivity->end()) nid = slave_it->second;
@@ -287,7 +287,7 @@ void Discret::Elements::FluidIntFace::patch_location_vector(
 
     if (has_PBC)  // set the id of the master node if the node is a PBC node
     {
-      std::map<int, int>::iterator slave_it = pbcconnectivity->find(
+      const auto slave_it = pbcconnectivity->find(
           nid);  // find the slave node id, is there a corresponding pbc master node?
 
       if (slave_it != pbcconnectivity->end()) nid = slave_it->second;
@@ -334,7 +334,7 @@ void Discret::Elements::FluidIntFace::patch_location_vector(
     std::vector<int>& lm_faceToPatch,          ///< local map between lm_face and lm_patch
     std::vector<int>& lm_masterNodeToPatch,  ///< local map between master nodes and nodes in patch
     std::vector<int>& lm_slaveNodeToPatch,   ///< local map between slave nodes and nodes in patch
-    std::shared_ptr<std::map<int, int>>
+    std::shared_ptr<const std::map<int, int>>
         pbcconnectivity  ///< connectivity between slave and PBC's master nodes
 )
 {
@@ -411,7 +411,7 @@ void Discret::Elements::FluidIntFace::patch_location_vector(
 
     if (has_PBC)  // set the id of the master node if the node is a PBC node
     {
-      std::map<int, int>::iterator slave_it = pbcconnectivity->find(
+      const auto slave_it = pbcconnectivity->find(
           nid);  // find the slave node id, is there a corresponding pbc master node?
 
       if (slave_it != pbcconnectivity->end()) nid = slave_it->second;
@@ -453,7 +453,7 @@ void Discret::Elements::FluidIntFace::patch_location_vector(
 
     if (has_PBC)  // set the id of the master node if the node is a PBC node
     {
-      std::map<int, int>::iterator slave_it = pbcconnectivity->find(
+      const auto slave_it = pbcconnectivity->find(
           nid);  // find the slave node id, is there a corresponding pbc master node?
 
       if (slave_it != pbcconnectivity->end()) nid = slave_it->second;
@@ -523,7 +523,7 @@ void Discret::Elements::FluidIntFace::patch_location_vector(
 
     if (has_PBC)  // set the id of the master node if the node is a PBC node
     {
-      std::map<int, int>::iterator slave_it = pbcconnectivity->find(
+      const auto slave_it = pbcconnectivity->find(
           nid);  // find the slave node id, is there a corresponding pbc master node?
 
       if (slave_it != pbcconnectivity->end()) nid = slave_it->second;
