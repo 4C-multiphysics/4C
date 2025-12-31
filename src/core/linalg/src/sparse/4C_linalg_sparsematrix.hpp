@@ -334,27 +334,6 @@ namespace Core::LinAlg
 
     /** \name Utility functions */
     //@{
-
-    /// Add a (transposed) Epetra_CrsMatrix to another: (*this) = (*this)*scalarB + A(^T)*scalarA
-    /*!
-
-    Add one matrix to another. the matrix (*this) to be added to must not be
-    completed. Sparsity patterns of A and (*this) need not match and A and (*this) can be
-    nonsymmetric in value and pattern.  Row map of A has to be a
-    processor-local subset of the row map of (*this).
-
-    \note This is a true parallel add, even in the transposed case!
-
-    \param A          (in)     : Matrix to add to B (must have Filled()==true)
-    \param transposeA (in)     : flag indicating whether transposed of A should be used
-    \param scalarA    (in)     : scaling factor for A
-    \param scalarB    (in)     : scaling factor for B
-    */
-    // void add(const SparseMatrix& A, const bool transposeA, const double scalarA,
-    //     const double scalarB);
-
-    //@}
-
     /*! \brief return the internal Epetra_Operator
 
     The internal Epetra_Operator here is the internal Epetra_CrsMatrix or Epetra_FECrsMatrix. This
@@ -375,6 +354,8 @@ namespace Core::LinAlg
     /// return the internal Epetra_CrsMatrix or Epetra_FECrsMatrix
     /// (down-cast from Epetra_CrsMatrix !) (you should not need this!)
     const Epetra_CrsMatrix& epetra_matrix() const { return *sysmat_; }
+
+    //@}
 
     /** \name Matrix Properties Query Methods */
     //@{
@@ -578,17 +559,9 @@ namespace Core::LinAlg
 
     //@}
 
-    /// Add one operator to another
+    /// Add a sparse operator to the sparse matrix: (*this) = (*this)*scalarB + A(^T)*scalarA
     void add(const Core::LinAlg::SparseOperator& A, const bool transposeA, const double scalarA,
         const double scalarB) override;
-
-    /// Add one SparseMatrixBase to another
-    void add_other(Core::LinAlg::SparseMatrix& B, const bool transposeA, const double scalarA,
-        const double scalarB) const override;
-
-    /// Add one BlockSparseMatrix to another
-    void add_other(Core::LinAlg::BlockSparseMatrixBase& B, const bool transposeA,
-        const double scalarA, const double scalarB) const override;
 
     //! Print to user-provided output stream
     void print(std::ostream& os) const { sysmat_->Print(os); }

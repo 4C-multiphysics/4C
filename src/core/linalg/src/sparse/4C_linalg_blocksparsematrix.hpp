@@ -170,17 +170,9 @@ namespace Core::LinAlg
     virtual void add(const BlockSparseMatrixBase& A, const bool transposeA, const double scalarA,
         const double scalarB);
 
-    /// Resolve virtual function of parent class
+    /// Add a sparse operator to the block sparse matrix: (*this) = (*this)*scalarB + A(^T)*scalarA
     void add(const SparseOperator& A, const bool transposeA, const double scalarA,
         const double scalarB) override;
-
-    /// Resolve virtual function of parent class
-    void add_other(SparseMatrix& A, const bool transposeA, const double scalarA,
-        const double scalarB) const override;
-
-    /// Resolve virtual function of parent class
-    void add_other(BlockSparseMatrixBase& A, const bool transposeA, const double scalarA,
-        const double scalarB) const override;
 
     /// Multiply all values in the matrix by a constant value (in place: A <- ScalarConstant * A).
     void scale(double ScalarConstant) override;
