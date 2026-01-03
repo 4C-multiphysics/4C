@@ -15,7 +15,7 @@
 
 extern "C"
 {
-#include <libqhull/qhull_a.h>
+#include <libqhull_r/qhull_ra.h>
 }
 
 FOUR_C_NAMESPACE_OPEN
@@ -392,6 +392,9 @@ void Cut::TetMesh::call_q_hull(
     }
   }
 
+  qhT qh_qh; /* Qhull's data structure.  First argument of most calls */
+  qhT* qh = &qh_qh;
+
   boolT ismalloc = false;
 
   // a set of option we try to process the input with
@@ -434,11 +437,11 @@ void Cut::TetMesh::call_q_hull(
     std::cout << "counter_qhull: " << counter_qhull << std::endl;
 #endif
     std::string& ostr = *i;
-    if (not qh_new_qhull(dim, n, coordinates.data(), ismalloc, const_cast<char*>(ostr.c_str()),
+    if (not qh_new_qhull(qh, dim, n, coordinates.data(), ismalloc, const_cast<char*>(ostr.c_str()),
             outfile, errfile))
     {
       // triangulate non-simplicial facets
-      qh_triangulate();
+      qh_triangulate(qh);
 
       facetT* facet;
       int nf = 0;
@@ -471,7 +474,7 @@ void Cut::TetMesh::call_q_hull(
             for (void** vertexp = &facet->vertices->e[0].p;
                 (vertex = static_cast<vertexT*>(*vertexp++));)
             {
-              int p = qh_pointid(vertex->point);
+              int p = qh_pointid(qh, vertex->point);
               if (p >= n)
               {
                 FOUR_C_THROW("new node in delaunay");
@@ -486,11 +489,11 @@ void Cut::TetMesh::call_q_hull(
     }
 
     // free long memory
-    qh_freeqhull(not qh_ALL);
+    qh_freeqhull(qh, not qh_ALL);
 
     // free short memory and memory allocator
     int curlong, totlong;
-    qh_memfreeshort(&curlong, &totlong);
+    qh_memfreeshort(qh, &curlong, &totlong);
 
     if (curlong or totlong)
     {
