@@ -1,0 +1,22 @@
+$MeshFormat
+4.1 0 8
+$EndMeshFormat
+$PhysicalNames
+1
+0 1 "FirstPoint"
+$EndPhysicalNames
+$Entities
+1 0 0 0
+1 0 0 0 1 1
+$EndEntities
+$Nodes
+1 1 1 1
+0 1 0 1
+1
+0 0 0
+$EndNodes
+$Elements
+1 1 1 1
+0 1 15 1
+1 1
+$EndElements

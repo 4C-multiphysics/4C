@@ -16,6 +16,7 @@
 #include "4C_fem_general_node.hpp"
 #include "4C_fem_nurbs_discretization_control_point.hpp"
 #include "4C_io_exodus.hpp"
+#include "4C_io_gmsh_reader.hpp"
 #include "4C_io_gridgenerator.hpp"
 #include "4C_io_input_file.hpp"
 #include "4C_io_mesh.hpp"
@@ -785,10 +786,17 @@ void Core::IO::MeshReader::read_and_partition()
         {
           mesh = std::make_shared<MeshInput::Mesh<3>>(VTU::read_vtu_file(this_file_path));
         }
+        else if (this_file_path.extension() == ".msh")
+        {
+          mesh = std::make_shared<MeshInput::Mesh<3>>(Gmsh::read_msh_file(this_file_path));
+        }
         else
         {
           FOUR_C_THROW(
-              "Unsupported mesh file format {}. Currently supported are '.e', '.exo', and '.exii'.",
+              "Unsupported mesh file format {}. Currently supported are\n"
+              "   - Exodus: '.e', '.exo', and '.exii'.\n",
+              "   - vtu: '.vtu' and '.vtk'.\n"
+              "   - gmsh: '.msh'.",
               this_file_path.extension().string());
         }
         MeshInput::print(*mesh, std::cout, verbosity);

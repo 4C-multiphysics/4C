@@ -2656,6 +2656,10 @@ four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_D
 four_c_test(TEST_FILE solid_vtu_field_input.4C.yaml NP 2 REQUIRED_DEPENDENCIES VTK RETURN_AS current)
 four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES VTK)
 
+# Tests requiring Gmsh
+four_c_test(TEST_FILE solid_gmsh_input.4C.yaml NP 2 REQUIRED_DEPENDENCIES GMSH RETURN_AS current)
+four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES GMSH)
+
 # Tests requiring ArborX
 four_c_test(TEST_FILE beam3eb_static_beam_to_solid_volume_meshtying_beam_to_beam_contact_boundingvolume.4C.yaml NP 1 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE beam3eb_static_beam_to_solid_volume_meshtying_beam_to_beam_contact_boundingvolume.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX RETURN_AS current)
