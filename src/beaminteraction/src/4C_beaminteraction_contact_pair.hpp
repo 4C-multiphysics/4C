@@ -81,7 +81,7 @@ namespace BeamInteraction
     virtual ~BeamContactPair() = default;
     //! Initialization
     virtual void init(const std::shared_ptr<BeamInteraction::BeamContactParams> params_ptr,
-        std::vector<Core::Elements::Element const*> elements);
+        std::vector<Core::Elements::Element const*> elements, double time = 0);
 
     //! Setup
     virtual void setup();
@@ -418,6 +418,9 @@ namespace BeamInteraction
 
     //! indicates if the init() function has been called
     bool isinit_;
+
+    //! time for evaluation of function
+    double time_;
 
     //! indicates if the setup() function has been called
     bool issetup_;
