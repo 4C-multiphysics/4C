@@ -11,55 +11,19 @@
 
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_reduced_lung_helpers.hpp"
+#include "4C_reduced_lung_test_utils_test.hpp"
 
 namespace
 {
   using namespace FourC::ReducedLung;
   using namespace FourC::Core::LinAlg;
-
-  // Helper: Compute and compare FD approximation with Jacobian column
-  void check_jacobian_column_against_fd(const std::vector<int>& dof_lids, int jac_col,
-      TerminalUnitModel& model, SparseMatrix& jac, Vector<double>& dofs, double dt, double eps,
-      const Map& row_map)
-  {
-    SCOPED_TRACE("Comparing FD approximation with Jacobian column " + std::to_string(jac_col));
-
-    // Perturb in +epsilon direction
-    for (int lid : dof_lids) dofs.get_values()[lid] += eps;
-    Vector<double> res_plus(row_map, true);
-    model.negative_residual_evaluator(model.data, res_plus, dofs, dt);
-
-    // Perturb in -epsilon direction
-    for (int lid : dof_lids) dofs.get_values()[lid] -= 2 * eps;
-    Vector<double> res_minus(row_map, true);
-    model.negative_residual_evaluator(model.data, res_minus, dofs, dt);
-
-    // Restore original state
-    for (int lid : dof_lids) dofs.get_values()[lid] += eps;
-
-    // Compute FD approximation
-    Vector<double> fd_derivative(row_map, true);
-    fd_derivative.update(-1.0 / (2 * eps), res_plus, 1.0 / (2 * eps), res_minus, 0.0);
-
-    // Compare with Jacobian column
-    for (size_t i = 0; i < model.data.number_of_elements(); ++i)
-    {
-      int n_entries = 0;
-      double* jac_vals = nullptr;
-      int* col_indices = nullptr;
-      jac.extract_my_row_view(i, n_entries, jac_vals, col_indices);
-
-      ASSERT_EQ(col_indices[jac_col], dof_lids[i]);
-      EXPECT_NEAR(jac_vals[jac_col], fd_derivative.local_values_as_span()[i], eps)
-          << "Mismatch at row " << i << ", col " << jac_col;
-    }
-  }
+  using namespace FourC::ReducedLung::TestUtils;
 
   // Tests the implementation of different model combinations by comparing the analytic jacobian
   // with a finite difference approximation of the residual functions.
   TEST(TerminalUnitTests, JacobianVsFiniteDifference)
   {
-    TerminalUnits terminal_units;
+    TerminalUnitContainer terminal_units;
     TerminalUnitModel model;
 
     // Artificial terminal unit data for evaluating the model equations
@@ -92,12 +56,15 @@ namespace
       model.rheological_model = KelvinVoigt{std::vector<double>{0.0, 1.0, 100.0}};
       model.elasticity_model = LinearElasticity{std::vector<double>{1.0, 1.0, 0.0},
           std::vector<double>{0.0, 0.0, 0.0}, std::vector<double>{0.0, 0.0, 0.0}};
-      model.negative_residual_evaluator = std::visit(
-          MakeNegativeResidualEvaluator{model.elasticity_model}, model.rheological_model);
-      model.jacobian_evaluator =
-          std::visit(MakeJacobianEvaluator{model.elasticity_model}, model.rheological_model);
-
+      model.internal_state_updater =
+          std::visit(TerminalUnits::MakeInternalStateUpdater{}, model.rheological_model);
+      model.negative_residual_evaluator =
+          std::visit(TerminalUnits::MakeNegativeResidualEvaluator{model.elasticity_model},
+              model.rheological_model);
+      model.jacobian_evaluator = std::visit(
+          TerminalUnits::MakeJacobianEvaluator{model.elasticity_model}, model.rheological_model);
       model.jacobian_evaluator(model.data, jac, locally_relevant_dofs, dt);
+
       check_jacobian_column_against_fd(
           model.data.lid_p1, 0, model, jac, locally_relevant_dofs, dt, eps, row_map);
       check_jacobian_column_against_fd(
@@ -113,12 +80,15 @@ namespace
       model.elasticity_model = OgdenHyperelasticity{std::vector<double>{1.0, 1.0, 1.0},
           std::vector<double>{5.0, -0.4, -8.0}, std::vector<double>{0.0, 0.0, 0.0},
           std::vector<double>{0.0, 0.0, 0.0}};
-      model.negative_residual_evaluator = std::visit(
-          MakeNegativeResidualEvaluator{model.elasticity_model}, model.rheological_model);
-      model.jacobian_evaluator =
-          std::visit(MakeJacobianEvaluator{model.elasticity_model}, model.rheological_model);
-
+      model.internal_state_updater =
+          std::visit(TerminalUnits::MakeInternalStateUpdater{}, model.rheological_model);
+      model.negative_residual_evaluator =
+          std::visit(TerminalUnits::MakeNegativeResidualEvaluator{model.elasticity_model},
+              model.rheological_model);
+      model.jacobian_evaluator = std::visit(
+          TerminalUnits::MakeJacobianEvaluator{model.elasticity_model}, model.rheological_model);
       model.jacobian_evaluator(model.data, jac, locally_relevant_dofs, dt);
+
       check_jacobian_column_against_fd(
           model.data.lid_p1, 0, model, jac, locally_relevant_dofs, dt, eps, row_map);
       check_jacobian_column_against_fd(
@@ -135,14 +105,15 @@ namespace
           std::vector<double>{0.0, 0.0, 0.0}};
       model.elasticity_model = LinearElasticity{std::vector<double>{1.0, 1.0, 0.0},
           std::vector<double>{0.0, 0.0, 0.0}, std::vector<double>{0.0, 0.0, 0.0}};
-      model.negative_residual_evaluator = std::visit(
-          MakeNegativeResidualEvaluator{model.elasticity_model}, model.rheological_model);
-      model.jacobian_evaluator =
-          std::visit(MakeJacobianEvaluator{model.elasticity_model}, model.rheological_model);
       model.internal_state_updater =
-          std::visit(MakeInternalStateUpdater{}, model.rheological_model);
-
+          std::visit(TerminalUnits::MakeInternalStateUpdater{}, model.rheological_model);
+      model.negative_residual_evaluator =
+          std::visit(TerminalUnits::MakeNegativeResidualEvaluator{model.elasticity_model},
+              model.rheological_model);
+      model.jacobian_evaluator = std::visit(
+          TerminalUnits::MakeJacobianEvaluator{model.elasticity_model}, model.rheological_model);
       model.jacobian_evaluator(model.data, jac, locally_relevant_dofs, dt);
+
       check_jacobian_column_against_fd(
           model.data.lid_p1, 0, model, jac, locally_relevant_dofs, dt, eps, row_map);
       check_jacobian_column_against_fd(
@@ -150,7 +121,6 @@ namespace
       check_jacobian_column_against_fd(
           model.data.lid_q, 2, model, jac, locally_relevant_dofs, dt, eps, row_map);
 
-      model.internal_state_updater(model.data, locally_relevant_dofs, dt);
       jac.complete();  // Sparsity pattern already filled the first time
       model.jacobian_evaluator(model.data, jac, locally_relevant_dofs, dt);
       check_jacobian_column_against_fd(
@@ -170,12 +140,15 @@ namespace
       model.elasticity_model = OgdenHyperelasticity{std::vector<double>{0.0, 1.0, 1.0},
           std::vector<double>{1.0, 6.4, -3.0}, std::vector<double>{0.0, 0.0, 0.0},
           std::vector<double>{0.0, 0.0, 0.0}};
-      model.negative_residual_evaluator = std::visit(
-          MakeNegativeResidualEvaluator{model.elasticity_model}, model.rheological_model);
-      model.jacobian_evaluator =
-          std::visit(MakeJacobianEvaluator{model.elasticity_model}, model.rheological_model);
-
+      model.internal_state_updater =
+          std::visit(TerminalUnits::MakeInternalStateUpdater{}, model.rheological_model);
+      model.negative_residual_evaluator =
+          std::visit(TerminalUnits::MakeNegativeResidualEvaluator{model.elasticity_model},
+              model.rheological_model);
+      model.jacobian_evaluator = std::visit(
+          TerminalUnits::MakeJacobianEvaluator{model.elasticity_model}, model.rheological_model);
       model.jacobian_evaluator(model.data, jac, locally_relevant_dofs, dt);
+
       check_jacobian_column_against_fd(
           model.data.lid_p1, 0, model, jac, locally_relevant_dofs, dt, eps, row_map);
       check_jacobian_column_against_fd(

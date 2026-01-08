@@ -20,6 +20,7 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_red_airways_elementbase.hpp"
+#include "4C_reduced_lung_airways.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
@@ -61,8 +62,8 @@ namespace ReducedLung
 
     // Create vectors of local entities (equations acting on the dofs).
     // Physical "elements" of the lung tree introducing the dofs.
-    std::vector<Airway> airways;
-    TerminalUnits terminal_units;
+    AirwayContainer airways;
+    TerminalUnitContainer terminal_units;
     std::map<int, int> dof_per_ele;  // Map global element id -> dof.
     int n_airways = 0;
     int n_terminal_units = 0;
@@ -75,10 +76,16 @@ namespace ReducedLung
       int local_element_id = actdis->element_row_map()->lid(element_id);
       if (user_ele->element_type() == Discret::Elements::RedAirwayType::instance())
       {
-        // Number of equations still missing! Needs to be changed when compliant airways are
-        // implemented.
-        airways.push_back(Airway{element_id, local_element_id, n_airways, AirwayType::resistive});
-        dof_per_ele[element_id] = 3;
+        ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType flow_model_name =
+            parameters.lung_tree.airways.flow_model.resistance_type.at(
+                ele.global_id(), "flow_model_type");
+        ReducedLungParameters::LungTree::Airways::WallModelType wall_model_type =
+            parameters.lung_tree.airways.wall_model_type.at(ele.global_id(), "wall_model_type");
+
+        add_airway_with_model_selection(
+            airways, user_ele, local_element_id, parameters, flow_model_name, wall_model_type);
+
+        dof_per_ele[element_id] = 2 + airways.models.back().data.n_state_equations;
         n_airways++;
       }
       else if (user_ele->element_type() == Discret::Elements::RedAcinusType::instance())
@@ -96,39 +103,8 @@ namespace ReducedLung
                   parameters.lung_tree.terminal_units.elasticity_model.elasticity_model_type.at(
                       ele.global_id(), "elasticity_model_type");
 
-          if (rheological_model_name == ReducedLungParameters::LungTree::TerminalUnits::
-                                            RheologicalModel::RheologicalModelType::KelvinVoigt)
-          {
-            if (elasticity_model_name == ReducedLungParameters::LungTree::TerminalUnits::
-                                             ElasticityModel::ElasticityModelType::Linear)
-            {
-              add_terminal_unit_ele<KelvinVoigt, LinearElasticity>(
-                  terminal_units, user_ele, local_element_id, parameters.lung_tree.terminal_units);
-            }
-            else if (elasticity_model_name == ReducedLungParameters::LungTree::TerminalUnits::
-                                                  ElasticityModel::ElasticityModelType::Ogden)
-            {
-              add_terminal_unit_ele<KelvinVoigt, OgdenHyperelasticity>(
-                  terminal_units, user_ele, local_element_id, parameters.lung_tree.terminal_units);
-            }
-          }
-          else if (rheological_model_name ==
-                   ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::
-                       RheologicalModelType::FourElementMaxwell)
-          {
-            if (elasticity_model_name == ReducedLungParameters::LungTree::TerminalUnits::
-                                             ElasticityModel::ElasticityModelType::Linear)
-            {
-              add_terminal_unit_ele<FourElementMaxwell, LinearElasticity>(
-                  terminal_units, user_ele, local_element_id, parameters.lung_tree.terminal_units);
-            }
-            else if (elasticity_model_name == ReducedLungParameters::LungTree::TerminalUnits::
-                                                  ElasticityModel::ElasticityModelType::Ogden)
-            {
-              add_terminal_unit_ele<FourElementMaxwell, OgdenHyperelasticity>(
-                  terminal_units, user_ele, local_element_id, parameters.lung_tree.terminal_units);
-            }
-          }
+          add_terminal_unit_with_model_selection(terminal_units, user_ele, local_element_id,
+              parameters.lung_tree.terminal_units, rheological_model_name, elasticity_model_name);
         }
         else
         {
@@ -166,13 +142,26 @@ namespace ReducedLung
       acc += ele_dof.second;
     }
     // Assign every local element its associated global dof ids.
-    for (auto& airway : airways)
+    for (auto& model : airways.models)
     {
-      int first_dof_gid = first_global_dof_of_ele[airway.global_element_id];
-      int n_dof = dof_per_ele[airway.global_element_id];
-      for (int i = 0; i < n_dof; i++)
+      for (size_t i = 0; i < model.data.number_of_elements(); i++)
       {
-        airway.global_dof_ids.insert(airway.global_dof_ids.end(), first_dof_gid + i);
+        int first_dof_gid = first_global_dof_of_ele[model.data.global_element_id[i]];
+        model.data.gid_p1.push_back(first_dof_gid);
+        model.data.gid_p2.push_back(first_dof_gid + 1);
+        model.data.gid_q1.push_back(first_dof_gid + 2);
+        if (model.data.n_state_equations == 2)
+        {
+          model.data.gid_q2.push_back(first_dof_gid + 3);
+        }
+        else if (model.data.n_state_equations == 1)
+        {
+          // do nothing, remains empty
+        }
+        else
+        {
+          FOUR_C_THROW("Number of state equations not implemented.");
+        }
       }
     }
     for (auto& model : terminal_units.models)
@@ -186,7 +175,8 @@ namespace ReducedLung
       }
     }
 
-    create_terminal_unit_evaluators(terminal_units);
+    TerminalUnits::create_evaluators(terminal_units);
+    Airways::create_evaluators(airways);
 
     // Build local map node id -> adjacent element id and distribute to all processors.
     std::map<int, std::vector<int>> ele_ids_per_node;
@@ -395,9 +385,13 @@ namespace ReducedLung
     // Calculate local and global number of "element" equations and assign local row IDs to define
     // the structure of the system of equations.
     int n_local_equations = 0;
-    for (const auto& airway : airways)
+    for (auto& model : airways.models)
     {
-      n_local_equations += airway.n_state_equations;
+      for (size_t i = 0; i < model.data.number_of_elements(); i++)
+      {
+        model.data.local_row_id.push_back(n_local_equations);
+        n_local_equations += model.data.n_state_equations;
+      }
     }
     for (auto& tu_model : terminal_units.models)
     {
@@ -456,11 +450,17 @@ namespace ReducedLung
     }
 
     // Save locally relevant dof ids of every entity. Needed for local assembly.
-    for (Airway& airway : airways)
+    for (auto& model : airways.models)
     {
-      for (const int& gid : airway.global_dof_ids)
+      for (size_t i = 0; i < model.data.number_of_elements(); i++)
       {
-        airway.local_dof_ids.push_back(locally_relevant_dof_map.lid(gid));
+        model.data.lid_p1.push_back(locally_relevant_dof_map.lid(model.data.gid_p1[i]));
+        model.data.lid_p2.push_back(locally_relevant_dof_map.lid(model.data.gid_p2[i]));
+        model.data.lid_q1.push_back(locally_relevant_dof_map.lid(model.data.gid_q1[i]));
+        if (model.data.n_state_equations == 2)
+        {
+          model.data.lid_q2.push_back(locally_relevant_dof_map.lid(model.data.gid_q2[i]));
+        }
       }
     }
     for (auto& tu_model : terminal_units.models)
@@ -495,34 +495,6 @@ namespace ReducedLung
       bc.local_dof_id = locally_relevant_dof_map.lid(bc.global_dof_id);
     }
 
-    // Local airway vectors. Potentially add to airway objects in the future.
-    std::vector<double> length(n_airways);
-    std::vector<double> area(n_airways);
-    std::vector<double> poiseuille_resistance(n_airways);
-
-    // Airway constants.
-    const double dynamic_viscosity_mu = 1.79195e-05;
-    const double density_rho = 1.176e-06;
-
-    // Fill airway data.
-    for (const Airway& airway : airways)
-    {
-      const int airway_id = airway.local_airway_id;
-      const auto* airway_ele =
-          static_cast<Discret::Elements::RedAirway*>(actdis->g_element(airway.global_element_id));
-      const Discret::ReducedLung::AirwayParams airway_params = airway_ele->get_airway_params();
-      const auto coords_1 = airway_ele->nodes()[0]->x();
-      const auto coords_2 = airway_ele->nodes()[1]->x();
-      const double current_length =
-          std::sqrt((coords_1[0] - coords_2[0]) * (coords_1[0] - coords_2[0]) +
-                    (coords_1[1] - coords_2[1]) * (coords_1[1] - coords_2[1]) +
-                    (coords_1[2] - coords_2[2]) * (coords_1[2] - coords_2[2]));
-      length[airway_id] = current_length;
-      area[airway_id] = airway_params.area;
-      poiseuille_resistance[airway_id] = 8 * std::numbers::pi * dynamic_viscosity_mu * density_rho *
-                                         current_length / (airway_params.area * airway_params.area);
-    }
-
     // Create system matrix and vectors:
     // Vector with all degrees of freedom (p1, p2, q, ...) associated to the elements.
     auto dofs = Core::LinAlg::Vector<double>(locally_owned_dof_map, true);
@@ -543,6 +515,9 @@ namespace ReducedLung
     // Time integration parameters.
     const double dt = parameters.dynamics.time_increment;
     const int n_timesteps = parameters.dynamics.number_of_steps;
+    Airways::update_internal_state_vectors(airways, locally_relevant_dofs, dt);
+    TerminalUnits::update_internal_state_vectors(terminal_units, locally_relevant_dofs, dt);
+
     // Time loop
     if (Core::Communication::my_mpi_rank(comm) == 0)
     {
@@ -563,40 +538,13 @@ namespace ReducedLung
 
       // Assemble system of equations.
       // Assemble airway equations in system matrix and rhs.
-      const auto evaluate_aw_jacobian = [&poiseuille_resistance](
-                                            std::array<double, 3>& values, const int& local_ele_id)
-      { values = {1.0, -1.0, -poiseuille_resistance[local_ele_id]}; };
-      // Momentum balance: p_in - p_out - R*q != 0.
-      const auto evaluate_aw_rhs = [&poiseuille_resistance](double& res, const double& p_in,
-                                       const double& p_out, const double& q,
-                                       const int& local_ele_id)
-      { res = -(p_in - p_out - poiseuille_resistance[local_ele_id] * q); };
-      for (const Airway& airway : airways)
-      {
-        std::array<double, 3> vals;
-        double res;
-        evaluate_aw_jacobian(vals, airway.local_airway_id);
-        evaluate_aw_rhs(res,
-            locally_relevant_dofs.local_values_as_span()[airway.local_dof_ids[p_in]],
-            locally_relevant_dofs.local_values_as_span()[airway.local_dof_ids[p_out]],
-            locally_relevant_dofs.local_values_as_span()[airway.local_dof_ids[q_in]],
-            airway.local_airway_id);
-        if (!sysmat.filled())
-        {
-          sysmat.insert_my_values(
-              airway.local_element_id, vals.size(), vals.data(), airway.local_dof_ids.data());
-        }
-        else
-        {
-          sysmat.replace_my_values(
-              airway.local_element_id, vals.size(), vals.data(), airway.local_dof_ids.data());
-        }
-        rhs.replace_local_value(airway.local_element_id, res);
-      }
+      Airways::update_negative_residual_vector(rhs, airways, locally_relevant_dofs, dt);
+      Airways::update_jacobian(sysmat, airways, locally_relevant_dofs, dt);
 
       // Assemble terminal unit equations.
-      update_terminal_unit_negative_residual_vector(rhs, terminal_units, locally_relevant_dofs, dt);
-      update_terminal_unit_jacobian(sysmat, terminal_units, locally_relevant_dofs, dt);
+      TerminalUnits::update_negative_residual_vector(
+          rhs, terminal_units, locally_relevant_dofs, dt);
+      TerminalUnits::update_jacobian(sysmat, terminal_units, locally_relevant_dofs, dt);
 
       // Assemble connection equations.
       for (const Connection& conn : connections)
@@ -740,8 +688,13 @@ namespace ReducedLung
       dofs.update(1.0, x_mapped_to_dofs, 1.0);
       export_to(dofs, locally_relevant_dofs);
 
-      // Update variable parameters depending on converged dofs.
-      update_terminal_unit_internal_state_vectors(terminal_units, locally_relevant_dofs, dt);
+      // To be done at end of each nonlinear loop iteration
+      TerminalUnits::update_internal_state_vectors(terminal_units, locally_relevant_dofs, dt);
+      Airways::update_internal_state_vectors(airways, locally_relevant_dofs, dt);
+
+      // To be done at end of each timestep
+      TerminalUnits::end_of_timestep_routine(terminal_units, locally_relevant_dofs, dt);
+      Airways::end_of_timestep_routine(airways, locally_relevant_dofs, dt);
 
       // Runtime output
       if (n % parameters.dynamics.results_every == 0)

@@ -13,21 +13,30 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_red_airways_elementbase.hpp"
+#include "4C_reduced_lung_airways.hpp"
+#include "4C_reduced_lung_input.hpp"
+#include "4C_reduced_lung_terminal_unit.hpp"
 
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace ReducedLung
 {
-
-  Core::LinAlg::Map create_domain_map(
-      const MPI_Comm& comm, const std::vector<Airway>& airways, const TerminalUnits& terminal_units)
+  Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const AirwayContainer& airways,
+      const TerminalUnitContainer& terminal_units)
   {
     std::vector<int> locally_owned_dof_indices;
-    for (const auto& airway : airways)
+    for (const auto& airway : airways.models)
     {
-      locally_owned_dof_indices.insert(locally_owned_dof_indices.end(),
-          airway.global_dof_ids.begin(), airway.global_dof_ids.end());
+      locally_owned_dof_indices.insert(
+          locally_owned_dof_indices.end(), airway.data.gid_p1.begin(), airway.data.gid_p1.end());
+      locally_owned_dof_indices.insert(
+          locally_owned_dof_indices.end(), airway.data.gid_p2.begin(), airway.data.gid_p2.end());
+      locally_owned_dof_indices.insert(
+          locally_owned_dof_indices.end(), airway.data.gid_q1.begin(), airway.data.gid_q1.end());
+      locally_owned_dof_indices.insert(locally_owned_dof_indices.end(), airway.data.gid_q2.begin(),
+          airway.data.gid_q2
+              .end());  // does nothing if the model has only 1 state equation, i.e. gid_q2 is empty
     }
     for (const auto& tu_model : terminal_units.models)
     {
@@ -44,15 +53,15 @@ namespace ReducedLung
     return domain_map;
   }
 
-  Core::LinAlg::Map create_row_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const TerminalUnits& terminal_units, const std::vector<Connection>& connections,
+  Core::LinAlg::Map create_row_map(const MPI_Comm& comm, const AirwayContainer& airways,
+      const TerminalUnitContainer& terminal_units, const std::vector<Connection>& connections,
       const std::vector<Bifurcation>& bifurcations,
       const std::vector<BoundaryCondition>& boundary_conditions)
   {
     int n_local_state_equations = 0;
-    for (const auto& airway : airways)
+    for (const auto& airway : airways.models)
     {
-      n_local_state_equations += airway.n_state_equations;
+      n_local_state_equations += airway.data.n_state_equations * airway.data.number_of_elements();
     }
     for (const auto& tu_model : terminal_units.models)
     {
@@ -82,8 +91,8 @@ namespace ReducedLung
     return row_map;
   }
 
-  Core::LinAlg::Map create_column_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const TerminalUnits& terminal_units, const std::map<int, int>& global_dof_per_ele,
+  Core::LinAlg::Map create_column_map(const MPI_Comm& comm, const AirwayContainer& airways,
+      const TerminalUnitContainer& terminal_units, const std::map<int, int>& global_dof_per_ele,
       const std::map<int, int>& first_global_dof_of_ele, const std::vector<Connection>& connections,
       const std::vector<Bifurcation>& bifurcations,
       const std::vector<BoundaryCondition>& boundary_conditions)
@@ -92,10 +101,18 @@ namespace ReducedLung
     std::vector<int> locally_relevant_dof_indices;
 
     // Loop over all elements and add their global dof ids
-    for (const auto& airway : airways)
+    for (const auto& airway : airways.models)
     {
+      locally_relevant_dof_indices.insert(
+          locally_relevant_dof_indices.end(), airway.data.gid_p1.begin(), airway.data.gid_p1.end());
+      locally_relevant_dof_indices.insert(
+          locally_relevant_dof_indices.end(), airway.data.gid_p2.begin(), airway.data.gid_p2.end());
+      locally_relevant_dof_indices.insert(
+          locally_relevant_dof_indices.end(), airway.data.gid_q1.begin(), airway.data.gid_q1.end());
       locally_relevant_dof_indices.insert(locally_relevant_dof_indices.end(),
-          airway.global_dof_ids.begin(), airway.global_dof_ids.end());
+          airway.data.gid_q2.begin(),
+          airway.data.gid_q2.end());  // does nothing if the model has only 1 state equation, i.e.
+                                      // gid_q2 is empty
     }
     for (const auto& tu_model : terminal_units.models)
     {
@@ -185,23 +202,126 @@ namespace ReducedLung
     return column_map;
   }
 
+  void add_airway_with_model_selection(AirwayContainer& airways, Core::Elements::Element* ele,
+      int local_element_id, const ReducedLungParameters& parameters,
+      ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType flow_model_type,
+      ReducedLungParameters::LungTree::Airways::WallModelType wall_model_type)
+  {
+    using ResistanceType = ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType;
+    using WallModelType = ReducedLungParameters::LungTree::Airways::WallModelType;
+
+    if (flow_model_type == ResistanceType::Linear)
+    {
+      if (wall_model_type == WallModelType::Rigid)
+      {
+        add_airway_ele<LinearResistive, RigidWall>(airways, ele, local_element_id, parameters);
+      }
+      else if (wall_model_type == WallModelType::KelvinVoigt)
+      {
+        add_airway_ele<LinearResistive, KelvinVoigtWall>(
+            airways, ele, local_element_id, parameters);
+      }
+      else
+      {
+        FOUR_C_THROW("Wall model not implemented.");
+      }
+    }
+    else if (flow_model_type == ResistanceType::NonLinear)
+    {
+      if (wall_model_type == WallModelType::Rigid)
+      {
+        add_airway_ele<NonLinearResistive, RigidWall>(airways, ele, local_element_id, parameters);
+      }
+      else if (wall_model_type == WallModelType::KelvinVoigt)
+      {
+        add_airway_ele<NonLinearResistive, KelvinVoigtWall>(
+            airways, ele, local_element_id, parameters);
+      }
+      else
+      {
+        FOUR_C_THROW("Wall model not implemented.");
+      }
+    }
+    else
+    {
+      FOUR_C_THROW("Flow model not implemented.");
+    }
+  }
+
+  void add_terminal_unit_with_model_selection(TerminalUnitContainer& terminal_units,
+      Core::Elements::Element* ele, int local_element_id,
+      const ReducedLungParameters::LungTree::TerminalUnits& tu_parameters,
+      ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
+          rheological_model_type,
+      ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType
+          elasticity_model_type)
+  {
+    using RheologicalModelType =
+        ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType;
+    using ElasticityModelType =
+        ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType;
+
+    if (rheological_model_type == RheologicalModelType::KelvinVoigt)
+    {
+      if (elasticity_model_type == ElasticityModelType::Linear)
+      {
+        add_terminal_unit_ele<KelvinVoigt, LinearElasticity>(
+            terminal_units, ele, local_element_id, tu_parameters);
+      }
+      else if (elasticity_model_type == ElasticityModelType::Ogden)
+      {
+        add_terminal_unit_ele<KelvinVoigt, OgdenHyperelasticity>(
+            terminal_units, ele, local_element_id, tu_parameters);
+      }
+      else
+      {
+        FOUR_C_THROW("Elasticity model not implemented.");
+      }
+    }
+    else if (rheological_model_type == RheologicalModelType::FourElementMaxwell)
+    {
+      if (elasticity_model_type == ElasticityModelType::Linear)
+      {
+        add_terminal_unit_ele<FourElementMaxwell, LinearElasticity>(
+            terminal_units, ele, local_element_id, tu_parameters);
+      }
+      else if (elasticity_model_type == ElasticityModelType::Ogden)
+      {
+        add_terminal_unit_ele<FourElementMaxwell, OgdenHyperelasticity>(
+            terminal_units, ele, local_element_id, tu_parameters);
+      }
+      else
+      {
+        FOUR_C_THROW("Elasticity model not implemented.");
+      }
+    }
+    else
+    {
+      FOUR_C_THROW("Rheological model not implemented.");
+    }
+  }
+
   void collect_runtime_output_data(
       Core::IO::DiscretizationVisualizationWriterMesh& visualization_writer,
-      const std::vector<Airway>& airways, const TerminalUnits& terminal_units,
+      const AirwayContainer& airways, const TerminalUnitContainer& terminal_units,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs,
       const Core::LinAlg::Map* element_row_map)
   {
     Core::LinAlg::Vector<double> pressure_in(*element_row_map, true);
     Core::LinAlg::Vector<double> pressure_out(*element_row_map, true);
     Core::LinAlg::Vector<double> flow_in(*element_row_map, true);
-    for (const auto& airway : airways)
+    Core::LinAlg::Vector<double> flow_out(*element_row_map, true);
+    for (const auto& model : airways.models)
     {
-      pressure_in.replace_local_value(airway.local_element_id,
-          locally_relevant_dofs.local_values_as_span()[airway.local_dof_ids[p_in]]);
-      pressure_out.replace_local_value(airway.local_element_id,
-          locally_relevant_dofs.local_values_as_span()[airway.local_dof_ids[p_out]]);
-      flow_in.replace_local_value(airway.local_element_id,
-          locally_relevant_dofs.local_values_as_span()[airway.local_dof_ids[q_in]]);
+      for (size_t i = 0; i < model.data.number_of_elements(); i++)
+      {
+        pressure_in.replace_local_value(model.data.local_element_id[i],
+            locally_relevant_dofs.local_values_as_span()[model.data.lid_p1[i]]);
+        pressure_out.replace_local_value(model.data.local_element_id[i],
+            locally_relevant_dofs.local_values_as_span()[model.data.lid_p2[i]]);
+        flow_in.replace_local_value(model.data.local_element_id[i],
+            locally_relevant_dofs.local_values_as_span()[model.data.lid_q1[i]]);
+      }
     }
     for (const auto& model : terminal_units.models)
     {

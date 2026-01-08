@@ -86,9 +86,9 @@ namespace ReducedLung
           {
             struct Elasticity
             {
-              Core::IO::InputField<double> wall_poisson_radio;
+              Core::IO::InputField<double> wall_poisson_ratio;
               Core::IO::InputField<double> wall_elasticity;
-              Core::IO::InputField<double> diameter_over_wall_thickness;
+              Core::IO::InputField<double> wall_thickness;
             } elasticity;
             struct Viscosity
             {
@@ -158,7 +158,7 @@ namespace ReducedLung
     struct AirProperties
     {
       double density;
-      double viscosity;
+      double dynamic_viscosity;
     } air_properties;
   };
   /// reduced airways parameters
