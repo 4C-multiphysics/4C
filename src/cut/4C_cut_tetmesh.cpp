@@ -392,8 +392,27 @@ void Cut::TetMesh::call_q_hull(
     }
   }
 
+  // If you want some debugging information replace the 0 pointer
+  // with stdout or some other file open for writing.
+
+#ifdef QHULL_EXTENDED_DEBUG_OUTPUT
+  FILE* outfile = stdout;
+#else
+  FILE* outfile = nullptr;
+#endif
+
+#ifdef QHULL_DEBUG_OUTPUT
+  FILE* errfile = stderr;
+#else
+  static NullFile errfile;
+#endif
+
   qhT qh_qh; /* Qhull's data structure.  First argument of most calls */
   qhT* qh = &qh_qh;
+
+  QHULL_LIB_CHECK
+
+  qh_zero(qh, errfile);
 
   boolT ismalloc = false;
 
@@ -412,21 +431,6 @@ void Cut::TetMesh::call_q_hull(
   options.push_back("qhull d Qt Qbb Qc Pp");
   options.push_back("qhull d Qt Qbb Qc Qz Pp");
   options.push_back("qhull d Qt Qbb Qc QJ Pp");
-
-  // If you want some debugging information replace the 0 pointer
-  // with stdout or some other file open for writing.
-
-#ifdef QHULL_EXTENDED_DEBUG_OUTPUT
-  FILE* outfile = stdout;
-#else
-  FILE* outfile = nullptr;
-#endif
-
-#ifdef QHULL_DEBUG_OUTPUT
-  FILE* errfile = stderr;
-#else
-  static NullFile errfile;
-#endif
 
 #ifdef QHULL_EXTENDED_DEBUG_OUTPUT
   int counter_qhull = 0;
