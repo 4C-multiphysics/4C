@@ -7,6 +7,8 @@
 
 message(STATUS "Fetch content for Qhull")
 
+cmake_policy(SET CMP0077 NEW)
+
 set(QHULL_ENABLE_TESTING "OFF")
 set(BUILD_APPLICATIONS "OFF")
 set(BUILD_STATIC_LIBS "OFF")

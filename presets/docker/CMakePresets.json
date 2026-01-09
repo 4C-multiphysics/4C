@@ -30,7 +30,8 @@
         "FOUR_C_WITH_VTK": "ON",
         "FOUR_C_WITH_GMSH": "ON",
         "FOUR_C_GMSH_ROOT": "/opt/4C-dependencies",
-        "FOUR_C_WITH_FFTW": "ON"
+        "FOUR_C_WITH_FFTW": "ON",
+        "FOUR_C_WITH_QHULL": "ON"
       }
     },
     {
@@ -140,7 +141,8 @@
         "FOUR_C_ENABLE_DOCUMENTATION": "OFF",
         "FOUR_C_WITH_VTK": "OFF",
         "FOUR_C_WITH_GMSH": "OFF",
-        "FOUR_C_WITH_FFTW": "OFF"
+        "FOUR_C_WITH_FFTW": "OFF",
+        "FOUR_C_WITH_QHULL": "OFF"
       }
     }
   ]
