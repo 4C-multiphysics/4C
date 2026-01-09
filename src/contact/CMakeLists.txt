@@ -13,7 +13,6 @@ set(_dependencies
     contact_constitutivelaw
     core
     global_data
-    inpar
     mat
     mortar
     scatra

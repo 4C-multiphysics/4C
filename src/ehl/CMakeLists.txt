@@ -14,7 +14,6 @@ set(_dependencies
     contact
     core
     global_data
-    inpar
     lubrication
     mat
     mortar

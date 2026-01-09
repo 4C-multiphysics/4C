@@ -13,7 +13,6 @@ set(_dependencies
     config
     core
     global_data
-    inpar
     mat
     structure_new
     )

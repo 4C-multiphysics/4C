@@ -14,7 +14,6 @@ set(_dependencies
     core
     fluid_ele
     global_data
-    inpar
     mat
     )
 

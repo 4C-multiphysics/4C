@@ -12,7 +12,6 @@ set(_dependencies
     config
     cut
     geometry_pair
-    inpar
     structure_new
     )
 

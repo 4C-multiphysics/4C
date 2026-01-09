@@ -12,7 +12,6 @@ set(_dependencies
     config
     core
     global_data
-    inpar
     )
 
 four_c_add_internal_dependency(${AUTO_DEFINED_MODULE_NAME} ${_dependencies})

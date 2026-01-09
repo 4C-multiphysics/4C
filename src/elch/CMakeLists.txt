@@ -15,7 +15,6 @@ set(_dependencies
     core
     fluid
     global_data
-    inpar
     scatra
     scatra_ele
     )

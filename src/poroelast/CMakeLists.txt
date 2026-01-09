@@ -17,7 +17,6 @@ set(_dependencies
     fluid_ele
     fsi
     global_data
-    inpar
     mat
     mortar
     solid_poro_3D_ele
