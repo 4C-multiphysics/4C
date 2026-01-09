@@ -11,6 +11,9 @@
 
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
+#include "4C_linalg_symmetric_tensor_eigen.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -711,75 +714,74 @@ Core::LinAlg::Matrix<3, 3> Core::LinAlg::matrix_3x3_spatial_stretch(
 Core::LinAlg::Matrix<3, 1> Core::LinAlg::calc_rot_vect_from_rot_matrix(
     const Core::LinAlg::Matrix<3, 3>& rot_matrix)
 {
-  // declare output rotation vector
-  Core::LinAlg::Matrix<3, 1> rot_vect(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::TensorView<const double, 3, 3> rot_matrix_tensor =
+      Core::LinAlg::make_tensor_view<3, 3>(rot_matrix.data());
 
+  return Core::LinAlg::make_matrix<3, 1>(calc_rotation_vector(rot_matrix_tensor));
+}
+
+Core::LinAlg::Tensor<double, 3> Core::LinAlg::calc_rotation_vector(
+    Core::LinAlg::TensorView<const double, 3, 3> rot_matrix)
+{
   // --> interpolate quaternion from rotation matrix using Spurrier's algorithm
 
-  // utilities
-  Core::LinAlg::Matrix<4, 1> tensor_characteristics(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<4, 1> quaternion(Core::LinAlg::Initialization::zero);
-  double max_value = 0.0;
-
   // compute tensor characteristics for the algorithm
-  tensor_characteristics(0) = rot_matrix(0, 0) + rot_matrix(1, 1) + rot_matrix(2, 2);
-  tensor_characteristics(1) = rot_matrix(0, 0);
-  tensor_characteristics(2) = rot_matrix(1, 1);
-  tensor_characteristics(3) = rot_matrix(2, 2);
+  std::array<double, 4> tensor_characteristics{};
+  tensor_characteristics[0] = Core::LinAlg::trace(rot_matrix);
+  tensor_characteristics[1] = rot_matrix(0, 0);
+  tensor_characteristics[2] = rot_matrix(1, 1);
+  tensor_characteristics[3] = rot_matrix(2, 2);
 
   // get the max. value of the computed tensor characteristics
-  max_value = tensor_characteristics.max_value();
+  std::size_t max_characteristic =
+      std::ranges::max_element(tensor_characteristics) - tensor_characteristics.begin();
 
   // get corresponding quaternion based on the max. value
-  if (max_value == tensor_characteristics(0))
+  std::array<double, 4> quaternion{};
+  if (max_characteristic == 0)
   {
-    quaternion(0) = 1.0 / 2.0 * std::sqrt(1.0 + max_value);
-    quaternion(1) = 1.0 / 4.0 * (rot_matrix(2, 1) - rot_matrix(1, 2)) / quaternion(0);
-    quaternion(2) = 1.0 / 4.0 * (rot_matrix(0, 2) - rot_matrix(2, 0)) / quaternion(0);
-    quaternion(3) = 1.0 / 4.0 * (rot_matrix(1, 0) - rot_matrix(0, 1)) / quaternion(0);
+    quaternion[0] = 1.0 / 2.0 * std::sqrt(1.0 + tensor_characteristics[0]);
+    quaternion[1] = 1.0 / 4.0 * (rot_matrix(2, 1) - rot_matrix(1, 2)) / quaternion[0];
+    quaternion[2] = 1.0 / 4.0 * (rot_matrix(0, 2) - rot_matrix(2, 0)) / quaternion[0];
+    quaternion[3] = 1.0 / 4.0 * (rot_matrix(1, 0) - rot_matrix(0, 1)) / quaternion[0];
   }
-  else if (max_value == tensor_characteristics(1))
+  else if (max_characteristic == 1)
   {
-    quaternion(1) =
-        std::sqrt(1.0 / 2.0 * rot_matrix(0, 0) + 1.0 / 4.0 * (1.0 - tensor_characteristics(0)));
-
-    quaternion(0) = 1.0 / 4.0 * (rot_matrix(2, 1) - rot_matrix(1, 2)) / quaternion(1);
-
-    quaternion(2) = 1.0 / 4.0 * (rot_matrix(1, 0) + rot_matrix(0, 1)) / quaternion(1);
-    quaternion(3) = 1.0 / 4.0 * (rot_matrix(2, 0) + rot_matrix(0, 2)) / quaternion(1);
+    quaternion[1] =
+        std::sqrt(1.0 / 2.0 * rot_matrix(0, 0) + 1.0 / 4.0 * (1.0 - tensor_characteristics[0]));
+    quaternion[0] = 1.0 / 4.0 * (rot_matrix(2, 1) - rot_matrix(1, 2)) / quaternion[1];
+    quaternion[2] = 1.0 / 4.0 * (rot_matrix(1, 0) + rot_matrix(0, 1)) / quaternion[1];
+    quaternion[3] = 1.0 / 4.0 * (rot_matrix(2, 0) + rot_matrix(0, 2)) / quaternion[1];
   }
-  else if (max_value == tensor_characteristics(2))
+  else if (max_characteristic == 2)
   {
-    quaternion(2) =
-        std::sqrt(1.0 / 2.0 * rot_matrix(1, 1) + 1.0 / 4.0 * (1.0 - tensor_characteristics(0)));
-
-    quaternion(0) = 1.0 / 4.0 * (rot_matrix(0, 2) - rot_matrix(2, 0)) / quaternion(2);
-
-    quaternion(1) = 1.0 / 4.0 * (rot_matrix(0, 1) + rot_matrix(1, 0)) / quaternion(2);
-    quaternion(3) = 1.0 / 4.0 * (rot_matrix(2, 1) + rot_matrix(1, 2)) / quaternion(2);
+    quaternion[2] =
+        std::sqrt(1.0 / 2.0 * rot_matrix(1, 1) + 1.0 / 4.0 * (1.0 - tensor_characteristics[0]));
+    quaternion[0] = 1.0 / 4.0 * (rot_matrix(0, 2) - rot_matrix(2, 0)) / quaternion[2];
+    quaternion[1] = 1.0 / 4.0 * (rot_matrix(0, 1) + rot_matrix(1, 0)) / quaternion[2];
+    quaternion[3] = 1.0 / 4.0 * (rot_matrix(2, 1) + rot_matrix(1, 2)) / quaternion[2];
   }
-  else if (max_value == tensor_characteristics(3))
+  else if (max_characteristic == 3)
   {
-    quaternion(3) =
-        std::sqrt(1.0 / 2.0 * rot_matrix(2, 2) + 1.0 / 4.0 * (1.0 - tensor_characteristics(0)));
-
-    quaternion(0) = 1.0 / 4.0 * (rot_matrix(1, 0) - rot_matrix(0, 1)) / quaternion(3);
-
-    quaternion(1) = 1.0 / 4.0 * (rot_matrix(0, 2) + rot_matrix(2, 0)) / quaternion(3);
-    quaternion(2) = 1.0 / 4.0 * (rot_matrix(1, 2) + rot_matrix(2, 1)) / quaternion(3);
+    quaternion[3] =
+        std::sqrt(1.0 / 2.0 * rot_matrix(2, 2) + 1.0 / 4.0 * (1.0 - tensor_characteristics[0]));
+    quaternion[0] = 1.0 / 4.0 * (rot_matrix(1, 0) - rot_matrix(0, 1)) / quaternion[3];
+    quaternion[1] = 1.0 / 4.0 * (rot_matrix(0, 2) + rot_matrix(2, 0)) / quaternion[3];
+    quaternion[2] = 1.0 / 4.0 * (rot_matrix(1, 2) + rot_matrix(2, 1)) / quaternion[3];
   }
   // compute unit quaternion
-  Core::LinAlg::Matrix<4, 1> unit_quaternion(Core::LinAlg::Initialization::zero);
-  unit_quaternion.update(1.0 / quaternion.norm2(), quaternion, 0.0);
+  Core::LinAlg::TensorView<double, 4> quat_view =
+      Core::LinAlg::make_tensor_view<4>(quaternion.data());
+  quat_view /= Core::LinAlg::norm2(quat_view);
 
   // extract rotation vector
-  rot_vect.clear();
-  if (1.0 - unit_quaternion(0) > 1.0e-16)  // otherwise rot_vect = 0
+  Core::LinAlg::Tensor<double, 3> rot_vect{};
+  if (1.0 - quaternion[0] > 1.0e-16)  // otherwise rot_vect = 0
   {
-    double rot_theta = 2.0 * std::acos(unit_quaternion(0));
-    rot_vect(0) = rot_theta / std::sin(rot_theta / 2.0) * unit_quaternion(1);
-    rot_vect(1) = rot_theta / std::sin(rot_theta / 2.0) * unit_quaternion(2);
-    rot_vect(2) = rot_theta / std::sin(rot_theta / 2.0) * unit_quaternion(3);
+    double rot_theta = 2.0 * std::acos(quaternion[0]);
+    rot_vect(0) = rot_theta / std::sin(rot_theta / 2.0) * quaternion[1];
+    rot_vect(1) = rot_theta / std::sin(rot_theta / 2.0) * quaternion[2];
+    rot_vect(2) = rot_theta / std::sin(rot_theta / 2.0) * quaternion[3];
   }
 
   return rot_vect;
@@ -790,48 +792,37 @@ Core::LinAlg::Matrix<3, 1> Core::LinAlg::calc_rot_vect_from_rot_matrix(
 Core::LinAlg::Matrix<3, 3> Core::LinAlg::calc_rot_matrix_from_rot_vect(
     const Core::LinAlg::Matrix<3, 1>& rot_vect)
 {
-  // auxiliaries
-  Core::LinAlg::Matrix<3, 3> id3x3(Core::LinAlg::Initialization::zero);
-  for (int i = 0; i < 3; ++i) id3x3(i, i) = 1.0;
+  Core::LinAlg::TensorView<const double, 3> rot_vect_tensor =
+      Core::LinAlg::make_tensor_view<3>(rot_vect.data());
 
-  // declare output matrix
-  Core::LinAlg::Matrix<3, 3> rot_matrix(Core::LinAlg::Initialization::zero);
+  return Core::LinAlg::make_matrix<3, 3>(calc_rotation_matrix(rot_vect_tensor));
+}
 
-  // add unit tensor to the rotation tensor
-  rot_matrix.update(1.0, id3x3, 0.0);
-
+Core::LinAlg::Tensor<double, 3, 3> Core::LinAlg::calc_rotation_matrix(
+    Core::LinAlg::TensorView<const double, 3> rot_vect)
+{
   // get angle
-  double angle = rot_vect.norm2();
+  double angle = Core::LinAlg::norm2(rot_vect);
 
   // check whether angle is larger than 0.0 -> in that case compute the further terms for the
   // rotation tensor
-  if (angle > 1.0e-16)
-  {
-    // get normalized rotation vector
-    Core::LinAlg::Matrix<3, 1> norm_rot_vect(Core::LinAlg::Initialization::zero);
-    norm_rot_vect.update(1.0 / angle, rot_vect, 0.0);
+  if (angle < 1.0e-16)
+    return Core::LinAlg::get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
 
-    // compute S matrix with components from the normalized rotation vector
-    Core::LinAlg::Matrix<3, 3> S(Core::LinAlg::Initialization::zero);
-    S(0, 1) = -norm_rot_vect(2);
-    S(1, 0) = -S(0, 1);
-    S(0, 2) = norm_rot_vect(1);
-    S(2, 0) = -S(0, 2);
-    S(1, 2) = -norm_rot_vect(0);
-    S(2, 1) = -S(1, 2);
+  // get normalized rotation vector
+  Core::LinAlg::Tensor<double, 3> norm_rot_vect = rot_vect / angle;
 
-    // update rotation matrix
-    rot_matrix.update(std::sin(angle), S, 1.0);
+  // compute S matrix with components from the normalized rotation vector
+  Core::LinAlg::Tensor<double, 3, 3> S{};
+  S(0, 1) = -norm_rot_vect(2);
+  S(1, 0) = -S(0, 1);
+  S(0, 2) = norm_rot_vect(1);
+  S(2, 0) = -S(0, 2);
+  S(1, 2) = -norm_rot_vect(0);
+  S(2, 1) = -S(1, 2);
 
-    // \f$ \bm{S} \bm{S} \f$
-    Core::LinAlg::Matrix<3, 3> SS(Core::LinAlg::Initialization::zero);
-    SS.multiply_nn(1.0, S, S, 0.0);
-
-    // update rotation matrix
-    rot_matrix.update(1.0 - std::cos(angle), SS, 1.0);
-  }
-
-  return rot_matrix;
+  return Core::LinAlg::get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>) +
+         std::sin(angle) * S + (1.0 - std::cos(angle)) * S * S;
 }
 
 /*--------------------------------------------------------------------*
