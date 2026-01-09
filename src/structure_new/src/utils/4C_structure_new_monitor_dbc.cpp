@@ -7,12 +7,12 @@
 
 #include "4C_structure_new_monitor_dbc.hpp"
 
+#include "4C_fem_condition.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fem_geometry_element_volume.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
-#include "4C_io_control.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_io_runtime_csv_writer.hpp"
 #include "4C_io_yaml.hpp"
@@ -124,6 +124,57 @@ void Solid::MonitorDbc::create_reaction_force_condition(
   discret.set_condition("ReactionForce", rcond_ptr);
 }
 
+void Solid::MonitorDbc::read_restart_yaml_file(const Core::Conditions::Condition& rcond)
+{
+  const std::string full_restart_dirpath(
+      Global::Problem::instance()->output_control_file()->restart_name());
+
+  const std::string filename =
+      full_restart_dirpath + "-" + std::to_string(rcond.id() + 1) + "_monitor_dbc.yaml";
+
+  std::ifstream in(filename, std::ios::binary);
+  if (!in)
+  {
+    FOUR_C_THROW("Could not open file {}", filename);
+  }
+  std::stringstream ss;
+  ss << in.rdbuf();
+  std::string file_contents = ss.str();
+
+  c4::csubstr yaml_view{file_contents.c_str(), file_contents.size()};
+
+  dbc_monitor_yaml_file_trees_.emplace_back(ryml::parse_in_arena(yaml_view));
+
+  ryml::NodeRef root = dbc_monitor_yaml_file_trees_.back().rootref();
+  auto data_node = root["dbc monitor condition data"];
+
+  std::vector<c4::yml::NodeRef> to_remove;
+
+  for (auto child : data_node.children())
+  {
+    auto candidate = child["step"];
+    if (!candidate.invalid())
+    {
+      // ensure scalar
+      if (!candidate.is_map() && !candidate.is_seq())
+      {
+        int val = 0;
+        candidate >> val;
+
+        if (val > Global::Problem::instance()->restart())
+        {
+          to_remove.push_back(child);
+        }
+      }
+    }
+  }
+
+  for (auto id : std::ranges::reverse_view(to_remove))
+  {
+    data_node.remove_child(id);
+  }
+}
+
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void Solid::MonitorDbc::setup()
@@ -169,98 +220,47 @@ void Solid::MonitorDbc::setup()
         break;
       }
       case IOMonitorStructureDBC::FileType::yaml:
-      {
-        // handle restart
-        if (Global::Problem::instance()->restart() and
-            Core::Communication::my_mpi_rank(get_comm()) == 0)
+        // only write yaml on rank 0
+        if (Core::Communication::my_mpi_rank(get_comm()) == 0)
         {
-          const std::string full_restart_dirpath(
-              Global::Problem::instance()->output_control_file()->restart_name());
-
-          const std::string filename =
-              full_restart_dirpath + "-" + std::to_string(rcond.id() + 1) + "_monitor_dbc.yaml";
-
-          std::ifstream in(filename, std::ios::binary);
-          if (!in)
+          // handle restart
+          if (Global::Problem::instance()->restart())
           {
-            FOUR_C_THROW("Could not open file {}", filename);
+            read_restart_yaml_file(rcond);
           }
-          std::stringstream ss;
-          ss << in.rdbuf();
-          std::string file_contents = ss.str();
-
-          c4::csubstr yaml_view{file_contents.c_str(), file_contents.size()};
-
-          dbc_monitor_yaml_file_trees_.emplace_back(ryml::parse_in_arena(yaml_view));
-
-          ryml::NodeRef root = dbc_monitor_yaml_file_trees_.back().rootref();
-          auto data_node = root["dbc monitor condition data"];
-
-          std::vector<c4::yml::NodeRef> to_remove;
-
-          for (auto child : data_node.children())
+          else
           {
-            auto candidate = child["step"];
-            if (!candidate.invalid())
-            {
-              // ensure scalar
-              if (!candidate.is_map() && !candidate.is_seq())
-              {
-                int val = 0;
-                candidate >> val;
+            // create new yaml tree
+            dbc_monitor_yaml_file_trees_.emplace_back(Core::IO::init_yaml_tree_with_exceptions());
+            ryml::NodeRef root = dbc_monitor_yaml_file_trees_.back().rootref();
+            // make root node a map
+            root |= ryml::MAP;
 
-                if (val > Global::Problem::instance()->restart())
+            // write condition information node if requested (not necessary for restarts)
+            if (sublist_IO_monitor_structure_dbc.get<bool>("WRITE_CONDITION_INFORMATION"))
+            {
+              auto information_node = root.append_child();
+              information_node << ryml::key("dbc monitor condition");
+              information_node |= ryml::MAP;
+              {
+                auto node_gids = information_node.append_child();
+                node_gids << ryml::key("node gids");
+                node_gids |= ryml::SEQ;
+                const auto* node_ids = rcond_ptr->get_nodes();
+                for (const auto node_id : *node_ids)
                 {
-                  to_remove.push_back(child);
+                  node_gids.append_child() << node_id;
                 }
               }
             }
-          }
 
-          for (auto id : std::ranges::reverse_view(to_remove))
-          {
-            data_node.remove_child(id);
+            // create data node
+            auto data_node = root.append_child();
+            data_node << ryml::key("dbc monitor condition data");
+            data_node |= ryml::SEQ;
           }
+          break;
         }
-        break;
-      }
-    }
-
-    if (sublist_IO_monitor_structure_dbc.get<bool>("WRITE_CONDITION_INFORMATION"))
-    {
-      FOUR_C_ASSERT_ALWAYS(file_type_ == IOMonitorStructureDBC::FileType::yaml,
-          "DBC monitor including condition information ('WRITE_CONDITION_INFORMATION: true') can "
-          "only be written to file for the 'yaml' file format!");
-
-      // only needs to be done if simulation is not restarted because in this case the file from
-      // the simulation that is restarted is read and on proc 0
-      if (!Global::Problem::instance()->restart() and
-          Core::Communication::my_mpi_rank(get_comm()) == 0)
-      {
-        dbc_monitor_yaml_file_trees_.emplace_back(Core::IO::init_yaml_tree_with_exceptions());
-        ryml::NodeRef root = dbc_monitor_yaml_file_trees_.back().rootref();
-
-        root |= ryml::MAP;
-        auto information_node = root.append_child();
-        information_node << ryml::key("dbc monitor condition");
-        information_node |= ryml::MAP;
-        {
-          auto node_gids = information_node.append_child();
-          node_gids << ryml::key("node gids");
-          node_gids |= ryml::SEQ;
-          const auto* node_ids = rcond_ptr->get_nodes();
-          for (const auto node_id : *node_ids)
-          {
-            node_gids.append_child() << node_id;
-          }
-        }
-
-        // add the data node to be appended later
-        root |= ryml::MAP;
-        auto data_node = root.append_child();
-        data_node << ryml::key("dbc monitor condition data");
-        data_node |= ryml::SEQ;
-      }
     }
   }
 

@@ -170,6 +170,13 @@ four_c_test(TEST_FILE beam3r_herm2line3_static_beam_to_solid_volume_meshtying_nu
 four_c_test(TEST_FILE beam3r_herm2line3_static_beam_to_solid_volume_meshtying_rotational_coupling_circ.4C.yaml NP 2)
 four_c_test(TEST_FILE beam3r_herm2line3_static_beam_to_solid_volume_meshtying_rotational_coupling_gpts_deformation_gradient_3d_local_1.4C.yaml NP 2 RETURN_AS current)
 four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 2)
+four_c_test(TEST_FILE beam3r_monitor_dbc_yaml_no_condition_information.4C.yaml NP 2 RETURN_AS current)
+four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 2 RETURN_AS current)
+four_c_test_add_csv_yaml_comparison(BASED_ON ${current} RESULT_FILE xxx-1-101_monitor_dbc.yaml REFERENCE_FILE ref/beam3r_monitor_dbc_yaml_no_condition_information-1-101_monitor_dbc.yaml TOL_R 1e-10 TOL_A 1e-12)
+four_c_test(TEST_FILE beam3r_monitor_dbc_yaml_with_condition_information.4C.yaml NP 2 RETURN_AS current)
+four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 2 RETURN_AS current)
+four_c_test_add_csv_yaml_comparison(BASED_ON ${current} RESULT_FILE xxx-1-101_monitor_dbc.yaml REFERENCE_FILE ref/beam3r_monitor_dbc_yaml_with_condition_information-1-101_monitor_dbc.yaml TOL_R 1e-10 TOL_A 1e-12)
+
 four_c_test(TEST_FILE beam3r_herm2line3_static_beam_to_solid_volume_meshtying_rotational_coupling_gpts_deformation_gradient_3d_local_2.4C.yaml NP 2)
 four_c_test(TEST_FILE beam3r_herm2line3_static_beam_to_solid_volume_meshtying_rotational_coupling_gpts_deformation_gradient_3d_local_3.4C.yaml NP 2)
 four_c_test(TEST_FILE beam3r_herm2line3_static_beam_to_solid_volume_meshtying_rotational_coupling_gpts_deformation_gradient_average_2d.4C.yaml NP 2)

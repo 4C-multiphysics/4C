@@ -79,6 +79,15 @@ namespace Solid
    private:
     int get_unique_id(int tagged_id, Core::Conditions::GeometryType gtype) const;
 
+    /**
+     * @brief Read in existing yaml file for restart and remove steps beyond restart step
+     *
+     * The opened yaml writer is appended to the dbc_monitor_yaml_file_trees_ vector.
+     *
+     * @param rcond Condition for which the restart file shall be read
+     */
+    void read_restart_yaml_file(const Core::Conditions::Condition& rcond);
+
     void create_reaction_force_condition(
         const Core::Conditions::Condition& tagged_cond, Core::FE::Discretization& discret) const;
 
