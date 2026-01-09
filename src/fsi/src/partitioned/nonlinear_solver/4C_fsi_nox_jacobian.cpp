@@ -110,18 +110,6 @@ void NOX::FSI::FSIMatrixFree::add(const Core::LinAlg::SparseOperator& A, const b
   FOUR_C_THROW("Not implemented");
 }
 
-void NOX::FSI::FSIMatrixFree::add_other(Core::LinAlg::SparseMatrix& A, const bool transposeA,
-    const double scalarA, const double scalarB) const
-{
-  FOUR_C_THROW("Not implemented");
-}
-
-void NOX::FSI::FSIMatrixFree::add_other(Core::LinAlg::BlockSparseMatrixBase& A,
-    const bool transposeA, const double scalarA, const double scalarB) const
-{
-  FOUR_C_THROW("Not implemented");
-}
-
 void NOX::FSI::FSIMatrixFree::scale(double ScalarConstant) { FOUR_C_THROW("Not implemented"); }
 
 void NOX::FSI::FSIMatrixFree::multiply(bool TransA, const Core::LinAlg::MultiVector<double>& X,

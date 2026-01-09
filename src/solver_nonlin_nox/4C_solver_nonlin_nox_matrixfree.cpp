@@ -162,18 +162,6 @@ void NOX::Nln::MatrixFree::SparseOperatorWrapper::add(const Core::LinAlg::Sparse
   FOUR_C_THROW("Not implemented");
 }
 
-void NOX::Nln::MatrixFree::SparseOperatorWrapper::add_other(Core::LinAlg::SparseMatrix& A,
-    const bool transposeA, const double scalarA, const double scalarB) const
-{
-  FOUR_C_THROW("Not implemented");
-}
-
-void NOX::Nln::MatrixFree::SparseOperatorWrapper::add_other(Core::LinAlg::BlockSparseMatrixBase& A,
-    const bool transposeA, const double scalarA, const double scalarB) const
-{
-  FOUR_C_THROW("Not implemented");
-}
-
 void NOX::Nln::MatrixFree::SparseOperatorWrapper::scale(double ScalarConstant)
 {
   FOUR_C_THROW("Not implemented");

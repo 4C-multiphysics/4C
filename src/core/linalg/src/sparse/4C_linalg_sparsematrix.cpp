@@ -1491,25 +1491,12 @@ void Core::LinAlg::SparseMatrix::replace_or_insert_global_values(
 void Core::LinAlg::SparseMatrix::add(const Core::LinAlg::SparseOperator& A, const bool transposeA,
     const double scalarA, const double scalarB)
 {
-  A.add_other(*this, transposeA, scalarA, scalarB);
-}
+  const auto* sparse_matrix = dynamic_cast<const Core::LinAlg::SparseMatrix*>(&A);
+  FOUR_C_ASSERT(sparse_matrix != nullptr,
+      "Matrix A cannot be added to this sparse matrix as it is not a sparse matrix!");
 
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void Core::LinAlg::SparseMatrix::add_other(Core::LinAlg::SparseMatrix& B, const bool transposeA,
-    const double scalarA, const double scalarB) const
-{
-  Core::LinAlg::matrix_add(*this, transposeA, scalarA, B, scalarB);
+  Core::LinAlg::matrix_add(*sparse_matrix, transposeA, scalarA, *this, scalarB);
 }
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void Core::LinAlg::SparseMatrix::add_other(Core::LinAlg::BlockSparseMatrixBase& B,
-    const bool transposeA, const double scalarA, const double scalarB) const
-{
-  FOUR_C_THROW("BlockSparseMatrix and SparseMatrix cannot be added");
-}
-
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/

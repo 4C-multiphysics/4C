@@ -102,12 +102,6 @@ namespace NOX
         void add(const Core::LinAlg::SparseOperator& A, const bool transposeA, const double scalarA,
             const double scalarB) override;
 
-        void add_other(Core::LinAlg::SparseMatrix& A, const bool transposeA, const double scalarA,
-            const double scalarB) const override;
-
-        void add_other(Core::LinAlg::BlockSparseMatrixBase& A, const bool transposeA,
-            const double scalarA, const double scalarB) const override;
-
         void scale(double ScalarConstant) override;
 
         void multiply(bool TransA, const Core::LinAlg::MultiVector<double>& X,

@@ -253,25 +253,22 @@ int Core::LinAlg::BlockSparseMatrixBase::ApplyInverse(
 void Core::LinAlg::BlockSparseMatrixBase::add(const Core::LinAlg::SparseOperator& A,
     const bool transposeA, const double scalarA, const double scalarB)
 {
-  A.add_other(*this, transposeA, scalarA, scalarB);
-}
+  auto* blocksparse_matrix = dynamic_cast<const Core::LinAlg::BlockSparseMatrixBase*>(&A);
+  FOUR_C_ASSERT(blocksparse_matrix != nullptr,
+      "Matrix A cannot be added to this block sparse matrix as it is not a block sparse matrix!");
 
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void Core::LinAlg::BlockSparseMatrixBase::add_other(Core::LinAlg::BlockSparseMatrixBase& A,
-    const bool transposeA, const double scalarA, const double scalarB) const
-{
-  A.add(*this, transposeA, scalarA, scalarB);
-}
-
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void Core::LinAlg::BlockSparseMatrixBase::add_other(Core::LinAlg::SparseMatrix& A,
-    const bool transposeA, const double scalarA, const double scalarB) const
-{
-  FOUR_C_THROW("BlockSparseMatrix and SparseMatrix cannot be added");
+  for (int i = 0; i < rows(); i++)
+  {
+    for (int j = 0; j < cols(); j++)
+    {
+      if (transposeA)
+        Core::LinAlg::matrix_add(
+            blocksparse_matrix->matrix(j, i), transposeA, scalarA, matrix(i, j), scalarB);
+      else
+        Core::LinAlg::matrix_add(
+            blocksparse_matrix->matrix(i, j), transposeA, scalarA, matrix(i, j), scalarB);
+    }
+  }
 }
 
 

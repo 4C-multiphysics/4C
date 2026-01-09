@@ -201,14 +201,6 @@ namespace Core::LinAlg
     virtual void add(const Core::LinAlg::SparseOperator& A, const bool transposeA,
         const double scalarA, const double scalarB) = 0;
 
-    /// Add one SparseMatrixBase to another
-    virtual void add_other(Core::LinAlg::SparseMatrix& A, const bool transposeA,
-        const double scalarA, const double scalarB) const = 0;
-
-    /// Add one BlockSparseMatrix to another
-    virtual void add_other(Core::LinAlg::BlockSparseMatrixBase& A, const bool transposeA,
-        const double scalarA, const double scalarB) const = 0;
-
     /// Multiply all values by a constant value (in place: A <- ScalarConstant * A).
     virtual void scale(double ScalarConstant) = 0;
 
