@@ -39,8 +39,8 @@ namespace Solid::IOMonitorStructureDBC
 
             // whether to write information about monitored boundary condition to an output file
             parameter<bool>("WRITE_CONDITION_INFORMATION",
-                {.description =
-                        "write information about monitored boundary condition to output file",
+                {.description = "write information about monitored boundary condition to output "
+                                "file. Only possible for yaml output.",
                     .default_value = false})},
         {.required = false});
     return spec;
