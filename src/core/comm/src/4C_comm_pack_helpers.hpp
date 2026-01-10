@@ -533,13 +533,13 @@ namespace Core::Communication
   /*!
    * \brief Extract stuff from a char vector data and increment position
    *
-   * This method is a template for stuff of type Pairedvector<Key,T0,Ts...>*
+   * This method is a template for stuff of type Pairedvector<Key,T0>*
    *
    * \param[in,out] buffer the buffer to unpack from
    * \param[out] stuff Pairedvector<Key,T0,Ts...> to extract from data
    */
   template <typename Key, typename T0, typename... Ts>
-  void extract_from_pack(UnpackBuffer& buffer, Core::Gen::Pairedvector<Key, T0, Ts...>& stuff)
+  void extract_from_pack(UnpackBuffer& buffer, Core::Gen::Pairedvector<Key, T0>& stuff)
   {
     int numentries = 0;
     extract_from_pack(buffer, numentries);

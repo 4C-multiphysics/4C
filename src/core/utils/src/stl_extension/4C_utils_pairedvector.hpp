@@ -11,10 +11,8 @@
 #include "4C_config.hpp"
 
 #include "4C_utils_exceptions.hpp"
-#include "4C_utils_pairedobj_insert_policy.hpp"
 
 #include <algorithm>
-#include <cstddef>
 #include <iomanip>
 #include <map>
 #include <ostream>
@@ -25,13 +23,6 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::Gen
 {
-  /// copy types
-  enum CopyType : char
-  {
-    DeepCopy,  ///< copy the whole paired vector
-    ShapeCopy  ///< copy the keys of the paired vector but clear all values.
-  };
-
   /**
    * @brief A substitute for std::maps, that has different storage and access
    * characteristics.
@@ -49,36 +40,34 @@ namespace Core::Gen
    * The access characteristics are equivalent to those of a vector, which is
    * the container it is based on. Note especially that the elements are not
    * sorted.
+   *
+   * @note This data structure should be replaced with C++23 flat_map
+   * (https://en.cppreference.com/w/cpp/container/flat_map.html).
    */
-  template <typename Key, typename T, typename InsertPolicy = DefaultInsertPolicy<Key, T>>
-  class Pairedvector : protected InsertPolicy
+  template <typename Key, typename T>
+  class Pairedvector
   {
    private:
-    using class_type = Pairedvector<Key, T, InsertPolicy>;
-    using base_type = InsertPolicy;
-    using pairedvector_type = typename base_type::pairedvector_type;
-    using pair_type = typename base_type::pair_type;
+    using pair_type = std::pair<Key, T>;
+    using pairedvector_type = std::vector<pair_type>;
 
    public:
-    using iterator = typename base_type::iterator;
-    using const_iterator = typename base_type::const_iterator;
+    using iterator = typename pairedvector_type::iterator;
+    using const_iterator = typename pairedvector_type::const_iterator;
 
     /**
      *  @brief  constructor creates no elements, but reserves the maximum
      *          number of entries.
      *  @param reserve The number of elements that are preallocated
      */
-    Pairedvector(size_t reserve)
-        : m_(reserve + InsertPolicy::capacity_offset(), pair_type()), entries_(0)
-    {
-    }
+    Pairedvector(size_t reserve) : m_(reserve, pair_type()), entries_(0) {}
 
     /**
      *  @brief  empty constructor creates no elements and does not reserve any
      *          number of entries. Use resize as soon as you know the necessary
      *          number of elements.
      */
-    Pairedvector() : m_(InsertPolicy::capacity_offset(), pair_type()), entries_(0) {}
+    Pairedvector() : entries_(0) {}
 
     /**
      *  @brief  constructor creates no elements, but reserves the maximum
@@ -88,8 +77,7 @@ namespace Core::Gen
      *  @param default_T   default value for the data within the pair
      */
     Pairedvector(size_t reserve, Key default_key, T default_T)
-        : m_(reserve + InsertPolicy::capacity_offset(), pair_type(default_key, default_T)),
-          entries_(0)
+        : m_(reserve, pair_type(default_key, default_T)), entries_(0)
     {
     }
 
@@ -100,52 +88,35 @@ namespace Core::Gen
      *  @param[in] type   Apply this copy type.
      *
      *  */
-    Pairedvector(const Pairedvector& source, Gen::CopyType type = DeepCopy)
-        : m_(0, pair_type()), entries_(0)
-
-    {
-      clone(source);
-
-      switch (type)
-      {
-        case ShapeCopy:
-        {
-          for (std::pair<Key, T>& entry : *this) entry.second = T();
-
-          break;
-        }
-        default:
-          break;
-      }
-    }
+    Pairedvector(const Pairedvector& source) : m_(0, pair_type()), entries_(0) { clone(source); }
 
     /**
      *  Returns a read/write iterator that points to the first
      *  element in the %Pairedvector.  Iteration is done in ordinary
      *  element order.
      */
-    iterator begin() { return base_type::begin(m_.begin()); }
+    iterator begin() { return m_.begin(); }
 
     /**
      *  Returns a read-only (constant) iterator that points to the first pair
      *  in the %Pairedvector.  Iteration is done in ordinary
      *  element order.
      */
-    const_iterator begin() const { return base_type::begin(m_.begin()); }
+    const_iterator begin() const { return m_.begin(); }
 
     /**
      *  Returns a read/write iterator that points one past the last
      *  pair in the %Pairedvector.  Iteration is done in ordinary
      *  element order.
      */
-    iterator end() { return base_type::end(m_.begin() + entries_); }
+    iterator end() { return m_.begin() + entries_; }
 
     /**
      *  Returns a read-only (constant) iterator that points one past the last
      *  pair in the %Pairedvector.  Iteration is done in ordinary
      *  element order.
      */
-    const_iterator end() const { return base_type::end(m_.begin() + entries_); }
+    const_iterator end() const { return m_.begin() + entries_; }
 
     /**
      *  @brief  Tries to locate an element in a %Pairedvector.
@@ -158,7 +129,15 @@ namespace Core::Gen
      *  pointing to the sought after %pair.  If unsuccessful it returns the
      *  past-the-end ( @c end() ) iterator.
      */
-    iterator find(const Key k) { return base_type::find(k, m_, entries_); }
+    iterator find(const Key k)
+    {
+      iterator last = m_.begin() + entries_;
+      for (iterator it = m_.begin(); it != last; ++it)
+      {
+        if (it->first == k) return it;
+      }
+      return last;
+    }
 
     /**
      *  @brief  Tries to locate an element in a %Pairedvector.
@@ -171,7 +150,15 @@ namespace Core::Gen
      *  iterator pointing to the sought after %pair. If unsuccessful it
      *  returns the past-the-end ( @c end() ) iterator.
      */
-    const_iterator find(const Key k) const { return base_type::find(k, m_, entries_); }
+    const_iterator find(const Key k) const
+    {
+      const_iterator last = m_.begin() + entries_;
+      for (const_iterator it = m_.begin(); it != last; ++it)
+      {
+        if (it->first == k) return it;
+      }
+      return last;
+    }
 
     /**
      * @param  x  Data with which old elements are overwritten.
@@ -206,10 +193,9 @@ namespace Core::Gen
     void resize(size_t new_size, pair_type x = pair_type())
     {
       // adapt sentinel value thresholds
-      if (m_.size() >= InsertPolicy::capacity_offset())
-        std::fill(m_.end() - InsertPolicy::capacity_offset(), m_.end(), x);
+      if (m_.size() >= 0) std::fill(m_.end(), m_.end(), x);
 
-      m_.resize(new_size + InsertPolicy::capacity_offset(), x);
+      m_.resize(new_size, x);
 
       // If vector is truncated to new_size, adapt number of entries.
       if (new_size < entries_) entries_ = new_size;
@@ -225,35 +211,21 @@ namespace Core::Gen
      *  subscript.  If the key does not exist, a pair with that key
      *  is created using default values, which is then returned.
      */
-    T& operator[](const Key k) { return base_type::get(k, m_, entries_); }
-
-    /** @brief In the default case same behavior as %operator[] */
-    T& operator()(const Key k) { return base_type::operator()(k, m_, entries_); }
-
-    /** @brief In the default case same behavior as %operator[] with minor overhead
-     *
-     *  @note If the quick_insert_policy is chosen, speed-up of look-up for
-     *  repetitive accesses with constant access pattern. See the policy for more
-     *  information.
-     *
-     *  @param[in] k          The key for which data should be retrieved.
-     *  @param[in] rep_count  Repetition counter. First repetition (rep_count==0)
-     *                        is used to initialize the access pattern.
-     *  @return A reference to the data of the (key,data) %pair.*/
-    T& repetitive_access(const Key k, const int rep_count)
+    T& operator[](const Key k)
     {
-      return base_type::repetitive_access(k, rep_count, m_, entries_);
+      iterator last = m_.begin() + entries_;
+      iterator it = find(k);
+      if (it != last) return it->second;
+
+      if (entries_ >= m_.size()) throw std::length_error("Pairedvector::operator[]");
+
+      ++entries_;
+      last->first = k;
+      return last->second;
     }
 
-    /** @brief complete special internally used data structures.
-     *
-     *  This routine is without functionality for the default_insert_policy, but
-     *  plays an important roll for the quick_insert_policy as well as for the
-     *  insert_and_sort_policy. See the repetitive_access and operator() methods
-     *  for more information.
-     *
-     */
-    void complete() { entries_ = InsertPolicy::complete(m_, entries_); }
+    /** @brief Same behavior as %operator[] */
+    T& operator()(const Key k) { return operator[](k); }
 
     /**
      *  @brief  Access to %Pairedvector data.
@@ -262,7 +234,14 @@ namespace Core::Gen
      *          such a data is present in the %Pairedvector.
      *  @throw  Core::Exception("invalid key")  If no such data is present.
      */
-    T& at(const Key k) { return base_type::at(k, m_, entries_); }
+    T& at(const Key k)
+    {
+      auto last = m_.begin() + entries_;
+      auto it = find(k);
+      if (it == last) FOUR_C_THROW("Pairedvector::at(): invalid key");
+
+      return it->second;
+    }
 
     /**
      *  @brief  Access to %Pairedvector data.
@@ -271,27 +250,20 @@ namespace Core::Gen
      *          such a data is present in the %Pairedvector.
      *  @throw  Core::Exception("invalid key")  If no such data is present.
      */
-    const T& at(const Key k) const { return base_type::at(k, m_, entries_); }
+    const T& at(const Key k) const
+    {
+      auto last = m_.begin() + entries_;
+      auto it = find(k);
+      if (it == last) FOUR_C_THROW("Pairedvector::at(): invalid key");
+
+      return it->second;
+    }
 
     /** Returns the current capacity of the %Pairedvector.  */
-    size_t capacity() const
-    {
-      return (m_.size() > 0 ? m_.size() - InsertPolicy::capacity_offset() : 0);
-    }
+    size_t capacity() const { return (m_.size() > 0 ? m_.size() : 0); }
 
     /**  Returns the number of elements in the %Pairedvector.  */
     size_t size() const { return entries_; }
-
-    /**
-     *  @brief  Erasing elements is not allowed for this data type!
-     *  @param  k  Key of element to be erased.
-     *
-     */
-    void erase(const Key k)
-    {
-      FOUR_C_THROW("entries cannot be removed");
-      return;
-    }
 
     /** Returns true if the %Pairedvector is empty.  (Thus begin() would equal
      *  end().)
@@ -306,11 +278,10 @@ namespace Core::Gen
      *  (Three pointers and the entries information, so it should be quite fast.)
      *
      *  */
-    void swap(class_type& x)
+    void swap(Pairedvector& x)
     {
       // swap internal data structure
       m_.swap(x.m_);
-      base_type::swap(x);
 
       // swap entry number
       const size_t my_entries = entries_;
@@ -325,9 +296,9 @@ namespace Core::Gen
      *  If necessary the capacity of this %Pairedvector will be modified. All
      *  previous elements are lost and will be overwritten by the source values.
      */
-    class_type& operator=(const class_type& source)
+    Pairedvector& operator=(const Pairedvector& source)
     {
-      clone(source, DeepCopy);
+      clone(source);
       return *this;
     }
 
@@ -338,7 +309,7 @@ namespace Core::Gen
      *  If necessary the capacity of this %Pairedvector will be modified. All
      *  previous elements are lost and will be overwritten by the source values.
      */
-    class_type& operator=(const std::map<Key, T>& source)
+    Pairedvector& operator=(const std::map<Key, T>& source)
     {
       clear();
       clone(source);
@@ -356,42 +327,10 @@ namespace Core::Gen
      *                     only the key but not the values are copied.
      *
      */
-    void clone(const class_type& source, const CopyType type)
+    void clone(const Pairedvector& source)
     {
       clear();
-      clone(source);
-
-      switch (type)
-      {
-        case ShapeCopy:
-        {
-          for (pair_type& entry : *this) entry.second = T();
-
-          break;
-        }
-        default:
-          break;
-      }
-    }
-
-    /**
-     *  @brief  print the %Pairedvector
-     *  @param  output stream.
-     *  @param  sort the entries before the actual print is performed.
-     *
-     *  Print the %Pairedvector information in column format. By default the
-     *  entries are sorted with respect to their KEY entries.
-     *
-     */
-    void print(std::ostream& os, bool sort = true) const
-    {
-      pairedvector_type sorted_m(m_.begin(), m_.begin() + entries_);
-      if (sort) std::sort(sorted_m.begin(), sorted_m.end(), pair_comp<pair_type>);
-
-      os << "Core::Gen::Pairedvector [size= " << size() << ", capacity=" << capacity() << "]\n";
-      if (sort) os << "sorted ";
-      os << "entries {KEY, T}:\n";
-      for (auto& p : sorted_m) os << "{" << p.first << ", " << p.second << "}\n";
+      clone_impl(source);
     }
 
     /** @brief access the raw internally stored data (read-only)
@@ -400,16 +339,6 @@ namespace Core::Gen
      *  compromised.
      */
     const pairedvector_type& data() const { return m_; }
-
-    /** @brief Activate and deactivate the debug functionality
-     *
-     *  @note This is only working, if the underlying data structures are
-     *  compiled with included DEBUG output.
-     *
-     *  @param[in] isdebug  bool value for activation/deactivation
-     *
-     */
-    void set_debug_mode(bool isdebug) { base_type::set_debug_mode(isdebug); }
 
    protected:
     /// access the internally stored data
@@ -420,10 +349,8 @@ namespace Core::Gen
      *  @param[in] source  copy the source object into this.
      *
      */
-    void clone(const class_type& source)
+    void clone_impl(const Pairedvector& source)
     {
-      base_type::clone(source);
-
       const size_t src_capacity = source.capacity();
       if (capacity() < src_capacity) resize(src_capacity);
 
@@ -434,6 +361,8 @@ namespace Core::Gen
     }
 
    private:
+    static bool pair_comp(const Key& i, const Key& j) { return i.first < j.first; }
+
     /// raw data vector
     pairedvector_type m_;
 
@@ -441,34 +370,6 @@ namespace Core::Gen
     size_t entries_;
 
   };  // class Pairedvector
-
-  /** @brief print sorted %Pairedvector (row format)
-   *
-   *  @param[in] os  output stream
-   *  @param[in] vec paired vector object which is going to be printed
-   *  @return The modified output stream.
-   *
-   */
-  template <typename Key, typename T0, typename... Ts>
-  std::ostream& operator<<(std::ostream& os, const Pairedvector<Key, T0, Ts...>& vec)
-  {
-    std::vector<std::pair<Key, T0>> sorted_vec(vec.begin(), vec.end());
-    std::sort(sorted_vec.begin(), sorted_vec.end(), pair_comp<std::pair<Key, T0>>);
-
-    os << "[size= " << vec.size() << ", capacity=" << vec.capacity() << "]";
-    for (auto& p : sorted_vec)
-      os << " (" << p.first << ", " << std::setprecision(3) << std::scientific << p.second << ")";
-
-    return os;
-  }
-
-  /// template alias for the Pairedvector using the default_insert_policy
-  template <typename Key, typename T>
-  using default_pairedvector = Pairedvector<Key, T, DefaultInsertPolicy<Key, T>>;
-
-  /// template alias for the Pairedvector using the quick_insert_policy
-  template <typename Key, typename T>
-  using quick_pairedvector = Pairedvector<Key, T, QuickInsertPolicy<Key, T>>;
 
 }  // namespace Core::Gen
 
