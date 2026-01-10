@@ -1,0 +1,32 @@
+$MeshFormat
+4.1 0 8
+$EndMeshFormat
+$PhysicalNames
+1
+1 1 "FirstLine"
+$EndPhysicalNames
+$Entities
+2 1 0 0
+1 0 0 0 0
+2 1 0 0 0
+1 -9.999999994736442e-08 -1e-07 -1e-07 1.0000001 1e-07 1e-07 1 1 2 1 -2
+$EndEntities
+$Nodes
+3 4 1 4
+0 1 0 1
+1
+0 0 0
+0 2 0 1
+2
+1 0 0
+1 1 0 2
+3
+4
+0.3333333333333333 0 0
+0.6666666666666666 0 0
+$EndNodes
+$Elements
+1 1 1 1
+1 1 26 1
+1 1 2 3 4
+$EndElements

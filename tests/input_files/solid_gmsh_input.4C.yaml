@@ -1,0 +1,122 @@
+TITLE:
+  - "msh input for solid mechanics"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO:
+  OUTPUT_SPRING: true
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "GL"
+  VERBOSITY: "Standard"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 5
+  OUTPUT_DATA_FORMAT: ascii
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+  GAUSS_POINT_DATA_OUTPUT_TYPE: element_center
+SOLVER 1:
+  SOLVER: "Superlu"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  RESTARTEVERY: 5
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 0.1
+  NUMSTEP: 10
+  MAXTIME: 1
+  TOLDISP: 1e-09
+  TOLRES: 1e-09
+  LOADLIN: true
+  LINEAR_SOLVER: 1
+STRUCT NOX/Printing:
+  Inner Iteration: false
+  Outer Iteration StatusTest: false
+MATERIALS:
+  - MAT: 1
+    MAT_ElastHyper:
+      NUMMAT: 2
+      MATIDS: [11, 12]
+      DENS: 1
+  - MAT: 11
+    ELAST_IsoExpoPow:
+      K1: 500
+      K2: 10
+      C: 1
+  - MAT: 12
+    ELAST_VolSussmanBathe:
+      KAPPA: 1000
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 3 # Physical group with tag 3
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 10 # Physical group with tag 10
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [1, 0, 0]
+    FUNCT: [1, 0, 0]
+  - E: 12 # Physical group with tag 12
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [0, 1, 0]
+    VAL: [0, 0.2, 0]
+    FUNCT: [0, 1, 0]
+STRUCTURE GEOMETRY:
+  SHOW_INFO: "full"
+  ELEMENT_BLOCKS:
+    - ID: 1 # Physical group with tag 1
+      SOLID:
+        HEX8:
+          MAT: 1
+          KINEM: nonlinear
+    - ID: 2 # Physical group with tag 2
+      SOLID:
+        TET4:
+          MAT: 1
+          KINEM: nonlinear
+  FILE: solid_gmsh_input.msh
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 100
+      QUANTITY: "dispx"
+      VALUE: 7.97928752678465192e-01
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 100
+      QUANTITY: "dispy"
+      VALUE: 7.97919139840810449e-02
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 100
+      QUANTITY: "dispz"
+      VALUE: 8.63386325331269230e-03
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 124
+      QUANTITY: "dispx"
+      VALUE: 5.80607612146844199e-01
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 124
+      QUANTITY: "dispy"
+      VALUE: 4.69773518441524846e-02
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 124
+      QUANTITY: "dispz"
+      VALUE: 1.58397904088701635e-01
+      TOLERANCE: 1e-08
+
