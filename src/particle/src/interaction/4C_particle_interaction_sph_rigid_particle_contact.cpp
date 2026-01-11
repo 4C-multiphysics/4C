@@ -68,7 +68,7 @@ void Particle::SPHRigidParticleContactBase::setup(
       boundarytypes_.erase(type_i);
 
   // safety check
-  if (not boundarytypes_.count(Particle::RigidPhase))
+  if (not boundarytypes_.contains(Particle::RigidPhase))
     FOUR_C_THROW("no rigid particles defined but a rigid particle contact formulation is set!");
 }
 

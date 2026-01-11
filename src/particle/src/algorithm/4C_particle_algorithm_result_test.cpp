@@ -177,6 +177,15 @@ void Particle::ParticleResultTest::test_special(
         else if (quantity == "tempgradz")
           dim = 2;
       }
+      // phi
+      else if (quantity == "pd_damage_phi")
+      {
+        // get enum of particle state
+        particleState = Particle::PDDamageVariable;
+
+        // get component of result
+        dim = 0;
+      }
       else
         FOUR_C_THROW("result check failed with unknown quantity '{}'!", quantity);
 

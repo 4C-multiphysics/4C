@@ -88,7 +88,15 @@ namespace Particle
     LastIterAngularAcceleration,   //!< angular acceleration after last converged iteration
     LastIterModifiedAcceleration,  //!< modified acceleration after last converged iteration
     LastIterDensity,               //!< density after last converged iteration
-    LastIterTemperature            //!< temperature after last converged iteration
+    LastIterTemperature,           //!< temperature after last converged iteration
+    /*---------------------------------------------------------------------------*/
+    // particle states for peridynamics body evaluation
+    PDBodyId,               //!< peridynamics body id
+    CriticalStretch,        //!< critical stretch
+    Young,                  //!< young's modulus
+    InitialConnectedBonds,  //!< initial active bonds
+    CurrentConnectedBonds,  //!< remained active bonds
+    PDDamageVariable        //!< damage level at pd node
     /*---------------------------------------------------------------------------*/
   };
 
