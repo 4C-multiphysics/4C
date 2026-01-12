@@ -18,7 +18,7 @@ set(BUILD_SHARED_LIBS "ON")
 fetchcontent_declare(
   libqhull
   GIT_REPOSITORY https://github.com/qhull/qhull.git
-  GIT_TAG d1c2fc0caa5f644f3a0f220290d4a868c68ed4f6
+  GIT_TAG a22c735d6a8d1b5eac5773790aeae28f3b088655 #v8.1-alpha1
   )
 
 fetchcontent_makeavailable(libqhull)
