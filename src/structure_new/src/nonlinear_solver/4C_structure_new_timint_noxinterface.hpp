@@ -86,6 +86,12 @@ namespace Solid
           const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
           const bool& isscaled = false) const override;
 
+      /*! Get the norm of right hand side rows/entries related to
+       *  Lagrange Multipliers DoFs (derived from NOX::Nln::Interface::Required) */
+      double get_lagrange_multiplier_rhs_norms(const Epetra_Vector& F,
+          const NOX::Nln::StatusTest::QuantityType& checkquantity,
+          const ::NOX::Abstract::Vector::NormType& type, const bool& isscaled) const override;
+
       /*! Get the root mean square of the solution update (vector) entries
        *  (derived from NOX::Nln::Interface::Required) */
       double get_primary_solution_update_rms(const Core::LinAlg::Vector<double>& xnew,
@@ -101,9 +107,24 @@ namespace Solid
           const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
           const bool& isscaled = false) const override;
 
+      /*! Returns the desired norm of the lagrange Multiplier solution update (vector) entries
+       *  (derived from NOX::Nln::Interface::Required) */
+      double get_lagrange_multiplier_solution_update_norms(const Epetra_Vector& xnew,
+          const Epetra_Vector& xold, const NOX::Nln::StatusTest::QuantityType& checkquantity,
+          const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
+          const bool& isscaled = false) const override;
+
       /*! Returns the previous solution norm of primary DoF fields
        *  (derived from NOX::Nln::Interface::Required) */
       double get_previous_primary_solution_norms(const Core::LinAlg::Vector<double>& xold,
+          const NOX::Nln::StatusTest::QuantityType& checkquantity,
+          const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
+          const bool& isscaled = false) const override;
+
+      /*! Returns the previous solution norm of lagrange multiplier DoF fields
+       *  (derived from NOX::Nln::Interface::Required) */
+      double get_previous_lagrange_multiplier_solution_norms(
+          const Core::LinAlg::Vector<double>& xold,
           const NOX::Nln::StatusTest::QuantityType& checkquantity,
           const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
           const bool& isscaled = false) const override;

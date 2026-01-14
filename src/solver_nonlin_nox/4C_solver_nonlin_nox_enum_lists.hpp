@@ -24,12 +24,13 @@ namespace NOX
     enum SolutionType : int
     {
       sol_unknown,
-      sol_structure,           ///< structural problem
-      sol_contact,             ///< contact problem
-      sol_meshtying,           ///< meshtying problem
-      sol_cardiovascular0d,    ///< 0D cardiovascular problem
-      sol_lag_pen_constraint,  ///< Lagrange or/and penalty enforced constraint problem
-      sol_scatra               ///< scalar transport problem
+      sol_structure,            ///< structural problem
+      sol_contact,              ///< contact problem
+      sol_meshtying,            ///< meshtying problem
+      sol_cardiovascular0d,     ///< 0D cardiovascular problem
+      sol_lag_pen_constraint,   ///< Lagrange or/and penalty enforced constraint problem
+      sol_scatra,               ///< scalar transport problem
+      sol_lagrange_multipliers  ///< beaminteraction with Lagrange multipliers problem
     };
 
     //! Map quantity enum to std::string
@@ -260,14 +261,15 @@ namespace NOX
         quantity_unknown,         ///< unknown quantity (dummy)
         quantity_structure,       ///< check structural quantities
         quantity_contact_normal,  ///< check (semi-smooth) contact quantities (normal/frictionless)
-        quantity_contact_friction,    ///< check (semi-smooth) contact quantities (frictionless)
-        quantity_meshtying,           ///< check meshtying quantities
-        quantity_cardiovascular0d,    ///< check 0d cardiovascular quantities
-        quantity_lag_pen_constraint,  ///< check Lagrange/penalty enforced constraint quantities
-        quantity_pressure,            ///< check pressure dofs
-        quantity_eas,                 ///< check eas dofs
-        quantity_levelset_reinit,     ///< check levelset reinitialization
-        quantity_constraints,         ///< check constraint framework quantities
+        quantity_contact_friction,      ///< check (semi-smooth) contact quantities (frictionless)
+        quantity_meshtying,             ///< check meshtying quantities
+        quantity_cardiovascular0d,      ///< check 0d cardiovascular quantities
+        quantity_lag_pen_constraint,    ///< check Lagrange/penalty enforced constraint quantities
+        quantity_pressure,              ///< check pressure dofs
+        quantity_eas,                   ///< check eas dofs
+        quantity_levelset_reinit,       ///< check levelset reinitialization
+        quantity_constraints,           ///< check constraint framework quantities
+        quantity_lagrange_multipliers,  ///< check lagrange multiplier quantities
       };
 
       /// Map quantity name to std::string
@@ -295,6 +297,8 @@ namespace NOX
             return "LevelSet-Reinit";
           case quantity_constraints:
             return "Constraints";
+          case quantity_lagrange_multipliers:
+            return "Lagrange-Multipliers";
           case quantity_unknown:
           default:
             return "unknown quantity type";
@@ -308,7 +312,7 @@ namespace NOX
 
         if (name == "Structure")
           type = quantity_structure;
-        else if (name == "Contact-Normal")
+        else if (name == "Contact-Normal")  //
           type = quantity_contact_normal;
         else if (name == "Contact-Friction")
           type = quantity_contact_friction;
@@ -326,6 +330,8 @@ namespace NOX
           type = quantity_levelset_reinit;
         else if (name == "Constraints")
           type = quantity_constraints;
+        else if (name == "Lagrange-Multipliers")
+          type = quantity_lagrange_multipliers;
 
         return type;
       };
