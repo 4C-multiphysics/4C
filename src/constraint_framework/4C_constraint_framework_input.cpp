@@ -25,7 +25,11 @@ std::vector<Core::IO::InputSpec> Constraints::valid_parameters()
 
   spec.push_back(group("CONSTRAINT",
       {parameter<EnforcementStrategy>(
-           "CONSTRAINT_ENFORCEMENT", {.description = "Type of constraint enforcement"}),
+           "CONSTRAINT_ENFORCEMENT", {.description = "Type of constraint enforcement",
+                                         .default_value = EnforcementStrategy::none}),
+
+          parameter<int>(
+              "NUMSTEP", {.description = "max number of time steps", .default_value = 41}),
 
           parameter<double>("PENALTY_PARAM",
               {.description = "Value of the penalty parameter", .default_value = 1e5})},
@@ -35,14 +39,35 @@ std::vector<Core::IO::InputSpec> Constraints::valid_parameters()
   /* parameters for embedded mesh constraint submodel */
 
   spec.push_back(group("CONSTRAINT/EMBEDDED MESH COUPLING",
-      {
-          parameter<EmbeddedMesh::CouplingStrategy>("COUPLING_STRATEGY",
-              {.description = "Strategy to couple background and overlapping mesh"}),
+      {parameter<EmbeddedMesh::CouplingStrategy>("COUPLING_STRATEGY",
+           {.description = "Strategy to couple background and overlapping mesh",
+               .default_value = EmbeddedMesh::CouplingStrategy::undefined}),
 
           parameter<EmbeddedMesh::SolidToSolidMortarShapefunctions>("MORTAR_SHAPE_FUNCTION",
               {.description = "Shape functions that should be use in case of coupling using the "
-                              "Mortar/Lagrange  Multiplier method "}),
-      },
+                              "Mortar/Lagrange  Multiplier method ",
+                  .default_value = EmbeddedMesh::SolidToSolidMortarShapefunctions::undefined}),
+
+          parameter<EmbeddedMesh::NitscheWeightingType>("NITSCHE_WEIGHTING_TYPE",
+              {.description = "Type of weighting that should be used for averaging quantities "
+                              "using the Nitsche method. ",
+                  .default_value = EmbeddedMesh::NitscheWeightingType::undefined}),
+
+          parameter<double>("NITSCHE_SCALAR_FACTOR_FOR_STABILIZATION_PARAM",
+              {.description =
+                      "Value of the stabilization parameter for coupling based on the "
+                      "Nitsche method for cases where the NITSCHE_WEIGHTING_TYPE is not undefined.",
+                  .default_value = 1.0}),
+
+          parameter<double>("NITSCHE_STABILIZATION_PARAM",
+              {.description = "Value of the stabilization parameter for coupling based on the "
+                              "Nitsche method in case the Nitsche weighting method is undefined",
+                  .default_value = 1e5}),
+
+          parameter<double>(
+              "NITSCHE_WEIGHTING_PARAM", {.description = "Value of the average weight parameter "
+                                                         "for coupling based on the Nitsche method",
+                                             .default_value = 0.5})},
       {.required = false}));
 
   /*----------------------------------------------------------------------*/

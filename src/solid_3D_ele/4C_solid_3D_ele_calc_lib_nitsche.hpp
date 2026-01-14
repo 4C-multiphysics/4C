@@ -402,7 +402,8 @@ namespace Discret::Elements
           std::declval<const Core::LinAlg::Tensor<double, dim>&>(),
           std::declval<const Core::LinAlg::Tensor<double, dim>&>(),
           std::declval<const Core::LinAlg::Tensor<double, dim>&>(),
-          std::declval<CauchyNDirLinearizations<dim>&>()))>> = true;
+          std::declval<CauchyNDirLinearizations<dim>&>(),
+          std::declval<const Core::FE::Discretization*>()))>> = true;
 
   namespace Internal
   {
@@ -412,8 +413,16 @@ namespace Discret::Elements
       EvaluateCauchyNDirAction(const Core::Elements::Element& e, Mat::So3Material& m,
           const std::vector<double>& d, const Core::LinAlg::Tensor<double, dim>& x,
           const Core::LinAlg::Tensor<double, dim>& normal,
-          const Core::LinAlg::Tensor<double, dim>& direction, CauchyNDirLinearizations<dim>& lins)
-          : element(e), mat(m), disp(d), xi(x), n(normal), dir(direction), linearizations(lins)
+          const Core::LinAlg::Tensor<double, dim>& direction, CauchyNDirLinearizations<dim>& lins,
+          const Core::FE::Discretization* dscrt = nullptr)
+          : element(e),
+            mat(m),
+            disp(d),
+            xi(x),
+            n(normal),
+            dir(direction),
+            linearizations(lins),
+            discret(dscrt)
       {
       }
 
@@ -422,7 +431,7 @@ namespace Discret::Elements
         requires(can_evaluate_cauchy_n_dir<T&, dim>)
       {
         return cauchy_n_dir_evaluatable->get_normal_cauchy_stress_at_xi(
-            element, mat, disp, xi, n, dir, linearizations);
+            element, mat, disp, xi, n, dir, linearizations, discret);
       }
 
       template <typename T>
@@ -442,6 +451,7 @@ namespace Discret::Elements
       const Core::LinAlg::Tensor<double, dim>& n;
       const Core::LinAlg::Tensor<double, dim>& dir;
       CauchyNDirLinearizations<dim>& linearizations;
+      const Core::FE::Discretization* discret;
     };
   }  // namespace Internal
 
@@ -456,10 +466,10 @@ namespace Discret::Elements
       const Core::Elements::Element& element, Mat::So3Material& mat,
       const std::vector<double>& disp, const Core::LinAlg::Tensor<double, 3>& xi,
       const Core::LinAlg::Tensor<double, 3>& n, const Core::LinAlg::Tensor<double, 3>& dir,
-      CauchyNDirLinearizations<3>& linearizations)
+      CauchyNDirLinearizations<3>& linearizations, const Core::FE::Discretization* discretization)
   {
-    return std::visit(
-        Internal::EvaluateCauchyNDirAction<3>(element, mat, disp, xi, n, dir, linearizations),
+    return std::visit(Internal::EvaluateCauchyNDirAction<3>(
+                          element, mat, disp, xi, n, dir, linearizations, discretization),
         variant);
   }
 }  // namespace Discret::Elements

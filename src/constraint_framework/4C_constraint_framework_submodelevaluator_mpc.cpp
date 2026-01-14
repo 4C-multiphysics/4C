@@ -150,6 +150,13 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::check_input
 
       break;
     }
+    case Constraints::EnforcementStrategy::none:
+    {
+      FOUR_C_THROW(
+          "Define a constraint enforcement for the evaluation of periodic boundary conditions for "
+          "RVEs.");
+      break;
+    }
   }
 
   // Conditions definition

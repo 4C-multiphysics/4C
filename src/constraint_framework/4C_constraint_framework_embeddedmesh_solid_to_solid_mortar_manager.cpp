@@ -168,7 +168,7 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::setup(
       }
   }
 
-  // Create the maps for boundary layer and background DOFs..
+  // Create the maps for interface and background DOFs.
   set_global_maps();
 
   // Create the global coupling matrices.
@@ -206,7 +206,7 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::set_global_maps()
       discret_->dof(node, boundary_layer_interface_dofs);
   }
 
-  // Create the beam and solid maps.
+  // Create the interface and solid maps.
   boundary_layer_interface_dof_rowmap_ =
       std::make_shared<Core::LinAlg::Map>(-1, boundary_layer_interface_dofs.size(),
           boundary_layer_interface_dofs.data(), 0, discret_->get_comm());
