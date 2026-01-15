@@ -29,7 +29,7 @@ namespace Core::IO
 namespace Particle
 {
   class WallDataState;
-}
+}  // namespace Particle
 
 namespace Core::FE
 {

@@ -69,14 +69,14 @@ void Particle::SPHHeatSourceBase::setup(
     if (thermomaterial_[type_i]->thermalAbsorptivity_ > 0.0)
     {
       // safety check
-      if (not potentialabsorbingtypes.count(type_i))
+      if (not potentialabsorbingtypes.contains(type_i))
         FOUR_C_THROW("thermal absorptivity for particles of type '{}' not possible!",
             Particle::enum_to_type_name(type_i));
 
       absorbingtypes_.insert(type_i);
     }
     // determine non-absorbing particle types
-    else if (potentialabsorbingtypes.count(type_i))
+    else if (potentialabsorbingtypes.contains(type_i))
     {
       nonabsorbingtypes_.insert(type_i);
     }
@@ -249,7 +249,7 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
         (ParticleUtils::pow<2>(V_i) + ParticleUtils::pow<2>(V_j)) / (dens_i[0] + dens_j[0]);
 
     // evaluate contribution of neighboring particle j
-    if (absorbingtypes_.count(type_i))
+    if (absorbingtypes_.contains(type_i))
     {
       // sum contribution of neighboring particle j
       ParticleUtils::vec_add_scale(cfg_i[type_i][particle_i].data(),
@@ -257,7 +257,7 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
     }
 
     // evaluate contribution of neighboring particle i
-    if (absorbingtypes_.count(type_j) and status_j == Particle::Owned)
+    if (absorbingtypes_.contains(type_j) and status_j == Particle::Owned)
     {
       // sum contribution of neighboring particle i
       ParticleUtils::vec_add_scale(cfg_i[type_j][particle_j].data(),

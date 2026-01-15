@@ -883,7 +883,7 @@ int Particle::ParticleEngine::get_number_of_particles() const
 int Particle::ParticleEngine::get_number_of_particles_of_specific_type(
     const ParticleType type) const
 {
-  if (not particlecontainerbundle_->get_particle_types().count(type)) return 0;
+  if (not particlecontainerbundle_->get_particle_types().contains(type)) return 0;
 
   // get container of owned particles of specific particle type
   ParticleContainer* container = particlecontainerbundle_->get_specific_container(type, Owned);
@@ -1486,7 +1486,7 @@ void Particle::ParticleEngine::determine_particles_to_be_transferred(
       if (gidofbin == -1)
       {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-        if (not particlestoremove[type].count(ownedindex))
+        if (not particlestoremove[type].contains(ownedindex))
           FOUR_C_THROW(
               "on processor {} a particle left the computational domain without being detected!",
               myrank_);

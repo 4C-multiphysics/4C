@@ -63,7 +63,7 @@ void Particle::SPHNeighborPairs::get_relevant_particle_pair_indices_for_disjoint
   if (relindices.size() != 0) FOUR_C_THROW("vector of relevant particle pair indices not cleared!");
 
   for (const auto& type_i : types_a)
-    if (types_b.count(type_i)) FOUR_C_THROW("no disjoint combination of particle types!");
+    if (types_b.contains(type_i)) FOUR_C_THROW("no disjoint combination of particle types!");
 #endif
 
   for (const auto& type_i : types_a)

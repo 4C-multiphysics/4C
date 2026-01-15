@@ -75,7 +75,8 @@ void Particle::SPHDensityBase::setup(
   // update with actual fluid particle types
   const auto fluidtypes = fluidtypes_;
   for (const auto& type_i : fluidtypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i)) fluidtypes_.erase(type_i);
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
+      fluidtypes_.erase(type_i);
 
   // setup density of ghosted particles to refresh
   {
@@ -726,7 +727,7 @@ void Particle::SPHDensitySummation::insert_particle_states_of_particle_types(
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
 
     // current particle type is not a fluid particle type
-    if (not fluidtypes_.count(type_i)) continue;
+    if (not fluidtypes_.contains(type_i)) continue;
 
     // states for density evaluation scheme
     particlestates.insert(Particle::DensitySum);
@@ -766,7 +767,7 @@ void Particle::SPHDensityIntegration::insert_particle_states_of_particle_types(
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
 
     // current particle type is not a fluid particle type
-    if (not fluidtypes_.count(type_i)) continue;
+    if (not fluidtypes_.contains(type_i)) continue;
 
     // states for density evaluation scheme
     particlestates.insert(Particle::DensityDot);
@@ -822,7 +823,7 @@ void Particle::SPHDensityPredictCorrect::insert_particle_states_of_particle_type
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
 
     // current particle type is not a fluid particle type
-    if (not fluidtypes_.count(type_i)) continue;
+    if (not fluidtypes_.contains(type_i)) continue;
 
     // states for density evaluation scheme
     particlestates.insert({Particle::DensityDot, Particle::DensitySum, Particle::Colorfield});

@@ -33,7 +33,7 @@ void Particle::set_initial_fields(const Teuchos::ParameterList& params,
 
   for (auto& stateIt : statetotypetofunctidmap)
   {
-    if (not stateIt.second.count(Particle::RigidPhase)) continue;
+    if (not stateIt.second.contains(Particle::RigidPhase)) continue;
 
     // state vector
     Particle::StateEnum particleState = stateIt.first;

@@ -24,7 +24,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Particle
 {
   class WallHandlerInterface;
-}
+}  // namespace Particle
 
 namespace Core::FE
 {

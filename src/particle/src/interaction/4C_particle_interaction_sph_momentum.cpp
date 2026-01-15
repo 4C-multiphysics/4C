@@ -102,23 +102,23 @@ void Particle::SPHMomentum::setup(
   // update with actual fluid particle types
   const auto allfluidtypes = allfluidtypes_;
   for (const auto& type_i : allfluidtypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       allfluidtypes_.erase(type_i);
 
   const auto intfluidtypes = intfluidtypes_;
   for (const auto& type_i : intfluidtypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       intfluidtypes_.erase(type_i);
 
   const auto purefluidtypes = purefluidtypes_;
   for (const auto& type_i : purefluidtypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       purefluidtypes_.erase(type_i);
 
   // update with actual boundary particle types
   const auto boundarytypes = boundarytypes_;
   for (const auto& type_i : boundarytypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       boundarytypes_.erase(type_i);
 
   // determine size of vectors indexed by particle types
@@ -148,7 +148,7 @@ void Particle::SPHMomentum::insert_particle_states_of_particle_types(
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
 
     // current particle type is not a pure fluid particle type
-    if (not purefluidtypes_.count(type_i)) continue;
+    if (not purefluidtypes_.contains(type_i)) continue;
 
     // additional states for transport velocity formulation
     if (transportvelocityformulation_ !=
@@ -252,7 +252,7 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
 
     double* acc_i = nullptr;
-    if (intfluidtypes_.count(type_i))
+    if (intfluidtypes_.contains(type_i))
       acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
 
     const double* mod_vel_i =
@@ -268,7 +268,7 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
 
     double* acc_j = nullptr;
-    if (intfluidtypes_.count(type_j) and status_j == Particle::Owned)
+    if (intfluidtypes_.contains(type_j) and status_j == Particle::Owned)
       acc_j = container_j->get_ptr_to_state(Particle::Acceleration, particle_j);
 
     const double* mod_vel_j =
@@ -398,7 +398,7 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
     // swap fluid particle and boundary particle
-    const bool swapparticles = boundarytypes_.count(type_i);
+    const bool swapparticles = boundarytypes_.contains(type_i);
     if (swapparticles)
     {
       std::tie(type_i, status_i, particle_i) = particlepair.tuple_j_;

@@ -30,7 +30,7 @@ namespace Core::IO
 namespace Particle
 {
   class RigidBodyDataState;
-}
+}  // namespace Particle
 
 /*---------------------------------------------------------------------------*
  | class declarations                                                        |

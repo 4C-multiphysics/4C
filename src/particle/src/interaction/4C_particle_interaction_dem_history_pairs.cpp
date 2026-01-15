@@ -258,7 +258,7 @@ void Particle::DEMHistoryPairs::communicate_specific_history_pairs(
     for (int globalid : particletargets[torank])
     {
       // no history pairs for current global id
-      if (not historydata.count(globalid)) continue;
+      if (not historydata.contains(globalid)) continue;
 
       for (auto& it_j : historydata[globalid])
       {

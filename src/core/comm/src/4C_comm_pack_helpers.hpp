@@ -26,7 +26,6 @@
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
-
 namespace Core::Communication
 {
 

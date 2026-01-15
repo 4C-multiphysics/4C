@@ -62,7 +62,7 @@ void Particle::SPHTemperature::setup(
   // update with actual integrated thermo particle types
   const auto intthermotypes = intthermotypes_;
   for (const auto& type_i : intthermotypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       intthermotypes_.erase(type_i);
 
   // setup temperature of ghosted particles to refresh
@@ -121,7 +121,7 @@ void Particle::SPHTemperature::insert_particle_states_of_particle_types(
     particlestates.insert(Particle::Temperature);
 
     // current particle type is not an integrated thermo particle type
-    if (not intthermotypes_.count(type)) continue;
+    if (not intthermotypes_.contains(type)) continue;
 
     // state for temperature evaluation scheme
     particlestates.insert(Particle::TemperatureDot);

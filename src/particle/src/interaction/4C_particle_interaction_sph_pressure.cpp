@@ -43,7 +43,8 @@ void Particle::SPHPressure::setup(
   // update with actual fluid particle types
   const auto fluidtypes = fluidtypes_;
   for (const auto& type_i : fluidtypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i)) fluidtypes_.erase(type_i);
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
+      fluidtypes_.erase(type_i);
 
   // setup pressure of ghosted particles to refresh
   {

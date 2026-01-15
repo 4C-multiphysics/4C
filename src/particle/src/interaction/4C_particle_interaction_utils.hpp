@@ -23,7 +23,6 @@ FOUR_C_NAMESPACE_OPEN
  | headers                                                                   |
  *---------------------------------------------------------------------------*/
 
-
 namespace Particle::ParticleUtils
 {
   /**
@@ -246,8 +245,6 @@ namespace Particle::ParticleUtils
   //@}
 
 }  // namespace Particle::ParticleUtils
-
-
 
 /*---------------------------------------------------------------------------*/
 FOUR_C_NAMESPACE_CLOSE

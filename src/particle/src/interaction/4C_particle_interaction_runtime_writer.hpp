@@ -65,7 +65,7 @@ namespace Particle
         const std::string& fieldname)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not runtime_visualization_managers_.count(fieldname))
+      if (not runtime_visualization_managers_.contains(fieldname))
         FOUR_C_THROW("no runtime output writer for field '{}' stored!", fieldname);
 #endif
 
@@ -76,7 +76,7 @@ namespace Particle
     inline Core::IO::RuntimeCsvWriter* get_specific_runtime_csv_writer(const std::string& fieldname)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not runtime_csvwriters_.count(fieldname))
+      if (not runtime_csvwriters_.contains(fieldname))
         FOUR_C_THROW("no runtime csv writer for field '{}' stored!", fieldname);
 #endif
 

@@ -76,7 +76,7 @@ void Particle::TimInt::setup(
 
   // determine set of particle types to be integrated in time
   for (auto& typeEnum : particlecontainerbundle->get_particle_types())
-    if (not typesexludedfromtimeintegration.count(typeEnum)) typestointegrate_.insert(typeEnum);
+    if (not typesexludedfromtimeintegration.contains(typeEnum)) typestointegrate_.insert(typeEnum);
 }
 
 void Particle::TimInt::insert_particle_states_of_particle_types(

@@ -24,19 +24,11 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
-  class ParticleEngineInterface;
   class ParticleContainerBundle;
-}  // namespace Particle
-
-namespace Particle
-{
-  class WallHandlerInterface;
-}
-
-namespace Particle
-{
+  class ParticleEngineInterface;
   class SPHKernelBase;
-}
+  class WallHandlerInterface;
+}  // namespace Particle
 
 /*---------------------------------------------------------------------------*
  | type definitions                                                          |

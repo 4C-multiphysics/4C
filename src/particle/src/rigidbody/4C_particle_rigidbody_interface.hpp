@@ -24,7 +24,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Particle
 {
   class RigidBodyDataState;
-}
+}  // namespace Particle
 
 /*---------------------------------------------------------------------------*
  | class declarations                                                        |

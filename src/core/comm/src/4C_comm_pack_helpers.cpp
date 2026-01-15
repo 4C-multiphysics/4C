@@ -59,6 +59,7 @@ void Core::Communication::extract_from_pack(
   extract_from_pack(buffer, a, m * sizeof(double));
 }
 
+
 void Core::Communication::extract_from_pack(
     Core::Communication::UnpackBuffer& buffer, std::string& stuff)
 {

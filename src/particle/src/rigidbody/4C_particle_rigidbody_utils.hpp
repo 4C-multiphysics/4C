@@ -130,7 +130,6 @@ namespace Particle::ParticleUtils
 
 }  // namespace Particle::ParticleUtils
 
-
 /*---------------------------------------------------------------------------*/
 FOUR_C_NAMESPACE_CLOSE
 

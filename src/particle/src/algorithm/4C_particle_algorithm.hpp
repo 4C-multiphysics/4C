@@ -26,25 +26,13 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
-  class TimInt;
   class GravityHandler;
+  class ParticleInteractionBase;
+  class ParticleObject;
+  class RigidBodyHandler;
+  class TimInt;
   class ViscousDampingHandler;
 }  // namespace Particle
-
-namespace Particle
-{
-  class ParticleInteractionBase;
-}
-
-namespace Particle
-{
-  class ParticleObject;
-}
-
-namespace Particle
-{
-  class RigidBodyHandler;
-}
 
 namespace Discret
 {

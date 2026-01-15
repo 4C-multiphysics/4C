@@ -545,7 +545,7 @@ void Particle::ParticleAlgorithm::determine_particle_types()
 
   // safety check
   for (auto& particle : particlestodistribute_)
-    if (not particlestatestotypes_.count(particle->return_particle_type()))
+    if (not particlestatestotypes_.contains(particle->return_particle_type()))
       FOUR_C_THROW("particle type '{}' of initial particle not defined!",
           Particle::enum_to_type_name(particle->return_particle_type()));
 }

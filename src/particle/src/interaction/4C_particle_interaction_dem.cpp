@@ -21,7 +21,6 @@
 #include "4C_particle_interaction_dem_neighbor_pairs.hpp"
 #include "4C_particle_interaction_material_handler.hpp"
 #include "4C_particle_interaction_runtime_writer.hpp"
-#include "4C_particle_interaction_sph.hpp"
 #include "4C_particle_interaction_utils.hpp"
 #include "4C_particle_wall_interface.hpp"
 

@@ -115,7 +115,7 @@ namespace Core::LinAlg::TensorGenerators
                     Core::LinAlg::reorder_axis<0, 1, 3, 2>(identity<T, n1, n2, n3, n4>)));
 
   template <typename T, std::size_t... n>
-  static constexpr SymmetricTensor<T, n...> ones = full<T, n...>(1);
+  static constexpr SymmetricTensor<T, n...> ones = full<n...>(static_cast<T>(1));
 }  // namespace Core::LinAlg::TensorGenerators
 
 FOUR_C_NAMESPACE_CLOSE

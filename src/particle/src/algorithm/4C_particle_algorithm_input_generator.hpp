@@ -18,7 +18,6 @@
 
 #include <mpi.h>
 
-
 FOUR_C_NAMESPACE_OPEN
 
 /*---------------------------------------------------------------------------*
@@ -27,7 +26,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Particle
 {
   class ParticleObject;
-}
+}  // namespace Particle
 
 /*---------------------------------------------------------------------------*
  | class declarations                                                        |

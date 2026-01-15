@@ -24,8 +24,8 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
-  class SPHEquationOfStateBase;
   class MaterialHandler;
+  class SPHEquationOfStateBase;
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*

@@ -24,18 +24,10 @@ FOUR_C_NAMESPACE_OPEN
 namespace Particle
 {
   class DirichletBoundaryConditionHandler;
+  class ParticleEngineInterface;
+  class RigidBodyHandlerInterface;
   class TemperatureBoundaryConditionHandler;
 }  // namespace Particle
-
-namespace Particle
-{
-  class ParticleEngineInterface;
-}
-
-namespace Particle
-{
-  class RigidBodyHandlerInterface;
-}
 
 /*---------------------------------------------------------------------------*
  | class declarations                                                        |

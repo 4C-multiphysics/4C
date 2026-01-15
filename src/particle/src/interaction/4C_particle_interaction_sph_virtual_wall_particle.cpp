@@ -64,12 +64,12 @@ void Particle::SPHVirtualWallParticle::setup(
   // update with actual fluid particle types
   const auto allfluidtypes = allfluidtypes_;
   for (const auto& type_i : allfluidtypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       allfluidtypes_.erase(type_i);
 
   const auto intfluidtypes = intfluidtypes_;
   for (const auto& type_i : intfluidtypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       intfluidtypes_.erase(type_i);
 }
 
@@ -232,7 +232,7 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
       std::tie(type_k, status_k, particle_k) = neighboringparticle;
 
       // evaluation only for fluid particles
-      if (not allfluidtypes_.count(type_k)) continue;
+      if (not allfluidtypes_.contains(type_k)) continue;
 
       // get container of particles of current particle type
       Particle::ParticleContainer* container_k =

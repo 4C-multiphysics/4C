@@ -28,8 +28,8 @@ namespace Particle
   class ParticleContainer;
   class ParticleContainerBundle;
   class ParticleObject;
-  class UniqueGlobalIdHandler;
   class ParticleRuntimeVtpWriter;
+  class UniqueGlobalIdHandler;
 }  // namespace Particle
 
 namespace Core::Binstrategy

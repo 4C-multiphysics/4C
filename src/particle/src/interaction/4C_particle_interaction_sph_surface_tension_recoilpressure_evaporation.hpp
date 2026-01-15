@@ -25,8 +25,8 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
-  class ParticleEngineInterface;
   class ParticleContainerBundle;
+  class ParticleEngineInterface;
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*

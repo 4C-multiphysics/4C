@@ -24,7 +24,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Particle
 {
   class ParticleEngineInterface;
-}
+}  // namespace Particle
 
 /*---------------------------------------------------------------------------*
  | class declarations                                                        |

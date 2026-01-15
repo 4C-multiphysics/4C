@@ -17,7 +17,6 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-
 namespace Particle::ParticleUtils
 {
   //! @name methods for the communication of particles
@@ -45,8 +44,6 @@ namespace Particle::ParticleUtils
   //@}
 
 }  // namespace Particle::ParticleUtils
-
-
 
 /*---------------------------------------------------------------------------*/
 FOUR_C_NAMESPACE_CLOSE

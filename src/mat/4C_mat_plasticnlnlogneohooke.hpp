@@ -223,9 +223,9 @@ namespace Mat
     Mat::PAR::PlasticNlnLogNeoHooke* params_;
 
     //! inverse right cauchy green of plastic strain
-    std::vector<Core::LinAlg::Matrix<3, 3>> invplrcglast_;
+    std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> invplrcglast_;
     //! inverse right cauchy green of plastic strain
-    std::vector<Core::LinAlg::Matrix<3, 3>> invplrcgcurr_;
+    std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> invplrcgcurr_;
 
     //! old (i.e. at t_n) accumulated plastic strain
     std::vector<double> accplstrainlast_;

@@ -247,7 +247,7 @@ void Particle::UniqueGlobalIdHandler::extract_requested_global_ids_on_master_pro
 {
   if (myrank_ == masterrank_)
   {
-    if (not preparedglobalids.count(masterrank_)) return;
+    if (not preparedglobalids.contains(masterrank_)) return;
 
     requesteduniqueglobalids.insert(requesteduniqueglobalids.begin(),
         preparedglobalids[masterrank_].begin(), preparedglobalids[masterrank_].end());

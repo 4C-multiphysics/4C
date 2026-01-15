@@ -123,7 +123,7 @@ void Particle::SPHPhaseChangeBase::setup(
 
   // safety check
   for (const auto& type_i : {belowphase_, abovephase_})
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       FOUR_C_THROW("no particle container for particle type '{}' found!",
           Particle::enum_to_type_name(type_i));
 }

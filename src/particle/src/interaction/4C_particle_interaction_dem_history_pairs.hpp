@@ -34,7 +34,7 @@ namespace Core::IO
 namespace Particle
 {
   class ParticleEngineInterface;
-}
+}  // namespace Particle
 
 /*---------------------------------------------------------------------------*
  | type definitions                                                          |

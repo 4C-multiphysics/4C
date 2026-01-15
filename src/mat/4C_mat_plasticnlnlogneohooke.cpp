@@ -10,8 +10,11 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
+#include "4C_linalg_symmetric_tensor_eigen.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_service.hpp"
 #include "4C_utils_enum.hpp"
@@ -297,20 +300,20 @@ void Mat::PlasticNlnLogNeoHooke::unpack(Core::Communication::UnpackBuffer& buffe
 
   for (int var = 0; var < histsize; ++var)
   {
-    Core::LinAlg::Matrix<3, 3> tmp_matrix(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::SymmetricTensor<double, 3, 3> tmp_tensor{};
     double tmp_scalar = 0.0;
 
     // last converged states are unpacked
     extract_from_pack(buffer, tmp_scalar);
     accplstrainlast_.push_back(tmp_scalar);
-    extract_from_pack(buffer, tmp_matrix);
-    invplrcglast_.push_back(tmp_matrix);
+    extract_from_pack(buffer, tmp_tensor);
+    invplrcglast_.push_back(tmp_tensor);
 
     // current iteration states are unpacked
     extract_from_pack(buffer, tmp_scalar);
     accplstraincurr_.push_back(tmp_scalar);
-    extract_from_pack(buffer, tmp_matrix);
-    invplrcgcurr_.push_back(tmp_matrix);
+    extract_from_pack(buffer, tmp_tensor);
+    invplrcgcurr_.push_back(tmp_tensor);
   }
 }  // unpack()
 
@@ -337,13 +340,10 @@ void Mat::PlasticNlnLogNeoHooke::setup(int numgp, const Discret::Elements::Fiber
   accplstrainlast_.resize(numgp);
   accplstraincurr_.resize(numgp);
 
-  Core::LinAlg::Matrix<3, 3> emptymat(Core::LinAlg::Initialization::zero);
-  for (int i = 0; i < 3; i++) emptymat(i, i) = 1.0;
-
   for (int i = 0; i < numgp; i++)
   {
-    invplrcglast_.at(i) = emptymat;
-    invplrcgcurr_.at(i) = emptymat;
+    invplrcglast_.at(i) = Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
+    invplrcgcurr_.at(i) = Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
 
     accplstrainlast_.at(i) = 0.0;
     accplstraincurr_.at(i) = 0.0;
@@ -371,12 +371,9 @@ void Mat::PlasticNlnLogNeoHooke::update()
   invplrcgcurr_.resize(histsize);
   accplstraincurr_.resize(histsize);
 
-  Core::LinAlg::Matrix<3, 3> emptymat(Core::LinAlg::Initialization::zero);
-  for (int i = 0; i < 3; i++) emptymat(i, i) = 1.0;
-
   for (int i = 0; i < histsize; i++)
   {
-    invplrcgcurr_.at(i) = emptymat;
+    invplrcgcurr_.at(i) = Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
     accplstraincurr_.at(i) = 0.0;
   }
 }  // update()
@@ -391,8 +388,6 @@ void Mat::PlasticNlnLogNeoHooke::evaluate(const Core::LinAlg::Tensor<double, 3, 
     Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,
     Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, int gp, int eleGID)
 {
-  const Core::LinAlg::Matrix<3, 3> defgrd_mat = Core::LinAlg::make_matrix_view(*defgrad);
-
   // elastic material data
   // get material parameters
   const double ym = params_->youngs_;                  // Young's modulus
@@ -408,7 +403,7 @@ void Mat::PlasticNlnLogNeoHooke::evaluate(const Core::LinAlg::Tensor<double, 3, 
   const double visc = params_->visc_;            // viscosity
   const double eps = params_->rate_dependency_;  // rate dependency
 
-  const double detF = defgrd_mat.determinant();
+  const double detF = Core::LinAlg::det(*defgrad);
 
   FOUR_C_ASSERT(context.time_step_size, "Time step size not given in evaluation context.");
   const double dt = *context.time_step_size;
@@ -420,89 +415,60 @@ void Mat::PlasticNlnLogNeoHooke::evaluate(const Core::LinAlg::Tensor<double, 3, 
   double Dgamma = 0.0;
   double dy_d_dgamma = 0.0;
 
-  Core::LinAlg::Matrix<3, 3> invdefgrd(defgrd_mat);
-  invdefgrd.invert();
+  const auto invdefgrd = Core::LinAlg::inv(*defgrad);
 
-  // matrices for temporary stuff
-  Core::LinAlg::Matrix<3, 3> tmp1;
-  Core::LinAlg::Matrix<3, 3> tmp2;
-
-  // 3x3 2nd-order identity matrix
-  Core::LinAlg::Matrix<3, 3> id2(Core::LinAlg::Initialization::zero);
-  // 3x3 2nd-order deviatoric identity matrix in principal directions
-  Core::LinAlg::Matrix<3, 3> Idev;
-  for (int i = 0; i < 3; i++)
-  {
-    id2(i, i) = 1.0;
-    for (int j = 0; j < 3; j++)
-    {
-      if (i == j)
-        Idev(i, j) = 2.0 / 3.0;
-      else
-        Idev(i, j) = -1.0 / 3.0;
-    }
-  }
+  Core::LinAlg::SymmetricTensor<double, 3, 3> id2 =
+      Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
+  // 3x3 2nd-order deviatoric identity tensor in principal directions
+  Core::LinAlg::SymmetricTensor<double, 3, 3> Idev =
+      id2 - 1.0 / 3.0 * Core::LinAlg::TensorGenerators::ones<double, 3, 3>;
 
   // linear elasticity tensor in principal directions
-  Core::LinAlg::Matrix<3, 3> D_ep_principal(Idev);
-  D_ep_principal.scale(2.0 * G);
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 3; j++) D_ep_principal(i, j) += kappa;
+  Core::LinAlg::SymmetricTensor<double, 3, 3> D_ep_principal =
+      Core::LinAlg::TensorGenerators::ones<double, 3, 3> * kappa;
+  D_ep_principal += 2.0 * G * Idev;
 
   // ------------------------------------------------------- trial strain
   // elastic left Cauchy-Green deformation tensor (LCG) at trial state
   // Be_trial = b_{e,n+1}^{trial} = F_{n+1} C_{p,n}^{-1} F_{n+1}
-  Core::LinAlg::Matrix<3, 3> Be_trial;
-  tmp1.multiply(defgrd_mat, invplrcglast_.at(gp));
-  Be_trial.multiply_nt(tmp1, defgrd_mat);
+  const auto Be_trial = Core::LinAlg::assume_symmetry(
+      *defgrad * invplrcglast_.at(gp) * Core::LinAlg::transpose(*defgrad));
 
   // elastic LCG at final state
-  Core::LinAlg::Matrix<3, 3> Be;
+  Core::LinAlg::SymmetricTensor<double, 3, 3> Be{};  // zero-initialized
 
   // ***************************************************
   // Here we start the principal stress based algorithm
   // ***************************************************
 
-  // convert and solve eigenvalue problem
-  // this matrix contains spatial eigen directions (the second
-  // index corresponds to the eigenvalue)
-  Core::LinAlg::SerialDenseMatrix n(3, 3);
-  Core::LinAlg::SerialDenseVector lambda_trial_square(3);
-
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 3; j++) n(i, j) = Be_trial(i, j);
-
-  // calculate eigenvectors and eigenvalues
-  Core::LinAlg::symmetric_eigen_problem(n, lambda_trial_square);
-  // eigenvectors are stored in n, i.e. original matrix inserted in method is
-  // destroyed.
+  const auto& [lambda_trial_square, n] = Core::LinAlg::eig(Be_trial);
   // eigenvalues correspond to the square of the stretches
 
   // spatial principal direction n_alpha (in Core::LINALG format)
-  std::vector<Core::LinAlg::Matrix<3, 1>> spatial_principal_directions;
+  std::vector<Core::LinAlg::Tensor<double, 3>> spatial_principal_directions;
   spatial_principal_directions.resize(3);
   for (int i = 0; i < 3; i++)
     for (int j = 0; j < 3; j++) (spatial_principal_directions.at(i))(j) = n(j, i);
 
   // material principal directions N_alpha
-  // note, that for convenience in the later programming this is NOT
+  // note that for convenience in the later programming this is NOT
   // based on the correct pull-back N_alpha = lambda_alpha * F^-1 * n_alpha
   // Instead we just do N_alpha = F^{-1} * n_alpha
-  std::vector<Core::LinAlg::Matrix<3, 1>> material_principal_directions;
+  std::vector<Core::LinAlg::Tensor<double, 3>> material_principal_directions;
   material_principal_directions.resize(3);
   for (int i = 0; i < 3; i++)
-    material_principal_directions.at(i).multiply(invdefgrd, spatial_principal_directions.at(i));
+    material_principal_directions.at(i) = invdefgrd * spatial_principal_directions.at(i);
 
   // deviatoric Kirchhoff stress at trial state
   // tau^{trial} = 2 * G * log(sqrt(lambda^2)) - 2/3 * G * log(detF)
-  Core::LinAlg::Matrix<3, 1> dev_KH_trial;
+  Core::LinAlg::Tensor<double, 3> dev_KH_trial;
   for (int i = 0; i < 3; i++)
-    dev_KH_trial(i) = G * std::log(lambda_trial_square(i)) - 2.0 / 3.0 * G * std::log(detF);
+    dev_KH_trial(i) = G * std::log(lambda_trial_square[i]) - 2.0 / 3.0 * G * std::log(detF);
 
   // deviatoric Kirchhoff stress at final state
   // For now we store the trial states. In case of plastic
   // material reaction, we will update it later
-  Core::LinAlg::Matrix<3, 1> dev_KH;
+  Core::LinAlg::Tensor<double, 3> dev_KH;
 
   // pressure (equal at trial state and final state) for the use with tau
   // tau = tau'_aa + p = tau'_aa + kappa * log(detF)
@@ -511,9 +477,7 @@ void Mat::PlasticNlnLogNeoHooke::evaluate(const Core::LinAlg::Tensor<double, 3, 
 
   // ----------------------------------------------------- yield function
   // calculate von Mises equivalent stress at trial state
-  double abs_dev_KH_trial = 0.0;
-  for (int i = 0; i < 3; i++) abs_dev_KH_trial += dev_KH_trial(i) * dev_KH_trial(i);
-  abs_dev_KH_trial = std::sqrt(abs_dev_KH_trial);
+  double abs_dev_KH_trial = norm2(dev_KH_trial);
 
   //! vector for input of differential pressure to function
   std::vector<std::pair<std::string, double>> dp;
@@ -532,8 +496,8 @@ void Mat::PlasticNlnLogNeoHooke::evaluate(const Core::LinAlg::Tensor<double, 3, 
   if (f_trial <= 0.0)  // ----------------------------------- elastic step
   {
     // trial state variables are final variables
-    dev_KH.update(dev_KH_trial);
-    Be.update(Be_trial);
+    dev_KH = dev_KH_trial;
+    Be = Be_trial;
 
     // plastic increment is zero
     Dgamma = 0.0;
@@ -550,31 +514,28 @@ void Mat::PlasticNlnLogNeoHooke::evaluate(const Core::LinAlg::Tensor<double, 3, 
     Dgamma = gamma_and_derivative.first;
 
     // flow vector (7.77) in de Souza Neta
-    Core::LinAlg::Matrix<3, 1> flow_vector(dev_KH_trial);
-    flow_vector.scale(1.0 / (sqrt(2.0 / 3.0) * abs_dev_KH_trial));
+    Core::LinAlg::Tensor<double, 3> flow_vector(dev_KH_trial);
+    flow_vector /= sqrt(2.0 / 3.0) * abs_dev_KH_trial;
 
     // stress return mapping (7.89) in de Souza Neto
-    double fac_dev_KH = 1.0 - 2.0 * G * Dgamma / (std::sqrt(2.0 / 3.0) * abs_dev_KH_trial);
-    dev_KH.update(fac_dev_KH, dev_KH_trial, 0.0);
+    dev_KH = (1.0 - 2.0 * G * Dgamma / (std::sqrt(2.0 / 3.0) * abs_dev_KH_trial)) * dev_KH_trial;
 
     // strain return mapping
     // b_{e,n+1} = sum_i^3 ( lambda_{n+1}^2 . n \otimes n )
     // lambda_{n+1} = lambda_{n+1}^{trial} / exp(Dgamma . flow_vector)
-    Be.clear();
     for (int i = 0; i < 3; i++)
     {
-      tmp1.multiply_nt(spatial_principal_directions.at(i), spatial_principal_directions.at(i));
-      Be.update((lambda_trial_square(i) / exp(2.0 * flow_vector(i) * Dgamma)), tmp1, 1.0);
+      Be += lambda_trial_square[i] / exp(2.0 * flow_vector(i) * Dgamma) *
+            Core::LinAlg::self_dyadic(spatial_principal_directions.at(i));
     }
 
     // update tangent modulus
     dy_d_dgamma = gamma_and_derivative.second;
     double fac_D_ep_1 = -4.0 * G * G * Dgamma / (sqrt(2.0 / 3.0) * abs_dev_KH_trial);
-    D_ep_principal.update(fac_D_ep_1, Idev, 1.0);
-    tmp1.multiply_nt(flow_vector, flow_vector);
+    D_ep_principal += fac_D_ep_1 * Idev;
     double fac_D_ep_2 =
         4.0 * G * G * (sqrt(2.0 / 3.0) * Dgamma / abs_dev_KH_trial - 1.0 / (3.0 * G + dy_d_dgamma));
-    D_ep_principal.update(fac_D_ep_2, tmp1, 1.0);
+    D_ep_principal += fac_D_ep_2 * Core::LinAlg::self_dyadic(flow_vector);
   }
 
   // -------------------------------------------------- output PK2 stress
@@ -582,69 +543,63 @@ void Mat::PlasticNlnLogNeoHooke::evaluate(const Core::LinAlg::Tensor<double, 3, 
   // or tau_ij = tau'_ii + kappa ln(J)
   // S_ij   = F^-1 tau_ij F^-T
   //        = tau_ij (F^-1 n_i) \otimes (F^-1 n_i)
-  Core::LinAlg::Matrix<3, 3> PK2(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; i++)
   {
-    tmp1.multiply_nt(material_principal_directions.at(i), material_principal_directions.at(i));
-    PK2.update((dev_KH(i) + pressure), tmp1, 1.0);
+    stress += (dev_KH(i) + pressure) * self_dyadic(material_principal_directions.at(i));
   }
 
-  Core::LinAlg::Matrix<6, 1> stress_view = Core::LinAlg::make_stress_like_voigt_view(stress);
-  Core::LinAlg::Matrix<6, 6> cmat_view = Core::LinAlg::make_stress_like_voigt_view(cmat);
-
-  // output stress in Voigt notation
-  stress = Core::LinAlg::assume_symmetry(Core::LinAlg::make_tensor_view(PK2));
-
   // ---------------------------------------------------- tangent modulus
+
+  // tensors for temporary stuff
+  std::vector<Core::LinAlg::Tensor<double, 3, 3>> mat_princ_direction_dyad;
+  mat_princ_direction_dyad.resize(3);
+  Core::LinAlg::Tensor<double, 3, 3> tmp1;
   // express coefficients of tangent in Kirchhoff stresses
-  cmat_view.clear();
   for (int a = 0; a < 3; a++)
   {
     // - sum_1^3 (2 * tau N_aaaa)
-    tmp1.multiply_nt(
-        material_principal_directions.at(a), material_principal_directions.at(a));  // N_{aa}
-    Core::LinAlg::FourTensorOperations::add_elasticity_tensor_product(
-        cmat_view, -2.0 * (dev_KH(a) + pressure), tmp1, tmp1, 1.0);
+    mat_princ_direction_dyad.at(a) = Core::LinAlg::dyadic(
+        material_principal_directions.at(a), material_principal_directions.at(a));
+  }
+
+  for (int a = 0; a < 3; a++)
+  {
+    cmat += -2.0 * (dev_KH(a) + pressure) *
+            Core::LinAlg::assume_symmetry(Core::LinAlg::dyadic(
+                mat_princ_direction_dyad.at(a), mat_princ_direction_dyad.at(a)));
 
     for (int b = 0; b < 3; b++)
     {
       // c_ab N_aabb
       // result of return mapping of deviatoric component c_ab
-      tmp1.multiply_nt(
-          material_principal_directions.at(a), material_principal_directions.at(a));  // N_{aa}
-      tmp2.multiply_nt(
-          material_principal_directions.at(b), material_principal_directions.at(b));  // N_{bb}
-      Core::LinAlg::FourTensorOperations::add_elasticity_tensor_product(
-          cmat_view, D_ep_principal(a, b), tmp1, tmp2, 1.0);
+      cmat += D_ep_principal(a, b) *
+              Core::LinAlg::assume_symmetry(Core::LinAlg::dyadic(
+                  mat_princ_direction_dyad.at(a), mat_princ_direction_dyad.at(b)));
 
       if (a != b)
       {
         const double fac =
-            (lambda_trial_square(a) != lambda_trial_square(b))
+            (lambda_trial_square[a] != lambda_trial_square[b])
                 ?  // (tau_aa * lambda_b^2 - tau_bb * lambda_a^2) / (lambda_a^2 - lambda_b^2)
-                ((dev_KH(a) + pressure) * lambda_trial_square(b) -
-                    (dev_KH(b) + pressure) * lambda_trial_square(a)) /
-                    (lambda_trial_square(a) - lambda_trial_square(b))
+                ((dev_KH(a) + pressure) * lambda_trial_square[b] -
+                    (dev_KH(b) + pressure) * lambda_trial_square[a]) /
+                    (lambda_trial_square[a] - lambda_trial_square[b])
                 :  // 1/2 [(d^2 Psi)/(d ln lambda_b * d ln lambda_b) -
                    //                (d^2 Psi)/(d ln lambda_a * d ln lambda_b)]
                    // - tau_bb, cf. (6.91)
                 0.5 * (D_ep_principal(b, b) - D_ep_principal(a, b)) - (dev_KH(b) + pressure);
-        tmp1.multiply_nt(
+        tmp1 = Core::LinAlg::dyadic(
             material_principal_directions.at(a), material_principal_directions.at(b));  // N_{ab}
-        tmp2.multiply_nt(
-            material_principal_directions.at(b), material_principal_directions.at(a));  // N_{ba}
-        Core::LinAlg::FourTensorOperations::add_elasticity_tensor_product(
-            cmat_view, fac, tmp1, tmp1, 1.0);  // N_{abab}
-        Core::LinAlg::FourTensorOperations::add_elasticity_tensor_product(
-            cmat_view, fac, tmp1, tmp2, 1.0);  // N_{abba}
+        cmat += fac * Core::LinAlg::assume_symmetry(Core::LinAlg::dyadic(tmp1, tmp1));
+        cmat += fac * Core::LinAlg::assume_symmetry(Core::LinAlg::dyadic(tmp1, transpose(tmp1)));
       }  // end if (a!=b)
     }  // end loop b
   }  // end loop a
 
   // --------------------------------------------- update plastic history
   // plastic inverse of right Cauchy-Green deformation tensor (RCG)
-  tmp1.multiply(invdefgrd, Be);
-  invplrcgcurr_.at(gp).multiply_nt(tmp1, invdefgrd);
+  invplrcgcurr_.at(gp) =
+      Core::LinAlg::assume_symmetry(invdefgrd * Be * Core::LinAlg::transpose(invdefgrd));
 
   // accumulated plastic strain
   accplstraincurr_.at(gp) = accplstrainlast_.at(gp) + Dgamma;

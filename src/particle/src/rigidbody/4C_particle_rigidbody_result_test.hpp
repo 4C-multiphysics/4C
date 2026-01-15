@@ -25,7 +25,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Particle
 {
   class RigidBodyHandlerInterface;
-}
+}  // namespace Particle
 
 /*---------------------------------------------------------------------------*
  | class declarations                                                        |

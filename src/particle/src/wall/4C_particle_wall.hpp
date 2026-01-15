@@ -25,14 +25,10 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
+  class ParticleEngineInterface;
   class WallDataState;
   class WallDiscretizationRuntimeVtuWriter;
 }  // namespace Particle
-
-namespace Particle
-{
-  class ParticleEngineInterface;
-}
 
 namespace Core::Binstrategy
 {

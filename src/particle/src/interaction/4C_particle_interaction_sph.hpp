@@ -23,19 +23,19 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
-  class SPHKernelBase;
-  class SPHEquationOfStateBundle;
-  class SPHNeighborPairs;
-  class SPHDensityBase;
-  class SPHPressure;
-  class SPHTemperature;
-  class SPHMomentum;
-  class SPHSurfaceTension;
   class SPHBoundaryParticleBase;
+  class SPHDensityBase;
+  class SPHEquationOfStateBundle;
+  class SPHKernelBase;
+  class SPHMomentum;
+  class SPHNeighborPairs;
   class SPHOpenBoundaryBase;
-  class SPHVirtualWallParticle;
   class SPHPhaseChangeBase;
+  class SPHPressure;
   class SPHRigidParticleContactBase;
+  class SPHSurfaceTension;
+  class SPHTemperature;
+  class SPHVirtualWallParticle;
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*
@@ -61,7 +61,6 @@ namespace Particle
      *       std::unique_ptr<T> ptr_T_ is required
      */
     ~ParticleInteractionSPH() override;
-
 
     //! setup particle interaction handler
     void setup(const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,

@@ -140,7 +140,7 @@ void Particle::ParticleRuntimeVtpWriter::set_particle_positions_and_states()
                 statedim * particlestored, positiondata.size());
 #endif
         }
-        else if (not blackliststates_.count(state))
+        else if (not blackliststates_.contains(state))
         {
           // prepare particle state data
           std::vector<double> statedata;

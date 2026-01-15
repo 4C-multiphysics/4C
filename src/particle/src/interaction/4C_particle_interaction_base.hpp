@@ -20,7 +20,6 @@
 
 #include <mpi.h>
 
-
 FOUR_C_NAMESPACE_OPEN
 
 /*---------------------------------------------------------------------------*
@@ -33,19 +32,11 @@ namespace Core::IO
 
 namespace Particle
 {
-  class MaterialHandler;
   class InteractionWriter;
-}  // namespace Particle
-
-namespace Particle
-{
+  class MaterialHandler;
   class ParticleEngineInterface;
-}
-
-namespace Particle
-{
   class WallHandlerInterface;
-}
+}  // namespace Particle
 
 /*---------------------------------------------------------------------------*
  | class declarations                                                        |

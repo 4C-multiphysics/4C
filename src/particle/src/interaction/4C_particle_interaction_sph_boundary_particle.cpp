@@ -42,12 +42,13 @@ void Particle::SPHBoundaryParticleBase::setup(
   // update with actual fluid particle types
   const auto fluidtypes = fluidtypes_;
   for (const auto& type_i : fluidtypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i)) fluidtypes_.erase(type_i);
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
+      fluidtypes_.erase(type_i);
 
   // update with actual boundary particle types
   const auto boundarytypes = boundarytypes_;
   for (const auto& type_i : boundarytypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       boundarytypes_.erase(type_i);
 
   // safety check
@@ -131,7 +132,7 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
     // evaluate contribution of neighboring fluid particle j
-    if (boundarytypes_.count(type_i))
+    if (boundarytypes_.contains(type_i))
     {
       // get container of owned particles
       Particle::ParticleContainer* container_j =
@@ -155,7 +156,7 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
     }
 
     // evaluate contribution of neighboring fluid particle i
-    if (boundarytypes_.count(type_j) and status_j == Particle::Owned)
+    if (boundarytypes_.contains(type_j) and status_j == Particle::Owned)
     {
       // get container of owned particles
       Particle::ParticleContainer* container_i =

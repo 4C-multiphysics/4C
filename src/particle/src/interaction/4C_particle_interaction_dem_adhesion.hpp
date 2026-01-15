@@ -46,7 +46,6 @@ namespace Particle
    */
   void verify_params_adhesion(const DEMAdhesionParams& params);
 
-
   class DEMAdhesion final
   {
    public:

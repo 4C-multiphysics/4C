@@ -59,7 +59,7 @@ void Particle::RigidBodyHandler::setup(
     Particle::ParticleContainerBundleShrdPtr particlecontainerbundle =
         particleengineinterface_->get_particle_container_bundle();
 
-    if (not particlecontainerbundle->get_particle_types().count(Particle::RigidPhase))
+    if (not particlecontainerbundle->get_particle_types().contains(Particle::RigidPhase))
       FOUR_C_THROW("no particle container for particle type '{}' found!",
           Particle::enum_to_type_name(Particle::RigidPhase));
   }

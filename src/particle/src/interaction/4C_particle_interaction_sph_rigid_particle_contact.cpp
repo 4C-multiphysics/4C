@@ -64,11 +64,11 @@ void Particle::SPHRigidParticleContactBase::setup(
   // update with actual boundary particle types
   const auto boundarytypes = boundarytypes_;
   for (const auto& type_i : boundarytypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       boundarytypes_.erase(type_i);
 
   // safety check
-  if (not boundarytypes_.count(Particle::RigidPhase))
+  if (not boundarytypes_.contains(Particle::RigidPhase))
     FOUR_C_THROW("no rigid particles defined but a rigid particle contact formulation is set!");
 }
 

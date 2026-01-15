@@ -127,14 +127,14 @@ void Particle::SPHSurfaceTension::setup(
 
   // safety check
   for (const auto& type_i : fluidtypes_)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       FOUR_C_THROW("no particle container for particle type '{}' found!",
           Particle::enum_to_type_name(type_i));
 
   // update with actual boundary particle types
   const auto boundarytypes = boundarytypes_;
   for (const auto& type_i : boundarytypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       boundarytypes_.erase(type_i);
 
   // setup interface normal of ghosted particles to refresh
@@ -163,7 +163,7 @@ void Particle::SPHSurfaceTension::insert_particle_states_of_particle_types(
     // get type of particles
     Particle::TypeEnum type = typeIt.first;
 
-    if (boundarytypes_.count(type)) haveboundarytypes = true;
+    if (boundarytypes_.contains(type)) haveboundarytypes = true;
   }
 
   // iterate over particle types
@@ -176,7 +176,7 @@ void Particle::SPHSurfaceTension::insert_particle_states_of_particle_types(
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
 
     // current particle type is not a fluid particle type
-    if (not fluidtypes_.count(type)) continue;
+    if (not fluidtypes_.contains(type)) continue;
 
     // states for surface tension evaluation scheme
     particlestates.insert(
@@ -403,7 +403,7 @@ void Particle::SPHSurfaceTension::compute_wall_colorfield_and_wall_interface_nor
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // evaluate contribution of neighboring boundary particle j
-    if (fluidtypes_.count(type_i))
+    if (fluidtypes_.contains(type_i))
     {
       // get material for current particle type
       const Mat::PAR::ParticleMaterialBase* material_j =
@@ -441,7 +441,7 @@ void Particle::SPHSurfaceTension::compute_wall_colorfield_and_wall_interface_nor
     }
 
     // evaluate contribution of neighboring boundary particle i
-    if (fluidtypes_.count(type_j) and status_j == Particle::Owned)
+    if (fluidtypes_.contains(type_j) and status_j == Particle::Owned)
     {
       // get material for current particle type
       const Mat::PAR::ParticleMaterialBase* material_i =

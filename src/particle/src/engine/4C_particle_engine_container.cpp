@@ -218,7 +218,7 @@ void Particle::ParticleContainer::remove_particle(int index)
 double Particle::ParticleContainer::get_min_value_of_state(ParticleState state) const
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-  if (not storedstates_.count(state))
+  if (not storedstates_.contains(state))
     FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
 #endif
 
@@ -235,7 +235,7 @@ double Particle::ParticleContainer::get_min_value_of_state(ParticleState state) 
 double Particle::ParticleContainer::get_max_value_of_state(ParticleState state) const
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-  if (not storedstates_.count(state))
+  if (not storedstates_.contains(state))
     FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
 #endif
 

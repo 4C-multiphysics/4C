@@ -25,24 +25,16 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
-  class ParticleEngineInterface;
-  class ParticleContainerBundle;
-}  // namespace Particle
-
-namespace Particle
-{
-  class WallHandlerInterface;
-}
-
-namespace Particle
-{
-  class MaterialHandler;
-  class InteractionWriter;
-  class DEMNeighborPairs;
-  class DEMHistoryPairs;
   class DEMContactNormalBase;
-  class DEMContactTangentialBase;
   class DEMContactRollingBase;
+  class DEMContactTangentialBase;
+  class DEMHistoryPairs;
+  class DEMNeighborPairs;
+  class InteractionWriter;
+  class MaterialHandler;
+  class ParticleContainerBundle;
+  class ParticleEngineInterface;
+  class WallHandlerInterface;
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*

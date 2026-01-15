@@ -160,7 +160,7 @@ namespace Particle
     inline int get_state_dim(ParticleState state)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedstates_.count(state))
+      if (not storedstates_.contains(state))
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
 #endif
 
@@ -188,7 +188,7 @@ namespace Particle
     inline double* get_ptr_to_state(ParticleState state, int index)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedstates_.count(state))
+      if (not storedstates_.contains(state))
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
 
       if (index < 0 or index > (particlestored_ - 1))
@@ -223,7 +223,7 @@ namespace Particle
             "can not return pointer to state of particle as index {} out of bounds!", index);
 #endif
 
-      if (storedstates_.count(state)) return &((states_[state])[index * statedim_[state]]);
+      if (storedstates_.contains(state)) return &((states_[state])[index * statedim_[state]]);
 
       return nullptr;
     };
@@ -262,7 +262,7 @@ namespace Particle
     inline void scale_state(double fac, ParticleState state)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedstates_.count(state))
+      if (not storedstates_.contains(state))
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
 #endif
 
@@ -281,10 +281,10 @@ namespace Particle
     inline void update_state(double facA, ParticleState stateA, double facB, ParticleState stateB)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedstates_.count(stateA))
+      if (not storedstates_.contains(stateA))
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(stateA));
 
-      if (not storedstates_.count(stateB))
+      if (not storedstates_.contains(stateB))
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(stateB));
 
       if (statedim_[stateA] != statedim_[stateB])
@@ -305,7 +305,7 @@ namespace Particle
     inline void set_state(std::vector<double> val, ParticleState state)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedstates_.count(state))
+      if (not storedstates_.contains(state))
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
 
       if (statedim_[state] != static_cast<int>(val.size()))
@@ -326,7 +326,7 @@ namespace Particle
     inline void clear_state(ParticleState state)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedstates_.count(state))
+      if (not storedstates_.contains(state))
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
 #endif
 
@@ -353,7 +353,10 @@ namespace Particle
      *
      * \return flag indicating stored state
      */
-    inline bool have_stored_state(ParticleState state) const { return storedstates_.count(state); };
+    inline bool have_stored_state(ParticleState state) const
+    {
+      return storedstates_.contains(state);
+    };
 
     /*!
      * \brief get size of particle container

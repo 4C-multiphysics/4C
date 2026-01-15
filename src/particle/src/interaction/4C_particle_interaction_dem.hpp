@@ -23,10 +23,10 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
-  class DEMNeighborPairs;
-  class DEMHistoryPairs;
-  class DEMContact;
   class DEMAdhesion;
+  class DEMContact;
+  class DEMHistoryPairs;
+  class DEMNeighborPairs;
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*

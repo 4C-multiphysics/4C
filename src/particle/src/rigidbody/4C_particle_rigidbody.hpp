@@ -34,14 +34,10 @@ namespace Core::IO
 namespace Particle
 {
   class ParticleEngineInterface;
-  class UniqueGlobalIdHandler;
-}  // namespace Particle
-
-namespace Particle
-{
+  class RigidBodyAffiliationPairs;
   class RigidBodyDataState;
   class RigidBodyRuntimeVtpWriter;
-  class RigidBodyAffiliationPairs;
+  class UniqueGlobalIdHandler;
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*

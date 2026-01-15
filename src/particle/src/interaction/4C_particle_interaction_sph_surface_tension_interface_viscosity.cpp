@@ -75,14 +75,14 @@ void Particle::SPHInterfaceViscosity::setup(
 
   // safety check
   for (const auto& type_i : fluidtypes_)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       FOUR_C_THROW("no particle container for particle type '{}' found!",
           Particle::enum_to_type_name(type_i));
 
   // update with actual boundary particle types
   const auto boundarytypes = boundarytypes_;
   for (const auto& type_i : boundarytypes)
-    if (not particlecontainerbundle_->get_particle_types().count(type_i))
+    if (not particlecontainerbundle_->get_particle_types().contains(type_i))
       boundarytypes_.erase(type_i);
 
   // determine size of vectors indexed by particle types
@@ -236,7 +236,7 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_bound
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
     // swap fluid particle and boundary particle
-    const bool swapparticles = boundarytypes_.count(type_i);
+    const bool swapparticles = boundarytypes_.contains(type_i);
     if (swapparticles)
     {
       std::tie(type_i, status_i, particle_i) = particlepair.tuple_j_;

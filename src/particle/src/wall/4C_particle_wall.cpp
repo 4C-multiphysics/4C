@@ -110,19 +110,19 @@ void Particle::WallHandlerBase::insert_particle_states_of_particle_types(
         Particle::LastIterAcceleration,
     });
 
-    if (particlestates.count(Particle::AngularVelocity))
+    if (particlestates.contains(Particle::AngularVelocity))
       particlestates.insert(Particle::LastIterAngularVelocity);
 
-    if (particlestates.count(Particle::AngularAcceleration))
+    if (particlestates.contains(Particle::AngularAcceleration))
       particlestates.insert(Particle::LastIterAngularAcceleration);
 
-    if (particlestates.count(Particle::ModifiedAcceleration))
+    if (particlestates.contains(Particle::ModifiedAcceleration))
       particlestates.insert(Particle::LastIterModifiedAcceleration);
 
-    if (particlestates.count(Particle::DensityDot))
+    if (particlestates.contains(Particle::DensityDot))
       particlestates.insert(Particle::LastIterDensity);
 
-    if (particlestates.count(Particle::TemperatureDot))
+    if (particlestates.contains(Particle::TemperatureDot))
       particlestates.insert(Particle::LastIterTemperature);
   }
 }

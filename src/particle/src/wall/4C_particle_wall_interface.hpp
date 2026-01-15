@@ -34,7 +34,7 @@ namespace Core::FE
 namespace Particle
 {
   class WallDataState;
-}
+}  // namespace Particle
 
 /*---------------------------------------------------------------------------*
  | class declarations                                                        |

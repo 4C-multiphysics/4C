@@ -74,7 +74,7 @@ namespace Particle
     inline ParticleContainer* get_specific_container(ParticleType type, ParticleStatus status) const
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedtypes_.count(type))
+      if (not storedtypes_.contains(type))
         FOUR_C_THROW("container for particle type '{}' not stored!", enum_to_type_name(type));
 #endif
 
@@ -96,7 +96,7 @@ namespace Particle
         double fac, ParticleState state, ParticleType type) const
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedtypes_.count(type))
+      if (not storedtypes_.contains(type))
         FOUR_C_THROW("container for particle type '{}' not stored!", enum_to_type_name(type));
 #endif
 
@@ -118,7 +118,7 @@ namespace Particle
         ParticleState stateB, ParticleType type) const
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedtypes_.count(type))
+      if (not storedtypes_.contains(type))
         FOUR_C_THROW("container for particle type '{}' not stored!", enum_to_type_name(type));
 #endif
 
@@ -137,7 +137,7 @@ namespace Particle
         std::vector<double> val, ParticleState state, ParticleType type) const
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedtypes_.count(type))
+      if (not storedtypes_.contains(type))
         FOUR_C_THROW("container for particle type '{}' not stored!", enum_to_type_name(type));
 #endif
 
@@ -154,7 +154,7 @@ namespace Particle
     inline void clear_state_specific_container(ParticleState state, ParticleType type) const
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedtypes_.count(type))
+      if (not storedtypes_.contains(type))
         FOUR_C_THROW("container for particle type '{}' not stored!", enum_to_type_name(type));
 #endif
 
