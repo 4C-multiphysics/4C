@@ -12,6 +12,7 @@
 
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_linalg_map.hpp"
+#include "4C_reduced_lung_airways.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 
 #include <mpi.h>
@@ -25,6 +26,8 @@ namespace Core::Nodes
 
 namespace ReducedLung
 {
+  using namespace Airways;
+  using namespace TerminalUnits;
   enum class BoundaryConditionType
   {
     pressure_in,
@@ -126,8 +129,8 @@ namespace ReducedLung
    * @param terminal_units Locally owned terminal units.
    * @return map specifying the dof-distribution over all ranks.
    */
-  Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const TerminalUnits& terminal_units);
+  Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const AirwayContainer& airways,
+      const TerminalUnitContainer& terminal_units);
 
   /*!
    * @brief Create the map with the locally owned row indices of the system matrix, i.e. the
@@ -154,8 +157,8 @@ namespace ReducedLung
    * element ids are needed.
    * @return map with locally owned rows.
    */
-  Core::LinAlg::Map create_row_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const TerminalUnits& terminal_units, const std::vector<Connection>& connections,
+  Core::LinAlg::Map create_row_map(const MPI_Comm& comm, const AirwayContainer& airways,
+      const TerminalUnitContainer& terminal_units, const std::vector<Connection>& connections,
       const std::vector<Bifurcation>& bifurcations,
       const std::vector<BoundaryCondition>& boundary_conditions);
 
@@ -180,15 +183,56 @@ namespace ReducedLung
    * element ids are needed.
    * @return map with distribution of column indices for the system matrix.
    */
-  Core::LinAlg::Map create_column_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const TerminalUnits& terminal_units, const std::map<int, int>& global_dof_per_ele,
+  Core::LinAlg::Map create_column_map(const MPI_Comm& comm, const AirwayContainer& airways,
+      const TerminalUnitContainer& terminal_units, const std::map<int, int>& global_dof_per_ele,
       const std::map<int, int>& first_global_dof_of_ele, const std::vector<Connection>& connections,
       const std::vector<Bifurcation>& bifurcations,
       const std::vector<BoundaryCondition>& boundary_conditions);
 
+  /*!
+   * @brief Add an airway element with the appropriate template instantiation based on model types.
+   *
+   * This helper function encapsulates the template instantiation logic for adding airway elements
+   * based on the flow model (Linear/NonLinear) and wall model (Rigid/KelvinVoigt) types.
+   *
+   * @param airways Container for all airway models.
+   * @param ele Pointer to the element.
+   * @param local_element_id Local element id for the row map.
+   * @param parameters Reduced lung parameters containing model and geometry information.
+   * @param flow_model_type The flow model type.
+   * @param wall_model_type The wall model type.
+   */
+  void add_airway_with_model_selection(AirwayContainer& airways, Core::Elements::Element* ele,
+      int local_element_id, const ReducedLungParameters& parameters,
+      ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType flow_model_type,
+      ReducedLungParameters::LungTree::Airways::WallModelType wall_model_type);
+
+  /*!
+   * @brief Add a terminal unit element with the appropriate template instantiation based on model
+   * types.
+   *
+   * This helper function encapsulates the template instantiation logic for adding terminal unit
+   * elements based on the rheological model (KelvinVoigt/FourElementMaxwell) and elasticity model
+   * (Linear/Ogden) types.
+   *
+   * @param terminal_units Container for all terminal unit models.
+   * @param ele Pointer to the element
+   * @param local_element_id Local element id for the row map.
+   * @param tu_parameters Terminal unit parameters containing model information.
+   * @param rheological_model_type The rheological model type.
+   * @param elasticity_model_type The elasticity model type.
+   */
+  void add_terminal_unit_with_model_selection(TerminalUnitContainer& terminal_units,
+      Core::Elements::Element* ele, int local_element_id,
+      const ReducedLungParameters::LungTree::TerminalUnits& tu_parameters,
+      ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
+          rheological_model_type,
+      ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType
+          elasticity_model_type);
+
   void collect_runtime_output_data(
       Core::IO::DiscretizationVisualizationWriterMesh& visualization_writer,
-      const std::vector<Airway>& airways, const TerminalUnits& terminal_units,
+      const AirwayContainer& airways, const TerminalUnitContainer& terminal_units,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs,
       const Core::LinAlg::Map* element_row_map);
 }  // namespace ReducedLung

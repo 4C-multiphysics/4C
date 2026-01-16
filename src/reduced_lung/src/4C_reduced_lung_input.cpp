@@ -80,7 +80,7 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                            {
                                .description = "Poisson's ratio of the airway wall.",
                                .store = in_struct(&ReducedLungParameters::LungTree::Airways::
-                                       WallModel::KelvinVoigt::Elasticity::wall_poisson_radio),
+                                       WallModel::KelvinVoigt::Elasticity::wall_poisson_ratio),
                            }),
                        input_field<double>("wall_elasticity",
                            {
@@ -88,12 +88,11 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                                .store = in_struct(&ReducedLungParameters::LungTree::Airways::
                                        WallModel::KelvinVoigt::Elasticity::wall_elasticity),
                            }),
-                       input_field<double>("diameter_over_wall_thickness",
+                       input_field<double>("wall_thickness",
                            {
-                               .description = "Ratio of diameter over wall thickness.",
-                               .store =
-                                   in_struct(&ReducedLungParameters::LungTree::Airways::WallModel::
-                                           KelvinVoigt::Elasticity::diameter_over_wall_thickness),
+                               .description = "Airway wall thickness.",
+                               .store = in_struct(&ReducedLungParameters::LungTree::Airways::
+                                       WallModel::KelvinVoigt::Elasticity::wall_thickness),
                            }),
                    },
                    {
@@ -346,7 +345,8 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                       {
                           .description = "Dynamic viscosity of air in the reduced dimensional lung "
                                          "simulation.",
-                          .store = in_struct(&ReducedLungParameters::AirProperties::viscosity),
+                          .store =
+                              in_struct(&ReducedLungParameters::AirProperties::dynamic_viscosity),
                       }),
 
                   parameter<double>("density",
