@@ -820,21 +820,39 @@ void Adapter::StructureBaseAlgorithmNew::create_wrapper(
     case Core::ProblemType::thermo_fsi:
     case Core::ProblemType::fsi_xfem:
     {
+      const Teuchos::ParameterList& fsidyn = problem->fsi_dynamic_params();
+      auto coupling = Teuchos::getIntegralValue<FsiCoupling>(fsidyn, "COUPALGO");
+
+      if (Core::Communication::my_mpi_rank((actdis_->get_comm())) == 0)
+        Core::IO::cout << "Using StructureNOXCorrectionWrapper()..." << Core::IO::endl;
+
       // Are there any constraint conditions active?
       const std::set<Inpar::Solid::ModelType>& modeltypes =
           ti_strategy->get_data_sdyn().get_model_types();
       if (modeltypes.find(Inpar::Solid::model_lag_pen_constraint) != modeltypes.end())
       {
-        if (Core::Communication::my_mpi_rank((actdis_->get_comm())) == 0)
-          Core::IO::cout << "Using StructureNOXCorrectionWrapper()..." << Core::IO::endl;
-
         str_wrapper_ = std::make_shared<StructureConstrMerged>(
             std::make_shared<StructureNOXCorrectionWrapper>(ti_strategy));
       }
       else
       {
-        // case of partitioned fsi
-        str_wrapper_ = std::make_shared<FSIStructureWrapper>(ti_strategy);
+        // case of monolithic fsi
+        if (coupling == fsi_iter_mortar_monolithicfluidsplit or
+            coupling == fsi_iter_mortar_monolithicstructuresplit or
+            coupling == fsi_iter_monolithicfluidsplit or
+            coupling == fsi_iter_monolithicstructuresplit or
+            coupling == fsi_iter_sliding_monolithicfluidsplit or
+            coupling == fsi_iter_sliding_monolithicstructuresplit or
+            coupling == fsi_iter_mortar_monolithicfluidsplit_saddlepoint)
+        {
+          str_wrapper_ = std::make_shared<FSIStructureWrapper>(
+              std::make_shared<StructureNOXCorrectionWrapper>(ti_strategy));
+        }
+        else
+        {
+          // case of partitioned fsi
+          str_wrapper_ = std::make_shared<FSIStructureWrapper>(ti_strategy);
+        }
       }
       break;
     }

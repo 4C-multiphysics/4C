@@ -18,6 +18,9 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::LinAlg
 {
+  // forward declaration
+  class DefaultBlockMatrixStrategy;
+
   /// Internal base class of BlockSparseMatrix that contains the non-template stuff
   /*!
 
@@ -210,6 +213,9 @@ namespace Core::LinAlg
     /// access to range map extractor in derived classes
     const MultiMapExtractor& range_extractor() const { return rangemaps_; }
 
+    //! Print to user-provided output stream
+    void print(std::ostream& os) const;
+
    private:
     /// the full domain map together with all partial domain maps
     MultiMapExtractor domainmaps_;
@@ -230,6 +236,11 @@ namespace Core::LinAlg
     bool usetranspose_;
   };
 
+  // split LinAlg::SparseMatrix into LinAlg::BlockSparseMatrix based on the given maps
+  std::shared_ptr<BlockSparseMatrixBase> copy_sparse_to_block_sparse_matrix(
+      const Core::LinAlg::SparseMatrix& sparse_matrix,
+      const Core::LinAlg::MultiMapExtractor& domainmaps,
+      const Core::LinAlg::MultiMapExtractor& rangemaps);
 
 
   /// Block matrix consisting of SparseMatrix blocks
