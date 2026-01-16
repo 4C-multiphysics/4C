@@ -72,6 +72,7 @@ CONTACT CONSTITUTIVE LAWS:
       SecondMatID: 2
       LateralLength: 1000
       Resolution: 6
+      PressureGreenFunFlag: true
       InitialTopologyStdDeviationFunct: 3
       HurstExponentFunct: 2
       RandomGeneratorSeed: 71
@@ -632,23 +633,23 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 9
       QUANTITY: "dispx"
-      VALUE: 0.4705186113408478
+      VALUE: 0.4323890861828205
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 9
       QUANTITY: "dispy"
-      VALUE: -1.569500261196927
+      VALUE: -1.4098071693460594
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 197
       QUANTITY: "dispx"
-      VALUE: 0.4707762321339245
+      VALUE: 0.4327337628064787
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 197
       QUANTITY: "dispy"
-      VALUE: -8.430035567025934
+      VALUE: -8.5897822555979264
       TOLERANCE: 1e-09

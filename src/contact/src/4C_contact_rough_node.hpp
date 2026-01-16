@@ -13,6 +13,10 @@
 #include "4C_contact_node.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 
+#ifdef FOUR_C_WITH_MIRCO
+#include <mirco_kokkostypes.h>
+#endif
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace CONTACT
@@ -97,8 +101,9 @@ namespace CONTACT
     void unpack(Core::Communication::UnpackBuffer& buffer) override;
 
     // //! @name Access methods
-
-    const Core::LinAlg::SerialDenseMatrix* get_topology() const { return &topology_; };
+#ifdef FOUR_C_WITH_MIRCO
+    const MIRCO::ViewMatrix_d* get_topology() const { return &topology_; };
+#endif
     double get_max_topology_height() const { return maxTopologyHeight_; };
 
    protected:
@@ -111,7 +116,11 @@ namespace CONTACT
 
     double hurstExponent_ = 0;
     double initialTopologyStdDeviation_ = 0;
-    Core::LinAlg::SerialDenseMatrix topology_;
+
+#ifdef FOUR_C_WITH_MIRCO
+    MIRCO::ViewMatrix_d topology_;
+#endif
+
     double maxTopologyHeight_;
   };
 }  // namespace CONTACT

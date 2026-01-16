@@ -2701,10 +2701,8 @@ four_c_test_restart(BASED_ON ${current} SAME_FILE NP 3 RESTART_STEP 4 REQUIRED_D
 four_c_test(TEST_FILE scatra_forced_hit_mean_8x8x8.4C.yaml NP 3 REQUIRED_DEPENDENCIES FFTW RETURN_AS current)
 four_c_test_restart(BASED_ON ${current} SAME_FILE NP 3 RESTART_STEP 4 REQUIRED_DEPENDENCIES FFTW)
 
-# We disabled this test since it often results in a timeout. See https://github.com/4C-multiphysics/4C/issues/1530
-# four_c_test(TEST_FILE roughcontact2d_mirco_patchtest.4C.yaml NP 2 OMP_THREADS 2 REQUIRED_DEPENDENCIES MIRCO)
-# We disabled this test since it fails with clang. See https://github.com/4C-multiphysics/4C/issues/539
-# four_c_test(TEST_FILE roughcontact2d_mirco_varying_roughness.4C.yaml NP 2 OMP_THREADS 2 REQUIRED_DEPENDENCIES MIRCO)
+four_c_test(TEST_FILE roughcontact2d_mirco_patchtest.4C.yaml NP 2 OMP_THREADS 2 REQUIRED_DEPENDENCIES MIRCO)
+four_c_test(TEST_FILE roughcontact2d_mirco_varying_roughness.4C.yaml NP 2 OMP_THREADS 2 REQUIRED_DEPENDENCIES MIRCO)
 
 # Special test cases which do not use the standard four_c_test functionality
 

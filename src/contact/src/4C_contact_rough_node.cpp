@@ -15,6 +15,7 @@
 
 #ifdef FOUR_C_WITH_MIRCO
 
+#include <mirco_kokkostypes.h>
 #include <mirco_topology.h>
 #include <mirco_topologyutilities.h>
 
@@ -61,19 +62,11 @@ CONTACT::RoughNode::RoughNode(int id, std::span<const double> coords, const int 
             ->function_by_id<Core::Utils::FunctionOfSpaceTime>(initialtopologystddeviationfunction_)
             .evaluate(this->x(), 1, this->n_dim());
 
-    const int N = pow(2, resolution_);
-    topology_.shape(N + 1, N + 1);
+    auto topology_h = MIRCO::CreateRmgSurface(resolution_, initialTopologyStdDeviation_,
+        hurstExponent_, randomseedflag_, randomgeneratorseed_);
+    topology_ = Kokkos::create_mirror_view_and_copy(MIRCO::ExecSpace_Default_t(), topology_h);
 
-    std::string topologyFilePath = "";
-    Teuchos::RCP<MIRCO::TopologyGeneration> surfacegenerator;
-    // creating the correct surface object
-    MIRCO::CreateSurfaceObject(resolution_, initialTopologyStdDeviation_, hurstExponent_,
-        randomseedflag_, topologyFilePath, randomtopologyflag_, randomgeneratorseed_,
-        surfacegenerator);
-    surfacegenerator->GetSurface(topology_.base());
-
-    auto max_and_mean = MIRCO::ComputeMaxAndMean(topology_.base());
-    maxTopologyHeight_ = max_and_mean.max_;
+    maxTopologyHeight_ = MIRCO::GetMax(topology_);
   }
 #else
   FOUR_C_THROW(
@@ -104,7 +97,27 @@ void CONTACT::RoughNode::pack(Core::Communication::PackBuffer& data) const
 
   add_to_pack(data, hurstExponent_);
   add_to_pack(data, initialTopologyStdDeviation_);
-  add_to_pack(data, topology_);
+
+#ifdef FOUR_C_WITH_MIRCO
+  // ---- topology_ (2D) ----
+  const std::size_t n0 = topology_.extent(0);
+  const std::size_t n1 = topology_.extent(1);
+
+  add_to_pack(data, n0);
+  add_to_pack(data, n1);
+
+  // Create host mirror and copy
+  auto topology_h = Kokkos::create_mirror_view_and_copy(MIRCO::MemorySpace_Host_t(), topology_);
+
+  for (std::size_t i = 0; i < n0; ++i)
+  {
+    for (std::size_t j = 0; j < n1; ++j)
+    {
+      add_to_pack(data, topology_h(i, j));
+    }
+  }
+#endif
+
   add_to_pack(data, maxTopologyHeight_);
 
   return;
@@ -129,10 +142,31 @@ void CONTACT::RoughNode::unpack(Core::Communication::UnpackBuffer& buffer)
 
   extract_from_pack(buffer, hurstExponent_);
   extract_from_pack(buffer, initialTopologyStdDeviation_);
-  extract_from_pack(buffer, topology_);
-  extract_from_pack(buffer, maxTopologyHeight_);
 
-  // Check
+#ifdef FOUR_C_WITH_MIRCO
+  // ---- topology_ (2D) ----
+  std::size_t n0, n1;
+  extract_from_pack(buffer, n0);
+  extract_from_pack(buffer, n1);
+
+  topology_ = MIRCO::ViewMatrix_d("topology", n0, n1);
+
+  // Host mirror
+  auto topology_h = Kokkos::create_mirror_view(MIRCO::MemorySpace_Host_t(), topology_);
+
+  for (std::size_t i = 0; i < n0; ++i)
+  {
+    for (std::size_t j = 0; j < n1; ++j)
+    {
+      extract_from_pack(buffer, topology_h(i, j));
+    }
+  }
+
+  // Copy to device
+  Kokkos::deep_copy(topology_, topology_h);
+#endif
+
+  extract_from_pack(buffer, maxTopologyHeight_);
 
   return;
 }
