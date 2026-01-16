@@ -438,13 +438,15 @@ void Thermo::TimInt::write_runtime_output()
  *----------------------------------------------------------------------*/
 void Thermo::TimInt::output_step(bool forced_writerestart)
 {
+  bool is_initial_step = (step_ == Global::Problem::instance()->restart());
+  bool is_regular_result_step = (writeglobevery_ > 0 and step_ % writeglobevery_ == 0);
+  bool is_regular_restart_step = (writerestartevery_ > 0 and step_ % writerestartevery_ == 0);
   // special treatment is necessary when restart is forced
-  if (forced_writerestart)
+  if (forced_writerestart and (is_regular_restart_step or is_initial_step))
   {
-    // restart has already been written or simulation has just started
-    if ((writerestartevery_ and (step_ % writerestartevery_ == 0)) or
-        step_ == Global::Problem::instance()->restart())
-      return;
+    // restart has already been written or simulation has just started -> forced_writerestart has no
+    // effect
+    return;
   }
 
   // this flag is passed along subroutines and prevents
@@ -452,21 +454,21 @@ void Thermo::TimInt::output_step(bool forced_writerestart)
   // state vectors, or similar
   bool datawritten = false;
 
-  // output restart (try this first)
-  // write restart step
-  if ((writerestartevery_ and (step_ % writerestartevery_ == 0)) or forced_writerestart)
+  // only write restart if this is a regular restart step or
+  // if writing restart is forced, but not at the initial step
+  if ((is_regular_restart_step or forced_writerestart) and not is_initial_step)
   {
     output_restart(datawritten);
   }
 
   // write runtime output
-  if (writeglobevery_ > 0 and step_ % writeglobevery_ == 0)
+  if (is_regular_result_step)
   {
     write_runtime_output();
   }
 
   // output heatflux & tempgrad
-  if (writeglobevery_ and (step_ % writeglobevery_ == 0) and
+  if (is_regular_result_step and
       ((writeheatflux_ != Thermo::heatflux_none) or (writetempgrad_ != Thermo::tempgrad_none)))
   {
     output_heatflux_tempgrad(datawritten);
