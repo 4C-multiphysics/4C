@@ -21,7 +21,7 @@ Particle::SPHBoundaryParticleBase::SPHBoundaryParticleBase(const Teuchos::Parame
     : params_sph_(params),
       fluidtypes_(
           {Particle::Phase1, Particle::Phase2, Particle::DirichletPhase, Particle::NeumannPhase}),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase})
+      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase, Particle::PDPhase})
 {
   // empty constructor
 }

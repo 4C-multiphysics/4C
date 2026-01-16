@@ -41,7 +41,9 @@ void Particle::SPHEquationOfStateBundle::init(Particle::MaterialHandler& particl
   for (const auto& type_i : particlematerial.get_particle_types())
   {
     // no equation of state for boundary or rigid particles
-    if (type_i == Particle::BoundaryPhase or type_i == Particle::RigidPhase) continue;
+    if (type_i == Particle::BoundaryPhase or type_i == Particle::RigidPhase or
+        type_i == Particle::PDPhase)
+      continue;
 
     // add to set of particle types of stored equation of state handlers
     storedtypes_.insert(type_i);

@@ -96,6 +96,22 @@ void Particle::read_particles(Core::IO::InputFile& input, const std::string& sec
               continue;
             }
           }
+          // optional pd body id
+          else if (next == "PDBODYID")
+          {
+            particlestate = Particle::PDBodyId;
+            parser.consume("PDBODYID");
+
+            if (auto val = parser.read<std::optional<double>>())
+            {
+              state.resize(1);
+              state[0] = *val;
+            }
+            else
+            {
+              continue;
+            }
+          }
           else
             FOUR_C_THROW("Optional particle state with label '{}' unknown!", statelabel);
 
@@ -124,12 +140,10 @@ Core::IO::InputSpec Particle::create_particle_spec()
 {
   using namespace Core::IO::InputSpecBuilders;
 
-  return all_of({
-      deprecated_selection<std::string>("TYPE", get_particle_type_names()),
-      parameter<std::vector<double>>("POS", {.size = 3}),
-      parameter<std::optional<double>>("RAD"),
+  return all_of({deprecated_selection<std::string>("TYPE", get_particle_type_names()),
+      parameter<std::vector<double>>("POS", {.size = 3}), parameter<std::optional<double>>("RAD"),
       parameter<std::optional<double>>("RIGIDCOLOR"),
-  });
+      parameter<std::optional<double>>("PDBODYID")});
 }
 
 

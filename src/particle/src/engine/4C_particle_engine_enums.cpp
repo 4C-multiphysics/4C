@@ -35,6 +35,12 @@ int Particle::enum_to_state_dim(const ParticleState& state)
     case WallColorfield:
     case LastIterDensity:
     case LastIterTemperature:
+    case Young:
+    case CriticalStretch:
+    case PDBodyId:
+    case InitialConnectedBonds:
+    case CurrentConnectedBonds:
+    case PDDamageVariable:
       dim = 1;
       break;
 
@@ -199,6 +205,24 @@ std::string Particle::enum_to_state_name(const ParticleState& state)
     case LastIterTemperature:
       name = "temperature last iteration";
       break;
+    case PDBodyId:
+      name = "peridynamics body id";
+      break;
+    case CriticalStretch:
+      name = "critical stretch";
+      break;
+    case Young:
+      name = "Youngs modulus";
+      break;
+    case InitialConnectedBonds:
+      name = "initial active bonds";
+      break;
+    case CurrentConnectedBonds:
+      name = "remained active bonds";
+      break;
+    case PDDamageVariable:
+      name = "pd_damage_phi";
+      break;
     default:
       FOUR_C_THROW("particle state unknown!");
   }
@@ -223,7 +247,7 @@ Particle::ParticleState Particle::enum_from_state_name(const std::string& name)
 }
 
 static std::vector<std::string> particle_type_names = {
-    "phase1", "phase2", "boundaryphase", "rigidphase", "dirichletphase", "neumannphase"};
+    "phase1", "phase2", "boundaryphase", "rigidphase", "dirichletphase", "neumannphase", "pdphase"};
 
 std::string Particle::enum_to_type_name(const ParticleType& type)
 {
