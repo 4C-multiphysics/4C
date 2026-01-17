@@ -67,7 +67,7 @@ SOLVER 2:
   SOLVER: "Belos"
   AZPREC: "Teko"
   AZREUSE: 10
-  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_multiphysics.xml"
   TEKO_XML_FILE: "xml/block_preconditioner/fluid_solid_ale.xml"
   NAME: "Fsi_Solver"
 DESIGN SURF DIRICH CONDITIONS:
