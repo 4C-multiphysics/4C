@@ -21,10 +21,6 @@ STRUCTURAL DYNAMIC:
   TIMESTEP: 0.5
   NUMSTEP: 2
   MAXTIME: 1
-  TOLDISP: 1e-12
-  TOLRES: 1e-12
-  MAXITER: 20
-  PREDICT: "TangDis"
   LINEAR_SOLVER: 1
 SOLVER 1:
   SOLVER: "Superlu"
@@ -90,6 +86,8 @@ RESULT DESCRIPTION:
       QUANTITY: "dispz"
       VALUE: 1.899650306824355
       TOLERANCE: 1e-10
+STRUCT NOX/Status Test:
+  XML File: "beam3r_herm2line3_static_beam_to_solid_volume_meshtying_mortar_lagrange.xml"
 MATERIALS:
   - MAT: 1
     MAT_Struct_StVenantKirchhoff:

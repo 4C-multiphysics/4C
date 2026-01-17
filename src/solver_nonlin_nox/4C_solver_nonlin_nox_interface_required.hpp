@@ -48,6 +48,12 @@ namespace NOX
             const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
             const bool& isScaled = false) const = 0;
 
+        //! returns the right-hand-side norms of the Lagrange Multiplier DoF fields
+        virtual double get_lagrange_multiplier_rhs_norms(const Epetra_Vector& F,
+            const NOX::Nln::StatusTest::QuantityType& checkQuantity,
+            const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
+            const bool& isScaled = false) const = 0;
+
         //! Returns the Root Mean Squares (abbr.: RMS) of the primary solution updates
         virtual double get_primary_solution_update_rms(const Core::LinAlg::Vector<double>& xNew,
             const Core::LinAlg::Vector<double>& xOld, const double& aTol, const double& rTol,
@@ -61,8 +67,21 @@ namespace NOX
             const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
             const bool& isScaled = false) const = 0;
 
+        //! Returns the increment norm of the Lagrange Multiplier DoF fields
+        virtual double get_lagrange_multiplier_solution_update_norms(const Epetra_Vector& xNew,
+            const Epetra_Vector& xOld, const NOX::Nln::StatusTest::QuantityType& checkQuantity,
+            const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
+            const bool& isScaled = false) const = 0;
+
         //! Returns the previous solution norm of primary DoF fields
         virtual double get_previous_primary_solution_norms(const Core::LinAlg::Vector<double>& xOld,
+            const NOX::Nln::StatusTest::QuantityType& checkQuantity,
+            const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
+            const bool& isScaled = false) const = 0;
+
+        //! Returns the previous solution norm of Lagrange Multiply DoF fields
+        virtual double get_previous_lagrange_multiplier_solution_norms(
+            const Core::LinAlg::Vector<double>& xOld,
             const NOX::Nln::StatusTest::QuantityType& checkQuantity,
             const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
             const bool& isScaled = false) const = 0;

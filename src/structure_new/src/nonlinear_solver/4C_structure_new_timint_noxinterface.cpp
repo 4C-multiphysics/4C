@@ -202,6 +202,42 @@ double Solid::TimeInt::NoxInterface::get_primary_rhs_norms(const Core::LinAlg::V
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+double Solid::TimeInt::NoxInterface::get_lagrange_multiplier_rhs_norms(const Epetra_Vector& F,
+    const NOX::Nln::StatusTest::QuantityType& checkquantity,
+    const ::NOX::Abstract::Vector::NormType& type, const bool& isscaled) const
+{
+  check_init_setup();
+  double rhsnorm = -1.0;
+
+  // convert the given quantity type to a model type
+  const Inpar::Solid::ModelType mt = Solid::Nln::convert_quantity_type2_model_type(checkquantity);
+  auto mt_temp = Inpar::Solid::model_beaminteraction;
+  switch (checkquantity)
+  {
+    case NOX::Nln::StatusTest::quantity_lagrange_multipliers:
+    {
+      // export the model specific solution if necessary
+      auto rhs_ptr = gstate_ptr_->extract_model_entries(mt, Core::LinAlg::Vector<double>(F));
+      auto lm_rhs_ptr =
+          gstate_ptr_->extract_model_entries(mt_temp, Core::LinAlg::Vector<double>(F));
+
+      int_ptr_->remove_condensed_contributions_from_rhs(*rhs_ptr);
+
+      rhsnorm = NOX::Nln::Aux::calc_vector_norm(*rhs_ptr, type, isscaled);
+      break;
+    }
+    default:
+    {
+      /* Nothing to do. Functionality is supposed to be extended. */
+      break;
+    }
+  }
+
+  return rhsnorm;
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 double Solid::TimeInt::NoxInterface::get_primary_solution_update_rms(
     const Core::LinAlg::Vector<double>& xnew, const Core::LinAlg::Vector<double>& xold,
     const double& atol, const double& rtol, const NOX::Nln::StatusTest::QuantityType& checkquantity,
@@ -298,6 +334,41 @@ double Solid::TimeInt::NoxInterface::get_primary_solution_update_norms(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+double Solid::TimeInt::NoxInterface::get_lagrange_multiplier_solution_update_norms(
+    const Epetra_Vector& xnew, const Epetra_Vector& xold,
+    const NOX::Nln::StatusTest::QuantityType& checkquantity,
+    const ::NOX::Abstract::Vector::NormType& type, const bool& isscaled) const
+{
+  check_init_setup();
+
+  double updatenorm = -1.0;
+
+  // convert the given quantity type to a model type
+  const Inpar::Solid::ModelType mt = Solid::Nln::convert_quantity_type2_model_type(checkquantity);
+  switch (checkquantity)
+  {
+    case NOX::Nln::StatusTest::quantity_lagrange_multipliers:
+    {
+      std::cout << "chk qty is lagrange mul" << std::endl;
+      auto model_incr_ptr =
+          gstate_ptr_->extract_model_entries(mt, Core::LinAlg::Vector<double>(xold));
+      auto model_xnew_ptr =
+          gstate_ptr_->extract_model_entries(mt, Core::LinAlg::Vector<double>(xnew));
+      model_incr_ptr->update(1.0, *model_xnew_ptr, -1.0);
+      updatenorm = NOX::Nln::Aux::calc_vector_norm(*model_incr_ptr, type, isscaled);
+      break;
+    }
+    default:
+    {
+      /* Nothing to do. Functionality is supposed to be extended. */
+      break;
+    }
+  }
+  return updatenorm;
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 double Solid::TimeInt::NoxInterface::get_previous_primary_solution_norms(
     const Core::LinAlg::Vector<double>& xold,
     const NOX::Nln::StatusTest::QuantityType& checkquantity,
@@ -332,6 +403,42 @@ double Solid::TimeInt::NoxInterface::get_previous_primary_solution_norms(
         int gdofnumber = int_ptr_->get_condensed_dof_number(checkquantity);
         xoldnorm /= static_cast<double>(gdofnumber);
       }
+      break;
+    }
+    default:
+    {
+      /* Nothing to do. Functionality is supposed to be extended. */
+      break;
+    }
+  }
+
+  return xoldnorm;
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+double Solid::TimeInt::NoxInterface::get_previous_lagrange_multiplier_solution_norms(
+    const Core::LinAlg::Vector<double>& xold,
+    const NOX::Nln::StatusTest::QuantityType& checkquantity,
+    const ::NOX::Abstract::Vector::NormType& type, const bool& isscaled) const
+{
+  check_init_setup();
+
+  double xoldnorm = -1.0;
+
+  // convert the given quantity type to a model type
+  const Inpar::Solid::ModelType mt = Solid::Nln::convert_quantity_type2_model_type(checkquantity);
+
+  switch (checkquantity)
+  {
+    case NOX::Nln::StatusTest::quantity_lagrange_multipliers:
+    {
+      // export the displacement solution if necessary
+      auto model_xold_ptr =
+          gstate_ptr_->extract_model_entries(mt, Core::LinAlg::Vector<double>(xold));
+
+      xoldnorm = NOX::Nln::Aux::calc_vector_norm(*model_xold_ptr, type, isscaled);
+
       break;
     }
     default:

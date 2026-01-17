@@ -25,16 +25,9 @@ STRUCTURAL DYNAMIC:
   RESULTSEVERY: 1
   NLNSOL: fullnewton
   LOADLIN: true
-  PREDICT: TangDis
   TIMESTEP: 0.5
   NUMSTEP: 2
   MAXTIME: 1.0
-  TOLRES: 1e-10
-  TOLDISP: 1e-10
-  NORM_RESF: Abs
-  NORM_DISP: Abs
-  NORMCOMBI_RESFDISP: And
-  MAXITER: 20
 SOLVER 1:
   NAME: Structure_Solver
   SOLVER: Superlu
@@ -118,6 +111,8 @@ DESIGN SURF DIRICH CONDITIONS:
 BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING VOLUME:
   - E: 1
     COUPLING_ID: 1
+STRUCT NOX/Status Test:
+  XML File: "beam3r_herm2line3_static_beam_to_solid_volume_meshtying_mortar_lagrange.xml"
 MATERIALS:
   - MAT: 1
     MAT_Struct_StVenantKirchhoff:

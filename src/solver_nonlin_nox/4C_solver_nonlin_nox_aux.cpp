@@ -497,6 +497,9 @@ NOX::Nln::SolutionType NOX::Nln::Aux::convert_quantity_type_to_solution_type(
     case NOX::Nln::StatusTest::quantity_cardiovascular0d:
       soltype = NOX::Nln::sol_cardiovascular0d;
       break;
+    case NOX::Nln::StatusTest::quantity_lagrange_multipliers:
+      soltype = NOX::Nln::sol_lagrange_multipliers;
+      break;
     case NOX::Nln::StatusTest::quantity_unknown:
     default:
       FOUR_C_THROW("Unknown conversion for the quantity type \"{}\".",
