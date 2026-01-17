@@ -74,11 +74,23 @@ Thermo::TimInt::TimInt(const Teuchos::ParameterList& ioparams,
   }
 
   // time state
-  time_ = TimeStepping::TimIntMStep<double>(0, 0, 0.0);
-  // HERE SHOULD BE SOMETHING LIKE (tdynparams.get<double>("TIMEINIT"))
   dt_ = TimeStepping::TimIntMStep(0, 0, tdynparams.get<double>("TIMESTEP"));
-  step_ = 0;
-  timen_ = time_[0] + dt_[0];  // set target time to initial time plus step size
+  if (int step = Global::Problem::instance()->restart(); step > 0)
+  {
+    Core::IO::DiscretizationReader reader(
+        *discret_, Global::Problem::instance()->input_control_file(), step);
+    if (step != reader.read_int("step")) FOUR_C_THROW("Time step on file not equal to given step");
+
+    step_ = step;
+    time_ = TimeStepping::TimIntMStep<double>(0, 0, reader.read_double("time"));
+    timen_ = time_[0] + dt_[0];
+  }
+  else
+  {
+    step_ = 0;
+    time_ = TimeStepping::TimIntMStep<double>(0, 0, 0.0);
+    timen_ = time_[0] + dt_[0];
+  }
   stepn_ = step_ + 1;
 
   // a zero vector of full length
@@ -335,14 +347,7 @@ void Thermo::TimInt::reset_step()
  *----------------------------------------------------------------------*/
 void Thermo::TimInt::read_restart(const int step)
 {
-  Core::IO::DiscretizationReader reader(
-      *discret_, Global::Problem::instance()->input_control_file(), step);
-  if (step != reader.read_int("step")) FOUR_C_THROW("Time step on file not equal to given step");
-
-  step_ = step;
-  stepn_ = step_ + 1;
-  time_ = TimeStepping::TimIntMStep<double>(0, 0, reader.read_double("time"));
-  timen_ = time_[0] + dt_[0];
+  // step and time is already set in initialisation of time integrator
 
   read_restart_state();
   read_restart_force();
