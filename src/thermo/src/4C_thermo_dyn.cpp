@@ -26,9 +26,15 @@ void thermo_dyn_drt()
 
   // do restart if demanded from input file
   const int restart = Global::Problem::instance()->restart();
+  const int write_initial_state =
+      Global::Problem::instance()->io_params().get<bool>("WRITE_INITIAL_STATE");
   if (restart)
   {
     algorithm->thermo_field()->read_restart(restart);
+  }
+  else if (write_initial_state)
+  {
+    algorithm->thermo_field()->output();
   }
 
   // enter time loop to solve problem
