@@ -9,6 +9,7 @@
 
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_constraint_framework_embeddedmesh_solid_to_solid_mortar_manager.hpp"
+#include "4C_constraint_framework_embeddedmesh_solid_to_solid_nitsche_manager.hpp"
 #include "4C_constraint_framework_embeddedmesh_solid_to_solid_utils.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io_visualization_manager.hpp"
@@ -26,9 +27,8 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
   auto xfem_parameter_list = Global::Problem::instance()->xfem_general_params();
   auto cut_parameter_list = Global::Problem::instance()->cut_general_params();
 
-  auto embedded_mesh_constraint_enforcement =
-      Teuchos::getIntegralValue<Constraints::EnforcementStrategy>(
-          constraint_parameter_list, "CONSTRAINT_ENFORCEMENT");
+  strategy_ = Teuchos::getIntegralValue<Constraints::EnforcementStrategy>(
+      constraint_parameter_list, "CONSTRAINT_ENFORCEMENT");
 
   auto embedded_mesh_constraint_penalty_parameter =
       constraint_parameter_list.get<double>("PENALTY_PARAM");
@@ -38,6 +38,19 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
   auto embedded_mesh_coupling_strategy =
       Teuchos::getIntegralValue<Constraints::EmbeddedMesh::CouplingStrategy>(
           embedded_mesh_parameter_list, "COUPLING_STRATEGY");
+
+  auto embedded_mesh_nitsche_weighting_type =
+      Teuchos::getIntegralValue<Constraints::EmbeddedMesh::NitscheWeightingType>(
+          embedded_mesh_parameter_list, "NITSCHE_WEIGHTING_TYPE");
+
+  auto embedded_mesh_scalar_factor_for_stabilization_param =
+      embedded_mesh_parameter_list.get<double>("NITSCHE_SCALAR_FACTOR_FOR_STABILIZATION_PARAM");
+
+  auto embedded_mesh_nitsche_stabilization_param =
+      embedded_mesh_parameter_list.get<double>("NITSCHE_STABILIZATION_PARAM");
+
+  auto embedded_mesh_nitsche_average_weight_param =
+      embedded_mesh_parameter_list.get<double>("NITSCHE_WEIGHTING_PARAM");
 
   auto embedded_mesh_mortar_shape_function =
       Teuchos::getIntegralValue<Constraints::EmbeddedMesh::SolidToSolidMortarShapefunctions>(
@@ -54,17 +67,24 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
   bool cut_screen_output = xfem_parameter_list.get<bool>("PRINT_OUTPUT");
 
   // Initialize embedded mesh coupling parameters
-  Constraints::EmbeddedMesh::EmbeddedMeshParams embedded_mesh_coupling_params = {
-      .coupling_strategy_ = embedded_mesh_coupling_strategy,
-      .constraint_enforcement_ = embedded_mesh_constraint_enforcement,
+  embedded_mesh_coupling_params_ = {.coupling_strategy_ = embedded_mesh_coupling_strategy,
+      .constraint_enforcement_ = strategy_,
       .constraint_penalty_parameter_ = embedded_mesh_constraint_penalty_parameter,
       .mortar_shape_function_ = embedded_mesh_mortar_shape_function,
+      .nitsche_weighting_type_ = embedded_mesh_nitsche_weighting_type,
+      .nitsche_scalar_factor_for_stabilization_param_ =
+          embedded_mesh_scalar_factor_for_stabilization_param,
+      .nitsche_average_weight_param_ = embedded_mesh_nitsche_average_weight_param,
+      .nitsche_stabilization_param_ = embedded_mesh_nitsche_stabilization_param,
       .xfem_nodal_dof_set_strategy_ = nodal_dofset_strategy,
       .xfem_volume_cell_gauss_point_by_ = volume_cell_gauss_point_by,
       .xfem_bcell_gauss_point_by_ = bound_cell_gauss_point_by,
       .gmsh_cut_out_ = gmsh_cut_out,
       .cut_screen_output_ = cut_screen_output,
       .cut_params_ = cut_parameter_list};
+
+  // Do basic checks of the embedded mesh parameters
+  check_input();
 
   // Initialize visualization manager
   auto visualization_manager = std::make_shared<Core::IO::VisualizationManager>(
@@ -73,9 +93,46 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
           *Global::Problem::instance()->output_control_file(), 0.0),  // Fix time
       discret_ptr->get_comm(), "embedded_mesh");
 
-  mortar_manager_ = std::make_shared<Constraints::EmbeddedMesh::SolidToSolidMortarManager>(
-      discret_ptr, dispnp, embedded_mesh_coupling_params, visualization_manager,
-      discret_ptr->dof_row_map()->max_all_gid() + 1);
+  if (embedded_mesh_coupling_params_.coupling_strategy_ ==
+      Constraints::EmbeddedMesh::CouplingStrategy::mortar)
+  {
+    mortar_manager_ = std::make_shared<Constraints::EmbeddedMesh::SolidToSolidMortarManager>(
+        discret_ptr, dispnp, embedded_mesh_coupling_params_, visualization_manager,
+        discret_ptr->dof_row_map()->max_all_gid() + 1);
+  }
+  else if (embedded_mesh_coupling_params_.coupling_strategy_ ==
+           Constraints::EmbeddedMesh::CouplingStrategy::nitsche)
+  {
+    nitsche_manager_ = std::make_shared<Constraints::EmbeddedMesh::SolidToSolidNitscheManager>(
+        discret_ptr, dispnp, embedded_mesh_coupling_params_, visualization_manager);
+  }
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::check_input()
+{
+  // Check the coupling strategy
+  switch (embedded_mesh_coupling_params_.coupling_strategy_)
+  {
+    case Constraints::EmbeddedMesh::CouplingStrategy::mortar:
+    {
+      FOUR_C_ASSERT(embedded_mesh_coupling_params_.constraint_enforcement_ ==
+                        Constraints::EnforcementStrategy::penalty,
+          "The following implementation for embedded mesh coupling based on the mortar method is "
+          "implemented only for a penalty constraint enforcement. ");
+      break;
+    }
+    case Constraints::EmbeddedMesh::CouplingStrategy::nitsche:
+    {
+      break;
+    }
+    case Constraints::EmbeddedMesh::CouplingStrategy::undefined:
+    {
+      FOUR_C_THROW("Define a constraint strategy for the evaluation of embedded mesh coupling.");
+      break;
+    }
+  }
 }
 
 bool Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::evaluate_force_stiff(
@@ -84,19 +141,34 @@ bool Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::evaluate_for
     std::shared_ptr<Core::LinAlg::SparseMatrix> me_stiff_ptr,
     std::shared_ptr<Core::LinAlg::Vector<double>> me_force_ptr)
 {
-  // Evaluate the global mortar matrices
-  mortar_manager_->evaluate_global_coupling_contributions(displacement_vector);
-  mortar_manager_->add_global_force_stiffness_penalty_contributions(
-      *global_state_ptr, me_stiff_ptr, me_force_ptr);
-
+  if (embedded_mesh_coupling_params_.coupling_strategy_ ==
+      Constraints::EmbeddedMesh::CouplingStrategy::mortar)
+  {
+    // Evaluate the global mortar matrices
+    mortar_manager_->evaluate_global_coupling_contributions(displacement_vector);
+    mortar_manager_->add_global_force_stiffness_penalty_contributions(
+        *global_state_ptr, me_stiff_ptr, me_force_ptr);
+  }
+  if (embedded_mesh_coupling_params_.coupling_strategy_ ==
+      Constraints::EmbeddedMesh::CouplingStrategy::nitsche)
+  {
+    // Evaluate the global mortar matrices
+    nitsche_manager_->evaluate_global_coupling_contributions(displacement_vector);
+    nitsche_manager_->add_global_force_stiffness_contributions(
+        *global_state_ptr, me_stiff_ptr, me_force_ptr);
+  }
   return true;
 }
 
 void Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::runtime_output_step_state(
     std::pair<double, int> output_time_and_step)
 {
-  // Write runtime output for the embedded mesh method
-  mortar_manager_->write_output(output_time_and_step.first, output_time_and_step.second);
+  if (embedded_mesh_coupling_params_.coupling_strategy_ ==
+      Constraints::EmbeddedMesh::CouplingStrategy::mortar)
+  {
+    // Write runtime output for the embedded mesh method
+    mortar_manager_->write_output(output_time_and_step.first, output_time_and_step.second);
+  }
 }
 
 std::map<Solid::EnergyType, double>
