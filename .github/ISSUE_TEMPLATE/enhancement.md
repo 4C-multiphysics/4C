@@ -1,7 +1,8 @@
 ---
 name: Enhancement
 about: Help us to improve the code's capabilities or structure
-labels: "type: enhancement"
+title: ''
+labels: 'type: enhancement'
 assignees: ''
 
 ---

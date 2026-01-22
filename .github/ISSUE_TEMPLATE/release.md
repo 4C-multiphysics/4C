@@ -1,8 +1,8 @@
 ---
 name: Release
 about: Create a new release.
-title: "Release 4C version YYYY.MINOR.PATCH"
-type: Task
+title: Release 4C version YYYY.MINOR.PATCH
+labels: ''
 assignees: ''
 
 ---
@@ -47,9 +47,11 @@ We do not yet have an automated way to collect the changelog. So, this requires 
 ### Miscellaneous
 <!-- Any other noteworthy changes -->
 
-## New Contributors
+## Who changed
+### New Contributors
 <!-- GitHub's generated release notes contain a list of new contributors since the last release -->
-
+### All contributors
+<!-- Let us also thank all contributors to this release. You may use [this script](https://gist.github.com/georghammerl/8bc9bebdb318393192cde1d215d465d6#file-collect_authors_reviewers_commenters-py) to collect authors, reviewers and commenters of merged pull requests. -->
 
 <!-- link to full changelog provided by GitHub's generated release notes -->
 **Full Changelog**: https://github.com/4C-multiphysics/4C/compare/v2025.1.0...v2025.2.0
