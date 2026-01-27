@@ -26,7 +26,9 @@ BeamInteraction::BeamToBeamContactParams::BeamToBeamContactParams()
       btb_penalty_law_regularization_c0_(-1.0),
       gap_shift_(0.0),
       btb_point_penalty_param_(-1.0),
+      btb_function_id_for_point_penalty_(-1),
       btb_line_penalty_param_(-1.0),
+      btb_function_id_for_line_penalty_(-1),
       btb_perp_shifting_angle1_(-1.0),
       btb_perp_shifting_angle2_(-1.0),
       btb_parallel_shifting_angle1_(-1.0),
@@ -83,20 +85,41 @@ void BeamInteraction::BeamToBeamContactParams::init()
   /****************************************************************************/
   btb_point_penalty_param_ = beam_contact_params_list.get<double>("BEAMS_BTBPENALTYPARAM");
 
-  if (btb_point_penalty_param_ < 0.0)
-    FOUR_C_THROW("beam-to-beam point penalty parameter must not be negative!");
+  btb_function_id_for_point_penalty_ =
+      beam_contact_params_list.get<int>("BEAMS_BTBPENALTYPARAM_BY_FUNCT");
+
+  if (btb_point_penalty_param_ < 0.0 and btb_function_id_for_point_penalty_ < 0.0)
+    FOUR_C_THROW(
+        "beam-to-beam point penalty parameter or beam-to-beam function id for point penalty must "
+        "be specified!");
+
+  if (btb_point_penalty_param_ > 0.0 and btb_function_id_for_point_penalty_ > 0.0)
+    FOUR_C_THROW(
+        "Please specify the beam-to-beam point penalty parameter either with BEAMS_BTBPENALTYPARAM "
+        "or BEAMS_BTBPENALTYPARAM_BY_FUNCT. Not both!");
 
 
   // input parameters required for all-angle-beam contact formulation ...
   if (beam_contact_params_list.get<bool>("BEAMS_SEGCON"))
   {
     /****************************************************************************/
+
+
+    btb_function_id_for_line_penalty_ =
+        beam_contact_params_list.get<int>("BEAMS_BTBLINEPENALTYPARAM_BY_FUNCT");
+
     btb_line_penalty_param_ = beam_contact_params_list.get<double>("BEAMS_BTBLINEPENALTYPARAM");
 
-    if (btb_line_penalty_param_ < 0.0)
+    if (btb_line_penalty_param_ < 0.0 and btb_function_id_for_line_penalty_ < 0.0)
       FOUR_C_THROW(
-          "You chose all-angle-beam contact algorithm: thus, beam-to-beam line"
-          " penalty parameter must not be negative!");
+          " beam-to-beam line penalty parameter or beam-to-beam function id for line penalty must "
+          "be specified non negative!");
+
+    if (btb_line_penalty_param_ > 0.0 and btb_function_id_for_line_penalty_ > 0.0)
+      FOUR_C_THROW(
+          "Please specify the beam-to-beam line penalty parameter either with "
+          "BEAMS_BTBLINEPENALTYPARAM or BEAMS_BTBLINEPENALTYPARAM_BY_FUNCT. Not both!");
+
 
     /****************************************************************************/
     // Todo find more verbose and expressive naming

@@ -27,6 +27,7 @@
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_structure_timint_impl.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_utils_function_of_time.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
 
@@ -130,7 +131,6 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::setup()
         "contact search!",
         element1()->id(), element2()->id());
   }
-
   cpvariables_.resize(0);
   gpvariables_.resize(0);
   epvariables_.resize(0);
@@ -242,7 +242,26 @@ bool BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate(
   // since most of the elements leave directly after the closest point projection!
   clear_class_variables();
 
+  // initialize the penalty parameter with default one
   double pp = params()->beam_to_beam_contact_params()->beam_to_beam_point_penalty_param();
+
+  // check if a function is specified
+  auto function_id =
+      params()->beam_to_beam_contact_params()->beam_to_beam_function_id_for_point_penalty();
+  if (function_id > -1)
+  {
+    // get penalty the value
+    auto& funct =
+        Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfTime>(function_id);
+    pp = funct.evaluate(time_);
+    if (pp < 0.0)
+    {
+      FOUR_C_THROW("Penalty value is smaller than 0, Please check Function {} at time {}",
+          function_id, time_);
+    }
+  }
+
+
 
   // Subdevide the two elements in segments with linear approximation
   std::vector<Core::LinAlg::Matrix<3, 1, double>> endpoints1;
@@ -691,10 +710,29 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_activ
                 std::pair<int, int> leftpoint_ids = std::make_pair(leftpoint_id1, leftpoint_id2);
                 TYPE jacobi = get_jacobi_at_xi(element1(), eta1_slave) * jacobi_interval;
 
-                const double parallel_pp =
+                // initialize the penalty parameter with parameter
+                double parallel_pp =
                     params()->beam_to_beam_contact_params()->beam_to_beam_line_penalty_param();
 
-                if (parallel_pp < 0.0) FOUR_C_THROW("BEAMS_BTBLINEPENALTYPARAM not set!");
+                // check if a function is specified
+                auto function_id = params()
+                                       ->beam_to_beam_contact_params()
+                                       ->beam_to_beam_function_id_for_line_penalty();
+                if (function_id > -1)
+                {
+                  // get penalty the value
+                  auto& funct =
+                      Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfTime>(
+                          function_id);
+                  parallel_pp = funct.evaluate(time_);
+                }
+
+
+                if (parallel_pp < 0.0)
+                  FOUR_C_THROW(
+                      "The peanlty parameter from BEAMS_BTBLINEPENALTYPARAM or "
+                      "BEAMS_BTBLINEPENALTYPARAM_BY_FUNCT may not be smaller than 0!");
+
 
                 // Create data container for each Gauss point (in case of small-angle contact the
                 // number of the Gauss point [numgp] and the number of the integration interval
