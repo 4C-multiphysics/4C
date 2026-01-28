@@ -114,7 +114,6 @@ namespace Core::Utils
      */
     SymbolicFunctionOfSpaceTime(const std::vector<std::string>& expressions,
         std::vector<std::shared_ptr<FunctionVariable>> variables);
-    explicit SymbolicFunctionOfSpaceTime(const char* str);
 
     double evaluate(std::span<const double> x, double t, std::size_t component) const override;
 

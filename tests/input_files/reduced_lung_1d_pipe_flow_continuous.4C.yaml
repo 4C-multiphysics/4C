@@ -71,3 +71,16 @@ RESULT DESCRIPTION:
       QUANTITY: "flow"
       VALUE: 1.8852568
       TOLERANCE: 1e-8
+  - ARTNET:
+      DIS: "artery"
+      NODE: 1
+      QUANTITY: "flow"
+      VALUE: 2.00030318
+      TOLERANCE: 1e-8
+  - ARTNET:
+      DIS: "artery"
+      NODE: 5
+      QUANTITY: "velocity"
+      VALUE: 0.60984287
+      TOLERANCE: 1e-8
+

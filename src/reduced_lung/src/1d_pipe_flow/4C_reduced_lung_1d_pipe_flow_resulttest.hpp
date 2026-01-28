@@ -22,17 +22,14 @@ namespace Core::FE
   class Discretization;
 }  // namespace Core::FE
 
-namespace ReducedLung1D
+namespace ReducedLung1dPipeFlow
 {
   // forward declaration
   class ResultTest : public Core::Utils::ResultTest
   {
    public:
     ResultTest(std::shared_ptr<Core::FE::Discretization> dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> sol)
-        : Core::Utils::ResultTest("ARTNET"), dis_(std::move(dis)), sol_(std::move(sol))
-    {
-    }
+        std::shared_ptr<const Core::LinAlg::Vector<double>> sol);
 
     void test_node(
         const Core::IO::InputParameterContainer& container, int& nerr, int& test_count) override;
@@ -42,7 +39,7 @@ namespace ReducedLung1D
     std::shared_ptr<const Core::LinAlg::Vector<double>> sol_;
   };
 
-}  // namespace ReducedLung1D
+}  // namespace ReducedLung1dPipeFlow
 
 FOUR_C_NAMESPACE_CLOSE
 

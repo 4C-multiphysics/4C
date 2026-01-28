@@ -27,7 +27,6 @@
 #include "4C_utils_function_of_time.hpp"
 
 #include <boost/graph/subgraph.hpp>
-#include <boost/xpressive/detail/core/matcher/logical_newline_matcher.hpp>
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -51,13 +50,13 @@ namespace ReducedLung1dPipeFlow
       const int node_gid = node.global_id();
       const int element_global_id = node.adjacent_elements()[0].global_id();
 
-      const double Young_value = parameters.material.Young_E.at(element_global_id);
+      const double Young_value = parameters.material.youngs_modulus_E.at(element_global_id);
       const double A0_value = parameters.geometry.reference_area_A0.at(element_global_id);
       const double r0_value = std::sqrt(A0_value / M_PI);
       const double th_value = parameters.geometry.thickness_th.at(element_global_id);
       const double beta_value =
           (sqrt(M_PI) * th_value * Young_value) /
-          ((1 - std::pow(parameters.material.Poisson_ratio_nue, 2)) * A0_value);
+          ((1 - std::pow(parameters.material.poisson_ratio_nu, 2)) * A0_value);
 
       Young.replace_global_value(node_gid, Young_value);
       reference_area.replace_global_value(node_gid, A0_value);
@@ -77,19 +76,21 @@ namespace ReducedLung1dPipeFlow
                  parameters.boundary_conditions.function_id_inflow);
   }
 
-  auto compute_length(const Core::Elements::Element& element)
+  double compute_length(const Core::Elements::Element& element)
   {
     const auto& p1 = element.nodes()[0]->x();
     const auto& p2 = element.nodes()[1]->x();
 
     // Calculate the length of artery element
-    const double L = std::sqrt(
-        std::pow(p1[0] - p2[0], 2) + std::pow(p1[1] - p2[1], 2) + std::pow(p1[2] - p2[2], 2));
+    const double sum_of_squares = (p1[0] - p2[0]) * (p1[0] - p2[0]) +
+                                  (p1[1] - p2[1]) * (p1[1] - p2[1]) +
+                                  (p1[2] - p2[2]) * (p1[2] - p2[2]);
+    const double L = std::sqrt(sum_of_squares);
     FOUR_C_ASSERT(L > 0, "Element length needs to be  > 0");
     return L;
   }
 
-  auto compute_psi_matrix(Core::LinAlg::Matrix<2, 4>& Psi_matrix,
+  void compute_psi_matrix(Core::LinAlg::Matrix<2, 4>& Psi_matrix,
       const Core::LinAlg::Matrix<2, 4>& N_matrix, const Core::LinAlg::Matrix<2, 4>& dNdxi_matrix,
       const Core::LinAlg::Matrix<2, 2>& flux_jacobian, const double L, const double delta)
   {
@@ -115,7 +116,9 @@ namespace ReducedLung1dPipeFlow
     // step 1: initial guess: Q(A0), W1 = 2Q/A0 - W2
     double W_in = 2 * Q_condition / boundary_A0 - characteristic_W_outgoing;
     double f = pow(W_in - characteristic_W_outgoing, 4) / 1024 *
-               pow(input.fluid.density_rho / beta, 2) * 0.5 * (W_in + characteristic_W_outgoing);
+                   pow(input.fluid.density_rho / beta, 2) * 0.5 *
+                   (W_in + characteristic_W_outgoing) -
+               Q_condition;
 
     int itrs = 0;
     while (fabs(f) > 0.000001)
@@ -306,6 +309,7 @@ namespace ReducedLung1dPipeFlow
 
         // U = [A u]^T
         Core::LinAlg::Matrix<2, 1> U;
+        U.put_scalar(0.0);
         for (int i = 0; i < 2; i++)
         {
           for (int j = 0; j < 4; j++)
@@ -383,7 +387,7 @@ namespace ReducedLung1dPipeFlow
         const double dbeta_dx =
             (sqrt(M_PI) * ((thickness_element * dYoung_dxi_gp * inv_det) * reference_area_element) -
                 thickness_element * Young_element * dA0_dxi_gp * inv_det) /
-            (pow(reference_area_element * (1 - pow(input.material.Poisson_ratio_nue, 2)), 2));
+            (pow(reference_area_element * (1 - pow(input.material.poisson_ratio_nu, 2)), 2));
         const double dp_dA0 = ((-0.5) * beta_element) / sqrt(reference_area_element);
 
         Core::LinAlg::Matrix<2, 1> S;
@@ -512,13 +516,19 @@ namespace ReducedLung1dPipeFlow
           // precribed inflow
           double heavyside = 1.0;
           double time_cyc = time_n;
-          while (time_cyc > input.boundary_conditions.cycle_period)
+          if (auto period = input.boundary_conditions.cycle_period)
           {
-            time_cyc -= input.boundary_conditions.cycle_period;
+            while (time_cyc > *period)
+            {
+              time_cyc -= *period;
+            }
           }
-          if (time_cyc > input.boundary_conditions.pulse_width)
+          if (auto pulse = input.boundary_conditions.pulse_width)
           {
-            heavyside = 0.0;
+            if (time_cyc > *pulse)
+            {
+              heavyside = 0.0;
+            }
           }
           // inlet
           if (normal_in_out[boundary_local_index] == -1)
@@ -640,6 +650,12 @@ namespace ReducedLung1dPipeFlow
         radius_solution, Core::IO::OutputEntity::node, {"r"});
     visualization_writer.write_to_disk(0.0, 0);
 
+    // Setup solver
+    Core::LinAlg::Solver solver(Global::Problem::instance()->solver_params(1),
+        discretization->get_comm(), Global::Problem::instance()->solver_params_callback(),
+        Teuchos::getIntegralValue<Core::IO::Verbositylevel>(
+            Global::Problem::instance()->io_params(), "VERBOSITY"));
+
     auto y = std::make_shared<Core::LinAlg::Vector<double>>(*discretization->dof_row_map());
 
     // Time loop
@@ -652,11 +668,7 @@ namespace ReducedLung1dPipeFlow
       discretization->evaluate(dummy, strategy, compute_local_contributions);
       mass_matrix->epetra_matrix().FillComplete();
 
-      Core::LinAlg::Solver solver(Global::Problem::instance()->solver_params(1),
-          discretization->get_comm(), Global::Problem::instance()->solver_params_callback(),
-          Teuchos::getIntegralValue<Core::IO::Verbositylevel>(
-              Global::Problem::instance()->io_params(), "VERBOSITY"));
-
+      solver.reset();
       // y = M^-1 * rhs
       [[maybe_unused]] int error = solver.solve(mass_matrix, y, rhs, {});
       FOUR_C_ASSERT(error == 0, "Error Code {}: solver solve failed.", error);
@@ -705,7 +717,7 @@ namespace ReducedLung1dPipeFlow
     // Result tests
     auto sol_ptr = std::make_shared<const Core::LinAlg::Vector<double>>(solution);
     std::shared_ptr<Core::Utils::ResultTest> resulttest =
-        std::make_shared<ReducedLung1D::ResultTest>(discretization, sol_ptr);
+        std::make_shared<ReducedLung1dPipeFlow::ResultTest>(discretization, sol_ptr);
     Global::Problem::instance()->add_field_test(resulttest);
     Global::Problem::instance()->test_all(discretization->get_comm());
   }

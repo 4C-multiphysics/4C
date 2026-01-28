@@ -45,10 +45,10 @@ Core::IO::InputSpec ReducedLung1dPipeFlow::valid_parameters()
                       {input_field<double>("Young_E",
                            {.description =
                                    "Young's modulus depending on generation and vessel type.",
-                               .store = in_struct(&Parameters::Material::Young_E)}),
+                               .store = in_struct(&Parameters::Material::youngs_modulus_E)}),
                           parameter<double>("Poisson_ratio_nue",
                               {.description = "Poisson ratio of material",
-                                  .store = in_struct(&Parameters::Material::Poisson_ratio_nue)})},
+                                  .store = in_struct(&Parameters::Material::poisson_ratio_nu)})},
                       {.description = "Parameters of wall mechanics",
                           .store = in_struct(&Parameters::material)}),
 
@@ -81,16 +81,14 @@ Core::IO::InputSpec ReducedLung1dPipeFlow::valid_parameters()
                               {.description = "ID of function describing the boundary condition",
                                   .store = in_struct(
                                       &Parameters::BoundaryConditions::condition_outflow)}),
-                          parameter<double>("cycle_period",
+                          parameter<std::optional<double>>("cycle_period",
                               {.description = "Duration of one cycle until next one starts, to "
                                               "implement pulsatility (systolic vs diastolic).",
-                                  .default_value = 1.0,
                                   .store =
                                       in_struct(&Parameters::BoundaryConditions::cycle_period)}),
-                          parameter<double>("pulse_width",
-                              {.description = "Duration of input pulse in the cycle - Heavyside "
+                          parameter<std::optional<double>>("pulse_width",
+                              {.description = "Duration of input pulse in the cycle - Heaviside "
                                               "function = 1.",
-                                  .default_value = 1.0,
                                   .store =
                                       in_struct(&Parameters::BoundaryConditions::pulse_width)}),
                       },

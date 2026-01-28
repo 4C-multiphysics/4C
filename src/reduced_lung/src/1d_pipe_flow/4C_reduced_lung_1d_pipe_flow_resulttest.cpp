@@ -11,14 +11,20 @@
 
 #include "4C_cardiovascular0d_arterialproxdist.hpp"
 #include "4C_comm_mpi_utils.hpp"
-#include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_reduced_lung_1d_pipe_flow_main.hpp"
 #include "4C_utils_result_test.hpp"
 
 FOUR_C_NAMESPACE_OPEN
-void ReducedLung1D::ResultTest::test_node(
+// Constructor
+ReducedLung1dPipeFlow::ResultTest::ResultTest(std::shared_ptr<Core::FE::Discretization> dis,
+    std::shared_ptr<const Core::LinAlg::Vector<double>> sol)
+    : Core::Utils::ResultTest("ARTNET"), dis_(std::move(dis)), sol_(std::move(sol))
+{
+}
+
+void ReducedLung1dPipeFlow::ResultTest::test_node(
     const Core::IO::InputParameterContainer& container, int& nerr, int& test_count)
 {
   std::string dis = container.get<std::string>("DIS");
@@ -33,7 +39,7 @@ void ReducedLung1D::ResultTest::test_node(
   if (const int is_node_of_any_rank = Core::Communication::sum_all(is_local_node, dis_->get_comm());
       is_node_of_any_rank == 0)
   {
-    FOUR_C_THROW(" Node {} does not belong to discretization {}", gid + 1, dis_->name());
+    FOUR_C_THROW("Node {} does not belong to discretization {}", gid + 1, dis_->name());
   }
   if (!dis_->have_global_node(gid)) return;
 

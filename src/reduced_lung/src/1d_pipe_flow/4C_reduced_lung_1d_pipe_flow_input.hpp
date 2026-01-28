@@ -33,12 +33,12 @@ namespace ReducedLung1dPipeFlow
     } fluid;
     struct Material
     {
-      Core::IO::InputField<double> Young_E;
-      double Poisson_ratio_nue;
+      Core::IO::InputField<double> youngs_modulus_E;
+      double poisson_ratio_nu;
     } material;
     struct Geometry
     {
-      Core::IO::InputField<double> reference_radius;
+      double reference_radius;
       Core::IO::InputField<double> reference_area_A0;
       Core::IO::InputField<double> thickness_th;
     } geometry;
@@ -48,8 +48,8 @@ namespace ReducedLung1dPipeFlow
       std::string output;
       int function_id_inflow;
       double condition_outflow;
-      double cycle_period;
-      double pulse_width;
+      std::optional<double> cycle_period;
+      std::optional<double> pulse_width;
       const Core::Utils::FunctionOfTime* bc_fct;
     } boundary_conditions;
   };

@@ -37,7 +37,7 @@ namespace ReducedLung1dPipeFlow
   /**
    * Computes and returns element length.
    */
-  auto compute_length(const Core::Elements::Element& element);
+  double compute_length(const Core::Elements::Element& element);
 
   /**
    * Computes the matrix of shape functions according to SUPG.
@@ -51,7 +51,7 @@ namespace ReducedLung1dPipeFlow
    * (2*lambda_max).
    * The derivative dxidx is defined by 1 / @param L
    */
-  auto compute_psi_matrix(Core::LinAlg::Matrix<2, 4>& Psi_matrix,
+  void compute_psi_matrix(Core::LinAlg::Matrix<2, 4>& Psi_matrix,
       const Core::LinAlg::Matrix<2, 4>& N_matrix, const Core::LinAlg::Matrix<2, 4>& dNdxi_matrix,
       const Core::LinAlg::Matrix<2, 2>& flux_jacobian, const double L, const double delta);
   /**
