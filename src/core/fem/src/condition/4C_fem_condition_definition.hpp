@@ -14,7 +14,9 @@
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_io_input_spec.hpp"
 
+#include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -64,11 +66,14 @@ namespace Core::Conditions
 
     /// read all conditions from my input file section
     /*!
-      \param input (i) the input file
-      \param cmap (o) the conditions we read here
+      \param input the input file
+      \param cmap an empty multimap to fill with the read conditions (key: entity id, value:
+      condition)
+      \param node_sets_names map of node set names to their ids from the external mesh file
      */
     void read(Core::IO::InputFile& input,
-        std::multimap<int, std::shared_ptr<Core::Conditions::Condition>>& cmap) const;
+        std::multimap<int, std::shared_ptr<Core::Conditions::Condition>>& cmap,
+        const std::map<std::string, std::vector<int>>& node_sets_names) const;
 
     /// name of my section in input file
     std::string section_name() const { return sectionname_; }
@@ -91,6 +96,27 @@ namespace Core::Conditions
     Core::Conditions::GeometryType gtype_;
 
     std::vector<Core::IO::InputSpec> specs_;
+
+    /**
+     * @brief Validate an entity input definition and resolve its internal ID if necessary.
+     *
+     * This function validates that the correct combination of entity ID and external name is
+     * provided. Additionally, it resolves the internal id:
+     *  - for external name entities: looks up the corresponding internal ID via @p node_sets_names
+     *  - for legacy IDs: converts from 1-based to 0-based indexing
+     *  - for other entity types: returns the provided ID directly
+     *
+     * Invalid input results in an assertion failure.
+     *
+     * @param entity_type     Entity identification type.
+     * @param id              Entity ID from input (only contains a value if specified in input).
+     * @param node_set_name   External node_set_name (only contains a value if specified in input).
+     * @param node_sets_names Mapping from external names to internal entity IDs.
+     * @return Resolved internal entity ID.
+     */
+    [[nodiscard]] int resolve_entity_id(EntityType entity_type, std::optional<int> id,
+        const std::optional<std::string>& node_set_name,
+        const std::map<std::string, std::vector<int>>& node_sets_names) const;
   };
 
 }  // namespace Core::Conditions

@@ -15,9 +15,21 @@ FOUR_C_NAMESPACE_OPEN
 
 
 Core::Conditions::Condition::Condition(const int id, const Core::Conditions::ConditionType type,
-    const bool buildgeometry, const Core::Conditions::GeometryType gtype, EntityType entity_type)
-    : id_(id), buildgeometry_(buildgeometry), type_(type), gtype_(gtype), entity_type_(entity_type)
+    const bool buildgeometry, const Core::Conditions::GeometryType gtype, EntityType entity_type,
+    std::optional<std::string> node_set_name)
+    : id_(id),
+      buildgeometry_(buildgeometry),
+      type_(type),
+      gtype_(gtype),
+      entity_type_(entity_type),
+      node_set_name_(std::move(node_set_name))
 {
+  if (entity_type_ == EntityType::node_set_name)
+  {
+    FOUR_C_ASSERT(node_set_name_.has_value(),
+        "Condition {} of ENTITY_TYPE 'node_set_name' requires a NODE_SET_NAME to be provided.",
+        id_);
+  }
 }
 
 std::ostream& operator<<(std::ostream& os, const Core::Conditions::Condition& cond)
@@ -52,6 +64,12 @@ std::shared_ptr<Core::Conditions::Condition> Core::Conditions::Condition::copy_w
   std::shared_ptr<Core::Conditions::Condition> copy(new Condition(*this));
   copy->clear_geometry();
   return copy;
+}
+
+std::string Core::Conditions::Condition::node_set_name() const
+{
+  FOUR_C_ASSERT(node_set_name_.has_value(), "Condition {} has no node_set_name assigned!", id_);
+  return node_set_name_.value();
 }
 
 

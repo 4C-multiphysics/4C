@@ -1533,7 +1533,7 @@ void Global::read_conditions(
     std::multimap<int, std::shared_ptr<Core::Conditions::Condition>> cond;
 
     // read conditions from the input file
-    condition_definition.read(input, cond);
+    condition_definition.read(input, cond, node_sets_names);
 
     // add nodes to conditions
     for (const auto& [entity_id, condition] : cond)
@@ -1606,6 +1606,7 @@ void Global::read_conditions(
           break;
         }
         case Core::Conditions::EntityType::node_set_id:
+        case Core::Conditions::EntityType::node_set_name:
         {
           FOUR_C_ASSERT_ALWAYS(node_sets.contains(entity_id),
               "Cannot apply condition '{}' to node set {} which is not specified in the mesh file.",
