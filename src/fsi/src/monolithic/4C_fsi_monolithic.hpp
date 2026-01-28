@@ -249,6 +249,8 @@ namespace FSI
     bool isadafluid_;      ///< Time step size adaptivity based on fluid?
     bool isadasolver_;     ///< Time step size adaptivity based on solver convergence?
 
+    bool use_old_structure_;  /// indicator if old or new time integration is used TEMPORARY
+
     //@}
 
     //! @name output related stuff
