@@ -845,4 +845,70 @@ const Core::IO::MeshInput::Mesh<3>* Core::IO::MeshReader::get_filtered_external_
   return &mesh_reader.filtered_mesh_on_rank_zero.value();
 }
 
+void Core::IO::MeshReader::get_node_sets(std::map<int, std::vector<int>>& node_sets,
+    std::map<std::string, std::vector<int>>& node_sets_names) const
+{
+  node_sets.clear();
+  node_sets_names.clear();
+  const int my_rank = Core::Communication::my_mpi_rank(get_comm());
+
+  // Data is available on rank zero: bring it into the right shape and broadcast it.
+  if (my_rank == 0)
+  {
+    if (const auto* external_mesh = get_external_mesh_on_rank_zero(); external_mesh)
+    {
+      const auto& node_sets_from_mesh = external_mesh->point_sets();
+      for (const auto& [id, node_set] : node_sets_from_mesh)
+      {
+        const auto& set = node_set.point_ids;
+        node_sets[id] = std::vector<int>(set.begin(), set.end());
+
+        // only append to names if name is given
+        if (node_set.name)
+        {
+          // Do not assert uniqueness of names here, as unambiguous names are only required for
+          // conditions which are identified by their external name.
+          node_sets_names[node_set.name.value()].push_back(id);
+        }
+      }
+    }
+    Core::Communication::broadcast(node_sets, 0, get_comm());
+    Core::Communication::broadcast(node_sets_names, 0, get_comm());
+  }
+  else
+  {
+    Core::Communication::broadcast(node_sets, 0, get_comm());
+    Core::Communication::broadcast(node_sets_names, 0, get_comm());
+  }
+}
+
+void Core::IO::MeshReader::get_element_block_nodes(
+    std::map<int, std::vector<int>>& element_block_nodes) const
+{
+  element_block_nodes.clear();
+  const int my_rank = Core::Communication::my_mpi_rank(get_comm());
+
+  // Data is available on rank zero: bring it into the right shape and broadcast it.
+  if (my_rank == 0)
+  {
+    if (const auto* external_mesh = get_external_mesh_on_rank_zero(); external_mesh)
+    {
+      for (const auto& [id, eb] : external_mesh->cell_blocks())
+      {
+        std::set<int> nodes;
+        for (const auto& cell : eb.cells())
+        {
+          nodes.insert(cell.begin(), cell.end());
+        }
+        element_block_nodes[id] = std::vector<int>(nodes.begin(), nodes.end());
+      }
+    }
+    Core::Communication::broadcast(element_block_nodes, 0, get_comm());
+  }
+  else
+  {
+    Core::Communication::broadcast(element_block_nodes, 0, get_comm());
+  }
+}
+
 FOUR_C_NAMESPACE_CLOSE
