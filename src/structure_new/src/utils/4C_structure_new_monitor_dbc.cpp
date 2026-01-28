@@ -121,6 +121,10 @@ void Solid::MonitorDbc::create_reaction_force_condition(
   rcond_ptr->parameters().add("ONOFF", (tagged_cond.parameters().get<std::vector<int>>("ONOFF")));
   rcond_ptr->set_nodes(*tagged_cond.get_nodes());
 
+  // copy external node set name if the condition has one, otherwise use the unique id as name
+  tagged_cond.has_node_set_name() ? rcond_ptr->set_node_set_name(tagged_cond.node_set_name())
+                                  : rcond_ptr->set_node_set_name(std::to_string(new_id + 1));
+
   discret.set_condition("ReactionForce", rcond_ptr);
 }
 
@@ -130,7 +134,7 @@ void Solid::MonitorDbc::read_restart_yaml_file(const Core::Conditions::Condition
       Global::Problem::instance()->output_control_file()->restart_name());
 
   const std::string filename =
-      full_restart_dirpath + "-" + std::to_string(rcond.id() + 1) + "_monitor_dbc.yaml";
+      full_restart_dirpath + "-" + rcond.node_set_name() + "_monitor_dbc.yaml";
 
   std::ifstream in(filename, std::ios::binary);
   if (!in)
@@ -211,7 +215,7 @@ void Solid::MonitorDbc::setup()
         dbc_monitor_csvwriter_.emplace_back(std::make_unique<Core::IO::RuntimeCsvWriter>(
             Core::Communication::my_mpi_rank(get_comm()),
             *Global::Problem::instance()->output_control_file(),
-            std::to_string(rcond.id() + 1) + "_monitor_dbc"));
+            rcond.node_set_name() + "_monitor_dbc"));
         const int csv_precision = 16;
         dbc_monitor_csvwriter_.back()->register_data_vector("ref_area", 1, csv_precision);
         dbc_monitor_csvwriter_.back()->register_data_vector("curr_area", 1, csv_precision);
@@ -366,7 +370,7 @@ void Solid::MonitorDbc::execute(Core::IO::DiscretizationWriter& writer)
         current_entry["ref_area"] << area_ref;
 
         std::string file_name = Global::Problem::instance()->output_control_file()->file_name() +
-                                "-" + std::to_string(rid + 1) + "_monitor_dbc.yaml";
+                                "-" + rcond_ptr->node_set_name() + "_monitor_dbc.yaml";
 
         std::ofstream output_filestream(file_name, std::ios::out);
         if (!output_filestream.is_open())
@@ -392,7 +396,8 @@ void Solid::MonitorDbc::write_results_to_screen(const Core::Conditions::Conditio
 {
   if (Core::Communication::my_mpi_rank(get_comm()) != 0) return;
 
-  Core::IO::cout << "\n\n--- Monitor Dirichlet boundary condition " << rcond.id() + 1 << " \n";
+  Core::IO::cout << "\n\n--- Monitor Dirichlet boundary condition " << rcond.node_set_name()
+                 << " \n";
   write_condition_header(Core::IO::cout.os(), OS_WIDTH);
   write_column_header(Core::IO::cout.os(), OS_WIDTH);
   write_results(Core::IO::cout.os(), OS_WIDTH, os_precision_, gstate_ptr_->get_step_n(),

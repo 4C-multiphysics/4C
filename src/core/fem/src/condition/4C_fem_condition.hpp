@@ -16,6 +16,8 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
+#include <string>
 #include <tuple>
 
 FOUR_C_NAMESPACE_OPEN
@@ -52,6 +54,11 @@ namespace Core::Conditions
      * Refers to an element block ID.
      */
     element_block_id,
+
+    /**
+     * Refers to an external name specified in the mesh file.
+     */
+    node_set_name
   };
 
   /*!
@@ -108,6 +115,12 @@ namespace Core::Conditions
     \brief Return condition id
     */
     [[nodiscard]] inline int id() const { return id_; }
+
+    void set_node_set_name(const std::string& name) { node_set_name_ = name; }
+
+    [[nodiscard]] std::string node_set_name() const;
+
+    [[nodiscard]] bool has_node_set_name() const { return node_set_name_.has_value(); }
 
     /*!
     \brief Return vector of my global node ids
@@ -243,6 +256,9 @@ namespace Core::Conditions
 
     //! Unique id of this condition, no second condition of the same type with same id may exist
     int id_{-1};
+
+    //! Optional external name of this condition
+    std::optional<std::string> node_set_name_{};
 
     //! global node ids
     std::vector<int> nodes_{};
