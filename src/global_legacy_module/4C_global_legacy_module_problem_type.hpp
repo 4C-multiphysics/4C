@@ -53,15 +53,16 @@ namespace Core
     porofluid_pressure_based_elast_scatra,  ///< pressure-based flow in elastic porous media with
                                             ///< transport of species
     red_airways,                            ///< reduced dimensional airways
-    reduced_lung,  ///< New implementation of red_airways with Newton-iteration
-    scatra,        ///< scalar transport problem (e.g. convection-diffusion)
-    ssi,           ///< scalar structure interaction
-    ssti,          ///< scalar structure thermo interaction
-    sti,           ///< scalar-thermo interaction
-    structure,     ///< structural problem
-    thermo,        ///< thermal problem
-    thermo_fsi,    ///< thermo-fluid-structure-interaction problem
-    tsi,           ///< thermal structure interaction
+    reduced_lung,               ///< New implementation of red_airways with Newton-iteration
+    reduced_lung_1d_pipe_flow,  ///< new implementation of arterial network
+    scatra,                     ///< scalar transport problem (e.g. convection-diffusion)
+    ssi,                        ///< scalar structure interaction
+    ssti,                       ///< scalar structure thermo interaction
+    sti,                        ///< scalar-thermo interaction
+    structure,                  ///< structural problem
+    thermo,                     ///< thermal problem
+    thermo_fsi,                 ///< thermo-fluid-structure-interaction problem
+    tsi,                        ///< thermal structure interaction
   };
 }  // namespace Core
 

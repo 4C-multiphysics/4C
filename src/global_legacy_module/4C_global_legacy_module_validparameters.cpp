@@ -65,6 +65,7 @@
 #include "4C_porofluid_pressure_based_input.hpp"
 #include "4C_rebalance_input.hpp"
 #include "4C_red_airways_input.hpp"
+#include "4C_reduced_lung_1d_pipe_flow_input.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_solver_nonlin_nox_input.hpp"
 #include "4C_ssi_input.hpp"
@@ -353,6 +354,7 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
   push_specs(specs, Inpar::BioFilm::valid_parameters());
   push_specs(specs, Airway::valid_parameters());
   push_specs(specs, ReducedLung::valid_parameters());
+  push_specs(specs, ReducedLung1dPipeFlow::valid_parameters());
   push_specs(specs, Inpar::Cardiovascular0D::valid_parameters());
   push_specs(specs, Inpar::FPSI::valid_parameters());
   push_specs(specs, FBI::valid_parameters());

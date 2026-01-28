@@ -570,6 +570,7 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
       }
       break;
     }
+    case Core::ProblemType::reduced_lung_1d_pipe_flow:
     case Core::ProblemType::art_net:  // _1D_ARTERY_
     {
       // create empty discretizations
