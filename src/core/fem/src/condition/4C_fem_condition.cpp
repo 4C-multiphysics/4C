@@ -54,5 +54,13 @@ std::shared_ptr<Core::Conditions::Condition> Core::Conditions::Condition::copy_w
   return copy;
 }
 
+std::string Core::Conditions::Condition::node_set_name() const
+{
+  if (node_set_name_)
+    return node_set_name_.value();
+  else
+    FOUR_C_THROW("Condition {} has no node_set_name assigned!", id_);
+}
+
 
 FOUR_C_NAMESPACE_CLOSE
