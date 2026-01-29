@@ -29,7 +29,8 @@ namespace NOX
       sol_meshtying,           ///< meshtying problem
       sol_cardiovascular0d,    ///< 0D cardiovascular problem
       sol_lag_pen_constraint,  ///< Lagrange or/and penalty enforced constraint problem
-      sol_scatra               ///< scalar transport problem
+      sol_scatra,              ///< scalar transport problem
+      sol_beaminteraction_lm   ///< beaminteraction with Lagrange multipliers problem
     };
 
     //! Map quantity enum to std::string
@@ -268,6 +269,7 @@ namespace NOX
         quantity_eas,                 ///< check eas dofs
         quantity_levelset_reinit,     ///< check levelset reinitialization
         quantity_constraints,         ///< check constraint framework quantities
+        quantity_beaminteraction_lm,  ///< check lagrange multiplier quantities for beaminteraction
       };
 
       /// Map quantity name to std::string
@@ -295,6 +297,8 @@ namespace NOX
             return "LevelSet-Reinit";
           case quantity_constraints:
             return "Constraints";
+          case quantity_beaminteraction_lm:
+            return "Beaminteraction-LM";
           case quantity_unknown:
           default:
             return "unknown quantity type";
@@ -326,6 +330,8 @@ namespace NOX
           type = quantity_levelset_reinit;
         else if (name == "Constraints")
           type = quantity_constraints;
+        else if (name == "Beaminteraction-LM")
+          type = quantity_beaminteraction_lm;
 
         return type;
       };

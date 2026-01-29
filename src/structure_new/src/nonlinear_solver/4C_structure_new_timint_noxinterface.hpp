@@ -75,7 +75,7 @@ namespace Solid
       bool compute_f_and_jacobian(const Core::LinAlg::Vector<double>& x,
           Core::LinAlg::Vector<double>& rhs, Core::LinAlg::SparseOperator& jac) override;
 
-      /*! Get the norm of right hand side rows/entries related to
+      /*! Get the norm of residual rows/entries related to
        *  primary DoFs (derived from NOX::Nln::Interface::Required) */
       double get_primary_rhs_norms(const Core::LinAlg::Vector<double>& F,
           const NOX::Nln::StatusTest::QuantityType& checkquantity,
@@ -97,7 +97,7 @@ namespace Solid
           const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
           const bool& isscaled = false) const override;
 
-      /*! Returns the previous solution norm of primary DoF fields
+      /*! Return the desired norm of solution of the primary DoF fields from previous iteration
        *  (derived from NOX::Nln::Interface::Required) */
       double get_previous_primary_solution_norms(const Core::LinAlg::Vector<double>& xold,
           const NOX::Nln::StatusTest::QuantityType& checkquantity,

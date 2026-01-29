@@ -1,0 +1,69 @@
+<ParameterList name="Status Test">
+  <!-- Outer Status Test: This test is an OR combination of the structural convergence and the maximum number of iterations -->
+  <ParameterList name="Outer Status Test">
+    <Parameter name="Test Type" type="string" value="Combo"/>
+    <Parameter name="Combo Type" type="string" value="OR"/>
+    <!-- Structural convergence is an AND combination of the residuum and step update -->
+    <ParameterList name="Test 0">
+      <Parameter name="Test Type" type="string" value="Combo"/>
+      <Parameter name="Combo Type" type="string" value="AND"/>
+      <!-- BEGIN: Combo AND - Test 0: "NormF" -->
+      <ParameterList name="Test 0">
+        <Parameter name="Test Type" type="string" value="Combo"/>
+        <Parameter name="Combo Type" type="string" value="AND"/>
+        <ParameterList name="Test 0">
+          <Parameter name="Test Type" type="string" value="NormF"/>
+          <!-- NormF - Quantity 0: Check the residual norm of the structural quantities -->
+          <ParameterList name="Quantity 0">
+            <Parameter name="Quantity Type" type="string" value="Structure"/>
+            <Parameter name="Tolerance Type" type="string" value="Absolute"/>
+            <Parameter name="Tolerance" type="double" value="1e-12"/>
+            <Parameter name="Norm Type" type="string" value="Two Norm"/>
+            <Parameter name="Scale Type" type="string" value="Scaled"/>
+          </ParameterList>
+          <!-- NormF - Quantity 1: Check the residual norm of the Lagrange Multiplier quantities -->
+          <ParameterList name="Quantity 1">
+            <Parameter name="Quantity Type" type="string" value="Beaminteraction-LM"/>
+            <Parameter name="Tolerance Type" type="string" value="Absolute"/>
+            <Parameter name="Tolerance" type="double" value="1.0e-12"/>
+            <Parameter name="Norm Type" type="string" value="Two Norm"/>
+            <Parameter name="Scale Type" type="string" value="Scaled"/>
+          </ParameterList>
+        </ParameterList>
+      </ParameterList>
+      <!-- END: Combo AND - Test 0: "NormF" -->
+      <!-- BEGIN: Combo AND - Test 1: "UpdateNorm" -->
+      <ParameterList name="Test 1">
+        <Parameter name="Test Type" type="string" value="Combo"/>
+        <Parameter name="Combo Type" type="string" value="AND"/>
+        <ParameterList name="Test 0">
+          <Parameter name="Test Type" type="string" value="NormUpdate"/>
+          <!-- UpdateNorm - Quantity 0: Check the increment of the structural displacements -->
+          <ParameterList name="Quantity 0">
+            <Parameter name="Quantity Type" type="string" value="Structure"/>
+            <Parameter name="Tolerance Type" type="string" value="Absolute"/>
+            <Parameter name="Tolerance" type="double" value="1e-12"/>
+            <Parameter name="Norm Type" type="string" value="Two Norm"/>
+            <Parameter name="Scale Type" type="string" value="Scaled"/>
+          </ParameterList>
+          <!-- UpdateNorm - Quantity 1: Check the increment of the Lagrange Multiplier quantities -->
+          <ParameterList name="Quantity 1">
+            <Parameter name="Quantity Type" type="string" value="Beaminteraction-LM"/>
+            <Parameter name="Tolerance Type" type="string" value="Absolute"/>
+            <Parameter name="Tolerance" type="double" value="1.0e-12"/>
+            <Parameter name="Norm Type" type="string" value="Two Norm"/>
+            <Parameter name="Scale Type" type="string" value="Scaled"/>
+          </ParameterList>
+        </ParameterList>
+      </ParameterList>
+      <!-- END: Combo AND - Test 1: "UpdateNorm" -->
+    </ParameterList>
+    <!-- END: Combo 0 - Test 0: "Combo" -->
+    <!-- BEGIN: Combo OR - Test 1: "MaxIters" -->
+    <ParameterList name="Test 1">
+      <Parameter name="Test Type" type="string" value="MaxIters"/>
+      <Parameter name="Maximum Iterations" type="int" value="10"/>
+    </ParameterList>
+    <!--END: "MaxIters" -->
+  </ParameterList>
+</ParameterList>

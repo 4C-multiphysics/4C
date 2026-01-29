@@ -240,7 +240,14 @@ Teuchos::RCP<const std::vector<double>> NOX::Nln::Group::get_rhs_norms(
     if (rval >= 0.0)
     {
       norms->push_back(rval);
+      continue;
     }
+
+    rval = get_nln_req_interface_ptr()->get_primary_rhs_norms(RHSVector.get_linalg_vector(), chQ[i],
+        type[i], (*scale)[i] == ::NOX::StatusTest::NormF::Scaled);
+
+    if (rval >= 0.0)
+      norms->push_back(rval);
     else
     {
       std::ostringstream msg;
@@ -343,7 +350,15 @@ Teuchos::RCP<std::vector<double>> NOX::Nln::Group::get_solution_update_norms(
     if (rval >= 0.0)
     {
       norms->push_back(rval);
+      continue;
     }
+
+    rval = get_nln_req_interface_ptr()->get_primary_solution_update_norms(
+        xVector.get_linalg_vector(), xOldNox.get_linalg_vector(), chQ[i], type[i],
+        (*scale)[i] == StatusTest::NormUpdate::Scaled);
+
+    if (rval >= 0.0)
+      norms->push_back(rval);
     else
     {
       std::ostringstream msg;
@@ -381,7 +396,14 @@ Teuchos::RCP<std::vector<double>> NOX::Nln::Group::get_previous_solution_norms(
     if (rval >= 0.0)
     {
       norms->push_back(rval);
+      continue;
     }
+    rval = get_nln_req_interface_ptr()->get_previous_primary_solution_norms(
+        xOldNox.get_linalg_vector(), chQ[i], type[i],
+        (*scale)[i] == StatusTest::NormUpdate::Scaled);
+
+    if (rval >= 0.0)
+      norms->push_back(rval);
     else
     {
       std::ostringstream msg;

@@ -177,6 +177,9 @@ Inpar::Solid::ModelType Solid::Nln::convert_sol_type2_model_type(
     case NOX::Nln::sol_lag_pen_constraint:
       modeltype = Inpar::Solid::model_lag_pen_constraint;
       break;
+    case NOX::Nln::sol_beaminteraction_lm:
+      modeltype = Inpar::Solid::model_beaminteraction;
+      break;
     default:
       // check if the corresponding enum could be found.
       if (do_check)

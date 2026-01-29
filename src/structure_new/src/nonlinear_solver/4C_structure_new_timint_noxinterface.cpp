@@ -162,6 +162,7 @@ double Solid::TimeInt::NoxInterface::get_primary_rhs_norms(const Core::LinAlg::V
       break;
     }
     case NOX::Nln::StatusTest::quantity_pressure:
+    case NOX::Nln::StatusTest::quantity_beaminteraction_lm:
     {
       // export the model specific solution if necessary
       auto rhs_ptr = gstate_ptr_->extract_model_entries(mt, F);
@@ -244,6 +245,7 @@ double Solid::TimeInt::NoxInterface::get_primary_solution_update_norms(
     case NOX::Nln::StatusTest::quantity_structure:
     case NOX::Nln::StatusTest::quantity_cardiovascular0d:
     case NOX::Nln::StatusTest::quantity_pressure:
+    case NOX::Nln::StatusTest::quantity_beaminteraction_lm:
     {
       // export the displacement solution if necessary
       auto model_incr_ptr = gstate_ptr_->extract_model_entries(mt, xold);
@@ -295,6 +297,7 @@ double Solid::TimeInt::NoxInterface::get_previous_primary_solution_norms(
     case NOX::Nln::StatusTest::quantity_structure:
     case NOX::Nln::StatusTest::quantity_cardiovascular0d:
     case NOX::Nln::StatusTest::quantity_pressure:
+    case NOX::Nln::StatusTest::quantity_beaminteraction_lm:
     {
       // export the displacement solution if necessary
       auto model_xold_ptr = gstate_ptr_->extract_model_entries(mt, xold);

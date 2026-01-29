@@ -41,8 +41,7 @@ namespace NOX
        public:
         //! Constructor
         Required() {};
-
-        //! returns the right-hand-side norms of the primary DoF fields
+        //! Return the desired norm of the residual of the primary DoF fields
         virtual double get_primary_rhs_norms(const Core::LinAlg::Vector<double>& F,
             const NOX::Nln::StatusTest::QuantityType& checkQuantity,
             const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
@@ -54,14 +53,14 @@ namespace NOX
             const NOX::Nln::StatusTest::QuantityType& checkQuantity,
             const bool& disable_implicit_weighting = false) const = 0;
 
-        //! Returns the increment norm of the primary DoF fields
+        //! Return the desired norm of the increment of the primary DoF fields
         virtual double get_primary_solution_update_norms(const Core::LinAlg::Vector<double>& xNew,
             const Core::LinAlg::Vector<double>& xOld,
             const NOX::Nln::StatusTest::QuantityType& checkQuantity,
             const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
             const bool& isScaled = false) const = 0;
 
-        //! Returns the previous solution norm of primary DoF fields
+        //! Return the desired norm of the solution of primary DoF fields from previous iteration
         virtual double get_previous_primary_solution_norms(const Core::LinAlg::Vector<double>& xOld,
             const NOX::Nln::StatusTest::QuantityType& checkQuantity,
             const ::NOX::Abstract::Vector::NormType& type = ::NOX::Abstract::Vector::TwoNorm,
