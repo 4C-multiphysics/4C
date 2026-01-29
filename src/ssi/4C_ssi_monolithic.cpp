@@ -762,7 +762,7 @@ void SSI::SsiMono::setup_system()
 
     // initialize object, that performs meshtying between manifold domains
     strategy_manifold_meshtying_ =
-        SSI::build_manifold_mesh_tying_strategy(scatra_manifold()->discretization(), ssi_maps_,
+        SSI::build_manifold_mesh_tying_strategy(*scatra_manifold()->discretization(), ssi_maps_,
             is_scatra_manifold_meshtying(), scatra_manifold()->matrix_type());
   }
   else
@@ -1660,7 +1660,7 @@ void SSI::SsiMono::set_scatra_manifold_solution(const Core::LinAlg::Vector<doubl
   for (const auto& coup : manifoldscatraflux_->scatra_manifold_couplings())
   {
     auto manifold_cond = coup->manifold_map_extractor()->extract_cond_vector(phi);
-    auto manifold_on_scatra_cond = coup->coupling_adapter()->slave_to_master(*manifold_cond);
+    auto manifold_on_scatra_cond = coup->coupling_adapter().slave_to_master(*manifold_cond);
     coup->scatra_map_extractor()->insert_cond_vector(*manifold_on_scatra_cond, *manifold_on_scatra);
   }
   scatra_field()->discretization()->set_state(0, "manifold_on_scatra", *manifold_on_scatra);

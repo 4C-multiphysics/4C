@@ -14,11 +14,9 @@
 #include "4C_io_runtime_csv_writer.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_ssi_utils.hpp"
-#include "4C_utils_parameter_list.fwd.hpp"
 
 #include <memory>
 #include <optional>
-#include <set>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -54,7 +52,7 @@ namespace SSI
   class SsiMono;
 
   //! type of coupling/system matrix block
-  enum class BlockMatrixType
+  enum class BlockMatrixType : std::uint8_t
   {
     ManifoldScaTra,     //! derivative of flux into/out of manifold w.r.t. scatra
     ManifoldStructure,  //! derivative of flux into/out of manifold w.r.t. structure
@@ -68,8 +66,8 @@ namespace SSI
   class ManifoldScaTraCoupling
   {
    public:
-    ManifoldScaTraCoupling(std::shared_ptr<Core::FE::Discretization> manifolddis,
-        std::shared_ptr<Core::FE::Discretization> scatradis,
+    ManifoldScaTraCoupling(const Core::FE::Discretization& manifold_discretization,
+        const Core::FE::Discretization& scatra_discretization,
         const Core::Conditions::Condition* condition_manifold,
         const Core::Conditions::Condition* condition_kinetics, int ndof_per_node);
 
@@ -83,17 +81,14 @@ namespace SSI
     //! Kinetics condition on scatra dis
     const Core::Conditions::Condition* condition_kinetics() const { return condition_kinetics_; }
 
-    //! manifold condition
-    const Core::Conditions::Condition* condition_manifold() const { return condition_manifold_; }
-
     //! coupling adapter between manifold (slave) and scatra (master)
-    std::shared_ptr<Coupling::Adapter::Coupling> coupling_adapter() const
+    [[nodiscard]] const Coupling::Adapter::Coupling& coupling_adapter() const
     {
       return coupling_adapter_;
     }
 
     //! inverse of thickness of manifold
-    double inv_thickness() const { return inv_thickness_; }
+    [[nodiscard]] double inv_thickness() const { return inv_thickness_; }
 
     //! condition ID of manifold condition
     int manifold_condition_id() const { return manifold_condition_id_; }
@@ -123,11 +118,8 @@ namespace SSI
     //! Kinetics condition on scatra dis
     const Core::Conditions::Condition* condition_kinetics_;
 
-    //! manifold condition
-    const Core::Conditions::Condition* condition_manifold_;
-
     //! coupling adapter between manifold (slave) and scatra (master)
-    std::shared_ptr<Coupling::Adapter::Coupling> coupling_adapter_;
+    Coupling::Adapter::Coupling coupling_adapter_;
 
     //! inverse of thickness of manifold
     const double inv_thickness_;
@@ -161,12 +153,12 @@ namespace SSI
 
     //! call complete on system matrices and coupling matrices
     //@{
-    void complete_matrix_manifold_scatra();
-    void complete_matrix_manifold_structure();
-    void complete_matrix_scatra_manifold();
-    void complete_matrix_scatra_structure();
-    void complete_system_matrix_manifold();
-    void complete_system_matrix_scatra();
+    void complete_matrix_manifold_scatra() const;
+    void complete_matrix_manifold_structure() const;
+    void complete_matrix_scatra_manifold() const;
+    void complete_matrix_scatra_structure() const;
+    void complete_system_matrix_manifold() const;
+    void complete_system_matrix_scatra() const;
     //@}
 
     //! write inflow fluxes to csv file
@@ -214,7 +206,7 @@ namespace SSI
     //@}
 
     //! write coupling fluxes (inflow into manifold) to csv file
-    void output();
+    void output() const;
 
     //! return all scatra-scatra manifold coupling operators
     std::vector<std::shared_ptr<SSI::ManifoldScaTraCoupling>>& scatra_manifold_couplings()
@@ -224,29 +216,31 @@ namespace SSI
 
    private:
     //! Add to global matrices and rhs
-    void add_condition_contribution();
+    void add_condition_contribution() const;
 
     //! Copy and scale (-1.0) to manifold side
     void copy_scatra_scatra_manifold_side(
-        std::shared_ptr<ManifoldScaTraCoupling> scatra_manifold_coupling);
+        const ManifoldScaTraCoupling& scatra_manifold_coupling) const;
 
     //! Evaluate flux and linearizations on bulk side
     void evaluate_bulk_side(ManifoldScaTraCoupling& scatra_manifold_coupling);
 
     //! Evaluate integral on scatra manifold over 1.0
-    void evaluate_scatra_manifold_domain_integral(ManifoldScaTraCoupling& scatra_manifold_coupling);
+    void evaluate_scatra_manifold_domain_integral(
+        const ManifoldScaTraCoupling& scatra_manifold_coupling);
 
     //! Evaluate integral on scatra manifold over positive fluxes
-    void evaluate_scatra_manifold_inflow_integral(ManifoldScaTraCoupling& scatra_manifold_coupling);
+    void evaluate_scatra_manifold_inflow_integral(
+        const ManifoldScaTraCoupling& scatra_manifold_coupling);
 
     //! prepare evaluation of coupling condition: set elemental data
-    void pre_evaluate(ManifoldScaTraCoupling& scatra_manifold_coupling);
+    void pre_evaluate(const ManifoldScaTraCoupling& scatra_manifold_coupling);
 
     //! uncomplete all global matrices if any matrices holding the condition contributions have
     //! updated graphs (i.e. zeros become non-zeros or vice versa). In this case the graph of the
     //! global matrices needs to be updated as well to be able to add the local matrices to the
     //! global matrices
-    void un_complete_matrices_if_necessary(ManifoldScaTraCoupling& scatra_manifold_coupling);
+    void un_complete_matrices_if_necessary(ManifoldScaTraCoupling& scatra_manifold_coupling) const;
 
     //! map extractor associated with all degrees of freedom inside scatra field
     std::shared_ptr<const Core::LinAlg::MultiMapExtractor> block_map_scatra_;
@@ -338,12 +332,11 @@ namespace SSI
      */
     virtual ~ManifoldMeshTyingStrategyBase() = default;
 
-    explicit ManifoldMeshTyingStrategyBase(
-        std::shared_ptr<Core::FE::Discretization> scatra_manifold_dis,
+    explicit ManifoldMeshTyingStrategyBase(const Core::FE::Discretization& scatra_manifold_dis,
         std::shared_ptr<SSI::Utils::SSIMaps> ssi_maps, bool is_manifold_meshtying);
 
     //! apply mesh tying to right hand side
-    void apply_mesh_tying_to_manifold_rhs(Core::LinAlg::Vector<double>& rhs_manifold);
+    void apply_mesh_tying_to_manifold_rhs(Core::LinAlg::Vector<double>& rhs_manifold) const;
 
     //! apply mesh tying to manifold system matrix
     virtual void apply_meshtying_to_manifold_matrix(
@@ -391,8 +384,7 @@ namespace SSI
   class ManifoldMeshTyingStrategySparse : public ManifoldMeshTyingStrategyBase
   {
    public:
-    explicit ManifoldMeshTyingStrategySparse(
-        std::shared_ptr<Core::FE::Discretization> scatra_manifold_dis,
+    explicit ManifoldMeshTyingStrategySparse(const Core::FE::Discretization& scatra_manifold_dis,
         std::shared_ptr<Utils::SSIMaps> ssi_maps, bool is_manifold_meshtying);
 
     void apply_meshtying_to_manifold_matrix(
@@ -417,8 +409,7 @@ namespace SSI
   class ManifoldMeshTyingStrategyBlock : public ManifoldMeshTyingStrategyBase
   {
    public:
-    explicit ManifoldMeshTyingStrategyBlock(
-        std::shared_ptr<Core::FE::Discretization> scatra_manifold_dis,
+    explicit ManifoldMeshTyingStrategyBlock(const Core::FE::Discretization& scatra_manifold_dis,
         std::shared_ptr<SSI::Utils::SSIMaps> ssi_maps, bool is_manifold_meshtying);
 
     void apply_meshtying_to_manifold_matrix(
@@ -465,9 +456,8 @@ namespace SSI
 
   //! build specific mesh tying strategy
   std::shared_ptr<SSI::ManifoldMeshTyingStrategyBase> build_manifold_mesh_tying_strategy(
-      std::shared_ptr<Core::FE::Discretization> scatra_manifold_dis,
-      std::shared_ptr<Utils::SSIMaps> ssi_maps, bool is_manifold_meshtying,
-      Core::LinAlg::MatrixType matrixtype_manifold);
+      const Core::FE::Discretization& scatra_manifold_dis, std::shared_ptr<Utils::SSIMaps> ssi_maps,
+      bool is_manifold_meshtying, Core::LinAlg::MatrixType matrixtype_manifold);
 
 }  // namespace SSI
 

@@ -88,18 +88,18 @@ namespace SSI
       SSIMatrices(const SSIMaps& ssi_maps, Core::LinAlg::MatrixType ssi_matrixtype,
           Core::LinAlg::MatrixType scatra_matrixtype, bool is_scatra_manifold);
 
-      void complete_scatra_manifold_scatra_matrix();
+      void complete_scatra_manifold_scatra_matrix() const;
 
       //! call complete on the scalar transport manifold - structure off-diagonal matrix
-      void complete_scatra_manifold_structure_matrix();
+      void complete_scatra_manifold_structure_matrix() const;
 
-      void complete_scatra_scatra_manifold_matrix();
+      void complete_scatra_scatra_manifold_matrix() const;
 
       //! call complete on the scalar transport - structure off-diagonal matrix
-      void complete_scatra_structure_matrix();
+      void complete_scatra_structure_matrix() const;
 
       //! call complete on the structure - scalar transport off-diagonal matrix
-      void complete_structure_scatra_matrix();
+      void complete_structure_scatra_matrix() const;
 
       //! method that clears all ssi matrices
       void clear_matrices() const;

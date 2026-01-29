@@ -20,12 +20,9 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-SSI::SsiMono::ConvCheckStrategyBase::ConvCheckStrategyBase(
-    const Teuchos::ParameterList& parameters  //!< parameter list for Newton-Raphson iteration
-    )
+SSI::SsiMono::ConvCheckStrategyBase::ConvCheckStrategyBase(const Teuchos::ParameterList& parameters)
     : itermax_(parameters.get<int>("ITEMAX")),
       itertol_(parameters.sublist("MONOLITHIC").get<double>("CONVTOL")),
-      non_converged_steps_(),
       restol_(parameters.sublist("MONOLITHIC").get<double>("ABSTOLRES"))
 {
 }
@@ -56,7 +53,7 @@ bool SSI::SsiMono::ConvCheckStrategyBase::compute_exit(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void SSI::SsiMono::ConvCheckStrategyBase::check_l2_norm(
-    double& incnorm, double& resnorm, double& dofnorm) const
+    const double& incnorm, const double& resnorm, double& dofnorm) const
 {
   if (std::isnan(incnorm) or std::isnan(resnorm) or std::isnan(dofnorm))
     FOUR_C_THROW("Vector norm is not a number!");
@@ -92,13 +89,14 @@ void SSI::SsiMono::ConvCheckStrategyBase::print_non_converged_steps(const int pi
 {
   if (pid == 0 and not non_converged_steps_.empty())
   {
-    std::cout << std::endl << "Non converged time steps: ";
-    for (int step : non_converged_steps_)
+    std::cout << "\nNon converged time steps: ";
+    for (auto it = non_converged_steps_.begin(); it != non_converged_steps_.end(); ++it)
     {
-      std::cout << step;
-      if (step != (*non_converged_steps_.end())) std::cout << ", ";
+      std::cout << *it;
+      // print comma except after the last element
+      if (std::next(it) != non_converged_steps_.end()) std::cout << ", ";
     }
-    std::cout << std::endl << std::endl;
+    std::cout << "\n\n";
   }
 }
 
@@ -169,11 +167,9 @@ void SSI::SsiMono::ConvCheckStrategyStd::print_newton_iteration_information(
   {
     // print header of convergence table to screen
     std::cout << "+------------+-------------------+--------------+--------------+--------------+"
-                 "--------------+"
-              << std::endl;
+                 "--------------+\n";
     std::cout << "|- step/max -|- tolerance[norm] -|- scatra-res -|- scatra-inc -|- struct-res "
-                 "-|- struct-inc -|"
-              << std::endl;
+                 "-|- struct-inc -|\n";
 
     // print first line of convergence table to screen
     // solution increment not yet available during first Newton-Raphson iteration
@@ -184,7 +180,7 @@ void SSI::SsiMono::ConvCheckStrategyStd::print_newton_iteration_information(
               << std::setw(10) << std::setprecision(3) << std::scientific
               << norms.at(L2norm::structureresnorm) << "   |      --      | "
               << "(       --      , te = " << std::setw(10) << std::setprecision(3)
-              << ssi_mono.dt_eval_ << ")" << std::endl;
+              << ssi_mono.dt_eval_ << ")\n";
   }
   else
   {
@@ -199,27 +195,23 @@ void SSI::SsiMono::ConvCheckStrategyStd::print_newton_iteration_information(
               << std::setprecision(3) << std::scientific
               << norms.at(L2norm::structureincnorm) / norms.at(L2norm::structuredofnorm)
               << "   | (ts = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_solve_
-              << ", te = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_eval_ << ")"
-              << std::endl;
+              << ", te = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_eval_ << ")\n";
   }
 
   if (exit and !converged)
   {
     std::cout << "+------------+-------------------+--------------+--------------+--------------+"
-                 "--------------+"
-              << std::endl;
+                 "--------------+\n";
     std::cout << "|      Newton-Raphson method has not converged after a maximum number of "
-              << std::setw(2) << itermax_ << " iterations!      |" << std::endl;
+              << std::setw(2) << itermax_ << " iterations!      |\n";
     std::cout << "+------------+-------------------+--------------+--------------+--------------+--"
-                 "------------+"
-              << std::endl;
+                 "------------+\n";
   }
 
   if (exit and converged)
   {
     std::cout << "+------------+-------------------+--------------+--------------+--------------+--"
-                 "------------+"
-              << std::endl;
+                 "------------+\n";
   }
 }
 
@@ -336,11 +328,9 @@ void SSI::SsiMono::ConvCheckStrategyElch::print_newton_iteration_information(
   {
     // print header of convergence table to screen
     std::cout << "+------------+-------------------+--------------+--------------+--------------+"
-                 "--------------+--------------+--------------+"
-              << std::endl;
+                 "--------------+--------------+--------------+\n";
     std::cout << "|- step/max -|- tolerance[norm] -|-- conc-res --|-- conc-inc --|-- pot-res "
-                 "---|-- pot-inc ---|- struct-res -|- struct-inc -|"
-              << std::endl;
+                 "---|-- pot-inc ---|- struct-res -|- struct-inc -|\n";
 
     // print first line of convergence table to screen
     // solution increment not yet available during first Newton-Raphson iteration
@@ -353,7 +343,7 @@ void SSI::SsiMono::ConvCheckStrategyElch::print_newton_iteration_information(
               << std::setprecision(3) << std::scientific << norms.at(SSI::L2norm::structureresnorm)
               << "   |      --      | "
               << "(       --      , te = " << std::setw(10) << std::setprecision(3)
-              << ssi_mono.dt_eval_ << ")" << std::endl;
+              << ssi_mono.dt_eval_ << ")\n";
   }
   else
   {
@@ -372,28 +362,24 @@ void SSI::SsiMono::ConvCheckStrategyElch::print_newton_iteration_information(
               << std::setprecision(3) << std::scientific
               << norms.at(SSI::L2norm::structureincnorm) / norms.at(SSI::L2norm::structuredofnorm)
               << "   | (ts = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_solve_
-              << ", te = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_eval_ << ")"
-              << std::endl;
+              << ", te = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_eval_ << ")\n";
   }
 
   if (exit and !converged)
   {
     std::cout << "+------------+-------------------+--------------+--------------+--------------+"
-                 "--------------+--------------+--------------+"
-              << std::endl;
+                 "--------------+--------------+--------------+\n";
     std::cout << "|                     Newton-Raphson method has not converged after a maximum "
                  "number of "
-              << std::setw(2) << itermax_ << " iterations!                     |" << std::endl;
+              << std::setw(2) << itermax_ << " iterations!                     |\n";
     std::cout << "+------------+-------------------+--------------+--------------+--------------+--"
-                 "------------+--------------+--------------+"
-              << std::endl;
+                 "------------+--------------+--------------+\n";
   }
 
   if (exit and converged)
   {
     std::cout << "+------------+-------------------+--------------+--------------+--------------+--"
-                 "------------+--------------+--------------+"
-              << std::endl;
+                 "------------+--------------+--------------+\n";
   }
 }
 
@@ -416,9 +402,9 @@ bool SSI::SsiMono::ConvCheckStrategyElch::exit_newton_raphson_init_pot_calc(
     if (ssi_mono.iteration_count() == 1)
     {
       // print header
-      std::cout << "Calculating initial field for electric potential" << std::endl;
-      std::cout << "+------------+-------------------+--------------+--------------+" << std::endl;
-      std::cout << "|- step/max -|- tol      [norm] -|-- pot-res ---|-- pot-inc ---|" << std::endl;
+      std::cout << "Calculating initial field for electric potential\n";
+      std::cout << "+------------+-------------------+--------------+--------------+\n";
+      std::cout << "|- step/max -|- tol      [norm] -|-- pot-res ---|-- pot-inc ---|\n";
 
       // print only norm of residuals
       std::cout << "|  " << std::setw(3) << ssi_mono.iteration_count() << "/" << std::setw(3)
@@ -426,7 +412,7 @@ bool SSI::SsiMono::ConvCheckStrategyElch::exit_newton_raphson_init_pot_calc(
                 << itertol_ << "[L_2 ]  | " << std::setw(10) << std::setprecision(3)
                 << std::scientific << norms.at(SSI::L2norm::potresnorm)
                 << "   |      --      | (       --      , te = " << std::setw(10)
-                << std::setprecision(3) << ssi_mono.dt_eval_ << ")" << std::endl;
+                << std::setprecision(3) << ssi_mono.dt_eval_ << ")\n";
     }
 
     else
@@ -438,20 +424,18 @@ bool SSI::SsiMono::ConvCheckStrategyElch::exit_newton_raphson_init_pot_calc(
                 << std::setprecision(3) << std::scientific
                 << norms.at(SSI::L2norm::potincnorm) / norms.at(SSI::L2norm::potdofnorm)
                 << "   | (ts = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_solve_
-                << ", te = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_eval_ << ")"
-                << std::endl;
+                << ", te = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_eval_ << ")\n";
     }
 
     if (exit and !converged)
     {
-      std::cout << "+--------------------------------------------------------------+" << std::endl;
-      std::cout << "|            >>>>>> not converged!                             |" << std::endl;
-      std::cout << "+--------------------------------------------------------------+" << std::endl;
+      std::cout << "+--------------------------------------------------------------+\n";
+      std::cout << "|            >>>>>> not converged!                             |\n";
+      std::cout << "+--------------------------------------------------------------+\n";
     }
     if (exit and converged)
     {
-      std::cout << "+------------+-------------------+--------------+--------------+" << std::endl
-                << std::endl;
+      std::cout << "+------------+-------------------+--------------+--------------+\n\n";
     }
   }
 
@@ -594,18 +578,15 @@ void SSI::SsiMono::ConvCheckStrategyElchScaTraManifold::print_newton_iteration_i
     // print header of convergence table to screen
     std::cout << "+------------+-------------------+--------------+--------------+--------------+"
                  "--------------+--------------+--------------+--------------+--------------+----"
-                 "----------+--------------+"
-              << std::endl;
+                 "----------+--------------+\n";
     std::cout
         << "+------------+-------------------+--                        scatra                  "
            "       --+--        structure        --+--                        manifold          "
-           "             --+"
-        << std::endl;
+           "             --+\n";
     std::cout
         << "|- step/max -|- tolerance[norm] -|-- conc-res --|-- conc-inc --|-- pot-res  --|-- "
            "pot-inc  --|--   res    --|--   inc    --|-- conc-res --|-- conc-inc --|-- "
-           "pot-res  --|-- pot-inc  --|"
-        << std::endl;
+           "pot-res  --|-- pot-inc  --|\n";
 
     // print first line of convergence table to screen
     // solution increment not yet available during first Newton-Raphson iteration
@@ -620,7 +601,7 @@ void SSI::SsiMono::ConvCheckStrategyElchScaTraManifold::print_newton_iteration_i
               << norms.at(SSI::L2norm::manifoldconcresnorm) << "   |      --      |  "
               << std::scientific << norms.at(SSI::L2norm::manifoldpotresnorm)
               << "   |      --      | (       --      , te = " << std::setw(10)
-              << std::setprecision(3) << ssi_mono.dt_eval_ << ")" << std::endl;
+              << std::setprecision(3) << ssi_mono.dt_eval_ << ")\n";
   }
   else
   {
@@ -649,35 +630,30 @@ void SSI::SsiMono::ConvCheckStrategyElchScaTraManifold::print_newton_iteration_i
               << norms.at(SSI::L2norm::manifoldpotincnorm) /
                      norms.at(SSI::L2norm::manifoldpotdofnorm)
               << "   | (ts = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_solve_
-              << ", te = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_eval_ << ")"
-              << std::endl;
+              << ", te = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_eval_ << ")\n";
   }
 
   if (exit and !converged)
   {
     std::cout << "+------------+-------------------+--------------+--------------+--------------+"
                  "--------------+--------------+--------------+--------------+--------------+----"
-                 "----------+--------------+"
-              << std::endl;
+                 "----------+--------------+\n";
     std::cout
         << "|              >> Newton-Raphson method has not converged after a maximum "
            "number of "
         << itermax_
         << " iterations! <<                                                                      "
-           "             |"
-        << std::endl;
+           "             |\n";
     std::cout << "+------------+-------------------+--------------+--------------+--------------+--"
                  "------------+--------------+--------------+--------------+--------------+--------"
-                 "------+--------------+"
-              << std::endl;
+                 "------+--------------+\n";
   }
 
   if (exit and converged)
   {
     std::cout << "+------------+-------------------+--------------+--------------+--------------+--"
                  "------------+--------------+--------------+--------------+--------------+--------"
-                 "------+--------------+"
-              << std::endl;
+                 "------+--------------+\n";
   }
 }
 
@@ -703,17 +679,14 @@ bool SSI::SsiMono::ConvCheckStrategyElchScaTraManifold::exit_newton_raphson_init
     if (ssi_mono.iteration_count() == 1)
     {
       // print header
-      std::cout << "Calculating initial field for electric potential" << std::endl;
+      std::cout << "Calculating initial field for electric potential\n";
       std::cout
           << "+------------+-------------------+--------------+--------------+--------------+--"
-             "------------+"
-          << std::endl;
+             "------------+\n";
       std::cout << "+------------+-------------------+--          scatra         --|--             "
-                   "manifold    --|"
-                << std::endl;
+                   "manifold    --|\n";
       std::cout << "|- step/max -|- tol      [norm] -|-- pot-res  --|-- pot-inc  --|-- pot-res  "
-                   "--|-- pot-inc  --|"
-                << std::endl;
+                   "--|-- pot-inc  --|\n";
 
       // print only norm of residuals
       std::cout << "|  " << std::setw(3) << ssi_mono.iteration_count() << "/" << std::setw(3)
@@ -723,7 +696,7 @@ bool SSI::SsiMono::ConvCheckStrategyElchScaTraManifold::exit_newton_raphson_init
                 << std::setw(10) << std::setprecision(3) << std::scientific
                 << norms.at(SSI::L2norm::manifoldpotresnorm)
                 << "   |      --      | (       --      , te = " << std::setw(10)
-                << std::setprecision(3) << ssi_mono.dt_eval_ << ")" << std::endl;
+                << std::setprecision(3) << ssi_mono.dt_eval_ << ")\n";
     }
     else
     {
@@ -739,29 +712,23 @@ bool SSI::SsiMono::ConvCheckStrategyElchScaTraManifold::exit_newton_raphson_init
                 << norms.at(SSI::L2norm::manifoldpotincnorm) /
                        norms.at(SSI::L2norm::manifoldpotdofnorm)
                 << "   | (ts = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_solve_
-                << ", te = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_eval_ << ")"
-                << std::endl;
+                << ", te = " << std::setw(10) << std::setprecision(3) << ssi_mono.dt_eval_ << ")\n";
     }
 
     // warn if maximum number of iterations is reached without convergence
     if (exit and !converged)
     {
       std::cout << "+--------------------------------------------------------------------------"
-                   "------------------+"
-                << std::endl;
+                   "------------------+\n";
       std::cout << "|            >>>>>> not converged!                                           "
-                   "                 |"
-                << std::endl;
+                   "                 |\n";
       std::cout << "+--------------------------------------------------------------------------"
-                   "------------------+"
-                << std::endl;
+                   "------------------+\n";
     }
     if (exit and converged)
     {
       std::cout << "+------------+-------------------+--------------+--------------+-----------"
-                   "---+--------------+"
-                << std::endl
-                << std::endl;
+                   "---+--------------+\n\n";
     }
   }
 

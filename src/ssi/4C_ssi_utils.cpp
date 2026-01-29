@@ -310,7 +310,7 @@ void SSI::Utils::SSIMatrices::initialize_off_diag_matrices(const SSIMaps& ssi_ma
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::Utils::SSIMatrices::complete_scatra_manifold_scatra_matrix()
+void SSI::Utils::SSIMatrices::complete_scatra_manifold_scatra_matrix() const
 {
   switch (scatra_matrixtype_)
   {
@@ -328,7 +328,7 @@ void SSI::Utils::SSIMatrices::complete_scatra_manifold_scatra_matrix()
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::Utils::SSIMatrices::complete_scatra_manifold_structure_matrix()
+void SSI::Utils::SSIMatrices::complete_scatra_manifold_structure_matrix() const
 {
   switch (scatra_matrixtype_)
   {
@@ -347,7 +347,7 @@ void SSI::Utils::SSIMatrices::complete_scatra_manifold_structure_matrix()
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::Utils::SSIMatrices::complete_scatra_scatra_manifold_matrix()
+void SSI::Utils::SSIMatrices::complete_scatra_scatra_manifold_matrix() const
 {
   switch (scatra_matrixtype_)
   {
@@ -365,7 +365,7 @@ void SSI::Utils::SSIMatrices::complete_scatra_scatra_manifold_matrix()
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::Utils::SSIMatrices::complete_scatra_structure_matrix()
+void SSI::Utils::SSIMatrices::complete_scatra_structure_matrix() const
 {
   switch (scatra_matrixtype_)
   {
@@ -383,7 +383,7 @@ void SSI::Utils::SSIMatrices::complete_scatra_structure_matrix()
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::Utils::SSIMatrices::complete_structure_scatra_matrix()
+void SSI::Utils::SSIMatrices::complete_structure_scatra_matrix() const
 {
   switch (scatra_matrixtype_)
   {
@@ -1032,12 +1032,9 @@ int SSI::Utils::SSIMeshTying::has_gid(
   const int upper_bound = my_rank_ == num_proc_ - 1 ? size : load_per_proc * (my_rank_ + 1);
   const int lower_bound = load_per_proc * my_rank_;
 
-  int my_return_value = has_gid_partial(gid, lower_bound, upper_bound, matching_nodes);
-  int glob_return_value;
+  const int my_return_value = has_gid_partial(gid, lower_bound, upper_bound, matching_nodes);
 
-  glob_return_value = Core::Communication::max_all(my_return_value, comm_);
-
-  return glob_return_value;
+  return Core::Communication::max_all(my_return_value, comm_);
 }
 
 /*---------------------------------------------------------------------------------*
@@ -1229,7 +1226,7 @@ void SSI::Utils::SSIMeshTying::define_master_slave_pairing(const Core::FE::Discr
   std::vector<const Core::Conditions::Condition*> dbc_conds;
   dis.get_condition("Dirichlet", dbc_conds);
   std::set<int> dbc_nodes;
-  for (auto* dbc_cond : dbc_conds)
+  for (const auto* dbc_cond : dbc_conds)
     for (const int& dbc_node : *dbc_cond->get_nodes()) dbc_nodes.insert(dbc_node);
 
   std::vector<int> my_master_gids;
