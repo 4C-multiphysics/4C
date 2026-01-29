@@ -176,19 +176,6 @@ void SSI::SSIPart2WC::do_scatra_step()
   evaluate_and_set_temperature_field();
 }
 
-/*----------------------------------------------------------------------*
- | Solve Scatra field                                        Thon 12/14 |
- *----------------------------------------------------------------------*/
-void SSI::SSIPart2WC::pre_operator1()
-{
-  if (iteration_count() != 1 and use_old_structure_time_int())
-  {
-    // NOTE: the predictor is NOT called in here. Just the screen output is not correct.
-    // we only get norm of the evaluation of the structure problem
-    structure_field()->prepare_partition_step();
-  }
-}
-
 /*----------------------------------------------------------------------*/
 // prepare time step
 /*----------------------------------------------------------------------*/
@@ -510,10 +497,6 @@ void SSI::SSIPart2WCSolidToScatraRelax::outer_loop()
     // solve scalar transport equation
     do_scatra_step();
 
-    // prepare a partitioned structure step
-    if (iteration_count() != 1 and use_old_structure_time_int())
-      structure_field()->prepare_partition_step();
-
     // solve structural system
     do_struct_step();
 
@@ -533,13 +516,6 @@ void SSI::SSIPart2WCSolidToScatraRelax::outer_loop()
 
     // since the velocity field has to fit to the relaxated displacements we also have to relaxate
     // them.
-    if (use_old_structure_time_int())
-    {
-      // since the velocity depends nonlinear on the displacements we can just approximate them via
-      // finite differences here.
-      velnp = calc_velocity(*dispnp);
-    }
-    else
     {
       // consistent derivation of velocity field from displacement field
       // set_state(dispnp) will automatically be undone during the next evaluation of the structural
@@ -745,10 +721,6 @@ void SSI::SSIPart2WCScatraToSolidRelax::outer_loop()
 
     // evaluate temperature from function and set to structural discretization
     evaluate_and_set_temperature_field();
-
-    // prepare partitioned structure step
-    if (iteration_count() != 1 and use_old_structure_time_int())
-      structure_field()->prepare_partition_step();
 
     // solve structural system
     do_struct_step();

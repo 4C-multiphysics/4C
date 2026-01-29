@@ -61,11 +61,7 @@ SSI::SSIBase::SSIBase(MPI_Comm comm, const Teuchos::ParameterList& globaltimepar
               ->get_dis("structure")
               ->has_condition("ssi_interface_meshtying")),
       temperature_funct_num_(
-          Global::Problem::instance()->elch_control_params().get<int>("TEMPERATURE_FROM_FUNCT")),
-      use_old_structure_(Global::Problem::instance()
-                             ->structural_dynamic_params()
-                             .get<Inpar::Solid::IntegrationStrategy>("INT_STRATEGY") ==
-                         Inpar::Solid::IntegrationStrategy::int_old)
+          Global::Problem::instance()->elch_control_params().get<int>("TEMPERATURE_FROM_FUNCT"))
 {
   // Keep this constructor empty!
   // First do everything on the more basic objects like the discretizations, like e.g.
@@ -121,9 +117,8 @@ void SSI::SSIBase::setup()
   scatra_field()->setup();
   if (is_scatra_manifold()) scatra_manifold()->setup();
 
-  // only relevant for new structural time integration
-  // only if adapter base has not already been set up outside
-  if (not use_old_structure_ and not struct_adapterbase_ptr_->is_setup())
+  // only necessary if adapter base has not already been set up outside
+  if (not struct_adapterbase_ptr_->is_setup())
   {
     // set up structural model evaluator
     setup_model_evaluator();
@@ -172,12 +167,6 @@ void SSI::SSIBase::setup()
           "No valid pointer to Adapter::SSIStructureWrapper !\n"
           "Either cast failed, or no valid wrapper was set using set_structure_wrapper(...) !");
     }
-  }
-
-  // for old structural time integration
-  else if (use_old_structure_)
-  {
-    structure_->setup();
   }
 
   if (is_s2i_kinetics_with_pseudo_contact())

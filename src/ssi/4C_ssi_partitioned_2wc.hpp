@@ -88,22 +88,22 @@ namespace SSI
 
    protected:
     //! solve field 1
-    virtual void operator1() { do_struct_step(); };
+    virtual void operator1() { do_struct_step(); }
 
     //! solve field 2
-    virtual void operator2() { do_scatra_step(); };
+    virtual void operator2() { do_scatra_step(); }
 
     //! pre operator called before first field operator
-    virtual void pre_operator1();
+    virtual void pre_operator1() {}
 
     //! pre operator called before second field operator
-    virtual void pre_operator2() {};
+    virtual void pre_operator2() {}
 
     //! post operator called after first field operator
-    virtual void post_operator1() {};
+    virtual void post_operator1() {}
 
     //! post operator called after second field operator
-    virtual void post_operator2() {};
+    virtual void post_operator2() {}
 
     //! perform iteration step of structure field and set the new disp and vel states in the scatra
     //! field

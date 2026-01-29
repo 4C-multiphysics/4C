@@ -38,10 +38,15 @@ void ssi_drt()
     // access scatra params list
     auto& scatradyn =
         const_cast<Teuchos::ParameterList&>(problem->scalar_transport_dynamic_params());
-    // access structural dynamic params list which will be possibly modified while creating the time
-    // integrator
+    // access the structural dynamic params list which will be possibly modified while creating the
+    // time integrator
     auto& sdyn = const_cast<Teuchos::ParameterList&>(
         Global::Problem::instance()->structural_dynamic_params());
+
+    FOUR_C_ASSERT_ALWAYS(sdyn.get<Inpar::Solid::IntegrationStrategy>("INT_STRATEGY") ==
+                             Inpar::Solid::IntegrationStrategy::int_standard,
+        "Only the new solid time integration is supported for SSI problems. Set `INT_STRATEGY` to "
+        "`Standard`!");
 
     // introduce additional scatra field on manifold?
     const bool is_scatra_manifold = ssiparams.sublist("MANIFOLD").get<bool>("ADD_MANIFOLD");
