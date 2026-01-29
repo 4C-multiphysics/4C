@@ -277,9 +277,6 @@ namespace SSI
     }
 
    protected:
-    //! get bool indicating if old structural time integration is used
-    [[nodiscard]] bool use_old_structure_time_int() const { return use_old_structure_; }
-
     //! check if \ref setup() was called
     void check_is_setup() const
     {
@@ -445,9 +442,6 @@ namespace SSI
 
     //! vector of temperatures
     std::shared_ptr<Core::LinAlg::Vector<double>> temperature_vector_;
-
-    //! Flag to indicate whether old structural time integration is used.
-    const bool use_old_structure_;
 
     //! a zero vector of full length with structure dofs
     std::shared_ptr<Core::LinAlg::Vector<double>> zeros_structure_;
