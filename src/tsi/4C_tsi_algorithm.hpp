@@ -102,20 +102,20 @@ namespace TSI
     //! access to thermal field
     const std::shared_ptr<Thermo::Adapter>& thermo_field() { return thermo_; }
 
+    //! calculate stresses, strains, energies
+    virtual void prepare_output() = 0;
+
+    //! write output
+    virtual void output(bool forced_writerestart = false);
+
    protected:
     //! @name Time loop building blocks
 
     //! start a new time step
     void prepare_time_step() override = 0;
 
-    //! calculate stresses, strains, energies
-    virtual void prepare_output() = 0;
-
     //! take current results for converged and save for next time step
     void update() override;
-
-    //! write output
-    virtual void output(bool forced_writerestart = false);
 
     //! communicate displacement vector to thermal field to enable their
     //! visualisation on the deformed body
