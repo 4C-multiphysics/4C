@@ -91,6 +91,8 @@ std::string_view Core::Materials::to_string(Core::Materials::MaterialType materi
       return "MAT_elchphase";
     case m_stvenant:
       return "MAT_Struct_StVenantKirchhoff";
+    case m_orthostvenant:
+      return "MAT_Struct_StVenantKirchhoffOrthotropic";
     case m_thermostvenant:
       return "MAT_Struct_ThermoStVenantK";
     case m_pldruckprag:

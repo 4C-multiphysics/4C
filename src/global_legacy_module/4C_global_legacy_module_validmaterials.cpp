@@ -1108,6 +1108,31 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   }
 
   /*--------------------------------------------------------------------*/
+  // St.Venant--Kirchhoff with orthotropy
+  {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+
+    known_materials[Core::Materials::m_orthostvenant] =
+        group("MAT_Struct_StVenantKirchhoffOrthotropic",
+            {
+                parameter<std::vector<double>>(
+                    "YOUNG", {.description = "Young's moduli",
+                                 .validator = all_elements(positive<double>()),
+                                 .size = 3}),
+                parameter<std::vector<double>>(
+                    "SHEAR", {.description = "Shear moduli",
+                                 .validator = all_elements(positive<double>()),
+                                 .size = 3}),
+                parameter<std::vector<double>>(
+                    "NUE", {.description = "Poisson's ratios",
+                               .validator = all_elements(in_range<double>(-1.0, excl(0.5))),
+                               .size = 3}),
+                parameter<double>("DENS", {.description = "mass density"}),
+            },
+            {.description = "St.Venant--Kirchhoff material"});
+  }
+
+  /*--------------------------------------------------------------------*/
   // St.Venant--Kirchhoff with temperature
   {
     known_materials[Core::Materials::m_thermostvenant] = group("MAT_Struct_ThermoStVenantK",
