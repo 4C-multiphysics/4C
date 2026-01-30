@@ -823,7 +823,7 @@ void Cut::Mesh::cut(Side& side)
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   for (std::map<int, std::shared_ptr<Element>>::iterator i = shadow_elements_.begin();
@@ -837,7 +837,7 @@ void Cut::Mesh::cut(Side& side)
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
 }
@@ -915,7 +915,7 @@ void Cut::Mesh::find_cut_points()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   for (std::map<int, std::shared_ptr<Element>>::iterator i = shadow_elements_.begin();
@@ -929,7 +929,7 @@ void Cut::Mesh::find_cut_points()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
 }
@@ -956,7 +956,7 @@ void Cut::Mesh::make_cut_lines()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   for (std::map<int, std::shared_ptr<Element>>::iterator i = shadow_elements_.begin();
@@ -974,7 +974,7 @@ void Cut::Mesh::make_cut_lines()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
 }
@@ -998,7 +998,7 @@ void Cut::Mesh::make_facets()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   for (std::map<int, std::shared_ptr<Element>>::iterator i = shadow_elements_.begin();
@@ -1012,7 +1012,7 @@ void Cut::Mesh::make_facets()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
 }
@@ -1036,7 +1036,7 @@ void Cut::Mesh::make_volume_cells()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   for (std::map<int, std::shared_ptr<Element>>::iterator i = shadow_elements_.begin();
@@ -1050,7 +1050,7 @@ void Cut::Mesh::make_volume_cells()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
 }
@@ -1080,7 +1080,7 @@ void Cut::Mesh::find_node_positions()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   for (std::map<int, std::shared_ptr<Element>>::iterator i = shadow_elements_.begin();
@@ -1094,7 +1094,7 @@ void Cut::Mesh::find_node_positions()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   // find undecided nodes
@@ -1434,7 +1434,7 @@ void Cut::Mesh::create_integration_cells(int count, bool tetcellsonly)
                    "[i.e. if count > 0 in a call from TetMeshIntersection]:";
 
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   for (std::map<int, std::shared_ptr<Element>>::iterator i = shadow_elements_.begin();
@@ -1452,7 +1452,7 @@ void Cut::Mesh::create_integration_cells(int count, bool tetcellsonly)
                   << std::endl;
 
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
 }
@@ -1474,7 +1474,7 @@ void Cut::Mesh::moment_fit_gauss_weights(bool include_inner, Cut::BCellGaussPts 
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   for (std::map<int, std::shared_ptr<Element>>::iterator i = shadow_elements_.begin();
@@ -1488,7 +1488,7 @@ void Cut::Mesh::moment_fit_gauss_weights(bool include_inner, Cut::BCellGaussPts 
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
 }
@@ -1510,7 +1510,7 @@ void Cut::Mesh::direct_divergence_gauss_rule(bool include_inner, Cut::BCellGauss
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   for (std::map<int, std::shared_ptr<Element>>::iterator i = shadow_elements_.begin();
@@ -1524,7 +1524,7 @@ void Cut::Mesh::direct_divergence_gauss_rule(bool include_inner, Cut::BCellGauss
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
 }
@@ -1546,7 +1546,7 @@ void Cut::Mesh::remove_empty_volume_cells()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
   for (std::map<int, std::shared_ptr<Element>>::iterator i = shadow_elements_.begin();
@@ -1560,7 +1560,7 @@ void Cut::Mesh::remove_empty_volume_cells()
     catch (Core::Exception& err)
     {
       debug_dump(&e, __FILE__, __LINE__);
-      throw;
+      throw std::runtime_error(err.what());
     }
   }
 }
