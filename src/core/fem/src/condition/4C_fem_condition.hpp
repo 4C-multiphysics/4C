@@ -16,6 +16,8 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
+#include <string>
 #include <tuple>
 
 FOUR_C_NAMESPACE_OPEN
@@ -52,6 +54,11 @@ namespace Core::Conditions
      * Refers to an element block ID.
      */
     element_block_id,
+
+    /**
+     * Refers to an external name specified in the mesh file.
+     */
+    node_set_name
   };
 
   /*!
@@ -90,9 +97,11 @@ namespace Core::Conditions
      *                            (elements) have to be build
      * \param gtype (in): type of geometric entity this condition lives on
      * \param entity_type (in): type of entity this condition is associated with
+     * \param node_set_name (in): optional name of the node set in the external mesh file
      */
     Condition(const int id, const Core::Conditions::ConditionType type, const bool buildgeometry,
-        const Core::Conditions::GeometryType gtype, EntityType entity_type);
+        const Core::Conditions::GeometryType gtype, EntityType entity_type,
+        std::optional<std::string> node_set_name = std::nullopt);
 
     /*!
     \brief Default constructor with type condition_none
@@ -108,6 +117,10 @@ namespace Core::Conditions
     \brief Return condition id
     */
     [[nodiscard]] inline int id() const { return id_; }
+
+    [[nodiscard]] std::string node_set_name() const;
+
+    [[nodiscard]] bool has_node_set_name() const { return node_set_name_.has_value(); }
 
     /*!
     \brief Return vector of my global node ids
@@ -258,6 +271,9 @@ namespace Core::Conditions
 
     //! Type of entity this condition is associated with
     EntityType entity_type_{};
+
+    //! Optional name of the node set in the external mesh file
+    std::optional<std::string> node_set_name_{};
 
     //! Geometry description of this condition
     std::map<int, std::shared_ptr<Core::Elements::Element>> geometry_;
