@@ -1102,7 +1102,8 @@ void Solid::ModelEvaluator::Structure::output_runtime_structure_gauss_point_data
         nullptr, nullptr, nullptr};
     std::array<std::shared_ptr<Core::LinAlg::SparseOperator>, 2> eval_mat = {nullptr, nullptr};
 
-    evaluate_internal(eval_mat.data(), eval_vec.data());
+    evaluate_internal_specified_elements(
+        eval_mat.data(), eval_vec.data(), discret().element_row_map());
 
     eval_data().gauss_point_data_output_manager_ptr()->post_evaluate();
   }
