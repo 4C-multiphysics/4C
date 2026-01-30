@@ -203,8 +203,12 @@ void TSI::Algorithm::output(bool forced_writerestart)
   // call the TSI parameter list
   const Teuchos::ParameterList& tsidyn = Global::Problem::instance()->tsi_dynamic_params();
   // Get the parameters for the Newton iteration
-  int upres = tsidyn.get<int>("RESULTSEVERY");
-  int uprestart = tsidyn.get<int>("RESTARTEVERY");
+  int results_every = tsidyn.get<int>("RESULTSEVERY");
+  int restart_every = tsidyn.get<int>("RESTARTEVERY");
+
+  bool is_regular_restart_step = (restart_every > 0 and (step() % restart_every == 0));
+  bool is_regular_result_step = (results_every > 0 and (step() % results_every == 0));
+
 
   //========================
   // output for thermofield:
@@ -213,14 +217,11 @@ void TSI::Algorithm::output(bool forced_writerestart)
   thermo_field()->output(forced_writerestart);
 
   // communicate the deformation to the thermal field,
-  // current displacements are contained in Dispn()
-  if (forced_writerestart == true and
-      ((upres != 0 and (step() % upres == 0)) or ((uprestart != 0) and (step() % uprestart == 0))))
+  if (forced_writerestart and (is_regular_result_step or is_regular_restart_step))
   {
     // displacement has already been written into thermo field for this step
   }
-  else if ((upres != 0 and (step() % upres == 0)) or
-           ((uprestart != 0) and (step() % uprestart == 0)) or forced_writerestart == true)
+  else if (is_regular_result_step or is_regular_restart_step or forced_writerestart)
   {
     if (matchinggrid_)
     {
@@ -279,9 +280,13 @@ void TSI::Algorithm::output(bool forced_writerestart)
   apply_thermo_coupling_state(thermo_field()->tempnp());
   structure_field()->output(forced_writerestart);
 
-  // mapped temperatures for structure field
-  if ((upres != 0 and (step() % upres == 0)) or ((uprestart != 0) and (step() % uprestart == 0)) or
-      forced_writerestart == true)
+  // communicate the deformation to the thermal field,
+  if (forced_writerestart and (is_regular_result_step or is_regular_restart_step))
+  {
+    // temperature has already been written into structure field for this step
+  }
+  else if (is_regular_result_step or is_regular_restart_step or forced_writerestart)
+  {
     if (not matchinggrid_)
     {
       //************************************************************************************
@@ -308,6 +313,7 @@ void TSI::Algorithm::output(bool forced_writerestart)
       structure_field()->discretization()->writer()->write_multi_vector(
           "struct_temperature", *tempnp_, Core::IO::nodevector);
     }
+  }
 
 
   // reset states
