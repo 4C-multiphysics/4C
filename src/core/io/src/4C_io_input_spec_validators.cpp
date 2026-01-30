@@ -8,22 +8,41 @@
 #include "4C_io_input_spec_validators.hpp"
 
 #include <regex>
+#include <utility>
 
 FOUR_C_NAMESPACE_OPEN
+
+namespace
+{
+  struct PatternValidator
+  {
+    explicit PatternValidator(std::string pattern)
+        : pattern(std::move(pattern)), regex(this->pattern, std::regex::ECMAScript)
+    {
+    }
+
+    bool operator()(const std::string& v) const { return std::regex_search(v, regex); }
+
+    void describe(std::ostream& os) const { os << "pattern{" << pattern << "}"; }
+
+    void emit_metadata(Core::IO::YamlNodeRef yaml) const
+    {
+      auto& node = yaml.node;
+      node |= ryml::MAP;
+      node["pattern"] |= ryml::MAP;
+      node["pattern"]["pattern"] << pattern;
+    }
+
+
+    std::string pattern;
+    std::regex regex;
+  };
+}  // namespace
 
 Core::IO::InputSpecBuilders::Validators::Validator<std::string>
 Core::IO::InputSpecBuilders::Validators::pattern(std::string pattern)
 {
-  return Validator<std::string>([re = std::regex(pattern, std::regex::ECMAScript)](
-                                    const std::string& v) { return std::regex_search(v, re); },
-      [pattern](std::ostream& os) { os << "pattern{" << pattern << "}"; },
-      [pattern](YamlNodeRef yaml)
-      {
-        auto& node = yaml.node;
-        node |= ryml::MAP;
-        node["pattern"] |= ryml::MAP;
-        node["pattern"]["pattern"] << pattern;
-      });
+  return PatternValidator(std::move(pattern));
 }
 
 FOUR_C_NAMESPACE_CLOSE

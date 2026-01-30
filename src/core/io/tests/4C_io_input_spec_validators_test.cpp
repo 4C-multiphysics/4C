@@ -100,4 +100,42 @@ namespace
     EXPECT_FALSE(validator("1-a-2"s));
   }
 
+  TEST(InputSpecValidators, CopyCtor)
+  {
+    auto v1 = positive<int>();
+    auto v2 = v1;
+
+    EXPECT_TRUE(v2(2));
+    EXPECT_FALSE(v2(0));
+  }
+
+  TEST(InputSpecValidators, MoveCtor)
+  {
+    auto v1 = positive<int>();
+    auto v2 = std::move(v1);
+
+    EXPECT_TRUE(v2(2));
+    EXPECT_FALSE(v2(0));
+  }
+
+  TEST(InputSpecValidators, CopyAssign)
+  {
+    auto v1 = positive<int>();
+    auto v2 = in_range(-3, -1);
+    v2 = v1;
+
+    EXPECT_TRUE(v2(2));
+    EXPECT_FALSE(v2(0));
+  }
+
+  TEST(InputSpecValidators, MoveAssign)
+  {
+    auto v1 = positive<int>();
+    auto v2 = in_range(-3, -1);
+    v2 = std::move(v1);
+
+    EXPECT_TRUE(v2(2));
+    EXPECT_FALSE(v2(0));
+  }
+
 }  // namespace

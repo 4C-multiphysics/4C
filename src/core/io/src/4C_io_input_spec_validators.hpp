@@ -106,6 +106,13 @@ namespace Core::IO::InputSpecBuilders::Validators
     template <typename T>
     using GeneralizedTypeT = typename GeneralizedType<T>::type;
 
+    template <typename ValidatorT, typename T>
+    concept ValidatorConcept = requires(const ValidatorT& validator, const T& value) {
+      { validator(value) } -> std::convertible_to<bool>;
+      { validator.describe(std::declval<std::ostream&>()) };
+      { validator.emit_metadata(std::declval<YamlNodeRef>()) };
+    };
+
 
     template <typename T, typename Enable = void>
     class ValidatorImpl
@@ -122,33 +129,65 @@ namespace Core::IO::InputSpecBuilders::Validators
       void emit_metadata(YamlNodeRef node) const { FOUR_C_THROW("Not implemented"); }
     };
 
+    /**
+     * Type erasure implementation for validators on primitive types.
+     */
     template <typename T>
     class ValidatorImpl<T, std::enable_if_t<IO::Internal::SupportedTypePrimitives<T>>>
     {
-      using Predicate = std::function<bool(const T&)>;
-      using Describe = std::function<void(std::ostream&)>;
-      using EmitMetadata = std::function<void(YamlNodeRef)>;
-
       struct Concept
       {
-        Predicate pred;
-        Describe desc;
-        EmitMetadata emit;
+        virtual ~Concept() = default;
+
+        virtual bool predicate(const T& v) const = 0;
+        virtual void describe(std::ostream& os) const = 0;
+        virtual void emit_metadata(YamlNodeRef node) const = 0;
+
+        virtual std::unique_ptr<Concept> clone() const = 0;
       };
 
-      Concept impl_;
+      template <typename ValidatorT>
+      struct Model final : Concept
+      {
+        explicit Model(ValidatorT validator) : validator_(std::move(validator)) {}
+
+        bool predicate(const T& v) const override { return validator_(v); }
+
+        void describe(std::ostream& os) const override { validator_.describe(os); }
+
+        void emit_metadata(YamlNodeRef node) const override { validator_.emit_metadata(node); }
+
+        std::unique_ptr<Concept> clone() const override
+        {
+          return std::make_unique<Model>(validator_);
+        }
+
+       private:
+        ValidatorT validator_;
+      };
+
+      std::unique_ptr<Concept> pimpl_;
 
      public:
       //! Type-erasing constructor.
-      template <typename FPredicate, typename FDescribe, typename FEmitMetadata>
-      ValidatorImpl(FPredicate p, FDescribe d, FEmitMetadata em)
-          : impl_{
-                .pred = Predicate(std::move(p)),
-                .desc = Describe(std::move(d)),
-                .emit = EmitMetadata(std::move(em)),
-            }
+      template <typename ValidatorT>
+        requires(ValidatorConcept<ValidatorT, T>)
+      /*implicit*/ ValidatorImpl(ValidatorT validator)
+          : pimpl_(std::make_unique<Model<ValidatorT>>(std::move(validator)))
       {
       }
+
+      ValidatorImpl(const ValidatorImpl& other) : pimpl_(other.pimpl_->clone()) {}
+
+      ValidatorImpl& operator=(const ValidatorImpl& other)
+      {
+        if (this != &other) pimpl_ = other.pimpl_->clone();
+        return *this;
+      }
+
+      ValidatorImpl(ValidatorImpl&&) noexcept = default;
+      ValidatorImpl& operator=(ValidatorImpl&&) noexcept = default;
+      ~ValidatorImpl() = default;
 
       /**
        * The main validation function. Returns true if the value is valid according to the
@@ -161,18 +200,18 @@ namespace Core::IO::InputSpecBuilders::Validators
         requires(std::same_as<T, std::decay_t<U>>)
       [[nodiscard]] bool operator()(const U& v) const
       {
-        return impl_.pred(v);
+        return pimpl_->predicate(v);
       }
 
       /**
        * Describes what this validator expects from the value in human-readable form .
        */
-      void describe(std::ostream& os) const { impl_.desc(os); }
+      void describe(std::ostream& os) const { pimpl_->describe(os); }
 
       /**
        * Emits metadata about this validator into the given YAML node.
        */
-      void emit_metadata(YamlNodeRef node) const { impl_.emit(node); }
+      void emit_metadata(YamlNodeRef node) const { pimpl_->emit_metadata(node); }
     };
 
     template <typename T>
@@ -318,7 +357,7 @@ namespace Core::IO::InputSpecBuilders::Validators
   template <typename Low, typename High,
       typename T = typename Internal::LowHighCommonType<Low, High>::type>
     requires((std::integral<T> && !std::same_as<T, bool>) || std::floating_point<T>)
-  [[nodiscard]] auto in_range(const Low& low, const High& high);
+  [[nodiscard]] Validator<T> in_range(const Low& low, const High& high);
 
   /**
    * Create a Validator that checks if an enum value is in a @p set of values.
@@ -330,7 +369,7 @@ namespace Core::IO::InputSpecBuilders::Validators
    */
   template <typename T>
     requires(std::is_enum_v<T>)
-  [[nodiscard]] auto in_set(const std::set<T>& set);
+  [[nodiscard]] Validator<T> in_set(const std::set<T>& set);
 
   /**
    * Create a Validator that checks if an enum value is in a @p set of values.
@@ -339,7 +378,7 @@ namespace Core::IO::InputSpecBuilders::Validators
    */
   template <typename T>
     requires(std::is_enum_v<T>)
-  [[nodiscard]] auto in_set(std::initializer_list<T> set);
+  [[nodiscard]] Validator<T> in_set(std::initializer_list<T> set);
 
   /**
    * Helper to mark a range value as inclusive in the in_range() function.
@@ -368,7 +407,7 @@ namespace Core::IO::InputSpecBuilders::Validators
    * arguments to deduce the type from.
    */
   template <Internal::Numeric T>
-  [[nodiscard]] auto positive();
+  [[nodiscard]] Validator<T> positive();
 
   /**
    * A shorthand for creating a Validator that checks if a value is in the range [0, max].
@@ -377,7 +416,7 @@ namespace Core::IO::InputSpecBuilders::Validators
    * arguments to deduce the type from.
    */
   template <Internal::Numeric T>
-  [[nodiscard]] auto positive_or_zero();
+  [[nodiscard]] Validator<T> positive_or_zero();
 
   /**
    * A validator that checks if all elements in a range-like object satisfy the given @p validator:
@@ -420,39 +459,48 @@ namespace Core::IO::InputSpecBuilders::Validators
 template <typename Low, typename High, typename T>
   requires((std::integral<T> && !std::same_as<T, bool>) || std::floating_point<T>)
 [[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::in_range(
-    const Low& low, const High& high)
+    const Low& low, const High& high) -> Validator<T>
 {
   const auto [low_val, low_type] = Internal::InclExclTag<T>(low);
   const auto [high_val, high_type] = Internal::InclExclTag<T>(high);
   FOUR_C_ASSERT_ALWAYS(low_val < high_val,
       "Invalid range: low value {} is not less than high value {}.", low_val, high_val);
 
-  const auto description =
-      std::format("in_range{}{},{}{}", (low_type == Internal::InclExclType::incl) ? "[" : "(",
+  struct InRangeValidator
+  {
+    bool operator()(const T& v) const
+    {
+      return ((low_type == Internal::InclExclType::incl) ? (v >= low_val) : (v > low_val)) &&
+             ((high_type == Internal::InclExclType::incl) ? (v <= high_val) : (v < high_val));
+    }
+
+    void describe(std::ostream& os) const
+    {
+      os << std::format("in_range{}{},{}{}", (low_type == Internal::InclExclType::incl) ? "[" : "(",
           low_val, high_val, (high_type == Internal::InclExclType::incl) ? "]" : ")");
+    }
 
+    void emit_metadata(YamlNodeRef yaml) const
+    {
+      auto& node = yaml.node;
+      node |= ryml::MAP;
+      auto range_node = node["range"];
+      range_node |= ryml::MAP;
+      emit_value_as_yaml(yaml.wrap(range_node["minimum"]), low_val);
+      emit_value_as_yaml(yaml.wrap(range_node["maximum"]), high_val);
+      const bool min_excl = (low_type == Internal::InclExclType::excl);
+      emit_value_as_yaml(yaml.wrap(range_node["minimum_exclusive"]), min_excl);
+      const bool max_excl = (high_type == Internal::InclExclType::excl);
+      emit_value_as_yaml(yaml.wrap(range_node["maximum_exclusive"]), max_excl);
+    }
 
-  return Validator<T>(
-      // Rename the variables so Clang OpenMP does not complain about capturing structured bindings.
-      [lv = low_val, hv = high_val, lt = low_type, ht = high_type](const T& v)
-      {
-        return ((lt == Internal::InclExclType::incl) ? (v >= lv) : (v > lv)) &&
-               ((ht == Internal::InclExclType::incl) ? (v <= hv) : (v < hv));
-      },
-      [description](std::ostream& os) { os << description; },
-      [lv = low_val, hv = high_val, lt = low_type, ht = high_type](YamlNodeRef yaml)
-      {
-        auto& node = yaml.node;
-        node |= ryml::MAP;
-        auto range_node = node["range"];
-        range_node |= ryml::MAP;
-        emit_value_as_yaml(yaml.wrap(range_node["minimum"]), lv);
-        emit_value_as_yaml(yaml.wrap(range_node["maximum"]), hv);
-        const bool min_excl = (lt == Internal::InclExclType::excl);
-        emit_value_as_yaml(yaml.wrap(range_node["minimum_exclusive"]), min_excl);
-        const bool max_excl = (ht == Internal::InclExclType::excl);
-        emit_value_as_yaml(yaml.wrap(range_node["maximum_exclusive"]), max_excl);
-      });
+    T low_val;
+    T high_val;
+    Internal::InclExclType low_type;
+    Internal::InclExclType high_type;
+  };
+
+  return InRangeValidator{low_val, high_val, low_type, high_type};
 }
 
 template <Core::IO::InputSpecBuilders::Validators::Internal::Numeric T>
@@ -468,13 +516,13 @@ template <Core::IO::InputSpecBuilders::Validators::Internal::Numeric T>
 }
 
 template <Core::IO::InputSpecBuilders::Validators::Internal::Numeric T>
-[[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::positive()
+[[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::positive() -> Validator<T>
 {
   return in_range(excl(static_cast<T>(0)), std::numeric_limits<T>::max());
 }
 
 template <Core::IO::InputSpecBuilders::Validators::Internal::Numeric T>
-[[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::positive_or_zero()
+[[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::positive_or_zero() -> Validator<T>
 {
   return in_range(static_cast<T>(0), std::numeric_limits<T>::max());
 }
@@ -482,52 +530,64 @@ template <Core::IO::InputSpecBuilders::Validators::Internal::Numeric T>
 template <typename T>
   requires(std::is_enum_v<T>)
 [[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::in_set(const std::set<T>& set)
+    -> Validator<T>
 {
   FOUR_C_ASSERT_ALWAYS(!set.empty(), "You passed an empty set to in_set().");
 
-  using namespace EnumTools;
-  std::ostringstream set_description;
-  set_description << "in_set{";
-  for (const auto& val : set) set_description << val << ",";
-  auto set_description_str = set_description.str();
-  set_description_str.pop_back();
-  set_description_str += "}";
+  struct InSetValidator
+  {
+    bool operator()(const T& v) const { return set.contains(v); }
 
-  return Validator<T>([set](const T& v) { return set.contains(v); },
-      [set_description_str](std::ostream& os) { os << set_description_str; },
-      [set](YamlNodeRef yaml)
+    void describe(std::ostream& os) const
+    {
+      using namespace EnumTools;
+      std::ostringstream set_description;
+      set_description << "in_set{";
+      for (const auto& val : set) set_description << val << ",";
+      auto set_description_str = set_description.str();
+      set_description_str.pop_back();
+      set_description_str += "}";
+      os << set_description_str;
+    }
+
+    void emit_metadata(YamlNodeRef yaml) const
+    {
+      auto& node = yaml.node;
+      node |= ryml::MAP;
+      auto set_node = node["choices"];
+      set_node |= ryml::SEQ;
+      for (const auto& val : set)
       {
-        auto& node = yaml.node;
-        node |= ryml::MAP;
-        auto set_node = node["choices"];
-        set_node |= ryml::SEQ;
-        for (const auto& val : set)
-        {
-          auto choice_node = set_node.append_child();
-          choice_node |= ryml::MAP;
-          emit_value_as_yaml(yaml.wrap(choice_node["name"]), val);
-        }
-      });
+        auto choice_node = set_node.append_child();
+        choice_node |= ryml::MAP;
+        emit_value_as_yaml(yaml.wrap(choice_node["name"]), val);
+      }
+    }
+
+    std::set<T> set;
+  };
+
+  return InSetValidator{set};
 }
 
 template <typename T>
   requires(std::is_enum_v<T>)
 [[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::in_set(std::initializer_list<T> set)
+    -> Validator<T>
 {
   return in_set(std::set<T>(set.begin(), set.end()));
 }
 
 template <typename T>
-[[nodiscard]] Core::IO::InputSpecBuilders::Validators::Validator<
-    Core::IO::InputSpecBuilders::Validators::RangeLike<T>>
-Core::IO::InputSpecBuilders::Validators::all_elements(Internal::ValidatorImpl<T> validator)
+[[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::all_elements(
+    Internal::ValidatorImpl<T> validator) -> Validator<RangeLike<T>>
 {
   return Validator<std::vector<T>>(validator);
 }
 
 template <typename T>
-[[nodiscard]] Core::IO::InputSpecBuilders::Validators::Validator<std::optional<T>>
-Core::IO::InputSpecBuilders::Validators::null_or(Internal::ValidatorImpl<T> validator)
+[[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::null_or(
+    Internal::ValidatorImpl<T> validator) -> Validator<std::optional<T>>
 {
   return Validator<std::optional<T>>(validator);
 }
