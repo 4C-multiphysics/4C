@@ -416,6 +416,11 @@ namespace Global
       return parameters_->sublist("PROBLEM SIZE");
     }
 
+    const Teuchos::ParameterList& reduced_lung_parameters() const
+    {
+      return parameters_->sublist("reduced_lung");
+    }
+
     const Teuchos::ParameterList& solver_params(int solverNr) const;
 
     std::function<const Teuchos::ParameterList&(int)> solver_params_callback() const;

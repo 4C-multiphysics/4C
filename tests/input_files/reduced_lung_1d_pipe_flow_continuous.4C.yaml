@@ -1,0 +1,86 @@
+TITLE:
+  - "8 elements form a continuous tube."
+  - "Flow bc at tube inlet, zero pressure at outlet."
+  - "Test 1D wave propagation through a uniform tube."
+reduced_lung:
+  general:
+    final_time: 0.1
+    steps: 10000
+    result_every: 1000
+    fluid_properties:
+      density_rho: 1
+      viscosity_mu: 0.035
+    geometry_parameters:
+      reference_area_A0:
+        constant: 3.2168
+      thickness_th:
+        constant: 0.05
+    material_parameters:
+      Poisson_ratio_nue: 0.5
+      Young_E:
+        constant: 510000
+    boundary_conditions:
+      input: flow
+      function_ID: 1
+      output: reflection
+      condition_outflow: 0
+      pulse_width: 0.2
+PROBLEM TYPE:
+  PROBLEMTYPE: "Reduced_Lung_1D_Pipe_Flow"
+IO/RUNTIME VTK OUTPUT:
+  OUTPUT_DATA_FORMAT: ascii
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Arterial_Network_Solver"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "1 - cos(2*pi*t/0.2)"
+
+NODE COORDS:
+  - NODE 1 COORD 0.00 0.00 0.00
+  - NODE 2 COORD 0.25 0.00 0.00
+  - NODE 3 COORD 0.50 0.00 0.00
+  - NODE 4 COORD 0.75 0.00 0.00
+  - NODE 5 COORD 1.00 0.00 0.00
+  - NODE 6 COORD 1.25 0.00 0.00
+  - NODE 7 COORD 1.50 0.00 0.00
+  - NODE 8 COORD 1.75 0.00 0.00
+  - NODE 9 COORD 2.00 0.00 0.00
+ARTERY ELEMENTS:
+  - 1 ART LINE2 1 2 MAT 1 GP 5 TYPE LinExp DIAM 24.0
+  - 2 ART LINE2 2 3 MAT 1 GP 5 TYPE LinExp DIAM 24.0
+  - 3 ART LINE2 3 4 MAT 1 GP 5 TYPE LinExp DIAM 24.0
+  - 4 ART LINE2 4 5 MAT 1 GP 5 TYPE LinExp DIAM 12.0
+  - 5 ART LINE2 5 6 MAT 1 GP 5 TYPE LinExp DIAM 12.0
+  - 6 ART LINE2 6 7 MAT 1 GP 5 TYPE LinExp DIAM 12.0
+  - 7 ART LINE2 7 8 MAT 1 GP 5 TYPE LinExp DIAM 12.0
+  - 8 ART LINE2 8 9 MAT 1 GP 5 TYPE LinExp DIAM 12.0
+MATERIALS:
+  - MAT: 1
+    MAT_CNST_ART:
+      VISCOSITY: 0.04
+      DENS: 0.001
+      YOUNG: 400000
+      NUE: 0.5
+      TH: 1.63
+      PEXT1: 0
+      PEXT2: 0
+RESULT DESCRIPTION:
+  - ARTNET:
+      DIS: "artery"
+      NODE: 9
+      QUANTITY: "flow"
+      VALUE: 1.8852568
+      TOLERANCE: 1e-8
+  - ARTNET:
+      DIS: "artery"
+      NODE: 1
+      QUANTITY: "flow"
+      VALUE: 2.00030318
+      TOLERANCE: 1e-8
+  - ARTNET:
+      DIS: "artery"
+      NODE: 5
+      QUANTITY: "velocity"
+      VALUE: 0.60984287
+      TOLERANCE: 1e-8
+
