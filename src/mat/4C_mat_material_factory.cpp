@@ -137,6 +137,7 @@
 #include "4C_mat_structporo_reaction.hpp"
 #include "4C_mat_structporo_reaction_ecm.hpp"
 #include "4C_mat_stvenantkirchhoff.hpp"
+#include "4C_mat_stvenantkirchhoff_orthotropic.hpp"
 #include "4C_mat_superelastic_sma.hpp"
 #include "4C_mat_sutherland.hpp"
 #include "4C_mat_thermoplastichyperelast.hpp"
@@ -226,6 +227,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     case Core::Materials::m_stvenant:
     {
       return make_parameter_impl<Mat::PAR::StVenantKirchhoff>(id, type, input_data);
+    }
+    case Core::Materials::m_orthostvenant:
+    {
+      return make_parameter_impl<Mat::PAR::StVenantKirchhoffOrthotropic>(id, type, input_data);
     }
     case Core::Materials::m_thermostvenant:
     {

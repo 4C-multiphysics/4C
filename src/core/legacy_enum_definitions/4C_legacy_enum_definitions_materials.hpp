@@ -176,6 +176,7 @@ namespace Core::Materials
     m_structpororeactionECM,  ///< wrapper material for poroelasticity (structure)
     m_superelast,             ///< Superelastic material behaviour of shape memory alloys
     m_stvenant,               ///< St.Venant Kirchhoff material
+    m_orthostvenant,          ///< St.Venant Kirchhoff material with orthotropy
     m_sutherland,             ///< material with temperature dependence according to Sutherland law
     m_thermo_fourier,  ///< (Possibly anisotropic) linear implementation of Fourier's law of heat
                        ///< conduction
