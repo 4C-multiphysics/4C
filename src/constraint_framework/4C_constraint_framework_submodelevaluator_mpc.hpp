@@ -68,7 +68,7 @@ namespace Constraints::SubmodelEvaluator
         surface_periodic_rve_conditions_;
 
     //! Tolerance for the opposing edge node search
-    double node_search_toler_ = 0.25;  // #ToDo: Add input parameter
+    double node_search_toler_;
 
     //! Dimension of the rve boundary
     Constraints::MultiPoint::RveDimension rve_dim_;

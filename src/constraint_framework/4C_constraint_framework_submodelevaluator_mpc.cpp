@@ -13,6 +13,10 @@
 #include "4C_constraint_framework_equation.hpp"
 #include "4C_fem_condition.hpp"
 #include "4C_fem_discretization.hpp"
+#include "4C_geometric_search_access_traits.hpp"
+#include "4C_geometric_search_bounding_volume.hpp"
+#include "4C_geometric_search_bvh.hpp"
+#include "4C_geometric_search_input.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_sparsematrix.hpp"
@@ -120,6 +124,7 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::check_input
   if (Core::Communication::num_mpi_ranks(discret_ptr_->get_comm()) > 1)
     FOUR_C_THROW("periodic boundary conditions for RVEs are not implemented in parallel.");
 
+  auto geom_search_parameter_list = Global::Problem::instance()->geometric_search_params();
   auto constraint_parameter_list = Global::Problem::instance()->constraint_params();
 
   strategy_ = Teuchos::getIntegralValue<Constraints::EnforcementStrategy>(
@@ -130,6 +135,9 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::check_input
   rve_ref_type_ =
       Teuchos::getIntegralValue<Constraints::MultiPoint::RveReferenceDeformationDefinition>(
           mpc_parameter_list, "RVE_REFERENCE_POINTS");
+
+  node_search_toler_ =
+      Teuchos::getDoubleParameter(geom_search_parameter_list, "SPHERE_RADIUS_EXTENSION_FACTOR");
 
   // Check the enforcement strategy
   switch (strategy_)
@@ -197,6 +205,9 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::check_input
   Core::IO::cout(Core::IO::verbose)
       << "There are " << point_linear_coupled_equation_conditions_.size()
       << " linear coupled equations" << Core::IO::endl;
+
+  Core::IO::cout(Core::IO::verbose)
+      << "The geometric search tolerance is set to: " << node_search_toler_ << Core::IO::endl;
 
   if (point_periodic_rve_ref_conditions_.size() == 0 &&
       rve_ref_type_ == Constraints::MultiPoint::RveReferenceDeformationDefinition::manual)
@@ -336,65 +347,91 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
             }
           }
           // Create PBC Node Pairs:
-          // #ToDo: Use ArborX for the search
-          std::string surfId;
-          std::vector<double> matchPosition = {0.0, 0.0, 0.0};
-
           for (const auto& surf : refEndNodeMap)
           {
-            for (auto nodeP : *rveBoundaryNodeIdMap[surf.first + "+"])
+            std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> bounding_volumes_neg;
+            std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> bounding_volumes_pos;
+
+            // Use nodes on the negative-normal surface and shift by the reference vector
+            // to obtain the target position of the corresponding node on the positive side.
+            for (auto node_gid : *rveBoundaryNodeIdMap[surf.first + "-"])
             {
-              Core::IO::cout(Core::IO::debug)
-                  << "Current SURF: " << surf.first << "Node+ ID: " << nodeP << Core::IO::endl;
+              // Don't include the reference node pair
+              if (node_gid == rveCornerNodeIdMap["N1"]) continue;
 
+              bounding_volumes_neg.emplace_back(
+                  std::make_pair(node_gid, Core::GeometricSearch::BoundingVolume()));
+
+              // calculate the target location
+              Core::LinAlg::Matrix<3, 1, double> target_node_position;
               for (int i = 0; i < numDim; ++i)
+                target_node_position(i) =
+                    discret_ptr_->g_node(node_gid)->x()[i] + rveRefVecMap[surf.first][i];
+
+              bounding_volumes_neg.back().second.add_point(target_node_position);
+              bounding_volumes_neg.back().second.extend_boundaries(node_search_toler_);
+            }
+
+            // Get the actual position of the nodes on the positive-normal surface (primitives)
+            for (auto node_gid : *rveBoundaryNodeIdMap[surf.first + "+"])
+            {
+              bounding_volumes_pos.emplace_back(
+                  std::make_pair(node_gid, Core::GeometricSearch::BoundingVolume()));
+
+              // get the actual location
+              Core::LinAlg::Matrix<3, 1, double> actual_node_position;
+              for (int i = 0; i < numDim; ++i)
+                actual_node_position(i) = discret_ptr_->g_node(node_gid)->x()[i];
+
+              bounding_volumes_pos.back().second.add_point(actual_node_position);
+              bounding_volumes_pos.back().second.extend_boundaries(node_search_toler_);
+            }
+
+            Core::GeometricSearch::BoundingVolumeHierarchy bvh_side_pos(
+                Core::GeometricSearch::BoundingVolumeVectorPlaceholder<
+                    Core::GeometricSearch::PrimitivesTag>{bounding_volumes_pos});
+
+            // Search all points on negative side in bvh of positive side
+            const auto [indices, offsets] = bvh_side_pos.query(bounding_volumes_neg);
+            Core::IO::cout(Core::IO::verbose)
+                << " Identified Periodic Node Pairs: " << surf.first << "-boundary (node-id)"
+                << Core::IO::endl
+                << "+--------------------------------------------------------------------+"
+                << Core::IO::endl;
+            for (std::size_t i = 0; i + 1 < offsets.extent(0); ++i)
+            {
+              const int nHits = offsets(i + 1) - offsets(i);
+              const int xm_id = bounding_volumes_neg[i].first;
+
+              if (nHits > 1)
               {
-                matchPosition[i] =
-                    discret_ptr_->g_node(nodeP)->x()[i] - rveRefVecMap[surf.first][i];
+                FOUR_C_THROW(
+                    "Periodic search failed on surface '%s': x- node %d has %d matches. "
+                    "Check mesh periodicity or SPHERE_RADIUS_EXTENSION_FACTOR.",
+                    surf.first.c_str(), xm_id, nHits);
               }
-              Core::IO::cout(Core::IO::debug)
-                  << "Node+ location: " << discret_ptr_->g_node(nodeP)->x()[0] << ", "
-                  << discret_ptr_->g_node(nodeP)->x()[1];
-              if (rve_dim_ == Constraints::MultiPoint::rve3d)
-                Core::IO::cout(Core::IO::debug) << ", " << discret_ptr_->g_node(nodeP)->x()[2];
-              Core::IO::cout(Core::IO::debug) << Core::IO::endl;
 
-              Core::IO::cout(Core::IO::debug)
-                  << "Position of matching Node: " << matchPosition[0] << ", " << matchPosition[1];
-              if (rve_dim_ == Constraints::MultiPoint::rve3d)
-                Core::IO::cout(Core::IO::debug) << ", " << matchPosition[2];
-              Core::IO::cout(Core::IO::debug) << Core::IO::endl;
-              for (auto nodeM : *rveBoundaryNodeIdMap[surf.first + "-"])
+              if (nHits == 0)
               {
-                if (nodeP == rveCornerNodeIdMap[surf.second]) break;
-
-                bool isMatch = true;
-                for (int i = 0; i < numDim; ++i)
-                {
-                  if (std::abs(discret_ptr_->g_node(nodeM)->x()[i] - matchPosition[i]) >
-                      node_search_toler_)
-                  {
-                    isMatch = false;
-                    break;
-                  }
-                }
-                if (isMatch)
-                {
-                  PBC.push_back(discret_ptr_->g_node(nodeP));
-                  PBC.push_back(discret_ptr_->g_node(nodeM));
-                  PBC.push_back(discret_ptr_->g_node(rveCornerNodeIdMap[surf.second]));
-                  PBC.push_back(discret_ptr_->g_node(rveCornerNodeIdMap["N1"]));
-                  PBCs.push_back(PBC);
-                  PBC.clear();
-
-                  {
-                    Core::IO::cout(Core::IO::debug)
-                        << "nodes coupled on " << surf.first << " +/- boundary: " << nodeP << " - "
-                        << nodeM << " = " << rveCornerNodeIdMap[surf.second] << " - "
-                        << rveCornerNodeIdMap["N1"] << Core::IO::endl;
-                  }
-                }
+                FOUR_C_THROW(
+                    "Periodic search failed on surface '%s': no match for x- node %d. "
+                    "Check mesh periodicity or SPHERE_RADIUS_EXTENSION_FACTOR.",
+                    surf.first.c_str(), xm_id);
               }
+
+              std::cout << "first is:" << indices(i) << std::endl;
+              // The order matters, because of sign (1) - (2) = (3) - (4)
+              PBC.push_back(discret_ptr_->g_node(indices(i)));                     // + side
+              PBC.push_back(discret_ptr_->g_node(bounding_volumes_neg[i].first));  // - side
+              PBC.push_back(discret_ptr_->g_node(rveCornerNodeIdMap[surf.second]));
+              PBC.push_back(discret_ptr_->g_node(rveCornerNodeIdMap["N1"]));
+              PBCs.push_back(PBC);
+              PBC.clear();
+
+              Core::IO::cout(Core::IO::verbose)
+                  << bounding_volumes_neg[i].first << "," << indices(i) << ","
+                  << rveCornerNodeIdMap[surf.second] << "," << rveCornerNodeIdMap["N1"]
+                  << Core::IO::endl;
             }
           }
         }
