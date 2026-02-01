@@ -582,7 +582,7 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::combine_field_vectors(
 void FSI::MortarMonolithicFluidSplitSaddlePoint::setup_rhs_residual(Core::LinAlg::Vector<double>& f)
 {
   // get single field residuals
-  std::shared_ptr<const Core::LinAlg::Vector<double>> solid_single_field_rhs_vector =
+  std::shared_ptr<Core::LinAlg::Vector<double>> solid_single_field_rhs_vector =
       std::make_shared<Core::LinAlg::Vector<double>>(*structure_field()->rhs());
   std::shared_ptr<const Core::LinAlg::Vector<double>> fluid_single_field_rhs_vector =
       std::make_shared<Core::LinAlg::Vector<double>>(*fluid_field()->rhs());
@@ -590,6 +590,9 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::setup_rhs_residual(Core::LinAlg
       std::make_shared<Core::LinAlg::Vector<double>>(*ale_field()->rhs());
   std::shared_ptr<Core::LinAlg::Vector<double>> lag_mult_rhs_vector =
       std::make_shared<Core::LinAlg::Vector<double>>(*lag_mult_dof_map_, true);
+
+  // NOX treats rhs different in new solid time integration, hence sign inversion is necessary here
+  if (!use_old_structure_) solid_single_field_rhs_vector->scale(-1.0);
 
   // put the single field residuals together
   combine_field_vectors(f, solid_single_field_rhs_vector, fluid_single_field_rhs_vector,
@@ -1266,12 +1269,15 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::output()
 
   ale_field()->output();
 
-  if (structure_field()->get_constraint_manager()->have_monitor())
+  if (use_old_structure_)
   {
-    structure_field()->get_constraint_manager()->compute_monitor_values(
-        *structure_field()->dispnp());
-    if (Core::Communication::my_mpi_rank(comm_) == 0)
-      structure_field()->get_constraint_manager()->print_monitor_values();
+    if (structure_field()->get_constraint_manager()->have_monitor())
+    {
+      structure_field()->get_constraint_manager()->compute_monitor_values(
+          *structure_field()->dispnp());
+      if (Core::Communication::my_mpi_rank(comm_) == 0)
+        structure_field()->get_constraint_manager()->print_monitor_values();
+    }
   }
 }
 
