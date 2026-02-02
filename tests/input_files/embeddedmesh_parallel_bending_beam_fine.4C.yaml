@@ -9,6 +9,7 @@ PROBLEM TYPE:
   SHAPEFCT: "Nurbs"
 IO/RUNTIME VTK OUTPUT:
   INTERVAL_STEPS: 1
+  OUTPUT_DATA_FORMAT: ascii
 IO/RUNTIME VTK OUTPUT/STRUCTURE:
   OUTPUT_STRUCTURE: true
   DISPLACEMENT: true
@@ -1809,55 +1810,55 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 100
       QUANTITY: "dispx"
-      VALUE: -6.984333846271665e-05
+      VALUE: -6.97214221992190997e-05
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 100
       QUANTITY: "dispy"
-      VALUE: -0.0015942688825899792
+      VALUE: -1.59456846036958987e-03
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 100
       QUANTITY: "dispz"
-      VALUE: 0.0006657262156468485
+      VALUE: 6.65691821395697275e-04
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 213
       QUANTITY: "dispx"
-      VALUE: -6.108273952807611e-08
+      VALUE: -6.34001721209868383e-08
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 213
       QUANTITY: "dispy"
-      VALUE: -0.012406099828382354
+      VALUE: -1.24061585587718556e-02
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 213
       QUANTITY: "dispz"
-      VALUE: 0.0006036993727379117
+      VALUE: 6.03726584589209356e-04
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 508
       QUANTITY: "dispx"
-      VALUE: 3.4458004945315466e-06
+      VALUE: 3.40299014503926591e-06
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 508
       QUANTITY: "dispy"
-      VALUE: -2.3530499093654185e-05
+      VALUE: -2.36537308776740920e-05
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 508
       QUANTITY: "dispz"
-      VALUE: -1.3055155685696844e-05
+      VALUE: -1.29141008255030966e-05
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
@@ -1881,35 +1882,35 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 311
       QUANTITY: "dispx"
-      VALUE: -4.727550381826338e-06
+      VALUE: -4.79049591306186138e-06
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 311
       QUANTITY: "dispy"
-      VALUE: -0.016694708921940457
+      VALUE: -1.66947153312812027e-02
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 311
       QUANTITY: "dispz"
-      VALUE: -0.0015395054326079358
+      VALUE: -1.53951314125519065e-03
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 400
       QUANTITY: "dispx"
-      VALUE: -4.8103287339274097e-08
+      VALUE: -7.06995052454675496e-08
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 400
       QUANTITY: "dispy"
-      VALUE: -0.009737431445517954
+      VALUE: -9.73741328642510270e-03
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 400
       QUANTITY: "dispz"
-      VALUE: -6.919959996875325e-05
+      VALUE: -6.92042374181038231e-05
       TOLERANCE: 1e-09
