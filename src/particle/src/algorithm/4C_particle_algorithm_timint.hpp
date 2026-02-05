@@ -23,6 +23,7 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
+  class ConstraintsHandler;
   class DirichletBoundaryConditionHandler;
   class ParticleEngineInterface;
   class RigidBodyHandlerInterface;
@@ -64,7 +65,8 @@ namespace Particle
      */
     virtual void setup(
         const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
-        const std::shared_ptr<Particle::RigidBodyHandlerInterface> particlerigidbodyinterface);
+        const std::shared_ptr<Particle::RigidBodyHandlerInterface> particlerigidbodyinterface,
+        const std::shared_ptr<Particle::ConstraintsHandler> constraints = nullptr);
 
     /*!
      * \brief insert integration dependent states of all particle types
@@ -136,6 +138,9 @@ namespace Particle
     //! temperature boundary condition handler
     std::unique_ptr<Particle::TemperatureBoundaryConditionHandler> temperatureboundarycondition_;
 
+    //! kinematic constraints handler
+    std::shared_ptr<Particle::ConstraintsHandler> constraints_;
+
     //! set of particle types to integrate in time
     std::set<Particle::TypeEnum> typestointegrate_;
 
@@ -172,8 +177,8 @@ namespace Particle
      *
      */
     void setup(const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
-        const std::shared_ptr<Particle::RigidBodyHandlerInterface> particlerigidbodyinterface)
-        override;
+        const std::shared_ptr<Particle::RigidBodyHandlerInterface> particlerigidbodyinterface,
+        const std::shared_ptr<Particle::ConstraintsHandler> constraints = nullptr) override;
 
     /*!
      * \brief time integration scheme specific pre-interaction routine

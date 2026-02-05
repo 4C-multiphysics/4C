@@ -177,7 +177,12 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
               {.description =
                       "Refer to the function ID describing the temperature boundary condition of "
                       "particle phase",
-                  .default_value = "none"})},
+                  .default_value = "none"}),
+
+          // restrain simulation to 2D
+          parameter<bool>("RESTRAIN_TO_2D",
+              {.description = "restrain simulation to 2D", .default_value = false}),
+      },
       {.required = false}));
 
   /*-------------------------------------------------------------------------*
