@@ -1550,7 +1550,7 @@ void Global::read_conditions(
                 "the input file.\n"
                 "This is probably because the geometry is handled in an external file.\n"
                 "If this is the case, you must specify a specific entity type (node_set_id or "
-                "element_block_id).\n",
+                "element_block_id) or identify the node set via its name.\n",
                 condition_definition.name(), entity_id);
           }
           switch (condition->g_type())

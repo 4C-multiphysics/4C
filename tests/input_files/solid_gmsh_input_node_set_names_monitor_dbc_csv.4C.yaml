@@ -39,14 +39,12 @@ FUNCT1:
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
 DESIGN POINT DIRICH CONDITIONS:
   - NODE_SET_NAME: left_faces
-    ENTITY_TYPE: node_set_name
     NUMDOF: 3
     ONOFF: [1, 1, 1]
     VAL: [0, 0, 0]
     FUNCT: [0, 0, 0]
     TAG: monitor_reaction
   - NODE_SET_NAME: right_faces
-    ENTITY_TYPE: node_set_name
     NUMDOF: 3
     ONOFF: [1, 0, 0]
     VAL: [1, 0, 0]

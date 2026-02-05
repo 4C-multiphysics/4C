@@ -66,22 +66,18 @@ FUNCT1:
     VALUES: [0, 0.1, 0.1]
 DESIGN SURF MORTAR CONTACT CONDITIONS 3D:
   - NODE_SET_NAME: slave
-    ENTITY_TYPE: node_set_name
     InterfaceID: 1
     Side: Slave
   - NODE_SET_NAME: master
-    ENTITY_TYPE: node_set_name
     InterfaceID: 1
     Side: Master
 DESIGN SURF DIRICH CONDITIONS:
   - NODE_SET_NAME: wall
-    ENTITY_TYPE: node_set_name
     NUMDOF: 3
     ONOFF: [1, 1, 1]
     VAL: [0, 0, 0]
     FUNCT: [null, null, null]
   - NODE_SET_NAME: pushing
-    ENTITY_TYPE: node_set_name
     NUMDOF: 3
     ONOFF: [1, 0, 0]
     VAL: [-1.0, 0.0, 0.0]
