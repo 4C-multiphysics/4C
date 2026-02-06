@@ -9,8 +9,7 @@
 
 #include "4C_contact_constitutivelaw_python_surrogate_contactconstitutivelaw.hpp"
 #include "4C_contact_node.hpp"
-
-#include <filesystem>
+#include "4C_unittest_utils_support_files_test.hpp"
 
 #ifdef FOUR_C_WITH_PYBIND11
 
@@ -26,9 +25,8 @@ namespace
       /// initialize container for material parameters
       Core::IO::InputParameterContainer container;
       container.add("Python_Filename",
-          std::filesystem::path(
-              "/home/a11bmama/codes/mayrmt_baci/src-baci/unittests/contact_constitutivelaw/"
-              "4C_python_surrogate_contactconstitutivelaw.py"));
+          TESTING::get_support_file_path(
+              "test_files/4C_contact_constitutivelaw_python_surrogate_linear.py"));
       container.add("Offset", 0.5);
 
       CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params(container);
