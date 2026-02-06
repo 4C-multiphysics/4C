@@ -18,7 +18,7 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-void Particle::ConstraintsProjection2D::apply(
+void Particle::ConstraintsProjectionBase::apply(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
     const std::set<Particle::TypeEnum>& types_to_integrate, const double time) const
 {
@@ -48,15 +48,50 @@ void Particle::ConstraintsProjection2D::apply(
       modacc = container->get_ptr_to_state(Particle::ModifiedAcceleration, 0);
 
     // get particle state dimension
-    int pos_state_dim = container->get_state_dim(Particle::Position);
+    const int pos_state_dim = container->get_state_dim(Particle::Position);
 
-    // iterate over owned particles of current type
-    for (int i = 0; i < n_particle_stored; ++i)
+    // project quantities
+    project(n_particle_stored, pos_state_dim, vel, acc, modvel, modacc);
+  }
+}
+
+void Particle::ConstraintsProjection2D::project(int n_particle_stored, int pos_state_dim,
+    double* vel, double* acc, double* modvel, double* modacc) const
+{
+  // iterate over all owned particles
+  for (int i = 0; i < n_particle_stored; ++i)
+  {
+    const auto idx = pos_state_dim * i + 2;
+
+    vel[idx] = 0.0;
+    acc[idx] = 0.0;
+    if (modvel) modvel[idx] = 0.0;
+    if (modacc) modacc[idx] = 0.0;
+  }
+}
+
+void Particle::ConstraintsProjection1D::project(int n_particle_stored, int pos_state_dim,
+    double* vel, double* acc, double* modvel, double* modacc) const
+{
+  // iterate over all owned particles
+  for (int i = 0; i < n_particle_stored; ++i)
+  {
+    const auto idx = pos_state_dim * i + 1;
+
+    vel[idx] = 0.0;
+    vel[idx + 1] = 0.0;
+    acc[idx] = 0.0;
+    acc[idx + 1] = 0.0;
+
+    if (modvel)
     {
-      vel[pos_state_dim * i + 2] = 0.0;
-      acc[pos_state_dim * i + 2] = 0.0;
-      if (modvel) modvel[pos_state_dim * i + 2] = 0.0;
-      if (modacc) modacc[pos_state_dim * i + 2] = 0.0;
+      modvel[idx] = 0.0;
+      modvel[idx + 1] = 0.0;
+    }
+    if (modacc)
+    {
+      modacc[idx] = 0.0;
+      modacc[idx + 1] = 0.0;
     }
   }
 }
@@ -66,10 +101,27 @@ std::unique_ptr<Particle::ConstraintsHandler> Particle::create_constraints(
 {
   std::unique_ptr<Particle::ConstraintsHandler> constraints = nullptr;
 
-  const auto restrain_to_2d =
-      params.sublist("INITIAL AND BOUNDARY CONDITIONS").get<bool>("RESTRAIN_TO_2D");
+  const auto constraint_type =
+      params.sublist("INITIAL AND BOUNDARY CONDITIONS").get<Particle::Constraint>("CONSTRAINT");
 
-  if (restrain_to_2d) constraints = std::make_unique<Particle::ConstraintsProjection2D>();
+  // create density correction handler
+  switch (constraint_type)
+  {
+    case Particle::NoConstraint:
+      break;
+
+    case Particle::Projection1D:
+    {
+      constraints = std::make_unique<Particle::ConstraintsProjection1D>();
+      break;
+    }
+
+    case Particle::Projection2D:
+    {
+      constraints = std::make_unique<Particle::ConstraintsProjection2D>();
+      break;
+    }
+  }
 
   return constraints;
 }

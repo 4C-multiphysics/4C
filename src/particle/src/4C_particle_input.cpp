@@ -179,9 +179,10 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
                       "particle phase",
                   .default_value = "none"}),
 
-          // restrain simulation to 2D
-          parameter<bool>("RESTRAIN_TO_2D",
-              {.description = "restrain simulation to 2D", .default_value = false}),
+          // kinematic constrain
+          parameter<Constraint>(
+              "CONSTRAINT", {.description = "type of kinematic constraint imposed",
+                                .default_value = Particle::NoConstraint}),
       },
       {.required = false}));
 

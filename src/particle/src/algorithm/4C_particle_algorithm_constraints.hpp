@@ -8,9 +8,6 @@
 #ifndef FOUR_C_PARTICLE_ALGORITHM_CONSTRAINTS_HPP
 #define FOUR_C_PARTICLE_ALGORITHM_CONSTRAINTS_HPP
 
-/*---------------------------------------------------------------------------*
- | headers                                                                   |
- *---------------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
 #include "4C_particle_engine_typedefs.hpp"
@@ -18,10 +15,6 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-
-/*---------------------------------------------------------------------------*
- | class declarations                                                        |
- *---------------------------------------------------------------------------*/
 namespace Particle
 {
   /*!
@@ -37,11 +30,29 @@ namespace Particle
         const std::set<Particle::TypeEnum>& types_to_integrate, const double time) const = 0;
   };
 
-  class ConstraintsProjection2D : public ConstraintsHandler
+  class ConstraintsProjectionBase : public ConstraintsHandler
   {
    public:
     void apply(Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
         const std::set<Particle::TypeEnum>& types_to_integrate, const double time) const override;
+
+   protected:
+    virtual void project(int n_particle_stored, int pos_state_dim, double* vel, double* acc,
+        double* modvel, double* modacc) const = 0;
+  };
+
+  class ConstraintsProjection2D : public ConstraintsProjectionBase
+  {
+   protected:
+    void project(int n_particle_stored, int pos_state_dim, double* vel, double* acc, double* modvel,
+        double* modacc) const override;
+  };
+
+  class ConstraintsProjection1D : public ConstraintsProjectionBase
+  {
+   protected:
+    void project(int n_particle_stored, int pos_state_dim, double* vel, double* acc, double* modvel,
+        double* modacc) const override;
   };
 
   std::unique_ptr<Particle::ConstraintsHandler> create_constraints(
@@ -49,7 +60,6 @@ namespace Particle
 
 }  // namespace Particle
 
-/*---------------------------------------------------------------------------*/
 FOUR_C_NAMESPACE_CLOSE
 
 #endif
