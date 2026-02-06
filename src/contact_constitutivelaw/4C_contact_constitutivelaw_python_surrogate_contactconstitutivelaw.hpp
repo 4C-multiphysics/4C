@@ -14,11 +14,9 @@
 #include "4C_contact_constitutivelaw_contactconstitutivelaw_parameter.hpp"
 
 #include <filesystem>
+#include <memory>
 
 #ifdef FOUR_C_WITH_PYBIND11
-
-#include <pybind11/embed.h>
-#include <pybind11/numpy.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -59,6 +57,8 @@ namespace CONTACT
       explicit PythonSurrogateConstitutiveLaw(
           CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params);
 
+      ~PythonSurrogateConstitutiveLaw() override;
+
       //! @name Access methods
       //@{
 
@@ -94,10 +94,13 @@ namespace CONTACT
       //@}
 
      private:
-      std::unique_ptr<pybind11::scoped_interpreter> guard_ = nullptr;
+      // std::unique_ptr<pybind11::scoped_interpreter> guard_ = nullptr;
 
-      pybind11::object evaluate_;
-      pybind11::object evaluate_derivative_;
+      // pybind11::object evaluate_;
+      // pybind11::object evaluate_derivative_;
+
+      class Impl;
+      std::unique_ptr<Impl> impl_;
 
       /// my constitutive law parameters
       CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params_;

@@ -15,6 +15,12 @@
 
 #ifdef FOUR_C_WITH_PYBIND11
 
+#include <pybind11/embed.h>
+#include <pybind11/numpy.h>
+
+#include <mutex>
+#include <utility>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
@@ -29,19 +35,46 @@ CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams::
 }
 
 /*----------------------------------------------------------------------*/
+/*  PIMPL implementation                                                */
+/*----------------------------------------------------------------------*/
+struct CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::Impl
+{
+  pybind11::object evaluate;
+  pybind11::object evaluate_derivative;
+
+  Impl(const CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams& params)
+  {
+    // Initialize interpreter once per process.
+    static std::once_flag py_init_flag;
+    static std::unique_ptr<pybind11::scoped_interpreter> py_guard;
+
+    std::call_once(
+        py_init_flag, []() { py_guard = std::make_unique<pybind11::scoped_interpreter>(); });
+
+    pybind11::module sys = pybind11::module::import("sys");
+    sys.attr("path").attr("insert")(0, params.get_python_filepath().parent_path().string());
+
+    pybind11::module model =
+        pybind11::module::import(params.get_python_filepath().stem().string().c_str());
+
+    evaluate = model.attr("evaluate");
+    evaluate_derivative = model.attr("evaluate_derivative");
+  }
+};
+
+
+/*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::PythonSurrogateConstitutiveLaw(
     CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params)
-    : params_(std::move(params))
+    : impl_(nullptr), params_(std::move(params))
 {
-  guard_ = std::make_unique<pybind11::scoped_interpreter>();
-
-  pybind11::module sys = pybind11::module::import("sys");
-  sys.attr("path").attr("insert")(0, params_.get_python_filepath().parent_path().string());
-  pybind11::module model = pybind11::module::import(params_.get_python_filepath().stem().c_str());
-  evaluate_ = model.attr("evaluate");
-  evaluate_derivative_ = model.attr("evaluate_derivative");
+  impl_ = std::make_unique<Impl>(params_);
 }
+
+/*----------------------------------------------------------------------*/
+CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::~PythonSurrogateConstitutiveLaw() =
+    default;
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
@@ -53,7 +86,7 @@ double CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::evaluate(
     FOUR_C_THROW("You should not be here. The Evaluate function is only tested for active nodes. ");
   }
 
-  const double pressure = evaluate_(gap, params_.get_offset()).cast<double>();
+  const double pressure = impl_->evaluate(gap, params_.get_offset()).cast<double>();
 
   return pressure;
 }
@@ -68,7 +101,7 @@ double CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::evaluate_deriva
     FOUR_C_THROW("You should not be here. The Evaluate function is only tested for active nodes.");
   }
 
-  const double derivative = evaluate_derivative_(gap, params_.get_offset()).cast<double>();
+  const double derivative = impl_->evaluate_derivative(gap, params_.get_offset()).cast<double>();
 
   return derivative;
 }
