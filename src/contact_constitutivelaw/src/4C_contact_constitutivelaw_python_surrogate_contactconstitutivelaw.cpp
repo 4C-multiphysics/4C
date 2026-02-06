@@ -72,7 +72,8 @@ CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::PythonSurrogateConstit
   impl_ = std::make_unique<Impl>(params_);
 }
 
-/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::~PythonSurrogateConstitutiveLaw() =
     default;
 

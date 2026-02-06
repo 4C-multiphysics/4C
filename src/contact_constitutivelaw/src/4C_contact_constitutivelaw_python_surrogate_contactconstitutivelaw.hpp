@@ -37,7 +37,7 @@ namespace CONTACT
        */
       PythonSurrogateConstitutiveLawParams(const Core::IO::InputParameterContainer& container);
 
-      /// Get the filename of the Python script
+      /// Get the filename of the Python script that implements the surrogate model
       std::filesystem::path get_python_filepath() const { return python_filename_; }
 
      private:
