@@ -293,6 +293,7 @@ Core::IO::OutputControl::OutputControl(MPI_Comm comm, std::string problemtype,
       size_t pos = outputname.rfind('/');
       control_file().write(
           "restarted_run", ((pos != std::string::npos) ? outputname.substr(pos + 1) : outputname));
+      control_file().write("restarted_from_step", restart_step);
     }
     control_file().end_group();
   }

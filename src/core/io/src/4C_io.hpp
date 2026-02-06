@@ -231,6 +231,7 @@ namespace Core::IO
     /*!
       You will want to call this once each time step _before_ the
       result data is written.
+      For full restart capabilities, call write_mesh() before this method.
       \param step : current time step
       \param time : current absolute time
     */

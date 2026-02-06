@@ -405,12 +405,6 @@ void ScaTra::LevelSetAlgorithm::check_and_write_output_and_restart()
   // solution output and potentially restart data and/or flux data
   if (is_result_step())
   {
-    // step number and time (only after that data output is possible)
-    output_->new_step(step_, time_);
-
-    // write domain decomposition for visualization (only once at step "upres"!)
-    if (step_ == upres_) output_->write_element_data(true);
-
     // write output to Gmsh postprocessing files
     if (outputgmsh_) output_to_gmsh(step_, time_);
 

@@ -130,6 +130,7 @@ void ScaTra::TimIntCardiacMonodomainHDG::collect_runtime_output_data()
 void ScaTra::TimIntCardiacMonodomainHDG::write_restart() const
 {
   // step number and time (only after that data output is possible)
+  output_->write_mesh(step_, time_);
   output_->new_step(step_, time_);
 
   // output restart information associated with mesh tying strategy
@@ -151,9 +152,6 @@ void ScaTra::TimIntCardiacMonodomainHDG::write_restart() const
   }
 
   output_->write_vector("phinp", dofphi);
-
-  // add info to control file for reading all variables in restart
-  output_->write_mesh(step_, time_);
 }
 
 /*----------------------------------------------------------------------*

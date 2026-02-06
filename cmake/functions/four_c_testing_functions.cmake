@@ -382,6 +382,7 @@ function(four_c_test_restart)
       TIMEOUT
       OMP_THREADS
       RETURN_AS
+      ASSERT_RESTART_STEP
       )
   set(multiValueArgs LABELS REQUIRED_DEPENDENCIES)
   cmake_parse_arguments(
@@ -419,6 +420,16 @@ function(four_c_test_restart)
 
   # In case we reuse the same file as the base test, get the input file from there
   if(_parsed_SAME_FILE)
+    # Get or initialize restart counter for this base test
+    get_property(_restart_count GLOBAL PROPERTY ${_parsed_BASED_ON}_RESTART_COUNT)
+    if(NOT DEFINED _restart_count OR _restart_count STREQUAL "")
+      set(_restart_count 0)
+    endif()
+
+    # Increment counter
+    math(EXPR _restart_count "${_restart_count} + 1")
+    set_property(GLOBAL PROPERTY ${_parsed_BASED_ON}_RESTART_COUNT ${_restart_count})
+
     set(name_of_test "${_parsed_BASED_ON}-restart_${_parsed_RESTART_STEP}-p${_parsed_NP}")
     get_test_property(${_parsed_BASED_ON} _internal_INPUT_FILE test_file_full_path)
     get_test_property(${_parsed_BASED_ON} _internal_OUTPUT_DIR test_directory)
@@ -486,6 +497,36 @@ function(four_c_test_restart)
     REQUIRED_DEPENDENCIES
     "${_parsed_REQUIRED_DEPENDENCIES}"
     )
+
+  # If ASSERT_RESTART_STEP is specified, verify the restart step in the control file
+  if(DEFINED _parsed_ASSERT_RESTART_STEP)
+    # Determine control file name based on restart type
+    if(_parsed_SAME_FILE)
+      set(control_file "${test_directory}/xxx-${_restart_count}.control")
+    else()
+      set(control_file "${test_directory}/xxx.control")
+    endif()
+
+    set(name_of_restart_check "${name_of_test}-check_restart_step")
+    set(check_command
+        "${FOUR_C_PYTHON_VENV_BUILD}/bin/check-restart-step ${control_file} ${_parsed_ASSERT_RESTART_STEP}"
+        )
+
+    # Ensure that Python is listed as required dependency
+    list(APPEND _parsed_REQUIRED_DEPENDENCIES "Python")
+    _add_test_with_options(
+      NAME_OF_TEST
+      ${name_of_restart_check}
+      TEST_COMMAND
+      ${check_command}
+      ADDITIONAL_FIXTURE
+      ${name_of_test}
+      LABELS
+      "${_parsed_LABELS}"
+      REQUIRED_DEPENDENCIES
+      "${_parsed_REQUIRED_DEPENDENCIES}"
+      )
+  endif()
 endfunction()
 
 ##

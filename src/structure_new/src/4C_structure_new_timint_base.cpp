@@ -644,6 +644,7 @@ void Solid::TimeInt::Base::output_restart(bool& datawritten)
   // write restart output, please
   if (dataglobalstate_->get_step_n() != 0)
     output_ptr->write_mesh(dataglobalstate_->get_step_n(), dataglobalstate_->get_time_n());
+
   new_io_step(datawritten);
 
   output_ptr->write_element_data(dataio_->is_first_output_of_run());

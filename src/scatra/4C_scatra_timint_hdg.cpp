@@ -390,9 +390,6 @@ void ScaTra::TimIntHDG::write_restart() const
   output_->write_vector("intphinp", intphinp_);
   output_->write_vector("phinp_trace", phinp_);
   output_->write_vector("intphin", intphin_);
-
-  output_->write_mesh(
-      step_, time_);  // add info to control file for reading all variables in restart
 }
 
 /*----------------------------------------------------------------------*

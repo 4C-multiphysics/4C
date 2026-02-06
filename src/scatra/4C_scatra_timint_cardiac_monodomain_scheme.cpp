@@ -70,10 +70,6 @@ void ScaTra::TimIntCardiacMonodomainOST::write_restart() const
 
   TimIntCardiacMonodomain::write_restart();
 
-  // Cardiac Monodomain specific
-  output_->write_mesh(
-      step_, time_);  // add info to control file for reading all variables in restart
-
   return;
 }
 
@@ -169,10 +165,6 @@ void ScaTra::TimIntCardiacMonodomainBDF2::write_restart() const
 
   TimIntCardiacMonodomain::write_restart();
 
-  // Cardiac Monodomain specific
-  output_->write_mesh(
-      step_, time_);  // add info to control file for reading all variables in restart
-
   return;
 }
 
@@ -256,10 +248,6 @@ void ScaTra::TimIntCardiacMonodomainGenAlpha::write_restart() const
   TimIntGenAlpha::write_restart();
 
   TimIntCardiacMonodomain::write_restart();
-
-  // Cardiac Monodomain specific
-  output_->write_mesh(
-      step_, time_);  // add info to control file for reading all variables in restart
 
   return;
 }

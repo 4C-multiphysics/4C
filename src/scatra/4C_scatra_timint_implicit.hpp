@@ -19,6 +19,7 @@
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_utils_result_test.hpp"
 
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <set>
@@ -869,7 +870,7 @@ namespace ScaTra
       // write restart info if the simulation ends
       const bool is_finished = not not_finished();
 
-      return (step_ % uprestart_ == 0 and step_ != 0) or is_finished;
+      return (step_ % uprestart_ == 0 and step_ != 0) or (is_finished and step_ != 0);
     }
 
     //! returns if output of results is needed for the current time step

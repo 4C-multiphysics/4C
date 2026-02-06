@@ -1146,6 +1146,7 @@ void ScaTra::ScaTraTimIntImpl::output_to_gmsh(const int step, const double time)
 void ScaTra::ScaTraTimIntImpl::write_restart() const
 {
   // step number and time (only after that data output is possible)
+  output_->write_mesh(step_, time_);
   output_->new_step(step_, time_);
 
   // solution
