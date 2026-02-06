@@ -44,7 +44,7 @@ namespace
   {
     // gap < 0
     EXPECT_ANY_THROW(coconstlaw_->evaluate(1.0, cnode.get()));
-    // 0< gap < offset
+    // 0 < gap < offset
     EXPECT_ANY_THROW(coconstlaw_->evaluate(-0.25, cnode.get()));
     // offset < gap
     EXPECT_NEAR(coconstlaw_->evaluate(-0.75, cnode.get()), -0.375, 1.e-15);
