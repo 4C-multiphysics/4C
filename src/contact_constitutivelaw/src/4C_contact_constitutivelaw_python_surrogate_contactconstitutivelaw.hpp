@@ -96,9 +96,6 @@ namespace CONTACT
      private:
       // std::unique_ptr<pybind11::scoped_interpreter> guard_ = nullptr;
 
-      // pybind11::object evaluate_;
-      // pybind11::object evaluate_derivative_;
-
       class Impl;
       std::unique_ptr<Impl> impl_;
 
