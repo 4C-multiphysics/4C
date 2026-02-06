@@ -97,7 +97,7 @@ namespace CONTACT
       // std::unique_ptr<pybind11::scoped_interpreter> guard_ = nullptr;
 
       class Impl;
-      std::unique_ptr<Impl> impl_;
+      std::unique_ptr<Impl> pimpl_;
 
       /// my constitutive law parameters
       CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params_;

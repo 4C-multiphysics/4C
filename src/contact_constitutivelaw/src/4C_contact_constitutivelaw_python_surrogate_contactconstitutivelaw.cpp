@@ -67,9 +67,9 @@ struct CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::Impl
 /*----------------------------------------------------------------------*/
 CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::PythonSurrogateConstitutiveLaw(
     CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params)
-    : impl_(nullptr), params_(std::move(params))
+    : pimpl_(nullptr), params_(std::move(params))
 {
-  impl_ = std::make_unique<Impl>(params_);
+  pimpl_ = std::make_unique<Impl>(params_);
 }
 
 /*----------------------------------------------------------------------*
@@ -87,7 +87,7 @@ double CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::evaluate(
     FOUR_C_THROW("You should not be here. The Evaluate function is only tested for active nodes. ");
   }
 
-  const double pressure = impl_->evaluate(gap, params_.get_offset()).cast<double>();
+  const double pressure = pimpl_->evaluate(gap, params_.get_offset()).cast<double>();
 
   return pressure;
 }
@@ -102,7 +102,7 @@ double CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::evaluate_deriva
     FOUR_C_THROW("You should not be here. The Evaluate function is only tested for active nodes.");
   }
 
-  const double derivative = impl_->evaluate_derivative(gap, params_.get_offset()).cast<double>();
+  const double derivative = pimpl_->evaluate_derivative(gap, params_.get_offset()).cast<double>();
 
   return derivative;
 }
