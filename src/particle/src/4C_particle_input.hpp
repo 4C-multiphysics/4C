@@ -112,6 +112,14 @@ namespace Particle
     RandlesCorrection
   };
 
+  //! type of constraint projection
+  enum Constraint
+  {
+    NoConstraint,
+    Projection1D,
+    Projection2D
+  };
+
   //! type of boundary particle formulation
   enum BoundaryParticleFormulationType
   {

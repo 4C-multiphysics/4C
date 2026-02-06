@@ -10,6 +10,7 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_io.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_particle_algorithm_constraints.hpp"
 #include "4C_particle_algorithm_gravity.hpp"
 #include "4C_particle_algorithm_initial_field.hpp"
 #include "4C_particle_algorithm_input_generator.hpp"
@@ -110,7 +111,7 @@ void Particle::ParticleAlgorithm::setup()
   if (particlerigidbody_) particlerigidbody_->setup(particleengine_);
 
   // setup particle time integration
-  particletimint_->setup(particleengine_, particlerigidbody_);
+  particletimint_->setup(particleengine_, particlerigidbody_, create_constraints(params_));
 
   // setup particle interaction handler
   if (particleinteraction_) particleinteraction_->setup(particleengine_, particlewall_);

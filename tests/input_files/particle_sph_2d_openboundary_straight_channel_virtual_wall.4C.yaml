@@ -1,0 +1,417 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Particle"
+IO:
+  STDOUTEVERY: 100
+  VERBOSITY: "Standard"
+BINNING STRATEGY:
+  BIN_SIZE_LOWER_BOUND: 0.06
+  DOMAINBOUNDINGBOX: "-0.15 -0.06 -0.03 0.15 0.06 0.03"
+PARTICLE DYNAMIC:
+  INTERACTION: "SPH"
+  RESULTSEVERY: 10
+  RESTARTEVERY: 400
+  TIMESTEP: 1e-02
+  NUMSTEP: 500
+  MAXTIME: 50
+  PHASE_TO_DYNLOADBALFAC: "phase1 1.0 dirichletphase 1.0 neumannphase 1.0"
+  PHASE_TO_MATERIAL_ID: "phase1 1 dirichletphase 1 neumannphase 1"
+  PARTICLE_WALL_SOURCE: DiscretCondition
+PARTICLE DYNAMIC/SPH:
+  WRITE_PARTICLE_WALL_INTERACTION: true
+  KERNEL: "QuinticSpline"
+  KERNEL_SPACE_DIM: "Kernel2D"
+  INITIALPARTICLESPACING: 0.01
+  WALLFORMULATION: VirtualParticleWallFormulation
+  TRANSPORTVELOCITYFORMULATION: "StandardTransportVelocity"
+  DIRICHLETBOUNDARYTYPE: "DirichletNormalToPlane"
+  DIRICHLET_FUNCT: 1
+  DIRICHLET_OUTWARD_NORMAL: "-1.0 0.0 0.0"
+  DIRICHLET_PLANE_POINT: "-0.1 0.0 0.0"
+  NEUMANNBOUNDARYTYPE: "NeumannNormalToPlane"
+  NEUMANN_OUTWARD_NORMAL: "1.0 0.0 0.0"
+  NEUMANN_PLANE_POINT: "0.1 0.0 0.0"
+PARTICLE DYNAMIC/INITIAL AND BOUNDARY CONDITIONS:
+  CONSTRAINT: "Projection2D"
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a*0.1*(-400.0*y*y+1.0)"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 3
+    TIMES: [0, 1, 1000]
+    DESCRIPTION: ["0.5*(1.0-cos((t*pi)/1.0))", "1.0"]
+MATERIALS:
+  - MAT: 1
+    MAT_ParticleSPHFluid:
+      INITRADIUS: 0.03
+      INITDENSITY: 1
+      REFDENSFAC: 1
+      EXPONENT: 1
+      BACKGROUNDPRESSURE: 1
+      BULK_MODULUS: 1
+      DYNAMIC_VISCOSITY: 0.001
+      BULK_VISCOSITY: 0
+      ARTIFICIAL_VISCOSITY: 0
+  - MAT: 2
+    MAT_ParticleSPHBoundary:
+      INITRADIUS: 0.03
+      INITDENSITY: 1
+  - MAT: 3
+    MAT_Membrane_ElastHyper:
+      NUMMAT: 1
+      MATIDS: [31]
+      DENS: 1
+  - MAT: 31
+    ELAST_IsoNeoHooke:
+      MUE:
+        constant: 40
+RESULT DESCRIPTION:
+  - PARTICLE:
+      ID: 262
+      QUANTITY: "posx"
+      VALUE: 0.03919125720791142
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 262
+      QUANTITY: "velx"
+      VALUE: 0.098382620800287
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 262
+      QUANTITY: "density"
+      VALUE: 1.005988707956631
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 248
+      QUANTITY: "posx"
+      VALUE: 0.09752029569374851
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 248
+      QUANTITY: "velx"
+      VALUE: 0.053619612515491965
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 248
+      QUANTITY: "density"
+      VALUE: 1.00220952563486931
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 214
+      QUANTITY: "posx"
+      VALUE: -0.09900499999999864
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 214
+      QUANTITY: "velx"
+      VALUE: 0.099
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 214
+      QUANTITY: "density"
+      VALUE: 1.01631243909988811
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 51
+      QUANTITY: "posx"
+      VALUE: 0.110712326508481909
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 51
+      QUANTITY: "velx"
+      VALUE: 0.0735500954722544953
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 51
+      QUANTITY: "density"
+      VALUE: 1
+      TOLERANCE: 1e-12
+PARTICLES:
+  - "TYPE phase1 POS -0.095 -0.045 0.0"
+  - "TYPE phase1 POS -0.085 -0.045 0.0"
+  - "TYPE phase1 POS -0.075 -0.045 0.0"
+  - "TYPE phase1 POS -0.065 -0.045 0.0"
+  - "TYPE phase1 POS -0.055 -0.045 0.0"
+  - "TYPE phase1 POS -0.045 -0.045 0.0"
+  - "TYPE phase1 POS -0.035 -0.045 0.0"
+  - "TYPE phase1 POS -0.025 -0.045 0.0"
+  - "TYPE phase1 POS -0.015 -0.045 0.0"
+  - "TYPE phase1 POS -0.005 -0.045 0.0"
+  - "TYPE phase1 POS 0.005 -0.045 0.0"
+  - "TYPE phase1 POS 0.015 -0.045 0.0"
+  - "TYPE phase1 POS 0.025 -0.045 0.0"
+  - "TYPE phase1 POS 0.035 -0.045 0.0"
+  - "TYPE phase1 POS 0.045 -0.045 0.0"
+  - "TYPE phase1 POS 0.055 -0.045 0.0"
+  - "TYPE phase1 POS 0.065 -0.045 0.0"
+  - "TYPE phase1 POS 0.075 -0.045 0.0"
+  - "TYPE phase1 POS 0.085 -0.045 0.0"
+  - "TYPE phase1 POS 0.095 -0.045 0.0"
+  - "TYPE phase1 POS -0.095 -0.035 0.0"
+  - "TYPE phase1 POS -0.085 -0.035 0.0"
+  - "TYPE phase1 POS -0.075 -0.035 0.0"
+  - "TYPE phase1 POS -0.065 -0.035 0.0"
+  - "TYPE phase1 POS -0.055 -0.035 0.0"
+  - "TYPE phase1 POS -0.045 -0.035 0.0"
+  - "TYPE phase1 POS -0.035 -0.035 0.0"
+  - "TYPE phase1 POS -0.025 -0.035 0.0"
+  - "TYPE phase1 POS -0.015 -0.035 0.0"
+  - "TYPE phase1 POS -0.005 -0.035 0.0"
+  - "TYPE phase1 POS 0.005 -0.035 0.0"
+  - "TYPE phase1 POS 0.015 -0.035 0.0"
+  - "TYPE phase1 POS 0.025 -0.035 0.0"
+  - "TYPE phase1 POS 0.035 -0.035 0.0"
+  - "TYPE phase1 POS 0.045 -0.035 0.0"
+  - "TYPE phase1 POS 0.055 -0.035 0.0"
+  - "TYPE phase1 POS 0.065 -0.035 0.0"
+  - "TYPE phase1 POS 0.075 -0.035 0.0"
+  - "TYPE phase1 POS 0.085 -0.035 0.0"
+  - "TYPE phase1 POS 0.095 -0.035 0.0"
+  - "TYPE phase1 POS -0.095 -0.025 0.0"
+  - "TYPE phase1 POS -0.085 -0.025 0.0"
+  - "TYPE phase1 POS -0.075 -0.025 0.0"
+  - "TYPE phase1 POS -0.065 -0.025 0.0"
+  - "TYPE phase1 POS -0.055 -0.025 0.0"
+  - "TYPE phase1 POS -0.045 -0.025 0.0"
+  - "TYPE phase1 POS -0.035 -0.025 0.0"
+  - "TYPE phase1 POS -0.025 -0.025 0.0"
+  - "TYPE phase1 POS -0.015 -0.025 0.0"
+  - "TYPE phase1 POS -0.005 -0.025 0.0"
+  - "TYPE phase1 POS 0.005 -0.025 0.0"
+  - "TYPE phase1 POS 0.015 -0.025 0.0"
+  - "TYPE phase1 POS 0.025 -0.025 0.0"
+  - "TYPE phase1 POS 0.035 -0.025 0.0"
+  - "TYPE phase1 POS 0.045 -0.025 0.0"
+  - "TYPE phase1 POS 0.055 -0.025 0.0"
+  - "TYPE phase1 POS 0.065 -0.025 0.0"
+  - "TYPE phase1 POS 0.075 -0.025 0.0"
+  - "TYPE phase1 POS 0.085 -0.025 0.0"
+  - "TYPE phase1 POS 0.095 -0.025 0.0"
+  - "TYPE phase1 POS -0.095 -0.015 0.0"
+  - "TYPE phase1 POS -0.085 -0.015 0.0"
+  - "TYPE phase1 POS -0.075 -0.015 0.0"
+  - "TYPE phase1 POS -0.065 -0.015 0.0"
+  - "TYPE phase1 POS -0.055 -0.015 0.0"
+  - "TYPE phase1 POS -0.045 -0.015 0.0"
+  - "TYPE phase1 POS -0.035 -0.015 0.0"
+  - "TYPE phase1 POS -0.025 -0.015 0.0"
+  - "TYPE phase1 POS -0.015 -0.015 0.0"
+  - "TYPE phase1 POS -0.005 -0.015 0.0"
+  - "TYPE phase1 POS 0.005 -0.015 0.0"
+  - "TYPE phase1 POS 0.015 -0.015 0.0"
+  - "TYPE phase1 POS 0.025 -0.015 0.0"
+  - "TYPE phase1 POS 0.035 -0.015 0.0"
+  - "TYPE phase1 POS 0.045 -0.015 0.0"
+  - "TYPE phase1 POS 0.055 -0.015 0.0"
+  - "TYPE phase1 POS 0.065 -0.015 0.0"
+  - "TYPE phase1 POS 0.075 -0.015 0.0"
+  - "TYPE phase1 POS 0.085 -0.015 0.0"
+  - "TYPE phase1 POS 0.095 -0.015 0.0"
+  - "TYPE phase1 POS -0.095 -0.005 0.0"
+  - "TYPE phase1 POS -0.085 -0.005 0.0"
+  - "TYPE phase1 POS -0.075 -0.005 0.0"
+  - "TYPE phase1 POS -0.065 -0.005 0.0"
+  - "TYPE phase1 POS -0.055 -0.005 0.0"
+  - "TYPE phase1 POS -0.045 -0.005 0.0"
+  - "TYPE phase1 POS -0.035 -0.005 0.0"
+  - "TYPE phase1 POS -0.025 -0.005 0.0"
+  - "TYPE phase1 POS -0.015 -0.005 0.0"
+  - "TYPE phase1 POS -0.005 -0.005 0.0"
+  - "TYPE phase1 POS 0.005 -0.005 0.0"
+  - "TYPE phase1 POS 0.015 -0.005 0.0"
+  - "TYPE phase1 POS 0.025 -0.005 0.0"
+  - "TYPE phase1 POS 0.035 -0.005 0.0"
+  - "TYPE phase1 POS 0.045 -0.005 0.0"
+  - "TYPE phase1 POS 0.055 -0.005 0.0"
+  - "TYPE phase1 POS 0.065 -0.005 0.0"
+  - "TYPE phase1 POS 0.075 -0.005 0.0"
+  - "TYPE phase1 POS 0.085 -0.005 0.0"
+  - "TYPE phase1 POS 0.095 -0.005 0.0"
+  - "TYPE phase1 POS -0.095 0.005 0.0"
+  - "TYPE phase1 POS -0.085 0.005 0.0"
+  - "TYPE phase1 POS -0.075 0.005 0.0"
+  - "TYPE phase1 POS -0.065 0.005 0.0"
+  - "TYPE phase1 POS -0.055 0.005 0.0"
+  - "TYPE phase1 POS -0.045 0.005 0.0"
+  - "TYPE phase1 POS -0.035 0.005 0.0"
+  - "TYPE phase1 POS -0.025 0.005 0.0"
+  - "TYPE phase1 POS -0.015 0.005 0.0"
+  - "TYPE phase1 POS -0.005 0.005 0.0"
+  - "TYPE phase1 POS 0.005 0.005 0.0"
+  - "TYPE phase1 POS 0.015 0.005 0.0"
+  - "TYPE phase1 POS 0.025 0.005 0.0"
+  - "TYPE phase1 POS 0.035 0.005 0.0"
+  - "TYPE phase1 POS 0.045 0.005 0.0"
+  - "TYPE phase1 POS 0.055 0.005 0.0"
+  - "TYPE phase1 POS 0.065 0.005 0.0"
+  - "TYPE phase1 POS 0.075 0.005 0.0"
+  - "TYPE phase1 POS 0.085 0.005 0.0"
+  - "TYPE phase1 POS 0.095 0.005 0.0"
+  - "TYPE phase1 POS -0.095 0.015 0.0"
+  - "TYPE phase1 POS -0.085 0.015 0.0"
+  - "TYPE phase1 POS -0.075 0.015 0.0"
+  - "TYPE phase1 POS -0.065 0.015 0.0"
+  - "TYPE phase1 POS -0.055 0.015 0.0"
+  - "TYPE phase1 POS -0.045 0.015 0.0"
+  - "TYPE phase1 POS -0.035 0.015 0.0"
+  - "TYPE phase1 POS -0.025 0.015 0.0"
+  - "TYPE phase1 POS -0.015 0.015 0.0"
+  - "TYPE phase1 POS -0.005 0.015 0.0"
+  - "TYPE phase1 POS 0.005 0.015 0.0"
+  - "TYPE phase1 POS 0.015 0.015 0.0"
+  - "TYPE phase1 POS 0.025 0.015 0.0"
+  - "TYPE phase1 POS 0.035 0.015 0.0"
+  - "TYPE phase1 POS 0.045 0.015 0.0"
+  - "TYPE phase1 POS 0.055 0.015 0.0"
+  - "TYPE phase1 POS 0.065 0.015 0.0"
+  - "TYPE phase1 POS 0.075 0.015 0.0"
+  - "TYPE phase1 POS 0.085 0.015 0.0"
+  - "TYPE phase1 POS 0.095 0.015 0.0"
+  - "TYPE phase1 POS -0.095 0.025 0.0"
+  - "TYPE phase1 POS -0.085 0.025 0.0"
+  - "TYPE phase1 POS -0.075 0.025 0.0"
+  - "TYPE phase1 POS -0.065 0.025 0.0"
+  - "TYPE phase1 POS -0.055 0.025 0.0"
+  - "TYPE phase1 POS -0.045 0.025 0.0"
+  - "TYPE phase1 POS -0.035 0.025 0.0"
+  - "TYPE phase1 POS -0.025 0.025 0.0"
+  - "TYPE phase1 POS -0.015 0.025 0.0"
+  - "TYPE phase1 POS -0.005 0.025 0.0"
+  - "TYPE phase1 POS 0.005 0.025 0.0"
+  - "TYPE phase1 POS 0.015 0.025 0.0"
+  - "TYPE phase1 POS 0.025 0.025 0.0"
+  - "TYPE phase1 POS 0.035 0.025 0.0"
+  - "TYPE phase1 POS 0.045 0.025 0.0"
+  - "TYPE phase1 POS 0.055 0.025 0.0"
+  - "TYPE phase1 POS 0.065 0.025 0.0"
+  - "TYPE phase1 POS 0.075 0.025 0.0"
+  - "TYPE phase1 POS 0.085 0.025 0.0"
+  - "TYPE phase1 POS 0.095 0.025 0.0"
+  - "TYPE phase1 POS -0.095 0.035 0.0"
+  - "TYPE phase1 POS -0.085 0.035 0.0"
+  - "TYPE phase1 POS -0.075 0.035 0.0"
+  - "TYPE phase1 POS -0.065 0.035 0.0"
+  - "TYPE phase1 POS -0.055 0.035 0.0"
+  - "TYPE phase1 POS -0.045 0.035 0.0"
+  - "TYPE phase1 POS -0.035 0.035 0.0"
+  - "TYPE phase1 POS -0.025 0.035 0.0"
+  - "TYPE phase1 POS -0.015 0.035 0.0"
+  - "TYPE phase1 POS -0.005 0.035 0.0"
+  - "TYPE phase1 POS 0.005 0.035 0.0"
+  - "TYPE phase1 POS 0.015 0.035 0.0"
+  - "TYPE phase1 POS 0.025 0.035 0.0"
+  - "TYPE phase1 POS 0.035 0.035 0.0"
+  - "TYPE phase1 POS 0.045 0.035 0.0"
+  - "TYPE phase1 POS 0.055 0.035 0.0"
+  - "TYPE phase1 POS 0.065 0.035 0.0"
+  - "TYPE phase1 POS 0.075 0.035 0.0"
+  - "TYPE phase1 POS 0.085 0.035 0.0"
+  - "TYPE phase1 POS 0.095 0.035 0.0"
+  - "TYPE phase1 POS -0.095 0.045 0.0"
+  - "TYPE phase1 POS -0.085 0.045 0.0"
+  - "TYPE phase1 POS -0.075 0.045 0.0"
+  - "TYPE phase1 POS -0.065 0.045 0.0"
+  - "TYPE phase1 POS -0.055 0.045 0.0"
+  - "TYPE phase1 POS -0.045 0.045 0.0"
+  - "TYPE phase1 POS -0.035 0.045 0.0"
+  - "TYPE phase1 POS -0.025 0.045 0.0"
+  - "TYPE phase1 POS -0.015 0.045 0.0"
+  - "TYPE phase1 POS -0.005 0.045 0.0"
+  - "TYPE phase1 POS 0.005 0.045 0.0"
+  - "TYPE phase1 POS 0.015 0.045 0.0"
+  - "TYPE phase1 POS 0.025 0.045 0.0"
+  - "TYPE phase1 POS 0.035 0.045 0.0"
+  - "TYPE phase1 POS 0.045 0.045 0.0"
+  - "TYPE phase1 POS 0.055 0.045 0.0"
+  - "TYPE phase1 POS 0.065 0.045 0.0"
+  - "TYPE phase1 POS 0.075 0.045 0.0"
+  - "TYPE phase1 POS 0.085 0.045 0.0"
+  - "TYPE phase1 POS 0.095 0.045 0.0"
+  - "TYPE dirichletphase POS -0.105 -0.045 0.0"
+  - "TYPE dirichletphase POS -0.115 -0.045 0.0"
+  - "TYPE dirichletphase POS -0.125 -0.045 0.0"
+  - "TYPE dirichletphase POS -0.105 -0.035 0.0"
+  - "TYPE dirichletphase POS -0.115 -0.035 0.0"
+  - "TYPE dirichletphase POS -0.125 -0.035 0.0"
+  - "TYPE dirichletphase POS -0.105 -0.025 0.0"
+  - "TYPE dirichletphase POS -0.115 -0.025 0.0"
+  - "TYPE dirichletphase POS -0.125 -0.025 0.0"
+  - "TYPE dirichletphase POS -0.105 -0.015 0.0"
+  - "TYPE dirichletphase POS -0.115 -0.015 0.0"
+  - "TYPE dirichletphase POS -0.125 -0.015 0.0"
+  - "TYPE dirichletphase POS -0.105 -0.005 0.0"
+  - "TYPE dirichletphase POS -0.115 -0.005 0.0"
+  - "TYPE dirichletphase POS -0.125 -0.005 0.0"
+  - "TYPE dirichletphase POS -0.105 0.005 0.0"
+  - "TYPE dirichletphase POS -0.115 0.005 0.0"
+  - "TYPE dirichletphase POS -0.125 0.005 0.0"
+  - "TYPE dirichletphase POS -0.105 0.015 0.0"
+  - "TYPE dirichletphase POS -0.115 0.015 0.0"
+  - "TYPE dirichletphase POS -0.125 0.015 0.0"
+  - "TYPE dirichletphase POS -0.105 0.025 0.0"
+  - "TYPE dirichletphase POS -0.115 0.025 0.0"
+  - "TYPE dirichletphase POS -0.125 0.025 0.0"
+  - "TYPE dirichletphase POS -0.105 0.035 0.0"
+  - "TYPE dirichletphase POS -0.115 0.035 0.0"
+  - "TYPE dirichletphase POS -0.125 0.035 0.0"
+  - "TYPE dirichletphase POS -0.105 0.045 0.0"
+  - "TYPE dirichletphase POS -0.115 0.045 0.0"
+  - "TYPE dirichletphase POS -0.125 0.045 0.0"
+  - "TYPE neumannphase POS 0.105 -0.045 0.0"
+  - "TYPE neumannphase POS 0.115 -0.045 0.0"
+  - "TYPE neumannphase POS 0.125 -0.045 0.0"
+  - "TYPE neumannphase POS 0.105 -0.035 0.0"
+  - "TYPE neumannphase POS 0.115 -0.035 0.0"
+  - "TYPE neumannphase POS 0.125 -0.035 0.0"
+  - "TYPE neumannphase POS 0.105 -0.025 0.0"
+  - "TYPE neumannphase POS 0.115 -0.025 0.0"
+  - "TYPE neumannphase POS 0.125 -0.025 0.0"
+  - "TYPE neumannphase POS 0.105 -0.015 0.0"
+  - "TYPE neumannphase POS 0.115 -0.015 0.0"
+  - "TYPE neumannphase POS 0.125 -0.015 0.0"
+  - "TYPE neumannphase POS 0.105 -0.005 0.0"
+  - "TYPE neumannphase POS 0.115 -0.005 0.0"
+  - "TYPE neumannphase POS 0.125 -0.005 0.0"
+  - "TYPE neumannphase POS 0.105 0.005 0.0"
+  - "TYPE neumannphase POS 0.115 0.005 0.0"
+  - "TYPE neumannphase POS 0.125 0.005 0.0"
+  - "TYPE neumannphase POS 0.105 0.015 0.0"
+  - "TYPE neumannphase POS 0.115 0.015 0.0"
+  - "TYPE neumannphase POS 0.125 0.015 0.0"
+  - "TYPE neumannphase POS 0.105 0.025 0.0"
+  - "TYPE neumannphase POS 0.115 0.025 0.0"
+  - "TYPE neumannphase POS 0.125 0.025 0.0"
+  - "TYPE neumannphase POS 0.105 0.035 0.0"
+  - "TYPE neumannphase POS 0.115 0.035 0.0"
+  - "TYPE neumannphase POS 0.125 0.035 0.0"
+  - "TYPE neumannphase POS 0.105 0.045 0.0"
+  - "TYPE neumannphase POS 0.115 0.045 0.0"
+  - "TYPE neumannphase POS 0.125 0.045 0.0"
+DESIGN SURFACE PARTICLE WALL:
+  - E: 1
+    MAT: -1
+DNODE-NODE TOPOLOGY: []
+DLINE-NODE TOPOLOGY: []
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
+  - "NODE 3 DSURFACE 1"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 5 DSURFACE 1"
+  - "NODE 6 DSURFACE 1"
+  - "NODE 7 DSURFACE 1"
+  - "NODE 8 DSURFACE 1"
+DVOL-NODE TOPOLOGY: []
+NODE COORDS:
+  - "NODE 1 COORD -0.126 -0.05 0.025"
+  - "NODE 2 COORD 0.126 -0.05 0.025"
+  - "NODE 3 COORD 0.126 -0.05 -0.025"
+  - "NODE 4 COORD -0.126 -0.05 -0.025"
+  - "NODE 5 COORD -0.126 0.05 0.025"
+  - "NODE 6 COORD 0.126 0.05 0.025"
+  - "NODE 7 COORD 0.126 0.05 -0.025"
+  - "NODE 8 COORD -0.126 0.05 -0.025"
+STRUCTURE ELEMENTS:
+  - "1 MEMBRANE4 QUAD4 1 2 3 4 MAT 3 KINEM nonlinear THICK 0.0001 STRESS_STRAIN plane_stress"
+  - "2 MEMBRANE4 QUAD4 5 6 7 8 MAT 3 KINEM nonlinear THICK 0.0001 STRESS_STRAIN plane_stress"

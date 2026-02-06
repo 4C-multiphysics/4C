@@ -9,6 +9,7 @@
 
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
+#include "4C_particle_algorithm_constraints.hpp"
 #include "4C_particle_algorithm_dirichlet_bc.hpp"
 #include "4C_particle_algorithm_temperature_bc.hpp"
 #include "4C_particle_engine_container.hpp"
@@ -39,7 +40,8 @@ Particle::TimInt::~TimInt() = default;
 
 void Particle::TimInt::setup(
     const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
-    const std::shared_ptr<Particle::RigidBodyHandlerInterface> particlerigidbodyinterface)
+    const std::shared_ptr<Particle::RigidBodyHandlerInterface> particlerigidbodyinterface,
+    const std::shared_ptr<Particle::ConstraintsHandler> constraints)
 {
   // set interface to particle engine
   particleengineinterface_ = particleengineinterface;
@@ -77,6 +79,9 @@ void Particle::TimInt::setup(
   // determine set of particle types to be integrated in time
   for (auto& typeEnum : particlecontainerbundle->get_particle_types())
     if (not typesexludedfromtimeintegration.contains(typeEnum)) typestointegrate_.insert(typeEnum);
+
+  // set constraints handler
+  constraints_ = constraints;
 }
 
 void Particle::TimInt::insert_particle_states_of_particle_types(
@@ -224,7 +229,8 @@ Particle::TimIntSemiImplicitEuler::TimIntSemiImplicitEuler(const Teuchos::Parame
 
 void Particle::TimIntSemiImplicitEuler::setup(
     const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
-    const std::shared_ptr<Particle::RigidBodyHandlerInterface> particlerigidbodyinterface)
+    const std::shared_ptr<Particle::RigidBodyHandlerInterface> particlerigidbodyinterface,
+    const std::shared_ptr<Particle::ConstraintsHandler> constraints)
 {
   // call base class setup
   Particle::TimInt::setup(particleengineinterface, particlerigidbodyinterface);
@@ -247,6 +253,9 @@ void Particle::TimIntSemiImplicitEuler::setup(
           "modified velocity and acceleration states not implemented yet for semi-implicit Euler "
           "time integration scheme!");
   }
+
+  // set constraints handler
+  constraints_ = constraints;
 }
 
 void Particle::TimIntSemiImplicitEuler::pre_interaction_routine()
@@ -256,6 +265,9 @@ void Particle::TimIntSemiImplicitEuler::pre_interaction_routine()
   // get particle container bundle
   Particle::ParticleContainerBundleShrdPtr particlecontainerbundle =
       particleengineinterface_->get_particle_container_bundle();
+
+  // apply kinematic constraints
+  if (constraints_) constraints_->apply(particlecontainerbundle, typestointegrate_, time_);
 
   // iterate over particle types
   for (auto& particleType : typestointegrate_)
@@ -349,6 +361,9 @@ void Particle::TimIntVelocityVerlet::pre_interaction_routine()
   // get particle container bundle
   Particle::ParticleContainerBundleShrdPtr particlecontainerbundle =
       particleengineinterface_->get_particle_container_bundle();
+
+  // apply kinematic constraints
+  if (constraints_) constraints_->apply(particlecontainerbundle, typestointegrate_, time_);
 
   // iterate over particle types
   for (auto& particleType : typestointegrate_)

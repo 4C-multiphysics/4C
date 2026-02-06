@@ -1311,6 +1311,8 @@ four_c_test(TEST_FILE particle_sph_2d_drivencavity_densitysummation_monaghan.4C.
 four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 150)
 four_c_test(TEST_FILE particle_sph_2d_openboundary_straight_channel.4C.yaml NP 2 RETURN_AS current)
 four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 400)
+four_c_test(TEST_FILE particle_sph_2d_openboundary_straight_channel_virtual_wall.4C.yaml NP 2 RETURN_AS current)
+four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 400)
 four_c_test(TEST_FILE particle_sph_2d_pdbody_gravity.4C.yaml NP 2 RETURN_AS current)
 four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 2750)
 four_c_test(TEST_FILE particle_sph_2d_pdbody_gravity_cracking.4C.yaml NP 2 RETURN_AS current)

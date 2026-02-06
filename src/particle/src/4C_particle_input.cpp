@@ -177,7 +177,13 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
               {.description =
                       "Refer to the function ID describing the temperature boundary condition of "
                       "particle phase",
-                  .default_value = "none"})},
+                  .default_value = "none"}),
+
+          // kinematic constrain
+          parameter<Constraint>(
+              "CONSTRAINT", {.description = "type of kinematic constraint imposed",
+                                .default_value = Particle::NoConstraint}),
+      },
       {.required = false}));
 
   /*-------------------------------------------------------------------------*
