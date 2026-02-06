@@ -90,6 +90,15 @@ void tsi_dyn_drt()
   // now do the coupling setup and create the combined dofmap
   tsi->setup_system();
 
+  // write initial state if requested and not a restart
+  const bool write_initial_state =
+      Global::Problem::instance()->io_params().get<bool>("WRITE_INITIAL_STATE") and (restart < 1);
+  if (write_initial_state)
+  {
+    tsi->prepare_output();
+    tsi->output();
+  }
+
   // solve the whole tsi problem
   tsi->time_loop();
 

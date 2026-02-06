@@ -4,6 +4,7 @@
 -->
 <VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
   <Collection>
+    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="tsi_heatflux_monolithic-vtk-files/structure-00000.pvtu"/>
     <DataSet timestep="5.00000000000000e+00" group="" part="0" file="tsi_heatflux_monolithic-vtk-files/structure-00005.pvtu"/>
   </Collection>
 </VTKFile>
