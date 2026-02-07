@@ -122,10 +122,11 @@ void CONTACT::CONSTITUTIVELAW::MircoConstitutiveLawParams::set_parameters()
 double CONTACT::CONSTITUTIVELAW::MircoConstitutiveLaw::evaluate(
     const double gap, CONTACT::Node* cnode)
 {
-  if (gap + params_.get_offset() > 0.0)
-  {
-    FOUR_C_THROW("You should not be here. The Evaluate function is only tested for active nodes. ");
-  }
+  FOUR_C_ASSERT(gap + params_.get_offset() <= 0.0,
+      "The Evaluate function can only operate on active nodes. With a current gap = {} and an "
+      "ititial offset = {}, this node is inactive though.",
+      gap, params_.get_offset());
+
   if (-(gap + params_.get_offset()) < params_.get_active_gap_tolerance())
   {
     return 0.0;
@@ -150,10 +151,11 @@ double CONTACT::CONSTITUTIVELAW::MircoConstitutiveLaw::evaluate(
 double CONTACT::CONSTITUTIVELAW::MircoConstitutiveLaw::evaluate_derivative(
     const double gap, CONTACT::Node* cnode)
 {
-  if (gap + params_.get_offset() > 0.0)
-  {
-    FOUR_C_THROW("You should not be here. The Evaluate function is only tested for active nodes.");
-  }
+  FOUR_C_ASSERT(gap + params_.get_offset() <= 0.0,
+      "The Evaluate function can only operate on active nodes. With a current gap = {} and an "
+      "ititial offset = {}, this node is inactive though.",
+      gap, params_.get_offset());
+
   if (-(gap + params_.get_offset()) < params_.get_active_gap_tolerance())
   {
     return 0.0;
