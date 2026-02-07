@@ -32,8 +32,8 @@ Core::IO::InputSpec CONTACT::CONSTITUTIVELAW::valid_contact_constitutive_laws()
             parameter<double>("A", {.description = "scaling factor"}),
             parameter<double>("B", {.description = "asymptote"}),
             parameter<double>("C", {.description = "y intercept"}),
-            parameter<double>(
-                "Offset", {.description = "offset for contact to start", .default_value = 0.0}),
+            parameter<double>("Offset",
+                {.description = "Verticaloffset for contact to start", .default_value = 0.0}),
         },
         {
             .description = "Broken rational law",
@@ -47,8 +47,8 @@ Core::IO::InputSpec CONTACT::CONSTITUTIVELAW::valid_contact_constitutive_laws()
     specs.emplace_back(group("CoConstLaw_python_surrogate",
         {parameter<std::filesystem::path>("Python_Filename",
              {.description = "Path to the Python surrogate model file / script"}),
-            parameter<double>(
-                "Offset", {.description = "offset for contact to start", .default_value = 0.0})},
+            parameter<double>("Offset",
+                {.description = "Vertical offset for contact to start", .default_value = 0.0})},
         {
             .description = "Python surrogate model",
         }));
@@ -62,8 +62,8 @@ Core::IO::InputSpec CONTACT::CONSTITUTIVELAW::valid_contact_constitutive_laws()
         {
             parameter<double>("A", {.description = "scaling factor"}),
             parameter<double>("B", {.description = "power coefficient"}),
-            parameter<double>(
-                "Offset", {.description = "offset for contact to start", .default_value = 0.0}),
+            parameter<double>("Offset",
+                {.description = "Verticaloffset for contact to start", .default_value = 0.0}),
         },
         {
             .description = "Power law",
@@ -79,8 +79,8 @@ Core::IO::InputSpec CONTACT::CONSTITUTIVELAW::valid_contact_constitutive_laws()
             parameter<double>("B", {.description = "B"}),
             parameter<double>("C", {.description = "C"}),
             parameter<double>("D", {.description = "D"}),
-            parameter<double>(
-                "Offset", {.description = "offset for contact to start", .default_value = 0.0}),
+            parameter<double>("Offset",
+                {.description = "Verticaloffset for contact to start", .default_value = 0.0}),
         },
         {
             .description = "Cubic function",
@@ -94,8 +94,8 @@ Core::IO::InputSpec CONTACT::CONSTITUTIVELAW::valid_contact_constitutive_laws()
         {
             parameter<double>("A", {.description = "slope"}),
             parameter<double>("B", {.description = "y intercept"}),
-            parameter<double>(
-                "Offset", {.description = "offset for contact to start", .default_value = 0.0}),
+            parameter<double>("Offset",
+                {.description = "Verticaloffset for contact to start", .default_value = 0.0}),
         },
         {
             .description = "Linear function",
