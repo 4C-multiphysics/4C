@@ -25,12 +25,13 @@ namespace CONTACT::CONSTITUTIVELAW
   /// Type of contact constitutive law
   enum class ConstitutiveLawType
   {
-    colaw_none,            ///< undefined
-    colaw_brokenrational,  ///< brokenrational constitutive law
-    colaw_linear,          ///< linear constitutive law
-    colaw_cubic,           ///< cubic constitutive law
-    colaw_power,           ///< simple power law as constitutive law
-    colaw_mirco            ///< mirco constitutive law
+    colaw_none,              ///< Undefined
+    colaw_brokenrational,    ///< Brokenrational constitutive law
+    colaw_linear,            ///< Linear constitutive law
+    colaw_cubic,             ///< Cubic constitutive law
+    colaw_power,             ///< Power law as constitutive law
+    colaw_mirco,             ///< MIRCO constitutive law
+    colaw_python_surrogate,  ///< Python-based surrogate contact law
   };
 
   /**

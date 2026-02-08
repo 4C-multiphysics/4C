@@ -5,7 +5,13 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-four_c_auto_define_tests(MODULE contact_constitutivelaw)
+slope = 1.5
+intercept = 0.0
 
-file(GLOB_RECURSE SUPPORT_FILES CONFIGURE_DEPENDS test_files/*)
-four_c_add_support_files_to_test(${AUTO_DEFINED_TEST_NAME} SUPPORT_FILES ${SUPPORT_FILES})
+
+def evaluate(gap, offset):
+    return slope * (gap + offset) + intercept
+
+
+def evaluate_derivative(gap, offset):
+    return slope

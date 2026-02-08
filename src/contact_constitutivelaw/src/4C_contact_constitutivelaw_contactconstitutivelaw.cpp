@@ -13,6 +13,7 @@
 #include "4C_contact_constitutivelaw_cubic_contactconstitutivelaw.hpp"
 #include "4C_contact_constitutivelaw_linear_contactconstitutivelaw.hpp"
 #include "4C_contact_constitutivelaw_power_contactconstitutivelaw.hpp"
+#include "4C_contact_constitutivelaw_python_surrogate_contactconstitutivelaw.hpp"
 #include "4C_global_data.hpp"
 #include "4C_utils_enum.hpp"
 
@@ -79,7 +80,20 @@ CONTACT::CONSTITUTIVELAW::ConstitutiveLaw::factory(const int id)
 #else
       FOUR_C_THROW(
           "You are trying to use MIRCO contact consitutive law with FOUR_C_WITH_MIRCO flag turned "
-          "off. Please enable this flag and configure & build 4C again");
+          "off. Please enable this flag and configure & build 4C again.");
+#endif
+    }
+    case CONTACT::CONSTITUTIVELAW::ConstitutiveLawType::colaw_python_surrogate:
+    {
+#ifdef FOUR_C_WITH_PYBIND11
+      CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params(
+          coconstlawdata.group("CoConstLaw_python_surrogate"));
+      return std::make_unique<CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw>(params);
+#else
+      FOUR_C_THROW(
+          "You are trying to use a contact consitutive law via Python, however with "
+          "FOUR_C_WITH_PYBIND11 flag turned off. Please enable this flag and configure & build 4C "
+          "again.");
 #endif
     }
     case CONTACT::CONSTITUTIVELAW::ConstitutiveLawType::colaw_none:
