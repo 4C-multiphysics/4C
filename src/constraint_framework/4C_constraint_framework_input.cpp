@@ -110,8 +110,9 @@ void Constraints::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       Core::Conditions::PointLinearCoupledEquation, false, Core::Conditions::geometry_type_point);
 
   linear_ce.add_component(parameter<int>("EQUATION", {.description = "EQUATION"}));
-  linear_ce.add_component(deprecated_selection<std::string>("ADD", {"dispx", "dispy", "undefined"},
-      {.description = "degrees of freedom", .default_value = "undefined"}));
+  linear_ce.add_component(
+      deprecated_selection<std::string>("ADD", {"dispx", "dispy", "dispz", "undefined"},
+          {.description = "degrees of freedom", .default_value = "undefined"}));
   linear_ce.add_component(parameter<double>("COEFFICIENT"));
 
   condlist.push_back(linear_ce);
