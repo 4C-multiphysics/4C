@@ -147,6 +147,9 @@ namespace Particle
     //! write particle-wall interaction output
     const bool writeparticlewallinteraction_;
 
+    //! reduced dimension scale factor
+    const double reduced_dimension_scale_factor_;
+
     //! set of all fluid particle types
     std::set<Particle::TypeEnum> allfluidtypes_;
 

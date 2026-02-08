@@ -46,6 +46,7 @@ Particle::SPHMomentum::SPHMomentum(const Teuchos::ParameterList& params)
           Teuchos::getIntegralValue<Particle::TransportVelocityFormulation>(
               params_sph_, "TRANSPORTVELOCITYFORMULATION")),
       writeparticlewallinteraction_(params_sph_.get<bool>("WRITE_PARTICLE_WALL_INTERACTION")),
+      reduced_dimension_scale_factor_(params_sph_.get<double>("REDUCED_DIMENSION_SCALE_FACTOR")),
       allfluidtypes_(
           {Particle::Phase1, Particle::Phase2, Particle::DirichletPhase, Particle::NeumannPhase}),
       intfluidtypes_({Particle::Phase1, Particle::Phase2, Particle::NeumannPhase}),
@@ -852,7 +853,8 @@ void Particle::SPHMomentum::momentum_equation_particle_wall_contribution() const
       std::vector<double> nodal_force(numnodes * 3);
       for (int node = 0; node < numnodes; ++node)
         for (int dim = 0; dim < 3; ++dim)
-          nodal_force[node * 3 + dim] = funct[node] * wallcontactforce[dim];
+          nodal_force[node * 3 + dim] =
+              funct[node] * wallcontactforce[dim] * reduced_dimension_scale_factor_;
 
       // assemble nodal forces
       walldatastate->get_force_col()->sum_into_global_values(

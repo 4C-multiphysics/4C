@@ -88,12 +88,22 @@ void Particle::SPHVirtualWallParticle::init_relative_positions_of_virtual_partic
   // number of particles per direction
   const int numparticleperdir = std::round(maxinteractiondistance / initialparticlespacing);
 
+  // get the kernel dimensionality
+  int kernel_dim = 0;
+  kernel_->kernel_space_dimension(kernel_dim);
+
+  const int s_start = (kernel_dim > 1) ? (-numparticleperdir + 1) : 0;
+  const int s_end = (kernel_dim > 1) ? numparticleperdir : 1;
+
+  const int t_start = (kernel_dim > 2) ? (-numparticleperdir + 1) : 0;
+  const int t_end = (kernel_dim > 2) ? numparticleperdir : 1;
+
   // iterate over virtual particles
   for (int r = 0; r < numparticleperdir; ++r)
   {
-    for (int s = (-numparticleperdir + 1); s < numparticleperdir; ++s)
+    for (int s = s_start; s < s_end; ++s)
     {
-      for (int t = (-numparticleperdir + 1); t < numparticleperdir; ++t)
+      for (int t = t_start; t < t_end; ++t)
       {
         // relative position of current virtual particle
         std::vector<double> currvirtualparticle(3);

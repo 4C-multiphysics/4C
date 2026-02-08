@@ -243,6 +243,13 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
               {.description = "type of transport velocity formulation",
                   .default_value = Particle::NoTransportVelocity}),
 
+          // reduced dimension scale factor for computing SPH forces
+          parameter<double>("REDUCED_DIMENSION_SCALE_FACTOR",
+              {.description =
+                      "scaling factor for the wall contact force to consider reduced "
+                      "dimensional modeling from 1D or 2D particle field to 3D structural field",
+                  .default_value = 1.0}),
+
           // type of temperature evaluation scheme
           parameter<TemperatureEvaluationScheme>(
               "TEMPERATUREEVALUATION", {.description = "type of temperature evaluation scheme",
