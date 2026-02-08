@@ -15,6 +15,10 @@
 
 #include <Teuchos_ParameterList.hpp>
 
+#include <map>
+#include <string>
+#include <vector>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::FE
@@ -94,6 +98,17 @@ namespace Core::IO
      */
     [[nodiscard]] const MeshInput::Mesh<3>* get_filtered_external_mesh_on_rank_zero(
         const Core::FE::Discretization& dis) const;
+
+    /**
+     * @brief Get the node sets of the external mesh read by this mesh reader.
+     *
+     * @param node_sets map of node set IDs to vector of node IDs
+     * @param node_sets_names map of node set names to the node_set_ids associated with that name
+     */
+    void get_node_sets(std::map<int, std::vector<int>>& node_sets,
+        std::map<std::string, std::vector<int>>& node_sets_names) const;
+
+    void get_element_block_nodes(std::map<int, std::vector<int>>& element_block_nodes) const;
 
    private:
     /// Communicator for this mesh reader.
