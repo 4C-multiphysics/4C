@@ -37,8 +37,10 @@ CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams::
 /*----------------------------------------------------------------------*/
 /*  PIMPL implementation                                                */
 /*----------------------------------------------------------------------*/
-struct CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::Impl
+class __attribute__((
+    visibility("hidden"))) CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::Impl
 {
+ public:
   pybind11::object evaluate;
   pybind11::object evaluate_derivative;
 
