@@ -102,11 +102,13 @@ void Mat::PlasticLinElast::pack(Core::Communication::PackBuffer& data) const
     add_to_pack(data, strainpllast_.at(var));
     add_to_pack(data, backstresslast_.at(var));
     add_to_pack(data, strainbarpllast_.at(var));
+    add_to_pack(data, betabarlast_.at(var));
 
     // insert current iteration states
     add_to_pack(data, strainplcurr_.at(var));
     add_to_pack(data, backstresscurr_.at(var));
     add_to_pack(data, strainbarplcurr_.at(var));
+    add_to_pack(data, betabarcurr_.at(var));
   }
 
   add_to_pack(data, plastic_step_);
@@ -158,6 +160,9 @@ void Mat::PlasticLinElast::unpack(Core::Communication::UnpackBuffer& buffer)
   strainbarpllast_ = std::vector<double>();
   strainbarplcurr_ = std::vector<double>();
 
+  betabarlast_ = std::vector<double>();
+  betabarcurr_ = std::vector<double>();
+
   for (int var = 0; var < histsize; ++var)
   {
     Core::LinAlg::SymmetricTensor<double, 3, 3> tmp_tensor{};
@@ -170,6 +175,8 @@ void Mat::PlasticLinElast::unpack(Core::Communication::UnpackBuffer& buffer)
     backstresslast_.push_back(tmp_tensor);
     extract_from_pack(buffer, tmp_scalar);
     strainbarpllast_.push_back(tmp_scalar);
+    extract_from_pack(buffer, tmp_scalar);
+    betabarlast_.push_back(tmp_scalar);
 
     // current iteration states are unpacked
     extract_from_pack(buffer, tmp_tensor);
@@ -178,6 +185,8 @@ void Mat::PlasticLinElast::unpack(Core::Communication::UnpackBuffer& buffer)
     backstresscurr_.push_back(tmp_tensor);
     extract_from_pack(buffer, tmp_scalar);
     strainbarplcurr_.push_back(tmp_scalar);
+    extract_from_pack(buffer, tmp_scalar);
+    betabarcurr_.push_back(tmp_scalar);
   }
 
   extract_from_pack(buffer, plastic_step_);
@@ -209,6 +218,9 @@ void Mat::PlasticLinElast::setup(int numgp, const Discret::Elements::Fibers& fib
   strainbarpllast_.resize(numgp);
   strainbarplcurr_.resize(numgp);
 
+  betabarlast_.resize(numgp);
+  betabarcurr_.resize(numgp);
+
   for (int i = 0; i < numgp; i++)
   {
     strainpllast_.at(i).fill(0.0);
@@ -219,6 +231,9 @@ void Mat::PlasticLinElast::setup(int numgp, const Discret::Elements::Fibers& fib
 
     strainbarpllast_.at(i) = 0.0;
     strainbarplcurr_.at(i) = 0.0;
+
+    betabarlast_.at(i) = 0.0;
+    betabarcurr_.at(i) = 0.0;
   }
 
   isinit_ = true;
@@ -237,6 +252,7 @@ void Mat::PlasticLinElast::update()
   backstresslast_ = backstresscurr_;
 
   strainbarpllast_ = strainbarplcurr_;
+  betabarlast_ = betabarcurr_;
 
   const int histsize = strainpllast_.size();
 
@@ -246,6 +262,7 @@ void Mat::PlasticLinElast::update()
     backstresscurr_.at(i).fill(0.0);
 
     strainbarplcurr_.at(i) = 0.0;
+    betabarcurr_.at(i) = 0.0;
   }
 
   return;
@@ -301,11 +318,9 @@ void Mat::PlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* de
   strainplcurr_.at(gp) = strainpllast_.at(gp);
 
   // get old equivalent plastic strain only in case of plastic step
-  double strainbar_p = 0.0;
-  // accumulated or equivalent plastic strain (scalar-valued)
   // astrain^{p,trial}_{n+1} = astrain^p_n
-  strainbar_p = (strainbarpllast_.at(gp));
-  if (strainbarpllast_.at(gp) < 0.0)
+  double strainbar_p = (strainbarpllast_.at(gp));
+  if (strainbar_p < 0.0)
     FOUR_C_THROW("accumulated plastic strain has to be equal to or greater than zero!");
 
   // ----------------------------------------------- elastic trial strain
@@ -484,6 +499,7 @@ void Mat::PlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* de
     // sqrt(2/3) N =  2/3 . ( sqrt(3/2) eta / etanorm)
     const double facbeta = 2.0 / 3.0 * (betabar - betabarold);
     backstresscurr_.at(gp) = backstresslast_.at(gp) + facbeta * N;
+    betabarcurr_.at(gp) = betabar;
 
     // deviatoric stress
     // s = s_{n+1}^{trial} - 2 . G . Delta gamma . N
@@ -542,6 +558,7 @@ void Mat::PlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* de
     strainplcurr_.at(gp) = strainpllast_.at(gp);
     strainbarplcurr_.at(gp) = strainbarpllast_.at(gp);
     backstresscurr_.at(gp) = backstresslast_.at(gp);
+    betabarcurr_.at(gp) = betabarlast_.at(gp);
 
 
   }  // elastic step
@@ -783,6 +800,62 @@ bool Mat::PlasticLinElast::vis_data(
   }
   return true;
 }  // vis_data()
+
+
+/*---------------------------------------------------------------------*
+ | return names of visualization data for direct VTK output            |
+ *---------------------------------------------------------------------*/
+void Mat::PlasticLinElast::register_output_data_names(
+    std::unordered_map<std::string, int>& names_and_size) const
+{
+  names_and_size["accumulated_plastic_strain"] = 1;
+  names_and_size["active_plasticity"] = 1;
+  names_and_size["back_stress_magnitude"] = 1;
+  names_and_size["back_stress"] = 6;
+}
+
+
+bool Mat::PlasticLinElast::evaluate_output_data(
+    const std::string& name, Core::LinAlg::SerialDenseMatrix& data) const
+{
+  if (name == "accumulated_plastic_strain")
+  {
+    for (std::size_t gp = 0; gp < strainbarplcurr_.size(); ++gp)
+    {
+      data(gp, 0) = strainbarplcurr_.at(int(gp));
+    }
+    return true;
+  }
+  if (name == "back_stress_magnitude")
+  {
+    for (std::size_t gp = 0; gp < betabarcurr_.size(); ++gp)
+    {
+      data(gp, 0) = betabarcurr_.at(int(gp));
+    }
+    return true;
+  }
+  if (name == "back_stress")
+  {
+    for (std::size_t gp = 0; gp < backstresscurr_.size(); ++gp)
+    {
+      const double* values = backstresscurr_.at(gp).data();
+      for (std::size_t i = 0; i < 6; ++i)
+      {
+        data(gp, i) = values[i];
+      }
+    }
+    return true;
+  }
+  if (name == "active_plasticity")
+  {
+    for (std::size_t gp = 0; gp < strainbarplcurr_.size(); ++gp)
+    {
+      data(gp, 0) = (strainbarplcurr_.at(int(gp)) > strainbarpllast_.at(int(gp))) ? 1 : 0;
+    }
+    return true;
+  }
+  return false;
+}
 
 
 /*----------------------------------------------------------------------*/

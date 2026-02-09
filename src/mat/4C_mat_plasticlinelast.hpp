@@ -208,6 +208,14 @@ namespace Mat
     bool vis_data(
         const std::string& name, std::vector<double>& data, int numgp, int eleID) const override;
 
+    //! return names of visualization data available for direct VTK output
+    void register_output_data_names(
+        std::unordered_map<std::string, int>& names_and_size) const override;
+
+    //! return visualization data for direct VTK output
+    bool evaluate_output_data(
+        const std::string& name, Core::LinAlg::SerialDenseMatrix& data) const override;
+
     //! finite difference check for debugging purposes
     void fd_check(Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,  // updated stress sigma_n+1
         Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>&
@@ -237,6 +245,10 @@ namespace Mat
     std::vector<double> strainbarpllast_;  //!< \f${\varepsilon}^p_{n}\f$
     //! current accumulated plastic strain at t_n+1
     std::vector<double> strainbarplcurr_;  //!< \f${\varepsilon}^p_{n+1}\f$
+    //! old back stress magnitude at t_n
+    std::vector<double> betabarlast_;  //!< \f${\varepsilon}^p_{n}\f$
+    //! current back stress magnitude at t_n+1
+    std::vector<double> betabarcurr_;  //!< \f${\varepsilon}^p_{n+1}\f$
     //! old back stress at t_n
     std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>
         backstresslast_;  //!< \f${\beta}_{n}\f$

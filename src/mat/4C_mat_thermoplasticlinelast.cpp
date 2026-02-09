@@ -423,7 +423,6 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
 
   // initialise the isotropic work hardening von Mises stress
   // sigma_yiso:= kappa = kappa(strainbar^p)
-  double sigma_yiso = 0.0;
 
   //---------------------------------------------------------------------------
   // check plastic admissibility, Phi<=0 is admissble
@@ -435,6 +434,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
   // sigma_y = sigma_y0 + kappa(strainbar^p)
   // kappa == sigma_yiso, kappa is already used as material parameter
   double sigma_y = 0.0;
+  double sigma_yiso = 0.0;
 
   bool is_isotropic_hard_linear = ((params_->sigma_y_).size() == 0);
   // check if constant Hiso is given in input file
@@ -451,10 +451,10 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
   {
     // calculate the isotropic hardening modulus with old plastic strains
     // Hiso = dsigma_y / d astrain^p
-    Hiso = get_iso_hard_at_strainbarnp(strainbar_p);
-
-    // calculate the uniaxial yield stress out of samples
-    sigma_y = get_sigma_y_at_strainbarnp(strainbar_p);
+    auto isohard_params = get_iso_hard_at_strainbarnp(strainbar_p, sigma_y0);
+    Hiso = isohard_params.hardening;
+    sigma_y = isohard_params.sigma_y;
+    sigma_yiso = sigma_y - sigma_y0;
   }
 
   // calculate the yield function with Dgamma = 0
@@ -588,11 +588,12 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
       else  // constant_Hiso == false
       {
         // Hiso = dsigma_y / d astrain^p_{n+1}
-        Hiso = get_iso_hard_at_strainbarnp(strainbar_p);
         // sigma_y = sigma_y(astrain^p_{n+1})
-        sigma_y = get_sigma_y_at_strainbarnp(strainbar_p);
+        auto isohard_params = get_iso_hard_at_strainbarnp(strainbar_p, sigma_y0);
+        Hiso = isohard_params.hardening;
+        sigma_y = isohard_params.sigma_y;
+        sigma_yiso = sigma_y - sigma_y0;
       }
-
 
     }  // end of local Newton iteration
     // --------------------------------------------------- plastic update
@@ -1172,12 +1173,14 @@ double Mat::ThermoPlasticLinElast::st_modulus() const
  | yield stress, i.e. isotropic hardening modulus at current            |
  | accumulated plastic strain                                           |
  *----------------------------------------------------------------------*/
-double Mat::ThermoPlasticLinElast::get_iso_hard_at_strainbarnp(
-    const double strainbar_p  // current accumulated strain
+Mat::ThermoPlasticLinElast::IsoHardeningParams
+Mat::ThermoPlasticLinElast::get_iso_hard_at_strainbarnp(
+    const double strainbar_p,  // current accumulated strain
+    const double sigma_y0      // initial yield stress
 ) const
 {
   // Hiso = d sigma_y / d astrain^p_{n+1}
-  double Hiso = 0.0;
+  Mat::ThermoPlasticLinElast::IsoHardeningParams hard_params;
 
   // extract vectors of samples
   const std::vector<double> strainbar_p_ref = params_->strainbar_p_ref_;
@@ -1185,113 +1188,54 @@ double Mat::ThermoPlasticLinElast::get_iso_hard_at_strainbarnp(
   // how many samples are available
   double samplenumber = sigma_y_ref.size();
 
+  double strainbar_p_diff = 0.0;
+  double stress_ref1 = 0.0;
+  double strainbar_p_ref1 = 0.0;
+  hard_params.sigma_y =
+      sigma_y_ref[samplenumber - 1];  // default value for extrapolation beyond last sample
+
   // loop over all samples
   for (int i = 0; i < samplenumber; ++i)
   {
     // astrain^{p}_{n+1} > astrain^{p}_ref^[i]
-    if (strainbar_p >= strainbar_p_ref[i])
+    if (strainbar_p < strainbar_p_ref[i])
     {
-      // astrain^{p}_{n+1} > astrain^{p}_ref^[i] --> sigma_y = sigma_ref[i]
-      // --> Hiso = d sigma_y / d astrain^{p}_{n+1} = 0
-      Hiso = 0.0;
-      continue;
-    }
-
-    // (strainbar_p < strainbar_p_ref[i])
-    else
-    {
-      // load is still elastic: astrain^{p}_{n+1} < astrain^{p}_ref^{i=0}
       if (i == 0)
       {
-        // yield boundary is the initial yield stress (sigma_y^{i=0})
-        Hiso = 0.0;
-        continue;
+        // if the current plastic strain is smaller than the first stored value,
+        // the hardening is calculated between the pair (strainbar_p_ref[0], sigma_y_ref[0])
+        // and the initial yield stress sigma_y0 (at zero plastic strain).
+        strainbar_p_ref1 = 0.0;
+        stress_ref1 = sigma_y0;
       }
-      // astrain^{p,i-1}_ref < astrain^{p}_{n+1} < astrain^{p,i}_ref
+      else
+      {
+        strainbar_p_ref1 = strainbar_p_ref[i - 1];
+        stress_ref1 = sigma_y_ref[i - 1];
+      }
+
+      strainbar_p_diff = strainbar_p_ref[i] - strainbar_p_ref1;
+      if (strainbar_p_diff == 0.0)
+      {
+        hard_params.hardening = 0.0;
+        hard_params.sigma_y = stress_ref1;
+      }
       else
       {
         //         sigma_y_n - sigma_y^{i-1}
         // Hiso =  ---------------------------------------
         //        astrain^{p,i}_ref - astrain^{p,i-1}_ref
-        Hiso =
-            (sigma_y_ref[i] - sigma_y_ref[i - 1]) / (strainbar_p_ref[i] - strainbar_p_ref[i - 1]);
-        continue;
+        hard_params.hardening = (sigma_y_ref[i] - stress_ref1) / strainbar_p_diff;
+        hard_params.sigma_y =
+            stress_ref1 + hard_params.hardening * (strainbar_p - strainbar_p_ref1);
       }
+      break;
     }  // load is plastic, hardening can occur
   }  // loop over samples
 
-  // return current isotropic hardening modulus
-  return Hiso;
-
+  // return current isotropic hardening modulus and current yield stress
+  return hard_params;
 }  // GetIsoHardeningModulus()
-
-
-/*----------------------------------------------------------------------*
- | compute current yield stress sigma_y(astrain^p)           dano 02/14 |
- | calculate yield stress from (sigma_y-astrain^p)-samples              |
- *----------------------------------------------------------------------*/
-double Mat::ThermoPlasticLinElast::get_sigma_y_at_strainbarnp(
-    const double strainbar_p  // current accumulated strain, in case of dependent hardening
-                              // if damage!=0: isotropic hardening internal variable
-) const
-{
-  // extract vectors of samples
-  const std::vector<double> sigma_y_ref = params_->sigma_y_;
-  // how many samples are available
-  double samplenumber = sigma_y_ref.size();
-  // return the yield stress
-  double sigma_y_interpol = 0.0;
-
-  // uniaxial yield stress given by piecewise linear curve
-  if (samplenumber > 0)
-  {
-    // get vector astrain^p_ref
-    const std::vector<double> strainbar_p_ref = params_->strainbar_p_ref_;
-    if (sigma_y_ref.size() != strainbar_p_ref.size())
-      FOUR_C_THROW("Samples have to fit to each other!");
-
-    // loop over samples
-    for (int i = 0; i < samplenumber; ++i)
-    {
-      // astrain^{p}_{n+1} > astrain^{p}_ref^[i]
-      if (strainbar_p >= strainbar_p_ref[i])
-      {
-        sigma_y_interpol = sigma_y_ref[i];
-      }
-      // current strains are <= strainbar_p_ref_max
-      else  // astrain^{p}_{n+1} < astrain^{p}_ref^[i]
-      {
-        // astrain^{p}_{n+1} < astrain^{p}_ref^{i=0}, i.e. load is still elastic
-        if (i == 0)
-        {
-          // yield boundary is the initial yield stress (sigma_y^{i=0})
-          sigma_y_interpol = sigma_y_ref[0];
-          continue;
-        }
-        // astrain^{p}_ref^{i=0} < astrain^{p}_{n+1} < astrain^{p}_ref^i
-        else
-        {
-          // astrain^{p,i-1}_ref < astrain^{p}_{n+1} < astrain^{p,i}_ref
-          if (strainbar_p < strainbar_p_ref[i])
-          {
-            // sigma_y_{n+1} = sigma_y^i +
-            //                                        sigma_y^i - sigma_y^{i-1}
-            // + (astrain^p_{n+1} - astrain^{p,i-1}) ---------------------------------------
-            //                                      astrain^{p,i}_ref - astrain^{p,i-1}_ref
-            sigma_y_interpol =
-                sigma_y_ref[i - 1] + (strainbar_p - strainbar_p_ref[i - 1]) *
-                                         (sigma_y_ref[i] - sigma_y_ref[i - 1]) /
-                                         (strainbar_p_ref[i] - strainbar_p_ref[i - 1]);
-          }  // current strains between strain^{i-1} and strain^i
-        }  // plastic regime
-      }
-    }  // loop over all samples
-  }  // samplenumber > 1
-
-  // return current yield stress
-  return sigma_y_interpol;
-
-}  // get_sigma_y_at_strainbarnp()
 
 
 /*---------------------------------------------------------------------*
@@ -1319,6 +1263,63 @@ bool Mat::ThermoPlasticLinElast::vis_data(
   }
   return true;
 }  // vis_data()
+
+
+/*---------------------------------------------------------------------*
+ | return names of visualization data for direct VTK output            |
+ *---------------------------------------------------------------------*/
+void Mat::ThermoPlasticLinElast::register_output_data_names(
+    std::unordered_map<std::string, int>& names_and_size) const
+{
+  names_and_size["accumulated_plastic_strain"] = 1;
+  names_and_size["active_plasticity"] = 1;
+  names_and_size["back_stress"] = 6;
+  names_and_size["dissipation"] = 1;
+}
+
+
+bool Mat::ThermoPlasticLinElast::evaluate_output_data(
+    const std::string& name, Core::LinAlg::SerialDenseMatrix& data) const
+{
+  if (name == "accumulated_plastic_strain")
+  {
+    for (std::size_t gp = 0; gp < strainbarplcurr_.size(); ++gp)
+    {
+      data(gp, 0) = strainbarplcurr_.at(int(gp));
+    }
+    return true;
+  }
+  if (name == "back_stress")
+  {
+    for (std::size_t gp = 0; gp < backstresscurr_.size(); ++gp)
+    {
+      const double* values = backstresscurr_.at(gp).data();
+      for (std::size_t i = 0; i < 6; ++i)
+      {
+        data(gp, i) = values[i];
+      }
+    }
+    return true;
+  }
+  if (name == "active_plasticity")
+  {
+    for (std::size_t gp = 0; gp < strainbarplcurr_.size(); ++gp)
+    {
+      data(gp, 0) = (strainbarplcurr_.at(int(gp)) > strainbarpllast_.at(int(gp))) ? 1 : 0;
+    }
+    return true;
+  }
+  if (name == "dissipation")
+  {
+    for (std::size_t gp = 0; gp < dmech_.size(); ++gp)
+    {
+      data(gp, 0) = dmech_.at(int(gp));
+    }
+    return true;
+  }
+
+  return false;
+}
 
 /*----------------------------------------------------------------------*/
 
