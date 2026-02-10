@@ -24,7 +24,12 @@
       <Parameter name="tentative: calculate qr" type="bool" value="true"/>
       <Parameter name="tentative: build coarse coordinates" type="bool" value="false"/>
     </ParameterList>
-    <ParameterList name="mySAPFact1"><Parameter name="factory" type="string" value="SaPFactory"/> <Parameter name="A" type="string" value="mySubBlockAFactory1"/> <Parameter name="P" type="string" value="myTentativePFact1"/> <Parameter name="sa: damping factor" type="double" value="1.33333"/>"</ParameterList>
+    <ParameterList name="mySAPFact1">
+      <Parameter name="factory" type="string" value="SaPFactory"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory1"/>
+      <Parameter name="P" type="string" value="myTentativePFact1"/>
+      <Parameter name="sa: damping factor" type="double" value="1.33333"/>
+    </ParameterList>
     <ParameterList name="myNspFact1">
       <Parameter name="factory" type="string" value="NullspaceFactory"/>
       <Parameter name="Fine level nullspace" type="string" value="Nullspace1"/>
@@ -36,28 +41,23 @@
       <Parameter name="block row" type="int" value="1"/>
       <Parameter name="block col" type="int" value="1"/>
     </ParameterList>
-    <!-- Submatrix A_{01}) for InterfaceAggregationFactory -->
-    <ParameterList name="mySubBlockAFactoryOffDiagonal">
-      <Parameter name="factory" type="string" value="SubBlockAFactory"/>
-      <Parameter name="block row" type="int" value="0"/>
-      <Parameter name="block col" type="int" value="1"/>
-    </ParameterList>
     <ParameterList name="myCoarseMap2">
       <Parameter name="factory" type="string" value="BlockedCoarseMapFactory"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap1"/>
     </ParameterList>
-    <ParameterList name="myInterfaceMapTransFact">
-      <Parameter name="factory" type="string" value="MapTransferFactory"/>
-      <Parameter name="map: factory" type="string" value="Primal interface DOF map"/>
-      <Parameter name="map: name" type="string" value="Primal interface DOF map"/>
-      <Parameter name="P" type="string" value="myTentativePFact1"/>
-      <Parameter name="nullspace vectors: limit to" type="string" value="translations"/>
+    <ParameterList name="myInterfaceMappingFact">
+      <Parameter name="factory" type="string" value="InterfaceMappingTransferFactory"/>
     </ParameterList>
     <ParameterList name="myInterfaceAggs2">
       <Parameter name="factory" type="string" value="InterfaceAggregationFactory"/>
-      <Parameter name="A" type="string" value="mySubBlockAFactoryOffDiagonal"/>
       <Parameter name="Aggregates" type="string" value="myAggFact1"/>
-      <Parameter name="Dual/primal mapping strategy" type="string" value="dof-based"/>
-      <Parameter name="Primal interface DOF map" type="string" value="myInterfaceMapTransFact"/>
+      <Parameter name="number of DOFs per dual node" type="int" value="3"/>
+      <Parameter name="Dual/primal mapping strategy" type="string" value="node-based"/>
+      <Parameter name="DualNodeID2PrimalNodeID" type="string" value="myInterfaceMappingFact"/>
+    </ParameterList>
+    <ParameterList name="myInterfaceMappingFactDependencies">
+      <Parameter name="dependency for" type="string" value="myInterfaceMappingFact"/>
+      <Parameter name="CoarseDualNodeID2PrimalNodeID" type="string" value="myInterfaceAggs2"/>
     </ParameterList>
     <ParameterList name="myTentativePFact2">
       <Parameter name="factory" type="string" value="TentativePFactory"/>
@@ -72,12 +72,6 @@
       <Parameter name="factory" type="string" value="NullspaceFactory"/>
       <Parameter name="Fine level nullspace" type="string" value="Nullspace2"/>
       <Parameter name="Nullspace2" type="string" value="myTentativePFact2"/>
-    </ParameterList>
-    <ParameterList name="myCoarseMap2Dependencies">
-      <Parameter name="dependency for" type="string" value="myCoarseMap2"/>
-      <Parameter name="Aggregates" type="string" value="myInterfaceAggs2"/>
-      <Parameter name="CoarseMap" type="string" value="myCoarseMap1"/>
-      <Parameter name="Nullspace" type="string" value="myNspFact2"/>
     </ParameterList>
     <!-- FACTORY MANAGERS -->
     <!-- Multigrid setup for primal block (A_{00}) -->
@@ -99,7 +93,6 @@
       <Parameter name="Aggregates" type="string" value="myInterfaceAggs2"/>
       <Parameter name="Nullspace" type="string" value="myNspFact2"/>
       <Parameter name="CoarseMap" type="string" value="myCoarseMap2"/>
-      <Parameter name="Primal interface DOF map" type="string" value="myInterfaceMapTransFact"/>
     </ParameterList>
     <!-- BLOCK TRANSFER operators -->
     <!-- define block prolongation operator using above blocks -->
@@ -123,6 +116,9 @@
       <Parameter name="factory" type="string" value="BlockedRAPFactory"/>
       <Parameter name="P" type="string" value="myBlockedPFact"/>
       <Parameter name="R" type="string" value="myBlockedRFact"/>
+      <ParameterList name="TransferFactories">
+        <Parameter name="DoTransferSpecialMappingForAggregates" type="string" value="myInterfaceMappingFact"/>
+      </ParameterList>
     </ParameterList>
     <!-- BLOCK SMOOTHERS -->
     <ParameterList name="mySmooFact1">
@@ -137,7 +133,6 @@
     <!-- Build Schur Complement factory (for being used in SIMPLE type block smoother)-->
     <ParameterList name="mySchurCompFact">
       <Parameter name="factory" type="string" value="SchurComplementFactory"/>
-      <!-- omega should be the same as the Simple damping factor -->
       <Parameter name="omega" type="double" value="0.8"/>
       <Parameter name="lumping" type="bool" value="false"/>
     </ParameterList>
@@ -153,10 +148,9 @@
     </ParameterList>
     <!-- Use SIMPLE: -->
     <ParameterList name="myBlockSmoother">
-      <Parameter name="factory" type="string" value="SimpleSmoother"/>
+      <Parameter name="factory" type="string" value="UzawaSmoother"/>
       <Parameter name="Sweeps" type="int" value="3"/>
       <Parameter name="Damping factor" type="double" value="0.8"/>
-      <Parameter name="UseSIMPLEC" type="bool" value="false"/>
       <!-- factory manager for block 1 -->
       <ParameterList name="block1">
         <Parameter name="A" type="string" value="mySubBlockAFactory1"/>
@@ -182,7 +176,7 @@
     <ParameterList name="AllLevel">
       <Parameter name="startLevel" type="int" value="0"/>
       <Parameter name="Smoother" type="string" value="myBlockSmoother"/>
-      <Parameter name="CoarseSolver" type="string" value="myBlockDirectSolver"/>
+      <Parameter name="CoarseSolver" type="string" value="myBlockSmoother"/>
       <Parameter name="P" type="string" value="myBlockedPFact"/>
       <Parameter name="R" type="string" value="myBlockedRFact"/>
       <Parameter name="A" type="string" value="myBlockedRAPFact"/>

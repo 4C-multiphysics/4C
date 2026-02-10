@@ -41,12 +41,6 @@
       <Parameter name="block row" type="int" value="1"/>
       <Parameter name="block col" type="int" value="1"/>
     </ParameterList>
-    <!-- for submatrix A_{01}) -->
-    <ParameterList name="mySubBlockAFactoryOffDiagonal">
-      <Parameter name="factory" type="string" value="SubBlockAFactory"/>
-      <Parameter name="block row" type="int" value="0"/>
-      <Parameter name="block col" type="int" value="1"/>
-    </ParameterList>
     <ParameterList name="myCoarseMap2">
       <Parameter name="factory" type="string" value="BlockedCoarseMapFactory"/>
       <Parameter name="CoarseMap" type="string" value="myCoarseMap1"/>
