@@ -24,8 +24,7 @@ FOUR_C_NAMESPACE_OPEN
 BeamInteraction::BeamInteractionParams::BeamInteractionParams()
     : isinit_(false),
       issetup_(false),
-      rep_strategy_(BeamInteraction::RepartitionStrategy::repstr_adaptive),
-      search_strategy_(BeamInteraction::SearchStrategy::bruteforce_with_binning)
+      rep_strategy_(BeamInteraction::RepartitionStrategy::repstr_adaptive)
 {
   // empty constructor
 }
@@ -41,9 +40,6 @@ void BeamInteraction::BeamInteractionParams::init()
 
   rep_strategy_ = Teuchos::getIntegralValue<BeamInteraction::RepartitionStrategy>(
       params_list, "REPARTITIONSTRATEGY");
-
-  search_strategy_ =
-      Teuchos::getIntegralValue<BeamInteraction::SearchStrategy>(params_list, "SEARCH_STRATEGY");
 
   isinit_ = true;
 }

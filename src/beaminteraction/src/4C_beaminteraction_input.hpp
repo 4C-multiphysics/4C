@@ -33,12 +33,6 @@ namespace BeamInteraction
     repstr_everydt    ///< do repartitioning every time step
   };
 
-  enum class SearchStrategy
-  {
-    bruteforce_with_binning,   ///< coupling pair search based on binning
-    bounding_volume_hierarchy  ///< coupling pair search based on a bounding volume hierarchy
-  };
-
   /// beam interaction parameters
   std::vector<Core::IO::InputSpec> valid_parameters();
 

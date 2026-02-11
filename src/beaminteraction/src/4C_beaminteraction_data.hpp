@@ -79,13 +79,6 @@ namespace BeamInteraction
       return rep_strategy_;
     };
 
-    BeamInteraction::SearchStrategy get_search_strategy() const
-    {
-      check_init_setup();
-      return search_strategy_;
-    }
-
-
    private:
     bool isinit_;
 
@@ -93,9 +86,6 @@ namespace BeamInteraction
 
     /// number of crosslinker that are initially set
     BeamInteraction::RepartitionStrategy rep_strategy_;
-
-    /// search strategy for beam coupling
-    BeamInteraction::SearchStrategy search_strategy_;
   };
 
 

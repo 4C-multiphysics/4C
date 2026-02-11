@@ -16,6 +16,9 @@
 #include "4C_binstrategy.hpp"
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_comm_utils_gid_vector.hpp"
+#include "4C_geometric_search_bvh.hpp"
+#include "4C_geometric_search_params.hpp"
+#include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_io_visualization_manager.hpp"
@@ -131,6 +134,11 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::setup()
   // build runtime visualization writer if desired
   if (beam_potential_parameters().runtime_output_params.output_interval.has_value())
     init_output_runtime_beam_potential();
+
+  // build a new data container to manage geometric search parameters
+  geometric_search_params_ptr_ = std::make_shared<Core::GeometricSearch::GeometricSearchParams>(
+      Global::Problem::instance()->geometric_search_params(),
+      Global::Problem::instance()->io_params());
 
   // set flag
   issetup_ = true;
@@ -659,45 +667,49 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::find_and_store_neighbori
   TEUCHOS_FUNC_TIME_MONITOR(
       "BeamInteraction::SubmodelEvaluator::BeamPotential::find_and_store_neighboring_elements");
 
-  // loop over all row elements
+  // Get vector of all beam element bounding boxes.
   int const numroweles = ele_type_map_extractor_ptr()->beam_map()->num_my_elements();
+  std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> beam_bounding_boxes;
   for (int rowele_i = 0; rowele_i < numroweles; ++rowele_i)
   {
     int const elegid = ele_type_map_extractor_ptr()->beam_map()->gid(rowele_i);
-    Core::Elements::Element* currele = discret_ptr()->g_element(elegid);
+    Core::Elements::Element* currele = discret().g_element(elegid);
 
-    // (unique) set of neighboring bins for all col bins assigned to current element
-    std::set<int> neighboring_binIds;
+    beam_bounding_boxes.emplace_back(std::make_pair(elegid,
+        currele->get_bounding_volume(discret(),
+            *beam_interaction_data_state_ptr()->get_dis_col_np(), *geometric_search_params_ptr_)));
+  }
 
-    // loop over all bind touched by currele
-    std::set<int>::const_iterator biniter;
-    for (biniter = beam_interaction_data_state_ptr()->get_row_ele_to_bin_set(elegid).begin();
-        biniter != beam_interaction_data_state_ptr()->get_row_ele_to_bin_set(elegid).end();
-        ++biniter)
-    {
-      std::vector<int> loc_neighboring_binIds;
-      loc_neighboring_binIds.reserve(27);
+  // Get vector of the bounding boxes of all possible interacting elements (also including beams
+  // if beam-to-beam contact is activated).
+  int const numcoleles = discret().num_my_col_elements();
+  std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> other_bounding_boxes;
+  for (int colele_i = 0; colele_i < numcoleles; ++colele_i)
+  {
+    // Check if the current element is relevant for beam-to-xxx contact.
+    Core::Elements::Element* currele = discret().l_col_element(colele_i);
 
-      // do not check on existence here -> shifted to GetBinContent
-      bin_strategy_ptr()->get_neighbor_and_own_bin_ids(*biniter, loc_neighboring_binIds);
+    other_bounding_boxes.emplace_back(std::make_pair(currele->id(),
+        currele->get_bounding_volume(discret(),
+            *beam_interaction_data_state_ptr()->get_dis_col_np(), *geometric_search_params_ptr_)));
+  }
 
-      // build up comprehensive unique set of neighboring bins
-      neighboring_binIds.insert(loc_neighboring_binIds.begin(), loc_neighboring_binIds.end());
-    }
-    // get unique vector of comprehensive neighboring bins
-    std::vector<int> glob_neighboring_binIds(neighboring_binIds.begin(), neighboring_binIds.end());
+  // Get colliding pairs.
+  const auto& collision_pairs =
+      Core::GeometricSearch::collision_search_print_results(other_bounding_boxes,
+          beam_bounding_boxes, discret().get_comm(), geometric_search_params_ptr_->verbosity_);
 
-    // set of elements that lie in neighboring bins
-    std::set<Core::Elements::Element*> neighboring_elements;
-    std::vector<Core::Binstrategy::Utils::BinContentType> bc(2);
-    bc[0] = Core::Binstrategy::Utils::BinContentType::Beam;
-    bc[1] = Core::Binstrategy::Utils::BinContentType::RigidSphere;
-    bin_strategy_ptr()->get_bin_content(neighboring_elements, bc, glob_neighboring_binIds);
+  // Create the beam-to-xxx pair pointers according to the search.
+  for (const auto& pair : collision_pairs)
+  {
+    nearby_elements_map_[pair.gid_predicate].insert(discret().g_element(pair.gid_primitive));
+  }
 
-    // sort out elements that should not be considered in contact evaluation
+  // Pre-filter some pairs
+  for (auto& [beam_gid, neighboring_elements] : nearby_elements_map_)
+  {
+    Core::Elements::Element* currele = discret().g_element(beam_gid);
     select_eles_to_be_considered_for_potential_evaluation(currele, neighboring_elements);
-
-    nearby_elements_map_[elegid] = neighboring_elements;
   }
 }
 

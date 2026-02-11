@@ -197,6 +197,9 @@ namespace BeamInteraction
       //! data container holding all beam contact related parameters
       BeamInteraction::Potential::BeamPotentialParameters beam_potential_parameters_;
 
+      //! data container holding all geometric search related parameters
+      std::shared_ptr<Core::GeometricSearch::GeometricSearchParams> geometric_search_params_ptr_;
+
       //! type of eles in bins  // Todo kept line for future improvement
       //    Core::Binstrategy::Utils::BinContentType bin_beamcontent_;
 
