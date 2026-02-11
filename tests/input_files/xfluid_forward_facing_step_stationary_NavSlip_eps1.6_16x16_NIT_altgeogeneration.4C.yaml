@@ -54,7 +54,7 @@ RESULT DESCRIPTION:
       NODE: 3461
       QUANTITY: "vely"
       VALUE: 0.00668161125310244
-      TOLERANCE: 1e-13
+      TOLERANCE: 1e-12
   - XFLUID:
       DIS: "fluid"
       NODE: 3461

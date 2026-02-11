@@ -13,10 +13,12 @@
 
 #include <stack>
 
+#ifdef FOUR_C_WITH_QHULL
 extern "C"
 {
-#include <libqhull/qhull_a.h>
+#include <libqhull_r/qhull_ra.h>
 }
+#endif
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -332,6 +334,7 @@ void Cut::TetMesh::init()
 void Cut::TetMesh::call_q_hull(
     const std::vector<Point*>& points, std::vector<std::vector<int>>& tets, bool project)
 {
+#ifdef FOUR_C_WITH_QHULL
   const int dim = 3;
   const int n = points.size();
 
@@ -392,6 +395,28 @@ void Cut::TetMesh::call_q_hull(
     }
   }
 
+  // If you want some debugging information replace the 0 pointer
+  // with stdout or some other file open for writing.
+
+#ifdef QHULL_EXTENDED_DEBUG_OUTPUT
+  FILE* outfile = stdout;
+#else
+  FILE* outfile = nullptr;
+#endif
+
+#ifdef QHULL_DEBUG_OUTPUT
+  FILE* errfile = stderr;
+#else
+  static NullFile errfile;
+#endif
+
+  qhT qh_qh; /* Qhull's data structure.  First argument of most calls */
+  qhT* qh = &qh_qh;
+
+  QHULL_LIB_CHECK
+
+  qh_zero(qh, errfile);
+
   boolT ismalloc = false;
 
   // a set of option we try to process the input with
@@ -410,21 +435,6 @@ void Cut::TetMesh::call_q_hull(
   options.push_back("qhull d Qt Qbb Qc Qz Pp");
   options.push_back("qhull d Qt Qbb Qc QJ Pp");
 
-  // If you want some debugging information replace the 0 pointer
-  // with stdout or some other file open for writing.
-
-#ifdef QHULL_EXTENDED_DEBUG_OUTPUT
-  FILE* outfile = stdout;
-#else
-  FILE* outfile = nullptr;
-#endif
-
-#ifdef QHULL_DEBUG_OUTPUT
-  FILE* errfile = stderr;
-#else
-  static NullFile errfile;
-#endif
-
 #ifdef QHULL_EXTENDED_DEBUG_OUTPUT
   int counter_qhull = 0;
 #endif
@@ -434,11 +444,11 @@ void Cut::TetMesh::call_q_hull(
     std::cout << "counter_qhull: " << counter_qhull << std::endl;
 #endif
     std::string& ostr = *i;
-    if (not qh_new_qhull(dim, n, coordinates.data(), ismalloc, const_cast<char*>(ostr.c_str()),
+    if (not qh_new_qhull(qh, dim, n, coordinates.data(), ismalloc, const_cast<char*>(ostr.c_str()),
             outfile, errfile))
     {
       // triangulate non-simplicial facets
-      qh_triangulate();
+      qh_triangulate(qh);
 
       facetT* facet;
       int nf = 0;
@@ -471,7 +481,7 @@ void Cut::TetMesh::call_q_hull(
             for (void** vertexp = &facet->vertices->e[0].p;
                 (vertex = static_cast<vertexT*>(*vertexp++));)
             {
-              int p = qh_pointid(vertex->point);
+              int p = qh_pointid(qh, vertex->point);
               if (p >= n)
               {
                 FOUR_C_THROW("new node in delaunay");
@@ -486,11 +496,11 @@ void Cut::TetMesh::call_q_hull(
     }
 
     // free long memory
-    qh_freeqhull(not qh_ALL);
+    qh_freeqhull(qh, not qh_ALL);
 
     // free short memory and memory allocator
     int curlong, totlong;
-    qh_memfreeshort(&curlong, &totlong);
+    qh_memfreeshort(qh, &curlong, &totlong);
 
     if (curlong or totlong)
     {
@@ -537,6 +547,12 @@ void Cut::TetMesh::call_q_hull(
 #endif
 
   FOUR_C_THROW("qhull failed: Maybe the wrong version is used. Check your installation.");
+#else
+  FOUR_C_THROW(
+      "Function can only be used with Qhull. To use it, enable Qhull during the configure "
+      "process.");
+  exit(1);
+#endif
 }
 
 /* First check if all the points of a tet share a cut-side, i.e. does the tet lie on a cut-side?
