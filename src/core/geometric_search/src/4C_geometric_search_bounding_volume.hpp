@@ -118,6 +118,21 @@ namespace Core::GeometricSearch
       }
     }
 
+    /**
+     * @brief Uniformly extends the bounding volume along all k-DOP directions.
+     *
+     * @param value The value by which the bounding volume is extended to in both the negative and
+     * positive direction for each k-DOP axis.
+     */
+    inline void extend_boundary_to(const double value)
+    {
+      for (int i_dir = 0; i_dir < kdop_directions; ++i_dir)
+      {
+        bounding_volume_._min_values[i_dir] -= static_cast<float>(value);
+        bounding_volume_._max_values[i_dir] += static_cast<float>(value);
+      }
+    }
+
     //! Use an ArborX geometry as internal storage.
     ArborX::Experimental::KDOP<kdop_dim, kdop_k> bounding_volume_;
 #endif

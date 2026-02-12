@@ -674,9 +674,24 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::find_and_store_neighbori
     int const elegid = ele_type_map_extractor_ptr()->beam_map()->gid(rowele_i);
     Core::Elements::Element* currele = discret().g_element(elegid);
 
-    beam_bounding_boxes.emplace_back(std::make_pair(elegid,
-        currele->get_bounding_volume(discret(),
-            *beam_interaction_data_state_ptr()->get_dis_col_np(), *geometric_search_params_ptr_)));
+    auto bounding_volume = currele->get_bounding_volume(discret(),
+        *beam_interaction_data_state_ptr()->get_dis_col_np(), *geometric_search_params_ptr_);
+
+    double interaction_radius;
+    if (beam_potential_parameters().cutoff_radius.has_value())
+    {
+      // The cutoff-radius is defined and thus marks the maximum extend of the bounding volume.
+      interaction_radius = beam_potential_parameters().cutoff_radius.value();
+    }
+    else
+    {
+      // The cutoff-radius is infinity, so everything interacts with everything. Therefore we extend
+      // the bounding volume to a high value.
+      interaction_radius = 1e10;
+    }
+
+    bounding_volume.extend_boundary_to(interaction_radius);
+    beam_bounding_boxes.emplace_back(std::make_pair(elegid, bounding_volume));
   }
 
   // Get vector of the bounding boxes of all possible interacting elements (also including beams
@@ -688,9 +703,24 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::find_and_store_neighbori
     // Check if the current element is relevant for beam-to-xxx potential.
     Core::Elements::Element* currele = discret().l_col_element(colele_i);
 
-    other_bounding_boxes.emplace_back(std::make_pair(currele->id(),
-        currele->get_bounding_volume(discret(),
-            *beam_interaction_data_state_ptr()->get_dis_col_np(), *geometric_search_params_ptr_)));
+    auto bounding_volume = currele->get_bounding_volume(discret(),
+        *beam_interaction_data_state_ptr()->get_dis_col_np(), *geometric_search_params_ptr_);
+
+    double interaction_radius;
+    if (beam_potential_parameters().cutoff_radius.has_value())
+    {
+      // The cutoff-radius is defined and thus marks the maximum extend of the bounding volume.
+      interaction_radius = beam_potential_parameters().cutoff_radius.value();
+    }
+    else
+    {
+      // The cutoff-radius is infinity, so everything interacts with everything. Therefore we extend
+      // the bounding volume to a high value.
+      interaction_radius = 1e10;
+    }
+
+    bounding_volume.extend_boundary_to(interaction_radius);
+    other_bounding_boxes.emplace_back(std::make_pair(currele->id(), bounding_volume));
   }
 
   // Get colliding pairs.
