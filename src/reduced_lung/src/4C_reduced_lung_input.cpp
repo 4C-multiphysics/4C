@@ -256,6 +256,37 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
           .description = "Elasticity model for the customizable spring of the rheological model.",
           .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::elasticity_model),
       });
+
+  Core::IO::InputSpec topology_spec = group<ReducedLungParameters::LungTree::Topology>("topology",
+      {
+          parameter<int>("num_nodes",
+              {
+                  .description = "Total number of nodes in the reduced lung tree.",
+                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::num_nodes),
+              }),
+          parameter<int>("num_elements",
+              {
+                  .description = "Total number of elements in the reduced lung tree.",
+                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::num_elements),
+              }),
+          input_field<std::vector<double>>("node_coordinates",
+              {
+                  .description = "Nodal coordinates as 3-component vectors indexed by node id.",
+                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::node_coordinates),
+              }),
+          input_field<std::vector<int>>("element_nodes",
+              {
+                  .description =
+                      "Element connectivity as [node_in, node_out] indexed by element id.",
+                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::element_nodes),
+              }),
+      },
+      {
+          .description = "Topology of the reduced lung tree.",
+          .required = true,
+          .store = in_struct(&ReducedLungParameters::LungTree::topology),
+      });
+
   Core::IO::InputSpec spec = group<ReducedLungParameters>("reduced_dimensional_lung",
       {
           group<ReducedLungParameters::Dynamics>("dynamics",
@@ -296,6 +327,7 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
 
           group<ReducedLungParameters::LungTree>("lung_tree",
               {
+                  topology_spec,
                   input_field<ReducedLungParameters::LungTree::ElementType>("element_type",
                       {
                           .description = "Type of reduced lung elements.",

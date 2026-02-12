@@ -19,8 +19,9 @@
 #include "4C_io_input_field.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
-#include "4C_red_airways_elementbase.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_reduced_lung_airways.hpp"
+#include "4C_reduced_lung_discretization_helpers.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_junctions.hpp"
@@ -38,26 +39,43 @@ namespace ReducedLung
   void reduced_lung_main()
   {
     // Access given 4C infrastructure.
-    std::shared_ptr<Core::FE::Discretization> actdis =
-        Global::Problem::instance()->get_dis("red_airway");
-    if (!actdis->filled())
-    {
-      actdis->fill_complete();
-    }
+    auto* problem = Global::Problem::instance();
     ReducedLungParameters parameters =
-        Global::Problem::instance()->parameters().get<ReducedLungParameters>(
-            "reduced_dimensional_lung");
-    Core::LinAlg::Solver solver(
-        Global::Problem::instance()->solver_params(parameters.dynamics.linear_solver),
-        actdis->get_comm(), Global::Problem::instance()->solver_params_callback(),
-        Teuchos::getIntegralValue<Core::IO::Verbositylevel>(
-            Global::Problem::instance()->io_params(), "VERBOSITY"));
+        problem->parameters().get<ReducedLungParameters>("reduced_dimensional_lung");
+    std::shared_ptr<Core::FE::Discretization> actdis = problem->get_dis("red_airway");
+
+    // Preserve input conditions so legacy BCs can still be applied after rebuilding.
+    std::multimap<std::string, std::shared_ptr<Core::Conditions::Condition>> preserved_conditions;
+    for (const auto& [name, condition] : actdis->get_all_conditions())
+    {
+      preserved_conditions.emplace(name, condition->copy_without_geometry());
+    }
+
+    actdis->clear_discret();
+
+    Core::Rebalance::RebalanceParameters rebalance_parameters{
+        .mesh_partitioning_parameters =
+            problem->parameters().get<Core::Rebalance::MeshPartitioningParameters>(
+                "MESH PARTITIONING"),
+        .geometric_search_parameters = problem->geometric_search_params(),
+        .io_parameters = problem->io_params(),
+    };
+    build_discretization_from_topology(
+        *actdis, parameters.lung_tree.topology, rebalance_parameters);
+    if (!preserved_conditions.empty())
+    {
+      actdis->get_all_conditions() = std::move(preserved_conditions);
+    }
+    actdis->fill_complete();
+    Core::LinAlg::Solver solver(problem->solver_params(parameters.dynamics.linear_solver),
+        actdis->get_comm(), problem->solver_params_callback(),
+        Teuchos::getIntegralValue<Core::IO::Verbositylevel>(problem->io_params(), "VERBOSITY"));
     compute_null_space_if_necessary(*actdis, solver.params());
     // Create runtime output writer
     Core::IO::DiscretizationVisualizationWriterMesh visualization_writer(
         actdis, Core::IO::visualization_parameters_factory(
-                    Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
-                    *Global::Problem::instance()->output_control_file(), 0));
+                    problem->io_params().sublist("RUNTIME VTK OUTPUT"),
+                    *problem->output_control_file(), 0));
     // The existing mpi communicator is recycled for the new data layout.
     const auto& comm = actdis->get_comm();
 
@@ -75,13 +93,14 @@ namespace ReducedLung
       auto* user_ele = ele.user_element();
       int element_id = ele.global_id();
       int local_element_id = actdis->element_row_map()->lid(element_id);
-      if (user_ele->element_type() == Discret::Elements::RedAirwayType::instance())
+      const auto element_kind = parameters.lung_tree.element_type.at(element_id, "element_type");
+      if (element_kind == ReducedLungParameters::LungTree::ElementType::Airway)
       {
         ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType flow_model_name =
             parameters.lung_tree.airways.flow_model.resistance_type.at(
-                ele.global_id(), "flow_model_type");
+                element_id, "resistance_type");
         ReducedLungParameters::LungTree::Airways::WallModelType wall_model_type =
-            parameters.lung_tree.airways.wall_model_type.at(ele.global_id(), "wall_model_type");
+            parameters.lung_tree.airways.wall_model_type.at(element_id, "wall_model_type");
 
         add_airway_with_model_selection(
             airways, user_ele, local_element_id, parameters, flow_model_name, wall_model_type);
@@ -89,34 +108,26 @@ namespace ReducedLung
         dof_per_ele[element_id] = 2 + airways.models.back().data.n_state_equations;
         n_airways++;
       }
-      else if (user_ele->element_type() == Discret::Elements::RedAcinusType::instance())
+      else if (element_kind == ReducedLungParameters::LungTree::ElementType::TerminalUnit)
       {
-        if (user_ele->material(0)->material_type() ==
-            Core::Materials::m_0d_maxwell_acinus_neohookean)
-        {
-          ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
-              rheological_model_name =
-                  parameters.lung_tree.terminal_units.rheological_model.rheological_model_type.at(
-                      ele.global_id(), "rheological_model_type");
+        ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
+            rheological_model_name =
+                parameters.lung_tree.terminal_units.rheological_model.rheological_model_type.at(
+                    element_id, "rheological_model_type");
 
-          ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType
-              elasticity_model_name =
-                  parameters.lung_tree.terminal_units.elasticity_model.elasticity_model_type.at(
-                      ele.global_id(), "elasticity_model_type");
+        ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType
+            elasticity_model_name =
+                parameters.lung_tree.terminal_units.elasticity_model.elasticity_model_type.at(
+                    element_id, "elasticity_model_type");
 
-          add_terminal_unit_with_model_selection(terminal_units, user_ele, local_element_id,
-              parameters.lung_tree.terminal_units, rheological_model_name, elasticity_model_name);
-        }
-        else
-        {
-          FOUR_C_THROW("Material not implemented.");
-        }
+        add_terminal_unit_with_model_selection(terminal_units, user_ele, local_element_id,
+            parameters.lung_tree.terminal_units, rheological_model_name, elasticity_model_name);
         dof_per_ele[element_id] = 3;
         n_terminal_units++;
       }
       else
       {
-        FOUR_C_THROW("Unknown element type.");
+        FOUR_C_THROW("Unknown reduced lung element type.");
       }
     }
 

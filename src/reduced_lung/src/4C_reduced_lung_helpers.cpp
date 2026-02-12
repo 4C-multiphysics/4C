@@ -12,7 +12,6 @@
 #include "4C_fem_condition.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
-#include "4C_red_airways_elementbase.hpp"
 #include "4C_reduced_lung_airways.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"

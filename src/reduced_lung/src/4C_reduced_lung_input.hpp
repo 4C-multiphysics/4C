@@ -13,6 +13,8 @@
 #include "4C_io_input_field.hpp"
 #include "4C_io_input_spec.hpp"
 
+#include <vector>
+
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -30,6 +32,14 @@ namespace ReducedLung
     } dynamics;
     struct LungTree
     {
+      struct Topology
+      {
+        int num_nodes;
+        int num_elements;
+        Core::IO::InputField<std::vector<double>> node_coordinates;  // [x, y, z]
+        Core::IO::InputField<std::vector<int>> element_nodes;        // [node_in, node_out]
+      } topology;
+
       /**
        * Enum to distinguish between airway and terminal unit elements in the reduced
        * lung implementation.

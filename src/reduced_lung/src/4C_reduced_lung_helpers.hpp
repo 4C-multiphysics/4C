@@ -49,33 +49,6 @@ namespace ReducedLung
     int local_dof_id = 0;
   };
 
-  enum ElementDofNumbering
-  {
-    p_in = 0,
-    p_out = 1,
-    q_in = 2,
-    q_out = 3
-  };
-
-  enum class AirwayType
-  {
-    resistive,
-    viscoelastic_RLC
-  };
-
-  struct Airway
-  {
-    int global_element_id;
-    int local_element_id;
-    int local_airway_id;
-    AirwayType airway_type;
-    // dofs: {p1, p2, q} for resistive airways; {p1, p2, q1, q2} for compliant airways
-    std::vector<int> global_dof_ids{};
-    int n_state_equations = 1;
-    // local dof ids in locally relevant dof map!
-    std::vector<int> local_dof_ids{};
-  };
-
   /*!
    * @brief Create the map with the locally owned dofs spanning the computation domain that
    * are necessary for the solution vector.
