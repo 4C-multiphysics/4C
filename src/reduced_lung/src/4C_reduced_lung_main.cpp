@@ -8,6 +8,7 @@
 #include "4C_reduced_lung_main.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
+#include "4C_comm_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_discretization_nullspace.hpp"
 #include "4C_fem_general_node.hpp"
@@ -40,9 +41,8 @@ namespace ReducedLung
     auto* problem = Global::Problem::instance();
     ReducedLungParameters parameters =
         problem->parameters().get<ReducedLungParameters>("reduced_dimensional_lung");
-    std::shared_ptr<Core::FE::Discretization> actdis = problem->get_dis("red_airway");
-
-    actdis->clear_discret();
+    MPI_Comm local_comm = problem->get_communicators().local_comm();
+    auto actdis = std::make_shared<Core::FE::Discretization>("reduced_lung", local_comm, 3);
 
     Core::Rebalance::RebalanceParameters rebalance_parameters{
         .mesh_partitioning_parameters =
