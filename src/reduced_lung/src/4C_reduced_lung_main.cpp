@@ -8,8 +8,6 @@
 #include "4C_reduced_lung_main.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
-#include "4C_fem_condition.hpp"
-#include "4C_fem_condition_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_discretization_nullspace.hpp"
 #include "4C_fem_general_node.hpp"
@@ -44,13 +42,6 @@ namespace ReducedLung
         problem->parameters().get<ReducedLungParameters>("reduced_dimensional_lung");
     std::shared_ptr<Core::FE::Discretization> actdis = problem->get_dis("red_airway");
 
-    // Preserve input conditions so legacy BCs can still be applied after rebuilding.
-    std::multimap<std::string, std::shared_ptr<Core::Conditions::Condition>> preserved_conditions;
-    for (const auto& [name, condition] : actdis->get_all_conditions())
-    {
-      preserved_conditions.emplace(name, condition->copy_without_geometry());
-    }
-
     actdis->clear_discret();
 
     Core::Rebalance::RebalanceParameters rebalance_parameters{
@@ -62,10 +53,6 @@ namespace ReducedLung
     };
     build_discretization_from_topology(
         *actdis, parameters.lung_tree.topology, rebalance_parameters);
-    if (!preserved_conditions.empty())
-    {
-      actdis->get_all_conditions() = std::move(preserved_conditions);
-    }
     actdis->fill_complete();
     Core::LinAlg::Solver solver(problem->solver_params(parameters.dynamics.linear_solver),
         actdis->get_comm(), problem->solver_params_callback(),
@@ -217,85 +204,111 @@ namespace ReducedLung
     Junctions::ConnectionData connections;
     Junctions::BifurcationData bifurcations;
     int n_boundary_conditions = 0;
-    // Find all nodes with boundary conditions
-    std::vector<const Core::Conditions::Condition*> conditions;
-    actdis->get_condition("RedAirwayPrescribedCond", conditions);
-    const auto red_airway_prescribed_conditions =
-        Core::Conditions::find_conditioned_node_ids_and_conditions(
-            *actdis, conditions, Core::Conditions::LookFor::locally_owned_and_ghosted);
-    // Loop over all local elements, get their nodes, create associated entity. This way, they are
-    // created on the same ranks as at least one of their connected elements. This reduces the
-    // amount of communication of dofs between ranks.
-    for (auto ele : actdis->my_row_element_range())
+    const auto& bc_parameters = parameters.boundary_conditions;
+    if (bc_parameters.num_conditions < 0)
     {
-      const auto nodes = ele.nodes();
-      // WARNING: if node ordering is wrong (inlet in nodes[1]), the whole logic doesn't apply in
-      // the same way as assumed throughout this implementation! A top-down ordering of nodes needs
-      // to be enforced during tree creation. This is to a large amount asserted during creation of
-      // the coupling entities. However, special cases might slip through.
-      auto node_in = nodes[0];
-      auto node_out = nodes[1];
-      const auto node_in_n_eles = global_ele_ids_per_node[node_in.global_id()].size();
-      const auto node_out_n_eles = global_ele_ids_per_node[node_out.global_id()].size();
-      // Check whether element is starting point of tree (trachea in full lungs, lobe inlets for
-      // single lobes, etc.)
-      if (node_in_n_eles == 1)
+      FOUR_C_THROW("Number of boundary conditions must be non-negative, got {}.",
+          bc_parameters.num_conditions);
+    }
+    boundary_conditions.reserve(bc_parameters.num_conditions);
+    for (int bc_id = 0; bc_id < bc_parameters.num_conditions; ++bc_id)
+    {
+      const int node_id_one_based = bc_parameters.node_id.at(bc_id, "bc_node_id");
+      if (node_id_one_based < 1 || node_id_one_based > parameters.lung_tree.topology.num_nodes)
       {
-        FOUR_C_ASSERT_ALWAYS(red_airway_prescribed_conditions.count(node_in.global_id()) == 1,
-            "Node {} is located at the boundary and needs to have exactly one boundary condition "
-            "but it has {} conditions.",
-            node_in.global_id(), red_airway_prescribed_conditions.count(node_in.global_id()));
+        FOUR_C_THROW("Boundary condition bc_node_id {} is outside the valid range [1, {}].",
+            node_id_one_based, parameters.lung_tree.topology.num_nodes);
+      }
+      const int node_id = node_id_one_based - 1;
+      auto node_it = global_ele_ids_per_node.find(node_id);
+      if (node_it == global_ele_ids_per_node.end())
+      {
+        FOUR_C_THROW(
+            "Boundary condition bc_node_id {} is not part of the topology.", node_id_one_based);
+      }
+      const auto& adjacent_elements = node_it->second;
+      if (adjacent_elements.size() != 1u)
+      {
+        FOUR_C_THROW(
+            "Boundary condition bc_node_id {} must connect to exactly one element, but connects "
+            "to {} elements.",
+            node_id_one_based, adjacent_elements.size());
+      }
 
-        const auto* bc_condition =
-            red_airway_prescribed_conditions.find(node_in.global_id())->second;
-        const std::string bc_type = bc_condition->parameters().get<std::string>("boundarycond");
-        const std::optional<int> funct_num =
-            bc_condition->parameters().get<std::vector<std::optional<int>>>("curve")[0];
-        if (bc_type == "pressure")
+      const int element_id = adjacent_elements.front();
+      const int local_element_id = actdis->element_row_map()->lid(element_id);
+      if (local_element_id == -1)
+      {
+        continue;
+      }
+      auto* ele = actdis->l_row_element(local_element_id);
+      const auto node_ids = ele->node_ids();
+      const bool is_inlet = node_ids[0] == node_id;
+      const bool is_outlet = node_ids[1] == node_id;
+      if (!is_inlet && !is_outlet)
+      {
+        FOUR_C_THROW(
+            "Boundary condition bc_node_id {} is not attached to element {} as inlet or outlet.",
+            node_id_one_based, element_id + 1);
+      }
+
+      const auto bc_kind = bc_parameters.bc_type.at(bc_id, "bc_type");
+      BoundaryConditionType bc_type;
+      int dof_offset = 0;
+      if (bc_kind == ReducedLungParameters::BoundaryConditions::Type::Pressure)
+      {
+        bc_type =
+            is_inlet ? BoundaryConditionType::pressure_in : BoundaryConditionType::pressure_out;
+        dof_offset = is_inlet ? 0 : 1;
+      }
+      else if (bc_kind == ReducedLungParameters::BoundaryConditions::Type::Flow)
+      {
+        bc_type = is_inlet ? BoundaryConditionType::flow_in : BoundaryConditionType::flow_out;
+        if (is_inlet)
         {
-          if (funct_num.has_value())
-          {
-            boundary_conditions.push_back(BoundaryCondition{ele.global_id(), 0, 0,
-                n_boundary_conditions, BoundaryConditionType::pressure_in,
-                first_global_dof_of_ele[ele.global_id()], funct_num.value()});
-            n_boundary_conditions++;
-          }
+          dof_offset = 2;
         }
         else
         {
-          FOUR_C_THROW("Boundary condition not implemented!");
+          const auto dof_it = global_dof_per_ele.find(element_id);
+          FOUR_C_ASSERT_ALWAYS(dof_it != global_dof_per_ele.end(),
+              "Missing dof count for element {}.", element_id + 1);
+          dof_offset = dof_it->second - 1;
         }
       }
-      // Create entities "top down"-like (a processor owning an element also owns its outlet node
-      // entities).
-      if (node_out_n_eles == 1)
+      else
       {
-        FOUR_C_ASSERT_ALWAYS(red_airway_prescribed_conditions.count(node_out.global_id()) == 1,
-            "Node {} is located at the boundary and needs to have exactly one boundary condition "
-            "but it has {} conditions.",
-            node_out.global_id(), red_airway_prescribed_conditions.count(node_out.global_id()));
+        FOUR_C_THROW("Boundary condition type not implemented.");
+      }
 
-        const auto* bc_condition =
-            red_airway_prescribed_conditions.find(node_out.global_id())->second;
-        const std::string bc_type = bc_condition->parameters().get<std::string>("boundarycond");
-        const std::optional<int> funct_num =
-            bc_condition->parameters().get<std::vector<std::optional<int>>>("curve")[0];
-        if (bc_type == "pressure")
+      const auto first_dof_it = first_global_dof_of_ele.find(element_id);
+      FOUR_C_ASSERT_ALWAYS(first_dof_it != first_global_dof_of_ele.end(),
+          "Missing dof offset for element {}.", element_id + 1);
+      const int global_dof_id = first_dof_it->second + dof_offset;
+      int function_id = 0;
+      double value = 0.0;
+      if (bc_parameters.value_source ==
+          ReducedLungParameters::BoundaryConditions::ValueSource::bc_function_id)
+      {
+        function_id = bc_parameters.function_id.at(bc_id, "bc_function_id");
+        if (function_id <= 0)
         {
-          if (funct_num.has_value())
-          {
-            // Pressure bc at outlet node, so p2 (2nd dof of ele).
-            boundary_conditions.push_back(BoundaryCondition{ele.global_id(), 0, 0,
-                n_boundary_conditions, BoundaryConditionType::pressure_out,
-                first_global_dof_of_ele[ele.global_id()] + 1, funct_num.value()});
-            n_boundary_conditions++;
-          }
-        }
-        else
-        {
-          FOUR_C_ASSERT(false, "Boundary condition not implemented!");
+          FOUR_C_THROW("Boundary condition bc_function_id must be positive, got {}.", function_id);
         }
       }
+      else if (bc_parameters.value_source ==
+               ReducedLungParameters::BoundaryConditions::ValueSource::bc_value)
+      {
+        value = bc_parameters.value.at(bc_id, "bc_value");
+      }
+      else
+      {
+        FOUR_C_THROW("Boundary condition value source not implemented.");
+      }
+
+      boundary_conditions.push_back(BoundaryCondition{
+          element_id, 0, 0, n_boundary_conditions, bc_type, global_dof_id, function_id, value});
+      n_boundary_conditions++;
     }
 
     Junctions::create_junctions(*actdis, global_ele_ids_per_node, global_dof_per_ele,
@@ -464,9 +477,13 @@ namespace ReducedLung
       {
         const double val = 1.0;
         double res;
-        auto bc_value = Global::Problem::instance()
-                            ->function_by_id<Core::Utils::FunctionOfTime>(bc.funct_num)
-                            .evaluate(n * dt);
+        double bc_value = bc.value;
+        if (bc.function_id > 0)
+        {
+          bc_value = Global::Problem::instance()
+                         ->function_by_id<Core::Utils::FunctionOfTime>(bc.function_id)
+                         .evaluate(n * dt);
+        }
         int local_dof_id = bc.local_dof_id;
         if (!sysmat.filled())
         {

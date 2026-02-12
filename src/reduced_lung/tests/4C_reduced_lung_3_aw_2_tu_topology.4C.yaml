@@ -43,3 +43,12 @@ reduced_dimensional_lung:
         linear:
           elasticity_e:
             constant: 1.0
+  boundary_conditions:
+    num_conditions: 2
+    bc_type:
+      from_file: "4C_reduced_lung_3_aw_2_tu_fields.json"
+    bc_node_id:
+      from_file: "4C_reduced_lung_3_aw_2_tu_fields.json"
+    boundary_value:
+      bc_value:
+        from_file: "4C_reduced_lung_3_aw_2_tu_fields.json"

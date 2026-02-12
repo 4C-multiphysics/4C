@@ -165,6 +165,34 @@ namespace ReducedLung
         } elasticity_model;
       } terminal_units;
     } lung_tree;
+    struct BoundaryConditions
+    {
+      int num_conditions;
+
+      /**
+       * Enum to distinguish between different boundary condition types.
+       */
+      enum class Type : std::uint8_t
+      {
+        Pressure,
+        Flow,
+      };
+
+      /**
+       * Enum to distinguish between boundary values given by function or constant.
+       */
+      enum class ValueSource : std::uint8_t
+      {
+        bc_function_id,
+        bc_value,
+      };
+
+      Core::IO::InputField<Type> bc_type;
+      Core::IO::InputField<int> node_id;
+      ValueSource value_source;
+      Core::IO::InputField<int> function_id;
+      Core::IO::InputField<double> value;
+    } boundary_conditions;
     struct AirProperties
     {
       double density;

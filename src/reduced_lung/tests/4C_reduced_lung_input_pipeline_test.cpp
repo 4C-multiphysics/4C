@@ -64,6 +64,14 @@ namespace
           ReducedLungParameters::LungTree::ElementType::Airway);
       EXPECT_EQ(params.lung_tree.element_type.at(3, "element_type"),
           ReducedLungParameters::LungTree::ElementType::TerminalUnit);
+
+      EXPECT_EQ(params.boundary_conditions.num_conditions, 2);
+      EXPECT_EQ(params.boundary_conditions.bc_type.at(0, "bc_type"),
+          ReducedLungParameters::BoundaryConditions::Type::Pressure);
+      EXPECT_EQ(params.boundary_conditions.node_id.at(0, "bc_node_id"), 1);
+      EXPECT_EQ(params.boundary_conditions.value_source,
+          ReducedLungParameters::BoundaryConditions::ValueSource::bc_value);
+      EXPECT_DOUBLE_EQ(params.boundary_conditions.value.at(1, "bc_value"), 0.0);
     }
 
     Core::FE::Discretization discretization("reduced_lung_pipeline_test", MPI_COMM_WORLD, 3);

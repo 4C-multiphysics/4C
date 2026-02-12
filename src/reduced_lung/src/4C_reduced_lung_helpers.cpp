@@ -169,26 +169,7 @@ namespace ReducedLung
     // Loop over all boundary conditions and add relevant dof ids (dof where bc is applied)
     for (const auto& bc : boundary_conditions)
     {
-      switch (bc.bc_type)
-      {
-        case BoundaryConditionType::pressure_in:
-          locally_relevant_dof_indices.insert(locally_relevant_dof_indices.end(),
-              first_global_dof_of_ele.find(bc.global_element_id)->second);
-          break;
-        case BoundaryConditionType::pressure_out:
-          locally_relevant_dof_indices.insert(locally_relevant_dof_indices.end(),
-              first_global_dof_of_ele.find(bc.global_element_id)->second + 1);
-          break;
-        case BoundaryConditionType::flow_in:
-          locally_relevant_dof_indices.insert(locally_relevant_dof_indices.end(),
-              first_global_dof_of_ele.find(bc.global_element_id)->second + 2);
-          break;
-        case BoundaryConditionType::flow_out:
-          locally_relevant_dof_indices.insert(locally_relevant_dof_indices.end(),
-              first_global_dof_of_ele.find(bc.local_bc_id)->second +
-                  global_dof_per_ele.find(bc.global_element_id)->second - 1);
-          break;
-      }
+      locally_relevant_dof_indices.push_back(bc.global_dof_id);
     }
 
     // Erase duplicate dof indices and sort the remaining ids

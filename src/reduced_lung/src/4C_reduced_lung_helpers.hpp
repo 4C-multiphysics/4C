@@ -45,7 +45,8 @@ namespace ReducedLung
     int local_bc_id;
     BoundaryConditionType bc_type;
     int global_dof_id;
-    int funct_num;
+    int function_id;
+    double value;
     int local_dof_id = 0;
   };
 

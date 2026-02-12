@@ -287,6 +287,65 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
           .store = in_struct(&ReducedLungParameters::LungTree::topology),
       });
 
+  auto store_boundary_value = StoreFunction<ReducedLungParameters::BoundaryConditions>(
+      [](Storage& storage, ReducedLungParameters::BoundaryConditions&& value)
+      {
+        FOUR_C_ASSERT(storage.type() == typeid(ReducedLungParameters::BoundaryConditions),
+            "Implementation error: expected BoundaryConditions storage.");
+        auto& target = std::any_cast<ReducedLungParameters::BoundaryConditions&>(storage);
+        target.value_source = value.value_source;
+        target.function_id = std::move(value.function_id);
+        target.value = std::move(value.value);
+        return StoreStatus::ok();
+      },
+      typeid(ReducedLungParameters::BoundaryConditions));
+
+  Core::IO::InputSpec boundary_conditions_spec = group<ReducedLungParameters::BoundaryConditions>(
+      "boundary_conditions",
+      {
+          parameter<int>("num_conditions",
+              {
+                  .description = "Total number of boundary conditions.",
+                  .store = in_struct(&ReducedLungParameters::BoundaryConditions::num_conditions),
+              }),
+          input_field<ReducedLungParameters::BoundaryConditions::Type>("bc_type",
+              {
+                  .description = "Boundary condition type (Pressure or Flow).",
+                  .store = in_struct(&ReducedLungParameters::BoundaryConditions::bc_type),
+              }),
+          input_field<int>("bc_node_id",
+              {
+                  .description = "Boundary node id (1-based).",
+                  .store = in_struct(&ReducedLungParameters::BoundaryConditions::node_id),
+              }),
+          selection<ReducedLungParameters::BoundaryConditions::ValueSource,
+              ReducedLungParameters::BoundaryConditions>("boundary_value",
+              {
+                  input_field<int>("bc_function_id",
+                      {
+                          .description = "Function id for time-dependent boundary values.",
+                          .store =
+                              in_struct(&ReducedLungParameters::BoundaryConditions::function_id),
+                      }),
+                  input_field<double>("bc_value",
+                      {
+                          .description = "Constant boundary value.",
+                          .store = in_struct(&ReducedLungParameters::BoundaryConditions::value),
+                      }),
+              },
+              {
+                  .description = "Boundary condition value definition.",
+                  .store = store_boundary_value,
+                  .store_selector =
+                      in_struct(&ReducedLungParameters::BoundaryConditions::value_source),
+              }),
+      },
+      {
+          .description = "Boundary conditions for the reduced lung tree.",
+          .required = true,
+          .store = in_struct(&ReducedLungParameters::boundary_conditions),
+      });
+
   Core::IO::InputSpec spec = group<ReducedLungParameters>("reduced_dimensional_lung",
       {
           group<ReducedLungParameters::Dynamics>("dynamics",
@@ -371,6 +430,7 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                                  "definitions and parameters",
                   .store = in_struct(&ReducedLungParameters::lung_tree),
               }),
+          boundary_conditions_spec,
           group<ReducedLungParameters::AirProperties>("air_properties",
               {
                   parameter<double>("dynamic_viscosity",
