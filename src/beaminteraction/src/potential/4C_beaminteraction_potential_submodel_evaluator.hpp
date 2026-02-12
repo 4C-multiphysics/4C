@@ -16,6 +16,7 @@
 #include "4C_beaminteraction_submodel_evaluator_generic.hpp"
 #include "4C_binstrategy_utils.hpp"
 #include "4C_fem_condition.hpp"
+#include "4C_geometric_search_params.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_io_visualization_manager.hpp"
 

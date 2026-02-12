@@ -17,7 +17,6 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_comm_utils_gid_vector.hpp"
 #include "4C_geometric_search_bvh.hpp"
-#include "4C_geometric_search_params.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_io_pstream.hpp"
@@ -681,12 +680,12 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::find_and_store_neighbori
   }
 
   // Get vector of the bounding boxes of all possible interacting elements (also including beams
-  // if beam-to-beam contact is activated).
+  // if beam-to-beam potential is activated).
   int const numcoleles = discret().num_my_col_elements();
   std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> other_bounding_boxes;
   for (int colele_i = 0; colele_i < numcoleles; ++colele_i)
   {
-    // Check if the current element is relevant for beam-to-xxx contact.
+    // Check if the current element is relevant for beam-to-xxx potential.
     Core::Elements::Element* currele = discret().l_col_element(colele_i);
 
     other_bounding_boxes.emplace_back(std::make_pair(currele->id(),
