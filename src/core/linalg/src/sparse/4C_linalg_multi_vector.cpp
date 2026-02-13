@@ -212,9 +212,9 @@ void Core::LinAlg::MultiVector<T>::sum_into_global_value(
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::sum_into_local_value(
-    int MyRow, int VectorIndex, double ScalarValue)
+    double** data, int MyRow, int VectorIndex, double ScalarValue)
 {
-  ASSERT_EPETRA_CALL(vector_->SumIntoMyValue(MyRow, VectorIndex, ScalarValue));
+  data[VectorIndex][MyRow] += ScalarValue;
 }
 
 

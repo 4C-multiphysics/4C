@@ -151,7 +151,7 @@ namespace Core::LinAlg
 
     void sum_into_global_value(long long GlobalRow, int VectorIndex, double ScalarValue);
 
-    void sum_into_local_value(int MyRow, int VectorIndex, double ScalarValue);
+    void sum_into_local_value(double** data, int MyRow, int VectorIndex, double ScalarValue);
 
     void extract_view(double*** ArrayOfPointers) const;
 
