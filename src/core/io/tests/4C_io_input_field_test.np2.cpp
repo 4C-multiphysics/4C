@@ -105,9 +105,6 @@ namespace
     GTEST_SKIP() << "Skipping test: Reading point based input fields requires VTK support";
 #endif
     Core::Utils::SingletonOwnerRegistry::ScopeGuard guard;
-    // Dummy call to ensure the element type is registered
-    TESTING::PureGeometryElementType::instance();
-
     // Read mesh from vtu file (only on rank 0)
     auto mesh = MeshInput::Mesh<3>(Core::Communication::my_mpi_rank(MPI_COMM_WORLD) == 0
                                        ? VTU::read_vtu_file(TESTING::get_support_file_path(
@@ -180,8 +177,6 @@ namespace
     GTEST_SKIP() << "Skipping test: Reading point based input fields requires VTK support";
 #endif
     Core::Utils::SingletonOwnerRegistry::ScopeGuard guard;
-    // Dummy call to ensure the element type is registered
-    TESTING::PureGeometryElementType::instance();
 
     // Read mesh from vtu file (only on rank 0)
     auto mesh = MeshInput::Mesh<3>(Core::Communication::my_mpi_rank(MPI_COMM_WORLD) == 0

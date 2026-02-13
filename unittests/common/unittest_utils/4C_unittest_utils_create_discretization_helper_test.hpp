@@ -12,131 +12,16 @@
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_discretization_builder.hpp"
-#include "4C_fem_general_element.hpp"
-#include "4C_fem_general_elementtype.hpp"
-#include "4C_fem_general_node.hpp"
 #include "4C_rebalance.hpp"
 #include "4C_rebalance_graph_based.hpp"
 
 #include <mpi.h>
-#include <Teuchos_ParameterList.hpp>
 
 #include <array>
 
 namespace TESTING
 {
   using namespace FourC;
-
-  class PureGeometryElementType : public Core::Elements::ElementType
-  {
-   public:
-    std::string name() const override { return "PureGeometryElementType"; }
-
-    static PureGeometryElementType& instance()
-    {
-      static PureGeometryElementType instance;
-      return instance;
-    }
-
-    std::shared_ptr<Core::Elements::Element> create(const int id, const int owner) override;
-
-    Core::Communication::ParObject* create(Core::Communication::UnpackBuffer& buffer) override;
-
-
-
-    void nodal_block_information(Core::Elements::Element* dwele, int& numdf, int& dimns) override
-    {
-      FOUR_C_THROW("Not implemented.");
-    }
-
-    Core::LinAlg::SerialDenseMatrix compute_null_space(
-        Core::Nodes::Node& node, std::span<const double> x0, const int numdof) override
-    {
-      FOUR_C_THROW("Not implemented.");
-    }
-  };
-
-  /**
-   * A minimal element implementation that only stores the cell type and has access to the
-   * nodes stored in the base class.
-   */
-  class PureGeometryElement : public Core::Elements::Element
-  {
-   public:
-    struct Data
-    {
-      Core::FE::CellType cell_type;
-      int num_dof_per_node;
-      int num_dof_per_element = 0;
-    };
-
-    PureGeometryElement(int id, int owner, Data data)
-        : Core::Elements::Element(id, owner), data_(data)
-    {
-    }
-
-    void pack(Core::Communication::PackBuffer& data) const override
-    {
-      int type = unique_par_object_id();
-      add_to_pack(data, type);
-
-      Element::pack(data);
-
-      data.add_to_pack(data_.cell_type);
-      data.add_to_pack(data_.num_dof_per_node);
-      data.add_to_pack(data_.num_dof_per_element);
-    }
-
-    void unpack(Core::Communication::UnpackBuffer& buffer) override
-    {
-      extract_and_assert_id(buffer, unique_par_object_id());
-      Element::unpack(buffer);
-      buffer.extract_from_pack(data_.cell_type);
-      buffer.extract_from_pack(data_.num_dof_per_node);
-      buffer.extract_from_pack(data_.num_dof_per_element);
-    }
-
-    Element* clone() const override { FOUR_C_THROW("Not implemented."); }
-
-    int unique_par_object_id() const override { return element_type().unique_par_object_id(); }
-
-    Core::Elements::ElementType& element_type() const override
-    {
-      return PureGeometryElementType::instance();
-    }
-
-    Core::FE::CellType shape() const override { return data_.cell_type; }
-    int evaluate_neumann(Teuchos::ParameterList& params, Core::FE::Discretization& discretization,
-        const Core::Conditions::Condition& condition, std::vector<int>& lm,
-        Core::LinAlg::SerialDenseVector& elevec1, Core::LinAlg::SerialDenseMatrix* elemat1) override
-    {
-      FOUR_C_THROW("Not implemented.");
-    }
-
-    int num_dof_per_node(const Core::Nodes::Node& node) const override
-    {
-      return data_.num_dof_per_node;
-    }
-
-    int num_dof_per_element() const override { return data_.num_dof_per_element; }
-
-   private:
-    Data data_;
-  };
-
-  inline std::shared_ptr<Core::Elements::Element> PureGeometryElementType::create(
-      const int id, const int owner)
-  {
-    return std::make_shared<PureGeometryElement>(id, owner, PureGeometryElement::Data{});
-  }
-
-  inline Core::Communication::ParObject* PureGeometryElementType::create(
-      Core::Communication::UnpackBuffer& buffer)
-  {
-    auto* object = new PureGeometryElement(-1, -1, PureGeometryElement::Data{});
-    object->unpack(buffer);
-    return object;
-  }
 
   /**
    * Fill the given @p discretization with a hypercube mesh. A total of `subdivisions^3` elements
@@ -163,10 +48,7 @@ namespace TESTING
     rebalance_parameters.mesh_partitioning_parameters.rebalance_type =
         Core::Rebalance::RebalanceType::hypergraph;
 
-    Core::FE::DiscretizationBuilder<3> builder;
-
-    // Dummy call to ensure the element type is registered
-    PureGeometryElementType::instance();
+    Core::FE::DiscretizationBuilder<3> builder(comm);
 
     if (my_rank == 0)
     {
@@ -183,13 +65,8 @@ namespace TESTING
                 lid(i, j + 1, k), lid(i, j, k + 1), lid(i + 1, j, k + 1), lid(i + 1, j + 1, k + 1),
                 lid(i, j + 1, k + 1)};
 
-
-            auto ele = std::make_unique<PureGeometryElement>(ele_id, my_rank,
-                PureGeometryElement::Data{
-                    .cell_type = Core::FE::CellType::hex8, .num_dof_per_node = 3});
-            ele->set_node_ids(8, nodeids.begin());
-
-            builder.add_element(Core::FE::CellType::hex8, nodeids, ele_id, std::move(ele));
+            builder.add_element(Core::FE::CellType::hex8, nodeids, ele_id,
+                {.num_dof_per_node = 3, .num_dof_per_element = 0});
           }
         }
       }
@@ -223,24 +100,27 @@ namespace TESTING
       Core::FE::Discretization& dis, const FourC::Core::IO::MeshInput::Mesh<3>& mesh)
   {
     // Create discretization from mesh and redistribute
-    std::map<int, std::shared_ptr<Core::Elements::Element>> user_elements;
+    Core::FE::DiscretizationBuilder<3> builder(dis.get_comm());
+
+    for (const auto& point : mesh.points_with_data())
+    {
+      builder.add_node(point.coordinate(), point.id(), nullptr);
+    }
+
     int cell_id = 0;
     for (const auto& [_, block] : mesh.cell_blocks())
     {
       for (const auto& cell : block.cells())
       {
-        auto e = std::make_shared<TESTING::PureGeometryElement>(cell_id, 0,
-            TESTING::PureGeometryElement::Data{
-                .cell_type = block.cell_type, .num_dof_per_node = 3});
-        e->set_node_ids(cell.size(), cell.data());
-        user_elements[cell_id] = e;
+        builder.add_element(
+            block.cell_type, cell, cell_id, {.num_dof_per_node = 3, .num_dof_per_element = 0});
 
         cell_id++;
       }
     }
     Core::Rebalance::RebalanceParameters rebalance_parameters;
 
-    dis.fill_from_mesh(mesh, user_elements, {}, rebalance_parameters);
+    builder.build(dis, rebalance_parameters);
   }
 
 
@@ -254,74 +134,42 @@ namespace TESTING
     discretization.clear_discret();
 
     const int my_rank = Core::Communication::my_mpi_rank(comm);
-    const int total_ranks = Core::Communication::num_mpi_ranks(comm);
-
-    const int n_total_elements = std::pow(2, levels) - 1;
-
-    // Create a map for all elements with some initial distribution
-    auto row_elements =
-        std::make_shared<Core::LinAlg::Map>(n_total_elements, 0, discretization.get_comm());
 
     const auto leaf_on_level = [&](unsigned level, unsigned ele_on_level) -> int
     { return std::pow(2, level) + ele_on_level; };
 
-    // Add the root element
-    if (row_elements->lid(0) != -1)
-    {
-      PureGeometryElementType::instance();
-      auto ele = std::make_unique<PureGeometryElement>(0, my_rank,
-          PureGeometryElement::Data{.cell_type = Core::FE::CellType::line2, .num_dof_per_node = 1});
-      const std::array nodeids{0, 1};
-      ele->set_node_ids(2, nodeids.data());
-      discretization.add_element(std::move(ele));
-    }
+    Core::FE::DiscretizationBuilder<3> builder(comm);
 
-    int ele_id = 1;
-    for (unsigned level = 1; level < levels; ++level)
+    if (my_rank == 0)
     {
-      const unsigned n_elements = std::pow(2, level);
-      for (unsigned ele_on_level = 0; ele_on_level < n_elements; ++ele_on_level)
+      // Add the root element
       {
-        if (row_elements->lid(ele_id) != -1)
+        const std::array nodeids{0, 1};
+        builder.add_element(Core::FE::CellType::line2, nodeids, 0,
+            {.num_dof_per_node = 1, .num_dof_per_element = 0});
+      }
+
+      int ele_id = 1;
+      for (unsigned level = 1; level < levels; ++level)
+      {
+        const unsigned n_elements = std::pow(2, level);
+        for (unsigned ele_on_level = 0; ele_on_level < n_elements; ++ele_on_level)
         {
           const unsigned parent_ele = ele_on_level / 2;
           const std::array nodeids{
               leaf_on_level(level - 1, parent_ele), leaf_on_level(level, ele_on_level)};
 
-          auto ele = std::make_unique<PureGeometryElement>(ele_id, my_rank,
-              PureGeometryElement::Data{
-                  .cell_type = Core::FE::CellType::line2, .num_dof_per_node = 1});
-          ele->set_node_ids(2, nodeids.data());
+          builder.add_element(Core::FE::CellType::line2, nodeids, ele_id,
+              {.num_dof_per_node = 1, .num_dof_per_element = 0});
 
-          discretization.add_element(std::move(ele));
+          ++ele_id;
         }
-        ++ele_id;
       }
-    }
 
-    auto graph = Core::Rebalance::build_graph(discretization, *row_elements);
-
-    const double imbalance_tol(1.1);
-    Teuchos::ParameterList rebalanceParams;
-    rebalanceParams.set("num_global_parts", total_ranks);
-    rebalanceParams.set("imbalance_tolerance", imbalance_tol);
-
-    std::shared_ptr<Core::LinAlg::Map> col_elements;
-    const auto [row_nodes, col_nodes] =
-        Core::Rebalance::rebalance_node_maps(*graph, rebalanceParams);
-
-    std::tie(row_elements, col_elements) =
-        discretization.build_element_row_column(*row_nodes, *col_nodes);
-
-    discretization.export_row_elements(*row_elements);
-    discretization.export_column_elements(*col_elements);
-
-    // Now create the nodes on the owning ranks
-    {
-      if (row_nodes->lid(0) != -1)
+      // Add the root node
       {
         const std::array coords = {0.0, 0.0, 0.0};
-        discretization.add_node(coords, 0, nullptr);
+        builder.add_node(coords, 0, nullptr);
       }
 
       const double y_inc = 1.0;
@@ -332,48 +180,51 @@ namespace TESTING
         for (unsigned ele_on_level = 0; ele_on_level < n_elements; ++ele_on_level)
         {
           const int node_id = leaf_on_level(level, ele_on_level);
-          if (row_nodes->lid(node_id) != -1)
-          {
-            const std::array coords = {ele_on_level * x_inc, level * y_inc, 0.0};
-            discretization.add_node(coords, node_id, nullptr);
-          }
+          const std::array coords = {ele_on_level * x_inc, level * y_inc, 0.0};
+          builder.add_node(coords, node_id, nullptr);
         }
       }
     }
 
-    discretization.export_column_nodes(*col_nodes);
+    const double imbalance_tol(1.1);
+    Core::Rebalance::RebalanceParameters rebalance_parameters;
+    rebalance_parameters.mesh_partitioning_parameters.imbalance_tol = imbalance_tol;
+    rebalance_parameters.mesh_partitioning_parameters.rebalance_type =
+        Core::Rebalance::RebalanceType::hypergraph;
+
+    builder.build(discretization, rebalance_parameters);
     discretization.fill_complete();
 
+    [[maybe_unused]] const int n_total_elements = std::pow(2, levels) - 1;
     FOUR_C_ASSERT(discretization.num_global_elements() == n_total_elements, "Internal error.");
   }
 
   inline void fill_single_tet(Core::FE::Discretization& discretization)
   {
+    Core::FE::DiscretizationBuilder<3> builder(discretization.get_comm());
+
     if (Core::Communication::my_mpi_rank(discretization.get_comm()) == 0)
     {
       const std::array nodeids{0, 1, 2, 3};
 
-      PureGeometryElementType::instance();
-      auto ele = std::make_unique<PureGeometryElement>(0, 0,
-          PureGeometryElement::Data{.cell_type = Core::FE::CellType::tet4, .num_dof_per_node = 3});
-      ele->set_node_ids(4, nodeids.begin());
+      builder.add_element(
+          Core::FE::CellType::tet4, nodeids, 0, {.num_dof_per_node = 3, .num_dof_per_element = 0});
 
-      discretization.add_element(std::move(ele));
-
-      const auto add_node = [&](int id, std::array<double, 3> coords)
-      { discretization.add_node(coords, id, nullptr); };
-
-      add_node(0, {0.0, 0.0, 0.0});
-      add_node(1, {1.0, 0.0, 0.0});
-      add_node(2, {0.0, 1.0, 0.0});
-      add_node(3, {0.0, 0.0, 1.0});
+      builder.add_node(std::array<double, 3>{0.0, 0.0, 0.0}, 0, nullptr);
+      builder.add_node(std::array<double, 3>{1.0, 0.0, 0.0}, 1, nullptr);
+      builder.add_node(std::array<double, 3>{0.0, 1.0, 0.0}, 2, nullptr);
+      builder.add_node(std::array<double, 3>{0.0, 0.0, 1.0}, 3, nullptr);
     }
 
+    Core::Rebalance::RebalanceParameters rebalance_parameters;
+    builder.build(discretization, rebalance_parameters);
     discretization.fill_complete();
   }
 
   inline void fill_cylindrical_hex27(Core::FE::Discretization& discretization, MPI_Comm comm)
   {
+    Core::FE::DiscretizationBuilder<3> builder(comm);
+
     if (Core::Communication::my_mpi_rank(comm) == 0)
     {
       std::array<int, 27> nodeids{};
@@ -385,19 +236,14 @@ namespace TESTING
       const double half = (outer + inner) / 2;
       const double angle = 0.1;
 
-
-      PureGeometryElementType::instance();
-      auto ele = std::make_unique<PureGeometryElement>(0, 0,
-          PureGeometryElement::Data{.cell_type = Core::FE::CellType::hex27, .num_dof_per_node = 3});
-      ele->set_node_ids(27, nodeids.begin());
-
-      discretization.add_element(std::move(ele));
+      builder.add_element(
+          Core::FE::CellType::hex27, nodeids, 0, {.num_dof_per_node = 3, .num_dof_per_element = 0});
 
       const auto add_node_polar = [&](int id, std::array<double, 3> coords_polar)
       {
         const std::array coords_cartesian{coords_polar[0] * std::cos(coords_polar[1]),
             coords_polar[0] * std::sin(coords_polar[1]), coords_polar[2]};
-        discretization.add_node(coords_cartesian, id, nullptr);
+        builder.add_node(coords_cartesian, id, nullptr);
       };
 
       add_node_polar(0, {inner, 0.0, 0.0});
@@ -437,25 +283,22 @@ namespace TESTING
       add_node_polar(26, {half, (angle / 2), depth / 2});
     }
 
+    Core::Rebalance::RebalanceParameters rebalance_parameters;
+    builder.build(discretization, rebalance_parameters);
     discretization.fill_complete();
   }
 
   inline void fill_undeformed_hex27(Core::FE::Discretization& discretization, MPI_Comm comm)
   {
+    Core::FE::DiscretizationBuilder<3> builder(comm);
+
     if (Core::Communication::my_mpi_rank(comm) == 0)
     {
       std::array<int, 27> nodeids{};
       std::iota(nodeids.begin(), nodeids.end(), 0);
 
-      PureGeometryElementType::instance();
-      auto ele = std::make_unique<PureGeometryElement>(0, 0,
-          PureGeometryElement::Data{.cell_type = Core::FE::CellType::hex27, .num_dof_per_node = 3});
-      ele->set_node_ids(27, nodeids.begin());
-
-      discretization.add_element(std::move(ele));
-
-      const auto add_node = [&](int id, std::array<double, 3> coords)
-      { discretization.add_node(coords, id, nullptr); };
+      builder.add_element(
+          Core::FE::CellType::hex27, nodeids, 0, {.num_dof_per_node = 3, .num_dof_per_element = 0});
 
       const std::vector<std::array<double, 3>> coords{{-1.0, -1.0, -1.0}, {1.0, -1.0, -1.0},
           {1.0, 1.0, -1.0}, {-1.0, 1.0, -1.0}, {-1.0, -1.0, 1.0}, {1.0, -1.0, 1.0}, {1.0, 1.0, 1.0},
@@ -466,30 +309,25 @@ namespace TESTING
           {0.0, 0.0, 0.0}};
 
       int counter = 0;
-      for (const auto& coord : coords) add_node(counter++, coord);
+      for (const auto& coord : coords) builder.add_node(coord, counter++, nullptr);
     }
 
+    Core::Rebalance::RebalanceParameters rebalance_parameters;
+    builder.build(discretization, rebalance_parameters);
     discretization.fill_complete();
   }
 
   inline void fill_deformed_hex27(Core::FE::Discretization& discretization, MPI_Comm comm)
   {
+    Core::FE::DiscretizationBuilder<3> builder(comm);
+
     if (Core::Communication::my_mpi_rank(comm) == 0)
     {
-      const std::string elementType = "SOlidH27";
-      const std::string disType = "HEX27";
       std::array<int, 27> nodeids{};
       std::iota(nodeids.begin(), nodeids.end(), 0);
 
-      PureGeometryElementType::instance();
-      auto ele = std::make_unique<PureGeometryElement>(0, 0,
-          PureGeometryElement::Data{.cell_type = Core::FE::CellType::hex27, .num_dof_per_node = 3});
-      ele->set_node_ids(27, nodeids.begin());
-
-      discretization.add_element(std::move(ele));
-
-      const auto add_node = [&](int id, std::array<double, 3> coords)
-      { discretization.add_node(coords, id, nullptr); };
+      builder.add_element(
+          Core::FE::CellType::hex27, nodeids, 0, {.num_dof_per_node = 3, .num_dof_per_element = 0});
 
       const std::vector<std::array<double, 3>> coords{{-0.9, -1.0, -1.0}, {1.0, -1.0, -1.0},
           {1.0, 1.0, -1.0}, {-1.0, 1.0, -1.0}, {-1.0, -1.0, 1.0}, {1.0, -1.0, 1.2}, {1.0, 1.0, 1.0},
@@ -500,9 +338,11 @@ namespace TESTING
           {0.0, 0.0, 0.0}};
 
       int counter = 0;
-      for (const auto& coord : coords) add_node(counter++, coord);
+      for (const auto& coord : coords) builder.add_node(coord, counter++, nullptr);
     }
 
+    Core::Rebalance::RebalanceParameters rebalance_parameters;
+    builder.build(discretization, rebalance_parameters);
     discretization.fill_complete();
   }
 
