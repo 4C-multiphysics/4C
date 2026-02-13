@@ -271,13 +271,14 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
               }),
           input_field<std::vector<double>>("node_coordinates",
               {
-                  .description = "Nodal coordinates as 3-component vectors indexed by node id.",
+                  .description = "Nodal coordinates as 3-component vectors indexed by 1-based node "
+                                 "id (map keys 1-based).",
                   .store = in_struct(&ReducedLungParameters::LungTree::Topology::node_coordinates),
               }),
           input_field<std::vector<int>>("element_nodes",
               {
-                  .description =
-                      "Element connectivity as [node_in, node_out] indexed by element id.",
+                  .description = "Element connectivity as [node_in, node_out] with 1-based node "
+                                 "ids, indexed by 1-based element id (map keys 1-based).",
                   .store = in_struct(&ReducedLungParameters::LungTree::Topology::element_nodes),
               }),
       },

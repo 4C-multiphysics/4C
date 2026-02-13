@@ -535,20 +535,20 @@ namespace ReducedLung
       {
         kelvin_voigt_model.viscosity_eta.push_back(
             params->kelvin_voigt.viscosity_kelvin_voigt_eta.at(
-                ele->id(), "viscosity_kelvin_voigt_eta"));
+                global_element_id, "viscosity_kelvin_voigt_eta"));
       }
       void operator()(FourElementMaxwell& model) const
       {
         model.elasticity_E_m.push_back(params->four_element_maxwell.elasticity_maxwell_e_m.at(
-            ele->id(), "elasticity_maxwell_e_m"));
+            global_element_id, "elasticity_maxwell_e_m"));
         model.viscosity_eta.push_back(params->four_element_maxwell.viscosity_kelvin_voigt_eta.at(
-            ele->id(), "viscosity_kelvin_voigt_eta"));
+            global_element_id, "viscosity_kelvin_voigt_eta"));
         model.viscosity_eta_m.push_back(params->four_element_maxwell.viscosity_maxwell_eta_m.at(
-            ele->id(), "viscosity_maxwell_eta_m"));
+            global_element_id, "viscosity_maxwell_eta_m"));
         model.maxwell_pressure_p_m.push_back(0.0);
       }
 
-      Core::Elements::Element* ele;
+      int global_element_id;
       const ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel* params;
     };
 
@@ -557,14 +557,14 @@ namespace ReducedLung
       void operator()(LinearElasticity& linear_elasticity_model) const
       {
         linear_elasticity_model.elasticity_E.push_back(
-            params->linear.elasticity_e.at(ele->id(), "elasticity_e"));
+            params->linear.elasticity_e.at(global_element_id, "elasticity_e"));
         // Vector initialization for internal pressure state.
         linear_elasticity_model.elastic_pressure_p_el.push_back(0.0);
         linear_elasticity_model.elastic_pressure_grad_dp_el.push_back(0.0);
       }
       void operator()(OgdenHyperelasticity& ogden_model) const {}
 
-      Core::Elements::Element* ele;
+      int global_element_id;
       const ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel* params;
     };
 
@@ -580,15 +580,21 @@ namespace ReducedLung
      * @param local_element_id Local identifier in 4C discretization.
      */
     template <typename R, typename E>
-    void add_terminal_unit_ele(TerminalUnitContainer& terminal_units, Core::Elements::Element* ele,
-        int local_element_id, const ReducedLungParameters::LungTree::TerminalUnits& tu_params)
+    void add_terminal_unit_ele(TerminalUnitContainer& terminal_units, int global_element_id,
+        int local_element_id, const ReducedLungParameters& params)
     {
       TerminalUnitModel& model = register_or_access_terminal_unit_model<R, E>(terminal_units);
 
-      model.data.global_element_id.push_back(ele->id());
+      model.data.global_element_id.push_back(global_element_id);
       model.data.local_element_id.push_back(local_element_id);
-      const auto& coords_node_1 = ele->nodes()[0]->x();
-      const auto& coords_node_2 = ele->nodes()[1]->x();
+      const auto& node_ids =
+          params.lung_tree.topology.element_nodes.at(global_element_id, "element_nodes");
+      const int node_in = node_ids[0] - 1;
+      const int node_out = node_ids[1] - 1;
+      const auto& coords_node_1 =
+          params.lung_tree.topology.node_coordinates.at(node_in, "node_coordinates");
+      const auto& coords_node_2 =
+          params.lung_tree.topology.node_coordinates.at(node_out, "node_coordinates");
       const double radius =
           std::sqrt((coords_node_1[0] - coords_node_2[0]) * (coords_node_1[0] - coords_node_2[0]) +
                     (coords_node_1[1] - coords_node_2[1]) * (coords_node_1[1] - coords_node_2[1]) +
@@ -596,9 +602,11 @@ namespace ReducedLung
       const double volume = (4.0 / 3.0) * std::numbers::pi * radius * radius * radius;
       model.data.volume_v.push_back(volume);
       model.data.reference_volume_v0.push_back(volume);
-      std::visit(AddRheologicalModelParameter{.ele = ele, .params = &tu_params.rheological_model},
+      std::visit(AddRheologicalModelParameter{.global_element_id = global_element_id,
+                     .params = &params.lung_tree.terminal_units.rheological_model},
           model.rheological_model);
-      std::visit(AddElasticityModelParameter{.ele = ele, .params = &tu_params.elasticity_model},
+      std::visit(AddElasticityModelParameter{.global_element_id = global_element_id,
+                     .params = &params.lung_tree.terminal_units.elasticity_model},
           model.elasticity_model);
     }
 

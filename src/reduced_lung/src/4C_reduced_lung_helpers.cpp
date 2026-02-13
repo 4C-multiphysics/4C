@@ -184,7 +184,7 @@ namespace ReducedLung
     return column_map;
   }
 
-  void add_airway_with_model_selection(AirwayContainer& airways, Core::Elements::Element* ele,
+  void add_airway_with_model_selection(AirwayContainer& airways, int global_element_id,
       int local_element_id, const ReducedLungParameters& parameters,
       ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType flow_model_type,
       ReducedLungParameters::LungTree::Airways::WallModelType wall_model_type)
@@ -196,12 +196,13 @@ namespace ReducedLung
     {
       if (wall_model_type == WallModelType::Rigid)
       {
-        add_airway_ele<LinearResistive, RigidWall>(airways, ele, local_element_id, parameters);
+        add_airway_ele<LinearResistive, RigidWall>(
+            airways, global_element_id, local_element_id, parameters);
       }
       else if (wall_model_type == WallModelType::KelvinVoigt)
       {
         add_airway_ele<LinearResistive, KelvinVoigtWall>(
-            airways, ele, local_element_id, parameters);
+            airways, global_element_id, local_element_id, parameters);
       }
       else
       {
@@ -212,12 +213,13 @@ namespace ReducedLung
     {
       if (wall_model_type == WallModelType::Rigid)
       {
-        add_airway_ele<NonLinearResistive, RigidWall>(airways, ele, local_element_id, parameters);
+        add_airway_ele<NonLinearResistive, RigidWall>(
+            airways, global_element_id, local_element_id, parameters);
       }
       else if (wall_model_type == WallModelType::KelvinVoigt)
       {
         add_airway_ele<NonLinearResistive, KelvinVoigtWall>(
-            airways, ele, local_element_id, parameters);
+            airways, global_element_id, local_element_id, parameters);
       }
       else
       {
@@ -231,8 +233,7 @@ namespace ReducedLung
   }
 
   void add_terminal_unit_with_model_selection(TerminalUnitContainer& terminal_units,
-      Core::Elements::Element* ele, int local_element_id,
-      const ReducedLungParameters::LungTree::TerminalUnits& tu_parameters,
+      int global_element_id, int local_element_id, const ReducedLungParameters& parameters,
       ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
           rheological_model_type,
       ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType
@@ -248,12 +249,12 @@ namespace ReducedLung
       if (elasticity_model_type == ElasticityModelType::Linear)
       {
         add_terminal_unit_ele<KelvinVoigt, LinearElasticity>(
-            terminal_units, ele, local_element_id, tu_parameters);
+            terminal_units, global_element_id, local_element_id, parameters);
       }
       else if (elasticity_model_type == ElasticityModelType::Ogden)
       {
         add_terminal_unit_ele<KelvinVoigt, OgdenHyperelasticity>(
-            terminal_units, ele, local_element_id, tu_parameters);
+            terminal_units, global_element_id, local_element_id, parameters);
       }
       else
       {
@@ -265,12 +266,12 @@ namespace ReducedLung
       if (elasticity_model_type == ElasticityModelType::Linear)
       {
         add_terminal_unit_ele<FourElementMaxwell, LinearElasticity>(
-            terminal_units, ele, local_element_id, tu_parameters);
+            terminal_units, global_element_id, local_element_id, parameters);
       }
       else if (elasticity_model_type == ElasticityModelType::Ogden)
       {
         add_terminal_unit_ele<FourElementMaxwell, OgdenHyperelasticity>(
-            terminal_units, ele, local_element_id, tu_parameters);
+            terminal_units, global_element_id, local_element_id, parameters);
       }
       else
       {
@@ -295,6 +296,7 @@ namespace ReducedLung
     Core::LinAlg::Vector<double> flow_out(*element_row_map, true);
     for (const auto& model : airways.models)
     {
+      const bool has_q_out = model.data.n_state_equations == 2;
       for (size_t i = 0; i < model.data.number_of_elements(); i++)
       {
         pressure_in.replace_local_value(model.data.local_element_id[i],
@@ -303,6 +305,9 @@ namespace ReducedLung
             locally_relevant_dofs.local_values_as_span()[model.data.lid_p2[i]]);
         flow_in.replace_local_value(model.data.local_element_id[i],
             locally_relevant_dofs.local_values_as_span()[model.data.lid_q1[i]]);
+        flow_out.replace_local_value(model.data.local_element_id[i],
+            locally_relevant_dofs
+                .local_values_as_span()[has_q_out ? model.data.lid_q2[i] : model.data.lid_q1[i]]);
       }
     }
     for (const auto& model : terminal_units.models)
@@ -315,6 +320,8 @@ namespace ReducedLung
             locally_relevant_dofs.local_values_as_span()[model.data.lid_p2[i]]);
         flow_in.replace_local_value(model.data.local_element_id[i],
             locally_relevant_dofs.local_values_as_span()[model.data.lid_q[i]]);
+        flow_out.replace_local_value(model.data.local_element_id[i],
+            locally_relevant_dofs.local_values_as_span()[model.data.lid_q[i]]);
       }
     }
     visualization_writer.append_result_data_vector_with_context(
@@ -323,6 +330,8 @@ namespace ReducedLung
         pressure_out, Core::IO::OutputEntity::element, {"p_2"});
     visualization_writer.append_result_data_vector_with_context(
         flow_in, Core::IO::OutputEntity::element, {"q_in"});
+    visualization_writer.append_result_data_vector_with_context(
+        flow_out, Core::IO::OutputEntity::element, {"q_out"});
   }
 }  // namespace ReducedLung
 

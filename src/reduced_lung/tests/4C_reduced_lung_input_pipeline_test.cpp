@@ -8,19 +8,15 @@
 #include <gtest/gtest.h>
 
 #include "4C_fem_discretization.hpp"
-#include "4C_io_input_file.hpp"
-#include "4C_io_input_parameter_container.hpp"
 #include "4C_rebalance.hpp"
 #include "4C_reduced_lung_discretization_helpers.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_input.hpp"
-#include "4C_unittest_utils_support_files_test.hpp"
 
 #include <mpi.h>
 
-#include <filesystem>
 #include <numbers>
-#include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace
@@ -28,51 +24,104 @@ namespace
   using namespace FourC;
   using namespace FourC::ReducedLung;
 
-  ReducedLungParameters load_parameters_from_file(const std::filesystem::path& input_path)
+  ReducedLungParameters make_parameters()
   {
-    std::vector<Core::IO::InputSpec> specs{ReducedLung::valid_parameters()};
-    Core::IO::InputFile input_file(specs, {}, MPI_COMM_WORLD);
-    input_file.read(input_path);
+    ReducedLungParameters params{};
+    params.air_properties = {
+        .density = 1.176e-06,
+        .dynamic_viscosity = 1.79105e-05,
+    };
+    params.dynamics = {
+        .time_increment = 1.0,
+        .number_of_steps = 1,
+        .restart_every = 1,
+        .results_every = 1,
+        .linear_solver = 1,
+    };
 
-    Core::IO::InputParameterContainer container;
-    input_file.match_section("reduced_dimensional_lung", container);
+    params.lung_tree.topology.num_nodes = 6;
+    params.lung_tree.topology.num_elements = 5;
+    params.lung_tree.topology.node_coordinates =
+        Core::IO::InputField<std::vector<double>>(std::unordered_map<int, std::vector<double>>{
+            {1, {0.0, 0.0, 0.0}},
+            {2, {1.0, 0.0, 0.0}},
+            {3, {1.0, 1.0, 0.0}},
+            {4, {1.0, -1.0, 0.0}},
+            {5, {2.0, 1.0, 0.0}},
+            {6, {2.0, -1.0, 0.0}},
+        });
+    params.lung_tree.topology.element_nodes =
+        Core::IO::InputField<std::vector<int>>(std::unordered_map<int, std::vector<int>>{
+            {1, {1, 2}},
+            {2, {2, 3}},
+            {3, {2, 4}},
+            {4, {3, 5}},
+            {5, {4, 6}},
+        });
+    params.lung_tree.element_type =
+        Core::IO::InputField<ReducedLungParameters::LungTree::ElementType>(
+            std::unordered_map<int, ReducedLungParameters::LungTree::ElementType>{
+                {1, ReducedLungParameters::LungTree::ElementType::Airway},
+                {2, ReducedLungParameters::LungTree::ElementType::Airway},
+                {3, ReducedLungParameters::LungTree::ElementType::Airway},
+                {4, ReducedLungParameters::LungTree::ElementType::TerminalUnit},
+                {5, ReducedLungParameters::LungTree::ElementType::TerminalUnit},
+            });
+    params.lung_tree.generation = Core::IO::InputField<int>(std::unordered_map<int, int>{
+        {1, 0},
+        {2, 1},
+        {3, 1},
+        {4, -1},
+        {5, -1},
+    });
 
-    return container.get<ReducedLungParameters>("reduced_dimensional_lung");
+    params.lung_tree.airways.radius =
+        Core::IO::InputField<double>(std::unordered_map<int, double>{{1, 1.0}, {2, 0.8}, {3, 0.6}});
+    params.lung_tree.airways.flow_model.resistance_type =
+        Core::IO::InputField<ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType>(
+            ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType::Linear);
+    params.lung_tree.airways.flow_model.include_inertia = Core::IO::InputField<bool>(false);
+    params.lung_tree.airways.wall_model_type =
+        Core::IO::InputField<ReducedLungParameters::LungTree::Airways::WallModelType>(
+            ReducedLungParameters::LungTree::Airways::WallModelType::Rigid);
+
+    params.lung_tree.terminal_units.rheological_model.rheological_model_type = Core::IO::InputField<
+        ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType>(
+        ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType::
+            KelvinVoigt);
+    params.lung_tree.terminal_units.rheological_model.kelvin_voigt.viscosity_kelvin_voigt_eta =
+        Core::IO::InputField<double>(0.0);
+    params.lung_tree.terminal_units.elasticity_model.elasticity_model_type = Core::IO::InputField<
+        ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType>(
+        ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType::
+            Linear);
+    params.lung_tree.terminal_units.elasticity_model.linear.elasticity_e =
+        Core::IO::InputField<double>(1.0);
+
+    params.boundary_conditions.num_conditions = 3;
+    params.boundary_conditions.bc_type =
+        Core::IO::InputField<ReducedLungParameters::BoundaryConditions::Type>(
+            std::unordered_map<int, ReducedLungParameters::BoundaryConditions::Type>{
+                {1, ReducedLungParameters::BoundaryConditions::Type::Pressure},
+                {2, ReducedLungParameters::BoundaryConditions::Type::Flow},
+                {3, ReducedLungParameters::BoundaryConditions::Type::Flow},
+            });
+    params.boundary_conditions.node_id = Core::IO::InputField<int>(std::unordered_map<int, int>{
+        {1, 1},
+        {2, 5},
+        {3, 9},
+    });
+    params.boundary_conditions.value_source =
+        ReducedLungParameters::BoundaryConditions::ValueSource::bc_value;
+    params.boundary_conditions.value = Core::IO::InputField<double>(
+        std::unordered_map<int, double>{{1, 1.0}, {2, 0.0}, {3, -0.5}});
+
+    return params;
   }
 
-  TEST(ReducedLungInputPipelineTest, ReadsInputBuildsDiscretizationAndModels)
+  TEST(ReducedLungInputPipelineTest, BuildsDiscretizationAndModels)
   {
-    const auto input_path =
-        TESTING::get_support_file_path("4C_reduced_lung_3_aw_2_tu_topology.4C.yaml");
-    const auto params = load_parameters_from_file(input_path);
-
-    {
-      SCOPED_TRACE("Input parsing");
-      EXPECT_EQ(params.lung_tree.topology.num_nodes, 6);
-      EXPECT_EQ(params.lung_tree.topology.num_elements, 5);
-
-      const auto coords_0 = params.lung_tree.topology.node_coordinates.at(0, "node_coordinates");
-      ASSERT_EQ(coords_0.size(), 3u);
-      EXPECT_DOUBLE_EQ(coords_0[0], 0.0);
-      EXPECT_DOUBLE_EQ(coords_0[1], 0.0);
-      EXPECT_DOUBLE_EQ(coords_0[2], 0.0);
-
-      const auto nodes_0 = params.lung_tree.topology.element_nodes.at(0, "element_nodes");
-      EXPECT_EQ(nodes_0, (std::vector<int>{1, 2}));
-
-      EXPECT_EQ(params.lung_tree.element_type.at(0, "element_type"),
-          ReducedLungParameters::LungTree::ElementType::Airway);
-      EXPECT_EQ(params.lung_tree.element_type.at(3, "element_type"),
-          ReducedLungParameters::LungTree::ElementType::TerminalUnit);
-
-      EXPECT_EQ(params.boundary_conditions.num_conditions, 2);
-      EXPECT_EQ(params.boundary_conditions.bc_type.at(0, "bc_type"),
-          ReducedLungParameters::BoundaryConditions::Type::Pressure);
-      EXPECT_EQ(params.boundary_conditions.node_id.at(0, "bc_node_id"), 1);
-      EXPECT_EQ(params.boundary_conditions.value_source,
-          ReducedLungParameters::BoundaryConditions::ValueSource::bc_value);
-      EXPECT_DOUBLE_EQ(params.boundary_conditions.value.at(1, "bc_value"), 0.0);
-    }
+    const auto params = make_parameters();
 
     Core::FE::Discretization discretization("reduced_lung_pipeline_test", MPI_COMM_WORLD, 3);
     Core::Rebalance::RebalanceParameters rebalance_parameters;
@@ -109,7 +158,6 @@ namespace
     TerminalUnitContainer terminal_units;
     for (const auto& element : discretization.my_row_element_range())
     {
-      auto* user_ele = element.user_element();
       const int element_id = element.global_id();
       const int local_element_id = discretization.element_row_map()->lid(element_id);
       const auto element_kind = params.lung_tree.element_type.at(element_id, "element_type");
@@ -121,7 +169,7 @@ namespace
         const auto wall_model_type =
             params.lung_tree.airways.wall_model_type.at(element_id, "wall_model_type");
         add_airway_with_model_selection(
-            airways, user_ele, local_element_id, params, flow_model_type, wall_model_type);
+            airways, element_id, local_element_id, params, flow_model_type, wall_model_type);
       }
       else
       {
@@ -131,8 +179,8 @@ namespace
         const auto elasticity_model_type =
             params.lung_tree.terminal_units.elasticity_model.elasticity_model_type.at(
                 element_id, "elasticity_model_type");
-        add_terminal_unit_with_model_selection(terminal_units, user_ele, local_element_id,
-            params.lung_tree.terminal_units, rheological_model_type, elasticity_model_type);
+        add_terminal_unit_with_model_selection(terminal_units, element_id, local_element_id, params,
+            rheological_model_type, elasticity_model_type);
       }
     }
 

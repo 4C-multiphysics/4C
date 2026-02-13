@@ -128,13 +128,13 @@ namespace ReducedLung
    * based on the flow model (Linear/NonLinear) and wall model (Rigid/KelvinVoigt) types.
    *
    * @param airways Container for all airway models.
-   * @param ele Pointer to the element.
+   * @param global_element_id Unique global identifier for the element.
    * @param local_element_id Local element id for the row map.
    * @param parameters Reduced lung parameters containing model and geometry information.
    * @param flow_model_type The flow model type.
    * @param wall_model_type The wall model type.
    */
-  void add_airway_with_model_selection(AirwayContainer& airways, Core::Elements::Element* ele,
+  void add_airway_with_model_selection(AirwayContainer& airways, int global_element_id,
       int local_element_id, const ReducedLungParameters& parameters,
       ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType flow_model_type,
       ReducedLungParameters::LungTree::Airways::WallModelType wall_model_type);
@@ -148,15 +148,14 @@ namespace ReducedLung
    * (Linear/Ogden) types.
    *
    * @param terminal_units Container for all terminal unit models.
-   * @param ele Pointer to the element
+   * @param global_element_id Unique global identifier of the element.
    * @param local_element_id Local element id for the row map.
-   * @param tu_parameters Terminal unit parameters containing model information.
+   * @param parameters Terminal unit parameters containing model information.
    * @param rheological_model_type The rheological model type.
    * @param elasticity_model_type The elasticity model type.
    */
   void add_terminal_unit_with_model_selection(TerminalUnitContainer& terminal_units,
-      Core::Elements::Element* ele, int local_element_id,
-      const ReducedLungParameters::LungTree::TerminalUnits& tu_parameters,
+      int global_element_id, int local_element_id, const ReducedLungParameters& parameters,
       ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
           rheological_model_type,
       ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType

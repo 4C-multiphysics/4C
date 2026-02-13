@@ -10,7 +10,6 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_comm_utils.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_fem_discretization_nullspace.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
@@ -57,7 +56,6 @@ namespace ReducedLung
     Core::LinAlg::Solver solver(problem->solver_params(parameters.dynamics.linear_solver),
         actdis->get_comm(), problem->solver_params_callback(),
         Teuchos::getIntegralValue<Core::IO::Verbositylevel>(problem->io_params(), "VERBOSITY"));
-    compute_null_space_if_necessary(*actdis, solver.params());
     // Create runtime output writer
     Core::IO::DiscretizationVisualizationWriterMesh visualization_writer(
         actdis, Core::IO::visualization_parameters_factory(
@@ -77,39 +75,42 @@ namespace ReducedLung
     // terminal units). Adds all information directly given in the row element range.
     for (auto ele : actdis->my_row_element_range())
     {
-      auto* user_ele = ele.user_element();
-      int element_id = ele.global_id();
-      int local_element_id = actdis->element_row_map()->lid(element_id);
-      const auto element_kind = parameters.lung_tree.element_type.at(element_id, "element_type");
-      if (element_kind == ReducedLungParameters::LungTree::ElementType::Airway)
+      int global_element_id = ele.global_id();
+      int local_element_id = actdis->element_row_map()->lid(global_element_id);
+      FOUR_C_ASSERT_ALWAYS(local_element_id >= 0,
+          "Element {} not found in element row map while iterating row elements.",
+          global_element_id + 1);
+      const auto element_type =
+          parameters.lung_tree.element_type.at(global_element_id, "element_type");
+      if (element_type == ReducedLungParameters::LungTree::ElementType::Airway)
       {
         ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType flow_model_name =
             parameters.lung_tree.airways.flow_model.resistance_type.at(
-                element_id, "resistance_type");
+                global_element_id, "resistance_type");
         ReducedLungParameters::LungTree::Airways::WallModelType wall_model_type =
-            parameters.lung_tree.airways.wall_model_type.at(element_id, "wall_model_type");
+            parameters.lung_tree.airways.wall_model_type.at(global_element_id, "wall_model_type");
 
-        add_airway_with_model_selection(
-            airways, user_ele, local_element_id, parameters, flow_model_name, wall_model_type);
+        add_airway_with_model_selection(airways, global_element_id, local_element_id, parameters,
+            flow_model_name, wall_model_type);
 
-        dof_per_ele[element_id] = 2 + airways.models.back().data.n_state_equations;
+        dof_per_ele[global_element_id] = 2 + airways.models.back().data.n_state_equations;
         n_airways++;
       }
-      else if (element_kind == ReducedLungParameters::LungTree::ElementType::TerminalUnit)
+      else if (element_type == ReducedLungParameters::LungTree::ElementType::TerminalUnit)
       {
         ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
             rheological_model_name =
                 parameters.lung_tree.terminal_units.rheological_model.rheological_model_type.at(
-                    element_id, "rheological_model_type");
+                    global_element_id, "rheological_model_type");
 
         ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType
             elasticity_model_name =
                 parameters.lung_tree.terminal_units.elasticity_model.elasticity_model_type.at(
-                    element_id, "elasticity_model_type");
+                    global_element_id, "elasticity_model_type");
 
-        add_terminal_unit_with_model_selection(terminal_units, user_ele, local_element_id,
-            parameters.lung_tree.terminal_units, rheological_model_name, elasticity_model_name);
-        dof_per_ele[element_id] = 3;
+        add_terminal_unit_with_model_selection(terminal_units, global_element_id, local_element_id,
+            parameters, rheological_model_name, elasticity_model_name);
+        dof_per_ele[global_element_id] = 3;
         n_terminal_units++;
       }
       else
@@ -278,7 +279,9 @@ namespace ReducedLung
       }
       else
       {
-        FOUR_C_THROW("Boundary condition type not implemented.");
+        FOUR_C_THROW(
+            "Boundary condition type '{}' not implemented. Supported types are Pressure and Flow.",
+            static_cast<int>(bc_kind));
       }
 
       const auto first_dof_it = first_global_dof_of_ele.find(element_id);
