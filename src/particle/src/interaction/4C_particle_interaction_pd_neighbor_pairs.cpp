@@ -504,20 +504,16 @@ void Particle::PDNeighborPairs::unpack_peridynamic_bond_list_data(const std::vec
   Core::Communication::UnpackBuffer data(buffer);
   while (!data.at_end())
   {
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
-
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
-
     int globalid_i;
     extract_from_pack(data, globalid_i);
     int globalid_j;
     extract_from_pack(data, globalid_j);
 
     // setup default tuples with proper global ids
-    Particle::LocalGlobalIndexTuple tuple_i = std::make_tuple(type_i, status_i, -1, globalid_i);
-    Particle::LocalGlobalIndexTuple tuple_j = std::make_tuple(type_j, status_j, -1, globalid_j);
+    Particle::LocalGlobalIndexTuple tuple_i = std::make_tuple(
+        ParticleType::UninitializedType, ParticleStatus::UninitializedStatus, -1, globalid_i);
+    Particle::LocalGlobalIndexTuple tuple_j = std::make_tuple(
+        ParticleType::UninitializedType, ParticleStatus::UninitializedStatus, -1, globalid_j);
 
     // add bond pair
     bondlist_->push_back(std::make_pair(tuple_i, tuple_j));

@@ -157,11 +157,12 @@ namespace Particle
     Phase2,  //!< particle type for particles of second phase
     /*---------------------------------------------------------------------------*/
     // particle types for SPH interaction
-    BoundaryPhase,   //!< particle type for boundary phase particles
-    RigidPhase,      //!< particle type for rigid phase particles
-    DirichletPhase,  //!< particle type for dirichlet phase particles (open boundary)
-    NeumannPhase,    //!< particle type for neumann phase particles (open boundary)
-    PDPhase          //!< particle tpe for peridynamic phase particles
+    BoundaryPhase,     //!< particle type for boundary phase particles
+    RigidPhase,        //!< particle type for rigid phase particles
+    DirichletPhase,    //!< particle type for dirichlet phase particles (open boundary)
+    NeumannPhase,      //!< particle type for neumann phase particles (open boundary)
+    PDPhase,           //!< particle type for peridynamic phase particles
+    UninitializedType  //!< not yet defined particle type
     /*---------------------------------------------------------------------------*/
   };
 
@@ -204,8 +205,9 @@ namespace Particle
    */
   enum ParticleStatus
   {
-    Owned,   //!< particle status for particles being owned on processors
-    Ghosted  //!< particle status for particles being ghosted on processors
+    Owned,               //!< particle status for particles being owned on processors
+    Ghosted,             //!< particle status for particles being ghosted on processors
+    UninitializedStatus  //!< not yet defined particle status
   };
 
   /*!
