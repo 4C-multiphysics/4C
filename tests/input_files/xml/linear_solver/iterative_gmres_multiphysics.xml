@@ -1,0 +1,28 @@
+<ParameterList name="Belos">
+  <!--
+    For iterative solver using the generalized minimal residual method, these are the recommended settings for Belos.
+    -->
+  <ParameterList name="GMRES">
+    <!-- ===========  GENERAL ================ -->
+    <Parameter name="Maximum Iterations" type="int" value="300"/>
+    <Parameter name="Convergence Tolerance" type="double" value="1e-8"/>
+    <Parameter name="Implicit Residual Scaling" type="string" value="Norm of Initial Residual"/>
+    <!-- ===========  OUTPUT ================ -->
+    <!--
+        Verbosity        - Integer value specifying the verbosity level (0 > none, 5 > minimal, 33 > high, ...).
+        Output Style     - Integer value specifying the style of output (0 - detailed, 1 - medium, 2 - high).
+        Output Frequency - Integer value specifying how often convergence information should be outputted (e.g. after each 5th iteration).
+        -->
+    <Parameter name="Verbosity" type="int" value="33"/>
+    <Parameter name="Output Style" type="int" value="2"/>
+    <Parameter name="Output Frequency" type="int" value="5"/>
+    <ParameterList name="User Status Tests">
+      <Parameter name="Test Type" type="string" value="Combo"/>
+      <Parameter name="Combo Type" type="string" value="AND"/>
+      <Parameter name="Number of Tests" type="int" value="3"/>
+      <ParameterList name="Test 0"><Parameter name="Test Type" type="string" value="PartialResidualNorm"/> <Parameter name="Block index" type="int" value="0"/> <Parameter name="Convergence Tolerance" type="double" value="1e-4"/> + <Parameter name="Scaling Type" type="string" value="None"/> + <Parameter name="Residual Norm" type="string" value="OneNorm"/> + <Parameter name="Scaling Norm" type="string" value="OneNorm"/></ParameterList>
+      <ParameterList name="Test 1"><Parameter name="Test Type" type="string" value="PartialResidualNorm"/> <Parameter name="Block index" type="int" value="1"/> <Parameter name="Convergence Tolerance" type="double" value="1e-4"/> + <Parameter name="Scaling Type" type="string" value="None"/> + <Parameter name="Residual Norm" type="string" value="OneNorm"/> + <Parameter name="Scaling Norm" type="string" value="OneNorm"/></ParameterList>
+      <ParameterList name="Test 2"><Parameter name="Test Type" type="string" value="PartialResidualNorm"/> <Parameter name="Block index" type="int" value="2"/> <Parameter name="Convergence Tolerance" type="double" value="1e-4"/> + <Parameter name="Scaling Type" type="string" value="None"/> + <Parameter name="Residual Norm" type="string" value="OneNorm"/> + <Parameter name="Scaling Norm" type="string" value="OneNorm"/></ParameterList>
+    </ParameterList>
+  </ParameterList>
+</ParameterList>
