@@ -377,7 +377,11 @@ bool Discret::Elements::SolidPoroPressureVelocityBased::vis_data(
   // Put the owner of this element into the file (use base class method for this)
   if (Core::Elements::Element::vis_data(name, data)) return true;
 
-  return solid_poro_material().vis_data(name, data, id());
+
+  const unsigned int dummy_gp = 0;
+  return solid_poro_material().vis_data(name, data, dummy_gp,
+      id());  // we use 0 here for the number of Gauss points, since this is not properly tracked
+              // for the old output; works for now for the underlying struct poro material
 }
 
 Mat::StructPoro& Discret::Elements::SolidPoroPressureVelocityBased::struct_poro_material(
