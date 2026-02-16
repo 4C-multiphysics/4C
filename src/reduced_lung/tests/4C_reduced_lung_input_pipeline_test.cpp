@@ -8,8 +8,8 @@
 #include <gtest/gtest.h>
 
 #include "4C_fem_discretization.hpp"
+#include "4C_fem_general_elementtype.hpp"
 #include "4C_rebalance.hpp"
-#include "4C_reduced_lung_discretization_helpers.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_input.hpp"
 
@@ -141,8 +141,9 @@ namespace
 
       for (const auto& element : discretization.my_row_element_range())
       {
-        EXPECT_EQ(&element.user_element()->element_type(),
-            &Discret::Elements::ReducedLungLineType::instance());
+        ASSERT_NE(element.user_element(), nullptr);
+        EXPECT_EQ(element.user_element()->element_type().name(), "PureGeometryElementType");
+        EXPECT_EQ(element.user_element()->shape(), Core::FE::CellType::line2);
       }
 
       if (discretization.element_row_map()->lid(0) != -1)

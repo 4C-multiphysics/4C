@@ -9,18 +9,92 @@
 
 #include "4C_reduced_lung_helpers.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_condition.hpp"
+#include "4C_fem_discretization_builder.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_reduced_lung_airways.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
+#include "4C_utils_exceptions.hpp"
 
+#include <array>
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace ReducedLung
 {
+  void build_discretization_from_topology(Core::FE::Discretization& discretization,
+      const ReducedLungParameters::LungTree::Topology& topology,
+      const Core::Rebalance::RebalanceParameters& rebalance_parameters)
+  {
+    Core::FE::DiscretizationBuilder<3> builder(discretization.get_comm());
+
+    const int my_rank = Core::Communication::my_mpi_rank(discretization.get_comm());
+    if (my_rank == 0)
+    {
+      if (topology.num_nodes <= 0)
+      {
+        FOUR_C_THROW("Topology num_nodes must be positive, got {}.", topology.num_nodes);
+      }
+      if (topology.num_elements <= 0)
+      {
+        FOUR_C_THROW("Topology num_elements must be positive, got {}.", topology.num_elements);
+      }
+
+      for (int node_id = 0; node_id < topology.num_nodes; ++node_id)
+      {
+        const auto coords = topology.node_coordinates.at(node_id, "node_coordinates");
+        if (coords.size() != 3u)
+        {
+          FOUR_C_THROW("Topology node_coordinates entry {} must have 3 components, got {}.",
+              node_id + 1, coords.size());
+        }
+        const std::array<double, 3> coord_array{coords[0], coords[1], coords[2]};
+        builder.add_node(coord_array, node_id, nullptr);
+      }
+
+      for (int element_id = 0; element_id < topology.num_elements; ++element_id)
+      {
+        const auto nodes = topology.element_nodes.at(element_id, "element_nodes");
+        if (nodes.size() != 2u)
+        {
+          FOUR_C_THROW("Topology element_nodes entry {} must have 2 entries, got {}.",
+              element_id + 1, nodes.size());
+        }
+        if (nodes[0] < 1 || nodes[1] < 1)
+        {
+          FOUR_C_THROW(
+              "Topology element_nodes entry {} must use 1-based node ids.", element_id + 1);
+        }
+
+        const int node_in = nodes[0] - 1;
+        const int node_out = nodes[1] - 1;
+        if (node_in >= topology.num_nodes || node_out >= topology.num_nodes)
+        {
+          FOUR_C_THROW("Topology element_nodes entry {} references node ids outside [1, {}].",
+              element_id + 1, topology.num_nodes);
+        }
+        if (node_in == node_out)
+        {
+          FOUR_C_THROW(
+              "Topology element_nodes entry {} uses identical in/out node ids.", element_id + 1);
+        }
+
+        const std::array<int, 2> node_ids{node_in, node_out};
+        builder.add_element(Core::FE::CellType::line2, node_ids, element_id,
+            Core::FE::DiscretizationBuilder<3>::DofInfo{
+                .num_dof_per_node = 1,
+                .num_dof_per_element = 0,
+            });
+      }
+    }
+
+    builder.build(discretization, rebalance_parameters);
+  }
+
   Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const AirwayContainer& airways,
       const TerminalUnitContainer& terminal_units)
   {

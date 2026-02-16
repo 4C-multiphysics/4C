@@ -19,7 +19,6 @@
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_rebalance.hpp"
 #include "4C_reduced_lung_airways.hpp"
-#include "4C_reduced_lung_discretization_helpers.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_junctions.hpp"

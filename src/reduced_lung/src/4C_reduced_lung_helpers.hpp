@@ -25,6 +25,16 @@ namespace Core::Nodes
   class Node;
 }
 
+namespace Core::FE
+{
+  class Discretization;
+}
+
+namespace Core::Rebalance
+{
+  struct RebalanceParameters;
+}
+
 namespace ReducedLung
 {
   using namespace Airways;
@@ -49,6 +59,20 @@ namespace ReducedLung
     double value;
     int local_dof_id = 0;
   };
+
+  /*!
+   * @brief Build a minimal discretization from the reduced lung topology.
+   *
+   * Creates line2 elements with a lightweight geometry-only element type and registers
+   * node coordinates/element connectivity for distribution, rebalancing, and output.
+   *
+   * @param discretization Target 4C discretization to populate.
+   * @param topology Reduced lung topology description (nodes and element connectivity).
+   * @param rebalance_parameters Parameters for mesh rebalancing/partitioning.
+   */
+  void build_discretization_from_topology(Core::FE::Discretization& discretization,
+      const ReducedLungParameters::LungTree::Topology& topology,
+      const Core::Rebalance::RebalanceParameters& rebalance_parameters);
 
   /*!
    * @brief Create the map with the locally owned dofs spanning the computation domain that
