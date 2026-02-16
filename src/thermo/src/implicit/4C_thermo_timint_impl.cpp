@@ -8,6 +8,7 @@
 #include "4C_thermo_timint_impl.hpp"
 
 #include "4C_coupling_adapter_mortar.hpp"
+#include "4C_fem_general_clement_interpolation.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_io_pstream.hpp"
@@ -90,27 +91,8 @@ Thermo::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& ioparams,
   discret_->evaluate(get_element_material_vector);
   overlapping_element_material_vector.complete();
 
-  conductivity_ = std::make_shared<Core::LinAlg::MultiVector<double>>(
-      Core::LinAlg::MultiVector<double>(*discret_->node_row_map(), columns, true));
-
-  for (const auto& node : discret_->my_row_node_range())
-  {
-    for (size_t col = 0; col < columns; col++)
-    {
-      Core::LinAlg::Vector<double> element_material(*overlapping_element_material_vector(col));
-      double nodal_material = 0.0;
-
-      for (auto ele : node.adjacent_elements())
-      {
-        const int global_element_id = ele.global_id();
-        const int local_element_id = element_material.get_map().lid(global_element_id);
-        nodal_material = nodal_material + element_material.local_values_as_span()[local_element_id];
-      }
-
-      const int num_elements = node.adjacent_elements().size();
-      conductivity_->replace_global_value(node.global_id(), col, nodal_material / num_elements);
-    }
-  }
+  conductivity_ =
+      Core::FE::compute_nodal_clement_interpolation(*discret_, overlapping_element_material_vector);
 
   // setup mortar coupling
   if (Global::Problem::instance()->get_problem_type() == Core::ProblemType::thermo)
