@@ -7,9 +7,144 @@
 
 #include "4C_fem_discretization_builder.hpp"
 
+#include "4C_fem_general_elementtype.hpp"
 #include "4C_rebalance.hpp"
 
 FOUR_C_NAMESPACE_OPEN
+
+namespace
+{
+  class PureGeometryElementType : public Core::Elements::ElementType
+  {
+   public:
+    std::string name() const override { return "PureGeometryElementType"; }
+
+    static PureGeometryElementType& instance()
+    {
+      static PureGeometryElementType instance;
+      return instance;
+    }
+
+    std::shared_ptr<Core::Elements::Element> create(const int id, const int owner) override;
+
+    Core::Communication::ParObject* create(Core::Communication::UnpackBuffer& buffer) override;
+
+    void nodal_block_information(Core::Elements::Element* dwele, int& numdf, int& dimns) override
+    {
+      FOUR_C_THROW("Not implemented.");
+    }
+
+    Core::LinAlg::SerialDenseMatrix compute_null_space(
+        Core::Nodes::Node& node, std::span<const double> x0, const int numdof) override
+    {
+      FOUR_C_THROW("Not implemented.");
+    }
+  };
+
+  /**
+   * A minimal element implementation that only stores the cell type and has access to the
+   * nodes stored in the base class.
+   *
+   * As long as the Discretization requires Element objects, this dummy object may be used to fill
+   * the Discretization with purely geometric information without any additional data.
+   */
+  class PureGeometryElement : public Core::Elements::Element
+  {
+   public:
+    struct Data
+    {
+      Core::FE::CellType cell_type;
+      int num_dof_per_node;
+      int num_dof_per_element = 0;
+    };
+
+    PureGeometryElement(int id, int owner, Data data)
+        : Core::Elements::Element(id, owner), data_(data)
+    {
+    }
+
+    void pack(Core::Communication::PackBuffer& data) const override
+    {
+      int type = unique_par_object_id();
+      add_to_pack(data, type);
+
+      Element::pack(data);
+
+      data.add_to_pack(data_.cell_type);
+      data.add_to_pack(data_.num_dof_per_node);
+      data.add_to_pack(data_.num_dof_per_element);
+    }
+
+    void unpack(Core::Communication::UnpackBuffer& buffer) override
+    {
+      extract_and_assert_id(buffer, unique_par_object_id());
+      Element::unpack(buffer);
+      buffer.extract_from_pack(data_.cell_type);
+      buffer.extract_from_pack(data_.num_dof_per_node);
+      buffer.extract_from_pack(data_.num_dof_per_element);
+    }
+
+    Element* clone() const override { FOUR_C_THROW("Not implemented."); }
+
+    int unique_par_object_id() const override { return element_type().unique_par_object_id(); }
+
+    Core::Elements::ElementType& element_type() const override
+    {
+      return PureGeometryElementType::instance();
+    }
+
+    Core::FE::CellType shape() const override { return data_.cell_type; }
+
+    int evaluate_neumann(Teuchos::ParameterList& params, Core::FE::Discretization& discretization,
+        const Core::Conditions::Condition& condition, std::vector<int>& lm,
+        Core::LinAlg::SerialDenseVector& elevec1, Core::LinAlg::SerialDenseMatrix* elemat1) override
+    {
+      FOUR_C_THROW("Not implemented.");
+    }
+
+    int num_dof_per_node(const Core::Nodes::Node& node) const override
+    {
+      return data_.num_dof_per_node;
+    }
+
+    int num_dof_per_element() const override { return data_.num_dof_per_element; }
+
+   private:
+    Data data_;
+  };
+
+  inline std::shared_ptr<Core::Elements::Element> PureGeometryElementType::create(
+      const int id, const int owner)
+  {
+    return std::make_shared<PureGeometryElement>(id, owner, PureGeometryElement::Data{});
+  }
+
+  inline Core::Communication::ParObject* PureGeometryElementType::create(
+      Core::Communication::UnpackBuffer& buffer)
+  {
+    auto* object = new PureGeometryElement(-1, -1, PureGeometryElement::Data{});
+    object->unpack(buffer);
+    return object;
+  }
+
+  void force_registration_pure_geometry_element_type() { PureGeometryElementType::instance(); }
+}  // namespace
+
+
+
+template <int dim>
+Core::FE::DiscretizationBuilder<dim>::DiscretizationBuilder(MPI_Comm communicator)
+    : my_rank_(Core::Communication::my_mpi_rank(communicator))
+{
+  // Ensure that all ranks called us. If not, execution will hang here, which is still easier to
+  // debug than chasing down differing ParObject IDs on different ranks due to some ranks not
+  // registering the PureGeometryElementType.
+  Communication::barrier(communicator);
+
+  force_registration_pure_geometry_element_type();
+}
+
+
 
 template <int dim>
 void Core::FE::DiscretizationBuilder<dim>::add_node(std::span<const double, dim> x,
@@ -35,6 +170,10 @@ void Core::FE::DiscretizationBuilder<dim>::add_element(Core::FE::CellType cell_t
     std::span<const IndexType> node_ids, IndexType global_id,
     std::shared_ptr<Core::Elements::Element> user_element)
 {
+  FOUR_C_ASSERT_ALWAYS(user_element,
+      "User element was nullptr. If you want to add an element without a user element, please use "
+      "the add_element overload without the user_element argument.");
+
   FOUR_C_ASSERT_ALWAYS(!elements_.contains(global_id),
       "Element with global id {} already added to the builder.", global_id);
 
@@ -52,6 +191,23 @@ void Core::FE::DiscretizationBuilder<dim>::add_element(Core::FE::CellType cell_t
                                    .global_id = global_id,
                                    .user_element = user_element,
                                });
+}
+
+
+
+template <int dim>
+void Core::FE::DiscretizationBuilder<dim>::add_element(Core::FE::CellType cell_type,
+    std::span<const IndexType> node_ids, IndexType global_id, DofInfo dof_info)
+{
+  auto user_element = std::make_shared<PureGeometryElement>(global_id, my_rank_,
+      PureGeometryElement::Data{
+          .cell_type = cell_type,
+          .num_dof_per_node = dof_info.num_dof_per_node,
+          .num_dof_per_element = dof_info.num_dof_per_element,
+      });
+  user_element->set_node_ids(node_ids.size(), node_ids.data());
+
+  add_element(cell_type, node_ids, global_id, user_element);
 }
 
 
@@ -151,5 +307,4 @@ void Core::FE::DiscretizationBuilder<dim>::assert_consistent() const
 }
 
 template class Core::FE::DiscretizationBuilder<3>;
-
 FOUR_C_NAMESPACE_CLOSE

@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "4C_fem_discretization.hpp"
+#include "4C_fem_general_element.hpp"
 #include "4C_unittest_utils_create_discretization_helper_test.hpp"
 
 #include <benchmark/benchmark.h>

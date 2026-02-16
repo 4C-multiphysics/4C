@@ -33,16 +33,38 @@ namespace Core::FE
     using IndexType = int;
 
     /**
+     * DofInfo with necessary information to create elements on-the-fly.
+     */
+    struct DofInfo
+    {
+      int num_dof_per_node;
+      int num_dof_per_element;
+    };
+
+    /**
+     * Create a DiscretizationBuilder. This is a collective call and all processes in the
+     * communicator must call it even if you do not intend to add any data on some ranks.
+     */
+    explicit DiscretizationBuilder(MPI_Comm communicator);
+
+    /**
      * @brief Add a node to the builder
      */
     void add_node(std::span<const double, dim> x, IndexType global_id,
         std::shared_ptr<Core::Nodes::Node> user_node = nullptr);
 
     /**
-     * @brief Add an element to the builder
+     * @brief Add an element to the builder with a user-provided Element object.
      */
     void add_element(Core::FE::CellType cell_type, std::span<const IndexType> node_ids,
-        IndexType global_id, std::shared_ptr<Core::Elements::Element> user_element = nullptr);
+        IndexType global_id, std::shared_ptr<Core::Elements::Element> user_element);
+
+    /**
+     * @brief Add an element to the builder and generate an appropriate Element object on-the-fly
+     * based on the provided DofInfo.
+     */
+    void add_element(Core::FE::CellType cell_type, std::span<const IndexType> node_ids,
+        IndexType global_id, DofInfo dof_info);
 
     /**
      * @brief Build a Discretization from the data added to the builder
@@ -79,6 +101,8 @@ namespace Core::FE
     std::map<IndexType, ElementData> elements_;
 
     std::unordered_set<IndexType> used_node_ids_;
+
+    int my_rank_;
   };
 }  // namespace Core::FE
 
