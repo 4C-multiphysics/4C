@@ -95,7 +95,8 @@ namespace
     container.add(
         "INTEGRATION", Discret::Elements::make_default_solid_integration_rules<celltype>());
 
-    ele->read_element(ele_type, Core::FE::cell_type_to_string(celltype), container);
+    ele->read_element(ele_type, Core::FE::cell_type_to_string(celltype), container,
+        Core::IO::MeshInput::ElementDataFromCellData{});
 
     return ele;
   }

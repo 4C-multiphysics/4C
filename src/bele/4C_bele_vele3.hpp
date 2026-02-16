@@ -241,7 +241,8 @@ namespace Discret
 
       /// Read input for this element
       bool read_element(const std::string& eletype, const std::string& distype,
-          const Core::IO::InputParameterContainer& container) override;
+          const Core::IO::InputParameterContainer& container,
+          const Core::IO::MeshInput::ElementDataFromCellData& element_data) override;
 
      private:
       //! action parameters recognized by bele3

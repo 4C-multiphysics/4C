@@ -14,7 +14,8 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
 bool Discret::Elements::Torsion3::read_element(const std::string& eletype,
-    const std::string& distype, const Core::IO::InputParameterContainer& container)
+    const std::string& distype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // read type of material model
   int material_id = container.get<int>("MAT");

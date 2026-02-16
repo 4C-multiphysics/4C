@@ -178,7 +178,8 @@ void Core::Elements::Element::print(std::ostream& os) const
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 bool Core::Elements::Element::read_element(const std::string& eletype, const std::string& distype,
-    const Core::IO::InputParameterContainer& container)
+    const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   FOUR_C_THROW("subclass implementations missing");
   return false;

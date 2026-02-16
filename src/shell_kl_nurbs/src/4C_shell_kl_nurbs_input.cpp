@@ -18,7 +18,8 @@ FOUR_C_NAMESPACE_OPEN
  *
  */
 bool Discret::Elements::KirchhoffLoveShellNurbs::read_element(const std::string& eletype,
-    const std::string& distype, const Core::IO::InputParameterContainer& container)
+    const std::string& distype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // set discretization type
   set_dis_type(Core::FE::string_to_cell_type(distype));

@@ -198,7 +198,8 @@ namespace Discret
       //! @}
 
       bool read_element(const std::string& eletype, const std::string& eledistype,
-          const Core::IO::InputParameterContainer& container) override;
+          const Core::IO::InputParameterContainer& container,
+          const Core::IO::MeshInput::ElementDataFromCellData& element_data) override;
 
       [[nodiscard]] const std::set<Inpar::Solid::EleTech>& get_ele_tech() const { return eletech_; }
 

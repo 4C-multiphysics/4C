@@ -175,7 +175,8 @@ namespace Discret
       std::shared_ptr<Core::Elements::ParamsInterface> params_interface_ptr() override;
 
       bool read_element(const std::string& eletype, const std::string& distype,
-          const Core::IO::InputParameterContainer& container) override;
+          const Core::IO::InputParameterContainer& container,
+          const Core::IO::MeshInput::ElementDataFromCellData& element_data) override;
 
       //! scale truss reference length
       void scale_reference_length(double scalefac);

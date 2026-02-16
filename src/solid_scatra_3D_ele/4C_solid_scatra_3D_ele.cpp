@@ -165,7 +165,8 @@ void Discret::Elements::SolidScatra::set_params_interface_ptr(const Teuchos::Par
 }
 
 bool Discret::Elements::SolidScatra::read_element(const std::string& eletype,
-    const std::string& celltype, const Core::IO::InputParameterContainer& container)
+    const std::string& celltype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // read base element
   // set cell type

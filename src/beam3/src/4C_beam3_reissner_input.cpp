@@ -21,7 +21,8 @@ FOUR_C_NAMESPACE_OPEN
 /*-----------------------------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------------------------*/
 bool Discret::Elements::Beam3r::read_element(const std::string& eletype, const std::string& distype,
-    const Core::IO::InputParameterContainer& container)
+    const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   /* the triad field is discretized with Lagrange polynomials of order num_node()-1;
    * the centerline is either discretized in the same way or with 3rd order Hermite polynomials;
@@ -49,7 +50,6 @@ bool Discret::Elements::Beam3r::read_element(const std::string& eletype, const s
 
   // read whether automatic differentiation via Sacado::Fad package shall be used
   use_fad_ = container.get<bool>("USE_FAD");
-
 
   // store nodal triads according to input file
   theta0node_.resize(nnodetriad);

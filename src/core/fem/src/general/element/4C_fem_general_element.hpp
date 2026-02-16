@@ -16,6 +16,7 @@
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_fem_general_elements_paramsinterface.hpp"
+#include "4C_io_mesh.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
@@ -655,7 +656,8 @@ might become invalid after a redistribution of the discretization.
     \brief Read input for this element
     */
     virtual bool read_element(const std::string& eletype, const std::string& distype,
-        const Core::IO::InputParameterContainer& container);
+        const Core::IO::InputParameterContainer& container,
+        const Core::IO::MeshInput::ElementDataFromCellData& element_data);
 
     /*!
       \brief Set processor local col id

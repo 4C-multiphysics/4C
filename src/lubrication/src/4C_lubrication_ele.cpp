@@ -271,7 +271,8 @@ std::vector<std::shared_ptr<Core::Elements::Element>> Discret::Elements::Lubrica
  | read element input                                       wirtz 10/15 |
  *----------------------------------------------------------------------*/
 bool Discret::Elements::Lubrication::read_element(const std::string& eletype,
-    const std::string& distype, const Core::IO::InputParameterContainer& container)
+    const std::string& distype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // read number of material model
   int material_id = container.get<int>("MAT");

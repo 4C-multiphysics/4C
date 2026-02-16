@@ -319,7 +319,8 @@ namespace
         linedef.fully_parse(parser, data);
 
         ele->set_node_ids_one_based_index(cell_info.nodal_ids);
-        ele->read_element(eletype, cell_info.cell_type_str, data);
+        ele->read_element(
+            eletype, cell_info.cell_type_str, data, Core::IO::MeshInput::ElementDataFromCellData{});
 
         // add element to discretization
         dis_->add_element(ele);
@@ -613,6 +614,7 @@ namespace
             "cell type '{}'.",
             eb_id, eb.cell_type, element_name, cell_type);
 
+        size_t cell_id_in_block = 0;
         for (const auto& cell : eb.cells())
         {
           // Do not yet use the external cell ID. 4C is not yet prepared to deal with this!
@@ -620,10 +622,12 @@ namespace
           auto ele = Core::Communication::factory(element_name, cell_type_string, ele_count, 0);
           if (!ele) FOUR_C_THROW("element creation failed");
           ele->set_node_ids(cell.size(), cell.data());
-          ele->read_element(element_name, cell_type_string, specific_data);
+          Core::IO::MeshInput::ElementDataFromCellData element_data{eb.cell_data, cell_id_in_block};
+          ele->read_element(element_name, cell_type_string, specific_data, element_data);
 
           user_elements.emplace(ele_count, std::move(ele));
           ele_count++;
+          cell_id_in_block++;
         }
       }
 
