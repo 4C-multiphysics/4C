@@ -21,25 +21,25 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.repository == '4C-multiphysics/4C'
       }}
     steps:
-      - uses: dawidd6/action-download-artifact@v12
+      - uses: dawidd6/action-download-artifact@v14
         with:
           workflow: documentation.yml
           name: doxygen
           path: ${{ github.workspace }}/doxygen
           branch: ${{ github.event.repository.default_branch }}
-      - uses: dawidd6/action-download-artifact@v12
+      - uses: dawidd6/action-download-artifact@v14
         with:
           workflow: documentation.yml
           name: documentation
           path: ${{ github.workspace }}/documentation
           branch: ${{ github.event.repository.default_branch }}
-      - uses: dawidd6/action-download-artifact@v12
+      - uses: dawidd6/action-download-artifact@v14
         with:
           workflow: coverage.yml
           name: 4C_coverage_report
           path: ${{ github.workspace }}/coverage_report
           branch: ${{ github.event.repository.default_branch }}
-      - uses: dawidd6/action-download-artifact@v12
+      - uses: dawidd6/action-download-artifact@v14
         with:
           workflow: nightly_tests.yml
           name: clang18_compile_time_report
