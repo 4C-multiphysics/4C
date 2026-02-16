@@ -1,0 +1,222 @@
+TITLE:
+  - "Simple test case for monolithic TSI: heating due to nodal velocities."
+  - "Compression of the body due to a traction force that increases with t"
+  - "In contrast to corresponding partitioned TSI test cases, here we use a"
+  - "dynamic time integration scheme for both fields"
+  - "dynamic, geometrically linear analysis with THETA=1.0 (implicit Euler)"
+  - "material parameters of steel"
+  - "new framework of convergence test:"
+  - "small thermal residual due to unstressed initial configuration, i.e. small"
+  - "reference norm, next step: load is increased leading to thermal heating and"
+  - "therefore to a big thermal residual norm"
+  - "thermal residual can hardly be dropped due to a huge norm after 1st solve, i.e."
+  - "output at numiter=2 --> criterion \"Coupl_and_Singl\" is no good choice here"
+  - "due to extremely coarse mesh, thermal problem cannot be resolved properly"
+  - "> temperature is not constant in the body but varies at the 4th position"
+  - "after the decimal point"
+PROBLEM SIZE:
+  ELEMENTS: 2
+  NODES: 12
+  MATERIALS: 4
+  NUMDF: 6
+IO:
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "GL"
+  THERM_HEATFLUX: "Current"
+  THERM_TEMPGRAD: "Current"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Thermo_Structure_Interaction"
+STRUCTURAL DYNAMIC:
+  RESULTSEVERY: 0
+  RESTARTEVERY: 0
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "OneStepTheta"
+  TIMESTEP: 1
+  NUMSTEP: 10
+  MAXTIME: 10
+  TOLDISP: 1e-08
+  TOLRES: 1e-06
+  NORM_RESF: "Rel"
+  LINEAR_SOLVER: 1
+STRUCTURAL DYNAMIC/ONESTEPTHETA:
+  THETA: 1
+IO/RUNTIME VTK OUTPUT:
+  OUTPUT_DATA_FORMAT: ascii
+  INTERVAL_STEPS: 3
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+  GAUSS_POINT_DATA_OUTPUT_TYPE: nodes
+THERMAL DYNAMIC:
+  RESTARTEVERY: 0
+  RESULTSEVERY: 0
+  INITIALFIELD: "field_by_function"
+  INITFUNCNO: 1
+  TIMESTEP: 0.01
+  MAXTIME: 1
+  TOLTEMP: 1e-08
+  TOLRES: 1e-05
+  ITERNORM: "Rms"
+  LINEAR_SOLVER: 1
+THERMAL DYNAMIC/ONESTEPTHETA:
+  THETA: 1
+THERMAL DYNAMIC/RUNTIME VTK OUTPUT:
+  OUTPUT_THERMO: true
+  TEMPERATURE: true
+TSI DYNAMIC:
+  RESTARTEVERY: 0
+  RESULTSEVERY: 3
+  NUMSTEP: 3
+  MAXTIME: 90
+  TIMESTEP: 30
+TSI DYNAMIC/MONOLITHIC:
+  CONVTOL: 1e-07
+  TOLINC: 1e-08
+  NORM_RESF: "Rel"
+  NORMCOMBI_RESFINC: "And"
+  LINEAR_SOLVER: 2
+SOLVER 1:
+  SOLVER: "UMFPACK"
+SOLVER 2:
+  SOLVER: "Belos"
+  AZPREC: "Teko"
+  AZREUSE: 20
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  TEKO_XML_FILE: "xml/block_preconditioner/thermo_solid.xml"
+  NAME: "Thermo_Structure_Interaction_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_ThermoPlasticLinElast:
+      YOUNG: 6000.0
+      NUE: 0.3
+      DENS: 1e-06
+      THEXPANS: 1.1e-05
+      INITTEMP: 300
+      YIELD: 250
+      ISOHARD: 0
+      KINHARD: 0
+      SAMPLENUM: 4
+      SIGMA_Y: [250, 500, 750, 1000]
+      EPSBAR_P: [0.0, 0.01, 0.1, 1.0]
+      TOL: 0.0001
+      THERMOMAT: 2
+  - MAT: 2
+    MAT_Fourier:
+      CAPA: 6.445
+      CONDUCT:
+        constant: [1031.2]
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 1
+    TAR_FIELD: "thermo"
+    TAR_MAT: 2
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "300.0"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "10*t"
+DESIGN SURF THERMO NEUMANN CONDITIONS:
+  # positive x direction
+  - E: 1
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+  # negative x direction
+  - E: 2
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+DESIGN SURF NEUMANN CONDITIONS:
+  # positive x direction
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [1, 0, 0]
+    FUNCT: [2, 2, 2]
+DESIGN SURF DIRICH CONDITIONS:
+  # negative x direction
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [0, 1, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DSURF-NODE TOPOLOGY:
+  # X+
+  - "NODE 9 DSURFACE 1"
+  - "NODE 10 DSURFACE 1"
+  - "NODE 11 DSURFACE 1"
+  - "NODE 12 DSURFACE 1"
+  # X-
+  - "NODE 1 DSURFACE 2"
+  - "NODE 4 DSURFACE 2"
+  - "NODE 5 DSURFACE 2"
+  - "NODE 8 DSURFACE 2"
+  # Y-
+  - "NODE 1 DSURFACE 3"
+  - "NODE 2 DSURFACE 3"
+  - "NODE 5 DSURFACE 3"
+  - "NODE 6 DSURFACE 3"
+  - "NODE 9 DSURFACE 3"
+  - "NODE 11 DSURFACE 3"
+  # Z-
+  - "NODE 3 DSURFACE 4"
+  - "NODE 4 DSURFACE 4"
+  - "NODE 1 DSURFACE 4"
+  - "NODE 2 DSURFACE 4"
+  - "NODE 10 DSURFACE 4"
+  - "NODE 9 DSURFACE 4"
+NODE COORDS:
+  - "NODE 1 COORD 0.00000000e+00 0.00000000e+00 -1.00000000e+00"
+  - "NODE 2 COORD 2.00000000e+00 0.00000000e+00 -1.00000000e+00"
+  - "NODE 3 COORD 2.00000000e+00 2.00000000e+00 -1.00000000e+00"
+  - "NODE 4 COORD 0.00000000e+00 2.00000000e+00 -1.00000000e+00"
+  - "NODE 5 COORD 0.00000000e+00 0.00000000e+00 1.00000000e+00"
+  - "NODE 6 COORD 2.00000000e+00 0.00000000e+00 1.00000000e+00"
+  - "NODE 7 COORD 2.00000000e+00 2.00000000e+00 1.00000000e+00"
+  - "NODE 8 COORD 0.00000000e+00 2.00000000e+00 1.00000000e+00"
+  - "NODE 9 COORD 4.00000000e+00 0.00000000e+00 -1.00000000e+00"
+  - "NODE 10 COORD 4.00000000e+00 2.00000000e+00 -1.00000000e+00"
+  - "NODE 11 COORD 4.00000000e+00 0.00000000e+00 1.00000000e+00"
+  - "NODE 12 COORD 4.00000000e+00 2.00000000e+00 1.00000000e+00"
+STRUCTURE ELEMENTS:
+  - "1 SOLIDSCATRA HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM linear TYPE Undefined"
+  - "2 SOLIDSCATRA HEX8 2 9 10 3 6 11 12 7 MAT 1 KINEM linear TYPE Undefined"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 9
+      QUANTITY: "dispx"
+      VALUE: 3.16107117110897073
+      TOLERANCE: 1e-06
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 10
+      QUANTITY: "accumulated_plastic_strain"
+      VALUE: 0.64
+      TOLERANCE: 1e-06
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 11
+      QUANTITY: "dissipation"
+      VALUE: -148.5
+      TOLERANCE: 1e-06
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 9
+      QUANTITY: "temp"
+      VALUE: 324.344799197706436
+      TOLERANCE: 1e-06

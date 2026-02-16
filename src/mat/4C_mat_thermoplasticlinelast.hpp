@@ -73,7 +73,6 @@ namespace Mat
 
   }  // namespace PAR
 
-
   class ThermoPlasticLinElastType : public Core::Communication::ParObjectType
   {
    public:
@@ -93,6 +92,9 @@ namespace Mat
   //! wrapper for linear thermo-elasto-plastic material
   class ThermoPlasticLinElast : public ThermoMechanicalMaterial
   {
+    // forward declaration
+    struct IsoHardeningParams;
+
    public:
     //! construct empty material object
     ThermoPlasticLinElast();
@@ -210,16 +212,9 @@ namespace Mat
 
     //! calculates the derivative of get_sigma_y_at_strainbarnp() w.r.t. astrain_{n+1}
     //! and returns the isotropic hardening modulus
-    double get_iso_hard_at_strainbarnp(
-        const double strainbar_p  //!< current accumulated strain
-                                  //!< or if damage!=0: isotropic hardening internal variable
-    ) const;
-
-    //! calculates current yield stress from (sigma_y-astrain)-samples which
-    //! describe a piecewise constant function
-    double get_sigma_y_at_strainbarnp(
-        const double strainbar_p  //!< current accumulated strain, in case of dependent hardening
-                                  //!< or if damage!=0: isotropic hardening internal variable
+    IsoHardeningParams get_iso_hard_at_strainbarnp(
+        const double strainbar_p,  //!< current accumulated strain
+        const double sigma_y0      // initial yield stress
     ) const;
 
     //! return density
@@ -354,6 +349,14 @@ namespace Mat
     bool vis_data(
         const std::string& name, std::vector<double>& data, int numgp, int eleID) const override;
 
+    //! return names of visualization data available for direct VTK output
+    void register_output_data_names(
+        std::unordered_map<std::string, int>& names_and_size) const override;
+
+    //! return visualization data for direct VTK output
+    bool evaluate_output_data(
+        const std::string& name, Core::LinAlg::SerialDenseMatrix& data) const override;
+
     //! @name thermo material interface
 
     void evaluate(const Core::LinAlg::Matrix<3, 1>& gradtemp, Core::LinAlg::Matrix<3, 3>& cmat,
@@ -435,6 +438,11 @@ namespace Mat
     //! element ID, in which first plasticity occurs
     int plastic_ele_id_;
 
+    struct IsoHardeningParams
+    {
+      double sigma_y{0.0};
+      double hardening{0.0};
+    };
   };  // class ThermoThermoPlasticLinElast : public Core::Mat::Material
 }  // namespace Mat
 

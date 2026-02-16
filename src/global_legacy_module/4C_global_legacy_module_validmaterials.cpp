@@ -1186,9 +1186,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("YIELD", {.description = "yield stress"}),
             parameter<double>("ISOHARD", {.description = "isotropic hardening modulus"}),
             parameter<double>("KINHARD", {.description = "kinematic hardening modulus"}),
-            parameter<int>("SAMPLENUM", {.description = "number of stress-strain pairs in list"}),
-            parameter<std::vector<double>>("SIGMA_Y",
-                {.description = "yield stress", .size = from_parameter<int>("SAMPLENUM")}),
+            parameter<int>("SAMPLENUM",
+                {.description =
+                        "number of stress-strain pairs for multi-linear isotropic hardening"}),
+            parameter<std::vector<double>>(
+                "SIGMA_Y", {.description = "yield stress values at specific plastic strains. The "
+                                           "value at zero plastic strain is still given in YIELD",
+                               .size = from_parameter<int>("SAMPLENUM")}),
             parameter<std::vector<double>>(
                 "EPSBAR_P", {.description = "accumulated plastic strain corresponding to SIGMA_Y",
                                 .size = from_parameter<int>("SAMPLENUM")}),
@@ -1196,7 +1200,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<int>("THERMOMAT",
                 {.description = "mat id of thermal material part", .default_value = -1}),
         },
-        {.description = "Thermo-elastic St.Venant Kirchhoff / plastic von Mises material"});
+        {.description = "Thermo-elastic St.Venant Kirchhoff / plastic von Mises material with "
+                        "isotropic and kinematic hardening. The material also includes adiabatic "
+                        "heating due to plastic dissipation"});
   }
 
   /*----------------------------------------------------------------------*/

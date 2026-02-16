@@ -116,6 +116,30 @@ int Discret::Elements::SolidScatra::evaluate(Teuchos::ParameterList& params,
 
       return 0;
     }
+    case Core::Elements::struct_init_gauss_point_data_output:
+    {
+      std::visit(
+          [&](auto& interface)
+          {
+            interface->initialize_gauss_point_data_output(*this, solid_material(),
+                *get_solid_params_interface().gauss_point_data_output_manager_ptr());
+          },
+          solid_scatra_calc_variant_);
+
+      return 0;
+    }
+    case Core::Elements::struct_gauss_point_data_output:
+    {
+      std::visit(
+          [&](auto& interface)
+          {
+            interface->evaluate_gauss_point_data_output(*this, solid_material(),
+                *get_solid_params_interface().gauss_point_data_output_manager_ptr());
+          },
+          solid_scatra_calc_variant_);
+
+      return 0;
+    }
     case Core::Elements::struct_calc_reset_istep:
     {
       std::visit([&](auto& interface)
