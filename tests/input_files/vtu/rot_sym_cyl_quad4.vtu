@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<VTKFile type="UnstructuredGrid" version="0.1" byte_order="LittleEndian">
+<!--This file was created by meshio v5.3.5-->
+<UnstructuredGrid>
+<Piece NumberOfPoints="6" NumberOfCells="2">
+<Points>
+<DataArray type="Float64" Name="Points" NumberOfComponents="3" format="ascii">
+0.00000000000e+00
+5.09271274201e+01
+4.99993976035e-01
+0.00000000000e+00
+5.09295817894e+01
+0.00000000000e+00
+5.00000000000e-01
+5.09271274201e+01
+4.99993976035e-01
+5.00000000000e-01
+5.09295817894e+01
+0.00000000000e+00
+1.00000000000e+00
+5.09271274201e+01
+4.99993976035e-01
+1.00000000000e+00
+5.09295817894e+01
+0.00000000000e+00
+
+</DataArray>
+</Points>
+<Cells>
+<DataArray type="Int64" Name="connectivity" format="ascii">
+0
+2
+3
+1
+2
+4
+5
+3
+
+</DataArray>
+<DataArray type="Int64" Name="offsets" format="ascii">
+4
+8
+
+</DataArray>
+<DataArray type="Int64" Name="types" format="ascii">
+9
+9
+
+</DataArray>
+</Cells>
+<PointData>
+<DataArray type="Int64" Name="point_set_2" format="ascii">
+1
+0
+0
+0
+1
+0
+
+</DataArray>
+<DataArray type="Int64" Name="point_set_3" format="ascii">
+1
+0
+1
+0
+1
+0
+
+</DataArray>
+<DataArray type="Int64" Name="point_set_5" format="ascii">
+1
+1
+1
+1
+0
+0
+
+</DataArray>
+<DataArray type="Int64" Name="point_set_1" format="ascii">
+0
+1
+0
+0
+0
+1
+
+</DataArray>
+<DataArray type="Int64" Name="point_set_4" format="ascii">
+0
+1
+0
+1
+0
+1
+
+</DataArray>
+<DataArray type="Float64" Name="fiber1" NumberOfComponents="3" format="ascii">
+-1.00000000000e+00
+0.00000000000e+00
+0.00000000000e+00
+-1.00000000000e+00
+0.00000000000e+00
+0.00000000000e+00
+-1.00000000000e+00
+0.00000000000e+00
+0.00000000000e+00
+-1.00000000000e+00
+0.00000000000e+00
+0.00000000000e+00
+-1.00000000000e+00
+0.00000000000e+00
+0.00000000000e+00
+-1.00000000000e+00
+0.00000000000e+00
+0.00000000000e+00
+
+</DataArray>
+<DataArray type="Float64" Name="fiber2" NumberOfComponents="3" format="ascii">
+0.00000000000e+00
+-9.81735876220e-03
+9.99951808572e-01
+0.00000000000e+00 
+0.00000000000e+00 
+1.00000000000e+00
+0.00000000000e+00 
+-9.81735876220e-03
+9.99951808572e-01
+0.00000000000e+00
+0.00000000000e+00 
+1.00000000000e+00
+0.00000000000e+00
+-9.81735876220e-03
+9.99951808572e-01
+0.00000000000e+00 
+0.00000000000e+00 
+1.00000000000e+00
+
+</DataArray>
+</PointData>
+<CellData>
+<DataArray type="Int64" Name="block_id" format="ascii">
+1
+1
+
+</DataArray>
+</CellData>
+</Piece>
+</UnstructuredGrid>
+</VTKFile>

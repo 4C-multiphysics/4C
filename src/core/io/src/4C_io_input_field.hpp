@@ -335,6 +335,9 @@ namespace Core::IO
       [[nodiscard]] T interpolate(IndexType element_id, std::span<const double> xi,
           std::string_view field_name = "unknown field") const
       {
+        FOUR_C_ASSERT(xi.size() == 3,
+            "xi must have exactly 3 components (1d/2d elements use zero-padded coordinates)");
+
         if (const T* data = std::get_if<T>(&data_))
         {
           return *data;
@@ -391,7 +394,7 @@ namespace Core::IO
             weights_ptr = weights_on_heap.data();
           }
           std::span<double> weights(weights_ptr, ele.num_node());
-          switch (std::size(xi))
+          switch (Core::FE::get_dimension(ele.shape()))
           {
             case 1:
               Core::FE::shape_function_1d(weights, xi[0], ele.shape());
@@ -403,8 +406,8 @@ namespace Core::IO
               Core::FE::shape_function_3d(weights, xi[0], xi[1], xi[2], ele.shape());
               break;
             default:
-              FOUR_C_THROW(
-                  "Invalid number of local coordinates: {}. Expected 1, 2 or 3.", std::size(xi));
+              FOUR_C_THROW("Element shape '{}' has invalid dimension for input field interpolation",
+                  ele.shape());
           }
 
           return Interpolation{}(weights, values);
