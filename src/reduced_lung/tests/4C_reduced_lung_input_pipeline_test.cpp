@@ -155,8 +155,8 @@ namespace
       }
     }
 
-    AirwayContainer airways;
-    TerminalUnitContainer terminal_units;
+    Airways::AirwayContainer airways;
+    TerminalUnits::TerminalUnitContainer terminal_units;
     for (const auto& element : discretization.my_row_element_range())
     {
       const int element_id = element.global_id();

@@ -26,6 +26,9 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace ReducedLung
 {
+  using namespace TerminalUnits;
+  using namespace Airways;
+
   void build_discretization_from_topology(Core::FE::Discretization& discretization,
       const ReducedLungParameters::LungTree::Topology& topology,
       const Core::Rebalance::RebalanceParameters& rebalance_parameters)
@@ -129,7 +132,7 @@ namespace ReducedLung
   Core::LinAlg::Map create_row_map(const MPI_Comm& comm, const AirwayContainer& airways,
       const TerminalUnitContainer& terminal_units, const Junctions::ConnectionData& connections,
       const Junctions::BifurcationData& bifurcations,
-      const std::vector<BoundaryCondition>& boundary_conditions)
+      const BoundaryConditions::BoundaryConditionContainer& boundary_conditions)
   {
     int n_local_state_equations = 0;
     for (const auto& airway : airways.models)
@@ -144,7 +147,8 @@ namespace ReducedLung
     const Core::LinAlg::Map state_equations(-1, n_local_state_equations, 0, comm);
     const Core::LinAlg::Map couplings(-1, connections.size() * 2 + bifurcations.size() * 3,
         state_equations.num_global_elements(), comm);
-    const Core::LinAlg::Map boundaries(-1, boundary_conditions.size(),
+    const Core::LinAlg::Map boundaries(-1,
+        BoundaryConditions::count_boundary_conditions(boundary_conditions),
         couplings.num_global_elements() + state_equations.num_global_elements(), comm);
 
     //  Merge all maps to the full local matrix row map
@@ -168,7 +172,7 @@ namespace ReducedLung
       const TerminalUnitContainer& terminal_units, const std::map<int, int>& global_dof_per_ele,
       const std::map<int, int>& first_global_dof_of_ele,
       const Junctions::ConnectionData& connections, const Junctions::BifurcationData& bifurcations,
-      const std::vector<BoundaryCondition>& boundary_conditions)
+      const BoundaryConditions::BoundaryConditionContainer& boundary_conditions)
   {
     // Vector for intermediate storage of necessary dof ids
     std::vector<int> locally_relevant_dof_indices;
@@ -241,9 +245,12 @@ namespace ReducedLung
           first_global_dof_of_ele.find(bifurcations.global_child_2_element_id[i])->second + 2);
     }
     // Loop over all boundary conditions and add relevant dof ids (dof where bc is applied)
-    for (const auto& bc : boundary_conditions)
+    for (const auto& model : boundary_conditions.models)
     {
-      locally_relevant_dof_indices.push_back(bc.global_dof_id);
+      for (size_t i = 0; i < model.data.size(); ++i)
+      {
+        locally_relevant_dof_indices.push_back(model.data.global_dof_id[i]);
+      }
     }
 
     // Erase duplicate dof indices and sort the remaining ids
