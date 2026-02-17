@@ -25,6 +25,16 @@ namespace Core::Nodes
   class Node;
 }
 
+namespace Core::FE
+{
+  class Discretization;
+}
+
+namespace Core::Rebalance
+{
+  struct RebalanceParameters;
+}
+
 namespace ReducedLung
 {
   using namespace Airways;
@@ -45,36 +55,24 @@ namespace ReducedLung
     int local_bc_id;
     BoundaryConditionType bc_type;
     int global_dof_id;
-    int funct_num;
+    int function_id;
+    double value;
     int local_dof_id = 0;
   };
 
-  enum ElementDofNumbering
-  {
-    p_in = 0,
-    p_out = 1,
-    q_in = 2,
-    q_out = 3
-  };
-
-  enum class AirwayType
-  {
-    resistive,
-    viscoelastic_RLC
-  };
-
-  struct Airway
-  {
-    int global_element_id;
-    int local_element_id;
-    int local_airway_id;
-    AirwayType airway_type;
-    // dofs: {p1, p2, q} for resistive airways; {p1, p2, q1, q2} for compliant airways
-    std::vector<int> global_dof_ids{};
-    int n_state_equations = 1;
-    // local dof ids in locally relevant dof map!
-    std::vector<int> local_dof_ids{};
-  };
+  /*!
+   * @brief Build a minimal discretization from the reduced lung topology.
+   *
+   * Creates line2 elements with a lightweight geometry-only element type and registers
+   * node coordinates/element connectivity for distribution, rebalancing, and output.
+   *
+   * @param discretization Target 4C discretization to populate.
+   * @param topology Reduced lung topology description (nodes and element connectivity).
+   * @param rebalance_parameters Parameters for mesh rebalancing/partitioning.
+   */
+  void build_discretization_from_topology(Core::FE::Discretization& discretization,
+      const ReducedLungParameters::LungTree::Topology& topology,
+      const Core::Rebalance::RebalanceParameters& rebalance_parameters);
 
   /*!
    * @brief Create the map with the locally owned dofs spanning the computation domain that
@@ -154,13 +152,13 @@ namespace ReducedLung
    * based on the flow model (Linear/NonLinear) and wall model (Rigid/KelvinVoigt) types.
    *
    * @param airways Container for all airway models.
-   * @param ele Pointer to the element.
+   * @param global_element_id Unique global identifier for the element.
    * @param local_element_id Local element id for the row map.
    * @param parameters Reduced lung parameters containing model and geometry information.
    * @param flow_model_type The flow model type.
    * @param wall_model_type The wall model type.
    */
-  void add_airway_with_model_selection(AirwayContainer& airways, Core::Elements::Element* ele,
+  void add_airway_with_model_selection(AirwayContainer& airways, int global_element_id,
       int local_element_id, const ReducedLungParameters& parameters,
       ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType flow_model_type,
       ReducedLungParameters::LungTree::Airways::WallModelType wall_model_type);
@@ -174,15 +172,14 @@ namespace ReducedLung
    * (Linear/Ogden) types.
    *
    * @param terminal_units Container for all terminal unit models.
-   * @param ele Pointer to the element
+   * @param global_element_id Unique global identifier of the element.
    * @param local_element_id Local element id for the row map.
-   * @param tu_parameters Terminal unit parameters containing model information.
+   * @param parameters Terminal unit parameters containing model information.
    * @param rheological_model_type The rheological model type.
    * @param elasticity_model_type The elasticity model type.
    */
   void add_terminal_unit_with_model_selection(TerminalUnitContainer& terminal_units,
-      Core::Elements::Element* ele, int local_element_id,
-      const ReducedLungParameters::LungTree::TerminalUnits& tu_parameters,
+      int global_element_id, int local_element_id, const ReducedLungParameters& parameters,
       ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
           rheological_model_type,
       ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType

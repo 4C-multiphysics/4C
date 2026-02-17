@@ -8,10 +8,8 @@
 #include "4C_reduced_lung_main.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
-#include "4C_fem_condition.hpp"
-#include "4C_fem_condition_utils.hpp"
+#include "4C_comm_utils.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_fem_discretization_nullspace.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
@@ -19,7 +17,7 @@
 #include "4C_io_input_field.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
-#include "4C_red_airways_elementbase.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_reduced_lung_airways.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_input.hpp"
@@ -38,26 +36,30 @@ namespace ReducedLung
   void reduced_lung_main()
   {
     // Access given 4C infrastructure.
-    std::shared_ptr<Core::FE::Discretization> actdis =
-        Global::Problem::instance()->get_dis("red_airway");
-    if (!actdis->filled())
-    {
-      actdis->fill_complete();
-    }
+    auto* problem = Global::Problem::instance();
     ReducedLungParameters parameters =
-        Global::Problem::instance()->parameters().get<ReducedLungParameters>(
-            "reduced_dimensional_lung");
-    Core::LinAlg::Solver solver(
-        Global::Problem::instance()->solver_params(parameters.dynamics.linear_solver),
-        actdis->get_comm(), Global::Problem::instance()->solver_params_callback(),
-        Teuchos::getIntegralValue<Core::IO::Verbositylevel>(
-            Global::Problem::instance()->io_params(), "VERBOSITY"));
-    compute_null_space_if_necessary(*actdis, solver.params());
+        problem->parameters().get<ReducedLungParameters>("reduced_dimensional_lung");
+    MPI_Comm local_comm = problem->get_communicators().local_comm();
+    auto actdis = std::make_shared<Core::FE::Discretization>("reduced_lung", local_comm, 3);
+
+    Core::Rebalance::RebalanceParameters rebalance_parameters{
+        .mesh_partitioning_parameters =
+            problem->parameters().get<Core::Rebalance::MeshPartitioningParameters>(
+                "MESH PARTITIONING"),
+        .geometric_search_parameters = problem->geometric_search_params(),
+        .io_parameters = problem->io_params(),
+    };
+    build_discretization_from_topology(
+        *actdis, parameters.lung_tree.topology, rebalance_parameters);
+    actdis->fill_complete();
+    Core::LinAlg::Solver solver(problem->solver_params(parameters.dynamics.linear_solver),
+        actdis->get_comm(), problem->solver_params_callback(),
+        Teuchos::getIntegralValue<Core::IO::Verbositylevel>(problem->io_params(), "VERBOSITY"));
     // Create runtime output writer
     Core::IO::DiscretizationVisualizationWriterMesh visualization_writer(
         actdis, Core::IO::visualization_parameters_factory(
-                    Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
-                    *Global::Problem::instance()->output_control_file(), 0));
+                    problem->io_params().sublist("RUNTIME VTK OUTPUT"),
+                    *problem->output_control_file(), 0));
     // The existing mpi communicator is recycled for the new data layout.
     const auto& comm = actdis->get_comm();
 
@@ -72,51 +74,47 @@ namespace ReducedLung
     // terminal units). Adds all information directly given in the row element range.
     for (auto ele : actdis->my_row_element_range())
     {
-      auto* user_ele = ele.user_element();
-      int element_id = ele.global_id();
-      int local_element_id = actdis->element_row_map()->lid(element_id);
-      if (user_ele->element_type() == Discret::Elements::RedAirwayType::instance())
+      int global_element_id = ele.global_id();
+      int local_element_id = actdis->element_row_map()->lid(global_element_id);
+      FOUR_C_ASSERT_ALWAYS(local_element_id >= 0,
+          "Element {} not found in element row map while iterating row elements.",
+          global_element_id + 1);
+      const auto element_type =
+          parameters.lung_tree.element_type.at(global_element_id, "element_type");
+      if (element_type == ReducedLungParameters::LungTree::ElementType::Airway)
       {
         ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType flow_model_name =
             parameters.lung_tree.airways.flow_model.resistance_type.at(
-                ele.global_id(), "flow_model_type");
+                global_element_id, "resistance_type");
         ReducedLungParameters::LungTree::Airways::WallModelType wall_model_type =
-            parameters.lung_tree.airways.wall_model_type.at(ele.global_id(), "wall_model_type");
+            parameters.lung_tree.airways.wall_model_type.at(global_element_id, "wall_model_type");
 
-        add_airway_with_model_selection(
-            airways, user_ele, local_element_id, parameters, flow_model_name, wall_model_type);
+        add_airway_with_model_selection(airways, global_element_id, local_element_id, parameters,
+            flow_model_name, wall_model_type);
 
-        dof_per_ele[element_id] = 2 + airways.models.back().data.n_state_equations;
+        dof_per_ele[global_element_id] = 2 + airways.models.back().data.n_state_equations;
         n_airways++;
       }
-      else if (user_ele->element_type() == Discret::Elements::RedAcinusType::instance())
+      else if (element_type == ReducedLungParameters::LungTree::ElementType::TerminalUnit)
       {
-        if (user_ele->material(0)->material_type() ==
-            Core::Materials::m_0d_maxwell_acinus_neohookean)
-        {
-          ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
-              rheological_model_name =
-                  parameters.lung_tree.terminal_units.rheological_model.rheological_model_type.at(
-                      ele.global_id(), "rheological_model_type");
+        ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
+            rheological_model_name =
+                parameters.lung_tree.terminal_units.rheological_model.rheological_model_type.at(
+                    global_element_id, "rheological_model_type");
 
-          ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType
-              elasticity_model_name =
-                  parameters.lung_tree.terminal_units.elasticity_model.elasticity_model_type.at(
-                      ele.global_id(), "elasticity_model_type");
+        ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType
+            elasticity_model_name =
+                parameters.lung_tree.terminal_units.elasticity_model.elasticity_model_type.at(
+                    global_element_id, "elasticity_model_type");
 
-          add_terminal_unit_with_model_selection(terminal_units, user_ele, local_element_id,
-              parameters.lung_tree.terminal_units, rheological_model_name, elasticity_model_name);
-        }
-        else
-        {
-          FOUR_C_THROW("Material not implemented.");
-        }
-        dof_per_ele[element_id] = 3;
+        add_terminal_unit_with_model_selection(terminal_units, global_element_id, local_element_id,
+            parameters, rheological_model_name, elasticity_model_name);
+        dof_per_ele[global_element_id] = 3;
         n_terminal_units++;
       }
       else
       {
-        FOUR_C_THROW("Unknown element type.");
+        FOUR_C_THROW("Unknown reduced lung element type.");
       }
     }
 
@@ -206,85 +204,113 @@ namespace ReducedLung
     Junctions::ConnectionData connections;
     Junctions::BifurcationData bifurcations;
     int n_boundary_conditions = 0;
-    // Find all nodes with boundary conditions
-    std::vector<const Core::Conditions::Condition*> conditions;
-    actdis->get_condition("RedAirwayPrescribedCond", conditions);
-    const auto red_airway_prescribed_conditions =
-        Core::Conditions::find_conditioned_node_ids_and_conditions(
-            *actdis, conditions, Core::Conditions::LookFor::locally_owned_and_ghosted);
-    // Loop over all local elements, get their nodes, create associated entity. This way, they are
-    // created on the same ranks as at least one of their connected elements. This reduces the
-    // amount of communication of dofs between ranks.
-    for (auto ele : actdis->my_row_element_range())
+    const auto& bc_parameters = parameters.boundary_conditions;
+    if (bc_parameters.num_conditions < 0)
     {
-      const auto nodes = ele.nodes();
-      // WARNING: if node ordering is wrong (inlet in nodes[1]), the whole logic doesn't apply in
-      // the same way as assumed throughout this implementation! A top-down ordering of nodes needs
-      // to be enforced during tree creation. This is to a large amount asserted during creation of
-      // the coupling entities. However, special cases might slip through.
-      auto node_in = nodes[0];
-      auto node_out = nodes[1];
-      const auto node_in_n_eles = global_ele_ids_per_node[node_in.global_id()].size();
-      const auto node_out_n_eles = global_ele_ids_per_node[node_out.global_id()].size();
-      // Check whether element is starting point of tree (trachea in full lungs, lobe inlets for
-      // single lobes, etc.)
-      if (node_in_n_eles == 1)
+      FOUR_C_THROW("Number of boundary conditions must be non-negative, got {}.",
+          bc_parameters.num_conditions);
+    }
+    boundary_conditions.reserve(bc_parameters.num_conditions);
+    for (int bc_id = 0; bc_id < bc_parameters.num_conditions; ++bc_id)
+    {
+      const int node_id_one_based = bc_parameters.node_id.at(bc_id, "bc_node_id");
+      if (node_id_one_based < 1 || node_id_one_based > parameters.lung_tree.topology.num_nodes)
       {
-        FOUR_C_ASSERT_ALWAYS(red_airway_prescribed_conditions.count(node_in.global_id()) == 1,
-            "Node {} is located at the boundary and needs to have exactly one boundary condition "
-            "but it has {} conditions.",
-            node_in.global_id(), red_airway_prescribed_conditions.count(node_in.global_id()));
+        FOUR_C_THROW("Boundary condition bc_node_id {} is outside the valid range [1, {}].",
+            node_id_one_based, parameters.lung_tree.topology.num_nodes);
+      }
+      const int node_id = node_id_one_based - 1;
+      auto node_it = global_ele_ids_per_node.find(node_id);
+      if (node_it == global_ele_ids_per_node.end())
+      {
+        FOUR_C_THROW(
+            "Boundary condition bc_node_id {} is not part of the topology.", node_id_one_based);
+      }
+      const auto& adjacent_elements = node_it->second;
+      if (adjacent_elements.size() != 1u)
+      {
+        FOUR_C_THROW(
+            "Boundary condition bc_node_id {} must connect to exactly one element, but connects "
+            "to {} elements.",
+            node_id_one_based, adjacent_elements.size());
+      }
 
-        const auto* bc_condition =
-            red_airway_prescribed_conditions.find(node_in.global_id())->second;
-        const std::string bc_type = bc_condition->parameters().get<std::string>("boundarycond");
-        const std::optional<int> funct_num =
-            bc_condition->parameters().get<std::vector<std::optional<int>>>("curve")[0];
-        if (bc_type == "pressure")
+      const int element_id = adjacent_elements.front();
+      const int local_element_id = actdis->element_row_map()->lid(element_id);
+      if (local_element_id == -1)
+      {
+        continue;
+      }
+      auto* ele = actdis->l_row_element(local_element_id);
+      const auto node_ids = ele->node_ids();
+      const bool is_inlet = node_ids[0] == node_id;
+      const bool is_outlet = node_ids[1] == node_id;
+      if (!is_inlet && !is_outlet)
+      {
+        FOUR_C_THROW(
+            "Boundary condition bc_node_id {} is not attached to element {} as inlet or outlet.",
+            node_id_one_based, element_id + 1);
+      }
+
+      const auto bc_kind = bc_parameters.bc_type.at(bc_id, "bc_type");
+      BoundaryConditionType bc_type;
+      int dof_offset = 0;
+      if (bc_kind == ReducedLungParameters::BoundaryConditions::Type::Pressure)
+      {
+        bc_type =
+            is_inlet ? BoundaryConditionType::pressure_in : BoundaryConditionType::pressure_out;
+        dof_offset = is_inlet ? 0 : 1;
+      }
+      else if (bc_kind == ReducedLungParameters::BoundaryConditions::Type::Flow)
+      {
+        bc_type = is_inlet ? BoundaryConditionType::flow_in : BoundaryConditionType::flow_out;
+        if (is_inlet)
         {
-          if (funct_num.has_value())
-          {
-            boundary_conditions.push_back(BoundaryCondition{ele.global_id(), 0, 0,
-                n_boundary_conditions, BoundaryConditionType::pressure_in,
-                first_global_dof_of_ele[ele.global_id()], funct_num.value()});
-            n_boundary_conditions++;
-          }
+          dof_offset = 2;
         }
         else
         {
-          FOUR_C_THROW("Boundary condition not implemented!");
+          const auto dof_it = global_dof_per_ele.find(element_id);
+          FOUR_C_ASSERT_ALWAYS(dof_it != global_dof_per_ele.end(),
+              "Missing dof count for element {}.", element_id + 1);
+          dof_offset = dof_it->second - 1;
         }
       }
-      // Create entities "top down"-like (a processor owning an element also owns its outlet node
-      // entities).
-      if (node_out_n_eles == 1)
+      else
       {
-        FOUR_C_ASSERT_ALWAYS(red_airway_prescribed_conditions.count(node_out.global_id()) == 1,
-            "Node {} is located at the boundary and needs to have exactly one boundary condition "
-            "but it has {} conditions.",
-            node_out.global_id(), red_airway_prescribed_conditions.count(node_out.global_id()));
+        FOUR_C_THROW(
+            "Boundary condition type '{}' not implemented. Supported types are Pressure and Flow.",
+            static_cast<int>(bc_kind));
+      }
 
-        const auto* bc_condition =
-            red_airway_prescribed_conditions.find(node_out.global_id())->second;
-        const std::string bc_type = bc_condition->parameters().get<std::string>("boundarycond");
-        const std::optional<int> funct_num =
-            bc_condition->parameters().get<std::vector<std::optional<int>>>("curve")[0];
-        if (bc_type == "pressure")
+      const auto first_dof_it = first_global_dof_of_ele.find(element_id);
+      FOUR_C_ASSERT_ALWAYS(first_dof_it != first_global_dof_of_ele.end(),
+          "Missing dof offset for element {}.", element_id + 1);
+      const int global_dof_id = first_dof_it->second + dof_offset;
+      int function_id = 0;
+      double value = 0.0;
+      if (bc_parameters.value_source ==
+          ReducedLungParameters::BoundaryConditions::ValueSource::bc_function_id)
+      {
+        function_id = bc_parameters.function_id.at(bc_id, "bc_function_id");
+        if (function_id <= 0)
         {
-          if (funct_num.has_value())
-          {
-            // Pressure bc at outlet node, so p2 (2nd dof of ele).
-            boundary_conditions.push_back(BoundaryCondition{ele.global_id(), 0, 0,
-                n_boundary_conditions, BoundaryConditionType::pressure_out,
-                first_global_dof_of_ele[ele.global_id()] + 1, funct_num.value()});
-            n_boundary_conditions++;
-          }
-        }
-        else
-        {
-          FOUR_C_ASSERT(false, "Boundary condition not implemented!");
+          FOUR_C_THROW("Boundary condition bc_function_id must be positive, got {}.", function_id);
         }
       }
+      else if (bc_parameters.value_source ==
+               ReducedLungParameters::BoundaryConditions::ValueSource::bc_value)
+      {
+        value = bc_parameters.value.at(bc_id, "bc_value");
+      }
+      else
+      {
+        FOUR_C_THROW("Boundary condition value source not implemented.");
+      }
+
+      boundary_conditions.push_back(BoundaryCondition{
+          element_id, 0, 0, n_boundary_conditions, bc_type, global_dof_id, function_id, value});
+      n_boundary_conditions++;
     }
 
     Junctions::create_junctions(*actdis, global_ele_ids_per_node, global_dof_per_ele,
@@ -453,9 +479,13 @@ namespace ReducedLung
       {
         const double val = 1.0;
         double res;
-        auto bc_value = Global::Problem::instance()
-                            ->function_by_id<Core::Utils::FunctionOfTime>(bc.funct_num)
-                            .evaluate(n * dt);
+        double bc_value = bc.value;
+        if (bc.function_id > 0)
+        {
+          bc_value = Global::Problem::instance()
+                         ->function_by_id<Core::Utils::FunctionOfTime>(bc.function_id)
+                         .evaluate(n * dt);
+        }
         int local_dof_id = bc.local_dof_id;
         if (!sysmat.filled())
         {

@@ -977,18 +977,18 @@ namespace ReducedLung
     {
       void operator()(LinearResistive& model)
       {
-        model.has_inertia.push_back(
-            params->lung_tree.airways.flow_model.include_inertia.at(ele->id(), "include_inertia"));
+        model.has_inertia.push_back(params->lung_tree.airways.flow_model.include_inertia.at(
+            global_element_id, "include_inertia"));
       }
       void operator()(NonLinearResistive& model)
       {
         model.turbulence_factor_gamma.push_back(
             params->lung_tree.airways.flow_model.resistance_model.non_linear.turbulence_factor_gamma
-                .at(ele->id(), "turbulence_factor_gamma"));
-        model.has_inertia.push_back(
-            params->lung_tree.airways.flow_model.include_inertia.at(ele->id(), "include_inertia"));
+                .at(global_element_id, "turbulence_factor_gamma"));
+        model.has_inertia.push_back(params->lung_tree.airways.flow_model.include_inertia.at(
+            global_element_id, "include_inertia"));
       }
-      Core::Elements::Element* ele;
+      int global_element_id;
       const ReducedLungParameters* params;
     };
 
@@ -1001,20 +1001,20 @@ namespace ReducedLung
       }
       void operator()(KelvinVoigtWall& model)
       {
-        model.wall_poisson_ratio.push_back(
-            params->kelvin_voigt.elasticity.wall_poisson_ratio.at(ele->id(), "wall_poisson_ratio"));
-        model.wall_elasticity.push_back(
-            params->kelvin_voigt.elasticity.wall_elasticity.at(ele->id(), "wall_elasticity"));
+        model.wall_poisson_ratio.push_back(params->kelvin_voigt.elasticity.wall_poisson_ratio.at(
+            global_element_id, "wall_poisson_ratio"));
+        model.wall_elasticity.push_back(params->kelvin_voigt.elasticity.wall_elasticity.at(
+            global_element_id, "wall_elasticity"));
         model.wall_thickness.push_back(
-            params->kelvin_voigt.elasticity.wall_thickness.at(ele->id(), "wall_thickness"));
+            params->kelvin_voigt.elasticity.wall_thickness.at(global_element_id, "wall_thickness"));
         model.viscous_time_constant.push_back(
             params->kelvin_voigt.viscosity.viscous_time_constant.at(
-                ele->id(), "viscous_time_constant"));
+                global_element_id, "viscous_time_constant"));
         model.viscous_phase_shift.push_back(params->kelvin_voigt.viscosity.viscous_phase_shift.at(
-            ele->id(), "viscous_phase_shift"));
+            global_element_id, "viscous_phase_shift"));
         model.area_n.push_back(ref_area);
       }
-      Core::Elements::Element* ele;
+      int global_element_id;
       const ReducedLungParameters::LungTree::Airways::WallModel* params;
       double ref_area;
     };
@@ -1032,21 +1032,27 @@ namespace ReducedLung
      * @param local_element_id Local identifier in 4C discretization.
      */
     template <typename F, typename W>
-    void add_airway_ele(AirwayContainer& airways, Core::Elements::Element* ele,
-        int local_element_id, const ReducedLungParameters& params)
+    void add_airway_ele(AirwayContainer& airways, int global_element_id, int local_element_id,
+        const ReducedLungParameters& params)
     {
       AirwayModel& model = register_or_access_airway_model<F, W>(airways);
 
-      model.data.global_element_id.push_back(ele->id());
+      model.data.global_element_id.push_back(global_element_id);
       model.data.local_element_id.push_back(local_element_id);
-      const auto& coords_node_1 = ele->nodes()[0]->x();
-      const auto& coords_node_2 = ele->nodes()[1]->x();
+      const auto& node_ids =
+          params.lung_tree.topology.element_nodes.at(global_element_id, "element_nodes");
+      const int node_in = node_ids[0] - 1;
+      const int node_out = node_ids[1] - 1;
+      const auto& coords_node_1 =
+          params.lung_tree.topology.node_coordinates.at(node_in, "node_coordinates");
+      const auto& coords_node_2 =
+          params.lung_tree.topology.node_coordinates.at(node_out, "node_coordinates");
       const double length =
           std::sqrt((coords_node_1[0] - coords_node_2[0]) * (coords_node_1[0] - coords_node_2[0]) +
                     (coords_node_1[1] - coords_node_2[1]) * (coords_node_1[1] - coords_node_2[1]) +
                     (coords_node_1[2] - coords_node_2[2]) * (coords_node_1[2] - coords_node_2[2]));
       model.data.ref_length.push_back(length);
-      const double radius = params.lung_tree.airways.radius.at(ele->id(), "radius");
+      const double radius = params.lung_tree.airways.radius.at(global_element_id, "radius");
       const double area = radius * radius * M_PI;
       model.data.air_properties.dynamic_viscosity = params.air_properties.dynamic_viscosity;
       model.data.air_properties.density = params.air_properties.density;
@@ -1058,10 +1064,11 @@ namespace ReducedLung
       model.data.p1_n.push_back(0.0);
       model.data.p2_n.push_back(0.0);
 
-      std::visit(AddFlowModelParameter{.ele = ele, .params = &params}, model.flow_model);
-      std::visit(
-          AddWallModelParameter{
-              .ele = ele, .params = &params.lung_tree.airways.wall_model, .ref_area = area},
+      std::visit(AddFlowModelParameter{.global_element_id = global_element_id, .params = &params},
+          model.flow_model);
+      std::visit(AddWallModelParameter{.global_element_id = global_element_id,
+                     .params = &params.lung_tree.airways.wall_model,
+                     .ref_area = area},
           model.wall_model);
     }
 

@@ -13,6 +13,8 @@
 #include "4C_io_input_field.hpp"
 #include "4C_io_input_spec.hpp"
 
+#include <vector>
+
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -30,6 +32,14 @@ namespace ReducedLung
     } dynamics;
     struct LungTree
     {
+      struct Topology
+      {
+        int num_nodes;
+        int num_elements;
+        Core::IO::InputField<std::vector<double>> node_coordinates;  // [x, y, z]
+        Core::IO::InputField<std::vector<int>> element_nodes;        // [node_in, node_out]
+      } topology;
+
       /**
        * Enum to distinguish between airway and terminal unit elements in the reduced
        * lung implementation.
@@ -155,6 +165,34 @@ namespace ReducedLung
         } elasticity_model;
       } terminal_units;
     } lung_tree;
+    struct BoundaryConditions
+    {
+      int num_conditions;
+
+      /**
+       * Enum to distinguish between different boundary condition types.
+       */
+      enum class Type : std::uint8_t
+      {
+        Pressure,
+        Flow,
+      };
+
+      /**
+       * Enum to distinguish between boundary values given by function or constant.
+       */
+      enum class ValueSource : std::uint8_t
+      {
+        bc_function_id,
+        bc_value,
+      };
+
+      Core::IO::InputField<Type> bc_type;
+      Core::IO::InputField<int> node_id;
+      ValueSource value_source;
+      Core::IO::InputField<int> function_id;
+      Core::IO::InputField<double> value;
+    } boundary_conditions;
     struct AirProperties
     {
       double density;
