@@ -1,0 +1,192 @@
+TITLE:
+  - Test shell7p elements with mixture material and vtu input fields
+  - Rotationally symmetric cylinder (2 axial, 1 circumferential elements) with two fiber families (axial/circumferential),
+    isotropic growth strategy, and spatially varying pressure load.
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+STRUCT NOX/Printing:
+  Warning: false
+  Inner Iteration: false
+  Outer Iteration StatusTest: false
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  RESULTSEVERY: 5
+  RESTARTEVERY: 5
+  TIMESTEP: 1.0
+  NUMSTEP: 10
+  MAXTIME: 10
+  LOADLIN: true
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_Mixture:
+      MATIDMIXTURERULE: 11
+      MATIDSCONST: [2, 3, 4]
+  - MAT: 11
+    MIX_GrowthRemodelMixtureRule:
+      GROWTH_STRATEGY: 100
+      DENS: 1
+      MASSFRAC: [0.35, 0.35, 0.3]
+  - MAT: 100
+    MIX_GrowthStrategy_Isotropic: {}
+  - MAT: 2
+    MIX_Constituent_ExplicitRemodelFiber:
+      ORIENTATION:
+        from_mesh: fiber2
+      FIBER_MATERIAL_ID: 22
+      DECAY_TIME: 10
+      GROWTH_CONSTANT: 0.01
+      DEPOSITION_STRETCH: 1.1783669297169928
+      INELASTIC_GROWTH: true
+  - MAT: 22
+    MIX_Constituent_RemodelFiber_Material_Exponential:
+      K1: 8
+      K2: 16
+      COMPRESSION: false
+  - MAT: 3
+    MIX_Constituent_ExplicitRemodelFiber:
+      ORIENTATION:
+        from_mesh: fiber1
+      FIBER_MATERIAL_ID: 33
+      ENABLE_GROWTH: true
+      DECAY_TIME: 10
+      GROWTH_CONSTANT: 0.05
+      DEPOSITION_STRETCH: 1.1783669297169928
+      INELASTIC_GROWTH: true
+  - MAT: 33
+    MIX_Constituent_RemodelFiber_Material_Exponential:
+      K1: 15
+      K2: 30
+      COMPRESSION: false
+  - MAT: 4
+    MIX_Constituent_ElastHyper:
+      NUMMAT: 2
+      MATIDS: [44, 45]
+      PRESTRESS_STRATEGY: 129
+  - MAT: 44
+    ELAST_IsoNeoHooke:
+      MUE:
+        constant: 70
+  - MAT: 45
+    ELAST_VolSussmanBathe:
+      KAPPA: 150
+  - MAT: 129
+    MIX_Prestress_Strategy_Iterative:
+      ACTIVE: false
+      ISOCHORIC: true
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1+0.2*x+0.8*z"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "atan(z/y)"
+STRUCTURE GEOMETRY:
+  ELEMENT_BLOCKS:
+    - ID: 1
+      SHELL7PSCATRA:
+        QUAD4:
+          MAT: 1
+          SDC: 1.0
+          EAS: ["N_3", "N_4", "N_3", "N_2", "N_2"]
+          USE_ANS: true
+          THICK: 3.5
+          TYPE: Undefined
+  FILE: vtu/rot_sym_cyl_quad4.vtu
+fields:
+  - name: fiber1
+    discretization: "structure"
+    source:
+      from_mesh:
+        basis: points
+  - name: fiber2
+    discretization: "structure"
+    source:
+      from_mesh:
+        basis: points
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 5
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 6
+    ONOFF: [0, 0, 1, 0, 0, 0]
+    VAL: [0, 0, 3.0, 0, 0, 0]
+    FUNCT: [0, 0, 1, 0, 0, 0]
+    TYPE: "orthopressure"
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 6
+    ENTITY_TYPE: node_set_id
+    ONOFF: [1, 0, 1, 0, 0, 0]
+    VAL: [0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0]
+  - E: 2
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 6
+    ONOFF: [1, 0, 1, 0, 0, 0]
+    VAL: [0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0]
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 4
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 6
+    ONOFF: [0, 0, 1, 0, 0, 0]
+    VAL: [0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0]
+  - E: 3
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 6
+    ONOFF: [0, 0, 1, 0, 0, 0]
+    VAL: [0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0]
+DESIGN POINT LOCSYS CONDITIONS:
+  - E: 2
+    ENTITY_TYPE: node_set_id
+    ROTANGLE: [1, 0, 0]
+    FUNCT: [2, 0, 0]
+    USEUPDATEDNODEPOS: 0
+DESIGN LINE LOCSYS CONDITIONS:
+  - E: 3
+    ENTITY_TYPE: node_set_id
+    ROTANGLE: [1, 0, 0]
+    FUNCT: [2, 0, 0]
+    USEUPDATEDNODEPOS: 0
+    USECONSISTENTNODENORMAL: 0
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispy"
+      VALUE: -6.98087730857424149e-01
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispz"
+      VALUE: -6.85370799129139500e-03
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispy"
+      VALUE: -6.98487488998592254e-01
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispz"
+      VALUE: 0.00000000000000000e+00
+      TOLERANCE: 1e-08
