@@ -13,6 +13,7 @@
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits_def.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_utils_std23_unreachable.hpp"
 
 #include <array>
 #include <tuple>
@@ -102,19 +103,41 @@ namespace Core::FE::Internal
       return fct(std::integral_constant<CellType, celltype>{});
     }
 
-    constexpr bool is_convertible = std::is_convertible_v<
-        std::invoke_result_t<UnsupportedCellTypeCallable,
-            std::integral_constant<CellType, celltype>>,
-        std::invoke_result_t<Function,
-            std::integral_constant<CellType, first_celltype_in_sequence<CelltypeSequence>::value>>>;
-    constexpr bool is_void = std::is_void_v<std::invoke_result_t<UnsupportedCellTypeCallable,
-        std::integral_constant<CellType, celltype>>>;
-    static_assert(is_convertible || is_void,
-        "The unsupported celltype callable must either return a convertible type to the return "
-        "type of the regular callable or must return void (and throw an error)!");
+    // 1. Determine the actual return types
+    using ErrorReturnType = std::invoke_result_t<UnsupportedCellTypeCallable,
+        std::integral_constant<CellType, celltype>>;
 
-    if constexpr (is_convertible)
+    using SuccessReturnType = std::invoke_result_t<Function,
+        std::integral_constant<CellType, first_celltype_in_sequence<CelltypeSequence>::value>>;
+
+    // 2. Check for void safely
+    constexpr bool is_void = std::is_void_v<ErrorReturnType>;
+
+    // 3. Safely check for convertibility
+    // If ErrorReturnType is void, we pass SuccessReturnType instead (Success is always convertible
+    // to itself). This prevents the "reference to void" error.
+    constexpr bool is_convertible =
+        std::is_convertible_v<std::conditional_t<is_void, SuccessReturnType, ErrorReturnType>,
+            SuccessReturnType>;
+
+    // 4. Now the static_assert works as intended
+    static_assert(is_void || is_convertible,
+        "The unsupported celltype callable must either return void (and throw) "
+        "or return a type convertible to the success path return type!");
+
+    if constexpr (is_void)
     {
+      // Call the handler (which throws).
+      // No 'return' here because it returns void.
+      unsupported_celltype_callable(std::integral_constant<CellType, celltype>{});
+
+      // This is never reached but required to satisfy the compiler. The compiler may still assume
+      // the void type is returned although it is blocked by the previous static_assert.
+      std23::unreachable();
+    }
+    else if constexpr (is_convertible)
+    {
+      // This path is safe because we know it's not void and it's convertible.
       return unsupported_celltype_callable(std::integral_constant<CellType, celltype>{});
     }
 
