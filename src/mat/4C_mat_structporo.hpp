@@ -330,6 +330,28 @@ namespace Mat
 
     //!@}
 
+
+    //! @name Gauss point output
+
+    void register_output_data_names(
+        std::unordered_map<std::string, int>& names_and_size) const override
+    {
+      // call method of the underlying material
+      mat_->register_output_data_names(names_and_size);
+    };
+
+
+    bool evaluate_output_data(
+        const std::string& name, Core::LinAlg::SerialDenseMatrix& data) const override
+    {
+      // call method of the underlying material
+      return mat_->evaluate_output_data(name, data);
+    }
+
+    //!@}
+
+
+
    protected:
     //! compute current porosity and save it
     void compute_porosity(
@@ -338,10 +360,10 @@ namespace Mat
         const double& J,            //!< (i) determinant of jacobian at gauss point
         const int& gp,              //!< (i) number of current gauss point
         double& porosity,           //!< (o) porosity at gauss point
-        double* dphi_dp,  //!< (o) first derivative of porosity w.r.t. pressure at gauss point
-        double* dphi_dJ,  //!< (o) first derivative of porosity w.r.t. jacobian at gauss point
-        double*
-            dphi_dJdp,  //!< (o) derivative of porosity w.r.t. pressure and jacobian at gauss point
+        double* dphi_dp,       //!< (o) first derivative of porosity w.r.t. pressure at gauss point
+        double* dphi_dJ,       //!< (o) first derivative of porosity w.r.t. jacobian at gauss point
+        double* dphi_dJdp,     //!< (o) derivative of porosity w.r.t. pressure and jacobian at gauss
+                               //!< point
         double* dphi_dJJ,      //!< (o) second derivative of porosity w.r.t. jacobian at gauss point
         double* dphi_dpp,      //!< (o) second derivative of porosity w.r.t. pressure at gauss point
         double* dphi_dphiref,  //!< (o) derivative of porosity w.r.t. reference porosity (only
