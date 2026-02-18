@@ -133,10 +133,11 @@ void Discret::Elements::Truss3Scatra::unpack(Core::Communication::UnpackBuffer& 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 bool Discret::Elements::Truss3Scatra::read_element(const std::string& eletype,
-    const std::string& distype, const Core::IO::InputParameterContainer& container)
+    const std::string& distype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // read base element
-  Truss3::read_element(eletype, distype, container);
+  Truss3::read_element(eletype, distype, container, element_data);
 
   // read scalar transport implementation type
   auto impltype = container.get<std::string>("TYPE");

@@ -485,6 +485,94 @@ namespace Core::IO::MeshInput
    */
   void print(const PointSet& point_set, std::ostream& os, VerbosityLevel verbose);
 
+  /*!
+   * @brief Allows to pass a pointer to the block cell data and a block local cell index to the
+   * element creation routine.
+   */
+  class ElementDataFromCellData
+  {
+    static constexpr unsigned dim = 3;
+    using CellDataMap = std::unordered_map<std::string, FieldDataVariantType<dim>>;
+
+   public:
+    /*!
+     * @brief Empyt constructor if no cell data is available.
+     */
+    ElementDataFromCellData() = default;
+
+    /*!
+     * @brief Constructor with given map and cell index.
+     */
+    ElementDataFromCellData(const CellDataMap& cell_data, std::size_t cell_index)
+        : cell_data_(&cell_data), cell_index_(cell_index)
+    {
+      // Check that the given cell index is valid for all cell data fields (should all have the same
+      // size).
+      for (const auto& [key, variant] : *cell_data_)
+      {
+        std::visit(
+            [&](const auto& vec)
+            {
+              if (cell_index_ >= vec.size())
+              {
+                FOUR_C_THROW("Cell index {} is out of bounds for cell data '{}' with size {}.",
+                    cell_index_, key, vec.size());
+              }
+            },
+            variant);
+      }
+    }
+
+    /*!
+     * @brief Get the value of the cell data with the given name for the cell corresponding to this
+     * view.
+     *
+     * @throws if no cell data with the given name exists or if the type of the cell data is not
+     * implicitly convertible to the expected type.
+     */
+    template <typename T>
+    T get(const std::string& cell_data_key) const
+    {
+      FOUR_C_ASSERT_ALWAYS(
+          cell_data_ != nullptr, "Cell data pointer in ElementDataFromCellData is null.");
+
+      FOUR_C_ASSERT_ALWAYS(cell_data_->contains(cell_data_key),
+          "The cell data does not contain the key '{}'.", cell_data_key);
+
+      const FieldDataVariantType<dim>& data = cell_data_->at(cell_data_key);
+
+      return std::visit(
+          [&](const auto& data)
+          {
+            using Type = std::decay_t<decltype(data)>::value_type;
+            if constexpr (!std::is_convertible_v<Type, T>)
+            {
+              FOUR_C_THROW(
+                  "Element data with name '{}' has type '{}' which is not convertible to "
+                  "the target type '{}'.",
+                  cell_data_key, Core::Utils::try_demangle(typeid(Type).name()),
+                  Core::Utils::try_demangle(typeid(T).name()));
+              return T{};  // This return is only needed to satisfy the compiler, it will never be
+                           // executed due to the exception.
+            }
+            else
+            {
+              FOUR_C_ASSERT(cell_index_ < data.size(),
+                  "Cell index {} is out of bounds for cell data with name '{}' which has size {}.",
+                  cell_index_, cell_data_key, data.size());
+              return static_cast<T>(data[cell_index_]);
+            }
+          },
+          data);
+    }
+
+   private:
+    // Pointer to the cell data map.
+    const CellDataMap* cell_data_ = nullptr;
+
+    // Block local cell index for which data will be returned by this object.
+    std::size_t cell_index_ = std::numeric_limits<std::size_t>::max();
+  };
 
   /*!
    * @brief Reads in a map with value_type @p T from the cell data of the given @p mesh.

@@ -229,7 +229,8 @@ Core::FE::GaussRule3D Discret::Elements::Vele3::get_optimal_gaussrule(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 bool Discret::Elements::Vele3::read_element(const std::string& eletype, const std::string& distype,
-    const Core::IO::InputParameterContainer& container)
+    const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   return true;
 }

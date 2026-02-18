@@ -256,7 +256,8 @@ Core::FE::GaussRule2D Discret::Elements::Bele3::get_optimal_gaussrule() const
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 bool Discret::Elements::Bele3::read_element(const std::string& eletype, const std::string& distype,
-    const Core::IO::InputParameterContainer& container)
+    const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // check if material is defined
   auto material_id = container.get<std::optional<int>>("MAT");

@@ -165,10 +165,11 @@ void Discret::Elements::Wall1Poro<distype>::print(std::ostream& os) const
 
 template <Core::FE::CellType distype>
 bool Discret::Elements::Wall1Poro<distype>::read_element(const std::string& eletype,
-    const std::string& eledistype, const Core::IO::InputParameterContainer& container)
+    const std::string& eledistype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // read base element
-  Wall1::read_element(eletype, eledistype, container);
+  Wall1::read_element(eletype, eledistype, container, element_data);
 
   // setup poro material
   std::shared_ptr<Mat::StructPoro> poromat = std::dynamic_pointer_cast<Mat::StructPoro>(material());

@@ -332,9 +332,10 @@ int Discret::Elements::ScaTraHDG::initialize()
  |  Read element from input (public)                     hoermann 09/15 |
  *----------------------------------------------------------------------*/
 bool Discret::Elements::ScaTraHDG::read_element(const std::string& eletype,
-    const std::string& distype, const Core::IO::InputParameterContainer& container)
+    const std::string& distype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
-  bool success = Transport::read_element(eletype, distype, container);
+  bool success = Transport::read_element(eletype, distype, container, element_data);
   degree_ = container.get<int>("DEG");
   degree_old_ = degree_;
 

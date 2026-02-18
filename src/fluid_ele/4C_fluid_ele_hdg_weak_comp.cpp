@@ -174,9 +174,10 @@ void Discret::Elements::FluidHDGWeakComp::unpack(Core::Communication::UnpackBuff
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 bool Discret::Elements::FluidHDGWeakComp::read_element(const std::string& eletype,
-    const std::string& distype, const Core::IO::InputParameterContainer& container)
+    const std::string& distype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
-  bool success = Fluid::read_element(eletype, distype, container);
+  bool success = Fluid::read_element(eletype, distype, container, element_data);
   degree_ = container.get<int>("DEG");
 
   completepol_ = container.get<std::optional<bool>>("SPC").value_or(false);

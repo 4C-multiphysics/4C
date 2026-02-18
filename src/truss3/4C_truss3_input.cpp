@@ -14,7 +14,8 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 bool Discret::Elements::Truss3::read_element(const std::string& eletype, const std::string& distype,
-    const Core::IO::InputParameterContainer& container)
+    const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // read number of material model
   int material_id = container.get<int>("MAT");

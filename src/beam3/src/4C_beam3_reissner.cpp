@@ -261,9 +261,16 @@ void Discret::Elements::Beam3rType::setup_element_definition(
 
   using namespace Core::IO::InputSpecBuilders;
 
+  const std::string nodal_rotation_vector_description =
+      "Cell data field name for nodal rotation vectors.";
+
   defs[Core::FE::CellType::line2] = all_of({
       parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 6}),
+      one_of({
+          parameter<std::vector<double>>("TRIADS", {.size = 6}),
+          parameter<std::string>(
+              "NODAL_ROTATION_VECTORS", {.description = nodal_rotation_vector_description}),
+      }),
       parameter<bool>("USE_FAD", {.default_value = false}),
       parameter<bool>("HERMITE_CENTERLINE",
           {
@@ -275,7 +282,11 @@ void Discret::Elements::Beam3rType::setup_element_definition(
 
   defs[Core::FE::CellType::line3] = all_of({
       parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 9}),
+      one_of({
+          parameter<std::vector<double>>("TRIADS", {.size = 9}),
+          parameter<std::string>(
+              "NODAL_ROTATION_VECTORS", {.description = nodal_rotation_vector_description}),
+      }),
       parameter<bool>("USE_FAD", {.default_value = false}),
       parameter<bool>("HERMITE_CENTERLINE",
           {
@@ -287,7 +298,11 @@ void Discret::Elements::Beam3rType::setup_element_definition(
 
   defs[Core::FE::CellType::line4] = all_of({
       parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 12}),
+      one_of({
+          parameter<std::vector<double>>("TRIADS", {.size = 12}),
+          parameter<std::string>(
+              "NODAL_ROTATION_VECTORS", {.description = nodal_rotation_vector_description}),
+      }),
       parameter<bool>("USE_FAD", {.default_value = false}),
       parameter<bool>("HERMITE_CENTERLINE",
           {
@@ -299,7 +314,11 @@ void Discret::Elements::Beam3rType::setup_element_definition(
 
   defs[Core::FE::CellType::line5] = all_of({
       parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 15}),
+      one_of({
+          parameter<std::vector<double>>("TRIADS", {.size = 15}),
+          parameter<std::string>(
+              "NODAL_ROTATION_VECTORS", {.description = nodal_rotation_vector_description}),
+      }),
       parameter<bool>("USE_FAD", {.default_value = false}),
       parameter<bool>("HERMITE_CENTERLINE",
           {

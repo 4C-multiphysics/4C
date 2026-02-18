@@ -21,7 +21,8 @@ FOUR_C_NAMESPACE_OPEN
 | Read in the RED_AIRWAY elements                                       |
 *-----------------------------------------------------------------------*/
 bool Discret::Elements::RedAirway::read_element(const std::string& eletype,
-    const std::string& distype, const Core::IO::InputParameterContainer& container)
+    const std::string& distype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   const int ndim = Global::Problem::instance()->n_dim();
   if (ndim != 3)
@@ -76,7 +77,8 @@ bool Discret::Elements::RedAirway::read_element(const std::string& eletype,
 | Read in the RED_ACINUS elements                                       |
 *-----------------------------------------------------------------------*/
 bool Discret::Elements::RedAcinus::read_element(const std::string& eletype,
-    const std::string& distype, const Core::IO::InputParameterContainer& container)
+    const std::string& distype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   const int ndim = Global::Problem::instance()->n_dim();
   if (ndim != 3)
@@ -108,7 +110,8 @@ bool Discret::Elements::RedAcinus::read_element(const std::string& eletype,
 | Read in the RED_ACINAR_INTER_DEP elements                             |
 *-----------------------------------------------------------------------*/
 bool Discret::Elements::RedInterAcinarDep::read_element(const std::string& eletype,
-    const std::string& distype, const Core::IO::InputParameterContainer& container)
+    const std::string& distype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   const int ndim = Global::Problem::instance()->n_dim();
   if (ndim != 3)

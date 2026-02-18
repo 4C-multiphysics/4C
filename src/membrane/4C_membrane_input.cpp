@@ -19,7 +19,8 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------*/
 template <Core::FE::CellType distype>
 bool Discret::Elements::Membrane<distype>::read_element(const std::string& eletype,
-    const std::string& eledistype, const Core::IO::InputParameterContainer& container)
+    const std::string& eledistype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // read number of material model
   int material_id = container.get<int>("MAT");

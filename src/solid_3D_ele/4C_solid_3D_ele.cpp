@@ -277,7 +277,8 @@ void Discret::Elements::Solid::set_params_interface_ptr(const Teuchos::Parameter
 }
 
 bool Discret::Elements::Solid::read_element(const std::string& eletype, const std::string& celltype,
-    const Core::IO::InputParameterContainer& container)
+    const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // set cell type
   celltype_ = Core::FE::string_to_cell_type(celltype);

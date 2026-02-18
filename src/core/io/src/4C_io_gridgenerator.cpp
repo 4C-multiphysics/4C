@@ -420,7 +420,8 @@ namespace Core::IO::GridGenerator
     std::shared_ptr<Core::Elements::Element> ele = Core::Communication::factory(
         elementtype, Core::FE::cell_type_to_string(cell_type), eleid, myrank);
     ele->set_node_ids(nodeids.size(), &(nodeids[0]));
-    ele->read_element(elementtype, Core::FE::cell_type_to_string(cell_type), ele_data);
+    ele->read_element(elementtype, Core::FE::cell_type_to_string(cell_type), ele_data,
+        Core::IO::MeshInput::ElementDataFromCellData{});
     return ele;
   }
 
@@ -517,7 +518,8 @@ namespace Core::IO::GridGenerator
     std::shared_ptr<Core::Elements::Element> ele = Core::Communication::factory(
         elementtype, FE::cell_type_to_string(cell_type), eleid, myrank);
     ele->set_node_ids(nodeids.size(), &(nodeids[0]));
-    ele->read_element(elementtype, FE::cell_type_to_string(cell_type), ele_data);
+    ele->read_element(elementtype, FE::cell_type_to_string(cell_type), ele_data,
+        Core::IO::MeshInput::ElementDataFromCellData{});
     return ele;
   }
 

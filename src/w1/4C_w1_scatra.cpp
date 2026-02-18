@@ -144,10 +144,11 @@ void Discret::Elements::Wall1Scatra::print(std::ostream& os) const
  |  read this element (public)                             schmidt 09/17|
  *----------------------------------------------------------------------*/
 bool Discret::Elements::Wall1Scatra::read_element(const std::string& eletype,
-    const std::string& eledistype, const Core::IO::InputParameterContainer& container)
+    const std::string& eledistype, const Core::IO::InputParameterContainer& container,
+    const Core::IO::MeshInput::ElementDataFromCellData& element_data)
 {
   // read base element
-  Wall1::read_element(eletype, eledistype, container);
+  Wall1::read_element(eletype, eledistype, container, element_data);
 
   // read scalar transport implementation type
   auto impltype = container.get<std::string>("TYPE");
