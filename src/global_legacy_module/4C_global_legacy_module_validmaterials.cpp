@@ -13,6 +13,7 @@
 #include "4C_io_input_field.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_io_input_spec_validators.hpp"
+#include "4C_linalg_utils_tensor_interpolation.hpp"
 #include "4C_mat_electrode.hpp"
 #include "4C_mat_fiber_interpolation.hpp"
 #include "4C_mat_fluidporo_singlephase.hpp"
@@ -4044,7 +4045,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
     known_materials[Core::Materials::mix_prestress_strategy_prescribed] =
         group("MIX_Prestress_Strategy_Prescribed",
             {
-                interpolated_input_field<Core::LinAlg::SymmetricTensor<double, 3, 3>>(
+                interpolated_input_field<Core::LinAlg::SymmetricTensor<double, 3, 3>,
+                    Core::LinAlg::SymmetricPositiveDefiniteInterpolation<double>>(
                     "PRESTRETCH", {.description = "Field of a symmetric prestretch tensor."}),
             },
             {.description = "Simple predefined prestress"});

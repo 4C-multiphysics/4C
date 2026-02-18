@@ -8,6 +8,7 @@
 #include "4C_mixture_prestress_strategy_prescribed.hpp"
 
 #include "4C_io_input_field.hpp"
+#include "4C_linalg_utils_tensor_interpolation.hpp"
 #include "4C_mat_anisotropy_coordinate_system_provider.hpp"
 #include "4C_mat_service.hpp"
 #include "4C_mixture_rule.hpp"
@@ -20,8 +21,8 @@ Mixture::PAR::PrescribedPrestressStrategy::PrescribedPrestressStrategy(
     const Core::Mat::PAR::Parameter::Data& matdata)
     : PrestressStrategy(matdata),
       prestretch_(matdata.parameters
-              .get<Core::IO::InterpolatedInputField<Core::LinAlg::SymmetricTensor<double, 3, 3>>>(
-                  "PRESTRETCH"))
+              .get<Core::IO::InterpolatedInputField<Core::LinAlg::SymmetricTensor<double, 3, 3>,
+                  Core::LinAlg::SymmetricPositiveDefiniteInterpolation<double>>>("PRESTRETCH"))
 {
 }
 
