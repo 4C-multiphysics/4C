@@ -1,6 +1,6 @@
 TITLE:
   - "Test of the templated implementation of solid elements"
-  - "Time Integration: Old"
+  - "Time Integration: Standard"
   - "Shape: hex8"
   - "Element-Technology:"
   - "Fibers: node"
@@ -10,7 +10,6 @@ SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Structure_Solver"
 STRUCTURAL DYNAMIC:
-  INT_STRATEGY: Old
   RESTARTEVERY: 1
   DYNAMICTYPE: "Statics"
   TIMESTEP: 0.5
@@ -50,75 +49,75 @@ FUNCT2:
 RESULT DESCRIPTION:
   - STRUCTURE:
       DIS: "structure"
-      NODE: 8
-      QUANTITY: "dispx"
-      VALUE: 0.16809030915918574
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 8
-      QUANTITY: "dispy"
-      VALUE: -0.4181514274150055
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 8
-      QUANTITY: "dispz"
-      VALUE: -0.012547598680643672
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 5
-      QUANTITY: "dispx"
-      VALUE: 0.312218995095973
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 5
-      QUANTITY: "dispy"
-      VALUE: -0.33404942694392425
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 5
-      QUANTITY: "dispz"
-      VALUE: 0.026702937012722007
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
       NODE: 6
       QUANTITY: "dispx"
-      VALUE: 0.1981516029947721
+      VALUE: 0.0670402800986559
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 6
       QUANTITY: "dispy"
-      VALUE: -0.4201051477830523
+      VALUE: -0.3866672027043537
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 6
       QUANTITY: "dispz"
-      VALUE: 0.04392515331316463
+      VALUE: -0.0135421774755776
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 7
       QUANTITY: "dispx"
-      VALUE: 0.24335224795383764
+      VALUE: 0.745910846879449
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 7
       QUANTITY: "dispy"
-      VALUE: -0.3530616528871443
+      VALUE: -0.1156991602065154
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 7
       QUANTITY: "dispz"
-      VALUE: -0.062354569759335815
+      VALUE: -0.020044906333637497
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispx"
+      VALUE: 0.9144401195169234
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispy"
+      VALUE: -0.0799872857417965
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispz"
+      VALUE: 0.08080065850368442
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispx"
+      VALUE: 0.0010789417516321048
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispy"
+      VALUE: -0.3474047362419707
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispz"
+      VALUE: -0.012009999274752315
       TOLERANCE: 1e-12
 DESIGN SURF DIRICH CONDITIONS:
   - E: 1
@@ -133,14 +132,14 @@ DESIGN SURF NEUMANN CONDITIONS:
     VAL: [10, 0.01, 0.01, 0, 0, 0]
     FUNCT: [1, 2, 2, 0, 0, 0]
 DSURF-NODE TOPOLOGY:
-  - "NODE 2 DSURFACE 1"
-  - "NODE 1 DSURFACE 1"
-  - "NODE 4 DSURFACE 1"
   - "NODE 3 DSURFACE 1"
-  - "NODE 8 DSURFACE 2"
-  - "NODE 5 DSURFACE 2"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 1 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
   - "NODE 6 DSURFACE 2"
   - "NODE 7 DSURFACE 2"
+  - "NODE 5 DSURFACE 2"
+  - "NODE 8 DSURFACE 2"
 NODE COORDS:
   - "FNODE 1 COORD 0.0 0.0 0.0 FIBER1 0.7071067811865475 0.7071067811865475 0.0"
   - "FNODE 2 COORD 0.0 1.0 0.0 FIBER1 0.7582029890619258 0.5686522417964444 0.31900290794511477"
@@ -151,4 +150,4 @@ NODE COORDS:
   - "FNODE 7 COORD 1.0 0.0 1.0 FIBER1 0.867722177809331 0.4958412444624749 -0.034636432087264454"
   - "FNODE 8 COORD 1.0 1.0 1.0 FIBER1 0.8693514422236204 0.4890101862507864 0.07139403088972127"
 STRUCTURE ELEMENTS:
-  - "1 SOLID HEX8 1 5 6 2 3 7 8 4 MAT 1 KINEM nonlinear"
+  - "1 SOLID HEX8 1 5 6 2 3 7 8 4 MAT 1 KINEM nonlinear TECH eas_mild"

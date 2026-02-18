@@ -1,7 +1,7 @@
 TITLE:
   - "Test of the templated implementation of solid elements"
-  - "Time Integration: Old"
-  - "Shape: hex18"
+  - "Time Integration: Standard"
+  - "Shape: hex8"
   - "Element-Technology:"
   - "Fibers: element"
 PROBLEM TYPE:
@@ -10,7 +10,6 @@ SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Structure_Solver"
 STRUCTURAL DYNAMIC:
-  INT_STRATEGY: Old
   RESTARTEVERY: 1
   DYNAMICTYPE: "Statics"
   TIMESTEP: 0.5
@@ -49,111 +48,75 @@ FUNCT2:
 RESULT DESCRIPTION:
   - STRUCTURE:
       DIS: "structure"
-      NODE: 3
+      NODE: 7
       QUANTITY: "dispx"
-      VALUE: 0.3385412179223576
+      VALUE: 1.1242381340194947
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
-      NODE: 3
+      NODE: 7
       QUANTITY: "dispy"
-      VALUE: -0.46888905399979414
+      VALUE: -0.052778059635078284
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
-      NODE: 3
+      NODE: 7
       QUANTITY: "dispz"
-      VALUE: 0.040914347703438964
+      VALUE: -0.03700689768918693
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
-      NODE: 11
+      NODE: 8
       QUANTITY: "dispx"
-      VALUE: 1.050422240037203
+      VALUE: 0.25743994830440314
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
-      NODE: 11
+      NODE: 8
       QUANTITY: "dispy"
-      VALUE: -0.13910744741124154
+      VALUE: -0.4859185124527012
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
-      NODE: 11
+      NODE: 8
       QUANTITY: "dispz"
-      VALUE: -0.014409032544693489
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 15
-      QUANTITY: "dispx"
-      VALUE: 0.5857985695276361
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 15
-      QUANTITY: "dispy"
-      VALUE: -0.3359672285019414
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 15
-      QUANTITY: "dispz"
-      VALUE: -0.01895372275730539
+      VALUE: -0.02323845430161774
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 6
       QUANTITY: "dispx"
-      VALUE: 0.5915667629738828
+      VALUE: 0.2611201577719446
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 6
       QUANTITY: "dispy"
-      VALUE: -0.343735993191681
+      VALUE: -0.4957066203827065
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 6
       QUANTITY: "dispz"
-      VALUE: 0.06652808884831674
+      VALUE: 0.058067548370784636
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
-      NODE: 12
+      NODE: 5
       QUANTITY: "dispx"
-      VALUE: 0.3344476324666058
+      VALUE: 1.1302108233632353
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
-      NODE: 12
+      NODE: 5
       QUANTITY: "dispy"
-      VALUE: -0.4615161986727136
+      VALUE: -0.06433775141291595
       TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
-      NODE: 12
+      NODE: 5
       QUANTITY: "dispz"
-      VALUE: -0.0043427685393774415
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 2
-      QUANTITY: "dispx"
-      VALUE: 1.058708693466661
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 2
-      QUANTITY: "dispy"
-      VALUE: -0.1467855402664
-      TOLERANCE: 1e-12
-  - STRUCTURE:
-      DIS: "structure"
-      NODE: 2
-      QUANTITY: "dispz"
-      VALUE: 0.07829263891767786
+      VALUE: 0.10219162955155517
       TOLERANCE: 1e-12
 DESIGN SURF DIRICH CONDITIONS:
   - E: 1
@@ -168,37 +131,23 @@ DESIGN SURF NEUMANN CONDITIONS:
     VAL: [10, 0.01, 0.01, 0, 0, 0]
     FUNCT: [1, 2, 2, 0, 0, 0]
 DSURF-NODE TOPOLOGY:
-  - "NODE 8 DSURFACE 1"
-  - "NODE 4 DSURFACE 1"
   - "NODE 1 DSURFACE 1"
-  - "NODE 13 DSURFACE 1"
-  - "NODE 17 DSURFACE 1"
-  - "NODE 10 DSURFACE 1"
-  - "NODE 3 DSURFACE 2"
-  - "NODE 11 DSURFACE 2"
-  - "NODE 15 DSURFACE 2"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 3 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
+  - "NODE 7 DSURFACE 2"
+  - "NODE 8 DSURFACE 2"
   - "NODE 6 DSURFACE 2"
-  - "NODE 12 DSURFACE 2"
-  - "NODE 2 DSURFACE 2"
+  - "NODE 5 DSURFACE 2"
 NODE COORDS:
   - "NODE 1 COORD 0.0 0.0 0.0"
-  - "NODE 2 COORD 1.0 0.0 0.0"
-  - "NODE 3 COORD 1.0 1.0 0.0"
-  - "NODE 4 COORD 0.0 1.0 0.0"
-  - "NODE 5 COORD 0.5 0.0 0.0"
-  - "NODE 6 COORD 1.0 0.5 0.0"
-  - "NODE 7 COORD 0.5 1.0 0.0"
-  - "NODE 8 COORD 0.0 0.5 0.0"
-  - "NODE 9 COORD 0.5 0.5 0.0"
-  - "NODE 10 COORD 0.0 0.0 1.0"
-  - "NODE 11 COORD 1.0 0.0 1.0"
-  - "NODE 12 COORD 1.0 1.0 1.0"
-  - "NODE 13 COORD 0.0 1.0 1.0"
-  - "NODE 14 COORD 0.5 0.0 1.0"
-  - "NODE 15 COORD 1.0 0.5 1.0"
-  - "NODE 16 COORD 0.5 1.0 1.0"
-  - "NODE 17 COORD 0.0 0.5 1.0"
-  - "NODE 18 COORD 0.5 0.5 1.0"
+  - "NODE 2 COORD 0.0 1.0 0.0"
+  - "NODE 3 COORD 0.0 0.0 1.0"
+  - "NODE 4 COORD 0.0 1.0 1.0"
+  - "NODE 5 COORD 1.0 0.0 0.0"
+  - "NODE 6 COORD 1.0 1.0 0.0"
+  - "NODE 7 COORD 1.0 0.0 1.0"
+  - "NODE 8 COORD 1.0 1.0 1.0"
 STRUCTURE ELEMENTS:
-  - "1 SOLID HEX18 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 MAT 1 KINEM nonlinear FIBER1 0.7071067811865475
-    0.7071067811865475 0.0"
+  - "1 SOLID HEX8 1 5 6 2 3 7 8 4 MAT 1 KINEM nonlinear TECH eas_mild FIBER1 0.7071067811865475 0.7071067811865475
+    0.0"
