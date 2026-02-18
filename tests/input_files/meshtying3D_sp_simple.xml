@@ -177,7 +177,7 @@
   <!-- Definition of the multigrid preconditioner -->
   <ParameterList name="Hierarchy">
     <Parameter name="max levels" type="int" value="3"/>
-    <Parameter name="coarse: max size" type="int" value="100"/>
+    <Parameter name="coarse: max size" type="int" value="800"/>
     <Parameter name="verbosity" type="string" value="Extreme"/>
     <Parameter name="use kokkos refactor" type="bool" value="false"/>
     <ParameterList name="AllLevel">

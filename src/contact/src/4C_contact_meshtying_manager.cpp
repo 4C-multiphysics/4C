@@ -16,6 +16,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linear_solver_method.hpp"
 #include "4C_mortar_defines.hpp"
 #include "4C_mortar_element.hpp"
 #include "4C_mortar_input.hpp"
@@ -441,6 +442,24 @@ bool CONTACT::MtManager::read_and_check_input(
           Teuchos::getIntegralValue<CONTACT::SystemType>(meshtying, "SYSTEM") ==
               CONTACT::SystemType::condensed_lagmult))
     FOUR_C_THROW("Condensation of linear system only possible for dual Lagrange multipliers");
+
+  if (const int solverNumber = meshtying.get<int>("LINEAR_SOLVER");
+      solverNumber != -1 && (onlymeshtying || meshtyingandcontact) &&
+      Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(meshtying, "STRATEGY") ==
+          CONTACT::SolvingStrategy::lagmult &&
+      Teuchos::getIntegralValue<CONTACT::SystemType>(meshtying, "SYSTEM") !=
+          CONTACT::SystemType::condensed &&
+      Teuchos::getIntegralValue<CONTACT::SystemType>(meshtying, "SYSTEM") !=
+          CONTACT::SystemType::condensed_lagmult &&
+      Global::Problem::instance()
+              ->solver_params(solverNumber)
+              .get<Core::LinearSolver::PreconditionerType>("AZPREC") ==
+          Core::LinearSolver::PreconditionerType::multigrid_muelu &&
+      Teuchos::getIntegralValue<Mortar::ParallelRedist>(
+          mortarParallelRedistParams, "PARALLEL_REDIST") != Mortar::ParallelRedist::redist_none)
+    FOUR_C_THROW(
+        "Parallel redistribution is currently not supported for MESHTYING problems in saddle-point "
+        "formulation preconditioned with MueLu");
 
   if (Teuchos::getIntegralValue<Mortar::ParallelRedist>(mortarParallelRedistParams,
           "PARALLEL_REDIST") == Mortar::ParallelRedist::redist_dynamic and

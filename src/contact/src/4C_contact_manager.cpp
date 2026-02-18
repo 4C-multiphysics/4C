@@ -33,6 +33,7 @@
 #include "4C_io_control.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linear_solver_method.hpp"
 #include "4C_mortar_input.hpp"
 #include "4C_mortar_utils.hpp"
 
@@ -703,6 +704,24 @@ bool CONTACT::Manager::read_and_check_input(Teuchos::ParameterList& cparams) con
       Teuchos::getIntegralValue<Mortar::ParallelRedist>(
           mortarParallelRedistParams, "PARALLEL_REDIST") != Mortar::ParallelRedist::redist_none)
     FOUR_C_THROW("Parallel redistribution not yet implemented for TSI problems");
+
+  if (const int solverNumber = contact.get<int>("LINEAR_SOLVER");
+      solverNumber != -1 &&
+      Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(contact, "STRATEGY") ==
+          CONTACT::SolvingStrategy::lagmult &&
+      Teuchos::getIntegralValue<CONTACT::SystemType>(contact, "SYSTEM") !=
+          CONTACT::SystemType::condensed &&
+      Teuchos::getIntegralValue<CONTACT::SystemType>(contact, "SYSTEM") !=
+          CONTACT::SystemType::condensed_lagmult &&
+      Global::Problem::instance()
+              ->solver_params(solverNumber)
+              .get<Core::LinearSolver::PreconditionerType>("AZPREC") ==
+          Core::LinearSolver::PreconditionerType::multigrid_muelu &&
+      Teuchos::getIntegralValue<Mortar::ParallelRedist>(
+          mortarParallelRedistParams, "PARALLEL_REDIST") != Mortar::ParallelRedist::redist_none)
+    FOUR_C_THROW(
+        "Parallel redistribution is currently not supported for CONTACT problems in saddle-point "
+        "formulation preconditioned with MueLu");
 
   // *********************************************************************
   // adhesive contact

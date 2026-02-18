@@ -19,6 +19,7 @@
 #include "4C_io.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
+#include "4C_linear_solver_method.hpp"
 #include "4C_mortar_element.hpp"
 #include "4C_mortar_node.hpp"
 #include "4C_mortar_utils.hpp"
@@ -137,6 +138,23 @@ void Mortar::STRATEGY::FactoryMT::read_and_check_input(Teuchos::ParameterList& p
     FOUR_C_THROW(
         "ERROR: Consistent dual shape functions in boundary elements only for Lagrange multiplier "
         "strategy.");
+  if (const int solverNumber = meshtying.get<int>("LINEAR_SOLVER");
+      solverNumber != -1 && (onlymeshtying || meshtyingandcontact) &&
+      Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(meshtying, "STRATEGY") ==
+          CONTACT::SolvingStrategy::lagmult &&
+      Teuchos::getIntegralValue<CONTACT::SystemType>(meshtying, "SYSTEM") !=
+          CONTACT::SystemType::condensed &&
+      Teuchos::getIntegralValue<CONTACT::SystemType>(meshtying, "SYSTEM") !=
+          CONTACT::SystemType::condensed_lagmult &&
+      Global::Problem::instance()
+              ->solver_params(solverNumber)
+              .get<Core::LinearSolver::PreconditionerType>("AZPREC") ==
+          Core::LinearSolver::PreconditionerType::multigrid_muelu &&
+      Teuchos::getIntegralValue<Mortar::ParallelRedist>(
+          mortarParallelRedistParams, "PARALLEL_REDIST") != Mortar::ParallelRedist::redist_none)
+    FOUR_C_THROW(
+        "Parallel redistribution is currently not supported for MESHTYING problems in saddle-point "
+        "formulation preconditioned with MueLu");
 
   if (Teuchos::getIntegralValue<Mortar::ConsistentDualType>(mortar, "LM_DUAL_CONSISTENT") !=
           Mortar::consistent_none &&
