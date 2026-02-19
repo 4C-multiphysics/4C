@@ -158,8 +158,6 @@ std::string_view Core::Conditions::to_string(const Core::Conditions::ConditionTy
       return "Multipoint constraint on a line";
     case Core::Conditions::MPC_NormalComponent_3D:
       return "Node on plane constraint";
-    case Core::Conditions::MPC_NormalComponent_3D_pen:
-      return "Node on plane penalty constraint";
     case Core::Conditions::LJ_Potential_Volume:
       return "Lennard-Jones potential in a volume";
     case Core::Conditions::LJ_Potential_Surface:

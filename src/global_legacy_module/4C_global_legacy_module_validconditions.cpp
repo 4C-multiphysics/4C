@@ -726,29 +726,6 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   condlist.push_back(nodemasterconst3D);
 
   /*--------------------------------------------------------------------*/
-  // Multi point constraint in 3D, moving all constraint nodes synchronously, penalty based
-
-  Core::Conditions::ConditionDefinition nodemasterconst3Dpen(
-      "DESIGN SURFACE NORMALDIR MULTIPNT CONSTRAINT 3D PEN", "MPC_NormalComponent_3D_Pen",
-      "Node on Plane Constraint Penalty", Core::Conditions::MPC_NormalComponent_3D_pen, false,
-      Core::Conditions::geometry_type_surface);
-
-
-  nodemasterconst3Dpen.add_component(parameter<int>("ConditionID"));
-  nodemasterconst3Dpen.add_component(parameter<double>("amplitude"));
-  nodemasterconst3Dpen.add_component(parameter<std::optional<int>>("curve", {.description = {}}));
-  nodemasterconst3Dpen.add_component(parameter<double>("activeTime"));
-  nodemasterconst3Dpen.add_component(parameter<double>("penalty"));
-  nodemasterconst3Dpen.add_component(parameter<int>("masterNode"));
-  nodemasterconst3Dpen.add_component(
-      parameter<std::vector<int>>("direction", {.description = "direction", .size = 3}));
-  nodemasterconst3Dpen.add_component(deprecated_selection<std::string>(
-      "value", {"disp", "x"}, {.description = "value", .default_value = "disp"}));
-  nodemasterconst3Dpen.add_component(deprecated_selection<std::string>("control", {"rel", "abs"},
-      {.description = "relative or absolute control", .default_value = "rel"}));
-
-  condlist.push_back(nodemasterconst3Dpen);
-  /*--------------------------------------------------------------------*/
   // Multi point constraint in 2D for a node on a line
   Core::Conditions::ConditionDefinition nodeonlineconst2D("DESIGN LINE MULTIPNT CONSTRAINT 2D",
       "MPC_NodeOnLine_2D", "Node on Line Constraint", Core::Conditions::MPC_NodeOnLine_2D, false,

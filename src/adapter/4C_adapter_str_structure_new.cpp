@@ -403,12 +403,9 @@ void Adapter::StructureBaseAlgorithmNew::set_model_types(
   // --- enforcement by penalty law
   std::vector<const Core::Conditions::Condition*> pencond_volconstr3d;
   std::vector<const Core::Conditions::Condition*> pencond_areaconstr3d;
-  std::vector<const Core::Conditions::Condition*> pencond_mpcnormcomp3d;
   actdis_->get_condition("VolumeConstraint_3D_Pen", pencond_volconstr3d);
   actdis_->get_condition("AreaConstraint_3D_Pen", pencond_areaconstr3d);
-  actdis_->get_condition("MPC_NormalComponent_3D_Pen", pencond_mpcnormcomp3d);
-  if (pencond_volconstr3d.size() or pencond_areaconstr3d.size() or pencond_mpcnormcomp3d.size())
-    have_pen_constraint = true;
+  if (pencond_volconstr3d.size() or pencond_areaconstr3d.size()) have_pen_constraint = true;
   if (have_lag_constraint or have_pen_constraint)
     modeltypes.insert(Inpar::Solid::model_lag_pen_constraint);
 

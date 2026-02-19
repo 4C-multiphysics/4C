@@ -110,7 +110,6 @@ namespace Core::Conditions
     MPC_NodeOnPlane_3D,
     MPC_NodeOnLine_3D,
     MPC_NormalComponent_3D,
-    MPC_NormalComponent_3D_pen,
     MPC_NodeOnLine_2D,
     LJ_Potential_Volume,
     LJ_Potential_Surface,
