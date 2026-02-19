@@ -147,7 +147,12 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
         "FUNCT", {.description = "function ids", .size = from_parameter<int>("NUMDOF")}));
     cond.add_component(deprecated_selection<std::string>("TYPE",
         {"Live", "Dead", "pseudo_orthopressure", "orthopressure", "PressureGrad"},
-        {.description = "type", .default_value = "Live"}));
+        {.description = "`Live/Dead`: stress vector components (`Dead` is not avail. for solids), "
+                        "`[pseudo_]orthopressure`: pressure normal to surface (only 1 component); "
+                        "for `orthopressure` in a structural analysis one has to provide "
+                        "`LOADLIN:true` in the `STRUCTURAL DYNAMIC` section, `PressureGrad`: "
+                        "prescribed pressure gradient in fluids",
+            .default_value = "Live"}));
 
     condlist.emplace_back(cond);
   };
@@ -268,8 +273,10 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
         "FUNCT", {.description = "", .size = from_parameter<int>("NUMDOF")}));
 
     // optional
-    cond.add_component(deprecated_selection<std::string>(
-        "TAG", {"none", "monitor_reaction"}, {.description = "", .default_value = "none"}));
+    cond.add_component(deprecated_selection<std::string>("TAG", {"none", "monitor_reaction"},
+        {.description =
+                "for monitor_reaction, the output is controlled via IO/MONITOR STRUCTURE DBC",
+            .default_value = "none"}));
 
     condlist.emplace_back(cond);
   };
@@ -308,12 +315,14 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   // Point coupling (e.g. joints - couple X out of Y nodal DoFs)
 
   Core::Conditions::ConditionDefinition pointcoupling("DESIGN POINT COUPLING CONDITIONS",
-      "PointCoupling", "Point Coupling", Core::Conditions::PointCoupling, false,
-      Core::Conditions::geometry_type_point);
+      "PointCoupling",
+      "All nodes in this Point set share the same displacement in the specified direction(s)",
+      Core::Conditions::PointCoupling, false, Core::Conditions::geometry_type_point);
 
   Core::Conditions::ConditionDefinition pointthermocoupling(
-      "DESIGN POINT THERMO COUPLING CONDITIONS", "PointThermoCoupling", "Point Coupling",
-      Core::Conditions::PointCoupling, false, Core::Conditions::geometry_type_point);
+      "DESIGN POINT THERMO COUPLING CONDITIONS", "PointThermoCoupling",
+      "All nodes in this Point set share the same temperature", Core::Conditions::PointCoupling,
+      false, Core::Conditions::geometry_type_point);
 
   const auto make_point_coupling_condition = [&condlist](auto& cond)
   {
@@ -458,29 +467,42 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   // local coordinate systems
 
   Core::Conditions::ConditionDefinition pointlocsys("DESIGN POINT LOCSYS CONDITIONS", "Locsys",
-      "Point local coordinate system", Core::Conditions::PointLocsys, true,
-      Core::Conditions::geometry_type_point);
+      "Point local coordinate system, to be used with the corresponding dirichlet boundary "
+      "condition",
+      Core::Conditions::PointLocsys, true, Core::Conditions::geometry_type_point);
   Core::Conditions::ConditionDefinition linelocsys("DESIGN LINE LOCSYS CONDITIONS", "Locsys",
-      "Line local coordinate system", Core::Conditions::LineLocsys, true,
-      Core::Conditions::geometry_type_line);
+      "Line local coordinate system, to be used with the corresponding dirichlet boundary "
+      "condition",
+      Core::Conditions::LineLocsys, true, Core::Conditions::geometry_type_line);
   Core::Conditions::ConditionDefinition surflocsys("DESIGN SURF LOCSYS CONDITIONS", "Locsys",
-      "Surface local coordinate system", Core::Conditions::SurfaceLocsys, true,
-      Core::Conditions::geometry_type_surface);
+      "Surface local coordinate system, to be used with the corresponding dirichlet boundary "
+      "condition",
+      Core::Conditions::SurfaceLocsys, true, Core::Conditions::geometry_type_surface);
   Core::Conditions::ConditionDefinition vollocsys("DESIGN VOL LOCSYS CONDITIONS", "Locsys",
-      "Volume local coordinate system", Core::Conditions::VolumeLocsys, true,
-      Core::Conditions::geometry_type_volume);
+      "Volume local coordinate system, to be used with the corresponding dirichlet boundary "
+      "condition",
+      Core::Conditions::VolumeLocsys, true, Core::Conditions::geometry_type_volume);
 
   const auto make_locsys_condition = [&condlist](auto& cond)
   {
-    cond.add_component(parameter<std::vector<double>>("ROTANGLE", {.description = "", .size = 3}));
-    cond.add_component(
-        parameter<std::vector<std::optional<int>>>("FUNCT", {.description = "", .size = 3}));
-    cond.add_component(parameter<int>("USEUPDATEDNODEPOS"));
+    cond.add_component(parameter<std::vector<double>>("ROTANGLE",
+        {.description =
+                "Cartesian components of the rotation vector; rotation direction is defined by the "
+                "direction of this vector, its norm defines the rotation angle",
+            .size = 3}));
+    cond.add_component(parameter<std::vector<std::optional<int>>>(
+        "FUNCT", {.description = "Rotation angle components are multiplied by this function "
+                                 "(mainly for spatial variation)",
+                     .size = 3}));
+    cond.add_component(parameter<int>("USEUPDATEDNODEPOS",
+        {.description = "1: Use node coordinates at new position within function definition, 0: "
+                        "use node coordinates at position of previous time step"}));
 
     if (cond.geometry_type() == Core::Conditions::geometry_type_line ||
         cond.geometry_type() == Core::Conditions::geometry_type_surface)
     {
-      cond.add_component(parameter<int>("USECONSISTENTNODENORMAL"));
+      cond.add_component(parameter<int>("USECONSISTENTNODENORMAL",
+          {.description = "1: Use consistent nodal normals if available (not for solids!)"}));
     }
 
     condlist.emplace_back(cond);

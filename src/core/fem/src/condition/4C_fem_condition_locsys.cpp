@@ -71,7 +71,7 @@ void Core::Conditions::LocsysManager::update(const double time,
   // LIMITATIONS:
   // - So far locsys only works for 2D and 3D solids
   // - Due to this limitation it's necessary to distinguish between this different element types
-  //   by means of there nodal DoFs. If further element types are integrated into locsys
+  //   by means of their nodal DoFs. If further element types are integrated into locsys
   //   more elaborate criteria might be useful.
 
   // If we have no functions in the locsys conditions the whole Setup method is only
