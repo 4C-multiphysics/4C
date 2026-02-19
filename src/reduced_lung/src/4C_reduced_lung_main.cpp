@@ -19,15 +19,14 @@
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_rebalance.hpp"
 #include "4C_reduced_lung_airways.hpp"
+#include "4C_reduced_lung_boundary_conditions.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_junctions.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
-#include "4C_utils_function_of_time.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
-#include <cmath>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -65,8 +64,8 @@ namespace ReducedLung
 
     // Create vectors of local entities (equations acting on the dofs).
     // Physical "elements" of the lung tree introducing the dofs.
-    AirwayContainer airways;
-    TerminalUnitContainer terminal_units;
+    Airways::AirwayContainer airways;
+    TerminalUnits::TerminalUnitContainer terminal_units;
     std::map<int, int> dof_per_ele;  // Map global element id -> dof.
     int n_airways = 0;
     int n_terminal_units = 0;
@@ -200,123 +199,19 @@ namespace ReducedLung
         ele_ids_per_node, merge_maps, comm);
 
     // Create entities with equations connecting elements (acting on "nodes" of the lung tree).
-    std::vector<BoundaryCondition> boundary_conditions;
+    BoundaryConditions::BoundaryConditionContainer boundary_conditions;
     Junctions::ConnectionData connections;
     Junctions::BifurcationData bifurcations;
-    int n_boundary_conditions = 0;
-    const auto& bc_parameters = parameters.boundary_conditions;
-    if (bc_parameters.num_conditions < 0)
-    {
-      FOUR_C_THROW("Number of boundary conditions must be non-negative, got {}.",
-          bc_parameters.num_conditions);
-    }
-    boundary_conditions.reserve(bc_parameters.num_conditions);
-    for (int bc_id = 0; bc_id < bc_parameters.num_conditions; ++bc_id)
-    {
-      const int node_id_one_based = bc_parameters.node_id.at(bc_id, "bc_node_id");
-      if (node_id_one_based < 1 || node_id_one_based > parameters.lung_tree.topology.num_nodes)
-      {
-        FOUR_C_THROW("Boundary condition bc_node_id {} is outside the valid range [1, {}].",
-            node_id_one_based, parameters.lung_tree.topology.num_nodes);
-      }
-      const int node_id = node_id_one_based - 1;
-      auto node_it = global_ele_ids_per_node.find(node_id);
-      if (node_it == global_ele_ids_per_node.end())
-      {
-        FOUR_C_THROW(
-            "Boundary condition bc_node_id {} is not part of the topology.", node_id_one_based);
-      }
-      const auto& adjacent_elements = node_it->second;
-      if (adjacent_elements.size() != 1u)
-      {
-        FOUR_C_THROW(
-            "Boundary condition bc_node_id {} must connect to exactly one element, but connects "
-            "to {} elements.",
-            node_id_one_based, adjacent_elements.size());
-      }
 
-      const int element_id = adjacent_elements.front();
-      const int local_element_id = actdis->element_row_map()->lid(element_id);
-      if (local_element_id == -1)
-      {
-        continue;
-      }
-      auto* ele = actdis->l_row_element(local_element_id);
-      const auto node_ids = ele->node_ids();
-      const bool is_inlet = node_ids[0] == node_id;
-      const bool is_outlet = node_ids[1] == node_id;
-      if (!is_inlet && !is_outlet)
-      {
-        FOUR_C_THROW(
-            "Boundary condition bc_node_id {} is not attached to element {} as inlet or outlet.",
-            node_id_one_based, element_id + 1);
-      }
-
-      const auto bc_kind = bc_parameters.bc_type.at(bc_id, "bc_type");
-      BoundaryConditionType bc_type;
-      int dof_offset = 0;
-      if (bc_kind == ReducedLungParameters::BoundaryConditions::Type::Pressure)
-      {
-        bc_type =
-            is_inlet ? BoundaryConditionType::pressure_in : BoundaryConditionType::pressure_out;
-        dof_offset = is_inlet ? 0 : 1;
-      }
-      else if (bc_kind == ReducedLungParameters::BoundaryConditions::Type::Flow)
-      {
-        bc_type = is_inlet ? BoundaryConditionType::flow_in : BoundaryConditionType::flow_out;
-        if (is_inlet)
-        {
-          dof_offset = 2;
-        }
-        else
-        {
-          const auto dof_it = global_dof_per_ele.find(element_id);
-          FOUR_C_ASSERT_ALWAYS(dof_it != global_dof_per_ele.end(),
-              "Missing dof count for element {}.", element_id + 1);
-          dof_offset = dof_it->second - 1;
-        }
-      }
-      else
-      {
-        FOUR_C_THROW(
-            "Boundary condition type '{}' not implemented. Supported types are Pressure and Flow.",
-            static_cast<int>(bc_kind));
-      }
-
-      const auto first_dof_it = first_global_dof_of_ele.find(element_id);
-      FOUR_C_ASSERT_ALWAYS(first_dof_it != first_global_dof_of_ele.end(),
-          "Missing dof offset for element {}.", element_id + 1);
-      const int global_dof_id = first_dof_it->second + dof_offset;
-      int function_id = 0;
-      double value = 0.0;
-      if (bc_parameters.value_source ==
-          ReducedLungParameters::BoundaryConditions::ValueSource::bc_function_id)
-      {
-        function_id = bc_parameters.function_id.at(bc_id, "bc_function_id");
-        if (function_id <= 0)
-        {
-          FOUR_C_THROW("Boundary condition bc_function_id must be positive, got {}.", function_id);
-        }
-      }
-      else if (bc_parameters.value_source ==
-               ReducedLungParameters::BoundaryConditions::ValueSource::bc_value)
-      {
-        value = bc_parameters.value.at(bc_id, "bc_value");
-      }
-      else
-      {
-        FOUR_C_THROW("Boundary condition value source not implemented.");
-      }
-
-      boundary_conditions.push_back(BoundaryCondition{
-          element_id, 0, 0, n_boundary_conditions, bc_type, global_dof_id, function_id, value});
-      n_boundary_conditions++;
-    }
+    BoundaryConditions::create_boundary_conditions(*actdis, parameters, global_ele_ids_per_node,
+        global_dof_per_ele, first_global_dof_of_ele, boundary_conditions);
+    BoundaryConditions::create_evaluators(boundary_conditions);
 
     Junctions::create_junctions(*actdis, global_ele_ids_per_node, global_dof_per_ele,
         first_global_dof_of_ele, connections, bifurcations);
     int n_connections = static_cast<int>(connections.size());
     int n_bifurcations = static_cast<int>(bifurcations.size());
+    int n_boundary_conditions = BoundaryConditions::count_boundary_conditions(boundary_conditions);
 
     // Print info on instantiated objects.
     {
@@ -362,12 +257,7 @@ namespace ReducedLung
     }
     // Assign local equation ids to connections, bifurcations, and boundary conditions.
     Junctions::assign_junction_local_equation_ids(connections, bifurcations, n_local_equations);
-    for (BoundaryCondition& bc : boundary_conditions)
-    {
-      // Each boundaary condition adds 1 equation enforcing it at the respective dof.
-      bc.local_equation_id = n_local_equations;
-      n_local_equations++;
-    }
+    BoundaryConditions::assign_local_equation_ids(boundary_conditions, n_local_equations);
 
     // Create all necessary maps for matrix, rhs, and dof-vector.
     // Map with all dof ids belonging to the local elements (airways and terminal units).
@@ -385,10 +275,7 @@ namespace ReducedLung
     // Assign global equation ids to connections, bifurcations, and boundary conditions based on the
     // row map. Maybe not necessary, but helps with debugging.
     Junctions::assign_junction_global_equation_ids(row_map, connections, bifurcations);
-    for (BoundaryCondition& bc : boundary_conditions)
-    {
-      bc.global_equation_id = row_map.gid(bc.local_equation_id);
-    }
+    BoundaryConditions::assign_global_equation_ids(row_map, boundary_conditions);
 
     // Save locally relevant dof ids of every entity. Needed for local assembly.
     for (auto& model : airways.models)
@@ -414,10 +301,7 @@ namespace ReducedLung
       }
     }
     Junctions::assign_junction_local_dof_ids(locally_relevant_dof_map, connections, bifurcations);
-    for (BoundaryCondition& bc : boundary_conditions)
-    {
-      bc.local_dof_id = locally_relevant_dof_map.lid(bc.global_dof_id);
-    }
+    BoundaryConditions::assign_local_dof_ids(locally_relevant_dof_map, boundary_conditions);
 
     // Create system matrix and vectors:
     // Vector with all degrees of freedom (p1, p2, q, ...) associated to the elements.
@@ -474,30 +358,9 @@ namespace ReducedLung
           rhs, connections, bifurcations, locally_relevant_dofs);
       Junctions::update_jacobian(sysmat, connections, bifurcations);
 
-      // Assemble boundary conditions (equation: dof_value - bc_value = 0).
-      for (const BoundaryCondition& bc : boundary_conditions)
-      {
-        const double val = 1.0;
-        double res;
-        double bc_value = bc.value;
-        if (bc.function_id > 0)
-        {
-          bc_value = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfTime>(bc.function_id)
-                         .evaluate(n * dt);
-        }
-        int local_dof_id = bc.local_dof_id;
-        if (!sysmat.filled())
-        {
-          sysmat.insert_my_values(bc.local_equation_id, 1, &val, &local_dof_id);
-        }
-        else
-        {
-          sysmat.replace_my_values(bc.local_equation_id, 1, &val, &local_dof_id);
-        }
-        res = -locally_relevant_dofs.local_values_as_span()[local_dof_id] + bc_value;
-        rhs.replace_local_value(bc.local_equation_id, res);
-      }
+      BoundaryConditions::update_negative_residual_vector(
+          rhs, boundary_conditions, locally_relevant_dofs, n * dt);
+      BoundaryConditions::update_jacobian(sysmat, boundary_conditions);
 
       // Fix sparsity pattern after the first assembly process.
       if (!sysmat.filled())

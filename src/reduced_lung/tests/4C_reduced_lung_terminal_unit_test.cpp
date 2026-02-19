@@ -18,6 +18,7 @@ namespace
   using namespace FourC::ReducedLung;
   using namespace FourC::Core::LinAlg;
   using namespace FourC::ReducedLung::TestUtils;
+  using namespace FourC::ReducedLung::TerminalUnits;
 
   // Tests the implementation of different model combinations by comparing the analytic jacobian
   // with a finite difference approximation of the residual functions.
