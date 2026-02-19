@@ -1,0 +1,41 @@
+# This workflow flags PRs that have been inactive for more than 180 days and closes them after another 14 days.
+# Issues will not be flagged or closed.
+
+name: "Close stale PRs"
+on:
+  schedule:
+    - cron: '30 12 * * *'
+
+env:
+  PR_INACTIVITY_AFTER: 1 #180 # days
+  PR_CLOSE_AFTER: 1 #14 # days
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
+        with:
+          stale-pr-message: >
+            This pull request has been inactive for **${{ env.PR_INACTIVITY_AFTER }}** days.
+
+            If this feature is still intended to be merged, please leave a brief comment outlining the
+            next intended steps and remove the `stale` label.
+            This will reset the inactivity counter.
+
+            If the pull request can be closed, feel free to close it. Otherwise do **not** change any
+            label or comment as this will wrongly reset the inactivity counter.
+            If no action is taken, this pull request will be automatically closed in
+            **${{ env.PR_CLOSE_AFTER }}** days.
+          close-pr-message: >
+            This pull request is closed due to inactivity. If this was a mistake, feel free to re-open
+            the PR.
+          days-before-pr-stale: ${{ env.PR_INACTIVITY_AFTER }}
+          days-before-pr-close: ${{ env.PR_CLOSE_AFTER }}
+          stale-pr-label: 'stale'
+          close-pr-label: 'closed-due-to-inactivity'
+          # Do not close issues
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
