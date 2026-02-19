@@ -16,6 +16,7 @@
 #include "4C_beaminteraction_submodel_evaluator_generic.hpp"
 #include "4C_binstrategy_utils.hpp"
 #include "4C_fem_condition.hpp"
+#include "4C_geometric_search_params.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_io_visualization_manager.hpp"
 
@@ -196,6 +197,9 @@ namespace BeamInteraction
      private:
       //! data container holding all beam contact related parameters
       BeamInteraction::Potential::BeamPotentialParameters beam_potential_parameters_;
+
+      //! data container holding all geometric search related parameters
+      std::shared_ptr<Core::GeometricSearch::GeometricSearchParams> geometric_search_params_ptr_;
 
       //! type of eles in bins  // Todo kept line for future improvement
       //    Core::Binstrategy::Utils::BinContentType bin_beamcontent_;

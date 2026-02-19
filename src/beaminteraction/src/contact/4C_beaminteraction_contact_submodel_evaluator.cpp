@@ -79,9 +79,7 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::setup()
   geometric_search_params_ptr_ = std::make_shared<Core::GeometricSearch::GeometricSearchParams>(
       Global::Problem::instance()->geometric_search_params(),
       Global::Problem::instance()->io_params());
-  if (beam_interaction_params_ptr_->get_search_strategy() ==
-          BeamInteraction::SearchStrategy::bounding_volume_hierarchy &&
-      geometric_search_params_ptr_->get_write_visualization_flag())
+  if (geometric_search_params_ptr_->get_write_visualization_flag())
   {
     geometric_search_visualization_ptr_ =
         std::make_shared<Core::GeometricSearch::GeometricSearchVisualization>(
@@ -914,116 +912,64 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::find_and_store_neighboring
   // Build the ids of the elements for the beam-to-solid conditions.
   beam_interaction_conditions_ptr_->build_id_sets(discret_ptr());
 
-  if (beam_interaction_params_ptr_->get_search_strategy() ==
-      BeamInteraction::SearchStrategy::bruteforce_with_binning)
+  // Get vector of all beam element bounding boxes.
+  int const numroweles = ele_type_map_extractor_ptr()->beam_map()->num_my_elements();
+  std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> beam_bounding_boxes;
+  for (int rowele_i = 0; rowele_i < numroweles; ++rowele_i)
   {
-    // loop over all row beam elements
-    // note: like this we ensure that first element of pair is always a beam element, also only
-    // beam to something contact considered
-    int const numroweles = ele_type_map_extractor_ptr()->beam_map()->num_my_elements();
-    for (int rowele_i = 0; rowele_i < numroweles; ++rowele_i)
+    int const elegid = ele_type_map_extractor_ptr()->beam_map()->gid(rowele_i);
+    Core::Elements::Element* currele = discret().g_element(elegid);
+
+    beam_bounding_boxes.emplace_back(std::make_pair(elegid,
+        currele->get_bounding_volume(discret(),
+            *beam_interaction_data_state_ptr()->get_dis_col_np(), *geometric_search_params_ptr_)));
+  }
+
+  // Get vector of the bounding boxes of all possible interacting elements (also including beams
+  // if beam-to-beam contact is activated).
+  int const numcoleles = discret().num_my_col_elements();
+  std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> other_bounding_boxes;
+  for (int colele_i = 0; colele_i < numcoleles; ++colele_i)
+  {
+    // Check if the current element is relevant for beam-to-xxx contact.
+    Core::Elements::Element* currele = discret().l_col_element(colele_i);
+    const Core::Binstrategy::Utils::BinContentType contact_type =
+        BeamInteraction::Utils::convert_element_to_bin_content_type(currele);
+    if (std::find(contactelementtypes_.begin(), contactelementtypes_.end(), contact_type) !=
+        contactelementtypes_.end())
     {
-      int const elegid = ele_type_map_extractor_ptr()->beam_map()->gid(rowele_i);
-      Core::Elements::Element* currele = discret_ptr()->g_element(elegid);
-
-      // (unique) set of neighboring bins for all col bins assigned to current element
-      std::set<int> neighboring_binIds;
-
-      // loop over all bins touched by currele
-      std::set<int>::const_iterator biniter;
-      for (biniter = beam_interaction_data_state_ptr()->get_row_ele_to_bin_set(elegid).begin();
-          biniter != beam_interaction_data_state_ptr()->get_row_ele_to_bin_set(elegid).end();
-          ++biniter)
-      {
-        std::vector<int> loc_neighboring_binIds;
-        // in three-dimensional space: 26 neighbouring-bins + 1 self
-        loc_neighboring_binIds.reserve(27);
-
-        // do not check on existence here -> shifted to GetBinContent
-        bin_strategy_ptr()->get_neighbor_and_own_bin_ids(*biniter, loc_neighboring_binIds);
-
-        // build up comprehensive unique set of neighboring bins
-        neighboring_binIds.insert(loc_neighboring_binIds.begin(), loc_neighboring_binIds.end());
-      }
-      // get set of elements that reside in neighboring bins
-      std::vector<int> glob_neighboring_binIds(
-          neighboring_binIds.begin(), neighboring_binIds.end());
-      std::set<Core::Elements::Element*> neighboring_elements;
-      bin_strategy_ptr()->get_bin_content(
-          neighboring_elements, contactelementtypes_, glob_neighboring_binIds);
-
-      // sort out elements that should not be considered in contact evaluation
-      select_eles_to_be_considered_for_contact_evaluation(currele, neighboring_elements);
-
-      nearby_elements_map_[elegid] = neighboring_elements;
+      other_bounding_boxes.emplace_back(
+          std::make_pair(currele->id(), currele->get_bounding_volume(discret(),
+                                            *beam_interaction_data_state_ptr()->get_dis_col_np(),
+                                            *geometric_search_params_ptr_)));
     }
   }
-  else if (beam_interaction_params_ptr_->get_search_strategy() ==
-           BeamInteraction::SearchStrategy::bounding_volume_hierarchy)
+
+  // Get colliding pairs.
+  const auto& collision_pairs = collision_search_print_results(other_bounding_boxes,
+      beam_bounding_boxes, discret().get_comm(), geometric_search_params_ptr_->verbosity_);
+
+  // Create the beam-to-xxx pair pointers according to the search.
+  for (const auto& pair : collision_pairs)
   {
-    // Get vector of all beam element bounding boxes.
-    int const numroweles = ele_type_map_extractor_ptr()->beam_map()->num_my_elements();
-    std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> beam_bounding_boxes;
-    for (int rowele_i = 0; rowele_i < numroweles; ++rowele_i)
-    {
-      int const elegid = ele_type_map_extractor_ptr()->beam_map()->gid(rowele_i);
-      Core::Elements::Element* currele = discret().g_element(elegid);
-
-      beam_bounding_boxes.emplace_back(
-          std::make_pair(elegid, currele->get_bounding_volume(discret(),
-                                     *beam_interaction_data_state_ptr()->get_dis_col_np(),
-                                     *geometric_search_params_ptr_)));
-    }
-
-    // Get vector of the bounding boxes of all possible interacting elements (also including beams
-    // if beam-to-beam contact is activated).
-    int const numcoleles = discret().num_my_col_elements();
-    std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> other_bounding_boxes;
-    for (int colele_i = 0; colele_i < numcoleles; ++colele_i)
-    {
-      // Check if the current element is relevant for beam-to-xxx contact.
-      Core::Elements::Element* currele = discret().l_col_element(colele_i);
-      const Core::Binstrategy::Utils::BinContentType contact_type =
-          BeamInteraction::Utils::convert_element_to_bin_content_type(currele);
-      if (std::find(contactelementtypes_.begin(), contactelementtypes_.end(), contact_type) !=
-          contactelementtypes_.end())
-      {
-        other_bounding_boxes.emplace_back(
-            std::make_pair(currele->id(), currele->get_bounding_volume(discret(),
-                                              *beam_interaction_data_state_ptr()->get_dis_col_np(),
-                                              *geometric_search_params_ptr_)));
-      }
-    }
-
-    // Get colliding pairs.
-    const auto& collision_pairs = collision_search_print_results(other_bounding_boxes,
-        beam_bounding_boxes, discret().get_comm(), geometric_search_params_ptr_->verbosity_);
-
-    // Create the beam-to-xxx pair pointers according to the search.
-    for (const auto& pair : collision_pairs)
-    {
-      nearby_elements_map_[pair.gid_predicate].insert(discret().g_element(pair.gid_primitive));
-    }
-
-    // Pre-filter some pairs
-    for (auto& [beam_gid, neighboring_elements] : nearby_elements_map_)
-    {
-      const Core::Elements::Element* currele = discret().g_element(beam_gid);
-      select_eles_to_be_considered_for_contact_evaluation(currele, neighboring_elements);
-    }
-
-    // Check if the primitives and predicates should be output
-    if (geometric_search_visualization_ptr_ != nullptr)
-    {
-      // Output is desired, so create it right here, because we only search the pairs once per time
-      // step anyways.
-      geometric_search_visualization_ptr_->write_primitives_and_predicates_to_disk(
-          g_state().get_time_n(), g_state().get_step_n(), other_bounding_boxes,
-          beam_bounding_boxes);
-    }
+    nearby_elements_map_[pair.gid_predicate].insert(discret().g_element(pair.gid_primitive));
   }
-  else
-    FOUR_C_THROW("No appropriate search strategy for beam interaction chosen!");
+
+  // Pre-filter some pairs
+  for (auto& [beam_gid, neighboring_elements] : nearby_elements_map_)
+  {
+    const Core::Elements::Element* currele = discret().g_element(beam_gid);
+    select_eles_to_be_considered_for_contact_evaluation(currele, neighboring_elements);
+  }
+
+  // Check if the primitives and predicates should be output
+  if (geometric_search_visualization_ptr_ != nullptr)
+  {
+    // Output is desired, so create it right here, because we only search the pairs once per time
+    // step anyways.
+    geometric_search_visualization_ptr_->write_primitives_and_predicates_to_disk(
+        g_state().get_time_n(), g_state().get_step_n(), other_bounding_boxes, beam_bounding_boxes);
+  }
 }
 
 /*----------------------------------------------------------------------------*

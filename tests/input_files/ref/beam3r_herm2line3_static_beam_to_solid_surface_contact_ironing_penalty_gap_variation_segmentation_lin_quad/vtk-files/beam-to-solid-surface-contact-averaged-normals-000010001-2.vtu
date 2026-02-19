@@ -12,41 +12,32 @@
 
     <Piece NumberOfPoints="0" NumberOfCells="0" >
       <Points>
-        <DataArray type="Float64" NumberOfComponents="3" format="binary">
-AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
+        <DataArray type="Float64" NumberOfComponents="3" format="ascii">
         </DataArray>
       </Points>
 
       <Cells>
-        <DataArray type="Int32" Name="connectivity" format="binary">
-AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
+        <DataArray type="Int32" Name="connectivity" format="ascii">
 
         </DataArray>
-        <DataArray type="Int32" Name="offsets" format="binary">
-AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
+        <DataArray type="Int32" Name="offsets" format="ascii">
 
         </DataArray>
-        <DataArray type="UInt8" Name="types" format="binary">
-AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
+        <DataArray type="UInt8" Name="types" format="ascii">
 
         </DataArray>
       </Cells>
 
   <PointData>
-        <DataArray type="Int32" Name="coupling_id" format="binary">
-AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
+        <DataArray type="Int32" Name="coupling_id" format="ascii">
         </DataArray>
-        <DataArray type="Float64" Name="displacement" NumberOfComponents="3" format="binary">
-AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
+        <DataArray type="Float64" Name="displacement" NumberOfComponents="3" format="ascii">
         </DataArray>
-        <DataArray type="Float64" Name="normal_averaged" NumberOfComponents="3" format="binary">
-AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
+        <DataArray type="Float64" Name="normal_averaged" NumberOfComponents="3" format="ascii">
         </DataArray>
-        <DataArray type="Float64" Name="normal_element" NumberOfComponents="3" format="binary">
-AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
+        <DataArray type="Float64" Name="normal_element" NumberOfComponents="3" format="ascii">
         </DataArray>
-        <DataArray type="Int32" Name="uid_0_face_id" format="binary">
-AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
+        <DataArray type="Int32" Name="uid_0_face_id" format="ascii">
         </DataArray>
       </PointData>
 

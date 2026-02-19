@@ -36,11 +36,7 @@ std::vector<Core::IO::InputSpec> BeamInteraction::valid_parameters()
                   {"everydt", repstr_everydt},
               },
               {.description = "Type of employed repartitioning strategy",
-                  .default_value = repstr_adaptive}),
-
-          parameter<SearchStrategy>("SEARCH_STRATEGY",
-              {.description = "Type of search strategy used for finding coupling pairs",
-                  .default_value = SearchStrategy::bruteforce_with_binning})},
+                  .default_value = repstr_adaptive})},
       {.required = false}));
 
   // get beam contact parameters

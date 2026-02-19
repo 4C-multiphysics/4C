@@ -15,7 +15,5 @@
       <PDataArray type="Int32" Name="uid_0_face_id" format="ascii"/>
     </PPointData>
     <Piece Source="beam-to-solid-surface-averaged-normals-00003-0.vtu"/>
-    <Piece Source="beam-to-solid-surface-averaged-normals-00003-1.vtu"/>
-    <Piece Source="beam-to-solid-surface-averaged-normals-00003-2.vtu"/>
   </PUnstructuredGrid>
 </VTKFile>

@@ -14,7 +14,5 @@
       <PDataArray type="Int32" Name="uid_1_pair_solid_id" format="ascii"/>
     </PPointData>
     <Piece Source="beam-to-solid-surface-mortar-00003-0.vtu"/>
-    <Piece Source="beam-to-solid-surface-mortar-00003-1.vtu"/>
-    <Piece Source="beam-to-solid-surface-mortar-00003-2.vtu"/>
   </PUnstructuredGrid>
 </VTKFile>
