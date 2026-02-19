@@ -2649,10 +2649,7 @@ void Solid::TimIntImpl::cmt_linear_solve()
   {
     // TODO: maps for merged meshtying and contact problem !!!
 
-    std::shared_ptr<Core::LinAlg::Map> masterDofMap;
-    std::shared_ptr<Core::LinAlg::Map> slaveDofMap;
-    std::shared_ptr<Core::LinAlg::Map> innerDofMap;
-    std::shared_ptr<Core::LinAlg::Map> activeDofMap;
+    std::shared_ptr<Core::LinAlg::Map> masterDofMap, slaveDofMap, innerDofMap, activeDofMap;
     std::shared_ptr<Mortar::StrategyBase> strategy =
         Core::Utils::shared_ptr_from_ref(cmtbridge_->get_strategy());
     strategy->collect_maps_for_preconditioner(masterDofMap, slaveDofMap, innerDofMap, activeDofMap);
@@ -2661,14 +2658,10 @@ void Solid::TimIntImpl::cmt_linear_solve()
     if (contactsolver_->params().isSublist("Belos Parameters"))
     {
       Teuchos::ParameterList& mueluParams = contactsolver_->params().sublist("Belos Parameters");
-      mueluParams.set<Teuchos::RCP<Epetra_Map>>(
-          "contact masterDofMap", Teuchos::rcpFromRef(masterDofMap->get_epetra_map()));
-      mueluParams.set<Teuchos::RCP<Epetra_Map>>(
-          "contact slaveDofMap", Teuchos::rcpFromRef(slaveDofMap->get_epetra_map()));
-      mueluParams.set<Teuchos::RCP<Epetra_Map>>(
-          "contact innerDofMap", Teuchos::rcpFromRef(innerDofMap->get_epetra_map()));
-      mueluParams.set<Teuchos::RCP<Epetra_Map>>(
-          "contact activeDofMap", Teuchos::rcpFromRef(activeDofMap->get_epetra_map()));
+      mueluParams.set<std::shared_ptr<Core::LinAlg::Map>>("contact masterDofMap", masterDofMap);
+      mueluParams.set<std::shared_ptr<Core::LinAlg::Map>>("contact slaveDofMap", slaveDofMap);
+      mueluParams.set<std::shared_ptr<Core::LinAlg::Map>>("contact innerDofMap", innerDofMap);
+      mueluParams.set<std::shared_ptr<Core::LinAlg::Map>>("contact activeDofMap", activeDofMap);
       std::shared_ptr<CONTACT::AbstractStrategy> costrat =
           std::dynamic_pointer_cast<CONTACT::AbstractStrategy>(strategy);
       if (costrat != nullptr)
@@ -2677,18 +2670,18 @@ void Solid::TimIntImpl::cmt_linear_solve()
         mueluParams.set<std::string>("Core::ProblemType", "meshtying");
 
       // construct the mapping of the dual node IDs to primal node IDs
-      std::shared_ptr<std::map<int, int>> dual2primal_map = std::make_shared<std::map<int, int>>();
-      const std::shared_ptr<const Core::LinAlg::Map> gs_node_row_map =
+      std::map<int, int> dual2primal_map;
+      const std::shared_ptr<const Core::LinAlg::Map> slave_node_row_map =
           strategy->slave_row_nodes_ptr();
       const Core::LinAlg::Map* solid_node_map = discretization()->node_row_map();
-      for (int dual_lid = 0; dual_lid < gs_node_row_map->num_my_elements(); dual_lid++)
+      for (int dual_lid = 0; dual_lid < slave_node_row_map->num_my_elements(); dual_lid++)
       {
-        int dual_gid = gs_node_row_map->gid(dual_lid);
+        int dual_gid = slave_node_row_map->gid(dual_lid);
         if (discretization()->have_global_node(dual_gid))
-          (*dual2primal_map)[dual_lid] = solid_node_map->lid(dual_gid);
+          dual2primal_map[dual_lid] = solid_node_map->lid(dual_gid);
       }
-      mueluParams.set<Teuchos::RCP<std::map<int, int>>>(
-          "Interface DualNodeID to PrimalNodeID", Teuchos::rcp(dual2primal_map));
+      mueluParams.set<std::shared_ptr<std::map<int, int>>>("Interface DualNodeID to PrimalNodeID",
+          std::make_shared<std::map<int, int>>(dual2primal_map));
 
       mueluParams.set<int>("time step", step_);
       mueluParams.set<int>("iter", iter_);

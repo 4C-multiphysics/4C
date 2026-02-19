@@ -193,29 +193,29 @@ void Core::LinearSolver::MueLuPreconditioner::setup(
 
     if (muelulist_.sublist("Belos Parameters").isParameter("contact slaveDofMap"))
     {
-      Teuchos::RCP<Epetra_Map> ep_slave_dof_map =
+      const auto slave_dof_map =
           muelulist_.sublist("Belos Parameters")
-              .get<Teuchos::RCP<Epetra_Map>>("contact slaveDofMap");
+              .get<std::shared_ptr<Core::LinAlg::Map>>("contact slaveDofMap");
 
-      if (ep_slave_dof_map.is_null()) FOUR_C_THROW("Interface contact map is not available!");
+      if (slave_dof_map == nullptr) FOUR_C_THROW("Interface contact map is not available!");
 
-      Teuchos::RCP<EpetraMap> x_slave_dof_map = Teuchos::make_rcp<EpetraMap>(ep_slave_dof_map);
+      Teuchos::RCP<EpetraMap> ep_slave_dof_map =
+          Teuchos::make_rcp<EpetraMap>(Teuchos::rcpFromRef(slave_dof_map->get_epetra_map()));
 
       H_->GetLevel(0)->Set("Primal interface DOF map",
-          Teuchos::rcp_dynamic_cast<const Xpetra::Map<LO, GO, NO>>(x_slave_dof_map, true));
+          Teuchos::rcp_dynamic_cast<const Xpetra::Map<LO, GO, NO>>(ep_slave_dof_map, true));
     }
 
     if (muelulist_.sublist("Belos Parameters").isParameter("Interface DualNodeID to PrimalNodeID"))
     {
-      Teuchos::RCP<std::map<LO, LO>> dual2primal_map =
+      std::shared_ptr<std::map<LO, LO>> dual2primal_map =
           muelulist_.sublist("Belos Parameters")
-              .get<Teuchos::RCP<std::map<LO, LO>>>("Interface DualNodeID to PrimalNodeID");
+              .get<std::shared_ptr<std::map<LO, LO>>>("Interface DualNodeID to PrimalNodeID");
 
-      if (dual2primal_map.is_null())
+      if (dual2primal_map == nullptr)
         FOUR_C_THROW("'Interface DualNodeID to PrimalNodeID' map is not available!");
 
-      H_->GetLevel(0)->Set("DualNodeID2PrimalNodeID",
-          Teuchos::rcp_dynamic_cast<std::map<int, int>>(dual2primal_map, true));
+      H_->GetLevel(0)->Set("DualNodeID2PrimalNodeID", Teuchos::rcp(dual2primal_map));
     }
 
     mueLuFactory.SetupHierarchy(*H_);

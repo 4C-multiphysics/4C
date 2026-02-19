@@ -1,4 +1,4 @@
-<!-- Define MueLu preconditioner --><ParameterList name="MueLu">
+<ParameterList name="MueLu">
   <!-- Factory collection -->
   <ParameterList name="Factories">
     <!-- sub block factories -->

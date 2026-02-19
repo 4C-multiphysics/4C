@@ -368,5 +368,4 @@ void CONTACT::Utils::get_initialization_info(bool& Two_half_pass,
   }
 }
 
-
 FOUR_C_NAMESPACE_CLOSE
