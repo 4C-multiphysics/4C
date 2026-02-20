@@ -35,6 +35,7 @@ namespace CONTACT
         : NitscheStrategy(
               dofRowMap, nodeRowMap, params, std::move(interface), dim, comm, alphaf, maxdof)
     {
+      set_time_step_size_and_total_time(params.get<double>("TIMESTEP_EVAL_REFERENCE_STATE"));
     }
 
     //! Shared data constructor
@@ -46,6 +47,7 @@ namespace CONTACT
         : NitscheStrategy(data_ptr, dofRowMap, nodeRowMap, params, std::move(interface), dim, comm,
               alphaf, maxdof)
     {
+      set_time_step_size_and_total_time(params.get<double>("TIMESTEP_EVAL_REFERENCE_STATE"));
     }
 
     void apply_force_stiff_cmt(std::shared_ptr<Core::LinAlg::Vector<double>> dis,

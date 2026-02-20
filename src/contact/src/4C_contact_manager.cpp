@@ -1083,20 +1083,94 @@ bool CONTACT::Manager::read_and_check_input(Teuchos::ParameterList& cparams) con
   cparams.setParameters(contact);
   cparams.setParameters(wearlist);
   cparams.setParameters(tsic);
-  if (problemtype == Core::ProblemType::tsi)
-    cparams.set<double>(
-        "TIMESTEP", Global::Problem::instance()->tsi_dynamic_params().get<double>("TIMESTEP"));
-  else if (problemtype != Core::ProblemType::structure)
+
+
+  switch (problemtype)
   {
-    // rauch 01/16
-    if (Core::Communication::my_mpi_rank(get_comm()) == 0)
-      std::cout << "\n \n  Warning: CONTACT::Manager::read_and_check_input() reads TIMESTEP = "
-                << stru.get<double>("TIMESTEP") << " from --STRUCTURAL DYNAMIC \n"
-                << std::endl;
-    cparams.set<double>("TIMESTEP", stru.get<double>("TIMESTEP"));
+    case Core::ProblemType::tsi:
+    {
+      const double timestep =
+          Global::Problem::instance()->tsi_dynamic_params().get<double>("TIMESTEP");
+
+      cparams.set<double>("TIMESTEP", timestep);
+      cparams.set<double>("TIMESTEP_EVAL_REFERENCE_STATE", timestep);
+
+      break;
+    }
+    case Core::ProblemType::structure:
+    {
+      const double timestep = stru.get<double>("TIMESTEP");
+
+      cparams.set<double>("TIMESTEP", timestep);
+      cparams.set<double>("TIMESTEP_EVAL_REFERENCE_STATE", timestep);
+      break;
+    }
+    case Core::ProblemType::poroelast:
+    case Core::ProblemType::poroscatra:
+    {
+      const Teuchos::ParameterList& porodyn =
+          Global::Problem::instance()->poroelast_dynamic_params();
+      const double timestep = porodyn.get<double>("TIMESTEP");
+
+      cparams.set<double>("TIMESTEP", timestep);
+      cparams.set<double>("TIMESTEP_EVAL_REFERENCE_STATE", timestep);
+      break;
+    }
+    case Core::ProblemType::ssi:
+    {
+      const Teuchos::ParameterList& ssi = Global::Problem::instance()->ssi_control_params();
+      const double timestep = ssi.get<double>("TIMESTEP");
+
+      cparams.set<double>("TIMESTEP", timestep);
+      cparams.set<double>("TIMESTEP_EVAL_REFERENCE_STATE", timestep);
+      break;
+    }
+    case Core::ProblemType::fsi:
+    {
+      const Teuchos::ParameterList& fsi = Global::Problem::instance()->fsi_dynamic_params();
+      const double timestep = fsi.get<double>("TIMESTEP");
+
+      cparams.set<double>("TIMESTEP", timestep);
+      cparams.set<double>("TIMESTEP_EVAL_REFERENCE_STATE", timestep);
+
+      break;
+    }
+    case Core::ProblemType::fsi_xfem:
+    {
+      const Teuchos::ParameterList& fsi_xfem = Global::Problem::instance()->fluid_dynamic_params();
+      const double timestep = fsi_xfem.get<double>("TIMESTEP");
+
+      cparams.set<double>("TIMESTEP", timestep);
+      cparams.set<double>("TIMESTEP_EVAL_REFERENCE_STATE", timestep);
+
+      break;
+    }
+
+    case Core::ProblemType::fpsi:
+    case Core::ProblemType::fpsi_xfem:
+    {
+      const Teuchos::ParameterList& fpsi = Global::Problem::instance()->fpsi_dynamic_params();
+      const double timestep = fpsi.get<double>("TIMESTEP");
+
+      cparams.set<double>("TIMESTEP", timestep);
+      cparams.set<double>("TIMESTEP_EVAL_REFERENCE_STATE", timestep);
+
+      break;
+    }
+
+    default:
+      // rauch 01/16
+      if (Core::Communication::my_mpi_rank(get_comm()) == 0)
+        std::cout << "\n \n  Warning: CONTACT::Manager::read_and_check_input() reads TIMESTEP = "
+                  << stru.get<double>("TIMESTEP") << " from --STRUCTURAL DYNAMIC \n"
+                  << std::endl;
+      const double timestep = stru.get<double>("TIMESTEP");
+      cparams.set<double>("TIMESTEP", timestep);
+      cparams.set<double>("TIMESTEP_EVAL_REFERENCE_STATE", timestep);
+
+      break;
   }
-  else
-    cparams.set<double>("TIMESTEP", stru.get<double>("TIMESTEP"));
+
 
   // *********************************************************************
   // NURBS contact

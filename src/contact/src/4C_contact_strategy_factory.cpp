@@ -516,7 +516,8 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
   {
     case Core::ProblemType::tsi:
     {
-      double timestep = Global::Problem::instance()->tsi_dynamic_params().get<double>("TIMESTEP");
+      const double timestep =
+          Global::Problem::instance()->tsi_dynamic_params().get<double>("TIMESTEP");
       // rauch 01/16
       if (Core::Communication::my_mpi_rank(get_comm()) == 0)
       {
@@ -527,12 +528,23 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
                   << "the new structural/contact framework!" << std::endl;
       }
       params.set<double>("TIMESTEP", timestep);
+      params.set<double>("TIMESTEP_EVAL_REFERENCE_STATE",
+          timestep);  // timestep to be used for the evaluation of the reference state
       break;
     }
     case Core::ProblemType::structure:
     {
-      params.set<double>("TIMESTEP",
-          Global::Problem::instance()->structural_dynamic_params().get<double>("TIMESTEP"));
+      const double timestep =
+          Global::Problem::instance()->structural_dynamic_params().get<double>("TIMESTEP");
+
+      params.set<double>("TIMESTEP", timestep);
+      params.set<double>("TIMESTEP_EVAL_REFERENCE_STATE",
+          timestep);  // timestep to be used for the evaluation of the reference state
+                      // (required to enable the reference state evaluation of materials with
+                      // history variables, specifically for the trace inequality matrices in the
+                      // Nitsche contact formulation); afterwards, the correct time step is set for
+                      // the real contact integration via the contact params interface
+
       break;
     }
     case Core::ProblemType::poroelast:
@@ -547,10 +559,43 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
       params.set<double>("porotimefac", porotimefac);
       params.set<bool>("CONTACT_NO_PENETRATION",
           porodyn.get<bool>("CONTACT_NO_PENETRATION"));  // used in the integrator
+      params.set<double>("TIMESTEP_EVAL_REFERENCE_STATE", porodyn.get<double>("TIMESTEP"));
       break;
     }
+    case Core::ProblemType::ssi:
+    {
+      params.set<double>("TIMESTEP_EVAL_REFERENCE_STATE",
+          Global::Problem::instance()->ssi_control_params().get<double>("TIMESTEP"));
+      break;
+    }
+    case Core::ProblemType::fsi:
+    {
+      params.set<double>("TIMESTEP_EVAL_REFERENCE_STATE",
+          Global::Problem::instance()->fsi_dynamic_params().get<double>("TIMESTEP"));
+      break;
+    }
+    case Core::ProblemType::fsi_xfem:
+    {
+      params.set<double>("TIMESTEP_EVAL_REFERENCE_STATE",
+          Global::Problem::instance()->fluid_dynamic_params().get<double>("TIMESTEP"));
+      break;
+    }
+
+    case Core::ProblemType::fpsi:
+    case Core::ProblemType::fpsi_xfem:
+    {
+      params.set<double>("TIMESTEP_EVAL_REFERENCE_STATE",
+          Global::Problem::instance()->fpsi_dynamic_params().get<double>("TIMESTEP"));
+      break;
+    }
+
     default:
-      /* Do nothing, all the time integration related stuff is supposed to be handled outside
+      // store a dummy timestep for the initial reference state evaluation in the parameter list
+      // (only used for that evaluation anyway, and set correctly via the contact params interface
+      // for the real contact integration afterwards)
+      params.set<double>("TIMESTEP_EVAL_REFERENCE_STATE", 1.0);
+
+      /* Do nothing else, all the time integration related stuff is supposed to be handled outside
        * of the contact strategy. */
       break;
   }

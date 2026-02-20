@@ -29,14 +29,15 @@ FOUR_C_NAMESPACE_OPEN
 
 
 double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue(
-    const std::vector<double>& parent_disp)
+    const std::vector<double>& parent_disp, const Mat::EvaluationContext& mat_eval_context)
 {
   // call the implementation that is dependent on scalars with an empty scalar vector
-  return estimate_nitsche_trace_max_eigenvalue(parent_disp, {});
+  return estimate_nitsche_trace_max_eigenvalue(parent_disp, {}, mat_eval_context);
 }
 
 double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue(
-    const std::vector<double>& parent_disp, const std::vector<double>& parent_scalar)
+    const std::vector<double>& parent_disp, const std::vector<double>& parent_scalar,
+    const Mat::EvaluationContext& mat_eval_context)
 {
   switch (parent_element()->shape())
   {
@@ -44,7 +45,7 @@ double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue(
       if (shape() == Core::FE::CellType::quad4)
       {
         return estimate_nitsche_trace_max_eigenvalue<Core::FE::CellType::hex8,
-            Core::FE::CellType::quad4>(parent_disp, parent_scalar);
+            Core::FE::CellType::quad4>(parent_disp, parent_scalar, mat_eval_context);
       }
       else
       {
@@ -52,13 +53,13 @@ double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue(
       }
     case Core::FE::CellType::hex27:
       return estimate_nitsche_trace_max_eigenvalue<Core::FE::CellType::hex27,
-          Core::FE::CellType::quad9>(parent_disp, parent_scalar);
+          Core::FE::CellType::quad9>(parent_disp, parent_scalar, mat_eval_context);
     case Core::FE::CellType::tet4:
       return estimate_nitsche_trace_max_eigenvalue<Core::FE::CellType::tet4,
-          Core::FE::CellType::tri3>(parent_disp, parent_scalar);
+          Core::FE::CellType::tri3>(parent_disp, parent_scalar, mat_eval_context);
     case Core::FE::CellType::nurbs27:
       return estimate_nitsche_trace_max_eigenvalue<Core::FE::CellType::nurbs27,
-          Core::FE::CellType::nurbs9>(parent_disp, parent_scalar);
+          Core::FE::CellType::nurbs9>(parent_disp, parent_scalar, mat_eval_context);
     default:
       FOUR_C_THROW("parent shape not implemented");
   }
@@ -67,7 +68,8 @@ double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue(
 
 template <Core::FE::CellType dt_vol, Core::FE::CellType dt_surf>
 double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue(
-    const std::vector<double>& parent_disp, const std::vector<double>& parent_scalar)
+    const std::vector<double>& parent_disp, const std::vector<double>& parent_scalar,
+    const Mat::EvaluationContext& mat_eval_context)
 {
   const int dim = Core::FE::dim<dt_vol>;
   const int num_dof = Core::FE::num_nodes(dt_vol) * Core::FE::dim<dt_vol>;
@@ -87,8 +89,8 @@ double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue(
 
   Core::LinAlg::Matrix<num_dof, num_dof> vol, surf;
 
-  trace_estimate_vol_matrix<dt_vol>(xrefe, xcurr, parent_scalar, vol);
-  trace_estimate_surf_matrix<dt_vol, dt_surf>(xrefe, xcurr, parent_scalar, surf);
+  trace_estimate_vol_matrix<dt_vol>(xrefe, xcurr, parent_scalar, mat_eval_context, vol);
+  trace_estimate_surf_matrix<dt_vol, dt_surf>(xrefe, xcurr, parent_scalar, mat_eval_context, surf);
 
   Core::LinAlg::Matrix<num_dof, dim_image> proj, tmp;
   subspace_projector<dt_vol>(xcurr, proj);
@@ -113,7 +115,7 @@ template <Core::FE::CellType dt_vol>
 void Discret::Elements::SolidSurface::trace_estimate_vol_matrix(
     const Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol), 3>& xrefe,
     const Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol), 3>& xcurr,
-    const std::vector<double>& parent_scalar,
+    const std::vector<double>& parent_scalar, const Mat::EvaluationContext& mat_eval_context,
     Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol) * 3, Core::FE::num_nodes(dt_vol) * 3>& vol)
 {
   const int dim = Core::FE::dim<dt_vol>;
@@ -146,10 +148,11 @@ void Discret::Elements::SolidSurface::trace_estimate_vol_matrix(
     }
 
     Core::LinAlg::Tensor<double, 3> xi_t = {{xi(0), xi(1), xi(2)}};
-    Mat::EvaluationContext context{.total_time = nullptr,  // Do not have the time here
-        .time_step_size = nullptr,                         // Do not have the time-step here
+    Mat::EvaluationContext context{.total_time = mat_eval_context.total_time,
+        .time_step_size = mat_eval_context.time_step_size,
         .xi = &xi_t,
         .ref_coords = nullptr};
+
     std::dynamic_pointer_cast<Mat::So3Material>(parent_element()->material())
         ->evaluate(&defgrd, glstrain, params, context, stress, cmat, gp, parent_element()->id());
     bc.multiply_tn(bop, Core::LinAlg::make_stress_like_voigt_view(cmat));
@@ -162,7 +165,7 @@ template <Core::FE::CellType dt_vol, Core::FE::CellType dt_surf>
 void Discret::Elements::SolidSurface::trace_estimate_surf_matrix(
     const Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol), 3>& xrefe,
     const Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol), 3>& xcurr,
-    const std::vector<double>& parent_scalar,
+    const std::vector<double>& parent_scalar, const Mat::EvaluationContext& mat_eval_context,
     Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol) * 3, Core::FE::num_nodes(dt_vol) * 3>& surf)
 {
   const int dim = Core::FE::dim<dt_vol>;
@@ -219,10 +222,12 @@ void Discret::Elements::SolidSurface::trace_estimate_surf_matrix(
     }
 
     Core::LinAlg::Tensor<double, 3> xi_t = {{xi(0), xi(1), xi(2)}};
-    Mat::EvaluationContext context{.total_time = nullptr,  // Do not have the time here
-        .time_step_size = nullptr,                         // Do not have the time-step here
+    Mat::EvaluationContext context{.total_time = mat_eval_context.total_time,
+        .time_step_size = mat_eval_context.time_step_size,
         .xi = &xi_t,
         .ref_coords = nullptr};
+
+
     std::dynamic_pointer_cast<Mat::So3Material>(parent_element()->material())
         ->evaluate(&defgrd, glstrain, params, context, stress, cmat, gp, parent_element()->id());
 
@@ -432,25 +437,25 @@ void Discret::Elements::SolidSurface::subspace_projector(
 }
 
 double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue_tsi(
-    std::vector<double>& parent_disp)
+    const Mat::EvaluationContext& mat_eval_context, std::vector<double>& parent_disp)
 {
   switch (parent_element()->shape())
   {
     case Core::FE::CellType::hex8:
       if (shape() == Core::FE::CellType::quad4)
         return estimate_nitsche_trace_max_eigenvalue_tsi<Core::FE::CellType::hex8,
-            Core::FE::CellType::quad4>(parent_disp);
+            Core::FE::CellType::quad4>(mat_eval_context, parent_disp);
       else
         FOUR_C_THROW("how can an hex8 element have a surface that is not quad4 ???");
     case Core::FE::CellType::hex27:
       return estimate_nitsche_trace_max_eigenvalue_tsi<Core::FE::CellType::hex27,
-          Core::FE::CellType::quad9>(parent_disp);
+          Core::FE::CellType::quad9>(mat_eval_context, parent_disp);
     case Core::FE::CellType::tet4:
       return estimate_nitsche_trace_max_eigenvalue_tsi<Core::FE::CellType::tet4,
-          Core::FE::CellType::tri3>(parent_disp);
+          Core::FE::CellType::tri3>(mat_eval_context, parent_disp);
     case Core::FE::CellType::nurbs27:
       return estimate_nitsche_trace_max_eigenvalue_tsi<Core::FE::CellType::nurbs27,
-          Core::FE::CellType::nurbs9>(parent_disp);
+          Core::FE::CellType::nurbs9>(mat_eval_context, parent_disp);
     default:
       FOUR_C_THROW("parent shape not implemented");
   }
@@ -460,7 +465,7 @@ double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue_ts
 
 template <Core::FE::CellType dt_vol, Core::FE::CellType dt_surf>
 double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue_tsi(
-    std::vector<double>& parent_disp)
+    const Mat::EvaluationContext& mat_eval_context, std::vector<double>& parent_disp)
 {
   const int dim = Core::FE::dim<dt_vol>;
   const int num_dof = Core::FE::num_nodes(dt_vol);
@@ -478,8 +483,8 @@ double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue_ts
 
   Core::LinAlg::Matrix<num_dof, num_dof> vol, surf;
 
-  trace_estimate_vol_matrix_tsi<dt_vol>(xrefe, xcurr, vol);
-  trace_estimate_surf_matrix_tsi<dt_vol, dt_surf>(xrefe, xcurr, surf);
+  trace_estimate_vol_matrix_tsi<dt_vol>(xrefe, xcurr, mat_eval_context, vol);
+  trace_estimate_surf_matrix_tsi<dt_vol, dt_surf>(xrefe, xcurr, mat_eval_context, surf);
 
 
   Core::LinAlg::Matrix<num_dof, dim_image> proj, tmp;
@@ -504,6 +509,7 @@ template <Core::FE::CellType dt_vol>
 void Discret::Elements::SolidSurface::trace_estimate_vol_matrix_tsi(
     const Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol), 3>& xrefe,
     const Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol), 3>& xcurr,
+    const Mat::EvaluationContext& mat_eval_context,
     Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol), Core::FE::num_nodes(dt_vol)>& vol)
 {
   const int dim = Core::FE::dim<dt_vol>;
@@ -548,6 +554,7 @@ template <Core::FE::CellType dt_vol, Core::FE::CellType dt_surf>
 void Discret::Elements::SolidSurface::trace_estimate_surf_matrix_tsi(
     const Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol), 3>& xrefe,
     const Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol), 3>& xcurr,
+    const Mat::EvaluationContext& mat_eval_context,
     Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol), Core::FE::num_nodes(dt_vol)>& surf)
 {
   const int dim = Core::FE::dim<dt_vol>;

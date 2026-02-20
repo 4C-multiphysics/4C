@@ -11,6 +11,7 @@
 #include "4C_contact_nitsche_utils.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_mat_so3_material.hpp"
 #include "4C_material_base.hpp"
 #include "4C_mortar_node.hpp"
 #include "4C_solid_3D_ele_surface.hpp"
@@ -1639,7 +1640,8 @@ void Mortar::Element::node_linearization(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Mortar::Element::estimate_nitsche_trace_max_eigenvalue()
+void Mortar::Element::estimate_nitsche_trace_max_eigenvalue(
+    const Mat::EvaluationContext& mat_eval_context)
 {
   FOUR_C_ASSERT(n_dim() == 3,
       "Contact using Nitsche's method is only supported for 3D problems. We do not intend to "
@@ -1649,14 +1651,16 @@ void Mortar::Element::estimate_nitsche_trace_max_eigenvalue()
   auto* surf = dynamic_cast<Discret::Elements::SolidSurface*>(surf_ele.get());
 
   if (mo_data().parent_scalar().empty())
-    traceHE_ = 1.0 / surf->estimate_nitsche_trace_max_eigenvalue(mo_data().parent_disp());
+    traceHE_ = 1.0 / surf->estimate_nitsche_trace_max_eigenvalue(
+                         mo_data().parent_disp(), mat_eval_context);
   else
     traceHE_ = 1.0 / surf->estimate_nitsche_trace_max_eigenvalue(
-                         mo_data().parent_disp(), mo_data().parent_scalar());
+                         mo_data().parent_disp(), mo_data().parent_scalar(), mat_eval_context);
 
   if (parent_element()->num_material() > 1)
     if (parent_element()->material(1)->material_type() == Core::Materials::m_thermo_fourier)
-      traceHCond_ = 1.0 / surf->estimate_nitsche_trace_max_eigenvalue_tsi(mo_data().parent_disp());
+      traceHCond_ = 1.0 / surf->estimate_nitsche_trace_max_eigenvalue_tsi(
+                              mat_eval_context, mo_data().parent_disp());
 }
 
 

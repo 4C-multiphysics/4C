@@ -29,6 +29,7 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_mat_elasthyper.hpp"
 #include "4C_mat_newtonianfluid.hpp"
+#include "4C_mat_so3_material.hpp"
 #include "4C_rebalance_binning_based.hpp"
 #include "4C_solid_3D_ele.hpp"
 #include "4C_solid_3D_ele_calc_lib_nitsche.hpp"
@@ -2433,8 +2434,18 @@ void XFEM::MeshCouplingFSI::estimate_nitsche_trace_max_eigenvalue(Core::Elements
   if (dispnp == nullptr) FOUR_C_THROW("Cannot get state vector 'dispnp'");
 
   eledisp = Core::FE::extract_values(*dispnp, la[0].lm_);
+
+
+  Mat::EvaluationContext mat_eval_context{
+      .total_time = &time_,
+      .time_step_size = &dt_,
+      .xi = nullptr,
+      .ref_coords = nullptr,
+
+  };
+
   (*ele_to_max_eigenvalue_)[ele->id()] = solidfaceele->estimate_nitsche_trace_max_eigenvalue(
-      eledisp);  // this is (E/h) ...basically :-)
+      eledisp, mat_eval_context);  // this is (E/h) ...basically :-)
 }
 
 /*--------------------------------------------------------------------------*
