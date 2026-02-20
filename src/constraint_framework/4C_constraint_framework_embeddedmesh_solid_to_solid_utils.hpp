@@ -206,6 +206,91 @@ namespace Constraints::EmbeddedMesh
       const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
           local_constraint_stresses);
 
+
+  template <typename Interface, typename T>
+  void calculate_derivative_unit_normal_d_displacement(const T& xi,
+      const GeometryPair::ElementData<Interface, double>& element_data_surface,
+      Core::LinAlg::Matrix<3, Interface::n_nodes_ * 3, double>& d_unit_normal_d_disp)
+  {
+    // Define variables
+    Core::LinAlg::Matrix<3, 1, double> normal;
+    Core::LinAlg::Matrix<3, Interface::n_nodes_ * 3, double> d_normal_d_disp(
+        Core::LinAlg::Initialization::zero);
+
+    // Evaluate derivative on position w.r.t. xi
+    Core::LinAlg::Matrix<3, 2, double> dinterface;
+    Core::LinAlg::Matrix<3, 1, double> dinterface_dxi;
+    Core::LinAlg::Matrix<3, 1, double> dinterface_deta;
+    GeometryPair::evaluate_position_derivative1<Interface>(xi, element_data_surface, dinterface);
+    for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
+    {
+      dinterface_dxi(i_dir) = dinterface(i_dir, 0);
+      dinterface_deta(i_dir) = dinterface(i_dir, 1);
+    }
+
+    // Calculate the non-normalized and normalized normal on xi
+    normal.cross_product(dinterface_dxi, dinterface_deta);
+    double length_normal = Core::FADUtils::vector_norm(normal);
+
+    if constexpr (std::is_same<Interface, GeometryPair::t_nurbs9>::value)
+    {
+      // In the NURBS case some normals have to be flipped to point outward of the volume element
+      normal.scale(element_data_surface.shape_function_data_.surface_normal_factor_);
+    }
+    Core::LinAlg::Matrix<3, 1, double> unit_normal(normal);
+    unit_normal.scale(1.0 / Core::FADUtils::vector_norm(normal));
+
+    // Initialize matrix of shape function derivatives
+    Core::LinAlg::Matrix<Interface::element_dim_, Interface::n_nodes_, double> dN(
+        Core::LinAlg::Initialization::zero);
+    GeometryPair::EvaluateShapeFunction<Interface>::evaluate_deriv1(
+        dN, xi, element_data_surface.shape_function_data_);
+
+    // Define directions
+    Core::LinAlg::Matrix<3, 1, double> e_x(Core::LinAlg::Initialization::zero),
+        e_y(Core::LinAlg::Initialization::zero), e_z(Core::LinAlg::Initialization::zero);
+    e_x(0, 0) = 1.0;
+    e_y(1, 0) = 1.0;
+    e_z(2, 0) = 1.0;
+    const std::array<Core::LinAlg::Matrix<3, 1, double>, 3> dirs = {e_x, e_y, e_z};
+
+    // Calculate derivative of non-normalized normal w.r.t. the displacements
+    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
+        ++i_interface_node)
+    {
+      for (unsigned int i_dir = 0; i_dir < 3; ++i_dir)
+      {
+        Core::LinAlg::Matrix<3, 1, double> d_xi_vector;
+        Core::LinAlg::Matrix<3, 1, double> d_eta_vector;
+        d_xi_vector.cross_product(dirs[i_dir], dinterface_deta);
+        d_xi_vector.scale(dN(0, i_interface_node));
+
+        d_eta_vector.cross_product(dinterface_dxi, dirs[i_dir]);
+        d_eta_vector.scale(dN(1, i_interface_node));
+
+        d_normal_d_disp(0, i_interface_node * 3 + i_dir) = d_xi_vector(0) + d_eta_vector(0);
+        d_normal_d_disp(1, i_interface_node * 3 + i_dir) = d_xi_vector(1) + d_eta_vector(1);
+        d_normal_d_disp(2, i_interface_node * 3 + i_dir) = d_xi_vector(2) + d_eta_vector(2);
+      }
+    }
+
+    // Define weighting matrix
+    Core::LinAlg::Matrix<3, 3, double> weighting_matrix(Core::LinAlg::Initialization::zero);
+    weighting_matrix(0, 0) = 1.0 - unit_normal(0) * unit_normal(0);
+    weighting_matrix(1, 1) = 1.0 - unit_normal(1) * unit_normal(1);
+    weighting_matrix(2, 2) = 1.0 - unit_normal(2) * unit_normal(2);
+    weighting_matrix(0, 1) = unit_normal(0) * unit_normal(1);
+    weighting_matrix(0, 2) = unit_normal(0) * unit_normal(2);
+    weighting_matrix(1, 0) = unit_normal(1) * unit_normal(0);
+    weighting_matrix(1, 2) = unit_normal(1) * unit_normal(2);
+    weighting_matrix(2, 0) = unit_normal(2) * unit_normal(0);
+    weighting_matrix(2, 1) = unit_normal(2) * unit_normal(1);
+
+    // Calculate derivative of normalized normal w.r.t. the displacements
+    d_unit_normal_d_disp.multiply(1.0, weighting_matrix, d_normal_d_disp, 1.0);
+    d_unit_normal_d_disp.scale(1 / length_normal);
+  }
+
   /**
    * \brief Map a point from the element's parametric space to the physical space
    */

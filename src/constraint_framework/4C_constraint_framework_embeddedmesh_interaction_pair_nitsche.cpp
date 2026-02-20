@@ -307,6 +307,7 @@ void evaluate_cauchy_stress_tensor_at_xi(const Core::FE::Discretization& discret
     std::vector<double>& ele_displacement, Core::Elements::Element& element,
     Core::LinAlg::Matrix<3, 1>& xi, Core::LinAlg::Matrix<3, 1, double>& normal_vector,
     Core::LinAlg::Matrix<3, 1, double>& traction_vector,
+    Core::LinAlg::Matrix<3, 3, double>& cauchy_stress_tensor,
     std::vector<Core::LinAlg::SerialDenseMatrix>& d_cauchyndir_dd)
 {
   // Define directions
@@ -320,7 +321,7 @@ void evaluate_cauchy_stress_tensor_at_xi(const Core::FE::Discretization& discret
   // Obtain the traction vector at xi
   if (auto* solid_ele = dynamic_cast<Discret::Elements::Solid*>(&element); solid_ele != nullptr)
   {
-    // Fill out the Cauchy stress tensor of the interface
+    // Fill out the traction vector and Cauchy stress tensor of the interface
     for (int i_dir = 0; i_dir < 3; ++i_dir)
     {
       Discret::Elements::CauchyNDirLinearizations<3> cauchy_linearizations{};
@@ -330,6 +331,16 @@ void evaluate_cauchy_stress_tensor_at_xi(const Core::FE::Discretization& discret
           Core::LinAlg::reinterpret_as_tensor<3>(xi),
           Core::LinAlg::reinterpret_as_tensor<3>(normal_vector),
           Core::LinAlg::reinterpret_as_tensor<3>(dirs[i_dir]), cauchy_linearizations, &discret);
+
+      for (int j_dir = 0; j_dir < 3; ++j_dir)
+      {
+        Discret::Elements::CauchyNDirLinearizations<3> cauchy_linearizations_dummy{};
+        cauchy_stress_tensor(i_dir, j_dir) = solid_ele->get_normal_cauchy_stress_at_xi(
+            ele_displacement, Core::LinAlg::reinterpret_as_tensor<3>(xi),
+            Core::LinAlg::reinterpret_as_tensor<3>(dirs[i_dir]),
+            Core::LinAlg::reinterpret_as_tensor<3>(dirs[j_dir]), cauchy_linearizations_dummy,
+            &discret);
+      }
     }
   }
   else
@@ -366,6 +377,10 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
   Core::LinAlg::Matrix<1, Background::n_nodes_ * Background::n_val_, double> N_background(
       Core::LinAlg::Initialization::zero);
 
+  // initialize variable for derivative of unit normal w.r.t. displacements
+  Core::LinAlg::Matrix<3, Interface::n_nodes_ * 3, double> d_unit_normal_d_disp(
+      Core::LinAlg::Initialization::zero);
+
   // The traction vector is the result of multiplying the Cauchy stress with the normal vector of
   // the interface
   Core::LinAlg::Matrix<3, 1, double> traction_vector_interface(Core::LinAlg::Initialization::zero);
@@ -394,6 +409,10 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     Core::LinAlg::Matrix<3, 1, double> normal_interface;
     GeometryPair::evaluate_face_normal<Interface>(xi_interface, ele1pos_current_, normal_interface);
 
+    // Calculate the derivative of the unit normal w.r.t the displacements at xi
+    calculate_derivative_unit_normal_d_displacement(
+        xi_interface, ele1pos_current_, d_unit_normal_d_disp);
+
     // To evaluate the Cauchy stresses in the parent element of the face element, we need to obtain
     // the corresponding coordinates of the Gauss points of the face element projected into its
     // parent element
@@ -413,12 +432,20 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
         "The following implementation for obtaining the Cauchy stresses is only for 3d elements.");
 
     // define linearizations for each direction
+    Core::LinAlg::Matrix<3, 3, double> cauchy_stress_tensor_interface(
+        Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3, double> dummy_background(Core::LinAlg::Initialization::zero);
     std::vector<Core::LinAlg::SerialDenseMatrix> d_cauchyndir_dd_interface(3);
     std::vector<Core::LinAlg::SerialDenseMatrix> d_cauchyndir_dd_background(3);
 
     evaluate_cauchy_stress_tensor_at_xi(discret, ele1_parent_dis_, *face_element->parent_element(),
         xi_interface_in_solid, normal_interface, traction_vector_interface,
-        d_cauchyndir_dd_interface);
+        cauchy_stress_tensor_interface, d_cauchyndir_dd_interface);
+
+    Core::LinAlg::Matrix<3, Interface::n_nodes_ * 3, double>
+        cauchy_stress_d_unit_normal_d_disp_interface(Core::LinAlg::Initialization::zero);
+    cauchy_stress_d_unit_normal_d_disp_interface.multiply(
+        cauchy_stress_tensor_interface, d_unit_normal_d_disp);
 
     // obtain the displacements of the background elements
     std::vector<double> background_displacement;
@@ -426,7 +453,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
       background_displacement.push_back(ele2dis_.element_position_(i_n_dof));
 
     evaluate_cauchy_stress_tensor_at_xi(discret, background_displacement, element_2(),
-        xi_background, normal_interface, traction_vector_background, d_cauchyndir_dd_background);
+        xi_background, normal_interface, traction_vector_background, dummy_background,
+        d_cauchyndir_dd_background);
 
     // As the calculations of the Cauchy stresses are done in the parent element of the face
     // element, we need the locations of the dofs of the interface in its parent element.
@@ -467,7 +495,10 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
           local_stiffness_disp_interface_stress_interface(
               i_interface_node * 3 + i_dim, j_interface_node * 3 + i_dim) +=
               N_interface(i_interface_node) *
-              d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
+                  d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
+                  weight * determinant_interface +
+              N_interface(i_interface_node) * cauchy_stress_d_unit_normal_d_disp_interface(
+                                                  i_dim, j_interface_node * 3 + i_dim) +
               weight * determinant_interface;
 
     // Fill in the local matrix K_nitsche_disp_interface_stress_background.
@@ -491,8 +522,12 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
           local_stiffness_disp_background_stress_interface(
               i_background_node * 3 + i_dim, j_interface_node * 3 + i_dim) +=
               N_background(i_background_node) *
-              d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
-              weight * determinant_interface;
+                  d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
+                  weight * determinant_interface +
+              N_background(i_background_node) *
+                  cauchy_stress_d_unit_normal_d_disp_interface(
+                      i_dim, j_interface_node * 3 + i_dim) *
+                  weight * determinant_interface;
 
     // Fill in the local matrix K_nitsche_disp_background_stress_background.
     for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;

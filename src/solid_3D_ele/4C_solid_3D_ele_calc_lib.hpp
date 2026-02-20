@@ -181,7 +181,7 @@ namespace Discret::Elements
 
       // Obtain the information required for a NURBS element
       bool zero_size = Core::FE::Nurbs::get_my_nurbs_knots_and_weights(
-          discret, &ele, element_nodes.knots, element_nodes.weights);
+          *discret, &ele, element_nodes.knots, element_nodes.weights);
       if (zero_size)
         FOUR_C_THROW("get_my_nurbs_knots_and_weights has to return a non zero size NURBS element.");
     }
