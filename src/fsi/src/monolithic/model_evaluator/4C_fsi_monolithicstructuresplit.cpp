@@ -10,8 +10,8 @@
 #include "4C_adapter_ale_fsi.hpp"
 #include "4C_adapter_fld_fluid_fsi.hpp"
 #include "4C_adapter_str_fsiwrapper.hpp"
-#include "4C_adapter_str_structure.hpp"
 #include "4C_ale_utils_mapextractor.hpp"
+#include "4C_comm_utils.hpp"
 #include "4C_constraint_manager.hpp"
 #include "4C_coupling_adapter.hpp"
 #include "4C_coupling_adapter_converter.hpp"
@@ -34,6 +34,87 @@ FOUR_C_NAMESPACE_OPEN
 FSI::MonolithicStructureSplit::MonolithicStructureSplit(
     MPI_Comm comm, const Teuchos::ParameterList& timeparams)
     : BlockMonolithic(comm, timeparams), lambda_(nullptr), lambdaold_(nullptr), energysum_(0.0)
+{
+  sggtransform_ = std::make_shared<Coupling::Adapter::MatrixRowColTransform>();
+  sgitransform_ = std::make_shared<Coupling::Adapter::MatrixRowTransform>();
+  sigtransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
+  aigtransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
+
+  fmiitransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
+  fmgitransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
+
+  fsaigtransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
+  fsmgitransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
+
+  fscoupfa_ = std::make_shared<Coupling::Adapter::Coupling>();
+
+  // Recovery of Lagrange multiplier happens on structure field
+  lambda_ = std::make_shared<Core::LinAlg::Vector<double>>(
+      *structure_field()->interface()->fsi_cond_map(), true);
+  lambdaold_ = std::make_shared<Core::LinAlg::Vector<double>>(
+      *structure_field()->interface()->fsi_cond_map(), true);
+  ddiinc_ = nullptr;
+  soliprev_ = nullptr;
+  ddginc_ = nullptr;
+  duginc_ = nullptr;
+  disgprev_ = nullptr;
+  sgiprev_ = nullptr;
+  sggprev_ = nullptr;
+
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  // check whether allocation was successful
+  if (sggtransform_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'sggtransform_' failed.");
+  }
+  if (sgitransform_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'sgitransform_' failed.");
+  }
+  if (sigtransform_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'sigtransform_' failed.");
+  }
+  if (aigtransform_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'aigtransform_' failed.");
+  }
+  if (fmiitransform_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'fmiitransform_' failed.");
+  }
+  if (fmgitransform_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'fmgitransform_' failed.");
+  }
+  if (fsaigtransform_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'fsaigtransform_' failed.");
+  }
+  if (fsmgitransform_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'fsmgitransform_' failed.");
+  }
+  if (fscoupfa_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'fscoupfa_' failed.");
+  }
+  if (lambda_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'lambda_' failed.");
+  }
+  if (lambdaold_ == nullptr)
+  {
+    FOUR_C_THROW("Allocation of 'lambdaold_' failed.");
+  }
+#endif
+
+  return;
+}
+
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+void FSI::MonolithicStructureSplit::check_dirichlet_boundary_conditions_on_interface()
 {
   // ---------------------------------------------------------------------------
   // FSI specific check of Dirichlet boundary conditions
@@ -130,91 +211,16 @@ FSI::MonolithicStructureSplit::MonolithicStructureSplit(
 
     FOUR_C_THROW("{}", errormsg.str());
   }
-  // ---------------------------------------------------------------------------
-
-  sggtransform_ = std::make_shared<Coupling::Adapter::MatrixRowColTransform>();
-  sgitransform_ = std::make_shared<Coupling::Adapter::MatrixRowTransform>();
-  sigtransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
-  aigtransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
-
-  fmiitransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
-  fmgitransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
-
-  fsaigtransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
-  fsmgitransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
-
-  fscoupfa_ = std::make_shared<Coupling::Adapter::Coupling>();
-
-  // Recovery of Lagrange multiplier happens on structure field
-  lambda_ = std::make_shared<Core::LinAlg::Vector<double>>(
-      *structure_field()->interface()->fsi_cond_map(), true);
-  lambdaold_ = std::make_shared<Core::LinAlg::Vector<double>>(
-      *structure_field()->interface()->fsi_cond_map(), true);
-  ddiinc_ = nullptr;
-  soliprev_ = nullptr;
-  ddginc_ = nullptr;
-  duginc_ = nullptr;
-  disgprev_ = nullptr;
-  sgiprev_ = nullptr;
-  sggprev_ = nullptr;
-
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-  // check whether allocation was successful
-  if (sggtransform_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'sggtransform_' failed.");
-  }
-  if (sgitransform_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'sgitransform_' failed.");
-  }
-  if (sigtransform_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'sigtransform_' failed.");
-  }
-  if (aigtransform_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'aigtransform_' failed.");
-  }
-  if (fmiitransform_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'fmiitransform_' failed.");
-  }
-  if (fmgitransform_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'fmgitransform_' failed.");
-  }
-  if (fsaigtransform_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'fsaigtransform_' failed.");
-  }
-  if (fsmgitransform_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'fsmgitransform_' failed.");
-  }
-  if (fscoupfa_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'fscoupfa_' failed.");
-  }
-  if (lambda_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'lambda_' failed.");
-  }
-  if (lambdaold_ == nullptr)
-  {
-    FOUR_C_THROW("Allocation of 'lambdaold_' failed.");
-  }
-#endif
-
-  return;
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void FSI::MonolithicStructureSplit::setup_system()
 {
-  const Teuchos::ParameterList& fsidyn = Global::Problem::instance()->fsi_dynamic_params();
+  // check for proper dirichlet boundary condition application
+  check_dirichlet_boundary_conditions_on_interface();
 
+  const Teuchos::ParameterList& fsidyn = Global::Problem::instance()->fsi_dynamic_params();
   set_default_parameters(fsidyn, nox_parameter_list());
 
   // call SetupSystem in base class
@@ -227,8 +233,8 @@ void FSI::MonolithicStructureSplit::setup_system()
   // linearization (if requested in the input file)
   fluid_field()->use_block_matrix(false);
 
-  // Use split structure matrix
-  structure_field()->use_block_matrix();
+  // Do no longer use split structure matrix for new solid time integration
+  if (use_old_structure_) structure_field()->use_block_matrix();
 
   // build ale system matrix in split system
   ale_field()->create_system_matrix(ale_field()->interface());
@@ -350,11 +356,14 @@ void FSI::MonolithicStructureSplit::setup_rhs_residual(Core::LinAlg::Vector<doub
   const double fluidscale = fluid_field()->residual_scaling();
 
   // get single field residuals
-  const Core::LinAlg::Vector<double> sv(*structure_field()->rhs());
+  Core::LinAlg::Vector<double> sv(*structure_field()->rhs());
   const Core::LinAlg::Vector<double> fv(*fluid_field()->rhs());
   const Core::LinAlg::Vector<double> av(*ale_field()->rhs());
 
-  //  // extract only inner DOFs from structure (=slave) and ALE field
+  // NOX treats rhs different in new solid time integration, hence sign inversion is necessary here
+  if (!use_old_structure_) sv.scale(-1.0);
+
+  // extract only inner DOFs from structure (=slave) and ALE field
   std::shared_ptr<const Core::LinAlg::Vector<double>> sov =
       structure_field()->interface()->extract_other_vector(sv);
   std::shared_ptr<const Core::LinAlg::Vector<double>> aov =
@@ -424,22 +433,33 @@ void FSI::MonolithicStructureSplit::setup_rhs_firstiter(Core::LinAlg::Vector<dou
       fluid_field()->shape_derivatives();
 
   // get structure matrix
-  const std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> blocks =
-      structure_field()->block_system_matrix();
+  std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> blocks = nullptr;
+  if (use_old_structure_)
+  {
+    blocks = structure_field()->block_system_matrix();
+  }
+  else
+  {
+    const std::shared_ptr<const Core::LinAlg::SparseMatrix> sparse_matrix_solid =
+        structure_field()->system_matrix();
+
+    // convert sparse matrix to block sparse matrix
+    // const std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> blocks =
+    blocks = Core::LinAlg::copy_sparse_to_block_sparse_matrix(
+        *sparse_matrix_solid, *structure_field()->interface(), *structure_field()->interface());
+
+    // Take care of Dirichlet boundary conditions
+    blocks->apply_dirichlet(*structure_field()->get_dbc_map_extractor()->cond_map(), true);
+    // blocks->apply_dirichlet(*(dbcmaps_->cond_map()), true);
+  }
 
   // get ale matrix
   const std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> blocka =
       ale_field()->block_system_matrix();
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-  if (blocks == nullptr)
-  {
-    FOUR_C_THROW("Expected Teuchos::rcp to structure block matrix.");
-  }
-  if (blocka == nullptr)
-  {
-    FOUR_C_THROW("Expected Teuchos::rcp to ALE block matrix.");
-  }
+  if (blocks == nullptr) FOUR_C_THROW("Expected structure block matrix.");
+  if (blocka == nullptr) FOUR_C_THROW("Expected ALE block matrix.");
 #endif
 
   // extract submatrices
@@ -605,8 +625,22 @@ void FSI::MonolithicStructureSplit::setup_system_matrix(Core::LinAlg::BlockSpars
   const Coupling::Adapter::Coupling& icoupfa = interface_fluid_ale_coupling();
 
   // get single field block matrices
-  const std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> s =
-      structure_field()->block_system_matrix();
+  std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> s = nullptr;
+  if (use_old_structure_)
+  {
+    s = structure_field()->block_system_matrix();
+  }
+  else
+  {
+    // get structure matrix
+    const std::shared_ptr<const Core::LinAlg::SparseMatrix> sparse_matrix_solid =
+        structure_field()->system_matrix();
+    // convert sparse matrix to block sparse matrix
+    // const std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> blocks =
+    s = Core::LinAlg::copy_sparse_to_block_sparse_matrix(
+        *sparse_matrix_solid, *structure_field()->interface(), *structure_field()->interface());
+  }
+
   const std::shared_ptr<Core::LinAlg::SparseMatrix> f = fluid_field()->system_matrix();
   const std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> a = ale_field()->block_system_matrix();
 
@@ -1155,12 +1189,15 @@ void FSI::MonolithicStructureSplit::output()
   fluid_field()->output();
   ale_field()->output();
 
-  if (structure_field()->get_constraint_manager()->have_monitor())
+  if (use_old_structure_)
   {
-    structure_field()->get_constraint_manager()->compute_monitor_values(
-        *structure_field()->dispnp());
-    if (Core::Communication::my_mpi_rank(get_comm()) == 0)
-      structure_field()->get_constraint_manager()->print_monitor_values();
+    if (structure_field()->get_constraint_manager()->have_monitor())
+    {
+      structure_field()->get_constraint_manager()->compute_monitor_values(
+          *structure_field()->dispnp());
+      if (Core::Communication::my_mpi_rank(get_comm()) == 0)
+        structure_field()->get_constraint_manager()->print_monitor_values();
+    }
   }
 }
 
@@ -1275,7 +1312,8 @@ void FSI::MonolithicStructureSplit::recover_lagrange_multiplier()
   // ---------Addressing term (3)
   std::shared_ptr<Core::LinAlg::Vector<double>> structureresidual =
       structure_field()->interface()->extract_fsi_cond_vector(*structure_field()->rhs());
-  structureresidual->scale(-1.0);  // invert sign to obtain residual, not rhs
+  if (use_old_structure_)
+    structureresidual->scale(-1.0);  // invert sign to obtain residual, not rhs
   tmpvec = std::make_shared<Core::LinAlg::Vector<double>>(*structureresidual);
   // ---------End of term (3)
 

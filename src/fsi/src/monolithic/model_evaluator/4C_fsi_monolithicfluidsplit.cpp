@@ -315,9 +315,12 @@ void FSI::MonolithicFluidSplit::setup_rhs_residual(Core::LinAlg::Vector<double>&
   const double fluidscale = fluid_field()->residual_scaling();
 
   // get single field residuals
-  const Core::LinAlg::Vector<double> sv(*structure_field()->rhs());
+  Core::LinAlg::Vector<double> sv(*structure_field()->rhs());
   const Core::LinAlg::Vector<double> fv(*fluid_field()->rhs());
   const Core::LinAlg::Vector<double> av(*ale_field()->rhs());
+
+  // NOX treats rhs different in new solid time integration, hence sign inversion is necessary here
+  if (!use_old_structure_) sv.scale(-1.0);
 
   // extract only inner DOFs from fluid (=slave) and ALE field
   std::shared_ptr<Core::LinAlg::Vector<double>> fov =
@@ -1273,12 +1276,15 @@ void FSI::MonolithicFluidSplit::output()
 
   ale_field()->output();
 
-  if (structure_field()->get_constraint_manager()->have_monitor())
+  if (use_old_structure_)
   {
-    structure_field()->get_constraint_manager()->compute_monitor_values(
-        *structure_field()->dispnp());
-    if (Core::Communication::my_mpi_rank(get_comm()) == 0)
-      structure_field()->get_constraint_manager()->print_monitor_values();
+    if (structure_field()->get_constraint_manager()->have_monitor())
+    {
+      structure_field()->get_constraint_manager()->compute_monitor_values(
+          *structure_field()->dispnp());
+      if (Core::Communication::my_mpi_rank(get_comm()) == 0)
+        structure_field()->get_constraint_manager()->print_monitor_values();
+    }
   }
 }
 

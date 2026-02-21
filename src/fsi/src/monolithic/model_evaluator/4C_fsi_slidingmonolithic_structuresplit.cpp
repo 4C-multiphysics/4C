@@ -273,8 +273,8 @@ void FSI::SlidingMonolithicStructureSplit::setup_system()
     // linearization (if requested in the input file)
     fluid_field()->use_block_matrix(false);
 
-    // Use split structure matrix
-    structure_field()->use_block_matrix();
+    // Do no longer use split structure matrix for new solid time integration
+    if (use_old_structure_) structure_field()->use_block_matrix();
 
     // build ale system matrix in split system
     ale_field()->create_system_matrix(ale_field()->interface());
@@ -384,9 +384,12 @@ void FSI::SlidingMonolithicStructureSplit::setup_rhs_residual(Core::LinAlg::Vect
   const std::shared_ptr<Core::LinAlg::SparseMatrix> mortarp = coupsfm_->get_mortar_matrix_p();
 
   // get single field residuals
-  const Core::LinAlg::Vector<double> sv(*structure_field()->rhs());
+  Core::LinAlg::Vector<double> sv(*structure_field()->rhs());
   const Core::LinAlg::Vector<double> fv(*fluid_field()->rhs());
   const Core::LinAlg::Vector<double> av(*ale_field()->rhs());
+
+  // NOX treats rhs different in new solid time integration, hence sign inversion is necessary here
+  if (!use_old_structure_) sv.scale(-1.0);
 
   // extract only inner DOFs from structure (=slave) and ALE field
   std::shared_ptr<const Core::LinAlg::Vector<double>> sov =
@@ -471,8 +474,26 @@ void FSI::SlidingMonolithicStructureSplit::setup_rhs_firstiter(Core::LinAlg::Vec
       fluid_field()->shape_derivatives();
 
   // get structure matrix
-  const std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> blocks =
-      structure_field()->block_system_matrix();
+  std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> blocks = nullptr;
+  if (use_old_structure_)
+  {
+    blocks = structure_field()->block_system_matrix();
+  }
+  else
+  {
+    // get structure matrix
+    const std::shared_ptr<const Core::LinAlg::SparseMatrix> sparse_matrix_solid =
+        structure_field()->system_matrix();
+
+    // convert sparse matrix to block sparse matrix
+    // const std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> blocks =
+    blocks = Core::LinAlg::copy_sparse_to_block_sparse_matrix(
+        *sparse_matrix_solid, *structure_field()->interface(), *structure_field()->interface());
+
+    // Take care of Dirichlet boundary conditions
+    blocks->apply_dirichlet(*structure_field()->get_dbc_map_extractor()->cond_map(), true);
+    // blocks->apply_dirichlet(*(dbcmaps_->cond_map()), true);
+  }
 
   // get ale matrix
   const std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> blocka =
@@ -673,8 +694,22 @@ void FSI::SlidingMonolithicStructureSplit::setup_system_matrix(
   std::shared_ptr<Core::LinAlg::SparseMatrix> mortarp = coupsfm_->get_mortar_matrix_p();
 
   // get single field block matrices
-  const std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> s =
-      structure_field()->block_system_matrix();
+  std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> s = nullptr;
+  if (use_old_structure_)
+  {
+    s = structure_field()->block_system_matrix();
+  }
+  else
+  {
+    // get structure matrix
+    const std::shared_ptr<const Core::LinAlg::SparseMatrix> sparse_matrix_solid =
+        structure_field()->system_matrix();
+    // convert sparse matrix to block sparse matrix
+    // const std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> blocks =
+    s = Core::LinAlg::copy_sparse_to_block_sparse_matrix(
+        *sparse_matrix_solid, *structure_field()->interface(), *structure_field()->interface());
+  }
+
   const std::shared_ptr<Core::LinAlg::SparseMatrix> f = fluid_field()->system_matrix();
   const std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> a = ale_field()->block_system_matrix();
 
@@ -1290,12 +1325,15 @@ void FSI::SlidingMonolithicStructureSplit::output()
   }
   ale_field()->output();
 
-  if (structure_field()->get_constraint_manager()->have_monitor())
+  if (use_old_structure_)
   {
-    structure_field()->get_constraint_manager()->compute_monitor_values(
-        *structure_field()->dispnp());
-    if (Core::Communication::my_mpi_rank(comm_) == 0)
-      structure_field()->get_constraint_manager()->print_monitor_values();
+    if (structure_field()->get_constraint_manager()->have_monitor())
+    {
+      structure_field()->get_constraint_manager()->compute_monitor_values(
+          *structure_field()->dispnp());
+      if (Core::Communication::my_mpi_rank(comm_) == 0)
+        structure_field()->get_constraint_manager()->print_monitor_values();
+    }
   }
 }
 
@@ -1429,7 +1467,8 @@ void FSI::SlidingMonolithicStructureSplit::recover_lagrange_multiplier()
   std::shared_ptr<Core::LinAlg::Vector<double>> structureresidual =
       std::make_shared<Core::LinAlg::Vector<double>>(
           *structure_field()->interface()->extract_fsi_cond_vector(*structure_field()->rhs()));
-  structureresidual->scale(-1.0);  // invert sign to obtain residual, not rhs
+  if (use_old_structure_)
+    structureresidual->scale(-1.0);  // invert sign to obtain residual, not rhs
   tmpvec = std::make_shared<Core::LinAlg::Vector<double>>(*structureresidual);
   // ---------End of term (3)
 

@@ -208,6 +208,9 @@ namespace FSI
         std::shared_ptr<const Core::LinAlg::Vector<double>> av,
         bool slave_vectors_contain_interface_dofs) final;
 
+    /// check for dirichlet conditions on solid interface
+    void check_dirichlet_boundary_conditions_on_interface();
+
     /// block system matrix
     std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> systemmatrix_;
 

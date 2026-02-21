@@ -10,8 +10,10 @@
 #include "4C_adapter_ale.hpp"
 #include "4C_adapter_ale_fsi.hpp"
 #include "4C_adapter_fld_fluid_fsi.hpp"
+#include "4C_adapter_str_factory.hpp"
 #include "4C_adapter_str_fsi_timint_adaptive.hpp"
 #include "4C_adapter_str_fsiwrapper.hpp"
+#include "4C_adapter_str_structure_new.hpp"
 #include "4C_constraint_manager.hpp"
 #include "4C_coupling_adapter.hpp"
 #include "4C_fem_discretization.hpp"
@@ -55,6 +57,7 @@ FSI::MonolithicBase::MonolithicBase(MPI_Comm comm, const Teuchos::ParameterList&
       isadastructure_(false),
       isadafluid_(false),
       isadasolver_(false),
+      use_old_structure_(true),
       verbosity_(Teuchos::getIntegralValue<Inpar::FSI::Verbosity>(
           Global::Problem::instance()->fsi_dynamic_params(), "VERBOSITY"))
 {
@@ -98,18 +101,38 @@ void FSI::MonolithicBase::create_structure_time_integrator(
   // access structural dynamic params
   const Teuchos::ParameterList& sdyn = Global::Problem::instance()->structural_dynamic_params();
 
-  // ask base algorithm for the structural time integrator
-  std::shared_ptr<Adapter::StructureBaseAlgorithm> structure =
-      std::make_shared<Adapter::StructureBaseAlgorithm>(
-          timeparams, const_cast<Teuchos::ParameterList&>(sdyn), structdis);
-  structure_ =
-      std::dynamic_pointer_cast<Adapter::FSIStructureWrapper>(structure->structure_field());
-  structure_->setup();
+  if (Teuchos::getIntegralValue<Inpar::Solid::IntegrationStrategy>(sdyn, "INT_STRATEGY") ==
+      Inpar::Solid::int_standard)
+  {
+    use_old_structure_ = false;
 
-  if (structure_ == nullptr)
-    FOUR_C_THROW(
-        "Cast from Adapter::Structure to Adapter::FSIStructureWrapper "
-        "failed.");
+    std::shared_ptr<Adapter::StructureBaseAlgorithmNew> structure =
+        Adapter::build_structure_algorithm(sdyn);
+    structure->init(Global::Problem::instance()->fsi_dynamic_params(),
+        const_cast<Teuchos::ParameterList&>(sdyn), structdis);
+    structure->setup();
+
+    structure_ =
+        std::dynamic_pointer_cast<Adapter::FSIStructureWrapper>(structure->structure_field());
+
+    if (structure_ == nullptr)
+      FOUR_C_THROW("cast from ADAPTER::Structure to ADAPTER::FSIStructureWrapper failed");
+  }
+  else
+  {
+    // ask base algorithm for the structural time integrator
+    std::shared_ptr<Adapter::StructureBaseAlgorithm> structure =
+        std::make_shared<Adapter::StructureBaseAlgorithm>(
+            timeparams, const_cast<Teuchos::ParameterList&>(sdyn), structdis);
+    structure_ =
+        std::dynamic_pointer_cast<Adapter::FSIStructureWrapper>(structure->structure_field());
+    structure_->setup();
+
+    if (structure_ == nullptr)
+      FOUR_C_THROW(
+          "Cast from Adapter::Structure to Adapter::FSIStructureWrapper "
+          "failed.");
+  }
 
   return;
 }
@@ -199,7 +222,7 @@ void FSI::MonolithicBase::output()
   fluid_field()->output();
   ale_field()->output();
 
-  if (structure_field()->get_constraint_manager()->have_monitor())
+  if (use_old_structure_)
   {
     structure_field()->get_constraint_manager()->compute_monitor_values(
         *structure_field()->dispnp());
@@ -625,7 +648,7 @@ void FSI::Monolithic::time_step(const std::shared_ptr<NOX::Nln::Interface::Requi
   // initial guess. (The Dirichlet conditions are already build in!)
   std::shared_ptr<Core::LinAlg::Vector<double>> initial_guess_v =
       std::make_shared<Core::LinAlg::Vector<double>>(*dof_row_map(), true);
-  initial_guess(initial_guess_v);
+  if (use_old_structure_) initial_guess(initial_guess_v);
 
   NOX::Nln::Vector noxSoln(initial_guess_v, NOX::Nln::Vector::MemoryType::View);
 

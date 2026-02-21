@@ -55,6 +55,76 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::BlockSparseMatrixBase:
   return sparse;
 }
 
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase>
+Core::LinAlg::copy_sparse_to_block_sparse_matrix(const Core::LinAlg::SparseMatrix& sparse_matrix,
+    const Core::LinAlg::MultiMapExtractor& domainmaps,
+    const Core::LinAlg::MultiMapExtractor& rangemaps)
+{
+  // Step 1: Precompute the number of max number of entries per row in the blocks
+
+  const int number_of_domain_maps = domainmaps.num_maps();
+
+  const auto& epetra_matrix = sparse_matrix.epetra_matrix();
+  const Map& sparse_matrix_col_map = sparse_matrix.col_map();
+  const int nummyrows = epetra_matrix.NumMyRows();
+  std::vector<int> max_num_entries_per_row_per_block(number_of_domain_maps, 0);
+  std::vector<int> num_entries_per_row_per_block(number_of_domain_maps, 0);
+  for (int iRow = 0; iRow < nummyrows; ++iRow)
+  {
+    int num_entries_per_row;
+    double* values;
+    int* indices;
+    epetra_matrix.ExtractMyRowView(iRow, num_entries_per_row, values, indices);
+    num_entries_per_row_per_block.assign(number_of_domain_maps, 0);
+    for (int iCol = 0; iCol < num_entries_per_row; ++iCol)
+    {
+      int col_gid = sparse_matrix_col_map.gid(indices[iCol]);
+      for (int m = 0; m < number_of_domain_maps; ++m)
+      {
+        if (domainmaps.map(m)->my_gid(col_gid))
+        {
+          ++num_entries_per_row_per_block[m];
+          break;
+        }
+      }
+    }
+    // check whether this works element wise ?!?!
+    max_num_entries_per_row_per_block =
+        std::max(num_entries_per_row_per_block, max_num_entries_per_row_per_block);
+  }
+
+  int max_num_entries_per_row = *std::ranges::max_element(
+      max_num_entries_per_row_per_block.begin(), max_num_entries_per_row_per_block.end());
+
+  // allocate block matrix with educated guess for number of non-zeros per row
+  auto block_matrix =
+      std::make_shared<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
+          domainmaps, rangemaps, max_num_entries_per_row, false, true);
+
+  // Step 2: Copy sparse matrix to block structure
+
+  for (int iRow = 0; iRow < nummyrows; ++iRow)
+  {
+    int num_entries_per_row;
+    double* values;
+    int* indices;
+
+    epetra_matrix.ExtractMyRowView(iRow, num_entries_per_row, values, indices);
+    const int row_gid = epetra_matrix.RowMap().GID(iRow);
+
+    for (int iCol = 0; iCol < num_entries_per_row; ++iCol)
+    {
+      int col_gid = sparse_matrix_col_map.gid(indices[iCol]);
+      block_matrix->assemble(values[iCol], row_gid, col_gid);
+    }
+  }
+
+  if (sparse_matrix.filled()) block_matrix->complete();
+
+  return block_matrix;
+}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
@@ -348,6 +418,35 @@ const Epetra_Map& Core::LinAlg::BlockSparseMatrixBase::OperatorRangeMap() const
   return full_range_map().get_epetra_map();
 }
 
+void Core::LinAlg::BlockSparseMatrixBase::print(std::ostream& os) const
+{
+  for (int row = 0; row < rows(); row++)
+  {
+    for (int col = 0; col < cols(); col++)
+    {
+      for (int proc = 0; proc < Core::Communication::num_mpi_ranks(get_comm()); ++proc)
+      {
+        Core::Communication::barrier(get_comm());
+        if (proc == Core::Communication::my_mpi_rank(get_comm()))
+        {
+          if (matrix(row, col).num_my_nonzeros() == 0)
+          {
+            os << "\nBlockSparseMatrix row, col: " << row << ", " << col << " on rank "
+               << Core::Communication::my_mpi_rank(get_comm()) << " is empty" << std::endl;
+          }
+          else
+          {
+            os << "\nBlockSparseMatrix row, col: " << row << ", " << col << " on rank "
+               << Core::Communication::my_mpi_rank(get_comm()) << std::endl;
+
+            matrix(row, col).print(os);
+          }
+        }
+        Core::Communication::barrier(get_comm());
+      }
+    }
+  }
+}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
