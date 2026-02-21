@@ -35,7 +35,9 @@ Particle::SPHPeridynamic::SPHPeridynamic(const Teuchos::ParameterList& particle_
       horizon_pd_(particle_params.sublist("PD").get<double>("INTERACTION_HORIZON")),
       dx_pd_(particle_params.sublist("PD").get<double>("PERIDYNAMIC_GRID_SPACING")),
       stiff_(particle_params.sublist("PD").get<double>("NORMAL_STIFF")),
-      damp_(particle_params.sublist("PD").get<double>("NORMAL_DAMP"))
+      damp_(particle_params.sublist("PD").get<double>("NORMAL_DAMP")),
+      peridynamic_dimension_(Teuchos::getIntegralValue<Particle::PeridynamicDimension>(
+          particle_params.sublist("PD"), "PD_DIMENSION"))
 {
   FOUR_C_ASSERT_ALWAYS(not particle_params.get<bool>("RIGID_BODY_MOTION"),
       "Peridynamic interaction is not available in combination with rigid body motion!");
@@ -55,6 +57,27 @@ Particle::SPHPeridynamic::SPHPeridynamic(const Teuchos::ParameterList& particle_
   const double minimum_bin_size = binning_params.get<double>("BIN_SIZE_LOWER_BOUND");
   FOUR_C_ASSERT_ALWAYS(horizon_pd_ <= minimum_bin_size,
       "Peridynamic INTERACTION_HORIZON must be smaller than BIN_SIZE_LOWER_BOUND!");
+
+  // checks for the dimensionality of the problem
+  {
+    const auto constraint_type = particle_params.sublist("INITIAL AND BOUNDARY CONDITIONS")
+                                     .get<Particle::Constraint>("CONSTRAINT");
+
+    if (peridynamic_dimension_ == Particle::PD_2DPlaneStress ||
+        peridynamic_dimension_ == Particle::PD_2DPlaneStrain)
+    {
+      FOUR_C_ASSERT_ALWAYS(constraint_type == Particle::Projection2D,
+          "Plane stress or plane strain for peridynamic requested. CONSTRAINT must be set to "
+          "Projection2D!");
+    }
+
+    if (constraint_type == Particle::Projection2D)
+    {
+      FOUR_C_ASSERT_ALWAYS(peridynamic_dimension_ != Particle::PD_3D,
+          "Projection2D CONSTRAINT is active. Choose 2D_PlaneStress or 2D_PlaneStrain as "
+          "PD_DIMENSION!");
+    }
+  }
 }
 
 void Particle::SPHPeridynamic::init(
@@ -287,11 +310,28 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
       ParticleUtils::vec_set_scale(m, 1.0 / xi_eta_norm, xi_eta);
 
       // calculate the bond force of the pair
-      double const fac =
-          (12.00 * (young_i[0] + young_j[0]) * 0.5) /
-          (std::numbers::pi * horizon_pd_ * horizon_pd_ * horizon_pd_ * horizon_pd_) * stretch *
-          calculate_volume_correction_factor(xi_norm) * dx_pd_ * dx_pd_ * dx_pd_ * dx_pd_ * dx_pd_ *
-          dx_pd_;
+      double fac;
+      switch (peridynamic_dimension_)
+      {
+        case Particle::PD_3D:
+          fac = (12.0 * (young_i[0] + young_j[0]) * 0.5) /
+                (std::numbers::pi * horizon_pd_ * horizon_pd_ * horizon_pd_ * horizon_pd_) *
+                stretch * calculate_volume_correction_factor(xi_norm) * dx_pd_ * dx_pd_ * dx_pd_ *
+                dx_pd_ * dx_pd_ * dx_pd_;
+          break;
+        case Particle::PD_2DPlaneStress:
+          fac = (9.0 * (young_i[0] + young_j[0]) * 0.5) /
+                (std::numbers::pi * horizon_pd_ * horizon_pd_ * horizon_pd_) * stretch *
+                calculate_volume_correction_factor(xi_norm) * dx_pd_ * dx_pd_ * dx_pd_ * dx_pd_;
+          break;
+        case Particle::PD_2DPlaneStrain:
+          fac = (48.0 * (young_i[0] + young_j[0]) * 0.5) /
+                (std::numbers::pi * 5.0 * horizon_pd_ * horizon_pd_ * horizon_pd_) * stretch *
+                calculate_volume_correction_factor(xi_norm) * dx_pd_ * dx_pd_ * dx_pd_ * dx_pd_;
+          break;
+        default:
+          FOUR_C_THROW("Unknown PD_DIMENSION given: {}!", peridynamic_dimension_);
+      }
 
       // add bond force contribution
       ParticleUtils::vec_add_scale(force_i, fac, m);

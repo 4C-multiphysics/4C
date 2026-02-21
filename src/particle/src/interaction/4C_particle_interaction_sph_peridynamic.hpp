@@ -103,6 +103,9 @@ namespace Particle
 
     //! contact damping parameter
     const double damp_;
+
+    //! peridynamic dimension
+    const Particle::PeridynamicDimension peridynamic_dimension_;
   };
 
 }  // namespace Particle
