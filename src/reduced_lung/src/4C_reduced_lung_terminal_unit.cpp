@@ -203,6 +203,41 @@ namespace ReducedLung
       }
     }
 
+    void assign_local_equation_ids(TerminalUnitContainer& terminal_units, int& n_local_equations)
+    {
+      for (auto& model : terminal_units.models)
+      {
+        model.data.local_row_id.clear();
+        model.data.local_row_id.reserve(model.data.number_of_elements());
+        for (size_t i = 0; i < model.data.number_of_elements(); i++)
+        {
+          model.data.local_row_id.push_back(n_local_equations);
+          n_local_equations++;
+        }
+      }
+    }
+
+    void assign_local_dof_ids(
+        const Core::LinAlg::Map& locally_relevant_dof_map, TerminalUnitContainer& terminal_units)
+    {
+      for (auto& model : terminal_units.models)
+      {
+        model.data.lid_p1.clear();
+        model.data.lid_p2.clear();
+        model.data.lid_q.clear();
+        model.data.lid_p1.reserve(model.data.number_of_elements());
+        model.data.lid_p2.reserve(model.data.number_of_elements());
+        model.data.lid_q.reserve(model.data.number_of_elements());
+
+        for (size_t i = 0; i < model.data.number_of_elements(); i++)
+        {
+          model.data.lid_p1.push_back(locally_relevant_dof_map.lid(model.data.gid_p1[i]));
+          model.data.lid_p2.push_back(locally_relevant_dof_map.lid(model.data.gid_p2[i]));
+          model.data.lid_q.push_back(locally_relevant_dof_map.lid(model.data.gid_q[i]));
+        }
+      }
+    }
+
     void update_internal_state_vectors(TerminalUnitContainer& terminal_units,
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
     {

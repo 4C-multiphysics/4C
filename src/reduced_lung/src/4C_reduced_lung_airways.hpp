@@ -13,6 +13,7 @@
 #include "4C_config.hpp"
 
 #include "4C_fem_discretization.hpp"
+#include "4C_linalg_map.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_reduced_lung_input.hpp"
@@ -1112,6 +1113,17 @@ namespace ReducedLung
      * captured by these evaluators remain valid.
      */
     void create_evaluators(AirwayContainer& airways);
+
+    /**
+     * @brief Assign local equation ids to airway state equations.
+     */
+    void assign_local_equation_ids(AirwayContainer& airways, int& n_local_equations);
+
+    /**
+     * @brief Assign local dof ids from the locally relevant dof map.
+     */
+    void assign_local_dof_ids(
+        const Core::LinAlg::Map& locally_relevant_dof_map, AirwayContainer& airways);
 
     /**
      * @brief Updates the internal state memory of each airway model.

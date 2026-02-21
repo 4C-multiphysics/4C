@@ -27,6 +27,9 @@
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
+#include <iostream>
+#include <map>
+
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -62,141 +65,27 @@ namespace ReducedLung
     // The existing mpi communicator is recycled for the new data layout.
     const auto& comm = actdis->get_comm();
 
-    // Create vectors of local entities (equations acting on the dofs).
-    // Physical "elements" of the lung tree introducing the dofs.
+    // "Elements" of the lung tree introducing the dofs.
     Airways::AirwayContainer airways;
     TerminalUnits::TerminalUnitContainer terminal_units;
     std::map<int, int> dof_per_ele;  // Map global element id -> dof.
     int n_airways = 0;
     int n_terminal_units = 0;
-    // Loop over all elements in actdis and create the new element data layout (for airways and
-    // terminal units). Adds all information directly given in the row element range.
-    for (auto ele : actdis->my_row_element_range())
-    {
-      int global_element_id = ele.global_id();
-      int local_element_id = actdis->element_row_map()->lid(global_element_id);
-      FOUR_C_ASSERT_ALWAYS(local_element_id >= 0,
-          "Element {} not found in element row map while iterating row elements.",
-          global_element_id + 1);
-      const auto element_type =
-          parameters.lung_tree.element_type.at(global_element_id, "element_type");
-      if (element_type == ReducedLungParameters::LungTree::ElementType::Airway)
-      {
-        ReducedLungParameters::LungTree::Airways::FlowModel::ResistanceType flow_model_name =
-            parameters.lung_tree.airways.flow_model.resistance_type.at(
-                global_element_id, "resistance_type");
-        ReducedLungParameters::LungTree::Airways::WallModelType wall_model_type =
-            parameters.lung_tree.airways.wall_model_type.at(global_element_id, "wall_model_type");
+    create_local_element_models(
+        *actdis, parameters, airways, terminal_units, dof_per_ele, n_airways, n_terminal_units);
 
-        add_airway_with_model_selection(airways, global_element_id, local_element_id, parameters,
-            flow_model_name, wall_model_type);
-
-        dof_per_ele[global_element_id] = 2 + airways.models.back().data.n_state_equations;
-        n_airways++;
-      }
-      else if (element_type == ReducedLungParameters::LungTree::ElementType::TerminalUnit)
-      {
-        ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType
-            rheological_model_name =
-                parameters.lung_tree.terminal_units.rheological_model.rheological_model_type.at(
-                    global_element_id, "rheological_model_type");
-
-        ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType
-            elasticity_model_name =
-                parameters.lung_tree.terminal_units.elasticity_model.elasticity_model_type.at(
-                    global_element_id, "elasticity_model_type");
-
-        add_terminal_unit_with_model_selection(terminal_units, global_element_id, local_element_id,
-            parameters, rheological_model_name, elasticity_model_name);
-        dof_per_ele[global_element_id] = 3;
-        n_terminal_units++;
-      }
-      else
-      {
-        FOUR_C_THROW("Unknown reduced lung element type.");
-      }
-    }
-
-    /* Create global dof numbering (done on every processor simultaneously)
-       Logic: global dof ids are created from element global ids by expanding them with their
-       associated dofs. Example: 3 resistive airway elements:
-           ele ids         dof ids
-                             {0       |\
-             {0               1       |   dofs associated with element 0
-                              2       |/
-                              3       |\
-              1       ->      4       |   dofs associated with element 1
-                              5       |/
-                              6       |\
-              2}              7       |   dofs associated with element 2
-                              8}      |/
-    */
-    auto global_dof_per_ele = Core::Communication::all_reduce(dof_per_ele, comm);
+    // Create global dof numbering (done on every processor simultaneously).
     std::map<int, int> first_global_dof_of_ele;
-    int acc = 0;
-    for (auto ele_dof : global_dof_per_ele)
-    {
-      first_global_dof_of_ele[ele_dof.first] = acc;
-      acc += ele_dof.second;
-    }
-    // Assign every local element its associated global dof ids.
-    for (auto& model : airways.models)
-    {
-      for (size_t i = 0; i < model.data.number_of_elements(); i++)
-      {
-        int first_dof_gid = first_global_dof_of_ele[model.data.global_element_id[i]];
-        model.data.gid_p1.push_back(first_dof_gid);
-        model.data.gid_p2.push_back(first_dof_gid + 1);
-        model.data.gid_q1.push_back(first_dof_gid + 2);
-        if (model.data.n_state_equations == 2)
-        {
-          model.data.gid_q2.push_back(first_dof_gid + 3);
-        }
-        else if (model.data.n_state_equations == 1)
-        {
-          // rigid airways -> only 3 unknowns
-        }
-        else
-        {
-          FOUR_C_THROW("Number of state equations not implemented.");
-        }
-      }
-    }
-    for (auto& model : terminal_units.models)
-    {
-      for (size_t i = 0; i < model.data.number_of_elements(); i++)
-      {
-        int first_dof_gid = first_global_dof_of_ele[model.data.global_element_id[i]];
-        model.data.gid_p1.push_back(first_dof_gid);
-        model.data.gid_p2.push_back(first_dof_gid + 1);
-        model.data.gid_q.push_back(first_dof_gid + 2);
-      }
-    }
+    std::map<int, int> global_dof_per_ele;
+    create_global_dof_maps(dof_per_ele, comm, global_dof_per_ele, first_global_dof_of_ele);
+    assign_global_dof_ids_to_models(first_global_dof_of_ele, airways, terminal_units);
 
+    // Create evaluator functions (assembly, residual, updates) for the different models.
     TerminalUnits::create_evaluators(terminal_units);
     Airways::create_evaluators(airways);
 
-    // Build local map node id -> adjacent element id and distribute to all processors.
-    std::map<int, std::vector<int>> ele_ids_per_node;
-    for (const auto& node : actdis->my_row_node_range())
-    {
-      for (auto ele : node.adjacent_elements())
-      {
-        ele_ids_per_node[node.global_id()].push_back(ele.global_id());
-      }
-    }
-    auto merge_maps =
-        [](const std::map<int, std::vector<int>>& map1, const std::map<int, std::vector<int>>& map2)
-    {
-      std::map<int, std::vector<int>> result = map1;
-      for (const auto& [key, values] : map2)
-      {
-        result[key].insert(result[key].end(), values.begin(), values.end());
-      }
-      return result;
-    };
-    auto global_ele_ids_per_node = Core::Communication::all_reduce<std::map<int, std::vector<int>>>(
-        ele_ids_per_node, merge_maps, comm);
+    // Mapping node -> elements to differentiate between boundary conditions and junctions.
+    auto global_ele_ids_per_node = create_global_ele_ids_per_node(*actdis, comm);
 
     // Create entities with equations connecting elements (acting on "nodes" of the lung tree).
     BoundaryConditions::BoundaryConditionContainer boundary_conditions;
@@ -213,48 +102,14 @@ namespace ReducedLung
     int n_bifurcations = static_cast<int>(bifurcations.size());
     int n_boundary_conditions = BoundaryConditions::count_boundary_conditions(boundary_conditions);
 
-    // Print info on instantiated objects.
-    {
-      int n_total_airways, n_total_terminal_units, n_total_connections, n_total_bifurcations,
-          n_total_boundary_conditions;
-      n_total_airways = Core::Communication::sum_all(n_airways, comm);
-      n_total_terminal_units = Core::Communication::sum_all(n_terminal_units, comm);
-      n_total_connections = Core::Communication::sum_all(n_connections, comm);
-      n_total_bifurcations = Core::Communication::sum_all(n_bifurcations, comm);
-      n_total_boundary_conditions = Core::Communication::sum_all(n_boundary_conditions, comm);
-      if (Core::Communication::my_mpi_rank(comm) == 0)
-      {
-        // clang-format off
-        std::cout << "--------- Instantiated objects ---------" 
-                  << "\nAirways:              |  " << n_total_airways
-                  << "\nTerminal Units:       |  " << n_total_terminal_units
-                  << "\nConnections:          |  " << n_total_connections
-                  << "\nBifurcations:         |  " << n_total_bifurcations
-                  << "\nBoundary Conditions:  |  " << n_total_boundary_conditions << "\n\n"
-                  << std::flush;
-        // clang-format on
-      }
-    }
+    print_instantiated_object_counts(
+        comm, n_airways, n_terminal_units, n_connections, n_bifurcations, n_boundary_conditions);
 
     // Calculate local and global number of "element" equations and assign local row IDs to define
-    // the structure of the system of equations.
+    // the structure of the system of equations (for the row map).
     int n_local_equations = 0;
-    for (auto& model : airways.models)
-    {
-      for (size_t i = 0; i < model.data.number_of_elements(); i++)
-      {
-        model.data.local_row_id.push_back(n_local_equations);
-        n_local_equations += model.data.n_state_equations;
-      }
-    }
-    for (auto& tu_model : terminal_units.models)
-    {
-      for (size_t i = 0; i < tu_model.data.number_of_elements(); i++)
-      {
-        tu_model.data.local_row_id.push_back(n_local_equations);
-        n_local_equations++;
-      }
-    }
+    Airways::assign_local_equation_ids(airways, n_local_equations);
+    TerminalUnits::assign_local_equation_ids(terminal_units, n_local_equations);
     // Assign local equation ids to connections, bifurcations, and boundary conditions.
     Junctions::assign_junction_local_equation_ids(connections, bifurcations, n_local_equations);
     BoundaryConditions::assign_local_equation_ids(boundary_conditions, n_local_equations);
@@ -278,28 +133,8 @@ namespace ReducedLung
     BoundaryConditions::assign_global_equation_ids(row_map, boundary_conditions);
 
     // Save locally relevant dof ids of every entity. Needed for local assembly.
-    for (auto& model : airways.models)
-    {
-      for (size_t i = 0; i < model.data.number_of_elements(); i++)
-      {
-        model.data.lid_p1.push_back(locally_relevant_dof_map.lid(model.data.gid_p1[i]));
-        model.data.lid_p2.push_back(locally_relevant_dof_map.lid(model.data.gid_p2[i]));
-        model.data.lid_q1.push_back(locally_relevant_dof_map.lid(model.data.gid_q1[i]));
-        if (model.data.n_state_equations == 2)
-        {
-          model.data.lid_q2.push_back(locally_relevant_dof_map.lid(model.data.gid_q2[i]));
-        }
-      }
-    }
-    for (auto& tu_model : terminal_units.models)
-    {
-      for (size_t i = 0; i < tu_model.data.number_of_elements(); i++)
-      {
-        tu_model.data.lid_p1.push_back(locally_relevant_dof_map.lid(tu_model.data.gid_p1[i]));
-        tu_model.data.lid_p2.push_back(locally_relevant_dof_map.lid(tu_model.data.gid_p2[i]));
-        tu_model.data.lid_q.push_back(locally_relevant_dof_map.lid(tu_model.data.gid_q[i]));
-      }
-    }
+    Airways::assign_local_dof_ids(locally_relevant_dof_map, airways);
+    TerminalUnits::assign_local_dof_ids(locally_relevant_dof_map, terminal_units);
     Junctions::assign_junction_local_dof_ids(locally_relevant_dof_map, connections, bifurcations);
     BoundaryConditions::assign_local_dof_ids(locally_relevant_dof_map, boundary_conditions);
 
@@ -342,14 +177,10 @@ namespace ReducedLung
                   << std::flush;
       }
       dofs_n.update(1.0, dofs, 0.0);
-      [[maybe_unused]] int err;  // Saves error code of trilinos functions.
 
-      // Assemble system of equations.
-      // Assemble airway equations in system matrix and rhs.
       Airways::update_negative_residual_vector(rhs, airways, locally_relevant_dofs, dt);
       Airways::update_jacobian(sysmat, airways, locally_relevant_dofs, dt);
 
-      // Assemble terminal unit equations.
       TerminalUnits::update_negative_residual_vector(
           rhs, terminal_units, locally_relevant_dofs, dt);
       TerminalUnits::update_jacobian(sysmat, terminal_units, locally_relevant_dofs, dt);

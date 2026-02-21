@@ -347,6 +347,47 @@ namespace ReducedLung
       }
     }
 
+    void assign_local_equation_ids(AirwayContainer& airways, int& n_local_equations)
+    {
+      for (auto& model : airways.models)
+      {
+        model.data.local_row_id.clear();
+        model.data.local_row_id.reserve(model.data.number_of_elements());
+        for (size_t i = 0; i < model.data.number_of_elements(); i++)
+        {
+          model.data.local_row_id.push_back(n_local_equations);
+          n_local_equations += model.data.n_state_equations;
+        }
+      }
+    }
+
+    void assign_local_dof_ids(
+        const Core::LinAlg::Map& locally_relevant_dof_map, AirwayContainer& airways)
+    {
+      for (auto& model : airways.models)
+      {
+        model.data.lid_p1.clear();
+        model.data.lid_p2.clear();
+        model.data.lid_q1.clear();
+        model.data.lid_q2.clear();
+        model.data.lid_p1.reserve(model.data.number_of_elements());
+        model.data.lid_p2.reserve(model.data.number_of_elements());
+        model.data.lid_q1.reserve(model.data.number_of_elements());
+        model.data.lid_q2.reserve(model.data.number_of_elements());
+
+        for (size_t i = 0; i < model.data.number_of_elements(); i++)
+        {
+          model.data.lid_p1.push_back(locally_relevant_dof_map.lid(model.data.gid_p1[i]));
+          model.data.lid_p2.push_back(locally_relevant_dof_map.lid(model.data.gid_p2[i]));
+          model.data.lid_q1.push_back(locally_relevant_dof_map.lid(model.data.gid_q1[i]));
+          if (model.data.n_state_equations == 2)
+          {
+            model.data.lid_q2.push_back(locally_relevant_dof_map.lid(model.data.gid_q2[i]));
+          }
+        }
+      }
+    }
+
 
     void update_internal_state_vectors(AirwayContainer& airways,
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)

@@ -19,6 +19,9 @@
 
 #include <mpi.h>
 
+#include <map>
+#include <vector>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::Nodes
@@ -51,6 +54,45 @@ namespace ReducedLung
   void build_discretization_from_topology(Core::FE::Discretization& discretization,
       const ReducedLungParameters::LungTree::Topology& topology,
       const Core::Rebalance::RebalanceParameters& rebalance_parameters);
+
+  /**
+   * @brief Create locally owned airway/terminal-unit entities from the row elements.
+   *
+   * Populates model containers and the local element->dof-count map used for global dof numbering.
+   */
+  void create_local_element_models(const Core::FE::Discretization& discretization,
+      const ReducedLungParameters& parameters, Airways::AirwayContainer& airways,
+      TerminalUnits::TerminalUnitContainer& terminal_units, std::map<int, int>& dof_per_ele,
+      int& n_airways, int& n_terminal_units);
+
+  /**
+   * @brief Build global dof layout maps from local element dof counts.
+   *
+   * @param local_dof_per_ele Local map global element id -> number of dofs.
+   * @param comm Communicator used for all-reduce.
+   * @param global_dof_per_ele Output global map global element id -> number of dofs.
+   * @param first_global_dof_of_ele Output global map global element id -> first global dof id.
+   */
+  void create_global_dof_maps(const std::map<int, int>& local_dof_per_ele, const MPI_Comm& comm,
+      std::map<int, int>& global_dof_per_ele, std::map<int, int>& first_global_dof_of_ele);
+
+  /**
+   * @brief Assign global dof ids to airway and terminal-unit model data.
+   */
+  void assign_global_dof_ids_to_models(const std::map<int, int>& first_global_dof_of_ele,
+      Airways::AirwayContainer& airways, TerminalUnits::TerminalUnitContainer& terminal_units);
+
+  /**
+   * @brief Build global map node id -> adjacent global element ids.
+   */
+  std::map<int, std::vector<int>> create_global_ele_ids_per_node(
+      const Core::FE::Discretization& discretization, const MPI_Comm& comm);
+
+  /**
+   * @brief Print globally reduced counts of instantiated reduced-lung entities.
+   */
+  void print_instantiated_object_counts(const MPI_Comm& comm, int n_airways, int n_terminal_units,
+      int n_connections, int n_bifurcations, int n_boundary_conditions);
 
   /*!
    * @brief Create the map with the locally owned dofs spanning the computation domain that

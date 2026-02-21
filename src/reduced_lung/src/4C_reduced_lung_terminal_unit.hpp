@@ -15,6 +15,7 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_io_input_field.hpp"
+#include "4C_linalg_map.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_mat_maxwell_0d_acinus.hpp"
@@ -650,6 +651,17 @@ namespace ReducedLung
      * evaluators remain valid.
      */
     void create_evaluators(TerminalUnitContainer& terminal_units);
+
+    /**
+     * @brief Assign local equation ids to terminal-unit equations.
+     */
+    void assign_local_equation_ids(TerminalUnitContainer& terminal_units, int& n_local_equations);
+
+    /**
+     * @brief Assign local dof ids from the locally relevant dof map.
+     */
+    void assign_local_dof_ids(
+        const Core::LinAlg::Map& locally_relevant_dof_map, TerminalUnitContainer& terminal_units);
 
     /**
      * @brief Updates the internal state memory of each terminal unit model.

@@ -20,7 +20,9 @@
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <algorithm>
 #include <array>
+#include <iostream>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -96,6 +98,163 @@ namespace ReducedLung
     }
 
     builder.build(discretization, rebalance_parameters);
+  }
+
+  void create_local_element_models(const Core::FE::Discretization& discretization,
+      const ReducedLungParameters& parameters, AirwayContainer& airways,
+      TerminalUnitContainer& terminal_units, std::map<int, int>& dof_per_ele, int& n_airways,
+      int& n_terminal_units)
+  {
+    dof_per_ele.clear();
+    n_airways = 0;
+    n_terminal_units = 0;
+
+    for (auto ele : discretization.my_row_element_range())
+    {
+      const int global_element_id = ele.global_id();
+      const int local_element_id = discretization.element_row_map()->lid(global_element_id);
+      FOUR_C_ASSERT_ALWAYS(local_element_id >= 0,
+          "Element {} not found in element row map while iterating row elements.",
+          global_element_id + 1);
+
+      const auto element_type =
+          parameters.lung_tree.element_type.at(global_element_id, "element_type");
+      if (element_type == ReducedLungParameters::LungTree::ElementType::Airway)
+      {
+        auto flow_model_name = parameters.lung_tree.airways.flow_model.resistance_type.at(
+            global_element_id, "resistance_type");
+        auto wall_model_type =
+            parameters.lung_tree.airways.wall_model_type.at(global_element_id, "wall_model_type");
+
+        add_airway_with_model_selection(airways, global_element_id, local_element_id, parameters,
+            flow_model_name, wall_model_type);
+
+        // 3 dofs with rigid walls, 4 dofs with compliant walls.
+        dof_per_ele[global_element_id] = 2 + airways.models.back().data.n_state_equations;
+        n_airways++;
+      }
+      else if (element_type == ReducedLungParameters::LungTree::ElementType::TerminalUnit)
+      {
+        auto rheological_model_name =
+            parameters.lung_tree.terminal_units.rheological_model.rheological_model_type.at(
+                global_element_id, "rheological_model_type");
+        auto elasticity_model_name =
+            parameters.lung_tree.terminal_units.elasticity_model.elasticity_model_type.at(
+                global_element_id, "elasticity_model_type");
+
+        add_terminal_unit_with_model_selection(terminal_units, global_element_id, local_element_id,
+            parameters, rheological_model_name, elasticity_model_name);
+
+        dof_per_ele[global_element_id] = 3;
+        n_terminal_units++;
+      }
+      else
+      {
+        FOUR_C_THROW("Unknown reduced lung element type.");
+      }
+    }
+  }
+
+  void create_global_dof_maps(const std::map<int, int>& local_dof_per_ele, const MPI_Comm& comm,
+      std::map<int, int>& global_dof_per_ele, std::map<int, int>& first_global_dof_of_ele)
+  {
+    global_dof_per_ele = Core::Communication::all_reduce(local_dof_per_ele, comm);
+
+    first_global_dof_of_ele.clear();
+    int acc = 0;
+    for (const auto& ele_dof : global_dof_per_ele)
+    {
+      first_global_dof_of_ele[ele_dof.first] = acc;
+      acc += ele_dof.second;
+    }
+  }
+
+  void assign_global_dof_ids_to_models(const std::map<int, int>& first_global_dof_of_ele,
+      AirwayContainer& airways, TerminalUnitContainer& terminal_units)
+  {
+    for (auto& model : airways.models)
+    {
+      for (size_t i = 0; i < model.data.number_of_elements(); i++)
+      {
+        const int first_dof_gid = first_global_dof_of_ele.at(model.data.global_element_id[i]);
+        model.data.gid_p1.push_back(first_dof_gid);
+        model.data.gid_p2.push_back(first_dof_gid + 1);
+        model.data.gid_q1.push_back(first_dof_gid + 2);
+        if (model.data.n_state_equations == 2)
+        {
+          model.data.gid_q2.push_back(first_dof_gid + 3);
+        }
+        else if (model.data.n_state_equations == 1)
+        {
+          // rigid airways -> only 3 unknowns
+        }
+        else
+        {
+          FOUR_C_THROW("Number of state equations not implemented.");
+        }
+      }
+    }
+
+    for (auto& model : terminal_units.models)
+    {
+      for (size_t i = 0; i < model.data.number_of_elements(); i++)
+      {
+        const int first_dof_gid = first_global_dof_of_ele.at(model.data.global_element_id[i]);
+        model.data.gid_p1.push_back(first_dof_gid);
+        model.data.gid_p2.push_back(first_dof_gid + 1);
+        model.data.gid_q.push_back(first_dof_gid + 2);
+      }
+    }
+  }
+
+  std::map<int, std::vector<int>> create_global_ele_ids_per_node(
+      const Core::FE::Discretization& discretization, const MPI_Comm& comm)
+  {
+    std::map<int, std::vector<int>> ele_ids_per_node;
+    for (const auto& node : discretization.my_row_node_range())
+    {
+      for (auto ele : node.adjacent_elements())
+      {
+        ele_ids_per_node[node.global_id()].push_back(ele.global_id());
+      }
+    }
+
+    auto merge_maps =
+        [](const std::map<int, std::vector<int>>& map1, const std::map<int, std::vector<int>>& map2)
+    {
+      std::map<int, std::vector<int>> result = map1;
+      for (const auto& [key, values] : map2)
+      {
+        result[key].insert(result[key].end(), values.begin(), values.end());
+      }
+      return result;
+    };
+
+    return Core::Communication::all_reduce<std::map<int, std::vector<int>>>(
+        ele_ids_per_node, merge_maps, comm);
+  }
+
+  void print_instantiated_object_counts(const MPI_Comm& comm, int n_airways, int n_terminal_units,
+      int n_connections, int n_bifurcations, int n_boundary_conditions)
+  {
+    int n_total_airways = Core::Communication::sum_all(n_airways, comm);
+    int n_total_terminal_units = Core::Communication::sum_all(n_terminal_units, comm);
+    int n_total_connections = Core::Communication::sum_all(n_connections, comm);
+    int n_total_bifurcations = Core::Communication::sum_all(n_bifurcations, comm);
+    int n_total_boundary_conditions = Core::Communication::sum_all(n_boundary_conditions, comm);
+
+    if (Core::Communication::my_mpi_rank(comm) == 0)
+    {
+      // clang-format off
+      std::cout << "--------- Instantiated objects ---------"
+                << "\nAirways:              |  " << n_total_airways
+                << "\nTerminal Units:       |  " << n_total_terminal_units
+                << "\nConnections:          |  " << n_total_connections
+                << "\nBifurcations:         |  " << n_total_bifurcations
+                << "\nBoundary Conditions:  |  " << n_total_boundary_conditions << "\n\n"
+                << std::flush;
+      // clang-format on
+    }
   }
 
   Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const AirwayContainer& airways,
