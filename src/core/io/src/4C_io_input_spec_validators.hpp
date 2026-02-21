@@ -540,10 +540,9 @@ template <typename T>
 
     void describe(std::ostream& os) const
     {
-      using namespace EnumTools;
       std::ostringstream set_description;
       set_description << "in_set{";
-      for (const auto& val : set) set_description << val << ",";
+      for (const auto& val : set) set_description << EnumTools::enum_name(val) << ",";
       auto set_description_str = set_description.str();
       set_description_str.pop_back();
       set_description_str += "}";

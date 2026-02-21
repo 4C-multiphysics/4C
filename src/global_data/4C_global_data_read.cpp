@@ -30,6 +30,7 @@
 #include "4C_io_input_file.hpp"
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_io_mesh.hpp"
 #include "4C_io_meshreader.hpp"
 #include "4C_mat_elchmat.hpp"
 #include "4C_mat_elchphase.hpp"
@@ -46,6 +47,7 @@
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -1471,64 +1473,6 @@ void Global::read_result(Global::Problem& problem, Core::IO::InputFile& input)
   if (result_descriptions) problem.get_result_test_manager().set_parsed_lines(*result_descriptions);
 }
 
-namespace
-{
-  void get_node_sets_from_mesh(
-      std::map<int, std::vector<int>>& node_sets, const Core::IO::MeshReader& mesh_reader)
-  {
-    node_sets.clear();
-    const int my_rank = Core::Communication::my_mpi_rank(mesh_reader.get_comm());
-
-    // Data is available on rank zero: bring it into the right shape and broadcast it.
-    if (my_rank == 0)
-    {
-      if (const auto* external_mesh = mesh_reader.get_external_mesh_on_rank_zero(); external_mesh)
-      {
-        const auto& node_sets_from_mesh = external_mesh->point_sets();
-        for (const auto& [id, node_set] : node_sets_from_mesh)
-        {
-          const auto& set = node_set.point_ids;
-          node_sets[id] = std::vector<int>(set.begin(), set.end());
-        }
-      }
-      Core::Communication::broadcast(node_sets, 0, mesh_reader.get_comm());
-    }
-    else
-    {
-      Core::Communication::broadcast(node_sets, 0, mesh_reader.get_comm());
-    }
-  }
-
-  void get_element_block_nodes_from_mesh(
-      std::map<int, std::vector<int>>& element_block_nodes, const Core::IO::MeshReader& mesh_reader)
-  {
-    element_block_nodes.clear();
-    const int my_rank = Core::Communication::my_mpi_rank(mesh_reader.get_comm());
-
-    // Data is available on rank zero: bring it into the right shape and broadcast it.
-    if (my_rank == 0)
-    {
-      if (const auto* external_mesh = mesh_reader.get_external_mesh_on_rank_zero(); external_mesh)
-      {
-        for (const auto& [id, eb] : external_mesh->cell_blocks())
-        {
-          std::set<int> nodes;
-          for (const auto& cell : eb.cells())
-          {
-            nodes.insert(cell.begin(), cell.end());
-          }
-          element_block_nodes[id] = std::vector<int>(nodes.begin(), nodes.end());
-        }
-      }
-      Core::Communication::broadcast(element_block_nodes, 0, mesh_reader.get_comm());
-    }
-    else
-    {
-      Core::Communication::broadcast(element_block_nodes, 0, mesh_reader.get_comm());
-    }
-  }
-}  // namespace
-
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Global::read_conditions(
@@ -1562,10 +1506,11 @@ void Global::read_conditions(
   Core::IO::read_design(input, "DVOL", dvol_fenode, get_discretization_callback);
 
   std::map<int, std::vector<int>> node_sets;
-  get_node_sets_from_mesh(node_sets, mesh_reader);
+  std::map<std::string, std::vector<int>> node_sets_names;
+  mesh_reader.get_node_sets(node_sets, node_sets_names);
 
   std::map<int, std::vector<int>> element_block_nodes;
-  get_element_block_nodes_from_mesh(element_block_nodes, mesh_reader);
+  mesh_reader.get_element_block_nodes(element_block_nodes);
 
   // check for meshfree discretisation to add node set topologies
   std::vector<std::vector<std::vector<int>>*> nodeset(4);
@@ -1588,7 +1533,7 @@ void Global::read_conditions(
     std::multimap<int, std::shared_ptr<Core::Conditions::Condition>> cond;
 
     // read conditions from the input file
-    condition_definition.read(input, cond);
+    condition_definition.read(input, cond, node_sets_names);
 
     // add nodes to conditions
     for (const auto& [entity_id, condition] : cond)
@@ -1605,7 +1550,7 @@ void Global::read_conditions(
                 "the input file.\n"
                 "This is probably because the geometry is handled in an external file.\n"
                 "If this is the case, you must specify a specific entity type (node_set_id or "
-                "element_block_id).\n",
+                "element_block_id) or identify the node set via its name.\n",
                 condition_definition.name(), entity_id);
           }
           switch (condition->g_type())
@@ -1661,6 +1606,7 @@ void Global::read_conditions(
           break;
         }
         case Core::Conditions::EntityType::node_set_id:
+        case Core::Conditions::EntityType::node_set_name:
         {
           FOUR_C_ASSERT_ALWAYS(node_sets.contains(entity_id),
               "Cannot apply condition '{}' to node set {} which is not specified in the mesh file.",

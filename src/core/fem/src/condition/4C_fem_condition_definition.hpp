@@ -14,7 +14,9 @@
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_io_input_spec.hpp"
 
+#include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -64,11 +66,14 @@ namespace Core::Conditions
 
     /// read all conditions from my input file section
     /*!
-      \param input (i) the input file
-      \param cmap (o) the conditions we read here
+      \param input the input file
+      \param cmap an empty multimap to fill with the read conditions (key: entity id, value:
+      condition)
+      \param node_sets_names map of node set names to their ids from the external mesh file
      */
     void read(Core::IO::InputFile& input,
-        std::multimap<int, std::shared_ptr<Core::Conditions::Condition>>& cmap) const;
+        std::multimap<int, std::shared_ptr<Core::Conditions::Condition>>& cmap,
+        const std::map<std::string, std::vector<int>>& node_sets_names) const;
 
     /// name of my section in input file
     std::string section_name() const { return sectionname_; }
