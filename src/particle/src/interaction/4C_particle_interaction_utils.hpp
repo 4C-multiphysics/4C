@@ -16,6 +16,7 @@
 #include "4C_utils_exceptions.hpp"
 
 #include <cmath>
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 

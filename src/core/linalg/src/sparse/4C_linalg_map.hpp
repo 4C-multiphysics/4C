@@ -18,6 +18,7 @@
 #include <mpi.h>
 
 #include <memory>
+#include <span>
 #include <variant>
 
 FOUR_C_NAMESPACE_OPEN

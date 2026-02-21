@@ -13,8 +13,9 @@
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_utils_fad.hpp"
 
-FOUR_C_NAMESPACE_OPEN
+#include <numbers>
 
+FOUR_C_NAMESPACE_OPEN
 
 namespace Core::LargeRotations
 {

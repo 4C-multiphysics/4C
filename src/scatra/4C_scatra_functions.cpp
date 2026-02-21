@@ -10,7 +10,22 @@
 #include "4C_global_data.hpp"
 #include "4C_io_input_spec_builders.hpp"
 
+#if defined(__APPLE__) && defined(__clang__)
+#include <boost/math/special_functions/ellint_1.hpp>
+#include <boost/math/special_functions/ellint_2.hpp>
+#include <boost/math/special_functions/ellint_3.hpp>
+namespace std
+{
+  using boost::math::ellint_1;
+  using boost::math::ellint_2;
+  using boost::math::ellint_3;
+  inline double comp_ellint_1(double k) { return boost::math::ellint_1(k); }
+  inline double comp_ellint_2(double k) { return boost::math::ellint_2(k); }
+  inline double comp_ellint_3(double k, double nu) { return boost::math::ellint_3(k, nu); }
+}  // namespace std
+#else
 #include <cmath>
+#endif
 
 FOUR_C_NAMESPACE_OPEN namespace
 {

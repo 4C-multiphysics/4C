@@ -16,6 +16,7 @@
 #include "4C_utils_symbolic_expression.fwd.hpp"
 
 #include <memory>
+#include <numbers>
 #include <span>
 #include <string>
 #include <vector>

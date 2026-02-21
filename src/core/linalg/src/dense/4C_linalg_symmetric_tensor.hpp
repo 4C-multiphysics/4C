@@ -638,7 +638,7 @@ namespace Core::LinAlg
           case 21:
             return 6;
           default:
-            FOUR_C_THROW("Unsupported symmetric tensor size: " + std::to_string(size));
+            FOUR_C_THROW("Unsupported symmetric tensor size: {}", size);
         }
       }(size);
 
