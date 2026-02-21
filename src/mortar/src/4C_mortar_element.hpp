@@ -15,6 +15,7 @@
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_mat_so3_material.hpp"
 #include "4C_mortar_input.hpp"
 #include "4C_mortar_node.hpp"
 #include "4C_utils_pairedvector.hpp"
@@ -1050,8 +1051,11 @@ namespace Mortar
     \note It has been decided that Nitsche's method for contact problems will only be done in three
     dimensions. Hence, we check for the number of spatial dimensions and throw an error if the
     problem at hand is not 3D.
+
+    \param[in] mat_eval_context Material evaluation context (further specified in the surface
+    elements)
       */
-    void estimate_nitsche_trace_max_eigenvalue();
+    void estimate_nitsche_trace_max_eigenvalue(const Mat::EvaluationContext& mat_eval_context);
 
     /*!
     \brief Estimated mesh size and stiffness parameter h/E via Eigenvalues of the trace inequality.

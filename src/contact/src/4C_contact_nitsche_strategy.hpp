@@ -39,7 +39,8 @@ namespace CONTACT
               NodeRowMap, params, dim, comm, alphaf, maxdof),
           interface_(std::move(interface)),
           curr_state_eval_(false)
-    { /* empty */
+    {
+      set_time_step_size_and_total_time(params.get<double>("TIMESTEP_EVAL_REFERENCE_STATE"));
     }
 
     //! Shared data constructor
@@ -51,7 +52,8 @@ namespace CONTACT
         : AbstractStrategy(data_ptr, dof_row_map, NodeRowMap, params, dim, comm, alphaf, maxdof),
           interface_(std::move(interface)),
           curr_state_eval_(false)
-    { /* empty */
+    {
+      set_time_step_size_and_total_time(params.get<double>("TIMESTEP_EVAL_REFERENCE_STATE"));
     }
 
     // don't want = operator and cctor
@@ -93,7 +95,7 @@ namespace CONTACT
       */
     void setup(bool redistributed, bool init) override;
 
-    virtual void update_trace_ineq_etimates();
+    virtual void update_trace_ineq_estimates();
 
     /*! \brief Get dirichlet B.C. status and store into Nodes
 
@@ -274,10 +276,25 @@ namespace CONTACT
     virtual std::shared_ptr<Core::LinAlg::SparseMatrix> create_matrix_block_ptr(
         const MatBlockType& bt);
 
+
+    /*!
+     * @brief Set time step size \f$ \Delta t \f$ and total time \f$ t_{n+1} \f$
+     *
+     * @param[in] delta_t  time step size
+     *
+     */
+    void set_time_step_size_and_total_time(double delta_t);
+
+
     std::vector<std::shared_ptr<CONTACT::Interface>> interface_;
 
     std::shared_ptr<Core::LinAlg::Vector<double>> curr_state_;
     bool curr_state_eval_;
+
+
+    double time_step_size_;
+    double total_time_;
+
 
     std::shared_ptr<Core::LinAlg::FEVector<double>> fc_;
     std::shared_ptr<Core::LinAlg::SparseMatrix> kc_;
