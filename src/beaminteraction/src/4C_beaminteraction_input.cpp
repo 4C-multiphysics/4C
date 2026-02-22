@@ -40,7 +40,7 @@ std::vector<Core::IO::InputSpec> BeamInteraction::valid_parameters()
 
           parameter<SearchStrategy>("SEARCH_STRATEGY",
               {.description = "Type of search strategy used for finding coupling pairs",
-                  .default_value = SearchStrategy::bruteforce_with_binning})},
+                  .default_value = SearchStrategy::bounding_volume_hierarchy})},
       {.required = false}));
 
   // get beam contact parameters
