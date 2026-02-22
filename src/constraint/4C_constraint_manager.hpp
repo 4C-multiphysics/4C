@@ -41,7 +41,6 @@ namespace Constraints
   class Constraint;
   class ConstraintPenalty;
   class MPConstraint3;
-  class MPConstraint3Penalty;
   class MPConstraint2;
   class Monitor;
   class ConstraintDofSet;
@@ -341,7 +340,6 @@ namespace Constraints
     std::shared_ptr<MPConstraint2>
         mpconline2d_;  ///< 2d multipoint constraint prescribing the motion
                        ///< of a node relatively to a straight line
-    std::shared_ptr<MPConstraint3Penalty> mpcnormcomp3dpen_;
 
 
     std::shared_ptr<Monitor> volmonitor3d_;   ///< 3d volume monitors defined on surfaces

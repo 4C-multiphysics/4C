@@ -12,7 +12,6 @@
 #include "4C_constraint_monitor.hpp"
 #include "4C_constraint_multipointconstraint2.hpp"
 #include "4C_constraint_multipointconstraint3.hpp"
-#include "4C_constraint_multipointconstraint3penalty.hpp"
 #include "4C_constraint_penalty.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
@@ -78,11 +77,8 @@ void Constraints::ConstrManager::init(
 
   volconstr3dpen_ = std::make_shared<ConstraintPenalty>(actdisc_, "VolumeConstraint_3D_Pen");
   areaconstr3dpen_ = std::make_shared<ConstraintPenalty>(actdisc_, "AreaConstraint_3D_Pen");
-  mpcnormcomp3dpen_ =
-      std::make_shared<MPConstraint3Penalty>(actdisc_, "MPC_NormalComponent_3D_Pen");
 
-  havepenaconstr_ = (mpcnormcomp3dpen_->have_constraint()) or
-                    (volconstr3dpen_->have_constraint()) or (areaconstr3dpen_->have_constraint());
+  havepenaconstr_ = (volconstr3dpen_->have_constraint()) or (areaconstr3dpen_->have_constraint());
 
   //----------------------------------------------------
   //-----------include possible further constraints here
@@ -145,8 +141,6 @@ void Constraints::ConstrManager::setup(
     mpconplane3d_->initialize(p, refbaseredundant);
     mpcnormcomp3d_->set_constr_state("displacement", *disp);
     mpcnormcomp3d_->initialize(p, refbaseredundant);
-    mpcnormcomp3dpen_->set_constr_state("displacement", *disp);
-    mpcnormcomp3dpen_->initialize(p);
 
     // Export redundant vector into distributed one
     refbasevalues_->export_to(*refbaseredundant, *conimpo_, Core::LinAlg::CombineMode::add);
@@ -268,8 +262,6 @@ void Constraints::ConstrManager::evaluate_force_stiff(const double time,
   mpconplane3d_->evaluate(p, stiff, constr_matrix_, fint, refbaseredundant, actredundant);
   mpcnormcomp3d_->set_constr_state("displacement", *disp);
   mpcnormcomp3d_->evaluate(p, stiff, constr_matrix_, fint, refbaseredundant, actredundant);
-  mpcnormcomp3dpen_->set_constr_state("displacement", *disp);
-  mpcnormcomp3dpen_->evaluate(p, stiff, nullptr, fint, nullptr, nullptr);
   mpconline2d_->set_constr_state("displacement", *disp);
   mpconline2d_->evaluate(p, stiff, constr_matrix_, fint, refbaseredundant, actredundant);
   // Export redundant vectors into distributed ones
