@@ -177,9 +177,13 @@ four_c_process_cache_variable(
 set(_mpiexec_all_args_for_testing ${FOUR_C_MPIEXEC_ARGS_FOR_TESTING})
 
 if(FOUR_C_ENABLE_ADDRESS_SANITIZER)
+  set(_suppressions_file ${PROJECT_BINARY_DIR}/tests/asan_leak_suppressions.txt)
+  configure_file(tests/asan_leak_suppressions.txt ${_suppressions_file} COPYONLY)
   # Do not detect leaks, we only care about UB inducing memory issues
-  string(APPEND _mpiexec_all_args_for_testing " -x LSAN_OPTIONS=detect_leaks=0")
-  set(FOUR_C_ENABLE_ADDRESS_SANITIZER_TEST_OPTIONS "LSAN_OPTIONS=detect_leaks=0")
+  string(APPEND _mpiexec_all_args_for_testing " -x LSAN_OPTIONS=suppressions=${_suppressions_file}")
+  set(FOUR_C_ENABLE_ADDRESS_SANITIZER_TEST_OPTIONS
+      "LSAN_OPTIONS=suppressions=${_suppressions_file}"
+      )
 endif()
 
 set(FOUR_C_EXECUTABLE_NAME 4C)
