@@ -287,7 +287,7 @@ namespace Constraints::EmbeddedMesh
     weighting_matrix(2, 1) = unit_normal(2) * unit_normal(1);
 
     // Calculate derivative of normalized normal w.r.t. the displacements
-    d_unit_normal_d_disp.multiply(1.0, weighting_matrix, d_normal_d_disp, 1.0);
+    d_unit_normal_d_disp.multiply(weighting_matrix, d_normal_d_disp);
     d_unit_normal_d_disp.scale(1 / length_normal);
   }
 

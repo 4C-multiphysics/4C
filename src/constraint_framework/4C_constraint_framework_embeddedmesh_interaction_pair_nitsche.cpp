@@ -497,9 +497,10 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
               N_interface(i_interface_node) *
                   d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
                   weight * determinant_interface +
-              N_interface(i_interface_node) * cauchy_stress_d_unit_normal_d_disp_interface(
-                                                  i_dim, j_interface_node * 3 + i_dim) +
-              weight * determinant_interface;
+              N_interface(i_interface_node) *
+                  cauchy_stress_d_unit_normal_d_disp_interface(
+                      i_dim, j_interface_node * 3 + i_dim) *
+                  weight * determinant_interface;
 
     // Fill in the local matrix K_nitsche_disp_interface_stress_background.
     for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
