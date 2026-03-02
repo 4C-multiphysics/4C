@@ -8,7 +8,7 @@
 
 # Install qhull
 # Call with
-# ./install.sh /path/to/install/dir
+# ./install.sh /path/to/install/dir compile_options
 
 # Exit the script at the first failure
 set -e
@@ -32,7 +32,7 @@ fi
 
 tar -xzf ${VERSION}.tar.gz
 cd qhull-${VERSION}/build
-cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} ..
+cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} $2 ..
 make -j${NPROCS} && make install
 cd ../../
 rm -rf qhull* ${VERSION}.tar.gz

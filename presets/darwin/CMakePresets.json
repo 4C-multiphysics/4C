@@ -1,0 +1,37 @@
+{
+  "version": 5,
+  "configurePresets": [
+    {
+      "name": ".darwin_base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RELEASE",
+        "CMAKE_INSTALL_PREFIX": "$env{HOME}/opt/4C",
+        "FOUR_C_BUILD_SHARED_LIBS": "ON",
+        "FOUR_C_WITH_BACKTRACE": "ON",
+        "FOUR_C_BACKTRACE_ROOT": "$env{HOME}/opt/libbacktrace",
+        "FOUR_C_QHULL_ROOT": "$env{HOME}/opt/qhull",
+        "FOUR_C_TRILINOS_ROOT": "$env{HOME}/opt/trilinos",
+        "FOUR_C_WITH_MIRCO": "OFF",
+        "FOUR_C_WITH_ARBORX": "OFF",
+        "FOUR_C_WITH_FFTW": "OFF",
+        "FOUR_C_WITH_PYTHON": "OFF",
+        "FOUR_C_ENABLE_METADATA_GENERATION": "OFF",
+        "FOUR_C_ENABLE_FE_TRAPPING": "OFF",
+        "FOUR_C_WITH_GOOGLETEST": "OFF"   // set to off to disable unittest compilation
+      }
+    },
+    {
+      "name": "darwin",
+      "displayName": "Release build for Darwin/ARM",
+      "description": "Build release version for a Mac ARM-based system.",
+      "inherits": [
+        ".darwin_base"
+      ],
+      "cacheVariables": {
+        "FOUR_C_WITH_GMSH": "OFF"
+      }
+    }
+  ]
+}
