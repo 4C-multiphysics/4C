@@ -1,0 +1,57 @@
+{
+  "version": 5,
+  "configurePresets": [
+    {
+      "name": ".darwin_base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RELEASE",
+        "CMAKE_INSTALL_PREFIX": "$env{HOME}/opt/4C",
+        "FOUR_C_ENABLE_WARNINGS_AS_ERRORS": "ON",
+        "FOUR_C_TRILINOS_ROOT": "$env{HOME}/opt/trilinos",
+        "FOUR_C_QHULL_ROOT": "$env{HOME}/opt/qhull",
+        "FOUR_C_BUILD_SHARED_LIBS": "ON",
+        "FOUR_C_WITH_GOOGLETEST": "ON",
+        "FOUR_C_ENABLE_DOXYGEN": "OFF",
+        "FOUR_C_ENABLE_DOCUMENTATION": "ON",
+        "FOUR_C_DOXYGEN_USE_LOCAL_MATHJAX": "ON",
+        "FOUR_C_DOXYGEN_LOCAL_MATHJAX_BASEPATH": "/opt/4C-dependencies-testing/MathJax-2.7.9",
+        "FOUR_C_WITH_ARBORX": "ON",
+        "FOUR_C_WITH_BACKTRACE": "ON",
+        "FOUR_C_BACKTRACE_ROOT": "$env{HOME}/opt/libbacktrace",
+        "FOUR_C_WITH_MIRCO": "ON",
+        "FOUR_C_WITH_DEAL_II": "ON",
+        "FOUR_C_WITH_PYBIND11": "ON",
+        "FOUR_C_WITH_GOOGLE_BENCHMARK": "ON",
+        "FOUR_C_WITH_VTK": "ON",
+        "FOUR_C_WITH_GMSH": "OFF",
+        "FOUR_C_WITH_FFTW": "ON",
+        "FOUR_C_ENABLE_PYTHON_BINDINGS": "ON"
+      }
+    },
+    {
+      "name": "darwin",
+      "displayName": "Release build for Darwin/ARM",
+      "description": "Build release version for a Mac ARM-based system.",
+      "inherits": [
+        ".darwin_base"
+      ],
+      "cacheVariables": {
+        "FOUR_C_WITH_GMSH": "OFF"
+      }
+    },
+    {
+      "name": "darwin-debug",
+      "displayName": "Debug build for Darwin/ARM",
+      "description": "Build debug version for a Mac ARM-based system.",
+      "inherits": [
+        ".darwin_base"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "DEBUG",
+        "FOUR_C_WITH_GMSH": "OFF"
+      }
+    }
+  ]
+}
