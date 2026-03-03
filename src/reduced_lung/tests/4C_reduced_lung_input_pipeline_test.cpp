@@ -37,6 +37,9 @@ namespace
         .restart_every = 1,
         .results_every = 1,
         .linear_solver = 1,
+        .max_nonlinear_iterations = 10,
+        .nonlinear_residual_tolerance = 1e-8,
+        .nonlinear_increment_tolerance = 1e-10,
     };
 
     params.lung_tree.topology.num_nodes = 6;

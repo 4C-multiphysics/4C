@@ -379,6 +379,26 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                                          "dimensional lung simulation.",
                           .store = in_struct(&ReducedLungParameters::Dynamics::linear_solver),
                       }),
+                  parameter<int>("max_nonlinear_iterations",
+                      {
+                          .description = "Maximum number of nonlinear iterations.",
+                          .store =
+                              in_struct(&ReducedLungParameters::Dynamics::max_nonlinear_iterations),
+                      }),
+                  parameter<double>("nonlinear_residual_tolerance",
+                      {
+                          .description =
+                              "Absolute residual norm tolerance for nonlinear convergence.",
+                          .store = in_struct(
+                              &ReducedLungParameters::Dynamics::nonlinear_residual_tolerance),
+                      }),
+                  parameter<double>("nonlinear_increment_tolerance",
+                      {
+                          .description =
+                              "Absolute increment norm tolerance for nonlinear convergence.",
+                          .store = in_struct(
+                              &ReducedLungParameters::Dynamics::nonlinear_increment_tolerance),
+                      }),
               },
               {
                   .required = true,

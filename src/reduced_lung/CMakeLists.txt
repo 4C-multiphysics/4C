@@ -11,6 +11,7 @@ set(_dependencies
     # cmake-format: sortable
     core
     global_data
+    solver_nonlin_nox
     )
 
 four_c_add_internal_dependency(${AUTO_DEFINED_MODULE_NAME} ${_dependencies})

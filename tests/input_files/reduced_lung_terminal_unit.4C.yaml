@@ -12,6 +12,9 @@ reduced_dimensional_lung:
     restart_every: 1
     results_every: 1
     time_increment: 1
+    nonlinear_residual_tolerance: 1e-8
+    nonlinear_increment_tolerance: 1e-10
+    max_nonlinear_iterations: 10
   lung_tree:
     topology:
       num_nodes: 2
