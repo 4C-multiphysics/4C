@@ -308,6 +308,11 @@ namespace Constraints::EmbeddedMesh
   double get_determinant_interface_element(
       Core::LinAlg::Matrix<2, 1> eta, const Core::Elements::Element& element);
 
+  template <typename Interface>
+  double get_determinant_interface_element_current_conf(Core::LinAlg::Matrix<2, 1> eta,
+      const Core::Elements::Element& element,
+      const GeometryPair::ElementData<Interface, double>& element_data_surface);
+
   /**
    * \brief Evaluate the normal vector at the nodes of an interface element
    */

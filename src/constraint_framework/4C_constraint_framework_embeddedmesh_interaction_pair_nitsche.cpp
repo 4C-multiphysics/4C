@@ -391,8 +391,11 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
   for (size_t it_gp = 0; it_gp < interface_integration_points_.size(); it_gp++)
   {
     auto& [xi_interface, xi_background, weight] = interface_integration_points_[it_gp];
-    double determinant_interface = Constraints::EmbeddedMesh::get_determinant_interface_element(
-        xi_interface, this->element_1());
+    // double determinant_interface = Constraints::EmbeddedMesh::get_determinant_interface_element(
+    //     xi_interface, this->element_1());
+    double determinant_interface =
+        Constraints::EmbeddedMesh::get_determinant_interface_element_current_conf<Interface>(
+            xi_interface, this->element_1(), ele1pos_current_);
 
     // Clear the shape function matrices
     N_interface.clear();
@@ -434,7 +437,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     // define linearizations for each direction
     Core::LinAlg::Matrix<3, 3, double> cauchy_stress_tensor_interface(
         Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<3, 3, double> dummy_background(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3, double> cauchy_stress_tensor_background(
+        Core::LinAlg::Initialization::zero);
     std::vector<Core::LinAlg::SerialDenseMatrix> d_cauchyndir_dd_interface(3);
     std::vector<Core::LinAlg::SerialDenseMatrix> d_cauchyndir_dd_background(3);
 
@@ -443,8 +447,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
         cauchy_stress_tensor_interface, d_cauchyndir_dd_interface);
 
     Core::LinAlg::Matrix<3, Interface::n_nodes_ * 3, double>
-        cauchy_stress_d_unit_normal_d_disp_interface(Core::LinAlg::Initialization::zero);
-    cauchy_stress_d_unit_normal_d_disp_interface.multiply(
+        cauchy_stress_interface_d_unit_normal_d_disp_interface(Core::LinAlg::Initialization::zero);
+    cauchy_stress_interface_d_unit_normal_d_disp_interface.multiply(
         cauchy_stress_tensor_interface, d_unit_normal_d_disp);
 
     // obtain the displacements of the background elements
@@ -453,8 +457,13 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
       background_displacement.push_back(ele2dis_.element_position_(i_n_dof));
 
     evaluate_cauchy_stress_tensor_at_xi(discret, background_displacement, element_2(),
-        xi_background, normal_interface, traction_vector_background, dummy_background,
-        d_cauchyndir_dd_background);
+        xi_background, normal_interface, traction_vector_background,
+        cauchy_stress_tensor_background, d_cauchyndir_dd_background);
+
+    Core::LinAlg::Matrix<3, Interface::n_nodes_ * 3, double>
+        cauchy_stress_background_d_unit_normal_d_disp_interface(Core::LinAlg::Initialization::zero);
+    cauchy_stress_background_d_unit_normal_d_disp_interface.multiply(
+        cauchy_stress_tensor_background, d_unit_normal_d_disp);
 
     // As the calculations of the Cauchy stresses are done in the parent element of the face
     // element, we need the locations of the dofs of the interface in its parent element.
@@ -493,12 +502,16 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
           j_interface_node++)
         for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
           local_stiffness_disp_interface_stress_interface(
-              i_interface_node * 3 + i_dim, j_interface_node * 3 + i_dim) +=
-              N_interface(i_interface_node) *
+              i_interface_node * 3 + i_dim, j_interface_node * 3 + i_dim) -=
+              nitsche_average_weight_param * N_interface(i_interface_node) *
                   d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
                   weight * determinant_interface +
-              N_interface(i_interface_node) *
-                  cauchy_stress_d_unit_normal_d_disp_interface(
+              nitsche_average_weight_param * N_interface(i_interface_node) *
+                  cauchy_stress_interface_d_unit_normal_d_disp_interface(
+                      i_dim, j_interface_node * 3 + i_dim) *
+                  weight * determinant_interface +
+              (1.0 - nitsche_average_weight_param) * N_interface(i_interface_node) *
+                  cauchy_stress_background_d_unit_normal_d_disp_interface(
                       i_dim, j_interface_node * 3 + i_dim) *
                   weight * determinant_interface;
 
@@ -509,8 +522,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
           j_background_node++)
         for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
           local_stiffness_disp_interface_stress_background(
-              i_interface_node * 3 + i_dim, j_background_node * 3 + i_dim) +=
-              N_interface(i_interface_node) *
+              i_interface_node * 3 + i_dim, j_background_node * 3 + i_dim) -=
+              (1.0 - nitsche_average_weight_param) * N_interface(i_interface_node) *
               d_cauchyndir_dd_background[i_dim](j_background_node, 0) * weight *
               determinant_interface;
 
@@ -522,11 +535,15 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
         for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
           local_stiffness_disp_background_stress_interface(
               i_background_node * 3 + i_dim, j_interface_node * 3 + i_dim) +=
-              N_background(i_background_node) *
+              nitsche_average_weight_param * N_background(i_background_node) *
                   d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
                   weight * determinant_interface +
-              N_background(i_background_node) *
-                  cauchy_stress_d_unit_normal_d_disp_interface(
+              nitsche_average_weight_param * N_background(i_background_node) *
+                  cauchy_stress_interface_d_unit_normal_d_disp_interface(
+                      i_dim, j_interface_node * 3 + i_dim) *
+                  weight * determinant_interface +
+              (1.0 - nitsche_average_weight_param) * N_background(i_background_node) *
+                  cauchy_stress_background_d_unit_normal_d_disp_interface(
                       i_dim, j_interface_node * 3 + i_dim) *
                   weight * determinant_interface;
 
@@ -538,7 +555,7 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
         for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
           local_stiffness_disp_background_stress_background(
               i_background_node * 3 + i_dim, j_background_node * 3 + i_dim) +=
-              N_background(i_background_node) *
+              (1.0 - nitsche_average_weight_param) * N_background(i_background_node) *
               d_cauchyndir_dd_background[i_dim](j_background_node, 0) * weight *
               determinant_interface;
 
@@ -591,8 +608,11 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
   {
     auto& [xi_interface, xi_background, weight] = interface_integration_points_[it_gp];
 
-    double determinant_interface = Constraints::EmbeddedMesh::get_determinant_interface_element(
-        xi_interface, this->element_1());
+    // double determinant_interface = Constraints::EmbeddedMesh::get_determinant_interface_element(
+    //     xi_interface, this->element_1());
+    double determinant_interface =
+        Constraints::EmbeddedMesh::get_determinant_interface_element_current_conf<Interface>(
+            xi_interface, this->element_1(), ele1pos_current_);
 
     // Get the shape function matrices
     N_interface.clear();

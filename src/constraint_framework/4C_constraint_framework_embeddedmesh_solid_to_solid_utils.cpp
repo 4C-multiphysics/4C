@@ -256,6 +256,8 @@ double calculate_determinant_interface_element(
   double determinant =
       std::sqrt(metrictensor(0, 0) * metrictensor(1, 1) - metrictensor(0, 1) * metrictensor(1, 0));
 
+  // std::cout << "determinant : " << determinant << std::endl;
+
   return determinant;
 }
 
@@ -276,6 +278,90 @@ double Constraints::EmbeddedMesh::get_determinant_interface_element(
     {
       determinant_interface =
           calculate_determinant_interface_element<Core::FE::CellType::quad4>(eta, element);
+      break;
+    }
+    default:
+      FOUR_C_THROW(
+          "The evaluation of the determinant hasn't been implemented "
+          "for other type of "
+          "elements. ");
+      break;
+  }
+
+  return determinant_interface;
+}
+
+template <typename Interface, Core::FE::CellType celldistype>
+double calculate_determinant_interface_element_current_conf(const Core::LinAlg::Matrix<2, 1>& eta,
+    const Core::Elements::Element& interface_element,
+    const GeometryPair::ElementData<Interface, double>& element_data_surface)
+{
+  const int numnodes = Core::FE::num_nodes(celldistype);
+  Core::LinAlg::Matrix<3, numnodes> xyze;
+
+  // std::cout << "position of nodes : " << std::endl;
+  // Get the position of the nodes of the interface element
+  for (int node_ele1 = 0; node_ele1 < interface_element.num_point(); node_ele1++)
+  {
+    xyze(0, node_ele1) = element_data_surface.element_position_(0 + 3 * node_ele1);
+    xyze(1, node_ele1) = element_data_surface.element_position_(1 + 3 * node_ele1);
+    xyze(2, node_ele1) = element_data_surface.element_position_(2 + 3 * node_ele1);
+
+    // std::cout << xyze(0, node_ele1) << ", " << xyze(1, node_ele1) << ", " << xyze(2, node_ele1)
+    // << std::endl;
+  }
+
+  Core::LinAlg::Matrix<numnodes, 1> funct;
+  Core::LinAlg::Matrix<2, numnodes> deriv;
+
+  // Evaluate the shape functions and its derivatives on eta
+  if (celldistype == Core::FE::CellType::nurbs9)
+  {
+    Core::LinAlg::Matrix<9, 1, double> cp_weights(Core::LinAlg::Initialization::zero);
+    std::vector<Core::LinAlg::SerialDenseVector> myknots(2);
+    std::vector<Core::LinAlg::SerialDenseVector> mypknots(3);
+
+    get_nurbs_information(interface_element, cp_weights, myknots, mypknots);
+
+    Core::FE::Nurbs::nurbs_get_2d_funct_deriv(funct, deriv, eta, myknots, cp_weights, celldistype);
+  }
+  else
+  {
+    Core::FE::shape_function_2d(funct, eta(0), eta(1), celldistype);
+    Core::FE::shape_function_2d_deriv1(deriv, eta(0), eta(1), celldistype);
+  }
+
+  // Calculate the metric tensor and obtain its determinant
+  Core::LinAlg::Matrix<2, 2> metrictensor;
+  Core::LinAlg::Matrix<2, 3> dxyzdrs;
+  dxyzdrs.multiply_nt(deriv, xyze);
+  metrictensor.multiply_nt(dxyzdrs, dxyzdrs);
+  double determinant =
+      std::sqrt(metrictensor(0, 0) * metrictensor(1, 1) - metrictensor(0, 1) * metrictensor(1, 0));
+
+  // std::cout << "determinant : " << determinant << std::endl;
+  return determinant;
+}
+
+template <typename Interface>
+double Constraints::EmbeddedMesh::get_determinant_interface_element_current_conf(
+    Core::LinAlg::Matrix<2, 1> eta, const Core::Elements::Element& element,
+    const GeometryPair::ElementData<Interface, double>& element_data_surface)
+{
+  double determinant_interface;
+
+  switch (element.shape())
+  {
+    case Core::FE::CellType::nurbs9:
+    {
+      determinant_interface = calculate_determinant_interface_element_current_conf<Interface,
+          Core::FE::CellType::nurbs9>(eta, element, element_data_surface);
+      break;
+    }
+    case Core::FE::CellType::quad4:
+    {
+      determinant_interface = calculate_determinant_interface_element_current_conf<Interface,
+          Core::FE::CellType::quad4>(eta, element, element_data_surface);
       break;
     }
     default:
@@ -967,6 +1053,14 @@ namespace Constraints::EmbeddedMesh
   initialize_template_assemble_local_nitsche_contributions(t_quad4, t_nurbs27);
   initialize_template_assemble_local_nitsche_contributions(t_nurbs9, t_nurbs27);
   initialize_template_assemble_local_nitsche_contributions(t_nurbs9, t_wedge6);
+
+#define initialize_template_calculate_determinant_interface_element_current_conf(Interface) \
+  template double get_determinant_interface_element_current_conf<Interface>(                \
+      Core::LinAlg::Matrix<2, 1> eta, const Core::Elements::Element& element,               \
+      const GeometryPair::ElementData<Interface, double>& element_data_surface);
+
+  initialize_template_calculate_determinant_interface_element_current_conf(t_quad4);
+  initialize_template_calculate_determinant_interface_element_current_conf(t_nurbs9);
 }  // namespace Constraints::EmbeddedMesh
 
 FOUR_C_NAMESPACE_CLOSE
