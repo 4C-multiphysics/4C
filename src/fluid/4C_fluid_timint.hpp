@@ -65,148 +65,120 @@ namespace FLD
     std::shared_ptr<const Core::LinAlg::Vector<double>> initial_guess() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> rhs() override = 0;
     std::shared_ptr<const Core::LinAlg::Vector<double>> true_residual() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<Core::LinAlg::Vector<double>> write_access_velnp() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> velnp() override = 0;
     std::shared_ptr<const Core::LinAlg::Vector<double>> velaf() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> veln() override = 0;
     std::shared_ptr<const Core::LinAlg::Vector<double>> velnm() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> accnp() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> accn() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> accnm() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> accam() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> scaaf() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> scaam() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> hist() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> grid_vel() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> grid_veln() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> dispnp() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> dispn() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> convective_vel() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> fs_vel() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<Core::LinAlg::Vector<double>> std_veln() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<Core::LinAlg::Vector<double>> std_velnp() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<Core::LinAlg::Vector<double>> std_velaf() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Map> dof_row_map() override { return dof_row_map(0); }
     std::shared_ptr<const Core::LinAlg::Map> dof_row_map(unsigned nds) override;
     std::shared_ptr<Core::LinAlg::SparseMatrix> system_matrix() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<Core::LinAlg::SparseMatrix> system_sparse_matrix() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> block_system_matrix() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> shape_derivatives() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     const std::shared_ptr<Core::FE::Discretization>& discretization() override { return discret_; }
     std::shared_ptr<const Core::DOFSets::DofSet> dof_set() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Vector<double>> stepinc() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::MapExtractor> get_dbc_map_extractor() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     void integrate() override = 0;
     void prepare_time_step() override
@@ -224,7 +196,6 @@ namespace FLD
     virtual bool convergence_check(int itnum, int itmax, const double ittol)
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return false;
     }
     void iter_update(const std::shared_ptr<const Core::LinAlg::Vector<double>> increment) override
     {
@@ -250,7 +221,6 @@ namespace FLD
     std::shared_ptr<Core::LinAlg::MapExtractor> get_vel_press_splitter() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
 
 
@@ -264,22 +234,18 @@ namespace FLD
     std::shared_ptr<Core::LinAlg::Solver> linear_solver() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Map> inner_velocity_row_map() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }  // only used for FSI
     std::shared_ptr<const Core::LinAlg::Map> velocity_row_map() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<const Core::LinAlg::Map> pressure_row_map() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
 
     /// preparations for Krylov space projection
@@ -302,41 +268,34 @@ namespace FLD
         std::shared_ptr<const Core::LinAlg::Map> mm, const int nds_master = 0) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     /// scaling factor needed to convert the residual to real forces
-    double residual_scaling() const override = 0;
+    [[nodiscard]] double residual_scaling() const override = 0;
 
-    double time_scaling() const override
+    [[nodiscard]] double time_scaling() const override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return 1337.0;
     }
 
     /// return time integration factor
-    double tim_int_param() const override = 0;
+    [[nodiscard]] double tim_int_param() const override = 0;
 
     /// communication object at the interface (neglecting pressure dofs)
-    std::shared_ptr<FLD::Utils::MapExtractor> const& interface() const override
+    [[nodiscard]] std::shared_ptr<FLD::Utils::MapExtractor> const& interface() const override
     {
       FOUR_C_THROW("Implemented in the fluid wrapper and derived classes");
-      static std::shared_ptr<FLD::Utils::MapExtractor> ret = nullptr;
-      return ret;
     }
 
     /// communication object at the interface needed for fpsi problems (including pressure dofs)
-    std::shared_ptr<FLD::Utils::MapExtractor> const& fpsi_interface() const override
+    [[nodiscard]] std::shared_ptr<FLD::Utils::MapExtractor> const& fpsi_interface() const override
     {
       FOUR_C_THROW("Implemented in the fluid wrapper and derived classes");
-      static std::shared_ptr<FLD::Utils::MapExtractor> ret = nullptr;
-      return ret;
     }
 
     void read_restart(int step) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     void set_restart(const int step, const double time,
@@ -347,12 +306,11 @@ namespace FLD
         std::shared_ptr<const Core::LinAlg::Vector<double>> readaccn) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
-    double time() const override { return time_; }
-    int step() const override { return step_; }
-    double dt() const override { return dta_; }
+    [[nodiscard]] double time() const override { return time_; }
+    [[nodiscard]] int step() const override { return step_; }
+    [[nodiscard]] double dt() const override { return dta_; }
 
     //! increment time and step value
     void increment_time_and_step() override;
@@ -396,7 +354,6 @@ namespace FLD
     void set_dt(const double dtnew) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     //! set time and step
@@ -405,7 +362,6 @@ namespace FLD
         ) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     /*!
@@ -419,7 +375,6 @@ namespace FLD
     void reset_step() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     /*!
@@ -435,129 +390,111 @@ namespace FLD
     void reset_time(const double dtold) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     virtual void lift_drag() const = 0;
-    double eval_time() const override
+    [[nodiscard]] double eval_time() const override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return 0.0;
     }
     void redistribute(const std::shared_ptr<Core::LinAlg::Graph> nodegraph) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     std::shared_ptr<Core::LinAlg::Vector<double>> extract_interface_forces() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     virtual std::shared_ptr<Core::LinAlg::Vector<double>> extract_interface_forces_robin()
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<Core::LinAlg::Vector<double>> extract_interface_velnp() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<Core::LinAlg::Vector<double>> extract_interface_veln() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     std::shared_ptr<Core::LinAlg::Vector<double>> extract_free_surface_veln() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
     void apply_interface_velocities(std::shared_ptr<Core::LinAlg::Vector<double>> ivel) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
     virtual void apply_interface_robin_value(std::shared_ptr<Core::LinAlg::Vector<double>> ivel,
         std::shared_ptr<Core::LinAlg::Vector<double>> iforce)
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
     /// Apply initial mesh displacement
     void apply_initial_mesh_displacement(
         std::shared_ptr<const Core::LinAlg::Vector<double>> initfluiddisp) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
     void apply_mesh_displacement(
         std::shared_ptr<const Core::LinAlg::Vector<double>> fluiddisp) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
     void apply_mesh_displacement_increment(
         std::shared_ptr<const Core::LinAlg::Vector<double>> dispstepinc) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
     void apply_mesh_velocity(std::shared_ptr<const Core::LinAlg::Vector<double>> gridvel) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     void displacement_to_velocity(std::shared_ptr<Core::LinAlg::Vector<double>> fcx) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
     void velocity_to_displacement(std::shared_ptr<Core::LinAlg::Vector<double>> fcx) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     void free_surf_displacement_to_velocity(
         std::shared_ptr<Core::LinAlg::Vector<double>> fcx) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
     void free_surf_velocity_to_displacement(
         std::shared_ptr<Core::LinAlg::Vector<double>> fcx) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
-    int itemax() const override { return itemax_; }
+    [[nodiscard]] int itemax() const override { return itemax_; }
     void set_itemax(int itemax) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     /*!
     \brief return type of time integration scheme
 
     */
-    Inpar::FLUID::TimeIntegrationScheme tim_int_scheme() const override { return timealgo_; }
+    [[nodiscard]] Inpar::FLUID::TimeIntegrationScheme tim_int_scheme() const override
+    {
+      return timealgo_;
+    }
 
     std::shared_ptr<Core::LinAlg::Vector<double>> integrate_interface_shape() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
 
     void use_block_matrix(bool splitmatrix) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     /// linear fluid solve with just a interface load
@@ -571,27 +508,23 @@ namespace FLD
         std::shared_ptr<Core::LinAlg::Vector<double>> ivel) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
 
     std::shared_ptr<Core::Utils::ResultTest> create_field_test() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
 
     std::shared_ptr<const Core::LinAlg::Vector<double>> extract_velocity_part(
         std::shared_ptr<const Core::LinAlg::Vector<double>> velpres) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
 
     std::shared_ptr<const Core::LinAlg::Vector<double>> extract_pressure_part(
         std::shared_ptr<const Core::LinAlg::Vector<double>> velpres) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
     }
 
     /// set initial flow field
@@ -605,14 +538,12 @@ namespace FLD
         const PoroElast::InitialField initfield, const int startfuncno) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     /// apply external forces to the fluid
     void apply_external_forces(std::shared_ptr<Core::LinAlg::MultiVector<double>> fext) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     /// apply external forces to the fluid
@@ -620,21 +551,18 @@ namespace FLD
         const std::shared_ptr<const Core::LinAlg::Vector<double>> contributing_vector) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     /// expand dirichlet set
     void add_dirich_cond(const std::shared_ptr<const Core::LinAlg::Map> maptoadd) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
-    };
+    }
 
     /// contract dirichlet set
     void remove_dirich_cond(const std::shared_ptr<const Core::LinAlg::Map> maptoremove) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     ///  set scalar fields within outer iteration loop
@@ -669,50 +597,47 @@ namespace FLD
     void set_velocity_field(std::shared_ptr<const Core::LinAlg::Vector<double>> velnp) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     /// provide access to the turbulence statistic manager
     std::shared_ptr<FLD::TurbulenceStatisticManager> turbulence_statistic_manager() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
-    };
+    }
     /// provide access to the box filter for dynamic Smagorinsky model
     std::shared_ptr<FLD::DynSmagFilter> dyn_smag_filter() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return nullptr;
-    };
-    std::shared_ptr<FLD::Vreman> vreman() override { return nullptr; };
+    }
+    std::shared_ptr<FLD::Vreman> vreman() override { return nullptr; }
 
     /// update velocity increment after Newton step
     void update_newton(std::shared_ptr<const Core::LinAlg::Vector<double>> vel) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     /// reset data for restart of simulation at beginning
     void reset(int numsteps = 1, int iter = -1) override
     {
       FOUR_C_THROW("reset function not implemented for this fluid adapter");
-    };
+    }
 
     // set fluid displacement vector due to biofilm growth
     void set_fld_gr_disp(std::shared_ptr<Core::LinAlg::Vector<double>> fluid_growth_disp) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
     void calculate_error() override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
-      return;
     }
 
-    Inpar::FLUID::PhysicalType physical_type() const override { return physicaltype_; }
+    [[nodiscard]] Inpar::FLUID::PhysicalType physical_type() const override
+    {
+      return physicaltype_;
+    }
 
    protected:
     //! fluid discretization

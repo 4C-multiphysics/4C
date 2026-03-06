@@ -33,7 +33,6 @@ FLD::TimInt::TimInt(const std::shared_ptr<Core::FE::Discretization>& discret,
       params_(params),
       output_(output),
       runtime_output_writer_(nullptr),
-      runtime_output_params_(),
       time_(0.0),
       step_(0),
       dta_(params_->get<double>("time step size")),
@@ -84,8 +83,6 @@ void FLD::TimInt::increment_time_and_step()
 {
   step_ += 1;
   time_ += dta_;
-
-  return;
 }
 
 FOUR_C_NAMESPACE_CLOSE

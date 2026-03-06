@@ -16,15 +16,11 @@
 #include "4C_fluid_turbulence_input.hpp"
 #include "4C_inpar_fluid.hpp"
 #include "4C_linalg_blocksparsematrix.hpp"
-#include "4C_linalg_utils_sparse_algebra_assemble.hpp"
-#include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_vector.hpp"
-#include "4C_utils_parameter_list.fwd.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
 
 #include <ctime>
-#include <iostream>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -127,17 +123,13 @@ namespace FLD
     \brief Print information about current time step to screen
 
     */
-    virtual void print_time_step_info()
-    {
-      FOUR_C_THROW("you are in the base class");
-      return;
-    }
+    virtual void print_time_step_info() { FOUR_C_THROW("you are in the base class"); }
 
     /*!
     \brief Set theta_ to its value, dependent on integration method for GenAlpha and BDF2
 
     */
-    virtual void set_theta() { return; }
+    virtual void set_theta() {}
 
     /*!
     \brief Set the part of the righthandside belonging to the last
@@ -222,7 +214,6 @@ namespace FLD
         std::shared_ptr<Core::LinAlg::Vector<double>> vel,
         std::shared_ptr<Core::LinAlg::Vector<double>> res)
     {
-      return;
     }
 
     /*!
@@ -403,10 +394,36 @@ namespace FLD
 
 
     /*!
-    \brief Update the solution after convergence of the nonlinear
-           iteration. Current solution becomes old solution of next
-           timestep.
-    */
+     * @brief Update the solution after convergence of the nonlinear iteration.
+     *
+     * Current solution becomes most recent solution of next timestep
+     *
+     * One-step-Theta: (step>1)
+     *
+     *   accn_  = (velnp_-veln_) / (Theta * dt) - (1/Theta -1) * accn_"(n+1)
+     *   velnm_ =veln_
+     *   veln_  =velnp_
+     *
+     * BDF2:           (step>1)
+     *                2*dt(n)+dt(n-1)              dt(n)+dt(n-1)
+     *   accn_   = --------------------- velnp_ - --------------- veln_
+     *             dt(n)*[dt(n)+dt(n-1)]           dt(n)*dt(n-1)
+     *
+     *                 dt(n)
+     *          + ----------------------- velnm_
+     *            dt(n-1)*[dt(n)+dt(n-1)]
+     *
+     *   velnm_ =veln_
+     *   veln_  =velnp_
+     *
+     * BDF2 and  One-step-Theta: (step==1)
+     *
+     * The given formulas are only valid from the second timestep. In the first step, the
+     * acceleration is calculated simply by
+     *
+     *   accn_  = (velnp_-veln_) / (dt)
+     *
+     */
     virtual void time_update();
 
     /*!
@@ -429,7 +446,7 @@ namespace FLD
     //@{
 
     //! access to time step size of previous time step
-    virtual double dt_previous() const { return dtp_; }
+    [[nodiscard]] virtual double dt_previous() const { return dtp_; }
 
     //! set time step size
     void set_dt(const double dtnew) override;
@@ -451,8 +468,6 @@ namespace FLD
       accnp_->update(1.0, *accn_, 0.0);
       velnp_->update(1.0, *veln_, 0.0);
       dispnp_->update(1.0, *dispn_, 0.0);
-
-      return;
     }
 
     /*! \brief Reset time and step in case that a time step has to be repeated
@@ -468,29 +483,26 @@ namespace FLD
     void reset_time(const double dtold) override { set_time_step(time() - dtold, step() - 1); }
 
     //! Give order of accuracy
-    virtual int method_order_of_accuracy() const
+    [[nodiscard]] virtual int method_order_of_accuracy() const
     {
       return std::min(method_order_of_accuracy_vel(), method_order_of_accuracy_pres());
     }
 
     //! Give local order of accuracy of velocity part
-    virtual int method_order_of_accuracy_vel() const
+    [[nodiscard]] virtual int method_order_of_accuracy_vel() const
     {
       FOUR_C_THROW("Not implemented in base class. May be overwritten by derived class.");
-      return 0;
     }
 
     //! Give local order of accuracy of pressure part
-    virtual int method_order_of_accuracy_pres() const
+    [[nodiscard]] virtual int method_order_of_accuracy_pres() const
     {
       FOUR_C_THROW("Not implemented in base class. May be overwritten by derived class.");
-      return 0;
     }
     //! Return linear error coefficient of velocity
-    virtual double method_lin_err_coeff_vel() const
+    [[nodiscard]] virtual double method_lin_err_coeff_vel() const
     {
       FOUR_C_THROW("Not implemented in base class. May be overwritten by derived class.");
-      return 0;
     }
 
     //@}
@@ -751,7 +763,7 @@ namespace FLD
     virtual std::shared_ptr<Core::LinAlg::MapExtractor> vel_pres_splitter()
     {
       return velpressplitter_;
-    };
+    }
     std::shared_ptr<const Core::LinAlg::Map> velocity_row_map() override;
     std::shared_ptr<const Core::LinAlg::Map> pressure_row_map() override;
     //  virtual void SetMeshMap(std::shared_ptr<const Core::LinAlg::Map> mm);
@@ -768,13 +780,13 @@ namespace FLD
      *  \sa trueresidual_
      *  \sa TrueResidual()
      */
-    double residual_scaling() const override = 0;
+    [[nodiscard]] double residual_scaling() const override = 0;
 
     /*!
     \brief return scheme-specific time integration parameter
 
     */
-    double tim_int_param() const override = 0;
+    [[nodiscard]] double tim_int_param() const override = 0;
 
     /*!
     \brief compute values at intermediate time steps for gen.-alpha
@@ -785,7 +797,6 @@ namespace FLD
     virtual void gen_alpha_intermediate_values(std::shared_ptr<Core::LinAlg::Vector<double>>& vecnp,
         std::shared_ptr<Core::LinAlg::Vector<double>>& vecn)
     {
-      return;
     }
 
     /// update velocity increment after Newton step
@@ -820,7 +831,6 @@ namespace FLD
     void set_velocity_field(std::shared_ptr<const Core::LinAlg::Vector<double>> setvelnp) override
     {
       velnp_->update(1.0, *setvelnp, 0.0);
-      return;
     }
 
     /// provide access to turbulence statistics manager
@@ -948,7 +958,7 @@ namespace FLD
     \brief evaluate and update problem-specific boundary conditions
 
     */
-    virtual void do_problem_specific_boundary_conditions() { return; }
+    virtual void do_problem_specific_boundary_conditions() {}
 
     ///< Print stabilization details to screen
     virtual void print_stabilization_details() const;
@@ -1021,22 +1031,30 @@ namespace FLD
     virtual void apply_dirichlet_to_system();
 
     /*!
-    \brief apply weak or mixed hybrid Dirichlet boundary conditions to system of equations
-
-    */
+     * @brief apply weak or mixed hybrid Dirichlet boundary conditions to system of equations
+     *
+     * Application of nonlinear boundary conditions to system, such as
+     * 1) Impedance conditions
+     * 2) Neumann inflow boundary conditions
+     * 3) flow-dependent pressure boundary conditions
+     * 4) weak Dirichlet boundary conditions
+     * 5) mixed/hybrid Dirichlet boundary conditions
+     * 6) Slip Supplemental Curved Boundary conditions
+     * 7) Navier-slip boundary conditions
+     */
     virtual void apply_nonlinear_boundary_conditions();
 
     /*!
     \brief update acceleration for generalized-alpha time integration
 
     */
-    virtual void gen_alpha_update_acceleration() { return; }
+    virtual void gen_alpha_update_acceleration() {}
 
     /*!
     \brief compute values at intermediate time steps for gen.-alpha
 
     */
-    virtual void gen_alpha_intermediate_values() { return; }
+    virtual void gen_alpha_intermediate_values() {}
 
     //! Predict velocities which satisfy exactly the Dirichlet BCs
     //! and the linearised system at the previously converged state.
@@ -1079,7 +1097,7 @@ namespace FLD
       \brief add problem dependent vectors
 
      */
-    virtual void add_problem_dependent_vectors() { return; };
+    virtual void add_problem_dependent_vectors() {}
 
     /*!
     \brief Initialize forcing

@@ -31,6 +31,7 @@
 #include "4C_linalg.hpp"
 #include "4C_linalg_krylov_projector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linear_solver_method.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_mat_list.hpp"

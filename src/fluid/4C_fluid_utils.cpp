@@ -17,12 +17,12 @@
 #include "4C_inpar_fluid.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_mapextractor.hpp"
+#include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_linear_solver_method_parameters.hpp"
 
-#include <stdio.h>
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
 #include <vector>
@@ -461,8 +461,6 @@ void FLD::Utils::StressManager::calc_sep_enr(std::shared_ptr<Core::LinAlg::Spars
     sep_enr_ = Core::LinAlg::matrix_multiply(Ptent, false, Ptent, true);
     sep_enr_->complete();
   }
-
-  return;
 }
 
 
