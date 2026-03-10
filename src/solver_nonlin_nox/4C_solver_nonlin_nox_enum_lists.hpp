@@ -24,6 +24,7 @@ namespace NOX
     enum SolutionType : int
     {
       sol_unknown,
+      sol_generic,             ///< generic problem, for generic linear systems
       sol_structure,           ///< structural problem
       sol_contact,             ///< contact problem
       sol_meshtying,           ///< meshtying problem
@@ -38,6 +39,8 @@ namespace NOX
     {
       switch (type)
       {
+        case sol_generic:
+          return "Generic";
         case sol_structure:
           return "Structure";
         case sol_contact:
@@ -60,7 +63,9 @@ namespace NOX
     inline SolutionType string_to_solution_type(const std::string& name)
     {
       SolutionType type = sol_unknown;
-      if (name == "Structure")
+      if (name == "Generic")
+        type = sol_generic;
+      else if (name == "Structure")
         type = sol_structure;
       else if (name == "Contact")
         type = sol_contact;
@@ -138,6 +143,7 @@ namespace NOX
       //! supported LinearSystem types
       enum LinearSystemType : int
       {
+        linear_system_generic,
         linear_system_structure,
         linear_system_structure_meshtying,
         linear_system_structure_contact,
@@ -258,6 +264,7 @@ namespace NOX
       //! Supported quantity names for distinguished status tests
       enum QuantityType : int
       {
+        quantity_generic,         ///< generic quantity
         quantity_unknown,         ///< unknown quantity (dummy)
         quantity_structure,       ///< check structural quantities
         quantity_contact_normal,  ///< check (semi-smooth) contact quantities (normal/frictionless)
@@ -277,6 +284,8 @@ namespace NOX
       {
         switch (type)
         {
+          case quantity_generic:
+            return "Generic";
           case quantity_structure:
             return "Structure";
           case quantity_contact_normal:
@@ -310,7 +319,9 @@ namespace NOX
       {
         QuantityType type = quantity_unknown;
 
-        if (name == "Structure")
+        if (name == "Generic")
+          type = quantity_generic;
+        else if (name == "Structure")
           type = quantity_structure;
         else if (name == "Contact-Normal")
           type = quantity_contact_normal;

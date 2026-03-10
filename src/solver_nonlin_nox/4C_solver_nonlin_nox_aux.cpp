@@ -84,8 +84,12 @@ NOX::Nln::LinSystem::LinearSystemType NOX::Nln::Aux::get_linear_system_type(
   {
     case 1:
     {
+      if (linsolvers.find(NOX::Nln::sol_generic) != ci_end)
+      {
+        return NOX::Nln::LinSystem::linear_system_generic;
+      }
       // --- Pure structural case (+ spring dashpot)
-      if (linsolvers.find(NOX::Nln::sol_structure) != ci_end)
+      else if (linsolvers.find(NOX::Nln::sol_structure) != ci_end)
       {
         return NOX::Nln::LinSystem::linear_system_structure;
       }
