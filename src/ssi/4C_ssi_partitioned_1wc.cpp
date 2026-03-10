@@ -320,7 +320,8 @@ bool SSI::SSIPart1WCScatraToSolid::finished() const
   if (diff_time_step_size())
     return !not_finished();
   else
-    return !(not_finished() and scatra_field()->not_finished());
+    return !(
+        not_finished() and scatra_field()->not_finished() and structure_field()->not_finished());
 }
 
 FOUR_C_NAMESPACE_CLOSE

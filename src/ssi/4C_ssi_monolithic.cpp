@@ -891,7 +891,7 @@ void SSI::SsiMono::timeloop()
   if (step() == 0) prepare_time_loop();
 
   // time loop
-  while (not_finished() and scatra_field()->not_finished())
+  while (not_finished() and scatra_field()->not_finished() and structure_field()->not_finished())
   {
     TEUCHOS_FUNC_TIME_MONITOR("SSI mono: solve time step");
     // prepare time step

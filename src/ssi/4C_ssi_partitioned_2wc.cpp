@@ -100,7 +100,7 @@ void SSI::SSIPart2WC::timeloop()
   prepare_time_loop();
 
   // time loop
-  while (not_finished() and scatra_field()->not_finished())
+  while (not_finished() and scatra_field()->not_finished() and structure_field()->not_finished())
   {
     prepare_time_step();
 
