@@ -16,6 +16,7 @@
 #include "4C_utils_shared_ptr_from_ref.hpp"
 
 #include <Epetra_Operator.h>
+#include <Thyra_LinearOpBase_decl.hpp>
 
 #include <memory>
 #include <vector>
