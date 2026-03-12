@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_constraint_framework_embeddedmesh_params.hpp"
 #include "4C_constraint_framework_submodelevaluator_base.hpp"
 #include "4C_fem_discretization.hpp"
 
@@ -18,7 +19,8 @@ FOUR_C_NAMESPACE_OPEN
 namespace Constraints::EmbeddedMesh
 {
   class SolidToSolidMortarManager;
-}
+  class SolidToSolidNitscheManager;
+}  // namespace Constraints::EmbeddedMesh
 
 namespace Constraints::SubmodelEvaluator
 {
@@ -54,6 +56,10 @@ namespace Constraints::SubmodelEvaluator
       // Nothing implemented
     }
 
+    /*! Perform basic checks of the input conditions and parameters
+     */
+    void check_input();
+
     //! derived
     void runtime_output_step_state(std::pair<double, int> output_time_and_step) override;
 
@@ -61,8 +67,14 @@ namespace Constraints::SubmodelEvaluator
     //@}
 
    private:
+    //! Couple strategy between overlapping and underlying meshes
+    Constraints::EmbeddedMesh::EmbeddedMeshParams embedded_mesh_coupling_params_;
+
     //! Pointer to the mortar manager. This object stores the relevant mortar matrices.
     std::shared_ptr<Constraints::EmbeddedMesh::SolidToSolidMortarManager> mortar_manager_;
+
+    //! Pointer to the Nitsche manager.
+    std::shared_ptr<Constraints::EmbeddedMesh::SolidToSolidNitscheManager> nitsche_manager_;
   };
 }  // namespace Constraints::SubmodelEvaluator
 
