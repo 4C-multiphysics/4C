@@ -10,6 +10,8 @@
 #include "4C_linalg_utils_tensor_interpolation.hpp"
 
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_symmetric_tensor.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -557,6 +559,75 @@ namespace
       EXPECT_NEAR(interp_gradient_standard(i, 0), ref_eigenval_gradient, 1.0e-4);
       EXPECT_NEAR(interp_gradient_specialized(i, 0), ref_eigenval_gradient, 1.0e-4);
     }
+  }
+
+
+  TEST(LinalgTensorInterpolationTest, SymmetricSPDInterpolationDiagonal)
+  {
+    {
+      const std::array<Core::LinAlg::SymmetricTensor<double, 3, 3>, 3> all_same_tensors = {
+          Core::LinAlg::TensorGenerators::diagonal(std::array{10.0, 0.5, 2.0}),
+          Core::LinAlg::TensorGenerators::diagonal(std::array{10.0, 0.5, 2.0}),
+          Core::LinAlg::TensorGenerators::diagonal(std::array{10.0, 0.5, 2.0})};
+
+      const std::array<double, 3> weights = {0.1, 0.5, 0.4};
+
+      const Core::LinAlg::SymmetricTensor<double, 3, 3> interpolated_tensor =
+          Core::LinAlg::interpolate_spd(weights, all_same_tensors);
+
+      // The result should be the same as the input tensors
+      FOUR_C_EXPECT_NEAR(interpolated_tensor, all_same_tensors[0], 1.0e-12);
+    }
+
+    {
+      const std::array<Core::LinAlg::SymmetricTensor<double, 3, 3>, 3> ref_tensors = {
+          Core::LinAlg::TensorGenerators::diagonal(std::array{10.0, 0.5, 2.0}),
+          Core::LinAlg::TensorGenerators::diagonal(std::array{12.0, 0.4, 3.0}),
+          Core::LinAlg::TensorGenerators::diagonal(std::array{13.0, 0.3, 4.0})};
+
+      const std::array<double, 3> weights = {0.1, 0.5, 0.4};
+
+      const Core::LinAlg::SymmetricTensor<double, 3, 3> interpolated_tensor =
+          Core::LinAlg::interpolate_spd(weights, ref_tensors);
+
+      // This should still be diagonal, with log-interpolated eigenvalues
+      FOUR_C_EXPECT_NEAR(interpolated_tensor,
+          Core::LinAlg::TensorGenerators::diagonal(std::array{12.16656453, 0.36456544, 3.23212109}),
+          1.0e-7);
+    }
+  }
+
+
+
+  TEST(LinalgTensorInterpolationTest, SymmetricSPDInterpolationPureRotation)
+  {
+    const std::array<Core::LinAlg::SymmetricTensor<double, 3, 3>, 3> tensors = {
+        Core::LinAlg::assume_symmetry(Core::LinAlg::Tensor<double, 3, 3>{
+            {{0.7895765126664778, 1.013576418177698, 1.1044280206330133},
+                {1.013576418177698, 1.4862383036989457, 1.564094529544559},
+                {1.1044280206330133, 1.564094529544559, 1.7091488088039124}}}),
+        Core::LinAlg::assume_symmetry(Core::LinAlg::Tensor<double, 3, 3>{
+            {{0.8431577941808065, 0.9106647034217905, 1.25714256472096},
+                {0.9106647034217906, 1.1355705284667736, 1.465546721583386},
+                {1.25714256472096, 1.4655467215833862, 2.0062353025217563}}}),
+        Core::LinAlg::assume_symmetry(Core::LinAlg::Tensor<double, 3, 3>{
+            {{0.35134275260569925, 0.7419684187562707, 0.7016200682920156},
+                {0.7419684187562707, 1.9807063716625941, 1.7714631959766316},
+                {0.7016200682920154, 1.7714631959766318, 1.6529145009010444}}}),
+    };
+
+    const std::array<double, 3> weights = {0.2, 0.5, 0.3};
+
+    const Core::LinAlg::SymmetricTensor<double, 3, 3> interpolated_tensor =
+        Core::LinAlg::interpolate_spd(weights, tensors);
+
+    FOUR_C_EXPECT_NEAR(interpolated_tensor,
+        (Core::LinAlg::Tensor<double, 3, 3>{{
+            {0.674, 0.916, 1.070},
+            {0.916, 1.451, 1.605},
+            {1.070, 1.605, 1.860},
+        }}),
+        1.0e-3);
   }
 
 }  // namespace
