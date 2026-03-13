@@ -96,7 +96,10 @@ namespace Particle
     Young,                  //!< young's modulus
     InitialConnectedBonds,  //!< initial active bonds
     CurrentConnectedBonds,  //!< remained active bonds
-    PDDamageVariable        //!< damage level at pd node
+    PDDamageVariable,       //!< damage level at pd node
+    /*---------------------------------------------------------------------------*/
+    // open boundary phases
+    OpenBoundaryId  //!< open boundary id
     /*---------------------------------------------------------------------------*/
   };
 

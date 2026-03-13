@@ -64,7 +64,7 @@ void Particle::read_particles(Core::IO::InputFile& input, const std::string& sec
         // optional particle parameters
         const std::unordered_map<std::string, Particle::ParticleState> additional_states = {
             {"RAD", Particle::Radius}, {"RIGIDCOLOR", Particle::RigidBodyColor},
-            {"PDBODYID", Particle::PDBodyId}};
+            {"PDBODYID", Particle::PDBodyId}, {"BOUNDARYID", Particle::OpenBoundaryId}};
 
         while (!parser.at_end())
         {

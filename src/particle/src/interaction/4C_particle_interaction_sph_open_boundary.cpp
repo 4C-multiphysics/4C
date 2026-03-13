@@ -27,11 +27,12 @@ FOUR_C_NAMESPACE_OPEN
 /*---------------------------------------------------------------------------*
  | definitions                                                               |
  *---------------------------------------------------------------------------*/
-Particle::SPHOpenBoundaryBase::SPHOpenBoundaryBase(const Teuchos::ParameterList& params)
-    : params_sph_(params),
+Particle::SPHOpenBoundaryBase::SPHOpenBoundaryBase(double initialparticlespacing, int boundary_id)
+    : initialparticlespacing_(initialparticlespacing),
       prescribedstatefunctid_(-1),
       fluidphase_(Particle::Phase1),
-      openboundaryphase_(Particle::DirichletPhase)
+      openboundaryphase_(Particle::DirichletPhase),
+      boundary_id_(boundary_id)
 {
   // empty constructor
 }
@@ -84,14 +85,11 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
   // generated particle objects
   std::vector<Particle::ParticleObjShrdPtr> particlesgenerated;
 
-  // get initial particle spacing
-  const double initialparticlespacing = params_sph_.get<double>("INITIALPARTICLESPACING");
-
   // number of particles per direction
-  const int numparticleperdir = std::round(maxinteractiondistance / initialparticlespacing);
+  const int numparticleperdir = std::round(maxinteractiondistance / initialparticlespacing_);
 
   // tolerance for phase change of open boundary particle to fluid particle
-  const double toleranceopenboundarytofluid = 0.1 * initialparticlespacing;
+  const double toleranceopenboundarytofluid = 0.1 * initialparticlespacing_;
 
   // get container of owned particles of open boundary phase
   Particle::ParticleContainer* container_i =
@@ -100,6 +98,11 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
   // iterate over particles in container
   for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
   {
+    // get particle boundary id
+    const double* boundary_id_i =
+        container_i->get_ptr_to_state(Particle::OpenBoundaryId, particle_i);
+    if (static_cast<int>(*boundary_id_i) != boundary_id_) continue;
+
     // get pointer to particle states
     double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
 
@@ -124,7 +127,7 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
 
       // shift open boundary particle back
       ParticleUtils::vec_add_scale(
-          pos_i, numparticleperdir * initialparticlespacing, outwardnormal_.data());
+          pos_i, numparticleperdir * initialparticlespacing_, outwardnormal_.data());
     }
     // open boundary particle more than maximum interaction distance away from plane
     else if (distancefromplane > maxinteractiondistance)
@@ -193,18 +196,18 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
   particleengineinterface_->hand_over_particles_to_be_inserted(particlestoinsert);
 }
 
-Particle::SPHOpenBoundaryDirichlet::SPHOpenBoundaryDirichlet(const Teuchos::ParameterList& params)
-    : SPHOpenBoundaryBase::SPHOpenBoundaryBase(params)
+Particle::SPHOpenBoundaryDirichlet::SPHOpenBoundaryDirichlet(
+    const Teuchos::ParameterList& params, double initialparticlespacing, int boundary_id)
+    : SPHOpenBoundaryBase::SPHOpenBoundaryBase(initialparticlespacing, boundary_id)
 {
-  prescribedstatefunctid_ = params_sph_.get<int>("DIRICHLET_FUNCT");
+  prescribedstatefunctid_ = params.get<int>("FUNCT");
 
   if (not(prescribedstatefunctid_ > 0)) FOUR_C_THROW("no function id of prescribed state set!");
 
   // init outward normal
   {
     double value;
-    std::istringstream stream(
-        Teuchos::getNumericStringParameter(params_sph_, "DIRICHLET_OUTWARD_NORMAL"));
+    std::istringstream stream(Teuchos::getNumericStringParameter(params, "OUTWARD_NORMAL"));
     while (stream >> value) outwardnormal_.push_back(value);
 
     // safety check
@@ -221,8 +224,7 @@ Particle::SPHOpenBoundaryDirichlet::SPHOpenBoundaryDirichlet(const Teuchos::Para
   // init plain point
   {
     double value;
-    std::istringstream stream(
-        Teuchos::getNumericStringParameter(params_sph_, "DIRICHLET_PLANE_POINT"));
+    std::istringstream stream(Teuchos::getNumericStringParameter(params, "PLANE_POINT"));
     while (stream >> value) planepoint_.push_back(value);
 
     // safety check
@@ -279,6 +281,11 @@ void Particle::SPHOpenBoundaryDirichlet::prescribe_open_boundary_states(const do
   // iterate over particles in container
   for (int particle_i = 0; particle_i < particlestored; ++particle_i)
   {
+    // get particle boundary id
+    const double* boundary_id_i =
+        container_i->get_ptr_to_state(Particle::OpenBoundaryId, particle_i);
+    if (static_cast<int>(*boundary_id_i) != boundary_id_) continue;
+
     // get pointer to particle states
     const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
     double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
@@ -368,6 +375,11 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
   // iterate over particles in container
   for (int particle_k = 0; particle_k < particlestored; ++particle_k)
   {
+    // get particle boundary id
+    const double* boundary_id_k =
+        container_k->get_ptr_to_state(Particle::OpenBoundaryId, particle_k);
+    if (static_cast<int>(*boundary_id_k) != boundary_id_) continue;
+
     // get pointer to particle states
     double* dens_k = container_k->get_ptr_to_state(Particle::Density, particle_k);
     double* press_k = container_k->get_ptr_to_state(Particle::Pressure, particle_k);
@@ -385,16 +397,16 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
   particleengineinterface_->refresh_particles_of_specific_states_and_types(statestorefresh_);
 }
 
-Particle::SPHOpenBoundaryNeumann::SPHOpenBoundaryNeumann(const Teuchos::ParameterList& params)
-    : SPHOpenBoundaryBase::SPHOpenBoundaryBase(params)
+Particle::SPHOpenBoundaryNeumann::SPHOpenBoundaryNeumann(
+    const Teuchos::ParameterList& params, double initialparticlespacing, int boundary_id)
+    : SPHOpenBoundaryBase::SPHOpenBoundaryBase(initialparticlespacing, boundary_id)
 {
-  prescribedstatefunctid_ = params_sph_.get<int>("NEUMANN_FUNCT");
+  prescribedstatefunctid_ = params.get<int>("FUNCT");
 
   // init outward normal
   {
     double value;
-    std::istringstream stream(
-        Teuchos::getNumericStringParameter(params_sph_, "NEUMANN_OUTWARD_NORMAL"));
+    std::istringstream stream(Teuchos::getNumericStringParameter(params, "OUTWARD_NORMAL"));
     while (stream >> value) outwardnormal_.push_back(value);
 
     // safety check
@@ -412,8 +424,7 @@ Particle::SPHOpenBoundaryNeumann::SPHOpenBoundaryNeumann(const Teuchos::Paramete
   // init plain point
   {
     double value;
-    std::istringstream stream(
-        Teuchos::getNumericStringParameter(params_sph_, "NEUMANN_PLANE_POINT"));
+    std::istringstream stream(Teuchos::getNumericStringParameter(params, "PLANE_POINT"));
     while (stream >> value) planepoint_.push_back(value);
 
     // safety check
@@ -480,6 +491,11 @@ void Particle::SPHOpenBoundaryNeumann::prescribe_open_boundary_states(const doub
     // iterate over particles in container
     for (int particle_i = 0; particle_i < particlestored; ++particle_i)
     {
+      // get particle boundary id
+      const double* boundary_id_i =
+          container_i->get_ptr_to_state(Particle::OpenBoundaryId, particle_i);
+      if (static_cast<int>(*boundary_id_i) != boundary_id_) continue;
+
       // get pointer to particle states
       const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
       double* press_i = container_i->get_ptr_to_state(Particle::Pressure, particle_i);
@@ -497,6 +513,11 @@ void Particle::SPHOpenBoundaryNeumann::prescribe_open_boundary_states(const doub
   // iterate over particles in container
   for (int particle_i = 0; particle_i < particlestored; ++particle_i)
   {
+    // get particle boundary id
+    const double* boundary_id_i =
+        container_i->get_ptr_to_state(Particle::OpenBoundaryId, particle_i);
+    if (static_cast<int>(*boundary_id_i) != boundary_id_) continue;
+
     // get pointer to particle states
     const double* press_i = container_i->get_ptr_to_state(Particle::Pressure, particle_i);
     double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);

@@ -42,7 +42,7 @@ namespace Particle
   {
    public:
     //! constructor
-    explicit SPHOpenBoundaryBase(const Teuchos::ParameterList& params);
+    explicit SPHOpenBoundaryBase(double initialparticlespacing, int boundary_id);
 
     //! virtual destructor
     virtual ~SPHOpenBoundaryBase() = default;
@@ -65,9 +65,6 @@ namespace Particle
     virtual void check_open_boundary_phase_change(const double maxinteractiondistance) final;
 
    protected:
-    //! smoothed particle hydrodynamics specific parameter list
-    const Teuchos::ParameterList& params_sph_;
-
     //! interface to particle engine
     std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface_;
 
@@ -89,6 +86,9 @@ namespace Particle
     //! states of ghosted particles to refresh
     Particle::StatesOfTypesToRefresh statestorefresh_;
 
+    //! initial particle spacing
+    double initialparticlespacing_;
+
     //! function id of prescribed state
     int prescribedstatefunctid_;
 
@@ -103,13 +103,17 @@ namespace Particle
 
     //! open boundary phase
     Particle::TypeEnum openboundaryphase_;
+
+    //! boundary id
+    int boundary_id_;
   };
 
   class SPHOpenBoundaryDirichlet : public SPHOpenBoundaryBase
   {
    public:
     //! constructor
-    explicit SPHOpenBoundaryDirichlet(const Teuchos::ParameterList& params);
+    explicit SPHOpenBoundaryDirichlet(
+        const Teuchos::ParameterList& params, double initialparticlespacing, int boundary_id);
 
     //! setup open boundary handler
     void setup(const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
@@ -129,7 +133,8 @@ namespace Particle
   {
    public:
     //! constructor
-    explicit SPHOpenBoundaryNeumann(const Teuchos::ParameterList& params);
+    explicit SPHOpenBoundaryNeumann(
+        const Teuchos::ParameterList& params, double initialparticlespacing, int boundary_id);
 
     //! setup open boundary handler
     void setup(const std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface,
