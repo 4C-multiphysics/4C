@@ -14,6 +14,7 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_utils_gausspoints.hpp"
 #include "4C_inpar_structure.hpp"
+#include "4C_linalg_tensor.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -38,9 +39,25 @@ namespace Discret
      public:
       SolidPoroPressureBasedEleCalc();
 
-      void evaluate_nonlinear_force_stiffness(const Core::Elements::Element& ele,
-          Mat::StructPoro& porostructmat, Mat::FluidPoroMultiPhase& porofluidmat,
-          const Inpar::Solid::KinemType& kinematictype,
+      /*!
+       * @brief This method adds the solid pressure contribution to the nonlinear force vector and
+       * stiffness matrix.
+       */
+      void add_solidpressure_contribution_to_nonlinear_force_stiffness(
+          const Core::Elements::Element& ele, Mat::StructPoro& porostructmat,
+          Mat::FluidPoroMultiPhase& porofluidmat, const Inpar::Solid::KinemType& kinematictype,
+          const Core::FE::Discretization& discretization, Core::Elements::LocationArray& la,
+          Teuchos::ParameterList& params, Core::LinAlg::SerialDenseVector* force_vector,
+          Core::LinAlg::SerialDenseMatrix* stiffness_matrix);
+
+      /*!
+       * @brief This method adds a possible body force contribution to the nonlinear force vector
+       * and stiffness matrix.
+       */
+      void add_bodyforce_contribution_to_nonlinear_force_stiffness(
+          const Core::Elements::Element& ele, Mat::StructPoro& porostructmat,
+          Mat::FluidPoroMultiPhase& porofluidmat, const Inpar::Solid::KinemType& kinematictype,
+          const Core::LinAlg::Tensor<double, 3>& bodyforce_contribution,
           const Core::FE::Discretization& discretization, Core::Elements::LocationArray& la,
           Teuchos::ParameterList& params, Core::LinAlg::SerialDenseVector* force_vector,
           Core::LinAlg::SerialDenseMatrix* stiffness_matrix);

@@ -96,7 +96,8 @@ Mat::PAR::FluidPoroPhaseLawLinear::FluidPoroPhaseLawLinear(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-double Mat::PAR::FluidPoroPhaseLawLinear::evaluate_saturation(const std::vector<double>& pressure)
+double Mat::PAR::FluidPoroPhaseLawLinear::evaluate_saturation(
+    const std::span<const double> pressure)
 {
   // check if sizes fit
   if (pressure.size() != presids_.size())
@@ -113,7 +114,7 @@ double Mat::PAR::FluidPoroPhaseLawLinear::evaluate_saturation(const std::vector<
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 double Mat::PAR::FluidPoroPhaseLawLinear::evaluate_deriv_of_saturation_wrt_pressure(
-    int doftoderive, const std::vector<double>& pressure)
+    int doftoderive, const std::span<const double> pressure)
 {
   // check if sizes fit
   if (pressure.size() != presids_.size())
@@ -186,7 +187,8 @@ Mat::PAR::FluidPoroPhaseLawTangent::FluidPoroPhaseLawTangent(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-double Mat::PAR::FluidPoroPhaseLawTangent::evaluate_saturation(const std::vector<double>& pressure)
+double Mat::PAR::FluidPoroPhaseLawTangent::evaluate_saturation(
+    const std::span<const double> pressure)
 {
   // check if sizes fit
   if (pressure.size() != presids_.size())
@@ -204,7 +206,7 @@ double Mat::PAR::FluidPoroPhaseLawTangent::evaluate_saturation(const std::vector
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 double Mat::PAR::FluidPoroPhaseLawTangent::evaluate_deriv_of_saturation_wrt_pressure(
-    int doftoderive, const std::vector<double>& pressure)
+    int doftoderive, const std::span<const double> pressure)
 {
   // check if sizes fit
   if (pressure.size() != presids_.size())
@@ -343,7 +345,7 @@ void Mat::PAR::FluidPoroPhaseLawByFunction::initialize_internal()
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 double Mat::PAR::FluidPoroPhaseLawByFunction::evaluate_saturation(
-    const std::vector<double>& pressure)
+    const std::span<const double> pressure)
 {
   switch (Global::Problem::instance()->n_dim())
   {
@@ -363,7 +365,7 @@ double Mat::PAR::FluidPoroPhaseLawByFunction::evaluate_saturation(
  *----------------------------------------------------------------------*/
 template <int dim>
 double Mat::PAR::FluidPoroPhaseLawByFunction::evaluate_saturation_internal(
-    const std::vector<double>& pressure)
+    const std::span<const double> pressure)
 {
   // check if sizes fit
   if (pressure.size() != presids_.size())
@@ -383,7 +385,7 @@ double Mat::PAR::FluidPoroPhaseLawByFunction::evaluate_saturation_internal(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 double Mat::PAR::FluidPoroPhaseLawByFunction::evaluate_deriv_of_saturation_wrt_pressure(
-    int doftoderive, const std::vector<double>& pressure)
+    int doftoderive, const std::span<const double> pressure)
 {
   switch (Global::Problem::instance()->n_dim())
   {
@@ -403,7 +405,7 @@ double Mat::PAR::FluidPoroPhaseLawByFunction::evaluate_deriv_of_saturation_wrt_p
  *----------------------------------------------------------------------*/
 template <int dim>
 double Mat::PAR::FluidPoroPhaseLawByFunction::evaluate_deriv_of_saturation_wrt_pressure_internal(
-    int doftoderive, const std::vector<double>& pressure)
+    int doftoderive, const std::span<const double> pressure)
 {
   // check if sizes fit
   if (pressure.size() != presids_.size())

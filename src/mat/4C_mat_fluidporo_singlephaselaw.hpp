@@ -47,11 +47,11 @@ namespace Mat
       virtual const std::vector<int>* pres_ids() = 0;
 
       //! evaluate saturation of phase
-      virtual double evaluate_saturation(const std::vector<double>& pressure) = 0;
+      virtual double evaluate_saturation(const std::span<const double> pressure) = 0;
 
       //! evaluate derivative of saturation w.r.t. pressure
       virtual double evaluate_deriv_of_saturation_wrt_pressure(
-          int doftoderive, const std::vector<double>& pressure) = 0;
+          int doftoderive, const std::span<const double> pressure) = 0;
 
       //! evaluate second derivative of saturation w.r.t. pressure
       virtual double evaluate_second_deriv_of_saturation_wrt_pressure(
@@ -92,14 +92,14 @@ namespace Mat
       const std::vector<int>* pres_ids() override { return &presids_; };
 
       //! evaluate saturation of phase
-      double evaluate_saturation(const std::vector<double>& pressure) override;
+      double evaluate_saturation(const std::span<const double> pressure) override;
 
       //! evaluate generalized pressure related to phase law
       double evaluate_gen_pressure(double saturation) override;
 
       //! evaluate derivative of saturation w.r.t. pressure
       double evaluate_deriv_of_saturation_wrt_pressure(
-          int doftoderive, const std::vector<double>& pressure) override;
+          int doftoderive, const std::span<const double> pressure) override;
 
       //! evaluate second derivative of saturation w.r.t. pressure
       double evaluate_second_deriv_of_saturation_wrt_pressure(int firstdoftoderive,
@@ -139,11 +139,11 @@ namespace Mat
       const std::vector<int>* pres_ids() override { return &presids_; };
 
       //! evaluate saturation of phase
-      double evaluate_saturation(const std::vector<double>& pressure) override;
+      double evaluate_saturation(const std::span<const double> pressure) override;
 
       //! evaluate derivative of saturation w.r.t. pressure
       double evaluate_deriv_of_saturation_wrt_pressure(
-          int doftoderive, const std::vector<double>& pressure) override;
+          int doftoderive, const std::span<const double> pressure) override;
 
       //! evaluate second derivative of saturation w.r.t. pressure
       double evaluate_second_deriv_of_saturation_wrt_pressure(int firstdoftoderive,
@@ -181,7 +181,7 @@ namespace Mat
 
 
       //! evaluate saturation of phase
-      double evaluate_saturation(const std::vector<double>& pressure) override
+      double evaluate_saturation(const std::span<const double> pressure) override
       {
         FOUR_C_THROW("The constraint phase law does not implement evaluation routines!");
         return 0.0;
@@ -189,7 +189,7 @@ namespace Mat
 
       //! evaluate derivative of saturation w.r.t. pressure
       double evaluate_deriv_of_saturation_wrt_pressure(
-          int doftoderive, const std::vector<double>& pressure) override
+          int doftoderive, const std::span<const double> pressure) override
       {
         FOUR_C_THROW("The constraint phase law does not implement evaluation routines!");
         return 0.0;
@@ -246,11 +246,11 @@ namespace Mat
       const std::vector<int>* pres_ids() override { return &presids_; };
 
       //! evaluate saturation of phase
-      double evaluate_saturation(const std::vector<double>& pressure) override;
+      double evaluate_saturation(const std::span<const double> pressure) override;
 
       //! evaluate derivative of saturation w.r.t. pressure
       double evaluate_deriv_of_saturation_wrt_pressure(
-          int doftoderive, const std::vector<double>& pressure) override;
+          int doftoderive, const std::span<const double> pressure) override;
 
       //! evaluate second derivative of saturation w.r.t. pressure
       double evaluate_second_deriv_of_saturation_wrt_pressure(int firstdoftoderive,
@@ -269,12 +269,12 @@ namespace Mat
 
       //! templated internal EvaluateSaturation implementation
       template <int dim>
-      double evaluate_saturation_internal(const std::vector<double>& pressure);
+      double evaluate_saturation_internal(const std::span<const double> pressure);
 
       //! templated internal evaluate_deriv_of_saturation_wrt_pressure implementation
       template <int dim>
       double evaluate_deriv_of_saturation_wrt_pressure_internal(
-          int doftoderive, const std::vector<double>& pressure);
+          int doftoderive, const std::span<const double> pressure);
 
       //! templated internal evaluate_deriv_of_pressure_wrt_saturation implementation
       template <int dim>

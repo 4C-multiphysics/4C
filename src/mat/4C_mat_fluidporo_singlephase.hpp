@@ -390,11 +390,11 @@ namespace Mat
     void fill_do_f_matrix(Core::LinAlg::SerialDenseMatrix& dofmat, int numphase) const;
 
     /// evaluate saturation of the phase
-    double evaluate_saturation(
-        int phasenum, const std::vector<double>& state, const std::vector<double>& pressure) const;
+    double evaluate_saturation(int phasenum, const std::span<const double> state,
+        const std::span<const double> pressure) const;
 
     /// evaluate the generalized(!) pressure of this phase
-    double evaluate_gen_pressure(int phasenum, const std::vector<double>& state) const;
+    double evaluate_gen_pressure(int phasenum, const std::span<const double> state) const;
 
     //! evaluate derivative of saturation with respect to pressure
     double evaluate_deriv_of_saturation_wrt_pressure(
@@ -406,7 +406,7 @@ namespace Mat
 
     //! evaluate derivative of degree of freedom with respect to pressure
     double evaluate_deriv_of_dof_wrt_pressure(
-        int phasenum, int doftoderive, const std::vector<double>& state) const;
+        int phasenum, int doftoderive, const std::span<const double> state) const;
 
     /// Return quick accessible material parameter data
     Core::Mat::PAR::Parameter* parameter() const override { return params_; }

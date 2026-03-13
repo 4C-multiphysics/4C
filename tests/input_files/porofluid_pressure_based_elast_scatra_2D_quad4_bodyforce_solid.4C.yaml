@@ -1,14 +1,17 @@
 TITLE:
-  - "Framework test for multiphase flow through rigid porous medium with a body force contribution in
-    negative y direction to model gravity effects. We have one fluid phases in the multiphase pore space
-    and one fluid phase in the additional porous network with the closing relation >evolutionequation_blood_lung<. "
+  - "Framework test for multiphase flow through deformable porous medium with a body force contribution
+    in the solid equations in negative y direction to model gravity effects. We have one fluid phases
+    in the multiphase pore space and one fluid phase in the additional porous network with the closing
+    relation >evolutionequation_blood_lung<. "
 PROBLEM SIZE:
   DIM: 2
 PROBLEM TYPE:
   PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
 STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
+  NEGLECTINERTIA: true
 IO/RUNTIME VTK OUTPUT:
   INTERVAL_STEPS: 1
   OUTPUT_DATA_FORMAT: ascii
@@ -35,14 +38,14 @@ porofluid_elasticity_scatra_dynamic/monolithic:
 porofluid_dynamic:
   initial_condition:
     type: by_condition
-  body_force: [0.0, -9810.0]
 porofluid_elasticity_dynamic:
   solve_structure: true
   coupling_scheme: twoway_monolithic
+  body_force: [0.0, -9810.0]
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
-  MAXTIME: 2.5
-  NUMSTEP: 25
+  MAXTIME: 0.2
+  NUMSTEP: 2
   THETA: 1
   INITIALFIELD: "field_by_condition"
   SKIPINITDER: true
@@ -55,7 +58,6 @@ SCALAR TRANSPORT DYNAMIC/NONLINEAR:
   ITEMAX: 100
   CONVTOL: 1e-08
   ABSTOLRES: -1
-
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "solver"
@@ -81,7 +83,7 @@ MATERIALS:
   - MAT: 12
     MAT_FluidPoroSinglePhase:
       DENSITYLAWID: 122
-      DENSITY: 1.0e-9
+      DENSITY: 1.0e-6
       RELPERMEABILITYLAWID: 125
       VISCOSITY_LAW_ID: 124
       DOFTYPEID: 121
@@ -102,11 +104,11 @@ MATERIALS:
 
   - MAT: 13
     MAT_FluidPoroVolFracPressureBloodLung:
-      DENSITY: 1.03e-6
+      DENSITY: 1.0e-6
       PERMEABILITY: 0.00015
       VISCOSITY_LAW_ID: 141
       INITIALVOLFRAC: 0.1
-      SCALING_PARAMETER_DEFORMATION: -0.1
+      SCALING_PARAMETER_DEFORMATION: -1.0
       SCALING_PARAMETER_PRESSURE: 0.0
   - MAT: 141
     MAT_FluidPoroViscosityLawConstant:
@@ -116,10 +118,10 @@ MATERIALS:
     MAT_StructPoro:
       MATID: 501
       POROLAWID: 502
-      INITPOROSITY: 0.8
+      INITPOROSITY: 0.6
   - MAT: 501
     MAT_Struct_StVenantKirchhoff:
-      YOUNG: 0.73
+      YOUNG: 6.0
       NUE: 0.3
       DENS: 1.0e-6
   - MAT: 502
@@ -166,9 +168,9 @@ CLONING MATERIAL MAP:
     TAR_MAT: 6
 FUNCT1:
   - COMPONENT: 0
-    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.5"
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
   - COMPONENT: 1
-    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.6"
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.0e-12"
 FUNCT2:
   - VARFUNCTION: "0.0"
 FUNCT3:
@@ -178,54 +180,54 @@ FUNCT3:
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
 
 RESULT DESCRIPTION:
-  - POROFLUIDMULTIPHASE:
-      DIS: "porofluid"
+  - STRUCTURE:
+      DIS: "structure"
       NODE: 89
-      QUANTITY: "phi1"
-      VALUE: 2.74680000000000054e-05
+      QUANTITY: "dispx"
+      VALUE: -5.44184225531693547e-04
       TOLERANCE: 1e-09
-  - POROFLUIDMULTIPHASE:
-      DIS: "porofluid"
+  - STRUCTURE:
+      DIS: "structure"
       NODE: 28
-      QUANTITY: "phi1"
-      VALUE: 7.84799999999999838e-06
+      QUANTITY: "dispy"
+      VALUE: -1.13515215893868950e-02
       TOLERANCE: 1e-09
-  - POROFLUIDMULTIPHASE:
-      DIS: "porofluid"
+  - STRUCTURE:
+      DIS: "structure"
       NODE: 54
-      QUANTITY: "phi1"
-      VALUE: 1.56960000000000002e-05
+      QUANTITY: "dispx"
+      VALUE: -5.10980644159250643e-04
       TOLERANCE: 1e-09
-  - POROFLUIDMULTIPHASE:
-      DIS: "porofluid"
+  - STRUCTURE:
+      DIS: "structure"
       NODE: 21
-      QUANTITY: "phi2"
-      VALUE: 6.06258009999999757e-03
+      QUANTITY: "dispy"
+      VALUE: -1.15596926602809340e-02
       TOLERANCE: 1e-09
-  - POROFLUIDMULTIPHASE:
-      DIS: "porofluid"
+  - STRUCTURE:
+      DIS: "structure"
       NODE: 32
-      QUANTITY: "phi2"
-      VALUE: 1.01043001000000014e-02
+      QUANTITY: "dispx"
+      VALUE: 3.18975646227633405e-04
       TOLERANCE: 1e-09
-  - POROFLUIDMULTIPHASE:
-      DIS: "porofluid"
+  - STRUCTURE:
+      DIS: "structure"
       NODE: 45
-      QUANTITY: "phi2"
-      VALUE: 1.41460201000000001e-02
+      QUANTITY: "dispy"
+      VALUE: -1.03674462400365243e-02
       TOLERANCE: 1e-09
 
-DESIGN SURF DIRICH CONDITIONS:
+DESIGN SURF PORO DIRICH CONDITIONS:
   - E: 1
+    NUMDOF: 2
+    ONOFF: [1, 1]
+    VAL: [0.0, 1.0e-12]
+    FUNCT: [0, 0]
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 2
     NUMDOF: 2
     ONOFF: [1, 1]
     VAL: [0.0, 0.0]
-    FUNCT: [0, 0]
-DESIGN LINE PORO DIRICH CONDITIONS:
-  - E: 1
-    NUMDOF: 2
-    ONOFF: [1, 1]
-    VAL: [0.0, 1.0e-10]
     FUNCT: [0, 0]
 DESIGN SURF TRANSPORT DIRICH CONDITIONS:
   - E: 1
@@ -248,6 +250,12 @@ DLINE-NODE TOPOLOGY:
   - NODE    7 DLINE 1
   - NODE    9 DLINE 1
   - NODE    11 DLINE 1
+  - NODE    121 DLINE 2
+  - NODE    122 DLINE 2
+  - NODE    123 DLINE 2
+  - NODE    124 DLINE 2
+  - NODE    125 DLINE 2
+  - NODE    126 DLINE 2
 DSURF-NODE TOPOLOGY:
   - NODE    1 DSURFACE 1
   - NODE    2 DSURFACE 1

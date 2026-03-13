@@ -167,6 +167,9 @@ namespace Discret::Elements
 
     [[nodiscard]] Mat::FluidPoroMultiPhase& fluid_poro_material(int nummat = 1) const;
 
+    [[nodiscard]] std::optional<Core::LinAlg::Tensor<double, 3>>
+    get_bodyforce_contribution_from_input() const;
+
     [[nodiscard]] Mat::So3Material& solid_poro_material(int nummat = 0) const;
 
     [[nodiscard]] bool have_eas() const
@@ -178,6 +181,11 @@ namespace Discret::Elements
     Inpar::Solid::KinemType get_ele_kinematic_type() { return solid_ele_property_.kintype; }
 
     Inpar::ScaTra::ImplType get_impl_type() { return poro_ele_property_.impltype; }
+
+    std::optional<Core::LinAlg::Tensor<double, 3>> get_possible_bodyforce_contribution()
+    {
+      return bodyforce_contribution_;
+    }
 
     void vis_names(std::map<std::string, int>& names) override;
 
@@ -207,6 +215,9 @@ namespace Discret::Elements
 
     //! flag, whether the post setup of materials is already called
     bool material_post_setup_ = false;
+
+    //! optional body force contribution
+    std::optional<Core::LinAlg::Tensor<double, 3>> bodyforce_contribution_{};
 
   };  // class SolidPoro
 

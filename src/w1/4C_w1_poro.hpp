@@ -331,7 +331,9 @@ namespace Discret
           const std::vector<double>& ephi,  //!< current primary variable for poro-multiphase flow
           Core::LinAlg::Matrix<numdof_, numdof_>* stiffmatrix,  //!< element stiffness matrix
           Core::LinAlg::Matrix<numdof_, 1>* force,              //!< element internal force vector
-          Teuchos::ParameterList& params  //!< algorithmic parameters e.g. time
+          Teuchos::ParameterList& params,  //!< algorithmic parameters e.g. time
+          const std::optional<Core::LinAlg::Tensor<double, numdim_>>&
+              bodyforce_contribution  //! bodyforce contribution
       );
 
       //! Calculate coupling terms in nonlinear stiffness and internal force for poroelasticity
@@ -388,6 +390,7 @@ namespace Discret
           const Core::LinAlg::Matrix<numdim_, numnod_>& xrefe,
           const Core::LinAlg::Matrix<numdim_, numnod_>& xcurr,
           const Core::LinAlg::Matrix<numdim_, numnod_>& nodaldisp, const std::vector<double>& ephi,
+          const std::optional<Core::LinAlg::Tensor<double, numdim_>>& bodyforce_contribution,
           Core::LinAlg::Matrix<numdof_, numdof_>* stiffmatrix,
           Core::LinAlg::Matrix<numdof_, 1>* force);
 
@@ -400,8 +403,9 @@ namespace Discret
 
       //! compute porosity at gausspoint and linearization of porosity w.r.t. structural
       //! displacements
-      void compute_porosity_and_linearization(Teuchos::ParameterList& params, const double& press,
-          const double& J, const int& gp, const Core::LinAlg::Matrix<numnod_, 1>& shapfct,
+      void compute_porosity_and_linearization(const Teuchos::ParameterList& params,
+          const double& press, const double& J, const int& gp,
+          const Core::LinAlg::Matrix<numnod_, 1>& shapfct,
           const Core::LinAlg::Matrix<numnod_, 1>* myporosity,
           const Core::LinAlg::Matrix<1, numdof_>& dJ_dus, double& porosity,
           Core::LinAlg::Matrix<1, numdof_>& dphi_dus, double& dphi_dJ);
@@ -447,8 +451,8 @@ namespace Discret
           Core::LinAlg::Matrix<numdof_, 1>* force, Core::LinAlg::Matrix<numstr_, 1>& fstress);
 
       //! fill stiffness matrix and rhs vector for pressure-based formulation
-      void fill_matrix_and_vectors_pressure_based(const int& gp,
-          const Core::LinAlg::Matrix<numnod_, 1>& shapefct,
+      void fill_matrix_and_vectors_pressure_based(const Teuchos::ParameterList& params,
+          const int& gp, const Core::LinAlg::Matrix<numnod_, 1>& shapefct,
           const Core::LinAlg::Matrix<numdim_, numnod_>& N_XYZ, const double& J, const double& press,
           const Core::LinAlg::Matrix<numstr_, numdof_>& bop,
           const Core::LinAlg::Matrix<numdim_, numdim_>& C_inv,
@@ -456,7 +460,12 @@ namespace Discret
           const Core::LinAlg::Matrix<numstr_, numdof_>& dCinv_dus,
           const Core::LinAlg::Matrix<1, numdof_>& dps_dus,
           Core::LinAlg::Matrix<numdof_, numdof_>* stiffmatrix,
-          Core::LinAlg::Matrix<numdof_, 1>* force);
+          Core::LinAlg::Matrix<numdof_, 1>* force,
+          const SolidPoroFluidProperties solidporo_fluid_properties,
+          const std::vector<double>& phi_at_gp,
+          const Mat::PAR::PoroFluidPressureBased::ClosingRelation& type_volfrac_closingrelation,
+          const std::optional<Core::LinAlg::Tensor<double, numdim_>>& bodyforce_contribution);
+
 
       //! fill stiffness matrix and rhs vector for brinkman flow
       void fill_matrix_and_vectors_brinkman(const int& gp, const double& J, const double& porosity,
@@ -572,7 +581,7 @@ namespace Discret
 
       //! recalculate solid pressure at GP in case of volfracs
       double recalculate_sol_pressure_at_gp(double press, const double porosity,
-          const int totalnumdofpernode, const int numfluidphases, const int numvolfrac,
+          const SolidPoroFluidProperties& solidporo_fluid_properties,
           const std::vector<double>& phi_at_gp,
           const Mat::PAR::PoroFluidPressureBased::ClosingRelation type_volfrac_closing_relation,
           const double J);

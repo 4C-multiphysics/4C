@@ -202,7 +202,7 @@ void Mat::FluidPoroSinglePhase::fill_do_f_matrix(
  *  Evaluate generalized pressure of a phase                vuong 08/16 |
  *----------------------------------------------------------------------*/
 double Mat::FluidPoroSinglePhase::evaluate_gen_pressure(
-    int phasenum, const std::vector<double>& state) const
+    int phasenum, const std::span<const double> state) const
 {
   return params_->phasedof_->evaluate_gen_pressure(phasenum, state);
 }
@@ -211,7 +211,7 @@ double Mat::FluidPoroSinglePhase::evaluate_gen_pressure(
  *   Evaluate saturation of the phase                       vuong 08/16 |
  *----------------------------------------------------------------------*/
 double Mat::FluidPoroSinglePhase::evaluate_saturation(
-    int phasenum, const std::vector<double>& state, const std::vector<double>& pressure) const
+    int phasenum, const std::span<const double> state, const std::span<const double> pressure) const
 {
   return params_->phasedof_->evaluate_saturation(phasenum, state, pressure);
 }
@@ -240,7 +240,7 @@ double Mat::FluidPoroSinglePhase::evaluate_second_deriv_of_saturation_wrt_pressu
  * Evaluate derivative of degree of freedom with respect to pressure          vuong 08/16 |
  *----------------------------------------------------------------------------------------*/
 double Mat::FluidPoroSinglePhase::evaluate_deriv_of_dof_wrt_pressure(
-    int phasenum, int doftoderive, const std::vector<double>& state) const
+    int phasenum, int doftoderive, const std::span<const double> state) const
 {
   return params_->phasedof_->evaluate_deriv_of_dof_wrt_pressure(phasenum, doftoderive, state);
 }

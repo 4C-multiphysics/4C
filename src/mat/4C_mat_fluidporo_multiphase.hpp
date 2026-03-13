@@ -146,16 +146,19 @@ namespace Mat
     }
 
     /// return permeability
-    double permeability() const { return paramsporo_->permeability_; }
+    [[nodiscard]] double permeability() const { return paramsporo_->permeability_; }
 
     /// return number of fluid phases
-    int num_fluid_phases() const { return paramsporo_->numfluidphases_; }
+    [[nodiscard]] int num_fluid_phases() const { return paramsporo_->numfluidphases_; }
 
     /// return number of volume fractions
-    int num_vol_frac() const { return paramsporo_->numvolfrac_; }
+    [[nodiscard]] int num_vol_frac() const { return paramsporo_->numvolfrac_; }
 
     /// Return quick accessible material parameter data
-    Mat::PAR::FluidPoroMultiPhase* parameter() const override { return paramsporo_; }
+    [[nodiscard]] Mat::PAR::FluidPoroMultiPhase* parameter() const override { return paramsporo_; }
+
+    //! Return phase densities
+    [[nodiscard]] std::vector<double> get_phase_densities() const;
 
     /// initialize the material
     virtual void initialize();
@@ -169,11 +172,11 @@ namespace Mat
 
     /// evaluate the generalized(!) pressure of all phases
     void evaluate_gen_pressure(
-        std::vector<double>& genpressure, const std::vector<double>& phinp) const;
+        std::vector<double>& genpressure, const std::span<const double> phinp) const;
 
     /// evaluate saturation of all phases
-    void evaluate_saturation(std::vector<double>& saturation, const std::vector<double>& phinp,
-        const std::vector<double>& pressure) const;
+    void evaluate_saturation(std::vector<double>& saturation, const std::span<const double> phinp,
+        const std::span<const double> pressure) const;
 
     //! transform generalized pressures to true pressures
     void transform_gen_pres_to_true_pres(
@@ -181,7 +184,7 @@ namespace Mat
 
     //! evaluate derivative of degree of freedom with respect to pressure
     void evaluate_deriv_of_dof_wrt_pressure(
-        Core::LinAlg::SerialDenseMatrix& derivs, const std::vector<double>& state) const;
+        Core::LinAlg::SerialDenseMatrix& derivs, const std::span<const double> state) const;
 
     //! evaluate derivative of saturation with respect to pressure
     void evaluate_deriv_of_saturation_wrt_pressure(

@@ -47,6 +47,11 @@ std::vector<Core::IO::InputSpec> PoroPressureBased::valid_parameters_porofluid_e
               },
               {.required = false}),
 
+          // body force contribution for solid part
+          parameter<std::optional<std::vector<double>>>("body_force",
+              {.description = "External body force contribution vector. The vector must "
+                              "have the same dimension as the problem (2D/3D)."}),
+
           // nonlinear solver
           group("nonlinear_solver",
               {

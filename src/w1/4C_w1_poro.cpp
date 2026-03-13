@@ -274,6 +274,19 @@ void Discret::Elements::Wall1Poro<distype>::get_materials_pressure_based()
             "NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE = 0 currently not supported since this requires "
             "an adaption of the definition of the solid pressure");
       }
+      if (fluidmulti_mat_->num_vol_frac())
+      {
+        // additional volume fractions are only possible if we have an incompressible solid because
+        // the porosity of the structure is calculated with the solidpressure which is calculated
+        // without contributions from the additional porous network
+        FOUR_C_ASSERT_ALWAYS(
+            struct_mat_->poro_law_type() == Core::Materials::m_poro_law_incompr_skeleton ||
+                struct_mat_->poro_law_type() == Core::Materials::m_poro_law_constant ||
+                (struct_mat_->poro_law_type() == Core::Materials::m_poro_law_density_dependent &&
+                    struct_mat_->inv_bulk_modulus() < 1.0e-10),
+            "Additional porous network is currently only possible with an incompressible "
+            "skeleton. Fix your StructPoro material!");
+      }
     }
     else
       FOUR_C_THROW("no second material defined for element {}", id());

@@ -194,6 +194,9 @@ bool Discret::Elements::SolidPoroPressureBased::read_element(const std::string& 
   // read scalar transport implementation type
   poro_ele_property_.impltype = container.get<Inpar::ScaTra::ImplType>("TYPE");
 
+  // possible bodyforce contribution
+  bodyforce_contribution_ = get_bodyforce_contribution_from_input();
+
 
   SolidIntegrationRules rules =
       Core::FE::cell_type_switch<Discret::Elements::ImplementedSolidCellTypes>(celltype_,
@@ -235,6 +238,8 @@ void Discret::Elements::SolidPoroPressureBased::pack(Core::Communication::PackBu
 
   data.add_to_pack(material_post_setup_);
 
+  add_to_pack(data, bodyforce_contribution_);
+
   // optional data, e.g., EAS data
   FOUR_C_ASSERT(solid_calc_variant_.has_value(),
       "The solid calculation interface is not initialized for element id {}. The element needs to "
@@ -258,6 +263,8 @@ void Discret::Elements::SolidPoroPressureBased::unpack(Core::Communication::Unpa
   extract_from_pack(buffer, poro_ele_property_.impltype);
 
   extract_from_pack(buffer, material_post_setup_);
+
+  extract_from_pack(buffer, bodyforce_contribution_);
 
   // reset solid and poro interfaces
   SolidIntegrationRules rules =
@@ -324,6 +331,36 @@ Mat::FluidPoroMultiPhase& Discret::Elements::SolidPoroPressureBased::fluid_poro_
         "an adaption of the definition of the solid pressure");
   }
   return *fluidmulti_mat;
+}
+std::optional<Core::LinAlg::Tensor<double, 3>>
+Discret::Elements::SolidPoroPressureBased::get_bodyforce_contribution_from_input() const
+{
+  // get poro-solid parameter
+  const Teuchos::ParameterList& solid_poro_params =
+      Global::Problem::instance()->poro_multi_phase_dynamic_params();
+
+  // get optional bodyforce contribution
+  const auto body_force = solid_poro_params.get<std::optional<std::vector<double>>>("body_force");
+
+  if (body_force.has_value())
+  {
+    // safety check
+    FOUR_C_ASSERT_ALWAYS(
+        static_cast<int>(body_force->size()) == Global::Problem::instance()->n_dim() &&
+            Global::Problem::instance()->n_dim() == 3,
+        "The dimension of your bodyforce vector and the dimension of the problem must be equal!");
+
+    Core::LinAlg::Tensor<double, 3> bodyforce{};
+    for (int idim = 0; idim < 3; idim++)
+    {
+      bodyforce(idim) = body_force.value()[idim];
+    }
+    return bodyforce;
+  }
+  else
+  {
+    return std::nullopt;
+  }
 }
 
 FOUR_C_NAMESPACE_CLOSE

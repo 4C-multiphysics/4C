@@ -320,11 +320,58 @@ void Mat::FluidPoroMultiPhase::unpack(Core::Communication::UnpackBuffer& buffer)
   // -> position check cannot be done in this case
 }
 
+std::vector<double> Mat::FluidPoroMultiPhase::get_phase_densities() const
+{
+  std::vector<double> fluidphase_densities(num_fluid_phases() + num_vol_frac(), 0.0);
+
+  // get densities of fluid phases in multiphase porespace
+  for (int iphase = 0; iphase < num_fluid_phases(); ++iphase)
+  {
+    // get the single phase density
+    fluidphase_densities[iphase] =
+        PoroPressureBased::ElementUtils::get_single_phase_mat_from_material(*this, iphase)
+            .density();
+  }
+
+  if (num_vol_frac())
+  {
+    // get densities of volfrac phases
+    if (paramsporo_->closing_relation_volfrac_ ==
+        Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+            evolutionequation_homogenized_vasculature_tumor)
+    {
+      for (int ivolfrac = 0; ivolfrac < num_vol_frac(); ++ivolfrac)
+      {
+        // get single volfrac density
+        fluidphase_densities[num_fluid_phases() + ivolfrac] =
+            PoroPressureBased::ElementUtils::get_single_vol_frac_mat_from_multi_material(
+                *this, num_fluid_phases() + ivolfrac)
+                .density();
+      }
+    }
+    else if (paramsporo_->closing_relation_volfrac_ ==
+             Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
+    {
+      for (int ivolfrac = 0; ivolfrac < num_vol_frac(); ++ivolfrac)
+      {
+        // get single volfrac density
+        fluidphase_densities[num_fluid_phases() + ivolfrac] =
+            PoroPressureBased::ElementUtils::
+                get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                    *this, num_fluid_phases() + ivolfrac)
+                    .density();
+      }
+    }
+  }
+
+  return fluidphase_densities;
+}
+
 /*----------------------------------------------------------------------*
  *  Evaluate generalized pressure of all phases            vuong 08/16 |
  *----------------------------------------------------------------------*/
 void Mat::FluidPoroMultiPhase::evaluate_gen_pressure(
-    std::vector<double>& genpressure, const std::vector<double>& phinp) const
+    std::vector<double>& genpressure, const std::span<const double> phinp) const
 {
   // evaluate the pressures
   for (int iphase = 0; iphase < num_fluid_phases(); iphase++)
@@ -343,7 +390,7 @@ void Mat::FluidPoroMultiPhase::evaluate_gen_pressure(
  *   Evaluate saturation of the phase                       vuong 08/16 |
  *----------------------------------------------------------------------*/
 void Mat::FluidPoroMultiPhase::evaluate_saturation(std::vector<double>& saturation,
-    const std::vector<double>& phinp, const std::vector<double>& pressure) const
+    const std::span<const double> phinp, const std::span<const double> pressure) const
 {
   // get the number of the phase, which saturation is calculated by the saturation constraint
   const int constraintsaturationphase = paramsporo_->constraintphaseID_;
@@ -385,7 +432,7 @@ void Mat::FluidPoroMultiPhase::transform_gen_pres_to_true_pres(
  * Evaluate derivative of degree of freedom with respect to pressure          vuong 08/16 |
  *----------------------------------------------------------------------------------------*/
 void Mat::FluidPoroMultiPhase::evaluate_deriv_of_dof_wrt_pressure(
-    Core::LinAlg::SerialDenseMatrix& derivs, const std::vector<double>& state) const
+    Core::LinAlg::SerialDenseMatrix& derivs, const std::span<const double> state) const
 {
   for (int iphase = 0; iphase < num_fluid_phases(); iphase++)
   {

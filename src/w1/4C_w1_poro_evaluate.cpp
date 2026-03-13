@@ -25,6 +25,38 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+std::optional<Core::LinAlg::Tensor<double, 2>> get_bodyforce_contribution_from_input()
+{
+  // get optional bodyforce contribution
+  const Teuchos::ParameterList& solid_poro_params =
+      Global::Problem::instance()->poro_multi_phase_dynamic_params();
+
+
+  if ((solid_poro_params.get<std::optional<std::vector<double>>>("body_force")).has_value())
+  {
+    // safety check
+    FOUR_C_ASSERT_ALWAYS(
+        static_cast<int>(
+            (solid_poro_params.get<std::optional<std::vector<double>>>("body_force"))->size()) ==
+                Global::Problem::instance()->n_dim() &&
+            Global::Problem::instance()->n_dim() == 2,
+        "The dimension of your bodyforce vector and the dimension of the problem must be equal!");
+
+    Core::LinAlg::Tensor<double, 2> bodyforce{};
+    for (int idim = 0; idim < 2; idim++)
+    {
+      bodyforce(idim) =
+          solid_poro_params.get<std::optional<std::vector<double>>>("body_force").value()[idim];
+    }
+    return bodyforce;
+  }
+  else
+  {
+    return std::nullopt;
+  }
+}
+
+
 template <Core::FE::CellType distype>
 void Discret::Elements::Wall1Poro<distype>::pre_evaluate(Teuchos::ParameterList& params,
     Core::FE::Discretization& discretization, Core::Elements::LocationArray& la)
@@ -261,9 +293,13 @@ int Discret::Elements::Wall1Poro<distype>::my_evaluate(Teuchos::ParameterList& p
                 discretization.get_state(1, "porofluid");
             myephi = Core::FE::extract_values(*matrix_state, la[1].lm_);
 
+            // get optional bodyforce contribution
+            const std::optional<Core::LinAlg::Tensor<double, numdim_>> bodyforce_contribution =
+                get_bodyforce_contribution_from_input();
+
             // calculate tangent stiffness matrix
             nonlinear_stiffness_poroelast_pressure_based(
-                lm, mydisp, myephi, matptr, &elevec_1, params);
+                lm, mydisp, myephi, matptr, &elevec_1, params, bodyforce_contribution);
           }
         }
       }
@@ -331,9 +367,14 @@ int Discret::Elements::Wall1Poro<distype>::my_evaluate(Teuchos::ParameterList& p
                 discretization.get_state(1, "porofluid");
             myephi = Core::FE::extract_values(*matrix_state, la[1].lm_);
 
+            // get optional bodyforce contribution
+            const std::optional<Core::LinAlg::Tensor<double, numdim_>> bodyforce_contribution =
+                get_bodyforce_contribution_from_input();
+
+
             // calculate tangent stiffness matrix
             nonlinear_stiffness_poroelast_pressure_based(
-                lm, mydisp, myephi, matptr, &elevec_1, params);
+                lm, mydisp, myephi, matptr, &elevec_1, params, bodyforce_contribution);
           }
         }
       }
@@ -446,9 +487,13 @@ int Discret::Elements::Wall1Poro<distype>::my_evaluate(Teuchos::ParameterList& p
               discretization.get_state(1, "porofluid");
           myephi = Core::FE::extract_values(*matrix_state, la[1].lm_);
 
+          // get optional bodyforce contribution
+          const std::optional<Core::LinAlg::Tensor<double, numdim_>> bodyforce_contribution =
+              get_bodyforce_contribution_from_input();
+
           // calculate tangent stiffness matrix
           nonlinear_stiffness_poroelast_pressure_based(
-              lm, mydisp, myephi, nullptr, &elevec_1, params);
+              lm, mydisp, myephi, nullptr, &elevec_1, params, bodyforce_contribution);
         }
       }
     }
@@ -516,8 +561,9 @@ void Discret::Elements::Wall1Poro<distype>::nonlinear_stiffness_poroelast_pressu
     const std::vector<double>& ephi,               // primary variable for poro-multiphase flow
     Core::LinAlg::Matrix<numdof_, numdof_>* stiffmatrix,  // element stiffness matrix
     Core::LinAlg::Matrix<numdof_, 1>* force,              // element internal force vector
-    Teuchos::ParameterList& params                        // algorithmic parameters e.g. time
-)
+    Teuchos::ParameterList& params,                       // algorithmic parameters e.g. time
+    const std::optional<Core::LinAlg::Tensor<double, numdim_>>&
+        bodyforce_contribution)  // bodyforce contribution
 {
   get_materials_pressure_based();
 
@@ -539,7 +585,8 @@ void Discret::Elements::Wall1Poro<distype>::nonlinear_stiffness_poroelast_pressu
   /* =========================================================================*/
   /* ================================================= Loop over Gauss Points */
   /* =========================================================================*/
-  gauss_point_loop_pressure_based(params, xrefe, xcurr, disp, ephi, stiffmatrix, force);
+  gauss_point_loop_pressure_based(
+      params, xrefe, xcurr, disp, ephi, bodyforce_contribution, stiffmatrix, force);
 }
 
 template <Core::FE::CellType distype>
@@ -716,6 +763,7 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_pressure_based(
     Teuchos::ParameterList& params, const Core::LinAlg::Matrix<numdim_, numnod_>& xrefe,
     const Core::LinAlg::Matrix<numdim_, numnod_>& xcurr,
     const Core::LinAlg::Matrix<numdim_, numnod_>& nodaldisp, const std::vector<double>& ephi,
+    const std::optional<Core::LinAlg::Tensor<double, numdim_>>& bodyforce_contribution,
     Core::LinAlg::Matrix<numdof_, numdof_>* stiffmatrix, Core::LinAlg::Matrix<numdof_, 1>* force)
 {
   /*--------------------------------- get node weights for nurbs elements */
@@ -797,6 +845,7 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_pressure_based(
     double press =
         compute_sol_pressure_at_gp(solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
             solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_, phi_at_gp);
+
     // recalculate for the case of volume fractions
     if (hasvolfracs)
     {
@@ -808,11 +857,8 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_pressure_based(
           dvolchange_dus, porosity, dporosity_dus, dporosity_dJ);
       // save the pressure coming from the fluid S_i*p_i
       const double fluidpress = press;
-      press = recalculate_sol_pressure_at_gp(fluidpress, porosity,
-          solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
-          solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
-          solidporo_fluid_properties.number_of_volfracs_, phi_at_gp, type_volfrac_closingrelation,
-          J);
+      press = recalculate_sol_pressure_at_gp(fluidpress, porosity, solidporo_fluid_properties,
+          phi_at_gp, type_volfrac_closingrelation, J);
       compute_linearization_of_sol_press_wrt_disp(fluidpress, porosity,
           solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
           solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
@@ -848,8 +894,9 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_pressure_based(
     }
 
     // **********************evaluate stiffness matrix and force vector**********************
-    fill_matrix_and_vectors_pressure_based(
-        gp, shapefct, N_XYZ, J, press, bop, C_inv, dJ_dus, dCinv_dus, dps_dus, stiffmatrix, force);
+    fill_matrix_and_vectors_pressure_based(params, gp, shapefct, N_XYZ, J, press, bop, C_inv,
+        dJ_dus, dCinv_dus, dps_dus, stiffmatrix, force, solidporo_fluid_properties, phi_at_gp,
+        type_volfrac_closingrelation, bodyforce_contribution);
   }
 }
 
@@ -1046,7 +1093,8 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors(const int& g
 }
 
 template <Core::FE::CellType distype>
-void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors_pressure_based(const int& gp,
+void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors_pressure_based(
+    const Teuchos::ParameterList& params, const int& gp,
     const Core::LinAlg::Matrix<numnod_, 1>& shapefct,
     const Core::LinAlg::Matrix<numdim_, numnod_>& N_XYZ, const double& J, const double& press,
     const Core::LinAlg::Matrix<numstr_, numdof_>& bop,
@@ -1054,7 +1102,10 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors_pressure_bas
     const Core::LinAlg::Matrix<1, numdof_>& dJ_dus,
     const Core::LinAlg::Matrix<numstr_, numdof_>& dCinv_dus,
     const Core::LinAlg::Matrix<1, numdof_>& dps_dus,
-    Core::LinAlg::Matrix<numdof_, numdof_>* stiffmatrix, Core::LinAlg::Matrix<numdof_, 1>* force)
+    Core::LinAlg::Matrix<numdof_, numdof_>* stiffmatrix, Core::LinAlg::Matrix<numdof_, 1>* force,
+    const SolidPoroFluidProperties solidporo_fluid_properties, const std::vector<double>& phi_at_gp,
+    const Mat::PAR::PoroFluidPressureBased::ClosingRelation& type_volfrac_closingrelation,
+    const std::optional<Core::LinAlg::Tensor<double, numdim_>>& bodyforce_contribution)
 {
   const double detJ_w = detJ_[gp] * intpoints_.weight(gp) * thickness_;
 
@@ -1070,6 +1121,8 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors_pressure_bas
 
   const double fac1 = -detJ_w * press;
   const double fac2 = fac1 * J;
+
+
 
   // update internal force vector
   if (force != nullptr)
@@ -1095,6 +1148,158 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors_pressure_bas
     tmp.multiply(-detJ_w * J, cinvb, dps_dus);
     stiffmatrix->update(1.0, tmp, 1.0);
 
+
+    if (bodyforce_contribution.has_value())
+    {
+      // get primary variables from additional porous network
+      auto volfrac_primary_variable = evaluate_fluid_additional_porous_network_variables(
+          solidporo_fluid_properties, phi_at_gp, type_volfrac_closingrelation, J, *fluidmulti_mat_);
+
+      // get saturation of phases in multiphase porespace
+      // initialize auxiliary variables
+      std::vector<double> genpress(
+          solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_, 0.0);
+      std::vector<double> sat(
+          solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_, 0.0);
+      std::vector<double> pressure(
+          solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_, 0.0);
+      std::vector<double> fluidphi(phi_at_gp.data(),
+          phi_at_gp.data() +
+              solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_);
+
+      // evaluate the pressures
+      fluidmulti_mat_->evaluate_gen_pressure(genpress, fluidphi);
+
+      // transform generalized pressures to true pressure values
+      fluidmulti_mat_->transform_gen_pres_to_true_pres(genpress, pressure);
+
+      // explicit evaluation of saturation
+      fluidmulti_mat_->evaluate_saturation(sat, fluidphi, pressure);
+
+      double dporosity_dJ = 0.0;
+      double porosity = 0.0;
+      Core::LinAlg::Matrix<1, numdof_> dporosity_dus;
+
+      compute_porosity_and_linearization(
+          params, press, J, gp, shapefct, nullptr, dJ_dus, porosity, dporosity_dus, dporosity_dJ);
+
+      // get phase densities
+      const std::vector<double> phase_densities = fluidmulti_mat_->get_phase_densities();
+      if (force != nullptr)
+      {
+        // bodyforce contribution from solid
+        Core::LinAlg::Tensor<double, numdim_> bodyforce{};
+
+
+        const double volfrac_solid = 1.0 - porosity;
+        bodyforce +=
+            bodyforce_contribution.value() * (volfrac_solid * struct_mat_->density_solid_phase());
+
+
+        // bodyforce contribution from additional porous network / volfracs
+        for (int i_volfrac = 0; i_volfrac < solidporo_fluid_properties.number_of_volfracs_;
+            ++i_volfrac)
+        {
+          bodyforce +=
+              bodyforce_contribution.value() *
+              phase_densities.at(
+                  solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_ +
+                  i_volfrac) *
+              volfrac_primary_variable.volfrac.at(i_volfrac);
+        }
+
+        // bodyforce contribution from multiphase porespace
+        for (int i_phase = 0;
+            i_phase < solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_;
+            ++i_phase)
+        {
+          bodyforce += bodyforce_contribution.value() * phase_densities.at(i_phase) *
+                       (porosity - volfrac_primary_variable.sumaddvolfrac) * sat[i_phase];
+        }
+
+        Core::LinAlg::Matrix<numdof_, 1> b(Core::LinAlg::Initialization::zero);
+        for (int i = 0; i < numnod_; ++i)
+        {
+          for (int j = 0; j < numdim_; ++j)
+          {
+            b(i * numdim_ + j, 0) = shapefct(i, 0) * bodyforce(j);
+          }
+        }
+
+        // update force vector
+        force->update(-1.0 * detJ_w, b, 1.0);
+      }
+
+      if (stiffmatrix != nullptr)
+      {
+        // additional body force stiffness
+        Core::LinAlg::Matrix<numdof_, 1> b(Core::LinAlg::Initialization::zero);
+        for (int i = 0; i < numnod_; ++i)
+        {
+          for (int j = 0; j < numdim_; ++j)
+          {
+            b(i * numdim_ + j, 0) = shapefct(i, 0) * bodyforce_contribution.value()(j);
+          }
+        }
+
+        // (dprefactor_soliddJ + dprefactor_volfracdJ + dprefactor_fluid_multiphase_dJ) * dJddisp
+        Core::LinAlg::Matrix<numdof_, numdof_> dBodyforcedDisp;
+
+        double dpre_factor_force_contribution_solid_dDetDefGrad =
+            -1.0 * dporosity_dJ * struct_mat_->density_solid_phase();
+
+        double dprefactor_volfrac_dDetDefGrad{};
+        if (solidporo_fluid_properties.number_of_volfracs_ &&
+            get_volfrac_closing_relation_type(solidporo_fluid_properties) ==
+                Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
+        {
+          // only one volfrac possible with this closing relation
+          int i_volfrac = 0;
+          dprefactor_volfrac_dDetDefGrad +=
+              compute_linearization_of_volfrac_blood_lung_wrt_det_def_grad(
+                  solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
+                  phi_at_gp, J, *fluidmulti_mat_) *
+              phase_densities.at(
+                  solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_ +
+                  i_volfrac);
+        }
+
+        // bodyforce contribution from multiphase porespace
+        double dpre_factor_force_contribution_multifluid_dDetDefGrad{};
+        if (solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_)
+        {
+          for (int i_phase = 0;
+              i_phase < solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_;
+              ++i_phase)
+          {
+            dpre_factor_force_contribution_multifluid_dDetDefGrad +=
+                phase_densities.at(i_phase) * sat[i_phase] * dporosity_dJ;
+
+            if (solidporo_fluid_properties.number_of_volfracs_ &&
+                get_volfrac_closing_relation_type(solidporo_fluid_properties) ==
+                    Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
+            {
+              dpre_factor_force_contribution_multifluid_dDetDefGrad -=
+                  phase_densities.at(i_phase) * sat[i_phase] *
+                  compute_linearization_of_volfrac_blood_lung_wrt_det_def_grad(
+                      solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
+                      phi_at_gp, J, *fluidmulti_mat_);
+            }
+          }
+        }
+
+
+        double pre_factor_linearization_wrt_DetDefGrad =
+            dpre_factor_force_contribution_solid_dDetDefGrad + dprefactor_volfrac_dDetDefGrad +
+            dpre_factor_force_contribution_multifluid_dDetDefGrad;
+
+        dBodyforcedDisp.multiply(detJ_w * pre_factor_linearization_wrt_DetDefGrad, b, dJ_dus);
+
+        stiffmatrix->update(1.0, dBodyforcedDisp, 1.0);
+      }
+    }
+
+
     // integrate `geometric' stiffness matrix and add to keu *****************
     Core::LinAlg::Matrix<numstr_, 1> sfac(C_inv_vec);  // auxiliary integrated stress
     sfac.scale(fac2);
@@ -1115,6 +1320,7 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors_pressure_bas
     }
   }
 }
+
 
 template <Core::FE::CellType distype>
 void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors_brinkman(const int& gp,
@@ -1187,8 +1393,8 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors_brinkman(con
 
     Core::LinAlg::Matrix<numdof_, numdof_> tmp;
 
-    // additional viscous fluid stress- stiffness term (B^T . fstress . dJ/d(us) * porosity * detJ *
-    // w(gp))
+    // additional viscous fluid stress- stiffness term (B^T . fstress . dJ/d(us) * porosity * detJ
+    // * w(gp))
     tmp.multiply(fac * porosity, fstressb, dJ_dus);
     stiffmatrix->update(1.0, tmp, 1.0);
 
@@ -1618,6 +1824,8 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors_od_pressure_
 
   const int totalnumdofpernode = fluidmulti_mat_->num_mat();
 
+  // bodyforce contribution not yet included
+
   {
     for (int i = 0; i < numnod_; i++)
     {
@@ -1969,7 +2177,8 @@ double Discret::Elements::Wall1Poro<distype>::compute_jacobian_determinant(const
   xjm.multiply_nt(deriv, xcurr);
   const double det = xji.invert(xjm);
 
-  // determinant of deformationgradient: det F = det ( d x / d X ) = det (dx/ds) * ( det(dX/ds) )^-1
+  // determinant of deformationgradient: det F = det ( d x / d X ) = det (dx/ds) * ( det(dX/ds)
+  // )^-1
   const double J = det / detJ_[gp];
 
   return J;
@@ -2070,7 +2279,7 @@ void Discret::Elements::Wall1Poro<distype>::compute_auxiliary_values(
 
 template <Core::FE::CellType distype>
 void Discret::Elements::Wall1Poro<distype>::compute_porosity_and_linearization(
-    Teuchos::ParameterList& params, const double& press, const double& J, const int& gp,
+    const Teuchos::ParameterList& params, const double& press, const double& J, const int& gp,
     const Core::LinAlg::Matrix<numnod_, 1>& shapfct,
     const Core::LinAlg::Matrix<numnod_, 1>* myporosity,
     const Core::LinAlg::Matrix<1, numdof_>& dJ_dus, double& porosity,
@@ -2398,7 +2607,8 @@ void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
           saturation, fluidphi, fluidpressure_multiphase_porespace);
 
 
-      // recalculate derivative for phase air ( air is always the first phse in multiphase porespace
+      // recalculate derivative for phase air ( air is always the first phse in multiphase
+      // porespace
       double dvolfrac_dpA =
           PoroPressureBased::ElementUtils::
               get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
@@ -2493,96 +2703,26 @@ double Discret::Elements::Wall1Poro<distype>::compute_sol_pressure_at_gp(
 
 template <Core::FE::CellType distype>
 double Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_at_gp(double press,
-    const double porosity, const int totalnumdofpernode, const int numfluidphases,
-    const int numvolfrac, const std::vector<double>& phi_at_gp,
+    const double porosity, const SolidPoroFluidProperties& solidporo_fluid_properties,
+    const std::vector<double>& phi_at_gp,
     const Mat::PAR::PoroFluidPressureBased::ClosingRelation type_volfrac_closing_relation,
     const double J)
 {
-  if (type_volfrac_closing_relation == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
-                                           evolutionequation_homogenized_vasculature_tumor)
-  {
-    // get volume fraction primary variables at [numfluidphases-1...numfluidphase-1+numvolfrac]
-    std::vector<double> volfracphi(
-        phi_at_gp.data() + numfluidphases, phi_at_gp.data() + numfluidphases + numvolfrac);
-    double sumaddvolfrac = 0.0;
-    for (int ivolfrac = 0; ivolfrac < numvolfrac; ivolfrac++) sumaddvolfrac += volfracphi[ivolfrac];
+  // evaluate volfrac primary variables
+  FourC::Discret::Elements::SolidPoroFluidAdditionalPorousNetworkVariables
+      volfrac_primary_variables =
+          evaluate_fluid_additional_porous_network_variables(solidporo_fluid_properties, phi_at_gp,
+              type_volfrac_closing_relation, J, *fluidmulti_mat_);
 
-    // p_s = (porosity - sumaddvolfrac)/porosity * fluidpress
-    //      + 1.0 / porosity sum_i=1^numvolfrac (volfrac_i*pressure_i)
-    // first part
-    press *= (porosity - sumaddvolfrac) / porosity;
+  // p_s = (porosity - sumaddvolfrac)/porosity * fluidpress
+  //      + 1.0 / porosity sum_i=1^numvolfrac (volfrac_i*pressure_i)
+  // first part
+  press *= (porosity - volfrac_primary_variables.sumaddvolfrac) / porosity;
 
-    // get volfrac pressures at [numfluidphases+numvolfrac...totalnumdofpernode-1]
-    std::vector<double> volfracpressure(
-        phi_at_gp.data() + numfluidphases + numvolfrac, phi_at_gp.data() + totalnumdofpernode);
-
-    // second part
-    for (int ivolfrac = 0; ivolfrac < numvolfrac; ivolfrac++)
-      press += volfracphi[ivolfrac] / porosity * volfracpressure[ivolfrac];
-
-    // note: in recalculate_solid_pressure in porofluid_phasemanager calculation is performed a bit
-    //       differently since we already pass porosity = porosity - sumaddvolfrac, but result is
-    //       equivalent
-  }
-  else if (type_volfrac_closing_relation ==
-           Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
-  {
-    // get volfrac pressures at [numfluidphases] so far only one volfrac pressure with closing
-    // relation for blood lung is possible
-    double volfracpressure = phi_at_gp[numfluidphases];
-
-
-    // so far only one volfrac with closing relation for blood lung is possible
-    const double volfrac = std::invoke(
-        [&]()
-        {
-          // pressure of air (always first phase in multiphase porespace)
-          if (phi_at_gp[0] / volfracpressure <= 1.0)
-          {
-            return (PoroPressureBased::ElementUtils::
-                        get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
-                            *fluidmulti_mat_, numfluidphases)
-                            .initial_volfrac() *
-                    pow(J, PoroPressureBased::ElementUtils::
-                               get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
-                                   *fluidmulti_mat_, numfluidphases)
-                                   .scaling_parameter_deformation()));
-          }
-          else
-          {
-            return (PoroPressureBased::ElementUtils::
-                        get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
-                            *fluidmulti_mat_, numfluidphases)
-                            .initial_volfrac() *
-                    pow(J, PoroPressureBased::ElementUtils::
-                               get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
-                                   *fluidmulti_mat_, numfluidphases)
-                                   .scaling_parameter_deformation()) *
-                    pow((phi_at_gp[0] / volfracpressure),
-                        PoroPressureBased::ElementUtils::
-                            get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
-                                *fluidmulti_mat_, numfluidphases)
-                                .scaling_parameter_pressure()));
-          }
-        });
-
-    // p_s = (porosity - sumaddvolfrac)/porosity * fluidpress
-    //      + 1.0 / porosity * volfrac * volfrac_pressure
-    // first part
-    press *= (porosity - volfrac) / porosity;
-
-    // second part
-    press += (volfrac / porosity) * volfracpressure;
-
-    // note: in recalculate_solid_pressure in porofluid_phasemanager calculation is performed a
-    // bit
-    //       differently since we already pass porosity = porosity - sumaddvolfrac, but result
-    //       is equivalent
-  }
-  else
-  {
-    FOUR_C_THROW("Internal error!");
-  }
+  // second part
+  for (int ivolfrac = 0; ivolfrac < solidporo_fluid_properties.number_of_volfracs_; ivolfrac++)
+    press += volfrac_primary_variables.volfrac[ivolfrac] / porosity *
+             volfrac_primary_variables.volfrac_pressure[ivolfrac];
 
   return press;
 }
