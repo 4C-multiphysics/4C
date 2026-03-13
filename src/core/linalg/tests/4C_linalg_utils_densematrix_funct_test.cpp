@@ -67,8 +67,8 @@ namespace
 
     Core::LinAlg::MatrixFunctErrorType exp_err_status =
         Core::LinAlg::MatrixFunctErrorType::no_errors;
-    Core::LinAlg::Matrix<2, 2> exp_A = Core::LinAlg::matrix_exp(
-        A, exp_err_status, Core::LinAlg::MatrixExpCalcMethod::default_method);
+    Core::LinAlg::Matrix<2, 2> exp_A =
+        Core::LinAlg::matrix_exp(A, exp_err_status, Core::LinAlg::MatrixExpCalcMethod::automatic);
     FOUR_C_ASSERT_ALWAYS(exp_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Exponential evaluation failed when using the default computation method!");
     FOUR_C_EXPECT_NEAR(exp_A, exp_A_ref, 1.0e-9);
@@ -104,8 +104,8 @@ namespace
 
     Core::LinAlg::MatrixFunctErrorType log_err_status =
         Core::LinAlg::MatrixFunctErrorType::no_errors;
-    Core::LinAlg::Matrix<2, 2> log_A = Core::LinAlg::matrix_log(
-        A, log_err_status, Core::LinAlg::MatrixLogCalcMethod::default_series);
+    Core::LinAlg::Matrix<2, 2> log_A =
+        Core::LinAlg::matrix_log(A, log_err_status, Core::LinAlg::MatrixLogCalcMethod::automatic);
     FOUR_C_ASSERT_ALWAYS(log_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Logarithm evaluation failed when using the default series description!");
     FOUR_C_EXPECT_NEAR(log_A, log_A_ref, 1.0e-9);
@@ -212,8 +212,8 @@ namespace
 
     Core::LinAlg::MatrixFunctErrorType exp_err_status =
         Core::LinAlg::MatrixFunctErrorType::no_errors;
-    Core::LinAlg::Matrix<3, 3> exp_A = Core::LinAlg::matrix_exp(
-        A, exp_err_status, Core::LinAlg::MatrixExpCalcMethod::default_method);
+    Core::LinAlg::Matrix<3, 3> exp_A =
+        Core::LinAlg::matrix_exp(A, exp_err_status, Core::LinAlg::MatrixExpCalcMethod::automatic);
     FOUR_C_ASSERT_ALWAYS(exp_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Exponential evaluation failed when using the default computation method!");
     FOUR_C_EXPECT_NEAR(exp_A, exp_A_ref, 1.0e-9);
@@ -332,7 +332,7 @@ namespace
     Core::LinAlg::MatrixFunctErrorType exp_err_status =
         Core::LinAlg::MatrixFunctErrorType::no_errors;
     Core::LinAlg::Matrix<9, 9> dexp_dA = Core::LinAlg::matrix_3x3_exp_1st_deriv(
-        A, exp_err_status, Core::LinAlg::GenMatrixExpFirstDerivCalcMethod::default_method);
+        A, exp_err_status, Core::LinAlg::GenMatrixExpFirstDerivCalcMethod::automatic);
     FOUR_C_ASSERT_ALWAYS(exp_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Evaluation of the first exponential derivative failed when using the default computation "
         "method!");
@@ -401,7 +401,7 @@ namespace
     Core::LinAlg::MatrixFunctErrorType exp_err_status =
         Core::LinAlg::MatrixFunctErrorType::no_errors;
     Core::LinAlg::Matrix<6, 6> dexp_dA = Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
-        A, exp_err_status, Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::default_method);
+        A, exp_err_status, Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::automatic);
     FOUR_C_ASSERT_ALWAYS(exp_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Evaluation of first exponential derivative (symmetric matrix) failed when using the "
         "default computation method!");
@@ -451,8 +451,8 @@ namespace
 
     Core::LinAlg::MatrixFunctErrorType log_err_status =
         Core::LinAlg::MatrixFunctErrorType::no_errors;
-    Core::LinAlg::Matrix<3, 3> log_A = Core::LinAlg::matrix_log(
-        A, log_err_status, Core::LinAlg::MatrixLogCalcMethod::default_series);
+    Core::LinAlg::Matrix<3, 3> log_A =
+        Core::LinAlg::matrix_log(A, log_err_status, Core::LinAlg::MatrixLogCalcMethod::automatic);
     FOUR_C_ASSERT_ALWAYS(log_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Logarithm evaluation failed when using the default series description!");
     FOUR_C_EXPECT_NEAR(log_A, log_A_ref, 1.0e-9);
@@ -586,7 +586,7 @@ namespace
     Core::LinAlg::MatrixFunctErrorType log_err_status =
         Core::LinAlg::MatrixFunctErrorType::no_errors;
     Core::LinAlg::Matrix<9, 9> dlog_dA = Core::LinAlg::matrix_3x3_log_1st_deriv(
-        A, log_err_status, Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::default_series);
+        A, log_err_status, Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::automatic);
     FOUR_C_ASSERT_ALWAYS(log_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Evaluation of logarithm derivative failed when using the default series!");
     FOUR_C_EXPECT_NEAR(dlog_dA, dlog_dA_ref, 1.0e-9);

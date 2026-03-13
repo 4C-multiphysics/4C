@@ -104,14 +104,17 @@ namespace Mat
       double evaluate_stress_ratio(
           const double equiv_stress, const double equiv_plastic_strain) override;
 
+
       double evaluate_plastic_strain_rate(const double equiv_stress,
-          const double equiv_plastic_strain, const double dt, const bool log_substep,
-          Mat::ViscoplastErrorType& err_status, const bool update_hist_var) override;
+          const double equiv_plastic_strain, const double dt, const double max_plastic_strain_incr,
+          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
+          const bool update_hist_var = true) override;
 
       Core::LinAlg::Matrix<2, 1> evaluate_derivatives_of_plastic_strain_rate(
           const double equiv_stress, const double equiv_plastic_strain, const double dt,
-          const bool log_substep, Mat::ViscoplastErrorType& err_status,
-          const bool update_hist_var) override;
+          const double max_plastic_strain_deriv_incr,
+          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
+          const bool update_hist_var = true) override;
 
       void setup(const int numgp, const Discret::Elements::Fibers& fibers,
           const std::optional<Discret::Elements::CoordinateSystem>& coord_system) override {};
@@ -153,7 +156,6 @@ namespace Mat
 
         /// initial yield strength
         double sigma_Y0;
-
 
         /// constructor
         ConstPars(const double prefac, const double expon, const double harden_prefac,

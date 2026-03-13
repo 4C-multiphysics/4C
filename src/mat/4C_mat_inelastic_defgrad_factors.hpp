@@ -10,18 +10,30 @@
 
 #include "4C_config.hpp"
 
+#include "4C_comm_pack_buffer.hpp"
+#include "4C_comm_pack_helpers.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_utils_densematrix_funct.hpp"
 #include "4C_linalg_utils_tensor_interpolation.hpp"
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
+#include "4C_mat_inelastic_defgrad_factors_service.hpp"
 #include "4C_mat_multiplicative_split_defgrad_elasthyper.hpp"
+#include "4C_mat_so3_material.hpp"
 #include "4C_mat_vplast_law.hpp"
 #include "4C_material_parameter_base.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
+#include <boost/graph/visitors.hpp>
+#include <Teuchos_Array.hpp>
 #include <Teuchos_ParameterList.hpp>
 
+#include <array>
+#include <cmath>
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -314,43 +326,59 @@ namespace Mat
       [[nodiscard]] double yield_cond_b() const { return yield_cond_b_; };
       //! get yield condition parameter \f[ F \f]
       [[nodiscard]] double yield_cond_f() const { return yield_cond_f_; };
-      //! get boolean: transversely isotropic material? (true: yes, false: isotropic)
-      [[nodiscard]] bool bool_transv_isotropy() const { return bool_transv_isotropy_; };
-      //! get boolean: logarithmic substepping? (true: yes, false: standard substepping)
-      [[nodiscard]] bool bool_log_substepping() const { return bool_log_substepping_; };
-      //! get maximum number of times a time step can be halved into smaller and smaller substeps
+      //! get material behavior
+      [[nodiscard]] InelasticDefgradTransvIsotropElastViscoplastUtils::MatBehavior mat_behavior()
+          const
+      {
+        return mat_behavior_;
+      };
+      //! get maximum number of times a time step can be halved into smaller and smaller
+      //! substeps
       [[nodiscard]] unsigned int max_halve_number() const
       {
-        return static_cast<unsigned int>(max_halve_number_);
-      };
-
-
-      //! read anisotropy type (true: transversely-isotropic, false: isotropic)
-      bool read_anisotropy_type(std::string anisotropy_type)
+        return static_cast<unsigned int>(max_substepping_halve_num_);
+      }
+      //! get the type of time integration for the evolution equations
+      //! of history variables
+      [[nodiscard]] InelasticDefgradTransvIsotropElastViscoplastUtils::TimIntType timint_type()
+          const
       {
-        // define naming types
-        const std::array<std::string, 3> transv_isotropy_names{
-            "transvisotrop", "transverseisotropic", "transverselyisotropic"};
-        const std::array<std::string, 2> isotropy_names{"isotrop", "isotropic"};
-
-
-        if (std::find(transv_isotropy_names.begin(), transv_isotropy_names.end(),
-                anisotropy_type) != transv_isotropy_names.end())
-        {
-          return true;
-        }
-        else if (std::find(isotropy_names.begin(), isotropy_names.end(), anisotropy_type) !=
-                 isotropy_names.end())
-        {
-          return false;
-        }
-        else
-        {
-          FOUR_C_THROW(
-              "Given anisotropy type {} not defined for InelasticDefgradTransvIsotropViscoplast",
-              anisotropy_type.c_str());
-        }
+        return timint_type_;
       };
+      //! get the type of material linearization used
+      [[nodiscard]] InelasticDefgradTransvIsotropElastViscoplastUtils::LinearizationType
+      linearization_type() const
+      {
+        return linearization_type_;
+      };
+      //! get maximum, numerically evaluable plastic strain increment
+      [[nodiscard]] double max_plastic_strain_incr() const { return max_plastic_strain_incr_; };
+      //! get maximum, numerically evaluable value for the increment of
+      //! the plastic strain derivatives (dt * derivative)
+      [[nodiscard]] double max_plastic_strain_deriv_incr() const
+      {
+        return max_plastic_strain_deriv_incr_;
+      }
+      //! get computation method for the matrix exponential
+      [[nodiscard]] Core::LinAlg::MatrixExpCalcMethod mat_exp_calc_method() const
+      {
+        return mat_exp_calc_method_;
+      }
+      //! get computation method for the first derivative of the matrix exponential
+      [[nodiscard]] Core::LinAlg::GenMatrixExpFirstDerivCalcMethod mat_exp_deriv_calc_method() const
+      {
+        return mat_exp_deriv_calc_method_;
+      }
+      //! get computation method for the matrix logarithm
+      [[nodiscard]] Core::LinAlg::MatrixLogCalcMethod mat_log_calc_method() const
+      {
+        return mat_log_calc_method_;
+      }
+      //! get computation method for the first derivative of the matrix logarithm
+      [[nodiscard]] Core::LinAlg::GenMatrixLogFirstDerivCalcMethod mat_log_deriv_calc_method() const
+      {
+        return mat_log_deriv_calc_method_;
+      }
 
      private:
       //! ID of the viscoplasticity law
@@ -366,16 +394,38 @@ namespace Mat
       //! yield condition parameter \f[ F \f]
       const double yield_cond_f_;
 
-      //! boolean: transversely isotropic? (true: yes, false: isotropic)
-      const bool bool_transv_isotropy_;
+      //! material behavior (transversely isotropic | isotropic )
+      const InelasticDefgradTransvIsotropElastViscoplastUtils::MatBehavior mat_behavior_;
 
-      //! boolean: computation method --> logarithmic substepping? (true: yes, false: standard
-      //! substepping)
-      const bool bool_log_substepping_;
+      //! computation method for the time integration of the
+      //! history variables (standard | logarithmic)
+      const InelasticDefgradTransvIsotropElastViscoplastUtils::TimIntType timint_type_;
+
+      //! linearization method (analytic | perturbation based)
+      InelasticDefgradTransvIsotropElastViscoplastUtils::LinearizationType linearization_type_;
+
+      //! maximum, numerically evaluable plastic strain increment
+      const double max_plastic_strain_incr_;
+
+      //! maximum, numerically evaluable increment of
+      //! plastic strain derivatives (time_step * derivative)
+      const double max_plastic_strain_deriv_incr_;
 
       //! maximum number of times the given time step can be halved before reaching the minimum
       //! allowed substep length
-      const int max_halve_number_;
+      const int max_substepping_halve_num_;
+
+      //! utilized computation method for the matrix exponential
+      const Core::LinAlg::MatrixExpCalcMethod mat_exp_calc_method_;
+
+      //! utilized computation method for the first derivative of the matrix exponential
+      const Core::LinAlg::GenMatrixExpFirstDerivCalcMethod mat_exp_deriv_calc_method_;
+
+      //! utilized computation method for the matrix logarithm
+      const Core::LinAlg::MatrixLogCalcMethod mat_log_calc_method_;
+
+      //! utilized computation method for the first derivative of the matrix logarithm
+      const Core::LinAlg::GenMatrixLogFirstDerivCalcMethod mat_log_deriv_calc_method_;
     };
   }  // namespace PAR
 
@@ -1216,115 +1266,6 @@ namespace Mat
   class InelasticDefgradTransvIsotropElastViscoplast : public InelasticDefgradFactors
   {
    public:
-    //! struct containing quantities computed from a given elasticity/plasticity state;
-    //! given: current right Cauchy-Green deformation tensor, inelastic deformation gradient and
-    //! plastic strain
-    struct StateQuantities
-    {
-      // ----- current state quantities (for the evaluated Gauss points) ----- //
-
-      //! elastic right Cauchy-Green deformation tensor
-      Core::LinAlg::Matrix<3, 3> curr_CeM_{Core::LinAlg::Initialization::zero};
-
-      //! isotropic stress factors
-      Core::LinAlg::Matrix<3, 1> curr_gamma_{Core::LinAlg::Initialization::zero};
-
-      //! isotropic constitutive tensor factors
-      Core::LinAlg::Matrix<8, 1> curr_delta_{Core::LinAlg::Initialization::zero};
-
-      //! elastic 2nd PK stress tensors (specifically only transversely-isotropic components)
-      Core::LinAlg::Matrix<3, 3> curr_SeM_{Core::LinAlg::Initialization::zero};
-
-      //! elastic stiffness tensor (specifically only transversely-isotropic components)
-      Core::LinAlg::Matrix<6, 6> curr_dSedCe_{Core::LinAlg::Initialization::zero};
-
-      //! deviatoric, symmetric part of the Mandel stress tensor
-      Core::LinAlg::Matrix<3, 3> curr_Me_dev_sym_M_{Core::LinAlg::Initialization::zero};
-
-      //! equivalent tensile stress
-      double curr_equiv_stress_{0.0};
-
-      //! equivalent plastic strain rate
-      double curr_equiv_plastic_strain_rate_{0.0};
-
-      //! plastic flow direction tensor
-      Core::LinAlg::Matrix<3, 3> curr_NpM_{Core::LinAlg::Initialization::zero};
-
-      //! plastic stretching tensor
-      Core::LinAlg::Matrix<3, 3> curr_dpM_{Core::LinAlg::Initialization::zero};
-
-      //! plastic velocity gradient tensor
-      Core::LinAlg::Matrix<3, 3> curr_lpM_{Core::LinAlg::Initialization::zero};
-
-      //! plastic update tensor
-      Core::LinAlg::Matrix<3, 3> curr_EpM_{Core::LinAlg::Initialization::zero};
-    };
-
-
-    //! struct containing specific derivatives of quantities computed from a given
-    //! elasticity/plasticity state; given: current right Cauchy-Green deformation tensor, inelastic
-    //! deformation gradient and plastic strain
-    struct StateQuantityDerivatives
-    {
-      // ----- current state variable derivatives (for the evaluated Gauss points)----- //
-
-      //! derivative of the elastic right Cauchy_Green deformation tensor w.r.t. the inverse
-      //! inelastic deformation gradient (Voigt stress form)
-      Core::LinAlg::Matrix<6, 9> curr_dCediFin_{Core::LinAlg::Initialization::zero};
-      //! derivative of the elastic right Cauchy_Green deformation tensor w.r.t. the right
-      //! Cauchy-Green deformation tensor (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> curr_dCedC_{Core::LinAlg::Initialization::zero};
-
-      //! derivatives of the equivalent tensile stress w.r.t. the inverse inelastic deformation
-      //! gradient (Voigt notation)
-      Core::LinAlg::Matrix<1, 9> curr_dequiv_stress_diFin_{Core::LinAlg::Initialization::zero};
-      //! derivatives of the equivalent tensile stress w.r.t. the right Cauchy-Green deformation
-      //! tensor (Voigt stress form)
-      Core::LinAlg::Matrix<1, 6> curr_dequiv_stress_dC_{Core::LinAlg::Initialization::zero};
-
-      //! derivative of the deviatoric, symmetric part of the Mandel stress tensor w.r.t. the
-      //! inverse inelastic deformation gradient (Voigt stress form)
-      Core::LinAlg::Matrix<6, 9> curr_dMe_dev_sym_diFin_{Core::LinAlg::Initialization::zero};
-      //! derivative of the deviatoric, symmetric part of the Mandel stress tensor w.r.t. the right
-      //! Cauchy-Green deformation tensor (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> curr_dMe_dev_sym_dC_{Core::LinAlg::Initialization::zero};
-
-      //! derivative of the plastic strain rate w.r.t. the equivalent stress
-      double curr_dpsr_dequiv_stress_{0.0};
-      //! derivative of the plastic strain rate w.r.t. the equivalent plastic strain
-      double curr_dpsr_depsp_{0.0};
-
-      //! derivative of the plastic stretching tensor w.r.t. the inverse inelastic deformation
-      //! gradient (Voigt stress form)
-      Core::LinAlg::Matrix<6, 9> curr_ddpdiFin_{Core::LinAlg::Initialization::zero};
-      //! derivative of the plastic stretching tensor w.r.t. the equivalent plastic strain (Voigt
-      //! stress form)
-      Core::LinAlg::Matrix<6, 1> curr_ddpdepsp_{Core::LinAlg::Initialization::zero};
-      //! derivative of the plastic stretching tensor w.r.t. the right Cauchy-Green deformation
-      //! tensor (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> curr_ddpdC_{Core::LinAlg::Initialization::zero};
-
-      //! derivative of the plastic velocity gradient tensor w.r.t. the inverse inelastic
-      //! deformation gradient (Voigt notation)
-      Core::LinAlg::Matrix<9, 9> curr_dlpdiFin_{Core::LinAlg::Initialization::zero};
-      //! derivative of the plastic velocity gradient tensor w.r.t. the equivalent plastic strain
-      //! (Voigt notation)
-      Core::LinAlg::Matrix<9, 1> curr_dlpdepsp_{Core::LinAlg::Initialization::zero};
-      //! derivative of the plastic velocity gradient tensor w.r.t. the right Cauchy-Green
-      //! deformation tensor (Voigt stress form)
-      Core::LinAlg::Matrix<9, 6> curr_dlpdC_{Core::LinAlg::Initialization::zero};
-
-      //! derivative of the plastic update tensor w.r.t. the inverse inelastic deformation gradient
-      //! (Voigt notation)
-      Core::LinAlg::Matrix<9, 9> curr_dEpdiFin_{Core::LinAlg::Initialization::zero};
-      //! derivative of the plastic update tensor w.r.t. the equivalent plastic strain (Voigt
-      //! notation)
-      Core::LinAlg::Matrix<9, 1> curr_dEpdepsp_{Core::LinAlg::Initialization::zero};
-      //! derivative of the plastic update tensor w.r.t. the right Cauchy-Green deformation tensor
-      //! (Voigt stress form)
-      Core::LinAlg::Matrix<9, 6> curr_dEpdC_{Core::LinAlg::Initialization::zero};
-    };
-
     /*!
      * @brief construct transversely isotropic material
      *
@@ -1385,8 +1326,9 @@ namespace Mat
 
     void unpack_inelastic(Core::Communication::UnpackBuffer& buffer) override;
 
-    /*! @brief Evaluate the current state variables based on a given right Cauchy-Green deformation
-     * tensor, given inverse plastic deformation gradient and given equivalent plastic strain
+    /*! @brief Evaluate the current state variables based on a given right Cauchy-Green
+     * deformation tensor, given inverse plastic deformation gradient and given equivalent
+     * plastic strain
      *
      * @param[in] CM right Cauchy-Green deformation tensor \f[ \boldsymbol{C} \f] in matrix form
      * @param[in] iFinM inverse inelastic deformation gradient
@@ -1394,10 +1336,15 @@ namespace Mat
      * @param[in] plastic_strain plastic strain  \f$ \varepsilon_{\text{p}} \f$
      * @param[out] err_status error status
      * @param[in] dt time step (or substep) length used for time integration
+     * @param[in] eval_type evaluation type: full evaluation or only
+     * partial evaluation, e.g. stop once the plastic strain rate has
+     * been evaluated
      */
-    StateQuantities evaluate_state_quantities(const Core::LinAlg::Matrix<3, 3>& CM,
-        const Core::LinAlg::Matrix<3, 3>& iFinM, const double plastic_strain,
-        Mat::ViscoplastErrorType& err_status, const double dt);
+    InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantities evaluate_state_quantities(
+        const Core::LinAlg::Matrix<3, 3>& CM, const Core::LinAlg::Matrix<3, 3>& iFinM,
+        const double plastic_strain,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status, const double dt,
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityEvalType& eval_type);
 
     /*! @brief Evaluate the current state variable derivatives with respect to the right
      * Cauchy-Green deformation tensor, the inverse plastic deformation gradient and the equivalent
@@ -1411,51 +1358,37 @@ namespace Mat
      * @param[in] dt time step length  \f$ \Delta t
      * \f$ (used for the integration)
      * @param[in] eval_state boolean: do we want to also evaluate the current state first (true)
-     *                       or is this already available from the current state variables (false)
+     *                       or is this already available from the
+     *                       current state variables (false)
+     * @param[in] eval_type evaluation type: full evaluation or only
+     * partial evaluation, e.g. stop once the derivatives of the plastic strain rate have
+     * been evaluated
      */
-    StateQuantityDerivatives evaluate_state_quantity_derivatives(
-        const Core::LinAlg::Matrix<3, 3>& CM, const Core::LinAlg::Matrix<3, 3>& iFinM,
-        const double plastic_strain, Mat::ViscoplastErrorType& err_status, const double dt,
+    InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivatives
+    evaluate_state_quantity_derivatives(const Core::LinAlg::Matrix<3, 3>& CM,
+        const Core::LinAlg::Matrix<3, 3>& iFinM, const double plastic_strain,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status, const double dt,
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivEvalType&
+            eval_type,
         const bool eval_state = false);
 
     //! return the fiber direction of transverse isotropy for the considered element
     Core::LinAlg::Matrix<3, 1> get_fiber_direction() { return m_; }
 
    private:
-    //! struct containing constant tensors which depend on the constant fiber direction \f$
-    //! \boldsymbol{m} \f$
-    struct ConstMatTensors
-    {
-      //! \f$ \boldsymbol{I} + \boldsymbol{m} \otimes \boldsymbol{m} \f$
-      Core::LinAlg::Matrix<3, 3> id_plus_mm_;
-      //! \f$ \boldsymbol{m} \otimes \boldsymbol{m} \f$
-      Core::LinAlg::Matrix<3, 3> mm_{Core::LinAlg::Initialization::zero};
-      //! deviatoric part \f$ \left( \boldsymbol{m} \otimes \boldsymbol{m}
-      //! \right)_\text{dev}\f$
-      Core::LinAlg::Matrix<3, 3> mm_dev_{Core::LinAlg::Initialization::zero};
-      //! \f$ \left( \boldsymbol{m} \otimes \boldsymbol{m} \right) \otimes \left( \boldsymbol{m}
-      //! \otimes \boldsymbol{m} \right) \f$ (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> mm_dyad_mm_{Core::LinAlg::Initialization::zero};
-      //!  \f$ \left( \boldsymbol{m} \otimes \boldsymbol{m} \right)_\text{dev} \otimes \left(
-      //!  \boldsymbol{m} \otimes \boldsymbol{m}
-      //!  \right) \f$
-      //! (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> mm_dev_dyad_mm_{Core::LinAlg::Initialization::zero};
-      //!  \f$ \boldsymbol{I} \otimes \left( \boldsymbol{m} \otimes \boldsymbol{m}
-      //!  \right) \f$
-      //! (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> id_dyad_mm_;
-
-      //! set tensors for a given fiber direction \f$ \boldsymbol{m} \f$
-      void set_material_const_tensors(const Core::LinAlg::Matrix<3, 1>& m);
-    };
-    ConstMatTensors const_mat_tensors_;
-
+    //! constant material-related tensors (isotropic: constant tensors
+    //! such
+    //! as identity matrices; transversely-isotropic: also contains
+    //! tensors associated with the director vector)
+    InelasticDefgradTransvIsotropElastViscoplastUtils::ConstMatTensors const_mat_tensors_;
 
     //! current Gauss Point
     int gp_;
     //! current element ID
     int ele_gid_;
+
+    //! parameter list
+    Teuchos::ParameterList params_;
 
     //! map to elastic materials/potential summands (only isotropic)
     std::vector<std::shared_ptr<Mat::Elastic::Summand>> potsumel_;
@@ -1472,63 +1405,25 @@ namespace Mat
     //! fiber direction (director vector)
     Core::LinAlg::Matrix<3, 1> m_;
 
+    //! utilities for evaluating the matrix exponential and logarithm
+    InelasticDefgradTransvIsotropElastViscoplastUtils::MatrixExpLogUtils matrix_exp_log_utils_;
+
     //! boolean to control whether the history variables should be updated during evaluation
     bool update_hist_var_ = true;
 
-    //! struct containing settings for time step lengths
-    struct TimeStepSettings
-    {
-      //! time step length
-      double dt_;
-      //! minimum substep length
-      double min_dt_;
-    };
-    TimeStepSettings time_step_settings_;
+    //! tracker for time step settings and time instants
+    InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepTracker time_step_tracker_;
 
-
-    //! struct containing quantities at the last and current time points (i.e., at \f[ t_n \f] and
-    //! \f[ t_{n+1} \f], respectively). The quantities are tracked at all Gauss points, in order to
-    //! update them simultaneously during the update method call
-    struct TimeStepQuantities
-    {
-      //! right Cauchy-Green deformation tensor at the last time step (for all Gauss points)
-      std::vector<Core::LinAlg::Matrix<3, 3>> last_rightCG_;
-
-      //! inverse plastic deformation gradient at the last time step (for all Gauss points)
-      std::vector<Core::LinAlg::Matrix<3, 3>> last_plastic_defgrd_inverse_;
-
-      //! (equivalent) plastic strain at the last time step (for all Gauss points)
-      std::vector<double> last_plastic_strain_;
-
-      //! temporary variable, for which we store the right Cauchy-Green deformation tensor at each
-      //! evaluation (used in order to update last_rightCG_ once outer NR converges) (for all Gauss
-      //! points)
-      std::vector<Core::LinAlg::Matrix<3, 3>> current_rightCG_;
-
-      //! current (reduced) deformation gradient: used to check whether the inverse inelastic
-      //! deformation gradient has already been evaluated (to improve the computation performance)
-      std::vector<Core::LinAlg::Matrix<3, 3>> current_defgrad_;
-
-
-      //! current inverse plastic deformation gradient (for all Gauss points)
-      std::vector<Core::LinAlg::Matrix<3, 3>> current_plastic_defgrd_inverse_;
-
-      //! current plastic strain (for all Gauss points)
-      std::vector<double> current_plastic_strain_;
-
-      //! inverse plastic deformation gradient at the last computed time instant (after the last
-      //! converged substep)
-      std::vector<Core::LinAlg::Matrix<3, 3>> last_substep_plastic_defgrd_inverse_;
-      //! plastic strain at the last computed time instant (after the last converged substep)
-      std::vector<double> last_substep_plastic_strain_;
-    };
-    TimeStepQuantities time_step_quantities_;
+    //! tracker for quantities at the last and current time points (i.e., at \f[ t_n \f] and
+    //! \f[ t_{n+1} \f], respectively) for all Gauss points simultaneously
+    InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities time_step_quantities_;
 
     //! evaluated state quantities
-    StateQuantities state_quantities_;
+    InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantities state_quantities_;
 
     //! evaluated state quantity derivatives
-    StateQuantityDerivatives state_quantity_derivatives_;
+    InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivatives
+        state_quantity_derivatives_;
 
     //! tensor interpolator used in the substepping procedure (one-dimensional, of order 1)
     Core::LinAlg::SecondOrderTensorInterpolator<1> tensor_interpolator_;
@@ -1540,33 +1435,15 @@ namespace Mat
     //! based on the reference matrices of the current time step)
     const std::vector<double> ref_locs_{0.0, 1.0};
 
-    //! struct with substepping parameters
-    struct SubstepParams
-    {
-      //! current time parameter ranging from 0 to the problem time step \f$ \Delta t \f$
-      double t;
-      //! counter of evaluated substeps
-      unsigned int substep_counter;
-      //! current substep size
-      double curr_dt;
-      //! number of times the problem time step \f$ \Delta t \f$ has been halved
-      unsigned int time_step_halving_counter;
-      //!  current total number of substeps to be evaluated within the time step \f$ \Delta t
-      //! \f$; this is not always given by time_step_halving_counter, since the
-      //! halving does not have to be uniform (e.g. we could halve the time step twice and still
-      //! have 3 substeps to evaluate instead of 4, i.e. if the first substep was evaluable
-      //! numerically, but the second substep not, leading to another halving of the substep length)
-      unsigned int total_num_of_substeps;
-      //! iteration counter of the Local Newton Loop used to evaluate each substep
-      unsigned int iter;
-    };
-
+    //! tracker object for the local substepping procedure
+    InelasticDefgradTransvIsotropElastViscoplastUtils::LocalSubsteppingUtils
+        local_substepping_utils_;
 
     /*!
      * @brief Calculate the Holzapfel gamma and delta values of the isotropic elastic material
      * components
-     * @param[in] CeM elastic right Cauchy_Green deformation tensor \f$ \boldsymbol{C}_\text{e} \f$
-     * in matrix form
+     * @param[in] CeM elastic right Cauchy_Green deformation tensor \f$ \boldsymbol{C}_\text{e}
+     * \f$ in matrix form
      * @param[out] gamma stress factors for the isotropic elasticity case, as derived in
      *                   Holzapfel - Nonlinear Solid Mechanics(2000)
      * @param[out] delta constitutive tensor factors for the isotropic elasticity case, as derived
@@ -1576,8 +1453,9 @@ namespace Mat
         Core::LinAlg::Matrix<3, 1>& gamma, Core::LinAlg::Matrix<8, 1>& delta);
 
     /*!
-     * @brief Check if the elastic predictor provides the solution for the current time step, i.e.,
-     * the deformation in the current time step is purely elastic with no viscoplastic contribution.
+     * @brief Check if the elastic predictor provides the solution for the current time step,
+     * i.e., the deformation in the current time step is purely elastic with no viscoplastic
+     * contribution.
      *
      * @param[in] CM right Cauchy_Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
      * @param[in] iFinM_pred predictor of the inverse inelastic deformation gradient \f$
@@ -1587,17 +1465,20 @@ namespace Mat
      * @param[out] err_status error status
      * @return boolean value: true (predictor = solution), or false (predictor != solution)
      */
-    bool check_predictor(const Core::LinAlg::Matrix<3, 3>& CM,
+    bool check_elastic_predictor(const Core::LinAlg::Matrix<3, 3>& CM,
         const Core::LinAlg::Matrix<3, 3>& iFinM_pred, const double plastic_strain_pred,
-        Mat::ViscoplastErrorType& err_status);
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /*!
      * @brief Calculate the residual for the Local Newton Loop (LNL)
      *
+     * @note The state quantities (class variable) are updated in this method, since they
+     * are used for the computation of the residual!
+     *
      * @param[in] CM right Cauchy_Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
-     * @param[in] x vector of Local Newton Loop unknowns, composed of the components of the inverse
-     *             inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1} \f$ and
-     *             plastic strain \f$ \varepsilon_{\text{p}} \f$
+     * @param[in] x vector of Local Newton Loop unknowns, composed of the components of the
+     * inverse inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1} \f$ and plastic
+     * strain \f$ \varepsilon_{\text{p}} \f$
      * @param[in] last_iFpM last inverse plastic deformation gradient
      *                      \f$ \boldsymbol{F}_{\text{in}, n}^{-1} \f$ in matrix form
      * @param[in] last_plastic_strain last plastic strain \f$ \varepsilon_{\text{p}, n}\f$
@@ -1608,7 +1489,7 @@ namespace Mat
     Core::LinAlg::Matrix<10, 1> calculate_local_newton_loop_residual(
         const Core::LinAlg::Matrix<3, 3>& CM, const Core::LinAlg::Matrix<10, 1>& x,
         const Core::LinAlg::Matrix<3, 3>& last_iFinM, const double last_plastic_strain,
-        const double dt, Mat::ViscoplastErrorType& err_status);
+        const double dt, InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
 
     /*!
@@ -1616,10 +1497,14 @@ namespace Mat
      * compute the 10 x 10 Jacobian matrix required for the Local Newton Loop and the
      * linearization for the Global Newton Loop
      *
+     * @note The state quantity derivatives (class variable) are updated in this method.
+     * They require the state quantities, which were evaluated and stored
+     * previously when calculating the residual.
+     *
      * @param[in] CM right Cauchy_Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
-     * @param[in] x vector of Local Newton Loop unknowns, composed of the components of the inverse
-     *             inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1} \f$ and
-     *             plastic strain \f$ \varepsilon_{\text{p}} \f$
+     * @param[in] x vector of Local Newton Loop unknowns, composed of the components of the
+     * inverse inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1} \f$ and plastic
+     * strain \f$ \varepsilon_{\text{p}} \f$
      * @param[in] last_iFpM last inverse plastic deformation gradient
      *                      \f$ \boldsymbol{F}_{\text{in}, n}^{-1} \f$ in matrix form
      * @param[in] last_plastic_strain last plastic strain \f$ \varepsilon_{\text{p}, n}\f$
@@ -1630,42 +1515,44 @@ namespace Mat
      */
     Core::LinAlg::Matrix<10, 10> calculate_jacobian(const Core::LinAlg::Matrix<3, 3>& CM,
         const Core::LinAlg::Matrix<10, 1>& x, const Core::LinAlg::Matrix<3, 3>& last_iFinM,
-        const double last_plastic_strain, const double dt, Mat::ViscoplastErrorType& err_status);
-
+        const double last_plastic_strain, const double dt,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /*!
      * @brief Local Newton Loop in order to calculate the current inverse plastic deformation
      * gradient and the current plastic strain value
      *
      * @param[in] defgrad deformation gradient \f$ \boldsymbol{F} \f$ in matrix form
-     * @param[in] x predictor of Local Newton Loop, composed of the components of the
+     * @param[in] x initial guess of Local Newton Loop, composed of the components of the
      *              inverse inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1} \f$
      *              and plastic strain \f$ \varepsilon_{\text{p}} \f$
      * @param[out] err_status error status
-     * @return solution vector of the Local Newton Loop, structured analogously to the predictor x
+     * @return solution vector of the Local Newton Loop, structured analogously to the initial guess
+     * x
      */
     Core::LinAlg::Matrix<10, 1> local_newton_loop(const Core::LinAlg::Matrix<3, 3>& defgrad,
-        const Core::LinAlg::Matrix<10, 1>& x, Mat::ViscoplastErrorType& err_status);
+        const Core::LinAlg::Matrix<10, 1>& x,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
 
     /*!
-     * @brief Setup new substep in the Local Newton Loop in case of an encountered evaluation error
+     * @brief Setup new substep in the Local Newton Loop in case of an encountered evaluation
+     * error
      *
-     * @param[in, out] substep_params parameters of the substepping procedure
-     * @param[out] sol current solution vector of the Local Newton Loop (reset to the last
+     * @param[in,out] sol current solution vector of the Local Newton Loop (reset to the last
      * converged value within this method)
-     * @param[out] curr_CM current right Cauchy-Green deformation tensor, interpolated using
+     * @param[in,out] curr_CM current right Cauchy-Green deformation tensor, interpolated using
      * the reference matrices of the time step (interpolated again within this method with the
      * updated new substep length)
      * @return error status for the new substep (true: no errors, false: we have halved the time
      * step too many times)
      *
      */
-    bool prepare_new_substep(SubstepParams& substep_params, Core::LinAlg::Matrix<10, 1>& sol,
-        Core::LinAlg::Matrix<3, 3>& curr_CM);
+    bool prepare_new_substep(Core::LinAlg::Matrix<10, 1>& sol, Core::LinAlg::Matrix<3, 3>& curr_CM);
 
     /*!
-     * @brief Evaluate the additional cmat stiffness tensor using a perturbation-based approach, if
+     * @brief Evaluate the additional cmat stiffness tensor using a perturbation-based approach,
+     if
      * the analytical evaluation fails
      *
      * @note For further information on the procedure, refer to:
@@ -1686,6 +1573,19 @@ namespace Mat
     void evaluate_additional_cmat_perturb_based(const Core::LinAlg::Matrix<3, 3>& FredM,
         Core::LinAlg::Matrix<6, 6>& cmatadd, const Core::LinAlg::Matrix<3, 3>& iFin_other,
         const Core::LinAlg::Matrix<6, 9>& dSdiFinj);
+
+    /*!
+     * @brief Get an extensive error message to be displayed when the
+     * simulation terminates. This is useful for debugging the time
+     * integration in more detail. This message contains a base error
+     * message which describes what failed in short form - this is
+     * then extended with information on the element ID, the Gauss
+     * Point, the last_ values and so on...
+     *
+     * @param[in] base_error_string base error message to be extended
+     * with further information
+     */
+    std::string get_error_info(const std::string& base_error_string);
   };
 }  // namespace Mat
 

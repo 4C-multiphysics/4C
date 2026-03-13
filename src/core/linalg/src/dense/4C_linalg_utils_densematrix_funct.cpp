@@ -1349,7 +1349,7 @@ Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_exp(const Core::LinAlg::Matr
   }
 
   // determine computation method based on the matrix norm
-  if (calc_method == Core::LinAlg::MatrixExpCalcMethod::default_method)
+  if (calc_method == Core::LinAlg::MatrixExpCalcMethod::automatic)
   {
     if (mat_norm < 2.0)
       calc_method = Core::LinAlg::MatrixExpCalcMethod::taylor_series;
@@ -1407,7 +1407,7 @@ Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_log(const Core::LinAlg::Matr
   update_mat.multiply(1.0, id_minus_A, inv_id_plus_A, 0.0);
 
   // get computation method if default is specified
-  if (calc_method == Core::LinAlg::MatrixLogCalcMethod::default_series)
+  if (calc_method == Core::LinAlg::MatrixLogCalcMethod::automatic)
   {
     // employ Taylor series if matrix norm smaller than 1 for characteristic matrix
     if (id_minus_A.norm2() < 1.0)
@@ -1491,7 +1491,7 @@ Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_exp_1st_deriv(
   Core::LinAlg::Matrix<9, 9> output(Initialization::zero);
 
   // determine the computation method (currently, only Taylor series implemented)
-  if (calc_method == Core::LinAlg::GenMatrixExpFirstDerivCalcMethod::default_method)
+  if (calc_method == Core::LinAlg::GenMatrixExpFirstDerivCalcMethod::automatic)
   {
     calc_method = Core::LinAlg::GenMatrixExpFirstDerivCalcMethod::taylor_series;
   }
@@ -1529,7 +1529,7 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
   }
 
   // determine computation method based on the matrix norm
-  if (calc_method == Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::default_method)
+  if (calc_method == Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::automatic)
   {
     if (norm < 0.3)
       calc_method = Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::taylor_series;
@@ -1569,7 +1569,7 @@ Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_log_1st_deriv(
   id_minus_A.update(1.0, id_3x3, -1.0, input, 0.0);
 
   // determine the computation method based on matrix characteristics
-  if (calc_method == Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::default_series)
+  if (calc_method == Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::automatic)
   {
     if (id_minus_A.norm2() < 1.0)
       calc_method = Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series;
@@ -1613,7 +1613,7 @@ Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_log_1st_deriv(
   id_minus_A.update(1.0, id_3x3, -1.0, input, 0.0);
 
   // determine the computation method based on matrix characteristics
-  if (calc_method == Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::default_series)
+  if (calc_method == Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::automatic)
   {
     if (id_minus_A.norm2() < 1.0)
       calc_method = Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series;

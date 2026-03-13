@@ -81,9 +81,9 @@ namespace Core::LinAlg
   /// enum class: computation method used for the calculation of the matrix exponential
   enum class MatrixExpCalcMethod
   {
-    default_method,  ///< default computation, employing either of the other methods below depending
-                     ///< on different characteristics, such as the matrix norm
-    taylor_series,   ///< computation using the Taylor series,
+    automatic,  ///< automatic computation, employing either of the other methods below depending
+                ///< on different characteristics, such as the matrix norm
+    taylor_series,    ///< computation using the Taylor series,
     spectral_decomp,  ///< computation using the spectral decomposition,
   };
 
@@ -100,12 +100,12 @@ namespace Core::LinAlg
    */
   template <unsigned int dim>
   Matrix<dim, dim> matrix_exp(const Matrix<dim, dim>& input, MatrixFunctErrorType& err_status,
-      const MatrixExpCalcMethod calc_method = MatrixExpCalcMethod::default_method);
+      const MatrixExpCalcMethod calc_method = MatrixExpCalcMethod::automatic);
 
   /// enum class: computation method used for the calculation of the matrix logarithm
   enum class MatrixLogCalcMethod
   {
-    default_series,  ///< default series computation, employing one of the series descriptions (or
+    automatic,       ///< automatic series computation, employing one of the series descriptions (or
                      ///< the spectral decomposition) below, depending on different characteristics,
                      ///< such as the matrix norm
     taylor_series,   ///< computation using the Taylor series,
@@ -142,7 +142,7 @@ namespace Core::LinAlg
    */
   template <unsigned int dim>
   Matrix<dim, dim> matrix_log(const Matrix<dim, dim>& input, MatrixFunctErrorType& err_status,
-      const MatrixLogCalcMethod calc_method = MatrixLogCalcMethod::default_series);
+      const MatrixLogCalcMethod calc_method = MatrixLogCalcMethod::automatic);
 
   /*!
    * @brief Special usage for methods employing the Pade approximation, where the Pade
@@ -168,9 +168,9 @@ namespace Core::LinAlg
   /// exponential for a general, not necessarily symmetric matrix
   enum class GenMatrixExpFirstDerivCalcMethod
   {
-    default_method,  ///< default computation, employing either of the other methods below depending
-                     ///< on different characteristics, such as the matrix norm
-    taylor_series,   ///< computation using the Taylor series,
+    automatic,  ///< automatic computation, employing either of the other methods below depending
+                ///< on different characteristics, such as the matrix norm
+    taylor_series,  ///< computation using the Taylor series,
   };
 
   /*!
@@ -188,17 +188,16 @@ namespace Core::LinAlg
    * notation
    */
   Matrix<9, 9> matrix_3x3_exp_1st_deriv(const Matrix<3, 3>& input, MatrixFunctErrorType& err_status,
-      GenMatrixExpFirstDerivCalcMethod calc_method =
-          GenMatrixExpFirstDerivCalcMethod::default_method);
+      GenMatrixExpFirstDerivCalcMethod calc_method = GenMatrixExpFirstDerivCalcMethod::automatic);
 
   /// enum class: computation method used for the calculation of the first derivative of the matrix
   /// logarithm for a general, not necessarily symmetric matrix
   enum class GenMatrixLogFirstDerivCalcMethod
   {
-    default_series,  ///< default series computation, employing either of the series below depending
-                     ///< on different characteristics, such as the matrix norm
-    taylor_series,   ///< computation using the Taylor series,
-    gregory_series,  ///< computation using the Gregory series,
+    automatic,  ///< automatic series computation, employing either of the series below depending
+                ///< on different characteristics, such as the matrix norm
+    taylor_series,    ///< computation using the Taylor series,
+    gregory_series,   ///< computation using the Gregory series,
     pade_part_fract,  ///< Pade approximation using a partial fraction expansion, as presented in
                       ///< Higham: Functions of Matrices, Chapter 11: Matrix Logarithm, Eq. 11.18
   };
@@ -224,8 +223,7 @@ namespace Core::LinAlg
   /*! @brief Basic usage for methods not based on the Pade approximation
    */
   Matrix<9, 9> matrix_3x3_log_1st_deriv(const Matrix<3, 3>& input, MatrixFunctErrorType& err_status,
-      GenMatrixLogFirstDerivCalcMethod calc_method =
-          GenMatrixLogFirstDerivCalcMethod::default_series);
+      GenMatrixLogFirstDerivCalcMethod calc_method = GenMatrixLogFirstDerivCalcMethod::automatic);
 
   /*!  @brief Special usage for methods employing the Pade approximation, where the Pade
    * order is also an input parameter
@@ -248,9 +246,9 @@ namespace Core::LinAlg
   /// exponential for a symmetric matrix
   enum class SymMatrixExpFirstDerivCalcMethod
   {
-    default_method,  ///< default computation, employing either of the other methods below depending
-                     ///< on different characteristics, such as the matrix norm
-    taylor_series,   ///< computation using the Taylor series,
+    automatic,  ///< automatic computation, employing either of the other methods below depending
+                ///< on different characteristics, such as the matrix norm
+    taylor_series,    ///< computation using the Taylor series,
     eigenproj_based,  ///< computation based on eigenprojections, as shown in deSouza, Computational
                       ///< Methods for Plasticity: Theory and Applications, Wiley & Sons,
                       ///< 2008, Section A.5
@@ -272,8 +270,7 @@ namespace Core::LinAlg
    */
   Matrix<6, 6> sym_matrix_3x3_exp_1st_deriv(const Matrix<3, 3>& input,
       MatrixFunctErrorType& err_status,
-      SymMatrixExpFirstDerivCalcMethod calc_method =
-          SymMatrixExpFirstDerivCalcMethod::default_method);
+      SymMatrixExpFirstDerivCalcMethod calc_method = SymMatrixExpFirstDerivCalcMethod::automatic);
 
   /*!
    * @brief Computes the exponential of a symmetric matrix along with the first and second

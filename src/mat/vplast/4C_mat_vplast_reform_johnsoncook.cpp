@@ -9,6 +9,7 @@
 
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_mat_inelastic_defgrad_factors_service.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_vplast_law.hpp"
 
@@ -17,6 +18,8 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+
+using ViscoplastErrorType = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType;
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
@@ -60,16 +63,17 @@ double Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_stress_ratio(
  *--------------------------------------------------------------------*/
 double Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_plastic_strain_rate(
     const double equiv_stress, const double equiv_plastic_strain, const double dt,
-    const bool log_substep, Mat::ViscoplastErrorType& err_status, const bool update_hist_var)
+    const double max_plastic_strain_incr, ViscoplastErrorType& err_status,
+    const bool update_hist_var)
 {
   // first set error status to "no errors"
-  err_status = Mat::ViscoplastErrorType::NoErrors;
+  err_status = ViscoplastErrorType::no_errors;
 
   // Check if plastic strain is negative and throw error (handled by the parent material,
   // substepping)
   if (equiv_plastic_strain < 0.0)
   {
-    err_status = Mat::ViscoplastErrorType::NegativePlasticStrain;
+    err_status = ViscoplastErrorType::negative_plastic_strain;
     return -1;
   }
 
@@ -86,11 +90,11 @@ double Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_plastic_strain_rate(
     // - 1.0]) ) \f$
     const double log_temp = const_pars_.log_p + const_pars_.e * (stress_ratio - 1.0);
 
-    // check if characteristic term too large, throw error overflow error if so
-    if (((!log_substep) && (std::log(dt) + log_temp > std::log(10.0 + const_pars_.p * dt))) ||
-        ((log_substep) && (std::log(dt) + log_temp > std::log(2.0e30 + const_pars_.p * dt))))
+    // check if characteristic term too large, throw error overflow
+    // error if so
+    if (std::log(dt) + log_temp > std::log(max_plastic_strain_incr + const_pars_.p * dt))
     {
-      err_status = Mat::ViscoplastErrorType::OverflowError;
+      err_status = ViscoplastErrorType::overflow_error;
       return -1;
     }
 
@@ -105,10 +109,11 @@ double Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_plastic_strain_rate(
 Core::LinAlg::Matrix<2, 1>
 Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_strain_rate(
     const double equiv_stress, const double equiv_plastic_strain, const double dt,
-    const bool log_substep, Mat::ViscoplastErrorType& err_status, const bool update_hist_var)
+    const double max_plastic_strain_deriv_incr, ViscoplastErrorType& err_status,
+    const bool update_hist_var)
 {
   // first set error status to "no errors"
-  err_status = Mat::ViscoplastErrorType::NoErrors;
+  err_status = ViscoplastErrorType::no_errors;
 
   // used equivalent plastic strain
   double used_equiv_plastic_strain = equiv_plastic_strain;
@@ -124,7 +129,7 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
   // substepping)
   if (equiv_plastic_strain < 0.0)
   {
-    err_status = Mat::ViscoplastErrorType::NegativePlasticStrain;
+    err_status = ViscoplastErrorType::negative_plastic_strain;
     return Core::LinAlg::Matrix<2, 1>{Core::LinAlg::Initialization::zero};
   }
 
@@ -160,10 +165,16 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
                            (const_pars_.N - 1.0) * log_equiv_plastic_strain;
 
     // check overflow error using these logarithms
-    if ((!log_substep && (log_dt + log_deriv_sigma > 10.0) && (log_dt + log_deriv_eps > 10.0)) &&
-        (log_substep && (log_dt + log_deriv_sigma > 2.0e30) && (log_dt + log_deriv_eps > 2.0e30)))
+    if (max_plastic_strain_deriv_incr <= 0.0)
     {
-      err_status = Mat::ViscoplastErrorType::OverflowError;
+      err_status = ViscoplastErrorType::overflow_error;
+      return Core::LinAlg::Matrix<2, 1>{Core::LinAlg::Initialization::zero};
+    }
+    double log_max_plastic_strain_deriv_value = std::log(max_plastic_strain_deriv_incr);
+    if ((log_dt + log_deriv_sigma > log_max_plastic_strain_deriv_value) &&
+        (log_dt + log_deriv_eps > log_max_plastic_strain_deriv_value))
+    {
+      err_status = ViscoplastErrorType::overflow_error;
       return Core::LinAlg::Matrix<2, 1>{Core::LinAlg::Initialization::zero};
     }
 

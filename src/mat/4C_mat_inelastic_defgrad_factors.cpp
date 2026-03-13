@@ -44,69 +44,11 @@
 FOUR_C_NAMESPACE_OPEN
 namespace
 {
-
-
-  // struct: constant non-material tensors
-  struct ConstNonMatTensors
-  {
-    static const ConstNonMatTensors& instance()
-    {
-      static ConstNonMatTensors instance;
-      return instance;
-    }
-
-    // constructor
-    ConstNonMatTensors()
-    {  // auxiliaries
-      Core::LinAlg::Matrix<3, 3> id3x3(Core::LinAlg::Initialization::zero);
-      for (int i = 0; i < 3; ++i) id3x3(i, i) = 1.0;
-      Core::LinAlg::Matrix<6, 6> temp6x6(Core::LinAlg::Initialization::zero);
-
-      // set constant non-material tensors
-
-      // 3x3 identity
-      id3x3_.update(1.0, id3x3, 0.0);
-
-      // Voigt stress form of 3x3 identity
-      Core::LinAlg::Voigt::VoigtUtils<Core::LinAlg::Voigt::NotationType::stress>::matrix_to_vector(
-          id3x3_, id6x1_);
-
-      // symmetric identity four tensor
-      Core::LinAlg::FourTensorOperations::add_kronecker_tensor_product(
-          id4_6x6_, 1.0, id3x3, id3x3, 0.0);
-
-      // deviatoric operator
-      Core::LinAlg::FourTensor<3> dev_op_four_tensor =
-          Core::LinAlg::setup_deviatoric_projection_tensor<3>();
-      Core::LinAlg::Voigt::setup_6x6_voigt_matrix_from_four_tensor(temp6x6, dev_op_four_tensor);
-      dev_op_ = Core::LinAlg::Voigt::modify_voigt_representation(temp6x6, 1.0, 2.0);
-
-      // identity four tensor
-      id4_9x9_.clear();
-      Core::LinAlg::FourTensorOperations::add_non_symmetric_product(1.0, id3x3_, id3x3_, id4_9x9_);
-
-      // 10x10 identity
-      id10x10_.clear();
-      for (int i = 0; i < 10; ++i) id10x10_(i, i) = 1.0;
-    }
-
-    // second-order 3x3 identity tensor in matrix form \f$ \boldsymbol{I} \f$
-    Core::LinAlg::Matrix<3, 3> id3x3_{Core::LinAlg::Initialization::zero};
-    // second-order 3x3 identity in Voigt stress form \f$ \boldsymbol{I} \f$
-    Core::LinAlg::Matrix<6, 1> id6x1_{Core::LinAlg::Initialization::zero};
-    // symmetric identity four tensor of dimension 3 \f$ \mathbb{I}_\text{S} \f$
-    Core::LinAlg::Matrix<6, 6> id4_6x6_{Core::LinAlg::Initialization::zero};
-    // deviatoric operator \f$ \mathbb{P}_{\text{dev}}  =  \mathbb{I}_\text{S} -
-    // \frac{1}{3} \boldsymbol{I} \otimes \boldsymbol{I} \f$
-    Core::LinAlg::Matrix<6, 6> dev_op_{Core::LinAlg::Initialization::zero};
-    // identity fourth-order tensor in Voigt notation: delta_AC delta_BD in index notation
-    Core::LinAlg::Matrix<9, 9> id4_9x9_{Core::LinAlg::Initialization::zero};
-    // second-order 10x10 identity tensor in matrix form
-    Core::LinAlg::Matrix<10, 10> id10x10_{Core::LinAlg::Initialization::zero};
-  };
+  namespace ViscoplastUtils = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils;
 
   // declare file-scope instance of the constant non-material tensors
-  static ConstNonMatTensors const_non_mat_tensors = ConstNonMatTensors::instance();
+  static ViscoplastUtils::ConstNonMatTensors const_non_mat_tensors =
+      ViscoplastUtils::ConstNonMatTensors::instance();
 
   // read input parameter container of parent material (i.e., underlying
   // multiplicative_split_defgrad_elasthyper material)
@@ -650,12 +592,31 @@ Mat::PAR::InelasticDefgradTransvIsotropElastViscoplast::
       yield_cond_a_(matdata.parameters.get<double>("YIELD_COND_A")),
       yield_cond_b_(matdata.parameters.get<double>("YIELD_COND_B")),
       yield_cond_f_(matdata.parameters.get<double>("YIELD_COND_F")),
-      bool_transv_isotropy_(
-          read_anisotropy_type(matdata.parameters.get<std::string>("ANISOTROPY"))),
-      bool_log_substepping_(matdata.parameters.get<bool>("LOG_SUBSTEP")),
-      max_halve_number_(matdata.parameters.get<int>("MAX_HALVE_NUM_SUBSTEP"))
+      mat_behavior_(matdata.parameters.get<ViscoplastUtils::MatBehavior>("MAT_BEHAVIOR")),
+      timint_type_(
+          matdata.parameters.get<ViscoplastUtils::TimIntType>("TIME_INTEGRATION_HIST_VARS")),
+      linearization_type_(
+          matdata.parameters.get<ViscoplastUtils::LinearizationType>("LINEARIZATION")),
+      max_plastic_strain_incr_(matdata.parameters.get<double>("MAX_PLASTIC_STRAIN_INCR")),
+      max_plastic_strain_deriv_incr_(
+          matdata.parameters.get<double>("MAX_PLASTIC_STRAIN_DERIV_INCR")),
+      max_substepping_halve_num_(matdata.parameters.get<int>("MAX_SUBSTEPPING_HALVE_NUM")),
+      mat_exp_calc_method_(
+          matdata.parameters.get<Core::LinAlg::MatrixExpCalcMethod>("MATRIX_EXP_CALC_METHOD")),
+      mat_exp_deriv_calc_method_(
+          matdata.parameters.get<Core::LinAlg::GenMatrixExpFirstDerivCalcMethod>(
+              "MATRIX_EXP_DERIV_CALC_METHOD")),
+      mat_log_calc_method_(
+          matdata.parameters.get<Core::LinAlg::MatrixLogCalcMethod>("MATRIX_LOG_CALC_METHOD")),
+      mat_log_deriv_calc_method_(
+          matdata.parameters.get<Core::LinAlg::GenMatrixLogFirstDerivCalcMethod>(
+              "MATRIX_LOG_DERIV_CALC_METHOD"))
 {
-  if (max_halve_number_ < 0) FOUR_C_THROW("Parameter MAX_HALVE_NUM_SUBSTEP must be >= 0!");
+  // consistency checks
+  if (max_substepping_halve_num_ < 0)
+    FOUR_C_THROW(
+        "Maximum number of times the global time step can be halved in the substepping procedure "
+        "must be >= 0!");
 }
 
 
@@ -685,7 +646,8 @@ std::shared_ptr<Mat::InelasticDefgradFactors> Mat::InelasticDefgradFactors::fact
   {
     FOUR_C_THROW(
         "If you use the material 'InelasticDefgradFactors' please set 'MASSLIN' in the "
-        "STRUCTURAL DYNAMIC Section to 'None', or feel free to implement other possibility!");
+        "STRUCTURAL DYNAMIC Section to 'None', or feel free to implement other "
+        "possibilities!");
   }
 
   // retrieve problem instance to read from
@@ -1650,36 +1612,35 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::InelasticDefgradTransvIsotrop
       fiber_reader_(std::move(fiber_reader)),
       tensor_interpolator_(init_tensor_interpolator())
 {
-  // set time step size to 0.0 (this is set to the correct and current value in the preevaluate
-  // method)
-  time_step_settings_.dt_ = 0.0;
+  // set time step size to 0.0 (this is set to the correct and current value in the
+  // preevaluate method)
+  time_step_tracker_.dt = 0.0;
   // set minimum substep length
-  time_step_settings_.min_dt_ = 0.0;
+  time_step_tracker_.min_dt = 0.0;
 
-  // ----- set last_ and current_ variables referring to values at different time instants -----
-  // for now: the number of Gauss points is unknown -> we set the values only for 1 Gauss point
-  // and update the number of Gauss points in the setup method
+  // ----- set last_ and current_ variables referring to values at different time instants
+  // ----- for now: the number of Gauss points is unknown -> we set the values only for 1
+  // Gauss point and update the number of Gauss points in the setup method
 
   // default values of the inverse plastic deformation gradient: unit tensor
-  time_step_quantities_.last_plastic_defgrd_inverse_.resize(1, const_non_mat_tensors.id3x3_);
-  time_step_quantities_.current_plastic_defgrd_inverse_.resize(
-      1, const_non_mat_tensors.id3x3_);  // value irrelevant at this point
-  time_step_quantities_.last_substep_plastic_defgrd_inverse_.resize(
-      1, const_non_mat_tensors.id3x3_);
+  time_step_quantities_.last_plastic_defgrad_inverse.resize(1, const_non_mat_tensors.id3x3);
+  time_step_quantities_.current_plastic_defgrad_inverse.resize(
+      1, const_non_mat_tensors.id3x3);  // value irrelevant at this point
+  time_step_quantities_.last_substep_plastic_defgrad_inverse.resize(1, const_non_mat_tensors.id3x3);
 
   // update last_ and current_ values of the plastic strain
-  time_step_quantities_.last_plastic_strain_.resize(1, 0.0);
-  time_step_quantities_.current_plastic_strain_.resize(1, 0.0);  // value irrelevant at this point
-  time_step_quantities_.last_substep_plastic_strain_.resize(1, 0.0);
+  time_step_quantities_.last_plastic_strain.resize(1, 0.0);
+  time_step_quantities_.current_plastic_strain.resize(1, 0.0);  // value irrelevant at this point
+  time_step_quantities_.last_substep_plastic_strain.resize(1, 0.0);
 
   // default values of the right CG tensor: unit tensor
-  time_step_quantities_.last_rightCG_.resize(1, const_non_mat_tensors.id3x3_);
-  time_step_quantities_.current_rightCG_.resize(
-      1, const_non_mat_tensors.id3x3_);  // value irrelevant at this point
+  time_step_quantities_.last_rightCG.resize(1, const_non_mat_tensors.id3x3);
+  time_step_quantities_.current_rightCG.resize(
+      1, const_non_mat_tensors.id3x3);  // value irrelevant at this point
 
   // default value for the current deformation gradient: zero tensor \f$ \boldsymbol{0} f$ (to make
   // sure that the inverse inelastic deformation gradient is evaluated in the first method call)
-  time_step_quantities_.current_defgrad_.resize(
+  time_step_quantities_.current_defgrad.resize(
       1, Core::LinAlg::Matrix<3, 3>{Core::LinAlg::Initialization::zero});
 }
 
@@ -1698,18 +1659,21 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::pre_evaluate(
 
   // set time step
   FOUR_C_ASSERT(context.time_step_size, "Time step size not given in evaluation context.");
-  time_step_settings_.dt_ = *context.time_step_size;
+  time_step_tracker_.dt = *context.time_step_size;
+  FOUR_C_ASSERT(context.total_time, "Total time not given in evaluation context.");
+  time_step_tracker_.tnp = *context.total_time;
+
   // set minimum substep length
-  time_step_settings_.min_dt_ =
-      time_step_settings_.dt_ / std::pow(2.0, parameter()->max_halve_number());
+  time_step_tracker_.min_dt =
+      time_step_tracker_.dt / std::pow(2.0, parameter()->max_halve_number());
 
   // set last substep values (last converged state) as the last time step values --> required, as
   // these are used in the EvaluateAdditionalCMat method (in the case where there is no plastic
   // deformation, these would not be updated correctly otherwise)
-  time_step_quantities_.last_substep_plastic_defgrd_inverse_[gp_] =
-      time_step_quantities_.last_plastic_defgrd_inverse_[gp_];
-  time_step_quantities_.last_substep_plastic_strain_[gp_] =
-      time_step_quantities_.last_plastic_strain_[gp_];
+  time_step_quantities_.last_substep_plastic_defgrad_inverse[gp_] =
+      time_step_quantities_.last_plastic_defgrad_inverse[gp_];
+  time_step_quantities_.last_substep_plastic_strain[gp_] =
+      time_step_quantities_.last_plastic_strain[gp_];
 
   // call preevaluate method of the viscoplastic law
   viscoplastic_law_->pre_evaluate(gp);
@@ -1747,12 +1711,13 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::calculate_gamma_delta(
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
-Mat::InelasticDefgradTransvIsotropElastViscoplast::StateQuantities
+ViscoplastUtils::StateQuantities
 Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
     const Core::LinAlg::Matrix<3, 3>& CM, const Core::LinAlg::Matrix<3, 3>& iFinM,
-    const double plastic_strain, Mat::ViscoplastErrorType& err_status, const double dt)
+    const double plastic_strain, ViscoplastUtils::ErrorType& err_status, const double dt,
+    const ViscoplastUtils::StateQuantityEvalType& eval_type)
 {
-  StateQuantities state_quantities{};
+  ViscoplastUtils::StateQuantities state_quantities{};
 
   // auxiliaries
   Core::LinAlg::Matrix<1, 1> temp1x1(Core::LinAlg::Initialization::zero);
@@ -1761,24 +1726,24 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
 
   // compute right elastic CG tensor
   temp3x3.multiply_nn(1.0, CM, iFinM, 0.0);
-  state_quantities.curr_CeM_.multiply_tn(1.0, iFinM, temp3x3, 0.0);
+  state_quantities.curr_CeM.multiply_tn(1.0, iFinM, temp3x3, 0.0);
   Core::LinAlg::SymmetricTensor<double, 3, 3> CeV =
-      Core::LinAlg::assume_symmetry(Core::LinAlg::make_tensor(state_quantities.curr_CeM_));
+      Core::LinAlg::assume_symmetry(Core::LinAlg::make_tensor(state_quantities.curr_CeM));
 
   // compose isotropic elastic coefficients (Holzapfel, Nonlinear Solid Mechanics, 2000)
   calculate_gamma_delta(
-      state_quantities.curr_CeM_, state_quantities.curr_gamma_, state_quantities.curr_delta_);
-  state_quantities.curr_SeM_.clear();
-  state_quantities.curr_dSedCe_.clear();
-  // compute additional 2nd elastic PK stress and elastic stiffness for the transversely isotropic
-  // components (additive split assumed, as for CoupTransverselyIsotropic)
-  if (parameter()->bool_transv_isotropy())
+      state_quantities.curr_CeM, state_quantities.curr_gamma, state_quantities.curr_delta);
+  state_quantities.curr_SeM.clear();
+  state_quantities.curr_dSedCe.clear();
+  // compute additional 2nd elastic PK stress and elastic stiffness for the transversely
+  // isotropic components (additive split assumed, as for CoupTransverselyIsotropic)
+  if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::transv_isotrop)
   {
     // initialize empty parameter list
     Teuchos::ParameterList param_list{};
 
-    // loop through all transversely isotropic parts, and compute the additional elastic stress
-    // and elastic stiffness
+    // loop through all transversely isotropic parts, and compute the additional elastic
+    // stress and elastic stiffness
     Core::LinAlg::SymmetricTensor<double, 3, 3> SeV{};
 
     Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3> dSedCe{};
@@ -1786,26 +1751,26 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
     {
       p->add_stress_aniso_principal(CeV, dSedCe, SeV, param_list, gp_, ele_gid_);
     }
-    state_quantities.curr_dSedCe_.clear();
-    state_quantities.curr_dSedCe_ += Core::LinAlg::make_stress_like_voigt_view(dSedCe);
-    state_quantities.curr_SeM_ = Core::LinAlg::make_matrix(Core::LinAlg::get_full(SeV));
+    state_quantities.curr_dSedCe.clear();
+    state_quantities.curr_dSedCe += Core::LinAlg::make_stress_like_voigt_view(dSedCe);
+    state_quantities.curr_SeM = Core::LinAlg::make_matrix(Core::LinAlg::get_full(SeV));
   }
 
   // Ce * Ce tensor
   Core::LinAlg::Matrix<3, 3> CeCeM(Core::LinAlg::Initialization::zero);
-  CeCeM.multiply_nn(1.0, state_quantities.curr_CeM_, state_quantities.curr_CeM_, 0.0);
+  CeCeM.multiply_nn(1.0, state_quantities.curr_CeM, state_quantities.curr_CeM, 0.0);
 
   // compute symmetric part of Mandel stress tensor
   Core::LinAlg::Matrix<3, 3> Me_sym_M(Core::LinAlg::Initialization::zero);
-  Me_sym_M.update(state_quantities.curr_gamma_(0), state_quantities.curr_CeM_,
-      state_quantities.curr_gamma_(1), CeCeM, 0.0);
-  Me_sym_M.update(state_quantities.curr_gamma_(2), const_non_mat_tensors.id3x3_, 1.0);
-  if (parameter()->bool_transv_isotropy())
+  Me_sym_M.update(state_quantities.curr_gamma(0), state_quantities.curr_CeM,
+      state_quantities.curr_gamma(1), CeCeM, 0.0);
+  Me_sym_M.update(state_quantities.curr_gamma(2), const_non_mat_tensors.id3x3, 1.0);
+  if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::transv_isotrop)
   {
     Core::LinAlg::Matrix<3, 3> addMeM(Core::LinAlg::Initialization::zero);
-    temp3x3.multiply_nn(1.0, state_quantities.curr_CeM_, state_quantities.curr_SeM_, 0.0);
+    temp3x3.multiply_nn(1.0, state_quantities.curr_CeM, state_quantities.curr_SeM, 0.0);
     addMeM.update(1.0 / 2.0, temp3x3, 0.0);
-    temp3x3.multiply_tn(1.0, state_quantities.curr_SeM_, state_quantities.curr_CeM_, 0.0);
+    temp3x3.multiply_tn(1.0, state_quantities.curr_SeM, state_quantities.curr_CeM, 0.0);
     addMeM.update(1.0 / 2.0, temp3x3, 1.0);
     Me_sym_M.update(1.0, addMeM, 1.0);
   }
@@ -1813,8 +1778,8 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
   // calculate deviatoric part of the symmetric Mandel stress
   double trMe = 0.0;
   for (int i = 0; i < 3; ++i) trMe += Me_sym_M(i, i);
-  state_quantities.curr_Me_dev_sym_M_.update(
-      1.0, Me_sym_M, -1.0 / 3.0 * trMe, const_non_mat_tensors.id3x3_, 0.0);
+  state_quantities.curr_Me_dev_sym_M.update(
+      1.0, Me_sym_M, -1.0 / 3.0 * trMe, const_non_mat_tensors.id3x3, 0.0);
 
   // for transverse isotropy: we use the Hill 1949 yield condition, adapted for transversely
   // isotropic materials --> get yield function parameters A, B, F
@@ -1822,117 +1787,164 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
   const double B = parameter()->yield_cond_b();
   const double F = parameter()->yield_cond_f();
 
-  // determine scalar quantities of invariants / pseudoinvariants needed to compute the equivalent
-  // tensile stress
+  // determine scalar quantities of invariants / pseudoinvariants needed to compute the
+  // equivalent tensile stress
   double Me_dev_sym_contract_Me_dev_sym =
       Core::LinAlg::FourTensorOperations::contract_matrix_matrix(
-          state_quantities.curr_Me_dev_sym_M_, state_quantities.curr_Me_dev_sym_M_);
+          state_quantities.curr_Me_dev_sym_M, state_quantities.curr_Me_dev_sym_M);
   Core::LinAlg::Matrix<3, 3> Me_dev_sym_squared_M(Core::LinAlg::Initialization::zero);
   Me_dev_sym_squared_M.multiply_nn(
-      1.0, state_quantities.curr_Me_dev_sym_M_, state_quantities.curr_Me_dev_sym_M_, 0.0);
+      1.0, state_quantities.curr_Me_dev_sym_M, state_quantities.curr_Me_dev_sym_M, 0.0);
   temp1x3.multiply_tn(1.0, m_, Me_dev_sym_squared_M, 0.0);
   temp1x1.multiply_nn(1.0, temp1x3, m_, 0.0);
   double mTMe_dev_sym_squared_m = temp1x1(0);
-  temp1x3.multiply_tn(1.0, m_, state_quantities.curr_Me_dev_sym_M_, 0.0);
+  temp1x3.multiply_tn(1.0, m_, state_quantities.curr_Me_dev_sym_M, 0.0);
   temp1x1.multiply_nn(1.0, temp1x3, m_, 0.0);
   double mTMe_dev_sym_m = temp1x1(0);
 
   // calculate equivalent tensile stress
-  if (parameter()->bool_transv_isotropy())
+  if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::transv_isotrop)
   {
-    state_quantities.curr_equiv_stress_ =
+    state_quantities.curr_equiv_stress =
         std::sqrt((A + 2 * B) * Me_dev_sym_contract_Me_dev_sym +
                   2 * (F - A - 2 * B) * mTMe_dev_sym_squared_m +
                   (5 * A + B - 2 * F) * std::pow(mTMe_dev_sym_m, 2.0));
   }
+  else if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::isotrop)
+  {
+    state_quantities.curr_equiv_stress = std::sqrt(3.0 / 2.0 * Me_dev_sym_contract_Me_dev_sym);
+  }
   else
   {
-    state_quantities.curr_equiv_stress_ = std::sqrt(3.0 / 2.0 * Me_dev_sym_contract_Me_dev_sym);
+    FOUR_C_THROW("Inconsistent material behavior {} in evaluating equivalent stress",
+        EnumTools::enum_name(parameter()->mat_behavior()));
   }
 
-  // calculate equivalent plastic strain rate using the viscoplastic law
-  state_quantities.curr_equiv_plastic_strain_rate_ =
-      viscoplastic_law_->evaluate_plastic_strain_rate(state_quantities.curr_equiv_stress_,
-          plastic_strain, dt, parameter()->bool_log_substepping(), err_status, update_hist_var_);
-
-  // return if we get an error, all other calculations are useless since substepping is triggered
-  if (err_status != Mat::ViscoplastErrorType::NoErrors)
+  // check if either stress or plastic strain are NaN -> in this case,
+  // return with overflow error
+  if (std::isnan(state_quantities.curr_equiv_stress) || std::isnan(plastic_strain))
   {
     // return with error
-    return StateQuantities{};
+    err_status = ViscoplastUtils::ErrorType::overflow_error;
+    return state_quantities;
+  }
+
+  if (eval_type == ViscoplastUtils::StateQuantityEvalType::EquivStressOnly)
+  {
+    return state_quantities;
+  }
+
+
+  // calculate equivalent plastic strain rate using the viscoplastic law
+  state_quantities.curr_equiv_plastic_strain_rate =
+      viscoplastic_law_->evaluate_plastic_strain_rate(state_quantities.curr_equiv_stress,
+          plastic_strain, dt, parameter()->max_plastic_strain_incr(), err_status, update_hist_var_);
+
+  if (eval_type == ViscoplastUtils::StateQuantityEvalType::PlasticStrainRateOnly)
+  {
+    return state_quantities;
+  }
+
+  // return if we get an error, all other calculations are useless since substepping is
+  // triggered
+  if (err_status != ViscoplastUtils::ErrorType::no_errors)
+  {
+    // return with error
+    return state_quantities;
   }
 
   // calculate plastic flow direction
-  if (parameter()->bool_transv_isotropy())
+  if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::transv_isotrop)
   {
     // determine required components for the computation of the plastic flow direction
     Core::LinAlg::Matrix<3, 1> Me_dev_sym_m(Core::LinAlg::Initialization::zero);
-    Me_dev_sym_m.multiply_nn(1.0, state_quantities.curr_Me_dev_sym_M_, m_, 0.0);
+    Me_dev_sym_m.multiply_nn(1.0, state_quantities.curr_Me_dev_sym_M, m_, 0.0);
     Core::LinAlg::Matrix<3, 3> m_dyad_Me_dev_sym_m(Core::LinAlg::Initialization::zero);
     m_dyad_Me_dev_sym_m.multiply_nt(1.0, m_, Me_dev_sym_m, 0.0);
     Core::LinAlg::Matrix<3, 3> Me_dev_sym_A_dyad_A(Core::LinAlg::Initialization::zero);
     Me_dev_sym_A_dyad_A.multiply_nt(1.0, Me_dev_sym_m, m_, 0.0);
 
-    state_quantities.curr_NpM_.clear();
-    state_quantities.curr_dpM_.clear();
-    if (state_quantities.curr_equiv_stress_ > 0.0)
+    state_quantities.curr_NpM.clear();
+    state_quantities.curr_dpM.clear();
+    if (state_quantities.curr_equiv_stress > 0.0)
     {
       // build the plastic flow direction from its tensor parts
-      state_quantities.curr_NpM_.update(
-          -2.0 / (3.0 * state_quantities.curr_equiv_stress_) * (F - A - 2.0 * B) * mTMe_dev_sym_m,
-          const_non_mat_tensors.id3x3_, 0.0);
-      state_quantities.curr_NpM_.update(
-          1.0 / (1.0 * state_quantities.curr_equiv_stress_) * (A + 2.0 * B),
-          state_quantities.curr_Me_dev_sym_M_, 1.0);
-      state_quantities.curr_NpM_.update(
-          1.0 / (2.0 * state_quantities.curr_equiv_stress_) * 2.0 * (F - A - 2.0 * B),
+      state_quantities.curr_NpM.update(
+          -2.0 / (3.0 * state_quantities.curr_equiv_stress) * (F - A - 2.0 * B) * mTMe_dev_sym_m,
+          const_non_mat_tensors.id3x3, 0.0);
+      state_quantities.curr_NpM.update(
+          1.0 / (1.0 * state_quantities.curr_equiv_stress) * (A + 2.0 * B),
+          state_quantities.curr_Me_dev_sym_M, 1.0);
+      state_quantities.curr_NpM.update(
+          1.0 / (2.0 * state_quantities.curr_equiv_stress) * 2.0 * (F - A - 2.0 * B),
           m_dyad_Me_dev_sym_m, 1.0);
-      state_quantities.curr_NpM_.update(
-          1.0 / (2.0 * state_quantities.curr_equiv_stress_) * 2.0 * (F - A - 2.0 * B),
+      state_quantities.curr_NpM.update(
+          1.0 / (2.0 * state_quantities.curr_equiv_stress) * 2.0 * (F - A - 2.0 * B),
           Me_dev_sym_A_dyad_A, 1.0);
-      state_quantities.curr_NpM_.update(1.0 / (2.0 * state_quantities.curr_equiv_stress_) *
-                                            (5.0 * A + B - 2.0 * F) * 2.0 * mTMe_dev_sym_m,
-          const_mat_tensors_.mm_dev_, 1.0);
+      state_quantities.curr_NpM.update(1.0 / (2.0 * state_quantities.curr_equiv_stress) *
+                                           (5.0 * A + B - 2.0 * F) * 2.0 * mTMe_dev_sym_m,
+          const_mat_tensors_.mm_dev, 1.0);
 
       // calculate plastic stretching tensor (deformation rate tensor)
-      state_quantities.curr_dpM_.update(
-          state_quantities.curr_equiv_plastic_strain_rate_, state_quantities.curr_NpM_, 0.0);
+      state_quantities.curr_dpM.update(
+          state_quantities.curr_equiv_plastic_strain_rate, state_quantities.curr_NpM, 0.0);
     }
 
     // calculate plastic velocity gradient tensor
-    state_quantities.curr_lpM_.multiply_nn(
-        1.0, const_mat_tensors_.id_plus_mm_, state_quantities.curr_dpM_, 0.0);
-    state_quantities.curr_lpM_.multiply_nn(
-        -1.0, state_quantities.curr_dpM_, const_mat_tensors_.mm_, 1.0);
+    state_quantities.curr_lpM.multiply_nn(
+        1.0, const_mat_tensors_.id_plus_mm, state_quantities.curr_dpM, 0.0);
+    state_quantities.curr_lpM.multiply_nn(
+        -1.0, state_quantities.curr_dpM, const_mat_tensors_.mm, 1.0);
+  }
+  else if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::isotrop)
+  {
+    state_quantities.curr_NpM.clear();
+    state_quantities.curr_dpM.clear();
+    if (state_quantities.curr_equiv_stress > 0.0)
+    {
+      // build the plastic flow direction from its tensor parts
+      state_quantities.curr_NpM.update(3.0 / (2.0 * state_quantities.curr_equiv_stress),
+          state_quantities.curr_Me_dev_sym_M, 0.0);
+
+      // calculate plastic stretching tensor (deformation rate tensor)
+      state_quantities.curr_dpM.update(
+          state_quantities.curr_equiv_plastic_strain_rate, state_quantities.curr_NpM, 0.0);
+    }
+
+    // calculate plastic velocity gradient tensor
+    state_quantities.curr_lpM.update(1.0, state_quantities.curr_dpM, 0.0);
   }
   else
   {
-    state_quantities.curr_NpM_.clear();
-    state_quantities.curr_dpM_.clear();
-    if (state_quantities.curr_equiv_stress_ > 0.0)
-    {
-      // build the plastic flow direction from its tensor parts
-      state_quantities.curr_NpM_.update(3.0 / (2.0 * state_quantities.curr_equiv_stress_),
-          state_quantities.curr_Me_dev_sym_M_, 0.0);
-
-      // calculate plastic stretching tensor (deformation rate tensor)
-      state_quantities.curr_dpM_.update(
-          state_quantities.curr_equiv_plastic_strain_rate_, state_quantities.curr_NpM_, 0.0);
-    }
-
-    // calculate plastic velocity gradient tensor
-    state_quantities.curr_lpM_.update(1.0, state_quantities.curr_dpM_, 0.0);
+    FOUR_C_THROW("Inconsistent material behavior {} for evaluating plastic flow direction",
+        EnumTools::enum_name(parameter()->mat_behavior()));
   }
 
   // calculate plastic update tensor (only required, and computed, for standard substepping)
-  if (!parameter()->bool_log_substepping())
+  if (parameter()->timint_type() == ViscoplastUtils::TimIntType::standard)
   {
-    temp3x3.update(-dt, state_quantities.curr_lpM_, 0.0);
-    Core::LinAlg::MatrixFunctErrorType exp_err_status{
-        Core::LinAlg::MatrixFunctErrorType::no_errors};
-    state_quantities.curr_EpM_ = Core::LinAlg::matrix_exp(temp3x3, exp_err_status);
-    FOUR_C_ASSERT_ALWAYS(exp_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
-        "Matrix exponential evaluation failed!");
+    temp3x3.update(-dt, state_quantities.curr_lpM, 0.0);
+    Core::LinAlg::MatrixFunctErrorType exp_err_status =
+        Core::LinAlg::MatrixFunctErrorType::no_errors;
+    state_quantities.curr_EpM =
+        Core::LinAlg::matrix_exp(temp3x3, exp_err_status, parameter()->mat_exp_calc_method());
+    if (exp_err_status != Core::LinAlg::MatrixFunctErrorType::no_errors)
+    {
+      err_status = ViscoplastUtils::ErrorType::failed_matrix_exp_evaluation;
+      return state_quantities;
+    }
+
+    return state_quantities;
+  }
+  else if (parameter()->timint_type() == ViscoplastUtils::TimIntType::logarithmic)
+  {
+    // nothing else to be done for logarithmic time integration
+    return state_quantities;
+  }
+  else
+  {
+    FOUR_C_THROW("Inconsistent time integration type {} in evaluating plastic update tensor",
+        EnumTools::enum_name(parameter()->timint_type()));
   }
 
   return state_quantities;
@@ -1940,13 +1952,13 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
-Mat::InelasticDefgradTransvIsotropElastViscoplast::StateQuantityDerivatives
+ViscoplastUtils::StateQuantityDerivatives
 Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_derivatives(
     const Core::LinAlg::Matrix<3, 3>& CM, const Core::LinAlg::Matrix<3, 3>& iFinM,
-    const double plastic_strain, Mat::ViscoplastErrorType& err_status, const double dt,
-    const bool eval_state)
+    const double plastic_strain, ViscoplastUtils::ErrorType& err_status, const double dt,
+    const ViscoplastUtils::StateQuantityDerivEvalType& eval_type, const bool eval_state)
 {
-  StateQuantityDerivatives state_quantity_derivatives{};
+  ViscoplastUtils::StateQuantityDerivatives state_quantity_derivatives{};
 
   // auxiliaries
   Core::LinAlg::Matrix<3, 3> temp3x3(Core::LinAlg::Initialization::zero);
@@ -1956,40 +1968,39 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
   Core::LinAlg::Matrix<9, 9> temp9x9(Core::LinAlg::Initialization::zero);
 
   // check whether to reevaluate the state or to keep the available state quantity values
-  StateQuantities relevant_state_quantities = state_quantities_;
+  ViscoplastUtils::StateQuantities relevant_state_quantities = state_quantities_;
   if (eval_state)
   {
-    relevant_state_quantities =
-        evaluate_state_quantities(CM, iFinM, plastic_strain, err_status, dt);
+    relevant_state_quantities = evaluate_state_quantities(CM, iFinM, plastic_strain, err_status, dt,
+        ViscoplastUtils::StateQuantityEvalType::FullEval);
   }
 
   // get the state quantities
-  const Core::LinAlg::Matrix<3, 3> CeM = relevant_state_quantities.curr_CeM_;
-  const Core::LinAlg::Matrix<3, 1> gamma = relevant_state_quantities.curr_gamma_;
-  const Core::LinAlg::Matrix<8, 1> delta = relevant_state_quantities.curr_delta_;
-  const Core::LinAlg::Matrix<3, 3> SeM = relevant_state_quantities.curr_SeM_;
-  const Core::LinAlg::Matrix<6, 6> dSedCe = relevant_state_quantities.curr_dSedCe_;
-  const Core::LinAlg::Matrix<3, 3> Me_dev_sym_M = relevant_state_quantities.curr_Me_dev_sym_M_;
-  const double equiv_stress = relevant_state_quantities.curr_equiv_stress_;
-  const double equiv_plastic_strain_rate =
-      relevant_state_quantities.curr_equiv_plastic_strain_rate_;
-  const Core::LinAlg::Matrix<3, 3> NpM = relevant_state_quantities.curr_NpM_;
-  const Core::LinAlg::Matrix<3, 3> dpM = relevant_state_quantities.curr_dpM_;
-  const Core::LinAlg::Matrix<3, 3> lpM = relevant_state_quantities.curr_lpM_;
-  const Core::LinAlg::Matrix<3, 3> EpM = relevant_state_quantities.curr_EpM_;
+  const Core::LinAlg::Matrix<3, 3> CeM = relevant_state_quantities.curr_CeM;
+  const Core::LinAlg::Matrix<3, 1> gamma = relevant_state_quantities.curr_gamma;
+  const Core::LinAlg::Matrix<8, 1> delta = relevant_state_quantities.curr_delta;
+  const Core::LinAlg::Matrix<3, 3> SeM = relevant_state_quantities.curr_SeM;
+  const Core::LinAlg::Matrix<6, 6> dSedCe = relevant_state_quantities.curr_dSedCe;
+  const Core::LinAlg::Matrix<3, 3> Me_dev_sym_M = relevant_state_quantities.curr_Me_dev_sym_M;
+  const double equiv_stress = relevant_state_quantities.curr_equiv_stress;
+  const double equiv_plastic_strain_rate = relevant_state_quantities.curr_equiv_plastic_strain_rate;
+  const Core::LinAlg::Matrix<3, 3> NpM = relevant_state_quantities.curr_NpM;
+  const Core::LinAlg::Matrix<3, 3> dpM = relevant_state_quantities.curr_dpM;
+  const Core::LinAlg::Matrix<3, 3> lpM = relevant_state_quantities.curr_lpM;
+  const Core::LinAlg::Matrix<3, 3> EpM = relevant_state_quantities.curr_EpM;
 
 
   // compute the relevant derivatives of the elastic right Cauchy-Green deformation tensor
   Mat::elast_hyper_get_derivs_of_elastic_right_cg_tensor(Core::LinAlg::make_tensor(iFinM),
       Core::LinAlg::assume_symmetry(Core::LinAlg::make_tensor(CM)),
-      state_quantity_derivatives.curr_dCedC_, state_quantity_derivatives.curr_dCediFin_);
+      state_quantity_derivatives.curr_dCedC, state_quantity_derivatives.curr_dCediFin);
   // save these also as four tensors
   Core::LinAlg::FourTensor<3> dCediFin_FourTensor(true);
   Core::LinAlg::Voigt::setup_four_tensor_from_6x9_voigt_matrix(
-      dCediFin_FourTensor, state_quantity_derivatives.curr_dCediFin_);
+      dCediFin_FourTensor, state_quantity_derivatives.curr_dCediFin);
   Core::LinAlg::FourTensor<3> dCedC_FourTensor(true);
   Core::LinAlg::Voigt::setup_four_tensor_from_6x6_voigt_matrix(
-      dCedC_FourTensor, state_quantity_derivatives.curr_dCedC_);
+      dCedC_FourTensor, state_quantity_derivatives.curr_dCedC);
 
   // inverse inelastic right Cauchy-Green deformation tensor
   Core::LinAlg::Matrix<3, 3> iCinM(Core::LinAlg::Initialization::zero);
@@ -2009,7 +2020,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
 
   // inverse transposed inelastic defgrad
   Core::LinAlg::Matrix<3, 3> iFinTM(Core::LinAlg::Initialization::zero);
-  iFinTM.multiply_tn(1.0, iFinM, const_non_mat_tensors.id3x3_, 0.0);
+  iFinTM.multiply_tn(1.0, iFinM, const_non_mat_tensors.id3x3, 0.0);
 
   // calculate various other helper tensors required for subsequent computation
   Core::LinAlg::Matrix<3, 3> CiFinM(Core::LinAlg::Initialization::zero);
@@ -2060,20 +2071,20 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
   Core::LinAlg::Matrix<6, 9> dMe_sym_diFin(Core::LinAlg::Initialization::zero);
   dMe_sym_diFin.clear();
   Core::LinAlg::FourTensorOperations::add_right_non_symmetric_holzapfel_product(
-      dMe_sym_diFin, iFinTCM, const_non_mat_tensors.id3x3_, gamma(0));
+      dMe_sym_diFin, iFinTCM, const_non_mat_tensors.id3x3, gamma(0));
   Core::LinAlg::FourTensorOperations::add_right_non_symmetric_holzapfel_product(
       dMe_sym_diFin, iFinTCM, CeM, gamma(1));
   Core::LinAlg::FourTensorOperations::add_right_non_symmetric_holzapfel_product(
-      dMe_sym_diFin, CeiFinTCM, const_non_mat_tensors.id3x3_, gamma(1));
+      dMe_sym_diFin, CeiFinTCM, const_non_mat_tensors.id3x3, gamma(1));
   dMe_sym_diFin.multiply_nt(delta(0), CeV, CiFinV, 1.0);
   dMe_sym_diFin.multiply_nt(delta(1), CeV, CiFinCeV, 1.0);
   dMe_sym_diFin.multiply_nt(delta(1), CeCeV, CiFinV, 1.0);
   dMe_sym_diFin.multiply_nt(delta(2), CeV, CiFiniCeV, 1.0);
-  dMe_sym_diFin.multiply_nt(delta(2), const_non_mat_tensors.id6x1_, CiFinV, 1.0);
+  dMe_sym_diFin.multiply_nt(delta(2), const_non_mat_tensors.id6x1, CiFinV, 1.0);
   dMe_sym_diFin.multiply_nt(delta(3), CeCeV, CiFinCeV, 1.0);
   dMe_sym_diFin.multiply_nt(delta(4), CeCeV, CiFiniCeV, 1.0);
-  dMe_sym_diFin.multiply_nt(delta(4), const_non_mat_tensors.id6x1_, CiFinCeV, 1.0);
-  dMe_sym_diFin.multiply_nt(delta(5), const_non_mat_tensors.id6x1_, CiFiniCeV, 1.0);
+  dMe_sym_diFin.multiply_nt(delta(4), const_non_mat_tensors.id6x1, CiFinCeV, 1.0);
+  dMe_sym_diFin.multiply_nt(delta(5), const_non_mat_tensors.id6x1, CiFiniCeV, 1.0);
 
   // \f$ \frac{\partial \boldsymbol{M}^{\text{e}}_{\text{sym}} }{\partial
   // \boldsymbol{C}^{}_{}} \f$ (Voigt stress-stress form)
@@ -2088,14 +2099,14 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
   dMe_sym_dC.multiply_nt(delta(1) / 2.0, CeV, iCinCiCinV, 1.0);
   dMe_sym_dC.multiply_nt(delta(1) / 2.0, CeCeV, iCinV, 1.0);
   dMe_sym_dC.multiply_nt(delta(2) / 2.0, CeV, iCV, 1.0);
-  dMe_sym_dC.multiply_nt(delta(2) / 2.0, const_non_mat_tensors.id6x1_, iCinV, 1.0);
+  dMe_sym_dC.multiply_nt(delta(2) / 2.0, const_non_mat_tensors.id6x1, iCinV, 1.0);
   dMe_sym_dC.multiply_nt(delta(3) / 2.0, CeCeV, iCinCiCinV, 1.0);
   dMe_sym_dC.multiply_nt(delta(4) / 2.0, CeCeV, iCV, 1.0);
-  dMe_sym_dC.multiply_nt(delta(4) / 2.0, const_non_mat_tensors.id6x1_, iCinCiCinV, 1.0);
-  dMe_sym_dC.multiply_nt(delta(5) / 2.0, const_non_mat_tensors.id6x1_, iCV, 1.0);
+  dMe_sym_dC.multiply_nt(delta(4) / 2.0, const_non_mat_tensors.id6x1, iCinCiCinV, 1.0);
+  dMe_sym_dC.multiply_nt(delta(5) / 2.0, const_non_mat_tensors.id6x1, iCV, 1.0);
 
-  // compute derivative of the additional transversely isotropic stress (w.r.t. right elastic
-  // Cauchy-Green deformation tensor) in stress-strain notation
+  // compute derivative of the additional transversely isotropic stress (w.r.t. right
+  // elastic Cauchy-Green deformation tensor) in stress-strain notation
   temp6x6.update(1.0, dSedCe, 0.0);
   Core::LinAlg::Matrix<6, 6> dSedCe_stress_strain =
       Core::LinAlg::Voigt::modify_voigt_representation(temp6x6, 1.0, 2.0);
@@ -2103,20 +2114,20 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
   // \f$ \frac{\partial \boldsymbol{S}^{\text{e}}_{\text{trn}} }{\partial
   // \boldsymbol{F}^{\text{in}^{-1}}_{}} \f$ (Voigt stress-form)
   Core::LinAlg::Matrix<6, 9> dSediFin(Core::LinAlg::Initialization::zero);
-  dSediFin.multiply_nn(1.0, dSedCe_stress_strain, state_quantity_derivatives.curr_dCediFin_, 0.0);
+  dSediFin.multiply_nn(1.0, dSedCe_stress_strain, state_quantity_derivatives.curr_dCediFin, 0.0);
   Core::LinAlg::FourTensor<3> dSediFin_FourTensor(true);
   Core::LinAlg::Voigt::setup_four_tensor_from_6x9_voigt_matrix(dSediFin_FourTensor, dSediFin);
 
   // \f$ \frac{\partial \boldsymbol{S}^{\text{e}}_{\text{trn}} }{\partial
   // \boldsymbol{C}^{}_{}} \f$ (Voigt stress-stress form)
   Core::LinAlg::Matrix<6, 6> dSedC(Core::LinAlg::Initialization::zero);
-  dSedC.multiply_nn(1.0, dSedCe_stress_strain, state_quantity_derivatives.curr_dCedC_, 0.0);
+  dSedC.multiply_nn(1.0, dSedCe_stress_strain, state_quantity_derivatives.curr_dCedC, 0.0);
   Core::LinAlg::FourTensor<3> dSedC_FourTensor(true);
   Core::LinAlg::Voigt::setup_four_tensor_from_6x6_voigt_matrix(dSedC_FourTensor, dSedC);
 
   // compute additional components of the elastic transversely isotropic components for the
   // derivatives of the symmetric Mandel stress
-  if (parameter()->bool_transv_isotropy())
+  if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::transv_isotrop)
   {
     Core::LinAlg::FourTensor<3> CedSediFin_FourTensor(true);
     Core::LinAlg::FourTensorOperations::multiply_matrix_four_tensor<3>(
@@ -2163,12 +2174,12 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
 
   // \f$ \frac{\partial \boldsymbol{M}^{\text{e}}_{\text{dev, sym}} }{\partial
   // \boldsymbol{F}^{\text{in}^{-1}}_{}} \f$ (Voigt stress-form)
-  state_quantity_derivatives.curr_dMe_dev_sym_diFin_.multiply_nn(
-      1.0, const_non_mat_tensors.dev_op_, dMe_sym_diFin, 0.0);
+  state_quantity_derivatives.curr_dMe_dev_sym_diFin.multiply_nn(
+      1.0, const_non_mat_tensors.dev_op, dMe_sym_diFin, 0.0);
   // \f$ \frac{\partial \boldsymbol{M}^{\text{e}}_{\text{dev,sym}} }{\partial
   // \boldsymbol{C}^{}_{}} \f$ (Voigt stress-stress form)
-  state_quantity_derivatives.curr_dMe_dev_sym_dC_.multiply_nn(
-      1.0, const_non_mat_tensors.dev_op_, dMe_sym_dC, 0.0);
+  state_quantity_derivatives.curr_dMe_dev_sym_dC.multiply_nn(
+      1.0, const_non_mat_tensors.dev_op, dMe_sym_dC, 0.0);
 
   // plastic flow direction in Voigt strain notation
   Core::LinAlg::Matrix<6, 1> NpV(Core::LinAlg::Initialization::zero);
@@ -2178,47 +2189,53 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
 
   // \f$ \frac{\partial \overline{\sigma} }{\partial
   // \boldsymbol{F}^{\text{in}^{-1}}_{}} \f$ (Voigt stress-form)
-  state_quantity_derivatives.curr_dequiv_stress_diFin_.multiply_tn(
-      1.0, NpV, state_quantity_derivatives.curr_dMe_dev_sym_diFin_, 0.0);
+  state_quantity_derivatives.curr_dequiv_stress_diFin.multiply_tn(
+      1.0, NpV, state_quantity_derivatives.curr_dMe_dev_sym_diFin, 0.0);
   // \f$ \frac{\partial \overline{\sigma} }{\partial
   // \boldsymbol{C}^{}} \f$ (Voigt stress-form)
-  state_quantity_derivatives.curr_dequiv_stress_dC_.multiply_tn(
-      1.0, NpV, state_quantity_derivatives.curr_dMe_dev_sym_dC_, 0.0);
+  state_quantity_derivatives.curr_dequiv_stress_dC.multiply_tn(
+      1.0, NpV, state_quantity_derivatives.curr_dMe_dev_sym_dC, 0.0);
 
   // recompute flow direction in stress form
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(NpM, NpV);
 
-  // we use the Hill 1949 yield condition, adapted for transversely isotropic materials -> get
-  // yield condition parameters A, B, and F
+  // we use the Hill 1949 yield condition, adapted for transversely isotropic materials ->
+  // get yield condition parameters A, B, and F
   const double A = parameter()->yield_cond_a();
   const double B = parameter()->yield_cond_b();
   const double F = parameter()->yield_cond_f();
 
-  // compute required derivative of the plastic flow direction (w.r.t. dev., sym. part of the
-  // Mandel stress)
+  // compute required derivative of the plastic flow direction (w.r.t. dev., sym. part of
+  // the Mandel stress)
   // \f$ \frac{\partial \boldsymbol{N}^{\text{p}}_{} }{\partial
   // \partial \boldsymbol{M}^{\text{e}}_{\text{dev,sym}}} \f$ (Voigt stress-stress form)
   Core::LinAlg::Matrix<6, 6> dNpdMe_sym_dev(Core::LinAlg::Initialization::zero);
-  if (parameter()->bool_transv_isotropy())
+  if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::transv_isotrop)
   {
     dNpdMe_sym_dev.multiply_nt(-1.0 / equiv_stress, NpV, NpV, 0.0);
     dNpdMe_sym_dev.update(-1.0 / 2.0 * 1.0 / equiv_stress * 4.0 / 3.0 * (F - A - 2.0 * B),
-        const_mat_tensors_.id_dyad_mm_, 1.0);
+        const_mat_tensors_.id_dyad_mm, 1.0);
     dNpdMe_sym_dev.update(
-        1.0 / 1.0 * 1.0 / equiv_stress * (A + 2 * B), const_non_mat_tensors.id4_6x6_, 1.0);
+        1.0 / 1.0 * 1.0 / equiv_stress * (A + 2 * B), const_non_mat_tensors.id4_6x6, 1.0);
     Core::LinAlg::FourTensorOperations::add_kronecker_tensor_product(dNpdMe_sym_dev,
-        1.0 / equiv_stress * (F - A - 2 * B), const_mat_tensors_.mm_, const_non_mat_tensors.id3x3_,
+        1.0 / equiv_stress * (F - A - 2 * B), const_mat_tensors_.mm, const_non_mat_tensors.id3x3,
         1.0);
     Core::LinAlg::FourTensorOperations::add_kronecker_tensor_product(dNpdMe_sym_dev,
-        1.0 / equiv_stress * (F - A - 2 * B), const_non_mat_tensors.id3x3_, const_mat_tensors_.mm_,
+        1.0 / equiv_stress * (F - A - 2 * B), const_non_mat_tensors.id3x3, const_mat_tensors_.mm,
         1.0);
     dNpdMe_sym_dev.update(
-        1.0 / equiv_stress * (5 * A + B - 2 * F), const_mat_tensors_.mm_dev_dyad_mm_, 1.0);
+        1.0 / equiv_stress * (5 * A + B - 2 * F), const_mat_tensors_.mm_dev_dyad_mm, 1.0);
+  }
+  else if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::isotrop)
+  {
+    dNpdMe_sym_dev.multiply_nt(-1.0 / equiv_stress, NpV, NpV, 0.0);
+    dNpdMe_sym_dev.update(1.0 / equiv_stress * 3.0 / 2.0, const_non_mat_tensors.id4_6x6, 1.0);
   }
   else
   {
-    dNpdMe_sym_dev.multiply_nt(-1.0 / equiv_stress, NpV, NpV, 0.0);
-    dNpdMe_sym_dev.update(1.0 / equiv_stress * 3.0 / 2.0, const_non_mat_tensors.id4_6x6_, 1.0);
+    FOUR_C_THROW(
+        "Inconsistent material behavior {} in evaluating derivative of plastic flow direction",
+        EnumTools::enum_name(parameter()->mat_behavior()));
   }
   // convert derivative to Voigt stress-strain form
   temp6x6 = dNpdMe_sym_dev;
@@ -2226,87 +2243,101 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
 
   // compute the relevant derivatives of the plastic strain rate
   Core::LinAlg::Matrix<2, 1> evoEqFunctionDers =
-      viscoplastic_law_->evaluate_derivatives_of_plastic_strain_rate(
-          equiv_stress, plastic_strain, dt, parameter()->bool_log_substepping(), err_status);
+      viscoplastic_law_->evaluate_derivatives_of_plastic_strain_rate(equiv_stress, plastic_strain,
+          dt, parameter()->max_plastic_strain_deriv_incr(), err_status);
 
-  // return if we get an error, all other calculations are useless since substepping is triggered
-  if (err_status != Mat::ViscoplastErrorType::NoErrors)
+  // return if we get an error, all other calculations are useless since substepping is
+  // triggered
+  if (err_status != ViscoplastUtils::ErrorType::no_errors)
   {
     // return with error
-    return StateQuantityDerivatives{};
+    return ViscoplastUtils::StateQuantityDerivatives{};
   }
 
-  state_quantity_derivatives.curr_dpsr_dequiv_stress_ = evoEqFunctionDers(0);
-  state_quantity_derivatives.curr_dpsr_depsp_ = evoEqFunctionDers(1);
+  if (eval_type == ViscoplastUtils::StateQuantityDerivEvalType::EquivStressDerivsOnly)
+  {
+    return state_quantity_derivatives;
+  }
+
+  // compute derivatives of the plastic strain rate
+  state_quantity_derivatives.curr_dpsr_dequiv_stress = evoEqFunctionDers(0);
+  state_quantity_derivatives.curr_dpsr_depsp = evoEqFunctionDers(1);
+
+
+  if (eval_type == ViscoplastUtils::StateQuantityDerivEvalType::PlasticStrainRateDerivsOnly)
+  {
+    return state_quantity_derivatives;
+  }
+
 
   // compute derivatives of the plastic stretching tensor...
   Core::LinAlg::Matrix<6, 6> Np_dyad_Np_V(
       Core::LinAlg::Initialization::zero);  // in stress-strain form
   temp6x6.multiply_nt(1.0, NpV, NpV, 0.0);
   Np_dyad_Np_V = Core::LinAlg::Voigt::modify_voigt_representation(temp6x6, 1.0, 2.0);
-  temp6x6.update(state_quantity_derivatives.curr_dpsr_dequiv_stress_, Np_dyad_Np_V,
+  temp6x6.update(state_quantity_derivatives.curr_dpsr_dequiv_stress, Np_dyad_Np_V,
       equiv_plastic_strain_rate, dNpdMe_sym_dev, 0.0);
 
   // ... w.r.t. invese inelastic defgrad
-  state_quantity_derivatives.curr_ddpdiFin_.multiply_nn(
-      1.0, temp6x6, state_quantity_derivatives.curr_dMe_dev_sym_diFin_, 0.0);
+  state_quantity_derivatives.curr_ddpdiFin.multiply_nn(
+      1.0, temp6x6, state_quantity_derivatives.curr_dMe_dev_sym_diFin, 0.0);
   // ... w.r.t. plastic strain
-  state_quantity_derivatives.curr_ddpdepsp_.update(
-      state_quantity_derivatives.curr_dpsr_depsp_, NpV, 0.0);
+  state_quantity_derivatives.curr_ddpdepsp.update(
+      state_quantity_derivatives.curr_dpsr_depsp, NpV, 0.0);
   // ... w.r.t. right CG
-  state_quantity_derivatives.curr_ddpdC_.multiply_nn(
-      1.0, temp6x6, state_quantity_derivatives.curr_dMe_dev_sym_dC_, 0.0);
+  state_quantity_derivatives.curr_ddpdC.multiply_nn(
+      1.0, temp6x6, state_quantity_derivatives.curr_dMe_dev_sym_dC, 0.0);
 
   // compute derivatives of the plastic velocity gradient ...
 
   // ... w.r.t. invese inelastic defgrad
   Core::LinAlg::FourTensor<3> ddpdiFin_FourTensor(true);
   Core::LinAlg::Voigt::setup_four_tensor_from_6x9_voigt_matrix(
-      ddpdiFin_FourTensor, state_quantity_derivatives.curr_ddpdiFin_);
+      ddpdiFin_FourTensor, state_quantity_derivatives.curr_ddpdiFin);
   Core::LinAlg::FourTensor<3> id_plus_mm_ddpdiFin_FourTensor(true);
   Core::LinAlg::FourTensorOperations::multiply_matrix_four_tensor<3>(
-      id_plus_mm_ddpdiFin_FourTensor, const_mat_tensors_.id_plus_mm_, ddpdiFin_FourTensor, true);
+      id_plus_mm_ddpdiFin_FourTensor, const_mat_tensors_.id_plus_mm, ddpdiFin_FourTensor, true);
   Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(
       temp9x9, id_plus_mm_ddpdiFin_FourTensor);
-  state_quantity_derivatives.curr_dlpdiFin_.update(1.0, temp9x9, 0.0);
+  state_quantity_derivatives.curr_dlpdiFin.update(1.0, temp9x9, 0.0);
   Core::LinAlg::FourTensor<3> mm_ddpdiFin_FourTensor(true);
   Core::LinAlg::FourTensorOperations::multiply_matrix_four_tensor<3>(
-      mm_ddpdiFin_FourTensor, const_mat_tensors_.mm_, ddpdiFin_FourTensor, true);
+      mm_ddpdiFin_FourTensor, const_mat_tensors_.mm, ddpdiFin_FourTensor, true);
   Core::LinAlg::FourTensor<3> mm_ddpdiFin_T12_FourTensor(true);
   mm_ddpdiFin_T12_FourTensor.transpose_12(mm_ddpdiFin_FourTensor);
   Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, mm_ddpdiFin_T12_FourTensor);
-  state_quantity_derivatives.curr_dlpdiFin_.update(-1.0, temp9x9, 1.0);
+  state_quantity_derivatives.curr_dlpdiFin.update(-1.0, temp9x9, 1.0);
 
   // ... w.r.t. right CG
   Core::LinAlg::FourTensor<3> ddpdC_FourTensor(true);
   Core::LinAlg::Voigt::setup_four_tensor_from_6x6_voigt_matrix(
-      ddpdC_FourTensor, state_quantity_derivatives.curr_ddpdC_);
+      ddpdC_FourTensor, state_quantity_derivatives.curr_ddpdC);
   Core::LinAlg::FourTensor<3> id_plus_mm_ddpdC_FourTensor(true);
   Core::LinAlg::FourTensorOperations::multiply_matrix_four_tensor<3>(
-      id_plus_mm_ddpdC_FourTensor, const_mat_tensors_.id_plus_mm_, ddpdC_FourTensor, true);
+      id_plus_mm_ddpdC_FourTensor, const_mat_tensors_.id_plus_mm, ddpdC_FourTensor, true);
   Core::LinAlg::Voigt::setup_9x6_voigt_matrix_from_four_tensor(
       temp9x6, id_plus_mm_ddpdC_FourTensor);
-  state_quantity_derivatives.curr_dlpdC_.update(1.0, temp9x6, 0.0);
+  state_quantity_derivatives.curr_dlpdC.update(1.0, temp9x6, 0.0);
   Core::LinAlg::FourTensor<3> mm_ddpdC_FourTensor(true);
   Core::LinAlg::FourTensorOperations::multiply_matrix_four_tensor<3>(
-      mm_ddpdC_FourTensor, const_mat_tensors_.mm_, ddpdC_FourTensor, true);
+      mm_ddpdC_FourTensor, const_mat_tensors_.mm, ddpdC_FourTensor, true);
   Core::LinAlg::FourTensor<3> mm_ddpdC_T12_FourTensor(true);
   mm_ddpdC_T12_FourTensor.transpose_12(mm_ddpdC_FourTensor);
   Core::LinAlg::Voigt::setup_9x6_voigt_matrix_from_four_tensor(temp9x6, mm_ddpdC_T12_FourTensor);
-  state_quantity_derivatives.curr_dlpdC_.update(-1.0, temp9x6, 1.0);
+  state_quantity_derivatives.curr_dlpdC.update(-1.0, temp9x6, 1.0);
 
   // ... w.r.t. plastic strain
   Core::LinAlg::Matrix<3, 3> ddpdepsp_M(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::Stresses::vector_to_matrix(
-      state_quantity_derivatives.curr_ddpdepsp_, ddpdepsp_M);
+      state_quantity_derivatives.curr_ddpdepsp, ddpdepsp_M);
   Core::LinAlg::Matrix<3, 3> dlpdepsp_M(Core::LinAlg::Initialization::zero);
-  dlpdepsp_M.multiply_nn(1.0, const_mat_tensors_.id_plus_mm_, ddpdepsp_M, 0.0);
-  dlpdepsp_M.multiply_nn(-1.0, ddpdepsp_M, const_mat_tensors_.mm_, 1.0);
-  Core::LinAlg::Voigt::matrix_3x3_to_9x1(dlpdepsp_M, state_quantity_derivatives.curr_dlpdepsp_);
+  dlpdepsp_M.multiply_nn(1.0, const_mat_tensors_.id_plus_mm, ddpdepsp_M, 0.0);
+  dlpdepsp_M.multiply_nn(-1.0, ddpdepsp_M, const_mat_tensors_.mm, 1.0);
+  Core::LinAlg::Voigt::matrix_3x3_to_9x1(dlpdepsp_M, state_quantity_derivatives.curr_dlpdepsp);
 
 
   // compute derivatives of the update tensor (only required for standard substepping)
-  if (!parameter()->bool_log_substepping())
+  if (parameter()->timint_type() == ViscoplastUtils::TimIntType::standard)
   {
     // compute argument
     Core::LinAlg::Matrix<3, 3> min_dt_lpM(Core::LinAlg::Initialization::zero);
@@ -2315,25 +2346,35 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
     // compute derivative of exponential ...
 
     // ... w.r.t. its argument
-    Core::LinAlg::MatrixFunctErrorType exp_deriv_err_status{
-        Core::LinAlg::MatrixFunctErrorType::no_errors};
-    Core::LinAlg::Matrix<9, 9> expderivV =
-        Core::LinAlg::matrix_3x3_exp_1st_deriv(min_dt_lpM, exp_deriv_err_status);
-    FOUR_C_ASSERT_ALWAYS(exp_deriv_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
-        "Matrix exponential derivative evaluation failed!");
-
+    Core::LinAlg::MatrixFunctErrorType exp_err_status =
+        Core::LinAlg::MatrixFunctErrorType::no_errors;
+    Core::LinAlg::Matrix<9, 9> expderivV = Core::LinAlg::matrix_3x3_exp_1st_deriv(
+        min_dt_lpM, exp_err_status, parameter()->mat_exp_deriv_calc_method());
+    if (exp_err_status != Core::LinAlg::MatrixFunctErrorType::no_errors)
+    {
+      err_status = ViscoplastUtils::ErrorType::failed_matrix_exp_evaluation;
+      return state_quantity_derivatives;
+    }
 
     // ... w.r.t. inverse inelastic defgrad
-    state_quantity_derivatives.curr_dEpdiFin_.multiply_nn(
-        -dt, expderivV, state_quantity_derivatives.curr_dlpdiFin_, 0.0);
+    state_quantity_derivatives.curr_dEpdiFin.multiply_nn(
+        -dt, expderivV, state_quantity_derivatives.curr_dlpdiFin, 0.0);
 
     // ... w.r.t. right CG
-    state_quantity_derivatives.curr_dEpdC_.multiply_nn(
-        -dt, expderivV, state_quantity_derivatives.curr_dlpdC_, 0.0);
+    state_quantity_derivatives.curr_dEpdC.multiply_nn(
+        -dt, expderivV, state_quantity_derivatives.curr_dlpdC, 0.0);
 
     // ... w.r.t. plastic strain
-    state_quantity_derivatives.curr_dEpdepsp_.multiply_nn(
-        -dt, expderivV, state_quantity_derivatives.curr_dlpdepsp_, 0.0);
+    state_quantity_derivatives.curr_dEpdepsp.multiply_nn(
+        -dt, expderivV, state_quantity_derivatives.curr_dlpdepsp, 0.0);
+
+
+    return state_quantity_derivatives;
+  }
+  if (parameter()->timint_type() == ViscoplastUtils::TimIntType::logarithmic)
+  {
+    // nothing else to be done for logarithmic time integration
+    return state_quantity_derivatives;
   }
 
   return state_quantity_derivatives;
@@ -2347,9 +2388,11 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_additional_cmat
     const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 1>& iCV,
     const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 6>& cmatadd)
 {
-  // reduced deformation gradient FredM, taking into account all the already computed inelastic
-  // factors
-  //    \f$ \boldsymbol{F_{\text{red}}} = \boldsymbol{F} \boldsymbol{F_{\text{in,other}}^{-1}} \f$
+  // reduced deformation gradient FredM, taking into account all the already computed
+  // inelastic factors
+  //    \f$ \boldsymbol{F_{\text{red}}} = \boldsymbol{F}
+  //    \boldsymbol{F_{\text{in,other}}^{-1}}
+  //    \f$
   //      with \f$\boldsymbol{F}_{\text{in,other}}^{-1} = \boldsymbol{F}_{\text{in},1}^{-1}
   //      \boldsymbol{F}_{\text{in},2}^{-1} \dots \f$ up to the current inelastic factor
   Core::LinAlg::Matrix<3, 3> FredM(Core::LinAlg::Initialization::zero);
@@ -2363,35 +2406,56 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_additional_cmat
   Core::LinAlg::FourTensor<3> tempFourTensor(true);
 
   // declare error status (no errors)
-  Mat::ViscoplastErrorType err_status = Mat::ViscoplastErrorType::NoErrors;
+  ViscoplastUtils::ErrorType err_status = ViscoplastUtils::ErrorType::no_errors;
+
+  // recompute the state to make sure that everything is evaluated properly after
+  // circumventing the stiffness evaluation
+  state_quantities_ =
+      evaluate_state_quantities(CredM, time_step_quantities_.current_plastic_defgrad_inverse[gp_],
+          time_step_quantities_.current_plastic_strain[gp_], err_status, time_step_tracker_.dt,
+          ViscoplastUtils::StateQuantityEvalType::FullEval);
 
   // calculate linearization term only if we have plastic strain
-  if (std::abs(time_step_quantities_.current_plastic_strain_[gp_] -
-               time_step_quantities_.last_plastic_strain_[gp_]) > 0.0)
+  if (std::abs(state_quantities_.curr_equiv_plastic_strain_rate * time_step_tracker_.dt) >
+      ViscoplastUtils::zero_plastic_strain_increment)
   {
+    // ----- perturbation-based linearization ----- //
+    if (parameter()->linearization_type() ==
+            ViscoplastUtils::LinearizationType::perturbation_based ||
+        err_status != ViscoplastUtils::ErrorType::no_errors)
+    {
+      evaluate_additional_cmat_perturb_based(FredM, cmatadd, iFin_other, dSdiFinj);
+
+      return;
+    }
+
     // ----- analytical linearization ----- //
     // if error encountered: perform perturbation-based linearization
 
     // calculate Jacobian
     Core::LinAlg::Matrix<10, 1> current_sol =
-        wrap_unknowns(time_step_quantities_.current_plastic_defgrd_inverse_[gp_],
-            time_step_quantities_.current_plastic_strain_[gp_]);
+        wrap_unknowns(time_step_quantities_.current_plastic_defgrad_inverse[gp_],
+            time_step_quantities_.current_plastic_strain[gp_]);
+
     Core::LinAlg::Matrix<10, 10> jacMat(Core::LinAlg::Initialization::zero);
     viscoplastic_law_->pre_evaluate(gp_);  // set last_substep <- last_
     jacMat = calculate_jacobian(CredM, current_sol,
-        time_step_quantities_.last_plastic_defgrd_inverse_[gp_],
-        time_step_quantities_.last_plastic_strain_[gp_], time_step_settings_.dt_, err_status);
-    if (err_status != Mat::ViscoplastErrorType::NoErrors)
+        time_step_quantities_.last_plastic_defgrad_inverse[gp_],
+        time_step_quantities_.last_plastic_strain[gp_], time_step_tracker_.dt, err_status);
+
+    if (err_status != ViscoplastUtils::ErrorType::no_errors)
     {
       evaluate_additional_cmat_perturb_based(FredM, cmatadd, iFin_other, dSdiFinj);
+
       return;
     }
 
     // if we get singular Jacobian: throw exception -> go to FD-based linearization
     if (abs(jacMat.determinant()) < 1.0e-10)
     {
-      err_status = ViscoplastErrorType::SingularJacobian;
+      err_status = ViscoplastUtils::ErrorType::singular_jacobian;
       evaluate_additional_cmat_perturb_based(FredM, cmatadd, iFin_other, dSdiFinj);
+
       return;
     }
 
@@ -2400,32 +2464,35 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_additional_cmat
     Core::LinAlg::Matrix<9, 6> rhs_iFin_V(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<1, 6> rhs_epsp_V(Core::LinAlg::Initialization::zero);
 
-    if (!(parameter()->bool_log_substepping()))
-    // standard substepping
+    if (parameter()->timint_type() == ViscoplastUtils::TimIntType::standard)
+    // standard time integration
     {
       // calculate RHS of the equation for the plastic deformation gradient
       Core::LinAlg::FourTensor<3> dEpdC_FourTensor(true);
       Core::LinAlg::Voigt::setup_four_tensor_from_9x6_voigt_matrix(
-          dEpdC_FourTensor, state_quantity_derivatives_.curr_dEpdC_);
+          dEpdC_FourTensor, state_quantity_derivatives_.curr_dEpdC);
       Core::LinAlg::FourTensorOperations::multiply_matrix_four_tensor<3>(tempFourTensor,
-          time_step_quantities_.last_plastic_defgrd_inverse_[gp_], dEpdC_FourTensor);
+          time_step_quantities_.last_plastic_defgrad_inverse[gp_], dEpdC_FourTensor);
       Core::LinAlg::Voigt::setup_9x6_voigt_matrix_from_four_tensor(rhs_iFin_V, tempFourTensor);
 
       // calculate RHS of the equation for the plastic strain
-      rhs_epsp_V.update(
-          time_step_settings_.dt_ * state_quantity_derivatives_.curr_dpsr_dequiv_stress_,
-          state_quantity_derivatives_.curr_dequiv_stress_dC_, 0.0);
+      rhs_epsp_V.update(time_step_tracker_.dt * state_quantity_derivatives_.curr_dpsr_dequiv_stress,
+          state_quantity_derivatives_.curr_dequiv_stress_dC, 0.0);
     }
-    else
+    else if (parameter()->timint_type() == ViscoplastUtils::TimIntType::logarithmic)
     // logarithmic substepping
     {
       // calculate RHS of the equation for the plastic deformation gradient
-      rhs_iFin_V.update(-time_step_settings_.dt_, state_quantity_derivatives_.curr_dlpdC_, 0.0);
+      rhs_iFin_V.update(-time_step_tracker_.dt, state_quantity_derivatives_.curr_dlpdC, 0.0);
 
       // calculate RHS of the equation for the plastic strain
-      rhs_epsp_V.update(
-          time_step_settings_.dt_ * state_quantity_derivatives_.curr_dpsr_dequiv_stress_,
-          state_quantity_derivatives_.curr_dequiv_stress_dC_, 0.0);
+      rhs_epsp_V.update(time_step_tracker_.dt * state_quantity_derivatives_.curr_dpsr_dequiv_stress,
+          state_quantity_derivatives_.curr_dequiv_stress_dC, 0.0);
+    }
+    else
+    {
+      FOUR_C_THROW("Inconsistent time integration type {} in evaluating material linearization",
+          EnumTools::enum_name(parameter()->timint_type()));
     }
 
     // assemble the RHS from its components
@@ -2441,7 +2508,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_additional_cmat
     int err2 = solver.factor();
     if ((err != 0) || (err2 != 0))
     {
-      err_status = ViscoplastErrorType::FailedSolAnalytLinearization;
+      err_status = ViscoplastUtils::ErrorType::failed_solution_analytic_linearization;
       evaluate_additional_cmat_perturb_based(FredM, cmatadd, iFin_other, dSdiFinj);
       return;
     }
@@ -2461,9 +2528,11 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
     const Core::LinAlg::Matrix<3, 3>* defgrad, const Core::LinAlg::Matrix<3, 3>& iFin_other,
     Core::LinAlg::Matrix<3, 3>& iFinM)
 {
-  // reduced deformation gradient FredM, taking into account all the already computed inelastic
-  // factors
-  //    \f$ \boldsymbol{F_{\text{red}}} = \boldsymbol{F} \boldsymbol{F_{\text{in,other}}^{-1}} \f$
+  // reduced deformation gradient FredM, taking into account all the already computed
+  // inelastic factors
+  //    \f$ \boldsymbol{F_{\text{red}}} = \boldsymbol{F}
+  //    \boldsymbol{F_{\text{in,other}}^{-1}}
+  //    \f$
   //      with \f$\boldsymbol{F}_{\text{in,other}}^{-1} = \boldsymbol{F}_{\text{in},1}^{-1}
   //      \boldsymbol{F}_{\text{in},2}^{-1} \dots \f$ up to the current inelastic factor
   Core::LinAlg::Matrix<3, 3> FredM(Core::LinAlg::Initialization::zero);
@@ -2471,29 +2540,33 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
   Core::LinAlg::Matrix<3, 3> CredM(Core::LinAlg::Initialization::zero);
   CredM.multiply_tn(1.0, FredM, FredM, 0.0);
 
-  // check whether we have already evaluated the inverse inelastic deformation gradient for the
-  // given reduced deformation gradient
+  // check whether we have already evaluated the inverse inelastic deformation gradient for
+  // the given reduced deformation gradient (this check should only be
+  // performed for the first repetition, since we want to repeat the
+  // return mapping under the same conditions, and not simply return the
+  // computed value)
   Core::LinAlg::Matrix<3, 3> diff_defgrad{Core::LinAlg::Initialization::zero};
-  diff_defgrad.update(1.0, FredM, -1.0, time_step_quantities_.current_defgrad_[gp_], 0.0);
-  if (diff_defgrad.norm2() == 0.0)
+  diff_defgrad.update(1.0, FredM, -1.0, time_step_quantities_.current_defgrad[gp_], 0.0);
+  if (diff_defgrad.norm2() <= 1.0e-16)
   {
-    // return the already computed current_ value
-    iFinM = time_step_quantities_.current_plastic_defgrd_inverse_[gp_];
+    // just set the already computed value, no further computation
+    iFinM = time_step_quantities_.current_plastic_defgrad_inverse[gp_];
+
     return;
   }
 
 
   // set predictor: assume purely elastic behavior in this time step
   Core::LinAlg::Matrix<3, 3> iFinM_pred(Core::LinAlg::Initialization::zero);
-  iFinM_pred.update(1.0, time_step_quantities_.last_plastic_defgrd_inverse_[gp_], 0.0);
-  double plastic_strain_pred = time_step_quantities_.last_plastic_strain_[gp_];
+  iFinM_pred.update(1.0, time_step_quantities_.last_plastic_defgrad_inverse[gp_], 0.0);
+  double plastic_strain_pred = time_step_quantities_.last_plastic_strain[gp_];
 
   // declare error status of evaluation (no errors)
-  Mat::ViscoplastErrorType err_status = Mat::ViscoplastErrorType::NoErrors;
+  ViscoplastUtils::ErrorType err_status = ViscoplastUtils::ErrorType::no_errors;
 
   // check whether the predictor is the solution (no plastic strain during this time step)
-  bool pred_is_sol = check_predictor(CredM, iFinM_pred, plastic_strain_pred, err_status);
-  if ((err_status == Mat::ViscoplastErrorType::NoErrors) && (pred_is_sol))
+  bool pred_is_sol = check_elastic_predictor(CredM, iFinM_pred, plastic_strain_pred, err_status);
+  if ((err_status == ViscoplastUtils::ErrorType::no_errors) && (pred_is_sol))
   {
     // update inverse inelastic defgrad
     iFinM = iFinM_pred;
@@ -2501,10 +2574,10 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
     // update history variables of material
     if (update_hist_var_)
     {
-      time_step_quantities_.current_plastic_defgrd_inverse_[gp_] = iFinM;
-      time_step_quantities_.current_plastic_strain_[gp_] = plastic_strain_pred;
-      time_step_quantities_.current_rightCG_[gp_] = CredM;
-      time_step_quantities_.current_defgrad_[gp_] = FredM;
+      time_step_quantities_.current_plastic_defgrad_inverse[gp_] = iFinM;
+      time_step_quantities_.current_plastic_strain[gp_] = plastic_strain_pred;
+      time_step_quantities_.current_rightCG[gp_] = CredM;
+      time_step_quantities_.current_defgrad[gp_] = FredM;
     }
   }
   else  // predictor does not suffice
@@ -2516,8 +2589,15 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
 
     // throw error if the Local Newton Loop cannot be evaluated with the given substepping
     // settings
-    if (err_status != Mat::ViscoplastErrorType::NoErrors)
-      FOUR_C_THROW("{}", Mat::to_string(err_status));
+    if (err_status != ViscoplastUtils::ErrorType::no_errors)
+    {
+      // output error and then throw (in order to display the error on
+      // the right processor)
+      const std::string extended_message =
+          get_error_info(Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
+                  get_detailed_error_message_for_error_type(err_status));
+      FOUR_C_THROW("{}", extended_message);
+    }
 
     // extract the inverse inelastic defgrad from the LNL solution
     iFinM = extract_inverse_inelastic_defgrad(sol);
@@ -2525,10 +2605,10 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
     // update history variables of material
     if (update_hist_var_)
     {
-      time_step_quantities_.current_plastic_defgrd_inverse_[gp_] = iFinM;
-      time_step_quantities_.current_plastic_strain_[gp_] = sol(9);
-      time_step_quantities_.current_rightCG_[gp_] = CredM;
-      time_step_quantities_.current_defgrad_[gp_] = FredM;
+      time_step_quantities_.current_plastic_defgrad_inverse[gp_] = iFinM;
+      time_step_quantities_.current_plastic_strain[gp_] = sol(9);
+      time_step_quantities_.current_rightCG[gp_] = CredM;
+      time_step_quantities_.current_defgrad[gp_] = FredM;
     }
   }
 }
@@ -2539,10 +2619,10 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
 void Mat::InelasticDefgradTransvIsotropElastViscoplast::update()
 {
   // update history variables for the next time step
-  time_step_quantities_.last_rightCG_ = time_step_quantities_.current_rightCG_;
-  time_step_quantities_.last_plastic_defgrd_inverse_ =
-      time_step_quantities_.current_plastic_defgrd_inverse_;
-  time_step_quantities_.last_plastic_strain_ = time_step_quantities_.current_plastic_strain_;
+  time_step_quantities_.last_rightCG = time_step_quantities_.current_rightCG;
+  time_step_quantities_.last_plastic_defgrad_inverse =
+      time_step_quantities_.current_plastic_defgrad_inverse;
+  time_step_quantities_.last_plastic_strain = time_step_quantities_.current_plastic_strain;
 
   // call update method of the viscoplastic law
   viscoplastic_law_->update();
@@ -2560,34 +2640,34 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::setup(const int numgp,
   Core::LinAlg::Matrix<6, 1> temp_6x1(Core::LinAlg::Initialization::zero);
 
   // default values of the inverse plastic deformation gradient for ALL Gauss Points
-  time_step_quantities_.last_plastic_defgrd_inverse_.resize(
-      numgp, time_step_quantities_.last_plastic_defgrd_inverse_[0]);
-  time_step_quantities_.current_plastic_defgrd_inverse_.resize(numgp,
-      time_step_quantities_.last_plastic_defgrd_inverse_[0]);  // value irrelevant at this point
-  time_step_quantities_.last_substep_plastic_defgrd_inverse_.resize(
-      numgp, time_step_quantities_.last_substep_plastic_defgrd_inverse_[0]);
+  time_step_quantities_.last_plastic_defgrad_inverse.resize(
+      numgp, time_step_quantities_.last_plastic_defgrad_inverse[0]);
+  time_step_quantities_.current_plastic_defgrad_inverse.resize(numgp,
+      time_step_quantities_.last_plastic_defgrad_inverse[0]);  // value irrelevant at this point
+  time_step_quantities_.last_substep_plastic_defgrad_inverse.resize(
+      numgp, time_step_quantities_.last_substep_plastic_defgrad_inverse[0]);
 
   // default values of the plastic strain for ALL Gauss Points
-  time_step_quantities_.last_plastic_strain_.resize(
-      numgp, time_step_quantities_.last_plastic_strain_[0]);
-  time_step_quantities_.current_plastic_strain_.resize(
-      numgp, time_step_quantities_.last_plastic_strain_[0]);  // value irrelevant at this point
-  time_step_quantities_.last_substep_plastic_strain_.resize(
-      numgp, time_step_quantities_.last_substep_plastic_strain_[0]);
+  time_step_quantities_.last_plastic_strain.resize(
+      numgp, time_step_quantities_.last_plastic_strain[0]);
+  time_step_quantities_.current_plastic_strain.resize(
+      numgp, time_step_quantities_.last_plastic_strain[0]);  // value irrelevant at this point
+  time_step_quantities_.last_substep_plastic_strain.resize(
+      numgp, time_step_quantities_.last_substep_plastic_strain[0]);
 
   // default values of the right CG deformation tensor for ALL Gauss Points
-  time_step_quantities_.last_rightCG_.resize(numgp, time_step_quantities_.last_rightCG_[0]);
-  time_step_quantities_.current_rightCG_.resize(
-      numgp, time_step_quantities_.last_rightCG_[0]);  // value irrelevant at this point
+  time_step_quantities_.last_rightCG.resize(numgp, time_step_quantities_.last_rightCG[0]);
+  time_step_quantities_.current_rightCG.resize(
+      numgp, time_step_quantities_.last_rightCG[0]);  // value irrelevant at this point
 
   // default values of the deformation gradient
-  time_step_quantities_.current_defgrad_.resize(numgp, time_step_quantities_.current_defgrad_[0]);
+  time_step_quantities_.current_defgrad.resize(numgp, time_step_quantities_.current_defgrad[0]);
 
   // call corresponding method of the viscoplastic law
   viscoplastic_law_->setup(numgp, fibers, coord_system);
 
   // read fiber and structural tensor in the case of transverse isotropy
-  if (parameter()->bool_transv_isotropy())
+  if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::transv_isotrop)
   {
     // read fiber via the fiber reader (hyperelastic transversely isotropic material)
     fiber_reader_.setup(numgp, fibers, coord_system);
@@ -2618,11 +2698,11 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::pack_inelastic(
     add_to_pack(data, m_);
 
     // pack last_ values inside time_step_quantities_
-    add_to_pack(data, time_step_quantities_.last_rightCG_);
-    add_to_pack(data, time_step_quantities_.last_plastic_defgrd_inverse_);
-    add_to_pack(data, time_step_quantities_.last_plastic_strain_);
-    add_to_pack(data, time_step_quantities_.last_substep_plastic_defgrd_inverse_);
-    add_to_pack(data, time_step_quantities_.last_substep_plastic_strain_);
+    add_to_pack(data, time_step_quantities_.last_rightCG);
+    add_to_pack(data, time_step_quantities_.last_plastic_defgrad_inverse);
+    add_to_pack(data, time_step_quantities_.last_plastic_strain);
+    add_to_pack(data, time_step_quantities_.last_substep_plastic_defgrad_inverse);
+    add_to_pack(data, time_step_quantities_.last_substep_plastic_strain);
   }
 }
 
@@ -2643,27 +2723,27 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::unpack_inelastic(
     extract_from_pack(buffer, m_);
 
     // unpack last_ values inside time_step_quantities_
-    extract_from_pack(buffer, time_step_quantities_.last_rightCG_);
-    extract_from_pack(buffer, time_step_quantities_.last_plastic_defgrd_inverse_);
-    extract_from_pack(buffer, time_step_quantities_.last_plastic_strain_);
-    extract_from_pack(buffer, time_step_quantities_.last_substep_plastic_defgrd_inverse_);
-    extract_from_pack(buffer, time_step_quantities_.last_substep_plastic_strain_);
+    extract_from_pack(buffer, time_step_quantities_.last_rightCG);
+    extract_from_pack(buffer, time_step_quantities_.last_plastic_defgrad_inverse);
+    extract_from_pack(buffer, time_step_quantities_.last_plastic_strain);
+    extract_from_pack(buffer, time_step_quantities_.last_substep_plastic_defgrad_inverse);
+    extract_from_pack(buffer, time_step_quantities_.last_substep_plastic_strain);
   }
 
   // fill current_ values with the last_ values
-  time_step_quantities_.current_rightCG_.resize(time_step_quantities_.last_rightCG_.size(),
-      time_step_quantities_.last_rightCG_[0]);  // value irrelevant
-  time_step_quantities_.current_plastic_defgrd_inverse_.resize(
-      time_step_quantities_.last_plastic_defgrd_inverse_.size(),
-      time_step_quantities_.last_plastic_defgrd_inverse_[0]);  // value irrelevant
-  time_step_quantities_.current_plastic_strain_.resize(
-      time_step_quantities_.last_plastic_strain_.size(),
-      time_step_quantities_.last_plastic_strain_[0]);  // value irrelevant
+  time_step_quantities_.current_rightCG.resize(time_step_quantities_.last_rightCG.size(),
+      time_step_quantities_.last_rightCG[0]);  // value irrelevant
+  time_step_quantities_.current_plastic_defgrad_inverse.resize(
+      time_step_quantities_.last_plastic_defgrad_inverse.size(),
+      time_step_quantities_.last_plastic_defgrad_inverse[0]);  // value irrelevant
+  time_step_quantities_.current_plastic_strain.resize(
+      time_step_quantities_.last_plastic_strain.size(),
+      time_step_quantities_.last_plastic_strain[0]);  // value irrelevant
 
   // set evaluated deformation gradient to 0, to make sure that the inverse inelastic deformation
   // gradient is evaluated fully after the restart
-  time_step_quantities_.current_defgrad_.resize(
-      time_step_quantities_.last_substep_plastic_defgrd_inverse_.size(),
+  time_step_quantities_.current_defgrad.resize(
+      time_step_quantities_.last_substep_plastic_defgrad_inverse.size(),
       Core::LinAlg::Matrix<3, 3>{Core::LinAlg::Initialization::zero});
 
 
@@ -2679,7 +2759,7 @@ Core::LinAlg::Matrix<10, 1>
 Mat::InelasticDefgradTransvIsotropElastViscoplast::calculate_local_newton_loop_residual(
     const Core::LinAlg::Matrix<3, 3>& CM, const Core::LinAlg::Matrix<10, 1>& x,
     const Core::LinAlg::Matrix<3, 3>& last_iFinM, const double last_plastic_strain, const double dt,
-    Mat::ViscoplastErrorType& err_status)
+    ViscoplastUtils::ErrorType& err_status)
 {
   // auxiliaries
   Core::LinAlg::Matrix<3, 3> temp3x3(Core::LinAlg::Initialization::zero);
@@ -2689,25 +2769,26 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::calculate_local_newton_loop_r
   double plastic_strain = x(9);
 
   // evaluate state variables
-  state_quantities_ = evaluate_state_quantities(CM, iFinM, plastic_strain, err_status, dt);
+  state_quantities_ = evaluate_state_quantities(
+      CM, iFinM, plastic_strain, err_status, dt, ViscoplastUtils::StateQuantityEvalType::FullEval);
 
   // declare residuals of the LNL
   Core::LinAlg::Matrix<3, 3> resFM(Core::LinAlg::Initialization::zero);
   double resepsp = 0.0;
 
   // compute residuals (standard substepping)
-  if (!(parameter()->bool_log_substepping()))
+  if (parameter()->timint_type() == ViscoplastUtils::TimIntType::standard)
   {
     // calculate residual of the equation for inelastic defgrad
-    temp3x3.multiply_nn(1.0, last_iFinM, state_quantities_.curr_EpM_, 0.0);
+    temp3x3.multiply_nn(1.0, last_iFinM, state_quantities_.curr_EpM, 0.0);
     resFM.update(1.0, iFinM, -1.0, temp3x3, 0.0);
 
     // calculate residual of the equation for plastic strain
     resepsp = plastic_strain - last_plastic_strain -
-              dt * state_quantities_.curr_equiv_plastic_strain_rate_;
+              dt * state_quantities_.curr_equiv_plastic_strain_rate;
   }
-  else
   // compute residuals (logarithmic substepping)
+  else if (parameter()->timint_type() == ViscoplastUtils::TimIntType::logarithmic)
   {
     // calculate the tensor logarithm involved in the residual
     Core::LinAlg::Matrix<3, 3> last_FinM(Core::LinAlg::Initialization::zero);
@@ -2721,11 +2802,16 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::calculate_local_newton_loop_r
         "Matrix logarithm evaluation failed!");
 
     // calculate residual of the equation for inelastic defgrad
-    resFM.update(1.0, logT, dt, state_quantities_.curr_lpM_, 0.0);
+    resFM.update(1.0, logT, dt, state_quantities_.curr_lpM, 0.0);
 
     // calculate residual of the equation for plastic strain
     resepsp = plastic_strain - last_plastic_strain -
-              dt * state_quantities_.curr_equiv_plastic_strain_rate_;
+              dt * state_quantities_.curr_equiv_plastic_strain_rate;
+  }
+  else
+  {
+    FOUR_C_THROW("Inconsistent time integration type {} in evaluating Local Newton residual",
+        EnumTools::enum_name(parameter()->timint_type()));
   }
 
   // return 10x1 residual vector
@@ -2750,7 +2836,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::calculate_local_newton_loop_r
 Core::LinAlg::Matrix<10, 10> Mat::InelasticDefgradTransvIsotropElastViscoplast::calculate_jacobian(
     const Core::LinAlg::Matrix<3, 3>& CM, const Core::LinAlg::Matrix<10, 1>& x,
     const Core::LinAlg::Matrix<3, 3>& last_iFinM, const double last_plastic_strain, const double dt,
-    Mat::ViscoplastErrorType& err_status)
+    ViscoplastUtils::ErrorType& err_status)
 {
   // auxiliaries
   Core::LinAlg::FourTensor<3> tempFourTensor(true);
@@ -2763,13 +2849,15 @@ Core::LinAlg::Matrix<10, 10> Mat::InelasticDefgradTransvIsotropElastViscoplast::
 
   // evaluate state derivatives
   state_quantity_derivatives_ = evaluate_state_quantity_derivatives(CM, iFinM, plastic_strain,
-      err_status, dt);  // we do not reevaluate the state quantities, this
-                        // was done in the residual computation already
+      err_status, dt,
+      ViscoplastUtils::StateQuantityDerivEvalType::FullEval);  // we do not reevaluate the state
+                                                               // quantities, this was done in the
+                                                               // residual computation already
 
   // get derivative of update tensor wrt inverse inelastic defgrad (in FourTensor form)
   Core::LinAlg::FourTensor<3> dEpdiFin_FourTensor(true);
   Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(
-      dEpdiFin_FourTensor, state_quantity_derivatives_.curr_dEpdiFin_);
+      dEpdiFin_FourTensor, state_quantity_derivatives_.curr_dEpdiFin);
 
   // declare Jacobian component blocks
 
@@ -2783,36 +2871,36 @@ Core::LinAlg::Matrix<10, 10> Mat::InelasticDefgradTransvIsotropElastViscoplast::
   // derivative of residual for plastic strain w.r.t. plastic strain
   double J_epsp_epsp = 0.0;
 
-  // standard substepping
-  if (!parameter()->bool_log_substepping())
+  // standard time integration
+  if (parameter()->timint_type() == ViscoplastUtils::TimIntType::standard)
   {
     // compute 9x9 north-west component block of the Jacobian (derivative of residual for
     // inelastic deformation gradient w.r.t. inelastic deformation gradient)
     Core::LinAlg::FourTensorOperations::multiply_matrix_four_tensor<3>(
         tempFourTensor, last_iFinM, dEpdiFin_FourTensor, true);
     Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, tempFourTensor);
-    J_iFin_iFin.update(1.0, const_non_mat_tensors.id4_9x9_, -1.0, temp9x9, 0.0);
+    J_iFin_iFin.update(1.0, const_non_mat_tensors.id4_9x9, -1.0, temp9x9, 0.0);
 
     // compute derivative of update tensor wrt plastic strain in matrix form
     Core::LinAlg::Matrix<3, 3> dEpdepsp_M(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Voigt::matrix_9x1_to_3x3(state_quantity_derivatives_.curr_dEpdepsp_, dEpdepsp_M);
+    Core::LinAlg::Voigt::matrix_9x1_to_3x3(state_quantity_derivatives_.curr_dEpdepsp, dEpdepsp_M);
 
     // compute 9x1 north-east component block of the Jacobian (derivative of residual for
     // inelastic deformation gradient w.r.t. plastic strain)
     temp3x3.multiply_nn(-1.0, last_iFinM, dEpdepsp_M, 0.0);
     Core::LinAlg::Voigt::matrix_3x3_to_9x1(temp3x3, J_iFin_epsp);
 
-    // compute 1x9 south-west component block of the Jacobian (derivative of residual for plastic
-    // strain w.r.t. inelastic deformation gradient)
-    J_epsp_iFin.update(-dt * state_quantity_derivatives_.curr_dpsr_dequiv_stress_,
-        state_quantity_derivatives_.curr_dequiv_stress_diFin_, 0.0);
+    // compute 1x9 south-west component block of the Jacobian (derivative of residual for
+    // plastic strain w.r.t. inelastic deformation gradient)
+    J_epsp_iFin.update(-dt * state_quantity_derivatives_.curr_dpsr_dequiv_stress,
+        state_quantity_derivatives_.curr_dequiv_stress_diFin, 0.0);
 
     // compute south-east component of the Jacobian (derivative of residual for plastic
     // strain w.r.t. plastic strain)
-    J_epsp_epsp = 1.0 - dt * state_quantity_derivatives_.curr_dpsr_depsp_;
+    J_epsp_epsp = 1.0 - dt * state_quantity_derivatives_.curr_dpsr_depsp;
   }
-  else
-  // logarithmic substepping
+  else if (parameter()->timint_type() == ViscoplastUtils::TimIntType::logarithmic)
+  // logarithmic time integration
   {
     // compute 9x9 north-west component block of the Jacobian (derivative of residual for
     // inelastic deformation gradient w.r.t. inelastic deformation gradient)
@@ -2820,31 +2908,60 @@ Core::LinAlg::Matrix<10, 10> Mat::InelasticDefgradTransvIsotropElastViscoplast::
     last_FinM.invert(last_iFinM);
     Core::LinAlg::Matrix<3, 3> T(Core::LinAlg::Initialization::zero);
     T.multiply_nn(1.0, last_FinM, iFinM, 0.0);
-    Core::LinAlg::MatrixFunctErrorType log_deriv_err_status{
-        Core::LinAlg::MatrixFunctErrorType::no_errors};
-    Core::LinAlg::Matrix<9, 9> dlogTdT =
-        Core::LinAlg::matrix_3x3_log_1st_deriv(T, log_deriv_err_status);
-    FOUR_C_ASSERT_ALWAYS(log_deriv_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
-        "Matrix logarithm derivative evaluation failed!");
+    Core::LinAlg::MatrixFunctErrorType log_err_status =
+        Core::LinAlg::MatrixFunctErrorType::no_errors;
+    Core::LinAlg::Matrix<9, 9> dlogTdT{Core::LinAlg::Initialization::zero};
+    if ((parameter()->mat_log_deriv_calc_method() ==
+            Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::
+                pade_part_fract))  // evaluation using the Pade partial fraction
+                                   // expansion?...
+    {
+      // check whether the logarithm was evaluated with the inverse
+      // scaling and squaring method, for which we have also determined
+      // a suitable Pade order -> if not so, then we throw error, since
+      // this is the only implemented case for now!
+      FOUR_C_ASSERT_ALWAYS(
+          parameter()->mat_log_calc_method() == Core::LinAlg::MatrixLogCalcMethod::inv_scal_square,
+          "Combination of logarithm evaluation methods not implemented yet!");
+
+      dlogTdT = Core::LinAlg::matrix_3x3_log_1st_deriv(T, log_err_status,
+          matrix_exp_log_utils_.pade_order, parameter()->mat_log_deriv_calc_method());
+    }
+    else  // evaluation using other provided methods?...
+    {
+      dlogTdT = Core::LinAlg::matrix_3x3_log_1st_deriv(
+          T, log_err_status, parameter()->mat_log_deriv_calc_method());
+    }
+
+    if (log_err_status != Core::LinAlg::MatrixFunctErrorType::no_errors)
+    {
+      err_status = ViscoplastUtils::ErrorType::failed_matrix_log_evaluation;
+      return Core::LinAlg::Matrix<10, 10>{Core::LinAlg::Initialization::zero};
+    }
     Core::LinAlg::Matrix<9, 9> dTdiFin(Core::LinAlg::Initialization::zero);
     Core::LinAlg::FourTensorOperations::add_non_symmetric_product(
-        1.0, last_FinM, const_non_mat_tensors.id3x3_, dTdiFin);
+        1.0, last_FinM, const_non_mat_tensors.id3x3, dTdiFin);
     Core::LinAlg::Matrix<9, 9> dlogTdiFin(Core::LinAlg::Initialization::zero);
     dlogTdiFin.multiply_nn(1.0, dlogTdT, dTdiFin, 0.0);
-    J_iFin_iFin.update(1.0, dlogTdiFin, dt, state_quantity_derivatives_.curr_dlpdiFin_, 0.0);
+    J_iFin_iFin.update(1.0, dlogTdiFin, dt, state_quantity_derivatives_.curr_dlpdiFin, 0.0);
 
     // compute 9x1 north-east component block of the Jacobian (derivative of residual for
     // inelastic deformation gradient w.r.t. plastic strain)
-    J_iFin_epsp.update(dt, state_quantity_derivatives_.curr_dlpdepsp_, 0.0);
+    J_iFin_epsp.update(dt, state_quantity_derivatives_.curr_dlpdepsp, 0.0);
 
-    // compute 1x9 south-west component block of the Jacobian (derivative of residual for plastic
-    // strain w.r.t. inelastic deformation gradient)
-    J_epsp_iFin.update(-dt * state_quantity_derivatives_.curr_dpsr_dequiv_stress_,
-        state_quantity_derivatives_.curr_dequiv_stress_diFin_, 0.0);
+    // compute 1x9 south-west component block of the Jacobian (derivative of residual for
+    // plastic strain w.r.t. inelastic deformation gradient)
+    J_epsp_iFin.update(-dt * state_quantity_derivatives_.curr_dpsr_dequiv_stress,
+        state_quantity_derivatives_.curr_dequiv_stress_diFin, 0.0);
 
     // compute south-east component of the Jacobian (derivative of residual for plastic
     // strain w.r.t. plastic strain)
-    J_epsp_epsp = 1.0 - dt * state_quantity_derivatives_.curr_dpsr_depsp_;
+    J_epsp_epsp = 1.0 - dt * state_quantity_derivatives_.curr_dpsr_depsp;
+  }
+  else
+  {
+    FOUR_C_THROW("Inconsistent time integration type {} in evaluating Jacobian",
+        EnumTools::enum_name(parameter()->timint_type()));
   }
 
   // assemble and return the Jacobian
@@ -2856,7 +2973,7 @@ Core::LinAlg::Matrix<10, 10> Mat::InelasticDefgradTransvIsotropElastViscoplast::
  *--------------------------------------------------------------------*/
 Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::local_newton_loop(
     const Core::LinAlg::Matrix<3, 3>& defgrad, const Core::LinAlg::Matrix<10, 1>& x,
-    Mat::ViscoplastErrorType& err_status)
+    ViscoplastUtils::ErrorType& err_status)
 {
   // auxiliaries
   Core::LinAlg::Matrix<10, 10> temp10x10(Core::LinAlg::Initialization::zero);
@@ -2885,24 +3002,17 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
   // declare current right CG (tensor interpolated later on in each substep)
   Core::LinAlg::Matrix<3, 3> curr_CM(Core::LinAlg::Initialization::zero);
 
-  // initialize substep parameters
-  SubstepParams substep_params = {
-      .t = 0,                // t = 0 (time parameter)
-      .substep_counter = 1,  // substep_counter = 1 (evaluation of first substep)
-      .curr_dt = time_step_settings_
-          .dt_,  // curr_dt = time_step_settings_.dt_ (first substep length = full time step)
-      .time_step_halving_counter =
-          0,  // time_step_halving_counter = 0 (full time step, therefore no substep halving yet)
-      .total_num_of_substeps =
-          1,      // total_num_of_substeps = 1 (1 substep to evaluate: full time step)
-      .iter = 0,  // iter = 0 (0 LNL iterations for the current substep)
-  };
+  // reset substep parameters
+  local_substepping_utils_.reset();
+  local_substepping_utils_.substep_counter = 1;
+  local_substepping_utils_.curr_dt = time_step_tracker_.dt;
+  local_substepping_utils_.total_num_of_substeps = 1;
 
   // set reference matrices for interpolation
-  ref_matrices_ = {time_step_quantities_.last_rightCG_[gp_], CM};
+  ref_matrices_ = {time_step_quantities_.last_rightCG[gp_], CM};
 
-  // declare error status for the new substep, to check whether we have halved the time step too
-  // many times (false) or if a new substep is possible (true)
+  // declare error status for considering a new substep: used to check whether we have
+  // halved the time step too many times (false) or if a new substep is possible (true)
   bool new_substep_status = true;
 
   // declare error status for tensor interpolation
@@ -2910,14 +3020,14 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
       Core::LinAlg::TensorInterpolationErrorType::NoErrors};
 
   // substepping procedure
-  while (substep_params.substep_counter <= substep_params.total_num_of_substeps)
+  while (local_substepping_utils_.substep_counter <= local_substepping_utils_.total_num_of_substeps)
   {
     // reset iteration counter
-    substep_params.iter = 0;
+    local_substepping_utils_.iter = 0;
 
     // get the right Cauchy-Green tensor of the current substep
     curr_CM = tensor_interpolator_.get_interpolated_matrix(ref_matrices_, ref_locs_,
-        (substep_params.t + substep_params.curr_dt) / time_step_settings_.dt_,
+        (local_substepping_utils_.t + local_substepping_utils_.curr_dt) / time_step_tracker_.dt,
         tensor_interpolator_err_status);
     FOUR_C_ASSERT_ALWAYS(
         tensor_interpolator_err_status == Core::LinAlg::TensorInterpolationErrorType::NoErrors,
@@ -2927,29 +3037,29 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
     // Newton-Raphson scheme for the current substep
     while (true)
     {
-      err_status = Mat::ViscoplastErrorType::NoErrors;
+      err_status = ViscoplastUtils::ErrorType::no_errors;
 
       // increment iteration counter
-      ++substep_params.iter;
+      ++local_substepping_utils_.iter;
 
       // check the determinant of the obtained inverse inelastic defgrad: if far from 1.0, then
       // restart with smaller time step
       if (std::abs(extract_inverse_inelastic_defgrad(sol).determinant() - 1.0) > 0.05)
       {
-        err_status = ViscoplastErrorType::NoPlasticIncompressibility;
-        new_substep_status = prepare_new_substep(substep_params, sol, curr_CM);
+        err_status = ViscoplastUtils::ErrorType::no_plastic_incompressibility;
+        new_substep_status = prepare_new_substep(sol, curr_CM);
         if (!new_substep_status) return sol;  // return with error
         continue;
       }
 
       // compute residual
       residual = calculate_local_newton_loop_residual(curr_CM, sol,
-          time_step_quantities_.last_substep_plastic_defgrd_inverse_[gp_],
-          time_step_quantities_.last_substep_plastic_strain_[gp_], substep_params.curr_dt,
+          time_step_quantities_.last_substep_plastic_defgrad_inverse[gp_],
+          time_step_quantities_.last_substep_plastic_strain[gp_], local_substepping_utils_.curr_dt,
           err_status);
-      if (err_status != Mat::ViscoplastErrorType::NoErrors)
+      if (err_status != ViscoplastUtils::ErrorType::no_errors)
       {
-        new_substep_status = prepare_new_substep(substep_params, sol, curr_CM);
+        new_substep_status = prepare_new_substep(sol, curr_CM);
         if (!new_substep_status) return sol;  // return with error
         continue;
       }
@@ -2965,16 +3075,17 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
         // break out of the loop of the current substep
 
         // update time parameter and substep count
-        substep_params.t += substep_params.curr_dt;
-        substep_params.substep_counter += 1;
+        local_substepping_utils_.t += local_substepping_utils_.curr_dt;
+        local_substepping_utils_.substep_counter += 1;
 
         // update the values of history variables at the last converged state (if we have not
         // reached the last step yet)
-        if (substep_params.substep_counter <= substep_params.total_num_of_substeps)
+        if (local_substepping_utils_.substep_counter <=
+            local_substepping_utils_.total_num_of_substeps)
         {
-          time_step_quantities_.last_substep_plastic_defgrd_inverse_[gp_] =
+          time_step_quantities_.last_substep_plastic_defgrad_inverse[gp_] =
               extract_inverse_inelastic_defgrad(sol);
-          time_step_quantities_.last_substep_plastic_strain_[gp_] = sol(9);
+          time_step_quantities_.last_substep_plastic_strain[gp_] = sol(9);
           // update last substep history variables of the viscoplastic flow rule
           viscoplastic_law_->update_gp_state(gp_);
         }
@@ -2986,13 +3097,13 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
       // check if maximum iteration is reached: if we have halved the time step the maximum
       // number of times, throw error and finish execution. Otherwise throw exception and
       // proceed with a smaller time step in the substepping scheme!
-      if (substep_params.iter > max_iter)
+      if (local_substepping_utils_.iter > max_iter)
       {
-        new_substep_status = prepare_new_substep(substep_params, sol, curr_CM);
+        new_substep_status = prepare_new_substep(sol, curr_CM);
         // if the halving number was exceeded --> return with error
         if (!new_substep_status)
         {
-          err_status = ViscoplastErrorType::NoConvergenceLNL;
+          err_status = ViscoplastUtils::ErrorType::no_convergence_local_newton;
           return sol;  // return with error
         }
         continue;
@@ -3000,12 +3111,12 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
 
       // compute Jacobian
       jacMat = calculate_jacobian(curr_CM, sol,
-          time_step_quantities_.last_substep_plastic_defgrd_inverse_[gp_],
-          time_step_quantities_.last_substep_plastic_strain_[gp_], substep_params.curr_dt,
+          time_step_quantities_.last_substep_plastic_defgrad_inverse[gp_],
+          time_step_quantities_.last_substep_plastic_strain[gp_], local_substepping_utils_.curr_dt,
           err_status);
-      if (err_status != Mat::ViscoplastErrorType::NoErrors)
+      if (err_status != ViscoplastUtils::ErrorType::no_errors)
       {
-        new_substep_status = prepare_new_substep(substep_params, sol, curr_CM);
+        new_substep_status = prepare_new_substep(sol, curr_CM);
         if (!new_substep_status) return sol;  // return with error
         continue;
       }
@@ -3022,8 +3133,8 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
       int err = solver_10_10_1.solve();                // X = A^-1 B
       if ((err != 0) || (err2 != 0))
       {
-        err_status = ViscoplastErrorType::FailedSolLinSystLNL;
-        new_substep_status = prepare_new_substep(substep_params, sol, curr_CM);
+        err_status = ViscoplastUtils::ErrorType::failed_solution_linear_system_lnl;
+        new_substep_status = prepare_new_substep(sol, curr_CM);
         if (!new_substep_status) return sol;  // return with error
         continue;
       }
@@ -3038,61 +3149,30 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
   return sol;
 }
 
-void Mat::InelasticDefgradTransvIsotropElastViscoplast::ConstMatTensors::set_material_const_tensors(
-    const Core::LinAlg::Matrix<3, 1>& m)
-{
-  // set material-dependent tensors (fiber orientation)
-
-  // structural tensor
-  mm_.multiply_nt(1.0, m, m, 0.0);
-
-  // deviatoric part of the structural tensor
-  double tr_mm_ = mm_(0, 0) + mm_(1, 1) + mm_(2, 2);
-  mm_dev_.update(1.0, mm_, -1.0 / 3.0 * tr_mm_, const_non_mat_tensors.id3x3_);
-
-  // dyadic product of structural tensors
-  Core::LinAlg::Matrix<6, 1> mm_V(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Voigt::VoigtUtils<Core::LinAlg::Voigt::NotationType::stress>::matrix_to_vector(
-      mm_, mm_V);
-  mm_dyad_mm_.multiply_nt(1.0, mm_V, mm_V, 0.0);
-
-  // dyadic product of deviatoric structural tensor with the structural tensor
-  Core::LinAlg::Matrix<6, 1> mm_dev_V(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Voigt::VoigtUtils<Core::LinAlg::Voigt::NotationType::stress>::matrix_to_vector(
-      mm_dev_, mm_dev_V);
-  mm_dev_dyad_mm_.multiply_nt(1.0, mm_dev_V, mm_V, 0.0);
-
-  // dyadic product of identity with the structural tensor
-  id_dyad_mm_.multiply_nt(1.0, const_non_mat_tensors.id6x1_, mm_V, 0.0);
-
-  // sum of identity with the structural tensor
-  id_plus_mm_.update(1.0, const_non_mat_tensors.id3x3_, 1.0, mm_, 0.0);
-}
-
-bool Mat::InelasticDefgradTransvIsotropElastViscoplast::check_predictor(
+bool Mat::InelasticDefgradTransvIsotropElastViscoplast::check_elastic_predictor(
     const Core::LinAlg::Matrix<3, 3>& CM, const Core::LinAlg::Matrix<3, 3>& iFinM_pred,
-    const double plastic_strain_pred, Mat::ViscoplastErrorType& err_status)
+    const double plastic_strain_pred, ViscoplastUtils::ErrorType& err_status)
 {
   // evaluate state with this elastic predictor and the minimum possible time step
-  state_quantities_ = evaluate_state_quantities(
-      CM, iFinM_pred, plastic_strain_pred, err_status, time_step_settings_.min_dt_);
+  state_quantities_ = evaluate_state_quantities(CM, iFinM_pred, plastic_strain_pred, err_status,
+      time_step_tracker_.min_dt, ViscoplastUtils::StateQuantityEvalType::FullEval);
 
   // check if the predicted plastic strain rate is 0 -> for flow rules with yield functions,
   // this means that the predictor is correct
-  return (state_quantities_.curr_equiv_plastic_strain_rate_ < 1.0e-15);
+  return (state_quantities_.curr_equiv_plastic_strain_rate * time_step_tracker_.dt <=
+          ViscoplastUtils::zero_plastic_strain_increment);
 }
 
 bool Mat::InelasticDefgradTransvIsotropElastViscoplast::prepare_new_substep(
-    SubstepParams& substep_params, Core::LinAlg::Matrix<10, 1>& sol,
-    Core::LinAlg::Matrix<3, 3>& curr_CM)
+    Core::LinAlg::Matrix<10, 1>& sol, Core::LinAlg::Matrix<3, 3>& curr_CM)
 {
   // extract substep parameters
-  const double& t = substep_params.t;
-  const unsigned int& substep_counter = substep_params.substep_counter;
-  double& curr_dt = substep_params.curr_dt;
-  unsigned int& time_step_halving_counter = substep_params.time_step_halving_counter;
-  unsigned int& total_num_of_substeps = substep_params.total_num_of_substeps;
-  unsigned int& iter = substep_params.iter;
+  const double& t = local_substepping_utils_.t;
+  const unsigned int& substep_counter = local_substepping_utils_.substep_counter;
+  double& curr_dt = local_substepping_utils_.curr_dt;
+  unsigned int& time_step_halving_counter = local_substepping_utils_.time_step_halving_counter;
+  unsigned int& total_num_of_substeps = local_substepping_utils_.total_num_of_substeps;
+  unsigned int& iter = local_substepping_utils_.iter;
 
   // the current iteration vector has reached a numerically inevaluable state -> we halve
   // the time step and apply substepping
@@ -3109,8 +3189,8 @@ bool Mat::InelasticDefgradTransvIsotropElastViscoplast::prepare_new_substep(
   }
 
   // reset the predictor to the last converged state
-  sol = wrap_unknowns(time_step_quantities_.last_substep_plastic_defgrd_inverse_[gp_],
-      time_step_quantities_.last_substep_plastic_strain_[gp_]);
+  sol = wrap_unknowns(time_step_quantities_.last_substep_plastic_defgrad_inverse[gp_],
+      time_step_quantities_.last_substep_plastic_strain[gp_]);
 
   // initialize the error status for the tensor interpolation
   Core::LinAlg::TensorInterpolationErrorType tensor_interpolator_err_status{
@@ -3118,7 +3198,7 @@ bool Mat::InelasticDefgradTransvIsotropElastViscoplast::prepare_new_substep(
 
   // recompute the current right CG
   curr_CM = tensor_interpolator_.get_interpolated_matrix(ref_matrices_, ref_locs_,
-      (t + curr_dt) / time_step_settings_.dt_, tensor_interpolator_err_status);
+      (t + curr_dt) / time_step_tracker_.dt, tensor_interpolator_err_status);
   FOUR_C_ASSERT_ALWAYS(
       tensor_interpolator_err_status == Core::LinAlg::TensorInterpolationErrorType::NoErrors,
       "Tensor interpolation failed with err: {}",
@@ -3153,7 +3233,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_additional_cmat
   // Voigt representation of the inverse inelastic defgrad
   Core::LinAlg::Matrix<9, 1> iFinV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(
-      time_step_quantities_.current_plastic_defgrd_inverse_[gp_], iFinV);
+      time_step_quantities_.current_plastic_defgrad_inverse[gp_], iFinV);
 
   // derivative of inverse inelastic deformation gradient w.r.t. right Cauchy-Green
   // deformation tensor, to be evaluated in the FD-based procedure
@@ -3207,6 +3287,91 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_additional_cmat
 
   // reset boolean for the history update
   update_hist_var_ = true;
+}
+
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+std::string Mat::InelasticDefgradTransvIsotropElastViscoplast::get_error_info(
+    const std::string& base_error_string)
+{
+  // auxiliaries
+  std::ostringstream temp_ostream;
+
+  // set output format for the numbers -> we can set it here for the
+  // entire error message
+  temp_ostream << std::fixed << std::setprecision(16) << std::endl;
+
+  // declare the extended error message
+  std::string extended_error_string{""};
+
+  // get relevant error info
+  extended_error_string += "BASE ERROR: \n";
+  extended_error_string += base_error_string + "\n";
+  extended_error_string +=
+      "-> At EleID: " + std::to_string(ele_gid_) + ". At GP: " + std::to_string(gp_) + ".\n";
+  extended_error_string += std::string(10, '.') + "\n";
+
+  // add the material parameters
+  extended_error_string += "PARAMETERS: \n";
+  parameter()->raw_parameters().print(temp_ostream);
+  viscoplastic_law_->parameter()->raw_parameters().print(temp_ostream);
+  temp_ostream << std::endl;
+  extended_error_string += temp_ostream.str();
+  temp_ostream.str("");
+  extended_error_string += std::string(10, '.') + "\n";
+
+  // add the relevant last_ values
+  extended_error_string += "LAST_ VALUES: \n";
+  extended_error_string += "last_plastic_defgrad_inverse: \n";
+  time_step_quantities_.last_plastic_defgrad_inverse[gp_].print(temp_ostream);
+  extended_error_string += temp_ostream.str();
+  temp_ostream.str("");
+  extended_error_string += "last_substep_plastic_defgrad_inverse: \n";
+  time_step_quantities_.last_substep_plastic_defgrad_inverse[gp_].print(temp_ostream);
+  extended_error_string += temp_ostream.str();
+  temp_ostream.str("");
+  extended_error_string += "last_plastic_strain: \n";
+  extended_error_string += "Double<1,1> \n";
+  temp_ostream << time_step_quantities_.last_plastic_strain[gp_] << std::endl;
+  extended_error_string += temp_ostream.str();
+  temp_ostream.str("");
+
+  extended_error_string += "last_substep_plastic_strain: \n";
+  extended_error_string += "Double<1,1> \n";
+  temp_ostream << time_step_quantities_.last_substep_plastic_strain[gp_] << std::endl;
+  extended_error_string += temp_ostream.str();
+  temp_ostream.str("");
+
+
+  extended_error_string += "last_rightCG: \n";
+  time_step_quantities_.last_rightCG[gp_].print(temp_ostream);
+  extended_error_string += temp_ostream.str();
+  temp_ostream.str("");
+  // add the current values
+  extended_error_string += "CURRENT_ VALUES: \n";
+  extended_error_string += "current_defgrad: \n";
+  time_step_quantities_.current_defgrad[gp_].print(temp_ostream);
+  extended_error_string += temp_ostream.str();
+  temp_ostream.str("");
+  extended_error_string += "current_rightCG: \n";
+  time_step_quantities_.current_rightCG[gp_].print(temp_ostream);
+  extended_error_string += temp_ostream.str();
+  temp_ostream.str("");
+  extended_error_string += std::string(10, '.');
+
+
+  // add the current values
+  extended_error_string += "OTHER VALUES: \n";
+  extended_error_string += "dt: \n";
+  extended_error_string += "Double<1,1> \n";
+  temp_ostream << time_step_tracker_.dt << std::endl;
+  extended_error_string += temp_ostream.str();
+  temp_ostream.str("");
+  extended_error_string += std::string(10, '.');
+
+
+  return extended_error_string;
 }
 
 

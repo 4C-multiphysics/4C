@@ -99,32 +99,30 @@ namespace Mat
        * a given equivalent stress \f$ \overflow{\sigma} \f$ and a given plastic strain \f$
        * \varepsilon^{\text{p}} \f$
        *
-       * @note To use the viscoplasticity components in the substepping schemes of
-       * InelasticDefgradTransvIsotropElastViscoplast, we have to check for eventual overflow errors
-       * within them. Specifically, we focus on the term  \f$ \Delta t \dot{\varepsilon}^{\text{p}}
-       * \f$, which shall be evaluable for both standard and logarithmic substepping, but also
-       * enable the numerical evaluation of the update tensor \f$ \mathsymbol{E}^{\text{p}} =
-       * \exp(-\Delta t \dot{\varepsilon}^{\text{p}} \mathsymbol{N}^{\text{p}}) \f$ required only in
-       * the standard substepping scheme. Moreover, for some viscoplasticity laws, we have to make
-       * sure that the given plastic strain is \f$ \varepsilon^{\text{p}} \ge 0 \f$, otherwise the
-       * evaluation of either flow rule or hardening model fails. This depends on the employed
-       * viscoplastic law.
+       * @note To use the viscoplasticity components in the time
+       * integration of history variables within InelasticDefgradTransvIsotropElastViscoplast, we
+       * have to check for eventual overflow errors within them. Specifically, we focus on the term
+       * \f$ \Delta t \dot{\varepsilon}^{\text{p}} \f$, which shall be
+       * evaluable in the specific time integration used. Moreover,
+       * for some viscoplasticity laws, we have to make sure that the given plastic strain is \f$
+       * \varepsilon^{\text{p}} \ge 0 \f$, otherwise the evaluation of either flow rule or hardening
+       * model fails. This depends on the employed viscoplastic law.
        *
        *
        * @param[in] equiv_stress Equivalent stress \f$ \overline{\sigma}  \f$
        * @param[in] equiv_plastic_strain Equivalent plastic strain \f$ \varepsilon^{\text{p}}\f$
        * @param[in] dt Time step size (used solely for overflow error checking, see @note)
-       * @param[in] log_substep Logarithmic substepping, for which only the plastic strain increment
-       * \Delta t \dot{\varepsilon}^{\text{p}}) \f shall be numerically evaluable? (as opposed to
-       * standard substepping, where also the update tensor \f$ \mathsymbol{E}^{\text{p}} \f$) is
-       * required)
+       * @param[in] max_plastic_strain_incr maximum, numerically evaluable plastic
+       * strain increment \f$ \Delta t \dot{\varepsilon}^{\text{p}}) \f$ (before throwing an
+       * overflow error)
        * @param[out] err_status output variable: error of the terms considered in
        * @note?
        * @return Equivalent plastic strain rate \f$ \dot{\varepsilon}^{\text{p}} \f$
        */
       virtual double evaluate_plastic_strain_rate(const double equiv_stress,
-          const double equiv_plastic_strain, const double dt, const bool log_substep,
-          Mat::ViscoplastErrorType& err_status, const bool update_hist_var = true) = 0;
+          const double equiv_plastic_strain, const double dt, const double max_plastic_strain_incr,
+          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
+          const bool update_hist_var = true) = 0;
 
       /*!
        * @brief Evaluate the derivatives of the equivalent plastic strain rate \f$
@@ -135,17 +133,19 @@ namespace Mat
        * @param[in] equiv_plastic_strain Equivalent plastic strain \f$ \varepsilon^{\text{p}}\f$
        * @param[in] dt Time step size (used solely for overflow error checking, see @note of
        * evaluate_plastic_strain_rate)
-       * @param[in] log_substep Logarithmic substepping, for which only the derivatives of the
-       * plastic strain increment \Delta t \dot{\varepsilon}^{\text{p}}) \f shall be numerically
-       * evaluable? (as opposed to standard substepping, where also the derivatives of the update
-       * tensor \f$ \mathsymbol{E}^{\text{p}} \f$) are required)
+       * @param[in] max_plastic_strain_deriv_incr Maximum
+       * numerically evaluable increment of the
+       * plastic strain derivatives (before throwing an overflow error),
+       * i.e. \f$ \Delta t \frac{\partial \dot{\varepsilon}^{\text{p}}}{\partial s},~ s \in
+       * \{\varepsilon^{\text{p}}, \overline{\sigma}\} \f$
        * @param[out] err_status output variable: error of the terms considered in @note?
        * @return Derivatives of the equivalent plastic strain rate w.r.t. the equivalent stress
        *         (element 0 of matrix) and the plastic strain (element 1 of matrix)
        */
       virtual Core::LinAlg::Matrix<2, 1> evaluate_derivatives_of_plastic_strain_rate(
           const double equiv_stress, const double equiv_plastic_strain, const double dt,
-          const bool log_substep, Mat::ViscoplastErrorType& err_status,
+          const double max_plastic_strain_deriv_incr,
+          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
           const bool update_hist_var = true) = 0;
 
       /// Return material parameters

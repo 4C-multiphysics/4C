@@ -9,6 +9,7 @@
 
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_mat_inelastic_defgrad_factors.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_vplast_law.hpp"
 #include "4C_mat_vplast_reform_johnsoncook.hpp"
@@ -91,16 +92,16 @@ namespace
     // set reference solution
     plastic_strain_rate_reformulated_JC_solution_ = 23188.7161986626;
 
-    // declare error status and logarithmic substepping
-    Mat::ViscoplastErrorType err_status = Mat::ViscoplastErrorType::NoErrors;
-    const bool log_substep = true;
+    // declare error status
+    Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType err_status =
+        Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors;
 
     // compute solution from the viscoplasticity law
     double plastic_strain_rate_reformulated_JC =
         vplast_law_reformulated_JC_->evaluate_plastic_strain_rate(
-            equiv_stress_, equiv_plastic_strain_, 1.0, log_substep, err_status, false);
+            equiv_stress_, equiv_plastic_strain_, 1.0, std::exp(30.0), err_status, false);
 
-    if (err_status != Mat::ViscoplastErrorType::NoErrors)
+    if (err_status != Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors)
       FOUR_C_THROW("Error encountered during testing of TestEvaluatePlasticStrainRate");
 
 
@@ -116,16 +117,16 @@ namespace
     deriv_plastic_strain_rate_reformulated_JC_solution_(1, 0) = -47431778.9968811;
 
 
-    // declare error status and logarithmic substepping
-    Mat::ViscoplastErrorType err_status = Mat::ViscoplastErrorType::NoErrors;
-    const bool log_substep = true;
+    // declare error status
+    Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType err_status =
+        Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors;
 
     // compute solution from the viscoplasticity law
     Core::LinAlg::Matrix<2, 1> deriv_plastic_strain_rate_reformulated_JC =
         vplast_law_reformulated_JC_->evaluate_derivatives_of_plastic_strain_rate(
-            equiv_stress_, equiv_plastic_strain_, 1.0, log_substep, err_status, false);
+            equiv_stress_, equiv_plastic_strain_, 1.0, std::exp(30.0), err_status, false);
 
-    if (err_status != Mat::ViscoplastErrorType::NoErrors)
+    if (err_status != Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors)
       FOUR_C_THROW("Error encountered during testing of TestEvaluatePlasticStrainRateDerivatives");
 
     // compare solutions
