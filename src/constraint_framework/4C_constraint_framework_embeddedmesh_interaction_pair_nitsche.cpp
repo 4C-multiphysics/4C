@@ -381,29 +381,43 @@ void evaluate_cauchy_stress_tensor_at_xi(const Core::FE::Discretization& discret
 }
 
 template <Core::FE::CellType celltype>
+struct LinearizationDependencies
+{
+  Discret::Elements::JacobianMapping<celltype> jacobian_mapping_;
+
+  Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+      deformation_gradient_;
+
+  Discret::Elements::Stress<celltype> pk2_;
+
+  Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> d_defgrad_;
+
+  Core::LinAlg::Matrix<3, 3> d_pk2_;
+};
+
+template <Core::FE::CellType celltype>
 struct FirstPKStressLinearizations
 {
   /// First Piola-Kirchhoff stress tensor
   Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> pk1_;
 
-  /// Variation of the 1. Piola Kirchhoff stress tensor w.r.t. the displacement field
-  Core::LinAlg::Matrix<6, Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>> b_pk1_;
+  /// Variation of the 1. Piola Kirchhoff stress tensor on a virtual displacement of a node in a
+  /// specific Cartesian direction (dir = 0, 1, 2)
+  Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> d_pk1_node_dir;
 
-  /// Linearization of the variation of the 1. Piola Kirchhoff stress tensor w.r.t. the displacement
-  /// field
-  Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>,
-      Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
-      lin_b_pk1_;
+  /// Linearization of the variation of the 1. Piola Kirchhoff stress tensor for the increment of
+  /// displacement of a node in a certain direction for a virtual displacement of a node in a
+  /// certain direction
+  Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+      lin_d_pk1_anode_dir_bnode_dir;
 };
 
-// Maybe I just need to calculate the Cauchy stress tensor and not the vector...
 template <Core::FE::CellType celltype>
-FirstPKStressLinearizations<celltype> evaluate_first_pk_linearizations_at_xi(
-    const Core::FE::Discretization& discret, const std::vector<double>& ele_displacement,
-    const Core::Elements::Element& element, Core::LinAlg::Matrix<3, 1>& xi)
+void evaluate_first_pk_at_xi(const Core::FE::Discretization& discret,
+    const std::vector<double>& ele_displacement, const Core::Elements::Element& element,
+    Core::LinAlg::Matrix<3, 1>& xi, LinearizationDependencies<celltype>& linearization_dependencies,
+    FirstPKStressLinearizations<celltype>& pk1_stress)
 {
-  FirstPKStressLinearizations<celltype> pk1_stress;
-
   const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>> xi_tensor =
       Core::LinAlg::reinterpret_as_tensor<Core::FE::dim<celltype>>(xi);
 
@@ -416,9 +430,13 @@ FirstPKStressLinearizations<celltype> evaluate_first_pk_linearizations_at_xi(
   const Discret::Elements::JacobianMapping<celltype> jacobian_mapping =
       Discret::Elements::evaluate_jacobian_mapping<celltype>(shape_functions, element_nodes);
 
+  linearization_dependencies.jacobian_mapping_ = jacobian_mapping;
+
   Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
       deformation_gradient =
           Discret::Elements::evaluate_deformation_gradient(jacobian_mapping, element_nodes);
+
+  linearization_dependencies.deformation_gradient_ = deformation_gradient;
 
   const Discret::Elements::SpatialMaterialMapping<celltype> spatial_material_mapping =
       evaluate_spatial_material_mapping(jacobian_mapping, element_nodes);
@@ -441,232 +459,158 @@ FirstPKStressLinearizations<celltype> evaluate_first_pk_linearizations_at_xi(
   // Setting the number of Gauss point (gp) to zero (this is later used for a warning, but not
   // relevant for calculations)
   const int gp = 0;
-  Discret::Elements::Stress<celltype> pk2 =
+  linearization_dependencies.pk2_ =
       Discret::Elements::evaluate_material_stress<celltype>(*(solid_ele->solid_material()),
           deformation_gradient, gl_strain, params, context, gp, element.id());
 
-  // Calculate the 1st Piola-Kirchhoff stresses using a pull back operation on the Cauchy stresses
+  // Calculate the 1st Piola-Kirchhoff stresses
   Core::LinAlg::Matrix<3, 3> def_gradient = Core::LinAlg::make_matrix_view(deformation_gradient);
   Core::LinAlg::Matrix<3, 3> def_gradient_inv(Core::LinAlg::Initialization::zero);
   def_gradient_inv.invert(def_gradient);
 
   Core::LinAlg::Matrix<3, 3> pk2_matrix(Core::LinAlg::Initialization::zero);
-  pk2_matrix(0, 0) = pk2.pk2_(0, 0);
-  pk2_matrix(1, 1) = pk2.pk2_(1, 1);
-  pk2_matrix(2, 2) = pk2.pk2_(2, 2);
-  pk2_matrix(0, 1) = pk2.pk2_(0, 1);
-  pk2_matrix(1, 0) = pk2.pk2_(0, 1);
-  pk2_matrix(1, 2) = pk2.pk2_(1, 2);
-  pk2_matrix(2, 1) = pk2.pk2_(1, 2);
-  pk2_matrix(0, 2) = pk2.pk2_(0, 2);
-  pk2_matrix(2, 0) = pk2.pk2_(0, 2);
+  pk2_matrix(0, 0) = linearization_dependencies.pk2_.pk2_(0, 0);
+  pk2_matrix(1, 1) = linearization_dependencies.pk2_.pk2_(1, 1);
+  pk2_matrix(2, 2) = linearization_dependencies.pk2_.pk2_(2, 2);
+  pk2_matrix(0, 1) = linearization_dependencies.pk2_.pk2_(0, 1);
+  pk2_matrix(1, 0) = linearization_dependencies.pk2_.pk2_(0, 1);
+  pk2_matrix(1, 2) = linearization_dependencies.pk2_.pk2_(1, 2);
+  pk2_matrix(2, 1) = linearization_dependencies.pk2_.pk2_(1, 2);
+  pk2_matrix(0, 2) = linearization_dependencies.pk2_.pk2_(0, 2);
+  pk2_matrix(2, 0) = linearization_dependencies.pk2_.pk2_(0, 2);
   pk1_stress.pk1_.multiply(def_gradient, pk2_matrix);
-
-  // Calculate the first contribution to the variation of the 2nd Piola-Kirchhoff stress: \delta F *
-  // S = ( B_pk2 * Grad_X(shape_functions) ) * \delta u
-  Core::LinAlg::Matrix<6, Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>> B_pk2_d_F_dd(
-      Core::LinAlg::Initialization::zero);
-  for (int num_node = 0; num_node < Core::FE::num_nodes(celltype); ++num_node)
-  {
-    B_pk2_d_F_dd(0, Core::FE::dim<celltype> * num_node + 0) =
-        pk2.pk2_(0, 0) * jacobian_mapping.N_XYZ[num_node](0) +
-        pk2.pk2_(0, 1) * jacobian_mapping.N_XYZ[num_node](1) +
-        pk2.pk2_(0, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_pk2_d_F_dd(1, Core::FE::dim<celltype> * num_node + 1) =
-        pk2.pk2_(0, 1) * jacobian_mapping.N_XYZ[num_node](0) +
-        pk2.pk2_(1, 1) * jacobian_mapping.N_XYZ[num_node](1) +
-        pk2.pk2_(1, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_pk2_d_F_dd(2, Core::FE::dim<celltype> * num_node + 2) =
-        pk2.pk2_(0, 2) * jacobian_mapping.N_XYZ[num_node](0) +
-        pk2.pk2_(1, 2) * jacobian_mapping.N_XYZ[num_node](1) +
-        pk2.pk2_(2, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_pk2_d_F_dd(3, Core::FE::dim<celltype> * num_node + 0) =
-        pk2.pk2_(0, 1) * jacobian_mapping.N_XYZ[num_node](0) +
-        pk2.pk2_(1, 1) * jacobian_mapping.N_XYZ[num_node](1) +
-        pk2.pk2_(1, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_pk2_d_F_dd(4, Core::FE::dim<celltype> * num_node + 1) =
-        pk2.pk2_(0, 2) * jacobian_mapping.N_XYZ[num_node](0) +
-        pk2.pk2_(1, 2) * jacobian_mapping.N_XYZ[num_node](1) +
-        pk2.pk2_(2, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_pk2_d_F_dd(5, Core::FE::dim<celltype> * num_node + 0) =
-        pk2.pk2_(0, 2) * jacobian_mapping.N_XYZ[num_node](0) +
-        pk2.pk2_(1, 2) * jacobian_mapping.N_XYZ[num_node](1) +
-        pk2.pk2_(2, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_pk2_d_F_dd(6, Core::FE::dim<celltype> * num_node + 1) =
-        pk2.pk2_(0, 0) * jacobian_mapping.N_XYZ[num_node](0) +
-        pk2.pk2_(0, 1) * jacobian_mapping.N_XYZ[num_node](1) +
-        pk2.pk2_(0, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_pk2_d_F_dd(7, Core::FE::dim<celltype> * num_node + 2) =
-        pk2.pk2_(0, 1) * jacobian_mapping.N_XYZ[num_node](0) +
-        pk2.pk2_(1, 1) * jacobian_mapping.N_XYZ[num_node](1) +
-        pk2.pk2_(1, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_pk2_d_F_dd(8, Core::FE::dim<celltype> * num_node + 2) =
-        pk2.pk2_(0, 0) * jacobian_mapping.N_XYZ[num_node](0) +
-        pk2.pk2_(0, 1) * jacobian_mapping.N_XYZ[num_node](1) +
-        pk2.pk2_(0, 2) * jacobian_mapping.N_XYZ[num_node](2);
-  }
-
-  // Get the variation of the Green-Lagrange strains
-  // first, evaluate matrix B = sym(deformation_gradient^T * Grad \delta u)
-  Core::LinAlg::Matrix<6, Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>> B_glstrain(
-      Core::LinAlg::Initialization::zero);
-  for (int num_node = 0; num_node < Core::FE::num_nodes(celltype); ++num_node)
-  {
-    B_glstrain(0, Core::FE::dim<celltype> * num_node + 0) =
-        def_gradient(0, 0) * jacobian_mapping.N_XYZ[num_node](0);
-    B_glstrain(0, Core::FE::dim<celltype> * num_node + 1) =
-        def_gradient(1, 0) * jacobian_mapping.N_XYZ[num_node](0);
-    B_glstrain(0, Core::FE::dim<celltype> * num_node + 2) =
-        def_gradient(2, 0) * jacobian_mapping.N_XYZ[num_node](0);
-    B_glstrain(1, Core::FE::dim<celltype> * num_node + 0) =
-        def_gradient(0, 1) * jacobian_mapping.N_XYZ[num_node](1);
-    B_glstrain(1, Core::FE::dim<celltype> * num_node + 1) =
-        def_gradient(1, 1) * jacobian_mapping.N_XYZ[num_node](1);
-    B_glstrain(1, Core::FE::dim<celltype> * num_node + 2) =
-        def_gradient(2, 1) * jacobian_mapping.N_XYZ[num_node](1);
-    B_glstrain(2, Core::FE::dim<celltype> * num_node + 0) =
-        def_gradient(0, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_glstrain(2, Core::FE::dim<celltype> * num_node + 1) =
-        def_gradient(1, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_glstrain(2, Core::FE::dim<celltype> * num_node + 2) =
-        def_gradient(2, 2) * jacobian_mapping.N_XYZ[num_node](2);
-    B_glstrain(3, Core::FE::dim<celltype> * num_node + 0) =
-        0.5 * (def_gradient(0, 1) * jacobian_mapping.N_XYZ[num_node](0) +
-                  def_gradient(0, 0) * jacobian_mapping.N_XYZ[num_node](1));
-    B_glstrain(3, Core::FE::dim<celltype> * num_node + 1) =
-        0.5 * (def_gradient(1, 1) * jacobian_mapping.N_XYZ[num_node](0) +
-                  def_gradient(1, 0) * jacobian_mapping.N_XYZ[num_node](1));
-    B_glstrain(3, Core::FE::dim<celltype> * num_node + 2) =
-        0.5 * (def_gradient(2, 1) * jacobian_mapping.N_XYZ[num_node](0) +
-                  def_gradient(2, 0) * jacobian_mapping.N_XYZ[num_node](1));
-    B_glstrain(4, Core::FE::dim<celltype> * num_node + 0) =
-        0.5 * (def_gradient(0, 2) * jacobian_mapping.N_XYZ[num_node](1) +
-                  def_gradient(0, 1) * jacobian_mapping.N_XYZ[num_node](2));
-    B_glstrain(4, Core::FE::dim<celltype> * num_node + 1) =
-        0.5 * (def_gradient(1, 2) * jacobian_mapping.N_XYZ[num_node](1) +
-                  def_gradient(1, 1) * jacobian_mapping.N_XYZ[num_node](2));
-    B_glstrain(4, Core::FE::dim<celltype> * num_node + 2) =
-        0.5 * (def_gradient(2, 2) * jacobian_mapping.N_XYZ[num_node](1) +
-                  def_gradient(2, 1) * jacobian_mapping.N_XYZ[num_node](2));
-    B_glstrain(5, Core::FE::dim<celltype> * num_node + 0) =
-        0.5 * (def_gradient(0, 2) * jacobian_mapping.N_XYZ[num_node](0) +
-                  def_gradient(0, 0) * jacobian_mapping.N_XYZ[num_node](2));
-    B_glstrain(5, Core::FE::dim<celltype> * num_node + 1) =
-        0.5 * (def_gradient(1, 2) * jacobian_mapping.N_XYZ[num_node](0) +
-                  def_gradient(1, 0) * jacobian_mapping.N_XYZ[num_node](2));
-    B_glstrain(5, Core::FE::dim<celltype> * num_node + 2) =
-        0.5 * (def_gradient(2, 2) * jacobian_mapping.N_XYZ[num_node](0) +
-                  def_gradient(2, 1) * jacobian_mapping.N_XYZ[num_node](2));
-  }
-
-  // Calculate the second contribution to the variation of the 2nd Piola-Kirchhoff stress: C *
-  // \delta E = C * B_glstrain * \delta u
-  Core::LinAlg::Matrix<6, Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>> B_S(
-      Core::LinAlg::Initialization::zero);
-  B_S.multiply(make_stress_like_voigt_view(pk2.cmat_), B_glstrain);
-
-  // for (int num_node = 0; num_node < Core::FE::num_nodes(celltype); ++num_node)
-  // {
-  //   pk2_var(0) += (C_B_glstrain(0, Core::FE::dim<celltype> * num_node + 0) + C_B_glstrain(0,
-  //   Core::FE::dim<celltype> * num_node + 1) + C_B_glstrain(0, Core::FE::dim<celltype> * num_node
-  //   + 2) )* shape_functions.shapefunctions_(num_node); pk2_var(1) += (C_B_glstrain(1,
-  //   Core::FE::dim<celltype> * num_node + 0) + C_B_glstrain(1, Core::FE::dim<celltype> * num_node
-  //   + 1) + C_B_glstrain(1, Core::FE::dim<celltype> * num_node + 2) )*
-  //   shape_functions.shapefunctions_(num_node); pk2_var(2) += (C_B_glstrain(2,
-  //   Core::FE::dim<celltype> * num_node + 0) + C_B_glstrain(2, Core::FE::dim<celltype> * num_node
-  //   + 1) + C_B_glstrain(2, Core::FE::dim<celltype> * num_node + 2) )*
-  //   shape_functions.shapefunctions_(num_node); pk2_var(3) += (C_B_glstrain(3,
-  //   Core::FE::dim<celltype> * num_node + 0) + C_B_glstrain(3, Core::FE::dim<celltype> * num_node
-  //   + 1) + C_B_glstrain(3, Core::FE::dim<celltype> * num_node + 2) )*
-  //   shape_functions.shapefunctions_(num_node); pk2_var(4) += (C_B_glstrain(4,
-  //   Core::FE::dim<celltype> * num_node + 0) + C_B_glstrain(4, Core::FE::dim<celltype> * num_node
-  //   + 1) + C_B_glstrain(4, Core::FE::dim<celltype> * num_node + 2) )*
-  //   shape_functions.shapefunctions_(num_node); pk2_var(5) += (C_B_glstrain(5,
-  //   Core::FE::dim<celltype> * num_node + 0) + C_B_glstrain(5, Core::FE::dim<celltype> * num_node
-  //   + 1) + C_B_glstrain(5, Core::FE::dim<celltype> * num_node + 2) )*
-  //   shape_functions.shapefunctions_(num_node);
-  // }
-
-  // Calculate the multiplication between the deformation gradient and \delta S. As
-  // // \delta S is in Voigt notation, the matrix L_F is constructed to multiply the
-  // // displacement gradient consistently with \delta S
-  // Core::LinAlg::Matrix<9, 6> L_F(Core::LinAlg::Initialization::zero);
-  // L_F(0,0) = def_gradient(0,0);
-  // L_F(0,3) = def_gradient(0,1);
-  // L_F(0,5) = def_gradient(0,2);
-  // L_F(1,1) = def_gradient(0,1);
-  // L_F(1,3) = def_gradient(0,0);
-  // L_F(1,4) = def_gradient(0,2);
-  // L_F(2,2) = def_gradient(0,2);
-  // L_F(2,4) = def_gradient(0,1);
-  // L_F(2,5) = def_gradient(0,0);
-  // L_F(3,0) = def_gradient(1,0);
-  // L_F(3,3) = def_gradient(1,1);
-  // L_F(3,5) = def_gradient(1,2);
-  // L_F(4,1) = def_gradient(1, 1);
-  // L_F(4,3) = def_gradient(1,0);
-  // L_F(4,4) = def_gradient(1,2);
-  // L_F(5,2) = def_gradient(1,2);
-  // L_F(5,4) = def_gradient(1, 1);
-  // L_F(5,5) = def_gradient(1,0);
-  // L_F(6,0) = def_gradient(2,0);
-  // L_F(6,3) = def_gradient(2,1);
-  // L_F(6, 5) = def_gradient(2,2);
-  // L_F(7,1) = def_gradient(2,1);
-  // L_F(7,3) = def_gradient(2,0);
-  // L_F(7,4) = def_gradient(2,2);
-  // L_F(8,2) = def_gradient(2,2);
-  // L_F(8,4) = def_gradient(2,1);
-  // L_F(8,5) = def_gradient(2,0);
-
-  // Calculate the matrix B_P, such that \delta P = B_P * \delta u
-  pk1_stress.b_pk1_.update(1.0, B_pk2_d_F_dd, 1.0, B_S);
-
-  // Initialize some helper matrices
-  Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>,
-      Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
-      dP_1, dP_2, dP_3;
-
-  for (unsigned int i_domain = 0; i_domain < Core::FE::num_nodes(celltype); i_domain++)
-    for (unsigned int j_domain = 0; j_domain < Core::FE::num_nodes(celltype); j_domain++)
-      for (unsigned int i_dim = 0; i_dim < Core::FE::dim<celltype>; i_dim++)
-      {
-        dP_1(i_domain * 3 + 0, j_domain * 3 + i_dim) =
-            jacobian_mapping.N_XYZ[i_domain](0) *
-                (B_S(0, j_domain * 3 + i_dim) + B_S(3, j_domain * 3 + i_dim) +
-                    B_S(5, j_domain * 3 + i_dim)) +
-            jacobian_mapping.N_XYZ[i_domain](1) *
-                (B_S(3, j_domain * 3 + i_dim) + B_S(1, j_domain * 3 + i_dim) +
-                    B_S(4, j_domain * 3 + i_dim)) +
-            jacobian_mapping.N_XYZ[i_domain](2) *
-                (B_S(5, j_domain * 3 + i_dim) + B_S(4, j_domain * 3 + i_dim) +
-                    B_S(2, j_domain * 3 + i_dim));
-        dP_1(i_domain * 3 + 1, j_domain * 3 + i_dim) =
-            jacobian_mapping.N_XYZ[i_domain](0) *
-                (B_S(0, j_domain * 3 + i_dim) + B_S(3, j_domain * 3 + i_dim) +
-                    B_S(5, j_domain * 3 + i_dim)) +
-            jacobian_mapping.N_XYZ[i_domain](1) *
-                (B_S(3, j_domain * 3 + i_dim) + B_S(1, j_domain * 3 + i_dim) +
-                    B_S(4, j_domain * 3 + i_dim)) +
-            jacobian_mapping.N_XYZ[i_domain](2) *
-                (B_S(5, j_domain * 3 + i_dim) + B_S(4, j_domain * 3 + i_dim) +
-                    B_S(2, j_domain * 3 + i_dim));
-        dP_1(i_domain * 3 + 2, j_domain * 3 + i_dim) =
-            jacobian_mapping.N_XYZ[i_domain](0) *
-                (B_S(0, j_domain * 3 + i_dim) + B_S(3, j_domain * 3 + i_dim) +
-                    B_S(5, j_domain * 3 + i_dim)) +
-            jacobian_mapping.N_XYZ[i_domain](1) *
-                (B_S(3, j_domain * 3 + i_dim) + B_S(1, j_domain * 3 + i_dim) +
-                    B_S(4, j_domain * 3 + i_dim)) +
-            jacobian_mapping.N_XYZ[i_domain](2) *
-                (B_S(5, j_domain * 3 + i_dim) + B_S(4, j_domain * 3 + i_dim) +
-                    B_S(2, j_domain * 3 + i_dim));
-      }
-  dP_2.update_t(dP_1);
-
-
-  return pk1_stress;
 }
+
+
+// Calculate the variation of the 1st. Piola-Kirchhoff stresses at a node in a certain dimensional
+// direction (in 3D, dir = 0, 1, 2)
+template <Core::FE::CellType celltype>
+void evaluate_variation_first_pk_at_node_dir(unsigned int& num_node, unsigned int& n_dir,
+    LinearizationDependencies<celltype>& linearization_dependencies,
+    FirstPKStressLinearizations<celltype>& pk1_stress)
+{
+  // Get the variation of the deformation gradient at a node and direction
+  linearization_dependencies.d_defgrad_.put_scalar(0.0);
+  for (int i_dim = 0; i_dim < Core::FE::dim<celltype>; i_dim++)
+    linearization_dependencies.d_defgrad_(n_dir, i_dim) =
+        linearization_dependencies.jacobian_mapping_.N_XYZ[num_node](i_dim);
+
+  // Get the variation of the Green-Lagrange strains at a node and direction
+  Core::LinAlg::Matrix<3, 3> d_glstrain(Core::LinAlg::Initialization::zero);
+
+  Core::LinAlg::Matrix<3, 3> defgrad =
+      Core::LinAlg::make_matrix_view(linearization_dependencies.deformation_gradient_);
+  Core::LinAlg::Matrix<3, 3> d_defgradT_defgrad(Core::LinAlg::Initialization::zero);
+  d_defgradT_defgrad.multiply_tn(linearization_dependencies.d_defgrad_, defgrad);
+  d_glstrain.update(0.5, d_defgradT_defgrad, 1.0);
+
+  Core::LinAlg::Matrix<3, 3> defgradT_d_defgrad(Core::LinAlg::Initialization::zero);
+  defgradT_d_defgrad.multiply_tn(defgrad, linearization_dependencies.d_defgrad_);
+  d_glstrain.update(0.5, defgradT_d_defgrad, 1.0);
+
+  Core::LinAlg::Matrix<6, 1> d_glstrain_voigt(Core::LinAlg::Initialization::zero);
+  d_glstrain_voigt(0) = d_glstrain(0, 0);
+  d_glstrain_voigt(1) = d_glstrain(1, 1);
+  d_glstrain_voigt(2) = d_glstrain(2, 2);
+  d_glstrain_voigt(3) = d_glstrain(0, 1);
+  d_glstrain_voigt(4) = d_glstrain(1, 2);
+  d_glstrain_voigt(5) = d_glstrain(0, 2);
+
+  // Get the variation of the second Piola-Kirchhoff stress at a node and direction
+  Core::LinAlg::Matrix<6, 1> d_pk2_voigt(Core::LinAlg::Initialization::zero);
+  d_pk2_voigt.multiply(
+      make_stress_like_voigt_view(linearization_dependencies.pk2_.cmat_), d_glstrain_voigt);
+
+  linearization_dependencies.d_pk2_.put_scalar(0.0);
+  linearization_dependencies.d_pk2_(0, 0) = d_pk2_voigt(0);
+  linearization_dependencies.d_pk2_(1, 1) = d_pk2_voigt(1);
+  linearization_dependencies.d_pk2_(2, 2) = d_pk2_voigt(2);
+  linearization_dependencies.d_pk2_(0, 1) = d_pk2_voigt(3);
+  linearization_dependencies.d_pk2_(1, 0) = d_pk2_voigt(3);
+  linearization_dependencies.d_pk2_(1, 2) = d_pk2_voigt(4);
+  linearization_dependencies.d_pk2_(2, 1) = d_pk2_voigt(4);
+  linearization_dependencies.d_pk2_(0, 2) = d_pk2_voigt(5);
+  linearization_dependencies.d_pk2_(2, 0) = d_pk2_voigt(5);
+
+  // Get the variation of the first Piola-Kirchhoff stresses at a node and direction
+  Core::LinAlg::Matrix<3, 3> d_defgrad_pk2(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> pk2_matrix(Core::LinAlg::Initialization::zero);
+  for (int i_dim = 0; i_dim < Core::FE::dim<celltype>; i_dim++)
+    for (int j_dim = 0; j_dim < Core::FE::dim<celltype>; j_dim++)
+      pk2_matrix(i_dim, j_dim) = linearization_dependencies.pk2_.pk2_(i_dim, j_dim);
+  d_defgrad_pk2.multiply(linearization_dependencies.d_defgrad_, pk2_matrix);
+
+  Core::LinAlg::Matrix<3, 3> defgrad_d_pk2(Core::LinAlg::Initialization::zero);
+  defgrad_d_pk2.multiply(defgrad, linearization_dependencies.d_pk2_);
+
+  // set d_pk1_node_dir to zero for safety
+  pk1_stress.d_pk1_node_dir.put_scalar(0.0);
+  pk1_stress.d_pk1_node_dir.update(1.0, d_defgrad_pk2, 1.0);
+  pk1_stress.d_pk1_node_dir.update(1.0, defgrad_d_pk2, 1.0);
+}
+
+template <Core::FE::CellType celltype>
+Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+evaluate_lin_variation_first_pk(LinearizationDependencies<celltype>& lin_dependencies_d_dof,
+    LinearizationDependencies<celltype>& lin_dependencies_dof)
+{
+  // Get the linearization of the virtual Green-Lagrange strains
+  Core::LinAlg::Matrix<3, 3> lin_d_glstrain(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> d_defgradT_lin_defgrad(Core::LinAlg::Initialization::zero);
+  d_defgradT_lin_defgrad.multiply_tn(
+      lin_dependencies_d_dof.d_defgrad_, lin_dependencies_dof.d_defgrad_);
+  lin_d_glstrain.update(0.5, d_defgradT_lin_defgrad, 1.0);
+
+  Core::LinAlg::Matrix<3, 3> lin_defgradT_d_defgrad(Core::LinAlg::Initialization::zero);
+  lin_defgradT_d_defgrad.multiply_tn(
+      lin_dependencies_dof.d_defgrad_, lin_dependencies_d_dof.d_defgrad_);
+  lin_d_glstrain.update(0.5, lin_defgradT_d_defgrad, 1.0);
+
+  Core::LinAlg::Matrix<6, 1> lin_d_glstrain_voigt(Core::LinAlg::Initialization::zero);
+  lin_d_glstrain_voigt(0) = lin_d_glstrain(0, 0);
+  lin_d_glstrain_voigt(1) = lin_d_glstrain(1, 1);
+  lin_d_glstrain_voigt(2) = lin_d_glstrain(2, 2);
+  lin_d_glstrain_voigt(3) = lin_d_glstrain(0, 1);
+  lin_d_glstrain_voigt(4) = lin_d_glstrain(1, 2);
+  lin_d_glstrain_voigt(5) = lin_d_glstrain(0, 2);
+
+  // Get the linearization of the variation of the second Piola-Kirchhoff stress
+  Core::LinAlg::Matrix<6, 1> lin_d_pk2_voigt(Core::LinAlg::Initialization::zero);
+  lin_d_pk2_voigt.multiply(
+      make_stress_like_voigt_view(lin_dependencies_d_dof.pk2_.cmat_), lin_d_glstrain_voigt);
+
+  Core::LinAlg::Matrix<3, 3> lin_d_pk2(Core::LinAlg::Initialization::zero);
+  lin_d_pk2.put_scalar(0.0);
+  lin_d_pk2(0, 0) = lin_d_pk2_voigt(0);
+  lin_d_pk2(1, 1) = lin_d_pk2_voigt(1);
+  lin_d_pk2(2, 2) = lin_d_pk2_voigt(2);
+  lin_d_pk2(0, 1) = lin_d_pk2_voigt(3);
+  lin_d_pk2(1, 0) = lin_d_pk2_voigt(3);
+  lin_d_pk2(1, 2) = lin_d_pk2_voigt(4);
+  lin_d_pk2(2, 1) = lin_d_pk2_voigt(4);
+  lin_d_pk2(0, 2) = lin_d_pk2_voigt(5);
+  lin_d_pk2(2, 0) = lin_d_pk2_voigt(5);
+
+  // Calculate the linearization of the variation of the first Piola-Kirchhoff stresses
+  Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> lin_d_pk1(
+      Core::LinAlg::Initialization::zero);
+
+  Core::LinAlg::Matrix<3, 3> d_defgrad_lin_pk2(Core::LinAlg::Initialization::zero);
+  d_defgrad_lin_pk2.multiply(lin_dependencies_d_dof.d_defgrad_, lin_dependencies_dof.d_pk2_);
+  lin_d_pk1.update(1.0, d_defgrad_lin_pk2, 1.0);
+
+  Core::LinAlg::Matrix<3, 3> lin_defgrad_d_pk2(Core::LinAlg::Initialization::zero);
+  lin_defgrad_d_pk2.multiply(lin_dependencies_dof.d_defgrad_, lin_dependencies_d_dof.d_pk2_);
+  lin_d_pk1.update(1.0, lin_defgrad_d_pk2, 1.0);
+
+  Core::LinAlg::Matrix<3, 3> defgrad_lin_d_pk2(Core::LinAlg::Initialization::zero);
+  defgrad_lin_d_pk2.multiply(
+      Core::LinAlg::make_matrix_view(lin_dependencies_d_dof.deformation_gradient_), lin_d_pk2);
+  lin_d_pk1.update(1.0, defgrad_lin_d_pk2, 1.0);
+
+  return lin_d_pk1;
+}
+
 
 template <typename Interface, typename Background>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface,
@@ -723,6 +667,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     // Obtain the normal in the reference configuration of the interface at xi
     Core::LinAlg::Matrix<3, 1, double> normal_interface;
     GeometryPair::evaluate_face_normal<Interface>(xi_interface, ele1pos_, normal_interface);
+    std::cout << "Normal interface " << std::endl;
+    normal_interface.print(std::cout);
 
     // To evaluate the first Piola-Kirchhoff stresses in the parent element of the face element, we
     // need to obtain the corresponding coordinates of the Gauss points of the face element
@@ -735,48 +681,125 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     interface_element_gp_in_solid<Interface::spatial_dim_>(
         *face_element, 1., xi_interface.data(), xi_interface_in_solid, temp);
 
-    // evaluate first Piola-Kirchhoff stress at the interface and its linearization
-    auto pk1_interface = evaluate_first_pk_linearizations_at_xi<Core::FE::CellType::nurbs27>(
-        discret, ele1_parent_dis_, *face_element->parent_element(), xi_interface_in_solid);
+    // evaluate first Piola-Kirchhoff stress at the interface
+    FirstPKStressLinearizations<Core::FE::CellType::nurbs27> pk1_interface;
+    LinearizationDependencies<Core::FE::CellType::nurbs27> lin_dependencies_d_interface;
+    LinearizationDependencies<Core::FE::CellType::nurbs27> lin_dependencies_interface;
+    evaluate_first_pk_at_xi(discret, ele1_parent_dis_, *face_element->parent_element(),
+        xi_interface_in_solid, lin_dependencies_d_interface, pk1_interface);
+    lin_dependencies_interface.jacobian_mapping_ = lin_dependencies_d_interface.jacobian_mapping_;
+    lin_dependencies_interface.deformation_gradient_ =
+        lin_dependencies_d_interface.deformation_gradient_;
+    lin_dependencies_interface.pk2_ = lin_dependencies_d_interface.pk2_;
+
+    std::cout << "PK1 stress interface " << std::endl;
+    pk1_interface.pk1_.print(std::cout);
 
     // obtain the displacements of the background elements
     std::vector<double> background_displacement;
     for (unsigned int i_n_dof = 0; i_n_dof < Background::n_dof_; i_n_dof++)
       background_displacement.push_back(ele2dis_.element_position_(i_n_dof));
 
-    // evaluate first Piola-Kirchhoff stress at the background and its linearization
-    auto pk1_background = evaluate_first_pk_linearizations_at_xi<Core::FE::CellType::hex8>(
-        discret, background_displacement, element_2(), xi_background);
+    // evaluate first Piola-Kirchhoff stress at the background
+    FirstPKStressLinearizations<Core::FE::CellType::hex8> pk1_background;
+    LinearizationDependencies<Core::FE::CellType::hex8> lin_dependencies_d_background;
+    LinearizationDependencies<Core::FE::CellType::hex8> lin_dependencies_background;
+    evaluate_first_pk_at_xi(discret, background_displacement, element_2(), xi_background,
+        lin_dependencies_d_background, pk1_background);
+    lin_dependencies_background.jacobian_mapping_ = lin_dependencies_d_background.jacobian_mapping_;
+    lin_dependencies_background.deformation_gradient_ =
+        lin_dependencies_d_background.deformation_gradient_;
+    lin_dependencies_background.pk2_ = lin_dependencies_d_background.pk2_;
+
+    std::cout << "PK1 stress background " << std::endl;
+    pk1_background.pk1_.print(std::cout);
+
+    // evaluate the weighted difference between the first Piola-Kirchhoff stresses of the interface
+    // and the background
+    Core::LinAlg::Matrix<3, 1> traction_pk1_interface(Core::LinAlg::Initialization::zero);
+    traction_pk1_interface.multiply(pk1_interface.pk1_, normal_interface);
+
+    std::cout << "traction interface " << std::endl;
+    traction_pk1_interface.print(std::cout);
+
+    Core::LinAlg::Matrix<3, 1> traction_pk1_background(Core::LinAlg::Initialization::zero);
+    traction_pk1_background.multiply(pk1_background.pk1_, normal_interface);
+
+    std::cout << "traction background " << std::endl;
+    traction_pk1_background.print(std::cout);
+
+    Core::LinAlg::Matrix<3, 1> traction_pk1_weighted(Core::LinAlg::Initialization::zero);
+    for (int i_dim = 0; i_dim < 3; ++i_dim)
+      traction_pk1_weighted(i_dim) =
+          nitsche_average_weight_param * traction_pk1_interface(i_dim) +
+          (1.0 - nitsche_average_weight_param) * traction_pk1_background(i_dim);
+
+    std::cout << "traction weighted " << std::endl;
+    traction_pk1_weighted.print(std::cout);
 
     // As the calculations of the first Piola-Kirchhoff stresses are done in the parent element of
     // the face element, we need the locations of the dofs of the interface in its parent element.
     // These locations are saved in a vector and used for calculating the contributions to the
     // stiffness matrix.
-    std::vector<int> lm_interface;
-    std::vector<int> lm_parent_interface;
-    std::vector<int> dummy_1;
-    std::vector<int> dummy_2;
-    face_element->location_vector(discret, lm_interface, dummy_1, dummy_2);
-    face_element->parent_element()->location_vector(discret, lm_parent_interface, dummy_1, dummy_2);
+    std::vector<int> id_nodes_parent_ele;
+    auto nodes_parent_ele = face_element->parent_element()->nodes();
+    for (int inode = 0; inode < face_element->parent_element()->num_node(); ++inode)
+      id_nodes_parent_ele.push_back(nodes_parent_ele[inode]->id());
 
     std::unordered_map<int, int> interface_solid_index;
-    interface_solid_index.reserve(lm_parent_interface.size());
-    for (int i = 0; i < static_cast<int>(lm_parent_interface.size()); ++i)
-    {
-      interface_solid_index[lm_parent_interface[i]] = i;
-    }
+    interface_solid_index.reserve(id_nodes_parent_ele.size());
+    for (int i = 0; i < id_nodes_parent_ele.size(); ++i)
+      interface_solid_index[id_nodes_parent_ele[i]] = i;
 
-    std::vector<int> dofs_interface_locations;
-    dofs_interface_locations.reserve(Interface::n_dof_);
+    std::vector<int> id_nodes_face_ele;
+    auto nodes_face_ele = face_element->nodes();
+    for (int inode = 0; inode < face_element->num_node(); ++inode)
+      id_nodes_face_ele.push_back(nodes_face_ele[inode]->id());
 
-    for (int dof : lm_interface)
+    std::vector<unsigned int> nodes_interface_locations;
+    nodes_interface_locations.reserve(Interface::n_dof_);
+
+    for (int node : id_nodes_face_ele)
     {
-      auto it = interface_solid_index.find(dof);
+      auto it = interface_solid_index.find(node);
       if (it != interface_solid_index.end())
       {
-        dofs_interface_locations.push_back(it->second);
+        nodes_interface_locations.push_back(it->second);
       }
     }
+
+    std::cout << "Nodes interface locations" << std::endl;
+    for (int i = 0; i < nodes_interface_locations.size(); ++i)
+      std::cout << nodes_interface_locations[i] << std::endl;
+
+    // Evaluate gap between interface and background at this gauss point
+    Core::LinAlg::Matrix<3, 1> displacement_interface(Core::LinAlg::Initialization::zero);
+    for (unsigned int i_dir = 0; i_dir < 3; ++i_dir)
+    {
+      for (unsigned int i_interface = 0; i_interface < Interface::n_nodes_; ++i_interface)
+        displacement_interface(i_dir) +=
+            N_interface(i_interface) * this->ele1dis_.element_position_(i_interface * 3 + i_dir);
+    }
+    std::cout << "displacement interface " << std::endl;
+    displacement_interface.print(std::cout);
+
+    Core::LinAlg::Matrix<3, 1> displacement_background(Core::LinAlg::Initialization::zero);
+    for (unsigned int i_dir = 0; i_dir < 3; ++i_dir)
+    {
+      for (unsigned int i_background = 0; i_background < Background::n_nodes_; ++i_background)
+        displacement_background(i_dir) +=
+            N_background(i_background) * this->ele2dis_.element_position_(i_background * 3 + i_dir);
+    }
+    std::cout << "displacement background " << std::endl;
+    displacement_background.print(std::cout);
+
+    Core::LinAlg::Matrix<3, 1> gap_between_interface_background(Core::LinAlg::Initialization::zero);
+    for (unsigned int i_dir = 0; i_dir < 3; ++i_dir)
+      gap_between_interface_background(i_dir) =
+          displacement_interface(i_dir) - displacement_background(i_dir);
+
+    std::cout << "gap between interface background" << std::endl;
+    gap_between_interface_background.print(std::cout);
 
     // Build helper stiffness matrices
     // "pink" terms
@@ -803,359 +826,188 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double> lin_var_pk1_interface;
     Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double> lin_var_pk1_background;
 
-    // Fill var_pk1_(.)_n_disp(.) terms
     for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
         i_interface_node++)
       for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
           j_interface_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+      {
+        for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
         {
-          var_pk1_interface_n_disp_interface(
-              i_interface_node * 3 + i_dim, j_interface_node * 3 + 0) -=
-              (pk1_interface.b_pk1_(0, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(3, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(5, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              N_interface(j_interface_node) * weight * determinant_interface *
-              nitsche_average_weight_param;
+          evaluate_variation_first_pk_at_node_dir(nodes_interface_locations[i_interface_node],
+              i_dir, lin_dependencies_d_interface, pk1_interface);
+          // std::cout << "pk1_interface.d_pk1_node_dir : " <<  i_dir << std::endl;
+          // pk1_interface.d_pk1_node_dir.print(std::cout);
 
-          var_pk1_interface_n_disp_interface(
-              i_interface_node * 3 + i_dim, j_interface_node * 3 + 1) -=
-              (pk1_interface.b_pk1_(6, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(1, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(4, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              N_interface(j_interface_node) * weight * determinant_interface *
-              nitsche_average_weight_param;
+          Core::LinAlg::Matrix<3, 1> traction_d_pk1(Core::LinAlg::Initialization::zero);
+          traction_d_pk1.multiply(pk1_interface.d_pk1_node_dir, normal_interface);
+          // std::cout << "traction_d_pk1 : " << std::endl;
+          // traction_d_pk1.print(std::cout);
 
-          var_pk1_interface_n_disp_interface(
-              i_interface_node * 3 + i_dim, j_interface_node * 3 + 2) -=
-              (pk1_interface.b_pk1_(8, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(7, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(2, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              N_interface(j_interface_node) * weight * determinant_interface *
-              nitsche_average_weight_param;
+          local_constraint_stresses(i_interface_node * 3 + i_dir) -=
+              traction_d_pk1(i_dir) * N_interface(j_interface_node) *
+              this->ele1dis_.element_position_(j_interface_node * 3 + i_dir) *
+              nitsche_average_weight_param * weight * determinant_interface;
+
+          local_constraint_stresses(i_interface_node * 3 + i_dir) -= traction_pk1_weighted(i_dir) *
+                                                                     N_interface(i_interface_node) *
+                                                                     weight * determinant_interface;
+
+          for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
+          {
+            var_pk1_interface_n_disp_interface(
+                i_interface_node * 3 + i_dir, j_interface_node * 3 + j_dir) -=
+                traction_d_pk1(j_dir) * N_interface(j_interface_node) *
+                nitsche_average_weight_param * weight * determinant_interface;
+
+            evaluate_variation_first_pk_at_node_dir(nodes_interface_locations[j_interface_node],
+                j_dir, lin_dependencies_interface, pk1_interface);
+
+            auto lin_d_pk1 = evaluate_lin_variation_first_pk(
+                lin_dependencies_d_interface, lin_dependencies_interface);
+            Core::LinAlg::Matrix<3, 1> traction_lin_var_pk1(Core::LinAlg::Initialization::zero);
+            traction_lin_var_pk1.multiply(lin_d_pk1, normal_interface);
+
+            lin_var_pk1_interface(i_interface_node * 3 + i_dir, j_interface_node * 3 + j_dir) -=
+                (traction_lin_var_pk1(0) * gap_between_interface_background(0) +
+                    traction_lin_var_pk1(1) * gap_between_interface_background(1) +
+                    traction_lin_var_pk1(2) * gap_between_interface_background(2)) *
+                nitsche_average_weight_param * weight * determinant_interface;
+          }
         }
-
-    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
-        i_interface_node++)
-      for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
-          i_background_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-        {
-          var_pk1_interface_n_disp_background(
-              i_interface_node * 3 + i_dim, i_background_node * 3 + 0) +=
-              (pk1_interface.b_pk1_(0, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(3, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(5, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              N_background(i_background_node) * weight * determinant_interface *
-              nitsche_average_weight_param;
-
-          var_pk1_interface_n_disp_background(
-              i_interface_node * 3 + i_dim, i_background_node * 3 + 1) +=
-              (pk1_interface.b_pk1_(6, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(1, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(4, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              N_background(i_background_node) * weight * determinant_interface *
-              nitsche_average_weight_param;
-
-          var_pk1_interface_n_disp_background(
-              i_interface_node * 3 + i_dim, i_background_node * 3 + 2) +=
-              (pk1_interface.b_pk1_(8, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(7, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(2, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              N_background(i_background_node) * weight * determinant_interface *
-              nitsche_average_weight_param;
-        }
-
-
-    for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
-        i_background_node++)
-      for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
-          i_interface_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-        {
-          var_pk1_background_n_disp_interface(
-              i_background_node * 3 + i_dim, i_interface_node * 3 + 0) -=
-              (pk1_background.b_pk1_(0, i_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(3, i_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(5, i_background_node * 3 + i_dim) * normal_interface(2)) *
-              N_interface(i_interface_node) * weight * determinant_interface *
-              (1.0 - nitsche_average_weight_param);
-
-          var_pk1_background_n_disp_interface(
-              i_background_node * 3 + i_dim, i_interface_node * 3 + 1) -=
-              (pk1_background.b_pk1_(6, i_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(1, i_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(4, i_background_node * 3 + i_dim) * normal_interface(2)) *
-              N_interface(i_interface_node) * weight * determinant_interface *
-              (1.0 - nitsche_average_weight_param);
-
-          var_pk1_background_n_disp_interface(
-              i_background_node * 3 + i_dim, i_interface_node * 3 + 2) -=
-              (pk1_background.b_pk1_(8, i_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(7, i_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(2, i_background_node * 3 + i_dim) * normal_interface(2)) *
-              N_interface(i_interface_node) * weight * determinant_interface *
-              (1.0 - nitsche_average_weight_param);
-        }
+      }
+    var_disp_interface_pk1_interface_n.update_t(var_pk1_interface_n_disp_interface);
 
     for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
         i_background_node++)
       for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
           j_background_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+      {
+        for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
         {
-          var_pk1_background_n_disp_background(
-              i_background_node * 3 + i_dim, j_background_node * 3 + 0) +=
-              (pk1_background.b_pk1_(0, i_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(3, i_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(5, i_background_node * 3 + i_dim) * normal_interface(2)) *
-              N_background(j_background_node) * weight * determinant_interface *
-              (1.0 - nitsche_average_weight_param);
+          evaluate_variation_first_pk_at_node_dir(
+              i_background_node, i_dir, lin_dependencies_d_background, pk1_background);
 
-          var_pk1_background_n_disp_background(
-              i_background_node * 3 + i_dim, j_background_node * 3 + 1) +=
-              (pk1_background.b_pk1_(6, i_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(1, i_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(4, i_background_node * 3 + i_dim) * normal_interface(2)) *
-              N_background(j_background_node) * weight * determinant_interface *
-              (1.0 - nitsche_average_weight_param);
+          Core::LinAlg::Matrix<3, 1> traction_d_pk1(Core::LinAlg::Initialization::zero);
+          traction_d_pk1.multiply(pk1_background.d_pk1_node_dir, normal_interface);
 
-          var_pk1_background_n_disp_background(
-              i_background_node * 3 + i_dim, j_background_node * 3 + 2) +=
-              (pk1_background.b_pk1_(8, i_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(7, i_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(2, i_background_node * 3 + i_dim) * normal_interface(2)) *
-              N_background(j_background_node) * weight * determinant_interface *
-              (1.0 - nitsche_average_weight_param);
+          local_constraint_stresses(Interface::n_dof_ + i_background_node * 3 + i_dir) +=
+              traction_d_pk1(i_dir) * N_background(j_background_node) *
+              this->ele2dis_.element_position_(j_background_node * 3 + i_dir) *
+              (1.0 - nitsche_average_weight_param) * weight * determinant_interface;
+
+          local_constraint_stresses(Interface::n_dof_ + i_background_node * 3 + i_dir) -=
+              traction_pk1_weighted(i_dir) * N_background(i_background_node) * weight *
+              determinant_interface;
+
+          for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
+          {
+            var_pk1_background_n_disp_background(
+                i_background_node * 3 + i_dir, j_background_node * 3 + j_dir) +=
+                traction_d_pk1(j_dir) * N_background(j_background_node) *
+                (1.0 - nitsche_average_weight_param) * weight * determinant_interface;
+
+            evaluate_variation_first_pk_at_node_dir(
+                j_background_node, j_dir, lin_dependencies_background, pk1_background);
+
+            auto lin_d_pk1 = evaluate_lin_variation_first_pk(
+                lin_dependencies_d_background, lin_dependencies_background);
+            Core::LinAlg::Matrix<3, 1> traction_lin_var_pk1(Core::LinAlg::Initialization::zero);
+            traction_lin_var_pk1.multiply(lin_d_pk1, normal_interface);
+
+            lin_var_pk1_background(i_background_node * 3 + i_dir, j_background_node * 3 + j_dir) -=
+                (traction_lin_var_pk1(0) * gap_between_interface_background(0) +
+                    traction_lin_var_pk1(1) * gap_between_interface_background(1) +
+                    traction_lin_var_pk1(2) * gap_between_interface_background(2)) *
+                (1.0 - nitsche_average_weight_param) * weight * determinant_interface;
+          }
         }
-
-    // Fill pk1_(.)_n_var_disp(.) terms
-    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
-        i_interface_node++)
-      for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
-          j_interface_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-        {
-          var_disp_interface_pk1_interface_n(
-              i_interface_node * 3 + 0, j_interface_node * 3 + i_dim) -=
-              N_interface(i_interface_node) *
-              (pk1_interface.b_pk1_(0, dofs_interface_locations[j_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(3, dofs_interface_locations[j_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(5, dofs_interface_locations[j_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              weight * determinant_interface * nitsche_average_weight_param;
-
-          var_disp_interface_pk1_interface_n(
-              i_interface_node * 3 + 1, j_interface_node * 3 + i_dim) -=
-              N_interface(i_interface_node) *
-              (pk1_interface.b_pk1_(6, dofs_interface_locations[j_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(1, dofs_interface_locations[j_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(4, dofs_interface_locations[j_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              weight * determinant_interface * nitsche_average_weight_param;
-
-          var_disp_interface_pk1_interface_n(
-              i_interface_node * 3 + 2, j_interface_node * 3 + i_dim) -=
-              N_interface(i_interface_node) *
-              (pk1_interface.b_pk1_(8, dofs_interface_locations[j_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(7, dofs_interface_locations[j_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(2, dofs_interface_locations[j_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              weight * determinant_interface * nitsche_average_weight_param;
-        }
+      }
+    var_disp_background_pk1_background_n.update_t(var_pk1_background_n_disp_background);
 
     for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
         i_interface_node++)
       for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
           i_background_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+        for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
         {
-          var_disp_interface_pk1_background_n(
-              i_interface_node * 3 + 0, i_background_node * 3 + i_dim) -=
-              N_interface(i_interface_node) *
-              (pk1_background.b_pk1_(0, i_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(3, i_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(5, i_background_node * 3 + i_dim) * normal_interface(2)) *
-              weight * determinant_interface * (1.0 - nitsche_average_weight_param);
+          evaluate_variation_first_pk_at_node_dir(nodes_interface_locations[i_interface_node],
+              i_dir, lin_dependencies_d_interface, pk1_interface);
 
-          var_disp_interface_pk1_background_n(
-              i_interface_node * 3 + 1, i_background_node * 3 + i_dim) -=
-              N_interface(i_interface_node) *
-              (pk1_background.b_pk1_(6, i_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(1, i_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(4, i_background_node * 3 + i_dim) * normal_interface(2)) *
-              weight * determinant_interface * (1.0 - nitsche_average_weight_param);
+          Core::LinAlg::Matrix<3, 1> traction_d_pk1(Core::LinAlg::Initialization::zero);
+          traction_d_pk1.multiply(pk1_interface.d_pk1_node_dir, normal_interface);
 
-          var_disp_interface_pk1_background_n(
-              i_interface_node * 3 + 2, i_background_node * 3 + i_dim) -=
-              N_interface(i_interface_node) *
-              (pk1_background.b_pk1_(8, i_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(7, i_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(2, i_background_node * 3 + i_dim) * normal_interface(2)) *
-              weight * determinant_interface * (1.0 - nitsche_average_weight_param);
+          local_constraint_stresses(i_interface_node * 3 + i_dir) +=
+              traction_d_pk1(i_dir) * N_background(i_background_node) *
+              this->ele2dis_.element_position_(i_background_node * 3 + i_dir) *
+              nitsche_average_weight_param * weight * determinant_interface;
+
+          for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
+          {
+            var_pk1_interface_n_disp_background(
+                i_interface_node * 3 + i_dir, i_background_node * 3 + j_dir) +=
+                traction_d_pk1(j_dir) * N_background(i_background_node) *
+                nitsche_average_weight_param * weight * determinant_interface;
+          }
         }
+    var_disp_background_pk1_interface_n.update_t(var_pk1_interface_n_disp_background);
 
     for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
         i_background_node++)
       for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
           i_interface_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+        for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
         {
-          var_disp_background_pk1_interface_n(
-              i_background_node * 3 + 0, i_interface_node * 3 + i_dim) -=
-              N_background(i_background_node) *
-              (pk1_interface.b_pk1_(0, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(3, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(5, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              weight * determinant_interface * nitsche_average_weight_param;
+          evaluate_variation_first_pk_at_node_dir(
+              i_background_node, i_dir, lin_dependencies_d_background, pk1_background);
 
-          var_disp_background_pk1_interface_n(
-              i_background_node * 3 + 1, i_interface_node * 3 + i_dim) -=
-              N_background(i_background_node) *
-              (pk1_interface.b_pk1_(6, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(1, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(4, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              weight * determinant_interface * nitsche_average_weight_param;
+          Core::LinAlg::Matrix<3, 1> traction_d_pk1(Core::LinAlg::Initialization::zero);
+          traction_d_pk1.multiply(pk1_background.d_pk1_node_dir, normal_interface);
 
-          var_disp_background_pk1_interface_n(
-              i_background_node * 3 + 2, i_interface_node * 3 + i_dim) -=
-              N_background(i_background_node) *
-              (pk1_interface.b_pk1_(8, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(0) +
-                  pk1_interface.b_pk1_(7, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(1) +
-                  pk1_interface.b_pk1_(2, dofs_interface_locations[i_interface_node] * 3 + i_dim) *
-                      normal_interface(2)) *
-              weight * determinant_interface * nitsche_average_weight_param;
+          local_constraint_stresses(Interface::n_dof_ + i_background_node * 3 + i_dir) -=
+              traction_d_pk1(i_dir) * N_interface(i_interface_node) *
+              this->ele1dis_.element_position_(i_interface_node * 3 + i_dir) *
+              (1.0 - nitsche_average_weight_param) * weight * determinant_interface;
+
+          for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
+          {
+            var_pk1_background_n_disp_interface(
+                i_background_node * 3 + i_dir, i_interface_node * 3 + j_dir) -=
+                traction_d_pk1(j_dir) * N_interface(i_interface_node) *
+                (1.0 - nitsche_average_weight_param) * weight * determinant_interface;
+          }
         }
+    var_disp_interface_pk1_background_n.update_t(var_pk1_background_n_disp_interface);
 
-    for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
-        i_background_node++)
-      for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
-          j_background_node++)
-        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-        {
-          var_disp_background_pk1_background_n(
-              i_background_node * 3 + 0, j_background_node * 3 + i_dim) -=
-              N_background(i_background_node) *
-              (pk1_background.b_pk1_(0, j_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(3, j_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(5, j_background_node * 3 + i_dim) * normal_interface(2)) *
-              weight * determinant_interface * (1.0 - nitsche_average_weight_param);
+    // With calculated contributions, add them to their respective matrix.
+    local_stiffness_disp_interface_stress_interface.update(
+        1.0, var_pk1_interface_n_disp_interface, 1.0);
+    local_stiffness_disp_interface_stress_interface.update(
+        1.0, var_disp_interface_pk1_interface_n, 1.0);
+    local_stiffness_disp_interface_stress_interface.update(1.0, lin_var_pk1_interface, 1.0);
+    // std::cout << "K_interface_interface " << std::endl;
+    // local_stiffness_disp_interface_stress_interface.print(std::cout);
 
-          var_disp_background_pk1_background_n(
-              i_background_node * 3 + 1, j_background_node * 3 + i_dim) -=
-              N_background(i_background_node) *
-              (pk1_background.b_pk1_(6, j_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(1, j_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(4, j_background_node * 3 + i_dim) * normal_interface(2)) *
-              weight * determinant_interface * (1.0 - nitsche_average_weight_param);
+    local_stiffness_disp_interface_stress_background.update(
+        1.0, var_pk1_interface_n_disp_background, 1.0);
+    local_stiffness_disp_interface_stress_background.update(
+        1.0, var_disp_interface_pk1_background_n, 1.0);
+    // std::cout << "K_interface_background " << std::endl;
+    // local_stiffness_disp_interface_stress_background.print(std::cout);
 
-          var_disp_background_pk1_background_n(
-              i_background_node * 3 + 2, j_background_node * 3 + i_dim) -=
-              N_background(i_background_node) *
-              (pk1_background.b_pk1_(8, j_background_node * 3 + i_dim) * normal_interface(0) +
-                  pk1_background.b_pk1_(7, j_background_node * 3 + i_dim) * normal_interface(1) +
-                  pk1_background.b_pk1_(2, j_background_node * 3 + i_dim) * normal_interface(2)) *
-              weight * determinant_interface * (1.0 - nitsche_average_weight_param);
-        }
+    local_stiffness_disp_background_stress_interface.update(
+        1.0, var_pk1_background_n_disp_interface, 1.0);
+    local_stiffness_disp_background_stress_interface.update(
+        1.0, var_disp_background_pk1_interface_n, 1.0);
+    // std::cout << "K_background_interface " << std::endl;
+    // local_stiffness_disp_background_stress_interface.print(std::cout);
 
-
-
-    // Fill in the local matrix K_nitsche_disp_interface_stress_interface.
-    // for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
-    //     i_interface_node++)
-    //   for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
-    //       j_interface_node++)
-    //     for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-    //       local_stiffness_disp_interface_stress_interface(
-    //           i_interface_node * 3 + i_dim, j_interface_node * 3 + i_dim) -=
-    //           nitsche_average_weight_param * N_interface(i_interface_node) *
-    //               d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0)
-    //               * weight * determinant_interface +
-    //           nitsche_average_weight_param * N_interface(i_interface_node) *
-    //               cauchy_stress_interface_d_unit_normal_d_disp_interface(
-    //                   i_dim, j_interface_node * 3 + i_dim) *
-    //               weight * determinant_interface +
-    //           (1.0 - nitsche_average_weight_param) * N_interface(i_interface_node) *
-    //               cauchy_stress_background_d_unit_normal_d_disp_interface(
-    //                   i_dim, j_interface_node * 3 + i_dim) *
-    //               weight * determinant_interface;
-    //
-    // // Fill in the local matrix K_nitsche_disp_interface_stress_background.
-    // for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
-    //     i_interface_node++)
-    //   for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
-    //       j_background_node++)
-    //     for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-    //       local_stiffness_disp_interface_stress_background(
-    //           i_interface_node * 3 + i_dim, j_background_node * 3 + i_dim) -=
-    //           (1.0 - nitsche_average_weight_param) * N_interface(i_interface_node) *
-    //           d_cauchyndir_dd_background[i_dim](j_background_node, 0) * weight *
-    //           determinant_interface;
-    //
-    // // Fill in the local matrix K_nitsche_disp_background_stress_interface.
-    // for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
-    //     i_background_node++)
-    //   for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
-    //       j_interface_node++)
-    //     for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-    //       local_stiffness_disp_background_stress_interface(
-    //           i_background_node * 3 + i_dim, j_interface_node * 3 + i_dim) +=
-    //           nitsche_average_weight_param * N_background(i_background_node) *
-    //               d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0)
-    //               * weight * determinant_interface +
-    //           nitsche_average_weight_param * N_background(i_background_node) *
-    //               cauchy_stress_interface_d_unit_normal_d_disp_interface(
-    //                   i_dim, j_interface_node * 3 + i_dim) *
-    //               weight * determinant_interface +
-    //           (1.0 - nitsche_average_weight_param) * N_background(i_background_node) *
-    //               cauchy_stress_background_d_unit_normal_d_disp_interface(
-    //                   i_dim, j_interface_node * 3 + i_dim) *
-    //               weight * determinant_interface;
-    //
-    // // Fill in the local matrix K_nitsche_disp_background_stress_background.
-    // for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
-    //     i_background_node++)
-    //   for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
-    //       j_background_node++)
-    //     for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-    //       local_stiffness_disp_background_stress_background(
-    //           i_background_node * 3 + i_dim, j_background_node * 3 + i_dim) +=
-    //           (1.0 - nitsche_average_weight_param) * N_background(i_background_node) *
-    //           d_cauchyndir_dd_background[i_dim](j_background_node, 0) * weight *
-    //           determinant_interface;
-    //
+    local_stiffness_disp_background_stress_background.update(
+        1.0, var_pk1_background_n_disp_background, 1.0);
+    local_stiffness_disp_background_stress_background.update(
+        1.0, var_disp_background_pk1_background_n, 1.0);
+    local_stiffness_disp_background_stress_background.update(1.0, lin_var_pk1_background, 1.0);
+    // std::cout << "K_background_background " << std::endl;
+    // local_stiffness_disp_background_stress_background.print(std::cout);
   }
 }
 

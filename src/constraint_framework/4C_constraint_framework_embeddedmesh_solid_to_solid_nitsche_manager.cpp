@@ -238,23 +238,6 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
   global_penalty_interface_->scale(penalty_param);
   global_penalty_background_->scale(penalty_param);
   global_penalty_interface_background_->scale(-penalty_param);
-
-  if (embedded_mesh_coupling_params_.nitsche_weighting_type_ == NitscheWeightingType::undefined)
-  {
-    // Get the average weight parameter.
-    const double average_weight_gamma =
-        embedded_mesh_coupling_params_.nitsche_average_weight_param_;
-
-    // Scale stress contributions
-    // global_virtual_disp_interface_stress_interface_->scale(-average_weight_gamma);
-    // global_virtual_disp_interface_stress_background_->scale(-(1.0 - average_weight_gamma));
-    // global_virtual_disp_background_stress_interface_->scale(average_weight_gamma);
-    // global_virtual_disp_background_stress_background_->scale(1.0 - average_weight_gamma);
-  }
-  else
-  {
-    // ToDO
-  }
 }
 
 /**
