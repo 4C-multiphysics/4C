@@ -45,12 +45,12 @@ Particle::ParticleInteractionSPH::ParticleInteractionSPH(
     MPI_Comm comm, const Teuchos::ParameterList& params)
     : Particle::ParticleInteractionBase(comm, params), params_sph_(params.sublist("SPH"))
 {
-  initialize_members();
+  initialize_members(params);
 }
 
 Particle::ParticleInteractionSPH::~ParticleInteractionSPH() = default;
 
-void Particle::ParticleInteractionSPH::initialize_members()
+void Particle::ParticleInteractionSPH::initialize_members(const Teuchos::ParameterList& params)
 {
   // init kernel handler
   init_kernel_handler();
@@ -84,6 +84,12 @@ void Particle::ParticleInteractionSPH::initialize_members()
 
   // init neumann open boundary handler
   init_neumann_open_boundary_handler();
+
+  // init open boundary handler
+  const Teuchos::ParameterList& params_bcs = params.isSublist("OPEN BOUNDARIES")
+                                                 ? params.sublist("OPEN BOUNDARIES")
+                                                 : Teuchos::ParameterList();
+  init_open_boundary_handler(params_bcs);
 
   // init virtual wall particle handler
   init_virtual_wall_particle_handler();
@@ -209,8 +215,8 @@ void Particle::ParticleInteractionSPH::insert_particle_states_of_particle_types(
     else if (type == Particle::DirichletPhase or type == Particle::NeumannPhase)
     {
       // insert states of open boundary particles
-      particlestates.insert(
-          {Particle::Mass, Particle::Radius, Particle::Density, Particle::Pressure});
+      particlestates.insert({Particle::Mass, Particle::Radius, Particle::Density,
+          Particle::Pressure, Particle::OpenBoundaryId});
     }
     else
     {
@@ -680,7 +686,15 @@ void Particle::ParticleInteractionSPH::init_dirichlet_open_boundary_handler()
     }
     case Particle::DirichletNormalToPlane:
     {
-      openboundaries_.push_back(std::make_unique<Particle::SPHOpenBoundaryDirichlet>(params_sph_));
+      // Create new parameter list for backwards compatibility
+      Teuchos::ParameterList params;
+      params.set<int>("FUNCT", params_sph_.get<int>("DIRICHLET_FUNCT"));
+      params.set<std::string>(
+          "OUTWARD_NORMAL", params_sph_.get<std::string>("DIRICHLET_OUTWARD_NORMAL"));
+      params.set<std::string>("PLANE_POINT", params_sph_.get<std::string>("DIRICHLET_PLANE_POINT"));
+
+      openboundaries_.push_back(std::make_unique<Particle::SPHOpenBoundaryDirichlet>(
+          params, params_sph_.get<double>("INITIALPARTICLESPACING"), 0));
       break;
     }
     default:
@@ -706,7 +720,15 @@ void Particle::ParticleInteractionSPH::init_neumann_open_boundary_handler()
     }
     case Particle::NeumannNormalToPlane:
     {
-      openboundaries_.push_back(std::make_unique<Particle::SPHOpenBoundaryNeumann>(params_sph_));
+      // Create new parameter list for backwards compatibility
+      Teuchos::ParameterList params;
+      params.set<int>("FUNCT", params_sph_.get<int>("NEUMANN_FUNCT"));
+      params.set<std::string>(
+          "OUTWARD_NORMAL", params_sph_.get<std::string>("NEUMANN_OUTWARD_NORMAL"));
+      params.set<std::string>("PLANE_POINT", params_sph_.get<std::string>("NEUMANN_PLANE_POINT"));
+
+      openboundaries_.push_back(std::make_unique<Particle::SPHOpenBoundaryNeumann>(
+          params, params_sph_.get<double>("INITIALPARTICLESPACING"), 0));
       break;
     }
     default:
@@ -716,6 +738,53 @@ void Particle::ParticleInteractionSPH::init_neumann_open_boundary_handler()
     }
   }
 }
+
+void Particle::ParticleInteractionSPH::init_open_boundary_handler(
+    const Teuchos::ParameterList& params_bcs)
+{
+  init_open_boundary<Particle::DirichletOpenBoundaryType, Particle::SPHOpenBoundaryDirichlet>(
+      params_bcs, "DIRICHLET_BOUNDARIES", Particle::DirichletNormalToPlane);
+
+  init_open_boundary<Particle::NeumannOpenBoundaryType, Particle::SPHOpenBoundaryNeumann>(
+      params_bcs, "NEUMANN_BOUNDARIES", Particle::NeumannNormalToPlane);
+}
+
+template <typename OpenBoundaryEnum, typename OpenBoundaryClass>
+void Particle::ParticleInteractionSPH::init_open_boundary(const Teuchos::ParameterList& params_bcs,
+    const std::string& root_name, const OpenBoundaryEnum enum_value)
+{
+  const double initial_particle_spacing = params_sph_.get<double>("INITIALPARTICLESPACING");
+
+  if (params_bcs.isParameter(root_name))
+  {
+    // open boundaries within the specified root
+    const auto& boundaries = params_bcs.get<std::vector<Teuchos::ParameterList>>(root_name);
+
+    for (const auto& boundary_data : boundaries)
+    {
+      const int boundary_id = boundary_data.get<int>("BOUNDARY");
+
+      const auto boundary_type = boundary_data.get<OpenBoundaryEnum>("_boundary_type");
+
+      const auto param_name =
+          Particle::open_boundary_type_to_string<OpenBoundaryEnum>(boundary_type);
+
+      if (boundary_type == enum_value)
+        openboundaries_.push_back(std::make_unique<OpenBoundaryClass>(
+            boundary_data.sublist(param_name), initial_particle_spacing, boundary_id));
+    }
+  }
+}
+
+template void Particle::ParticleInteractionSPH::init_open_boundary<
+    Particle::DirichletOpenBoundaryType, Particle::SPHOpenBoundaryDirichlet>(
+    const Teuchos::ParameterList& params_bcs, const std::string& root_name,
+    const Particle::DirichletOpenBoundaryType enum_value);
+
+template void Particle::ParticleInteractionSPH::init_open_boundary<
+    Particle::NeumannOpenBoundaryType, Particle::SPHOpenBoundaryNeumann>(
+    const Teuchos::ParameterList& params_bcs, const std::string& root_name,
+    const Particle::NeumannOpenBoundaryType enum_value);
 
 void Particle::ParticleInteractionSPH::init_virtual_wall_particle_handler()
 {

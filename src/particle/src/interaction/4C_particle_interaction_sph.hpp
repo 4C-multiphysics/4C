@@ -112,7 +112,7 @@ namespace Particle
      * Initialize the members by assigning the respective derived classes based on the input
      * parameters
      */
-    void initialize_members();
+    void initialize_members(const Teuchos::ParameterList& params);
 
     //! init kernel handler
     void init_kernel_handler();
@@ -158,6 +158,14 @@ namespace Particle
 
     //! init peridynamic interaction handler
     void init_peridynamic_interaction_handler();
+
+    //! init open boundaries handler
+    void init_open_boundary_handler(const Teuchos::ParameterList& params_bcs);
+
+    //! init open boundaries of a specific type
+    template <typename OpenBoundaryEnum, typename OpenBoundaryClass>
+    void init_open_boundary(const Teuchos::ParameterList& params_bcs, const std::string& root_name,
+        const OpenBoundaryEnum enum_value);
 
     //! smoothed particle hydrodynamics specific parameter list
     const Teuchos::ParameterList& params_sph_;
