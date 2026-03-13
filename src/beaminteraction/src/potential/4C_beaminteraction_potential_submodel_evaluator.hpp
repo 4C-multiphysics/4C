@@ -92,15 +92,13 @@ namespace BeamInteraction
       void reset_step_state() override;
 
       //! derived
-      void write_restart(Core::IO::DiscretizationWriter& ia_writer,
-          Core::IO::DiscretizationWriter& bin_writer) const override;
+      void write_restart(Core::IO::DiscretizationWriter& bin_writer) const override;
 
       //! derived
       void pre_read_restart() override;
 
       //! derived
-      void read_restart(Core::IO::DiscretizationReader& ia_reader,
-          Core::IO::DiscretizationReader& bin_reader) override;
+      void read_restart(Core::IO::DiscretizationReader& bin_reader) override;
 
       //! derived
       void post_read_restart() override;

@@ -458,7 +458,7 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::partition_problem()
   check_init();
 
   // TODO: Introduce proper parameter
-  if (true)
+  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact))
   {
     const auto geometric_search_params_ptr_ = Core::GeometricSearch::GeometricSearchParams(
         Global::Problem::instance()->geometric_search_params(),
@@ -880,20 +880,20 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::write_restart(
   int const stepn = global_state().get_step_n();
   double const timen = global_state().get_time_n();
   std::shared_ptr<Core::IO::DiscretizationWriter> ia_writer = ia_discret_->writer();
-  std::shared_ptr<Core::IO::DiscretizationWriter> bin_writer = bindis_->writer();
 
   // write restart of ia_discret
   ia_writer->write_mesh(stepn, timen);
   ia_writer->new_step(stepn, timen);
 
   // TODO: Introduce proper parameter
-  if (true)
+  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact))
   {
-    // TODO: Whatever we want to do here?
     ia_writer->clear_map_cache();
   }
   else
   {
+    std::shared_ptr<Core::IO::DiscretizationWriter> bin_writer = bindis_->writer();
+
     // mesh is not written to disc, only maximum node id is important for output
     // fixme: can we just write mesh
     bin_writer->write_only_nodes_in_new_field_group_to_control_file(stepn, timen, true);
@@ -903,12 +903,12 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::write_restart(
     // the map cache as we can't get any advantage saving the maps anyway
     ia_writer->clear_map_cache();
     bin_writer->clear_map_cache();
-  }
 
-  // sub model loop
-  Vector::iterator some_iter;
-  for (some_iter = me_vec_ptr_->begin(); some_iter != me_vec_ptr_->end(); ++some_iter)
-    (*some_iter)->write_restart(*ia_writer, *bin_writer);
+    // sub model loop
+    Vector::iterator some_iter;
+    for (some_iter = me_vec_ptr_->begin(); some_iter != me_vec_ptr_->end(); ++some_iter)
+      (*some_iter)->write_restart(*bin_writer);
+  }
 }
 
 /*----------------------------------------------------------------------------*
@@ -931,23 +931,34 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::read_restart(
   // includes fill_complete()
   ia_reader.read_history_data(stepn);
 
-  // rebuild bin discret correctly in case crosslinker were present
-  // Fixme: do just read history data like with ia discret
-  // read correct nodes
-  Core::IO::DiscretizationReader bin_reader(*bindis_, input_control_file, stepn);
-  bin_reader.read_nodes_only(stepn);
-  bindis_->fill_complete(Core::FE::OptionsFillComplete::none());
+  // TODO: Introduce proper parameter
+  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact))
+  {
+    // need to read step next (as it was written next, do safety check)
+    if (stepn != ia_reader.read_int("step"))
+      FOUR_C_THROW("Restart step not consistent with read restart step. ");
 
-  // need to read step next (as it was written next, do safety check)
-  if (stepn != ia_reader.read_int("step") or stepn != bin_reader.read_int("step"))
-    FOUR_C_THROW("Restart step not consistent with read restart step. ");
+    partition_problem();
+  }
+  else
+  {
+    // rebuild bin discret correctly in case crosslinker were present
+    // Fixme: do just read history data like with ia discret
+    // read correct nodes
+    Core::IO::DiscretizationReader bin_reader(*bindis_, input_control_file, stepn);
+    bin_reader.read_nodes_only(stepn);
+    bindis_->fill_complete(Core::FE::OptionsFillComplete::none());
 
-  // rebuild binning
-  partition_problem();
+    // need to read step next (as it was written next, do safety check)
+    if (stepn != ia_reader.read_int("step") or stepn != bin_reader.read_int("step"))
+      FOUR_C_THROW("Restart step not consistent with read restart step. ");
 
-  // sub model loop
-  for (some_iter = me_vec_ptr_->begin(); some_iter != me_vec_ptr_->end(); ++some_iter)
-    (*some_iter)->read_restart(ia_reader, bin_reader);
+    partition_problem();
+
+    // sub model loop
+    for (some_iter = me_vec_ptr_->begin(); some_iter != me_vec_ptr_->end(); ++some_iter)
+      (*some_iter)->read_restart(bin_reader);
+  }
 
   // post sub model loop
   for (some_iter = me_vec_ptr_->begin(); some_iter != me_vec_ptr_->end(); ++some_iter)
@@ -968,6 +979,8 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::read_restart(
   }
 }
 
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluator::BeamInteractionModelEvaluator::run_pre_compute_x(
     const Core::LinAlg::Vector<double>& xold, Core::LinAlg::Vector<double>& dir_mutable,
     const NOX::Nln::Group& curr_grp)
@@ -1022,7 +1035,7 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::update_step_element()
   check_init_setup();
 
   // TODO: Introduce proper parameter
-  if (true)
+  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact))
   {
     Vector::iterator some_iter;
     bool beam_redist = check_if_beam_discret_redistribution_needs_to_be_done();
