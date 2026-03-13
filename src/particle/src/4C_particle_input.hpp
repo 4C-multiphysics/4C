@@ -269,6 +269,9 @@ namespace Particle
   //! set the particle conditions
   void set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist);
 
+  //! get open boundary type to string
+  template <typename T>
+  std::string open_boundary_type_to_string(T type);
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*/

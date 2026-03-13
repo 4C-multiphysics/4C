@@ -126,6 +126,53 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
           parameter<bool>("PD_BODY_INTERACTION",
               {.description = "consider peridynamic body interaction", .default_value = false})},
       {.required = false}));
+
+  auto all_dirichlet_boundaries = all_of({
+      parameter<int>("BOUNDARY"),
+      one_of(
+          std::vector<Core::IO::InputSpec>{
+              group("NoDirichletOpenBoundary", {}, {.description = "no dirichlet open boundary"}),
+              group("DirichletNormalToPlane",
+                  {
+                      parameter<int>(
+                          "FUNCT", {.description = "number of function governing velocity "
+                                                   "condition on dirichlet open boundary",
+                                       .default_value = -1}),
+                      parameter<std::string>("OUTWARD_NORMAL",
+                          {.description = "direction of outward normal on dirichlet open boundary",
+                              .default_value = "0.0 0.0 0.0"}),
+                      parameter<std::string>(
+                          "PLANE_POINT", {.description = "point on dirichlet open boundary plane",
+                                             .default_value = "0.0 0.0 0.0"}),
+                  },
+                  {.description = "dirichlet normal to plane open boundary"})},
+          store_index_as<Particle::DirichletOpenBoundaryType>("_boundary_type",
+              {Particle::NoDirichletOpenBoundary, Particle::DirichletNormalToPlane})),
+  });
+
+  auto all_neumann_boundaries = all_of({
+      parameter<int>("BOUNDARY"),
+      one_of(
+          std::vector<Core::IO::InputSpec>{
+              group("NoNeumannOpenBoundary", {}, {.description = "no neumann open boundary"}),
+              group("NeumannNormalToPlane",
+                  {
+                      parameter<int>(
+                          "FUNCT", {.description = "number of function governing pressure "
+                                                   "condition on neumann open boundary",
+                                       .default_value = -1}),
+                      parameter<std::string>("OUTWARD_NORMAL",
+                          {.description = "direction of outward normal on neumann open boundary",
+                              .default_value = "0.0 0.0 0.0"}),
+                      parameter<std::string>(
+                          "PLANE_POINT", {.description = "point on neumann open boundary plane",
+                                             .default_value = "0.0 0.0 0.0"}),
+                  },
+                  {.description = "neumann normal to plane open boundary"})},
+          store_index_as<Particle::NeumannOpenBoundaryType>(
+              "_boundary_type", {Particle::NoNeumannOpenBoundary, Particle::NeumannNormalToPlane})),
+  });
+
   /*-------------------------------------------------------------------------*
  | control parameters for initial/boundary conditions |
  *-------------------------------------------------------------------------*/
@@ -185,6 +232,15 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
               "CONSTRAINT", {.description = "type of kinematic constraint imposed",
                                 .default_value = Particle::NoConstraint}),
       },
+      {.required = false}));
+
+  specs.push_back(group("PARTICLE DYNAMIC/OPEN BOUNDARIES",
+      {
+
+          // open dirichlet boundaries
+          list("DIRICHLET_BOUNDARIES", {all_dirichlet_boundaries}, {.required = false}),
+          // open neumann boundaries
+          list("NEUMANN_BOUNDARIES", {all_neumann_boundaries}, {.required = false})},
       {.required = false}));
 
   /*-------------------------------------------------------------------------*
@@ -623,6 +679,34 @@ void Particle::set_valid_conditions(std::vector<Core::Conditions::ConditionDefin
   surfpartwall.add_component(parameter<int>("MAT"));
 
   condlist.push_back(surfpartwall);
+}
+
+template <>
+std::string Particle::open_boundary_type_to_string(Particle::DirichletOpenBoundaryType type)
+{
+  switch (type)
+  {
+    case Particle::NoDirichletOpenBoundary:
+      return "NoDirichletOpenBoundary";
+    case Particle::DirichletNormalToPlane:
+      return "DirichletNormalToPlane";
+    default:
+      FOUR_C_THROW("Unknown Dirichlet open boundary type");
+  }
+}
+
+template <>
+std::string Particle::open_boundary_type_to_string(Particle::NeumannOpenBoundaryType type)
+{
+  switch (type)
+  {
+    case Particle::NoNeumannOpenBoundary:
+      return "NoNeumannOpenBoundary";
+    case Particle::NeumannNormalToPlane:
+      return "NeumannNormalToPlane";
+    default:
+      FOUR_C_THROW("Unknown Neumann open boundary type");
+  }
 }
 
 FOUR_C_NAMESPACE_CLOSE
