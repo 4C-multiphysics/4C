@@ -105,12 +105,15 @@ namespace Core::LinAlg
 
   /*! \brief Enrich a matrix graph based on it's powers.
    *
-   *  \param A     (in) : Sparse matrix, which graph needs to be enriched
-   *  \param power (in) : Power value
+   * Calculates an enriched graph based on powers of a given matrix A. Each refinement level l
+   * calculates A^(l+1) = A^(l)*A^(l).
    *
-   *  \return Returned the enriched graph G(A^(power))
+   *  \param A      (in) : Sparse matrix, which graph needs to be enriched
+   *  \param levels (in) : Number of refinement levels
+   *
+   *  \return Returns the enriched graph G(A^(2^l))
    */
-  std::shared_ptr<Core::LinAlg::Graph> enrich_matrix_graph(const SparseMatrix& A, int power);
+  std::shared_ptr<Core::LinAlg::Graph> enrich_matrix_graph(const SparseMatrix& A, int levels);
 
   /*!
    * \brief split a matrix into a 2x2 block system
