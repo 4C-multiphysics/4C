@@ -828,7 +828,7 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::write_restart(
   // sub model loop
   Vector::iterator some_iter;
   for (some_iter = me_vec_ptr_->begin(); some_iter != me_vec_ptr_->end(); ++some_iter)
-    (*some_iter)->write_restart(*ia_writer, *bin_writer);
+    (*some_iter)->write_restart(*bin_writer);
 }
 
 /*----------------------------------------------------------------------------*
@@ -867,7 +867,7 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::read_restart(
 
   // sub model loop
   for (some_iter = me_vec_ptr_->begin(); some_iter != me_vec_ptr_->end(); ++some_iter)
-    (*some_iter)->read_restart(ia_reader, bin_reader);
+    (*some_iter)->read_restart(bin_reader);
 
   // post sub model loop
   for (some_iter = me_vec_ptr_->begin(); some_iter != me_vec_ptr_->end(); ++some_iter)

@@ -560,7 +560,7 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::reset_step_state() { che
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void BeamInteraction::SubmodelEvaluator::BeamPotential::write_restart(
-    Core::IO::DiscretizationWriter& ia_writer, Core::IO::DiscretizationWriter& bin_writer) const
+    Core::IO::DiscretizationWriter& bin_writer) const
 {
   // empty
 }
@@ -575,7 +575,7 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::pre_read_restart()
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void BeamInteraction::SubmodelEvaluator::BeamPotential::read_restart(
-    Core::IO::DiscretizationReader& ia_reader, Core::IO::DiscretizationReader& bin_reader)
+    Core::IO::DiscretizationReader& bin_reader)
 {
   // empty
 }

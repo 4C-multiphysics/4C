@@ -151,14 +151,12 @@ namespace BeamInteraction
       virtual void reset_step_state() = 0;
 
       //! \brief write model specific restart
-      virtual void write_restart(Core::IO::DiscretizationWriter& ia_writer,
-          Core::IO::DiscretizationWriter& bin_writer) const = 0;
+      virtual void write_restart(Core::IO::DiscretizationWriter& bin_writer) const = 0;
 
       /*! \brief read model specific restart information
        *
        *  \param ioreader (in) : input reader*/
-      virtual void read_restart(Core::IO::DiscretizationReader& ia_writer,
-          Core::IO::DiscretizationReader& bin_writer) = 0;
+      virtual void read_restart(Core::IO::DiscretizationReader& bin_writer) = 0;
 
       //! \brief do stuff pre reading of model specific restart information
       virtual void pre_read_restart() = 0;
