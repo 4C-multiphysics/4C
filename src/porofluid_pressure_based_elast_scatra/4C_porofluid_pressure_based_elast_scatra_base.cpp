@@ -12,7 +12,6 @@
 #include "4C_adapter_scatra_base_algorithm.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_node.hpp"
-#include "4C_global_data.hpp"
 #include "4C_mat_fluidporo_multiphase.hpp"
 #include "4C_mat_scatra_multiporo.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_utils.hpp"
@@ -55,13 +54,15 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::init(
     int nds_disp, int nds_vel, int nds_solidpressure, int nds_porofluid_scatra,
     const std::map<int, std::set<int>>* nearby_ele_pairs)
 {
+  const auto& algorithm_deps = this->algorithm_deps();
+  FOUR_C_ASSERT_ALWAYS(
+      algorithm_deps.solver_params_by_id, "Solver parameter callback is not initialized.");
+
   // save the dofset number of the scatra on the fluid dis
   nds_porofluid_scatra_ = nds_porofluid_scatra;
 
-  // access the global problem
-  Global::Problem* problem = Global::Problem::instance();
-  const PoroPressureBased::PorofluidElastAlgorithmDeps porofluid_elast_algorithm_deps =
-      PoroPressureBased::make_elast_algorithm_deps_from_problem(*problem);
+  const PoroPressureBased::PorofluidElastAlgorithmDeps& porofluid_elast_algorithm_deps =
+      algorithm_deps.porofluid_elast_algorithm_deps;
 
   // Create the two uncoupled subproblems.
 
@@ -140,7 +141,7 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::init(
 
   // scatra problem
   scatra_algo_ = std::make_shared<Adapter::ScaTraBaseAlgorithm>(scatra_global_time_params,
-      scatra_params, problem->solver_params(linsolvernumber), scatra_disname, true);
+      scatra_params, algorithm_deps.solver_params_by_id(linsolvernumber), scatra_disname, true);
 
   // initialize the base algo.
   // scatra time integrator is constructed and initialized inside.
@@ -300,10 +301,11 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::update_and_output()
  *----------------------------------------------------------------------*/
 void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::create_field_test()
 {
-  Global::Problem* problem = Global::Problem::instance();
+  const auto& algorithm_deps = this->algorithm_deps();
+  FOUR_C_ASSERT_ALWAYS(algorithm_deps.add_field_test, "Result test callback is not initialized.");
 
   porofluid_elast_algo_->create_field_test();
-  problem->add_field_test(scatra_algo_->create_scatra_field_test());
+  algorithm_deps.add_field_test(scatra_algo_->create_scatra_field_test());
 }
 
 /*----------------------------------------------------------------------*

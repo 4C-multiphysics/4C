@@ -8,9 +8,10 @@
 #include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_base.hpp"
 
 #include "4C_fem_discretization.hpp"
-#include "4C_global_data.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
+
+#include <utility>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -20,14 +21,15 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingBaseAlgorithm::
     PorofluidElastScatraArteryCouplingBaseAlgorithm(
         const std::shared_ptr<Core::FE::Discretization> artery_dis,
         const std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params)
+        const Teuchos::ParameterList& coupling_params,
+        PorofluidElastScatraArteryCouplingDeps artery_coupling_deps)
     : artery_dis_(artery_dis),
       homogenized_dis_(homogenized_dis),
       my_mpi_rank_(Core::Communication::my_mpi_rank(artery_dis->get_comm())),
-      evaluate_in_ref_config_(Global::Problem::instance()
-              ->porofluid_pressure_based_dynamic_params()
-              .sublist("artery_coupling")
+      evaluate_in_ref_config_(artery_coupling_deps.porofluid_pressure_based_dynamic_parameters
+              ->sublist("artery_coupling")
               .get<bool>("evaluate_in_reference_configuration")),
+      artery_coupling_deps_(std::move(artery_coupling_deps)),
       comm_(artery_dis->get_comm())
 {
   // safety check

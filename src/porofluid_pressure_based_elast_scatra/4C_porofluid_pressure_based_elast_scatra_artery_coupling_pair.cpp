@@ -14,7 +14,6 @@
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_fem_general_utils_integration.hpp"
 #include "4C_fem_geometry_coordinate_system_utils.hpp"
-#include "4C_global_data.hpp"
 #include "4C_mat_cnst_1d_art.hpp"
 #include "4C_mat_fluidporo_multiphase.hpp"
 #include "4C_porofluid_pressure_based_ele_parameter.hpp"
@@ -75,7 +74,8 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery, dis_t
       timefacrhs_artery_density_(0.0),
       timefacrhs_homogenized_density_(0.0),
       timefacrhs_artery_(0.0),
-      timefacrhs_homogenized_(0.0)
+      timefacrhs_homogenized_(0.0),
+      my_mpi_rank_(-1)
 {
 }
 
@@ -89,13 +89,17 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
     const std::vector<int>& coupled_dofs_homogenized, const std::vector<int>& coupled_dofs_artery,
     const std::vector<std::vector<int>>& scale_vector,
     const std::vector<std::vector<int>>& function_id_vector, const std::string condition_name,
-    const double penalty_parameter, const std::string coupling_type, const int eta_ntp)
+    const double penalty_parameter, const std::string coupling_type, const int eta_ntp,
+    const std::function<const Core::Utils::FunctionOfAnything&(int)>& function_of_anything_by_id,
+    const int my_mpi_rank)
 {
   coupling_method_ =
       Teuchos::getIntegralValue<ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
           coupling_params, "coupling_method");
 
   condition_name_ = condition_name;
+  my_mpi_rank_ = my_mpi_rank;
+  function_of_anything_by_id_ = function_of_anything_by_id;
 
   evaluate_in_ref_config_ =
       porofluid_coupling_params.get<bool>("evaluate_in_reference_configuration");
@@ -478,9 +482,10 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
           "must define a zero exchange term.");
     }
     variable_diameter_active_ = true;
-    artery_diameter_funct_ =
-        &Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfAnything>(
-            diameter_function_id);
+    if (!function_of_anything_by_id_)
+      FOUR_C_THROW("Function callback is not initialized for artery-coupling pair.");
+
+    artery_diameter_funct_ = &function_of_anything_by_id_(diameter_function_id);
     if (coupling_type_ == CouplingType::porofluid)
     {
       // homogenized derivatives + 1 artery pressure derivative
@@ -578,10 +583,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
     dim>::pre_evaluate_lateral_surface_coupling(Core::LinAlg::MultiVector<double>&
         gauss_point_vector)
 {
-  const int my_mpi_rank =
-      Core::Communication::my_mpi_rank(Global::Problem::instance()->get_dis("artery")->get_comm());
   const int my_lid = artery_element_->lid();
-  if (homogenized_element_->owner() != my_mpi_rank) return;
+  if (homogenized_element_->owner() != my_mpi_rank_) return;
 
   // unit radial basis vectors
   Core::LinAlg::Matrix<3, 1> unit_radial_basis_1;
@@ -4030,9 +4033,10 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
   {
     if (function_id_vector[i] >= 0 && abs(scale_vector[i]) > 0)
     {
-      function_vector.at(i) =
-          &Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfAnything>(
-              function_id_vector[i]);
+      if (!function_of_anything_by_id_)
+        FOUR_C_THROW("Function callback is not initialized for artery-coupling pair.");
+
+      function_vector.at(i) = &function_of_anything_by_id_(function_id_vector[i]);
       function_coupling_active_ = true;
     }
     else

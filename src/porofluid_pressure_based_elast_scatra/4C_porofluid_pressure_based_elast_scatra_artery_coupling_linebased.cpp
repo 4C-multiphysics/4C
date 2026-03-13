@@ -10,7 +10,6 @@
 #include "4C_fem_condition_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
-#include "4C_global_data.hpp"
 #include "4C_inpar_structure.hpp"
 #include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
@@ -29,12 +28,13 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
     PorofluidElastScatraArteryCouplingLineBasedAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params, const std::string& condition_name)
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
+        const PoroPressureBased::PorofluidElastScatraArteryCouplingDeps& artery_coupling_deps)
     : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(
-          artery_dis, homogenized_dis, coupling_params, condition_name),
-      max_num_segments_per_artery_element_(Global::Problem::instance()
-              ->porofluid_pressure_based_dynamic_params()
-              .sublist("artery_coupling")
+          artery_dis, homogenized_dis, coupling_params, condition_name, artery_coupling_deps),
+      max_num_segments_per_artery_element_(
+          artery_coupling_deps.porofluid_pressure_based_dynamic_parameters
+              ->sublist("artery_coupling")
               .get<int>("maximum_number_of_segments_per_artery_element"))
 {
   // user info

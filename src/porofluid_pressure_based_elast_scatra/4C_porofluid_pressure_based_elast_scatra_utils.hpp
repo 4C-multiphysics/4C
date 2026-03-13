@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_linalg_vector.hpp"
+#include "4C_porofluid_pressure_based_elast_scatra_algorithm_dependencies.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
 
 #include <Sacado.hpp>
@@ -38,13 +39,16 @@ namespace PoroPressureBased
 
   //! setup discretizations and dofsets
   std::map<int, std::set<int>> setup_discretizations_and_field_coupling_porofluid_elast_scatra(
-      MPI_Comm comm, const std::string& struct_disname, const std::string& fluid_disname,
+      const PorofluidElastAlgorithmDeps& porofluid_elast_algorithm_deps, MPI_Comm comm,
+      const std::string& struct_disname, const std::string& fluid_disname,
       const std::string& scatra_disname, int& ndsporo_disp, int& ndsporo_vel,
       int& ndsporo_solidpressure, int& ndsporofluid_scatra, const bool artery_coupl);
 
   //! exchange material pointers of discretizations
-  void assign_material_pointers_porofluid_elast_scatra(const std::string& struct_disname,
-      const std::string& fluid_disname, const std::string& scatra_disname, const bool artery_coupl);
+  void assign_material_pointers_porofluid_elast_scatra(
+      const PorofluidElastAlgorithmDeps& porofluid_elast_algorithm_deps,
+      const std::string& struct_disname, const std::string& fluid_disname,
+      const std::string& scatra_disname, const bool artery_coupl);
 
   //! create solution algorithm depending on input file
   std::shared_ptr<PorofluidElastScatraBaseAlgorithm> create_algorithm_porofluid_elast_scatra(
@@ -54,6 +58,14 @@ namespace PoroPressureBased
   );
 
   //! create coupling strategy for coupling with 1D network depending on input file
+  std::shared_ptr<PorofluidElastScatraArteryCouplingBaseAlgorithm>
+  create_and_init_artery_coupling_strategy(std::shared_ptr<Core::FE::Discretization> arterydis,
+      std::shared_ptr<Core::FE::Discretization> contdis,
+      const PorofluidElastScatraArteryCouplingDeps& artery_coupling_deps,
+      const Teuchos::ParameterList& meshtyingparams, const std::string& condname,
+      const bool evaluate_on_lateral_surface);
+
+  //! backward-compatible overload that derives dependencies from Global::Problem
   std::shared_ptr<PorofluidElastScatraArteryCouplingBaseAlgorithm>
   create_and_init_artery_coupling_strategy(std::shared_ptr<Core::FE::Discretization> arterydis,
       std::shared_ptr<Core::FE::Discretization> contdis,

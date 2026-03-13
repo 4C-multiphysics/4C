@@ -11,8 +11,8 @@
 #include "4C_coupling_adapter_converter.hpp"
 #include "4C_fem_condition_selector.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_global_data.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_utils_function_manager.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -22,9 +22,10 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::
     PorofluidElastScatraArteryCouplingNodeBasedAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& meshtying_params, const std::string& condition_name)
+        const Teuchos::ParameterList& meshtying_params, const std::string& condition_name,
+        const PoroPressureBased::PorofluidElastScatraArteryCouplingDeps& artery_coupling_deps)
     : PorofluidElastScatraArteryCouplingBaseAlgorithm(
-          artery_dis, homogenized_dis, meshtying_params),
+          artery_dis, homogenized_dis, meshtying_params, artery_coupling_deps),
       condition_name_(condition_name)
 {
   // user info
@@ -272,6 +273,9 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::
     check_dbc_on_coupled_dofs(const Core::FE::Discretization& dis,
         const std::shared_ptr<const Core::LinAlg::Map>& coupled_dof_map) const
 {
+  FOUR_C_ASSERT_ALWAYS(
+      artery_coupling_deps().function_manager != nullptr, "Function manager is not initialized.");
+
   // object holds maps/subsets for DOFs subjected to Dirichlet BCs and otherwise
   const auto dbc_maps = std::make_shared<Core::LinAlg::MapExtractor>();
   {
@@ -281,7 +285,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::
     // other parameters needed by the elements
     ele_params.set("total time", 0.0);
     ele_params.set<const Core::Utils::FunctionManager*>(
-        "function_manager", &Global::Problem::instance()->function_manager());
+        "function_manager", artery_coupling_deps().function_manager);
     dis.evaluate_dirichlet(ele_params, zeros, nullptr, nullptr, nullptr, dbc_maps);
   }
   // intersect DBC maps and coupled dof map to check if coupling and DBC are applied on same dofs

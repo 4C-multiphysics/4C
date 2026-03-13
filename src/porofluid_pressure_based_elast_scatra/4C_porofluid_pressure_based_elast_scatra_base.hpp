@@ -13,13 +13,16 @@
 #include "4C_adapter_algorithmbase.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_porofluid_pressure_based_elast_base.hpp"
+#include "4C_porofluid_pressure_based_elast_scatra_algorithm_dependencies.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
 #include "4C_porofluid_pressure_based_utils.hpp"
 
 #include <Teuchos_Time.hpp>
 
 #include <memory>
+#include <optional>
 #include <set>
+#include <utility>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -68,6 +71,11 @@ namespace PoroPressureBased
 
     //! read restart
     void read_restart(int restart) override;
+
+    void set_algorithm_deps(PorofluidElastScatraAlgorithmDeps algorithm_deps)
+    {
+      algorithm_deps_ = std::move(algorithm_deps);
+    }
 
     //! create result test for subproblems
     void create_field_test();
@@ -147,6 +155,15 @@ namespace PoroPressureBased
     std::shared_ptr<Core::LinAlg::Map> add_dirichmaps_volfrac_spec_;
 
     std::shared_ptr<ScaTra::MeshtyingStrategyArtery> scatra_meshtying_strategy_;
+
+    const PorofluidElastScatraAlgorithmDeps& algorithm_deps() const
+    {
+      FOUR_C_ASSERT_ALWAYS(algorithm_deps_.has_value(),
+          "Porofluid-elast-scatra algorithm dependencies are not initialized.");
+      return *algorithm_deps_;
+    }
+
+    std::optional<PorofluidElastScatraAlgorithmDeps> algorithm_deps_;
   };
 
 }  // namespace PoroPressureBased

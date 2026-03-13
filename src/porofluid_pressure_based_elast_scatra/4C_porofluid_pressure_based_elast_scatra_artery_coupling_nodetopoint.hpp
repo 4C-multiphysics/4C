@@ -26,7 +26,8 @@ namespace PoroPressureBased
     PorofluidElastScatraArteryCouplingNodeToPointAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params, const std::string& condition_name);
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
+        const PorofluidElastScatraArteryCouplingDeps& artery_coupling_deps);
 
     //! set up of the global system of equations of the coupled problem
     void setup_system(std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,

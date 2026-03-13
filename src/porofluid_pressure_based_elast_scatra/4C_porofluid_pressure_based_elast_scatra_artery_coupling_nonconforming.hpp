@@ -38,7 +38,8 @@ namespace PoroPressureBased
     PorofluidElastScatraArteryCouplingNonConformingAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params, const std::string& condition_name);
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
+        const PorofluidElastScatraArteryCouplingDeps& artery_coupling_deps);
 
    protected:
     //! Evaluate the 1D-3D coupling
@@ -179,7 +180,8 @@ namespace PoroPressureBased
     //! return appropriate internal implementation class
     //! (acts as a simple factory to create single pairs)
     static std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>
-    create_new_artery_coupling_pair(std::vector<Core::Elements::Element const*> const& elements);
+    create_new_artery_coupling_pair(
+        const std::vector<Core::Elements::Element const*>& elements, int spatial_dimension);
 
     //! set the artery diameter in material to be able to use it on 1D discretization
     virtual void set_artery_diameter_in_material() = 0;

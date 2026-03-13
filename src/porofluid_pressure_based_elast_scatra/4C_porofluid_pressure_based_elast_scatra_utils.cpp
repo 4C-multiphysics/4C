@@ -101,6 +101,7 @@ std::shared_ptr<PoroPressureBased::PorofluidElastScatraArteryCouplingBaseAlgorit
 PoroPressureBased::create_and_init_artery_coupling_strategy(
     std::shared_ptr<Core::FE::Discretization> arterydis,
     std::shared_ptr<Core::FE::Discretization> contdis,
+    const PoroPressureBased::PorofluidElastScatraArteryCouplingDeps& artery_coupling_deps,
     const Teuchos::ParameterList& meshtyingparams, const std::string& condname,
     const bool evaluate_on_lateral_surface)
 {
@@ -119,25 +120,25 @@ PoroPressureBased::create_and_init_artery_coupling_strategy(
       if (evaluate_on_lateral_surface)
         strategy = std::make_shared<
             PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm>(
-            arterydis, contdis, meshtyingparams, condname);
+            arterydis, contdis, meshtyingparams, condname, artery_coupling_deps);
       else
         strategy = std::make_shared<
             PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm>(
-            arterydis, contdis, meshtyingparams, condname);
+            arterydis, contdis, meshtyingparams, condname, artery_coupling_deps);
       break;
     }
     case ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::nodal:
     {
       strategy =
           std::make_shared<PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm>(
-              arterydis, contdis, meshtyingparams, condname);
+              arterydis, contdis, meshtyingparams, condname, artery_coupling_deps);
       break;
     }
     case ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point:
     {
       strategy = std::make_shared<
           PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm>(
-          arterydis, contdis, meshtyingparams, condname);
+          arterydis, contdis, meshtyingparams, condname, artery_coupling_deps);
       break;
     }
     default:
@@ -152,12 +153,28 @@ PoroPressureBased::create_and_init_artery_coupling_strategy(
   return strategy;
 }
 
+std::shared_ptr<PoroPressureBased::PorofluidElastScatraArteryCouplingBaseAlgorithm>
+PoroPressureBased::create_and_init_artery_coupling_strategy(
+    std::shared_ptr<Core::FE::Discretization> arterydis,
+    std::shared_ptr<Core::FE::Discretization> contdis,
+    const Teuchos::ParameterList& meshtyingparams, const std::string& condname,
+    const bool evaluate_on_lateral_surface)
+{
+  Global::Problem* problem = Global::Problem::instance();
+  const PoroPressureBased::PorofluidElastScatraArteryCouplingDeps artery_coupling_deps =
+      PoroPressureBased::make_artery_coupling_deps_from_problem(*problem);
+
+  return create_and_init_artery_coupling_strategy(std::move(arterydis), std::move(contdis),
+      artery_coupling_deps, meshtyingparams, condname, evaluate_on_lateral_surface);
+}
+
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::map<int, std::set<int>>
-PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast_scatra(MPI_Comm comm,
-    const std::string& struct_disname, const std::string& fluid_disname,
+PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast_scatra(
+    const PoroPressureBased::PorofluidElastAlgorithmDeps& porofluid_elast_algorithm_deps,
+    MPI_Comm comm, const std::string& struct_disname, const std::string& fluid_disname,
     const std::string& scatra_disname, int& ndsporo_disp, int& ndsporo_vel,
     int& ndsporo_solidpressure, int& ndsporofluid_scatra, const bool artery_coupl)
 {
@@ -169,10 +186,6 @@ PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast_scat
   // For artery-coupled simulations:
   // 4. Artery discretization - provided as input
   // 5. Artery-scatra discretization - cloned from artery discretization
-
-  Global::Problem* problem = Global::Problem::instance();
-  const PoroPressureBased::PorofluidElastAlgorithmDeps porofluid_elast_algorithm_deps =
-      PoroPressureBased::make_elast_algorithm_deps_from_problem(*problem);
 
   setup_discretizations_and_field_coupling_porofluid_elast(porofluid_elast_algorithm_deps,
       struct_disname, fluid_disname, ndsporo_disp, ndsporo_vel, ndsporo_solidpressure);
@@ -282,13 +295,10 @@ PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast_scat
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void PoroPressureBased::assign_material_pointers_porofluid_elast_scatra(
+    const PoroPressureBased::PorofluidElastAlgorithmDeps& porofluid_elast_algorithm_deps,
     const std::string& struct_disname, const std::string& fluid_disname,
     const std::string& scatra_disname, const bool artery_coupl)
 {
-  Global::Problem* problem = Global::Problem::instance();
-  const PoroPressureBased::PorofluidElastAlgorithmDeps porofluid_elast_algorithm_deps =
-      PoroPressureBased::make_elast_algorithm_deps_from_problem(*problem);
-
   PoroPressureBased::assign_material_pointers_porofluid_elast(
       porofluid_elast_algorithm_deps, struct_disname, fluid_disname);
 
