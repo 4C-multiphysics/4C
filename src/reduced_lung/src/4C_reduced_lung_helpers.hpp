@@ -16,9 +16,12 @@
 #include "4C_reduced_lung_boundary_conditions.hpp"
 #include "4C_reduced_lung_junctions.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
+#include "4C_solver_nonlin_nox_interface_required_base.hpp"
 
 #include <mpi.h>
+#include <Teuchos_ParameterList.hpp>
 
+#include <functional>
 #include <map>
 #include <vector>
 
@@ -28,6 +31,13 @@ namespace Core::Nodes
 {
   class Node;
 }
+
+namespace Core::LinAlg
+{
+  class SparseOperator;
+  template <typename T>
+  class Vector;
+}  // namespace Core::LinAlg
 
 namespace Core::FE
 {
@@ -41,6 +51,77 @@ namespace Core::Rebalance
 
 namespace ReducedLung
 {
+  /**
+   * @brief Callback bundle used to wire reduced-lung assembly into NOX::Nln::Adapter.
+   *
+   * The callbacks are assigned to the adapter's public callback members in
+   * reduced_lung_main and tests.
+   */
+  struct NoxAdapterCallbacks
+  {
+    /**
+     * @brief Assemble residual for the current NOX iterate.
+     *
+     * @param x Current NOX solution iterate.
+     * @param residual Residual vector to be filled.
+     * @param fill_type NOX fill context.
+     * @return true on successful assembly.
+     */
+    std::function<bool(
+        const Core::LinAlg::Vector<double>&, Core::LinAlg::Vector<double>&, NOX::Nln::FillType)>
+        residual;
+
+    /**
+     * @brief Assemble Jacobian for the current NOX iterate.
+     *
+     * @param x Current NOX solution iterate.
+     * @param jacobian Jacobian operator to be filled.
+     * @return true on successful assembly.
+     */
+    std::function<bool(const Core::LinAlg::Vector<double>&, Core::LinAlg::SparseOperator&)>
+        jacobian;
+
+    /**
+     * @brief Update current physical time used by time-dependent residual terms.
+     *
+     * @param time Current time of the integration step.
+     */
+    std::function<void(double)> set_time;
+  };
+
+  /**
+   * @brief Create reduced-lung callbacks compatible with NOX::Nln::Adapter.
+   *
+   * The generated callbacks update model state vectors from the current iterate,
+   * then assemble residual and Jacobian using reduced-lung model routines.
+   *
+   * @param dofs Globally owned dof vector.
+   * @param locally_relevant_dofs Ghosted dof vector used for local assembly.
+   * @param airways Airway model container.
+   * @param terminal_units Terminal-unit model container.
+   * @param connections Junction connection data.
+   * @param bifurcations Junction bifurcation data.
+   * @param boundary_conditions Boundary-condition container.
+   * @param dt Time-step size.
+   * @return Callback bundle for NOX adapter residual/Jacobian assembly.
+   */
+  NoxAdapterCallbacks create_nox_adapter_callbacks(Core::LinAlg::Vector<double>& dofs,
+      Core::LinAlg::Vector<double>& locally_relevant_dofs, Airways::AirwayContainer& airways,
+      TerminalUnits::TerminalUnitContainer& terminal_units, Junctions::ConnectionData& connections,
+      Junctions::BifurcationData& bifurcations,
+      BoundaryConditions::BoundaryConditionContainer& boundary_conditions, double dt);
+
+  /**
+   * @brief Create a NOX parameter list for reduced-lung nonlinear solves.
+   *
+   * @param nonlinear_residual_tolerance Absolute residual tolerance.
+   * @param nonlinear_increment_tolerance Absolute increment tolerance.
+   * @param max_nonlinear_iterations Maximum Newton iterations per solve.
+   * @return Teuchos parameter list configured for NOX::Nln::Adapter.
+   */
+  Teuchos::ParameterList create_nox_parameter_list(double nonlinear_residual_tolerance,
+      double nonlinear_increment_tolerance, int max_nonlinear_iterations);
+
   /*!
    * @brief Build a minimal discretization from the reduced lung topology.
    *

@@ -14,6 +14,10 @@
 #include "4C_fem_discretization_builder.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_sparseoperator.hpp"
+#include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linalg_vector.hpp"
 #include "4C_rebalance.hpp"
 #include "4C_reduced_lung_airways.hpp"
 #include "4C_reduced_lung_input.hpp"
@@ -30,6 +34,73 @@ namespace ReducedLung
 {
   using namespace TerminalUnits;
   using namespace Airways;
+
+  namespace
+  {
+    // Helper class to assemble the reduced-lung callbacks for NOX::Nln::Adapter.
+    class NoxAssembly
+    {
+     public:
+      NoxAssembly(Airways::AirwayContainer& airways,
+          TerminalUnits::TerminalUnitContainer& terminal_units,
+          Junctions::ConnectionData& connections, Junctions::BifurcationData& bifurcations,
+          BoundaryConditions::BoundaryConditionContainer& boundary_conditions, double dt,
+          double current_time)
+          : airways_(airways),
+            terminal_units_(terminal_units),
+            connections_(connections),
+            bifurcations_(bifurcations),
+            boundary_conditions_(boundary_conditions),
+            dt_(dt),
+            current_time_(current_time)
+      {
+      }
+
+      void set_current_time(double time) { current_time_ = time; }
+
+      void update_state_from_nox_vector(const Core::LinAlg::Vector<double>& x,
+          Core::LinAlg::Vector<double>& dofs,
+          Core::LinAlg::Vector<double>& locally_relevant_dofs) const
+      {
+        Core::LinAlg::export_to(x, dofs);
+        Core::LinAlg::export_to(dofs, locally_relevant_dofs);
+
+        Airways::update_internal_state_vectors(airways_, locally_relevant_dofs, dt_);
+        TerminalUnits::update_internal_state_vectors(terminal_units_, locally_relevant_dofs, dt_);
+      }
+
+      void assemble_residual(Core::LinAlg::Vector<double>& residual,
+          const Core::LinAlg::Vector<double>& locally_relevant_dofs) const
+      {
+        Airways::update_residual_vector(residual, airways_, locally_relevant_dofs, dt_);
+        TerminalUnits::update_residual_vector(
+            residual, terminal_units_, locally_relevant_dofs, dt_);
+        Junctions::update_residual_vector(
+            residual, connections_, bifurcations_, locally_relevant_dofs);
+        BoundaryConditions::update_residual_vector(
+            residual, boundary_conditions_, locally_relevant_dofs, current_time_);
+      }
+
+      void assemble_jacobian(Core::LinAlg::SparseMatrix& jac,
+          const Core::LinAlg::Vector<double>& locally_relevant_dofs) const
+      {
+        Airways::update_jacobian(jac, airways_, locally_relevant_dofs, dt_);
+        TerminalUnits::update_jacobian(jac, terminal_units_, locally_relevant_dofs, dt_);
+        Junctions::update_jacobian(jac, connections_, bifurcations_);
+        BoundaryConditions::update_jacobian(jac, boundary_conditions_);
+        if (!jac.filled()) jac.complete();
+      }
+
+     private:
+      Airways::AirwayContainer& airways_;
+      TerminalUnits::TerminalUnitContainer& terminal_units_;
+      Junctions::ConnectionData& connections_;
+      Junctions::BifurcationData& bifurcations_;
+      BoundaryConditions::BoundaryConditionContainer& boundary_conditions_;
+      double dt_;
+      double current_time_;
+    };
+  }  // namespace
 
   void build_discretization_from_topology(Core::FE::Discretization& discretization,
       const ReducedLungParameters::LungTree::Topology& topology,
@@ -255,6 +326,89 @@ namespace ReducedLung
                 << std::flush;
       // clang-format on
     }
+  }
+
+  NoxAdapterCallbacks create_nox_adapter_callbacks(Core::LinAlg::Vector<double>& dofs,
+      Core::LinAlg::Vector<double>& locally_relevant_dofs, Airways::AirwayContainer& airways,
+      TerminalUnits::TerminalUnitContainer& terminal_units, Junctions::ConnectionData& connections,
+      Junctions::BifurcationData& bifurcations,
+      BoundaryConditions::BoundaryConditionContainer& boundary_conditions, double dt)
+  {
+    auto assembly = std::make_shared<NoxAssembly>(
+        airways, terminal_units, connections, bifurcations, boundary_conditions, dt, 0.0);
+
+    NoxAdapterCallbacks callbacks;
+    callbacks.set_time = [assembly](double time) { assembly->set_current_time(time); };
+
+    callbacks.residual = [assembly, &dofs, &locally_relevant_dofs](
+                             const Core::LinAlg::Vector<double>& x,
+                             Core::LinAlg::Vector<double>& residual, NOX::Nln::FillType) -> bool
+    {
+      assembly->update_state_from_nox_vector(x, dofs, locally_relevant_dofs);
+      assembly->assemble_residual(residual, locally_relevant_dofs);
+      return true;
+    };
+
+    callbacks.jacobian = [assembly, &dofs, &locally_relevant_dofs](
+                             const Core::LinAlg::Vector<double>& x,
+                             Core::LinAlg::SparseOperator& jac) -> bool
+    {
+      assembly->update_state_from_nox_vector(x, dofs, locally_relevant_dofs);
+      auto* jac_matrix = dynamic_cast<Core::LinAlg::SparseMatrix*>(&jac);
+      if (jac_matrix == nullptr)
+      {
+        FOUR_C_THROW(
+            "ReducedLung NOX assembly requires Core::LinAlg::SparseMatrix Jacobian operator.");
+      }
+
+      assembly->assemble_jacobian(*jac_matrix, locally_relevant_dofs);
+      return true;
+    };
+
+    return callbacks;
+  }
+
+  Teuchos::ParameterList create_nox_parameter_list(const double nonlinear_residual_tolerance,
+      const double nonlinear_increment_tolerance, const int max_nonlinear_iterations)
+  {
+    Teuchos::ParameterList nox_params;
+    nox_params.set("Nonlinear Solver", "Line Search Based");
+
+    auto& pdir = nox_params.sublist("Direction");
+    pdir.set("Method", "Newton");
+    pdir.sublist("Newton").sublist("Linear Solver");
+
+    nox_params.sublist("Line Search").set("Method", "Full Step");
+
+    auto& outer = nox_params.sublist("Status Test").sublist("Outer Status Test");
+    outer.set("Test Type", "Combo");
+    outer.set("Combo Type", "OR");
+
+    auto& converged = outer.sublist("Test 0");
+    converged.set("Test Type", "Combo");
+    converged.set("Combo Type", "AND");
+
+    auto& norm_f = converged.sublist("Test 0");
+    norm_f.set("Test Type", "NormF");
+    norm_f.set("Quantity Type", "Generic");
+    norm_f.set("Tolerance Type", "Absolute");
+    norm_f.set<double>("Tolerance", nonlinear_residual_tolerance);
+    norm_f.set("Norm Type", "Two Norm");
+    norm_f.set("Scale Type", "Unscaled");
+
+    auto& norm_update = converged.sublist("Test 1");
+    norm_update.set("Test Type", "NormUpdateSkipFirstIter");
+    norm_update.set("Quantity Type", "Generic");
+    norm_update.set("Tolerance Type", "Absolute");
+    norm_update.set<double>("Tolerance", nonlinear_increment_tolerance);
+    norm_update.set("Norm Type", "Two Norm");
+    norm_update.set("Scale Type", "Unscaled");
+
+    auto& max_iters = outer.sublist("Test 1");
+    max_iters.set("Test Type", "MaxIters");
+    max_iters.set<int>("Maximum Iterations", max_nonlinear_iterations);
+
+    return nox_params;
   }
 
   Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const AirwayContainer& airways,

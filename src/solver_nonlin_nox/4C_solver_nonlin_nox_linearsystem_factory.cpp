@@ -15,6 +15,7 @@
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_solver_nonlin_nox_globaldata.hpp"
 #include "4C_solver_nonlin_nox_interface_jacobian_base.hpp"
+#include "4C_solver_nonlin_nox_linearsystem_generic.hpp"
 #include "4C_solver_nonlin_nox_scaling.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
 #include "4C_structure_new_nox_nln_str_linearsystem.hpp"
@@ -57,6 +58,13 @@ Teuchos::RCP<NOX::Nln::LinearSystemBase> NOX::Nln::LinSystem::Factory::build_lin
 
   switch (linsystype)
   {
+    // generic case
+    case NOX::Nln::LinSystem::linear_system_generic:
+    {
+      linSys = Teuchos::make_rcp<NOX::Nln::Generic::LinearSystem>(
+          printParams, lsParams, linSolvers, iReq, iJac, jac, precMat, cloneVector, scalingObject);
+      break;
+    }
     // pure structural case
     case NOX::Nln::LinSystem::linear_system_structure:
     {

@@ -29,6 +29,9 @@ namespace ReducedLung
       int restart_every = -1;
       int results_every = -1;
       int linear_solver;
+      int max_nonlinear_iterations;
+      double nonlinear_residual_tolerance;
+      double nonlinear_increment_tolerance;
     } dynamics;
     struct LungTree
     {
