@@ -13,12 +13,13 @@
 #include "4C_constraint_framework_submodelevaluator_base.hpp"
 #include "4C_fem_discretization.hpp"
 
-FOUR_C_NAMESPACE_OPEN
+FOUR_C_NAMESPACE_OPEN namespace Core::IO { class VisualizationManager; }
 
 namespace Constraints::EmbeddedMesh
 {
-  class SolidToSolidMortarManager;
-}
+  struct EmbeddedMeshParams;
+  class SolidToSolidCouplingManager;
+}  // namespace Constraints::EmbeddedMesh
 
 namespace Constraints::SubmodelEvaluator
 {
@@ -29,7 +30,7 @@ namespace Constraints::SubmodelEvaluator
     \brief Standard Constructor
     */
     EmbeddedMeshConstraintManager(std::shared_ptr<Core::FE::Discretization> discret_ptr,
-        const Core::LinAlg::Vector<double>& dispnp);
+        const Core::LinAlg::Vector<double>& displacement_np);
 
     //! @name Public evaluation methods
 
@@ -58,11 +59,19 @@ namespace Constraints::SubmodelEvaluator
     void runtime_output_step_state(std::pair<double, int> output_time_and_step) override;
 
     [[nodiscard]] std::map<Solid::EnergyType, double> get_energy() const override;
-    //@}
 
    private:
-    //! Pointer to the mortar manager. This object stores the relevant mortar matrices.
-    std::shared_ptr<Constraints::EmbeddedMesh::SolidToSolidMortarManager> mortar_manager_;
+    //! Get coupling strategy for coupling embedded meshes
+    EmbeddedMesh::CouplingStrategy coupling_strategy_;
+
+    std::shared_ptr<Constraints::EmbeddedMesh::SolidToSolidCouplingManager> get_coupling_manager(
+        std::shared_ptr<Core::FE::Discretization> discret_ptr,
+        const Core::LinAlg::Vector<double>& displacement_np,
+        Constraints::EmbeddedMesh::EmbeddedMeshParams embedded_mesh_coupling_params,
+        std::shared_ptr<Core::IO::VisualizationManager> visualization_manager);
+
+    //! Pointer to the coupling manager.
+    std::shared_ptr<Constraints::EmbeddedMesh::SolidToSolidCouplingManager> coupling_manager_;
   };
 }  // namespace Constraints::SubmodelEvaluator
 
