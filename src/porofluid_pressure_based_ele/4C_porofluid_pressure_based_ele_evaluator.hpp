@@ -29,7 +29,8 @@ namespace Core
   namespace Utils
   {
     class FunctionOfAnything;
-  }
+    class FunctionManager;
+  }  // namespace Utils
 }  // namespace Core
 
 namespace Discret
@@ -2268,10 +2269,12 @@ namespace Discret
        public:
         //! constructor
         EvaluatorDomainIntegrals(std::shared_ptr<AssembleInterface> assembler, int curphase,
-            std::vector<int> domainint_funct, int numscal)
+            std::vector<int> domainint_funct, int numscal,
+            const Core::Utils::FunctionManager* function_manager)
             : EvaluatorBase<nsd, nen>(assembler, curphase),
               domainint_funct_(domainint_funct),
-              numscal_(numscal) {};
+              numscal_(numscal),
+              function_manager_(function_manager) {};
 
        protected:
         //! evaluate element matrix
@@ -2352,6 +2355,9 @@ namespace Discret
 
         //! number of scalars in system
         int numscal_;
+
+        //! function manager for domain integral functions
+        const Core::Utils::FunctionManager* function_manager_;
       };
 
       /*----------------------------------------------------------------------*

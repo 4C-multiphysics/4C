@@ -209,6 +209,10 @@ namespace PoroPressureBased
     int itmin_;
     //! current iteration step
     int itnum_;
+
+    //! linear solver id for monolithic porofluid-elast solve
+    int linsolvernumber_;
+
     //! @name Global vectors
     std::shared_ptr<Core::LinAlg::Vector<double>> zeros_;  //!< a zero vector of full length
 

@@ -9,6 +9,7 @@
 
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
+#include "4C_porofluid_pressure_based_elast_algorithm_dependencies.hpp"
 #include "4C_porofluid_pressure_based_elast_input.hpp"
 #include "4C_porofluid_pressure_based_elast_utils.hpp"
 #include "4C_porofluid_pressure_based_utils.hpp"
@@ -28,6 +29,8 @@ void porofluid_elast_dyn(int restart)
 
   // access the problem
   Global::Problem* problem = Global::Problem::instance();
+  const PoroPressureBased::PorofluidElastAlgorithmDeps algorithm_deps =
+      PoroPressureBased::make_elast_algorithm_deps_from_problem(*problem);
 
   // access the communicator
   MPI_Comm comm = problem->get_dis(struct_disname)->get_comm();
@@ -47,13 +50,13 @@ void porofluid_elast_dyn(int restart)
 
   // Setup discretizations and coupling. Assign the dof sets and return the numbers
   PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast(
-      struct_disname, fluid_disname, nds_disp, nds_vel, nds_solidpressure);
+      algorithm_deps, struct_disname, fluid_disname, nds_disp, nds_vel, nds_solidpressure);
 
   std::map<int, std::set<int>> nearby_ele_pairs;
-  if (Global::Problem::instance()->does_exist_dis("artery"))
+  if (problem->does_exist_dis("artery"))
   {
-    nearby_ele_pairs =
-        PoroPressureBased::setup_discretizations_and_field_coupling_artery(struct_disname);
+    nearby_ele_pairs = PoroPressureBased::setup_discretizations_and_field_coupling_artery(
+        algorithm_deps, struct_disname);
   }
 
   // Parameter reading
@@ -71,7 +74,8 @@ void porofluid_elast_dyn(int restart)
       poroparams, "coupling_scheme");
 
   std::shared_ptr<PoroPressureBased::PorofluidElastAlgorithm> algo =
-      PoroPressureBased::create_algorithm_porofluid_elast(solscheme, poroparams, comm);
+      PoroPressureBased::create_algorithm_porofluid_elast(
+          solscheme, poroparams, comm, algorithm_deps);
 
   // initialize
   algo->init(poroparams, poroparams, structdyn, fluiddyn, struct_disname, fluid_disname, true,
@@ -92,7 +96,8 @@ void porofluid_elast_dyn(int restart)
   // assign poro material for evaluation of porosity
   // note: to be done after potential restart, as in read_restart()
   //       the secondary material is destroyed
-  PoroPressureBased::assign_material_pointers_porofluid_elast(struct_disname, fluid_disname);
+  PoroPressureBased::assign_material_pointers_porofluid_elast(
+      algorithm_deps, struct_disname, fluid_disname);
 
   // Setup the solver (only for the monolithic problem)
   algo->setup_solver();

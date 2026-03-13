@@ -10,7 +10,6 @@
 #include "4C_art_net_input.hpp"
 #include "4C_fem_dofset_predefineddofnumber.hpp"
 #include "4C_fem_general_utils_createdis.hpp"
-#include "4C_global_data.hpp"
 #include "4C_poroelast_utils.hpp"
 #include "4C_porofluid_pressure_based_elast_artery_coupling.hpp"
 #include "4C_porofluid_pressure_based_elast_base.hpp"
@@ -26,27 +25,35 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast(
-    const std::string& struct_disname, const std::string& fluid_disname, int& nds_disp,
-    int& nds_vel, int& nds_solidpressure)
+    const PorofluidElastAlgorithmDeps& algorithm_deps, const std::string& struct_disname,
+    const std::string& fluid_disname, int& nds_disp, int& nds_vel, int& nds_solidpressure)
 {
   // Creates a poro-fluid discretization by cloning the structural discretization read from the
   // input file.
 
-  const Global::Problem* problem = Global::Problem::instance();
+  FOUR_C_ASSERT_ALWAYS(
+      algorithm_deps.discretization_by_name, "Discretization callback is not initialized.");
+  FOUR_C_ASSERT_ALWAYS(
+      algorithm_deps.cloning_material_map != nullptr, "Cloning material map is not initialized.");
+  FOUR_C_ASSERT_ALWAYS(algorithm_deps.validate_porofluid_material_id,
+      "Material validation callback is not initialized.");
 
   const std::shared_ptr<Core::FE::Discretization> structure_discretization =
-      problem->get_dis(struct_disname);
+      algorithm_deps.discretization_by_name(struct_disname);
   const std::shared_ptr<Core::FE::Discretization> porofluid_discretization =
-      problem->get_dis(fluid_disname);
+      algorithm_deps.discretization_by_name(fluid_disname);
 
   if (!structure_discretization->filled()) structure_discretization->fill_complete();
   if (!porofluid_discretization->filled()) porofluid_discretization->fill_complete();
 
   if (porofluid_discretization->num_global_nodes() == 0)
   {
+    PorofluidCloneStrategy::set_material_validation_callback(
+        algorithm_deps.validate_porofluid_material_id);
+
     // fill poro fluid discretization by cloning structure discretization
-    Core::FE::clone_discretization<PorofluidCloneStrategy>(*structure_discretization,
-        *porofluid_discretization, Global::Problem::instance()->cloning_material_map());
+    Core::FE::clone_discretization<PorofluidCloneStrategy>(
+        *structure_discretization, *porofluid_discretization, *algorithm_deps.cloning_material_map);
   }
   else
   {
@@ -87,28 +94,33 @@ void PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::map<int, std::set<int>> PoroPressureBased::setup_discretizations_and_field_coupling_artery(
-    const std::string& struct_disname)
+    const PorofluidElastAlgorithmDeps& algorithm_deps, const std::string& struct_disname)
 {
-  const Global::Problem* problem = Global::Problem::instance();
+  FOUR_C_ASSERT_ALWAYS(
+      algorithm_deps.discretization_by_name, "Discretization callback is not initialized.");
+  FOUR_C_ASSERT_ALWAYS(algorithm_deps.porofluid_pressure_based_dynamic_parameters != nullptr,
+      "Porofluid pressure based dynamic parameters are not initialized.");
+
+  const Teuchos::ParameterList& porofluid_pressure_based_dynamic_parameters =
+      *algorithm_deps.porofluid_pressure_based_dynamic_parameters;
 
   const std::shared_ptr<Core::FE::Discretization> structure_discretization =
-      problem->get_dis(struct_disname);
+      algorithm_deps.discretization_by_name(struct_disname);
 
   std::shared_ptr<Core::FE::Discretization> artery_discretization = nullptr;
-  artery_discretization = Global::Problem::instance()->get_dis("artery");
+  artery_discretization = algorithm_deps.discretization_by_name("artery");
 
   const auto artery_coupling_method =
       Teuchos::getIntegralValue<ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
-          problem->porofluid_pressure_based_dynamic_params().sublist("artery_coupling"),
+          porofluid_pressure_based_dynamic_parameters.sublist("artery_coupling"),
           "coupling_method");
 
-  const bool evaluate_on_lateral_surface = problem->porofluid_pressure_based_dynamic_params()
-                                               .sublist("artery_coupling")
-                                               .get<bool>("lateral_surface_coupling");
+  const bool evaluate_on_lateral_surface =
+      porofluid_pressure_based_dynamic_parameters.sublist("artery_coupling")
+          .get<bool>("lateral_surface_coupling");
 
   const int maximum_number_of_segments_per_artery_element =
-      problem->porofluid_pressure_based_dynamic_params()
-          .sublist("artery_coupling")
+      porofluid_pressure_based_dynamic_parameters.sublist("artery_coupling")
           .get<int>("maximum_number_of_segments_per_artery_element");
 
   // curr_seg_lengths: defined as element-wise quantity
@@ -147,12 +159,16 @@ std::map<int, std::set<int>> PoroPressureBased::setup_discretizations_and_field_
  | exchange material pointers of both discretizations       vuong 08/16 |
  *----------------------------------------------------------------------*/
 void PoroPressureBased::assign_material_pointers_porofluid_elast(
-    const std::string& struct_disname, const std::string& fluid_disname)
+    const PorofluidElastAlgorithmDeps& algorithm_deps, const std::string& struct_disname,
+    const std::string& fluid_disname)
 {
-  Global::Problem* problem = Global::Problem::instance();
+  FOUR_C_ASSERT_ALWAYS(
+      algorithm_deps.discretization_by_name, "Discretization callback is not initialized.");
 
-  std::shared_ptr<Core::FE::Discretization> structdis = problem->get_dis(struct_disname);
-  std::shared_ptr<Core::FE::Discretization> fluiddis = problem->get_dis(fluid_disname);
+  std::shared_ptr<Core::FE::Discretization> structdis =
+      algorithm_deps.discretization_by_name(struct_disname);
+  std::shared_ptr<Core::FE::Discretization> fluiddis =
+      algorithm_deps.discretization_by_name(fluid_disname);
 
   PoroElast::Utils::set_material_pointers_matching_grid(*structdis, *fluiddis);
 }
@@ -163,7 +179,8 @@ void PoroPressureBased::assign_material_pointers_porofluid_elast(
 std::shared_ptr<PoroPressureBased::PorofluidElastAlgorithm>
 PoroPressureBased::create_algorithm_porofluid_elast(
     PoroPressureBased::SolutionSchemePorofluidElast solscheme,
-    const Teuchos::ParameterList& timeparams, MPI_Comm comm)
+    const Teuchos::ParameterList& timeparams, MPI_Comm comm,
+    PorofluidElastAlgorithmDeps algorithm_deps)
 {
   // Creation of Coupled Problem algorithm.
   std::shared_ptr<PoroPressureBased::PorofluidElastAlgorithm> algo;
@@ -207,6 +224,9 @@ PoroPressureBased::create_algorithm_porofluid_elast(
       FOUR_C_THROW("Unknown time-integration scheme for multiphase poro fluid problem");
       break;
   }
+
+  FOUR_C_ASSERT_ALWAYS(algo != nullptr, "Porofluid-elast algorithm creation failed.");
+  algo->set_algorithm_deps(std::move(algorithm_deps));
 
   return algo;
 }

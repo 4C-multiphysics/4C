@@ -11,7 +11,6 @@
 #include "4C_adapter_str_factory.hpp"
 #include "4C_adapter_str_structure_new.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
@@ -43,12 +42,14 @@ void PoroPressureBased::PorofluidElastAlgorithm::init(
     int nds_disp, int nds_vel, int nds_solidpressure, int nds_porofluid_scatra,
     const std::map<int, std::set<int>>* nearby_ele_pairs)
 {
-  // access the global problem
-  Global::Problem* problem = Global::Problem::instance();
+  const auto& algorithm_deps = this->algorithm_deps();
+  FOUR_C_ASSERT_ALWAYS(
+      algorithm_deps.discretization_by_name, "Discretization callback is not initialized.");
 
   // Create the two uncoupled subproblems.
   // access the structural discretization
-  std::shared_ptr<Core::FE::Discretization> structure_dis = problem->get_dis(structure_disname);
+  std::shared_ptr<Core::FE::Discretization> structure_dis =
+      algorithm_deps.discretization_by_name(structure_disname);
 
   // build underlying structure algorithm
   std::shared_ptr<Adapter::StructureBaseAlgorithmNew> structure_adapter_algo =
@@ -81,7 +82,8 @@ void PoroPressureBased::PorofluidElastAlgorithm::init(
       porofluid_elast_params.sublist("nonlinear_solver").get<int>("linear_solver_id");
 
   // access the fluid discretization
-  std::shared_ptr<Core::FE::Discretization> porofluid_dis = problem->get_dis(porofluid_disname);
+  std::shared_ptr<Core::FE::Discretization> porofluid_dis =
+      algorithm_deps.discretization_by_name(porofluid_disname);
 
   // set degrees of freedom in the discretization
   if (!porofluid_dis->filled()) porofluid_dis->fill_complete();
@@ -95,13 +97,10 @@ void PoroPressureBased::PorofluidElastAlgorithm::init(
       Teuchos::getIntegralValue<PoroPressureBased::TimeIntegrationScheme>(
           porofluid_params.sublist("time_integration"), "scheme");
 
-  const PoroPressureBased::PorofluidAlgorithmDeps algorithm_deps =
-      PoroPressureBased::make_algorithm_deps_from_problem(*problem);
-
   // build porofluid algorithm
   std::shared_ptr<Adapter::PoroFluidMultiphase> porofluid_algo =
       PoroPressureBased::create_algorithm(time_integration_scheme, porofluid_dis, linsolvernumber,
-          global_time_params, porofluid_params, output, algorithm_deps);
+          global_time_params, porofluid_params, output, algorithm_deps.porofluid_algorithm_deps);
 
   porofluid_algo_ = std::make_shared<Adapter::PoroFluidMultiphaseWrapper>(porofluid_algo);
   porofluid_algo_->init(
@@ -202,10 +201,11 @@ void PoroPressureBased::PorofluidElastAlgorithm::prepare_time_step()
  *----------------------------------------------------------------------*/
 void PoroPressureBased::PorofluidElastAlgorithm::create_field_test()
 {
-  Global::Problem* problem = Global::Problem::instance();
+  const auto& algorithm_deps = this->algorithm_deps();
+  FOUR_C_ASSERT_ALWAYS(algorithm_deps.add_field_test, "Result test callback is not initialized.");
 
-  problem->add_field_test(structure_algo_->create_field_test());
-  problem->add_field_test(porofluid_algo_->create_field_test());
+  algorithm_deps.add_field_test(structure_algo_->create_field_test());
+  algorithm_deps.add_field_test(porofluid_algo_->create_field_test());
 }
 
 /*------------------------------------------------------------------------*

@@ -60,7 +60,7 @@ int Discret::Elements::PoroFluidMultiPhase::evaluate(Teuchos::ParameterList& par
       elevec[2] = &elevec3;
 
       return Discret::Elements::PoroFluidMultiPhaseFactory::provide_impl(
-          shape(), numdofpernode, discretization.name())
+          shape(), static_cast<int>(discretization.n_dim()), numdofpernode, discretization.name())
           ->evaluate(this, params, discretization, la, elemat, elevec);
       break;
     }

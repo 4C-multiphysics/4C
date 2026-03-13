@@ -9,6 +9,7 @@
 
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
+#include "4C_porofluid_pressure_based_elast_scatra_algorithm_dependencies.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_base.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_utils.hpp"
 
@@ -27,6 +28,8 @@ void porofluid_pressure_based_elast_scatra_dyn(int restart)
 
   // access the problem
   Global::Problem* problem = Global::Problem::instance();
+  const auto algorithm_deps =
+      PoroPressureBased::make_elast_scatra_algorithm_deps_from_problem(*problem);
 
   // access the communicator
   MPI_Comm comm = problem->get_dis(struct_disname)->get_comm();
@@ -64,9 +67,10 @@ void porofluid_pressure_based_elast_scatra_dyn(int restart)
 
   // Setup discretizations and coupling. Assign the dof sets and return the numbers
   std::map<int, std::set<int>> nearby_ele_pairs =
-      PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast_scatra(comm,
-          struct_disname, porofluid_disname, scatra_disname, nds_disp, nds_vel, nds_solidpressure,
-          nds_porofluid_scatra, artery_coupling);
+      PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast_scatra(
+          algorithm_deps.porofluid_elast_algorithm_deps, comm, struct_disname, porofluid_disname,
+          scatra_disname, nds_disp, nds_vel, nds_solidpressure, nds_porofluid_scatra,
+          artery_coupling);
 
   // -------------------------------------------------------------------
   // algorithm construction depending on
@@ -79,6 +83,7 @@ void porofluid_pressure_based_elast_scatra_dyn(int restart)
   std::shared_ptr<PoroPressureBased::PorofluidElastScatraBaseAlgorithm> algo =
       PoroPressureBased::create_algorithm_porofluid_elast_scatra(
           solution_scheme, porofluid_elast_scatra_params, comm);
+  algo->set_algorithm_deps(algorithm_deps);
 
   algo->init(porofluid_elast_scatra_params, porofluid_elast_scatra_params, porofluid_elast_params,
       structure_params, porofluid_params, scatra_params, struct_disname, porofluid_disname,
@@ -99,7 +104,8 @@ void porofluid_pressure_based_elast_scatra_dyn(int restart)
   // note: to be done after potential restart, as in read_restart() the secondary material is
   // destroyed
   PoroPressureBased::assign_material_pointers_porofluid_elast_scatra(
-      struct_disname, porofluid_disname, scatra_disname, artery_coupling);
+      algorithm_deps.porofluid_elast_algorithm_deps, struct_disname, porofluid_disname,
+      scatra_disname, artery_coupling);
 
   // Setup Solver (necessary if poro-structure coupling solved monolithically)
   algo->setup_solver();

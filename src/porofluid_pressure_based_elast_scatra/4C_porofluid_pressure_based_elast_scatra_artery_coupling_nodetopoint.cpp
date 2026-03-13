@@ -21,9 +21,10 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm::
     PorofluidElastScatraArteryCouplingNodeToPointAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params, const std::string& condition_name)
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
+        const PoroPressureBased::PorofluidElastScatraArteryCouplingDeps& artery_coupling_deps)
     : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(
-          artery_dis, homogenized_dis, coupling_params, condition_name)
+          artery_dis, homogenized_dis, coupling_params, condition_name, artery_coupling_deps)
 {
   // user info
   if (my_mpi_rank_ == 0)

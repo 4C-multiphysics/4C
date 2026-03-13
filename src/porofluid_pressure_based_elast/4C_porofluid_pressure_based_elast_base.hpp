@@ -15,7 +15,11 @@
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
+#include "4C_porofluid_pressure_based_elast_algorithm_dependencies.hpp"
 #include "4C_utils_exceptions.hpp"
+
+#include <optional>
+#include <utility>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -48,6 +52,11 @@ namespace PoroPressureBased
         const std::map<int, std::set<int>>* nearby_ele_pairs) = 0;
 
     virtual void post_init();
+
+    void set_algorithm_deps(PorofluidElastAlgorithmDeps algorithm_deps)
+    {
+      algorithm_deps_ = std::move(algorithm_deps);
+    }
 
     /// read restart
     void read_restart(int restart) override;
@@ -204,6 +213,15 @@ namespace PoroPressureBased
     std::shared_ptr<Adapter::PoroFluidMultiphaseWrapper> porofluid_algo_;
 
    protected:
+    const PorofluidElastAlgorithmDeps& algorithm_deps() const
+    {
+      FOUR_C_ASSERT_ALWAYS(algorithm_deps_.has_value(),
+          "Porofluid-elast algorithm dependencies are not initialized.");
+      return *algorithm_deps_;
+    }
+
+    std::optional<PorofluidElastAlgorithmDeps> algorithm_deps_;
+
     /// true if we solve the structure field
     /// (false in case of porofluid-scatra coupling without mesh deformation)
     bool solve_structure_;

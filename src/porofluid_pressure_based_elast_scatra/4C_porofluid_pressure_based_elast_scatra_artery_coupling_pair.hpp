@@ -21,6 +21,7 @@
 
 #include <Sacado.hpp>
 
+#include <functional>
 #include <memory>
 
 // define Fad object for evaluation
@@ -89,7 +90,10 @@ namespace PoroPressureBased
         const std::vector<int>& coupled_dofs_artery,
         const std::vector<std::vector<int>>& scale_vector,
         const std::vector<std::vector<int>>& funct_vector, std::string condition_names,
-        double penalty_parameter, std::string coupling_type = "", int eta_ntp = 0) = 0;
+        double penalty_parameter, std::string coupling_type = "", int eta_ntp = 0,
+        const std::function<const Core::Utils::FunctionOfAnything&(int)>&
+            function_of_anything_by_id = {},
+        int my_mpi_rank = -1) = 0;
 
     //! query if pair active
     virtual bool is_active() = 0;
@@ -192,7 +196,10 @@ namespace PoroPressureBased
         const std::vector<int>& coupled_dofs_artery,
         const std::vector<std::vector<int>>& scale_vector,
         const std::vector<std::vector<int>>& function_id_vector, std::string condition_name,
-        double penalty_parameter, std::string coupling_type = "", int eta_ntp = 0) override;
+        double penalty_parameter, std::string coupling_type = "", int eta_ntp = 0,
+        const std::function<const Core::Utils::FunctionOfAnything&(int)>&
+            function_of_anything_by_id = {},
+        int my_mpi_rank = -1) override;
 
     //! query if pair active
     bool is_active() override { return is_active_; }
@@ -803,6 +810,12 @@ namespace PoroPressureBased
 
     //! the artery material
     std::shared_ptr<Mat::Cnst1dArt> artery_material_;
+
+    //! callback to retrieve function definitions by id
+    std::function<const Core::Utils::FunctionOfAnything&(int)> function_of_anything_by_id_;
+
+    //! rank of the process evaluating this pair
+    int my_mpi_rank_;
   };
 
 }  // namespace PoroPressureBased

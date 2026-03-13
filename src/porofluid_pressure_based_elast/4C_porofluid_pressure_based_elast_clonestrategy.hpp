@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <vector>
@@ -32,6 +33,8 @@ namespace PoroPressureBased
    public:
     /// returns conditions names to be copied (source and target name)
     [[nodiscard]] static std::map<std::string, std::string> conditions_to_copy();
+
+    static void set_material_validation_callback(std::function<void(int)> callback);
 
    protected:
     /// determine element type and whether the element is copied or not

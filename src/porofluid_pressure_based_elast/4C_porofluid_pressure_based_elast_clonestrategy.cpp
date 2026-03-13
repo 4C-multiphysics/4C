@@ -8,13 +8,21 @@
 #include "4C_porofluid_pressure_based_elast_clonestrategy.hpp"
 
 #include "4C_fem_general_element.hpp"
-#include "4C_global_data.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_material_parameter_base.hpp"
 #include "4C_porofluid_pressure_based_ele.hpp"
 
 FOUR_C_NAMESPACE_OPEN
+
+namespace
+{
+  std::function<void(int)>& material_validation_callback()
+  {
+    static std::function<void(int)> callback;
+    return callback;
+  }
+}  // namespace
 
 
 /*----------------------------------------------------------------------*
@@ -30,18 +38,21 @@ std::map<std::string, std::string> PoroPressureBased::PorofluidCloneStrategy::co
 }
 
 
+void PoroPressureBased::PorofluidCloneStrategy::set_material_validation_callback(
+    std::function<void(int)> callback)
+{
+  material_validation_callback() = std::move(callback);
+}
+
+
 /*----------------------------------------------------------------------*
  | check for correct material                               vuong 08/16 |
  *----------------------------------------------------------------------*/
 void PoroPressureBased::PorofluidCloneStrategy::check_material_type(const int matid)
 {
-  // We take the material with the ID specified by the user
-  // Here we check first, whether this material is of admissible type
-  Core::Materials::MaterialType mtype =
-      Global::Problem::instance()->materials()->parameter_by_id(matid)->type();
-  if ((mtype != Core::Materials::m_fluidporo_multiphase) and
-      (mtype != Core::Materials::m_fluidporo_multiphase_reactions))
-    FOUR_C_THROW("Material with ID {} is not admissible for porofluid multiphase elements", matid);
+  FOUR_C_ASSERT_ALWAYS(
+      material_validation_callback(), "Material validation callback is not initialized.");
+  material_validation_callback()(matid);
 }
 
 

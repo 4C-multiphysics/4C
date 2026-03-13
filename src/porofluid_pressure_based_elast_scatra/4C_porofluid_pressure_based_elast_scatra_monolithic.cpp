@@ -13,7 +13,6 @@
 #include "4C_adapter_str_structure.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_assemblestrategy.hpp"
-#include "4C_global_data.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_equilibrate.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
@@ -252,11 +251,17 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::build_block_nul
  *----------------------------------------------------------------------*/
 void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::setup_solver()
 {
+  const auto& algorithm_deps = this->algorithm_deps();
+  FOUR_C_ASSERT_ALWAYS(algorithm_deps.poro_multi_phase_scatra_dynamic_parameters != nullptr,
+      "Poro-multiphase-scatra dynamic parameters are not initialized.");
+  FOUR_C_ASSERT_ALWAYS(
+      algorithm_deps.solver_params_by_id, "Solver parameter callback is not initialized.");
+
   //  solver
   // create a linear solver
   // get dynamic section of poroelasticity
   const Teuchos::ParameterList& poromultscatradyn =
-      Global::Problem::instance()->poro_multi_phase_scatra_dynamic_params();
+      *algorithm_deps.poro_multi_phase_scatra_dynamic_parameters;
   // get the solver number used for linear poroelasticity solver
   const int linsolvernumber = poromultscatradyn.sublist("monolithic")
                                   .sublist("nonlinear_solver")
@@ -266,8 +271,7 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::setup_solver()
     FOUR_C_THROW(
         "no linear solver defined for poromultiphaseflow with scatra coupling.\n"
         " Please set LINEAR_SOLVER in POROMULTIPHASESCATRA DYNAMIC to a valid number!");
-  const Teuchos::ParameterList& solverparams =
-      Global::Problem::instance()->solver_params(linsolvernumber);
+  const Teuchos::ParameterList& solverparams = algorithm_deps.solver_params_by_id(linsolvernumber);
   const auto solvertype =
       Teuchos::getIntegralValue<Core::LinearSolver::SolverType>(solverparams, "SOLVER");
 
@@ -286,10 +290,12 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::setup_solver()
 void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::create_linear_solver(
     const Teuchos::ParameterList& solverparams, const Core::LinearSolver::SolverType solvertype)
 {
-  solver_ = std::make_shared<Core::LinAlg::Solver>(solverparams, get_comm(),
-      Global::Problem::instance()->solver_params_callback(),
-      Teuchos::getIntegralValue<Core::IO::Verbositylevel>(
-          Global::Problem::instance()->io_params(), "VERBOSITY"));
+  const auto& algorithm_deps = this->algorithm_deps();
+  FOUR_C_ASSERT_ALWAYS(
+      algorithm_deps.solver_params_by_id, "Solver parameter callback is not initialized.");
+
+  solver_ = std::make_shared<Core::LinAlg::Solver>(
+      solverparams, get_comm(), algorithm_deps.solver_params_by_id, algorithm_deps.verbosity);
   // no need to do the rest for direct solvers
   if (Core::LinearSolver::is_direct_linear_solver(solvertype)) return;
 

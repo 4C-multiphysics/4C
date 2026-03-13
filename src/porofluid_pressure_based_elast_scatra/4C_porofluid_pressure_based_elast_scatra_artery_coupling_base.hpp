@@ -13,6 +13,7 @@
 #include "4C_fem_condition.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_porofluid_pressure_based_elast_scatra_algorithm_dependencies.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <memory>
@@ -34,7 +35,8 @@ namespace PoroPressureBased
     PorofluidElastScatraArteryCouplingBaseAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params);
+        const Teuchos::ParameterList& coupling_params,
+        PorofluidElastScatraArteryCouplingDeps artery_coupling_deps);
 
     //! virtual destructor
     virtual ~PorofluidElastScatraArteryCouplingBaseAlgorithm() = default;
@@ -127,6 +129,11 @@ namespace PoroPressureBased
     virtual std::shared_ptr<const Core::LinAlg::Vector<double>> blood_vessel_volume_fraction() = 0;
 
    protected:
+    const PorofluidElastScatraArteryCouplingDeps& artery_coupling_deps() const
+    {
+      return artery_coupling_deps_;
+    }
+
     //! communicator
     MPI_Comm get_comm() const { return comm_; }
 
@@ -163,6 +170,9 @@ namespace PoroPressureBased
      * configuration
      */
     bool evaluate_in_ref_config_;
+
+    //! accessors and callbacks needed by artery-coupling internals
+    PorofluidElastScatraArteryCouplingDeps artery_coupling_deps_;
 
    private:
     //! mpi communicator (mainly for screen output)

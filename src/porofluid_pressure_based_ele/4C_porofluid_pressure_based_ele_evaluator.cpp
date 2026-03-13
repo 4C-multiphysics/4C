@@ -7,12 +7,12 @@
 
 #include "4C_porofluid_pressure_based_ele_evaluator.hpp"
 
-#include "4C_global_data.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_porofluid_pressure_based_ele_parameter.hpp"
 #include "4C_porofluid_pressure_based_ele_phasemanager.hpp"
 #include "4C_porofluid_pressure_based_ele_variablemanager.hpp"
 #include "4C_utils_function.hpp"
+#include "4C_utils_function_manager.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -624,7 +624,7 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorInterface<nsd, nen>::create_eval
       if (para.has_scalar()) numscal = phasemanager.num_scal();
       std::shared_ptr<AssembleInterface> assembler = std::make_shared<AssembleStandard>(-1, false);
       evaluator = std::make_shared<EvaluatorDomainIntegrals<nsd, nen>>(
-          assembler, -1, para.domain_int_functions(), numscal);
+          assembler, -1, para.domain_int_functions(), numscal, para.function_manager());
       break;
     }
     default:
@@ -3374,8 +3374,9 @@ inline const Core::Utils::FunctionOfAnything&
 Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd, nen>::function(
     int functnum) const
 {
-  const auto& funct =
-      Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfAnything>(functnum);
+  FOUR_C_ASSERT_ALWAYS(function_manager_ != nullptr,
+      "Function manager must be set for porofluid domain integral functions.");
+  const auto& funct = function_manager_->function_by_id<Core::Utils::FunctionOfAnything>(functnum);
   if (funct.number_components() != 1)
     FOUR_C_THROW("only one component allowed for domain integral functions");
   return funct;

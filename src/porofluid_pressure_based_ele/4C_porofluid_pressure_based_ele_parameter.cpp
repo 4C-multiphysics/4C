@@ -8,6 +8,7 @@
 #include "4C_porofluid_pressure_based_ele_parameter.hpp"
 
 #include "4C_utils_exceptions.hpp"
+#include "4C_utils_function_manager.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -52,7 +53,8 @@ Discret::Elements::PoroFluidMultiPhaseEleParameter::PoroFluidMultiPhaseEleParame
       nds_solidpressure_(-1),
       nds_scalar_(-1),
       isset_generalparams_(false),
-      domainint_funct_(0)
+      domainint_funct_(0),
+      function_manager_(nullptr)
 {
   return;
 }
@@ -156,6 +158,9 @@ void Discret::Elements::PoroFluidMultiPhaseEleParameter::set_general_parameters(
   // get number of domain integral functions and resize vector
   const int num_domainint_funct = parameters.get<int>("num_domainint_funct", false);
   domainint_funct_.resize(num_domainint_funct);
+
+  function_manager_ =
+      parameters.get<const Core::Utils::FunctionManager*>("function_manager", nullptr);
 
   // set functions into vector
   for (int ifunct = 0; ifunct < num_domainint_funct; ifunct++)

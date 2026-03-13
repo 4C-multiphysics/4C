@@ -372,6 +372,8 @@ void PoroPressureBased::PorofluidAlgorithm::set_element_general_parameters() con
   eleparams.set<bool>("using generalized-alpha time integration", false);
   eleparams.set<bool>("using stationary formulation", false);
   eleparams.set<double>("alpha_F", 1.0);
+  eleparams.set<const Core::Utils::FunctionManager*>(
+      "function_manager", algorithm_deps_.function_manager);
 
   eleparams.set<bool>("has_bodyforce_contribution", has_bodyforce_contribution_);
   eleparams.set<std::vector<double>>(

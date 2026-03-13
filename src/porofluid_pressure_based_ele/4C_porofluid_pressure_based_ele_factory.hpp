@@ -31,8 +31,8 @@ namespace Discret
       //! dtor
       virtual ~PoroFluidMultiPhaseFactory() = default;
       //! ProvideImpl
-      static PoroFluidMultiPhaseEleInterface* provide_impl(
-          Core::FE::CellType distype, const int numdofpernode, const std::string& disname);
+      static PoroFluidMultiPhaseEleInterface* provide_impl(Core::FE::CellType distype,
+          int spatial_dimension, const int numdofpernode, const std::string& disname);
 
      private:
       //! define PoroFluidMultiPhaseEle instances dependent on problem

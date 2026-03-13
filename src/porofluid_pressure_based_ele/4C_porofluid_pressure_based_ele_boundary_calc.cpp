@@ -10,10 +10,10 @@
 #include "4C_fem_condition.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fem_general_utils_boundary_integration.hpp"
-#include "4C_global_data.hpp"  // for curves and functions
 #include "4C_porofluid_pressure_based_ele_action.hpp"
 #include "4C_porofluid_pressure_based_ele_parameter.hpp"
 #include "4C_utils_function.hpp"
+#include "4C_utils_function_manager.hpp"
 #include "4C_utils_parameter_list.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
@@ -201,6 +201,8 @@ int Discret::Elements::PoroFluidMultiPhaseEleBoundaryCalc<distype>::evaluate_neu
         "The NUMDOF you have entered in your NEUMANN CONDITION does not equal the number of "
         "scalars.");
 
+  const Core::Utils::FunctionManager* function_manager = params_->function_manager();
+
   // integration loop
   for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
   {
@@ -221,10 +223,12 @@ int Discret::Elements::PoroFluidMultiPhaseEleBoundaryCalc<distype>::evaluate_neu
         // factor given by spatial function
         if (func[dof].has_value() && func[dof].value() > 0)
         {
+          FOUR_C_ASSERT_ALWAYS(function_manager != nullptr,
+              "Function manager must be set for porofluid Neumann boundary condition.");
           // evaluate function at current Gauss point (provide always 3D coordinates!)
-          functfac = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[dof].value())
-                         .evaluate(coordgp.as_span(), time, dof);
+          functfac =
+              function_manager->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[dof].value())
+                  .evaluate(coordgp.as_span(), time, dof);
         }
         else
           functfac = 1.;

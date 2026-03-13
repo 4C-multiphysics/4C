@@ -11,7 +11,6 @@
 #include "4C_adapter_porofluid_pressure_based_wrapper.hpp"
 #include "4C_adapter_str_wrapper.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 
@@ -460,11 +459,15 @@ void PoroPressureBased::PorofluidElastPartitionedAlgorithm::read_restart(int res
 {
   if (restart)
   {
+    const auto& algorithm_deps = this->algorithm_deps();
+    FOUR_C_ASSERT_ALWAYS(
+        algorithm_deps.input_control_file != nullptr, "Input control file is not initialized.");
+
     // call base class
     PoroPressureBased::PorofluidElastAlgorithm::read_restart(restart);
 
-    Core::IO::DiscretizationReader reader(*porofluid_algo()->discretization(),
-        Global::Problem::instance()->input_control_file(), restart);
+    Core::IO::DiscretizationReader reader(
+        *porofluid_algo()->discretization(), algorithm_deps.input_control_file, restart);
     if (restart != reader.read_int("step"))
       FOUR_C_THROW("Time step on file not equal to given step");
 

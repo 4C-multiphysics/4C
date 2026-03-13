@@ -13,7 +13,6 @@
 #include "4C_fem_condition_locsys.hpp"
 #include "4C_fem_general_assemblestrategy.hpp"
 #include "4C_fem_general_elements_paramsminimal.hpp"
-#include "4C_global_data.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_equilibrate.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
@@ -45,6 +44,7 @@ PoroPressureBased::PorofluidElastMonolithicAlgorithm::PorofluidElastMonolithicAl
       itmax_(0),
       itmin_(1),
       itnum_(0),
+      linsolvernumber_(-1),
       solveradaptolbetter_(0.0),
       solveradapttol_(false),
       blockrowdofmap_(nullptr),
@@ -119,6 +119,16 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::init(
                         .sublist("nonlinear_solver")
                         .sublist("convergence_criteria_adaptivity")
                         .get<bool>("active");
+
+  linsolvernumber_ =
+      algoparams.sublist("monolithic").sublist("nonlinear_solver").get<int>("linear_solver_id");
+
+  vectornormfres_ = Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(
+      algoparams.sublist("monolithic").sublist("nonlinear_solver").sublist("residual"),
+      "vector_norm");
+  vectornorminc_ = Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(
+      algoparams.sublist("monolithic").sublist("nonlinear_solver").sublist("increment"),
+      "vector_norm");
 }
 
 /*----------------------------------------------------------------------*
@@ -602,30 +612,21 @@ bool PoroPressureBased::PorofluidElastMonolithicAlgorithm::setup_solver()
 {
   //  solver
   // create a linear solver
-  // get dynamic section of poroelasticity
-  const Teuchos::ParameterList& poromultdyn =
-      Global::Problem::instance()->poro_multi_phase_dynamic_params();
-  // get the solver number used for linear poroelasticity solver
-  const int linsolvernumber =
-      poromultdyn.sublist("monolithic").sublist("nonlinear_solver").get<int>("linear_solver_id");
+  const auto& algorithm_deps = this->algorithm_deps();
+  FOUR_C_ASSERT_ALWAYS(
+      algorithm_deps.solver_params_by_id, "Solver parameter callback is not initialized.");
+
   // check if the poroelasticity solver has a valid solver number
-  if (linsolvernumber == (-1))
+  if (linsolvernumber_ == (-1))
     FOUR_C_THROW(
         "no linear solver defined for poromultiphaseflow. Please set LINEAR_SOLVER in "
         "POROMULTIPHASE DYNAMIC to a valid number!");
-  const Teuchos::ParameterList& solverparams =
-      Global::Problem::instance()->solver_params(linsolvernumber);
+
+  const Teuchos::ParameterList& solverparams = algorithm_deps.solver_params_by_id(linsolvernumber_);
   const auto solvertype =
       Teuchos::getIntegralValue<Core::LinearSolver::SolverType>(solverparams, "SOLVER");
 
   create_linear_solver(solverparams, solvertype);
-
-  vectornormfres_ = Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(
-      poromultdyn.sublist("monolithic").sublist("nonlinear_solver").sublist("residual"),
-      "vector_norm");
-  vectornorminc_ = Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(
-      poromultdyn.sublist("monolithic").sublist("nonlinear_solver").sublist("increment"),
-      "vector_norm");
 
   return true;
 }
@@ -636,10 +637,12 @@ bool PoroPressureBased::PorofluidElastMonolithicAlgorithm::setup_solver()
 void PoroPressureBased::PorofluidElastMonolithicAlgorithm::create_linear_solver(
     const Teuchos::ParameterList& solverparams, const Core::LinearSolver::SolverType solvertype)
 {
-  solver_ = std::make_shared<Core::LinAlg::Solver>(solverparams, get_comm(),
-      Global::Problem::instance()->solver_params_callback(),
-      Teuchos::getIntegralValue<Core::IO::Verbositylevel>(
-          Global::Problem::instance()->io_params(), "VERBOSITY"));
+  const auto& algorithm_deps = this->algorithm_deps();
+  FOUR_C_ASSERT_ALWAYS(
+      algorithm_deps.solver_params_by_id, "Solver parameter callback is not initialized.");
+
+  solver_ = std::make_shared<Core::LinAlg::Solver>(
+      solverparams, get_comm(), algorithm_deps.solver_params_by_id, algorithm_deps.verbosity);
   // no need to do the rest for direct solvers
   if (Core::LinearSolver::is_direct_linear_solver(solvertype)) return;
 
