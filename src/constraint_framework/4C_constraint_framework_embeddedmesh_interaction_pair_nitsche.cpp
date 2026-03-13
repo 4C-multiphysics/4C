@@ -334,7 +334,7 @@ struct QuantitiesDomainEvaluatedAtXi
       N_XYZ_;
 
   /// Deformation gradient
-  const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>> defgrad_;
+  const Core::LinAlg::Matrix<3, 3> defgrad_;
 
   /// First Piola-Kirchhoff stresses
   const Core::LinAlg::Matrix<3, 3> pk1_;
@@ -352,7 +352,8 @@ struct LinearizationDependencies
   Core::LinAlg::Matrix<3, 3> d_pk2_;
 };
 
-
+// Helper function to evaluate necessary quantities of a domain at xi (like stress, deformation
+// gradient and so on...)
 template <Core::FE::CellType celltype>
 QuantitiesDomainEvaluatedAtXi<celltype> evaluate_domain_quantities_at_xi(
     const Core::FE::Discretization& discret, const Core::Elements::Element& element,
@@ -416,10 +417,10 @@ QuantitiesDomainEvaluatedAtXi<celltype> evaluate_domain_quantities_at_xi(
   Core::LinAlg::Matrix<3, 3> pk1(Core::LinAlg::Initialization::zero);
   pk1.multiply(def_gradient, pk2_matrix);
 
-  QuantitiesDomainEvaluatedAtXi<celltype> quantities_domain_evaluated_at_xi{
-      jacobian_mapping.N_XYZ, deformation_gradient, pk1, pk2};
+  QuantitiesDomainEvaluatedAtXi<celltype> quantities_domain_at_xi{
+      jacobian_mapping.N_XYZ, def_gradient, pk1, pk2};
 
-  return quantities_domain_evaluated_at_xi;
+  return quantities_domain_at_xi;
 }
 
 
@@ -428,7 +429,7 @@ QuantitiesDomainEvaluatedAtXi<celltype> evaluate_domain_quantities_at_xi(
 template <Core::FE::CellType celltype>
 std::tuple<Core::LinAlg::Matrix<3, 3>, LinearizationDependencies<celltype>>
 evaluate_variation_first_pk_at_node_dir(unsigned int& num_node, unsigned int& n_dir,
-    QuantitiesDomainEvaluatedAtXi<celltype>& quantities_domain_evaluated_at_xi)
+    QuantitiesDomainEvaluatedAtXi<celltype>& quantities_domain_at_xi)
 {
   LinearizationDependencies<celltype> linearization_dependencies;
 
@@ -436,19 +437,19 @@ evaluate_variation_first_pk_at_node_dir(unsigned int& num_node, unsigned int& n_
   linearization_dependencies.d_defgrad_.put_scalar(0.0);
   for (int i_dim = 0; i_dim < Core::FE::dim<celltype>; i_dim++)
     linearization_dependencies.d_defgrad_(n_dir, i_dim) =
-        quantities_domain_evaluated_at_xi.N_XYZ_[num_node](i_dim);
+        quantities_domain_at_xi.N_XYZ_[num_node](i_dim);
 
   // Get the variation of the Green-Lagrange strains at a node and direction
   Core::LinAlg::Matrix<3, 3> d_glstrain(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<3, 3> defgrad =
-      Core::LinAlg::make_matrix_view(quantities_domain_evaluated_at_xi.defgrad_);
   Core::LinAlg::Matrix<3, 3> d_defgradT_defgrad(Core::LinAlg::Initialization::zero);
-  d_defgradT_defgrad.multiply_tn(linearization_dependencies.d_defgrad_, defgrad);
+  d_defgradT_defgrad.multiply_tn(
+      linearization_dependencies.d_defgrad_, quantities_domain_at_xi.defgrad_);
   d_glstrain.update(0.5, d_defgradT_defgrad, 1.0);
 
   Core::LinAlg::Matrix<3, 3> defgradT_d_defgrad(Core::LinAlg::Initialization::zero);
-  defgradT_d_defgrad.multiply_tn(defgrad, linearization_dependencies.d_defgrad_);
+  defgradT_d_defgrad.multiply_tn(
+      quantities_domain_at_xi.defgrad_, linearization_dependencies.d_defgrad_);
   d_glstrain.update(0.5, defgradT_d_defgrad, 1.0);
 
   Core::LinAlg::Matrix<6, 1> d_glstrain_voigt(Core::LinAlg::Initialization::zero);
@@ -462,7 +463,7 @@ evaluate_variation_first_pk_at_node_dir(unsigned int& num_node, unsigned int& n_
   // Get the variation of the second Piola-Kirchhoff stress at a node and direction
   Core::LinAlg::Matrix<6, 1> d_pk2_voigt(Core::LinAlg::Initialization::zero);
   d_pk2_voigt.multiply(
-      make_stress_like_voigt_view(quantities_domain_evaluated_at_xi.pk2_.cmat_), d_glstrain_voigt);
+      make_stress_like_voigt_view(quantities_domain_at_xi.pk2_.cmat_), d_glstrain_voigt);
 
   linearization_dependencies.d_pk2_.put_scalar(0.0);
   linearization_dependencies.d_pk2_(0, 0) = d_pk2_voigt(0);
@@ -480,11 +481,11 @@ evaluate_variation_first_pk_at_node_dir(unsigned int& num_node, unsigned int& n_
   Core::LinAlg::Matrix<3, 3> pk2_matrix(Core::LinAlg::Initialization::zero);
   for (int i_dim = 0; i_dim < Core::FE::dim<celltype>; i_dim++)
     for (int j_dim = 0; j_dim < Core::FE::dim<celltype>; j_dim++)
-      pk2_matrix(i_dim, j_dim) = quantities_domain_evaluated_at_xi.pk2_.pk2_(i_dim, j_dim);
+      pk2_matrix(i_dim, j_dim) = quantities_domain_at_xi.pk2_.pk2_(i_dim, j_dim);
   d_defgrad_pk2.multiply(linearization_dependencies.d_defgrad_, pk2_matrix);
 
   Core::LinAlg::Matrix<3, 3> defgrad_d_pk2(Core::LinAlg::Initialization::zero);
-  defgrad_d_pk2.multiply(defgrad, linearization_dependencies.d_pk2_);
+  defgrad_d_pk2.multiply(quantities_domain_at_xi.defgrad_, linearization_dependencies.d_pk2_);
 
   // set d_pk1_node_dir to zero for safety
   Core::LinAlg::Matrix<3, 3> d_pk1_node_dir(Core::LinAlg::Initialization::zero);
@@ -498,7 +499,7 @@ template <Core::FE::CellType celltype>
 Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>>
 evaluate_lin_variation_first_pk(LinearizationDependencies<celltype>& lin_dependencies_d_dof,
     LinearizationDependencies<celltype>& lin_dependencies_dof,
-    QuantitiesDomainEvaluatedAtXi<celltype>& quantities_domain_evaluated_at_xi)
+    QuantitiesDomainEvaluatedAtXi<celltype>& quantities_domain_at_xi)
 {
   // Get the linearization of the virtual Green-Lagrange strains
   Core::LinAlg::Matrix<3, 3> lin_d_glstrain(Core::LinAlg::Initialization::zero);
@@ -523,8 +524,7 @@ evaluate_lin_variation_first_pk(LinearizationDependencies<celltype>& lin_depende
   // Get the linearization of the variation of the second Piola-Kirchhoff stress
   Core::LinAlg::Matrix<6, 1> lin_d_pk2_voigt(Core::LinAlg::Initialization::zero);
   lin_d_pk2_voigt.multiply(
-      make_stress_like_voigt_view(quantities_domain_evaluated_at_xi.pk2_.cmat_),
-      lin_d_glstrain_voigt);
+      make_stress_like_voigt_view(quantities_domain_at_xi.pk2_.cmat_), lin_d_glstrain_voigt);
 
   Core::LinAlg::Matrix<3, 3> lin_d_pk2(Core::LinAlg::Initialization::zero);
   lin_d_pk2.put_scalar(0.0);
@@ -551,8 +551,7 @@ evaluate_lin_variation_first_pk(LinearizationDependencies<celltype>& lin_depende
   lin_d_pk1.update(1.0, lin_defgrad_d_pk2, 1.0);
 
   Core::LinAlg::Matrix<3, 3> defgrad_lin_d_pk2(Core::LinAlg::Initialization::zero);
-  defgrad_lin_d_pk2.multiply(
-      Core::LinAlg::make_matrix_view(quantities_domain_evaluated_at_xi.defgrad_), lin_d_pk2);
+  defgrad_lin_d_pk2.multiply(quantities_domain_at_xi.defgrad_, lin_d_pk2);
   lin_d_pk1.update(1.0, defgrad_lin_d_pk2, 1.0);
 
   return lin_d_pk1;
