@@ -80,11 +80,11 @@ namespace Constraints::EmbeddedMesh
         Core::LinAlg::SparseMatrix& global_penalty_boundarylayer,
         Core::LinAlg::SparseMatrix& global_penalty_background,
         Core::LinAlg::SparseMatrix& global_penalty_boundarylayer_background,
-        Core::LinAlg::SparseMatrix& global_virtual_disp_interface_stress_interface,
-        Core::LinAlg::SparseMatrix& global_virtual_disp_interface_stress_background,
-        Core::LinAlg::SparseMatrix& global_virtual_disp_background_stress_interface,
-        Core::LinAlg::SparseMatrix& global_virtual_disp_background_stress_background,
-        Core::LinAlg::FEVector<double>& global_constraint, double& nitsche_stabilization_param,
+        Core::LinAlg::SparseMatrix& global_nitsche_interface,
+        Core::LinAlg::SparseMatrix& global_nitsche_background,
+        Core::LinAlg::SparseMatrix& global_nitsche_interface_background,
+        Core::LinAlg::FEVector<double>& global_penalty_constraint,
+        Core::LinAlg::FEVector<double>& global_nitsche_constraint,
         double& nitsche_average_weight_param) override
     {
       FOUR_C_THROW("The evaluation of Nitsche contributions cannot be called from a mortar pair.");

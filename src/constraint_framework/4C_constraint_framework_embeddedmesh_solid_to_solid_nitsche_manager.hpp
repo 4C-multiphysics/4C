@@ -93,7 +93,7 @@ namespace Constraints::EmbeddedMesh
      * \brief Scale contributions from the Nitsche method with the penalty parameter and weighting
      * average parameter
      */
-    void scale_contributions_nitsche_stiffness_matrices() const;
+    void scale_penalty_contributions_() const;
 
     /**
      * \brief Get the communicator associated to the Nitsche manager
@@ -166,24 +166,21 @@ namespace Constraints::EmbeddedMesh
     //! Global contributions of the penalty term associated with both interface and background DOFs
     std::shared_ptr<Core::LinAlg::SparseMatrix> global_penalty_interface_background_ = nullptr;
 
-    //! Global contributions of the stresses associated with the interface DOFs (maybe call it
-    //! global_stress_contribution_to_stiff_interface_interface_?)
-    std::shared_ptr<Core::LinAlg::SparseMatrix> global_virtual_disp_interface_stress_interface_ =
-        nullptr;
+    //! Global contributions of the Nitsche method associated with the interface DOFs
+    std::shared_ptr<Core::LinAlg::SparseMatrix> global_nitsche_interface_ = nullptr;
 
-    //! Global contributions ...
-    std::shared_ptr<Core::LinAlg::SparseMatrix> global_virtual_disp_interface_stress_background_ =
-        nullptr;
+    //! Global contributions of the Nitsche method associated with the background DOFs
+    std::shared_ptr<Core::LinAlg::SparseMatrix> global_nitsche_background_ = nullptr;
 
-    //! Global contributions ...
-    std::shared_ptr<Core::LinAlg::SparseMatrix> global_virtual_disp_background_stress_interface_ =
-        nullptr;
+    //! Global contributions of the Nitsche method associated with both the interface and background
+    //! DOFs
+    std::shared_ptr<Core::LinAlg::SparseMatrix> global_nitsche_interface_background = nullptr;
 
-    std::shared_ptr<Core::LinAlg::SparseMatrix> global_virtual_disp_background_stress_background_ =
-        nullptr;
+    //! Global penalty constraint vector.
+    std::shared_ptr<Core::LinAlg::FEVector<double>> global_penalty_constraint_ = nullptr;
 
-    //! Global constraint vector.
-    std::shared_ptr<Core::LinAlg::FEVector<double>> global_constraint_ = nullptr;
+    //! Global Nitsche constraint vector.
+    std::shared_ptr<Core::LinAlg::FEVector<double>> global_nitsche_constraint_ = nullptr;
 
     //! Vector with all contact pairs to be evaluated by this Nitsche manager.
     std::vector<std::shared_ptr<Constraints::EmbeddedMesh::SolidInteractionPair>>

@@ -71,11 +71,11 @@ namespace Constraints::EmbeddedMesh
         Core::LinAlg::SparseMatrix& global_penalty_boundarylayer,
         Core::LinAlg::SparseMatrix& global_penalty_background,
         Core::LinAlg::SparseMatrix& global_penalty_boundarylayer_background,
-        Core::LinAlg::SparseMatrix& global_virtual_disp_interface_stress_interface,
-        Core::LinAlg::SparseMatrix& global_virtual_disp_interface_stress_background,
-        Core::LinAlg::SparseMatrix& global_virtual_disp_background_stress_interface,
-        Core::LinAlg::SparseMatrix& global_virtual_disp_background_stress_background,
-        Core::LinAlg::FEVector<double>& global_constraint, double& nitsche_stabilization_param,
+        Core::LinAlg::SparseMatrix& global_nitsche_interface,
+        Core::LinAlg::SparseMatrix& global_nitsche_background,
+        Core::LinAlg::SparseMatrix& global_nitsche_interface_background,
+        Core::LinAlg::FEVector<double>& global_penalty_constraint,
+        Core::LinAlg::FEVector<double>& global_nitsche_constraint,
         double& nitsche_average_weight_param) override;
 
     /**
@@ -105,13 +105,13 @@ namespace Constraints::EmbeddedMesh
 
     void evaluate_stress_contributions_nitsche(const Core::FE::Discretization& discret,
         Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
-            local_stiffness_disp_interface_stress_interface,
-        Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
-            local_stiffness_disp_interface_stress_background,
+            local_stiffness_nitsche_interface,
         Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
-            local_stiffness_disp_background_stress_background,
+            local_stiffness_nitsche_background,
+        Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
+            local_stiffness_nitsche_interface_background,
         Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
-            local_constraint_stresses,
+            local_constraint_nitsche,
         double& nitsche_average_weight_param);
 
     //! @name Visualization methods

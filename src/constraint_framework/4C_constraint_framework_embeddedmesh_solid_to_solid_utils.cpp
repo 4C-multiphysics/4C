@@ -769,11 +769,11 @@ void Constraints::EmbeddedMesh::assemble_local_nitsche_contributions(
     const Core::FE::Discretization& discret, Core::LinAlg::SparseMatrix& global_penalty_interface,
     Core::LinAlg::SparseMatrix& global_penalty_background,
     Core::LinAlg::SparseMatrix& global_penalty_interface_background,
-    Core::LinAlg::SparseMatrix& global_disp_interface_stress_interface,
-    Core::LinAlg::SparseMatrix& global_disp_interface_stress_background,
-    Core::LinAlg::SparseMatrix& global_disp_background_stress_interface,
-    Core::LinAlg::SparseMatrix& global_disp_background_stress_background,
-    Core::LinAlg::FEVector<double>& global_constraint,
+    Core::LinAlg::SparseMatrix& global_nitsche_interface,
+    Core::LinAlg::SparseMatrix& global_nitsche_background,
+    Core::LinAlg::SparseMatrix& global_nitsche_interface_background,
+    Core::LinAlg::FEVector<double>& global_penalty_constraint,
+    Core::LinAlg::FEVector<double>& global_nitsche_constraint,
     const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
         local_stiffness_penalty_interface,
     const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
@@ -781,17 +781,15 @@ void Constraints::EmbeddedMesh::assemble_local_nitsche_contributions(
     const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
         local_stiffness_penalty_interface_background,
     const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
-        local_stiffness_disp_interface_stress_interface,
-    const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
-        local_stiffness_disp_interface_stress_background,
-    const Core::LinAlg::Matrix<Background::n_dof_, Interface::n_dof_, double>&
-        local_stiffness_disp_background_stress_interface,
+        local_stiffness_nitsche_interface,
     const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
-        local_stiffness_disp_background_stress_background,
+        local_stiffness_nitsche_background,
+    const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
+        local_stiffness_nitsche_interface_background,
     const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
         local_constraint_penalty,
     const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
-        local_constraint_stresses)
+        local_constraint_nitsche)
 {
   // Get the GIDs of the interface
   std::vector<int> interface_row;
@@ -820,29 +818,18 @@ void Constraints::EmbeddedMesh::assemble_local_nitsche_contributions(
       global_penalty_interface.fe_assemble(
           local_stiffness_penalty_interface(i_interface, j_interface), interface_row[i_interface],
           interface_row[j_interface]);
-      global_disp_interface_stress_interface.fe_assemble(
-          local_stiffness_disp_interface_stress_interface(i_interface, j_interface),
-          interface_row[i_interface], interface_row[j_interface]);
+      global_nitsche_interface.fe_assemble(
+          local_stiffness_nitsche_interface(i_interface, j_interface), interface_row[i_interface],
+          interface_row[j_interface]);
     }
     for (unsigned int i_background = 0; i_background < Background::n_dof_; ++i_background)
     {
       global_penalty_interface_background.fe_assemble(
           local_stiffness_penalty_interface_background(i_interface, i_background),
           interface_row[i_interface], background_row[i_background]);
-      global_disp_interface_stress_background.fe_assemble(
-          local_stiffness_disp_interface_stress_background(i_interface, i_background),
+      global_nitsche_interface_background.fe_assemble(
+          local_stiffness_nitsche_interface_background(i_interface, i_background),
           interface_row[i_interface], background_row[i_background]);
-    }
-  }
-
-
-  for (unsigned int i_background = 0; i_background < Background::n_dof_; ++i_background)
-  {
-    for (unsigned int i_interface = 0; i_interface < Interface::n_dof_; ++i_interface)
-    {
-      global_disp_background_stress_interface.fe_assemble(
-          local_stiffness_disp_background_stress_interface(i_background, i_interface),
-          background_row[i_background], interface_row[i_interface]);
     }
   }
 
@@ -853,17 +840,17 @@ void Constraints::EmbeddedMesh::assemble_local_nitsche_contributions(
       global_penalty_background.fe_assemble(
           local_stiffness_penalty_background(i_background, j_background),
           background_row[i_background], background_row[j_background]);
-      global_disp_background_stress_background.fe_assemble(
-          local_stiffness_disp_background_stress_background(i_background, j_background),
+      global_nitsche_background.fe_assemble(
+          local_stiffness_nitsche_background(i_background, j_background),
           background_row[i_background], background_row[j_background]);
     }
   }
 
   // Assemble into the global force.
-  global_constraint.sum_into_global_values(Interface::n_dof_ + Background::n_dof_,
+  global_penalty_constraint.sum_into_global_values(Interface::n_dof_ + Background::n_dof_,
       interface_background_row.data(), local_constraint_penalty.data());
-  global_constraint.sum_into_global_values(Interface::n_dof_ + Background::n_dof_,
-      interface_background_row.data(), local_constraint_stresses.data());
+  global_nitsche_constraint.sum_into_global_values(Interface::n_dof_ + Background::n_dof_,
+      interface_background_row.data(), local_constraint_nitsche.data());
 }
 
 template <typename Interface, typename Background, typename Mortar>
@@ -1024,11 +1011,11 @@ namespace Constraints::EmbeddedMesh
       Core::LinAlg::SparseMatrix& global_penalty_interface,                             \
       Core::LinAlg::SparseMatrix& global_penalty_background,                            \
       Core::LinAlg::SparseMatrix& global_penalty_interface_background,                  \
-      Core::LinAlg::SparseMatrix& global_disp_interface_stress_interface,               \
-      Core::LinAlg::SparseMatrix& global_disp_interface_stress_background,              \
-      Core::LinAlg::SparseMatrix& global_disp_background_stress_interface,              \
-      Core::LinAlg::SparseMatrix& global_disp_background_stress_background,             \
-      Core::LinAlg::FEVector<double>& global_constraint,                                \
+      Core::LinAlg::SparseMatrix& global_nitsche_interface,                             \
+      Core::LinAlg::SparseMatrix& global_nitsche_background,                            \
+      Core::LinAlg::SparseMatrix& global_nitsche_interface_background,                  \
+      Core::LinAlg::FEVector<double>& global_penalty_constraint,                        \
+      Core::LinAlg::FEVector<double>& global_nitsche_constraint,                        \
       const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&         \
           local_stiffness_penalty_interface,                                            \
       const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&       \
@@ -1036,17 +1023,15 @@ namespace Constraints::EmbeddedMesh
       const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&        \
           local_stiffness_penalty_interface_background,                                 \
       const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&         \
-          local_stiffness_disp_interface_stress_interface,                              \
-      const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&        \
-          local_stiffness_disp_interface_stress_background,                             \
-      const Core::LinAlg::Matrix<Background::n_dof_, Interface::n_dof_, double>&        \
-          local_stiffness_disp_background_stress_interface,                             \
+          local_stiffness_nitsche_interface,                                            \
       const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&       \
-          local_stiffness_disp_background_stress_background,                            \
+          local_stiffness_nitsche_background,                                           \
+      const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&        \
+          local_stiffness_nitsche_interface_background,                                 \
       const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&    \
           local_constraint_penalty,                                                     \
       const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&    \
-          local_constraint_stresses);
+          local_constraint_nitsche);
 
   initialize_template_assemble_local_nitsche_contributions(t_quad4, t_hex8);
   initialize_template_assemble_local_nitsche_contributions(t_nurbs9, t_hex8);
