@@ -101,16 +101,13 @@ namespace Constraints::EmbeddedMesh
             local_stiffness_penalty_background,
         Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
             local_stiffness_penalty_interface_background,
-        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint,
-        double& nitsche_stabilization_param);
+        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint);
 
     void evaluate_stress_contributions_nitsche(const Core::FE::Discretization& discret,
         Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
             local_stiffness_disp_interface_stress_interface,
         Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
             local_stiffness_disp_interface_stress_background,
-        Core::LinAlg::Matrix<Background::n_dof_, Interface::n_dof_, double>&
-            local_stiffness_disp_background_stress_interface,
         Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
             local_stiffness_disp_background_stress_background,
         Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
