@@ -16,6 +16,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_nodal_cleme
     const Core::FE::Discretization& dis, const Core::LinAlg::MultiVector<double>& values)
 {
   const size_t dimensions = dis.n_dim();
+  const size_t spatial_dimensions = 3;
   auto nodal_values = std::make_shared<Core::LinAlg::MultiVector<double>>(
       *dis.node_row_map(), values.num_vectors(), true);
 
@@ -42,7 +43,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_nodal_cleme
       const auto* element_nodes = user_element->nodes();
       const int number_of_nodes = user_element->num_node();
 
-      Core::LinAlg::SerialDenseMatrix node_coordinates(dimensions, number_of_nodes);
+      Core::LinAlg::SerialDenseMatrix node_coordinates(spatial_dimensions, number_of_nodes, true);
       for (int node_number = 0; node_number < number_of_nodes; ++node_number)
         for (size_t dim = 0; dim < dimensions; ++dim)
           node_coordinates(dim, node_number) = element_nodes[node_number]->x()[dim];
@@ -62,8 +63,8 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_nodal_cleme
       const int global_element_id = element.global_id();
       const int local_element_id = values.get_vector(0).get_map().lid(global_element_id);
 
-      FOUR_C_ASSERT(
-          local_element_id >= 0, "Global element id {} not found in local map", global_element_id);
+      FOUR_C_ASSERT(local_element_id >= 0, "Global element id {} not owned by this process",
+          global_element_id);
 
       patch_data.push_back({local_element_id, volume});
       total_weight += volume;
