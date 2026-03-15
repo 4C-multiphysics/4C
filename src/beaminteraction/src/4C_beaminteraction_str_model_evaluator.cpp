@@ -458,7 +458,10 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::partition_problem()
   check_init();
 
   // TODO: Introduce proper parameter
-  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact))
+  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_potential) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_crosslinking) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_spherebeamlink))
   {
     const auto geometric_search_params_ptr_ = Core::GeometricSearch::GeometricSearchParams(
         Global::Problem::instance()->geometric_search_params(),
@@ -886,7 +889,10 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::write_restart(
   ia_writer->new_step(stepn, timen);
 
   // TODO: Introduce proper parameter
-  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact))
+  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_potential) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_crosslinking) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_spherebeamlink))
   {
     ia_writer->clear_map_cache();
   }
@@ -932,7 +938,10 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::read_restart(
   ia_reader.read_history_data(stepn);
 
   // TODO: Introduce proper parameter
-  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact))
+  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_potential) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_crosslinking) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_spherebeamlink))
   {
     // need to read step next (as it was written next, do safety check)
     if (stepn != ia_reader.read_int("step"))
@@ -1035,7 +1044,10 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::update_step_element()
   check_init_setup();
 
   // TODO: Introduce proper parameter
-  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact))
+  if (have_sub_model_type(BeamInteraction::SubModelType::submodel_beamcontact) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_potential) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_crosslinking) and
+      !have_sub_model_type(BeamInteraction::SubModelType::submodel_spherebeamlink))
   {
     Vector::iterator some_iter;
     bool beam_redist = check_if_beam_discret_redistribution_needs_to_be_done();
