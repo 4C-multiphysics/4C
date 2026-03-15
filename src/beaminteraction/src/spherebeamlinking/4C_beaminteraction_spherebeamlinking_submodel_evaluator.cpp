@@ -498,7 +498,7 @@ void BeamInteraction::SubmodelEvaluator::SphereBeamLinking::reset_step_state()
 /*-------------------------------------------------------------------------------*
  *-------------------------------------------------------------------------------*/
 void BeamInteraction::SubmodelEvaluator::SphereBeamLinking::write_restart(
-    Core::IO::DiscretizationWriter& ia_writer, Core::IO::DiscretizationWriter& bin_writer) const
+    Core::IO::DiscretizationWriter& bin_writer) const
 {
   check_init_setup();
 
@@ -515,7 +515,7 @@ void BeamInteraction::SubmodelEvaluator::SphereBeamLinking::pre_read_restart()
 /*-------------------------------------------------------------------------------*
  *-------------------------------------------------------------------------------*/
 void BeamInteraction::SubmodelEvaluator::SphereBeamLinking::read_restart(
-    Core::IO::DiscretizationReader& ia_reader, Core::IO::DiscretizationReader& bin_reader)
+    Core::IO::DiscretizationReader& bin_reader)
 {
   check_init_setup();
 
