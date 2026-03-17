@@ -93,7 +93,7 @@ namespace Constraints::EmbeddedMesh
      * \brief Scale contributions from the Nitsche method with the penalty parameter and weighting
      * average parameter
      */
-    void scale_penalty_contributions_() const;
+    void scale_penalty_contributions() const;
 
     /**
      * \brief Get the communicator associated to the Nitsche manager
@@ -174,7 +174,7 @@ namespace Constraints::EmbeddedMesh
 
     //! Global contributions of the Nitsche method associated with both the interface and background
     //! DOFs
-    std::shared_ptr<Core::LinAlg::SparseMatrix> global_nitsche_interface_background = nullptr;
+    std::shared_ptr<Core::LinAlg::SparseMatrix> global_nitsche_interface_background_ = nullptr;
 
     //! Global penalty constraint vector.
     std::shared_ptr<Core::LinAlg::FEVector<double>> global_penalty_constraint_ = nullptr;

@@ -108,11 +108,11 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::setup(
   // Create the global coupling matrices related to the Nitsche stress contributions.
   global_nitsche_interface_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *interface_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
-  global_nitsche_interface_background =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*interface_and_background_dof_rowmap_, 100, true,
-          true, Core::LinAlg::SparseMatrix::FE_MATRIX);
   global_nitsche_background_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *background_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
+  global_nitsche_interface_background_ =
+      std::make_shared<Core::LinAlg::SparseMatrix>(*interface_and_background_dof_rowmap_, 100, true,
+          true, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // Create the global constraint contributions to the force.
   global_penalty_constraint_ =
@@ -187,8 +187,8 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
   global_penalty_interface_background_->put_scalar(0.);
 
   global_nitsche_interface_->put_scalar(0.);
-  global_nitsche_interface_background->put_scalar(0.);
   global_nitsche_background_->put_scalar(0.);
+  global_nitsche_interface_background_->put_scalar(0.);
 
   global_penalty_constraint_->put_scalar(0.);
   global_nitsche_constraint_->put_scalar(0.);
@@ -198,7 +198,7 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
     elepairptr->evaluate_and_assemble_nitsche_contributions(*discret_, this,
         *global_penalty_interface_, *global_penalty_background_,
         *global_penalty_interface_background_, *global_nitsche_interface_,
-        *global_nitsche_background_, *global_nitsche_interface_background,
+        *global_nitsche_background_, *global_nitsche_interface_background_,
         *global_penalty_constraint_, *global_nitsche_constraint_,
         embedded_mesh_coupling_params_.nitsche_average_weight_param_);
   }
@@ -210,19 +210,19 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
       *interface_and_background_dof_rowmap_, *interface_and_background_dof_rowmap_);
 
   global_nitsche_interface_->complete(*interface_dof_rowmap_, *interface_dof_rowmap_);
-  global_nitsche_interface_background->complete(
-      *interface_and_background_dof_rowmap_, *interface_and_background_dof_rowmap_);
   global_nitsche_background_->complete(*background_dof_rowmap_, *background_dof_rowmap_);
+  global_nitsche_interface_background_->complete(
+      *interface_and_background_dof_rowmap_, *interface_and_background_dof_rowmap_);
 
   // Complete the global vector.
   global_penalty_constraint_->complete();
   global_nitsche_constraint_->complete();
 
-  // Scale the global penalty contributions before assembling into the Nitsche formulation
-  scale_penalty_contributions_();
+  // Scale the global penalty contributions before assembling into the final Nitsche formulation
+  scale_penalty_contributions();
 }
 
-void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::scale_penalty_contributions_() const
+void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::scale_penalty_contributions() const
 {
   // Get the penalty parameter.
   const double penalty_param = embedded_mesh_coupling_params_.nitsche_stabilization_param_;
@@ -255,8 +255,8 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
 
     stiff->add(*global_nitsche_interface_, false, 1.0, 1.0);
     stiff->add(*global_nitsche_background_, false, 1.0, 1.0);
-    stiff->add(*global_nitsche_interface_background, false, 1.0, 1.0);
-    stiff->add(*global_nitsche_interface_background, true, 1.0, 1.0);
+    stiff->add(*global_nitsche_interface_background_, false, 1.0, 1.0);
+    stiff->add(*global_nitsche_interface_background_, true, 1.0, 1.0);
   }
 
   if (force != nullptr)
