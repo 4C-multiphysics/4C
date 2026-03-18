@@ -14,6 +14,8 @@
 #include "4C_linear_solver_preconditioner_type.hpp"
 
 #include <MueLu_UseDefaultTypes.hpp>
+#include <Teko_BlockInvDiagonalStrategy.hpp>
+#include <Teko_GaussSeidelPreconditionerFactory.hpp>
 #include <Teko_LU2x2Strategy.hpp>
 #include <Xpetra_BlockedCrsMatrix.hpp>
 
@@ -89,6 +91,49 @@ namespace Core::LinearSolver
     // Sparse approximate inverse parameters
     double drop_tol_;
     int fill_level_;
+  };
+
+
+  /**
+   * Generic block preconditioner for arrowhead matrices of the form
+   * | K^S     -M^T |
+   * |     K^B  D^T |
+   * | -M   D       |
+   * based on a Gauss-Seidel procedure using a Schur complement.
+   */
+  class ArrowHeadPreconditionerFactory : public Teko::GaussSeidelPreconditionerFactory
+  {
+   protected:
+    //! Initialize from a parameter list
+    void initializeFromParameterList(const Teuchos::ParameterList& pl) override;
+  };
+
+
+  /**
+   * Strategy to provide the inverse diagonal for the arrowhead block preconditioner.
+   */
+  class ArrowHeadInvDiagonalStrategy : public Teko::InvFactoryDiagStrategy
+  {
+   public:
+    ArrowHeadInvDiagonalStrategy(
+        const std::vector<Teuchos::RCP<Teko::InverseFactory>>& inverseFactories,
+        const std::vector<Teuchos::RCP<Teko::InverseFactory>>& preconditionerFactories,
+        const Teuchos::RCP<Teko::InverseFactory>& defaultInverseFact = Teuchos::null,
+        const Teuchos::RCP<Teko::InverseFactory>& defaultPreconditionerFact = Teuchos::null);
+
+    /** returns an (approximate) inverse of the diagonal blocks of A
+     * where A is closely related to the original source for invD0 and invD1
+     * and the Schur complement for zero block.
+     *
+     * \param[in]     A       Operator to extract the block diagonals from.
+     * \param[in]     state   State object for this operator.
+     * \param[in,out] invDiag Vector eventually containing the inverse operators
+     */
+    void getInvD(const Teko::BlockedLinearOp& A, Teko::BlockPreconditionerState& state,
+        std::vector<Teko::LinearOp>& invDiag) const override;
+
+   private:
+    ArrowHeadInvDiagonalStrategy(const ArrowHeadInvDiagonalStrategy&);
   };
 }  // namespace Core::LinearSolver
 

@@ -1,0 +1,52 @@
+<ParameterList name="Teko">
+  <!--
+  For beam-solid interaction problems, these are the recommended settings for the block preconditioner
+  consisting of a Block LU from Teko with a special Schur complement strategy, using MueLu as multigrid
+  preconditioner for the solid field (Schur complement) and Ifpack for an additive schwarz direct solver
+  on the beam field.
+  -->
+  <!-- ===========  BLOCK PRECONDITIONER ================ -->
+  <!-- Definition of the block preconditioner, which has to be defined under sub-list "Preconditioner",
+       which is used by Teko. The single field inverse approximation methods have to be given under
+       sub-lists "Inverse<1..n>". -->
+  <Parameter name="Inverse Type" type="string" value="Preconditioner"/>
+  <ParameterList name="Inverse Factory Library">
+    <ParameterList name="Preconditioner">
+      <!-- We need to reorder this operator -->
+      <Parameter name="Type" type="string" value="Arrowhead Preconditioner"/>
+      <Parameter name="Inverse Type 1" type="string" value="Inverse1"/>
+      <Parameter name="Inverse Type 2" type="string" value="Inverse2"/>
+      <Parameter name="Inverse Type 3" type="string" value="Inverse3"/>
+    </ParameterList>
+    <!-- =========== SINGLE FIELD PRECONDITIONER FOR SOLID ====================== -->
+    <ParameterList name="Inverse1">
+      <Parameter name="Type" type="string" value="MueLu"/>
+      <Parameter name="verbosity" type="string" value="Extreme"/>
+      <Parameter name="max levels" type="int" value="10"/>
+      <Parameter name="multigrid algorithm" type="string" value="sa"/>
+      <Parameter name="transpose: use implicit" type="bool" value="true"/>
+      <Parameter name="coarse: max size" type="int" value="1000"/>
+      <Parameter name="coarse: type" type="string" value="Umfpack"/>
+      <Parameter name="aggregation: type" type="string" value="uncoupled"/>
+      <Parameter name="aggregation: drop scheme" type="string" value="classical"/>
+      <Parameter name="smoother: type" type="string" value="CHEBYSHEV"/>
+      <ParameterList name="smoother: params">
+        <Parameter name="chebyshev: degree" type="int" value="3"/>
+      </ParameterList>
+    </ParameterList>
+    <!-- =========== SINGLE FIELD PRECONDITIONER FOR BEAM ======================= -->
+    <ParameterList name="Inverse2">
+      <Parameter name="Type" type="string" value="Amesos"/>
+      <ParameterList name="Amesos Settings">
+        <Parameter name="Reindex" type="bool" value="true"/>
+      </ParameterList>
+    </ParameterList>
+    <!-- =========== SINGLE FIELD PRECONDITIONER FOR SCHUR COMPLEMENT =========== -->
+    <ParameterList name="Inverse3">
+      <Parameter name="Type" type="string" value="Amesos"/>
+      <ParameterList name="Amesos Settings">
+        <Parameter name="Reindex" type="bool" value="true"/>
+      </ParameterList>
+    </ParameterList>
+  </ParameterList>
+</ParameterList>
