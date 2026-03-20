@@ -23,7 +23,7 @@ namespace Constraints::EmbeddedMesh
   class SolidToSolidNitscheManager;
   class SolidToSolidNitscheManager;
 
-  template <typename Interface, typename Background>
+  template <typename Interface, typename ParentInterface, typename Background>
   class SurfaceToBackgroundCouplingPairNitsche : public SolidInteractionPair
   {
    public:
@@ -101,7 +101,8 @@ namespace Constraints::EmbeddedMesh
             local_stiffness_penalty_background,
         Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
             local_stiffness_penalty_interface_background,
-        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint);
+        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint,
+        bool evaluate_perturbation, double epsilon);
 
     void evaluate_stress_contributions_nitsche(const Core::FE::Discretization& discret,
         Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
@@ -110,9 +111,11 @@ namespace Constraints::EmbeddedMesh
             local_stiffness_nitsche_background,
         Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
             local_stiffness_nitsche_interface_background,
+        Core::LinAlg::Matrix<Background::n_dof_, Interface::n_dof_, double>&
+            local_stiffness_nitsche_background_interface,
         Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
             local_constraint_nitsche,
-        double& nitsche_average_weight_param);
+        double& nitsche_average_weight_param, bool evaluate_perturbation, double epsilon);
 
     //! @name Visualization methods
     /*!
@@ -149,23 +152,28 @@ namespace Constraints::EmbeddedMesh
           "This function is not implemented for the SurfaceToBackgroundCouplingPairNitsche.");
     }
 
+    /*!
+    \brief Get parent element of first element
+    */
+    Core::Elements::Element& parent_element_1() const { return *parent_element1_; };
+
+    //! Pointer to the parent element of element_1()
+    Core::Elements::Element* parent_element1_;
+
     //! Initial nodal positions (and tangents) of the interface element.
     GeometryPair::ElementData<Interface, double> ele1pos_;
+
+    //! Initial nodal positions (and tangents) of the parent element of the interface element.
+    GeometryPair::ElementData<ParentInterface, double> ele1parentpos_;
 
     //! Initial nodal positions (and tangents) of the background element.
     GeometryPair::ElementData<Background, double> ele2pos_;
 
-    //! Current nodal positions (and tangents) of the interface element.
-    GeometryPair::ElementData<Interface, double> ele1pos_current_;
-
-    //! Current nodal positions (and tangents) of the background element.
-    GeometryPair::ElementData<Background, double> ele2pos_current_;
-
     //! Displacements of the interface element.
     GeometryPair::ElementData<Interface, double> ele1dis_;
 
-    //! Displacements of the parent element of the interface element
-    std::vector<double> ele1_parent_dis_;
+    //! Displacements of the parent of the interface element.
+    GeometryPair::ElementData<ParentInterface, double> ele1parentdis_;
 
     //! Displacements of the background element.
     GeometryPair::ElementData<Background, double> ele2dis_;

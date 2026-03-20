@@ -454,7 +454,7 @@ std::shared_ptr<Constraints::EmbeddedMesh::SolidInteractionPair> coupling_pair_n
         case Core::FE::CellType::hex8:
         {
           return std::make_shared<Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<
-              GeometryPair::t_quad4, GeometryPair::t_hex8>>(
+              GeometryPair::t_quad4, GeometryPair::t_hex8, GeometryPair::t_hex8>>(
               interfaceele_real, background_ele, params_ptr, cutwizard_ptr, boundary_cells);
           break;
         }
@@ -473,14 +473,14 @@ std::shared_ptr<Constraints::EmbeddedMesh::SolidInteractionPair> coupling_pair_n
         case Core::FE::CellType::hex8:
         {
           return std::make_shared<Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<
-              GeometryPair::t_nurbs9, GeometryPair::t_hex8>>(
+              GeometryPair::t_nurbs9, GeometryPair::t_nurbs27, GeometryPair::t_hex8>>(
               interfaceele_real, background_ele, params_ptr, cutwizard_ptr, boundary_cells);
           break;
         }
         case Core::FE::CellType::wedge6:
         {
           return std::make_shared<Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<
-              GeometryPair::t_nurbs9, GeometryPair::t_wedge6>>(
+              GeometryPair::t_nurbs9, GeometryPair::t_nurbs27, GeometryPair::t_wedge6>>(
               interfaceele_real, background_ele, params_ptr, cutwizard_ptr, boundary_cells);
           break;
         }
