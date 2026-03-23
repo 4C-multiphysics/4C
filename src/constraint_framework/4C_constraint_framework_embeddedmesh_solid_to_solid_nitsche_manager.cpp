@@ -51,6 +51,13 @@ Constraints::EmbeddedMesh::SolidToSolidNitscheManager::SolidToSolidNitscheManage
   Constraints::EmbeddedMesh::change_gauss_rule_of_cut_elements(
       cut_elements_col_vector_, *cutwizard);
 
+  // Get the indices of the DOFs related to the parent elements of the interface
+  std::vector<int> parent_dofs_temp = Constraints::EmbeddedMesh::get_dofs_ids_parent_elements(
+      info_background_interface_elements, *discret_);
+  parent_dofs_.reserve(parent_dofs_temp.size());
+  parent_dofs_.insert(parent_dofs_.end(), parent_dofs_temp.begin(), parent_dofs_temp.end());
+
+  // Generate visualization manager information
   visualization_manager_->register_visualization_data("background_integration_points");
   visualization_manager_->register_visualization_data("interface_integration_points");
   visualization_manager_->register_visualization_data("cut_element_integration_points");
@@ -106,19 +113,18 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::setup(
           true, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // Create the global coupling matrices related to the Nitsche stress contributions.
-  global_nitsche_interface_ = std::make_shared<Core::LinAlg::SparseMatrix>(
-      *interface_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
+  global_nitsche_parent_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      *parent_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
   global_nitsche_background_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *background_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
-  global_nitsche_interface_background_ =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*interface_and_background_dof_rowmap_, 100, true,
-          true, Core::LinAlg::SparseMatrix::FE_MATRIX);
+  global_nitsche_parent_background_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      *parent_and_background_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // Create the global constraint contributions to the force.
   global_penalty_constraint_ =
       std::make_shared<Core::LinAlg::FEVector<double>>(*interface_and_background_dof_rowmap_);
   global_nitsche_constraint_ =
-      std::make_shared<Core::LinAlg::FEVector<double>>(*interface_and_background_dof_rowmap_);
+      std::make_shared<Core::LinAlg::FEVector<double>>(*parent_and_background_dof_rowmap_);
 
   // Set flag for successful setup.
   is_setup_ = true;
@@ -140,6 +146,7 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::set_global_maps()
   std::vector<int> interface_dofs;
   std::vector<int> background_dofs;
   std::vector<int> interface_and_background_dofs;
+  std::vector<int> parent_and_background_dofs;
   for (int i_node = 0; i_node < discret_->node_row_map()->num_my_elements(); i_node++)
   {
     const Core::Nodes::Node* node = discret_->l_row_node(i_node);
@@ -157,14 +164,27 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::set_global_maps()
 
   std::sort(interface_and_background_dofs.begin(), interface_and_background_dofs.end());
 
+  parent_and_background_dofs.reserve(parent_dofs_.size() + background_dofs.size());
+  parent_and_background_dofs.insert(
+      parent_and_background_dofs.end(), parent_dofs_.begin(), parent_dofs_.end());
+  parent_and_background_dofs.insert(
+      parent_and_background_dofs.end(), background_dofs.begin(), background_dofs.end());
+
+  std::sort(parent_and_background_dofs.begin(), parent_and_background_dofs.end());
+
   // Create the interface and solid maps.
   interface_dof_rowmap_ = std::make_shared<Core::LinAlg::Map>(
       -1, interface_dofs.size(), interface_dofs.data(), 0, discret_->get_comm());
+  parent_dof_rowmap_ = std::make_shared<Core::LinAlg::Map>(
+      -1, parent_dofs_.size(), parent_dofs_.data(), 0, discret_->get_comm());
   background_dof_rowmap_ = std::make_shared<Core::LinAlg::Map>(
       -1, background_dofs.size(), background_dofs.data(), 0, discret_->get_comm());
   interface_and_background_dof_rowmap_ =
       std::make_shared<Core::LinAlg::Map>(-1, interface_and_background_dofs.size(),
           interface_and_background_dofs.data(), 0, discret_->get_comm());
+  parent_and_background_dof_rowmap_ =
+      std::make_shared<Core::LinAlg::Map>(-1, parent_and_background_dofs.size(),
+          parent_and_background_dofs.data(), 0, discret_->get_comm());
 
   // Set flags for global maps.
   is_global_maps_build_ = true;
@@ -186,9 +206,9 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
   global_penalty_background_->put_scalar(0.);
   global_penalty_interface_background_->put_scalar(0.);
 
-  global_nitsche_interface_->put_scalar(0.);
+  global_nitsche_parent_->put_scalar(0.);
   global_nitsche_background_->put_scalar(0.);
-  global_nitsche_interface_background_->put_scalar(0.);
+  global_nitsche_parent_background_->put_scalar(0.);
 
   global_penalty_constraint_->put_scalar(0.);
   global_nitsche_constraint_->put_scalar(0.);
@@ -197,10 +217,9 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
   {
     elepairptr->evaluate_and_assemble_nitsche_contributions(*discret_, this,
         *global_penalty_interface_, *global_penalty_background_,
-        *global_penalty_interface_background_, *global_nitsche_interface_,
-        *global_nitsche_background_, *global_nitsche_interface_background_,
-        *global_penalty_constraint_, *global_nitsche_constraint_,
-        embedded_mesh_coupling_params_.nitsche_average_weight_param_);
+        *global_penalty_interface_background_, *global_nitsche_parent_, *global_nitsche_background_,
+        *global_nitsche_parent_background_, *global_penalty_constraint_,
+        *global_nitsche_constraint_, embedded_mesh_coupling_params_.nitsche_average_weight_param_);
   }
 
   // Complete the global matrices.
@@ -209,10 +228,10 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
   global_penalty_interface_background_->complete(
       *interface_and_background_dof_rowmap_, *interface_and_background_dof_rowmap_);
 
-  global_nitsche_interface_->complete(*interface_dof_rowmap_, *interface_dof_rowmap_);
+  global_nitsche_parent_->complete(*parent_dof_rowmap_, *parent_dof_rowmap_);
   global_nitsche_background_->complete(*background_dof_rowmap_, *background_dof_rowmap_);
-  global_nitsche_interface_background_->complete(
-      *interface_and_background_dof_rowmap_, *interface_and_background_dof_rowmap_);
+  global_nitsche_parent_background_->complete(
+      *parent_and_background_dof_rowmap_, *parent_and_background_dof_rowmap_);
 
   // Complete the global vector.
   global_penalty_constraint_->complete();
@@ -253,10 +272,10 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
     stiff->add(*global_penalty_interface_background_, false, 1.0, 1.0);
     stiff->add(*global_penalty_interface_background_, true, 1.0, 1.0);
 
-    stiff->add(*global_nitsche_interface_, false, 1.0, 1.0);
+    stiff->add(*global_nitsche_parent_, false, 1.0, 1.0);
     stiff->add(*global_nitsche_background_, false, 1.0, 1.0);
-    stiff->add(*global_nitsche_interface_background_, false, 1.0, 1.0);
-    stiff->add(*global_nitsche_interface_background_, true, 1.0, 1.0);
+    stiff->add(*global_nitsche_parent_background_, false, 1.0, 1.0);
+    stiff->add(*global_nitsche_parent_background_, true, 1.0, 1.0);
   }
 
   if (force != nullptr)

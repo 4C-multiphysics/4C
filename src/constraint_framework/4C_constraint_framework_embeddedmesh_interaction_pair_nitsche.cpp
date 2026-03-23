@@ -201,227 +201,50 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     Core::LinAlg::SparseMatrix& global_penalty_interface,
     Core::LinAlg::SparseMatrix& global_penalty_background,
     Core::LinAlg::SparseMatrix& global_penalty_interface_background,
-    Core::LinAlg::SparseMatrix& global_nitsche_interface,
+    Core::LinAlg::SparseMatrix& global_nitsche_parent,
     Core::LinAlg::SparseMatrix& global_nitsche_background,
-    Core::LinAlg::SparseMatrix& global_nitsche_interface_background,
+    Core::LinAlg::SparseMatrix& global_nitsche_parent_background,
     Core::LinAlg::FEVector<double>& global_penalty_constraint,
     Core::LinAlg::FEVector<double>& global_nitsche_constraint, double& nitsche_average_weight_param)
 {
-  // This is only for testing finite differences
-  // Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_, 1, double> perturbation(
-  //     Core::LinAlg::Initialization::zero);
-  // double delta_interface = 0.001;
-  // double delta_background = 0.001;
-  // for (int i_interface = 0; i_interface < ParentInterface::n_dof_; i_interface++)
-  //   perturbation(i_interface) = delta_interface;
-  // for (int i_background = 0; i_background < Background::n_dof_; i_background++)
-  //   perturbation(ParentInterface::n_dof_ + i_background) = delta_background;
-  //
-  // std::cout << "pertubration" << std::endl;
-  // perturbation.print(std::cout);
-
-
   // Initialize variables for local penalty contributions.
-  Core::LinAlg::Matrix<ParentInterface::n_dof_, ParentInterface::n_dof_, double>
+  Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>
       local_stiffness_penalty_interface(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>
       local_stiffness_penalty_background(Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<ParentInterface::n_dof_, Background::n_dof_, double>
+  Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>
       local_stiffness_penalty_interface_background(Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_, 1, double>
-      local_constraint_penalty(Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double> local_constraint_penalty(
+      Core::LinAlg::Initialization::uninitialized);
 
   // Initialize variables for local stress contributions.
   Core::LinAlg::Matrix<ParentInterface::n_dof_, ParentInterface::n_dof_, double>
-      local_stiffness_nitsche_interface(Core::LinAlg::Initialization::uninitialized);
+      local_stiffness_nitsche_parent_interface(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>
       local_stiffness_nitsche_background(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Matrix<ParentInterface::n_dof_, Background::n_dof_, double>
-      local_stiffness_nitsche_interface_background(Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<Background::n_dof_, ParentInterface::n_dof_, double>
-      local_stiffness_nitsche_background_interface(Core::LinAlg::Initialization::uninitialized);
+      local_stiffness_nitsche_parent_background(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_, 1, double>
       local_constraint_nitsche(Core::LinAlg::Initialization::uninitialized);
 
-  // // Evaluate the local penalty contributions of Nitsche method
+  // Evaluate the local penalty contributions of Nitsche method
   evaluate_penalty_contributions_nitsche(local_stiffness_penalty_interface,
       local_stiffness_penalty_background, local_stiffness_penalty_interface_background,
-      local_constraint_penalty, false, 0.0);
-  //
-  // Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, Interface::n_dof_ +
-  // Background::n_dof_, double>
-  //     local_stiffness(Core::LinAlg::Initialization::zero);
-  //
-  // std::cout << "local_constraint_penalty: " << std::endl;
-  // local_constraint_penalty.print(std::cout);
-  //
-  // // Assemble penalty related terms
-  // for (int i_interface_dof = 0; i_interface_dof < Interface::n_dof_; i_interface_dof++)
-  //   for (int j_interface_dof = 0; j_interface_dof < Interface::n_dof_; j_interface_dof++)
-  //     local_stiffness(i_interface_dof, j_interface_dof) =
-  //     local_stiffness_penalty_interface(i_interface_dof, j_interface_dof);
-  //
-  // for (int i_background_dof = 0; i_background_dof < Background::n_dof_; i_background_dof++)
-  //   for (int j_background_dof = 0; j_background_dof < Background::n_dof_; j_background_dof++)
-  //     local_stiffness(Interface::n_dof_+ i_background_dof, Interface::n_dof_ + j_background_dof)
-  //     = local_stiffness_penalty_background(i_background_dof, j_background_dof);
-  //
-  // for (int i_interface_dof = 0; i_interface_dof < Interface::n_dof_; i_interface_dof++)
-  //   for (int j_background_dof = 0; j_background_dof < Background::n_dof_; j_background_dof++)
-  //     local_stiffness(i_interface_dof, Interface::n_dof_ + j_background_dof) = -1.0 *
-  //     local_stiffness_penalty_interface_background(i_interface_dof, j_background_dof);
-  //
-  // Core::LinAlg::Matrix<Background::n_dof_, Interface::n_dof_, double>
-  //     local_stiffness_penalty_background_interface(Core::LinAlg::Initialization::uninitialized);
-  // local_stiffness_penalty_background_interface.update_t(local_stiffness_penalty_interface_background);
-  //
-  // for (int i_background_dof = 0; i_background_dof < Background::n_dof_; i_background_dof++)
-  //   for (int j_interface_dof = 0; j_interface_dof < Interface::n_dof_; j_interface_dof++)
-  //     local_stiffness(Interface::n_dof_ + i_background_dof, j_interface_dof) = -1.0 *
-  //     local_stiffness_penalty_background_interface(i_background_dof, j_interface_dof);
-  //
-  // Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>
-  // local_stiffness_perturbation(Core::LinAlg::Initialization::uninitialized);
-  // local_stiffness_perturbation.multiply(local_stiffness, perturbation);
-  // std::cout << "Multiplying local_stiffness * pertubration: " << std::endl;
-  // local_stiffness_perturbation.print(std::cout);
-  //
-  // Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>
-  // local_constraint_penalty_perturbation(
-  //     Core::LinAlg::Initialization::uninitialized);
-  //
-  // double epsilon = 1;
-  // evaluate_penalty_contributions_nitsche(local_stiffness_penalty_interface,
-  //    local_stiffness_penalty_background, local_stiffness_penalty_interface_background,
-  //    local_constraint_penalty_perturbation, true, epsilon);
-  //
-  // std::cout << "local_constraint_penalty_perturbation: " << std::endl;
-  // local_constraint_penalty_perturbation.print(std::cout);
-  //
-  // Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double> finite_diff(
-  //     Core::LinAlg::Initialization::zero);
-  //
-  // for (int dof = 0; dof < (Interface::n_dof_ + Background::n_dof_); dof++)
-  //   finite_diff(dof) = local_constraint_penalty_perturbation(dof) -
-  //   local_constraint_penalty(dof);
-  // finite_diff.scale(1.0 / epsilon);
-  //
-  // std::cout << "Finite difference result " << std::endl;
-  // finite_diff.print(std::cout);
-  //
-  // // Obtain difference between K*perturbation and finite differences
-  // Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double> delta(
-  //     Core::LinAlg::Initialization::zero);
-  //
-  // for (int dof = 0; dof < (Interface::n_dof_ + Background::n_dof_); dof++)
-  //   delta(dof) = local_stiffness_perturbation(dof) - finite_diff(dof);
-  //
-  // std::cout << "delta " << std::endl;
-  // delta.print(std::cout);
+      local_constraint_penalty);
 
-
-
-  evaluate_stress_contributions_nitsche(discret, local_stiffness_nitsche_interface,
-      local_stiffness_nitsche_background, local_stiffness_nitsche_interface_background,
-      local_stiffness_nitsche_background_interface, local_constraint_nitsche,
-      nitsche_average_weight_param, false, 0.0);
-
-  // std::cout << "local_constraint_nitsche" << std::endl;
-  // local_constraint_nitsche.print(std::cout);
-  //
-  // Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_,
-  //     ParentInterface::n_dof_ + Background::n_dof_, double>
-  //     local_stiffness(Core::LinAlg::Initialization::zero);
-  //
-  // // Assemble stress related terms
-  // for (int i_interface_dof = 0; i_interface_dof < ParentInterface::n_dof_; i_interface_dof++)
-  //   for (int j_interface_dof = 0; j_interface_dof < ParentInterface::n_dof_; j_interface_dof++)
-  //     local_stiffness(i_interface_dof, j_interface_dof) =
-  //         local_stiffness_nitsche_interface(i_interface_dof, j_interface_dof);
-  //
-  // for (int i_background_dof = 0; i_background_dof < Background::n_dof_; i_background_dof++)
-  //   for (int j_background_dof = 0; j_background_dof < Background::n_dof_; j_background_dof++)
-  //     local_stiffness(ParentInterface::n_dof_ + i_background_dof, ParentInterface::n_dof_ +
-  //     j_background_dof) =
-  //         local_stiffness_nitsche_background(i_background_dof, j_background_dof);
-  //
-  // for (int i_interface_dof = 0; i_interface_dof < ParentInterface::n_dof_; i_interface_dof++)
-  //   for (int j_background_dof = 0; j_background_dof < Background::n_dof_; j_background_dof++)
-  //     local_stiffness(i_interface_dof, ParentInterface::n_dof_ + j_background_dof) =
-  //         local_stiffness_nitsche_interface_background(i_interface_dof, j_background_dof);
-  //
-  // for (int i_background_dof = 0; i_background_dof < Background::n_dof_; i_background_dof++)
-  //   for (int j_interface_dof = 0; j_interface_dof < ParentInterface::n_dof_; j_interface_dof++)
-  //     local_stiffness(ParentInterface::n_dof_ + i_background_dof, j_interface_dof) =
-  //         local_stiffness_nitsche_background_interface(i_background_dof, j_interface_dof);
-
-  // std::cout << "block interface" << std::endl;
-  // local_stiffness_nitsche_interface.print(std::cout);
-  // //
-  // std::cout << "block background" << std::endl;
-  // local_stiffness_nitsche_background.print(std::cout);
-  // //
-  // std::cout << "block interface-background" << std::endl;
-  // local_stiffness_nitsche_interface_background.print(std::cout);
-  //
-  // std::cout << "block background-interface" << std::endl;
-  // local_stiffness_nitsche_background_interface.print(std::cout);
-  //
-  // std::cout << "Stiffness matrix" << std::endl;
-  // local_stiffness.print(std::cout);
-  // //
-  // // std::cout << "perturbation" << std::endl;
-  // // perturbation.print(std::cout);
-
-  // Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_, 1, double>
-  //     local_stiffness_perturbation(Core::LinAlg::Initialization::uninitialized);
-  // local_stiffness_perturbation.multiply(local_stiffness, perturbation);
-  // std::cout << "Multiplying local_stiffness * pertubration: " << std::endl;
-  // local_stiffness_perturbation.print(std::cout);
-  //
-  //
-  // // Doing some perturbations
-  // Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_, 1, double>
-  //     local_constraint_nitsche_perturbation(Core::LinAlg::Initialization::uninitialized);
-  // double epsilon = 1e-7;
-  // evaluate_stress_contributions_nitsche(discret, local_stiffness_nitsche_interface,
-  //     local_stiffness_nitsche_background, local_stiffness_nitsche_interface_background,
-  //     local_stiffness_nitsche_background_interface, local_constraint_nitsche_perturbation,
-  //     nitsche_average_weight_param, true, epsilon);
-  //
-  // std::cout << "local_constraint_nitsche_perturbation: " << std::endl;
-  // local_constraint_nitsche_perturbation.print(std::cout);
-  //
-  // Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_, 1, double> finite_diff(
-  //     Core::LinAlg::Initialization::zero);
-  //
-  // for (int dof = 0; dof < (ParentInterface::n_dof_ + Background::n_dof_); dof++)
-  //   finite_diff(dof) = local_constraint_nitsche_perturbation(dof) -
-  //   local_constraint_nitsche(dof);
-  // finite_diff.scale(1.0 / epsilon);
-  //
-  // std::cout << "Finite difference result " << std::endl;
-  // finite_diff.print(std::cout);
-  //
-  // // Obtain difference between K*perturbation and finite differences
-  // Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_, 1, double> delta(
-  //     Core::LinAlg::Initialization::uninitialized);
-  //
-  // for (int dof = 0; dof < (ParentInterface::n_dof_ + Background::n_dof_); dof++)
-  //   delta(dof) = local_stiffness_perturbation(dof) - finite_diff(dof);
-  //
-  // std::cout << "delta " << std::endl;
-  // delta.print(std::cout);
-
+  // Evaluate stress contributions of Nitsche method
+  evaluate_stress_contributions_nitsche(discret, local_stiffness_nitsche_parent_interface,
+      local_stiffness_nitsche_background, local_stiffness_nitsche_parent_background,
+      local_constraint_nitsche, nitsche_average_weight_param);
 
   // Assemble into global matrices.
-  assemble_local_nitsche_contributions<ParentInterface, Background>(this, discret,
+  assemble_local_nitsche_contributions<Interface, ParentInterface, Background>(this, discret,
       global_penalty_interface, global_penalty_background, global_penalty_interface_background,
-      global_nitsche_interface, global_nitsche_background, global_nitsche_interface_background,
+      global_nitsche_parent, global_nitsche_background, global_nitsche_parent_background,
       global_penalty_constraint, global_nitsche_constraint, local_stiffness_penalty_interface,
       local_stiffness_penalty_background, local_stiffness_penalty_interface_background,
-      local_stiffness_nitsche_interface, local_stiffness_nitsche_background,
-      local_stiffness_nitsche_interface_background, local_constraint_penalty,
+      local_stiffness_nitsche_parent_interface, local_stiffness_nitsche_background,
+      local_stiffness_nitsche_parent_background, local_constraint_penalty,
       local_constraint_nitsche);
 }
 
@@ -644,6 +467,9 @@ QuantitiesDomainEvaluatedAtXi<celltype> evaluate_domain_quantities_at_xi(
       Core::LinAlg::Initialization::uninitialized);
   dX_N.multiply(jacobian_background_inv, dxi_N);
 
+  // std::cout << "dX_N" << std::endl;
+  // dX_N.print(std::cout);
+
   // Return quantities
   QuantitiesDomainEvaluatedAtXi<celltype> quantities_domain_at_xi{dX_N, def_gradient, pk1, pk2};
 
@@ -808,45 +634,24 @@ template <typename Interface, typename ParentInterface, typename Background>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface, ParentInterface,
     Background>::evaluate_stress_contributions_nitsche(const Core::FE::Discretization& discret,
     Core::LinAlg::Matrix<ParentInterface::n_dof_, ParentInterface::n_dof_, double>&
-        local_stiffness_nitsche_interface,
+        local_stiffness_nitsche_parent,
     Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
         local_stiffness_nitsche_background,
     Core::LinAlg::Matrix<ParentInterface::n_dof_, Background::n_dof_, double>&
-        local_stiffness_nitsche_interface_background,
-    Core::LinAlg::Matrix<Background::n_dof_, ParentInterface::n_dof_, double>&
-        local_stiffness_nitsche_background_interface,
+        local_stiffness_nitsche_parent_background,
     Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_, 1, double>&
         local_constraint_nitsche,
-    double& nitsche_average_weight_param, bool evaluate_perturbation, double epsilon)
+    double& nitsche_average_weight_param)
 {
-  if (evaluate_perturbation == true)
-  {
-    for (int i = 0; i < Interface::n_dof_; i++) ele1dis_.element_position_(i) += epsilon * 0.001;
-
-    for (int i = 0; i < ParentInterface::n_dof_; i++)
-      ele1parentdis_.element_position_(i) += epsilon * 0.001;
-
-    for (int i = 0; i < Background::n_dof_; i++) ele2dis_.element_position_(i) += epsilon * 0.001;
-
-    std::cout << "displacement of degrees of freedom interface " << std::endl;
-    ele1dis_.element_position_.print(std::cout);
-
-    std::cout << "displacement of degrees of freedom interface-parent " << std::endl;
-    ele1parentdis_.element_position_.print(std::cout);
-
-    std::cout << "displacement of degrees of freedom background " << std::endl;
-    ele2dis_.element_position_.print(std::cout);
-  }
-
   // The following calculations are meant for 3D elements, therefore check the dimension of the
   // interface parent element and the background element.
   FOUR_C_ASSERT(Interface::spatial_dim_ + 1 != 3 or Background::spatial_dim_ != 3,
       "The following implementation is only for 3d elements.");
 
   // Initialize the local stress matrices.
-  local_stiffness_nitsche_interface.put_scalar(0.0);
+  local_stiffness_nitsche_parent.put_scalar(0.0);
   local_stiffness_nitsche_background.put_scalar(0.0);
-  local_stiffness_nitsche_interface_background.put_scalar(0.0);
+  local_stiffness_nitsche_parent_background.put_scalar(0.0);
   local_constraint_nitsche.put_scalar(0.0);
 
   // Initialize variables for shape function values.
@@ -872,9 +677,6 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     for (int i_interface_node = 0; i_interface_node < Interface::n_nodes_; i_interface_node++)
       nodal_initpos_interface(i_interface_node, i_dim) =
           ele1pos_.element_position_(i_dim + 3 * i_interface_node);
-
-  // std::cout << "Initial position interface" << std::endl;
-  // nodal_initpos_interface.print(std::cout);
 
   Core::LinAlg::Matrix<ParentInterface::n_nodes_, 3, double> nodal_initpos_parent(
       Core::LinAlg::Initialization::zero);
@@ -1077,8 +879,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     for (unsigned int i_dir = 0; i_dir < 3; ++i_dir)
       gap_at_xi(i_dir) = displacement_at_xi_interface(i_dir) - displacement_at_xi_background(i_dir);
 
-    // std::cout << "gap between interface background" << std::endl;
-    // gap_at_xi.print(std::cout);
+    std::cout << "gap between interface background" << std::endl;
+    gap_at_xi.print(std::cout);
 
     // As the calculations of the first Piola-Kirchhoff stresses are done in the parent element of
     // the face element, we need the locations of the dofs of the interface in its parent element.
@@ -1117,34 +919,62 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
 
     // Build helper stiffness matrices
     /// Terms in \delta \Pi_{Nitsche}^{interface} , displacement_{interface}
+    // Core::LinAlg::Matrix<ParentInterface::n_dof_, ParentInterface::n_dof_, double>
+    //     lin_d_pk1_parent(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<ParentInterface::n_dof_, ParentInterface::n_dof_, double>
-        lin_d_pk1_interface(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<ParentInterface::n_dof_, ParentInterface::n_dof_, double>
-        d_pk1_interface_disp_interface(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<ParentInterface::n_dof_, ParentInterface::n_dof_, double>
-        d_disp_interface_pk1_interface(Core::LinAlg::Initialization::zero);
+        d_pk1_parent_disp_interface(Core::LinAlg::Initialization::zero);
+    // Core::LinAlg::Matrix<ParentInterface::n_dof_, ParentInterface::n_dof_, double>
+    //     d_disp_interface_pk1_interface(Core::LinAlg::Initialization::zero);
 
-    for (unsigned int i_interface_node = 0; i_interface_node < ParentInterface::n_nodes_;
-        i_interface_node++)
+    for (unsigned int i_parent_node = 0; i_parent_node < ParentInterface::n_nodes_; i_parent_node++)
       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
-        auto [_, lin_dependencies_i_interface] = evaluate_variation_first_pk_at_node_dir(
-            i_interface_node, i_dir, quantities_at_xi_parent);
+        auto [d_pk1_i_interface, _] =
+            evaluate_variation_first_pk_at_node_dir(i_parent_node, i_dir, quantities_at_xi_parent);
 
-        for (unsigned int j_interface_node = 0; j_interface_node < ParentInterface::n_nodes_;
+        Core::LinAlg::Matrix<3, 1> traction_d_pk1_i_interface(Core::LinAlg::Initialization::zero);
+        traction_d_pk1_i_interface.multiply(d_pk1_i_interface, unit_normal_interface);
+
+        for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
             j_interface_node++)
         {
           for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
           {
+            d_pk1_parent_disp_interface(i_parent_node * 3 + i_dir,
+                nodes_interface_locations[j_interface_node] * 3 + j_dir) -=
+                traction_d_pk1_i_interface(j_dir) * N_interface(j_interface_node) *
+                nitsche_average_weight_param * weight * determinant_interface;
+          }
+        }
+      }
+    local_stiffness_nitsche_parent.update(1.0, d_pk1_parent_disp_interface, 1.0);
+    // std::cout << "local_stiffness_nitsche_parent 1 " << std::endl;
+    // local_stiffness_nitsche_parent.print(std::cout);
+    local_stiffness_nitsche_parent.update_t(1.0, d_pk1_parent_disp_interface, 1.0);
+    // std::cout << "local_stiffness_nitsche_parent 2 " << std::endl;
+    // local_stiffness_nitsche_parent.print(std::cout);
+
+
+    for (unsigned int i_parent_node = 0; i_parent_node < ParentInterface::n_nodes_; i_parent_node++)
+      for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
+      {
+        auto [_, lin_dependencies_i_interface] =
+            evaluate_variation_first_pk_at_node_dir(i_parent_node, i_dir, quantities_at_xi_parent);
+
+        for (unsigned int j_parent_node = 0; j_parent_node < ParentInterface::n_nodes_;
+            j_parent_node++)
+        {
+          for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
+          {
             auto [_, lin_dependencies_j_interface] = evaluate_variation_first_pk_at_node_dir(
-                j_interface_node, j_dir, quantities_at_xi_parent);
+                j_parent_node, j_dir, quantities_at_xi_parent);
 
             auto lin_d_pk1 = evaluate_lin_variation_first_pk(lin_dependencies_i_interface,
                 lin_dependencies_j_interface, quantities_at_xi_parent);
             Core::LinAlg::Matrix<3, 1> traction_lin_var_pk1(Core::LinAlg::Initialization::zero);
             traction_lin_var_pk1.multiply(lin_d_pk1, unit_normal_interface);
 
-            lin_d_pk1_interface(i_interface_node * 3 + i_dir, j_interface_node * 3 + j_dir) -=
+            local_stiffness_nitsche_parent(i_parent_node * 3 + i_dir, j_parent_node * 3 + j_dir) -=
                 (traction_lin_var_pk1(0) * gap_at_xi(0) + traction_lin_var_pk1(1) * gap_at_xi(1) +
                     traction_lin_var_pk1(2) * gap_at_xi(2)) *
                 nitsche_average_weight_param * weight * determinant_interface;
@@ -1152,86 +982,70 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
         }
       }
 
-    for (unsigned int i_interface_node = 0; i_interface_node < ParentInterface::n_nodes_;
-        i_interface_node++)
-      for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
-      {
-        auto [d_pk1_i_interface, _] = evaluate_variation_first_pk_at_node_dir(
-            i_interface_node, i_dir, quantities_at_xi_parent);
+    // std::cout << "local_stiffness_nitsche_parent 3 " << std::endl;
+    // local_stiffness_nitsche_parent.print(std::cout);
 
-        Core::LinAlg::Matrix<3, 1> traction_d_pk1_i_interface(Core::LinAlg::Initialization::zero);
-        traction_d_pk1_i_interface.multiply(d_pk1_i_interface, unit_normal_interface);
 
-        for (unsigned int j_interface_node = 0; j_interface_node < ParentInterface::n_nodes_;
-            j_interface_node++)
-        {
-          for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
-          {
-            d_pk1_interface_disp_interface(
-                i_interface_node * 3 + i_dir, j_interface_node * 3 + j_dir) -=
-                traction_d_pk1_i_interface(j_dir) * N_parent(j_interface_node) *
-                nitsche_average_weight_param * weight * determinant_interface;
-          }
-        }
-      }
 
-    for (unsigned int i_interface_node = 0; i_interface_node < ParentInterface::n_nodes_;
-        i_interface_node++)
-      for (unsigned int j_interface_node = 0; j_interface_node < ParentInterface::n_nodes_;
-          j_interface_node++)
-      {
-        for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
-        {
-          auto [d_pk1_j_interface, _] = evaluate_variation_first_pk_at_node_dir(
-              j_interface_node, j_dir, quantities_at_xi_parent);
-
-          Core::LinAlg::Matrix<3, 1> traction_d_pk1_j_interface(Core::LinAlg::Initialization::zero);
-          traction_d_pk1_j_interface.multiply(d_pk1_j_interface, unit_normal_interface);
-
-          for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
-          {
-            d_disp_interface_pk1_interface(
-                i_interface_node * 3 + i_dir, j_interface_node * 3 + j_dir) -=
-                N_parent(i_interface_node) * traction_d_pk1_j_interface(i_dir) *
-                nitsche_average_weight_param * weight * determinant_interface;
-          }
-        }
-      }
-
-    //// Add contributions to matrix
-    local_stiffness_nitsche_interface.update(1.0, lin_d_pk1_interface, 1.0);
-    local_stiffness_nitsche_interface.update(1.0, d_pk1_interface_disp_interface, 1.0);
-    local_stiffness_nitsche_interface.update(1.0, d_disp_interface_pk1_interface, 1.0);
+    // for (unsigned int i_interface_node = 0; i_interface_node < ParentInterface::n_nodes_;
+    //     i_interface_node++)
+    //   for (unsigned int j_interface_node = 0; j_interface_node < ParentInterface::n_nodes_;
+    //       j_interface_node++)
+    //   {
+    //     for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
+    //     {
+    //       auto [d_pk1_j_interface, _] = evaluate_variation_first_pk_at_node_dir(
+    //           j_interface_node, j_dir, quantities_at_xi_parent);
+    //
+    //       Core::LinAlg::Matrix<3, 1>
+    //       traction_d_pk1_j_interface(Core::LinAlg::Initialization::zero);
+    //       traction_d_pk1_j_interface.multiply(d_pk1_j_interface, unit_normal_interface);
+    //
+    //       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
+    //       {
+    //         d_disp_interface_pk1_interface(
+    //             i_interface_node * 3 + i_dir, j_interface_node * 3 + j_dir) -=
+    //             N_parent(i_interface_node) * traction_d_pk1_j_interface(i_dir) *
+    //             nitsche_average_weight_param * weight * determinant_interface;
+    //       }
+    //     }
+    //   }
+    //
+    // //// Add contributions to matrix
+    // local_stiffness_nitsche_interface.update(1.0, lin_d_pk1_interface, 1.0);
+    // local_stiffness_nitsche_interface.update(1.0, d_pk1_interface_disp_interface, 1.0);
+    // local_stiffness_nitsche_interface.update(1.0, d_disp_interface_pk1_interface, 1.0);
 
 
     /// Terms in \delta \Pi_{Nitsche}^{interface} , displacement_{background}
-    Core::LinAlg::Matrix<ParentInterface::n_dof_, Background::n_dof_, double>
-        d_pk1_interface_disp_background(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<ParentInterface::n_dof_, Background::n_dof_, double>
-        d_disp_interface_pk1_background(Core::LinAlg::Initialization::zero);
+    // Core::LinAlg::Matrix<ParentInterface::n_dof_, Background::n_dof_, double>
+    //     d_pk1_interface_disp_background(Core::LinAlg::Initialization::zero);
+    // Core::LinAlg::Matrix<ParentInterface::n_dof_, Background::n_dof_, double>
+    //     d_disp_interface_pk1_background(Core::LinAlg::Initialization::zero);
 
-    for (unsigned int i_interface_node = 0; i_interface_node < ParentInterface::n_nodes_;
-        i_interface_node++)
+    for (unsigned int i_parent_node = 0; i_parent_node < ParentInterface::n_nodes_; i_parent_node++)
       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
-        auto [d_pk1_i_interface, _] = evaluate_variation_first_pk_at_node_dir(
-            i_interface_node, i_dir, quantities_at_xi_parent);
+        auto [d_pk1_i_parent, _] =
+            evaluate_variation_first_pk_at_node_dir(i_parent_node, i_dir, quantities_at_xi_parent);
 
-        Core::LinAlg::Matrix<3, 1> traction_d_pk1_i_interface(Core::LinAlg::Initialization::zero);
-        traction_d_pk1_i_interface.multiply(d_pk1_i_interface, unit_normal_interface);
+        Core::LinAlg::Matrix<3, 1> traction_d_pk1_i_parent(Core::LinAlg::Initialization::zero);
+        traction_d_pk1_i_parent.multiply(d_pk1_i_parent, unit_normal_interface);
 
         for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
             j_background_node++)
           for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
           {
-            d_pk1_interface_disp_background(
-                i_interface_node * 3 + i_dir, j_background_node * 3 + j_dir) +=
-                traction_d_pk1_i_interface(j_dir) * N_background(j_background_node) *
+            local_stiffness_nitsche_parent_background(
+                i_parent_node * 3 + i_dir, j_background_node * 3 + j_dir) +=
+                traction_d_pk1_i_parent(j_dir) * N_background(j_background_node) *
                 nitsche_average_weight_param * weight * determinant_interface;
           }
       }
+    // std::cout << "local_stiffness_nitsche_parent_background 1 " << std::endl;
+    // local_stiffness_nitsche_parent_background.print(std::cout);
 
-    for (unsigned int i_interface_node = 0; i_interface_node < ParentInterface::n_nodes_;
+    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
         i_interface_node++)
       for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
           j_background_node++)
@@ -1245,56 +1059,31 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
 
           for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
           {
-            d_disp_interface_pk1_background(
-                i_interface_node * 3 + i_dir, j_background_node * 3 + j_dir) -=
-                N_parent(i_interface_node) * traction_d_pk1_j_background(i_dir) *
+            local_stiffness_nitsche_parent_background(
+                nodes_interface_locations[i_interface_node] * 3 + i_dir,
+                j_background_node * 3 + j_dir) -=
+                N_interface(i_interface_node) * traction_d_pk1_j_background(i_dir) *
                 (1.0 - nitsche_average_weight_param) * weight * determinant_interface;
           }
         }
+    // std::cout << "local_stiffness_nitsche_parent_background 2 " << std::endl;
+    // local_stiffness_nitsche_parent_background.print(std::cout);
 
     //// Add contributions to matrices
-    local_stiffness_nitsche_interface_background.update(1.0, d_pk1_interface_disp_background, 1.0);
-    local_stiffness_nitsche_interface_background.update(1.0, d_disp_interface_pk1_background, 1.0);
-
-    local_stiffness_nitsche_background_interface.update_t(
-        local_stiffness_nitsche_interface_background);
+    // local_stiffness_nitsche_parent_background.update(1.0, d_pk1_interface_disp_background, 1.0);
+    // local_stiffness_nitsche_parent_background.update(1.0, d_disp_interface_pk1_background, 1.0);
+    //
+    // local_stiffness_nitsche_background_interface.update_t(
+    //     local_stiffness_nitsche_parent_background);
 
 
     // Terms in \delta \Pi_{Nitsche}^{background} , displacement_{background}
-    Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double> lin_d_pk1_background(
-        Core::LinAlg::Initialization::zero);
+    // Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double> lin_d_pk1_background(
+    //     Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>
         d_pk1_background_disp_background(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>
-        d_disp_background_pk1_background(Core::LinAlg::Initialization::zero);
-
-    for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
-        i_background_node++)
-      for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
-      {
-        auto [_, lin_dependencies_i_background] = evaluate_variation_first_pk_at_node_dir(
-            i_background_node, i_dir, quantities_at_xi_background);
-
-        for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
-            j_background_node++)
-        {
-          for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
-          {
-            auto [_, lin_dependencies_j_background] = evaluate_variation_first_pk_at_node_dir(
-                j_background_node, j_dir, quantities_at_xi_background);
-
-            auto lin_d_pk1 = evaluate_lin_variation_first_pk(lin_dependencies_i_background,
-                lin_dependencies_j_background, quantities_at_xi_background);
-            Core::LinAlg::Matrix<3, 1> traction_lin_d_pk1(Core::LinAlg::Initialization::zero);
-            traction_lin_d_pk1.multiply(lin_d_pk1, unit_normal_interface);
-
-            lin_d_pk1_background(i_background_node * 3 + i_dir, j_background_node * 3 + j_dir) -=
-                (traction_lin_d_pk1(0) * gap_at_xi(0) + traction_lin_d_pk1(1) * gap_at_xi(1) +
-                    traction_lin_d_pk1(2) * gap_at_xi(2)) *
-                (1.0 - nitsche_average_weight_param) * weight * determinant_interface;
-          }
-        }
-      }
+    // Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>
+    //     d_disp_background_pk1_background(Core::LinAlg::Initialization::zero);
 
     for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
         i_background_node++)
@@ -1319,53 +1108,92 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
           }
         }
       }
+    local_stiffness_nitsche_background.update(1.0, d_pk1_background_disp_background, 1.0);
+    // std::cout << "local_stiffness_nitsche_background 1 " << std::endl;
+    // local_stiffness_nitsche_background.print(std::cout);
+    local_stiffness_nitsche_background.update_t(1.0, d_pk1_background_disp_background, 1.0);
+    // std::cout << "local_stiffness_nitsche_background 2 " << std::endl;
+    // local_stiffness_nitsche_background.print(std::cout);
 
     for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
         i_background_node++)
-      for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
-          j_background_node++)
+      for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
-        for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
+        auto [_, lin_dependencies_i_background] = evaluate_variation_first_pk_at_node_dir(
+            i_background_node, i_dir, quantities_at_xi_background);
+
+        for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
+            j_background_node++)
         {
-          auto [d_pk1_j_background, _] = evaluate_variation_first_pk_at_node_dir(
-              j_background_node, j_dir, quantities_at_xi_background);
-
-          Core::LinAlg::Matrix<3, 1> traction_d_pk1_j_background(
-              Core::LinAlg::Initialization::zero);
-          traction_d_pk1_j_background.multiply(d_pk1_j_background, unit_normal_interface);
-
-          for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
+          for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
           {
-            d_disp_background_pk1_background(
-                i_background_node * 3 + i_dir, j_background_node * 3 + j_dir) +=
-                N_background(i_background_node) * traction_d_pk1_j_background(i_dir) *
+            auto [_, lin_dependencies_j_background] = evaluate_variation_first_pk_at_node_dir(
+                j_background_node, j_dir, quantities_at_xi_background);
+
+            auto lin_d_pk1 = evaluate_lin_variation_first_pk(lin_dependencies_i_background,
+                lin_dependencies_j_background, quantities_at_xi_background);
+            Core::LinAlg::Matrix<3, 1> traction_lin_d_pk1(Core::LinAlg::Initialization::zero);
+            traction_lin_d_pk1.multiply(lin_d_pk1, unit_normal_interface);
+
+            local_stiffness_nitsche_background(
+                i_background_node * 3 + i_dir, j_background_node * 3 + j_dir) -=
+                (traction_lin_d_pk1(0) * gap_at_xi(0) + traction_lin_d_pk1(1) * gap_at_xi(1) +
+                    traction_lin_d_pk1(2) * gap_at_xi(2)) *
                 (1.0 - nitsche_average_weight_param) * weight * determinant_interface;
           }
         }
       }
+    // std::cout << "local_stiffness_nitsche_background 3 " << std::endl;
+    // local_stiffness_nitsche_background.print(std::cout);
 
-    local_stiffness_nitsche_background.update(1.0, lin_d_pk1_background, 1.0);
-    local_stiffness_nitsche_background.update(1.0, d_pk1_background_disp_background, 1.0);
-    local_stiffness_nitsche_background.update(1.0, d_disp_background_pk1_background, 1.0);
+
+
+    // for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
+    //     i_background_node++)
+    //   for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
+    //       j_background_node++)
+    //   {
+    //     for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
+    //     {
+    //       auto [d_pk1_j_background, _] = evaluate_variation_first_pk_at_node_dir(
+    //           j_background_node, j_dir, quantities_at_xi_background);
+    //
+    //       Core::LinAlg::Matrix<3, 1> traction_d_pk1_j_background(
+    //           Core::LinAlg::Initialization::zero);
+    //       traction_d_pk1_j_background.multiply(d_pk1_j_background, unit_normal_interface);
+    //
+    //       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
+    //       {
+    //         d_disp_background_pk1_background(
+    //             i_background_node * 3 + i_dir, j_background_node * 3 + j_dir) +=
+    //             N_background(i_background_node) * traction_d_pk1_j_background(i_dir) *
+    //             (1.0 - nitsche_average_weight_param) * weight * determinant_interface;
+    //       }
+    //     }
+    //   }
+
+    // local_stiffness_nitsche_background.update(1.0, lin_d_pk1_background, 1.0);
+    // local_stiffness_nitsche_background.update(1.0, d_pk1_background_disp_background, 1.0);
+    // local_stiffness_nitsche_background.update(1.0, d_disp_background_pk1_background, 1.0);
 
 
     // Obtain the contributions to the local constraint
-    for (unsigned int i_interface_node = 0; i_interface_node < ParentInterface::n_nodes_;
-        i_interface_node++)
+    for (unsigned int i_parent_node = 0; i_parent_node < ParentInterface::n_nodes_; i_parent_node++)
       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
-        auto [d_pk1_i_interface, lin_dependencies_i_interface] =
-            evaluate_variation_first_pk_at_node_dir(
-                i_interface_node, i_dir, quantities_at_xi_parent);
+        auto [d_pk1_i_parent, _] =
+            evaluate_variation_first_pk_at_node_dir(i_parent_node, i_dir, quantities_at_xi_parent);
 
-        Core::LinAlg::Matrix<3, 1> d_traction_i_interface(Core::LinAlg::Initialization::zero);
-        d_traction_i_interface.multiply(d_pk1_i_interface, unit_normal_interface);
+        Core::LinAlg::Matrix<3, 1> d_traction_i_parent(Core::LinAlg::Initialization::zero);
+        d_traction_i_parent.multiply(d_pk1_i_parent, unit_normal_interface);
 
-        local_constraint_nitsche(i_interface_node * 3 + i_dir) -=
-            (d_traction_i_interface(0) * gap_at_xi(0) + d_traction_i_interface(1) * gap_at_xi(1) +
-                d_traction_i_interface(2) * gap_at_xi(2)) *
+        local_constraint_nitsche(i_parent_node * 3 + i_dir) -=
+            (d_traction_i_parent(0) * gap_at_xi(0) + d_traction_i_parent(1) * gap_at_xi(1) +
+                d_traction_i_parent(2) * gap_at_xi(2)) *
             nitsche_average_weight_param * weight * determinant_interface;
       }
+    // std::cout << "local_constraint_nitsche 1 " << std::endl;
+    // local_constraint_nitsche.print(std::cout);
 
 
     for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
@@ -1383,16 +1211,20 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
                 d_traction_i_background(2) * gap_at_xi(2)) *
             (1.0 - nitsche_average_weight_param) * weight * determinant_interface;
       }
+    // std::cout << "local_constraint_nitsche 2 " << std::endl;
+    // local_constraint_nitsche.print(std::cout);
 
 
-    for (unsigned int i_interface_node = 0; i_interface_node < ParentInterface::n_nodes_;
+    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
         i_interface_node++)
       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
-        local_constraint_nitsche(i_interface_node * 3 + i_dir) -= traction_pk1_weighted(i_dir) *
-                                                                  N_parent(i_interface_node) *
-                                                                  weight * determinant_interface;
+        local_constraint_nitsche(nodes_interface_locations[i_interface_node] * 3 + i_dir) -=
+            traction_pk1_weighted(i_dir) * N_interface(i_interface_node) * weight *
+            determinant_interface;
       }
+    // std::cout << "local_constraint_nitsche 3 " << std::endl;
+    // local_constraint_nitsche.print(std::cout);
 
 
     for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
@@ -1403,9 +1235,18 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
             traction_pk1_weighted(i_dir) * N_background(i_background_node) * weight *
             determinant_interface;
       }
+    // std::cout << "local_constraint_nitsche 1 " << std::endl;
+    // local_constraint_nitsche.print(std::cout);
   }
 
-  // local_constraint_nitsche.print(std::cout);
+  std::cout << "local_stiffness_nitsche_parent " << std::endl;
+  local_stiffness_nitsche_parent.print(std::cout);
+  std::cout << "local_stiffness_nitsche_background " << std::endl;
+  local_stiffness_nitsche_background.print(std::cout);
+  std::cout << "local_stiffness_nitsche_parent_background " << std::endl;
+  local_stiffness_nitsche_parent_background.print(std::cout);
+  std::cout << "local constraint nitsche " << std::endl;
+  local_constraint_nitsche.print(std::cout);
 }
 
 template <typename Interface, typename ParentInterface, typename Background>
@@ -1417,23 +1258,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
         local_stiffness_penalty_background,
     Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
         local_stiffness_penalty_interface_background,
-    Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint,
-    bool evaluate_perturbation, double epsilon)
+    Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint)
 {
-  if (evaluate_perturbation == true)
-  {
-    // for (int i = 0; i < Interface::n_dof_; i++)
-    //   ele1dis_.element_position_(i) += epsilon * 0.001;
-
-    for (int i = 0; i < Background::n_dof_; i++) ele2dis_.element_position_(i) += epsilon * 0.001;
-
-    std::cout << "element 1 position " << std::endl;
-    ele1dis_.element_position_.print(std::cout);
-
-    std::cout << "element 2 position " << std::endl;
-    ele2dis_.element_position_.print(std::cout);
-  }
-
   // Initialize the local penalty matrices.
   local_stiffness_penalty_interface.put_scalar(0.0);
   local_stiffness_penalty_background.put_scalar(0.0);

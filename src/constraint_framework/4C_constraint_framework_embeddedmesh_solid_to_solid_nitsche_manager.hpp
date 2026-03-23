@@ -148,14 +148,21 @@ namespace Constraints::EmbeddedMesh
     //! Id of background column elements that are cut
     std::vector<int> ids_cut_elements_col_;
 
+    std::vector<int> parent_dofs_;
+
     //! Row map of the solid interface DOFs.
     std::shared_ptr<Core::LinAlg::Map> interface_dof_rowmap_;
+
+    //! Row map of the solid parent element of the interface DOFs.
+    std::shared_ptr<Core::LinAlg::Map> parent_dof_rowmap_;
 
     //! Row map of the solid background DOFs.
     std::shared_ptr<Core::LinAlg::Map> background_dof_rowmap_;
 
     //! Row map of both interface and solid background DOFs.
     std::shared_ptr<Core::LinAlg::Map> interface_and_background_dof_rowmap_;
+
+    std::shared_ptr<Core::LinAlg::Map> parent_and_background_dof_rowmap_;
 
     //! Global contributions of the penalty term associated with the interface DOFs
     std::shared_ptr<Core::LinAlg::SparseMatrix> global_penalty_interface_ = nullptr;
@@ -166,15 +173,15 @@ namespace Constraints::EmbeddedMesh
     //! Global contributions of the penalty term associated with both interface and background DOFs
     std::shared_ptr<Core::LinAlg::SparseMatrix> global_penalty_interface_background_ = nullptr;
 
-    //! Global contributions of the Nitsche method associated with the interface DOFs
-    std::shared_ptr<Core::LinAlg::SparseMatrix> global_nitsche_interface_ = nullptr;
+    //! Global contributions of the Nitsche method associated with the parent of the interface DOFs
+    std::shared_ptr<Core::LinAlg::SparseMatrix> global_nitsche_parent_ = nullptr;
 
     //! Global contributions of the Nitsche method associated with the background DOFs
     std::shared_ptr<Core::LinAlg::SparseMatrix> global_nitsche_background_ = nullptr;
 
-    //! Global contributions of the Nitsche method associated with both the interface and background
-    //! DOFs
-    std::shared_ptr<Core::LinAlg::SparseMatrix> global_nitsche_interface_background_ = nullptr;
+    //! Global contributions of the Nitsche method associated with both the parent of the interface
+    //! and background DOFs
+    std::shared_ptr<Core::LinAlg::SparseMatrix> global_nitsche_parent_background_ = nullptr;
 
     //! Global penalty constraint vector.
     std::shared_ptr<Core::LinAlg::FEVector<double>> global_penalty_constraint_ = nullptr;

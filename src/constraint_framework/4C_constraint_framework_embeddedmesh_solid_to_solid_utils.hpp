@@ -100,6 +100,10 @@ namespace Constraints::EmbeddedMesh
       std::vector<std::shared_ptr<Constraints::EmbeddedMesh::SolidInteractionPair>>&
           embeddedmesh_coupling_pairs);
 
+  std::vector<int> get_dofs_ids_parent_elements(
+      std::vector<BackgroundInterfaceInfo>& info_background_interface_elements,
+      Core::FE::Discretization& discret);
+
   /**
    * \brief Change integration rule of cut background elements
    * @param cut_elements_vector (in) vector of cut elements
@@ -176,7 +180,7 @@ namespace Constraints::EmbeddedMesh
    * @param local_stiffness_penalty_interface_background (in) Local penalty contributions from both
    * interface and background of the pair.
    */
-  template <typename Interface, typename Background>
+  template <typename Interface, typename ParentInterface, typename Background>
   void assemble_local_nitsche_contributions(
       const Constraints::EmbeddedMesh::SolidInteractionPair* pair,
       const Core::FE::Discretization& discret, Core::LinAlg::SparseMatrix& global_penalty_interface,
@@ -193,15 +197,15 @@ namespace Constraints::EmbeddedMesh
           local_stiffness_penalty_background,
       const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
           local_stiffness_penalty_interface_background,
-      const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
-          local_stiffness_nitsche_interface,
+      const Core::LinAlg::Matrix<ParentInterface::n_dof_, ParentInterface::n_dof_, double>&
+          local_stiffness_nitsche_parent,
       const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
           local_stiffness_nitsche_background,
-      const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
-          local_stiffness_nitsche_interface_background,
+      const Core::LinAlg::Matrix<ParentInterface::n_dof_, Background::n_dof_, double>&
+          local_stiffness_nitsche_parent_background,
       const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
           local_constraint_penalty,
-      const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
+      const Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_, 1, double>&
           local_constraint_nitsche);
 
 
