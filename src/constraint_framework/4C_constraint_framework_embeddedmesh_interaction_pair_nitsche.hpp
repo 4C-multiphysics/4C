@@ -105,15 +105,15 @@ namespace Constraints::EmbeddedMesh
         bool evaluate_perturbation, double epsilon);
 
     void evaluate_stress_contributions_nitsche(const Core::FE::Discretization& discret,
-        Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
+        Core::LinAlg::Matrix<ParentInterface::n_dof_, ParentInterface::n_dof_, double>&
             local_stiffness_nitsche_interface,
         Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
             local_stiffness_nitsche_background,
-        Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
+        Core::LinAlg::Matrix<ParentInterface::n_dof_, Background::n_dof_, double>&
             local_stiffness_nitsche_interface_background,
-        Core::LinAlg::Matrix<Background::n_dof_, Interface::n_dof_, double>&
+        Core::LinAlg::Matrix<Background::n_dof_, ParentInterface::n_dof_, double>&
             local_stiffness_nitsche_background_interface,
-        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
+        Core::LinAlg::Matrix<ParentInterface::n_dof_ + Background::n_dof_, 1, double>&
             local_constraint_nitsche,
         double& nitsche_average_weight_param, bool evaluate_perturbation, double epsilon);
 
