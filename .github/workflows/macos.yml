@@ -1,0 +1,58 @@
+name: macOS built test
+
+on:
+  #schedule:
+  #  - cron: 3 4 * * 0
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test 4C on macOS
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6
+      - name: Preparation
+        run: |
+          g++ -v
+          uname
+          sysctl -n hw.physicalcpu
+          pwd
+          brew tap botantony/cmake3
+          brew install cmake3
+          echo "/opt/homebrew/opt/cmake3/bin" >> $GITHUB_PATH
+          sudo ln -sf $(brew --prefix gcc@14)/bin/gfortran-14 /opt/homebrew/bin/gfortran
+          brew install openmpi hdf5 llvm boost cln metis netcdf lld scalapack fftw
+          echo "DYLD_LIBRARY_PATH=/opt/homebrew/lib:${DYLD_LIBRARY_PATH}" >> $GITHUB_ENV
+      - name: Cache Dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: $HOME/opt
+          key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh') }}
+      - name: Install the dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: |
+          echo "install the dependencies"
+          cmake --version
+          sh ./dependencies/darwin/compile_dependencies.sh
+      - name: Build 4C
+        run: |
+          pwd
+          g++ -v
+          cmake -B build/ --fresh --preset=darwin-debug
+          cmake --build build/ --target full
+      - name: Run tests
+        run: |
+          echo "tests"
+          ctest  --test-dir build/ -j `sysctl -n hw.physicalcpu` --output-on-failure --output-junit $GITHUB_WORKSPACE/macos_assertions_test_report.xml
+      - name: Upload test report
+        if: success() || failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos_assertions_test_report.xml
+          path: |
+            ${{ github.workspace }}/macos_assertions_test_report.xml
