@@ -41,6 +41,19 @@ Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface, Par
   if (!face_element) FOUR_C_THROW("Cast to FaceElement failed!");
   parent_element1_ = (face_element->parent_element());
 
+  // Get kinematics of parent and background elements
+  auto* parent_solid_ele = dynamic_cast<Discret::Elements::Solid*>(&this->parent_element_1());
+  if (!parent_solid_ele)
+    FOUR_C_THROW(
+        "This implementation of the embedded mesh method only works for new solid elements.");
+  parent_element1_kinem_ = parent_solid_ele->kinematic_type();
+
+  auto* background_solid_ele = dynamic_cast<Discret::Elements::Solid*>(&this->element_2());
+  if (!background_solid_ele)
+    FOUR_C_THROW(
+        "This implementation of the embedded mesh method only works for new solid elements.");
+  element2_kinem_ = background_solid_ele->kinematic_type();
+
   // Initialize the element positions and displacement containers
   ele1pos_ = GeometryPair::InitializeElementData<Interface, double>::initialize(&this->element_1());
   ele1parentpos_ = GeometryPair::InitializeElementData<ParentInterface, double>::initialize(
@@ -274,58 +287,6 @@ void interface_element_gp_in_solid(Core::Elements::FaceElement& face_element, co
 }
 
 template <Core::FE::CellType celltype>
-void evaluate_cauchy_stress_tensor_at_xi(const Core::FE::Discretization& discret,
-    std::vector<double>& ele_displacement, Core::Elements::Element& element,
-    Core::LinAlg::Matrix<3, 1>& xi, Core::LinAlg::Matrix<3, 1, double>& normal_vector,
-    Core::LinAlg::Matrix<3, 1, double>& traction_vector,
-    Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>&
-        deformation_gradient,
-    Core::LinAlg::Matrix<3, 3, double>& cauchy_stress_tensor,
-    std::vector<Core::LinAlg::SerialDenseMatrix>& d_cauchyndir_dd
-    // Discret::Elements::CauchyNDirLinearizationDependencies<celltype>& linearization_dependencies
-)
-{
-  // Define directions
-  Core::LinAlg::Matrix<3, 1, double> e_x(Core::LinAlg::Initialization::zero),
-      e_y(Core::LinAlg::Initialization::zero), e_z(Core::LinAlg::Initialization::zero);
-  e_x(0, 0) = 1.0;
-  e_y(1, 0) = 1.0;
-  e_z(2, 0) = 1.0;
-  const std::array<Core::LinAlg::Matrix<3, 1, double>, 3> dirs = {e_x, e_y, e_z};
-
-  // Obtain the traction vector at xi
-  if (auto* solid_ele = dynamic_cast<Discret::Elements::Solid*>(&element); solid_ele != nullptr)
-  {
-    Discret::Elements::CauchyNDirLinearizations<3> cauchy_linearizations{};
-
-    // Fill out the traction vector and Cauchy stress tensor of the interface
-    for (int i_dir = 0; i_dir < 3; ++i_dir)
-    {
-      cauchy_linearizations.d_cauchyndir_dd = &d_cauchyndir_dd[i_dir];
-
-      traction_vector(i_dir) = solid_ele->get_normal_cauchy_stress_at_xi(ele_displacement,
-          Core::LinAlg::reinterpret_as_tensor<3>(xi),
-          Core::LinAlg::reinterpret_as_tensor<3>(normal_vector),
-          Core::LinAlg::reinterpret_as_tensor<3>(dirs[i_dir]), cauchy_linearizations, &discret);
-
-      for (int j_dir = 0; j_dir < 3; ++j_dir)
-      {
-        Discret::Elements::CauchyNDirLinearizations<3> cauchy_linearizations_dummy{};
-        cauchy_stress_tensor(i_dir, j_dir) = solid_ele->get_normal_cauchy_stress_at_xi(
-            ele_displacement, Core::LinAlg::reinterpret_as_tensor<3>(xi),
-            Core::LinAlg::reinterpret_as_tensor<3>(dirs[i_dir]),
-            Core::LinAlg::reinterpret_as_tensor<3>(dirs[j_dir]), cauchy_linearizations_dummy,
-            &discret);
-      }
-    }
-  }
-  else
-  {
-    FOUR_C_THROW("Unsupported solid element type");
-  }
-}
-
-template <Core::FE::CellType celltype>
 struct QuantitiesDomainEvaluatedAtXi
 {
   /// Derivative of the shape functions w.r.t. the reference coordinates
@@ -355,6 +316,7 @@ struct LinearizationDependencies
 template <Core::FE::CellType celltype>
 QuantitiesDomainEvaluatedAtXi<celltype> evaluate_domain_quantities_at_xi(
     const Core::FE::Discretization& discret, const Core::Elements::Element& element,
+    Inpar::Solid::KinemType ele_kinem_type,
     const Core::LinAlg::Matrix<Core::FE::num_nodes(celltype), 3, double> initial_position_ele,
     const std::vector<double>& ele_displacement, Core::LinAlg::Matrix<3, 1>& xi,
     Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::num_nodes(celltype), double> dxi_N)
@@ -379,10 +341,26 @@ QuantitiesDomainEvaluatedAtXi<celltype> evaluate_domain_quantities_at_xi(
       evaluate_spatial_material_mapping(jacobian_mapping, element_nodes);
 
   const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
-      cauchygreen = evaluate_cauchy_green(spatial_material_mapping);
+      strain = [&]()
+  {
+    if (ele_kinem_type == Inpar::Solid::KinemType::linear)
+    {
+      return Discret::Elements::evaluate_linear_gl_strain(
+          element_nodes, Discret::Elements::evaluate_linear_strain_gradient(jacobian_mapping));
+    }
+    else if (ele_kinem_type == Inpar::Solid::KinemType::nonlinearTotLag)
+    {
+      const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+          cauchygreen = evaluate_cauchy_green(spatial_material_mapping);
 
-  const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
-      gl_strain = Discret::Elements::evaluate_green_lagrange_strain(cauchygreen);
+      return Discret::Elements::evaluate_green_lagrange_strain(cauchygreen);
+    }
+    else
+    {
+      FOUR_C_THROW(
+          "kinem_type not supported for the evaluation of the first Piola-Kirchhoff stresses!");
+    }
+  }();
 
   auto* solid_ele = dynamic_cast<const Discret::Elements::Solid*>(&element);
   if (!solid_ele) FOUR_C_THROW("Cast to Discret::Elements::Solid failed!");
@@ -398,7 +376,7 @@ QuantitiesDomainEvaluatedAtXi<celltype> evaluate_domain_quantities_at_xi(
   // relevant for calculations)
   const int gp = 0;
   auto pk2 = Discret::Elements::evaluate_material_stress<celltype>(*(solid_ele->solid_material()),
-      deformation_gradient, gl_strain, params, context, gp, element.id());
+      deformation_gradient, strain, params, context, gp, element.id());
 
   // Calculate the 1st Piola-Kirchhoff stresses
   Core::LinAlg::Matrix<3, 3> def_gradient = Core::LinAlg::make_matrix_view(deformation_gradient);
@@ -440,7 +418,8 @@ QuantitiesDomainEvaluatedAtXi<celltype> evaluate_domain_quantities_at_xi(
 template <Core::FE::CellType celltype>
 std::tuple<Core::LinAlg::Matrix<3, 3>, LinearizationDependencies<celltype>>
 evaluate_variation_first_pk_at_node_dir(unsigned int& num_node, unsigned int& n_dir,
-    QuantitiesDomainEvaluatedAtXi<celltype>& quantities_domain_at_xi)
+    QuantitiesDomainEvaluatedAtXi<celltype>& quantities_domain_at_xi,
+    Inpar::Solid::KinemType kinem_type)
 {
   LinearizationDependencies<celltype> linearization_dependencies;
 
@@ -451,30 +430,46 @@ evaluate_variation_first_pk_at_node_dir(unsigned int& num_node, unsigned int& n_
         quantities_domain_at_xi.N_XYZ_(i_dim, num_node);
 
   // Get the variation of the Green-Lagrange strains at a node and direction
-  Core::LinAlg::Matrix<3, 3> d_glstrain(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> d_strain(Core::LinAlg::Initialization::zero);
+  if (kinem_type == Inpar::Solid::KinemType::linear)
+  {
+    // Evaluate the derivative of the linear strain
+    for (int i_dim = 0; i_dim < Core::FE::dim<celltype>; ++i_dim)
+    {
+      d_strain(n_dir, i_dim) += 0.5 * quantities_domain_at_xi.N_XYZ_(i_dim, num_node);
+      d_strain(i_dim, n_dir) += 0.5 * quantities_domain_at_xi.N_XYZ_(i_dim, num_node);
+    }
+  }
+  else if (kinem_type == Inpar::Solid::KinemType::nonlinearTotLag)
+  {
+    // Evaluate the derivative of the Green-Lagrange strain
+    Core::LinAlg::Matrix<3, 3> d_defgradT_defgrad(Core::LinAlg::Initialization::zero);
+    d_defgradT_defgrad.multiply_tn(
+        linearization_dependencies.d_defgrad_, quantities_domain_at_xi.defgrad_);
+    d_strain.update(0.5, d_defgradT_defgrad, 1.0);
 
-  Core::LinAlg::Matrix<3, 3> d_defgradT_defgrad(Core::LinAlg::Initialization::zero);
-  d_defgradT_defgrad.multiply_tn(
-      linearization_dependencies.d_defgrad_, quantities_domain_at_xi.defgrad_);
-  d_glstrain.update(0.5, d_defgradT_defgrad, 1.0);
+    Core::LinAlg::Matrix<3, 3> defgradT_d_defgrad(Core::LinAlg::Initialization::zero);
+    defgradT_d_defgrad.multiply_tn(
+        quantities_domain_at_xi.defgrad_, linearization_dependencies.d_defgrad_);
+    d_strain.update(0.5, defgradT_d_defgrad, 1.0);
+  }
+  else
+    FOUR_C_THROW(
+        "kinem_type not supported for the evaluation of the first Piola-Kirchhoff stresses!");
 
-  Core::LinAlg::Matrix<3, 3> defgradT_d_defgrad(Core::LinAlg::Initialization::zero);
-  defgradT_d_defgrad.multiply_tn(
-      quantities_domain_at_xi.defgrad_, linearization_dependencies.d_defgrad_);
-  d_glstrain.update(0.5, defgradT_d_defgrad, 1.0);
 
-  Core::LinAlg::Matrix<6, 1> d_glstrain_voigt(Core::LinAlg::Initialization::zero);
-  d_glstrain_voigt(0) = d_glstrain(0, 0);
-  d_glstrain_voigt(1) = d_glstrain(1, 1);
-  d_glstrain_voigt(2) = d_glstrain(2, 2);
-  d_glstrain_voigt(3) = 2 * d_glstrain(0, 1);
-  d_glstrain_voigt(4) = 2 * d_glstrain(1, 2);
-  d_glstrain_voigt(5) = 2 * d_glstrain(0, 2);
+  Core::LinAlg::Matrix<6, 1> d_strain_voigt(Core::LinAlg::Initialization::zero);
+  d_strain_voigt(0) = d_strain(0, 0);
+  d_strain_voigt(1) = d_strain(1, 1);
+  d_strain_voigt(2) = d_strain(2, 2);
+  d_strain_voigt(3) = 2 * d_strain(0, 1);
+  d_strain_voigt(4) = 2 * d_strain(1, 2);
+  d_strain_voigt(5) = 2 * d_strain(0, 2);
 
   // Get the variation of the second Piola-Kirchhoff stress at a node and direction
   Core::LinAlg::Matrix<6, 1> d_pk2_voigt(Core::LinAlg::Initialization::zero);
   d_pk2_voigt.multiply(
-      make_stress_like_voigt_view(quantities_domain_at_xi.pk2_.cmat_), d_glstrain_voigt);
+      make_stress_like_voigt_view(quantities_domain_at_xi.pk2_.cmat_), d_strain_voigt);
 
   linearization_dependencies.d_pk2_.put_scalar(0.0);
   linearization_dependencies.d_pk2_(0, 0) = d_pk2_voigt(0);
@@ -686,12 +681,14 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     // evaluate first Piola-Kirchhoff stress and other necessary quantities on the interface at xi
     auto quantities_at_xi_parent =
         evaluate_domain_quantities_at_xi<ParentInterface::discretization_>(discret,
-            parent_element_1(), nodal_initpos_parent, nodal_disp_parent, xi_parent, dN_parent);
+            parent_element_1(), parent_element1_kinem_, nodal_initpos_parent, nodal_disp_parent,
+            xi_parent, dN_parent);
 
     // evaluate first Piola-Kirchhoff stress and other necessary quantities on the background at xi
     auto quantities_at_xi_background =
         evaluate_domain_quantities_at_xi<Background::discretization_>(discret, element_2(),
-            nodal_initpos_background, nodal_disp_background, xi_background, dN_background);
+            element2_kinem_, nodal_initpos_background, nodal_disp_background, xi_background,
+            dN_background);
 
     // evaluate the weighted difference between the first Piola-Kirchhoff stresses of the interface
     // and the background
@@ -767,8 +764,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     for (unsigned int i_parent_node = 0; i_parent_node < ParentInterface::n_nodes_; i_parent_node++)
       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
-        auto [d_pk1_i_interface, _] =
-            evaluate_variation_first_pk_at_node_dir(i_parent_node, i_dir, quantities_at_xi_parent);
+        auto [d_pk1_i_interface, _] = evaluate_variation_first_pk_at_node_dir(
+            i_parent_node, i_dir, quantities_at_xi_parent, parent_element1_kinem_);
 
         Core::LinAlg::Matrix<3, 1> traction_d_pk1_i_interface(Core::LinAlg::Initialization::zero);
         traction_d_pk1_i_interface.multiply(d_pk1_i_interface, unit_normal_interface);
@@ -792,8 +789,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     for (unsigned int i_parent_node = 0; i_parent_node < ParentInterface::n_nodes_; i_parent_node++)
       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
-        auto [_, lin_dependencies_i_interface] =
-            evaluate_variation_first_pk_at_node_dir(i_parent_node, i_dir, quantities_at_xi_parent);
+        auto [_, lin_dependencies_i_interface] = evaluate_variation_first_pk_at_node_dir(
+            i_parent_node, i_dir, quantities_at_xi_parent, parent_element1_kinem_);
 
         for (unsigned int j_parent_node = 0; j_parent_node < ParentInterface::n_nodes_;
             j_parent_node++)
@@ -801,7 +798,7 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
           for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
           {
             auto [_, lin_dependencies_j_interface] = evaluate_variation_first_pk_at_node_dir(
-                j_parent_node, j_dir, quantities_at_xi_parent);
+                j_parent_node, j_dir, quantities_at_xi_parent, parent_element1_kinem_);
 
             auto lin_d_pk1 = evaluate_lin_variation_first_pk(lin_dependencies_i_interface,
                 lin_dependencies_j_interface, quantities_at_xi_parent);
@@ -820,8 +817,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     for (unsigned int i_parent_node = 0; i_parent_node < ParentInterface::n_nodes_; i_parent_node++)
       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
-        auto [d_pk1_i_parent, _] =
-            evaluate_variation_first_pk_at_node_dir(i_parent_node, i_dir, quantities_at_xi_parent);
+        auto [d_pk1_i_parent, _] = evaluate_variation_first_pk_at_node_dir(
+            i_parent_node, i_dir, quantities_at_xi_parent, parent_element1_kinem_);
 
         Core::LinAlg::Matrix<3, 1> traction_d_pk1_i_parent(Core::LinAlg::Initialization::zero);
         traction_d_pk1_i_parent.multiply(d_pk1_i_parent, unit_normal_interface);
@@ -844,7 +841,7 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
         for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
         {
           auto [d_pk1_j_background, _] = evaluate_variation_first_pk_at_node_dir(
-              j_background_node, j_dir, quantities_at_xi_background);
+              j_background_node, j_dir, quantities_at_xi_background, element2_kinem_);
           Core::LinAlg::Matrix<3, 1> traction_d_pk1_j_background(
               Core::LinAlg::Initialization::zero);
           traction_d_pk1_j_background.multiply(d_pk1_j_background, unit_normal_interface);
@@ -869,7 +866,7 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
       {
         auto [d_pk1_i_background, lin_dependencies_i_background] =
             evaluate_variation_first_pk_at_node_dir(
-                i_background_node, i_dir, quantities_at_xi_background);
+                i_background_node, i_dir, quantities_at_xi_background, element2_kinem_);
 
         Core::LinAlg::Matrix<3, 1> traction_i_background(Core::LinAlg::Initialization::zero);
         traction_i_background.multiply(d_pk1_i_background, unit_normal_interface);
@@ -894,7 +891,7 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
         auto [_, lin_dependencies_i_background] = evaluate_variation_first_pk_at_node_dir(
-            i_background_node, i_dir, quantities_at_xi_background);
+            i_background_node, i_dir, quantities_at_xi_background, element2_kinem_);
 
         for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
             j_background_node++)
@@ -902,7 +899,7 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
           for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
           {
             auto [_, lin_dependencies_j_background] = evaluate_variation_first_pk_at_node_dir(
-                j_background_node, j_dir, quantities_at_xi_background);
+                j_background_node, j_dir, quantities_at_xi_background, element2_kinem_);
 
             auto lin_d_pk1 = evaluate_lin_variation_first_pk(lin_dependencies_i_background,
                 lin_dependencies_j_background, quantities_at_xi_background);
@@ -923,8 +920,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
     for (unsigned int i_parent_node = 0; i_parent_node < ParentInterface::n_nodes_; i_parent_node++)
       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
-        auto [d_pk1_i_parent, _] =
-            evaluate_variation_first_pk_at_node_dir(i_parent_node, i_dir, quantities_at_xi_parent);
+        auto [d_pk1_i_parent, _] = evaluate_variation_first_pk_at_node_dir(
+            i_parent_node, i_dir, quantities_at_xi_parent, parent_element1_kinem_);
 
         Core::LinAlg::Matrix<3, 1> d_traction_i_parent(Core::LinAlg::Initialization::zero);
         d_traction_i_parent.multiply(d_pk1_i_parent, unit_normal_interface);
@@ -940,7 +937,7 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairNitsche<Interface
       for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
       {
         auto [d_pk1_i_background, _] = evaluate_variation_first_pk_at_node_dir(
-            i_background_node, i_dir, quantities_at_xi_background);
+            i_background_node, i_dir, quantities_at_xi_background, element2_kinem_);
 
         Core::LinAlg::Matrix<3, 1> d_traction_i_background(Core::LinAlg::Initialization::zero);
         d_traction_i_background.multiply(d_pk1_i_background, unit_normal_interface);

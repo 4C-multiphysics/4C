@@ -671,33 +671,39 @@ void Constraints::EmbeddedMesh::get_coupling_pairs_and_background_elements(
   }
 }
 
-std::vector<int> Constraints::EmbeddedMesh::get_dofs_ids_parent_elements(
+std::vector<int> Constraints::EmbeddedMesh::get_node_ids_parent_elements(
     std::vector<BackgroundInterfaceInfo>& info_background_interface_elements,
     Core::FE::Discretization& discret)
 {
-  std::set<int> parent_dofs_set;
+  // std::cout << "get_node_ids_parent_elements" << std::endl;
+  std::set<int> parent_node_set;
 
   // Iterate over the information of the background elements and their corresponding interface
   // elements
   for (auto& background_interface_info : info_background_interface_elements)
   {
-    std::vector<int> parent_dofs_ids_temp;
-    std::vector<int> dummy_1;
-    std::vector<int> dummy_2;
+    std::vector<int> parent_node_ids_temp;
     for (auto iter_interface_ele : background_interface_info.interface_element_global_ids)
     {
       Core::Elements::Element* parent_element = discret.g_element(iter_interface_ele);
+      // std::cout << "parent element id " << parent_element->id() << std::endl;
 
-      parent_dofs_ids_temp.clear();
-      dummy_1.clear();
-      dummy_2.clear();
-      parent_element->location_vector(discret, parent_dofs_ids_temp, dummy_1, dummy_2);
+      for (int i_node = 0; i_node < parent_element->num_node(); i_node++)
+      {
+        parent_node_ids_temp.push_back(parent_element->node_ids()[i_node]);
+      }
 
-      parent_dofs_set.insert(parent_dofs_ids_temp.begin(), parent_dofs_ids_temp.end());
+      // for (int i_node = 0; i_node < parent_node_ids_temp.size(); i_node++)
+      // {
+      //   std::cout << parent_node_ids_temp[i_node] << ", ";
+      // }
+      // std::cout << std::endl;
+
+      parent_node_set.insert(parent_node_ids_temp.begin(), parent_node_ids_temp.end());
     }
   }
 
-  return std::vector<int>(parent_dofs_set.begin(), parent_dofs_set.end());
+  return std::vector<int>(parent_node_set.begin(), parent_node_set.end());
 }
 
 void Constraints::EmbeddedMesh::change_gauss_rule_of_cut_elements(

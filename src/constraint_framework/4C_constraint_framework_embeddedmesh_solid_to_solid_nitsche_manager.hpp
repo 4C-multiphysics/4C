@@ -123,6 +123,11 @@ namespace Constraints::EmbeddedMesh
      */
     bool is_cut_node(Core::Nodes::Node const& node);
 
+    /**
+     * \brief Check if this node is in a parent element
+     */
+    bool is_parent_node(Core::Nodes::Node const& node);
+
    private:
     /**
      * \brief Calculate the maps for the solid interface and background dofs. The calculated
@@ -148,7 +153,7 @@ namespace Constraints::EmbeddedMesh
     //! Id of background column elements that are cut
     std::vector<int> ids_cut_elements_col_;
 
-    std::vector<int> parent_dofs_;
+    std::vector<int> parent_node_ids_;
 
     //! Row map of the solid interface DOFs.
     std::shared_ptr<Core::LinAlg::Map> interface_dof_rowmap_;

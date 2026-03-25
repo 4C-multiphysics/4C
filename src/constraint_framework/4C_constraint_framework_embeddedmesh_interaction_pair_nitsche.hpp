@@ -149,13 +149,17 @@ namespace Constraints::EmbeddedMesh
           "This function is not implemented for the SurfaceToBackgroundCouplingPairNitsche.");
     }
 
-    /*!
-    \brief Get parent element of first element
-    */
+    //! Get parent element of first element
     Core::Elements::Element& parent_element_1() const { return *parent_element1_; };
 
+    //! Kinematics of parent element
+    Inpar::Solid::KinemType parent_element1_kinem_;
+
+    //! Kinematics of background element
+    Inpar::Solid::KinemType element2_kinem_;
+
     //! Pointer to the parent element of element_1()
-    Core::Elements::Element* parent_element1_;
+    Core::Elements::Element* parent_element1_ = nullptr;
 
     //! Initial nodal positions (and tangents) of the interface element.
     GeometryPair::ElementData<Interface, double> ele1pos_;

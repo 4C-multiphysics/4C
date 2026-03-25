@@ -43,6 +43,18 @@ Constraints::EmbeddedMesh::SolidToSolidNitscheManager::SolidToSolidNitscheManage
       get_information_background_and_interface_elements(
           *cutwizard, *discret_, ids_cut_elements_col_, cut_elements_col_vector_);
 
+  // std::cout << "info_background_interface_elements " << std::endl;
+  // for (int i = 0; i < info_background_interface_elements.size(); i++)
+  // {
+  //   std::cout << i << " --- background element " <<
+  //   info_background_interface_elements[i].background_element_ptr->id() << std::endl; std::cout <<
+  //   "interface_element_global_ids : "; std::set<int>::iterator itr; for (itr =
+  //   info_background_interface_elements[i].interface_element_global_ids.begin(); itr !=
+  //   info_background_interface_elements[i].interface_element_global_ids.end(); itr++)
+  //     std::cout << *itr << ", ";
+  //   std::cout << std::endl;
+  // }
+
   // Get the coupling pairs and cut elements
   get_coupling_pairs_and_background_elements(info_background_interface_elements, cutwizard,
       embedded_mesh_coupling_params_, *discret_, embedded_mesh_solid_pairs_);
@@ -52,10 +64,14 @@ Constraints::EmbeddedMesh::SolidToSolidNitscheManager::SolidToSolidNitscheManage
       cut_elements_col_vector_, *cutwizard);
 
   // Get the indices of the DOFs related to the parent elements of the interface
-  std::vector<int> parent_dofs_temp = Constraints::EmbeddedMesh::get_dofs_ids_parent_elements(
+  std::vector<int> parent_dofs_temp = Constraints::EmbeddedMesh::get_node_ids_parent_elements(
       info_background_interface_elements, *discret_);
-  parent_dofs_.reserve(parent_dofs_temp.size());
-  parent_dofs_.insert(parent_dofs_.end(), parent_dofs_temp.begin(), parent_dofs_temp.end());
+  parent_node_ids_.reserve(parent_dofs_temp.size());
+  parent_node_ids_.insert(parent_node_ids_.end(), parent_dofs_temp.begin(), parent_dofs_temp.end());
+
+  // std::cout << "parent node ids "<< std::endl;
+  // for (int i = 0; i < parent_node_ids_.size(); i++)
+  //   std::cout << parent_node_ids_[i] << std::endl;
 
   // Generate visualization manager information
   visualization_manager_->register_visualization_data("background_integration_points");
@@ -144,6 +160,7 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::set_global_maps()
 {
   // Get the dofs of the background and interface elements
   std::vector<int> interface_dofs;
+  std::vector<int> parent_dofs;
   std::vector<int> background_dofs;
   std::vector<int> interface_and_background_dofs;
   std::vector<int> parent_and_background_dofs;
@@ -154,7 +171,32 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::set_global_maps()
       discret_->dof(node, background_dofs);
     else if (Constraints::EmbeddedMesh::is_interface_node(*discret_, *node))
       discret_->dof(node, interface_dofs);
+
+    // std::cout << "set global maps" << std::endl;
+    if (is_parent_node(*node))
+    {
+      // std::cout << "is parent node " << node->id() << std::endl;
+      discret_->dof(node, parent_dofs);
+      // for (int i = 0; i < parent_dofs.size(); i++)
+      //   std::cout << parent_dofs[i] << ", ";
+      // std::cout << std::endl;
+    }
   }
+  //
+  // std::cout << "interface_dofs" << std::endl;
+  // for (int i = 0; i < interface_dofs.size(); i++)
+  //   std::cout << interface_dofs[i] << ", ";
+  // std::cout << std::endl;
+  //
+  // std::cout << "parent_dofs" << std::endl;
+  // for (int i = 0; i < parent_dofs.size(); i++)
+  //   std::cout << parent_dofs[i] << ", ";
+  // std::cout << std::endl;
+  //
+  // std::cout << "background_dofs" << std::endl;
+  // for (int i = 0; i < background_dofs.size(); i++)
+  //   std::cout << background_dofs[i] << ", ";
+  // std::cout << std::endl;
 
   interface_and_background_dofs.reserve(interface_dofs.size() + background_dofs.size());
   interface_and_background_dofs.insert(
@@ -164,19 +206,23 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::set_global_maps()
 
   std::sort(interface_and_background_dofs.begin(), interface_and_background_dofs.end());
 
-  parent_and_background_dofs.reserve(parent_dofs_.size() + background_dofs.size());
+  parent_and_background_dofs.reserve(parent_dofs.size() + background_dofs.size());
   parent_and_background_dofs.insert(
-      parent_and_background_dofs.end(), parent_dofs_.begin(), parent_dofs_.end());
+      parent_and_background_dofs.end(), parent_dofs.begin(), parent_dofs.end());
   parent_and_background_dofs.insert(
       parent_and_background_dofs.end(), background_dofs.begin(), background_dofs.end());
 
   std::sort(parent_and_background_dofs.begin(), parent_and_background_dofs.end());
 
+  // std::cout << "parent dofs ids " << std::endl;
+  // for (int i = 0; i < parent_dofs.size(); i++)
+  //   std::cout << parent_dofs[i] << std::endl;
+
   // Create the interface and solid maps.
   interface_dof_rowmap_ = std::make_shared<Core::LinAlg::Map>(
       -1, interface_dofs.size(), interface_dofs.data(), 0, discret_->get_comm());
   parent_dof_rowmap_ = std::make_shared<Core::LinAlg::Map>(
-      -1, parent_dofs_.size(), parent_dofs_.data(), 0, discret_->get_comm());
+      -1, parent_dofs.size(), parent_dofs.data(), 0, discret_->get_comm());
   background_dof_rowmap_ = std::make_shared<Core::LinAlg::Map>(
       -1, background_dofs.size(), background_dofs.data(), 0, discret_->get_comm());
   interface_and_background_dof_rowmap_ =
@@ -313,6 +359,15 @@ bool Constraints::EmbeddedMesh::SolidToSolidNitscheManager::is_cut_node(
   }
 
   return is_cut_node;
+}
+
+bool Constraints::EmbeddedMesh::SolidToSolidNitscheManager::is_parent_node(
+    Core::Nodes::Node const& node)
+{
+  // Check if the id of this node is in the list of node ids.
+  int node_id = node.id();
+  return std::find(parent_node_ids_.begin(), parent_node_ids_.end(), node_id) !=
+         parent_node_ids_.end();
 }
 
 MPI_Comm Constraints::EmbeddedMesh::SolidToSolidNitscheManager::get_my_comm()

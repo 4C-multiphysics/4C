@@ -100,7 +100,7 @@ namespace Constraints::EmbeddedMesh
       std::vector<std::shared_ptr<Constraints::EmbeddedMesh::SolidInteractionPair>>&
           embeddedmesh_coupling_pairs);
 
-  std::vector<int> get_dofs_ids_parent_elements(
+  std::vector<int> get_node_ids_parent_elements(
       std::vector<BackgroundInterfaceInfo>& info_background_interface_elements,
       Core::FE::Discretization& discret);
 
