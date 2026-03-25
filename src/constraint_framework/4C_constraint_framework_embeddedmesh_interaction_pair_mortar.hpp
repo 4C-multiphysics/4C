@@ -66,7 +66,6 @@ namespace Constraints::EmbeddedMesh
      * @param global_constraint (in/out) Global constraint vector.
      * @param global_kappa (in/out) Global scaling matrix.
      * @param global_lambda_active (in/out) Global vector with active Lagrange multipliers.
-     * @param displacement_vector (in) Global displacement vector.
      */
     void evaluate_and_assemble_mortar_contributions(const Core::FE::Discretization& discret,
         const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
@@ -75,6 +74,21 @@ namespace Constraints::EmbeddedMesh
         Core::LinAlg::FEVector<double>& global_constraint,
         Core::LinAlg::FEVector<double>& global_kappa,
         Core::LinAlg::FEVector<double>& global_lambda_active) override;
+
+    void evaluate_and_assemble_nitsche_contributions(const Core::FE::Discretization& discret,
+        const Constraints::EmbeddedMesh::SolidToSolidNitscheManager* nitsche_manager,
+        Core::LinAlg::SparseMatrix& global_penalty_boundarylayer,
+        Core::LinAlg::SparseMatrix& global_penalty_background,
+        Core::LinAlg::SparseMatrix& global_penalty_boundarylayer_background,
+        Core::LinAlg::SparseMatrix& global_nitsche_interface,
+        Core::LinAlg::SparseMatrix& global_nitsche_background,
+        Core::LinAlg::SparseMatrix& global_nitsche_interface_background,
+        Core::LinAlg::FEVector<double>& global_penalty_constraint,
+        Core::LinAlg::FEVector<double>& global_nitsche_constraint,
+        double& nitsche_average_weight_param) override
+    {
+      FOUR_C_THROW("The evaluation of Nitsche contributions cannot be called from a mortar pair.");
+    }
 
     /**
      * \brief Set the Gauss rule over the interface for element1_ and element2_.
@@ -89,21 +103,30 @@ namespace Constraints::EmbeddedMesh
 
    private:
     /**
-     * \brief Evaluate the local mortar matrices for this contact element pair.
+     * \brief Evaluate the local mortar matrices for this coupling element pair.
      */
     void evaluate_dm(Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double>& local_D,
         Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double>& local_M,
         Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_kappa,
         Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_constraint);
 
-    //! Current nodal positions (and tangents) of the interface element.
+    //! Initial nodal positions (and tangents) of the interface element.
     GeometryPair::ElementData<Interface, double> ele1pos_;
 
-    //! Current nodal positions (and tangents) of the background element.
+    //! Initial nodal positions (and tangents) of the background element.
     GeometryPair::ElementData<Background, double> ele2pos_;
+
+    //! Current nodal positions (and tangents) of the interface element.
+    GeometryPair::ElementData<Interface, double> ele1pos_current_;
+
+    //! Current nodal positions (and tangents) of the background element.
+    GeometryPair::ElementData<Background, double> ele2pos_current_;
 
     //! Displacements of the interface element.
     GeometryPair::ElementData<Interface, double> ele1dis_;
+
+    //! Displacements of the parent element of the interface element
+    std::vector<double> ele1_parent_dis_;
 
     //! Displacements of the background element.
     GeometryPair::ElementData<Background, double> ele2dis_;
@@ -112,46 +135,6 @@ namespace Constraints::EmbeddedMesh
     std::vector<std::tuple<Core::LinAlg::Matrix<2, 1>, Core::LinAlg::Matrix<3, 1>, double>>
         interface_integration_points_;
   };
-
-  /**
-   * \brief Evaluate the normal vector at the nodes of an interface element
-   */
-  template <typename ElementType>
-  typename std::enable_if<GeometryPair::IsSurfaceAveragedNormalsElement<ElementType>::value_>::type
-  evaluate_interface_element_nodal_normals(
-      GeometryPair::ElementData<ElementType, double>& element_data_surface)
-  {
-    Core::LinAlg::SerialDenseMatrix nodal_coordinates =
-        Core::FE::get_ele_node_numbering_nodes_paramspace(ElementType::discretization_);
-    Core::LinAlg::Matrix<3, 1, double> xi(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<3, 1, double> temp_normal;
-    Core::LinAlg::Matrix<ElementType::n_nodes_, 1, Core::LinAlg::Matrix<3, 1, double>> normals;
-
-    for (size_t iter_node = 0; iter_node < ElementType::n_nodes_; iter_node++)
-    {
-      for (unsigned int i_dim = 0; i_dim < 2; i_dim++)
-        xi(i_dim) = nodal_coordinates(i_dim, iter_node);
-      GeometryPair::evaluate_face_normal<ElementType>(xi, element_data_surface, temp_normal);
-      for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-        normals(iter_node)(i_dim) += temp_normal(i_dim);
-    }
-
-    for (size_t iter_node = 0; iter_node < ElementType::n_nodes_; iter_node++)
-    {
-      normals(iter_node).scale(1.0 / Core::FADUtils::vector_norm(normals(iter_node)));
-      element_data_surface.nodal_normals_(0 + 3 * iter_node) = normals(iter_node)(0);
-      element_data_surface.nodal_normals_(1 + 3 * iter_node) = normals(iter_node)(1);
-      element_data_surface.nodal_normals_(2 + 3 * iter_node) = normals(iter_node)(2);
-    }
-  }
-
-  template <typename ElementType>
-  std::enable_if_t<!GeometryPair::IsSurfaceAveragedNormalsElement<ElementType>::value_>
-  evaluate_interface_element_nodal_normals(
-      GeometryPair::ElementData<ElementType, double>& element_data_surface)
-  {
-  }
-
 }  // namespace Constraints::EmbeddedMesh
 
 FOUR_C_NAMESPACE_CLOSE

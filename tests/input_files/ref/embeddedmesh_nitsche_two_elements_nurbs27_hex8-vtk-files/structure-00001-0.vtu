@@ -1,0 +1,43 @@
+<?xml version="1.0" ?> 
+<!-- 
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="UnstructuredGrid" version="0.1" compressor="vtkZLibDataCompressor" byte_order="LittleEndian">
+  <UnstructuredGrid>
+    <FieldData>
+      <DataArray type="Float64" Name="TIME" NumberOfTuples="1" format="ascii">
+1.000000000000000e+00 
+      </DataArray>
+    </FieldData>
+
+    <Piece NumberOfPoints="35" NumberOfCells="2" >
+      <Points>
+        <DataArray type="Float64" NumberOfComponents="3" format="binary">
+AQAAAEgDAABIAwAAkgAAAA==eAGFkMENgDAMA/vgwZON6OaswggdAUFyrrAUlQdOr66btLX3G9cn7eih40x1nmv25a+45bQiX9xyltzy6Se6n384c3r/0xmV/JZPP+6Hez689Fv+3sNJf+SJ2/sseeZzv/wVJz8VP+fpyzn7vBtraVf1KzyHebf0cx9a8TvnwUdOxZXDvHm+4srBnzr5A73DV7E=
+        </DataArray>
+      </Points>
+
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="binary">
+AQAAAIwAAACMAAAAQgAAAA==eAENwwcOgkAAALBjyhBR2QIC/v+RtklDCCEyNjE1M/dmYWll7d3Gh61PX77t7B0cnZxd/Li6ufv18PTy5x9wHAJU
+
+        </DataArray>
+        <DataArray type="Int32" Name="offsets" format="binary">
+AQAAAAgAAAAIAAAADgAAAA==eAGTZmBgUAZiAAFsAD8=
+
+        </DataArray>
+        <DataArray type="UInt8" Name="types" format="binary">
+AQAAAAIAAAACAAAACgAAAA==eAGT5QEAAEgAKg==
+
+        </DataArray>
+      </Cells>
+
+  <PointData>
+        <DataArray type="Float64" Name="displacement" NumberOfComponents="3" format="binary">
+AQAAAEgDAABIAwAAGwIAAA==eAFjYICAezYrv1oZLdqfKeB8e9Ov2j1QYYa3UHEYX+DSxksP5OL23EcTT93htioxJHPPLaj4G/ZNPZldrXBzLDWUlnYa9u83uGm0I8bFzAZmXrU6RBzGb5gWei0wx8MmG6oeJp5mqMW51TDZ5glUfOrBN6eEInrg5h+H2lt4pnmGxOEum2tGMxctvjfV5iSaOz+bNO9nT8zZcxYqvsxt4Q925tk2v58Ff1vhM9FmL1T8AB/nlC+53XDz2VUh7rzt/ifef+rEPWkWbMbGMd17/qqguv9bopyN4IaUPRuh6qW+lNrkirftcXLbc4n574Q9O6DiJQU3zDqWN8DNv3rkY9zcfzP3MxWGNvXFLoeHz3moOCwcEkSdyhcd3WBzDU28vuRLd0jXYptHUPHvievO8q/cblO2p/FPj+Mkm69Qcc41zjdtVDbYrLRaMJ/Dco7NWzRzYPa8hooXqF2bIX9ruo1PwJsrp1I32HyCiht7r73GP3umDYvctfZi8+k226HhNj9I9It410SbbSsPiwtb9uypUYKEzy8V1YO+WhP2yCxaFTCRa7YNx1GIf/ffmiqz/NYMuH9Lsw5KbDw9Zf+E+VdLXcu37nk569y3xU+27EmFinsIroq5UL95jxJ/8oFbaoh0+klA/mMqcxM8PGH+2O3tmSw4EyEOMx8mf356t5zW38178qHmw8SF7Eq/HL2IMB8mjosGAMvOO50=
+        </DataArray>
+      </PointData>
+
+    </Piece>
+  </UnstructuredGrid>
+</VTKFile>
