@@ -161,6 +161,37 @@ choices:
     }
   }
 
+  TEST(InputSpecTest, MagicEnumVector)
+  {
+    enum Enum
+    {
+      a,
+      b,
+      c,
+    };
+
+    auto spec = parameter<std::vector<Enum>>("enum", {});
+
+    {
+      SCOPED_TRACE("Valid enum constants");
+      auto tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+
+      ryml::parse_in_arena(R"(
+enum: [a, c]
+)",
+          root);
+
+      ConstYamlNodeRef node(root, "");
+      InputParameterContainer container;
+      spec.match(node, container);
+      const auto& vec = container.get<std::vector<Enum>>("enum");
+      ASSERT_EQ(vec.size(), 2);
+      EXPECT_EQ(vec[0], Enum::a);
+      EXPECT_EQ(vec[1], Enum::c);
+    }
+  }
+
   TEST(InputSpecTest, ParseSingleDefaultedEntryDat)
   {
     // This used to be a bug where a single default dat parameter was not accepted.
