@@ -210,16 +210,12 @@ void Adapter::FluidAle::output()
   {
     // we want to be able to restart monolithically from an partitioned fsi scheme
     const int uprestart = timeparams_.get<int>("RESTARTEVERY");
-    const int upres = timeparams_.get<int>("RESULTSEVERY");
 
-    if ((uprestart != 0 && fluid_field()->step() % uprestart == 0) ||
-        fluid_field()->step() % upres == 0)
+    if (uprestart != 0 && fluid_field()->step() % uprestart == 0)
     {
-      std::shared_ptr<Core::LinAlg::Vector<double>> lambda =
-          fluid_field()->extract_interface_forces();
-      std::shared_ptr<Core::LinAlg::Vector<double>> lambdafull =
-          fluid_field()->interface()->insert_fsi_cond_vector(*lambda);
-      fluid_field()->disc_writer()->write_vector("fsilambda", lambdafull);
+      const auto lambda = fluid_field()->extract_interface_forces();
+      const auto lambda_full = fluid_field()->interface()->insert_fsi_cond_vector(*lambda);
+      fluid_field()->disc_writer()->write_vector("fsilambda", lambda_full);
     }
   }
 

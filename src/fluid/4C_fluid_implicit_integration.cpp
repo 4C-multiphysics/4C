@@ -3365,172 +3365,166 @@ void FLD::FluidImplicitTimeInt::write_runtime_output()
  *----------------------------------------------------------------------*/
 void FLD::FluidImplicitTimeInt::output()
 {
-  // output of solution
+  // output of the solution
   if (upres_ > 0 and step_ % upres_ == 0)
   {
-    if (runtime_output_writer_ != nullptr) write_runtime_output();
-    // step number and time
-    output_->new_step(step_, time_);
-
-    // time step, especially necessary for adaptive dt
-    output_->write_double("timestep", dta_);
-
-    // velocity/pressure vector
-    output_->write_vector("velnp", velnp_);
-
-    // (hydrodynamic) pressure
-    std::shared_ptr<Core::LinAlg::Vector<double>> pressure =
-        velpressplitter_->extract_cond_vector(*velnp_);
-    output_->write_vector("pressure", pressure);
-
-    if (xwall_ != nullptr)
-    {
-      output_->write_vector("xwall_enrvelnp", xwall_->get_output_vector(*velnp_));
-      output_->write_vector("xwall_tauw", xwall_->get_tauw_vector());
-    }
-
-    if (params_->get<bool>("GMSH_OUTPUT")) output_to_gmsh(step_, time_, false);
-
-    if (alefluid_) output_->write_vector("dispnp", dispnp_);
-
-    if (physicaltype_ == Inpar::FLUID::varying_density or
-        physicaltype_ == Inpar::FLUID::boussinesq or physicaltype_ == Inpar::FLUID::tempdepwater)
-    {
-      std::shared_ptr<Core::LinAlg::Vector<double>> scalar_field =
-          velpressplitter_->extract_cond_vector(*scaaf_);
-      output_->write_vector("scalar_field", scalar_field);
-    }
-
-    // only perform stress calculation when output is needed
-    if (writestresses_)
-    {
-      output_->write_vector("traction", stressmanager_->get_pre_calc_stresses(*trueresidual_));
-    }
-    // only perform wall shear stress calculation when output is needed
-    if (write_wall_shear_stresses_ && xwall_ == nullptr)
-    {
-      output_->write_vector(
-          "wss", stressmanager_->get_pre_calc_wall_shear_stresses(*trueresidual_));
-    }
-
-    // biofilm growth
-    if (fldgrdisp_ != nullptr)
-    {
-      output_->write_vector("fld_growth_displ", fldgrdisp_);
-    }
-
-    if (params_->get<bool>("COMPUTE_EKIN")) write_output_kinetic_energy();
-
-    // write domain decomposition for visualization (only once!)
-    output_->write_element_data(true);
-
-    if (step_ <= 1 and write_nodedata_first_step_) output_->write_node_data(true);
-
-    if (uprestart_ != 0 && step_ % uprestart_ == 0)  // add restart data
-    {
-      // acceleration vector at time n+1 and n, velocity/pressure vector at time n and n-1
-      output_->write_vector("accnp", accnp_);
-      output_->write_vector("accn", accn_);
-      output_->write_vector("veln", veln_);
-      output_->write_vector("velnm", velnm_);
-
-      if (alefluid_)
-      {
-        output_->write_vector("dispn", dispn_);
-        output_->write_vector("dispnm", dispnm_);
-        output_->write_vector("gridvn", gridvn_);
-      }
-
-      if (xwall_ != nullptr)
-        output_->write_vector("wss", stressmanager_->get_pre_calc_wall_shear_stresses(
-                                         *xwall_->fix_dirichlet_inflow(*trueresidual_)));
-
-      // flow rate, flow volume and impedance in case of flow-dependent pressure bc
-      if (nonlinearbc_) output_nonlinear_bc();
-
-      output_external_forces();
-
-      // write mesh in each restart step --- the elements are required since
-      // they contain history variables (the time dependent subscales)
-      // But never do this for step 0 (visualization of initial field) since
-      // it would lead to writing the mesh twice for step 0
-      // (FluidBaseAlgorithm already wrote the mesh) -> HDF5 writer will claim!
-      if ((step_ != 0) and (Teuchos::getIntegralValue<Inpar::FLUID::SubscalesTD>(
-                                params_->sublist("RESIDUAL-BASED STABILIZATION"), "TDS") !=
-                               Inpar::FLUID::SubscalesTD::subscales_quasistatic))
-        output_->write_mesh(step_, time_);
-
-      if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0)
-        std::cout << "====== Restart for field '" << discret_->name() << "' written in step "
-                  << step_ << std::endl;
-    }
+    write_output();
   }
-  // write restart also when uprestart_ is not a integer multiple of upres_
-  else if (uprestart_ > 0 && step_ % uprestart_ == 0)
+  // write restart information
+  if (uprestart_ > 0 && step_ % uprestart_ == 0)
   {
-    // step number and time
-    output_->new_step(step_, time_);
-
-    // time step, especially necessary for adaptive dt
-    output_->write_double("timestep", dta_);
-
-    // velocity/pressure vector
-    output_->write_vector("velnp", velnp_);
-
-    // output_->write_vector("residual", trueresidual_);
-    if (alefluid_)
-    {
-      output_->write_vector("dispnp", dispnp_);
-      output_->write_vector("dispn", dispn_);
-      output_->write_vector("dispnm", dispnm_);
-      output_->write_vector("gridvn", gridvn_);
-    }
-
-    // write mesh in each restart step --- the elements are required since
-    // they contain history variables (the time dependent subscales)
-    // But never do this for step 0 (visualization of initial field) since
-    // it would lead to writing the mesh twice for step 0
-    // (FluidBaseAlgorithm already wrote the mesh) -> HDF5 writer will claim!
-    if ((step_ != 0) and (Teuchos::getIntegralValue<Inpar::FLUID::SubscalesTD>(
-                              params_->sublist("RESIDUAL-BASED STABILIZATION"), "TDS") !=
-                             Inpar::FLUID::SubscalesTD::subscales_quasistatic))
-      output_->write_mesh(step_, time_);
-
-    // only perform stress calculation when output is needed
-    if (writestresses_)
-    {
-      output_->write_vector("traction", stressmanager_->get_pre_calc_stresses(*trueresidual_));
-    }
-    // only perform wall shear stress calculation when output is needed
-    if (write_wall_shear_stresses_ && xwall_ == nullptr)
-    {
-      output_->write_vector(
-          "wss", stressmanager_->get_pre_calc_wall_shear_stresses(*trueresidual_));
-    }
-    // acceleration vector at time n+1 and n, velocity/pressure vector at time n and n-1
-    output_->write_vector("accnp", accnp_);
-    output_->write_vector("accn", accn_);
-    output_->write_vector("veln", veln_);
-    output_->write_vector("velnm", velnm_);
-
-    if (xwall_ != nullptr)
-    {
-      output_->write_vector("xwall_tauw", xwall_->get_tauw_vector());
-      output_->write_vector("wss", stressmanager_->get_pre_calc_wall_shear_stresses(
-                                       *xwall_->fix_dirichlet_inflow(*trueresidual_)));
-    }
-
-    // flow rate, flow volume and impedance in case of flow-dependent pressure bc
-    if (nonlinearbc_) output_nonlinear_bc();
-
-    output_external_forces();
+    write_restart();
   }
 
   // -------------------------------------------------------------------
   // calculate and write lift'n'drag forces from the residual
   // -------------------------------------------------------------------
   lift_drag();
-}  // FluidImplicitTimeInt::Output
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void FLD::FluidImplicitTimeInt::write_output()
+{
+  if (runtime_output_writer_ != nullptr)
+  {
+    write_runtime_output();
+    return;
+  }
+  // step number and time
+  output_->new_step(step_, time_);
+
+  // time step, especially necessary for adaptive dt
+  // TODO CAN ALREADY BE REMOVED output_->write_double("timestep", dta_);
+
+  // velocity/pressure vector
+  // TODO IS AVAILABLE IN VTK OUTPUT, CAN BE REMOVED output_->write_vector("velnp",
+  // velnp_);
+
+  // (hydrodynamic) pressure
+  /*
+   // TODO IS AVAILABLE IN VTK OUTPUT, CAN BE REMOVED
+  const auto pressure = velpressplitter_->extract_cond_vector(*velnp_);
+  output_->write_vector("pressure", pressure);
+  */
+
+  if (xwall_ != nullptr)
+  {
+    output_->write_vector("xwall_enrvelnp", xwall_->get_output_vector(*velnp_));
+    // TODO CLASHES WITH RESTART; SHOULD BE MOVED TO VTK OUTPUT output_->write_vector("xwall_tauw",
+    // xwall_->get_tauw_vector());
+  }
+
+  if (params_->get<bool>("GMSH_OUTPUT")) output_to_gmsh(step_, time_, false);
+
+  // TODO CLASHES WITH RESTART; SHOULD BE MOVED TO VTK OUTPUT if (alefluid_)
+  // output_->write_vector("dispnp", dispnp_);
+
+  if (physicaltype_ == Inpar::FLUID::varying_density or physicaltype_ == Inpar::FLUID::boussinesq or
+      physicaltype_ == Inpar::FLUID::tempdepwater)
+  {
+    const std::shared_ptr<Core::LinAlg::Vector<double>> scalar_field =
+        velpressplitter_->extract_cond_vector(*scaaf_);
+    output_->write_vector("scalar_field", scalar_field);
+  }
+
+  // only perform stress calculation when output is needed
+  if (writestresses_)
+  {
+    output_->write_vector("traction", stressmanager_->get_pre_calc_stresses(*trueresidual_));
+  }
+  // only perform wall shear stress calculation when output is needed
+  if (write_wall_shear_stresses_ && xwall_ == nullptr)
+  {
+    output_->write_vector("wss", stressmanager_->get_pre_calc_wall_shear_stresses(*trueresidual_));
+  }
+
+  // biofilm growth
+  if (fldgrdisp_ != nullptr)
+  {
+    output_->write_vector("fld_growth_displ", fldgrdisp_);
+  }
+
+  if (params_->get<bool>("COMPUTE_EKIN")) write_output_kinetic_energy();
+
+  // write domain decomposition for visualization (only once!)
+  output_->write_element_data(true);
+
+  if (step_ <= 1 and write_nodedata_first_step_) output_->write_node_data(true);
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void FLD::FluidImplicitTimeInt::write_restart()
+{
+  // step number and time
+  output_->new_step(step_, time_);
+
+  // acceleration and velocity/pressure vector
+  output_->write_vector("accnp", accnp_);
+  output_->write_vector("accn", accn_);
+  output_->write_vector("veln", veln_);
+  output_->write_vector("velnm", velnm_);
+  output_->write_vector("velnp", velnp_);
+
+  // write mesh in each restart step --- the elements are required since
+  // they contain history variables (the time dependent subscales)
+  // But never do this for step 0 (visualization of initial field) since
+  // it would lead to writing the mesh twice for step 0
+  // (FluidBaseAlgorithm already wrote the mesh) -> HDF5 writer will claim!
+  if ((step_ != 0) and (Teuchos::getIntegralValue<Inpar::FLUID::SubscalesTD>(
+                            params_->sublist("RESIDUAL-BASED STABILIZATION"), "TDS") !=
+                           Inpar::FLUID::SubscalesTD::subscales_quasistatic))
+    output_->write_mesh(step_, time_);
+
+  // time step, especially necessary for adaptive dt
+  output_->write_double("timestep", dta_);
+
+  if (alefluid_)
+  {
+    output_->write_vector("dispnp", dispnp_);
+    output_->write_vector("dispn", dispn_);
+    output_->write_vector("dispnm", dispnm_);
+    output_->write_vector("gridvn", gridvn_);
+  }
+
+  // only perform stress calculation when output is needed
+  /*if (writestresses_)
+  {
+    // TODO temp comment; BUT WHY IS THIS NEEDED FOR RESTART? output_->write_vector("traction",
+    // stressmanager_->get_pre_calc_stresses(*trueresidual_));
+  }
+  // only perform wall shear stress calculation when output is needed
+  if (write_wall_shear_stresses_ && xwall_ == nullptr)
+  {
+    // TODO temp comment; BUT WHY IS THIS NEEDED FOR RESTART? output_->write_vector("wss",
+    // stressmanager_->get_pre_calc_wall_shear_stresses(*trueresidual_));
+  }*/
+
+  if (xwall_ != nullptr)
+  {
+    std::cout << "Test2" << std::endl;
+    output_->write_vector("xwall_tauw", xwall_->get_tauw_vector());
+    std::cout << "Test3" << std::endl;
+
+    output_->write_vector("wss", stressmanager_->get_pre_calc_wall_shear_stresses(
+                                     *xwall_->fix_dirichlet_inflow(*trueresidual_)));
+  }
+
+  std::cout << "Test4" << std::endl;
+
+  // flow rate, flow volume and impedance in case of flow-dependent pressure bc
+  if (nonlinearbc_) output_nonlinear_bc();
+
+  output_external_forces();
+
+  if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0)
+  {
+    std::cout << "====== Restart for field '" << discret_->name() << "' written in step " << step_
+              << '\n'
+              << std::flush;
+  }
+}
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
