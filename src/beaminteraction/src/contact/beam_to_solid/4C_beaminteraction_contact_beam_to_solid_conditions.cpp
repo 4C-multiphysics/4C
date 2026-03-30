@@ -351,6 +351,9 @@ BeamInteraction::create_beam_to_solid_volume_pair_mortar(const Core::FE::CellTyp
 {
   switch (mortar_shape_function)
   {
+    case BeamToSolid::BeamToSolidMortarShapefunctions::point1:
+      return create_beam_to_solid_volume_pair_mortar<BtsClass, BtsMortarTemplateArguments...,
+          GeometryPair::t_line1>(shape, other_mortar_shape_function...);
     case BeamToSolid::BeamToSolidMortarShapefunctions::line2:
       return create_beam_to_solid_volume_pair_mortar<BtsClass, BtsMortarTemplateArguments...,
           GeometryPair::t_line2>(shape, other_mortar_shape_function...);
