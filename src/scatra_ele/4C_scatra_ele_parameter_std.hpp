@@ -10,8 +10,8 @@
 
 #include "4C_config.hpp"
 
+#include "4C_inpar_cardiac_monodomain.hpp"
 #include "4C_inpar_scatra.hpp"
-#include "4C_scatra_cardiac_monodomain_input.hpp"
 #include "4C_scatra_ele_parameter_base.hpp"
 
 FOUR_C_NAMESPACE_OPEN

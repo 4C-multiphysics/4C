@@ -25,10 +25,10 @@
 #include "4C_contact_strategy_factory.hpp"
 #include "4C_contact_utils.hpp"
 #include "4C_contact_utils_parallel.hpp"
-#include "4C_contact_wear_input.hpp"
 #include "4C_contact_wear_interface.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
+#include "4C_inpar_wear.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_input_parameter_container.hpp"
@@ -107,8 +107,8 @@ CONTACT::Manager::Manager(Core::FE::Discretization& discret, double alphaf)
 
   // get input parameters
   auto stype = Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(contactParams, "STRATEGY");
-  auto wearLaw = Teuchos::getIntegralValue<Wear::WearLaw>(contactParams, "WEARLAW");
-  auto wearType = Teuchos::getIntegralValue<Wear::WearType>(contactParams, "WEARTYPE");
+  auto wearLaw = Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(contactParams, "WEARLAW");
+  auto wearType = Teuchos::getIntegralValue<Inpar::Wear::WearType>(contactParams, "WEARTYPE");
   auto constr_direction = Teuchos::getIntegralValue<CONTACT::ConstraintDirection>(
       contactParams, "CONSTRAINT_DIRECTIONS");
   auto frictionType = Teuchos::getIntegralValue<CONTACT::FrictionType>(contactParams, "FRICTION");
@@ -117,7 +117,7 @@ CONTACT::Manager::Manager(Core::FE::Discretization& discret, double alphaf)
   auto algo = Teuchos::getIntegralValue<Mortar::AlgorithmType>(contactParams, "ALGORITHM");
 
   bool friplus = false;
-  if ((wearLaw != Wear::wear_none) ||
+  if ((wearLaw != Inpar::Wear::wear_none) ||
       (contactParams.get<CONTACT::Problemtype>("PROBTYPE") == CONTACT::Problemtype::tsi))
     friplus = true;
 
@@ -551,8 +551,8 @@ CONTACT::Manager::Manager(Core::FE::Discretization& discret, double alphaf)
       std::make_shared<CONTACT::AbstractStrategyDataContainer>();
 
   // create LagrangeStrategyWear for wear as non-distinct quantity
-  if (stype == CONTACT::SolvingStrategy::lagmult && wearLaw != Wear::wear_none &&
-      (wearType == Wear::wear_intstate || wearType == Wear::wear_primvar))
+  if (stype == CONTACT::SolvingStrategy::lagmult && wearLaw != Inpar::Wear::wear_none &&
+      (wearType == Inpar::Wear::wear_intstate || wearType == Inpar::Wear::wear_primvar))
   {
     strategy_ = std::make_shared<Wear::LagrangeStrategyWear>(data_ptr, discret.dof_row_map(),
         discret.node_row_map(), contactParams, interfaces, dim, comm_, alphaf, maxdof);
@@ -729,7 +729,8 @@ bool CONTACT::Manager::read_and_check_input(Teuchos::ParameterList& cparams) con
   // *********************************************************************
   if (Teuchos::getIntegralValue<CONTACT::AdhesionType>(contact, "ADHESION") !=
           CONTACT::AdhesionType::none and
-      Teuchos::getIntegralValue<Wear::WearLaw>(wearlist, "WEARLAW") != Wear::wear_none)
+      Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") !=
+          Inpar::Wear::wear_none)
     FOUR_C_THROW("Adhesion combined with wear not yet tested!");
 
   if (Teuchos::getIntegralValue<CONTACT::AdhesionType>(contact, "ADHESION") !=
@@ -813,7 +814,8 @@ bool CONTACT::Manager::read_and_check_input(Teuchos::ParameterList& cparams) con
     std::cout << ("Warning: Contact search called without inflation of bounding volumes\n")
               << std::endl;
 
-  if (Teuchos::getIntegralValue<Wear::WearSide>(wearlist, "WEAR_SIDE") != Wear::wear_slave)
+  if (Teuchos::getIntegralValue<Inpar::Wear::WearSide>(wearlist, "WEAR_SIDE") !=
+      Inpar::Wear::wear_slave)
     std::cout << ("\n \n Warning: Contact with both-sided wear is still experimental !")
               << std::endl;
 
@@ -898,7 +900,8 @@ bool CONTACT::Manager::read_and_check_input(Teuchos::ParameterList& cparams) con
       FOUR_C_THROW(
           "For initialization of init contact with gap, the INITCONTACTGAPVALUE is needed.");
 
-    if (Teuchos::getIntegralValue<Wear::WearLaw>(wearlist, "WEARLAW") != Wear::wear_none &&
+    if (Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") !=
+            Inpar::Wear::wear_none &&
         contact.get<bool>("FRLESS_FIRST"))
       FOUR_C_THROW("Frictionless first contact step with wear not yet implemented");
 
@@ -925,29 +928,35 @@ bool CONTACT::Manager::read_and_check_input(Teuchos::ParameterList& cparams) con
     // *********************************************************************
     // contact with wear
     // *********************************************************************
-    if (Teuchos::getIntegralValue<Wear::WearLaw>(wearlist, "WEARLAW") == Wear::wear_none &&
+    if (Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") ==
+            Inpar::Wear::wear_none &&
         wearlist.get<double>("WEARCOEFF") != 0.0)
       FOUR_C_THROW("Wear coefficient only necessary in the context of wear.");
 
     if (problemtype == Core::ProblemType::structure and
-        Teuchos::getIntegralValue<Wear::WearLaw>(wearlist, "WEARLAW") != Wear::wear_none and
-        Teuchos::getIntegralValue<Wear::WearTimInt>(wearlist, "WEARTIMINT") != Wear::wear_expl)
+        Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") !=
+            Inpar::Wear::wear_none and
+        Teuchos::getIntegralValue<Inpar::Wear::WearTimInt>(wearlist, "WEARTIMINT") !=
+            Inpar::Wear::wear_expl)
       FOUR_C_THROW(
           "Wear calculation for pure structure problems only with explicit internal state "
           "variable approach reasonable!");
 
     if (Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") ==
             CONTACT::FrictionType::none &&
-        Teuchos::getIntegralValue<Wear::WearLaw>(wearlist, "WEARLAW") != Wear::wear_none)
+        Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") !=
+            Inpar::Wear::wear_none)
       FOUR_C_THROW("Wear models only applicable to frictional contact.");
 
-    if (Teuchos::getIntegralValue<Wear::WearLaw>(wearlist, "WEARLAW") != Wear::wear_none &&
+    if (Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") !=
+            Inpar::Wear::wear_none &&
         wearlist.get<double>("WEARCOEFF") <= 0.0)
       FOUR_C_THROW("No valid wear coefficient provided, must be equal or greater 0.0");
 
     if (Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") ==
             CONTACT::FrictionType::tresca &&
-        Teuchos::getIntegralValue<Wear::WearLaw>(wearlist, "WEARLAW") != Wear::wear_none)
+        Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") !=
+            Inpar::Wear::wear_none)
       FOUR_C_THROW("Wear only for Coulomb friction!");
 
     // *********************************************************************
@@ -1062,7 +1071,8 @@ bool CONTACT::Manager::read_and_check_input(Teuchos::ParameterList& cparams) con
           "GPTS algorithm only tested for structural, FSI-CutFEM, FPSI-CutFEM, and "
           "poroelastic problems");
 
-    if (Teuchos::getIntegralValue<Wear::WearLaw>(wearlist, "WEARLAW") != Wear::wear_none)
+    if (Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") !=
+        Inpar::Wear::wear_none)
       FOUR_C_THROW("GPTS algorithm not implemented for wear");
 
   }  // END GPTS CHECKS

@@ -19,8 +19,9 @@
 #include "4C_elch_input.hpp"
 #include "4C_fem_condition_definition.hpp"
 #include "4C_fpsi_input.hpp"
-#include "4C_fs3i_biofilm_fsi_input.hpp"
 #include "4C_fsi_input.hpp"
+#include "4C_inpar_bio.hpp"
+#include "4C_inpar_cardiac_monodomain.hpp"
 #include "4C_inpar_fluid.hpp"
 #include "4C_inpar_s2i.hpp"
 #include "4C_inpar_scatra.hpp"
@@ -32,7 +33,6 @@
 #include "4C_particle_input.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
 #include "4C_red_airways_input.hpp"
-#include "4C_scatra_cardiac_monodomain_input.hpp"
 #include "4C_ssi_input.hpp"
 #include "4C_ssti_input.hpp"
 #include "4C_sti_input.hpp"
@@ -836,7 +836,7 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   FSI::set_valid_conditions(condlist);
   FPSI::set_valid_conditions(condlist);
   Inpar::XFEM::set_valid_conditions(condlist);
-  BioFilm::set_valid_conditions(condlist);
+  Inpar::BioFilm::set_valid_conditions(condlist);
   ArteryNetwork::set_valid_conditions(condlist);
   Airway::set_valid_conditions(condlist);
   Cardiovascular0DInput::set_valid_conditions(condlist);

@@ -13,10 +13,10 @@
 #include "4C_contact_input.hpp"
 #include "4C_contact_interface.hpp"
 #include "4C_contact_lagrange_strategy.hpp"
-#include "4C_contact_wear_input.hpp"
 #include "4C_contact_wear_interface.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
+#include "4C_inpar_wear.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
@@ -57,30 +57,31 @@ Wear::LagrangeStrategyWear::LagrangeStrategyWear(
 
   // set wear contact status
   auto wtype =
-      Teuchos::getIntegralValue<Wear::WearType>(LagrangeStrategyWear::params(), "WEARTYPE");
+      Teuchos::getIntegralValue<Inpar::Wear::WearType>(LagrangeStrategyWear::params(), "WEARTYPE");
   auto wside =
-      Teuchos::getIntegralValue<Wear::WearSide>(LagrangeStrategyWear::params(), "WEAR_SIDE");
-  auto wtime = Teuchos::getIntegralValue<Wear::WearTimeScale>(
+      Teuchos::getIntegralValue<Inpar::Wear::WearSide>(LagrangeStrategyWear::params(), "WEAR_SIDE");
+  auto wtime = Teuchos::getIntegralValue<Inpar::Wear::WearTimeScale>(
       LagrangeStrategyWear::params(), "WEAR_TIMESCALE");
-  auto wtimint =
-      Teuchos::getIntegralValue<Wear::WearTimInt>(LagrangeStrategyWear::params(), "WEARTIMINT");
-  auto wlaw = Teuchos::getIntegralValue<Wear::WearLaw>(LagrangeStrategyWear::params(), "WEARLAW");
+  auto wtimint = Teuchos::getIntegralValue<Inpar::Wear::WearTimInt>(
+      LagrangeStrategyWear::params(), "WEARTIMINT");
+  auto wlaw =
+      Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(LagrangeStrategyWear::params(), "WEARLAW");
 
   // set wear contact status
-  if (wlaw != Wear::wear_none and wtype == Wear::wear_intstate) weightedwear_ = true;
+  if (wlaw != Inpar::Wear::wear_none and wtype == Inpar::Wear::wear_intstate) weightedwear_ = true;
 
   // discrete both-sided wear for active set output
-  if (wside == Wear::wear_both and wtype == Wear::wear_primvar) wbothpv_ = true;
-  if (wtimint == Wear::wear_impl) wearimpl_ = true;
+  if (wside == Inpar::Wear::wear_both and wtype == Inpar::Wear::wear_primvar) wbothpv_ = true;
+  if (wtimint == Inpar::Wear::wear_impl) wearimpl_ = true;
 
   // set wear contact discretization
-  if (wtype == Wear::wear_primvar) wearprimvar_ = true;
+  if (wtype == Inpar::Wear::wear_primvar) wearprimvar_ = true;
 
   // both sided wear for discrete wear
-  if (wside == Wear::wear_both and wtype == Wear::wear_primvar) wearbothpv_ = true;
+  if (wside == Inpar::Wear::wear_both and wtype == Inpar::Wear::wear_primvar) wearbothpv_ = true;
 
   // different wear timescales?
-  if (wtime == Wear::wear_time_different) weartimescales_ = true;
+  if (wtime == Inpar::Wear::wear_time_different) weartimescales_ = true;
 
   return;
 }
@@ -196,7 +197,8 @@ void Wear::LagrangeStrategyWear::setup_wear(bool redistributed, bool init)
     // ****************************************************
     // both-sided wear specific
     // ****************************************************
-    if (Teuchos::getIntegralValue<Wear::WearSide>(params(), "WEAR_SIDE") == Wear::wear_both and
+    if (Teuchos::getIntegralValue<Inpar::Wear::WearSide>(params(), "WEAR_SIDE") ==
+            Inpar::Wear::wear_both and
         wearprimvar_ == false)
     {
       gminvolvednodes_ =
@@ -399,7 +401,8 @@ void Wear::LagrangeStrategyWear::assemble_mortar()
     // only assemble D2 for both-sided wear --> unweights the
     // weighted wear increment in master side
     // --> based on weak dirichlet bc!
-    if (Teuchos::getIntegralValue<Wear::WearSide>(params(), "WEAR_SIDE") == Wear::wear_both and
+    if (Teuchos::getIntegralValue<Inpar::Wear::WearSide>(params(), "WEAR_SIDE") ==
+            Inpar::Wear::wear_both and
         !wearprimvar_)
       interface_[i]->assemble_d2(*d2matrix_);
 
@@ -1567,12 +1570,12 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
     std::shared_ptr<Core::LinAlg::Vector<double>>& feff, Core::LinAlg::Vector<double>& gact)
 {
   auto shapefcn = Teuchos::getIntegralValue<Mortar::ShapeFcn>(params(), "LM_SHAPEFCN");
-  auto wearshapefcn = Teuchos::getIntegralValue<Wear::WearShape>(params(), "WEAR_SHAPEFCN");
+  auto wearshapefcn = Teuchos::getIntegralValue<Inpar::Wear::WearShape>(params(), "WEAR_SHAPEFCN");
 
   // double-check if this is a dual LM system
   if (shapefcn != Mortar::shape_dual && shapefcn != Mortar::shape_petrovgalerkin)
     FOUR_C_THROW("Condensation only for dual LM");
-  if (wearshapefcn != Wear::wear_shape_dual) FOUR_C_THROW("Condensation only for dual wear");
+  if (wearshapefcn != Inpar::Wear::wear_shape_dual) FOUR_C_THROW("Condensation only for dual wear");
 
   // get stick map
   std::shared_ptr<Core::LinAlg::Map> gstickt = Core::LinAlg::split_map(*gactivet_, *gslipt_);
@@ -2671,7 +2674,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
   auto systype = Teuchos::getIntegralValue<CONTACT::SystemType>(params(), "SYSTEM");
 
   // get wear shapefunction type
-  auto wearshapefcn = Teuchos::getIntegralValue<Wear::WearShape>(params(), "WEAR_SHAPEFCN");
+  auto wearshapefcn = Teuchos::getIntegralValue<Inpar::Wear::WearShape>(params(), "WEAR_SHAPEFCN");
 
   /**********************************************************************/
   /* export weighted gap vector to gactiveN-map                         */
@@ -2796,9 +2799,9 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     // steady state scenario
     if (sswear_)
     {
-      if (wearshapefcn == Wear::wear_shape_dual)
+      if (wearshapefcn == Inpar::Wear::wear_shape_dual)
         ematrix_->complete(*gactiven_, *gactiven_);  // quadr. matrix --> for dual shapes --> diag.
-      else if (wearshapefcn == Wear::wear_shape_standard)
+      else if (wearshapefcn == Inpar::Wear::wear_shape_standard)
         ematrix_->complete(
             *gsdofnrowmap_, *gactiven_);  // quadr. matrix --> for dual shapes --> diag.
       else
@@ -2813,9 +2816,9 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     // general scenario
     else
     {
-      if (wearshapefcn == Wear::wear_shape_dual)
+      if (wearshapefcn == Inpar::Wear::wear_shape_dual)
         ematrix_->complete(*gslipn_, *gslipn_);  // quadr. matrix --> for dual shapes --> diag.
-      else if (wearshapefcn == Wear::wear_shape_standard)
+      else if (wearshapefcn == Inpar::Wear::wear_shape_standard)
         ematrix_->complete(
             *gsdofnrowmap_, *gslipn_);  // quadr. matrix --> for dual shapes --> diag.
       else
@@ -4232,7 +4235,8 @@ void Wear::LagrangeStrategyWear::output_wear()
      * unweight the resulting vector by D_2^-1*w_2~ and get the final
      * unweighted wear vector.
      **********************************************************************/
-    if (Teuchos::getIntegralValue<Wear::WearSide>(params(), "WEAR_SIDE") == Wear::wear_both)
+    if (Teuchos::getIntegralValue<Inpar::Wear::WearSide>(params(), "WEAR_SIDE") ==
+        Inpar::Wear::wear_both)
     {
       // different wear coefficients on both sides...
       double wearcoeff_s = params().get<double>("WEARCOEFF", 0.0);
@@ -4980,7 +4984,8 @@ void Wear::LagrangeStrategyWear::update_active_set_semi_smooth(const bool firstS
   for (int i = 0; i < (int)interface_.size(); ++i)
   {
     // for both-sided wear
-    if (Teuchos::getIntegralValue<Wear::WearSide>(scontact_, "WEAR_SIDE") == Wear::wear_both and
+    if (Teuchos::getIntegralValue<Inpar::Wear::WearSide>(scontact_, "WEAR_SIDE") ==
+            Inpar::Wear::wear_both and
         wearprimvar_ == false)
     {
       gminvolvednodes_ =

@@ -12,7 +12,7 @@
 
 #include "4C_contact_input.hpp"
 #include "4C_contact_interface.hpp"
-#include "4C_contact_wear_input.hpp"
+#include "4C_inpar_wear.hpp"
 #include "4C_linalg_fevector.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -420,9 +420,9 @@ namespace Wear
     \brief Get type of wear shapefnct
 
     */
-    Wear::WearShape wear_shape_fcn()
+    Inpar::Wear::WearShape wear_shape_fcn()
     {
-      return Teuchos::getIntegralValue<Wear::WearShape>(imortar_, "WEAR_SHAPEFCN");
+      return Teuchos::getIntegralValue<Inpar::Wear::WearShape>(imortar_, "WEAR_SHAPEFCN");
     }
 
    private:

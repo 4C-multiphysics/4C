@@ -14,10 +14,10 @@
 #include "4C_contact_defines.hpp"
 #include "4C_contact_input.hpp"
 #include "4C_contact_meshtying_contact_bridge.hpp"
-#include "4C_contact_wear_input.hpp"
 #include "4C_fem_condition_locsys.hpp"
 #include "4C_fem_discretization_nullspace.hpp"
 #include "4C_global_data.hpp"
+#include "4C_inpar_wear.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_krylov_projector.hpp"
@@ -1478,12 +1478,12 @@ int Solid::TimIntImpl::newton_full()
         normlagr_ = -1.0;
 
       // for wear discretization
-      auto wtype = Teuchos::getIntegralValue<Wear::WearType>(
+      auto wtype = Teuchos::getIntegralValue<Inpar::Wear::WearType>(
           cmtbridge_->get_strategy().params(), "WEARTYPE");
-      auto wside = Teuchos::getIntegralValue<Wear::WearSide>(
+      auto wside = Teuchos::getIntegralValue<Inpar::Wear::WearSide>(
           cmtbridge_->get_strategy().params(), "WEAR_SIDE");
 
-      if (wtype == Wear::wear_primvar)
+      if (wtype == Inpar::Wear::wear_primvar)
       {
         std::shared_ptr<const Core::LinAlg::Vector<double>> wincr =
             cmtbridge_->get_strategy().w_solve_incr();
@@ -1500,7 +1500,7 @@ int Solid::TimIntImpl::newton_full()
         else
           normw_ = -1.0;
 
-        if (wside == Wear::wear_both)
+        if (wside == Inpar::Wear::wear_both)
         {
           std::shared_ptr<const Core::LinAlg::Vector<double>> wmincr =
               cmtbridge_->get_strategy().wm_solve_incr();
@@ -3211,10 +3211,10 @@ void Solid::TimIntImpl::print_newton_iter_header(FILE* ofile)
         cmtbridge_->get_strategy().params(), "STRATEGY");
     auto systype = Teuchos::getIntegralValue<CONTACT::SystemType>(
         cmtbridge_->get_strategy().params(), "SYSTEM");
-    auto wtype =
-        Teuchos::getIntegralValue<Wear::WearType>(cmtbridge_->get_strategy().params(), "WEARTYPE");
-    auto wside =
-        Teuchos::getIntegralValue<Wear::WearSide>(cmtbridge_->get_strategy().params(), "WEAR_SIDE");
+    auto wtype = Teuchos::getIntegralValue<Inpar::Wear::WearType>(
+        cmtbridge_->get_strategy().params(), "WEARTYPE");
+    auto wside = Teuchos::getIntegralValue<Inpar::Wear::WearSide>(
+        cmtbridge_->get_strategy().params(), "WEAR_SIDE");
 
     if (soltype == CONTACT::SolvingStrategy::lagmult &&
         (systype != CONTACT::SystemType::condensed &&
@@ -3241,11 +3241,11 @@ void Solid::TimIntImpl::print_newton_iter_header(FILE* ofile)
         case Inpar::Solid::convnorm_abs:
         {
           oss << std::setw(20) << "abs-lagrincr-norm";
-          if (wtype == Wear::wear_primvar)
+          if (wtype == Inpar::Wear::wear_primvar)
           {
             oss << std::setw(20) << "abs-wearincr-S-norm";
             oss << std::setw(20) << "abs-wearcon-S-norm";
-            if (wside == Wear::wear_both)
+            if (wside == Inpar::Wear::wear_both)
             {
               oss << std::setw(20) << "abs-wearincr-M-norm";
               oss << std::setw(20) << "abs-wearcon-M-norm";
@@ -3381,10 +3381,10 @@ void Solid::TimIntImpl::print_newton_iter_text(FILE* ofile)
         cmtbridge_->get_strategy().params(), "STRATEGY");
     auto systype = Teuchos::getIntegralValue<CONTACT::SystemType>(
         cmtbridge_->get_strategy().params(), "SYSTEM");
-    auto wtype =
-        Teuchos::getIntegralValue<Wear::WearType>(cmtbridge_->get_strategy().params(), "WEARTYPE");
-    auto wside =
-        Teuchos::getIntegralValue<Wear::WearSide>(cmtbridge_->get_strategy().params(), "WEAR_SIDE");
+    auto wtype = Teuchos::getIntegralValue<Inpar::Wear::WearType>(
+        cmtbridge_->get_strategy().params(), "WEARTYPE");
+    auto wside = Teuchos::getIntegralValue<Inpar::Wear::WearSide>(
+        cmtbridge_->get_strategy().params(), "WEAR_SIDE");
 
     if (soltype == CONTACT::SolvingStrategy::lagmult &&
         (systype != CONTACT::SystemType::condensed &&
@@ -3396,12 +3396,12 @@ void Solid::TimIntImpl::print_newton_iter_text(FILE* ofile)
       oss << std::setw(20) << std::setprecision(5) << std::scientific
           << normlagr_;  // norm Lagrange multipliers
 
-      if (wtype == Wear::wear_primvar)
+      if (wtype == Inpar::Wear::wear_primvar)
       {
         oss << std::setw(20) << std::setprecision(5) << std::scientific << normw_;  // norm wear
         oss << std::setw(20) << std::setprecision(5) << std::scientific
             << normwrhs_;  // norm wear rhs
-        if (wside == Wear::wear_both)
+        if (wside == Inpar::Wear::wear_both)
         {
           oss << std::setw(20) << std::setprecision(5) << std::scientific << normwm_;  // norm wear
           oss << std::setw(20) << std::setprecision(5) << std::scientific

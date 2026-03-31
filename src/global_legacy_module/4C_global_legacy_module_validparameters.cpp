@@ -16,7 +16,6 @@
 #include "4C_cardiovascular0d_input.hpp"
 #include "4C_constraint_framework_input.hpp"
 #include "4C_contact_input.hpp"
-#include "4C_contact_wear_input.hpp"
 #include "4C_coupling_volmortar_input.hpp"
 #include "4C_cut_input.hpp"
 #include "4C_ehl_input.hpp"
@@ -26,11 +25,12 @@
 #include "4C_fem_geometry_searchtree_input.hpp"
 #include "4C_fem_nurbs_discretization_knotvector.hpp"
 #include "4C_fpsi_input.hpp"
-#include "4C_fs3i_biofilm_fsi_input.hpp"
 #include "4C_fs3i_input.hpp"
 #include "4C_fsi_input.hpp"
 #include "4C_geometric_search_input.hpp"
 #include "4C_global_legacy_module_problem_type_string.hpp"
+#include "4C_inpar_bio.hpp"
+#include "4C_inpar_cardiac_monodomain.hpp"
 #include "4C_inpar_fluid.hpp"
 #include "4C_inpar_io.hpp"
 #include "4C_inpar_IO_runtime_output.hpp"
@@ -41,6 +41,7 @@
 #include "4C_inpar_s2i.hpp"
 #include "4C_inpar_scatra.hpp"
 #include "4C_inpar_structure.hpp"
+#include "4C_inpar_wear.hpp"
 #include "4C_inpar_xfem.hpp"
 #include "4C_io_gridgenerator.hpp"
 #include "4C_io_input_field.hpp"
@@ -63,7 +64,6 @@
 #include "4C_red_airways_input.hpp"
 #include "4C_reduced_lung_1d_pipe_flow_input.hpp"
 #include "4C_reduced_lung_input.hpp"
-#include "4C_scatra_cardiac_monodomain_input.hpp"
 #include "4C_solver_nonlin_nox_input.hpp"
 #include "4C_ssi_input.hpp"
 #include "4C_ssti_input.hpp"
@@ -305,7 +305,7 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
   push_specs(specs, Mortar::valid_parameters());
   push_specs(specs, CONTACT::valid_parameters());
   push_specs(specs, Coupling::VolMortar::valid_parameters());
-  push_specs(specs, Wear::valid_parameters());
+  push_specs(specs, Inpar::Wear::valid_parameters());
   push_specs(specs, Inpar::IORuntimeOutput::FLUID::valid_parameters());
   push_specs(specs, Inpar::IORuntimeOutput::Solid::valid_parameters());
   push_specs(specs, Beam::IORuntimeOutput::valid_parameters());
@@ -327,7 +327,7 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
   push_specs(specs, Inpar::ScaTra::valid_parameters());
   push_specs(specs, LevelSet::valid_parameters());
   push_specs(specs, ElCh::valid_parameters());
-  push_specs(specs, ElectroPhysiology::valid_parameters());
+  push_specs(specs, Inpar::ElectroPhysiology::valid_parameters());
   push_specs(specs, STI::valid_parameters());
 
   push_specs(specs, Inpar::S2I::valid_parameters());
@@ -345,7 +345,7 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
 
   push_specs(specs, ArtDyn::valid_parameters());
   push_specs(specs, ArteryNetwork::valid_parameters());
-  push_specs(specs, BioFilm::valid_parameters());
+  push_specs(specs, Inpar::BioFilm::valid_parameters());
   push_specs(specs, Airway::valid_parameters());
   push_specs(specs, ReducedLung::valid_parameters());
   push_specs(specs, ReducedLung1dPipeFlow::valid_parameters());

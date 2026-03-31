@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_SCATRA_CARDIAC_MONODOMAIN_INPUT_HPP
-#define FOUR_C_SCATRA_CARDIAC_MONODOMAIN_INPUT_HPP
+#ifndef FOUR_C_INPAR_CARDIAC_MONODOMAIN_HPP
+#define FOUR_C_INPAR_CARDIAC_MONODOMAIN_HPP
 
 
 #include "4C_config.hpp"
@@ -22,12 +22,15 @@ namespace Core::Conditions
 {
   class ConditionDefinition;
 }
-namespace ElectroPhysiology
+namespace Inpar
 {
-  /// elch parameters
-  Core::IO::InputSpec valid_parameters();
+  namespace ElectroPhysiology
+  {
+    /// elch parameters
+    Core::IO::InputSpec valid_parameters();
 
-}  // namespace ElectroPhysiology
+  }  // namespace ElectroPhysiology
+}  // namespace Inpar
 FOUR_C_NAMESPACE_CLOSE
 
 #endif

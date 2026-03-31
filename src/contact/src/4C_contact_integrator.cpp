@@ -14,9 +14,9 @@
 #include "4C_contact_input.hpp"
 #include "4C_contact_node.hpp"
 #include "4C_contact_paramsinterface.hpp"
-#include "4C_contact_wear_input.hpp"
 #include "4C_fem_general_utils_boundary_integration.hpp"
 #include "4C_fem_general_utils_integration.hpp"
+#include "4C_inpar_wear.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_mat_structporo.hpp"
@@ -43,11 +43,11 @@ CONTACT::Integrator::Integrator(
       algo_(Teuchos::getIntegralValue<Mortar::AlgorithmType>(imortar_, "ALGORITHM")),
       stype_(Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(imortar_, "STRATEGY")),
       cppnormal_(imortar_.get<bool>("CPP_NORMALS")),
-      wearlaw_(Teuchos::getIntegralValue<Wear::WearLaw>(imortar_, "WEARLAW")),
+      wearlaw_(Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(imortar_, "WEARLAW")),
       wearimpl_(false),
-      wearside_(Wear::wear_slave),
-      weartype_(Wear::wear_intstate),
-      wearshapefcn_(Wear::wear_shape_standard),
+      wearside_(Inpar::Wear::wear_slave),
+      weartype_(Inpar::Wear::wear_intstate),
+      wearshapefcn_(Inpar::Wear::wear_shape_standard),
       sswear_(imortar_.get<bool>("SSWEAR")),
       wearcoeff_(-1.0),
       wearcoeffm_(-1.0),
@@ -60,20 +60,20 @@ CONTACT::Integrator::Integrator(
   initialize_gp(eletype);
 
   // wear specific
-  if (wearlaw_ != Wear::wear_none)
+  if (wearlaw_ != Inpar::Wear::wear_none)
   {
     // set wear contact status
-    auto wtimint = Teuchos::getIntegralValue<Wear::WearTimInt>(params, "WEARTIMINT");
-    if (wtimint == Wear::wear_impl) wearimpl_ = true;
+    auto wtimint = Teuchos::getIntegralValue<Inpar::Wear::WearTimInt>(params, "WEARTIMINT");
+    if (wtimint == Inpar::Wear::wear_impl) wearimpl_ = true;
 
     // wear surface
-    wearside_ = Teuchos::getIntegralValue<Wear::WearSide>(imortar_, "WEAR_SIDE");
+    wearside_ = Teuchos::getIntegralValue<Inpar::Wear::WearSide>(imortar_, "WEAR_SIDE");
 
     // wear algorithm
-    weartype_ = Teuchos::getIntegralValue<Wear::WearType>(imortar_, "WEARTYPE");
+    weartype_ = Teuchos::getIntegralValue<Inpar::Wear::WearType>(imortar_, "WEARTYPE");
 
     // wear shape function
-    wearshapefcn_ = Teuchos::getIntegralValue<Wear::WearShape>(imortar_, "WEAR_SHAPEFCN");
+    wearshapefcn_ = Teuchos::getIntegralValue<Inpar::Wear::WearShape>(imortar_, "WEAR_SHAPEFCN");
 
     // wear coefficient
     wearcoeff_ = imortar_.get<double>("WEARCOEFF");
@@ -3721,7 +3721,7 @@ void CONTACT::Integrator::integrate_deriv_cell_3d_aux_plane_quad(Mortar::Element
 
   // contact with wear
   bool wear = false;
-  if (wearlaw_ != Wear::wear_none) wear = true;
+  if (wearlaw_ != Inpar::Wear::wear_none) wear = true;
 
   // number of nodes (slave, master)
   int nrow = sele.num_node();
@@ -4111,7 +4111,7 @@ void CONTACT::Integrator::integrate_deriv_cell_3d_aux_plane_quad(Mortar::Element
             jumpval, &wearval, dsliptmatrixgp, dweargp, dsxigp, dmxigp, dnmap_unit, dualmap);
 
       // integrate T and E matrix for discr. wear
-      if (wear_type() == Wear::wear_primvar) gp_te(sele, lmval, sval, jac, wgt, jumpval);
+      if (wear_type() == Inpar::Wear::wear_primvar) gp_te(sele, lmval, sval, jac, wgt, jumpval);
 
       //********************************************************************
       // compute cell linearization
@@ -4142,7 +4142,7 @@ void CONTACT::Integrator::integrate_deriv_cell_3d_aux_plane_quad(Mortar::Element
               wgt, duallin, dgapgp, jacintcellmap, dpsxigp, dualmap, dualquad3d);
 
           // Lin wear matrices T and E for discr. wear
-          if (wear_type() == Wear::wear_primvar)
+          if (wear_type() == Inpar::Wear::wear_primvar)
             gp_3d_te_lin(iter, sele, sval, lmval, sderiv, lmderiv, jac, wgt, jumpval, dsxigp,
                 jacintcellmap, dsliptmatrixgp, dualmap);
         }
@@ -5715,7 +5715,7 @@ void CONTACT::Integrator::integrate_gp_3d(Mortar::Element& sele, Mortar::Element
       // WEAR stuff
       //*******************************
       // std. wear for all wear-algorithm types
-      if (wearlaw_ != Wear::wear_none)
+      if (wearlaw_ != Inpar::Wear::wear_none)
       {
         int linsize = 0;
         for (int i = 0; i < sele.num_node(); ++i)
@@ -5734,16 +5734,16 @@ void CONTACT::Integrator::integrate_gp_3d(Mortar::Element& sele, Mortar::Element
             wgt, jumpval, &wearval, dsliptmatrixgp, dweargp, derivsxi, derivmxi, dnmap_unit,
             dualmap);
 
-        if (wear_type() == Wear::wear_intstate and wearimpl_ == true)
+        if (wear_type() == Inpar::Wear::wear_intstate and wearimpl_ == true)
           for (int j = 0; j < sele.num_node(); ++j)
             gp_3d_wear_lin(j, sele, sval, lmval, sderiv, lmderiv, jac, normal, wgt, wearval,
                 jumpval, dweargp, derivjac, derivsxi, dualmap);
 
         // integrate T and E matrix for discr. wear
-        if (wear_type() == Wear::wear_primvar) gp_te(sele, lmval, sval, jac, wgt, jumpval);
+        if (wear_type() == Inpar::Wear::wear_primvar) gp_te(sele, lmval, sval, jac, wgt, jumpval);
 
         // both-sided discr wear specific stuff
-        if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_primvar)
+        if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_primvar)
         {
           Core::LinAlg::SerialDenseVector lm2val(mele.num_node());
           Core::LinAlg::SerialDenseMatrix lm2deriv(mele.num_node(), n_dim() - 1, true);
@@ -5753,7 +5753,7 @@ void CONTACT::Integrator::integrate_gp_3d(Mortar::Element& sele, Mortar::Element
         }
 
         // both-sided wear specific stuff
-        if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_intstate)
+        if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_intstate)
         {
           Core::LinAlg::SerialDenseVector lm2val(mele.num_node());
           Core::LinAlg::SerialDenseMatrix lm2deriv(mele.num_node(), 2, true);
@@ -5763,14 +5763,14 @@ void CONTACT::Integrator::integrate_gp_3d(Mortar::Element& sele, Mortar::Element
         }
 
         // Lin wear matrices T and E for discr. wear
-        if (wearimpl_ == true and wear_type() == Wear::wear_primvar)
+        if (wearimpl_ == true and wear_type() == Inpar::Wear::wear_primvar)
           for (int j = 0; j < sele.num_node(); ++j)
             gp_3d_te_lin(j, sele, sval, lmval, sderiv, lmderiv, jac, wgt, jumpval, derivsxi,
                 derivjac, dsliptmatrixgp, dualmap);
 
 
 
-        if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_primvar and
+        if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_primvar and
             wearimpl_ == true)
         {
           Core::LinAlg::SerialDenseVector lm2val(mele.num_node());
@@ -5907,7 +5907,7 @@ void CONTACT::Integrator::integrate_gp_2d(Mortar::Element& sele, Mortar::Element
       }
 
       // wear specific stuff
-      if (wearlaw_ != Wear::wear_none)
+      if (wearlaw_ != Inpar::Wear::wear_none)
       {
         // nodal Lagrange multiplier
         Core::LinAlg::SerialDenseMatrix lagmult(3, sele.num_node());
@@ -5931,10 +5931,10 @@ void CONTACT::Integrator::integrate_gp_2d(Mortar::Element& sele, Mortar::Element
             dualmap);
 
         // integrate T and E matrix for discr. wear
-        if (wear_type() == Wear::wear_primvar) gp_te(sele, lmval, sval, jac, wgt, &jumpval);
+        if (wear_type() == Inpar::Wear::wear_primvar) gp_te(sele, lmval, sval, jac, wgt, &jumpval);
 
         // both-sided discr wear specific stuff
-        if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_primvar)
+        if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_primvar)
         {
           Core::LinAlg::SerialDenseVector lm2val(mele.num_node());
           Core::LinAlg::SerialDenseMatrix lm2deriv(mele.num_node(), n_dim() - 1, true);
@@ -5944,7 +5944,7 @@ void CONTACT::Integrator::integrate_gp_2d(Mortar::Element& sele, Mortar::Element
         }
 
         // both-sided map wear specific stuff
-        if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_intstate)
+        if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_intstate)
         {
           Core::LinAlg::SerialDenseVector lm2val(mele.num_node());
           Core::LinAlg::SerialDenseMatrix lm2deriv(mele.num_node(), 2, true);
@@ -5954,18 +5954,18 @@ void CONTACT::Integrator::integrate_gp_2d(Mortar::Element& sele, Mortar::Element
         }
 
         // Lin wear for impl. alg.
-        if (wearimpl_ == true and wear_type() == Wear::wear_intstate)
+        if (wearimpl_ == true and wear_type() == Inpar::Wear::wear_intstate)
           for (int j = 0; j < sele.num_node(); ++j)
             gp_2d_wear_lin(j, sele, sval, lmval, sderiv, lmderiv, jac, normal, wgt, wearval,
                 &jumpval, dweargp, derivjac, derivsxi, dualmap);
 
         // Lin wear T and E matrix
-        if (wearimpl_ == true and wear_type() == Wear::wear_primvar)
+        if (wearimpl_ == true and wear_type() == Inpar::Wear::wear_primvar)
           for (int j = 0; j < sele.num_node(); ++j)
             gp_2d_te_lin(j, sele, sval, lmval, sderiv, lmderiv, jac, wgt, &jumpval, derivsxi,
                 derivjac, dsliptmatrixgp, dualmap);
 
-        if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_primvar and
+        if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_primvar and
             wearimpl_ == true)
         {
           Core::LinAlg::SerialDenseVector lm2val(mele.num_node());
@@ -6529,7 +6529,7 @@ void CONTACT::Integrator::gap_3d(Mortar::Element& sele, Mortar::Element& mele,
     gpn[1] += sval[i] * mymrtrnode->mo_data().n()[1];
     gpn[2] += sval[i] * mymrtrnode->mo_data().n()[2];
 
-    if (wear_type() == Wear::wear_primvar)
+    if (wear_type() == Inpar::Wear::wear_primvar)
     {
       FriNode* myfricnode = dynamic_cast<FriNode*>(mymrtrnode);
       sgpx[0] += sval[i] * (sele.get_nodal_coords(0, i) -
@@ -6550,7 +6550,7 @@ void CONTACT::Integrator::gap_3d(Mortar::Element& sele, Mortar::Element& mele,
   // build interpolation of master GP coordinates
   for (int i = 0; i < ncol; ++i)
   {
-    if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_primvar)
+    if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_primvar)
     {
       FriNode* masternode = dynamic_cast<FriNode*>(mnodes[i]);
 
@@ -6688,7 +6688,7 @@ void CONTACT::Integrator::gap_3d(Mortar::Element& sele, Mortar::Element& mele,
 
   // for wear as own discretization
   // lin slave nodes
-  if (wear_type() == Wear::wear_primvar)
+  if (wear_type() == Inpar::Wear::wear_primvar)
   {
     for (int z = 0; z < nrow; ++z)
     {
@@ -6748,7 +6748,7 @@ void CONTACT::Integrator::gap_3d(Mortar::Element& sele, Mortar::Element& mele,
   }
 
   //        MASTER
-  if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_primvar)
+  if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_primvar)
   {
     for (int z = 0; z < ncol; ++z)
     {
@@ -6853,7 +6853,7 @@ void CONTACT::Integrator::gap_2d(Mortar::Element& sele, Mortar::Element& mele,
     gpn[0] += sval[i] * mymrtrnode->mo_data().n()[0];
     gpn[1] += sval[i] * mymrtrnode->mo_data().n()[1];
 
-    if (wear_type() == Wear::wear_primvar)
+    if (wear_type() == Inpar::Wear::wear_primvar)
     {
       FriNode* myfricnode = dynamic_cast<FriNode*>(mymrtrnode);
       double w = myfricnode->wear_data().wcurr()[0] + myfricnode->wear_data().waccu()[0];
@@ -6870,7 +6870,7 @@ void CONTACT::Integrator::gap_2d(Mortar::Element& sele, Mortar::Element& mele,
   // build interpolation of master GP coordinates
   for (int i = 0; i < ncol; ++i)
   {
-    if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_primvar)
+    if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_primvar)
     {
       FriNode* mymrtrnodeM = dynamic_cast<FriNode*>(mnodes[i]);
       double w = mymrtrnodeM->wear_data().wcurr()[0] + mymrtrnodeM->wear_data().waccu()[0];
@@ -6957,7 +6957,7 @@ void CONTACT::Integrator::gap_2d(Mortar::Element& sele, Mortar::Element& mele,
 
   // for wear as own discretization
   // slave nodes
-  if (wear_type() == Wear::wear_primvar)
+  if (wear_type() == Inpar::Wear::wear_primvar)
   {
     for (int z = 0; z < nrow; ++z)
     {
@@ -6997,7 +6997,7 @@ void CONTACT::Integrator::gap_2d(Mortar::Element& sele, Mortar::Element& mele,
 
   // **************************************************
   // master nodes
-  if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_primvar)
+  if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_primvar)
   {
     for (int z = 0; z < ncol; ++z)
     {
@@ -7077,7 +7077,7 @@ void inline CONTACT::Integrator::gp_3d_g_quad_pwlin(Mortar::Element& sele,
     gpn[1] += sval[i] * mymrtrnode->mo_data().n()[1];
     gpn[2] += sval[i] * mymrtrnode->mo_data().n()[2];
 
-    if (wear_type() == Wear::wear_primvar)
+    if (wear_type() == Inpar::Wear::wear_primvar)
     {
       FriNode* myfrinode = dynamic_cast<FriNode*>(snodes[i]);
       sgpx[0] += sval[i] *
@@ -7098,7 +7098,7 @@ void inline CONTACT::Integrator::gp_3d_g_quad_pwlin(Mortar::Element& sele,
   // build interpolation of master GP coordinates
   for (int i = 0; i < ncol; ++i)
   {
-    if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_primvar)
+    if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_primvar)
     {
       FriNode* masternode = dynamic_cast<FriNode*>(mnodes[i]);
 
@@ -7249,7 +7249,7 @@ void inline CONTACT::Integrator::gp_3d_g_quad_pwlin(Mortar::Element& sele,
 
   // for wear as own discretization
   // lin slave nodes
-  if (wear_type() == Wear::wear_primvar)
+  if (wear_type() == Inpar::Wear::wear_primvar)
   {
     for (int z = 0; z < nrow; ++z)
     {
@@ -7297,7 +7297,7 @@ void inline CONTACT::Integrator::gp_3d_g_quad_pwlin(Mortar::Element& sele,
   }
 
   //        MASTER
-  if (wear_side() == Wear::wear_both and wear_type() == Wear::wear_primvar)
+  if (wear_side() == Inpar::Wear::wear_both and wear_type() == Inpar::Wear::wear_primvar)
   {
     for (int z = 0; z < ncol; ++z)
     {
@@ -7429,7 +7429,7 @@ void inline CONTACT::Integrator::gp_2d_g_lin(int& iter, Mortar::Element& sele,
   //****************************************************************
   // LIN WEAR W.R.T. LM
   //****************************************************************
-  if (wear_type() == Wear::wear_primvar)
+  if (wear_type() == Inpar::Wear::wear_primvar)
   {
     // get master element nodes themselves
     const int ncol = mele.num_node();
@@ -7446,7 +7446,7 @@ void inline CONTACT::Integrator::gp_2d_g_lin(int& iter, Mortar::Element& sele,
             jac * wgt * lmval[iter] * (gpn[z] * sval[bl] * wearnode->mo_data().n()[z]);
     }
 
-    if (wear_side() == Wear::wear_both)
+    if (wear_side() == Inpar::Wear::wear_both)
     {
       for (int bl = 0; bl < ncol; ++bl)
       {
@@ -7725,7 +7725,7 @@ void CONTACT::Integrator::gp_g_lin(int& iter, Mortar::Element& sele, Mortar::Ele
   //****************************************************************
   // LIN WEAR W.R.T. W
   //****************************************************************
-  if (wear_type() == Wear::wear_primvar)
+  if (wear_type() == Inpar::Wear::wear_primvar)
   {
     std::map<int, double>& dgwmmap =
         dynamic_cast<CONTACT::Node*>(mymrtrnode)->data().get_deriv_gw();
@@ -7738,7 +7738,7 @@ void CONTACT::Integrator::gp_g_lin(int& iter, Mortar::Element& sele, Mortar::Ele
             jac * wgt * lmval[iter] * (gpn[z] * sval[bl] * wearnode->mo_data().n()[z]);
     }
 
-    if (wear_side() == Wear::wear_both)
+    if (wear_side() == Inpar::Wear::wear_both)
     {
       for (int bl = 0; bl < ncol; ++bl)
       {
@@ -9623,7 +9623,7 @@ void inline CONTACT::Integrator::gp_2d_wear(Mortar::Element& sele, Mortar::Eleme
   // product
   // use non-abs value for implicit-wear algorithm
   // just for simple linear. maybe we change this in future
-  if (wearimpl_ and wear_type() != Wear::wear_primvar)
+  if (wearimpl_ and wear_type() != Inpar::Wear::wear_primvar)
     wearval[0] = (wearval[0]) * abs(jumpval[0]);
   else
     wearval[0] = abs(wearval[0]) * abs(jumpval[0]);
@@ -9647,7 +9647,7 @@ void inline CONTACT::Integrator::gp_2d_wear(Mortar::Element& sele, Mortar::Eleme
   //****************************************************************
   //   linearization for implicit algorithms
   //****************************************************************
-  if (wearimpl_ || wear_type() == Wear::wear_primvar)
+  if (wearimpl_ || wear_type() == Inpar::Wear::wear_primvar)
   {
     // evaluate the GP wear function derivatives
     Core::Gen::Pairedvector<int, double> ddualgp_x(ndof * ncol + linsize);
@@ -9989,7 +9989,7 @@ void inline CONTACT::Integrator::gp_3d_wear(Mortar::Element& sele, Mortar::Eleme
   }
 
   // linearization without lm weighting and jac.
-  if (wearimpl_ or wear_type() == Wear::wear_primvar)
+  if (wearimpl_ or wear_type() == Inpar::Wear::wear_primvar)
   {
     int linsize = 0;
     for (int i = 0; i < nrow; ++i)
@@ -10145,7 +10145,7 @@ void inline CONTACT::Integrator::gp_3d_wear(Mortar::Element& sele, Mortar::Eleme
 
     // slip lin. for discrete wear
     // u/abs(u) * lin tang * jump
-    if (wear_type() == Wear::wear_primvar)
+    if (wear_type() == Inpar::Wear::wear_primvar)
     {
       for (CI p = dt0.begin(); p != dt0.end(); ++p)
         dsliptmatrixgp[p->first] += absx * (p->second) * jumptan(0, 0);
@@ -10300,7 +10300,7 @@ void inline CONTACT::Integrator::gp_3d_wear(Mortar::Element& sele, Mortar::Eleme
 
     // slip lin. for discrete wear
     // u/abs(u) * tang * lin jump
-    if (wear_type() == Wear::wear_primvar)
+    if (wear_type() == Inpar::Wear::wear_primvar)
     {
       for (CI p = lintan0.begin(); p != lintan0.end(); ++p)
         dsliptmatrixgp[p->first] += absx * (p->second) * jumptan(0, 0);
@@ -10328,7 +10328,7 @@ void inline CONTACT::Integrator::gp_te(Mortar::Element& sele,
 
   int nrow = sele.num_node();
 
-  if (wear_shape_fcn() == Wear::wear_shape_standard)
+  if (wear_shape_fcn() == Inpar::Wear::wear_shape_standard)
   {
     for (int k = 0; k < nrow; ++k)
     {
@@ -10350,7 +10350,7 @@ void inline CONTACT::Integrator::gp_te(Mortar::Element& sele,
       }
     }
   }
-  else if (wear_shape_fcn() == Wear::wear_shape_dual)
+  else if (wear_shape_fcn() == Inpar::Wear::wear_shape_dual)
   {
     for (int k = 0; k < nrow; ++k)
     {
@@ -10402,7 +10402,7 @@ void inline CONTACT::Integrator::gp_te_master(Mortar::Element& sele, Mortar::Ele
   int nrow = mele.num_node();
   int ncol = sele.num_node();
 
-  if (wear_shape_fcn() == Wear::wear_shape_standard)
+  if (wear_shape_fcn() == Inpar::Wear::wear_shape_standard)
   {
     for (int k = 0; k < nrow; ++k)
     {
@@ -10431,7 +10431,7 @@ void inline CONTACT::Integrator::gp_te_master(Mortar::Element& sele, Mortar::Ele
       }
     }
   }
-  else if (wear_shape_fcn() == Wear::wear_shape_dual)
+  else if (wear_shape_fcn() == Inpar::Wear::wear_shape_dual)
   {
     for (int k = 0; k < nrow; ++k)
     {
@@ -10498,7 +10498,7 @@ void inline CONTACT::Integrator::gp_2d_te_master_lin(int& iter,  // like k
   Mortar::Node* mymrtrnode = dynamic_cast<Mortar::Node*>(mnodes[iter]);
   if (!mymrtrnode) FOUR_C_THROW("Null pointer!");
 
-  if (wear_shape_fcn() == Wear::wear_shape_standard)
+  if (wear_shape_fcn() == Inpar::Wear::wear_shape_standard)
   {
     // integrate LinT
     for (int j = 0; j < nrow; ++j)
@@ -10590,7 +10590,8 @@ void inline CONTACT::Integrator::gp_2d_te_master_lin(int& iter,  // like k
       for (CI p = dsxigp.begin(); p != dsxigp.end(); ++p) emmap_jk[p->first] += fac * (p->second);
     }  // end integrate linE
   }
-  else if (wear_shape_fcn() == Wear::wear_shape_dual)  //******************************************
+  else if (wear_shape_fcn() ==
+           Inpar::Wear::wear_shape_dual)  //******************************************
   {
     FOUR_C_THROW("Chosen shapefunctions 'wear_shape_dual' not supported!");
   }
@@ -10621,7 +10622,7 @@ void inline CONTACT::Integrator::gp_2d_te_lin(int& iter, Mortar::Element& sele,
   Mortar::Node* mymrtrnode = dynamic_cast<Mortar::Node*>(snodes[iter]);
   if (!mymrtrnode) FOUR_C_THROW("Null pointer!");
 
-  if (wear_shape_fcn() == Wear::wear_shape_standard)
+  if (wear_shape_fcn() == Inpar::Wear::wear_shape_standard)
   {
     // integrate LinT
     for (int j = 0; j < nrow; ++j)
@@ -10699,7 +10700,8 @@ void inline CONTACT::Integrator::gp_2d_te_lin(int& iter, Mortar::Element& sele,
         emmap_jk[p->first] += fac * (p->second);
     }  // end integrate linE
   }
-  else if (wear_shape_fcn() == Wear::wear_shape_dual)  //******************************************
+  else if (wear_shape_fcn() ==
+           Inpar::Wear::wear_shape_dual)  //******************************************
   {
     // integrate LinT
     for (int j = 0; j < nrow; ++j)
@@ -10819,7 +10821,7 @@ void inline CONTACT::Integrator::gp_3d_te_lin(int& iter, Mortar::Element& sele,
   Mortar::Node* mymrtrnode = dynamic_cast<Mortar::Node*>(snodes[iter]);
   if (!mymrtrnode) FOUR_C_THROW("Null pointer!");
 
-  if (wear_shape_fcn() == Wear::wear_shape_standard)
+  if (wear_shape_fcn() == Inpar::Wear::wear_shape_standard)
   {
     // integrate LinT
     for (int j = 0; j < nrow; ++j)
@@ -10913,7 +10915,7 @@ void inline CONTACT::Integrator::gp_3d_te_lin(int& iter, Mortar::Element& sele,
 
     }  // end integrate linE
   }
-  else if (wear_shape_fcn() == Wear::wear_shape_dual)
+  else if (wear_shape_fcn() == Inpar::Wear::wear_shape_dual)
   {
     // integrate LinT
     for (int j = 0; j < nrow; ++j)
@@ -11071,7 +11073,7 @@ void inline CONTACT::Integrator::gp_3d_te_master_lin(int& iter, Mortar::Element&
   Mortar::Node* mymrtrnode = dynamic_cast<Mortar::Node*>(mnodes[iter]);
   if (!mymrtrnode) FOUR_C_THROW("Null pointer!");
 
-  if (wear_shape_fcn() == Wear::wear_shape_standard)
+  if (wear_shape_fcn() == Inpar::Wear::wear_shape_standard)
   {
     // integrate LinT
     for (int j = 0; j < nrow; ++j)
@@ -11159,7 +11161,7 @@ void inline CONTACT::Integrator::gp_3d_te_master_lin(int& iter, Mortar::Element&
   //------------------------------------------------------------
   //------------------------------------------------------------
   //------------------------------------------------------------
-  else if (wear_shape_fcn() == Wear::wear_shape_dual)
+  else if (wear_shape_fcn() == Inpar::Wear::wear_shape_dual)
   {
     // integrate LinT
     for (int j = 0; j < nrow; ++j)

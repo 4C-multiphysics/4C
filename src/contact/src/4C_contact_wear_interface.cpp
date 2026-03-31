@@ -40,23 +40,23 @@ Wear::WearInterface::WearInterface(
       sswear_(icontact.get<bool>("SSWEAR"))
 {
   // set wear contact status
-  auto wtype = Teuchos::getIntegralValue<Wear::WearType>(icontact, "WEARTYPE");
+  auto wtype = Teuchos::getIntegralValue<Inpar::Wear::WearType>(icontact, "WEARTYPE");
 
-  auto wtimint = Teuchos::getIntegralValue<Wear::WearTimInt>(icontact, "WEARTIMINT");
+  auto wtimint = Teuchos::getIntegralValue<Inpar::Wear::WearTimInt>(icontact, "WEARTIMINT");
 
-  auto wside = Teuchos::getIntegralValue<Wear::WearSide>(icontact, "WEAR_SIDE");
+  auto wside = Teuchos::getIntegralValue<Inpar::Wear::WearSide>(icontact, "WEAR_SIDE");
 
-  auto wlaw = Teuchos::getIntegralValue<Wear::WearLaw>(icontact, "WEARLAW");
+  auto wlaw = Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(icontact, "WEARLAW");
 
-  if (wlaw != Wear::wear_none) wear_ = true;
+  if (wlaw != Inpar::Wear::wear_none) wear_ = true;
 
-  if (wtimint == Wear::wear_impl) wearimpl_ = true;
-
-  // set wear contact discretization
-  if (wtype == Wear::wear_primvar) wearpv_ = true;
+  if (wtimint == Inpar::Wear::wear_impl) wearimpl_ = true;
 
   // set wear contact discretization
-  if (wside == Wear::wear_both) wearboth_ = true;
+  if (wtype == Inpar::Wear::wear_primvar) wearpv_ = true;
+
+  // set wear contact discretization
+  if (wside == Inpar::Wear::wear_both) wearboth_ = true;
 
   return;
 }
@@ -148,12 +148,12 @@ void Wear::WearInterface::assemble_te(
         double val = colcurr->second;
 
         // do not assemble zeros into m matrix
-        if (wear_shape_fcn() == Wear::wear_shape_standard)
+        if (wear_shape_fcn() == Inpar::Wear::wear_shape_standard)
         {
           if (abs(val) > 1.0e-12) eglobal.assemble(val, row, col);
           ++k;
         }
-        else if (wear_shape_fcn() == Wear::wear_shape_dual)
+        else if (wear_shape_fcn() == Inpar::Wear::wear_shape_dual)
         {
           if (col == row)
             if (abs(val) > 1.0e-12) eglobal.assemble(val, row, col);
@@ -257,12 +257,12 @@ void Wear::WearInterface::assemble_te_master(
         double val = colcurr->second;
 
         // do not assemble zeros into m matrix
-        if (wear_shape_fcn() == Wear::wear_shape_standard)
+        if (wear_shape_fcn() == Inpar::Wear::wear_shape_standard)
         {
           if (abs(val) > 1.0e-12) eglobal.fe_assemble(val, row, col);
           ++k;
         }
-        else if (wear_shape_fcn() == Wear::wear_shape_dual)
+        else if (wear_shape_fcn() == Inpar::Wear::wear_shape_dual)
         {
           if (col == row)
             if (abs(val) > 1.0e-12) eglobal.fe_assemble(val, row, col);

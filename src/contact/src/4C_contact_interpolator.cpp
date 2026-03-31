@@ -27,31 +27,31 @@ NTS::Interpolator::Interpolator(Teuchos::ParameterList& params, const int& dim)
     : iparams_(params),
       dim_(dim),
       pwslip_(iparams_.get<bool>("GP_SLIP_INCR")),
-      wearlaw_(Teuchos::getIntegralValue<Wear::WearLaw>(iparams_, "WEARLAW")),
+      wearlaw_(Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(iparams_, "WEARLAW")),
       wearimpl_(false),
-      wearside_(Wear::wear_slave),
-      weartype_(Wear::wear_intstate),
-      wearshapefcn_(Wear::wear_shape_standard),
+      wearside_(Inpar::Wear::wear_slave),
+      weartype_(Inpar::Wear::wear_intstate),
+      wearshapefcn_(Inpar::Wear::wear_shape_standard),
       wearcoeff_(-1.0),
       wearcoeffm_(-1.0),
       sswear_(iparams_.get<bool>("SSWEAR")),
       ssslip_(iparams_.get<double>("SSSLIP"))
 {
   // wear specific
-  if (wearlaw_ != Wear::wear_none)
+  if (wearlaw_ != Inpar::Wear::wear_none)
   {
     // wear time integration
-    auto wtimint = Teuchos::getIntegralValue<Wear::WearTimInt>(params, "WEARTIMINT");
-    if (wtimint == Wear::wear_impl) wearimpl_ = true;
+    auto wtimint = Teuchos::getIntegralValue<Inpar::Wear::WearTimInt>(params, "WEARTIMINT");
+    if (wtimint == Inpar::Wear::wear_impl) wearimpl_ = true;
 
     // wear surface
-    wearside_ = Teuchos::getIntegralValue<Wear::WearSide>(iparams_, "BOTH_SIDED_WEAR");
+    wearside_ = Teuchos::getIntegralValue<Inpar::Wear::WearSide>(iparams_, "BOTH_SIDED_WEAR");
 
     // wear algorithm
-    weartype_ = Teuchos::getIntegralValue<Wear::WearType>(iparams_, "WEARTYPE");
+    weartype_ = Teuchos::getIntegralValue<Inpar::Wear::WearType>(iparams_, "WEARTYPE");
 
     // wear shape function
-    wearshapefcn_ = Teuchos::getIntegralValue<Wear::WearShape>(iparams_, "WEAR_SHAPEFCN");
+    wearshapefcn_ = Teuchos::getIntegralValue<Inpar::Wear::WearShape>(iparams_, "WEAR_SHAPEFCN");
 
     // wear coefficient
     wearcoeff_ = iparams_.get<double>("WEARCOEFF");
@@ -217,7 +217,7 @@ void NTS::Interpolator::interpolate_2d(Mortar::Node& snode, std::vector<Mortar::
       }
 
       // calculate node-wise wear (prim. var.)
-      if (weartype_ == Wear::wear_primvar)
+      if (weartype_ == Inpar::Wear::wear_primvar)
       {
         FOUR_C_THROW("stop");
         nw_t_e_2d(mynode, area, jumpval, dslipmatrix);
@@ -893,7 +893,7 @@ void NTS::Interpolator::nw_wear_2d(CONTACT::Node& mynode, Mortar::Element& mele,
   //****************************************************************
   //   linearization for implicit algorithms
   //****************************************************************
-  if ((wearimpl_ || weartype_ == Wear::wear_primvar) and abs(jumpval) > 1e-12)
+  if ((wearimpl_ || weartype_ == Inpar::Wear::wear_primvar) and abs(jumpval) > 1e-12)
   {
     // lin. abs(x) = x/abs(x) * lin x.
     double xabsx = (jumpval / abs(jumpval)) * lm_lin;

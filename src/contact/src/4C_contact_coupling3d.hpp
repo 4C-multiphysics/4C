@@ -11,7 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_contact_input.hpp"
-#include "4C_contact_wear_input.hpp"
+#include "4C_inpar_wear.hpp"
 #include "4C_mortar_coupling3d.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -151,9 +151,9 @@ namespace CONTACT
      \brief Return type of wear surface definition
 
      */
-    Wear::WearType wear_type() const
+    Inpar::Wear::WearType wear_type() const
     {
-      return Teuchos::getIntegralValue<Wear::WearType>(imortar_, "WEARTYPE");
+      return Teuchos::getIntegralValue<Inpar::Wear::WearType>(imortar_, "WEARTYPE");
     }
 
     //@}

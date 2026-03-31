@@ -13,8 +13,8 @@
  *---------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
-#include "4C_contact_wear_input.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
+#include "4C_inpar_wear.hpp"
 #include "4C_utils_pairedvector.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
@@ -176,15 +176,15 @@ namespace NTS
     bool pwslip_;                      //< point-wise evaluated slip increment
 
     // wear inputs from parameter list
-    Wear::WearLaw wearlaw_;         //< type of wear law
-    bool wearimpl_;                 //< flag for implicit wear algorithm
-    Wear::WearSide wearside_;       //< definition of wear surface
-    Wear::WearType weartype_;       //< definition of contact wear algorithm
-    Wear::WearShape wearshapefcn_;  //< type of wear shape function
-    double wearcoeff_;              //< wear coefficient
-    double wearcoeffm_;             //< wear coefficient master
-    bool sswear_;                   //< flag for steady state wear
-    double ssslip_;                 //< fixed slip for steady state wear
+    Inpar::Wear::WearLaw wearlaw_;         //< type of wear law
+    bool wearimpl_;                        //< flag for implicit wear algorithm
+    Inpar::Wear::WearSide wearside_;       //< definition of wear surface
+    Inpar::Wear::WearType weartype_;       //< definition of contact wear algorithm
+    Inpar::Wear::WearShape wearshapefcn_;  //< type of wear shape function
+    double wearcoeff_;                     //< wear coefficient
+    double wearcoeffm_;                    //< wear coefficient master
+    bool sswear_;                          //< flag for steady state wear
+    double ssslip_;                        //< fixed slip for steady state wear
   };
 
 
