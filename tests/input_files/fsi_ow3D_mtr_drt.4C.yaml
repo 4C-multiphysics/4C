@@ -32,15 +32,12 @@ STRUCT NOX/Printing:
   Outer Iteration StatusTest: false
 SOLVER 1:
   SOLVER: "UMFPACK"
-  AZSUB: 300
   NAME: "Ale_Solver"
 SOLVER 2:
   SOLVER: "UMFPACK"
-  AZSUB: 300
   NAME: "Structure_Solver"
 SOLVER 3:
   SOLVER: "UMFPACK"
-  AZSUB: 300
   NAME: "Fluid_Solver"
 MATERIALS:
   - MAT: 1

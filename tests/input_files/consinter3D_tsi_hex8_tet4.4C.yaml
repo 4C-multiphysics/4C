@@ -37,7 +37,6 @@ SOLVER 2:
   SOLVER: "Belos"
   AZPREC: "Teko"
   AZTOL: 1e-10
-  AZSUB: 300
   THROW_IF_UNCONVERGED: false
   TEKO_XML_FILE: "xml/block_preconditioner/thermo_solid.xml"
   NAME: "Thermo_Structure_Interaction_Solver"

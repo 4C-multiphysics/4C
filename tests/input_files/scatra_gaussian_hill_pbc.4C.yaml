@@ -27,7 +27,6 @@ SOLVER 1:
   SOLVER: "Belos"
   IFPACK_XML_FILE: "xml/preconditioner/ifpack.xml"
   AZTOL: 1e-09
-  AZSUB: 40
   NAME: "Sca_Tra_Solver"
 MATERIALS:
   - MAT: 1

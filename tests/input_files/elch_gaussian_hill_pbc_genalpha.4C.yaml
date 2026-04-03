@@ -32,7 +32,6 @@ SOLVER 1:
   AZITER: 500
   AZTOL: 1e-10
   AZREUSE: 20
-  AZSUB: 200
   NAME: "Sca_Tra_Solver"
 MATERIALS:
   - MAT: 1

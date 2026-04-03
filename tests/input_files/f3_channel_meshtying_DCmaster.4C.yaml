@@ -42,7 +42,6 @@ SOLVER 1:
   AZTOL: 1e-09
   AZOUTPUT: 50
   AZREUSE: 5
-  AZSUB: 100
   NAME: "Meshtying_Solver"
 MATERIALS:
   - MAT: 1

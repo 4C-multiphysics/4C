@@ -52,7 +52,6 @@ SOLVER 2:
   SOLVER: "Belos"
   IFPACK_XML_FILE: "xml/preconditioner/ifpack.xml"
   AZTOL: 1e-10
-  AZSUB: 25
   NAME: "Fluid_Solver"
 MATERIALS:
   - MAT: 1

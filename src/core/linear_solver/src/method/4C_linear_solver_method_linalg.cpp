@@ -350,7 +350,6 @@ Teuchos::ParameterList translate_four_c_to_belos(const Teuchos::ParameterList& i
         break;
       case Core::LinearSolver::IterativeSolverType::gmres:
         beloslist.set("Solver Type", "GMRES");
-        beloslist.set("Num Blocks", inparams.get<int>("AZSUB"));
         break;
       default:
       {
