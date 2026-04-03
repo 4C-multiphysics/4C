@@ -17,7 +17,6 @@ SOLVER 1:
   IFPACK_XML_FILE: "xml/preconditioner/ifpack.xml"
   AZTOL: 1e-07
   AZREUSE: 5
-  AZSUB: 100
   NAME: "Fluid_Solver"
 PROBLEM TYPE:
   PROBLEMTYPE: "Fluid"

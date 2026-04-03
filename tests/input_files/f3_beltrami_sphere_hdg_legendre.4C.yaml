@@ -32,7 +32,6 @@ SOLVER 1:
   SOLVER: "Belos"
   IFPACK_XML_FILE: "xml/preconditioner/ifpack.xml"
   AZTOL: 2e-05
-  AZSUB: 100
 MATERIALS:
   - MAT: 1
     MAT_fluid:

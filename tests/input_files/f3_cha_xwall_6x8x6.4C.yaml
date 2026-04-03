@@ -40,7 +40,6 @@ SOLVER 1:
   AZITER: 2000
   AZTOL: 1e-18
   AZREUSE: 8
-  AZSUB: 120
   NAME: "Fluid_Solver"
 MATERIALS:
   - MAT: 1

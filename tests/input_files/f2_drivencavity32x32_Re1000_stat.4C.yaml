@@ -37,7 +37,6 @@ SOLVER 1:
   SOLVER: "Belos"
   IFPACK_XML_FILE: "xml/preconditioner/ifpack.xml"
   AZTOL: 1e-07
-  AZSUB: 25
   THROW_IF_UNCONVERGED: false
   NAME: "Fluid_Solver"
 DESIGN POINT DIRICH CONDITIONS:

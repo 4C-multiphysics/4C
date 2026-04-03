@@ -44,7 +44,6 @@ SOLVER 1:
   IFPACK_XML_FILE: "xml/preconditioner/ifpack.xml"
   AZTOL: 0.0001
   AZREUSE: 5
-  AZSUB: 40
   NAME: "Fluid_Solver"
 MATERIALS:
   - MAT: 1

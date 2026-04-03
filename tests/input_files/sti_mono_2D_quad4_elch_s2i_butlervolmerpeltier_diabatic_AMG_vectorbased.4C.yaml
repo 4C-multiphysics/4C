@@ -46,7 +46,6 @@ SCALAR TRANSPORT DYNAMIC/S2I COUPLING:
 SOLVER 1:
   SOLVER: "Belos"
   AZPREC: "MueLu"
-  AZSUB: 100
   THROW_IF_UNCONVERGED: false
   MUELU_XML_FILE: "xml/multigrid/sti_template.xml"
 SOLVER 2:

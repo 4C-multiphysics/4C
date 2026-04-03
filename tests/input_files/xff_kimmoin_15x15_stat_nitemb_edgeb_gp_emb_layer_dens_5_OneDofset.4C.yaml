@@ -48,7 +48,6 @@ SOLVER 1:
   IFPACK_XML_FILE: "xff_kimmoin_ifpack.xml"
   AZOUTPUT: 50
   AZREUSE: 1
-  AZSUB: 1000
   NAME: "Fluid_Solver"
 MATERIALS:
   - MAT: 1

@@ -94,11 +94,6 @@ namespace Core::LinearSolver
                     "be declared stalled and thus force recomputation of the preconditioner.",
                 .default_value = 50}),
 
-        parameter<int>(
-            "AZSUB", {.description = "The maximum size of the Krylov subspace used with \"GMRES\" "
-                                     "before\n a restart is performed.",
-                         .default_value = 50}),
-
         parameter<bool>("THROW_IF_UNCONVERGED",
             {.description =
                     "If set to true, the iterative linear solver "

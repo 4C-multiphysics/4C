@@ -34,7 +34,6 @@ SOLVER 1:
   AZPREC: "MueLu"
   AZTOL: 1e-05
   AZOUTPUT: 1000
-  AZSUB: 100
   MUELU_XML_FILE: "xml/multigrid/elasticity_template.xml"
   NAME: "Structure_Solver"
 MATERIALS:
