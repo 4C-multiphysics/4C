@@ -39,6 +39,7 @@ mkdir -p $BUILD_DIR && cd $BUILD_DIR
 
 CMAKE_COMMAND=cmake
 BREW_DIR=/opt/homebrew
+PARMETIS_DIR=$HOME/opt/parmetis
 MPI_BIN_DIR=$BREW_DIR/bin
 
 $CMAKE_COMMAND \
@@ -53,8 +54,8 @@ $CMAKE_COMMAND \
   -DTPL_ENABLE_INTERNAL_BLASLIB=OFF \
   -DTPL_ENABLE_LAPACKLIB=ON \
   \
-  -DTPL_PARMETIS_INCLUDE_DIRS="$BREW_DIR/include" \
-  -DTPL_PARMETIS_LIBRARIES="$BREW_DIR/lib/libparmetis.dylib;$BREW_DIR/lib/libmetis.dylib" \
+  -DTPL_PARMETIS_INCLUDE_DIRS="$BREW_DIR/include;$PARMETIS_DIR/include;" \
+  -DTPL_PARMETIS_LIBRARIES="$PARMETIS_DIR/lib/libparmetis.dylib;$BREW_DIR/lib/libmetis.dylib" \
   \
   -DBUILD_SHARED_LIBS=ON \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \

@@ -16,12 +16,13 @@ set -e
 INSTALL_DIR="$1"
 # Number of procs for building (default 4)
 NPROCS=${NPROCS=4}
-VERSION="5.6.0"
-CHECKSUM="3e08c1bdea7aaaba303d3cf03059f3b4336fa49bef93f4260f478f067f518289"
+PREFIX="mumps-debian-"
+VERSION="5.6.2-2"
+CHECKSUM="5555eead9891938a54f12bf5c0cbd77e906648bb5409e97d69f29adaaf59a295"
 
-wget --no-verbose https://ftp.mcs.anl.gov/pub/petsc/externalpackages/MUMPS_${VERSION}.tar.gz
+wget --no-verbose https://salsa.debian.org/science-team/mumps/-/archive/debian/${VERSION}/${PREFIX}${VERSION}.tar.gz
 # Verify checksum
-if [ $CHECKSUM = `sha256sum MUMPS_${VERSION}.tar.gz | awk '{print $1}'` ]
+if [ $CHECKSUM = `sha256sum ${PREFIX}${VERSION}.tar.gz | awk '{print $1}'` ]
 then
   echo "Checksum matches"
 else
@@ -29,12 +30,12 @@ else
   exit 1
 fi
 
-tar -xzf MUMPS_${VERSION}.tar.gz
-cd MUMPS_${VERSION}/
+tar -xzf ${PREFIX}${VERSION}.tar.gz
+cd ${PREFIX}${VERSION}
 cp Make.inc/Makefile.inc.generic Makefile.inc
 make -j${NPROCS} FC=mpif90 FL=mpif90 \
-  INCPAR="-I/opt/homebrew/include" \
-  LIBPAR="-L/opt/homebrew/lib -lmetis -lparmetis -lscalapack -llapack" \
+  INCPAR="-I/opt/homebrew/include -I$HOME/opt/parmetis/include" \
+  LIBPAR="-L/opt/homebrew/lib -lmetis -lscalapack -llapack -L$HOME/opt/parmetis/lib -lparmetis" \
   ORDERINGSF="-Dpord -Dparmetis" \
   OPTF="-O3 -fallow-argument-mismatch"
 mkdir -p ${INSTALL_DIR}

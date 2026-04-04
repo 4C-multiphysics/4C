@@ -13,7 +13,7 @@
 # Exit the script at the first failure
 set -e
 
-INSTALL_DIR=/opt/homebrew
+INSTALL_DIR="$1"
 # Number of procs for building (default 4)
 NPROCS=${NPROCS=4}
 VERSION="4.0.3"

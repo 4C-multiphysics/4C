@@ -15,36 +15,68 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v6
-      - name: Preparation
+      - name: System preparation
         run: |
+          echo "System information:"
           g++ -v
           uname
           sysctl -n hw.physicalcpu
-          pwd
-          brew tap botantony/cmake3
-          brew install cmake3
-          echo "/opt/homebrew/opt/cmake3/bin" >> $GITHUB_PATH
+          brew update
           sudo ln -sf $(brew --prefix gcc@14)/bin/gfortran-14 /opt/homebrew/bin/gfortran
-          brew install openmpi hdf5 llvm boost cln metis netcdf lld scalapack fftw
+          brew install jpeg-turbo
+          ls -l /opt/homebrew/lib/libjpeg.dylib
+          brew install openmpi hdf5 llvm boost cln metis netcdf lld scalapack fftw vtk gmsh
           echo "DYLD_LIBRARY_PATH=/opt/homebrew/lib:${DYLD_LIBRARY_PATH}" >> $GITHUB_ENV
-      - name: Cache Dependencies
+          echo "HOME=$HOME" >> $GITHUB_ENV
+          mkdir -p ${{ env.HOME }}/opt
+          sudo chown -R $(whoami) ${{ env.HOME }}/opt
+          sudo mkdir -p /opt/homebrew/Cellar/fltk/1.4.4/lib
+          sudo mkdir -p /opt/homebrew/Cellar/libpng/1.6.54_1/lib
+          sudo ln -s /opt/homebrew/opt/fltk/lib/libfltk_images.1.4.dylib /opt/homebrew/Cellar/fltk/1.4.4/lib/libfltk_images.dylib
+          sudo ln -s /opt/homebrew/opt/libpng/lib/libpng16.16.dylib /opt/homebrew/Cellar/libpng/1.6.54_1/lib/libpng16.dylib
+          sudo ln -s /opt/homebrew/opt/libpng/lib/libpng.dylib /opt/homebrew/Cellar/libpng/1.6.54_1/lib/libpng.dylib
+          sudo ln -s /opt/homebrew/opt/jpeg-turbo/lib/libjpeg.8.dylib /opt/homebrew/Cellar/libpng/1.6.54_1/lib/libjpeg.dylib
+          sudo ln -s /opt/homebrew/opt/fltk/lib/libfltk.1.4.dylib /opt/homebrew/Cellar/fltk/1.4.4/lib/libfltk.dylib
+          sudo ln -s /opt/homebrew/opt/fltk/lib/libfltk_gl.1.4.dylib /opt/homebrew/Cellar/fltk/1.4.4/lib/libfltk_gl.dylib
+      - name: Restore dependencies cache
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
-          path: $HOME/opt
-          key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh') }}
-      - name: Install the dependencies
+          path: ${{ env.HOME }}/opt
+          key: v2-${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh')
+            }}
+      - name: Compile and install the dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
         run: |
           echo "install the dependencies"
           cmake --version
           sh ./dependencies/darwin/compile_dependencies.sh
+      - name: Save dependencies cache
+        if: success() && steps.cache-deps.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.HOME }}/opt
+          key: v2-${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh')
+            }}
+      - name: Restore build cache
+        id: cache-build
+        uses: actions/cache/restore@v4
+        with:
+          path: build/
+          key: ${{ runner.os }}-build-${{ github.sha }}
       - name: Build 4C
+        if: steps.cache-build.outputs.cache-hit != 'true'
         run: |
           pwd
           g++ -v
-          cmake -B build/ --fresh --preset=darwin-debug
+          cmake -B build/ --fresh --preset=darwin
           cmake --build build/ --target full
+      - name: Save build cache
+        if: success() && steps.cache-build.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: build/
+          key: ${{ runner.os }}-build-${{ github.sha }}
       - name: Run tests
         run: |
           echo "tests"

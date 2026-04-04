@@ -203,10 +203,17 @@ function(_add_test_with_options)
       ADDITIONAL_FIXTURE
       TOTAL_PROCS
       TIMEOUT
+      SKIP
       INPUT_FILE
       OUTPUT_DIR
       )
-  set(multiValueArgs TEST_COMMAND REQUIRED_DEPENDENCIES LABELS CLEANUP_FIXTURES)
+  set(multiValueArgs
+      TEST_COMMAND
+      REQUIRED_DEPENDENCIES
+      LABELS
+      EXCLUDE_PLATFORM
+      CLEANUP_FIXTURES
+      )
   cmake_parse_arguments(
     _parsed
     "${options}"
@@ -233,6 +240,10 @@ function(_add_test_with_options)
     set(_parsed_TOTAL_PROCS 1)
   endif()
 
+  if(NOT DEFINED _parsed_SKIP)
+    set(_parsed_SKIP "OFF")
+  endif()
+
   if(NOT DEFINED _parsed_TIMEOUT)
     set(_parsed_TIMEOUT "")
   endif()
@@ -251,6 +262,11 @@ function(_add_test_with_options)
 
   # check if all required dependencies are present
   check_required_dependencies(skip_message "${_parsed_REQUIRED_DEPENDENCIES}")
+
+  # check if the test is marked to be skipped
+  if(_parsed_SKIP STREQUAL "ON")
+    set(skip_message "The test ${_parsed_NAME_OF_TEST} is marked to be skipped")
+  endif()
 
   if(NOT skip_message STREQUAL "")
     # The dummy test needs to report a arbitrary error code that ctest interprets as "skipped".
@@ -321,6 +337,7 @@ endfunction()
 #                                 If multiple dependencies are provided, all must be met for the test to run.
 #                                 Note that the version is the _internal_ version that 4C assigns to the dependency.
 #   RETURN_AS:                    A variable name that allows to add further dependent tests based on this test.
+#   EXCLUDE_PLATFORM:             Mark to not run the test on specific platform.
 function(four_c_test)
   set(options "")
   set(oneValueArgs
@@ -330,7 +347,7 @@ function(four_c_test)
       OMP_THREADS
       RETURN_AS
       )
-  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES)
+  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES EXCLUDE_PLATFORM)
   cmake_parse_arguments(
     _parsed
     "${options}"
@@ -397,6 +414,14 @@ function(four_c_test)
     math(EXPR _parsed_TIMEOUT "${FOUR_C_TEST_TIMEOUT_SCALE} * ${_parsed_TIMEOUT}")
   endif()
 
+  # check if the platform is matched
+  # By default we enable the test, but if EXCLUDE_PLATFORM is defined, e.g., Linux|Darwin|Windows,
+  # then the test is ignored if the platform is matched.
+  set(skip_var "OFF")
+  if(CMAKE_SYSTEM_NAME IN_LIST _parsed_EXCLUDE_PLATFORM)
+    set(skip_var "ON")
+  endif()
+
   _add_test_with_options(
     NAME_OF_TEST
     ${name_of_test}
@@ -414,6 +439,8 @@ function(four_c_test)
     "${test_directory}"
     REQUIRED_DEPENDENCIES
     "${_parsed_REQUIRED_DEPENDENCIES}"
+    SKIP
+    "${skip_var}"
     )
 endfunction()
 
@@ -433,6 +460,7 @@ endfunction()
 #   LABELS:                  Add labels to the test
 #   REQUIRED_DEPENDENCIES:   Any required external dependencies. The test will be skipped if the dependencies are not met.
 #   RETURN_AS:               A variable name that allows to add further dependent tests based on this test.
+#   EXCLUDE_PLATFORM:        Mark to not run the restart test on specific platform.
 function(__four_c_test_restart)
   set(options SAME_FILE)
   set(oneValueArgs
@@ -445,7 +473,7 @@ function(__four_c_test_restart)
       RETURN_AS
       ASSERT_RESTART_STEP
       )
-  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES)
+  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES EXCLUDE_PLATFORM)
   cmake_parse_arguments(
     _parsed
     "${options}"
@@ -533,6 +561,21 @@ function(__four_c_test_restart)
         )
   endif()
 
+  # skip the restart test if the main test is skipped
+  get_test_property(${_parsed_BASED_ON} SKIP_RETURN_CODE skip_code_base_var)
+  if(skip_code_base_var STREQUAL "NOTFOUND")
+    set(skip_var "OFF")
+  else()
+    set(skip_var "ON")
+  endif()
+
+  # check if the platform is matched
+  # By default we enable the test, but if EXCLUDE_PLATFORM is defined, e.g., Linux|Darwin|Windows,
+  # then the test is ignored if the platform is matched.
+  if(CMAKE_SYSTEM_NAME IN_LIST _parsed_EXCLUDE_PLATFORM)
+    set(skip_var "ON")
+  endif()
+
   check_test_exists(_base_test_exists ${_parsed_BASED_ON})
   if(NOT _base_test_exists)
     message(FATAL_ERROR "Base test ${_parsed_BASED_ON} for restart does not exist.")
@@ -549,6 +592,8 @@ function(__four_c_test_restart)
     "${total_procs}"
     TIMEOUT
     "${_parsed_TIMEOUT}"
+    SKIP
+    "${skip_var}"
     LABELS
     "${_parsed_LABELS}"
     INPUT_FILE
@@ -602,6 +647,7 @@ endfunction()
 # optional parameters:
 #   LABELS:                add labels to the test
 #   REQUIRED_DEPENDENCIES: any required external dependencies. The test will be skipped if the dependencies are not met.
+#   EXCLUDE_PLATFORM:      mark to not run the test on specific platform.
 #
 function(__four_c_test_add_csv_yaml_comparison)
   set(options "")
@@ -612,7 +658,7 @@ function(__four_c_test_add_csv_yaml_comparison)
       TOL_R
       TOL_A
       )
-  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES)
+  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES EXCLUDE_PLATFORM)
   cmake_parse_arguments(
     _parsed
     "${options}"
@@ -642,6 +688,21 @@ function(__four_c_test_add_csv_yaml_comparison)
       "diff-with-tolerance ${test_directory}/${_parsed_RESULT_FILE} ${PROJECT_SOURCE_DIR}/tests/input_files/${_parsed_REFERENCE_FILE} ${_parsed_TOL_R} ${_parsed_TOL_A}"
       )
 
+  # skip the test if the main test is skipped
+  get_test_property(${_parsed_BASED_ON} SKIP_RETURN_CODE skip_code_base_var)
+  if(skip_code_base_var STREQUAL "NOTFOUND")
+    set(skip_var "OFF")
+  else()
+    set(skip_var "ON")
+  endif()
+
+  # check if the platform is matched
+  # By default we enable the test, but if EXCLUDE_PLATFORM is defined, e.g., Linux|Darwin|Windows,
+  # then the test is ignored if the platform is matched.
+  if(CMAKE_SYSTEM_NAME IN_LIST _parsed_EXCLUDE_PLATFORM)
+    set(skip_var "ON")
+  endif()
+
   # Ensure that Python is listed as required dependency
   list(APPEND _parsed_REQUIRED_DEPENDENCIES "Python")
   _add_test_with_options(
@@ -651,10 +712,14 @@ function(__four_c_test_add_csv_yaml_comparison)
     ${csv_comparison_command}
     ADDITIONAL_FIXTURE
     ${_parsed_BASED_ON}
+    SKIP
+    "${skip_var}"
     LABELS
     "${_parsed_LABELS}"
     REQUIRED_DEPENDENCIES
     "${_parsed_REQUIRED_DEPENDENCIES}"
+    SKIP
+    "${skip_var}"
     )
 endfunction()
 
@@ -830,9 +895,10 @@ endfunction()
 #                                The supported version constraint operators are: >=, <=, >, <, ==
 #                                If multiple dependencies are provided, all must be met for the test to run.
 #                                Note that the version is the _internal_ version that 4C assigns to the dependency.
+# EXCLUDE_PLATFORM:              Mark to not run the test on specific platform.
 function(four_c_test_tutorial)
   set(oneValueArgs TEST_FILE NP TIMEOUT)
-  set(multiValueArgs COPY_FILES REQUIRED_DEPENDENCIES)
+  set(multiValueArgs COPY_FILES REQUIRED_DEPENDENCIES EXCLUDE_PLATFORM)
   cmake_parse_arguments(
     _parsed
     "${options}"
@@ -885,6 +951,13 @@ function(four_c_test_tutorial)
 
   # check whether the dependencies are required
   check_required_dependencies(skip_message "${_parsed_REQUIRED_DEPENDENCIES}")
+
+  # check if the test is marked to be skipped
+  if(skip_message STREQUAL "")
+    if(CMAKE_SYSTEM_NAME IN_LIST _parsed_EXCLUDE_PLATFORM)
+      set(skip_message "The test ${name_of_test} is marked to be skipped")
+    endif()
+  endif()
 
   if(NOT skip_message STREQUAL "")
     # The dummy test needs to report a arbitrary error code that ctest interprets as "skipped".
@@ -1085,6 +1158,14 @@ function(__four_c_test_vtk)
   # Ensure that Python is listed as required dependency
   list(APPEND _parsed_REQUIRED_DEPENDENCIES "Python")
 
+  # skip the test if the main test is skipped
+  get_test_property(${_parsed_BASED_ON} SKIP_RETURN_CODE skip_code_base_var)
+  if(skip_code_base_var STREQUAL "NOTFOUND")
+    set(skip_var "OFF")
+  else()
+    set(skip_var "ON")
+  endif()
+
   # Add test
   _add_test_with_options(
     NAME_OF_TEST
@@ -1097,6 +1178,8 @@ function(__four_c_test_vtk)
     "1"
     TIMEOUT
     "${_parsed_TIMEOUT}"
+    SKIP
+    "${skip_var}"
     LABELS
     "${_parsed_LABELS}"
     OUTPUT_DIR

@@ -6,7 +6,13 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
+# Exit the script at the first failure
+set -e
+
 export DEP_DIR=$HOME/opt
+
+# workaround for cmake-4
+export CMAKE_POLICY_VERSION_MINIMUM=3.5
 
 # compiled the dependencies
 cd dependencies/current/backtrace
