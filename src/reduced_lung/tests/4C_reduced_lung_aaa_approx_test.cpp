@@ -9,6 +9,8 @@
 
 #include "4C_reduced_lung_aaa_approx.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace
