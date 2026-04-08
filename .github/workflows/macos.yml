@@ -1,0 +1,45 @@
+name: macOS built test
+
+on:
+  #schedule:
+  #  - cron: 3 4 * * 0
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test 4C on macOS
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6
+      - run: |
+          g++ -v
+          cmake --version
+          uname
+          sysctl -n hw.physicalcpu
+          pwd
+      - name: Install the dependencies
+        run: |
+          echo "TODO to install the dependencies"
+          #./dependencies/darwin/compile_dependencies.sh
+          brew install openmpi git wget gcc@14 hdf5 ninja llvm boost cln metis
+      - name: Build 4C
+        run: |
+          pwd
+          g++ -v
+          cmake -B build/ --fresh --preset=darwin
+          cmake --build build/ --target full
+      - name: Run tests
+        run: |
+          echo "TODO tests"
+          ctest  --test-dir build/ -j `sysctl -n hw.physicalcpu` --output-on-failure --output-junit $GITHUB_WORKSPACE/macos_assertions_test_report.xml
+      - name: Upload test report
+        if: success() || failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos_assertions_test_report.xml
+          path: |
+            ${{ github.workspace }}/macos_assertions_test_report.xml
