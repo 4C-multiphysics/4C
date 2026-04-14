@@ -8,6 +8,7 @@
 #include "4C_io_mesh.hpp"
 
 #include "4C_utils_enum.hpp"
+#include "4C_utils_exceptions.hpp"
 #include "4C_utils_std23_unreachable.hpp"
 
 #include <algorithm>
@@ -66,6 +67,32 @@ template <unsigned dim>
 bool Core::IO::MeshInput::Mesh<dim>::has_point_data(const std::string& field_name) const
 {
   return raw_mesh_->point_data.find(field_name) != raw_mesh_->point_data.end();
+}
+
+
+template <unsigned dim>
+Core::IO::MeshInput::CellBlockLookupTables<dim>
+Core::IO::MeshInput::Mesh<dim>::create_cell_block_lookup_tables() const
+{
+  CellBlockLookupTables<dim> lookup_tables;
+
+  for (const auto& cell_block : cell_blocks())
+  {
+    const auto cell_block_id = cell_block.id();
+
+    bool inserted = lookup_tables.by_id.emplace(cell_block_id, cell_block).second;
+
+    FOUR_C_ASSERT_ALWAYS(inserted,
+        "Duplicate cell block ID {} found in the mesh. Cell block IDs must be unique.",
+        cell_block_id);
+
+    if (cell_block.name().has_value())
+    {
+      lookup_tables.by_name[cell_block.name().value()].emplace_back(cell_block);
+    }
+  }
+
+  return lookup_tables;
 }
 
 

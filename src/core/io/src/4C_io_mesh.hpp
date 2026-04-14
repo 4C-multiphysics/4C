@@ -561,6 +561,18 @@ namespace Core::IO::MeshInput
   };
 
   /**
+   * Lookup tables for resolving mesh cell blocks by ID and by optional name.
+   */
+  template <unsigned dim>
+  struct CellBlockLookupTables
+  {
+    /// map from id to cell blocks
+    std::unordered_map<ExternalIdType, CellBlockReference<dim, true>> by_id{};
+    /// map from name to cell blocks (there can be multiple blocks with the same name)
+    std::unordered_map<std::string, std::vector<CellBlockReference<dim, true>>> by_name{};
+  };
+
+  /**
    * @brief An interface to a mesh.
    *
    * This class internally uses a RawMesh and exposes a reduced interface to it that is easier
@@ -604,6 +616,13 @@ namespace Core::IO::MeshInput
              std::views::transform(
                  [this](size_t id) { return CellBlockReference<dim, false>(raw_mesh_.get(), id); });
     }
+
+    /** @brief Builds lookup tables for cell blocks, indexed by ID and by name.
+     *
+     * Iterates over all cell blocks in the mesh and populates tables for efficient lookup during
+     * mesh reading. Blocks without a name are only accessible by ID.
+     */
+    [[nodiscard]] CellBlockLookupTables<dim> create_cell_block_lookup_tables() const;
 
     /**
      * Get a range of all points defined in this mesh. This only returns the coordinates of the

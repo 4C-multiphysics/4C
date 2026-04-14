@@ -123,7 +123,7 @@ RESULT DESCRIPTION:
 STRUCTURE GEOMETRY:
   FILE: tutorial_fsi_2d.e
   ELEMENT_BLOCKS:
-    - ID: 1
+    - NAME: flexible_bottom
       SOLID:
         QUAD4:
           MAT: 2
@@ -135,7 +135,7 @@ FLUID GEOMETRY:
   FILE: tutorial_fsi_2d.e
   SHOW_INFO: "summary"
   ELEMENT_BLOCKS:
-    - ID: 2
+    - NAME: fluid
       FLUID:
         QUAD4:
           MAT: 1

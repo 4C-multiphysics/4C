@@ -2684,6 +2684,8 @@ __four_c_test_add_csv_yaml_comparison(BASED_ON ${current_restart} RESULT_FILE xx
 four_c_test(TEST_FILE solid_gmsh_input_node_set_names_monitor_dbc_yaml.4C.yaml NP 2 REQUIRED_DEPENDENCIES GMSH RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES GMSH RETURN_AS current_restart)
 __four_c_test_add_csv_yaml_comparison(BASED_ON ${current_restart} RESULT_FILE xxx-1-left_faces_monitor_dbc.yaml REFERENCE_FILE ref/solid_gmsh_input-left_faces_monitor_dbc.yaml TOL_R 1e-6 TOL_A 1e-10 REQUIRED_DEPENDENCIES GMSH)
+four_c_test(TEST_FILE solid_gmsh_input_element_block_names.4C.yaml NP 2 REQUIRED_DEPENDENCIES GMSH RETURN_AS current)
+__four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES GMSH RETURN_AS current_restart)
 
 # Tests requiring ArborX
 four_c_test(TEST_FILE rve2d_periodic_bcs_with_mpcs.4C.yaml REQUIRED_DEPENDENCIES ArborX)
