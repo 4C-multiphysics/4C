@@ -360,208 +360,205 @@ namespace Core::IO::MeshInput
 
       return *converter;
     }
-
-    /**
-     * A lightweight reference to a point in a Mesh used to provide a nicer interface.
-     *
-     * @note This class does not own any data and only refers to data in the RawMesh. Thus, it can
-     * only be used as long as the corresponding RawMesh is alive.
-     */
-    template <unsigned dim, bool is_const>
-    struct PointReference
-    {
-      template <typename T>
-      using MaybeConst = std::conditional_t<is_const, const T, T>;
-
-      PointReference(MaybeConst<RawMesh<dim>>* raw_mesh, size_t index)
-          : raw_mesh_(raw_mesh), index_(index)
-      {
-        FOUR_C_ASSERT(raw_mesh_ != nullptr, "RawMesh pointer must not be null.");
-        FOUR_C_ASSERT(
-            index_ < raw_mesh_->points.size(), "Point index {} is out of bounds.", index_);
-      }
-
-      /**
-       * Get the spatial coordinates of the point.
-       */
-      [[nodiscard]] MaybeConst<std::array<double, dim>>& coordinate() const
-      {
-        return raw_mesh_->points[index_];
-      }
-
-      /**
-       * Get the ID of the point in the mesh. This is the ID that cells use to form their
-       * connectivity.
-       */
-      [[nodiscard]] size_t id() const { return index_; }
-
-      /**
-       * Get the external ID of the point (if available). If not available, returns
-       * #invalid_external_id.
-       */
-      [[nodiscard]] ExternalIdType external_id() const
-      {
-        return raw_mesh_->external_ids ? (*raw_mesh_->external_ids)[index_] : invalid_external_id;
-      }
-
-      /**
-       * @brief Returns the number of data-fields associated with this point
-       */
-      [[nodiscard]] std::size_t data_size() const { return raw_mesh_->point_data.size(); }
-
-      [[nodiscard]] FieldRawDataSpanVariantType data(const std::string& field_name) const
-      {
-        return std::visit([&](const auto& data) -> FieldRawDataSpanVariantType
-            { return data.at(index_); }, raw_mesh_->point_data.at(field_name));
-      }
-
-      /**
-       * @brief Return the data as a specific type by making use of all known converters
-       */
-      template <typename T>
-      [[nodiscard]] T data_as(const std::string& field_name) const
-      {
-        return std::visit(
-            [&](const auto& data) -> T
-            {
-              using TargetType = std::decay_t<T>;
-              using SourceType = std::decay_t<decltype(data)>::value_type;
-
-              const auto converter =
-                  get_eligible_converter<SourceType, TargetType>(raw_mesh_->converters);
-
-              return converter(data[index_]);
-            },
-            raw_mesh_->point_data.at(field_name));
-      }
-
-     private:
-      MaybeConst<RawMesh<dim>>* raw_mesh_;
-      size_t index_;
-    };
-
-
-    /**
-     * A lightweight reference to a cell in a Mesh used to provide a nicer interface.
-     *
-     * @note This class does not own any data and only refers to data in the RawMesh. Thus, it can
-     * only be used as long as the corresponding RawMesh is alive.
-     */
-    template <unsigned dim, bool is_const>
-    struct CellReference
-    {
-      template <typename T>
-      using MaybeConst = std::conditional_t<is_const, const T, T>;
-
-      CellReference(
-          MaybeConst<RawMesh<dim>>* raw_mesh, MaybeConst<CellBlock<dim>>* cell_block, size_t index)
-          : raw_mesh_(raw_mesh), cell_block_(cell_block), index_(index)
-      {
-        FOUR_C_ASSERT(raw_mesh_ != nullptr, "RawMesh pointer must not be null.");
-        FOUR_C_ASSERT(cell_block_ != nullptr, "CellBlock pointer must not be null.");
-        FOUR_C_ASSERT(index_ < cell_block_->size(), "Cell index {} is out of bounds.", index_);
-      }
-
-      /**
-       * Get the ID of the cell in the mesh.
-       */
-      [[nodiscard]] size_t id() const { return index_; }
-
-      /**
-       * Get the external ID of the cell (if available). If not available, returns
-       * #invalid_external_id.
-       */
-      [[nodiscard]] ExternalIdType external_id() const
-      {
-        return cell_block_->external_ids ? (*cell_block_->external_ids)[index_]
-                                         : invalid_external_id;
-      }
-
-      [[nodiscard]] FieldRawDataSpanVariantType data(const std::string& field_name) const
-      {
-        return std::visit([&](const auto& data) -> FieldRawDataSpanVariantType
-            { return data.at(index_); }, cell_block_->cell_data.at(field_name));
-      }
-
-      template <typename T>
-      [[nodiscard]] T data_as(const std::string& field_name) const
-      {
-        return std::visit(
-            [&](const auto& data) -> T
-            {
-              using TargetType = std::decay_t<T>;
-              using SourceType = std::decay_t<decltype(data)>::value_type;
-
-              const auto converter =
-                  get_eligible_converter<SourceType, TargetType>(raw_mesh_->converters);
-
-              return converter(data[index_]);
-            },
-            cell_block_->cell_data.at(field_name));
-      }
-
-     private:
-      MaybeConst<RawMesh<dim>>* raw_mesh_;
-      MaybeConst<CellBlock<dim>>* cell_block_;
-      size_t index_;
-    };
-
-
-    /**
-     * A lightweight reference to a cell-block in a Mesh used to provide a nicer interface.
-     *
-     * @note This class does not own any data and only refers to data in the RawMesh. Thus, it can
-     * only be used as long as the corresponding RawMesh is alive.
-     */
-    template <unsigned dim, bool is_const>
-    struct CellBlockReference
-    {
-      template <typename T>
-      using MaybeConst = std::conditional_t<is_const, const T, T>;
-
-      CellBlockReference(MaybeConst<RawMesh<dim>>* raw_mesh, size_t id)
-          : raw_mesh_(raw_mesh), cell_block_(&raw_mesh_->cell_blocks.at(id)), id_(id)
-      {
-        FOUR_C_ASSERT(raw_mesh_ != nullptr, "RawMesh pointer must not be null.");
-      }
-
-      [[nodiscard]] MaybeConst<CellBlock<dim>>& get() { return *cell_block_; }
-
-      [[nodiscard]] const CellBlock<dim>& get() const { return *cell_block_; }
-
-      /**
-       * Get the ID of the cell-block in the mesh.
-       */
-      [[nodiscard]] size_t id() const { return id_; }
-
-      [[nodiscard]] const std::optional<std::string>& name() const { return cell_block_->name; }
-
-
-      [[nodiscard]] std::size_t size() const { return cell_block_->size(); }
-
-      [[nodiscard]] FE::CellType cell_type() const { return cell_block_->cell_type; }
-
-      [[nodiscard]] auto cells() const { return cell_block_->cells(); }
-
-      /**
-       * Get a lightweight cells iterator in this block along with their associated data (if any).
-       */
-      [[nodiscard]] auto cells_with_data() const
-      {
-        auto indices = std::views::iota(size_t{0}, cell_block_->size());
-        return indices |
-               std::views::transform([this](std::size_t i)
-                   { return Internal::CellReference<dim, true>(raw_mesh_, cell_block_, i); });
-      }
-
-      [[nodiscard]] const auto& cell_data() const { return cell_block_->cell_data; }
-
-     private:
-      MaybeConst<RawMesh<dim>>* raw_mesh_;
-      MaybeConst<CellBlock<dim>>* cell_block_;
-      size_t id_;
-    };
   }  // namespace Internal
+
+  /**
+   * A lightweight reference to a point in a Mesh used to provide a nicer interface.
+   *
+   * @note This class does not own any data and only refers to data in the RawMesh. Thus, it can
+   * only be used as long as the corresponding RawMesh is alive.
+   */
+  template <unsigned dim, bool is_const>
+  struct PointReference
+  {
+    template <typename T>
+    using MaybeConst = std::conditional_t<is_const, const T, T>;
+
+    PointReference(MaybeConst<RawMesh<dim>>* raw_mesh, size_t index)
+        : raw_mesh_(raw_mesh), index_(index)
+    {
+      FOUR_C_ASSERT(raw_mesh_ != nullptr, "RawMesh pointer must not be null.");
+      FOUR_C_ASSERT(index_ < raw_mesh_->points.size(), "Point index {} is out of bounds.", index_);
+    }
+
+    /**
+     * Get the spatial coordinates of the point.
+     */
+    [[nodiscard]] MaybeConst<std::array<double, dim>>& coordinate() const
+    {
+      return raw_mesh_->points[index_];
+    }
+
+    /**
+     * Get the ID of the point in the mesh. This is the ID that cells use to form their
+     * connectivity.
+     */
+    [[nodiscard]] size_t id() const { return index_; }
+
+    /**
+     * Get the external ID of the point (if available). If not available, returns
+     * #invalid_external_id.
+     */
+    [[nodiscard]] ExternalIdType external_id() const
+    {
+      return raw_mesh_->external_ids ? (*raw_mesh_->external_ids)[index_] : invalid_external_id;
+    }
+
+    /**
+     * @brief Returns the number of data-fields associated with this point
+     */
+    [[nodiscard]] std::size_t data_size() const { return raw_mesh_->point_data.size(); }
+
+    [[nodiscard]] FieldRawDataSpanVariantType data(const std::string& field_name) const
+    {
+      return std::visit([&](const auto& data) -> FieldRawDataSpanVariantType
+          { return data.at(index_); }, raw_mesh_->point_data.at(field_name));
+    }
+
+    /**
+     * @brief Return the data as a specific type by making use of all known converters
+     */
+    template <typename T>
+    [[nodiscard]] T data_as(const std::string& field_name) const
+    {
+      return std::visit(
+          [&](const auto& data) -> T
+          {
+            using TargetType = std::decay_t<T>;
+            using SourceType = std::decay_t<decltype(data)>::value_type;
+
+            const auto converter =
+                Internal::get_eligible_converter<SourceType, TargetType>(raw_mesh_->converters);
+
+            return converter(data[index_]);
+          },
+          raw_mesh_->point_data.at(field_name));
+    }
+
+   private:
+    MaybeConst<RawMesh<dim>>* raw_mesh_;
+    size_t index_;
+  };
+
+
+  /**
+   * A lightweight reference to a cell in a Mesh used to provide a nicer interface.
+   *
+   * @note This class does not own any data and only refers to data in the RawMesh. Thus, it can
+   * only be used as long as the corresponding RawMesh is alive.
+   */
+  template <unsigned dim, bool is_const>
+  struct CellReference
+  {
+    template <typename T>
+    using MaybeConst = std::conditional_t<is_const, const T, T>;
+
+    CellReference(
+        MaybeConst<RawMesh<dim>>* raw_mesh, MaybeConst<CellBlock<dim>>* cell_block, size_t index)
+        : raw_mesh_(raw_mesh), cell_block_(cell_block), index_(index)
+    {
+      FOUR_C_ASSERT(raw_mesh_ != nullptr, "RawMesh pointer must not be null.");
+      FOUR_C_ASSERT(cell_block_ != nullptr, "CellBlock pointer must not be null.");
+      FOUR_C_ASSERT(index_ < cell_block_->size(), "Cell index {} is out of bounds.", index_);
+    }
+
+    /**
+     * Get the ID of the cell in the mesh.
+     */
+    [[nodiscard]] size_t id() const { return index_; }
+
+    /**
+     * Get the external ID of the cell (if available). If not available, returns
+     * #invalid_external_id.
+     */
+    [[nodiscard]] ExternalIdType external_id() const
+    {
+      return cell_block_->external_ids ? (*cell_block_->external_ids)[index_] : invalid_external_id;
+    }
+
+    [[nodiscard]] FieldRawDataSpanVariantType data(const std::string& field_name) const
+    {
+      return std::visit([&](const auto& data) -> FieldRawDataSpanVariantType
+          { return data.at(index_); }, cell_block_->cell_data.at(field_name));
+    }
+
+    template <typename T>
+    [[nodiscard]] T data_as(const std::string& field_name) const
+    {
+      return std::visit(
+          [&](const auto& data) -> T
+          {
+            using TargetType = std::decay_t<T>;
+            using SourceType = std::decay_t<decltype(data)>::value_type;
+
+            const auto converter =
+                Internal::get_eligible_converter<SourceType, TargetType>(raw_mesh_->converters);
+
+            return converter(data[index_]);
+          },
+          cell_block_->cell_data.at(field_name));
+    }
+
+   private:
+    MaybeConst<RawMesh<dim>>* raw_mesh_;
+    MaybeConst<CellBlock<dim>>* cell_block_;
+    size_t index_;
+  };
+
+
+  /**
+   * A lightweight reference to a cell-block in a Mesh used to provide a nicer interface.
+   *
+   * @note This class does not own any data and only refers to data in the RawMesh. Thus, it can
+   * only be used as long as the corresponding RawMesh is alive.
+   */
+  template <unsigned dim, bool is_const>
+  struct CellBlockReference
+  {
+    template <typename T>
+    using MaybeConst = std::conditional_t<is_const, const T, T>;
+
+    CellBlockReference(MaybeConst<RawMesh<dim>>* raw_mesh, size_t id)
+        : raw_mesh_(raw_mesh), cell_block_(&raw_mesh_->cell_blocks.at(id)), id_(id)
+    {
+      FOUR_C_ASSERT(raw_mesh_ != nullptr, "RawMesh pointer must not be null.");
+    }
+
+    [[nodiscard]] MaybeConst<CellBlock<dim>>& get() { return *cell_block_; }
+
+    [[nodiscard]] const CellBlock<dim>& get() const { return *cell_block_; }
+
+    /**
+     * Get the ID of the cell-block in the mesh.
+     */
+    [[nodiscard]] size_t id() const { return id_; }
+
+    [[nodiscard]] const std::optional<std::string>& name() const { return cell_block_->name; }
+
+
+    [[nodiscard]] std::size_t size() const { return cell_block_->size(); }
+
+    [[nodiscard]] FE::CellType cell_type() const { return cell_block_->cell_type; }
+
+    [[nodiscard]] auto cells() const { return cell_block_->cells(); }
+
+    /**
+     * Get a lightweight cells iterator in this block along with their associated data (if any).
+     */
+    [[nodiscard]] auto cells_with_data() const
+    {
+      auto indices = std::views::iota(size_t{0}, cell_block_->size());
+      return indices | std::views::transform([this](std::size_t i)
+                           { return CellReference<dim, true>(raw_mesh_, cell_block_, i); });
+    }
+
+    [[nodiscard]] const auto& cell_data() const { return cell_block_->cell_data; }
+
+   private:
+    MaybeConst<RawMesh<dim>>* raw_mesh_;
+    MaybeConst<CellBlock<dim>>* cell_block_;
+    size_t id_;
+  };
 
   /**
    * @brief An interface to a mesh.
@@ -597,15 +594,15 @@ namespace Core::IO::MeshInput
     [[nodiscard]] auto cell_blocks() const
     {
       return cell_blocks_ids_filter_ |
-             std::views::transform([this](size_t id)
-                 { return Internal::CellBlockReference<dim, true>(raw_mesh_.get(), id); });
+             std::views::transform(
+                 [this](size_t id) { return CellBlockReference<dim, true>(raw_mesh_.get(), id); });
     }
 
     [[nodiscard]] auto cell_blocks()
     {
       return cell_blocks_ids_filter_ |
-             std::views::transform([this](size_t id)
-                 { return Internal::CellBlockReference<dim, false>(raw_mesh_.get(), id); });
+             std::views::transform(
+                 [this](size_t id) { return CellBlockReference<dim, false>(raw_mesh_.get(), id); });
     }
 
     /**
@@ -639,16 +636,14 @@ namespace Core::IO::MeshInput
      */
     [[nodiscard]] auto points_with_data() const
     {
-      return point_ids_filter_ |
-             std::views::transform([this](std::size_t i)
-                 { return Internal::PointReference<dim, true>(raw_mesh_.get(), i); });
+      return point_ids_filter_ | std::views::transform([this](std::size_t i)
+                                     { return PointReference<dim, true>(raw_mesh_.get(), i); });
     }
 
     [[nodiscard]] auto points_with_data()
     {
-      return point_ids_filter_ |
-             std::views::transform([this](std::size_t i)
-                 { return Internal::PointReference<dim, false>(raw_mesh_.get(), i); });
+      return point_ids_filter_ | std::views::transform([this](std::size_t i)
+                                     { return PointReference<dim, false>(raw_mesh_.get(), i); });
     }
 
     /**
