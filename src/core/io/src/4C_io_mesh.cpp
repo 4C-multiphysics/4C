@@ -236,23 +236,29 @@ void Core::IO::MeshInput::print(const Mesh<dim>& mesh, std::ostream& os, Verbosi
   {
     if (verbose == VerbosityLevel::full)
     {
+      os << std::format(" {:^23} |{:^33}|\n", "node ID", "coordinates");
+      os << std::format(
+          "{:^12}|{:^12}|{:>10},{:>10},{:>10} |\n", "external", "internal(+1)", "X", "Y", "Z");
+      os << std::format("{:-<12}|{:-<12}|{:-<33}|\n", "", "", "");
       for (const auto& point : mesh.points_with_data())
       {
+        int internal_id = point.id() + 1;
         if (point.external_id() != invalid_external_id)
         {
-          os << "  " << point.external_id() << ": [";
+          os << std::format(" {:10} | {:10} |", point.external_id(), internal_id);
         }
         else
         {
-          os << "  [";
+          os << std::format(" {:10} | {:10} |", " ", internal_id);
         }
+        std::string coord_str;
         for (const auto& coord : point.coordinate())
         {
-          os << std::format("{:10.6g},", coord);
+          if (!coord_str.empty()) coord_str += ",";
+          coord_str += std::format("{:10.6g}", coord);
         }
-        os << "]\n";
+        os << coord_str << " |\n";
       }
-      os << "\n";
     }
     os << "cell-blocks:\n";
     for (const auto& cell_block : mesh.cell_blocks())
@@ -264,7 +270,7 @@ void Core::IO::MeshInput::print(const Mesh<dim>& mesh, std::ostream& os, Verbosi
     }
     os << "\n";
 
-    os << "point-sets:\n";
+    os << "point-sets (internal node numbers +1):\n";
     for (const auto& [ps_id, ps] : mesh.point_sets())
     {
       os << "  point-set " << ps_id;
@@ -285,6 +291,7 @@ void Core::IO::MeshInput::print(
 
   if (verbose == VerbosityLevel::full)
   {
+    os << "    (connectivity contains internal node numbers +1)\n";
     std::size_t i = 0;
     for (const auto& connectivity : block.cells())
     {
@@ -297,8 +304,13 @@ void Core::IO::MeshInput::print(
       {
         os << "    [";
       }
-      for (const auto& id : connectivity) os << id << ", ";
-      os << "]\n";
+      std::string connectivity_str;
+      for (const auto& id : connectivity)
+      {
+        if (!connectivity_str.empty()) connectivity_str += ", ";
+        connectivity_str += std::to_string(id + 1);
+      }
+      os << connectivity_str << "]\n";
       i++;
     }
     os << "\n";
@@ -315,7 +327,7 @@ void Core::IO::MeshInput::print(const PointSet& point_set, std::ostream& os, Ver
     for (const int id : point_set.point_ids)
     {
       if (nline++ % 12 == 0) os << "\n  ";
-      os << " " << std::setw(nodelength) << id << ",";
+      os << " " << std::setw(nodelength) << id + 1 << ",";
     }
     if (nline % 12 != 0) os << "\n";
   }
