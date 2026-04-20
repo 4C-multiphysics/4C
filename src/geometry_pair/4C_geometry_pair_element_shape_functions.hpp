@@ -186,6 +186,58 @@ namespace GeometryPair
   };
 
   /**
+   * \brief Specialization for Hermite elements
+   */
+  template <>
+  struct EvaluateShapeFunction<t_hermite_dual>
+  {
+    /**
+     * \brief Evaluate the shape functions of the element at xi.
+     *
+     * @param N (out) shape functions.
+     * @param xi (in) Parameter coordinate on the element.
+     * @param shape_function_data (in) Shape function data container.
+     */
+    template <typename V, typename T>
+    static void evaluate(
+        V& N, const T& xi, const ShapeFunctionData<t_hermite_dual>& shape_function_data)
+    {
+      Core::FE::shape_function_dual_hermite_1d(
+          N, xi, shape_function_data.ref_length_, t_hermite::discretization_);
+    }
+
+    /**
+     * \brief Evaluate the derivatives of the shape functions of the element at xi.
+     *
+     * @param dN (out) derivatives of shape functions.
+     * @param xi (in) Parameter coordinate on the element.
+     * @param shape_function_data (in) Shape function data container.
+     */
+    template <typename V, typename T>
+    static void evaluate_deriv1(
+        V& dN, const T& xi, const ShapeFunctionData<t_hermite_dual>& shape_function_data)
+    {
+      Core::FE::shape_function_dual_hermite_1d_deriv1(
+          dN, xi, shape_function_data.ref_length_, t_hermite::discretization_);
+    }
+
+    /**
+     * \brief Evaluate the 2nd derivatives of the shape functions of the element at xi.
+     *
+     * @param ddN (out) 2nd derivatives of shape functions.
+     * @param xi (in) Parameter coordinate on the element.
+     * @param shape_function_data (in) Shape function data container.
+     */
+    template <typename V, typename T>
+    static void evaluate_deriv2(
+        V& ddN, const T& xi, const ShapeFunctionData<t_hermite_dual>& shape_function_data)
+    {
+      Core::FE::shape_function_dual_hermite_1d_deriv2(
+          ddN, xi, shape_function_data.ref_length_, t_hermite::discretization_);
+    }
+  };
+
+  /**
    * \brief Specialization for NURBS elements
    */
   template <typename ElementType>

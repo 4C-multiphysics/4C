@@ -259,8 +259,10 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortarRotation<Beam, Solid, 
       Core::LinAlg::inverse(T_solid_inv);
 
       // Evaluate shape functions.
+      GeometryPair::ShapeFunctionData<GeometryPair::t_hermite_dual> mortar_shape_function_data;
+      mortar_shape_function_data.ref_length_ = this->ele1pos_.shape_function_data_.ref_length_;
       GeometryPair::EvaluateShapeFunction<MortarRot>::evaluate(
-          lambda_shape_functions, projected_gauss_point.get_eta());
+          lambda_shape_functions, projected_gauss_point.get_eta(), mortar_shape_function_data);
       for (unsigned int i_node = 0; i_node < MortarRot::n_nodes_; i_node++)
         for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
           lambda_shape_functions_full(i_dim, 3 * i_node + i_dim) = lambda_shape_functions(i_node);
@@ -553,8 +555,10 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortarRotation<Beam, Solid, 
       Core::LinAlg::inverse(T_solid_inv);
 
       // Evaluate shape functions.
+      GeometryPair::ShapeFunctionData<GeometryPair::t_hermite_dual> mortar_shape_function_data;
+      mortar_shape_function_data.ref_length_ = this->ele1pos_.shape_function_data_.ref_length_;
       GeometryPair::EvaluateShapeFunction<MortarRot>::evaluate(
-          lambda_shape_functions, projected_gauss_point.get_eta());
+          lambda_shape_functions, projected_gauss_point.get_eta(), mortar_shape_function_data);
       for (unsigned int i_node = 0; i_node < MortarRot::n_nodes_; i_node++)
         for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
           lambda_shape_functions_full(i_dim, 3 * i_node + i_dim) = lambda_shape_functions(i_node);
@@ -651,14 +655,23 @@ namespace BeamInteraction
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line2, t_line2);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line2, t_line3);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line2, t_line4);
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line2, t_hermite_dual);
 
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line3, t_line2);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line3, t_line3);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line3, t_line4);
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line3, t_hermite_dual);
 
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line4, t_line2);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line4, t_line3);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line4, t_line4);
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line4, t_hermite_dual);
+
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_hermite_dual, t_line2);
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_hermite_dual, t_line3);
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_hermite_dual, t_line4);
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(
+      t_hermite_dual, t_hermite_dual);
 }  // namespace BeamInteraction
 
 FOUR_C_NAMESPACE_CLOSE

@@ -153,7 +153,9 @@ namespace BeamToSolid
     //! Quadratic.
     line3,
     //! Cubic.
-    line4
+    line4,
+    //! dual hermite
+    dual_hermite,
   };
 
   /**
