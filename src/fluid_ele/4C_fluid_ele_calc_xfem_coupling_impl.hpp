@@ -12,7 +12,7 @@
 
 #include "4C_fem_general_element.hpp"
 #include "4C_fluid_ele_calc_xfem_coupling.hpp"
-#include "4C_inpar_xfem.hpp"
+#include "4C_xfem_input.hpp"
 
 //   qnuP - option SHOULD BE ON!
 //     projects the given velocity into normal direction in case there
@@ -387,7 +387,7 @@ namespace Discret
             const Core::LinAlg::Matrix<nsd_, 1>&
                 ivelint_jump,  ///< prescribed interface velocity, Dirichlet values or jump height
                                ///< for coupled problems
-            const Inpar::XFEM::EleCouplingCondType& cond_type  ///< condition type
+            const XFEM::EleCouplingCondType& cond_type  ///< condition type
             ) override;
 
         //! build coupling matrices and assemble terms for Nitsche's (NIT) method
@@ -419,7 +419,7 @@ namespace Discret
                 LB_proj_matrix,  ///< prescribed projection matrix for laplace-beltrami problems
             const std::vector<Core::LinAlg::SerialDenseMatrix>&
                 solid_stress,  ///< structural cauchy stress and linearization
-            std::map<Inpar::XFEM::CoupTerm, std::pair<bool, double>>&
+            std::map<XFEM::CoupTerm, std::pair<bool, double>>&
                 configmap  ///< Interface Terms configuration map
             ) override;
 
@@ -448,7 +448,7 @@ namespace Discret
             const Core::LinAlg::Matrix<nsd_, 1>&
                 itraction_jump,  ///< prescribed interface traction, jump
                                  ///< height for coupled problems
-            std::map<Inpar::XFEM::CoupTerm, std::pair<bool, double>>&
+            std::map<XFEM::CoupTerm, std::pair<bool, double>>&
                 configmap  ///< Interface Terms configuration map
             ) override;
 

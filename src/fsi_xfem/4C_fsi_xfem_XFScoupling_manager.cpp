@@ -96,7 +96,7 @@ void XFEM::XfsCouplingManager::set_coupling_states()
   insert_vector(0, velnp, 0, mcfsi_->i_velnp(), CouplingCommManager::partial_to_partial);
 
   // 4 Set Structural Velocity onto the structural discretization
-  if (mcfsi_->get_averaging_strategy() != Inpar::XFEM::Xfluid_Sided)
+  if (mcfsi_->get_averaging_strategy() != XFEM::Xfluid_Sided)
   {
     // Set Dispnp (used to calc local coord of gausspoints)
     struct_->discretization()->set_state("dispnp", *struct_->dispnp());

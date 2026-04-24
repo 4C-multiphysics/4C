@@ -19,42 +19,42 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-Inpar::XFEM::EleCouplingCondType XFEM::cond_type_string_to_enum(const std::string& condname)
+XFEM::EleCouplingCondType XFEM::cond_type_string_to_enum(const std::string& condname)
 {
   if (condname == "XFEMSurfFSIPart")
-    return Inpar::XFEM::CouplingCond_SURF_FSI_PART;
+    return XFEM::CouplingCond_SURF_FSI_PART;
   else if (condname == "XFEMSurfFSIMono")
-    return Inpar::XFEM::CouplingCond_SURF_FSI_MONO;
+    return XFEM::CouplingCond_SURF_FSI_MONO;
   else if (condname == "XFEMSurfFPIMono" || condname == "XFEMSurfFPIMono_ps_ps" ||
            condname == "XFEMSurfFPIMono_ps_pf" || condname == "XFEMSurfFPIMono_pf_ps" ||
            condname == "XFEMSurfFPIMono_pf_pf")
-    return Inpar::XFEM::CouplingCond_SURF_FPI_MONO;
+    return XFEM::CouplingCond_SURF_FPI_MONO;
   else if (condname == "XFEMSurfFluidFluid")
-    return Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID;
+    return XFEM::CouplingCond_SURF_FLUIDFLUID;
   else if (condname == "XFEMLevelsetWeakDirichlet")
-    return Inpar::XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET;
+    return XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET;
   else if (condname == "XFEMLevelsetNeumann")
-    return Inpar::XFEM::CouplingCond_LEVELSET_NEUMANN;
+    return XFEM::CouplingCond_LEVELSET_NEUMANN;
   else if (condname == "XFEMLevelsetNavierSlip")
-    return Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP;
+    return XFEM::CouplingCond_LEVELSET_NAVIER_SLIP;
   else if (condname == "XFEMLevelsetTwophase")
-    return Inpar::XFEM::CouplingCond_LEVELSET_TWOPHASE;
+    return XFEM::CouplingCond_LEVELSET_TWOPHASE;
   else if (condname == "XFEMLevelsetCombustion")
-    return Inpar::XFEM::CouplingCond_LEVELSET_COMBUSTION;
+    return XFEM::CouplingCond_LEVELSET_COMBUSTION;
   else if (condname == "XFEMSurfWeakDirichlet")
-    return Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET;
+    return XFEM::CouplingCond_SURF_WEAK_DIRICHLET;
   else if (condname == "XFEMSurfNeumann")
-    return Inpar::XFEM::CouplingCond_SURF_NEUMANN;
+    return XFEM::CouplingCond_SURF_NEUMANN;
   else if (condname == "XFEMSurfNavierSlip")
-    return Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP;
+    return XFEM::CouplingCond_SURF_NAVIER_SLIP;
   else if (condname == "XFEMSurfNavierSlipTwoPhase")
-    return Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE;
+    return XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE;
   else if (condname == "EmbeddedMeshSolidSurfCoupling")
-    return Inpar::XFEM::CouplingCond_EMBEDDEDMESH_SOLID_SURF;
+    return XFEM::CouplingCond_EMBEDDEDMESH_SOLID_SURF;
   else if (condname == "EmbeddedMeshSolidVolBackground")
-    return Inpar::XFEM::CouplingCond_EMBEDDEDMESH_BACKGROUND_SOLID_VOL;
+    return XFEM::CouplingCond_EMBEDDEDMESH_BACKGROUND_SOLID_VOL;
 
-  return Inpar::XFEM::CouplingCond_NONE;
+  return XFEM::CouplingCond_NONE;
 }
 
 /*--------------------------------------------------------------------------*
@@ -78,7 +78,7 @@ XFEM::CouplingBase::CouplingBase(
       cutter_dis_(nullptr),
       coupl_dis_(nullptr),
       coupl_name_(""),
-      averaging_strategy_(Inpar::XFEM::invalid),
+      averaging_strategy_(XFEM::invalid),
       myrank_(Core::Communication::my_mpi_rank(bg_dis_->get_comm())),
       dt_(-1.0),
       time_(time),
@@ -177,76 +177,76 @@ void XFEM::CouplingBase::init_configuration_map()
 {
   // Configuration of Consistency Terms
   // all components:
-  configuration_map_[Inpar::XFEM::F_Con_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Con_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Con_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XF_Con_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XS_Con_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Con_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Con_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Con_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XF_Con_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XS_Con_Col] = std::pair<bool, double>(false, 0.0);
   // normal terms:
-  configuration_map_[Inpar::XFEM::F_Con_n_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Con_n_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Con_n_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XF_Con_n_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XS_Con_n_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Con_n_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Con_n_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Con_n_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XF_Con_n_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XS_Con_n_Col] = std::pair<bool, double>(false, 0.0);
   // tangential terms:
-  configuration_map_[Inpar::XFEM::F_Con_t_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Con_t_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Con_t_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XF_Con_t_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XS_Con_t_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Con_t_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Con_t_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Con_t_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XF_Con_t_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XS_Con_t_Col] = std::pair<bool, double>(false, 0.0);
 
   // Configuration of Adjoint Consistency Terms
   // all components:
-  configuration_map_[Inpar::XFEM::F_Adj_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XF_Adj_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XS_Adj_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Adj_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Adj_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::FStr_Adj_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XStr_Adj_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Adj_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XF_Adj_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XS_Adj_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Adj_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Adj_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::FStr_Adj_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XStr_Adj_Col] = std::pair<bool, double>(false, 0.0);
   // normal terms:
-  configuration_map_[Inpar::XFEM::F_Adj_n_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XF_Adj_n_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XS_Adj_n_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Adj_n_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Adj_n_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::FStr_Adj_n_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XStr_Adj_n_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Adj_n_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XF_Adj_n_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XS_Adj_n_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Adj_n_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Adj_n_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::FStr_Adj_n_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XStr_Adj_n_Col] = std::pair<bool, double>(false, 0.0);
   // tangential terms:
-  configuration_map_[Inpar::XFEM::F_Adj_t_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XF_Adj_t_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XS_Adj_t_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Adj_t_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Adj_t_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::FStr_Adj_t_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::XStr_Adj_t_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Adj_t_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XF_Adj_t_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XS_Adj_t_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Adj_t_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Adj_t_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::FStr_Adj_t_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::XStr_Adj_t_Col] = std::pair<bool, double>(false, 0.0);
 
   // Configuration of Penalty Terms
   // all components:
-  configuration_map_[Inpar::XFEM::F_Pen_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Pen_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Pen_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Pen_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Pen_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Pen_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Pen_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Pen_Col] = std::pair<bool, double>(false, 0.0);
   // linearization of penalty terms: at the moment exclusively used for inflow stab
-  configuration_map_[Inpar::XFEM::F_Pen_Row_linF1] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Pen_Row_linF2] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Pen_Row_linF3] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Pen_Row_linF1] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Pen_Row_linF2] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Pen_Row_linF3] = std::pair<bool, double>(false, 0.0);
   // normal terms:
-  configuration_map_[Inpar::XFEM::F_Pen_n_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Pen_n_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Pen_n_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Pen_n_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Pen_n_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Pen_n_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Pen_n_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Pen_n_Col] = std::pair<bool, double>(false, 0.0);
   // tangential terms:
-  configuration_map_[Inpar::XFEM::F_Pen_t_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Pen_t_Row] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_Pen_t_Col] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_Pen_t_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Pen_t_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Pen_t_Row] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_Pen_t_Col] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_Pen_t_Col] = std::pair<bool, double>(false, 0.0);
 
   // Starting from here are some special Terms
-  configuration_map_[Inpar::XFEM::F_LB_Rhs] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_LB_Rhs] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::F_TJ_Rhs] = std::pair<bool, double>(false, 0.0);
-  configuration_map_[Inpar::XFEM::X_TJ_Rhs] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_LB_Rhs] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_LB_Rhs] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::F_TJ_Rhs] = std::pair<bool, double>(false, 0.0);
+  configuration_map_[XFEM::X_TJ_Rhs] = std::pair<bool, double>(false, 0.0);
   return;
 }
 
@@ -260,7 +260,7 @@ void XFEM::CouplingBase::set_element_conditions()
   cutterele_conds_.reserve(nummycolele);
 
   // initialize the vector invalid coupling-condition type "NONE"
-  EleCoupCond init_pair = EleCoupCond(Inpar::XFEM::CouplingCond_NONE, nullptr);
+  EleCoupCond init_pair = EleCoupCond(XFEM::CouplingCond_NONE, nullptr);
   for (int lid = 0; lid < nummycolele; lid++) cutterele_conds_.push_back(init_pair);
 
   //-----------------------------------------------------------------------------------
@@ -272,11 +272,10 @@ void XFEM::CouplingBase::set_element_conditions()
     // loop all possible XFEM-coupling conditions
     for (size_t cond = 0; cond < conditions_to_copy_.size(); cond++)
     {
-      Inpar::XFEM::EleCouplingCondType cond_type =
-          cond_type_string_to_enum(conditions_to_copy_[cond]);
+      XFEM::EleCouplingCondType cond_type = cond_type_string_to_enum(conditions_to_copy_[cond]);
 
       // non-coupling condition found (e.g. FSI coupling)
-      if (cond_type == Inpar::XFEM::CouplingCond_NONE) continue;
+      if (cond_type == XFEM::CouplingCond_NONE) continue;
 
       // get all conditions with given condition name
       std::vector<const Core::Conditions::Condition*> mycond;
@@ -306,7 +305,7 @@ void XFEM::CouplingBase::set_element_conditions()
       }
 
       // non-unique conditions for one cutter element
-      if (cutterele_conds_[lid].first != Inpar::XFEM::CouplingCond_NONE)
+      if (cutterele_conds_[lid].first != XFEM::CouplingCond_NONE)
       {
         FOUR_C_THROW(
             "There are two different condition types for the same cutter dis element with id {}: "
@@ -324,7 +323,7 @@ void XFEM::CouplingBase::set_element_conditions()
   // loop all column cutting elements on this processor
   for (int lid = 0; lid < nummycolele; lid++)
   {
-    if (cutterele_conds_[lid].first == Inpar::XFEM::CouplingCond_NONE)
+    if (cutterele_conds_[lid].first == XFEM::CouplingCond_NONE)
       FOUR_C_THROW("cutter element with local id {} has no valid coupling-condition", lid);
   }
 }
@@ -368,61 +367,59 @@ void XFEM::CouplingBase::status(const int coupling_idx, const int side_start_gid
 
 void XFEM::CouplingBase::set_averaging_strategy()
 {
-  const Inpar::XFEM::EleCouplingCondType cond_type = cond_type_string_to_enum(cond_name_);
+  const XFEM::EleCouplingCondType cond_type = cond_type_string_to_enum(cond_name_);
 
   switch (cond_type)
   {
-    case Inpar::XFEM::CouplingCond_SURF_FSI_MONO:
+    case XFEM::CouplingCond_SURF_FSI_MONO:
     {
       // ask the first cutter element
       const int lid = 0;
       averaging_strategy_ =
-          cutterele_conds_[lid].second->parameters().get<Inpar::XFEM::AveragingStrategy>(
-              "COUPSTRATEGY");
+          cutterele_conds_[lid].second->parameters().get<XFEM::AveragingStrategy>("COUPSTRATEGY");
       // check unhandled cased
-      if (averaging_strategy_ == Inpar::XFEM::Mean || averaging_strategy_ == Inpar::XFEM::Harmonic)
+      if (averaging_strategy_ == XFEM::Mean || averaging_strategy_ == XFEM::Harmonic)
         FOUR_C_THROW(
             "XFEM::CouplingBase::set_averaging_strategy(): Strategy Mean/Harmoninc not available "
             "for "
             "FSI monolithic, ... coming soon!");
       break;
     }
-    case Inpar::XFEM::CouplingCond_SURF_FPI_MONO:
+    case XFEM::CouplingCond_SURF_FPI_MONO:
     {
-      averaging_strategy_ = Inpar::XFEM::Xfluid_Sided;
+      averaging_strategy_ = XFEM::Xfluid_Sided;
       break;
     }
-    case Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID:
+    case XFEM::CouplingCond_SURF_FLUIDFLUID:
     {
       // ask the first cutter element
       const int lid = 0;
       averaging_strategy_ =
-          cutterele_conds_[lid].second->parameters().get<Inpar::XFEM::AveragingStrategy>(
-              "COUPSTRATEGY");
+          cutterele_conds_[lid].second->parameters().get<XFEM::AveragingStrategy>("COUPSTRATEGY");
       break;
     }
-    case Inpar::XFEM::CouplingCond_LEVELSET_TWOPHASE:
-    case Inpar::XFEM::CouplingCond_LEVELSET_COMBUSTION:
+    case XFEM::CouplingCond_LEVELSET_TWOPHASE:
+    case XFEM::CouplingCond_LEVELSET_COMBUSTION:
     {
-      averaging_strategy_ = Inpar::XFEM::Harmonic;
+      averaging_strategy_ = XFEM::Harmonic;
       break;
     }
-    case Inpar::XFEM::CouplingCond_SURF_FSI_PART:
-    case Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET:
-    case Inpar::XFEM::CouplingCond_SURF_NEUMANN:
-    case Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP:
-    case Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE:
-    case Inpar::XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
-    case Inpar::XFEM::CouplingCond_LEVELSET_NEUMANN:
-    case Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP:
+    case XFEM::CouplingCond_SURF_FSI_PART:
+    case XFEM::CouplingCond_SURF_WEAK_DIRICHLET:
+    case XFEM::CouplingCond_SURF_NEUMANN:
+    case XFEM::CouplingCond_SURF_NAVIER_SLIP:
+    case XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE:
+    case XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
+    case XFEM::CouplingCond_LEVELSET_NEUMANN:
+    case XFEM::CouplingCond_LEVELSET_NAVIER_SLIP:
     {
-      averaging_strategy_ = Inpar::XFEM::Xfluid_Sided;
+      averaging_strategy_ = XFEM::Xfluid_Sided;
       break;
     }
-    case Inpar::XFEM::CouplingCond_EMBEDDEDMESH_BACKGROUND_SOLID_VOL:
-    case Inpar::XFEM::CouplingCond_EMBEDDEDMESH_SOLID_SURF:
+    case XFEM::CouplingCond_EMBEDDEDMESH_BACKGROUND_SOLID_VOL:
+    case XFEM::CouplingCond_EMBEDDEDMESH_SOLID_SURF:
     {
-      averaging_strategy_ = Inpar::XFEM::Mean;
+      averaging_strategy_ = XFEM::Mean;
       break;
     }
     default:
@@ -434,25 +431,24 @@ void XFEM::CouplingBase::set_averaging_strategy()
 
 void XFEM::CouplingBase::set_coupling_discretization()
 {
-  const Inpar::XFEM::EleCouplingCondType cond_type = cond_type_string_to_enum(cond_name_);
+  const XFEM::EleCouplingCondType cond_type = cond_type_string_to_enum(cond_name_);
 
   switch (cond_type)
   {
-    case Inpar::XFEM::CouplingCond_SURF_FPI_MONO:
+    case XFEM::CouplingCond_SURF_FPI_MONO:
     {
       coupl_dis_ = cutter_dis_;
       break;
     }
-    case Inpar::XFEM::CouplingCond_SURF_FSI_MONO:
-    case Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID:
+    case XFEM::CouplingCond_SURF_FSI_MONO:
+    case XFEM::CouplingCond_SURF_FLUIDFLUID:
     {
       // depending on the weighting strategy
-      if (averaging_strategy_ == Inpar::XFEM::Xfluid_Sided)
+      if (averaging_strategy_ == XFEM::Xfluid_Sided)
       {
         coupl_dis_ = cutter_dis_;
       }
-      else if (averaging_strategy_ == Inpar::XFEM::Embedded_Sided or
-               averaging_strategy_ == Inpar::XFEM::Mean)
+      else if (averaging_strategy_ == XFEM::Embedded_Sided or averaging_strategy_ == XFEM::Mean)
       {
         coupl_dis_ = cond_dis_;
       }
@@ -460,32 +456,32 @@ void XFEM::CouplingBase::set_coupling_discretization()
         FOUR_C_THROW("Invalid coupling strategy for XFF or XFSI application");
       break;
     }
-    case Inpar::XFEM::CouplingCond_LEVELSET_TWOPHASE:
-    case Inpar::XFEM::CouplingCond_LEVELSET_COMBUSTION:
+    case XFEM::CouplingCond_LEVELSET_TWOPHASE:
+    case XFEM::CouplingCond_LEVELSET_COMBUSTION:
     {
       coupl_dis_ = bg_dis_;
       break;
     }
-    case Inpar::XFEM::CouplingCond_SURF_FSI_PART:
-    case Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET:  // set this to nullptr when the
-                                                         // values are read from the function
-                                                         // instead of the ivelnp vector
-    case Inpar::XFEM::CouplingCond_SURF_NEUMANN:
-    case Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP:
-    case Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE:
+    case XFEM::CouplingCond_SURF_FSI_PART:
+    case XFEM::CouplingCond_SURF_WEAK_DIRICHLET:  // set this to nullptr when the
+                                                  // values are read from the function
+                                                  // instead of the ivelnp vector
+    case XFEM::CouplingCond_SURF_NEUMANN:
+    case XFEM::CouplingCond_SURF_NAVIER_SLIP:
+    case XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE:
     {
       coupl_dis_ = cutter_dis_;
       break;
     }
-    case Inpar::XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
-    case Inpar::XFEM::CouplingCond_LEVELSET_NEUMANN:
-    case Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP:
+    case XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
+    case XFEM::CouplingCond_LEVELSET_NEUMANN:
+    case XFEM::CouplingCond_LEVELSET_NAVIER_SLIP:
     {
       coupl_dis_ = nullptr;
       break;
     }
-    case Inpar::XFEM::CouplingCond_EMBEDDEDMESH_BACKGROUND_SOLID_VOL:
-    case Inpar::XFEM::CouplingCond_EMBEDDEDMESH_SOLID_SURF:
+    case XFEM::CouplingCond_EMBEDDEDMESH_BACKGROUND_SOLID_VOL:
+    case XFEM::CouplingCond_EMBEDDEDMESH_SOLID_SURF:
     {
       coupl_dis_ = cond_dis_;
       break;
@@ -674,9 +670,9 @@ void XFEM::CouplingBase::get_average_weights(Core::Elements::Element* xfele,  //
     double& kappa_s,  ///< Weight parameter (parameter -/slave  side)
     bool& non_xfluid_coupling)
 {
-  non_xfluid_coupling = (get_averaging_strategy() != Inpar::XFEM::Xfluid_Sided);
+  non_xfluid_coupling = (get_averaging_strategy() != XFEM::Xfluid_Sided);
 
-  if (get_averaging_strategy() != Inpar::XFEM::Harmonic)
+  if (get_averaging_strategy() != XFEM::Harmonic)
     XFEM::Utils::get_std_average_weights(get_averaging_strategy(), kappa_m);
   else
     get_coupling_specific_average_weights(xfele, coup_ele, kappa_m);
@@ -714,10 +710,10 @@ void XFEM::CouplingBase::get_visc_penalty_stabfac(Core::Elements::Element* xfele
     double& NIT_visc_stab_fac,       ///< viscous part of Nitsche's penalty term
     double& NIT_visc_stab_fac_tang,  ///< viscous part of Nitsche's penalty term in tang direction
     const double& NITStabScaling, const double& NITStabScalingTang, const bool& IsPseudo2D,
-    const Inpar::XFEM::ViscStabTraceEstimate ViscStab_TraceEstimate)
+    const XFEM::ViscStabTraceEstimate ViscStab_TraceEstimate)
 {
   double penscaling = 0.0;
-  if (get_averaging_strategy() != Inpar::XFEM::Embedded_Sided)
+  if (get_averaging_strategy() != XFEM::Embedded_Sided)
   {
     double visc_m = 0.0;
     get_viscosity_master(
@@ -725,7 +721,7 @@ void XFEM::CouplingBase::get_visc_penalty_stabfac(Core::Elements::Element* xfele
     penscaling = visc_m * kappa_m * inv_h_k;
   }
 
-  if (get_averaging_strategy() != Inpar::XFEM::Xfluid_Sided)
+  if (get_averaging_strategy() != XFEM::Xfluid_Sided)
   {
     double penscaling_s = 0.0;
     get_penalty_scaling_slave(coup_ele, penscaling_s);

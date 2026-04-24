@@ -31,18 +31,18 @@ Discret::Elements::FluidEleParameterXFEM::FluidEleParameterXFEM()
     : Discret::Elements::FluidEleParameterStd::FluidEleParameterStd(),
       vcellgausspts_(Cut::VCellGaussPts_DirectDivergence),
       bcellgausspts_(Cut::BCellGaussPts_Tessellation),
-      coupling_method_(Inpar::XFEM::Nitsche),
-      hybrid_lm_l2_proj_(Inpar::XFEM::Hybrid_LM_L2_Proj_part),
-      visc_stab_trace_estimate_(Inpar::XFEM::ViscStab_TraceEstimate_CT_div_by_hk),
-      visc_stab_hk_(Inpar::XFEM::ViscStab_hk_vol_equivalent),
+      coupling_method_(XFEM::Nitsche),
+      hybrid_lm_l2_proj_(XFEM::Hybrid_LM_L2_Proj_part),
+      visc_stab_trace_estimate_(XFEM::ViscStab_TraceEstimate_CT_div_by_hk),
+      visc_stab_hk_(XFEM::ViscStab_hk_vol_equivalent),
       nit_stab_gamma_(0.0),
       nit_stab_gamma_tang_(0.0),
-      visc_adjoint_scaling_(Inpar::XFEM::adj_sym),
+      visc_adjoint_scaling_(XFEM::adj_sym),
       is_pseudo_2d_(false),
-      xff_conv_stab_scaling_(Inpar::XFEM::XFF_ConvStabScaling_none),
-      conv_stab_scaling_(Inpar::XFEM::ConvStabScaling_none),
-      mass_conservation_combo_(Inpar::XFEM::MassConservationCombination_max),
-      mass_conservation_scaling_(Inpar::XFEM::MassConservationScaling_only_visc)
+      xff_conv_stab_scaling_(XFEM::XFF_ConvStabScaling_none),
+      conv_stab_scaling_(XFEM::ConvStabScaling_none),
+      mass_conservation_combo_(XFEM::MassConservationCombination_max),
+      mass_conservation_scaling_(XFEM::MassConservationScaling_only_visc)
 {
 }
 
@@ -51,8 +51,7 @@ Discret::Elements::FluidEleParameterXFEM::FluidEleParameterXFEM()
 //----------------------------------------------------------------------*/
 void Discret::Elements::FluidEleParameterXFEM::check_parameter_consistency(int myrank) const
 {
-  if (visc_adjoint_scaling_ == Inpar::XFEM::adj_sym &&
-      coupling_method_ == Inpar::XFEM::Hybrid_LM_viscous_stress)
+  if (visc_adjoint_scaling_ == XFEM::adj_sym && coupling_method_ == XFEM::Hybrid_LM_viscous_stress)
   {
     if (myrank == 0)
       Core::IO::cout
@@ -64,7 +63,7 @@ void Discret::Elements::FluidEleParameterXFEM::check_parameter_consistency(int m
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   switch (intterms_prev_state_)
   {
-    case Inpar::XFEM::PreviousState_only_consistency:
+    case XFEM::PreviousState_only_consistency:
     {
       if (myrank == 0)
         Core::IO::cout << "Treatment of interface terms in case of new OST: ONLY CONSISTENCY \n"
@@ -73,7 +72,7 @@ void Discret::Elements::FluidEleParameterXFEM::check_parameter_consistency(int m
                        << Core::IO::endl;
       break;
     }
-    case Inpar::XFEM::PreviousState_full:
+    case XFEM::PreviousState_full:
     {
       if (myrank == 0)
         Core::IO::cout << "Treatment of interface terms in case of new OST: FULL \n"
@@ -93,13 +92,13 @@ void Discret::Elements::FluidEleParameterXFEM::check_parameter_consistency(int m
 //    check parameter combination for consistency
 //----------------------------------------------------------------------*/
 void Discret::Elements::FluidEleParameterXFEM::check_parameter_consistency_for_averaging_strategy(
-    int myrank, Inpar::XFEM::AveragingStrategy averaging_strategy) const
+    int myrank, XFEM::AveragingStrategy averaging_strategy) const
 {
   // Determine, whether this is an embedded-sided Nitsche-approach
-  const bool isEmbNitsche = (coupling_method_ == Inpar::XFEM::Nitsche &&
-                             averaging_strategy == Inpar::XFEM::Embedded_Sided);
+  const bool isEmbNitsche =
+      (coupling_method_ == XFEM::Nitsche && averaging_strategy == XFEM::Embedded_Sided);
 
-  if (visc_stab_trace_estimate_ == Inpar::XFEM::ViscStab_TraceEstimate_eigenvalue && !isEmbNitsche)
+  if (visc_stab_trace_estimate_ == XFEM::ViscStab_TraceEstimate_eigenvalue && !isEmbNitsche)
     FOUR_C_THROW(
         "Solution of eigenvalue problem to estimate parameter from trace inequality is only "
         "reasonable for embedded-sided Nitsche coupling.");
@@ -108,15 +107,15 @@ void Discret::Elements::FluidEleParameterXFEM::check_parameter_consistency_for_a
   if (isEmbNitsche)
   {
     // check element l
-    if (visc_stab_trac_estimate() != Inpar::XFEM::ViscStab_TraceEstimate_eigenvalue)
+    if (visc_stab_trac_estimate() != XFEM::ViscStab_TraceEstimate_eigenvalue)
     {
-      if (visc_stab_hk() == Inpar::XFEM::ViscStab_hk_cut_vol_div_by_cut_surf or
-          visc_stab_hk() == Inpar::XFEM::ViscStab_hk_ele_vol_div_by_cut_surf)
+      if (visc_stab_hk() == XFEM::ViscStab_hk_cut_vol_div_by_cut_surf or
+          visc_stab_hk() == XFEM::ViscStab_hk_ele_vol_div_by_cut_surf)
         FOUR_C_THROW(
             "chosen characteristic element length definition ViscStabHK is not supported for "
             "embedded-sided Nitsche method");
 
-      if (visc_stab_hk() == Inpar::XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf)
+      if (visc_stab_hk() == XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf)
         FOUR_C_THROW(
             "chosen characteristic element length definition "
             "ViscStab_hk_ele_vol_div_by_max_ele_surf is supported for embedded-sided Nitsche "
@@ -128,18 +127,18 @@ void Discret::Elements::FluidEleParameterXFEM::check_parameter_consistency_for_a
   }
 
   // Consistency Check for EVP and Xfluid-sided Nitsche
-  if (!isEmbNitsche and visc_stab_trac_estimate() == Inpar::XFEM::ViscStab_TraceEstimate_eigenvalue)
+  if (!isEmbNitsche and visc_stab_trac_estimate() == XFEM::ViscStab_TraceEstimate_eigenvalue)
     FOUR_C_THROW(
         "estimating trace inequality scaling via solving eigenvalue problems not supported for "
         "xfluid-sided Nitsche!");
 
-  if (!isEmbNitsche and visc_stab_hk() == Inpar::XFEM::ViscStab_hk_ele_vol_div_by_ele_surf)
+  if (!isEmbNitsche and visc_stab_hk() == XFEM::ViscStab_hk_ele_vol_div_by_ele_surf)
     FOUR_C_THROW(
         "chosen characteristic element length definition ViscStabHK is not supported for "
         "xfluid-sided Nitsche method as the element surface cannot be specified for cut elements");
 
-  if (!isEmbNitsche and (visc_stab_hk() == Inpar::XFEM::ViscStab_hk_ele_vol_div_by_cut_surf or
-                            visc_stab_hk() == Inpar::XFEM::ViscStab_hk_cut_vol_div_by_cut_surf))
+  if (!isEmbNitsche and (visc_stab_hk() == XFEM::ViscStab_hk_ele_vol_div_by_cut_surf or
+                            visc_stab_hk() == XFEM::ViscStab_hk_cut_vol_div_by_cut_surf))
   {
     if (myrank == 0)
       Core::IO::cout
@@ -177,27 +176,26 @@ void Discret::Elements::FluidEleParameterXFEM::set_element_xfem_parameter(
   // parameters describing the coupling approach
   //---------------------------------------------
   coupling_method_ =
-      Teuchos::getIntegralValue<Inpar::XFEM::CouplingMethod>(params_xf_stab, "COUPLING_METHOD");
+      Teuchos::getIntegralValue<XFEM::CouplingMethod>(params_xf_stab, "COUPLING_METHOD");
 
   hybrid_lm_l2_proj_ =
-      Teuchos::getIntegralValue<Inpar::XFEM::HybridLmL2Proj>(params_xf_stab, "HYBRID_LM_L2_PROJ");
+      Teuchos::getIntegralValue<XFEM::HybridLmL2Proj>(params_xf_stab, "HYBRID_LM_L2_PROJ");
 
   //--------------------------------------------
   // parameters for the viscous stabilization in Nitsche's method and MixedHybrid_LM methods
   //---------------------------------------------
 
-  visc_stab_trace_estimate_ = Teuchos::getIntegralValue<Inpar::XFEM::ViscStabTraceEstimate>(
+  visc_stab_trace_estimate_ = Teuchos::getIntegralValue<XFEM::ViscStabTraceEstimate>(
       params_xf_stab, "VISC_STAB_TRACE_ESTIMATE");
 
-  visc_stab_hk_ =
-      Teuchos::getIntegralValue<Inpar::XFEM::ViscStabHk>(params_xf_stab, "VISC_STAB_HK");
+  visc_stab_hk_ = Teuchos::getIntegralValue<XFEM::ViscStabHk>(params_xf_stab, "VISC_STAB_HK");
 
   nit_stab_gamma_ = params_xf_stab.get<double>("NIT_STAB_FAC");
 
   nit_stab_gamma_tang_ = params_xf_stab.get<double>("NIT_STAB_FAC_TANG");
 
-  visc_adjoint_scaling_ = Teuchos::getIntegralValue<Inpar::XFEM::AdjointScaling>(
-      params_xf_stab, "VISC_ADJOINT_SYMMETRY");
+  visc_adjoint_scaling_ =
+      Teuchos::getIntegralValue<XFEM::AdjointScaling>(params_xf_stab, "VISC_ADJOINT_SYMMETRY");
 
   is_pseudo_2d_ = params_xf_stab.get<bool>("IS_PSEUDO_2D");
 
@@ -211,21 +209,21 @@ void Discret::Elements::FluidEleParameterXFEM::set_element_xfem_parameter(
   // parameters for the convective interface stabilizations
   //---------------------------------------------
 
-  xff_conv_stab_scaling_ = Teuchos::getIntegralValue<Inpar::XFEM::XffConvStabScaling>(
-      params_xf_stab, "XFF_CONV_STAB_SCALING");
+  xff_conv_stab_scaling_ =
+      Teuchos::getIntegralValue<XFEM::XffConvStabScaling>(params_xf_stab, "XFF_CONV_STAB_SCALING");
   conv_stab_scaling_ =
-      Teuchos::getIntegralValue<Inpar::XFEM::ConvStabScaling>(params_xf_stab, "CONV_STAB_SCALING");
+      Teuchos::getIntegralValue<XFEM::ConvStabScaling>(params_xf_stab, "CONV_STAB_SCALING");
 
   //--------------------------------------------
   // settings for computation of Nitsche's penalty parameter
   //---------------------------------------------
 
-  mass_conservation_combo_ = Teuchos::getIntegralValue<Inpar::XFEM::MassConservationCombination>(
+  mass_conservation_combo_ = Teuchos::getIntegralValue<XFEM::MassConservationCombination>(
       params_xf_stab, "MASS_CONSERVATION_COMBO");
-  mass_conservation_scaling_ = Teuchos::getIntegralValue<Inpar::XFEM::MassConservationScaling>(
+  mass_conservation_scaling_ = Teuchos::getIntegralValue<XFEM::MassConservationScaling>(
       params_xf_stab, "MASS_CONSERVATION_SCALING");
 
-  intterms_prev_state_ = Teuchos::getIntegralValue<Inpar::XFEM::InterfaceTermsPreviousState>(
+  intterms_prev_state_ = Teuchos::getIntegralValue<XFEM::InterfaceTermsPreviousState>(
       params_xf_gen, "INTERFACE_TERMS_PREVIOUS_STATE");
 
   //--------------------------------------------

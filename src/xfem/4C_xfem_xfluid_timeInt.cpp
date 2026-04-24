@@ -22,11 +22,11 @@
 #include "4C_fluid_ele.hpp"
 #include "4C_fluid_ele_factory.hpp"
 #include "4C_fluid_ele_interface.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_xfem_condition_manager.hpp"
 #include "4C_xfem_dofset.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <iostream>
 
@@ -47,10 +47,10 @@ XFEM::XFluidTimeInt::XFluidTimeInt(
     const std::shared_ptr<Cut::CutWizard>& wizard_new,                 /// cut wizard at t^(n+1)
     const std::shared_ptr<XFEM::XFEMDofSet>& dofset_old,               /// XFEM dofset at t^n
     const std::shared_ptr<XFEM::XFEMDofSet>& dofset_new,               /// XFEM dofset at t^(n+1)
-    const Inpar::XFEM::XFluidTimeIntScheme xfluid_timintapproach,      /// xfluid_timintapproch
-    std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>&
+    const XFEM::XFluidTimeIntScheme xfluid_timintapproach,             /// xfluid_timintapproach
+    std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>&
         node_to_reconstr_method,  /// reconstruction map for nodes and its dofsets
-    std::map<Inpar::XFEM::XFluidTimeInt, std::map<int, std::set<int>>>&
+    std::map<XFEM::XFluidTimeIntMethod, std::map<int, std::set<int>>>&
         reconstr_method_to_node,  /// inverse reconstruction map for nodes and its dofsets
     const int step,               /// global time step
     const bool xfluid_timint_check_interfacetips,      /// check interfacetips?
@@ -84,27 +84,27 @@ XFEM::XFluidTimeInt::XFluidTimeInt(
 void XFEM::XFluidTimeInt::set_and_print_status(const bool screenout)
 {
   reconstr_counts_.clear();
-  for (std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>::const_iterator node_it =
+  for (std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>::const_iterator node_it =
            node_to_reconstr_method_.begin();
       node_it != node_to_reconstr_method_.end(); node_it++)
   {
-    const std::vector<Inpar::XFEM::XFluidTimeInt>& nodesets = node_it->second;
+    const std::vector<XFEM::XFluidTimeIntMethod>& nodesets = node_it->second;
 
-    for (std::vector<Inpar::XFEM::XFluidTimeInt>::const_iterator sets = nodesets.begin();
+    for (std::vector<XFEM::XFluidTimeIntMethod>::const_iterator sets = nodesets.begin();
         sets != nodesets.end(); sets++)
     {
-      std::map<Inpar::XFEM::XFluidTimeInt, int>::iterator it = reconstr_counts_.find(*sets);
+      std::map<XFEM::XFluidTimeIntMethod, int>::iterator it = reconstr_counts_.find(*sets);
 
       if (it != reconstr_counts_.end())
         (it->second)++;  // increase counter
       else
         reconstr_counts_.insert(
-            std::pair<Inpar::XFEM::XFluidTimeInt, int>(*sets, 1));  // initialize counter with 1
+            std::pair<XFEM::XFluidTimeIntMethod, int>(*sets, 1));  // initialize counter with 1
     }
   }
 
-  int nummethods = Inpar::XFEM::Xf_TimeInt_undefined +
-                   1;  // has to be larger than the maximum of the enum Inpar::XFEM::XFluidTimeInt
+  int nummethods = XFEM::Xf_TimeInt_undefined +
+                   1;  // has to be larger than the maximum of the enum XFEM::XFluidTimeIntMethod
 
   std::vector<int> cpu_methods(nummethods);
   std::vector<int> glob_methods(nummethods);
@@ -115,8 +115,7 @@ void XFEM::XFluidTimeInt::set_and_print_status(const bool screenout)
     glob_methods[i] = 0;
   }
 
-  for (std::map<Inpar::XFEM::XFluidTimeInt, int>::iterator reconstrMethod =
-           reconstr_counts_.begin();
+  for (std::map<XFEM::XFluidTimeIntMethod, int>::iterator reconstrMethod = reconstr_counts_.begin();
       reconstrMethod != reconstr_counts_.end(); reconstrMethod++)
   {
     int index = (int)(reconstrMethod->first);
@@ -134,7 +133,7 @@ void XFEM::XFluidTimeInt::set_and_print_status(const bool screenout)
     for (int method_idx = 0; method_idx < nummethods; method_idx++)
     {
       printf("\n%s:\t #dofsets(P%i/allprocs):\t(%i/%i)",
-          map_method_enum_to_string(Inpar::XFEM::XFluidTimeInt(method_idx)).c_str(), myrank_,
+          map_method_enum_to_string(XFEM::XFluidTimeIntMethod(method_idx)).c_str(), myrank_,
           cpu_methods[method_idx], glob_methods[method_idx]);
     }
     Core::IO::cout << "\n+-------------------------------------------------------+\n"
@@ -148,33 +147,33 @@ void XFEM::XFluidTimeInt::set_and_print_status(const bool screenout)
 /*----------------------------------------------------------------------*
 | returns matching std::string for each reconstruction method   schott 07/12 |
 *----------------------------------------------------------------------*/
-std::string XFEM::XFluidTimeInt::map_method_enum_to_string(const Inpar::XFEM::XFluidTimeInt term)
+std::string XFEM::XFluidTimeInt::map_method_enum_to_string(const XFEM::XFluidTimeIntMethod term)
 {
   // length of return std::string is 14 due to usage in formatted screen output
   switch (term)
   {
-    case Inpar::XFEM::Xf_TimeInt_STD_by_SL:
+    case XFEM::Xf_TimeInt_STD_by_SL:
       return "Semi-Lagrange: STD(n+1)                    ";
       break;
-    case Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_GHOST:
+    case XFEM::Xf_TimeInt_STD_by_COPY_from_GHOST:
       return "Copy Dofset:   GHOST(n)   -> STD(n+1)      ";
       break;
-    case Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_STD:
+    case XFEM::Xf_TimeInt_STD_by_COPY_from_STD:
       return "Copy Dofset:   STD(n)     -> STD(n+1)      ";
       break;
-    case Inpar::XFEM::Xf_TimeInt_GHOST_by_GP:
+    case XFEM::Xf_TimeInt_GHOST_by_GP:
       return "Ghost-Penalty: GHOST(n+1)                  ";
       break;
-    case Inpar::XFEM::Xf_TimeInt_GHOST_by_COPY_from_GHOST:
+    case XFEM::Xf_TimeInt_GHOST_by_COPY_from_GHOST:
       return "Copy Dofset:   GHOST(n)   -> GHOST(n+1)    ";
       break;
-    case Inpar::XFEM::Xf_TimeInt_GHOST_by_COPY_from_STD:
+    case XFEM::Xf_TimeInt_GHOST_by_COPY_from_STD:
       return "Copy Dofset:   STD(n)     -> GHOST(n+1)    ";
       break;
-    case Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS:
+    case XFEM::Xf_TimeInt_by_PROJ_from_DIS:
       return "Copy Dofset:   STD_EMB(n) -> STD/GHOST(n+1)";
       break;
-    case Inpar::XFEM::Xf_TimeInt_undefined:
+    case XFEM::Xf_TimeInt_undefined:
       return "undefined:                                 ";
     default:
       FOUR_C_THROW("Cannot cope with name enum {}", term);
@@ -327,8 +326,8 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
     const int nds_old = 0;
 
     // copy dofs from this node from t^n -> t^(n+1)
-    copy_dofs(node, nds_new, nds_old, Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_STD,
-        newRowStateVectors, oldRowStateVectors, dbcgids);
+    copy_dofs(node, nds_new, nds_old, XFEM::Xf_TimeInt_STD_by_COPY_from_STD, newRowStateVectors,
+        oldRowStateVectors, dbcgids);
 
   }  // end case A
   else if (n_new == nullptr or unique_std_uncut_np)
@@ -402,31 +401,29 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
       if (nds_old != -1)  // case b)
       {
         // copy values
-        copy_dofs(node, nds_new, nds_old, Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_STD,
-            newRowStateVectors, oldRowStateVectors, dbcgids);
+        copy_dofs(node, nds_new, nds_old, XFEM::Xf_TimeInt_STD_by_COPY_from_STD, newRowStateVectors,
+            oldRowStateVectors, dbcgids);
       }
       else  // case c)
       {
         // case: NEWLY CREATED NODEHANDLE: just one ghost dofset at old time!
         //      structural movement more than one element near node, (here SEMILAGRANGE possible!)
 
-        if (timeint_scheme_ == Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP)
+        if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP)
           FOUR_C_THROW("structural movement more than one element near node {}", gid);
         else if (timeint_scheme_ ==
-                     Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
-                 timeint_scheme_ ==
-                     Inpar::XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
+                     XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
+                 timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
         {
-          mark_dofs(node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
+          mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
         }
         else if (timeint_scheme_ ==
-                 Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
+                 XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
         {
-          mark_dofs(
-              node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS, dbcgids);
+          mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_by_PROJ_from_DIS, dbcgids);
         }
         else
-          FOUR_C_THROW("unknown Inpar::XFEM::Xf_TimIntScheme");
+          FOUR_C_THROW("unknown XFEM::Xf_TimIntScheme");
       }
     }  // some elements cut
     else if (numDofSets_old == 0)
@@ -435,24 +432,23 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
       //        structural movement more than one element for node ? (here SEMILAGRANGE possible!",
       //        gid);
 
-      if (timeint_scheme_ == Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP)
+      if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP)
         FOUR_C_THROW(
             "no dofset at t^n available, structural movement more than one element for node {}",
             gid);
       else if (timeint_scheme_ ==
-                   Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
-               timeint_scheme_ == Inpar::XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
+                   XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
+               timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
       {
-        mark_dofs(node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
+        mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
       }
       else if (timeint_scheme_ ==
-               Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
+               XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
       {
-        mark_dofs(
-            node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS, dbcgids);
+        mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_by_PROJ_from_DIS, dbcgids);
       }
       else
-        FOUR_C_THROW("unknown Inpar::XFEM::Xf_TimIntScheme");
+        FOUR_C_THROW("unknown XFEM::Xf_TimIntScheme");
     }
     else
     {
@@ -467,32 +463,30 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
       {
         // all dofsets at t^n are not std-dofsets, structural movement more than one element
 
-        if (timeint_scheme_ == Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP)
+        if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP)
           FOUR_C_THROW(
               "all dofset at t^n are ghost-dofsets, structural movement more than one element for "
               "node {}",
               gid);
         else if (timeint_scheme_ ==
-                     Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
-                 timeint_scheme_ ==
-                     Inpar::XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
+                     XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
+                 timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
         {
-          mark_dofs(node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
+          mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
         }
         else if (timeint_scheme_ ==
-                 Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
+                 XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
         {
-          mark_dofs(
-              node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS, dbcgids);
+          mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_by_PROJ_from_DIS, dbcgids);
         }
         else
-          FOUR_C_THROW("unknown Inpar::XFEM::Xf_TimIntScheme");
+          FOUR_C_THROW("unknown XFEM::Xf_TimIntScheme");
       }
       else
       {
         // copy values
-        copy_dofs(node, nds_new, nds_old, Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_STD,
-            newRowStateVectors, oldRowStateVectors, dbcgids);
+        copy_dofs(node, nds_new, nds_old, XFEM::Xf_TimeInt_STD_by_COPY_from_STD, newRowStateVectors,
+            oldRowStateVectors, dbcgids);
       }
     }  // end more than one dofset
   }  // end case B
@@ -561,19 +555,17 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
       if (nodaldofset->is_standard_dof_set())  // case b)
       {
         // copy values or SL
-        if (timeint_scheme_ == Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP or
+        if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP or
+            timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
             timeint_scheme_ ==
-                Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
-            timeint_scheme_ ==
-                Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
+                XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
         {
-          copy_dofs(node, nds_new, nds_old, Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_STD,
+          copy_dofs(node, nds_new, nds_old, XFEM::Xf_TimeInt_STD_by_COPY_from_STD,
               newRowStateVectors, oldRowStateVectors, dbcgids);
         }
-        else if (timeint_scheme_ ==
-                 Inpar::XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
+        else if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
         {
-          mark_dofs(node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
+          mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
         }
       }
       else  // case c)
@@ -583,7 +575,7 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
         // interface, e.g. at t^n a fluid node between two contacting thin structures can become a
         // ghost node w.r.t to a neighbored independent fluid domain (F|S|F -node- F|S|F ->
         // F|S-node-S|F -- F|S|F)
-        mark_dofs(node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_GHOST_by_GP, dbcgids);
+        mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_GHOST_by_GP, dbcgids);
       }
     }  // just one dofset at new timestep
     else
@@ -604,28 +596,23 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
                 ->is_standard_dof_set())  // first dofset (has been checked to be a std-dofset)
         {
           // copy values or SL
-          if (timeint_scheme_ ==
-                  Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP or
+          if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP or
+              timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
               timeint_scheme_ ==
-                  Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
-              timeint_scheme_ ==
-                  Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
+                  XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
           {
-            copy_dofs(node, nds_new, nds_old, Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_STD,
+            copy_dofs(node, nds_new, nds_old, XFEM::Xf_TimeInt_STD_by_COPY_from_STD,
                 newRowStateVectors, oldRowStateVectors, dbcgids);
           }
-          else if (timeint_scheme_ ==
-                   Inpar::XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
+          else if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
           {
-            mark_dofs(
-                node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
+            mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
           }
         }
         else
         {
           // for newly created ghost dofsets we have to reconstruct ghost dofs
-          mark_dofs(
-              node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_GHOST_by_GP, dbcgids);
+          mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_GHOST_by_GP, dbcgids);
         }
       }
     }  // more than one dofset
@@ -688,7 +675,7 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
       //-----------------------------------------------------------------
 
       if (timeint_scheme_ ==
-          Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
+          XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
       {
         // check, if we already have an entry for that node!
         if (node_to_reconstr_method_.find(gid) != node_to_reconstr_method_.end())
@@ -711,31 +698,27 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
 #endif
         if (is_std_set_np)  // std at t^(n+1)
         {
-          if (timeint_scheme_ == Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP)
+          if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP)
             FOUR_C_THROW(
                 "no corresponding dofset at t^n, choose a SL-based-approach for node {}", gid);
           else if (timeint_scheme_ ==
-                       Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
-                   timeint_scheme_ ==
-                       Inpar::XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
+                       XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
+                   timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
           {
-            mark_dofs(
-                node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
+            mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
           }
           else if (timeint_scheme_ ==
-                   Inpar::XFEM::
-                       Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
+                   XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
           {
-            mark_dofs(node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS,
-                dbcgids);
+            mark_dofs(
+                node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_by_PROJ_from_DIS, dbcgids);
           }
           else
-            FOUR_C_THROW("unknown Inpar::XFEM::Xf_TimIntScheme");
+            FOUR_C_THROW("unknown XFEM::Xf_TimIntScheme");
         }
         else  // ghost at t^(n+1)
         {
-          mark_dofs(
-              node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_GHOST_by_GP, dbcgids);
+          mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_GHOST_by_GP, dbcgids);
         }
       }
       else  // unique set found
@@ -752,24 +735,20 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
         if (is_std_set_np and is_std_set_n)  // std at t^n and t^(n+1)
         {
           // copy values or use SL
-          if (timeint_scheme_ ==
-                  Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP or
+          if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP or
+              timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
               timeint_scheme_ ==
-                  Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
-              timeint_scheme_ ==
-                  Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
+                  XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
           {
-            copy_dofs(node, nds_new, nds_old, Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_STD,
+            copy_dofs(node, nds_new, nds_old, XFEM::Xf_TimeInt_STD_by_COPY_from_STD,
                 newRowStateVectors, oldRowStateVectors, dbcgids);
           }
-          else if (timeint_scheme_ ==
-                   Inpar::XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
+          else if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
           {
-            mark_dofs(
-                node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
+            mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
           }
           else
-            FOUR_C_THROW("unknown Inpar::XFEM::Xf_TimIntScheme");
+            FOUR_C_THROW("unknown XFEM::Xf_TimIntScheme");
         }
         else if (is_std_set_np and !is_std_set_n)  // ghost at t^n and std at t^(n+1)
         {
@@ -781,59 +760,55 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
           {
             // copy values
 
-            if (timeint_scheme_ ==
-                Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP)
+            if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP)
             {
-              copy_dofs(node, nds_new, nds_old, Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_GHOST,
+              copy_dofs(node, nds_new, nds_old, XFEM::Xf_TimeInt_STD_by_COPY_from_GHOST,
                   newRowStateVectors, oldRowStateVectors, dbcgids);
             }
             else if (timeint_scheme_ ==
-                     Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP)
+                     XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP)
             {
               // is a copy from ghost->std reasonable or not?
-              copy_dofs(node, nds_new, nds_old, Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_GHOST,
+              copy_dofs(node, nds_new, nds_old, XFEM::Xf_TimeInt_STD_by_COPY_from_GHOST,
                   newRowStateVectors, oldRowStateVectors, dbcgids);
             }
+            else if (timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
+            {
+              mark_dofs(node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
+            }
             else if (timeint_scheme_ ==
-                     Inpar::XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP)
+                     XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
             {
               mark_dofs(
-                  node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_STD_by_SL, dbcgids);
-            }
-            else if (timeint_scheme_ ==
-                     Inpar::XFEM::
-                         Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
-            {
-              mark_dofs(node, nds_new, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS,
-                  dbcgids);
+                  node, nds_new, newRowStateVectors, XFEM::Xf_TimeInt_by_PROJ_from_DIS, dbcgids);
             }
             else
-              FOUR_C_THROW("unknown Inpar::XFEM::Xf_TimIntScheme");
+              FOUR_C_THROW("unknown XFEM::Xf_TimIntScheme");
           }
           else
           {
             FOUR_C_THROW("case should not be called");
             // not unique ghost dofset
             // mark_dofs(node, nds_new, newRowStateVectors,
-            // Inpar::XFEM::Xf_TimeInt_SemiLagrange,dbcgids);
+            // XFEM::Xf_TimeInt_SemiLagrange,dbcgids);
           }
         }
         else if (!is_std_set_np and is_std_set_n)  // ghost at t^(n+1)
         {
           // copy values, should be reasonable since dofsets identified
-          copy_dofs(node, nds_new, nds_old, Inpar::XFEM::Xf_TimeInt_GHOST_by_COPY_from_STD,
+          copy_dofs(node, nds_new, nds_old, XFEM::Xf_TimeInt_GHOST_by_COPY_from_STD,
               newRowStateVectors, oldRowStateVectors, dbcgids);
           //            mark_dofs(node, nds_new, newRowStateVectors,
-          //            Inpar::XFEM::Xf_TimeInt_GHOST_by_GP,dbcgids);
+          //            XFEM::Xf_TimeInt_GHOST_by_GP,dbcgids);
         }
         else if (!is_std_set_np and !is_std_set_n)
         {
           // copy values, should be reasonable since dofsets identified
           //  FOUR_C_THROW("Copy for node {}", gid);
-          copy_dofs(node, nds_new, nds_old, Inpar::XFEM::Xf_TimeInt_GHOST_by_COPY_from_GHOST,
+          copy_dofs(node, nds_new, nds_old, XFEM::Xf_TimeInt_GHOST_by_COPY_from_GHOST,
               newRowStateVectors, oldRowStateVectors, dbcgids);
           //            mark_dofs(node, nds_new, newRowStateVectors,
-          //            Inpar::XFEM::Xf_TimeInt_GHOST_by_GP,dbcgids);
+          //            XFEM::Xf_TimeInt_GHOST_by_GP,dbcgids);
         }
       }  // end found set at t^n
 
@@ -847,7 +822,7 @@ void XFEM::XFluidTimeInt::transfer_nodal_dofs_to_new_map(
 // get nodes and dofsets for given reconstruction method
 // -------------------------------------------------------------------
 std::map<int, std::set<int>>& XFEM::XFluidTimeInt::get_node_to_dof_map_for_reconstr(
-    Inpar::XFEM::XFluidTimeInt reconstr)
+    XFEM::XFluidTimeIntMethod reconstr)
 {
   // returns empty map if reconstruction method is not present
   return reconstr_method_to_node_[reconstr];
@@ -970,7 +945,7 @@ void XFEM::XFluidTimeInt::find_surrounding_ghost_dofsets(
 void XFEM::XFluidTimeInt::copy_dofs(const Core::Nodes::Node* node,  /// drt node
     const int nds_new,                                              /// nodal dofset at t^(n+1)
     const int nds_old,                                              /// nodal dofset at t^n
-    const Inpar::XFEM::XFluidTimeInt method,                        /// reconstruction method
+    const XFEM::XFluidTimeIntMethod method,                         /// reconstruction method
     const std::vector<std::shared_ptr<Core::LinAlg::Vector<double>>>&
         newRowStateVectors,  /// row map based state vectors at t^(n+1)
     const std::vector<std::shared_ptr<const Core::LinAlg::Vector<double>>>&
@@ -978,10 +953,10 @@ void XFEM::XFluidTimeInt::copy_dofs(const Core::Nodes::Node* node,  /// drt node
     const std::shared_ptr<std::set<int>> dbcgids  /// set of DBC global ids)
 )
 {
-  if (method != Inpar::XFEM::Xf_TimeInt_GHOST_by_COPY_from_GHOST and
-      method != Inpar::XFEM::Xf_TimeInt_GHOST_by_COPY_from_STD and
-      method != Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_GHOST and
-      method != Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_STD)
+  if (method != XFEM::Xf_TimeInt_GHOST_by_COPY_from_GHOST and
+      method != XFEM::Xf_TimeInt_GHOST_by_COPY_from_STD and
+      method != XFEM::Xf_TimeInt_STD_by_COPY_from_GHOST and
+      method != XFEM::Xf_TimeInt_STD_by_COPY_from_STD)
     FOUR_C_THROW("don't call copy_dofs for non-copy reconstruction type");
 
 
@@ -1036,13 +1011,12 @@ void XFEM::XFluidTimeInt::copy_dofs(const Core::Nodes::Node* node,  /// drt node
   }
 
   // create permutation cycles
-  if ((method == Inpar::XFEM::Xf_TimeInt_GHOST_by_COPY_from_GHOST or
-          method == Inpar::XFEM::Xf_TimeInt_GHOST_by_COPY_from_STD or
-          method == Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_GHOST or
-          method ==
-              Inpar::XFEM::Xf_TimeInt_STD_by_COPY_from_STD  // no permutation for std-to-std as std
-                                                            // is always the first, nevertheless
-                                                            // std-to-std reasonable for some cases?
+  if ((method == XFEM::Xf_TimeInt_GHOST_by_COPY_from_GHOST or
+          method == XFEM::Xf_TimeInt_GHOST_by_COPY_from_STD or
+          method == XFEM::Xf_TimeInt_STD_by_COPY_from_GHOST or
+          method == XFEM::Xf_TimeInt_STD_by_COPY_from_STD  // no permutation for std-to-std as std
+                                                           // is always the first, nevertheless
+                                                           // std-to-std reasonable for some cases?
           ) and
       nds_new != nds_old)
   {
@@ -1068,8 +1042,8 @@ void XFEM::XFluidTimeInt::copy_dofs(const Core::Nodes::Node* node,  /// drt node
 void XFEM::XFluidTimeInt::mark_dofs(const Core::Nodes::Node* node,  /// drt node
     const int nds_new,                                              /// nodal dofset at t^(n+1)
     const std::vector<std::shared_ptr<Core::LinAlg::Vector<double>>>&
-        newRowStateVectors,                   /// row map based state vectors at t^(n+1)
-    const Inpar::XFEM::XFluidTimeInt method,  /// reconstruction method
+        newRowStateVectors,                  /// row map based state vectors at t^(n+1)
+    const XFEM::XFluidTimeIntMethod method,  /// reconstruction method
     const std::shared_ptr<std::set<int>>
         dbcgids  /// set of dof gids that must not be changed by ghost penalty reconstruction
 )
@@ -1085,9 +1059,9 @@ void XFEM::XFluidTimeInt::mark_dofs(const Core::Nodes::Node* node,  /// drt node
   // when only std-values are computed using SL but ghost-values would be copied in case of the full
   // SL-algorithm in the boundary zone, all ghost-values will be reconstructed using the GP-approach
   // (this is done in the transfer_dofs_to_new_map directly)
-  if ((timeint_scheme_ == Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
-          timeint_scheme_ == Inpar::XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP) and
-      method == Inpar::XFEM::Xf_TimeInt_STD_by_SL)
+  if ((timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP or
+          timeint_scheme_ == XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP) and
+      method == XFEM::Xf_TimeInt_STD_by_SL)
   {
     // map of global nid of a neighbored ghost node and the corresponding ghost-dofset-number which
     // corresponds to the given std dofset at the node
@@ -1110,12 +1084,12 @@ void XFEM::XFluidTimeInt::mark_dofs(const Core::Nodes::Node* node,  /// drt node
         if (dis_->node_row_map()->lid(nid) != -1)  // is row node on this proc
         {
           Core::Nodes::Node* n = dis_->g_node(nid);
-          mark_dofs(n, dofset, newRowStateVectors, Inpar::XFEM::Xf_TimeInt_GHOST_by_GP, dbcgids);
+          mark_dofs(n, dofset, newRowStateVectors, XFEM::Xf_TimeInt_GHOST_by_GP, dbcgids);
         }
         else
         {
           // in parallel we have to export the info to other procs
-          mark_dofs_for_export(nid, dofset, Inpar::XFEM::Xf_TimeInt_GHOST_by_GP);
+          mark_dofs_for_export(nid, dofset, XFEM::Xf_TimeInt_GHOST_by_GP);
         }
       }
     }
@@ -1145,7 +1119,7 @@ void XFEM::XFluidTimeInt::mark_dofs(const Core::Nodes::Node* node,  /// drt node
       int gid = dofs_new[i];
 
       // set Dirichlet BC for ghost penalty reconstruction
-      if (method != Inpar::XFEM::Xf_TimeInt_GHOST_by_GP)
+      if (method != XFEM::Xf_TimeInt_GHOST_by_GP)
       {
         if (dbcgids != nullptr) (*dbcgids).insert(gid);
       }
@@ -1167,7 +1141,7 @@ void XFEM::XFluidTimeInt::mark_dofs(const Core::Nodes::Node* node,  /// drt node
 // -------------------------------------------------------------------
 void XFEM::XFluidTimeInt::mark_dofs_for_export(const int nid,  /// node id
     const int dofset,                                          /// ghost dofset number
-    const Inpar::XFEM::XFluidTimeInt
+    const XFEM::XFluidTimeIntMethod
         method  /// reconstruction method used for marking the nodal dofset
 )
 {
@@ -1206,8 +1180,8 @@ void XFEM::XFluidTimeInt::mark_dofs_for_export(const int nid,  /// node id
 // set the reconstruction method for current nodal dofset, return if set
 // -------------------------------------------------------------------
 bool XFEM::XFluidTimeInt::set_reconstr_method(const Core::Nodes::Node* node,  /// drt node
-    const int nds_new,                       /// nodal dofset w.r.t new interface position
-    const Inpar::XFEM::XFluidTimeInt method  /// which type of reconstruction method
+    const int nds_new,                      /// nodal dofset w.r.t new interface position
+    const XFEM::XFluidTimeIntMethod method  /// which type of reconstruction method
 )
 {
   Cut::Node* n = wizard_new_->get_node(node->id());
@@ -1221,7 +1195,7 @@ bool XFEM::XFluidTimeInt::set_reconstr_method(const Core::Nodes::Node* node,  //
     numdofsets = 1;  // one std dofset
 
   // find the node in map
-  std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>::iterator it;
+  std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>::iterator it;
   it = node_to_reconstr_method_.find(node->id());
 
   if (it != node_to_reconstr_method_.end())
@@ -1234,15 +1208,15 @@ bool XFEM::XFluidTimeInt::set_reconstr_method(const Core::Nodes::Node* node,  //
 
     // do not overwrite Ghost-penalty reconstruction method which have been already marked by
     // surrounding SL-dofsets
-    if (it->second[nds_new] == Inpar::XFEM::Xf_TimeInt_GHOST_by_GP) return false;
+    if (it->second[nds_new] == XFEM::Xf_TimeInt_GHOST_by_GP) return false;
 
     // do not overwrite already values, expect that method is Xf_TimeInt_GHOST_by_GP
-    if (it->second[nds_new] != Inpar::XFEM::Xf_TimeInt_undefined and  // overwriting
-        it->second[nds_new] != method and                             // methods not equal
-        method != Inpar::XFEM::Xf_TimeInt_GHOST_by_GP and  // overwriting with non-GP approach
+    if (it->second[nds_new] != XFEM::Xf_TimeInt_undefined and  // overwriting
+        it->second[nds_new] != method and                      // methods not equal
+        method != XFEM::Xf_TimeInt_GHOST_by_GP and             // overwriting with non-GP approach
         it->second[nds_new] !=
-            Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS  // overwriting projection after previous
-                                                      // failure (label correction)
+            XFEM::Xf_TimeInt_by_PROJ_from_DIS  // overwriting projection after previous
+                                               // failure (label correction)
     )
     {
       FOUR_C_THROW(
@@ -1253,7 +1227,7 @@ bool XFEM::XFluidTimeInt::set_reconstr_method(const Core::Nodes::Node* node,  //
     //---------------------------------------------------------
 
     // remove the node from the old method in the reconstr. method-to-node map
-    std::map<Inpar::XFEM::XFluidTimeInt, std::map<int, std::set<int>>>::iterator itm;
+    std::map<XFEM::XFluidTimeIntMethod, std::map<int, std::set<int>>>::iterator itm;
     itm = reconstr_method_to_node_.find(it->second[nds_new]);
 
     if (itm != reconstr_method_to_node_.end())
@@ -1271,11 +1245,11 @@ bool XFEM::XFluidTimeInt::set_reconstr_method(const Core::Nodes::Node* node,  //
   }
   else
   {
-    std::vector<Inpar::XFEM::XFluidTimeInt> vec(
-        numdofsets, Inpar::XFEM::Xf_TimeInt_undefined);  // initialize with undefined status
+    std::vector<XFEM::XFluidTimeIntMethod> vec(
+        numdofsets, XFEM::Xf_TimeInt_undefined);  // initialize with undefined status
     vec[nds_new] = method;
     node_to_reconstr_method_.insert(
-        std::pair<int, std::vector<Inpar::XFEM::XFluidTimeInt>>(node->id(), vec));
+        std::pair<int, std::vector<XFEM::XFluidTimeIntMethod>>(node->id(), vec));
     reconstr_method_to_node_[method][node->id()].insert(nds_new);
     return true;
   }
@@ -1355,11 +1329,10 @@ int XFEM::XFluidTimeInt::identify_old_sets(const Cut::Node* n_old,  /// node w.r
   if (identified_old_sets.size() == 0  // no identification via common cutsides possible
       and is_std_set_np  // it is a standard dofset at the new time step, for which the alternative
                          // would be only to use SemiLagrangean
-      and
-      timeint_scheme_ ==
-          Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP  // just when we need to
-                                                                             // copy data, otherwise
-                                                                             // simulation will stop
+      and timeint_scheme_ ==
+              XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP  // just when we need to
+                                                                          // copy data, otherwise
+                                                                          // simulation will stop
   )
   {
     // look again in the old sets if there was a standard dofset
@@ -2165,7 +2138,7 @@ void XFEM::XFluidTimeInt::export_methods(
         for (std::map<int, int>::iterator it = dofset_map.begin(); it != dofset_map.end(); it++)
         {
           mark_dofs(
-              node, it->first, newRowStateVectors, (Inpar::XFEM::XFluidTimeInt)it->second, dbcgids);
+              node, it->first, newRowStateVectors, (XFEM::XFluidTimeIntMethod)it->second, dbcgids);
         }
       }
 

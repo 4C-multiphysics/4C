@@ -39,7 +39,6 @@
 #include "4C_fluid_utils_mapextractor.hpp"
 #include "4C_fluid_xwall.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_xfem.hpp"  //for enums only
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
@@ -50,6 +49,7 @@
 #include "4C_mat_newtonianfluid.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_utils_function.hpp"
+#include "4C_xfem_input.hpp"  //for enums only
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
@@ -1875,7 +1875,7 @@ void FLD::FluidImplicitTimeInt::assemble_edge_based_matand_rhs()
 
     Teuchos::ParameterList params;
     if (params_->sublist("RESIDUAL-BASED STABILIZATION").isParameter("POROUS-FLOW STABILIZATION"))
-      params.set<Inpar::XFEM::FaceType>("FaceType", Inpar::XFEM::face_type_porof);
+      params.set<XFEM::FaceType>("FaceType", XFEM::face_type_porof);
     // set action for elements
     params.set<FLD::IntFaceAction>("action", FLD::EOS_and_GhostPenalty_stabilization);
     evaluate_fluid_edge_based(sysmat_, *residual_, params);
@@ -1957,8 +1957,7 @@ void FLD::FluidImplicitTimeInt::evaluate_fluid_edge_based(
       // call the edge-based assemble and evaluate routine
       Discret::Elements::FluidIntFaceImplInterface::impl(ele)
           ->assemble_internal_faces_using_neighbor_data(ele, material, nds_master, nds_slave,
-              Inpar::XFEM::face_type_std, edgebasedparams, *facediscret_, sysmat_linalg,
-              residual_col);
+              XFEM::face_type_std, edgebasedparams, *facediscret_, sysmat_linalg, residual_col);
     }
   }
 

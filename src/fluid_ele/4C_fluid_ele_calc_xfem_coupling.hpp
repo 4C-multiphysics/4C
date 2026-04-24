@@ -25,8 +25,8 @@
 
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_fixedsizeblockmatrix.hpp"
+#include "4C_xfem_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -376,7 +376,7 @@ namespace Discret
             const Core::LinAlg::Matrix<nsd_, 1>&
                 ivelint_jump,  ///< prescribed interface velocity, Dirichlet values or jump height
                                ///< for coupled problems
-            const Inpar::XFEM::EleCouplingCondType& cond_type  ///< condition type
+            const XFEM::EleCouplingCondType& cond_type  ///< condition type
             ) = 0;
 
         //! build coupling matrices for Nitsche's method (NIT)
@@ -408,7 +408,7 @@ namespace Discret
                 LB_proj_matrix,  ///< prescribed projection matrix for laplace-beltrami problems
             const std::vector<Core::LinAlg::SerialDenseMatrix>&
                 solid_stress,  ///< structural cauchy stress and linearization
-            std::map<Inpar::XFEM::CoupTerm, std::pair<bool, double>>&
+            std::map<XFEM::CoupTerm, std::pair<bool, double>>&
                 configmap  ///< Interface Terms configuration map
             ) = 0;
 
@@ -437,7 +437,7 @@ namespace Discret
             const Core::LinAlg::Matrix<nsd_, 1>&
                 itraction_jump,  ///< prescribed interface traction, jump
                                  ///< height for coupled problems
-            std::map<Inpar::XFEM::CoupTerm, std::pair<bool, double>>&
+            std::map<XFEM::CoupTerm, std::pair<bool, double>>&
                 configmap  ///< Interface Terms configuration map
             ) = 0;
       };

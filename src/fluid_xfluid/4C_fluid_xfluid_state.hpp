@@ -12,10 +12,10 @@
 
 #include "4C_cut_input.hpp"
 #include "4C_inpar_fluid.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <map>
 #include <memory>

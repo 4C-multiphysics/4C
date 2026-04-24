@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_inpar_xfem.hpp"
+#include "4C_xfem_input.hpp"
 
 #include "4C_cut_enum.hpp"
 #include "4C_fem_condition_definition.hpp"
@@ -14,7 +14,7 @@ FOUR_C_NAMESPACE_OPEN
 
 
 
-std::vector<Core::IO::InputSpec> Inpar::XFEM::valid_parameters()
+std::vector<Core::IO::InputSpec> XFEM::valid_parameters()
 {
   using namespace Core::IO::InputSpecBuilders;
   std::vector<Core::IO::InputSpec> specs;
@@ -103,33 +103,32 @@ std::vector<Core::IO::InputSpec> Inpar::XFEM::valid_parameters()
           // xfluidfluid-fsi-monolithic approach
           deprecated_selection<MonolithicXffsiApproach>("MONOLITHIC_XFFSI_APPROACH",
               {
-                  {"xffsi_full_newton", Inpar::XFEM::XFFSI_Full_Newton},
-                  {"xffsi_fixedALE_interpolation", Inpar::XFEM::XFFSI_FixedALE_Interpolation},
-                  {"xffsi_fixedALE_partitioned", Inpar::XFEM::XFFSI_FixedALE_Partitioned},
+                  {"xffsi_full_newton", XFEM::XFFSI_Full_Newton},
+                  {"xffsi_fixedALE_interpolation", XFEM::XFFSI_FixedALE_Interpolation},
+                  {"xffsi_fixedALE_partitioned", XFEM::XFFSI_FixedALE_Partitioned},
               },
               {.description = "The monolithic approach for xfluidfluid-fsi",
-                  .default_value = Inpar::XFEM::XFFSI_FixedALE_Partitioned}),
+                  .default_value = XFEM::XFFSI_FixedALE_Partitioned}),
 
           // xfluidfluid time integration approach
           parameter<XFluidFluidTimeInt>(
               "XFLUIDFLUID_TIMEINT", {.description = "The xfluidfluid-timeintegration approach",
-                                         .default_value = Inpar::XFEM::Xff_TimeInt_FullProj}),
+                                         .default_value = XFEM::Xff_TimeInt_FullProj}),
 
           deprecated_selection<XFluidTimeIntScheme>("XFLUID_TIMEINT",
               {
                   {"STD=COPY_and_GHOST=COPY/GP",
-                      Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP},
+                      XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP},
                   {"STD=COPY/SL_and_GHOST=COPY/GP",
-                      Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP},
+                      XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP},
                   {"STD=SL(boundary-zone)_and_GHOST=GP",
-                      Inpar::XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP},
+                      XFEM::Xf_TimeIntScheme_STD_by_SL_cut_zone_AND_GHOST_by_GP},
                   {"STD=COPY/PROJ_and_GHOST=COPY/PROJ/GP",
-                      Inpar::XFEM::
-                          Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP},
+                      XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP},
               },
               {.description = "The xfluid time integration approach",
                   .default_value =
-                      Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP}),
+                      XFEM::Xf_TimeIntScheme_STD_by_Copy_or_SL_AND_GHOST_by_Copy_or_GP}),
 
           parameter<bool>(
               "ALE_XFluid", {.description = "XFluid is Ale Fluid?", .default_value = false}),
@@ -138,7 +137,7 @@ std::vector<Core::IO::InputSpec> Inpar::XFEM::valid_parameters()
           // step
           parameter<InterfaceTermsPreviousState>("INTERFACE_TERMS_PREVIOUS_STATE",
               {.description = "how to treat interface terms from previous time step (new OST)",
-                  .default_value = Inpar::XFEM::PreviousState_only_consistency}),
+                  .default_value = XFEM::PreviousState_only_consistency}),
 
           parameter<bool>("XFLUID_TIMEINT_CHECK_INTERFACETIPS",
               {.description = "Xfluid TimeIntegration Special Check if node has changed the side!",
@@ -157,28 +156,28 @@ std::vector<Core::IO::InputSpec> Inpar::XFEM::valid_parameters()
           parameter<CouplingMethod>("COUPLING_METHOD",
               {.description = "method how to enforce embedded boundary/coupling conditions at the "
                               "interface",
-                  .default_value = Inpar::XFEM::Nitsche}),
+                  .default_value = XFEM::Nitsche}),
 
           deprecated_selection<HybridLmL2Proj>("HYBRID_LM_L2_PROJ",
               {
-                  {"full_ele_proj", Inpar::XFEM::Hybrid_LM_L2_Proj_full},
-                  {"part_ele_proj", Inpar::XFEM::Hybrid_LM_L2_Proj_part},
+                  {"full_ele_proj", XFEM::Hybrid_LM_L2_Proj_full},
+                  {"part_ele_proj", XFEM::Hybrid_LM_L2_Proj_part},
               },
               {.description =
                       "perform the L2 projection between stress fields on whole element or on "
                       "fluid part?",
-                  .default_value = Inpar::XFEM::Hybrid_LM_L2_Proj_part}),
+                  .default_value = XFEM::Hybrid_LM_L2_Proj_part}),
 
           deprecated_selection<AdjointScaling>("VISC_ADJOINT_SYMMETRY",
               {
-                  {"yes", Inpar::XFEM::adj_sym},
-                  {"no", Inpar::XFEM::adj_skew},
-                  {"sym", Inpar::XFEM::adj_sym},
-                  {"skew", Inpar::XFEM::adj_skew},
-                  {"none", Inpar::XFEM::adj_none},
+                  {"yes", XFEM::adj_sym},
+                  {"no", XFEM::adj_skew},
+                  {"sym", XFEM::adj_sym},
+                  {"skew", XFEM::adj_skew},
+                  {"none", XFEM::adj_none},
               },
               {.description = "viscous and adjoint viscous interface terms with matching sign?",
-                  .default_value = Inpar::XFEM::adj_sym}),
+                  .default_value = XFEM::adj_sym}),
 
           // viscous and convective Nitsche/MSH stabilization parameter
           parameter<double>("NIT_STAB_FAC",
@@ -190,75 +189,74 @@ std::vector<Core::IO::InputSpec> Inpar::XFEM::valid_parameters()
 
           deprecated_selection<ViscStabTraceEstimate>("VISC_STAB_TRACE_ESTIMATE",
               {
-                  {"CT_div_by_hk", Inpar::XFEM::ViscStab_TraceEstimate_CT_div_by_hk},
-                  {"eigenvalue", Inpar::XFEM::ViscStab_TraceEstimate_eigenvalue},
+                  {"CT_div_by_hk", XFEM::ViscStab_TraceEstimate_CT_div_by_hk},
+                  {"eigenvalue", XFEM::ViscStab_TraceEstimate_eigenvalue},
               },
               {.description =
                       "how to estimate the scaling from the trace inequality in Nitsche's method",
-                  .default_value = Inpar::XFEM::ViscStab_TraceEstimate_CT_div_by_hk}),
+                  .default_value = XFEM::ViscStab_TraceEstimate_CT_div_by_hk}),
 
 
           deprecated_selection<TraceEstimateEigenvalueUpdate>("UPDATE_EIGENVALUE_TRACE_ESTIMATE",
               {
-                  {"every_iter", Inpar::XFEM::Eigenvalue_update_every_iter},
-                  {"every_timestep", Inpar::XFEM::Eigenvalue_update_every_timestep},
-                  {"once", Inpar::XFEM::Eigenvalue_update_once},
+                  {"every_iter", XFEM::Eigenvalue_update_every_iter},
+                  {"every_timestep", XFEM::Eigenvalue_update_every_timestep},
+                  {"once", XFEM::Eigenvalue_update_once},
               },
               {.description = "how often should the local eigenvalue problem be updated",
-                  .default_value = Inpar::XFEM::Eigenvalue_update_every_iter}),
+                  .default_value = XFEM::Eigenvalue_update_every_iter}),
 
           deprecated_selection<ViscStabHk>("VISC_STAB_HK",
               {
-                  {"vol_equivalent", Inpar::XFEM::ViscStab_hk_vol_equivalent},
-                  {"cut_vol_div_by_cut_surf", Inpar::XFEM::ViscStab_hk_cut_vol_div_by_cut_surf},
-                  {"ele_vol_div_by_cut_surf", Inpar::XFEM::ViscStab_hk_ele_vol_div_by_cut_surf},
-                  {"ele_vol_div_by_ele_surf", Inpar::XFEM::ViscStab_hk_ele_vol_div_by_ele_surf},
-                  {"ele_vol_div_by_max_ele_surf",
-                      Inpar::XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf},
+                  {"vol_equivalent", XFEM::ViscStab_hk_vol_equivalent},
+                  {"cut_vol_div_by_cut_surf", XFEM::ViscStab_hk_cut_vol_div_by_cut_surf},
+                  {"ele_vol_div_by_cut_surf", XFEM::ViscStab_hk_ele_vol_div_by_cut_surf},
+                  {"ele_vol_div_by_ele_surf", XFEM::ViscStab_hk_ele_vol_div_by_ele_surf},
+                  {"ele_vol_div_by_max_ele_surf", XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf},
               },
               {.description = "how to define the characteristic element length in cut elements",
-                  .default_value = Inpar::XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf}),
+                  .default_value = XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf}),
 
 
           deprecated_selection<ConvStabScaling>("CONV_STAB_SCALING",
               {
-                  {"inflow", Inpar::XFEM::ConvStabScaling_inflow},
-                  {"abs_inflow", Inpar::XFEM::ConvStabScaling_abs_inflow},
-                  {"none", Inpar::XFEM::ConvStabScaling_none},
+                  {"inflow", XFEM::ConvStabScaling_inflow},
+                  {"abs_inflow", XFEM::ConvStabScaling_abs_inflow},
+                  {"none", XFEM::ConvStabScaling_none},
               },
               {.description = "scaling factor for viscous interface stabilization (Nitsche, MSH)",
-                  .default_value = Inpar::XFEM::ConvStabScaling_none}),
+                  .default_value = XFEM::ConvStabScaling_none}),
 
           deprecated_selection<XffConvStabScaling>("XFF_CONV_STAB_SCALING",
               {
-                  {"inflow", Inpar::XFEM::XFF_ConvStabScaling_upwinding},
-                  {"averaged", Inpar::XFEM::XFF_ConvStabScaling_only_averaged},
-                  {"none", Inpar::XFEM::XFF_ConvStabScaling_none},
+                  {"inflow", XFEM::XFF_ConvStabScaling_upwinding},
+                  {"averaged", XFEM::XFF_ConvStabScaling_only_averaged},
+                  {"none", XFEM::XFF_ConvStabScaling_none},
               },
               {.description = "scaling factor for convective interface stabilization of "
                               "fluid-fluid Coupling",
-                  .default_value = Inpar::XFEM::XFF_ConvStabScaling_none}),
+                  .default_value = XFEM::XFF_ConvStabScaling_none}),
 
           deprecated_selection<MassConservationCombination>("MASS_CONSERVATION_COMBO",
               {
-                  {"max", Inpar::XFEM::MassConservationCombination_max},
-                  {"sum", Inpar::XFEM::MassConservationCombination_sum},
+                  {"max", XFEM::MassConservationCombination_max},
+                  {"sum", XFEM::MassConservationCombination_sum},
               },
               {.description =
                       "choose the maximum from viscous and convective contributions or just "
                       "sum both up",
-                  .default_value = Inpar::XFEM::MassConservationCombination_max}),
+                  .default_value = XFEM::MassConservationCombination_max}),
 
 
           deprecated_selection<MassConservationScaling>("MASS_CONSERVATION_SCALING",
               {
-                  {"full", Inpar::XFEM::MassConservationScaling_full},
-                  {"only_visc", Inpar::XFEM::MassConservationScaling_only_visc},
+                  {"full", XFEM::MassConservationScaling_full},
+                  {"only_visc", XFEM::MassConservationScaling_only_visc},
               },
               {.description =
                       "apply additional scaling of penalty term to enforce mass conservation "
                       "for convection-dominated flow",
-                  .default_value = Inpar::XFEM::MassConservationScaling_only_visc}),
+                  .default_value = XFEM::MassConservationScaling_only_visc}),
 
           parameter<bool>("GHOST_PENALTY_STAB",
               {.description = "switch on/off ghost penalty interface stabilization",
@@ -379,7 +377,7 @@ std::vector<Core::IO::InputSpec> Inpar::XFEM::valid_parameters()
 }
 
 
-void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist)
+void XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist)
 {
   using namespace Core::IO;
   using namespace Core::IO::InputSpecBuilders;
@@ -503,10 +501,10 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
   xfem_levelset_navier_slip.add_component(levelsetfield_components);
 
   xfem_levelset_navier_slip.add_component(deprecated_selection<ProjToSurface>("SURFACE_PROJECTION",
-      {{"proj_normal", Inpar::XFEM::Proj_normal}, {"proj_smoothed", Inpar::XFEM::Proj_smoothed},
-          {"proj_normal_smoothed_comb", Inpar::XFEM::Proj_normal_smoothed_comb},
-          {"proj_normal_phi", Inpar::XFEM::Proj_normal_phi}},
-      {.description = "", .default_value = Inpar::XFEM::Proj_normal}));
+      {{"proj_normal", XFEM::Proj_normal}, {"proj_smoothed", XFEM::Proj_smoothed},
+          {"proj_normal_smoothed_comb", XFEM::Proj_normal_smoothed_comb},
+          {"proj_normal_phi", XFEM::Proj_normal_phi}},
+      {.description = "", .default_value = XFEM::Proj_normal}));
   xfem_levelset_navier_slip.add_component(
       parameter<int>("L2_PROJECTION_SOLVER", {.description = ""}));
   xfem_levelset_navier_slip.add_component(
@@ -569,8 +567,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
 
   xfem_surf_fluidfluid.add_component(parameter<int>("COUPLINGID"));
   xfem_surf_fluidfluid.add_component(deprecated_selection<AveragingStrategy>("COUPSTRATEGY",
-      {{"xfluid", Inpar::XFEM::Xfluid_Sided}, {"embedded", Inpar::XFEM::Embedded_Sided},
-          {"mean", Inpar::XFEM::Mean}},
+      {{"xfluid", XFEM::Xfluid_Sided}, {"embedded", XFEM::Embedded_Sided}, {"mean", XFEM::Mean}},
       {.description = "coupling strategy"}));
 
   condlist.push_back(xfem_surf_fluidfluid);
@@ -586,9 +583,9 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
 
   // COUPSTRATEGY IS FLUID SIDED
   xfem_surf_fsi_part.add_component(deprecated_selection<InterfaceLaw>("INTLAW",
-      {{"noslip", Inpar::XFEM::noslip}, {"noslip_splitpen", Inpar::XFEM::noslip_splitpen},
-          {"slip", Inpar::XFEM::slip}, {"navslip", Inpar::XFEM::navierslip}},
-      {.description = "", .default_value = Inpar::XFEM::noslip}));
+      {{"noslip", XFEM::noslip}, {"noslip_splitpen", XFEM::noslip_splitpen}, {"slip", XFEM::slip},
+          {"navslip", XFEM::navierslip}},
+      {.description = "", .default_value = XFEM::noslip}));
   xfem_surf_fsi_part.add_component(
       parameter<double>("SLIPCOEFFICIENT", {.description = "", .default_value = 0.0}));
   xfem_surf_fsi_part.add_component(
@@ -605,14 +602,13 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
 
   xfem_surf_fsi_mono.add_component(parameter<int>("COUPLINGID"));
   xfem_surf_fsi_mono.add_component(deprecated_selection<AveragingStrategy>("COUPSTRATEGY",
-      {{"xfluid", Inpar::XFEM::Xfluid_Sided}, {"solid", Inpar::XFEM::Embedded_Sided},
-          {"mean", Inpar::XFEM::Mean}, {"harmonic", Inpar::XFEM::Harmonic}},
-      {.description = "", .default_value = Inpar::XFEM::Xfluid_Sided}));
+      {{"xfluid", XFEM::Xfluid_Sided}, {"solid", XFEM::Embedded_Sided}, {"mean", XFEM::Mean},
+          {"harmonic", XFEM::Harmonic}},
+      {.description = "", .default_value = XFEM::Xfluid_Sided}));
   xfem_surf_fsi_mono.add_component(deprecated_selection<InterfaceLaw>("INTLAW",
-      {{"noslip", Inpar::XFEM::noslip}, {"noslip_splitpen", Inpar::XFEM::noslip_splitpen},
-          {"slip", Inpar::XFEM::slip}, {"navslip", Inpar::XFEM::navierslip},
-          {"navslip_contact", Inpar::XFEM::navierslip_contact}},
-      {.description = "", .default_value = Inpar::XFEM::noslip}));
+      {{"noslip", XFEM::noslip}, {"noslip_splitpen", XFEM::noslip_splitpen}, {"slip", XFEM::slip},
+          {"navslip", XFEM::navierslip}, {"navslip_contact", XFEM::navierslip_contact}},
+      {.description = "", .default_value = XFEM::noslip}));
   xfem_surf_fsi_mono.add_component(
       parameter<double>("SLIPCOEFFICIENT", {.description = "", .default_value = 0.0}));
   xfem_surf_fsi_mono.add_component(

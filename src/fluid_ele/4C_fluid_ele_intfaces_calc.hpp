@@ -12,10 +12,10 @@
 #include "4C_config.hpp"
 
 #include "4C_fem_general_element.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_material_base.hpp"
 #include "4C_utils_singleton_owner.hpp"
+#include "4C_xfem_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -61,8 +61,8 @@ namespace Discret
           std::shared_ptr<Core::Mat::Material>& material,  ///< material associated with the faces
           std::vector<int>& nds_master,                    ///< nodal dofset w.r.t. master element
           std::vector<int>& nds_slave,                     ///< nodal dofset w.r.t. slave element
-          const Inpar::XFEM::FaceType& face_type,  ///< which type of face std, ghost, ghost-penalty
-          Teuchos::ParameterList& params,          ///< parameter list
+          const XFEM::FaceType& face_type,  ///< which type of face std, ghost, ghost-penalty
+          Teuchos::ParameterList& params,   ///< parameter list
           Core::FE::DiscretizationFaces& discretization,              ///< faces discretization
           std::shared_ptr<Core::LinAlg::SparseMatrix> systemmatrix,   ///< systemmatrix
           std::shared_ptr<Core::LinAlg::Vector<double>> systemvector  ///< systemvector
@@ -129,8 +129,8 @@ namespace Discret
           std::shared_ptr<Core::Mat::Material>& material,  ///< material associated with the faces
           std::vector<int>& nds_master,                    ///< nodal dofset w.r.t. master element
           std::vector<int>& nds_slave,                     ///< nodal dofset w.r.t. slave element
-          const Inpar::XFEM::FaceType& face_type,  ///< which type of face std, ghost, ghost-penalty
-          Teuchos::ParameterList& params,          ///< parameter list
+          const XFEM::FaceType& face_type,  ///< which type of face std, ghost, ghost-penalty
+          Teuchos::ParameterList& params,   ///< parameter list
           Core::FE::DiscretizationFaces& discretization,              ///< faces discretization
           std::shared_ptr<Core::LinAlg::SparseMatrix> systemmatrix,   ///< systemmatrix
           std::shared_ptr<Core::LinAlg::Vector<double>> systemvector  ///< systemvector

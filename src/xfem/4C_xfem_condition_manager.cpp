@@ -852,7 +852,7 @@ bool XFEM::ConditionManager::has_moving_interface()
   return false;
 }
 
-bool XFEM::ConditionManager::has_averaging_strategy(Inpar::XFEM::AveragingStrategy strategy)
+bool XFEM::ConditionManager::has_averaging_strategy(XFEM::AveragingStrategy strategy)
 {
   if (has_level_set_coupling())
   {

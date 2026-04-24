@@ -100,8 +100,8 @@ void Discret::Elements::FluidIntFaceImpl<distype>::assemble_internal_faces_using
     std::shared_ptr<Core::Mat::Material>& material,  ///< material for face stabilization
     std::vector<int>& nds_master,                    ///< nodal dofset w.r.t. master element
     std::vector<int>& nds_slave,                     ///< nodal dofset w.r.t. slave element
-    const Inpar::XFEM::FaceType& face_type,  ///< which type of face std, ghost, ghost-penalty
-    Teuchos::ParameterList& params,          ///< parameter list
+    const XFEM::FaceType& face_type,  ///< which type of face std, ghost, ghost-penalty
+    Teuchos::ParameterList& params,   ///< parameter list
     Core::FE::DiscretizationFaces& discretization,              ///< faces discretization
     std::shared_ptr<Core::LinAlg::SparseMatrix> systemmatrix,   ///< systemmatrix
     std::shared_ptr<Core::LinAlg::Vector<double>> systemvector  ///< systemvector

@@ -13,8 +13,8 @@
 
 #include "4C_fsi_input.hpp"
 #include "4C_fsi_xfem_algorithm.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_mapextractor.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <limits>
 

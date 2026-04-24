@@ -30,7 +30,7 @@
 #include "4C_cut_input.hpp"
 #include "4C_fluid_implicit_integration.hpp"
 #include "4C_fluid_xfluid_state.hpp"
-#include "4C_inpar_xfem.hpp"
+#include "4C_xfem_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -501,8 +501,8 @@ namespace FLD
 
     void x_timint_corrective_transfer_vectors_between_steps(
         const std::shared_ptr<XFEM::XFluidTimeInt>&
-            xfluid_timeint,  ///< xfluid time integration class
-        const Inpar::XFEM::XFluidTimeIntScheme xfluid_timintapproach,  /// xfluid_timintapproch
+            xfluid_timeint,                                     ///< xfluid time integration class
+        const XFEM::XFluidTimeIntScheme xfluid_timintapproach,  /// xfluid_timintapproach
         std::vector<std::shared_ptr<const Core::LinAlg::Vector<double>>>&
             oldRowStateVectors,  ///< row map based vectors w.r.t old interface position
         std::vector<std::shared_ptr<Core::LinAlg::Vector<double>>>&
@@ -557,7 +557,7 @@ namespace FLD
         std::shared_ptr<Core::LinAlg::Vector<double>>
             dispnp,                             ///< displacement col - vector timestep n+1
         const Core::LinAlg::Map* olddofcolmap,  ///< dofcolmap at time and interface position t^n
-        std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>&
+        std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>&
             node_to_reconstr_method,  ///< reconstruction map for nodes and its dofsets
         const bool screen_out         ///< screen output?
     );
@@ -651,7 +651,7 @@ namespace FLD
     void gen_alpha_update_acceleration() override;
 
     /// return type of enforcing interface conditions
-    Inpar::XFEM::CouplingMethod coupling_method() const { return coupling_method_; }
+    XFEM::CouplingMethod coupling_method() const { return coupling_method_; }
 
     //@}
 
@@ -694,10 +694,10 @@ namespace FLD
     //---------------------------------input parameters------------------
 
     /// type of enforcing interface conditions in XFEM
-    Inpar::XFEM::CouplingMethod coupling_method_;
+    XFEM::CouplingMethod coupling_method_;
 
     //! @name xfluid time integration
-    Inpar::XFEM::XFluidTimeIntScheme xfluid_timintapproach_;
+    XFEM::XFluidTimeIntScheme xfluid_timintapproach_;
 
     //! @name check interfacetips in timeintegration
     bool xfluid_timint_check_interfacetips_;

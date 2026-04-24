@@ -39,7 +39,7 @@ FSI::FluidFluidMonolithicStructureSplit::FluidFluidMonolithicStructureSplit(
 
   // XFFSI_Full_Newton is an invalid choice together with NOX,
   // because DOF-maps can change from one iteration step to the other (XFEM cut)
-  if (fluid_field()->monolithic_xffsi_approach() == Inpar::XFEM::XFFSI_Full_Newton)
+  if (fluid_field()->monolithic_xffsi_approach() == XFEM::XFFSI_Full_Newton)
     FOUR_C_THROW("NOX-based XFFSI Approach does not work with XFFSI_Full_Newton!");
 }
 

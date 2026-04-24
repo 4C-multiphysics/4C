@@ -99,8 +99,8 @@ void FLD::XFluidFluid::create_initial_state()
   // discretization may have changed)
   if (Teuchos::getIntegralValue<Inpar::FLUID::CalcError>(*params_, "calculate error") !=
           Inpar::FLUID::no ||
-      mc_xff_->get_averaging_strategy() == Inpar::XFEM::Embedded_Sided ||
-      mc_xff_->get_averaging_strategy() == Inpar::XFEM::Mean)
+      mc_xff_->get_averaging_strategy() == XFEM::Embedded_Sided ||
+      mc_xff_->get_averaging_strategy() == XFEM::Mean)
   {
     embedded_fluid_->create_faces_extension();
   }
@@ -157,14 +157,13 @@ void FLD::XFluidFluid::set_x_fluid_fluid_params()
   xff_eos_pres_emb_layer_ = params_xf_stab.get<bool>("XFF_EOS_PRES_EMB_LAYER");
 
   // whether an eigenvalue problem has to be solved to estimate Nitsche's parameter
-  nitsche_evp_ =
-      (Teuchos::getIntegralValue<Inpar::XFEM::ViscStabTraceEstimate>(params_xf_stab,
-           "VISC_STAB_TRACE_ESTIMATE") == Inpar::XFEM::ViscStab_TraceEstimate_eigenvalue);
+  nitsche_evp_ = (Teuchos::getIntegralValue<XFEM::ViscStabTraceEstimate>(params_xf_stab,
+                      "VISC_STAB_TRACE_ESTIMATE") == XFEM::ViscStab_TraceEstimate_eigenvalue);
 
   // get general XFEM/XFFSI specific parameters
-  monolithic_approach_ = Teuchos::getIntegralValue<Inpar::XFEM::MonolithicXffsiApproach>(
+  monolithic_approach_ = Teuchos::getIntegralValue<XFEM::MonolithicXffsiApproach>(
       params_->sublist("XFLUID DYNAMIC/GENERAL"), "MONOLITHIC_XFFSI_APPROACH");
-  xfem_timeintapproach_ = Teuchos::getIntegralValue<Inpar::XFEM::XFluidFluidTimeInt>(
+  xfem_timeintapproach_ = Teuchos::getIntegralValue<XFEM::XFluidFluidTimeInt>(
       params_->sublist("XFLUID DYNAMIC/GENERAL"), "XFLUIDFLUID_TIMEINT");
 
   // get information about active shape derivatives
@@ -238,7 +237,7 @@ void FLD::XFluidFluid::evaluate(std::shared_ptr<const Core::LinAlg::Vector<doubl
         xff_state_->xffluidsplitter_->extract_fluid_vector(*xff_state_->xffluidincvel_));
   }
 
-  if (mc_xff_->get_averaging_strategy() == Inpar::XFEM::Embedded_Sided and nitsche_evp_)
+  if (mc_xff_->get_averaging_strategy() == XFEM::Embedded_Sided and nitsche_evp_)
   {
     mc_xff_->reset_evaluated_trace_estimates();
     if (ale_embfluid_)
@@ -366,7 +365,7 @@ void FLD::XFluidFluid::assemble_mat_and_rhs(int itnum  ///< iteration number
   // evaluate elements of embedded fluid
   embedded_fluid_->prepare_solve();
 
-  if (mc_xff_->get_averaging_strategy() == Inpar::XFEM::Embedded_Sided)
+  if (mc_xff_->get_averaging_strategy() == XFEM::Embedded_Sided)
   {
     mc_xff_->get_coupling_dis()->clear_state();
     // set velocity and displacement state for embedded fluid
@@ -567,7 +566,7 @@ bool FLD::XFluidFluid::x_timint_project_from_embedded_discretization(
 
   // get set of node-ids, that demand projection from embedded discretization
   std::map<int, std::set<int>>& projection_nodeToDof =
-      xfluid_timeint->get_node_to_dof_map_for_reconstr(Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS);
+      xfluid_timeint->get_node_to_dof_map_for_reconstr(XFEM::Xf_TimeInt_by_PROJ_from_DIS);
 
   std::shared_ptr<const Core::LinAlg::Vector<double>> disp =
       Core::Rebalance::get_col_version_of_row_vector(

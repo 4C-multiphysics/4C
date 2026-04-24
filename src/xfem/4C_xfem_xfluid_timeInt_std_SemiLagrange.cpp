@@ -12,9 +12,9 @@
 #include "4C_cut_elementhandle.hpp"
 #include "4C_cut_integrationcell.hpp"
 #include "4C_cut_volumecell.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_xfem_dofset.hpp"
+#include "4C_xfem_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -26,9 +26,9 @@ FOUR_C_NAMESPACE_OPEN
  *------------------------------------------------------------------------------------------------*/
 XFEM::XfluidSemiLagrange::XfluidSemiLagrange(
     XFEM::XfluidTimeintBase& timeInt,  /// time integration base class object
-    const std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>&
-        reconstr_method,                      /// reconstruction map for nodes and its dofsets
-    Inpar::XFEM::XFluidTimeInt& timeIntType,  /// type of time integration
+    const std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>&
+        reconstr_method,                     /// reconstruction map for nodes and its dofsets
+    XFEM::XFluidTimeIntMethod& timeIntType,  /// type of time integration
     const std::shared_ptr<Core::LinAlg::Vector<double>> veln,  /// velocity at time t^n in col map
     const double& dt,                                          /// time step size
     const double& theta,                                       /// OST theta

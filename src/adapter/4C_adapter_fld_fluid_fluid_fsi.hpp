@@ -11,10 +11,10 @@
 #include "4C_config.hpp"
 
 #include "4C_adapter_fld_fluid_fsi.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <memory>
 
@@ -141,10 +141,7 @@ namespace Adapter
     bool is_ale_relaxation_step(int step) const;
 
     /// get type of monolithic XFFSI approach
-    Inpar::XFEM::MonolithicXffsiApproach monolithic_xffsi_approach() const
-    {
-      return monolithic_approach_;
-    }
+    XFEM::MonolithicXffsiApproach monolithic_xffsi_approach() const { return monolithic_approach_; }
 
     std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> shape_derivatives() override;
 
@@ -167,7 +164,7 @@ namespace Adapter
 
     /// type of monolithic XFluid-Fluid approach (decides whether ALE-mesh is fixed during
     /// Newton iteration)
-    Inpar::XFEM::MonolithicXffsiApproach monolithic_approach_;
+    XFEM::MonolithicXffsiApproach monolithic_approach_;
 
     /// flag, that indicates, whether ALE-relaxation is activated
     bool relaxing_ale_;

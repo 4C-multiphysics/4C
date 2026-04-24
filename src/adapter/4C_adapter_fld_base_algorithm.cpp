@@ -299,8 +299,8 @@ void Adapter::FluidBaseAlgorithm::setup_fluid(const Teuchos::ParameterList& prbd
     fluidtimeparams->sublist("XFLUID DYNAMIC/XFPSI MONOLITHIC") = xfdyn.sublist("XFPSI MONOLITHIC");
 
     fluidtimeparams->sublist("XFLUID DYNAMIC/GENERAL")
-        .set<Inpar::XFEM::MonolithicXffsiApproach>("MONOLITHIC_XFFSI_APPROACH",
-            xfdyn.sublist("GENERAL").get<Inpar::XFEM::MonolithicXffsiApproach>(
+        .set<XFEM::MonolithicXffsiApproach>("MONOLITHIC_XFFSI_APPROACH",
+            xfdyn.sublist("GENERAL").get<XFEM::MonolithicXffsiApproach>(
                 "MONOLITHIC_XFFSI_APPROACH"));
     fluidtimeparams->sublist("XFLUID DYNAMIC/GENERAL")
         .set<double>("XFLUIDFLUID_SEARCHRADIUS",

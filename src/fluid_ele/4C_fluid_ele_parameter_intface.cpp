@@ -237,8 +237,8 @@ void Discret::Elements::FluidEleParameterIntFace::set_face_general_xfem_paramete
 //                                                         schott Jun14 |
 //---------------------------------------------------------------------*/
 bool Discret::Elements::FluidEleParameterIntFace::set_face_specific_fluid_xfem_parameter(
-    const Inpar::XFEM::FaceType& face_type,  ///< which type of face std, ghost, ghost-penalty
-    Teuchos::ParameterList& params           ///< parameter list
+    const XFEM::FaceType& face_type,  ///< which type of face std, ghost, ghost-penalty
+    Teuchos::ParameterList& params    ///< parameter list
 )
 {
   TEUCHOS_FUNC_TIME_MONITOR("XFEM::Edgestab EOS: set_face_specific_fluid_xfem_parameter");
@@ -249,7 +249,7 @@ bool Discret::Elements::FluidEleParameterIntFace::set_face_specific_fluid_xfem_p
   // remark: flags for ghost penalty have to be set
   if (is_ghost_penalty_reconstruction())
   {
-    if (face_type != Inpar::XFEM::face_type_ghost_penalty)
+    if (face_type != XFEM::face_type_ghost_penalty)
       return false;  // do not assembly (stabilizing just the ghost-penalty faces is sufficient)
 
     // otherwise continue and set the required flags for the face
@@ -262,7 +262,7 @@ bool Discret::Elements::FluidEleParameterIntFace::set_face_specific_fluid_xfem_p
   // set the values into the fldpara_intface_-list
 
   EOS_whichtau_actual_ = EOS_whichtau_;
-  if (face_type == Inpar::XFEM::face_type_std)
+  if (face_type == XFEM::face_type_std)
   {
     set_face_eos_pres((eos_pres() == Inpar::FLUID::EOS_PRES_std_eos));
     set_face_eos_conv_stream((eos_conv_stream() == Inpar::FLUID::EOS_CONV_STREAM_std_eos));
@@ -274,7 +274,7 @@ bool Discret::Elements::FluidEleParameterIntFace::set_face_specific_fluid_xfem_p
     set_face_gp_trans(false);
     set_face_gp_u_p_2nd(false);
   }
-  else if (face_type == Inpar::XFEM::face_type_ghost_penalty)
+  else if (face_type == XFEM::face_type_ghost_penalty)
   {
     set_face_eos_pres((eos_pres() != Inpar::FLUID::EOS_PRES_none));
     set_face_eos_conv_stream((eos_conv_stream() != Inpar::FLUID::EOS_CONV_STREAM_none));
@@ -288,7 +288,7 @@ bool Discret::Elements::FluidEleParameterIntFace::set_face_specific_fluid_xfem_p
     set_face_gp_trans(is_general_ghost_penalty_trans());
     set_face_gp_u_p_2nd(is_general_ghost_penalty_u_p_2nd());
   }
-  else if (face_type == Inpar::XFEM::face_type_boundary_ghost_penalty)
+  else if (face_type == XFEM::face_type_boundary_ghost_penalty)
   {
     // TODO: this can be improved if only pressure is assembled later on
 
@@ -302,7 +302,7 @@ bool Discret::Elements::FluidEleParameterIntFace::set_face_specific_fluid_xfem_p
     set_face_gp_trans(false);
     set_face_gp_u_p_2nd(false);
   }
-  else if (face_type == Inpar::XFEM::face_type_ghost)
+  else if (face_type == XFEM::face_type_ghost)
   {
     set_face_eos_pres(false);
     set_face_eos_conv_stream(false);
@@ -313,7 +313,7 @@ bool Discret::Elements::FluidEleParameterIntFace::set_face_specific_fluid_xfem_p
     set_face_gp_trans(false);
     set_face_gp_u_p_2nd(false);
   }
-  else if (face_type == Inpar::XFEM::face_type_porof)
+  else if (face_type == XFEM::face_type_porof)
   {
     EOS_whichtau_actual_ = Inpar::FLUID::EOS_tau_poroelast_fluid;
     set_face_eos_pres(true);

@@ -206,21 +206,20 @@ namespace XFEM
         double stabadj = 0.0;
         XFEM::Utils::get_navier_slip_stabilization_parameters(
             visc_stab_tang, dynvisc, sliplength, stabnit, stabadj);
-        configuration_map_[Inpar::XFEM::F_Pen_t_Row].second = stabnit;
-        configuration_map_[Inpar::XFEM::F_Con_t_Row] =
+        configuration_map_[XFEM::F_Pen_t_Row].second = stabnit;
+        configuration_map_[XFEM::F_Con_t_Row] =
             std::pair<bool, double>(true, -stabnit);  //+sign for penalty!
-        configuration_map_[Inpar::XFEM::F_Con_t_Col] =
-            std::pair<bool, double>(true, sliplength / dynvisc);
-        configuration_map_[Inpar::XFEM::F_Adj_t_Row].second = stabadj;
-        configuration_map_[Inpar::XFEM::FStr_Adj_t_Col] = std::pair<bool, double>(true, sliplength);
+        configuration_map_[XFEM::F_Con_t_Col] = std::pair<bool, double>(true, sliplength / dynvisc);
+        configuration_map_[XFEM::F_Adj_t_Row].second = stabadj;
+        configuration_map_[XFEM::FStr_Adj_t_Col] = std::pair<bool, double>(true, sliplength);
       }
       else
       {
-        configuration_map_[Inpar::XFEM::F_Pen_t_Row].second = full_stab;
-        configuration_map_[Inpar::XFEM::F_Con_t_Row] = std::pair<bool, double>(false, 0.0);
-        configuration_map_[Inpar::XFEM::F_Con_t_Col] = std::pair<bool, double>(false, 0.0);
-        configuration_map_[Inpar::XFEM::F_Adj_t_Row].second = 1.0;
-        configuration_map_[Inpar::XFEM::FStr_Adj_t_Col] = std::pair<bool, double>(false, 0.0);
+        configuration_map_[XFEM::F_Pen_t_Row].second = full_stab;
+        configuration_map_[XFEM::F_Con_t_Row] = std::pair<bool, double>(false, 0.0);
+        configuration_map_[XFEM::F_Con_t_Col] = std::pair<bool, double>(false, 0.0);
+        configuration_map_[XFEM::F_Adj_t_Row].second = 1.0;
+        configuration_map_[XFEM::FStr_Adj_t_Col] = std::pair<bool, double>(false, 0.0);
       }
     };
 

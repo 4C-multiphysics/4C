@@ -13,10 +13,10 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fem_general_node.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_xfem_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -636,9 +636,9 @@ namespace XFEM
 
     //! constructor
     explicit XfluidStd(XFEM::XfluidTimeintBase& timeInt,  ///< time integration base class object
-        const std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>&
-            reconstr_method,                      ///< reconstruction map for nodes and its dofsets
-        Inpar::XFEM::XFluidTimeInt& timeIntType,  ///< type of time integration
+        const std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>&
+            reconstr_method,                     ///< reconstruction map for nodes and its dofsets
+        XFEM::XFluidTimeIntMethod& timeIntType,  ///< type of time integration
         const std::shared_ptr<Core::LinAlg::Vector<double>> veln,  ///< velocity at time t^n
         const double& dt,                                          ///< time step size
         const bool initialize                                      ///< is initialization?
@@ -942,7 +942,7 @@ namespace XFEM
     //! time-integration variables
     /*========================================================================*/
 
-    Inpar::XFEM::XFluidTimeInt
+    XFEM::XFluidTimeIntMethod
         timeIntType_;  //! which computation/reconstruction algorithm for standard dofs
 
     std::shared_ptr<Core::LinAlg::Vector<double>>
