@@ -51,6 +51,12 @@ METADATA_TO_SCHEMA_PRIMITIVE = {
 MISSING_DESCRIPTION = "No description yet."
 
 
+def completion_schema_stem(schema_stem: str) -> str:
+    if schema_stem.endswith("_schema"):
+        return schema_stem[: -len("_schema")] + "_completion_schema"
+    return schema_stem + "_completion"
+
+
 def set_description(description: NotSetAlias[str] | None) -> str:
     if check_if_set(description):
         return description
@@ -300,6 +306,109 @@ def validator_to_schema(
             return None
 
 
+def create_function_section_default_snippet(
+    function_section_name: str, function_id_label: str
+) -> Schema:
+    return Schema(
+        schema_type=Types.object(
+            applicators=[
+                Applicators.defaultSnippets(
+                    [
+                        {
+                            "label": function_section_name,
+                            "description": "Insert a new FUNCT definition.",
+                            "body": {
+                                function_section_name.replace(
+                                    function_id_label,
+                                    f"${{1:{function_id_label}}}",
+                                ): ["${2:}"]
+                            },
+                        }
+                    ]
+                )
+            ]
+        ),
+    )
+
+
+def create_completion_schema(
+    top_level_property_names: list[str],
+    json_schema_path: pathlib.Path,
+    function_regex: str,
+    function_section_name: str,
+    function_id_label: str,
+) -> Schema:
+    """Wraps the full schema specified by json_schema_path in a completion-oriented schema that exposes all top-level keys via propertyNames and provides a default snippet for function sections.
+
+    Args:
+        top_level_property_names: list of all top-level property names
+        json_schema_path (pathlib.Path): Path to the full JSON schema to reference in the completion schema.
+        function_regex (str): Regex pattern to validate function sections (e.g., "^FUNCT[1-9][0-9]*$").
+        function_section_name (str): label of the function section
+        function_id_label (str): label for the function id in the snippet (e.g., "<n>" for "FUNCT<n>")
+
+    Returns:
+        Schema: Returns a JSON schema object that can be used for completion-oriented validation of 4C input files.
+    """
+    allowed_property_names = Schema(
+        schema_type=Types.string(
+            applicators=[
+                Applicators.anyOf(
+                    [
+                        Schema(
+                            schema_type=Types.string(
+                                validators=[
+                                    Validators.enum(sorted(top_level_property_names))
+                                ]
+                            )
+                        ),
+                        Schema(
+                            schema_type=Types.string(
+                                validators=[Validators.pattern(function_regex)]
+                            )
+                        ),
+                    ]
+                )
+            ]
+        )
+    )
+    completion_schema = Schema(
+        description=(
+            "Completion-oriented wrapper schema for 4C input files. "
+            "Uses propertyNames to surface all top-level keys and delegates "
+            "validation to the generated full schema."
+        ),
+        schema_type=Types.object(
+            applicators=[
+                Applicators.allOf(
+                    [
+                        Schema(
+                            schema_type=Types.object(
+                                applicators=[
+                                    Applicators.propertyNames(allowed_property_names)
+                                ]
+                            )
+                        ),
+                        create_function_section_default_snippet(
+                            function_section_name, function_id_label
+                        ),
+                        Schema(
+                            schema_type=Types.object(
+                                core=[Core.ref(f"./{json_schema_path.name}")]
+                            )
+                        ),
+                    ]
+                ),
+            ]
+        ),
+    )
+    completion_schema.schema_type.core.append(
+        Core.schema("https://json-schema.org/draft/2020-12/schema")
+    )
+
+    return completion_schema
+
+
 def main(fourc_metadata_yaml_path: str, json_schema_path: str):
     json_schema_path = pathlib.Path(json_schema_path)
 
@@ -369,9 +478,12 @@ def main(fourc_metadata_yaml_path: str, json_schema_path: str):
     )
 
     # Move functions to pattern properties
-    function_schema = properties.schemas.pop("FUNCT<n>")
+    function_regex = "^FUNCT[1-9][0-9]*$"
+    function_id_label = "<n>"
+    function_section_name = "FUNCT" + function_id_label
+    function_schema = properties.schemas.pop(function_section_name)
     schema.schema_type.applicators.append(
-        Applicators.patternProperties({"^FUNCT[1-9][0-9]*$": function_schema})
+        Applicators.patternProperties({function_regex: function_schema})
     )
 
     # Dump schema as JSON
@@ -384,6 +496,21 @@ def main(fourc_metadata_yaml_path: str, json_schema_path: str):
         json_schema_path.stem + "_partial"
     )
     json_schema_partial_path.write_text(json.dumps(schema_dict, indent=2))
+
+    completion_schema = create_completion_schema(
+        top_level_property_names=list(properties.schemas.keys()),
+        json_schema_path=json_schema_path,
+        function_regex=function_regex,
+        function_section_name=function_section_name,
+        function_id_label=function_id_label,
+    )
+
+    json_completion_schema_path = json_schema_path.with_stem(
+        completion_schema_stem(json_schema_path.stem)
+    )
+    json_completion_schema_path.write_text(
+        json.dumps(completion_schema.to_dict(), indent=2)
+    )
 
 
 def cli():
