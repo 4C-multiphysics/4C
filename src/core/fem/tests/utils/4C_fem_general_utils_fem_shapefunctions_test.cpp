@@ -35,4 +35,62 @@ namespace
     for (std::size_t i = 0; i < ddN_ref.size(); ++i) EXPECT_NEAR(ddN(i), ddN_ref[i], 1e-10);
   }
 
+  TEST(ElementShapeFunctionsTest, TestDualHermiteLine2)
+  {
+    const double r = 0.123456789;
+    const double L = 1.0;
+
+    Core::LinAlg::Matrix<4, 1> Phi(Core::LinAlg::Initialization::zero);
+    Core::FE::shape_function_dual_hermite_1d(Phi, r, L, Core::FE::CellType::line2);
+
+    std::vector<double> Phi_ref = {
+        -0.24634578918994066, -0.05276684284142519, -1.1393423701836305, -14.366895799082851};
+
+    for (std::size_t i = 0; i < Phi_ref.size(); ++i) EXPECT_NEAR(Phi(i), Phi_ref[i], 1e-10);
+
+    Core::LinAlg::Matrix<1, 4> dPhi(Core::LinAlg::Initialization::zero);
+    Core::FE::shape_function_dual_hermite_1d_deriv1(dPhi, r, L, Core::FE::CellType::line2);
+
+    std::vector<double> dPhi_ref = {
+        4.275834475307499, -60.75445819868999, -2.423982640307499, -49.64334718868999};
+
+    for (std::size_t i = 0; i < dPhi_ref.size(); ++i) EXPECT_NEAR(dPhi(i), dPhi_ref[i], 1e-10);
+
+    Core::LinAlg::Matrix<1, 4> ddPhi(Core::LinAlg::Initialization::zero);
+    Core::FE::shape_function_dual_hermite_1d_deriv2(ddPhi, r, L, Core::FE::CellType::line2);
+
+    std::vector<double> ddPhi_ref = {1.0185185775, 32.77777707, 13.9814814225, 122.77777707};
+
+    for (std::size_t i = 0; i < ddPhi_ref.size(); ++i) EXPECT_NEAR(ddPhi(i), ddPhi_ref[i], 1e-10);
+  }
+
+  TEST(ElementShapeFunctionsTest, TestDualHermiteLine2Length03)
+  {
+    const double r = 0.123456789;
+    const double L = 0.3;
+
+    Core::LinAlg::Matrix<4, 1> Phi(Core::LinAlg::Initialization::zero);
+    Core::FE::shape_function_dual_hermite_1d(Phi, r, L, Core::FE::CellType::line2);
+
+    std::vector<double> Phi_ref = {
+        -0.24634578918994066, -0.17588947613808398, -1.1393423701836305, -47.8896526636095};
+
+    for (std::size_t i = 0; i < Phi_ref.size(); ++i) EXPECT_NEAR(Phi(i), Phi_ref[i], 1e-10);
+
+    Core::LinAlg::Matrix<1, 4> dPhi(Core::LinAlg::Initialization::zero);
+    Core::FE::shape_function_dual_hermite_1d_deriv1(dPhi, r, L, Core::FE::CellType::line2);
+
+    std::vector<double> dPhi_ref = {
+        4.275834475307499, -202.51486066229998, -2.423982640307499, -165.47782396229996};
+
+    for (std::size_t i = 0; i < dPhi_ref.size(); ++i) EXPECT_NEAR(dPhi(i), dPhi_ref[i], 1e-10);
+
+    Core::LinAlg::Matrix<1, 4> ddPhi(Core::LinAlg::Initialization::zero);
+    Core::FE::shape_function_dual_hermite_1d_deriv2(ddPhi, r, L, Core::FE::CellType::line2);
+
+    std::vector<double> ddPhi_ref = {1.0185185775, 109.2592569, 13.9814814225, 409.2592569};
+
+    for (std::size_t i = 0; i < ddPhi_ref.size(); ++i) EXPECT_NEAR(ddPhi(i), ddPhi_ref[i], 1e-10);
+  }
+
 }  // namespace
