@@ -16,9 +16,9 @@
 #include "4C_fem_general_utils_createdis.hpp"
 #include "4C_geometric_search_matchingoctree.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_scatra_s2i_input.hpp"
 #include "4C_scatra_timint_implicit.hpp"
 #include "4C_scatra_timint_meshtying_strategy_s2i.hpp"
 #include "4C_ssi_monolithic.hpp"
@@ -1304,8 +1304,8 @@ void SSI::Utils::SSIMeshTying::find_slave_slave_transformation_nodes(
   std::vector<int> original_slave_gids;
   for (auto* meshtying_condition : meshtying_conditions)
   {
-    if (meshtying_condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
-        Inpar::S2I::side_source)
+    if (meshtying_condition->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") ==
+        S2I::side_source)
     {
       Core::Communication::add_owned_node_gid_from_list(
           dis, *meshtying_condition->get_nodes(), original_slave_gids);

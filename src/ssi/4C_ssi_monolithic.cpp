@@ -713,7 +713,7 @@ void SSI::SsiMono::setup()
         "Must have incremental solution approach for monolithic scalar-structure interaction!");
 
   if (ssi_interface_meshtying() and
-      meshtying_strategy_s2i()->coupling_type() != Inpar::S2I::coupling_matching_nodes)
+      meshtying_strategy_s2i()->coupling_type() != S2I::coupling_matching_nodes)
   {
     FOUR_C_THROW(
         "Monolithic scalar-structure interaction only implemented for scatra-scatra "

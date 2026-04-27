@@ -11,8 +11,8 @@
 #include "4C_config.hpp"
 
 #include "4C_fem_condition.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_scatra_ele_parameter_base.hpp"
+#include "4C_scatra_s2i_input.hpp"
 
 #include <vector>
 
@@ -73,7 +73,7 @@ namespace Discret
       double peltier() const { return peltier_; }
       const std::vector<double>* permeabilities() const { return permeabilities_; }
       double regularization_parameter() const { return regularizationparameter_; }
-      Inpar::S2I::RegularizationType regularization_type() const { return regularizationtype_; }
+      S2I::RegularizationType regularization_type() const { return regularizationtype_; }
       double resistance() const { return resistance_; }
       double resistivity() const { return resistivity_; }
       const std::vector<int>* stoichiometries() const { return stoichiometries_; }
@@ -140,7 +140,7 @@ namespace Discret
       double regularizationparameter_;
 
       /// type of regularization for S2IKineticsGrowth condition
-      Inpar::S2I::RegularizationType regularizationtype_;
+      S2I::RegularizationType regularizationtype_;
 
       /// interface resistance associated with S2ICoupling condition
       double resistance_;

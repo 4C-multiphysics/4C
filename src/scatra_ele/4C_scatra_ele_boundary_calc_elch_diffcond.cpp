@@ -270,9 +270,9 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchDiffCond<distype, probdim>::eva
 {
   switch (my::scatraparamsboundary_->kinetic_model())
   {
-    case Inpar::S2I::kinetics_nointerfaceflux:
+    case S2I::kinetics_nointerfaceflux:
       break;
-    case Inpar::S2I::kinetics_constantinterfaceresistance:
+    case S2I::kinetics_constantinterfaceresistance:
     {
       myelectrode::evaluate_s2_i_coupling(
           ele, params, discretization, la, eslavematrix, emastermatrix, eslaveresidual);
@@ -299,9 +299,9 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchDiffCond<distype,
 {
   switch (my::scatraparamsboundary_->kinetic_model())
   {
-    case Inpar::S2I::kinetics_nointerfaceflux:
+    case S2I::kinetics_nointerfaceflux:
       break;
-    case Inpar::S2I::kinetics_constantinterfaceresistance:
+    case S2I::kinetics_constantinterfaceresistance:
     {
       myelectrode::evaluate_s2_i_coupling_od(ele, params, discretization, la, eslavematrix);
       break;

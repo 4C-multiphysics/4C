@@ -1203,7 +1203,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::
     switch (kineticmodel)
     {
       // constant permeability model
-      case Inpar::S2I::kinetics_constperm:
+      case S2I::kinetics_constperm:
       {
         if (permeabilities == nullptr)
           FOUR_C_THROW(
@@ -1448,7 +1448,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_s2_i_c
       switch (scatraparamsboundary_->kinetic_model())
       {
         // constant permeability model
-        case Inpar::S2I::kinetics_constperm:
+        case S2I::kinetics_constperm:
         {
           // dervivative of interface flux w.r.t. displacement
           switch (differentiationtype)

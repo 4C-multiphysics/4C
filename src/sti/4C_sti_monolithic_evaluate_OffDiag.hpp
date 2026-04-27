@@ -11,8 +11,8 @@
 #include "4C_config.hpp"
 
 #include "4C_adapter_scatra_base_algorithm.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_scatra_s2i_input.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -237,7 +237,7 @@ namespace STI
 
   //! build specific off diagonal coupling object
   std::shared_ptr<STI::ScatraThermoOffDiagCoupling> build_scatra_thermo_off_diag_coupling(
-      const Inpar::S2I::CouplingType& couplingtype,
+      const S2I::CouplingType& couplingtype,
       std::shared_ptr<const Core::LinAlg::MultiMapExtractor> block_map_thermo,
       std::shared_ptr<const Core::LinAlg::MultiMapExtractor> block_map_thermo_interface,
       std::shared_ptr<const Core::LinAlg::MultiMapExtractor> block_map_thermo_interface_slave,

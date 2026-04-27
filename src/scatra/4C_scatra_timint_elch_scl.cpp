@@ -601,12 +601,12 @@ void ScaTra::ScaTraTimIntElchSCL::setup_coupling()
       // is this node owned by this proc?
       if (!Core::Communication::is_node_gid_on_this_proc(*discret_, coupling_node_gid)) continue;
 
-      switch (coupling_condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE"))
+      switch (coupling_condition->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE"))
       {
-        case Inpar::S2I::side_source:
+        case S2I::side_source:
           my_macro_slave_node_gids.emplace_back(coupling_node_gid);
           break;
-        case Inpar::S2I::side_master:
+        case S2I::side_master:
           my_macro_master_node_gids.emplace_back(coupling_node_gid);
           break;
         default:

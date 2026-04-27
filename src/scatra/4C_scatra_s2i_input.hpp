@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_INPAR_S2I_HPP
-#define FOUR_C_INPAR_S2I_HPP
+#ifndef FOUR_C_SCATRA_S2I_INPUT_HPP
+#define FOUR_C_SCATRA_S2I_INPUT_HPP
 
 #include "4C_config.hpp"
 
@@ -20,7 +20,7 @@ namespace Core::Conditions
 {
   class ConditionDefinition;
 }
-namespace Inpar::S2I
+namespace S2I
 {
   //! type of interface side
   enum InterfaceSides
@@ -100,7 +100,7 @@ namespace Inpar::S2I
 
   //! set valid conditions for scatra-scatra interface coupling
   void set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist);
-}  // namespace Inpar::S2I
+}  // namespace S2I
 
 FOUR_C_NAMESPACE_CLOSE
 

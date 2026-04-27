@@ -51,7 +51,7 @@ Discret::Elements::ScaTraEleParameterBoundary::ScaTraEleParameterBoundary(
       peltier_(0.0),
       permeabilities_(nullptr),
       regularizationparameter_(-1.0),
-      regularizationtype_(Inpar::S2I::RegularizationType::regularization_undefined),
+      regularizationtype_(S2I::RegularizationType::regularization_undefined),
       resistance_(0.0),
       resistivity_(0.0),
       capacitance_(0.0),
@@ -77,8 +77,8 @@ void Discret::Elements::ScaTraEleParameterBoundary::set_parameters(
       // set parameters to internal members depending on kinetic model
       switch (kineticmodel_)
       {
-        case Inpar::S2I::kinetics_constperm:
-        case Inpar::S2I::kinetics_linearperm:
+        case S2I::kinetics_constperm:
+        case S2I::kinetics_linearperm:
         {
           set_is_pseudo_contact(parameters);
           set_num_scal(parameters);
@@ -86,7 +86,7 @@ void Discret::Elements::ScaTraEleParameterBoundary::set_parameters(
           break;
         }
 
-        case Inpar::S2I::kinetics_constantinterfaceresistance:
+        case S2I::kinetics_constantinterfaceresistance:
         {
           set_is_pseudo_contact(parameters);
           set_resistance(parameters);
@@ -95,21 +95,21 @@ void Discret::Elements::ScaTraEleParameterBoundary::set_parameters(
           break;
         }
 
-        case Inpar::S2I::kinetics_nointerfaceflux:
+        case S2I::kinetics_nointerfaceflux:
         {
           // do nothing
           break;
         }
 
-        case Inpar::S2I::kinetics_butlervolmer:
-        case Inpar::S2I::kinetics_butlervolmerlinearized:
-        case Inpar::S2I::kinetics_butlervolmerreduced:
-        case Inpar::S2I::kinetics_butlervolmerreducedcapacitance:
-        case Inpar::S2I::kinetics_butlervolmerreducedlinearized:
-        case Inpar::S2I::kinetics_butlervolmerpeltier:
-        case Inpar::S2I::kinetics_butlervolmerresistance:
-        case Inpar::S2I::kinetics_butlervolmerreducedthermoresistance:
-        case Inpar::S2I::kinetics_butlervolmerreducedresistance:
+        case S2I::kinetics_butlervolmer:
+        case S2I::kinetics_butlervolmerlinearized:
+        case S2I::kinetics_butlervolmerreduced:
+        case S2I::kinetics_butlervolmerreducedcapacitance:
+        case S2I::kinetics_butlervolmerreducedlinearized:
+        case S2I::kinetics_butlervolmerpeltier:
+        case S2I::kinetics_butlervolmerresistance:
+        case S2I::kinetics_butlervolmerreducedthermoresistance:
+        case S2I::kinetics_butlervolmerreducedresistance:
         {
           set_alpha(parameters);
           set_charge_transfer_constant(parameters);
@@ -117,19 +117,19 @@ void Discret::Elements::ScaTraEleParameterBoundary::set_parameters(
           set_num_electrons(parameters);
           set_num_scal(parameters);
           set_stoichiometries(parameters);
-          if (kineticmodel_ == Inpar::S2I::kinetics_butlervolmerreducedcapacitance)
+          if (kineticmodel_ == S2I::kinetics_butlervolmerreducedcapacitance)
           {
             set_capacitance(parameters);
           }
-          if (kineticmodel_ == Inpar::S2I::kinetics_butlervolmerpeltier)
+          if (kineticmodel_ == S2I::kinetics_butlervolmerpeltier)
             set_peltier(parameters);
-          else if (kineticmodel_ == Inpar::S2I::kinetics_butlervolmerresistance or
-                   kineticmodel_ == Inpar::S2I::kinetics_butlervolmerreducedresistance)
+          else if (kineticmodel_ == S2I::kinetics_butlervolmerresistance or
+                   kineticmodel_ == S2I::kinetics_butlervolmerreducedresistance)
           {
             set_conv_tol_iter_num(parameters);
             set_resistance(parameters);
           }
-          if (kineticmodel_ == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
+          if (kineticmodel_ == S2I::kinetics_butlervolmerreducedthermoresistance)
           {
             set_energy_substance_ratio(parameters);
             set_thermo_perm(parameters);
@@ -144,7 +144,7 @@ void Discret::Elements::ScaTraEleParameterBoundary::set_parameters(
       }
 
       // regularization is not relevant for scatra-scatra interface coupling without growth
-      regularizationtype_ = Inpar::S2I::RegularizationType::regularization_none;
+      regularizationtype_ = S2I::RegularizationType::regularization_none;
 
       break;
     }
@@ -154,7 +154,7 @@ void Discret::Elements::ScaTraEleParameterBoundary::set_parameters(
       // set parameters to internal members depending on kinetic model
       switch (kineticmodel_)
       {
-        case Inpar::S2I::growth_kinetics_butlervolmer:
+        case S2I::growth_kinetics_butlervolmer:
         {
           set_alpha(parameters);
           set_charge_transfer_constant(parameters);
@@ -289,7 +289,7 @@ void Discret::Elements::ScaTraEleParameterBoundary::set_regularization(
   regularizationparameter_ = parameters.get<double>("REGPAR", -1.0);
   if (regularizationparameter_ < 0.0)
     FOUR_C_THROW("Regularization parameter for lithium stripping must not be negative!");
-  regularizationtype_ = parameters.get<Inpar::S2I::RegularizationType>("REGTYPE");
+  regularizationtype_ = parameters.get<S2I::RegularizationType>("REGTYPE");
 }
 
 /*----------------------------------------------------------------------*

@@ -369,7 +369,7 @@ void CONTACT::IntegratorNitscheSsi::integrate_ssi_interface_condition(Mortar::El
   // perform integration according to kinetic model
   switch (kinetic_model)
   {
-    case Inpar::S2I::kinetics_constperm:
+    case S2I::kinetics_constperm:
     {
       const double permeability = (*get_scatra_ele_parameter_boundary()->permeabilities())[0];
 
@@ -388,7 +388,7 @@ void CONTACT::IntegratorNitscheSsi::integrate_ssi_interface_condition(Mortar::El
 
       break;
     }
-    case Inpar::S2I::kinetics_linearperm:
+    case S2I::kinetics_linearperm:
     {
       const double permeability = (*get_scatra_ele_parameter_boundary()->permeabilities())[0];
 

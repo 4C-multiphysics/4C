@@ -12,9 +12,9 @@
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_fem_geometry_position_array.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_scatra_s2i_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -131,14 +131,14 @@ void ScaTra::ScaTraUtils::check_consistency_with_s2_i_kinetics_condition(
     const int s2ikinetics_id = conditionToBeTested->parameters().get<int>("S2I_KINETICS_ID");
 
     // check the interface side
-    switch (conditionToBeTested->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE"))
+    switch (conditionToBeTested->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE"))
     {
-      case Inpar::S2I::side_source:
+      case S2I::side_source:
       {
         isslave = true;
         break;
       }
-      case Inpar::S2I::side_master:
+      case S2I::side_master:
       {
         isslave = false;
         break;
@@ -159,15 +159,15 @@ void ScaTra::ScaTraUtils::check_consistency_with_s2_i_kinetics_condition(
       if (s2ikinetics_id != s2ikinetics_cond_id) continue;
 
       // check the interface side
-      switch (s2ikinetics_cond->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE"))
+      switch (s2ikinetics_cond->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE"))
       {
-        case Inpar::S2I::side_source:
+        case S2I::side_source:
         {
           if (isslave) assert_same_nodes(conditionToBeTested, s2ikinetics_cond);
 
           break;
         }
-        case Inpar::S2I::side_master:
+        case S2I::side_master:
         {
           if (!isslave) assert_same_nodes(conditionToBeTested, s2ikinetics_cond);
 

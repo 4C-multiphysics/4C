@@ -76,7 +76,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
   const double faraday = myelch::elchparams_->faraday();
   const double resistivity = my::scatraparamsboundary_->resistivity();
   const int kineticmodel = my::scatraparamsboundary_->kinetic_model();
-  if (kineticmodel != Inpar::S2I::growth_kinetics_butlervolmer)
+  if (kineticmodel != S2I::growth_kinetics_butlervolmer)
   {
     FOUR_C_THROW(
         "Received illegal kinetic model for scatra-scatra interface coupling involving interface "
@@ -109,7 +109,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
 
     switch (kineticmodel)
     {
-      case Inpar::S2I::growth_kinetics_butlervolmer:
+      case S2I::growth_kinetics_butlervolmer:
       {
         const double alphaa = my::scatraparamsboundary_->alphadata();
         const double kr = my::scatraparamsboundary_->charge_transfer_constant();
@@ -609,7 +609,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
 
   // access input parameters associated with condition
   const int kineticmodel = my::scatraparamsboundary_->kinetic_model();
-  if (kineticmodel != Inpar::S2I::growth_kinetics_butlervolmer)
+  if (kineticmodel != S2I::growth_kinetics_butlervolmer)
   {
     FOUR_C_THROW(
         "Received illegal kinetic model for scatra-scatra interface coupling involving interface "
@@ -725,7 +725,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
 
   // access input parameters associated with condition
   const int kineticmodel = my::scatraparamsboundary_->kinetic_model();
-  if (kineticmodel != Inpar::S2I::growth_kinetics_butlervolmer)
+  if (kineticmodel != S2I::growth_kinetics_butlervolmer)
   {
     FOUR_C_THROW(
         "Received illegal kinetic model for scatra-scatra interface coupling involving interface "

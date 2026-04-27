@@ -93,10 +93,10 @@ STI::Algorithm::Algorithm(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
     // perform initializations depending on type of meshtying method
     switch (strategyscatra_->coupling_type())
     {
-      case Inpar::S2I::coupling_matching_nodes:
+      case S2I::coupling_matching_nodes:
       {
         // safety check
-        if (strategythermo_->coupling_type() != Inpar::S2I::coupling_matching_nodes)
+        if (strategythermo_->coupling_type() != S2I::coupling_matching_nodes)
         {
           FOUR_C_THROW(
               "Must have matching nodes at scatra-scatra coupling interfaces in both the scatra "
@@ -106,10 +106,10 @@ STI::Algorithm::Algorithm(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
         break;
       }
 
-      case Inpar::S2I::coupling_mortar_standard:
+      case S2I::coupling_mortar_standard:
       {
         // safety check
-        if (strategythermo_->coupling_type() != Inpar::S2I::coupling_mortar_condensed_bubnov)
+        if (strategythermo_->coupling_type() != S2I::coupling_mortar_condensed_bubnov)
           FOUR_C_THROW("Invalid type of scatra-scatra interface coupling for thermo field!");
 
         // extract scatra-scatra interface mesh tying conditions
@@ -120,8 +120,8 @@ STI::Algorithm::Algorithm(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
         for (auto& condition : conditions)
         {
           // consider conditions for slave side only
-          if (condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
-              Inpar::S2I::side_source)
+          if (condition->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") ==
+              S2I::side_source)
           {
             // extract ID of current condition
             const int condid = condition->parameters().get<int>("ConditionID");
@@ -183,21 +183,20 @@ void STI::Algorithm::modify_field_parameters_for_thermo_field()
     fieldparameters_->sublist("S2I COUPLING").set<bool>("SLAVEONLY", true);
 
     // adapt type of meshtying method for thermo field
-    if (fieldparameters_->sublist("S2I COUPLING").get<Inpar::S2I::CouplingType>("COUPLINGTYPE") ==
-        Inpar::S2I::CouplingType::coupling_mortar_standard)
+    if (fieldparameters_->sublist("S2I COUPLING").get<S2I::CouplingType>("COUPLINGTYPE") ==
+        S2I::CouplingType::coupling_mortar_standard)
     {
       fieldparameters_->sublist("S2I COUPLING")
-          .set<Inpar::S2I::CouplingType>(
-              "COUPLINGTYPE", Inpar::S2I::CouplingType::coupling_mortar_condensed_bubnov);
+          .set<S2I::CouplingType>(
+              "COUPLINGTYPE", S2I::CouplingType::coupling_mortar_condensed_bubnov);
     }
-    else if (fieldparameters_->sublist("S2I COUPLING")
-                 .get<Inpar::S2I::CouplingType>("COUPLINGTYPE") !=
-             Inpar::S2I::CouplingType::coupling_matching_nodes)
+    else if (fieldparameters_->sublist("S2I COUPLING").get<S2I::CouplingType>("COUPLINGTYPE") !=
+             S2I::CouplingType::coupling_matching_nodes)
       FOUR_C_THROW("Invalid type of scatra-scatra interface coupling!");
 
     // make sure that interface side underlying Lagrange multiplier definition is slave side
     fieldparameters_->sublist("S2I COUPLING")
-        .set<Inpar::S2I::InterfaceSides>("LMSIDE", Inpar::S2I::InterfaceSides::side_source);
+        .set<S2I::InterfaceSides>("LMSIDE", S2I::InterfaceSides::side_source);
   }
 }  // STI::Algorithm::modify_field_parameters_for_thermo_field()
 
@@ -307,7 +306,7 @@ void STI::Algorithm::transfer_scatra_to_thermo(
   {
     switch (strategythermo_->coupling_type())
     {
-      case Inpar::S2I::coupling_matching_nodes:
+      case S2I::coupling_matching_nodes:
       {
         // pass master-side scatra degrees of freedom to thermo discretization
         const std::shared_ptr<Core::LinAlg::Vector<double>> imasterphinp =
@@ -322,7 +321,7 @@ void STI::Algorithm::transfer_scatra_to_thermo(
         break;
       }
 
-      case Inpar::S2I::coupling_mortar_condensed_bubnov:
+      case S2I::coupling_mortar_condensed_bubnov:
       {
         // extract scatra-scatra interface mesh tying conditions
         std::vector<const Core::Conditions::Condition*> conditions;
@@ -332,8 +331,8 @@ void STI::Algorithm::transfer_scatra_to_thermo(
         for (auto& condition : conditions)
         {
           // consider conditions for slave side only
-          if (condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
-              Inpar::S2I::side_source)
+          if (condition->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") ==
+              S2I::side_source)
           {
             // extract ID of current condition
             const int condid = condition->parameters().get<int>("ConditionID");
@@ -370,7 +369,7 @@ void STI::Algorithm::transfer_thermo_to_scatra(
 
   // transfer state vector for evaluation of scatra-scatra interface mesh tying
   if (scatra_->scatra_field()->s2i_meshtying() and
-      strategyscatra_->coupling_type() == Inpar::S2I::coupling_mortar_standard)
+      strategyscatra_->coupling_type() == S2I::coupling_mortar_standard)
   {
     // extract scatra-scatra interface mesh tying conditions
     std::vector<const Core::Conditions::Condition*> conditions;
@@ -380,8 +379,7 @@ void STI::Algorithm::transfer_thermo_to_scatra(
     for (auto& condition : conditions)
     {
       // consider conditions for slave side only
-      if (condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
-          Inpar::S2I::side_source)
+      if (condition->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") == S2I::side_source)
       {
         // extract ID of current condition
         const int condid = condition->parameters().get<int>("ConditionID");

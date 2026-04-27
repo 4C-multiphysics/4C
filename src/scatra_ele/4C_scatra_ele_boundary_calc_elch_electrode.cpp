@@ -83,7 +83,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
 
   Core::LinAlg::Matrix<nen_, 1> eslavetempnp(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<nen_, 1> emastertempnp(Core::LinAlg::Initialization::zero);
-  if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
+  if (kineticmodel == S2I::kinetics_butlervolmerreducedthermoresistance)
   {
     my::extract_node_values(
         eslavetempnp, discretization, la, "islavetemp", my::scatraparams_->nds_thermo());
@@ -185,7 +185,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype, probdim>::
   // get faraday constant
   const double faraday = Discret::Elements::ScaTraEleParameterElch::instance("scatra")->faraday();
 
-  if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
+  if (kineticmodel == S2I::kinetics_butlervolmerreducedthermoresistance)
   {
     const double gasconstant =
         Discret::Elements::ScaTraEleParameterElch::instance("scatra")->gas_constant();
@@ -197,15 +197,15 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype, probdim>::
   switch (kineticmodel)
   {
     // Butler-Volmer kinetics
-    case Inpar::S2I::kinetics_butlervolmer:
-    case Inpar::S2I::kinetics_butlervolmerlinearized:
-    case Inpar::S2I::kinetics_butlervolmerpeltier:
-    case Inpar::S2I::kinetics_butlervolmerreducedthermoresistance:
-    case Inpar::S2I::kinetics_butlervolmerreduced:
-    case Inpar::S2I::kinetics_butlervolmerreducedcapacitance:
-    case Inpar::S2I::kinetics_butlervolmerreducedlinearized:
-    case Inpar::S2I::kinetics_butlervolmerresistance:
-    case Inpar::S2I::kinetics_butlervolmerreducedresistance:
+    case S2I::kinetics_butlervolmer:
+    case S2I::kinetics_butlervolmerlinearized:
+    case S2I::kinetics_butlervolmerpeltier:
+    case S2I::kinetics_butlervolmerreducedthermoresistance:
+    case S2I::kinetics_butlervolmerreduced:
+    case S2I::kinetics_butlervolmerreducedcapacitance:
+    case S2I::kinetics_butlervolmerreducedlinearized:
+    case S2I::kinetics_butlervolmerresistance:
+    case S2I::kinetics_butlervolmerreducedresistance:
     {
       if (matelectrode == nullptr)
         FOUR_C_THROW("Invalid electrode material for scatra-scatra interface coupling!");
@@ -232,13 +232,13 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype, probdim>::
 
       switch (kineticmodel)
       {
-        case Inpar::S2I::kinetics_butlervolmer:
-        case Inpar::S2I::kinetics_butlervolmerlinearized:
-        case Inpar::S2I::kinetics_butlervolmerpeltier:
-        case Inpar::S2I::kinetics_butlervolmerreducedthermoresistance:
-        case Inpar::S2I::kinetics_butlervolmerreduced:
-        case Inpar::S2I::kinetics_butlervolmerreducedcapacitance:
-        case Inpar::S2I::kinetics_butlervolmerreducedlinearized:
+        case S2I::kinetics_butlervolmer:
+        case S2I::kinetics_butlervolmerlinearized:
+        case S2I::kinetics_butlervolmerpeltier:
+        case S2I::kinetics_butlervolmerreducedthermoresistance:
+        case S2I::kinetics_butlervolmerreduced:
+        case S2I::kinetics_butlervolmerreducedcapacitance:
+        case S2I::kinetics_butlervolmerreducedlinearized:
         {
           // electrode-electrolyte overpotential at integration point
           const double eta = eslavepotint - emasterpotint - epd;
@@ -272,8 +272,8 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype, probdim>::
           break;
         }
 
-        case Inpar::S2I::kinetics_butlervolmerresistance:
-        case Inpar::S2I::kinetics_butlervolmerreducedresistance:
+        case S2I::kinetics_butlervolmerresistance:
+        case S2I::kinetics_butlervolmerreducedresistance:
         {
           // compute Butler-Volmer mass flux density via Newton-Raphson method
           const double j = calculate_modified_butler_volmer_mass_flux_density(j0, alphaa, alphac,
@@ -305,7 +305,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype, probdim>::
               k_sm, k_ms, k_mm, r_s, r_m);
 
           break;
-        }  // case Inpar::S2I::kinetics_butlervolmerresistance:
+        }  // case S2I::kinetics_butlervolmerresistance:
         default:
         {
           FOUR_C_THROW("something went wrong");
@@ -314,7 +314,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype, probdim>::
       break;
     }
 
-    case Inpar::S2I::kinetics_constantinterfaceresistance:
+    case S2I::kinetics_constantinterfaceresistance:
     {
       // core residual
       const double inv_massfluxresistance = 1.0 / (resistance * faraday);
@@ -421,13 +421,13 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype, probdim>::
             "Must provide both master-side matrices and master-side vector or none of them!");
 
       break;
-    }  // case Inpar::S2I::kinetics_constantinterfaceresistance
+    }  // case S2I::kinetics_constantinterfaceresistance
 
-    case Inpar::S2I::kinetics_nointerfaceflux:
+    case S2I::kinetics_nointerfaceflux:
     {
       // do nothing
       break;
-    }  // case Inpar::S2I::kinetics_nointerfaceflux
+    }  // case S2I::kinetics_nointerfaceflux
 
     default:
     {
@@ -454,7 +454,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
       my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphidtnp(
       my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
-  if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedcapacitance)
+  if (kineticmodel == S2I::kinetics_butlervolmerreducedcapacitance)
   {
     my::extract_node_values(eslavephidtnp, discretization, la, "islavephidtnp");
     my::extract_node_values(emasterphidtnp, discretization, la, "imasterphidtnp");
@@ -536,7 +536,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype, probdim>::
   // interface coupling condition
   switch (kineticmodel)
   {
-    case Inpar::S2I::kinetics_butlervolmerreducedcapacitance:
+    case S2I::kinetics_butlervolmerreducedcapacitance:
     {
       // evaluate time derivative of potential values at current integration point on slave- and
       // master-side of scatra-scatra interface
@@ -645,11 +645,11 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
     switch (kineticmodel)
     {
       // Butler-Volmer kinetics
-      case Inpar::S2I::kinetics_butlervolmer:
-      case Inpar::S2I::kinetics_butlervolmerlinearized:
-      case Inpar::S2I::kinetics_butlervolmerreduced:
-      case Inpar::S2I::kinetics_butlervolmerreducedcapacitance:
-      case Inpar::S2I::kinetics_butlervolmerreducedlinearized:
+      case S2I::kinetics_butlervolmer:
+      case S2I::kinetics_butlervolmerlinearized:
+      case S2I::kinetics_butlervolmerreduced:
+      case S2I::kinetics_butlervolmerreducedcapacitance:
+      case S2I::kinetics_butlervolmerreducedlinearized:
       {
         // access input parameters associated with current condition
         const auto conditiontype = my::scatraparamsboundary_->condition_type();
@@ -735,7 +735,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
         }
         break;
       }
-      case Inpar::S2I::kinetics_constantinterfaceresistance:
+      case S2I::kinetics_constantinterfaceresistance:
       {
         switch (differentiationtype)
         {
@@ -788,7 +788,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
 
         break;
       }
-      case Inpar::S2I::kinetics_nointerfaceflux:
+      case S2I::kinetics_nointerfaceflux:
       {
         // nothing to do
         break;
@@ -825,7 +825,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
       my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphidtnp(
       my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
-  if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedcapacitance)
+  if (kineticmodel == S2I::kinetics_butlervolmerreducedcapacitance)
   {
     my::extract_node_values(eslavephidtnp, discretization, la, "islavephidtnp");
     my::extract_node_values(emasterphidtnp, discretization, la, "imasterphidtnp");
@@ -873,7 +873,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
     switch (kineticmodel)
     {
       // Butler-Volmer kinetics
-      case Inpar::S2I::kinetics_butlervolmerreducedcapacitance:
+      case S2I::kinetics_butlervolmerreducedcapacitance:
       {
         // evaluate time derivative of potential values at current integration point on slave- and
         // master-side of scatra-scatra interface
@@ -1179,7 +1179,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
 
     Core::LinAlg::Matrix<nen_, 1> eslavetempnp(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nen_, 1> emastertempnp(Core::LinAlg::Initialization::zero);
-    if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
+    if (kineticmodel == S2I::kinetics_butlervolmerreducedthermoresistance)
     {
       my::extract_node_values(
           eslavetempnp, discretization, la, "islavetemp", my::scatraparams_->nds_thermo());
@@ -1197,7 +1197,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
     const double etempint = 0.5 * (eslavetempint + emastertempint);
 
     double frt = 0.0;
-    if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
+    if (kineticmodel == S2I::kinetics_butlervolmerreducedthermoresistance)
     {
       const double gasconstant =
           Discret::Elements::ScaTraEleParameterElch::instance("scatra")->gas_constant();
@@ -1211,15 +1211,15 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
     switch (kineticmodel)
     {
         // Butler-Volmer kinetics
-      case Inpar::S2I::kinetics_butlervolmer:
-      case Inpar::S2I::kinetics_butlervolmerlinearized:
-      case Inpar::S2I::kinetics_butlervolmerpeltier:
-      case Inpar::S2I::kinetics_butlervolmerreducedthermoresistance:
-      case Inpar::S2I::kinetics_butlervolmerreduced:
-      case Inpar::S2I::kinetics_butlervolmerreducedcapacitance:
-      case Inpar::S2I::kinetics_butlervolmerreducedlinearized:
-      case Inpar::S2I::kinetics_butlervolmerresistance:
-      case Inpar::S2I::kinetics_butlervolmerreducedresistance:
+      case S2I::kinetics_butlervolmer:
+      case S2I::kinetics_butlervolmerlinearized:
+      case S2I::kinetics_butlervolmerpeltier:
+      case S2I::kinetics_butlervolmerreducedthermoresistance:
+      case S2I::kinetics_butlervolmerreduced:
+      case S2I::kinetics_butlervolmerreducedcapacitance:
+      case S2I::kinetics_butlervolmerreducedlinearized:
+      case S2I::kinetics_butlervolmerresistance:
+      case S2I::kinetics_butlervolmerreducedresistance:
       {
         if (matelectrode == nullptr)
           FOUR_C_THROW("Invalid electrode material for scatra-scatra interface coupling!");
@@ -1241,13 +1241,13 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
 
         switch (kineticmodel)
         {
-          case Inpar::S2I::kinetics_butlervolmer:
-          case Inpar::S2I::kinetics_butlervolmerlinearized:
-          case Inpar::S2I::kinetics_butlervolmerpeltier:
-          case Inpar::S2I::kinetics_butlervolmerreducedthermoresistance:
-          case Inpar::S2I::kinetics_butlervolmerreduced:
-          case Inpar::S2I::kinetics_butlervolmerreducedcapacitance:
-          case Inpar::S2I::kinetics_butlervolmerreducedlinearized:
+          case S2I::kinetics_butlervolmer:
+          case S2I::kinetics_butlervolmerlinearized:
+          case S2I::kinetics_butlervolmerpeltier:
+          case S2I::kinetics_butlervolmerreducedthermoresistance:
+          case S2I::kinetics_butlervolmerreduced:
+          case S2I::kinetics_butlervolmerreducedcapacitance:
+          case S2I::kinetics_butlervolmerreducedlinearized:
           {
             // electrode-electrolyte overpotential at integration point
             const double eta = eslavepotint - emasterpotint - epd;
@@ -1275,8 +1275,8 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
             break;
           }
 
-          case Inpar::S2I::kinetics_butlervolmerresistance:
-          case Inpar::S2I::kinetics_butlervolmerreducedresistance:
+          case S2I::kinetics_butlervolmerresistance:
+          case S2I::kinetics_butlervolmerreducedresistance:
           {
             // compute Butler-Volmer mass flux density via Newton-Raphson method
             const double j = calculate_modified_butler_volmer_mass_flux_density(j0, alphaa, alphac,
@@ -1296,7 +1296,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
             }
 
             break;
-          }  // case Inpar::S2I::kinetics_butlervolmerresistance:
+          }  // case S2I::kinetics_butlervolmerresistance:
           default:
           {
             FOUR_C_THROW("something went wrong");
@@ -1304,7 +1304,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
         }
         break;
       }
-      case Inpar::S2I::kinetics_constantinterfaceresistance:
+      case S2I::kinetics_constantinterfaceresistance:
       {
         const double inv_massfluxresistance = 1.0 / (resistance * faraday);
 
@@ -1326,7 +1326,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
 
       break;
 
-      case Inpar::S2I::kinetics_nointerfaceflux:
+      case S2I::kinetics_nointerfaceflux:
       {
         // do nothing
         break;

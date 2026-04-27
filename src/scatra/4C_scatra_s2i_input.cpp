@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_inpar_s2i.hpp"
+#include "4C_scatra_s2i_input.hpp"
 
 #include "4C_fem_condition_definition.hpp"
 #include "4C_io_input_spec_builders.hpp"
@@ -14,7 +14,7 @@ FOUR_C_NAMESPACE_OPEN
 /*------------------------------------------------------------------------*
  | valid parameters for scatra-scatra interface coupling   fang 01/16 |
  *------------------------------------------------------------------------*/
-std::vector<Core::IO::InputSpec> Inpar::S2I::valid_parameters()
+std::vector<Core::IO::InputSpec> S2I::valid_parameters()
 {
   using namespace Core::IO::InputSpecBuilders;
 
@@ -115,7 +115,7 @@ std::vector<Core::IO::InputSpec> Inpar::S2I::valid_parameters()
 /*------------------------------------------------------------------------*
  | set valid conditions for scatra-scatra interface coupling   fang 01/16 |
  *------------------------------------------------------------------------*/
-void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist)
+void S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist)
 {
   using namespace Core::IO::InputSpecBuilders;
 
@@ -135,9 +135,9 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
     const auto make_s2imeshtying = [&condlist](Core::Conditions::ConditionDefinition& cond)
     {
       cond.add_component(parameter<int>("ConditionID"));
-      cond.add_component(deprecated_selection<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE",
-          {{"Undefined", Inpar::S2I::side_undefined}, {"Slave", Inpar::S2I::side_source},
-              {"Master", Inpar::S2I::side_master}},
+      cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
+          {{"Undefined", S2I::side_undefined}, {"Slave", S2I::side_source},
+              {"Master", S2I::side_master}},
           {.description = "interface side"}));
       cond.add_component(parameter<int>("S2I_KINETICS_ID"));
 
@@ -177,10 +177,10 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
       {
         // constant and linear permeability
         auto constlinperm = all_of({
-            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
+            deprecated_selection<S2I::KineticModels>("KINETIC_MODEL",
                 {
-                    {"ConstantPermeability", Inpar::S2I::kinetics_constperm},
-                    {"LinearPermeability", Inpar::S2I::kinetics_linearperm},
+                    {"ConstantPermeability", S2I::kinetics_constperm},
+                    {"LinearPermeability", S2I::kinetics_linearperm},
                 }),
             parameter<int>("NUMSCAL"),
             parameter<std::vector<double>>(
@@ -192,13 +192,13 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer = all_of({
-            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
+            deprecated_selection<S2I::KineticModels>("KINETIC_MODEL",
                 {
-                    {"Butler-Volmer", Inpar::S2I::kinetics_butlervolmer},
-                    {"Butler-Volmer_Linearized", Inpar::S2I::kinetics_butlervolmerlinearized},
-                    {"Butler-VolmerReduced", Inpar::S2I::kinetics_butlervolmerreduced},
+                    {"Butler-Volmer", S2I::kinetics_butlervolmer},
+                    {"Butler-Volmer_Linearized", S2I::kinetics_butlervolmerlinearized},
+                    {"Butler-VolmerReduced", S2I::kinetics_butlervolmerreduced},
                     {"Butler-VolmerReduced_Linearized",
-                        Inpar::S2I::kinetics_butlervolmerreducedlinearized},
+                        S2I::kinetics_butlervolmerreducedlinearized},
                 }),
             parameter<int>("NUMSCAL"),
             parameter<std::vector<int>>(
@@ -214,9 +214,9 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer_peltier = all_of({
-            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
+            deprecated_selection<S2I::KineticModels>("KINETIC_MODEL",
                 {
-                    {"Butler-Volmer-Peltier", Inpar::S2I::kinetics_butlervolmerpeltier},
+                    {"Butler-Volmer-Peltier", S2I::kinetics_butlervolmerpeltier},
                 }),
             parameter<int>("NUMSCAL"),
             parameter<std::vector<int>>(
@@ -234,10 +234,10 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer_reduced_capacitance = all_of({
-            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
+            deprecated_selection<S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"Butler-VolmerReduced_Capacitance",
-                        Inpar::S2I::kinetics_butlervolmerreducedcapacitance},
+                        S2I::kinetics_butlervolmerreducedcapacitance},
                 }),
             parameter<int>("NUMSCAL"),
             parameter<std::vector<int>>(
@@ -255,9 +255,9 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer_resistance = all_of({
-            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
+            deprecated_selection<S2I::KineticModels>("KINETIC_MODEL",
                 {
-                    {"Butler-Volmer_Resistance", Inpar::S2I::kinetics_butlervolmerresistance},
+                    {"Butler-Volmer_Resistance", S2I::kinetics_butlervolmerresistance},
                 }),
             parameter<int>("NUMSCAL"),
             parameter<std::vector<int>>(
@@ -276,10 +276,10 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer_reduced_with_resistance = all_of({
-            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
+            deprecated_selection<S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"Butler-VolmerReduced_Resistance",
-                        Inpar::S2I::kinetics_butlervolmerreducedresistance},
+                        S2I::kinetics_butlervolmerreducedresistance},
                 }),
             parameter<int>("NUMSCAL"),
             parameter<std::vector<int>>(
@@ -299,10 +299,10 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer_reduced_thermo = all_of({
-            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
+            deprecated_selection<S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"Butler-VolmerReduced_ThermoResistance",
-                        Inpar::S2I::kinetics_butlervolmerreducedthermoresistance},
+                        S2I::kinetics_butlervolmerreducedthermoresistance},
                 }),
             parameter<int>("NUMSCAL"),
             parameter<std::vector<int>>(
@@ -321,10 +321,9 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto constant_interface_resistance = all_of({
-            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
+            deprecated_selection<S2I::KineticModels>("KINETIC_MODEL",
                 {
-                    {"ConstantInterfaceResistance",
-                        Inpar::S2I::kinetics_constantinterfaceresistance},
+                    {"ConstantInterfaceResistance", S2I::kinetics_constantinterfaceresistance},
                 }),
             parameter<std::vector<int>>("ONOFF", {.size = 2}),
             parameter<double>("RESISTANCE"),
@@ -339,7 +338,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
         // no interface flux
         auto noflux = deprecated_selection<KineticModels>(
             "KINETIC_MODEL", {
-                                 {"NoInterfaceFlux", Inpar::S2I::kinetics_nointerfaceflux},
+                                 {"NoInterfaceFlux", S2I::kinetics_nointerfaceflux},
                              });
 
         kinetic_model_choices.emplace_back(std::move(noflux));
@@ -405,10 +404,10 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
         parameter<double>("CONDUCTIVITY"),
         deprecated_selection<RegularizationType>("REGTYPE",
             {
-                {"none", Inpar::S2I::regularization_none},
-                {"polynomial", Inpar::S2I::regularization_polynomial},
-                {"Hein", Inpar::S2I::regularization_hein},
-                {"trigonometrical", Inpar::S2I::regularization_trigonometrical},
+                {"none", S2I::regularization_none},
+                {"polynomial", S2I::regularization_polynomial},
+                {"Hein", S2I::regularization_hein},
+                {"trigonometrical", S2I::regularization_trigonometrical},
             }),
         parameter<double>("REGPAR"),
         parameter<double>("INITTHICKNESS"),
@@ -437,8 +436,8 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
         Core::Conditions::S2ISCLCoupling, true, Core::Conditions::geometry_type_surface);
 
     s2isclcond.add_component(deprecated_selection<InterfaceSides>("INTERFACE_SIDE",
-        {{"Undefined", Inpar::S2I::side_undefined}, {"Slave", Inpar::S2I::side_source},
-            {"Master", Inpar::S2I::side_master}},
+        {{"Undefined", S2I::side_undefined}, {"Slave", S2I::side_source},
+            {"Master", S2I::side_master}},
         {.description = "interface side"}));
 
     condlist.emplace_back(s2isclcond);

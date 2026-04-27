@@ -14,12 +14,12 @@
 #include "4C_fem_condition_utils.hpp"
 #include "4C_fem_general_assemblestrategy.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_io_runtime_csv_writer.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_scatra_ele_action.hpp"
 #include "4C_scatra_ele_parameter_boundary.hpp"
+#include "4C_scatra_s2i_input.hpp"
 #include "4C_scatra_timint_implicit.hpp"
 #include "4C_ssi_monolithic.hpp"
 #include "4C_ssi_problem_access.hpp"
@@ -686,13 +686,12 @@ void SSI::ScaTraManifoldScaTraFluxEvaluator::pre_evaluate(
   eleparams.set<Core::Conditions::ConditionType>(
       "condition type", Core::Conditions::ConditionType::S2IKinetics);
 
-  switch (
-      scatra_manifold_coupling.condition_kinetics()->parameters().get<Inpar::S2I::KineticModels>(
-          "KINETIC_MODEL"))
+  switch (scatra_manifold_coupling.condition_kinetics()->parameters().get<S2I::KineticModels>(
+      "KINETIC_MODEL"))
   {
-    case Inpar::S2I::kinetics_constantinterfaceresistance:
+    case S2I::kinetics_constantinterfaceresistance:
     {
-      eleparams.set<int>("KINETIC_MODEL", Inpar::S2I::kinetics_constantinterfaceresistance);
+      eleparams.set<int>("KINETIC_MODEL", S2I::kinetics_constantinterfaceresistance);
       eleparams.set<double>("RESISTANCE",
           scatra_manifold_coupling.condition_kinetics()->parameters().get<double>("RESISTANCE"));
       eleparams.set<const std::vector<int>*>("ONOFF",
@@ -702,9 +701,9 @@ void SSI::ScaTraManifoldScaTraFluxEvaluator::pre_evaluate(
           scatra_manifold_coupling.condition_kinetics()->parameters().get<int>("E-"));
       break;
     }
-    case Inpar::S2I::kinetics_butlervolmerreduced:
+    case S2I::kinetics_butlervolmerreduced:
     {
-      eleparams.set<int>("KINETIC_MODEL", Inpar::S2I::kinetics_butlervolmerreduced);
+      eleparams.set<int>("KINETIC_MODEL", S2I::kinetics_butlervolmerreduced);
       eleparams.set<int>("NUMSCAL",
           scatra_manifold_coupling.condition_kinetics()->parameters().get<int>("NUMSCAL"));
       eleparams.set<const std::vector<int>*>("STOICHIOMETRIES",
@@ -720,9 +719,9 @@ void SSI::ScaTraManifoldScaTraFluxEvaluator::pre_evaluate(
           scatra_manifold_coupling.condition_kinetics()->parameters().get<double>("ALPHA_C"));
       break;
     }
-    case Inpar::S2I::kinetics_nointerfaceflux:
+    case S2I::kinetics_nointerfaceflux:
     {
-      eleparams.set<int>("KINETIC_MODEL", Inpar::S2I::kinetics_nointerfaceflux);
+      eleparams.set<int>("KINETIC_MODEL", S2I::kinetics_nointerfaceflux);
       break;
     }
     default:
