@@ -8,13 +8,13 @@
 #include "4C_scatra_ele_boundary_calc_elch_electrode_sti_thermo.hpp"
 
 #include "4C_fem_general_utils_boundary_integration.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_mat_electrode.hpp"
 #include "4C_scatra_ele_boundary_calc_elch_electrode_utils.hpp"
 #include "4C_scatra_ele_parameter_boundary.hpp"
 #include "4C_scatra_ele_parameter_elch.hpp"
 #include "4C_scatra_ele_parameter_std.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
+#include "4C_scatra_s2i_input.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -80,7 +80,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeSTIThermo<distype,
   my::extract_node_values(emasterphinp, discretization, la, "imasterphinp");
 
   Core::LinAlg::Matrix<nen_, 1> emastertempnp(Core::LinAlg::Initialization::zero);
-  if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
+  if (kineticmodel == S2I::kinetics_butlervolmerreducedthermoresistance)
     my::extract_node_values(
         emastertempnp, discretization, la, "imastertemp", my::scatraparams_->nds_thermo());
 
@@ -189,7 +189,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeSTIThermo<distype,
   switch (kineticmodel)
   {
     // Butler-Volmer-Peltier kinetics
-    case Inpar::S2I::kinetics_butlervolmerpeltier:
+    case S2I::kinetics_butlervolmerpeltier:
     {
       switch (differentiationtype)
       {
@@ -264,7 +264,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeSTIThermo<distype,
       }
       break;
     }
-    case Inpar::S2I::kinetics_butlervolmerreducedthermoresistance:
+    case S2I::kinetics_butlervolmerreducedthermoresistance:
     {
       // average temperature at interface
       const double etempint = 0.5 * (eslavetempint + emastertempint);
@@ -369,8 +369,8 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeSTIThermo<distype,
       }
       break;
     }
-    case Inpar::S2I::kinetics_constantinterfaceresistance:
-    case Inpar::S2I::kinetics_nointerfaceflux:
+    case S2I::kinetics_constantinterfaceresistance:
+    case S2I::kinetics_nointerfaceflux:
       break;
 
     default:

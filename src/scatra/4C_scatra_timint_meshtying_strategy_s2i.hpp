@@ -16,11 +16,11 @@
 #include "4C_fem_condition.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_io_runtime_csv_writer.hpp"
 #include "4C_linalg_fevector.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_scatra_input.hpp"
+#include "4C_scatra_s2i_input.hpp"
 #include "4C_scatra_timint_meshtying_strategy_base.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -113,7 +113,7 @@ namespace ScaTra
     std::shared_ptr<const Coupling::Adapter::Coupling> coupling_adapter() const { return icoup_; };
 
     //! return flag for meshtying method
-    const Inpar::S2I::CouplingType& coupling_type() const { return couplingtype_; }
+    const S2I::CouplingType& coupling_type() const { return couplingtype_; }
 
     //! return global map of degrees of freedom
     const Core::LinAlg::Map& dof_row_map() const override;
@@ -182,7 +182,7 @@ namespace ScaTra
 
     //! return flag for evaluation of scatra-scatra interface coupling involving interface layer
     //! growth
-    const Inpar::S2I::GrowthEvaluation& int_layer_growth_evaluation() const
+    const S2I::GrowthEvaluation& int_layer_growth_evaluation() const
     {
       return intlayergrowth_evaluation_;
     };
@@ -353,7 +353,7 @@ namespace ScaTra
     std::shared_ptr<Core::LinAlg::SparseMatrix> imasterslavematrix_;
 
     //! flag for meshtying method
-    const Inpar::S2I::CouplingType couplingtype_;
+    const S2I::CouplingType couplingtype_;
 
     //! mortar matrix D
     std::shared_ptr<Core::LinAlg::SparseMatrix> D_;
@@ -404,7 +404,7 @@ namespace ScaTra
     std::shared_ptr<Core::LinAlg::Vector<double>> imasterphi_on_slave_side_np_;
 
     //! flag for interface side underlying Lagrange multiplier definition
-    const Inpar::S2I::InterfaceSides lmside_;
+    const S2I::InterfaceSides lmside_;
 
     //! type of global system matrix in global system of equations
     const Core::LinAlg::MatrixType matrixtype_;
@@ -413,7 +413,7 @@ namespace ScaTra
     const double ntsprojtol_;
 
     //! flag for evaluation of scatra-scatra interface coupling involving interface layer growth
-    const Inpar::S2I::GrowthEvaluation intlayergrowth_evaluation_;
+    const S2I::GrowthEvaluation intlayergrowth_evaluation_;
 
     //! local Newton-Raphson convergence tolerance for scatra-scatra interface coupling involving
     //! interface layer growth
@@ -603,21 +603,17 @@ namespace ScaTra
     void evaluate_mortar_cells(const Core::FE::Discretization& idiscret,
         const Teuchos::ParameterList& params,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix1,
-        const Inpar::S2I::InterfaceSides matrix1_side_rows,
-        const Inpar::S2I::InterfaceSides matrix1_side_cols,
+        const S2I::InterfaceSides matrix1_side_rows, const S2I::InterfaceSides matrix1_side_cols,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix2,
-        const Inpar::S2I::InterfaceSides matrix2_side_rows,
-        const Inpar::S2I::InterfaceSides matrix2_side_cols,
+        const S2I::InterfaceSides matrix2_side_rows, const S2I::InterfaceSides matrix2_side_cols,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix3,
-        const Inpar::S2I::InterfaceSides matrix3_side_rows,
-        const Inpar::S2I::InterfaceSides matrix3_side_cols,
+        const S2I::InterfaceSides matrix3_side_rows, const S2I::InterfaceSides matrix3_side_cols,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix4,
-        const Inpar::S2I::InterfaceSides matrix4_side_rows,
-        const Inpar::S2I::InterfaceSides matrix4_side_cols,
+        const S2I::InterfaceSides matrix4_side_rows, const S2I::InterfaceSides matrix4_side_cols,
         const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
-        const Inpar::S2I::InterfaceSides vector1_side,
+        const S2I::InterfaceSides vector1_side,
         const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
-        const Inpar::S2I::InterfaceSides vector2_side) const;
+        const S2I::InterfaceSides vector2_side) const;
 
     /*!
      * @brief  evaluate node-to-segment coupling
@@ -651,21 +647,17 @@ namespace ScaTra
         const Core::LinAlg::Vector<int>& islavenodesimpltypes,
         const Core::FE::Discretization& idiscret, const Teuchos::ParameterList& params,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix1,
-        const Inpar::S2I::InterfaceSides matrix1_side_rows,
-        const Inpar::S2I::InterfaceSides matrix1_side_cols,
+        const S2I::InterfaceSides matrix1_side_rows, const S2I::InterfaceSides matrix1_side_cols,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix2,
-        const Inpar::S2I::InterfaceSides matrix2_side_rows,
-        const Inpar::S2I::InterfaceSides matrix2_side_cols,
+        const S2I::InterfaceSides matrix2_side_rows, const S2I::InterfaceSides matrix2_side_cols,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix3,
-        const Inpar::S2I::InterfaceSides matrix3_side_rows,
-        const Inpar::S2I::InterfaceSides matrix3_side_cols,
+        const S2I::InterfaceSides matrix3_side_rows, const S2I::InterfaceSides matrix3_side_cols,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix4,
-        const Inpar::S2I::InterfaceSides matrix4_side_rows,
-        const Inpar::S2I::InterfaceSides matrix4_side_cols,
+        const S2I::InterfaceSides matrix4_side_rows, const S2I::InterfaceSides matrix4_side_cols,
         const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
-        const Inpar::S2I::InterfaceSides vector1_side,
+        const S2I::InterfaceSides vector1_side,
         const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
-        const Inpar::S2I::InterfaceSides vector2_side) const;
+        const S2I::InterfaceSides vector2_side) const;
 
     /*!
      * @brief  evaluate mortar elements
@@ -695,21 +687,17 @@ namespace ScaTra
         const Core::LinAlg::Vector<int>& ieleimpltypes, const Core::FE::Discretization& idiscret,
         const Teuchos::ParameterList& params,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix1,
-        const Inpar::S2I::InterfaceSides matrix1_side_rows,
-        const Inpar::S2I::InterfaceSides matrix1_side_cols,
+        const S2I::InterfaceSides matrix1_side_rows, const S2I::InterfaceSides matrix1_side_cols,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix2,
-        const Inpar::S2I::InterfaceSides matrix2_side_rows,
-        const Inpar::S2I::InterfaceSides matrix2_side_cols,
+        const S2I::InterfaceSides matrix2_side_rows, const S2I::InterfaceSides matrix2_side_cols,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix3,
-        const Inpar::S2I::InterfaceSides matrix3_side_rows,
-        const Inpar::S2I::InterfaceSides matrix3_side_cols,
+        const S2I::InterfaceSides matrix3_side_rows, const S2I::InterfaceSides matrix3_side_cols,
         const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix4,
-        const Inpar::S2I::InterfaceSides matrix4_side_rows,
-        const Inpar::S2I::InterfaceSides matrix4_side_cols,
+        const S2I::InterfaceSides matrix4_side_rows, const S2I::InterfaceSides matrix4_side_cols,
         const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
-        const Inpar::S2I::InterfaceSides vector1_side,
+        const S2I::InterfaceSides vector1_side,
         const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
-        const Inpar::S2I::InterfaceSides vector2_side) const;
+        const S2I::InterfaceSides vector2_side) const;
 
     //! flag indicating if we have capacitive interface flux contributions
     bool has_capacitive_contributions_;
@@ -788,19 +776,18 @@ namespace ScaTra
 
    protected:
     //! protected constructor for singletons
-    MortarCellInterface(
-        const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+    MortarCellInterface(const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,  //!< number of slave-side degrees of freedom per node
         const int& numdofpernode_master  //!< number of master-side degrees of freedom per node
     );
 
     //! flag for interface side underlying Lagrange multiplier definition
-    const Inpar::S2I::InterfaceSides lmside_;
+    const S2I::InterfaceSides lmside_;
 
     //! flag for meshtying method
-    const Inpar::S2I::CouplingType couplingtype_;
+    const S2I::CouplingType couplingtype_;
 
     //! number of slave-side degrees of freedom per node
     const int numdofpernode_slave_;
@@ -816,8 +803,8 @@ namespace ScaTra
    public:
     //! singleton access method
     static MortarCellCalc<distype_s, distype_m>* instance(
-        const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+        const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,   //!< number of slave-side degrees of freedom per node
         const int& numdofpernode_master,  //!< number of master-side degrees of freedom per node
@@ -887,8 +874,8 @@ namespace ScaTra
     static constexpr int nsd_master_ = Core::FE::dim<distype_m>;
 
     //! protected constructor for singletons
-    MortarCellCalc(const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+    MortarCellCalc(const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,  //!< number of slave-side degrees of freedom per node
         const int& numdofpernode_master  //!< number of master-side degrees of freedom per node
@@ -1056,10 +1043,10 @@ namespace ScaTra
     static MortarCellInterface* mortar_cell_calc(
         const ScaTra::ImplType&
             impltype,  //!< physical implementation type of mortar integration cell
-        const Mortar::Element& slaveelement,           //!< slave-side mortar element
-        const Mortar::Element& masterelement,          //!< master-side mortar element
-        const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+        const Mortar::Element& slaveelement,    //!< slave-side mortar element
+        const Mortar::Element& masterelement,   //!< master-side mortar element
+        const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const std::string& disname  //!< name of interface discretization
     );
@@ -1071,9 +1058,9 @@ namespace ScaTra
     static MortarCellInterface* mortar_cell_calc(
         const ScaTra::ImplType&
             impltype,  //!< physical implementation type of mortar integration cell
-        const Mortar::Element& masterelement,          //!< master-side mortar element
-        const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+        const Mortar::Element& masterelement,   //!< master-side mortar element
+        const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,  //!< number of slave-side degrees of freedom per node
         const std::string& disname       //!< name of interface discretization
@@ -1084,8 +1071,8 @@ namespace ScaTra
     static MortarCellInterface* mortar_cell_calc(
         const ScaTra::ImplType&
             impltype,  //!< physical implementation type of mortar integration cell
-        const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+        const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,   //!< number of slave-side degrees of freedom per node
         const int& numdofpernode_master,  //!< number of master-side degrees of freedom per node
@@ -1100,33 +1087,31 @@ namespace ScaTra
     //! constructor
     MortarCellAssemblyStrategy(
         std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1,  //!< system matrix 1
-        const Inpar::S2I::InterfaceSides
+        const S2I::InterfaceSides
             matrix1_side_rows,  //!< interface side associated with rows of system matrix 1
-        const Inpar::S2I::InterfaceSides
+        const S2I::InterfaceSides
             matrix1_side_cols,  //!< interface side associated with columns of system matrix 1
         std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix2,  //!< system matrix 2
-        const Inpar::S2I::InterfaceSides
+        const S2I::InterfaceSides
             matrix2_side_rows,  //!< interface side associated with rows of system matrix 2
-        const Inpar::S2I::InterfaceSides
+        const S2I::InterfaceSides
             matrix2_side_cols,  //!< interface side associated with columns of system matrix 2
         std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix3,  //!< system matrix 3
-        const Inpar::S2I::InterfaceSides
+        const S2I::InterfaceSides
             matrix3_side_rows,  //!< interface side associated with rows of system matrix 3
-        const Inpar::S2I::InterfaceSides
+        const S2I::InterfaceSides
             matrix3_side_cols,  //!< interface side associated with columns of system matrix 3
         std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix4,  //!< system matrix 4
-        const Inpar::S2I::InterfaceSides
+        const S2I::InterfaceSides
             matrix4_side_rows,  //!< interface side associated with rows of system matrix 4
-        const Inpar::S2I::InterfaceSides
+        const S2I::InterfaceSides
             matrix4_side_cols,  //!< interface side associated with columns of system matrix 4
         std::shared_ptr<Core::LinAlg::MultiVector<double>> systemvector1,  //!< system vector 1
-        const Inpar::S2I::InterfaceSides
-            vector1_side,  //!< interface side associated with system vector 1
+        const S2I::InterfaceSides vector1_side,  //!< interface side associated with system vector 1
         std::shared_ptr<Core::LinAlg::FEVector<double>> systemvector2,
-        const Inpar::S2I::InterfaceSides
-            vector2_side,        //!< interface side associated with system vector 2
-        const int nds_rows = 0,  //!< number of dofset associated with matrix rows
-        const int nds_cols = 0   //!< number of dofset associated with matrix columns
+        const S2I::InterfaceSides vector2_side,  //!< interface side associated with system vector 2
+        const int nds_rows = 0,                  //!< number of dofset associated with matrix rows
+        const int nds_cols = 0  //!< number of dofset associated with matrix columns
     );
 
     /*!
@@ -1195,10 +1180,9 @@ namespace ScaTra
      * @param assembler_pid_master   ID of processor performing master-side matrix assembly
      */
     void assemble_cell_matrix(const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix,
-        const Core::LinAlg::SerialDenseMatrix& cellmatrix,
-        const Inpar::S2I::InterfaceSides side_rows, const Inpar::S2I::InterfaceSides side_cols,
-        Core::Elements::LocationArray& la_slave, Core::Elements::LocationArray& la_master,
-        const int assembler_pid_master) const;
+        const Core::LinAlg::SerialDenseMatrix& cellmatrix, const S2I::InterfaceSides side_rows,
+        const S2I::InterfaceSides side_cols, Core::Elements::LocationArray& la_slave,
+        Core::Elements::LocationArray& la_master, const int assembler_pid_master) const;
 
     /*!
      * @brief  assemble cell vector into system vector
@@ -1211,12 +1195,12 @@ namespace ScaTra
      * @param assembler_pid_master  ID of processor performing master-side vector assembly
      */
     void assemble_cell_vector(Core::LinAlg::MultiVector<double>& systemvector,
-        const Core::LinAlg::SerialDenseVector& cellvector, const Inpar::S2I::InterfaceSides side,
+        const Core::LinAlg::SerialDenseVector& cellvector, const S2I::InterfaceSides side,
         Core::Elements::LocationArray& la_slave, Core::Elements::LocationArray& la_master,
         const int assembler_pid_master) const;
 
     void assemble_cell_vector(const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector,
-        const Core::LinAlg::SerialDenseVector& cellvector, const Inpar::S2I::InterfaceSides side,
+        const Core::LinAlg::SerialDenseVector& cellvector, const S2I::InterfaceSides side,
         Core::Elements::LocationArray& la_slave, Core::Elements::LocationArray& la_master,
         const int assembler_pid_master) const;
 
@@ -1230,7 +1214,7 @@ namespace ScaTra
      * @param la_master  master-side location array
      */
     void init_cell_matrix(Core::LinAlg::SerialDenseMatrix& cellmatrix,
-        const Inpar::S2I::InterfaceSides side_rows, const Inpar::S2I::InterfaceSides side_cols,
+        const S2I::InterfaceSides side_rows, const S2I::InterfaceSides side_cols,
         Core::Elements::LocationArray& la_slave, Core::Elements::LocationArray& la_master) const;
 
     /*!
@@ -1242,7 +1226,7 @@ namespace ScaTra
      * @param la_master   master-side location array
      */
     void init_cell_vector(Core::LinAlg::SerialDenseVector& cellvector,
-        const Inpar::S2I::InterfaceSides side, Core::Elements::LocationArray& la_slave,
+        const S2I::InterfaceSides side, Core::Elements::LocationArray& la_slave,
         Core::Elements::LocationArray& la_master) const;
 
     //! cell matrix 1
@@ -1264,28 +1248,28 @@ namespace ScaTra
     Core::LinAlg::SerialDenseVector cellvector2_;
 
     //! interface side associated with rows of system matrix 1
-    const Inpar::S2I::InterfaceSides matrix1_side_rows_;
+    const S2I::InterfaceSides matrix1_side_rows_;
 
     //! interface side associated with columns of system matrix 1
-    const Inpar::S2I::InterfaceSides matrix1_side_cols_;
+    const S2I::InterfaceSides matrix1_side_cols_;
 
     //! interface side associated with rows of system matrix 2
-    const Inpar::S2I::InterfaceSides matrix2_side_rows_;
+    const S2I::InterfaceSides matrix2_side_rows_;
 
     //! interface side associated with columns of system matrix 2
-    const Inpar::S2I::InterfaceSides matrix2_side_cols_;
+    const S2I::InterfaceSides matrix2_side_cols_;
 
     //! interface side associated with rows of system matrix 3
-    const Inpar::S2I::InterfaceSides matrix3_side_rows_;
+    const S2I::InterfaceSides matrix3_side_rows_;
 
     //! interface side associated with columns of system matrix 3
-    const Inpar::S2I::InterfaceSides matrix3_side_cols_;
+    const S2I::InterfaceSides matrix3_side_cols_;
 
     //! interface side associated with rows of system matrix 4
-    const Inpar::S2I::InterfaceSides matrix4_side_rows_;
+    const S2I::InterfaceSides matrix4_side_rows_;
 
     //! interface side associated with columns of system matrix 4
-    const Inpar::S2I::InterfaceSides matrix4_side_cols_;
+    const S2I::InterfaceSides matrix4_side_cols_;
 
     //! system matrix 1
     const std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1_;
@@ -1306,10 +1290,10 @@ namespace ScaTra
     const std::shared_ptr<Core::LinAlg::FEVector<double>> systemvector2_;
 
     //! interface side associated with system vector 1
-    const Inpar::S2I::InterfaceSides vector1_side_;
+    const S2I::InterfaceSides vector1_side_;
 
     //! interface side associated with system vector 2
-    const Inpar::S2I::InterfaceSides vector2_side_;
+    const S2I::InterfaceSides vector2_side_;
 
     //! number of dofset associated with matrix rows
     const int nds_rows_;

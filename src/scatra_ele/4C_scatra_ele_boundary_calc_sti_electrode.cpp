@@ -10,7 +10,6 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_utils_boundary_integration.hpp"
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_mat_electrode.hpp"
 #include "4C_mat_fourier.hpp"
 #include "4C_mat_soret.hpp"
@@ -19,6 +18,7 @@
 #include "4C_scatra_ele_parameter_elch.hpp"
 #include "4C_scatra_ele_parameter_std.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
+#include "4C_scatra_s2i_input.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -89,7 +89,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype, probdim>::eva
   const int kineticmodel = my::scatraparamsboundary_->kinetic_model();
 
   Core::LinAlg::Matrix<nen_, 1> emastertemp(Core::LinAlg::Initialization::zero);
-  if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
+  if (kineticmodel == S2I::kinetics_butlervolmerreducedthermoresistance)
     my::extract_node_values(emastertemp, discretization, la, "imastertemp", 3);
 
   // element slave mechanical stress tensor
@@ -172,7 +172,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
   switch (kineticmodel)
   {
     // Butler-Volmer-Peltier kinetics
-    case Inpar::S2I::kinetics_butlervolmerpeltier:
+    case S2I::kinetics_butlervolmerpeltier:
     {
       // extract saturation value of intercalated lithium concentration from electrode material
       const double cmax = matelectrode.c_max();
@@ -215,7 +215,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
 
       break;
     }
-    case Inpar::S2I::kinetics_butlervolmerreducedthermoresistance:
+    case S2I::kinetics_butlervolmerreducedthermoresistance:
     {
       // Flux of energy from mass flux and from difference in temperature
       double j_timefacrhsfac(0.0);
@@ -291,9 +291,9 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
 
       break;
     }
-    case Inpar::S2I::kinetics_butlervolmerreduced:
-    case Inpar::S2I::kinetics_constantinterfaceresistance:
-    case Inpar::S2I::kinetics_nointerfaceflux:
+    case S2I::kinetics_butlervolmerreduced:
+    case S2I::kinetics_constantinterfaceresistance:
+    case S2I::kinetics_nointerfaceflux:
     {
       // do nothing
       break;
@@ -339,7 +339,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
   const int kineticmodel = my::scatraparamsboundary_->kinetic_model();
 
   Core::LinAlg::Matrix<nen_, 1> emastertemp(Core::LinAlg::Initialization::zero);
-  if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
+  if (kineticmodel == S2I::kinetics_butlervolmerreducedthermoresistance)
     my::extract_node_values(emastertemp, discretization, la, "imastertemp", 3);
 
   // get primary variable to derive the linearization
@@ -436,7 +436,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
   switch (kineticmodel)
   {
     // Butler-Volmer-Peltier kinetics
-    case Inpar::S2I::kinetics_butlervolmerpeltier:
+    case S2I::kinetics_butlervolmerpeltier:
     {
       switch (differentiationtype)
       {
@@ -528,7 +528,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
       }
       break;
     }
-    case Inpar::S2I::kinetics_butlervolmerreducedthermoresistance:
+    case S2I::kinetics_butlervolmerreducedthermoresistance:
     {
       switch (differentiationtype)
       {
@@ -691,9 +691,9 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
       }
       break;
     }
-    case Inpar::S2I::kinetics_butlervolmerreduced:
-    case Inpar::S2I::kinetics_constantinterfaceresistance:
-    case Inpar::S2I::kinetics_nointerfaceflux:
+    case S2I::kinetics_butlervolmerreduced:
+    case S2I::kinetics_constantinterfaceresistance:
+    case S2I::kinetics_nointerfaceflux:
     {
       // do nothing
       break;

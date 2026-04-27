@@ -310,8 +310,8 @@ void STI::ScatraThermoOffDiagCouplingMatchingNodes::evaluate_scatra_thermo_inter
   for (const auto& kinetics_slave_cond :
       meshtying_strategy_scatra()->kinetics_conditions_meshtying_slave_side())
   {
-    if (kinetics_slave_cond.second->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") !=
-        static_cast<int>(Inpar::S2I::kinetics_nointerfaceflux))
+    if (kinetics_slave_cond.second->parameters().get<S2I::KineticModels>("KINETIC_MODEL") !=
+        static_cast<int>(S2I::kinetics_nointerfaceflux))
     {
       // collect condition specific data and store to scatra boundary parameter class
       meshtying_strategy_scatra()->set_condition_specific_scatra_parameters(
@@ -493,8 +493,8 @@ void STI::ScatraThermoOffDiagCouplingMatchingNodes::evaluate_off_diag_block_ther
   for (const auto& kinetics_slave_cond :
       meshtying_strategy_thermo()->kinetics_conditions_meshtying_slave_side())
   {
-    if (kinetics_slave_cond.second->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") !=
-        static_cast<int>(Inpar::S2I::kinetics_nointerfaceflux))
+    if (kinetics_slave_cond.second->parameters().get<S2I::KineticModels>("KINETIC_MODEL") !=
+        static_cast<int>(S2I::kinetics_nointerfaceflux))
     {
       // collect condition specific data and store to scatra boundary parameter class
       meshtying_strategy_thermo()->set_condition_specific_scatra_parameters(
@@ -648,14 +648,13 @@ void STI::ScatraThermoOffDiagCouplingMortarStandard::
   Teuchos::ParameterList condparams;
 
   // action for elements
-  condparams.set<Inpar::S2I::EvaluationActions>("action", Inpar::S2I::evaluate_condition_od);
+  condparams.set<S2I::EvaluationActions>("action", S2I::evaluate_condition_od);
 
   // create strategy for assembly of auxiliary system matrices
-  ScaTra::MortarCellAssemblyStrategy strategyscatrathermos2i(slavematrix, Inpar::S2I::side_source,
-      Inpar::S2I::side_source, nullptr, Inpar::S2I::side_undefined, Inpar::S2I::side_undefined,
-      mastermatrix_sparse, Inpar::S2I::side_master, Inpar::S2I::side_source, nullptr,
-      Inpar::S2I::side_undefined, Inpar::S2I::side_undefined, nullptr, Inpar::S2I::side_undefined,
-      nullptr, Inpar::S2I::side_undefined, 0, 1);
+  ScaTra::MortarCellAssemblyStrategy strategyscatrathermos2i(slavematrix, S2I::side_source,
+      S2I::side_source, nullptr, S2I::side_undefined, S2I::side_undefined, mastermatrix_sparse,
+      S2I::side_master, S2I::side_source, nullptr, S2I::side_undefined, S2I::side_undefined,
+      nullptr, S2I::side_undefined, nullptr, S2I::side_undefined, 0, 1);
 
   // extract scatra-scatra interface kinetics conditions
   std::vector<const Core::Conditions::Condition*> conditions;
@@ -665,8 +664,7 @@ void STI::ScatraThermoOffDiagCouplingMortarStandard::
   for (const auto& condition : conditions)
   {
     // consider conditions for slave side only
-    if (condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
-        Inpar::S2I::side_source)
+    if (condition->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") == S2I::side_source)
     {
       // add condition to parameter list
       condparams.set<const Core::Conditions::Condition*>("condition", condition);
@@ -794,14 +792,13 @@ void STI::ScatraThermoOffDiagCouplingMortarStandard::
   Teuchos::ParameterList condparams;
 
   // action for elements
-  condparams.set<Inpar::S2I::EvaluationActions>("action", Inpar::S2I::evaluate_condition_od);
+  condparams.set<S2I::EvaluationActions>("action", S2I::evaluate_condition_od);
 
   // create strategy for assembly of auxiliary system matrix
-  ScaTra::MortarCellAssemblyStrategy strategythermoscatras2i(slavematrix, Inpar::S2I::side_source,
-      Inpar::S2I::side_source, slavematrix, Inpar::S2I::side_source, Inpar::S2I::side_master,
-      nullptr, Inpar::S2I::side_undefined, Inpar::S2I::side_undefined, nullptr,
-      Inpar::S2I::side_undefined, Inpar::S2I::side_undefined, nullptr, Inpar::S2I::side_undefined,
-      nullptr, Inpar::S2I::side_undefined, 0, 1);
+  ScaTra::MortarCellAssemblyStrategy strategythermoscatras2i(slavematrix, S2I::side_source,
+      S2I::side_source, slavematrix, S2I::side_source, S2I::side_master, nullptr,
+      S2I::side_undefined, S2I::side_undefined, nullptr, S2I::side_undefined, S2I::side_undefined,
+      nullptr, S2I::side_undefined, nullptr, S2I::side_undefined, 0, 1);
 
   // extract scatra-scatra interface kinetics conditions
   std::vector<const Core::Conditions::Condition*> conditions;
@@ -811,8 +808,7 @@ void STI::ScatraThermoOffDiagCouplingMortarStandard::
   for (const auto& condition : conditions)
   {
     // consider conditions for slave side only
-    if (condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
-        Inpar::S2I::side_source)
+    if (condition->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") == S2I::side_source)
     {
       // add condition to parameter list
       condparams.set<const Core::Conditions::Condition*>("condition", condition);
@@ -886,7 +882,7 @@ void STI::ScatraThermoOffDiagCouplingMortarStandard::
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::shared_ptr<STI::ScatraThermoOffDiagCoupling> STI::build_scatra_thermo_off_diag_coupling(
-    const Inpar::S2I::CouplingType& couplingtype,
+    const S2I::CouplingType& couplingtype,
     std::shared_ptr<const Core::LinAlg::MultiMapExtractor> block_map_thermo,
     std::shared_ptr<const Core::LinAlg::MultiMapExtractor> block_map_thermo_interface,
     std::shared_ptr<const Core::LinAlg::MultiMapExtractor> block_map_thermo_interface_slave,
@@ -903,7 +899,7 @@ std::shared_ptr<STI::ScatraThermoOffDiagCoupling> STI::build_scatra_thermo_off_d
 
   switch (couplingtype)
   {
-    case Inpar::S2I::coupling_matching_nodes:
+    case S2I::coupling_matching_nodes:
     {
       scatrathermooffdiagcoupling = std::make_shared<STI::ScatraThermoOffDiagCouplingMatchingNodes>(
           block_map_thermo, block_map_thermo_interface, block_map_thermo_interface_slave,
@@ -911,7 +907,7 @@ std::shared_ptr<STI::ScatraThermoOffDiagCoupling> STI::build_scatra_thermo_off_d
           meshtying_strategy_scatra, meshtying_strategy_thermo, scatra, thermo);
       break;
     }
-    case Inpar::S2I::coupling_mortar_standard:
+    case S2I::coupling_mortar_standard:
     {
       scatrathermooffdiagcoupling =
           std::make_shared<STI::ScatraThermoOffDiagCouplingMortarStandard>(block_map_thermo,

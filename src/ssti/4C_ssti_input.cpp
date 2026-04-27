@@ -8,11 +8,11 @@
 #include "4C_ssti_input.hpp"
 
 #include "4C_fem_condition_definition.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_linalg_equilibrate.hpp"
 #include "4C_linalg_sparseoperator.hpp"
 #include "4C_scatra_input.hpp"
+#include "4C_scatra_s2i_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -149,9 +149,9 @@ void SSTI::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinitio
   const auto make_sstiinterfacemeshtying = [&condlist](Core::Conditions::ConditionDefinition& cond)
   {
     cond.add_component(parameter<int>("ConditionID"));
-    cond.add_component(deprecated_selection<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE",
-        {{"Undefined", Inpar::S2I::side_undefined}, {"Slave", Inpar::S2I::side_source},
-            {"Master", Inpar::S2I::side_master}},
+    cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
+        {{"Undefined", S2I::side_undefined}, {"Slave", S2I::side_source},
+            {"Master", S2I::side_master}},
         {.description = "interface side"}));
     cond.add_component(parameter<int>("S2I_KINETICS_ID"));
     condlist.push_back(cond);

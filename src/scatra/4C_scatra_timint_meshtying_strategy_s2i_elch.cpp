@@ -202,12 +202,11 @@ void ScaTra::MeshtyingStrategyS2IElch::evaluate_point_coupling()
 
     // compute matrix and vector contributions according to kinetic model for current point coupling
     // condition
-    const int kinetic_model =
-        cond_slave->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL");
+    const int kinetic_model = cond_slave->parameters().get<S2I::KineticModels>("KINETIC_MODEL");
     switch (kinetic_model)
     {
-      case Inpar::S2I::kinetics_butlervolmer:
-      case Inpar::S2I::kinetics_butlervolmerreduced:
+      case S2I::kinetics_butlervolmer:
+      case S2I::kinetics_butlervolmerreduced:
       {
         // access material of electrode
         auto matelectrode = std::dynamic_pointer_cast<const Mat::Electrode>(
@@ -279,8 +278,8 @@ void ScaTra::MeshtyingStrategyS2IElch::evaluate_point_coupling()
         const double eta = ed_pot - el_pot - epd;
 
         // Butler-Volmer exchange mass flux density
-        const double j0 = cond_slave->parameters().get<Inpar::S2I::KineticModels>(
-                              "KINETIC_MODEL") == Inpar::S2I::kinetics_butlervolmerreduced
+        const double j0 = cond_slave->parameters().get<S2I::KineticModels>("KINETIC_MODEL") ==
+                                  S2I::kinetics_butlervolmerreduced
                               ? kr
                               : kr * std::pow(el_conc, alphaa) * std::pow(cmax - ed_conc, alphaa) *
                                     std::pow(ed_conc, alphac);
@@ -337,7 +336,7 @@ void ScaTra::MeshtyingStrategyS2IElch::evaluate_point_coupling()
 
         break;
       }
-      case Inpar::S2I::kinetics_nointerfaceflux:
+      case S2I::kinetics_nointerfaceflux:
         break;
 
       default:
@@ -353,8 +352,8 @@ void ScaTra::MeshtyingStrategyS2IElch::evaluate_point_coupling()
  *------------------------------------------------------------------------*/
 void ScaTra::MeshtyingStrategyS2IElch::init_conv_check_strategy()
 {
-  if (couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_petrov or
-      couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_bubnov)
+  if (couplingtype_ == S2I::coupling_mortar_saddlepoint_petrov or
+      couplingtype_ == S2I::coupling_mortar_saddlepoint_bubnov)
   {
     convcheckstrategy_ = std::make_shared<ScaTra::ConvCheckStrategyS2ILMElch>(
         scatratimint_->scatra_parameter_list()->sublist("NONLINEAR"));
@@ -376,7 +375,7 @@ void ScaTra::MeshtyingStrategyS2IElch::init_conv_check_strategy()
 void ScaTra::MeshtyingStrategyS2IElch::update() const
 {
   // update scatra-scatra interface layer thicknesses in case of semi-implicit solution approach
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_semi_implicit)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_semi_implicit)
   {
     // extract boundary conditions for scatra-scatra interface layer growth
     std::vector<const Core::Conditions::Condition*> conditions;
@@ -387,9 +386,9 @@ void ScaTra::MeshtyingStrategyS2IElch::update() const
     {
       // extract current condition
       // extract kinetic model from current condition
-      switch (condition->parameters().get<Inpar::S2I::GrowthKineticModels>("KINETIC_MODEL"))
+      switch (condition->parameters().get<S2I::GrowthKineticModels>("KINETIC_MODEL"))
       {
-        case Inpar::S2I::growth_kinetics_butlervolmer:
+        case S2I::growth_kinetics_butlervolmer:
         {
           // extract parameters from current condition
           const auto kr = condition->parameters().get<double>("K_R");
@@ -540,8 +539,8 @@ void ScaTra::MeshtyingStrategyS2IElch::update() const
 template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
 ScaTra::MortarCellCalcElch<distype_s, distype_m>*
 ScaTra::MortarCellCalcElch<distype_s, distype_m>::instance(
-    const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-    const Inpar::S2I::InterfaceSides&
+    const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+    const S2I::InterfaceSides&
         lmside,  //!< flag for interface side underlying Lagrange multiplier definition
     const int& numdofpernode_slave,   //!< number of slave-side degrees of freedom per node
     const int& numdofpernode_master,  //!< number of master-side degrees of freedom per node
@@ -549,7 +548,7 @@ ScaTra::MortarCellCalcElch<distype_s, distype_m>::instance(
 )
 {
   static auto singleton_map = Core::Utils::make_singleton_map<std::string>(
-      [](const Inpar::S2I::CouplingType& couplingtype, const Inpar::S2I::InterfaceSides& lmside,
+      [](const S2I::CouplingType& couplingtype, const S2I::InterfaceSides& lmside,
           const int& numdofpernode_slave, const int& numdofpernode_master)
       {
         return std::unique_ptr<MortarCellCalcElch<distype_s, distype_m>>(
@@ -567,8 +566,8 @@ ScaTra::MortarCellCalcElch<distype_s, distype_m>::instance(
  *----------------------------------------------------------------------*/
 template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
 ScaTra::MortarCellCalcElch<distype_s, distype_m>::MortarCellCalcElch(
-    const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-    const Inpar::S2I::InterfaceSides&
+    const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+    const S2I::InterfaceSides&
         lmside,  //!< flag for interface side underlying Lagrange multiplier definition
     const int& numdofpernode_slave,  //!< number of slave-side degrees of freedom per node
     const int& numdofpernode_master  //!< number of master-side degrees of freedom per node
@@ -717,8 +716,8 @@ double ScaTra::MortarCellCalcElch<distype_s, distype_m>::get_frt() const
 template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
 ScaTra::MortarCellCalcElchSTIThermo<distype_s, distype_m>*
 ScaTra::MortarCellCalcElchSTIThermo<distype_s, distype_m>::instance(
-    const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-    const Inpar::S2I::InterfaceSides&
+    const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+    const S2I::InterfaceSides&
         lmside,  //!< flag for interface side underlying Lagrange multiplier definition
     const int& numdofpernode_slave,   //!< number of slave-side degrees of freedom per node
     const int& numdofpernode_master,  //!< number of master-side degrees of freedom per node
@@ -726,7 +725,7 @@ ScaTra::MortarCellCalcElchSTIThermo<distype_s, distype_m>::instance(
 )
 {
   static auto singleton_map = Core::Utils::make_singleton_map<std::string>(
-      [](const Inpar::S2I::CouplingType& couplingtype, const Inpar::S2I::InterfaceSides& lmside,
+      [](const S2I::CouplingType& couplingtype, const S2I::InterfaceSides& lmside,
           const int& numdofpernode_slave, const int& numdofpernode_master)
       {
         return std::unique_ptr<MortarCellCalcElchSTIThermo<distype_s, distype_m>>(
@@ -744,8 +743,8 @@ ScaTra::MortarCellCalcElchSTIThermo<distype_s, distype_m>::instance(
  *----------------------------------------------------------------------*/
 template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
 ScaTra::MortarCellCalcElchSTIThermo<distype_s, distype_m>::MortarCellCalcElchSTIThermo(
-    const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-    const Inpar::S2I::InterfaceSides&
+    const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+    const S2I::InterfaceSides&
         lmside,  //!< flag for interface side underlying Lagrange multiplier definition
     const int& numdofpernode_slave,  //!< number of slave-side degrees of freedom per node
     const int& numdofpernode_master  //!< number of master-side degrees of freedom per node
@@ -781,10 +780,10 @@ void ScaTra::MortarCellCalcElchSTIThermo<distype_s, distype_m>::evaluate(
 )
 {
   // extract and evaluate action
-  switch (Teuchos::getIntegralValue<Inpar::S2I::EvaluationActions>(params, "action"))
+  switch (Teuchos::getIntegralValue<S2I::EvaluationActions>(params, "action"))
   {
     // evaluate and assemble off-diagonal interface linearizations
-    case Inpar::S2I::evaluate_condition_od:
+    case S2I::evaluate_condition_od:
     {
       evaluate_condition_od(idiscret, cell, slaveelement, masterelement, la_slave, la_master,
           params, cellmatrix1, cellmatrix3);
@@ -931,8 +930,8 @@ double ScaTra::MortarCellCalcElchSTIThermo<distype_s, distype_m>::get_frt() cons
 template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
 ScaTra::MortarCellCalcSTIElch<distype_s, distype_m>*
 ScaTra::MortarCellCalcSTIElch<distype_s, distype_m>::instance(
-    const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-    const Inpar::S2I::InterfaceSides&
+    const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+    const S2I::InterfaceSides&
         lmside,  //!< flag for interface side underlying Lagrange multiplier definition
     const int& numdofpernode_slave,   //!< number of slave-side degrees of freedom per node
     const int& numdofpernode_master,  //!< number of master-side degrees of freedom per node
@@ -940,7 +939,7 @@ ScaTra::MortarCellCalcSTIElch<distype_s, distype_m>::instance(
 )
 {
   static auto singleton_map = Core::Utils::make_singleton_map<std::string>(
-      [](const Inpar::S2I::CouplingType& couplingtype, const Inpar::S2I::InterfaceSides& lmside,
+      [](const S2I::CouplingType& couplingtype, const S2I::InterfaceSides& lmside,
           const int& numdofpernode_slave, const int& numdofpernode_master)
       {
         return std::unique_ptr<MortarCellCalcSTIElch<distype_s, distype_m>>(
@@ -958,8 +957,8 @@ ScaTra::MortarCellCalcSTIElch<distype_s, distype_m>::instance(
  *----------------------------------------------------------------------*/
 template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
 ScaTra::MortarCellCalcSTIElch<distype_s, distype_m>::MortarCellCalcSTIElch(
-    const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-    const Inpar::S2I::InterfaceSides&
+    const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+    const S2I::InterfaceSides&
         lmside,  //!< flag for interface side underlying Lagrange multiplier definition
     const int& numdofpernode_slave,  //!< number of slave-side degrees of freedom per node
     const int& numdofpernode_master  //!< number of master-side degrees of freedom per node
@@ -996,10 +995,10 @@ void ScaTra::MortarCellCalcSTIElch<distype_s, distype_m>::evaluate(
 )
 {
   // extract and evaluate action
-  switch (Teuchos::getIntegralValue<Inpar::S2I::EvaluationActions>(params, "action"))
+  switch (Teuchos::getIntegralValue<S2I::EvaluationActions>(params, "action"))
   {
     // evaluate and assemble interface linearizations and residuals
-    case Inpar::S2I::evaluate_condition:
+    case S2I::evaluate_condition:
     {
       evaluate_condition(idiscret, cell, slaveelement, masterelement, la_slave, la_master, params,
           cellmatrix1, cellvector1);
@@ -1008,7 +1007,7 @@ void ScaTra::MortarCellCalcSTIElch<distype_s, distype_m>::evaluate(
     }
 
     // evaluate and assemble off-diagonal interface linearizations
-    case Inpar::S2I::evaluate_condition_od:
+    case S2I::evaluate_condition_od:
     {
       evaluate_condition_od(idiscret, cell, slaveelement, masterelement, la_slave, la_master,
           params, cellmatrix1, cellmatrix2);
@@ -1229,15 +1228,15 @@ void ScaTra::MeshtyingStrategyS2IElchSCL::setup_meshtying()
     if (s2imeshtying_condition->parameters().get<int>("S2I_KINETICS_ID") != -1)
       FOUR_C_THROW("No kinetics condition is allowed for the coupled space-charge layer problem.");
 
-    switch (s2imeshtying_condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE"))
+    switch (s2imeshtying_condition->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE"))
     {
-      case Inpar::S2I::side_source:
+      case S2I::side_source:
       {
         Core::Communication::add_owned_node_gid_from_list(*scatratimint_->discretization(),
             *s2imeshtying_condition->get_nodes(), islavenodegidset);
         break;
       }
-      case Inpar::S2I::side_master:
+      case S2I::side_master:
       {
         Core::Communication::add_owned_node_gid_from_list(*scatratimint_->discretization(),
             *s2imeshtying_condition->get_nodes(), imasternodegidset);

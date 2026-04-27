@@ -56,8 +56,8 @@ ScaTra::MeshtyingStrategyS2I::MeshtyingStrategyS2I(
       icoupmortar_(),
       imortarcells_(),
       imortarredistribution_(
-          Teuchos::getIntegralValue<Inpar::S2I::CouplingType>(parameters.sublist("S2I COUPLING"),
-              "COUPLINGTYPE") == Inpar::S2I::coupling_mortar_standard and
+          Teuchos::getIntegralValue<S2I::CouplingType>(parameters.sublist("S2I COUPLING"),
+              "COUPLINGTYPE") == S2I::coupling_mortar_standard and
           Teuchos::getIntegralValue<Mortar::ParallelRedist>(
               Global::Problem::instance()->mortar_coupling_params().sublist(
                   "PARALLEL REDISTRIBUTION"),
@@ -70,7 +70,7 @@ ScaTra::MeshtyingStrategyS2I::MeshtyingStrategyS2I(
       islavematrix_(nullptr),
       imastermatrix_(nullptr),
       imasterslavematrix_(nullptr),
-      couplingtype_(Teuchos::getIntegralValue<Inpar::S2I::CouplingType>(
+      couplingtype_(Teuchos::getIntegralValue<S2I::CouplingType>(
           parameters.sublist("S2I COUPLING"), "COUPLINGTYPE")),
       D_(nullptr),
       M_(nullptr),
@@ -89,11 +89,11 @@ ScaTra::MeshtyingStrategyS2I::MeshtyingStrategyS2I(
       islavephidtnp_(nullptr),
       imasterphidt_on_slave_side_np_(nullptr),
       imasterphi_on_slave_side_np_(nullptr),
-      lmside_(Teuchos::getIntegralValue<Inpar::S2I::InterfaceSides>(
+      lmside_(Teuchos::getIntegralValue<S2I::InterfaceSides>(
           parameters.sublist("S2I COUPLING"), "LMSIDE")),
       matrixtype_(Teuchos::getIntegralValue<Core::LinAlg::MatrixType>(parameters, "MATRIXTYPE")),
       ntsprojtol_(parameters.sublist("S2I COUPLING").get<double>("NTSPROJTOL")),
-      intlayergrowth_evaluation_(Teuchos::getIntegralValue<Inpar::S2I::GrowthEvaluation>(
+      intlayergrowth_evaluation_(Teuchos::getIntegralValue<S2I::GrowthEvaluation>(
           parameters.sublist("S2I COUPLING"), "INTLAYERGROWTH_EVALUATION")),
       intlayergrowth_convtol_(
           parameters.sublist("S2I COUPLING").get<double>("INTLAYERGROWTH_CONVTOL")),
@@ -135,13 +135,13 @@ void ScaTra::MeshtyingStrategyS2I::condense_mat_and_rhs(
 {
   switch (couplingtype_)
   {
-    case Inpar::S2I::coupling_mortar_condensed_bubnov:
+    case S2I::coupling_mortar_condensed_bubnov:
     {
       // extract global system matrix
       std::shared_ptr<Core::LinAlg::SparseMatrix> sparsematrix = scatratimint_->system_matrix();
       if (sparsematrix == nullptr) FOUR_C_THROW("System matrix is not a sparse matrix!");
 
-      if (lmside_ == Inpar::S2I::side_source)
+      if (lmside_ == S2I::side_source)
       {
         // initialize temporary matrix for slave-side rows of global system matrix
         Core::LinAlg::SparseMatrix sparsematrixrowsslave(*interfacemaps_->map(1), 81);
@@ -261,12 +261,12 @@ void ScaTra::MeshtyingStrategyS2I::condense_mat_and_rhs(
       break;
     }
 
-    case Inpar::S2I::coupling_matching_nodes:
-    case Inpar::S2I::coupling_mortar_standard:
-    case Inpar::S2I::coupling_mortar_saddlepoint_petrov:
-    case Inpar::S2I::coupling_mortar_saddlepoint_bubnov:
-    case Inpar::S2I::coupling_mortar_condensed_petrov:
-    case Inpar::S2I::coupling_nts_standard:
+    case S2I::coupling_matching_nodes:
+    case S2I::coupling_mortar_standard:
+    case S2I::coupling_mortar_saddlepoint_petrov:
+    case S2I::coupling_mortar_saddlepoint_bubnov:
+    case S2I::coupling_mortar_condensed_petrov:
+    case S2I::coupling_nts_standard:
     {
       // do nothing in these cases
       break;
@@ -298,7 +298,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
 
   switch (couplingtype_)
   {
-    case Inpar::S2I::coupling_matching_nodes:
+    case S2I::coupling_matching_nodes:
     {
       // create parameter list
       Teuchos::ParameterList condparams;
@@ -316,8 +316,8 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
       islaveresidual_->put_scalar(0.);
       for (auto kinetics_slave_cond : kinetics_conditions_meshtying_slaveside_)
       {
-        if (kinetics_slave_cond.second->parameters().get<Inpar::S2I::KineticModels>(
-                "KINETIC_MODEL") != static_cast<int>(Inpar::S2I::kinetics_nointerfaceflux) and
+        if (kinetics_slave_cond.second->parameters().get<S2I::KineticModels>("KINETIC_MODEL") !=
+                static_cast<int>(S2I::kinetics_nointerfaceflux) and
             kinetics_slave_cond.second->g_type() != Core::Conditions::geometry_type_point)
         {
           // collect condition specific data and store to scatra boundary parameter class
@@ -551,24 +551,24 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
       break;
     }
 
-    case Inpar::S2I::coupling_mortar_standard:
-    case Inpar::S2I::coupling_mortar_saddlepoint_petrov:
-    case Inpar::S2I::coupling_mortar_saddlepoint_bubnov:
-    case Inpar::S2I::coupling_mortar_condensed_petrov:
-    case Inpar::S2I::coupling_mortar_condensed_bubnov:
-    case Inpar::S2I::coupling_nts_standard:
+    case S2I::coupling_mortar_standard:
+    case S2I::coupling_mortar_saddlepoint_petrov:
+    case S2I::coupling_mortar_saddlepoint_bubnov:
+    case S2I::coupling_mortar_condensed_petrov:
+    case S2I::coupling_mortar_condensed_bubnov:
+    case S2I::coupling_nts_standard:
     {
       // initialize auxiliary system matrix and vector for slave side
-      if (couplingtype_ == Inpar::S2I::coupling_mortar_standard or
-          lmside_ == Inpar::S2I::side_source or couplingtype_ == Inpar::S2I::coupling_nts_standard)
+      if (couplingtype_ == S2I::coupling_mortar_standard or lmside_ == S2I::side_source or
+          couplingtype_ == S2I::coupling_nts_standard)
       {
         islavematrix_->zero();
         islaveresidual_->put_scalar(0.);
       }
 
       // initialize auxiliary system matrix and vector for master side
-      if (couplingtype_ == Inpar::S2I::coupling_mortar_standard or
-          lmside_ == Inpar::S2I::side_master or couplingtype_ == Inpar::S2I::coupling_nts_standard)
+      if (couplingtype_ == S2I::coupling_mortar_standard or lmside_ == S2I::side_master or
+          couplingtype_ == S2I::coupling_nts_standard)
       {
         imastermatrix_->zero();
         imasterresidual_->put_scalar(0.);
@@ -595,50 +595,47 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
         // collect condition specific data and store to scatra boundary parameter class
         set_condition_specific_scatra_parameters(*(kinetics_slave_cond.second));
 
-        if (couplingtype_ != Inpar::S2I::coupling_nts_standard)
+        if (couplingtype_ != S2I::coupling_nts_standard)
         {
           // set action
-          params.set<Inpar::S2I::EvaluationActions>("action", Inpar::S2I::evaluate_condition);
+          params.set<S2I::EvaluationActions>("action", S2I::evaluate_condition);
 
-          evaluate_mortar_cells(idiscret, params, islavematrix_, Inpar::S2I::side_source,
-              Inpar::S2I::side_source, islavematrix_, Inpar::S2I::side_source,
-              Inpar::S2I::side_master, imastermatrix_, Inpar::S2I::side_master,
-              Inpar::S2I::side_source, imastermatrix_, Inpar::S2I::side_master,
-              Inpar::S2I::side_master,
+          evaluate_mortar_cells(idiscret, params, islavematrix_, S2I::side_source, S2I::side_source,
+              islavematrix_, S2I::side_source, S2I::side_master, imastermatrix_, S2I::side_master,
+              S2I::side_source, imastermatrix_, S2I::side_master, S2I::side_master,
               islaveresidual_ != nullptr
                   ? Core::Utils::shared_ptr_from_ref(islaveresidual_->as_multi_vector())
                   : nullptr,
-              Inpar::S2I::side_source, imasterresidual_, Inpar::S2I::side_master);
+              S2I::side_source, imasterresidual_, S2I::side_master);
         }
 
         else
         {
           // set action
-          params.set<Inpar::S2I::EvaluationActions>("action", Inpar::S2I::evaluate_condition_nts);
+          params.set<S2I::EvaluationActions>("action", S2I::evaluate_condition_nts);
 
           // evaluate note-to-segment coupling at current interface
           evaluate_nts(*islavenodestomasterelements_[kinetics_slave_cond.first],
               *islavenodeslumpedareas_[kinetics_slave_cond.first],
               *islavenodesimpltypes_[kinetics_slave_cond.first], idiscret, params, islavematrix_,
-              Inpar::S2I::side_source, Inpar::S2I::side_source, islavematrix_,
-              Inpar::S2I::side_source, Inpar::S2I::side_master, imastermatrix_,
-              Inpar::S2I::side_master, Inpar::S2I::side_source, imastermatrix_,
-              Inpar::S2I::side_master, Inpar::S2I::side_master,
+              S2I::side_source, S2I::side_source, islavematrix_, S2I::side_source, S2I::side_master,
+              imastermatrix_, S2I::side_master, S2I::side_source, imastermatrix_, S2I::side_master,
+              S2I::side_master,
               islaveresidual_ != nullptr
                   ? Core::Utils::shared_ptr_from_ref(islaveresidual_->as_multi_vector())
                   : nullptr,
-              Inpar::S2I::side_source, imasterresidual_, Inpar::S2I::side_master);
+              S2I::side_source, imasterresidual_, S2I::side_master);
         }
       }
 
       // finalize auxiliary system matrix for slave side
-      if (couplingtype_ == Inpar::S2I::coupling_mortar_standard or
-          lmside_ == Inpar::S2I::side_source or couplingtype_ == Inpar::S2I::coupling_nts_standard)
+      if (couplingtype_ == S2I::coupling_mortar_standard or lmside_ == S2I::side_source or
+          couplingtype_ == S2I::coupling_nts_standard)
         islavematrix_->complete(*interfacemaps_->full_map(), *interfacemaps_->map(1));
 
       // finalize auxiliary system matrix and residual vector for master side
-      if (couplingtype_ == Inpar::S2I::coupling_mortar_standard or
-          lmside_ == Inpar::S2I::side_master or couplingtype_ == Inpar::S2I::coupling_nts_standard)
+      if (couplingtype_ == S2I::coupling_mortar_standard or lmside_ == S2I::side_master or
+          couplingtype_ == S2I::coupling_nts_standard)
       {
         imastermatrix_->complete(*interfacemaps_->full_map(), *interfacemaps_->map(2));
         imasterresidual_->complete(Core::LinAlg::CombineMode::add, true);
@@ -657,8 +654,8 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
           // assemble interface contributions into global system of equations
           switch (couplingtype_)
           {
-            case Inpar::S2I::coupling_mortar_standard:
-            case Inpar::S2I::coupling_nts_standard:
+            case S2I::coupling_mortar_standard:
+            case S2I::coupling_nts_standard:
             {
               const std::shared_ptr<const Core::LinAlg::SparseMatrix> islavematrix =
                   not imortarredistribution_
@@ -677,10 +674,10 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
               break;
             }
 
-            case Inpar::S2I::coupling_mortar_saddlepoint_petrov:
-            case Inpar::S2I::coupling_mortar_saddlepoint_bubnov:
+            case S2I::coupling_mortar_saddlepoint_petrov:
+            case S2I::coupling_mortar_saddlepoint_bubnov:
             {
-              if (lmside_ == Inpar::S2I::side_source)
+              if (lmside_ == S2I::side_source)
               {
                 // assemble slave-side interface contributions into global residual vector
                 Core::LinAlg::Vector<double> islaveresidual(*interfacemaps_->map(1));
@@ -722,9 +719,9 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
               break;
             }
 
-            case Inpar::S2I::coupling_mortar_condensed_petrov:
+            case S2I::coupling_mortar_condensed_petrov:
             {
-              if (lmside_ == Inpar::S2I::side_source)
+              if (lmside_ == S2I::side_source)
               {
                 Core::LinAlg::matrix_add(*islavematrix_, false, 1., *systemmatrix, 1.);
                 Core::LinAlg::matrix_add(*Core::LinAlg::matrix_multiply(
@@ -751,7 +748,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
               break;
             }
 
-            case Inpar::S2I::coupling_mortar_condensed_bubnov:
+            case S2I::coupling_mortar_condensed_bubnov:
             {
               // assemble interface contributions into global system of equations
               if (slaveonly_)
@@ -788,7 +785,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
           // assemble interface contributions into global system of equations
           switch (couplingtype_)
           {
-            case Inpar::S2I::coupling_mortar_standard:
+            case S2I::coupling_mortar_standard:
             {
               // split interface sparse matrices into block matrices
               const std::shared_ptr<const Core::LinAlg::SparseMatrix> islavematrix =
@@ -856,7 +853,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
   {
     switch (couplingtype_)
     {
-      case Inpar::S2I::coupling_matching_nodes:
+      case S2I::coupling_matching_nodes:
       {
         // create parameter list for elements
         Teuchos::ParameterList conditionparams;
@@ -971,7 +968,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
             *icoup_->source_to_target(*islaveresidual_), 2, *scatratimint_->residual(), -1.);
 
         // compute additional linearizations and residuals in case of monolithic evaluation approach
-        if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+        if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
         {
           // extract map associated with scalar transport degrees of freedom
           const Core::LinAlg::Map& dofrowmap_scatra =
@@ -1371,9 +1368,8 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_and_assemble_capacitive_contribution
   // evaluate scatra-scatra interface coupling
   for (auto kinetics_slave_cond_cap : kinetics_conditions_meshtying_slaveside_)
   {
-    if (kinetics_slave_cond_cap.second->parameters().get<Inpar::S2I::KineticModels>(
-            "KINETIC_MODEL") ==
-        static_cast<int>(Inpar::S2I::kinetics_butlervolmerreducedcapacitance))
+    if (kinetics_slave_cond_cap.second->parameters().get<S2I::KineticModels>("KINETIC_MODEL") ==
+        static_cast<int>(S2I::kinetics_butlervolmerreducedcapacitance))
     {
       // collect condition specific data and store to scatra boundary parameter class
       set_condition_specific_scatra_parameters(*kinetics_slave_cond_cap.second);
@@ -1541,21 +1537,17 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_mortar_element(const Core::FE::Discr
 void ScaTra::MeshtyingStrategyS2I::evaluate_mortar_cells(const Core::FE::Discretization& idiscret,
     const Teuchos::ParameterList& params,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix1,
-    const Inpar::S2I::InterfaceSides matrix1_side_rows,
-    const Inpar::S2I::InterfaceSides matrix1_side_cols,
+    const S2I::InterfaceSides matrix1_side_rows, const S2I::InterfaceSides matrix1_side_cols,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix2,
-    const Inpar::S2I::InterfaceSides matrix2_side_rows,
-    const Inpar::S2I::InterfaceSides matrix2_side_cols,
+    const S2I::InterfaceSides matrix2_side_rows, const S2I::InterfaceSides matrix2_side_cols,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix3,
-    const Inpar::S2I::InterfaceSides matrix3_side_rows,
-    const Inpar::S2I::InterfaceSides matrix3_side_cols,
+    const S2I::InterfaceSides matrix3_side_rows, const S2I::InterfaceSides matrix3_side_cols,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix4,
-    const Inpar::S2I::InterfaceSides matrix4_side_rows,
-    const Inpar::S2I::InterfaceSides matrix4_side_cols,
+    const S2I::InterfaceSides matrix4_side_rows, const S2I::InterfaceSides matrix4_side_cols,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
-    const Inpar::S2I::InterfaceSides vector1_side,
+    const S2I::InterfaceSides vector1_side,
     const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
-    const Inpar::S2I::InterfaceSides vector2_side) const
+    const S2I::InterfaceSides vector2_side) const
 {
   // instantiate assembly strategy for mortar integration cells
   ScaTra::MortarCellAssemblyStrategy strategy(systemmatrix1, matrix1_side_rows, matrix1_side_cols,
@@ -1633,21 +1625,17 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_nts(
     const Core::LinAlg::Vector<int>& islavenodesimpltypes, const Core::FE::Discretization& idiscret,
     const Teuchos::ParameterList& params,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix1,
-    const Inpar::S2I::InterfaceSides matrix1_side_rows,
-    const Inpar::S2I::InterfaceSides matrix1_side_cols,
+    const S2I::InterfaceSides matrix1_side_rows, const S2I::InterfaceSides matrix1_side_cols,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix2,
-    const Inpar::S2I::InterfaceSides matrix2_side_rows,
-    const Inpar::S2I::InterfaceSides matrix2_side_cols,
+    const S2I::InterfaceSides matrix2_side_rows, const S2I::InterfaceSides matrix2_side_cols,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix3,
-    const Inpar::S2I::InterfaceSides matrix3_side_rows,
-    const Inpar::S2I::InterfaceSides matrix3_side_cols,
+    const S2I::InterfaceSides matrix3_side_rows, const S2I::InterfaceSides matrix3_side_cols,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix4,
-    const Inpar::S2I::InterfaceSides matrix4_side_rows,
-    const Inpar::S2I::InterfaceSides matrix4_side_cols,
+    const S2I::InterfaceSides matrix4_side_rows, const S2I::InterfaceSides matrix4_side_cols,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
-    const Inpar::S2I::InterfaceSides vector1_side,
+    const S2I::InterfaceSides vector1_side,
     const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
-    const Inpar::S2I::InterfaceSides vector2_side) const
+    const S2I::InterfaceSides vector2_side) const
 {
   // instantiate assembly strategy for node-to-segment coupling
   ScaTra::MortarCellAssemblyStrategy strategy(systemmatrix1, matrix1_side_rows, matrix1_side_cols,
@@ -1708,21 +1696,17 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_mortar_elements(const Core::LinAlg::
     const Core::LinAlg::Vector<int>& ieleimpltypes, const Core::FE::Discretization& idiscret,
     const Teuchos::ParameterList& params,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix1,
-    const Inpar::S2I::InterfaceSides matrix1_side_rows,
-    const Inpar::S2I::InterfaceSides matrix1_side_cols,
+    const S2I::InterfaceSides matrix1_side_rows, const S2I::InterfaceSides matrix1_side_cols,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix2,
-    const Inpar::S2I::InterfaceSides matrix2_side_rows,
-    const Inpar::S2I::InterfaceSides matrix2_side_cols,
+    const S2I::InterfaceSides matrix2_side_rows, const S2I::InterfaceSides matrix2_side_cols,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix3,
-    const Inpar::S2I::InterfaceSides matrix3_side_rows,
-    const Inpar::S2I::InterfaceSides matrix3_side_cols,
+    const S2I::InterfaceSides matrix3_side_rows, const S2I::InterfaceSides matrix3_side_cols,
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix4,
-    const Inpar::S2I::InterfaceSides matrix4_side_rows,
-    const Inpar::S2I::InterfaceSides matrix4_side_cols,
+    const S2I::InterfaceSides matrix4_side_rows, const S2I::InterfaceSides matrix4_side_cols,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
-    const Inpar::S2I::InterfaceSides vector1_side,
+    const S2I::InterfaceSides vector1_side,
     const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
-    const Inpar::S2I::InterfaceSides vector2_side) const
+    const S2I::InterfaceSides vector2_side) const
 {
   // instantiate assembly strategy for mortar elements
   ScaTra::MortarCellAssemblyStrategy strategy(systemmatrix1, matrix1_side_rows, matrix1_side_cols,
@@ -1761,8 +1745,8 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_mortar_elements(const Core::LinAlg::
  *--------------------------------------------------------------------------------------*/
 ScaTra::MortarCellInterface* ScaTra::MortarCellFactory::mortar_cell_calc(
     const ScaTra::ImplType& impltype, const Mortar::Element& slaveelement,
-    const Mortar::Element& masterelement, const Inpar::S2I::CouplingType& couplingtype,
-    const Inpar::S2I::InterfaceSides& lmside, const std::string& disname)
+    const Mortar::Element& masterelement, const S2I::CouplingType& couplingtype,
+    const S2I::InterfaceSides& lmside, const std::string& disname)
 {
   // extract number of slave-side degrees of freedom per node
   const int numdofpernode_slave = slaveelement.num_dof_per_node(*slaveelement.nodes()[0]);
@@ -1798,7 +1782,7 @@ ScaTra::MortarCellInterface* ScaTra::MortarCellFactory::mortar_cell_calc(
 template <Core::FE::CellType distype_s>
 ScaTra::MortarCellInterface* ScaTra::MortarCellFactory::mortar_cell_calc(
     const ScaTra::ImplType& impltype, const Mortar::Element& masterelement,
-    const Inpar::S2I::CouplingType& couplingtype, const Inpar::S2I::InterfaceSides& lmside,
+    const S2I::CouplingType& couplingtype, const S2I::InterfaceSides& lmside,
     const int& numdofpernode_slave, const std::string& disname)
 {
   // extract number of master-side degrees of freedom per node
@@ -1834,8 +1818,8 @@ ScaTra::MortarCellInterface* ScaTra::MortarCellFactory::mortar_cell_calc(
  *--------------------------------------------------------------------------------------*/
 template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
 ScaTra::MortarCellInterface* ScaTra::MortarCellFactory::mortar_cell_calc(
-    const ScaTra::ImplType& impltype, const Inpar::S2I::CouplingType& couplingtype,
-    const Inpar::S2I::InterfaceSides& lmside, const int& numdofpernode_slave,
+    const ScaTra::ImplType& impltype, const S2I::CouplingType& couplingtype,
+    const S2I::InterfaceSides& lmside, const int& numdofpernode_slave,
     const int& numdofpernode_master, const std::string& disname)
 {
   // return instance of evaluation class for mortar integration cell depending on physical
@@ -1884,8 +1868,8 @@ ScaTra::MortarCellInterface* ScaTra::MortarCellFactory::mortar_cell_calc(
  *------------------------------------------------------------------------*/
 void ScaTra::MeshtyingStrategyS2I::init_conv_check_strategy()
 {
-  if (couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_petrov or
-      couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_bubnov)
+  if (couplingtype_ == S2I::coupling_mortar_saddlepoint_petrov or
+      couplingtype_ == S2I::coupling_mortar_saddlepoint_bubnov)
   {
     convcheckstrategy_ = std::make_shared<ScaTra::ConvCheckStrategyS2ILM>(
         scatratimint_->scatra_parameter_list()->sublist("NONLINEAR"));
@@ -1917,7 +1901,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
     {
       const int s2ikinetics_cond_id = s2ikinetics_cond->parameters().get<int>("ConditionID");
       const int s2ikinetics_cond_interface_side =
-          s2ikinetics_cond->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE");
+          s2ikinetics_cond->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE");
 
       if (s2ikinetics_cond_id < 0)
         FOUR_C_THROW("Invalid condition ID {} for S2IKinetics Condition!", s2ikinetics_cond_id);
@@ -1926,13 +1910,13 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
       if (s2imeshtying_cond->parameters().get<int>("S2I_KINETICS_ID") != s2ikinetics_cond_id)
         continue;
       // only continue if sides match
-      if (s2imeshtying_cond->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") !=
+      if (s2imeshtying_cond->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") !=
           s2ikinetics_cond_interface_side)
         continue;
 
       switch (s2ikinetics_cond_interface_side)
       {
-        case Inpar::S2I::side_source:
+        case S2I::side_source:
         {
           if (kinetics_conditions_meshtying_slaveside_.find(s2ikinetics_cond_id) ==
               kinetics_conditions_meshtying_slaveside_.end())
@@ -1948,8 +1932,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                 s2ikinetics_cond_id);
           }
 
-          if (s2ikinetics_cond->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") ==
-              static_cast<int>(Inpar::S2I::kinetics_butlervolmerreducedcapacitance))
+          if (s2ikinetics_cond->parameters().get<S2I::KineticModels>("KINETIC_MODEL") ==
+              static_cast<int>(S2I::kinetics_butlervolmerreducedcapacitance))
           {
             has_capacitive_contributions_ = true;
 
@@ -1972,7 +1956,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
           break;
         }
 
-        case Inpar::S2I::side_master:
+        case S2I::side_master:
         {
           if (master_conditions_.find(s2ikinetics_cond_id) == master_conditions_.end())
           {
@@ -2002,7 +1986,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
   {
     // setup scatra-scatra interface coupling for interfaces with pairwise overlapping interface
     // nodes
-    case Inpar::S2I::coupling_matching_nodes:
+    case S2I::coupling_matching_nodes:
     {
       // overwrite IDs of master-side scatra-scatra interface coupling conditions with the value -1
       // to prevent them from being evaluated when calling evaluate_condition on the discretization
@@ -2042,8 +2026,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                    scatratimint_->num_dof_per_node_in_condition(*kinetics_condition))
             FOUR_C_THROW("all S2I conditions must have the same number of dof per node");
 
-          if (kinetics_condition->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") !=
-              static_cast<int>(Inpar::S2I::kinetics_nointerfaceflux))
+          if (kinetics_condition->parameters().get<S2I::KineticModels>("KINETIC_MODEL") !=
+              static_cast<int>(S2I::kinetics_nointerfaceflux))
           {
             Core::Communication::add_owned_node_gid_from_list(*scatratimint_->discretization(),
                 *kinetics_condition->get_nodes(), islavenodegidvec);
@@ -2081,8 +2065,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                    scatratimint_->num_dof_per_node_in_condition(*kinetics_condition))
             FOUR_C_THROW("all S2I conditions must have the same number of dof per node");
 
-          if (kinetics_condition->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") !=
-              static_cast<int>(Inpar::S2I::kinetics_nointerfaceflux))
+          if (kinetics_condition->parameters().get<S2I::KineticModels>("KINETIC_MODEL") !=
+              static_cast<int>(S2I::kinetics_nointerfaceflux))
           {
             Core::Communication::add_owned_node_gid_from_list(*scatratimint_->discretization(),
                 *kinetics_condition->get_nodes(), islavenodegidset);
@@ -2149,15 +2133,15 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
     }
 
     // setup scatra-scatra interface coupling for interfaces with non-overlapping interface nodes
-    case Inpar::S2I::coupling_mortar_standard:
-    case Inpar::S2I::coupling_mortar_saddlepoint_petrov:
-    case Inpar::S2I::coupling_mortar_saddlepoint_bubnov:
-    case Inpar::S2I::coupling_mortar_condensed_petrov:
-    case Inpar::S2I::coupling_mortar_condensed_bubnov:
-    case Inpar::S2I::coupling_nts_standard:
+    case S2I::coupling_mortar_standard:
+    case S2I::coupling_mortar_saddlepoint_petrov:
+    case S2I::coupling_mortar_saddlepoint_bubnov:
+    case S2I::coupling_mortar_condensed_petrov:
+    case S2I::coupling_mortar_condensed_bubnov:
+    case S2I::coupling_nts_standard:
     {
       // safety checks
-      if (imortarredistribution_ and couplingtype_ != Inpar::S2I::coupling_mortar_standard)
+      if (imortarredistribution_ and couplingtype_ != S2I::coupling_mortar_standard)
       {
         FOUR_C_THROW(
             "Parallel redistribution only implemented for scatra-scatra interface coupling based "
@@ -2237,7 +2221,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
         // extract mortar discretization
         const Core::FE::Discretization& idiscret = interface.discret();
 
-        if (couplingtype_ != Inpar::S2I::coupling_nts_standard)
+        if (couplingtype_ != S2I::coupling_nts_standard)
         {
           // provide each slave-side mortar element with material of corresponding parent element
           for (int iele = 0; iele < interface.source_col_elements()->num_my_elements(); ++iele)
@@ -2441,23 +2425,21 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
           Teuchos::ParameterList eleparams;
 
           // set action for slave-side elements
-          eleparams.set<Inpar::S2I::EvaluationActions>(
-              "action", Inpar::S2I::evaluate_nodal_area_fractions);
+          eleparams.set<S2I::EvaluationActions>("action", S2I::evaluate_nodal_area_fractions);
 
           // compute vector for lumped interface area fractions associated with slave-side nodes
           const Core::LinAlg::Map& dofrowmap_slave = *interface.source_row_dofs();
           std::shared_ptr<Core::LinAlg::Vector<double>> islavenodeslumpedareas_dofvector =
               std::make_shared<Core::LinAlg::Vector<double>>(dofrowmap_slave);
           evaluate_mortar_elements(elecolmap_slave, islaveelementsimpltypes, idiscret, eleparams,
-              nullptr, Inpar::S2I::side_undefined, Inpar::S2I::side_undefined, nullptr,
-              Inpar::S2I::side_undefined, Inpar::S2I::side_undefined, nullptr,
-              Inpar::S2I::side_undefined, Inpar::S2I::side_undefined, nullptr,
-              Inpar::S2I::side_undefined, Inpar::S2I::side_undefined,
+              nullptr, S2I::side_undefined, S2I::side_undefined, nullptr, S2I::side_undefined,
+              S2I::side_undefined, nullptr, S2I::side_undefined, S2I::side_undefined, nullptr,
+              S2I::side_undefined, S2I::side_undefined,
               islavenodeslumpedareas_dofvector != nullptr
                   ? Core::Utils::shared_ptr_from_ref(
                         islavenodeslumpedareas_dofvector->as_multi_vector())
                   : nullptr,
-              Inpar::S2I::side_source, nullptr, Inpar::S2I::side_undefined);
+              S2I::side_source, nullptr, S2I::side_undefined);
 
           // transform map of result vector
           std::shared_ptr<Core::LinAlg::Vector<double>>& islavenodeslumpedareas =
@@ -2497,8 +2479,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
           *(scatratimint_->discretization()->dof_row_map()), imaps);
       interfacemaps_->check_for_valid_map_extractor();
 
-      if (couplingtype_ == Inpar::S2I::coupling_mortar_standard or
-          lmside_ == Inpar::S2I::side_source or couplingtype_ == Inpar::S2I::coupling_nts_standard)
+      if (couplingtype_ == S2I::coupling_mortar_standard or lmside_ == S2I::side_source or
+          couplingtype_ == S2I::coupling_nts_standard)
       {
         // initialize auxiliary system matrix for slave side
         islavematrix_ = std::make_shared<Core::LinAlg::SparseMatrix>(*interfacemaps_->map(1), 81);
@@ -2507,8 +2489,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
         islaveresidual_ = std::make_shared<Core::LinAlg::Vector<double>>(*interfacemaps_->map(1));
       }
 
-      if (couplingtype_ == Inpar::S2I::coupling_mortar_standard or
-          lmside_ == Inpar::S2I::side_master or couplingtype_ == Inpar::S2I::coupling_nts_standard)
+      if (couplingtype_ == S2I::coupling_mortar_standard or lmside_ == S2I::side_master or
+          couplingtype_ == S2I::coupling_nts_standard)
       {
         // initialize auxiliary system matrix for master side
         imastermatrix_ = std::make_shared<Core::LinAlg::SparseMatrix>(
@@ -2521,17 +2503,17 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
 
       switch (couplingtype_)
       {
-        case Inpar::S2I::coupling_mortar_saddlepoint_petrov:
-        case Inpar::S2I::coupling_mortar_saddlepoint_bubnov:
-        case Inpar::S2I::coupling_mortar_condensed_petrov:
-        case Inpar::S2I::coupling_mortar_condensed_bubnov:
+        case S2I::coupling_mortar_saddlepoint_petrov:
+        case S2I::coupling_mortar_saddlepoint_bubnov:
+        case S2I::coupling_mortar_condensed_petrov:
+        case S2I::coupling_mortar_condensed_bubnov:
         {
-          if (lmside_ == Inpar::S2I::side_source)
+          if (lmside_ == S2I::side_source)
           {
             D_ = std::make_shared<Core::LinAlg::SparseMatrix>(*interfacemaps_->map(1), 81);
             M_ = std::make_shared<Core::LinAlg::SparseMatrix>(*interfacemaps_->map(1), 81);
-            if (couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_bubnov or
-                couplingtype_ == Inpar::S2I::coupling_mortar_condensed_bubnov)
+            if (couplingtype_ == S2I::coupling_mortar_saddlepoint_bubnov or
+                couplingtype_ == S2I::coupling_mortar_condensed_bubnov)
               E_ = std::make_shared<Core::LinAlg::SparseMatrix>(*interfacemaps_->map(1), 81);
           }
           else
@@ -2540,8 +2522,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                 *interfacemaps_->map(2), 81, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
             M_ = std::make_shared<Core::LinAlg::SparseMatrix>(
                 *interfacemaps_->map(2), 81, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
-            if (couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_bubnov or
-                couplingtype_ == Inpar::S2I::coupling_mortar_condensed_bubnov)
+            if (couplingtype_ == S2I::coupling_mortar_saddlepoint_bubnov or
+                couplingtype_ == S2I::coupling_mortar_condensed_bubnov)
               E_ = std::make_shared<Core::LinAlg::SparseMatrix>(
                   *interfacemaps_->map(2), 81, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
           }
@@ -2556,48 +2538,38 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
             params.set<const Core::Conditions::Condition*>("condition", kinetics_slave_cond.second);
 
             // set action
-            params.set<Inpar::S2I::EvaluationActions>(
-                "action", Inpar::S2I::evaluate_mortar_matrices);
+            params.set<S2I::EvaluationActions>("action", S2I::evaluate_mortar_matrices);
 
             // evaluate mortar integration cells at current interface
             evaluate_mortar_cells(icoupmortar_[kinetics_slave_cond.first]->interface()->discret(),
-                params, D_,
-                lmside_ == Inpar::S2I::side_source ? Inpar::S2I::side_source
-                                                   : Inpar::S2I::side_master,
-                lmside_ == Inpar::S2I::side_source ? Inpar::S2I::side_source
-                                                   : Inpar::S2I::side_master,
-                M_,
-                lmside_ == Inpar::S2I::side_source ? Inpar::S2I::side_source
-                                                   : Inpar::S2I::side_master,
-                lmside_ == Inpar::S2I::side_source ? Inpar::S2I::side_master
-                                                   : Inpar::S2I::side_source,
-                E_,
-                lmside_ == Inpar::S2I::side_source ? Inpar::S2I::side_source
-                                                   : Inpar::S2I::side_master,
-                lmside_ == Inpar::S2I::side_source ? Inpar::S2I::side_source
-                                                   : Inpar::S2I::side_master,
-                nullptr, Inpar::S2I::side_undefined, Inpar::S2I::side_undefined, nullptr,
-                Inpar::S2I::side_undefined, nullptr, Inpar::S2I::side_undefined);
+                params, D_, lmside_ == S2I::side_source ? S2I::side_source : S2I::side_master,
+                lmside_ == S2I::side_source ? S2I::side_source : S2I::side_master, M_,
+                lmside_ == S2I::side_source ? S2I::side_source : S2I::side_master,
+                lmside_ == S2I::side_source ? S2I::side_master : S2I::side_source, E_,
+                lmside_ == S2I::side_source ? S2I::side_source : S2I::side_master,
+                lmside_ == S2I::side_source ? S2I::side_source : S2I::side_master, nullptr,
+                S2I::side_undefined, S2I::side_undefined, nullptr, S2I::side_undefined, nullptr,
+                S2I::side_undefined);
           }
 
           // finalize mortar matrices D, M, and E
           D_->complete();
-          if (lmside_ == Inpar::S2I::side_source)
+          if (lmside_ == S2I::side_source)
             M_->complete(*interfacemaps_->map(2), *interfacemaps_->map(1));
           else
             M_->complete(*interfacemaps_->map(1), *interfacemaps_->map(2));
-          if (couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_bubnov or
-              couplingtype_ == Inpar::S2I::coupling_mortar_condensed_bubnov)
+          if (couplingtype_ == S2I::coupling_mortar_saddlepoint_bubnov or
+              couplingtype_ == S2I::coupling_mortar_condensed_bubnov)
             E_->complete();
 
           switch (couplingtype_)
           {
-            case Inpar::S2I::coupling_mortar_condensed_petrov:
-            case Inpar::S2I::coupling_mortar_condensed_bubnov:
+            case S2I::coupling_mortar_condensed_petrov:
+            case S2I::coupling_mortar_condensed_bubnov:
             {
               // set up mortar projector P
               std::shared_ptr<Core::LinAlg::Vector<double>> D_diag(nullptr);
-              if (lmside_ == Inpar::S2I::side_source)
+              if (lmside_ == S2I::side_source)
                 D_diag = std::make_shared<Core::LinAlg::Vector<double>>(*interfacemaps_->map(1));
               else
                 D_diag = std::make_shared<Core::LinAlg::Vector<double>>(*interfacemaps_->map(2));
@@ -2614,7 +2586,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                 M_ = nullptr;
               }
 
-              if (couplingtype_ == Inpar::S2I::coupling_mortar_condensed_bubnov)
+              if (couplingtype_ == S2I::coupling_mortar_condensed_bubnov)
               {
                 // set up mortar projector Q
                 Q_ = std::make_shared<Core::LinAlg::SparseMatrix>(*E_);
@@ -2627,8 +2599,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
               break;
             }
 
-            case Inpar::S2I::coupling_mortar_saddlepoint_petrov:
-            case Inpar::S2I::coupling_mortar_saddlepoint_bubnov:
+            case S2I::coupling_mortar_saddlepoint_petrov:
+            case S2I::coupling_mortar_saddlepoint_bubnov:
             {
               // determine number of Lagrange multiplier dofs owned by each processor
               MPI_Comm comm(scatratimint_->discretization()->get_comm());
@@ -2636,7 +2608,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
               const int mypid(Core::Communication::my_mpi_rank(comm));
               std::vector<int> localnumlmdof(numproc, 0);
               std::vector<int> globalnumlmdof(numproc, 0);
-              if (lmside_ == Inpar::S2I::side_source)
+              if (lmside_ == S2I::side_source)
                 localnumlmdof[mypid] = interfacemaps_->map(1)->num_my_elements();
               else
                 localnumlmdof[mypid] = interfacemaps_->map(2)->num_my_elements();
@@ -2676,7 +2648,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
               D_ = Core::LinAlg::matrix_row_transform_gids(*D_, *lmdofrowmap);
               M_ = Core::LinAlg::matrix_row_transform_gids(*M_, *lmdofrowmap);
 
-              if (couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_petrov)
+              if (couplingtype_ == S2I::coupling_mortar_saddlepoint_petrov)
               {
                 // transform domain map of mortar matrix D from slave-side dofrowmap to Lagrange
                 // multiplier dofrowmap and store transformed matrix as mortar matrix E
@@ -2764,8 +2736,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
     // perform setup depending on evaluation method
     switch (intlayergrowth_evaluation_)
     {
-      case Inpar::S2I::growth_evaluation_monolithic:
-      case Inpar::S2I::growth_evaluation_semi_implicit:
+      case S2I::growth_evaluation_monolithic:
+      case S2I::growth_evaluation_semi_implicit:
       {
         // extract map associated with scatra-scatra interface layer thicknesses
         const std::shared_ptr<const Core::LinAlg::Map>& dofrowmap_growth =
@@ -2775,7 +2747,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
         growthn_ = std::make_shared<Core::LinAlg::Vector<double>>(*dofrowmap_growth, true);
 
         // additional initializations for monolithic solution approach
-        if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+        if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
         {
           // initialize extended map extractor
           const Core::LinAlg::Map* const dofrowmap_scatra =
@@ -2911,7 +2883,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
         }  // loop over all nodes
 
         // copy initial state
-        if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+        if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
           growthnp_->update(1., *growthn_, 0.);
 
         break;
@@ -2931,7 +2903,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
   auto equilibration_method =
       std::vector<Core::LinAlg::EquilibrationMethod>(1, scatratimint_->equilibration_method());
   equilibration_ = Core::LinAlg::build_equilibration(matrixtype_, equilibration_method,
-      (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic
+      (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic
               ? extendedmaps_->full_map()
               : std::make_shared<const Core::LinAlg::Map>(
                     *scatratimint_->discretization()->dof_row_map())));
@@ -2942,7 +2914,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
 void ScaTra::MeshtyingStrategyS2I::compute_time_derivative() const
 {
   // only relevant for monolithic evaluation of scatra-scatra interface layer growth
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
   {
     // compute inverse time factor 1./(theta*dt)
     const double timefac_inverse =
@@ -2959,7 +2931,7 @@ void ScaTra::MeshtyingStrategyS2I::compute_time_derivative() const
 void ScaTra::MeshtyingStrategyS2I::update() const
 {
   // only relevant for monolithic evaluation of scatra-scatra interface layer growth
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
   {
     // update state vectors
     growthn_->update(1., *growthnp_, 0.);
@@ -3013,14 +2985,14 @@ void ScaTra::MeshtyingStrategyS2I::write_s2_i_kinetics_specific_scatra_parameter
     case Core::Conditions::ConditionType::S2IKinetics:
     {
       const int kineticmodel =
-          s2ikinetics_cond.parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL");
+          s2ikinetics_cond.parameters().get<S2I::KineticModels>("KINETIC_MODEL");
       s2icouplingparameters.set("KINETIC_MODEL", kineticmodel);
 
       // set the kinetic model specific parameters
       switch (kineticmodel)
       {
-        case Inpar::S2I::kinetics_constperm:
-        case Inpar::S2I::kinetics_linearperm:
+        case S2I::kinetics_constperm:
+        case S2I::kinetics_linearperm:
         {
           s2icouplingparameters.set<int>(
               "NUMSCAL", s2ikinetics_cond.parameters().get<int>("NUMSCAL"));
@@ -3031,7 +3003,7 @@ void ScaTra::MeshtyingStrategyS2I::write_s2_i_kinetics_specific_scatra_parameter
           break;
         }
 
-        case Inpar::S2I::kinetics_constantinterfaceresistance:
+        case S2I::kinetics_constantinterfaceresistance:
         {
           s2icouplingparameters.set<double>(
               "RESISTANCE", s2ikinetics_cond.parameters().get<double>("RESISTANCE"));
@@ -3044,21 +3016,21 @@ void ScaTra::MeshtyingStrategyS2I::write_s2_i_kinetics_specific_scatra_parameter
           break;
         }
 
-        case Inpar::S2I::kinetics_nointerfaceflux:
+        case S2I::kinetics_nointerfaceflux:
         {
           // do nothing
           break;
         }
 
-        case Inpar::S2I::kinetics_butlervolmer:
-        case Inpar::S2I::kinetics_butlervolmerlinearized:
-        case Inpar::S2I::kinetics_butlervolmerreduced:
-        case Inpar::S2I::kinetics_butlervolmerreducedcapacitance:
-        case Inpar::S2I::kinetics_butlervolmerreducedlinearized:
-        case Inpar::S2I::kinetics_butlervolmerpeltier:
-        case Inpar::S2I::kinetics_butlervolmerresistance:
-        case Inpar::S2I::kinetics_butlervolmerreducedthermoresistance:
-        case Inpar::S2I::kinetics_butlervolmerreducedresistance:
+        case S2I::kinetics_butlervolmer:
+        case S2I::kinetics_butlervolmerlinearized:
+        case S2I::kinetics_butlervolmerreduced:
+        case S2I::kinetics_butlervolmerreducedcapacitance:
+        case S2I::kinetics_butlervolmerreducedlinearized:
+        case S2I::kinetics_butlervolmerpeltier:
+        case S2I::kinetics_butlervolmerresistance:
+        case S2I::kinetics_butlervolmerreducedthermoresistance:
+        case S2I::kinetics_butlervolmerreducedresistance:
         {
           s2icouplingparameters.set<int>(
               "NUMSCAL", s2ikinetics_cond.parameters().get<int>("NUMSCAL"));
@@ -3075,16 +3047,16 @@ void ScaTra::MeshtyingStrategyS2I::write_s2_i_kinetics_specific_scatra_parameter
           s2icouplingparameters.set<bool>(
               "IS_PSEUDO_CONTACT", s2ikinetics_cond.parameters().get<bool>("IS_PSEUDO_CONTACT"));
 
-          if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedcapacitance)
+          if (kineticmodel == S2I::kinetics_butlervolmerreducedcapacitance)
             s2icouplingparameters.set<double>(
                 "CAPACITANCE", s2ikinetics_cond.parameters().get<double>("CAPACITANCE"));
 
-          if (kineticmodel == Inpar::S2I::kinetics_butlervolmerpeltier)
+          if (kineticmodel == S2I::kinetics_butlervolmerpeltier)
             s2icouplingparameters.set<double>(
                 "PELTIER", s2ikinetics_cond.parameters().get<double>("PELTIER"));
 
-          if (kineticmodel == Inpar::S2I::kinetics_butlervolmerresistance or
-              kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedresistance)
+          if (kineticmodel == S2I::kinetics_butlervolmerresistance or
+              kineticmodel == S2I::kinetics_butlervolmerreducedresistance)
           {
             s2icouplingparameters.set<double>(
                 "RESISTANCE", s2ikinetics_cond.parameters().get<double>("RESISTANCE"));
@@ -3094,7 +3066,7 @@ void ScaTra::MeshtyingStrategyS2I::write_s2_i_kinetics_specific_scatra_parameter
                 s2ikinetics_cond.parameters().get<int>("ITEMAX_IMPLBUTLERVOLMER"));
           }
 
-          if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
+          if (kineticmodel == S2I::kinetics_butlervolmerreducedthermoresistance)
           {
             s2icouplingparameters.set<double>(
                 "THERMOPERM", s2ikinetics_cond.parameters().get<double>("THERMOPERM"));
@@ -3115,13 +3087,13 @@ void ScaTra::MeshtyingStrategyS2I::write_s2_i_kinetics_specific_scatra_parameter
     case Core::Conditions::ConditionType::S2IKineticsGrowth:
     {
       const int kineticmodel =
-          s2ikinetics_cond.parameters().get<Inpar::S2I::GrowthKineticModels>("KINETIC_MODEL");
+          s2ikinetics_cond.parameters().get<S2I::GrowthKineticModels>("KINETIC_MODEL");
       s2icouplingparameters.set("KINETIC_MODEL", kineticmodel);
 
       // set the kinetic model specific parameters
       switch (kineticmodel)
       {
-        case Inpar::S2I::growth_kinetics_butlervolmer:
+        case S2I::growth_kinetics_butlervolmer:
         {
           s2icouplingparameters.set<int>(
               "NUMSCAL", s2ikinetics_cond.parameters().get<int>("NUMSCAL"));
@@ -3141,8 +3113,8 @@ void ScaTra::MeshtyingStrategyS2I::write_s2_i_kinetics_specific_scatra_parameter
               "MOLMASS", s2ikinetics_cond.parameters().get<double>("MOLMASS"));
           s2icouplingparameters.set<double>(
               "REGPAR", s2ikinetics_cond.parameters().get<double>("REGPAR"));
-          s2icouplingparameters.set("REGTYPE",
-              s2ikinetics_cond.parameters().get<Inpar::S2I::RegularizationType>("REGTYPE"));
+          s2icouplingparameters.set(
+              "REGTYPE", s2ikinetics_cond.parameters().get<S2I::RegularizationType>("REGTYPE"));
           s2icouplingparameters.set<double>(
               "CONDUCTIVITY", s2ikinetics_cond.parameters().get<double>("CONDUCTIVITY"));
           break;
@@ -3168,7 +3140,7 @@ void ScaTra::MeshtyingStrategyS2I::write_s2_i_kinetics_specific_scatra_parameter
 void ScaTra::MeshtyingStrategyS2I::set_old_part_of_rhs() const
 {
   // only relevant for monolithic evaluation of scatra-scatra interface layer growth
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
   {
     // compute factor dt*(1-theta)
     const double factor = scatratimint_->dt() -
@@ -3185,13 +3157,13 @@ void ScaTra::MeshtyingStrategyS2I::write_restart() const
 {
   // only relevant for monolithic or semi-implicit evaluation of scatra-scatra interface layer
   // growth
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic or
-      intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_semi_implicit)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic or
+      intlayergrowth_evaluation_ == S2I::growth_evaluation_semi_implicit)
   {
     // output state vector of discrete scatra-scatra interface layer thicknesses
     scatratimint_->disc_writer()->write_vector("growthn", growthn_);
 
-    if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+    if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
     {
       // output state vector of time derivatives of discrete scatra-scatra interface layer
       // thicknesses
@@ -3207,8 +3179,8 @@ void ScaTra::MeshtyingStrategyS2I::read_restart(
 {
   // only relevant for monolithic or semi-implicit evaluation of scatra-scatra interface layer
   // growth
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic or
-      intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_semi_implicit)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic or
+      intlayergrowth_evaluation_ == S2I::growth_evaluation_semi_implicit)
   {
     // initialize reader
     std::shared_ptr<Core::IO::DiscretizationReader> reader(nullptr);
@@ -3222,7 +3194,7 @@ void ScaTra::MeshtyingStrategyS2I::read_restart(
     // read state vector of discrete scatra-scatra interface layer thicknesses
     reader->read_vector(growthn_, "growthn");
 
-    if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+    if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
     {
       // read state vector of time derivatives of discrete scatra-scatra interface layer thicknesses
       reader->read_vector(growthdtn_, "growthdtn");
@@ -3248,14 +3220,13 @@ void ScaTra::MeshtyingStrategyS2I::collect_output_data() const
 {
   // only relevant for monolithic or semi-implicit evaluation of scatra-scatra interface layer
   // growth
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic or
-      intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_semi_implicit)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic or
+      intlayergrowth_evaluation_ == S2I::growth_evaluation_semi_implicit)
   {
     // extract relevant state vector of discrete scatra-scatra interface layer thicknesses based on
     // map of scatra-scatra interface layer thickness variables
     const Core::LinAlg::Vector<double>& growth =
-        intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic ? *growthnp_
-                                                                               : *growthn_;
+        intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic ? *growthnp_ : *growthn_;
 
     // for proper output, initialize target state vector of discrete scatra-scatra interface layer
     // thicknesses based on map of row nodes
@@ -3329,8 +3300,8 @@ void ScaTra::MeshtyingStrategyS2I::output_interface_flux() const
   for (auto* s2ikinetics_cond : s2ikinetics_conditions)
   {
     // only slave side has relevant information
-    if (s2ikinetics_cond->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
-        static_cast<int>(Inpar::S2I::side_source))
+    if (s2ikinetics_cond->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") ==
+        static_cast<int>(S2I::side_source))
     {
       const int condition_id = s2ikinetics_cond->parameters().get<int>("ConditionID");
       auto s2i_flux =
@@ -3380,7 +3351,7 @@ void ScaTra::MeshtyingStrategyS2I::output_interface_flux() const
 void ScaTra::MeshtyingStrategyS2I::explicit_predictor() const
 {
   // only relevant for monolithic evaluation of scatra-scatra interface layer growth
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
     // predict state vector of discrete scatra-scatra interface layer thicknesses at time n+1
     growthnp_->update(scatratimint_->dt(), *growthdtn_, 1.);
 }
@@ -3421,7 +3392,7 @@ void ScaTra::MeshtyingStrategyS2I::extract_matrix_rows(
 void ScaTra::MeshtyingStrategyS2I::add_time_integration_specific_vectors() const
 {
   // only relevant for scatra-scatra interface coupling with pairwise coinciding interface nodes
-  if (couplingtype_ == Inpar::S2I::coupling_matching_nodes)
+  if (couplingtype_ == S2I::coupling_matching_nodes)
   {
     // add state vector containing master-side scatra degrees of freedom to scatra discretization
     interfacemaps_->insert_vector(
@@ -3443,13 +3414,12 @@ void ScaTra::MeshtyingStrategyS2I::add_time_integration_specific_vectors() const
 
   // only relevant for monolithic or semi-implicit evaluation of scatra-scatra interface layer
   // growth
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic or
-      intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_semi_implicit)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic or
+      intlayergrowth_evaluation_ == S2I::growth_evaluation_semi_implicit)
   {
     // extract relevant state vector of discrete scatra-scatra interface layer thicknesses
     const std::shared_ptr<Core::LinAlg::Vector<double>>& growth =
-        intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic ? growthnp_
-                                                                               : growthn_;
+        intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic ? growthnp_ : growthn_;
 
     // set state vector
     scatratimint_->discretization()->set_state(2, "growth", *growth);
@@ -3490,28 +3460,28 @@ void ScaTra::MeshtyingStrategyS2I::init_meshtying()
           "Can't have more than one boundary condition for scatra-scatra interface layer growth at "
           "the moment!");
     }
-    if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_none)
+    if (intlayergrowth_evaluation_ == S2I::growth_evaluation_none)
     {
       FOUR_C_THROW(
           "Invalid flag for evaluation of scatra-scatra interface coupling involving interface "
           "layer growth!");
     }
-    if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic and
+    if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic and
         scatratimint_->method_name() != ScaTra::timeint_one_step_theta)
     {
       FOUR_C_THROW(
           "Monolithic evaluation of scatra-scatra interface layer growth only implemented for "
           "one-step-theta time integration scheme at the moment!");
     }
-    if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_semi_implicit and
-        conditions[0]->parameters().get<Inpar::S2I::RegularizationType>("REGTYPE") !=
-            Inpar::S2I::RegularizationType::regularization_none)
+    if (intlayergrowth_evaluation_ == S2I::growth_evaluation_semi_implicit and
+        conditions[0]->parameters().get<S2I::RegularizationType>("REGTYPE") !=
+            S2I::RegularizationType::regularization_none)
     {
       FOUR_C_THROW(
           "No regularization implemented for semi-implicit evaluation of scatra-scatra interface "
           "layer growth!");
     }
-    if (couplingtype_ != Inpar::S2I::coupling_matching_nodes)
+    if (couplingtype_ != S2I::coupling_matching_nodes)
     {
       FOUR_C_THROW(
           "Evaluation of scatra-scatra interface layer growth only implemented for conforming "
@@ -3543,7 +3513,7 @@ void ScaTra::MeshtyingStrategyS2I::init_meshtying()
     scatratimint_->set_number_of_dof_set_growth(number_dofsets);
     // initialize linear solver for monolithic scatra-scatra interface coupling involving interface
     // layer growth
-    if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+    if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
     {
       const int extendedsolver = Global::Problem::instance()
                                      ->scalar_transport_dynamic_params()
@@ -3565,7 +3535,7 @@ void ScaTra::MeshtyingStrategyS2I::init_meshtying()
   }  // initialize scatra-scatra interface layer growth
 
   // safety check
-  else if (intlayergrowth_evaluation_ != Inpar::S2I::growth_evaluation_none)
+  else if (intlayergrowth_evaluation_ != S2I::growth_evaluation_none)
   {
     FOUR_C_THROW(
         "Cannot evaluate scatra-scatra interface coupling involving interface layer growth without "
@@ -3634,7 +3604,7 @@ void ScaTra::MeshtyingStrategyS2I::build_block_map_extractors()
 void ScaTra::MeshtyingStrategyS2I::equip_extended_solver_with_null_space_info() const
 {
   // consider extended linear solver for scatra-scatra interface layer growth if applicable
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
   {
     // loop over blocks of scalar transport system matrix
     for (int iblock = 0; iblock < scatratimint_->dof_block_maps()->num_maps(); ++iblock)
@@ -3684,16 +3654,16 @@ void ScaTra::MeshtyingStrategyS2I::solve(const std::shared_ptr<Core::LinAlg::Sol
   switch (intlayergrowth_evaluation_)
   {
     // no or semi-implicit treatment of scatra-scatra interface layer growth
-    case Inpar::S2I::growth_evaluation_none:
-    case Inpar::S2I::growth_evaluation_semi_implicit:
+    case S2I::growth_evaluation_none:
+    case S2I::growth_evaluation_semi_implicit:
     {
       switch (couplingtype_)
       {
-        case Inpar::S2I::coupling_matching_nodes:
-        case Inpar::S2I::coupling_mortar_standard:
-        case Inpar::S2I::coupling_mortar_condensed_petrov:
-        case Inpar::S2I::coupling_mortar_condensed_bubnov:
-        case Inpar::S2I::coupling_nts_standard:
+        case S2I::coupling_matching_nodes:
+        case S2I::coupling_mortar_standard:
+        case S2I::coupling_mortar_condensed_petrov:
+        case S2I::coupling_mortar_condensed_bubnov:
+        case S2I::coupling_nts_standard:
         {
           // equilibrate global system of equations if necessary
           equilibration_->equilibrate_system(
@@ -3710,8 +3680,8 @@ void ScaTra::MeshtyingStrategyS2I::solve(const std::shared_ptr<Core::LinAlg::Sol
           break;
         }
 
-        case Inpar::S2I::coupling_mortar_saddlepoint_petrov:
-        case Inpar::S2I::coupling_mortar_saddlepoint_bubnov:
+        case S2I::coupling_mortar_saddlepoint_petrov:
+        case S2I::coupling_mortar_saddlepoint_bubnov:
         {
           // check scalar transport system matrix
           std::shared_ptr<Core::LinAlg::SparseMatrix> sparsematrix =
@@ -3723,7 +3693,7 @@ void ScaTra::MeshtyingStrategyS2I::solve(const std::shared_ptr<Core::LinAlg::Sol
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>
               extendedsystemmatrix(*extendedmaps_, *extendedmaps_);
           extendedsystemmatrix.assign(0, 0, Core::LinAlg::DataAccess::Share, *sparsematrix);
-          if (lmside_ == Inpar::S2I::side_source)
+          if (lmside_ == S2I::side_source)
           {
             Core::LinAlg::matrix_add(*D_, true, 1., extendedsystemmatrix.matrix(0, 1), 0.);
             Core::LinAlg::matrix_add(*M_, true, -1., extendedsystemmatrix.matrix(0, 1), 1.);
@@ -3780,11 +3750,11 @@ void ScaTra::MeshtyingStrategyS2I::solve(const std::shared_ptr<Core::LinAlg::Sol
     }
 
     // monolithic treatment of scatra-scatra interface layer growth
-    case Inpar::S2I::growth_evaluation_monolithic:
+    case S2I::growth_evaluation_monolithic:
     {
       switch (couplingtype_)
       {
-        case Inpar::S2I::coupling_matching_nodes:
+        case S2I::coupling_matching_nodes:
         {
           switch (matrixtype_)
           {
@@ -3918,7 +3888,7 @@ const Core::LinAlg::Solver& ScaTra::MeshtyingStrategyS2I::solver() const
 {
   const Core::LinAlg::Solver* solver(nullptr);
 
-  if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
+  if (intlayergrowth_evaluation_ == S2I::growth_evaluation_monolithic)
   {
     if (extendedsolver_ == nullptr) FOUR_C_THROW("Invalid linear solver!");
     solver = extendedsolver_.get();
@@ -4134,8 +4104,8 @@ void ScaTra::MeshtyingStrategyS2I::fd_check(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-ScaTra::MortarCellInterface::MortarCellInterface(const Inpar::S2I::CouplingType& couplingtype,
-    const Inpar::S2I::InterfaceSides& lmside, const int& numdofpernode_slave,
+ScaTra::MortarCellInterface::MortarCellInterface(const S2I::CouplingType& couplingtype,
+    const S2I::InterfaceSides& lmside, const int& numdofpernode_slave,
     const int& numdofpernode_master)
     : lmside_(lmside),
       couplingtype_(couplingtype),
@@ -4148,12 +4118,12 @@ ScaTra::MortarCellInterface::MortarCellInterface(const Inpar::S2I::CouplingType&
  *----------------------------------------------------------------------*/
 template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
 ScaTra::MortarCellCalc<distype_s, distype_m>*
-ScaTra::MortarCellCalc<distype_s, distype_m>::instance(const Inpar::S2I::CouplingType& couplingtype,
-    const Inpar::S2I::InterfaceSides& lmside, const int& numdofpernode_slave,
+ScaTra::MortarCellCalc<distype_s, distype_m>::instance(const S2I::CouplingType& couplingtype,
+    const S2I::InterfaceSides& lmside, const int& numdofpernode_slave,
     const int& numdofpernode_master, const std::string& disname)
 {
   static auto singleton_map = Core::Utils::make_singleton_map<std::string>(
-      [](const Inpar::S2I::CouplingType& couplingtype, const Inpar::S2I::InterfaceSides& lmside,
+      [](const S2I::CouplingType& couplingtype, const S2I::InterfaceSides& lmside,
           const int& numdofpernode_slave, const int& numdofpernode_master)
       {
         return std::unique_ptr<MortarCellCalc<distype_s, distype_m>>(
@@ -4177,9 +4147,9 @@ void ScaTra::MortarCellCalc<distype_s, distype_m>::evaluate(
     Core::LinAlg::SerialDenseVector& cellvector1, Core::LinAlg::SerialDenseVector& cellvector2)
 {
   // extract and evaluate action
-  switch (Teuchos::getIntegralValue<Inpar::S2I::EvaluationActions>(params, "action"))
+  switch (Teuchos::getIntegralValue<S2I::EvaluationActions>(params, "action"))
   {
-    case Inpar::S2I::evaluate_mortar_matrices:
+    case S2I::evaluate_mortar_matrices:
     {
       // evaluate mortar matrices
       evaluate_mortar_matrices(
@@ -4188,7 +4158,7 @@ void ScaTra::MortarCellCalc<distype_s, distype_m>::evaluate(
       break;
     }
 
-    case Inpar::S2I::evaluate_condition:
+    case S2I::evaluate_condition:
     {
       // evaluate and assemble interface linearizations and residuals
       evaluate_condition(idiscret, cell, slaveelement, masterelement, la_slave, la_master, params,
@@ -4218,9 +4188,9 @@ void ScaTra::MortarCellCalc<distype_s, distype_m>::evaluate_nts(
     Core::LinAlg::SerialDenseVector& ntsvector2)
 {
   // extract and evaluate action
-  switch (Teuchos::getIntegralValue<Inpar::S2I::EvaluationActions>(params, "action"))
+  switch (Teuchos::getIntegralValue<S2I::EvaluationActions>(params, "action"))
   {
-    case Inpar::S2I::evaluate_condition_nts:
+    case S2I::evaluate_condition_nts:
     {
       // extract condition from parameter list
       const Core::Conditions::Condition* condition =
@@ -4258,9 +4228,9 @@ void ScaTra::MortarCellCalc<distype_s, distype_m>::evaluate_mortar_element(
     Core::LinAlg::SerialDenseVector& elevector1, Core::LinAlg::SerialDenseVector& elevector2)
 {
   // extract and evaluate action
-  switch (Teuchos::getIntegralValue<Inpar::S2I::EvaluationActions>(params, "action"))
+  switch (Teuchos::getIntegralValue<S2I::EvaluationActions>(params, "action"))
   {
-    case Inpar::S2I::evaluate_nodal_area_fractions:
+    case S2I::evaluate_nodal_area_fractions:
     {
       // evaluate and assemble lumped interface area fractions associated with element nodes
       evaluate_nodal_area_fractions(element, elevector1);
@@ -4279,9 +4249,9 @@ void ScaTra::MortarCellCalc<distype_s, distype_m>::evaluate_mortar_element(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-ScaTra::MortarCellCalc<distype_s, distype_m>::MortarCellCalc(
-    const Inpar::S2I::CouplingType& couplingtype, const Inpar::S2I::InterfaceSides& lmside,
-    const int& numdofpernode_slave, const int& numdofpernode_master)
+ScaTra::MortarCellCalc<distype_s, distype_m>::MortarCellCalc(const S2I::CouplingType& couplingtype,
+    const S2I::InterfaceSides& lmside, const int& numdofpernode_slave,
+    const int& numdofpernode_master)
     : MortarCellInterface(couplingtype, lmside, numdofpernode_slave, numdofpernode_master),
       scatraparamsboundary_(Discret::Elements::ScaTraEleParameterBoundary::instance("scatra")),
       ephinp_slave_(numdofpernode_slave,
@@ -4389,7 +4359,7 @@ double ScaTra::MortarCellCalc<distype_s, distype_m>::eval_shape_func_and_dom_int
   Coupling::VolMortar::Utils::shape_function<distype_m>(funct_master_, coordinates_master.data());
   switch (couplingtype_)
   {
-    case Inpar::S2I::coupling_mortar_standard:
+    case S2I::coupling_mortar_standard:
     {
       // there actually aren't any Lagrange multipliers, but we still need to set pseudo Lagrange
       // multiplier test functions equal to the standard shape and test functions for correct
@@ -4400,12 +4370,12 @@ double ScaTra::MortarCellCalc<distype_s, distype_m>::eval_shape_func_and_dom_int
       break;
     }
 
-    case Inpar::S2I::coupling_mortar_saddlepoint_petrov:
-    case Inpar::S2I::coupling_mortar_condensed_petrov:
+    case S2I::coupling_mortar_saddlepoint_petrov:
+    case S2I::coupling_mortar_condensed_petrov:
     {
       // dual Lagrange multiplier shape functions combined with standard Lagrange multiplier test
       // functions
-      if (lmside_ == Inpar::S2I::side_source)
+      if (lmside_ == S2I::side_source)
       {
         Coupling::VolMortar::Utils::dual_shape_function<distype_s>(
             shape_lm_slave_, coordinates_slave.data(), slaveelement);
@@ -4421,12 +4391,12 @@ double ScaTra::MortarCellCalc<distype_s, distype_m>::eval_shape_func_and_dom_int
       break;
     }
 
-    case Inpar::S2I::coupling_mortar_saddlepoint_bubnov:
-    case Inpar::S2I::coupling_mortar_condensed_bubnov:
+    case S2I::coupling_mortar_saddlepoint_bubnov:
+    case S2I::coupling_mortar_condensed_bubnov:
     {
       // dual Lagrange multiplier shape functions combined with dual Lagrange multiplier test
       // functions
-      if (lmside_ == Inpar::S2I::side_source)
+      if (lmside_ == S2I::side_source)
       {
         Coupling::VolMortar::Utils::dual_shape_function<distype_s>(
             shape_lm_slave_, coordinates_slave.data(), slaveelement);
@@ -4499,7 +4469,7 @@ void ScaTra::MortarCellCalc<distype_s, distype_m>::eval_shape_func_at_slave_node
     const Mortar::Node& slavenode, Mortar::Element& slaveelement, Mortar::Element& masterelement)
 {
   // safety check
-  if (couplingtype_ != Inpar::S2I::coupling_nts_standard)
+  if (couplingtype_ != S2I::coupling_nts_standard)
     FOUR_C_THROW("This function should only be called when evaluating node-to-segment coupling!");
 
   // extract global ID of slave-side node
@@ -4555,7 +4525,7 @@ void ScaTra::MortarCellCalc<distype_s, distype_m>::evaluate_mortar_matrices(Mort
     const double fac = eval_shape_func_and_dom_int_fac_at_int_point(
         slaveelement, masterelement, cell, intpoints, iquad);
 
-    if (lmside_ == Inpar::S2I::side_source)
+    if (lmside_ == S2I::side_source)
     {
       // loop over all degrees of freedom per node
       for (int k = 0; k < numdofpernode_slave_; ++k)
@@ -4566,15 +4536,15 @@ void ScaTra::MortarCellCalc<distype_s, distype_m>::evaluate_mortar_matrices(Mort
 
           switch (couplingtype_)
           {
-            case Inpar::S2I::coupling_mortar_saddlepoint_petrov:
-            case Inpar::S2I::coupling_mortar_saddlepoint_bubnov:
-            case Inpar::S2I::coupling_mortar_condensed_petrov:
-            case Inpar::S2I::coupling_mortar_condensed_bubnov:
+            case S2I::coupling_mortar_saddlepoint_petrov:
+            case S2I::coupling_mortar_saddlepoint_bubnov:
+            case S2I::coupling_mortar_condensed_petrov:
+            case S2I::coupling_mortar_condensed_bubnov:
             {
               D(row_slave, row_slave) += shape_lm_slave_(vi) * fac;
 
-              if (couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_bubnov or
-                  couplingtype_ == Inpar::S2I::coupling_mortar_condensed_bubnov)
+              if (couplingtype_ == S2I::coupling_mortar_saddlepoint_bubnov or
+                  couplingtype_ == S2I::coupling_mortar_condensed_bubnov)
               {
                 for (int ui = 0; ui < nen_slave_; ++ui)
                   E(row_slave, ui * numdofpernode_slave_ + k) +=
@@ -4612,15 +4582,15 @@ void ScaTra::MortarCellCalc<distype_s, distype_m>::evaluate_mortar_matrices(Mort
 
           switch (couplingtype_)
           {
-            case Inpar::S2I::coupling_mortar_saddlepoint_petrov:
-            case Inpar::S2I::coupling_mortar_saddlepoint_bubnov:
-            case Inpar::S2I::coupling_mortar_condensed_petrov:
-            case Inpar::S2I::coupling_mortar_condensed_bubnov:
+            case S2I::coupling_mortar_saddlepoint_petrov:
+            case S2I::coupling_mortar_saddlepoint_bubnov:
+            case S2I::coupling_mortar_condensed_petrov:
+            case S2I::coupling_mortar_condensed_bubnov:
             {
               D(row_master, row_master) += shape_lm_master_(vi) * fac;
 
-              if (couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_bubnov or
-                  couplingtype_ == Inpar::S2I::coupling_mortar_condensed_bubnov)
+              if (couplingtype_ == S2I::coupling_mortar_saddlepoint_bubnov or
+                  couplingtype_ == S2I::coupling_mortar_condensed_bubnov)
               {
                 for (int ui = 0; ui < nen_master_; ++ui)
                   E(row_master, ui * numdofpernode_master_ + k) +=
@@ -4766,21 +4736,17 @@ void ScaTra::MortarCellCalc<distype_s, distype_m>::evaluate_nodal_area_fractions
  *----------------------------------------------------------------------*/
 ScaTra::MortarCellAssemblyStrategy::MortarCellAssemblyStrategy(
     std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1,
-    const Inpar::S2I::InterfaceSides matrix1_side_rows,
-    const Inpar::S2I::InterfaceSides matrix1_side_cols,
+    const S2I::InterfaceSides matrix1_side_rows, const S2I::InterfaceSides matrix1_side_cols,
     std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix2,
-    const Inpar::S2I::InterfaceSides matrix2_side_rows,
-    const Inpar::S2I::InterfaceSides matrix2_side_cols,
+    const S2I::InterfaceSides matrix2_side_rows, const S2I::InterfaceSides matrix2_side_cols,
     std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix3,
-    const Inpar::S2I::InterfaceSides matrix3_side_rows,
-    const Inpar::S2I::InterfaceSides matrix3_side_cols,
+    const S2I::InterfaceSides matrix3_side_rows, const S2I::InterfaceSides matrix3_side_cols,
     std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix4,
-    const Inpar::S2I::InterfaceSides matrix4_side_rows,
-    const Inpar::S2I::InterfaceSides matrix4_side_cols,
+    const S2I::InterfaceSides matrix4_side_rows, const S2I::InterfaceSides matrix4_side_cols,
     std::shared_ptr<Core::LinAlg::MultiVector<double>> systemvector1,
-    const Inpar::S2I::InterfaceSides vector1_side,
+    const S2I::InterfaceSides vector1_side,
     std::shared_ptr<Core::LinAlg::FEVector<double>> systemvector2,
-    const Inpar::S2I::InterfaceSides vector2_side, const int nds_rows, const int nds_cols)
+    const S2I::InterfaceSides vector2_side, const int nds_rows, const int nds_cols)
     : matrix1_side_rows_(matrix1_side_rows),
       matrix1_side_cols_(matrix1_side_cols),
       matrix2_side_rows_(matrix2_side_rows),
@@ -4845,25 +4811,24 @@ void ScaTra::MortarCellAssemblyStrategy::assemble_cell_matrices_and_vectors(
  *----------------------------------------------------------------------------------*/
 void ScaTra::MortarCellAssemblyStrategy::assemble_cell_matrix(
     const std::shared_ptr<Core::LinAlg::SparseOperator>& systemmatrix,
-    const Core::LinAlg::SerialDenseMatrix& cellmatrix, const Inpar::S2I::InterfaceSides side_rows,
-    const Inpar::S2I::InterfaceSides side_cols, Core::Elements::LocationArray& la_slave,
+    const Core::LinAlg::SerialDenseMatrix& cellmatrix, const S2I::InterfaceSides side_rows,
+    const S2I::InterfaceSides side_cols, Core::Elements::LocationArray& la_slave,
     Core::Elements::LocationArray& la_master, const int assembler_pid_master) const
 {
   // determine location array associated with matrix columns
-  Core::Elements::LocationArray& la_cols =
-      side_cols == Inpar::S2I::side_source ? la_slave : la_master;
+  Core::Elements::LocationArray& la_cols = side_cols == S2I::side_source ? la_slave : la_master;
 
   // assemble cell matrix into system matrix
   switch (side_rows)
   {
-    case Inpar::S2I::side_source:
+    case S2I::side_source:
     {
       systemmatrix->assemble(-1, la_cols[nds_cols_].stride_, cellmatrix, la_slave[nds_rows_].lm_,
           la_slave[nds_rows_].lmowner_, la_cols[nds_cols_].lm_);
       break;
     }
 
-    case Inpar::S2I::side_master:
+    case S2I::side_master:
     {
       std::dynamic_pointer_cast<Core::LinAlg::SparseMatrix>(systemmatrix)
           ->fe_assemble(cellmatrix, la_master[nds_rows_].lm_,
@@ -4885,14 +4850,14 @@ void ScaTra::MortarCellAssemblyStrategy::assemble_cell_matrix(
  *----------------------------------------------------------------------------------*/
 void ScaTra::MortarCellAssemblyStrategy::assemble_cell_vector(
     Core::LinAlg::MultiVector<double>& systemvector,
-    const Core::LinAlg::SerialDenseVector& cellvector, const Inpar::S2I::InterfaceSides side,
+    const Core::LinAlg::SerialDenseVector& cellvector, const S2I::InterfaceSides side,
     Core::Elements::LocationArray& la_slave, Core::Elements::LocationArray& la_master,
     const int assembler_pid_master) const
 {
   // assemble cell vector into system vector
   switch (side)
   {
-    case Inpar::S2I::side_source:
+    case S2I::side_source:
     {
       if (systemvector.num_vectors() != 1)
         FOUR_C_THROW("Invalid number of vectors inside Core::LinAlg::MultiVector<double>!");
@@ -4902,7 +4867,7 @@ void ScaTra::MortarCellAssemblyStrategy::assemble_cell_vector(
       break;
     }
 
-    case Inpar::S2I::side_master:
+    case S2I::side_master:
     {
       if (assembler_pid_master == Core::Communication::my_mpi_rank(systemvector.get_comm()))
       {
@@ -4925,20 +4890,20 @@ void ScaTra::MortarCellAssemblyStrategy::assemble_cell_vector(
  *----------------------------------------------------------------------------------*/
 void ScaTra::MortarCellAssemblyStrategy::assemble_cell_vector(
     const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector,
-    const Core::LinAlg::SerialDenseVector& cellvector, const Inpar::S2I::InterfaceSides side,
+    const Core::LinAlg::SerialDenseVector& cellvector, const S2I::InterfaceSides side,
     Core::Elements::LocationArray& la_slave, Core::Elements::LocationArray& la_master,
     const int assembler_pid_master) const
 {
   // assemble cell vector into system vector
   switch (side)
   {
-    case Inpar::S2I::side_source:
+    case S2I::side_source:
     {
       FOUR_C_ASSERT(false, "Don't know what to do, does not work for FE-Vectors.");
       break;
     }
 
-    case Inpar::S2I::side_master:
+    case S2I::side_master:
     {
       if (assembler_pid_master == Core::Communication::my_mpi_rank(systemvector->get_comm()))
       {
@@ -4990,15 +4955,15 @@ void ScaTra::MortarCellAssemblyStrategy::init_cell_matrices_and_vectors(
 /*---------------------------------------------------------------------------*
  *---------------------------------------------------------------------------*/
 void ScaTra::MortarCellAssemblyStrategy::init_cell_matrix(
-    Core::LinAlg::SerialDenseMatrix& cellmatrix, const Inpar::S2I::InterfaceSides side_rows,
-    const Inpar::S2I::InterfaceSides side_cols, Core::Elements::LocationArray& la_slave,
+    Core::LinAlg::SerialDenseMatrix& cellmatrix, const S2I::InterfaceSides side_rows,
+    const S2I::InterfaceSides side_cols, Core::Elements::LocationArray& la_slave,
     Core::Elements::LocationArray& la_master) const
 {
   // determine number of matrix rows and number of matrix columns
-  const int nrows = side_rows == Inpar::S2I::side_source ? la_slave[nds_rows_].size()
-                                                         : la_master[nds_rows_].size();
-  const int ncols = side_cols == Inpar::S2I::side_source ? la_slave[nds_cols_].size()
-                                                         : la_master[nds_cols_].size();
+  const int nrows =
+      side_rows == S2I::side_source ? la_slave[nds_rows_].size() : la_master[nds_rows_].size();
+  const int ncols =
+      side_cols == S2I::side_source ? la_slave[nds_cols_].size() : la_master[nds_cols_].size();
 
   // reshape cell matrix if necessary
   if (cellmatrix.numRows() != nrows or cellmatrix.numCols() != ncols)
@@ -5015,12 +4980,12 @@ void ScaTra::MortarCellAssemblyStrategy::init_cell_matrix(
 /*---------------------------------------------------------------------------*
  *---------------------------------------------------------------------------*/
 void ScaTra::MortarCellAssemblyStrategy::init_cell_vector(
-    Core::LinAlg::SerialDenseVector& cellvector, const Inpar::S2I::InterfaceSides side,
+    Core::LinAlg::SerialDenseVector& cellvector, const S2I::InterfaceSides side,
     Core::Elements::LocationArray& la_slave, Core::Elements::LocationArray& la_master) const
 {
   // determine number of vector components
   const int ndofs =
-      side == Inpar::S2I::side_source ? la_slave[nds_rows_].size() : la_master[nds_rows_].size();
+      side == S2I::side_source ? la_slave[nds_rows_].size() : la_master[nds_rows_].size();
 
   // reshape cell vector if necessary
   if (cellvector.length() != ndofs)

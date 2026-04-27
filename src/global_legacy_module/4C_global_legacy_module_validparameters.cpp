@@ -38,7 +38,6 @@
 #include "4C_inpar_IO_runtime_vtk_output_structure.hpp"
 #include "4C_inpar_IO_runtime_vtp_output_structure.hpp"
 #include "4C_inpar_plasticity.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_inpar_structure.hpp"
 #include "4C_io_gridgenerator.hpp"
 #include "4C_io_input_field.hpp"
@@ -63,6 +62,7 @@
 #include "4C_reduced_lung_input.hpp"
 #include "4C_scatra_cardiac_monodomain_input.hpp"
 #include "4C_scatra_input.hpp"
+#include "4C_scatra_s2i_input.hpp"
 #include "4C_solver_nonlin_nox_input.hpp"
 #include "4C_ssi_input.hpp"
 #include "4C_ssti_input.hpp"
@@ -330,7 +330,7 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
   push_specs(specs, ElectroPhysiology::valid_parameters());
   push_specs(specs, STI::valid_parameters());
 
-  push_specs(specs, Inpar::S2I::valid_parameters());
+  push_specs(specs, S2I::valid_parameters());
   push_specs(specs, FS3I::valid_parameters());
   push_specs(specs, FSI::valid_parameters());
   push_specs(specs, PoroElast::valid_parameters());

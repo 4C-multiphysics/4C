@@ -28,11 +28,11 @@
 #include "4C_contact_wear_interface.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_io.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method.hpp"
+#include "4C_scatra_s2i_input.hpp"
 #include "4C_scatra_timint_meshtying_strategy_s2i.hpp"
 #include "4C_ssi_input.hpp"
 #include "4C_structure_new_timint_basedataglobalstate.hpp"
@@ -1938,8 +1938,8 @@ void CONTACT::STRATEGY::Factory::set_parameters_for_contact_condition(
       if (s2ikinetics_cond->parameters().get<int>("ConditionID") == conditiongroupid)
       {
         // only the source-side stores the parameters
-        if (s2ikinetics_cond->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
-            Inpar::S2I::side_source)
+        if (s2ikinetics_cond->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") ==
+            S2I::side_source)
         {
           // fill the parameters from the s2i condition
           ScaTra::MeshtyingStrategyS2I::

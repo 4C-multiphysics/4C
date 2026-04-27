@@ -80,7 +80,7 @@ STI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
 
   // extract coupling adapters for scatra-scatra interface mesh tying
   if (scatra_field()->s2i_meshtying() and
-      strategyscatra_->coupling_type() == Inpar::S2I::coupling_matching_nodes)
+      strategyscatra_->coupling_type() == S2I::coupling_matching_nodes)
   {
     icoupscatra_ = strategyscatra_->coupling_adapter();
     icoupthermo_ = strategythermo_->coupling_adapter();
@@ -809,7 +809,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
 
               switch (strategyscatra_->coupling_type())
               {
-                case Inpar::S2I::coupling_matching_nodes:
+                case S2I::coupling_matching_nodes:
                 {
                   Coupling::Adapter::CouplingSlaveConverter converter(*icoupthermo_);
                   Coupling::Adapter::MatrixLogicalSplitAndTransform()(scatrathermoblock,
@@ -818,7 +818,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
                       true, true);
                   break;
                 }
-                case Inpar::S2I::coupling_mortar_standard:
+                case S2I::coupling_mortar_standard:
                 {
                   // initialize temporary matrix for slave-side columns of current matrix block
                   Core::LinAlg::SparseMatrix scatrathermocolsslave(scatrathermoblock.row_map(), 81);
@@ -880,7 +880,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
 
             switch (strategyscatra_->coupling_type())
             {
-              case Inpar::S2I::coupling_matching_nodes:
+              case S2I::coupling_matching_nodes:
               {
                 Coupling::Adapter::CouplingSlaveConverter converter(*icoupthermo_);
                 Coupling::Adapter::MatrixLogicalSplitAndTransform()(
@@ -889,7 +889,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
                     blocksystemmatrix->matrix(nblockmapsscatra, nblockmapsscatra), true, true);
                 break;
               }
-              case Inpar::S2I::coupling_mortar_standard:
+              case S2I::coupling_mortar_standard:
               {
                 // initialize temporary matrix for slave-side columns of thermo-thermo matrix block
                 Core::LinAlg::SparseMatrix thermothermocolsslave(*maps_->map(1), 81);
@@ -957,7 +957,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
 
             switch (strategyscatra_->coupling_type())
             {
-              case Inpar::S2I::coupling_matching_nodes:
+              case S2I::coupling_matching_nodes:
               {
                 Coupling::Adapter::CouplingSlaveConverter converter(*icoupthermo_);
                 Coupling::Adapter::MatrixLogicalSplitAndTransform()(scatrathermoblock,
@@ -972,7 +972,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
                 break;
               }
 
-              case Inpar::S2I::coupling_mortar_standard:
+              case S2I::coupling_mortar_standard:
               {
                 // initialize temporary matrix for slave-side columns of scatra-thermo matrix block
                 Core::LinAlg::SparseMatrix scatrathermocolsslave(
@@ -1081,7 +1081,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
 
         switch (strategyscatra_->coupling_type())
         {
-          case Inpar::S2I::coupling_matching_nodes:
+          case S2I::coupling_matching_nodes:
           {
             Coupling::Adapter::CouplingSlaveConverter converter(*icoupthermo_);
             Coupling::Adapter::MatrixLogicalSplitAndTransform()(scatrathermoblock,
@@ -1095,7 +1095,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
             break;
           }
 
-          case Inpar::S2I::coupling_mortar_standard:
+          case S2I::coupling_mortar_standard:
           {
             // initialize temporary matrix for slave-side columns of global system matrix
             Core::LinAlg::SparseMatrix systemmatrixcolsslave(*dof_row_map(), 81);
@@ -1526,12 +1526,12 @@ void STI::Monolithic::solve()
               *strategythermo_->interface_maps()->map(1));
       switch (strategyscatra_->coupling_type())
       {
-        case Inpar::S2I::coupling_matching_nodes:
+        case S2I::coupling_matching_nodes:
         {
           icoupthermo_->target_to_source(*masterincrement, *slaveincrement);
           break;
         }
-        case Inpar::S2I::coupling_mortar_standard:
+        case S2I::coupling_mortar_standard:
         {
           strategythermo_->p()->multiply(false, *masterincrement, *slaveincrement);
           break;
@@ -1571,14 +1571,14 @@ void STI::Monolithic::apply_dirichlet_off_diag(
   {
     switch (strategythermo_->coupling_type())
     {
-      case Inpar::S2I::coupling_matching_nodes:
+      case S2I::coupling_matching_nodes:
       {
         if (!thermo_field()->discretization()->has_condition("PointCoupling"))
           thermoscatra_domain_interface->apply_dirichlet(*icoupthermo_->source_dof_map(), false);
         break;
       }
 
-      case Inpar::S2I::coupling_mortar_condensed_bubnov:
+      case S2I::coupling_mortar_condensed_bubnov:
       {
         thermoscatra_domain_interface->apply_dirichlet(
             *(strategythermo_->interface_maps()->map(1)), false);
@@ -1634,7 +1634,7 @@ void STI::Monolithic::assemble_domain_interface_off_diag(
   thermoscatra_domain_interface->add(*thermoscatrablockdomain_, false, 1.0, 1.0);
   thermoscatra_domain_interface->add(*thermoscatrablockinterface_, false, 1.0, 1.0);
 
-  if (strategythermo_->coupling_type() == Inpar::S2I::coupling_matching_nodes)
+  if (strategythermo_->coupling_type() == S2I::coupling_matching_nodes)
   {  // standard meshtying algorithm with Lagrange multipliers condensed out
     if (!thermo_field()->discretization()->has_condition("PointCoupling"))
     {
@@ -1693,7 +1693,7 @@ void STI::Monolithic::assemble_domain_interface_off_diag(
       }
     }
   }
-  else if (strategythermo_->coupling_type() == Inpar::S2I::coupling_mortar_condensed_bubnov)
+  else if (strategythermo_->coupling_type() == S2I::coupling_mortar_condensed_bubnov)
   {
     // standard meshtying algorithm with Lagrange multipliers condensed out
     // loop over all thermo-scatra matrix blocks

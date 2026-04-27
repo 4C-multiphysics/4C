@@ -8,11 +8,11 @@
 #include "4C_ssi_input.hpp"
 
 #include "4C_fem_condition_definition.hpp"
-#include "4C_inpar_s2i.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_linalg_equilibrate.hpp"
 #include "4C_linalg_sparseoperator.hpp"
 #include "4C_scatra_input.hpp"
+#include "4C_scatra_s2i_input.hpp"
 FOUR_C_NAMESPACE_OPEN
 
 std::vector<Core::IO::InputSpec> SSI::valid_parameters()
@@ -338,9 +338,9 @@ void SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition
   const auto make_ssiinterfacemeshtying = [&condlist](Core::Conditions::ConditionDefinition& cond)
   {
     cond.add_component(parameter<int>("ConditionID"));
-    cond.add_component(deprecated_selection<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE",
-        {{"Undefined", Inpar::S2I::side_undefined}, {"Slave", Inpar::S2I::side_source},
-            {"Master", Inpar::S2I::side_master}},
+    cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
+        {{"Undefined", S2I::side_undefined}, {"Slave", S2I::side_source},
+            {"Master", S2I::side_master}},
         {.description = "interface_side"}));
     cond.add_component(parameter<int>("S2I_KINETICS_ID"));
 
@@ -395,16 +395,15 @@ void SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition
 
     surfmanifoldkinetics.add_component(one_of({
         all_of({
-            deprecated_selection<Inpar::S2I::KineticModels>(
-                "KINETIC_MODEL", {{"ConstantInterfaceResistance",
-                                     Inpar::S2I::kinetics_constantinterfaceresistance}}),
+            deprecated_selection<S2I::KineticModels>("KINETIC_MODEL",
+                {{"ConstantInterfaceResistance", S2I::kinetics_constantinterfaceresistance}}),
             parameter<std::vector<int>>("ONOFF", {.size = 2}),
             parameter<double>("RESISTANCE"),
             parameter<int>("E-"),
         }),
         all_of({
-            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
-                {{"Butler-VolmerReduced", Inpar::S2I::kinetics_butlervolmerreduced}}),
+            deprecated_selection<S2I::KineticModels>(
+                "KINETIC_MODEL", {{"Butler-VolmerReduced", S2I::kinetics_butlervolmerreduced}}),
             parameter<int>("NUMSCAL"),
             parameter<std::vector<int>>(
                 "STOICHIOMETRIES", {.size = from_parameter<int>("NUMSCAL")}),
@@ -413,8 +412,8 @@ void SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition
             parameter<double>("ALPHA_A"),
             parameter<double>("ALPHA_C"),
         }),
-        deprecated_selection<Inpar::S2I::KineticModels>(
-            "KINETIC_MODEL", {{"NoInterfaceFlux", Inpar::S2I::kinetics_nointerfaceflux}}),
+        deprecated_selection<S2I::KineticModels>(
+            "KINETIC_MODEL", {{"NoInterfaceFlux", S2I::kinetics_nointerfaceflux}}),
     }));
   }
 
@@ -474,9 +473,9 @@ void SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition
   const auto make_ssiinterfacecontact = [&condlist](Core::Conditions::ConditionDefinition& cond)
   {
     cond.add_component(parameter<int>("ConditionID"));
-    cond.add_component(deprecated_selection<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE",
-        {{"Undefined", Inpar::S2I::side_undefined}, {"Slave", Inpar::S2I::side_source},
-            {"Master", Inpar::S2I::side_master}},
+    cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
+        {{"Undefined", S2I::side_undefined}, {"Slave", S2I::side_source},
+            {"Master", S2I::side_master}},
         {.description = "interface_side"}));
     cond.add_component(parameter<int>("S2I_KINETICS_ID"));
     cond.add_component(parameter<int>("CONTACT_CONDITION_ID"));

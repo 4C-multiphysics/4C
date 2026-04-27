@@ -102,8 +102,8 @@ namespace ScaTra
    public:
     //! singleton access method
     static MortarCellCalcElch<distype_s, distype_m>* instance(
-        const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+        const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,   //!< number of slave-side degrees of freedom per node
         const int& numdofpernode_master,  //!< number of master-side degrees of freedom per node
@@ -113,8 +113,8 @@ namespace ScaTra
 
    protected:
     //! protected constructor for singletons
-    MortarCellCalcElch(const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+    MortarCellCalcElch(const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,  //!< number of slave-side degrees of freedom per node
         const int& numdofpernode_master  //!< number of master-side degrees of freedom per node
@@ -185,8 +185,8 @@ namespace ScaTra
    public:
     //! singleton access method
     static MortarCellCalcElchSTIThermo<distype_s, distype_m>* instance(
-        const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+        const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,   //!< number of slave-side degrees of freedom per node
         const int& numdofpernode_master,  //!< number of master-side degrees of freedom per node
@@ -221,8 +221,8 @@ namespace ScaTra
 
     //! private constructor for singletons
     MortarCellCalcElchSTIThermo(
-        const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+        const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,  //!< number of slave-side degrees of freedom per node
         const int& numdofpernode_master  //!< number of master-side degrees of freedom per node
@@ -264,8 +264,8 @@ namespace ScaTra
    public:
     //! singleton access method
     static MortarCellCalcSTIElch<distype_s, distype_m>* instance(
-        const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+        const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,   //!< number of slave-side degrees of freedom per node
         const int& numdofpernode_master,  //!< number of master-side degrees of freedom per node
@@ -297,9 +297,8 @@ namespace ScaTra
     using my::nsd_slave_;
 
     //! private constructor for singletons
-    MortarCellCalcSTIElch(
-        const Inpar::S2I::CouplingType& couplingtype,  //!< flag for meshtying method
-        const Inpar::S2I::InterfaceSides&
+    MortarCellCalcSTIElch(const S2I::CouplingType& couplingtype,  //!< flag for meshtying method
+        const S2I::InterfaceSides&
             lmside,  //!< flag for interface side underlying Lagrange multiplier definition
         const int& numdofpernode_slave,  //!< number of slave-side degrees of freedom per node
         const int& numdofpernode_master  //!< number of master-side degrees of freedom per node

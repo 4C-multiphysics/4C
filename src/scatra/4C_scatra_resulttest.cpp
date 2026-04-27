@@ -182,13 +182,13 @@ double ScaTra::ScaTraResultTest::result_node(
     std::shared_ptr<const Core::LinAlg::Vector<double>> s2igrowthvec(nullptr);
     switch (strategy->int_layer_growth_evaluation())
     {
-      case Inpar::S2I::growth_evaluation_monolithic:
+      case S2I::growth_evaluation_monolithic:
       {
         s2igrowthvec = strategy->growth_var_np();
         break;
       }
 
-      case Inpar::S2I::growth_evaluation_semi_implicit:
+      case S2I::growth_evaluation_semi_implicit:
       {
         s2igrowthvec = strategy->growth_var_n();
         break;

@@ -205,7 +205,7 @@ void SSTI::SSTIAlgorithm::setup()
     // safety checks
     if (meshtying_strategy_scatra_ == nullptr)
       FOUR_C_THROW("Invalid scatra-scatra interface coupling strategy!");
-    if (meshtying_strategy_scatra_->coupling_type() != Inpar::S2I::coupling_matching_nodes)
+    if (meshtying_strategy_scatra_->coupling_type() != S2I::coupling_matching_nodes)
       FOUR_C_THROW("SSTI only implemented for interface coupling with matching interface nodes!");
 
     // extract meshtying strategy for scatra-scatra interface coupling on thermo discretization
@@ -213,7 +213,7 @@ void SSTI::SSTIAlgorithm::setup()
         thermo_->scatra_field()->strategy());
     if (meshtying_strategy_thermo_ == nullptr)
       FOUR_C_THROW("Invalid scatra-scatra interface coupling strategy!");
-    if (meshtying_strategy_thermo_->coupling_type() != Inpar::S2I::coupling_matching_nodes)
+    if (meshtying_strategy_thermo_->coupling_type() != S2I::coupling_matching_nodes)
       FOUR_C_THROW("SSTI only implemented for interface coupling with matching interface nodes!");
 
     // setup everything for SSTI structure meshtying

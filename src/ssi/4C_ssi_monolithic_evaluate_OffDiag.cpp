@@ -393,8 +393,8 @@ void SSI::ScatraStructureOffDiagCoupling::
   for (auto kinetics_slave_cond :
       meshtying_strategy_s2i_->kinetics_conditions_meshtying_slave_side())
   {
-    if (kinetics_slave_cond.second->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") ==
-        static_cast<int>(Inpar::S2I::kinetics_butlervolmerreducedcapacitance))
+    if (kinetics_slave_cond.second->parameters().get<S2I::KineticModels>("KINETIC_MODEL") ==
+        static_cast<int>(S2I::kinetics_butlervolmerreducedcapacitance))
     {
       // collect condition specific data and store to scatra boundary parameter class
       meshtying_strategy_s2i_->set_condition_specific_scatra_parameters(
@@ -630,8 +630,8 @@ void SSI::ScatraStructureOffDiagCoupling::
   for (auto kinetics_slave_cond :
       meshtying_strategy_s2i_->kinetics_conditions_meshtying_slave_side())
   {
-    if (kinetics_slave_cond.second->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") !=
-        static_cast<int>(Inpar::S2I::kinetics_nointerfaceflux))
+    if (kinetics_slave_cond.second->parameters().get<S2I::KineticModels>("KINETIC_MODEL") !=
+        static_cast<int>(S2I::kinetics_nointerfaceflux))
     {
       // collect condition specific data and store to scatra boundary parameter class
       meshtying_strategy_s2i_->set_condition_specific_scatra_parameters(

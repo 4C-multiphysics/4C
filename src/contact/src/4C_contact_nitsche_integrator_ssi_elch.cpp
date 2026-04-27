@@ -349,8 +349,8 @@ void CONTACT::IntegratorNitscheSsiElch::integrate_ssi_interface_condition(
   // perform integration dependent on scatra-scatra interface kinetic model
   switch (kinetic_model)
   {
-    case Inpar::S2I::kinetics_butlervolmer:
-    case Inpar::S2I::kinetics_butlervolmerreduced:
+    case S2I::kinetics_butlervolmer:
+    case S2I::kinetics_butlervolmerreduced:
     {
       // access material of parent element for ELCH simulations
       std::shared_ptr<const Mat::Electrode> electrode_material =
@@ -403,7 +403,7 @@ void CONTACT::IntegratorNitscheSsiElch::integrate_ssi_interface_condition(
                 electrode_conc, faraday, frt, detF);
 
         // Butler-Volmer exchange mass flux density
-        const double j0(kinetic_model == Inpar::S2I::kinetics_butlervolmerreduced
+        const double j0(kinetic_model == S2I::kinetics_butlervolmerreduced
                             ? kr
                             : kr * std::pow(electrolyte_conc, alphaa) *
                                   std::pow(cmax - electrode_conc, alphaa) *
@@ -481,7 +481,7 @@ void CONTACT::IntegratorNitscheSsiElch::integrate_ssi_interface_condition(
 
       break;
     }
-    case Inpar::S2I::kinetics_nointerfaceflux:
+    case S2I::kinetics_nointerfaceflux:
       break;
     default:
     {
