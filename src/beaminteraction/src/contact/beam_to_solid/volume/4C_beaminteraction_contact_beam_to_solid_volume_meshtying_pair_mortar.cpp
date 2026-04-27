@@ -405,6 +405,13 @@ namespace BeamInteraction
 {
   using namespace GeometryPair;
 
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_hex8, t_line1>;
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_hex20, t_line1>;
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_hex27, t_line1>;
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_tet4, t_line1>;
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_tet10, t_line1>;
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_nurbs27, t_line1>;
+
   template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_hex8, t_line2>;
   template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_hex20, t_line2>;
   template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_hex27, t_line2>;
