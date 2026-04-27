@@ -168,11 +168,11 @@ namespace Discret
           const Core::LinAlg::Matrix<nsd_, 1>&
               ivelint_jump,  ///< prescribed interface velocity, Dirichlet values or jump height for
                              ///< coupled problems
-          const Inpar::XFEM::EleCouplingCondType& cond_type  ///< condition type
+          const XFEM::EleCouplingCondType& cond_type  ///< condition type
       )
       {
-        if (cond_type == Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID &&
-            fldparaxfem_.xff_conv_stab_scaling() == Inpar::XFEM::XFF_ConvStabScaling_none)
+        if (cond_type == XFEM::CouplingCond_SURF_FLUIDFLUID &&
+            fldparaxfem_.xff_conv_stab_scaling() == XFEM::XFF_ConvStabScaling_none)
           FOUR_C_THROW("Cannot apply convective stabilization terms for XFF_ConvStabScaling_none!");
 
         // funct_m * timefac * fac * funct_m  * kappa_m (dyadic product)
@@ -199,9 +199,9 @@ namespace Discret
 
         switch (cond_type)
         {
-          case Inpar::XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
-          case Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET:
-          case Inpar::XFEM::CouplingCond_SURF_FSI_PART:
+          case XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
+          case XFEM::CouplingCond_SURF_WEAK_DIRICHLET:
+          case XFEM::CouplingCond_SURF_FSI_PART:
           {
             nit_stab_penalty(
                 funct_m, timefacfac, std::pair<bool, double>(true, NIT_stab_fac_conv),  // F_Pen_Row
@@ -211,7 +211,7 @@ namespace Discret
             );
             break;
           }
-          case Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID:
+          case XFEM::CouplingCond_SURF_FLUIDFLUID:
           {
             // funct_s
             std::shared_ptr<SlaveElementRepresentation<distype, slave_distype, slave_numdof>> set =
@@ -227,7 +227,7 @@ namespace Discret
 
             funct_s_m_dyad_.multiply_nt(funct_s_, funct_m);
 
-            if (fldparaxfem_.xff_conv_stab_scaling() == Inpar::XFEM::XFF_ConvStabScaling_upwinding)
+            if (fldparaxfem_.xff_conv_stab_scaling() == XFEM::XFF_ConvStabScaling_upwinding)
             {
               nit_stab_penalty(funct_m, timefacfac,
                   std::pair<bool, double>(true, NIT_stab_fac_conv),  // F_Pen_Row
@@ -239,16 +239,14 @@ namespace Discret
 
             // prevent instabilities due to convective mass transport across the fluid-fluid
             // interface
-            if (fldparaxfem_.xff_conv_stab_scaling() ==
-                    Inpar::XFEM::XFF_ConvStabScaling_upwinding ||
-                fldparaxfem_.xff_conv_stab_scaling() ==
-                    Inpar::XFEM::XFF_ConvStabScaling_only_averaged)
+            if (fldparaxfem_.xff_conv_stab_scaling() == XFEM::XFF_ConvStabScaling_upwinding ||
+                fldparaxfem_.xff_conv_stab_scaling() == XFEM::XFF_ConvStabScaling_only_averaged)
             {
               nit_stab_inflow_averaged_term(funct_m, velint_m, normal, density_m, timefacfac);
             }
             break;
           }
-          case Inpar::XFEM::CouplingCond_SURF_FSI_MONO:
+          case XFEM::CouplingCond_SURF_FSI_MONO:
           {
             FOUR_C_THROW("Convective stabilization in monolithic XFSI is not yet available!");
             break;
@@ -292,7 +290,7 @@ namespace Discret
               LB_proj_matrix,  ///< prescribed projection matrix for laplace-beltrami problems
           const std::vector<Core::LinAlg::SerialDenseMatrix>&
               solid_stress,  ///< structural cauchy stress and linearization
-          std::map<Inpar::XFEM::CoupTerm, std::pair<bool, double>>&
+          std::map<XFEM::CoupTerm, std::pair<bool, double>>&
               configmap  ///< Interface Terms configuration map
       )
       {
@@ -327,23 +325,18 @@ namespace Discret
         // interface velocity vector in gausspoint
         velint_s_.clear();
 
-        if (configmap.at(Inpar::XFEM::X_Adj_Col).first ||
-            configmap.at(Inpar::XFEM::X_Pen_Col).first ||
-            configmap.at(Inpar::XFEM::X_Adj_n_Col).first ||
-            configmap.at(Inpar::XFEM::X_Pen_n_Col).first ||
-            configmap.at(Inpar::XFEM::X_Adj_t_Col).first ||
-            configmap.at(Inpar::XFEM::X_Pen_t_Col).first)
+        if (configmap.at(XFEM::X_Adj_Col).first || configmap.at(XFEM::X_Pen_Col).first ||
+            configmap.at(XFEM::X_Adj_n_Col).first || configmap.at(XFEM::X_Pen_n_Col).first ||
+            configmap.at(XFEM::X_Adj_t_Col).first || configmap.at(XFEM::X_Pen_t_Col).first)
           this->get_interface_velnp(velint_s_);
 
         // Calc full veldiff
-        if (configmap.at(Inpar::XFEM::F_Adj_Row).first ||
-            configmap.at(Inpar::XFEM::XF_Adj_Row).first ||
-            configmap.at(Inpar::XFEM::XS_Adj_Row).first ||
-            configmap.at(Inpar::XFEM::F_Pen_Row).first ||
-            configmap.at(Inpar::XFEM::X_Pen_Row).first)
+        if (configmap.at(XFEM::F_Adj_Row).first || configmap.at(XFEM::XF_Adj_Row).first ||
+            configmap.at(XFEM::XS_Adj_Row).first || configmap.at(XFEM::F_Pen_Row).first ||
+            configmap.at(XFEM::X_Pen_Row).first)
         {
-          velint_diff_.update(configmap.at(Inpar::XFEM::F_Adj_Col).second, velint_m,
-              -configmap.at(Inpar::XFEM::X_Adj_Col).second, velint_s_, 0.0);
+          velint_diff_.update(configmap.at(XFEM::F_Adj_Col).second, velint_m,
+              -configmap.at(XFEM::X_Adj_Col).second, velint_s_, 0.0);
           // add the prescribed interface velocity for weak Dirichlet boundary conditions or the
           // jump height for coupled problems
           velint_diff_.update(-1.0, ivelint_jump, 1.0);
@@ -360,16 +353,14 @@ namespace Discret
         }
 
         // Calc normal-veldiff
-        if (configmap.at(Inpar::XFEM::F_Adj_n_Row).first ||
-            configmap.at(Inpar::XFEM::XF_Adj_n_Row).first ||
-            configmap.at(Inpar::XFEM::XS_Adj_n_Row).first ||
-            configmap.at(Inpar::XFEM::F_Pen_n_Row).first ||
-            configmap.at(Inpar::XFEM::X_Pen_n_Row).first)
+        if (configmap.at(XFEM::F_Adj_n_Row).first || configmap.at(XFEM::XF_Adj_n_Row).first ||
+            configmap.at(XFEM::XS_Adj_n_Row).first || configmap.at(XFEM::F_Pen_n_Row).first ||
+            configmap.at(XFEM::X_Pen_n_Row).first)
         {
           // velint_diff_proj_normal_ = (u^m_k - u^s_k - u^{jump}_k) P^n_{kj}
           // (([|u|]-u_0)*P^n) Apply from right for consistency
-          velint_diff_normal_.update(configmap.at(Inpar::XFEM::F_Pen_n_Col).second, velint_m,
-              -configmap.at(Inpar::XFEM::X_Pen_n_Col).second, velint_s_, 0.0);
+          velint_diff_normal_.update(configmap.at(XFEM::F_Pen_n_Col).second, velint_m,
+              -configmap.at(XFEM::X_Pen_n_Col).second, velint_s_, 0.0);
           // add the prescribed interface velocity for weak Dirichlet boundary conditions or the
           // jump height for coupled problems
           velint_diff_normal_.update(-1.0, ivelint_jump, 1.0);
@@ -387,16 +378,14 @@ namespace Discret
         }
 
         // Calc tangential-veldiff
-        if (configmap.at(Inpar::XFEM::F_Adj_t_Row).first ||
-            configmap.at(Inpar::XFEM::XF_Adj_t_Row).first ||
-            configmap.at(Inpar::XFEM::XS_Adj_t_Row).first ||
-            configmap.at(Inpar::XFEM::F_Pen_t_Row).first ||
-            configmap.at(Inpar::XFEM::X_Pen_t_Row).first)
+        if (configmap.at(XFEM::F_Adj_t_Row).first || configmap.at(XFEM::XF_Adj_t_Row).first ||
+            configmap.at(XFEM::XS_Adj_t_Row).first || configmap.at(XFEM::F_Pen_t_Row).first ||
+            configmap.at(XFEM::X_Pen_t_Row).first)
         {
           // velint_diff_proj_tangential_ = (u^m_k - u^s_k - u^{jump}_k) P^t_{kj}
           // (([|u|]-u_0)*P^t) Apply from right for consistency
-          velint_diff_tangential_.update(configmap.at(Inpar::XFEM::F_Pen_t_Col).second, velint_m,
-              -configmap.at(Inpar::XFEM::X_Pen_t_Col).second, velint_s_, 0.0);
+          velint_diff_tangential_.update(configmap.at(XFEM::F_Pen_t_Col).second, velint_m,
+              -configmap.at(XFEM::X_Pen_t_Col).second, velint_s_, 0.0);
           // add the prescribed interface velocity for weak Dirichlet boundary conditions or the
           // jump height for coupled problems
           velint_diff_tangential_.update(-1.0, ivelint_jump, 1.0);
@@ -421,51 +410,46 @@ namespace Discret
         // REMARK: this term includes also inflow coercivity in case of XFSI
         // with modified stabfac (see NIT_ComputeStabfac)
 
-        if (configmap.at(Inpar::XFEM::F_Pen_n_Row).first ||
-            configmap.at(Inpar::XFEM::X_Pen_n_Row).first)
+        if (configmap.at(XFEM::F_Pen_n_Row).first || configmap.at(XFEM::X_Pen_n_Row).first)
         {
           // Normal Terms!
           nit_stab_penalty_projected(funct_m, proj_normal_, velint_diff_proj_normal_, timefacfac,
-              configmap.at(Inpar::XFEM::F_Pen_n_Row), configmap.at(Inpar::XFEM::X_Pen_n_Row),
-              configmap.at(Inpar::XFEM::F_Pen_n_Col), configmap.at(Inpar::XFEM::X_Pen_n_Col));
+              configmap.at(XFEM::F_Pen_n_Row), configmap.at(XFEM::X_Pen_n_Row),
+              configmap.at(XFEM::F_Pen_n_Col), configmap.at(XFEM::X_Pen_n_Col));
         }
 
-        if (configmap.at(Inpar::XFEM::F_Pen_t_Row).first ||
-            configmap.at(Inpar::XFEM::X_Pen_t_Row).first)
+        if (configmap.at(XFEM::F_Pen_t_Row).first || configmap.at(XFEM::X_Pen_t_Row).first)
         {
           // Tangential Terms!
           nit_stab_penalty_projected(funct_m, proj_tangential_, velint_diff_proj_tangential_,
-              timefacfac, configmap.at(Inpar::XFEM::F_Pen_t_Row),
-              configmap.at(Inpar::XFEM::X_Pen_t_Row), configmap.at(Inpar::XFEM::F_Pen_t_Col),
-              configmap.at(Inpar::XFEM::X_Pen_t_Col));
+              timefacfac, configmap.at(XFEM::F_Pen_t_Row), configmap.at(XFEM::X_Pen_t_Row),
+              configmap.at(XFEM::F_Pen_t_Col), configmap.at(XFEM::X_Pen_t_Col));
         }
 
-        if (configmap.at(Inpar::XFEM::F_Pen_Row).first ||
-            configmap.at(Inpar::XFEM::X_Pen_Row).first)
+        if (configmap.at(XFEM::F_Pen_Row).first || configmap.at(XFEM::X_Pen_Row).first)
         {
-          nit_stab_penalty(funct_m, timefacfac, configmap.at(Inpar::XFEM::F_Pen_Row),
-              configmap.at(Inpar::XFEM::X_Pen_Row), configmap.at(Inpar::XFEM::F_Pen_Col),
-              configmap.at(Inpar::XFEM::X_Pen_Col));
+          nit_stab_penalty(funct_m, timefacfac, configmap.at(XFEM::F_Pen_Row),
+              configmap.at(XFEM::X_Pen_Row), configmap.at(XFEM::F_Pen_Col),
+              configmap.at(XFEM::X_Pen_Col));
 
-          if (configmap.at(Inpar::XFEM::F_Pen_Row_linF1).first)
+          if (configmap.at(XFEM::F_Pen_Row_linF1).first)
           {
-            if (!configmap.at(Inpar::XFEM::F_Pen_Row_linF1).first ||
-                !configmap.at(Inpar::XFEM::F_Pen_Row_linF2).first ||
-                !configmap.at(Inpar::XFEM::F_Pen_Row_linF3).first)
+            if (!configmap.at(XFEM::F_Pen_Row_linF1).first ||
+                !configmap.at(XFEM::F_Pen_Row_linF2).first ||
+                !configmap.at(XFEM::F_Pen_Row_linF3).first)
               FOUR_C_THROW("Linearization for Penalty Term not set for all Components!");
 
-            nit_stab_penalty_lin(funct_m, timefacfac, configmap.at(Inpar::XFEM::F_Pen_Row),
-                configmap.at(Inpar::XFEM::F_Pen_Row_linF1),
-                configmap.at(Inpar::XFEM::F_Pen_Row_linF2),
-                configmap.at(Inpar::XFEM::F_Pen_Row_linF3));
+            nit_stab_penalty_lin(funct_m, timefacfac, configmap.at(XFEM::F_Pen_Row),
+                configmap.at(XFEM::F_Pen_Row_linF1), configmap.at(XFEM::F_Pen_Row_linF2),
+                configmap.at(XFEM::F_Pen_Row_linF3));
           }
         }
 
         // add averaged term (TODO: For XFF? How does this work for non-master coupled? @Benedikt?)
         // Todo: is not handled by configmap yet as it has the shape of a penalty term and therefore
         // will be evaluated there at the end!
-        if (fldparaxfem_.xff_conv_stab_scaling() == Inpar::XFEM::XFF_ConvStabScaling_upwinding ||
-            fldparaxfem_.xff_conv_stab_scaling() == Inpar::XFEM::XFF_ConvStabScaling_only_averaged)
+        if (fldparaxfem_.xff_conv_stab_scaling() == XFEM::XFF_ConvStabScaling_upwinding ||
+            fldparaxfem_.xff_conv_stab_scaling() == XFEM::XFF_ConvStabScaling_only_averaged)
         {
           nit_stab_inflow_averaged_term(funct_m, velint_m, normal, density_m, timefacfac);
         }
@@ -493,30 +477,30 @@ namespace Discret
 
         //-----------------------------------------------------------------
         // pressure consistency term
-        if (configmap.at(Inpar::XFEM::F_Con_Col).first)
+        if (configmap.at(XFEM::F_Con_Col).first)
         {
           nit_p_consistency_master_terms(pres_m, funct_m, normal_pres_timefacfac_,
-              configmap.at(Inpar::XFEM::F_Con_Row), configmap.at(Inpar::XFEM::X_Con_Row),
-              configmap.at(Inpar::XFEM::F_Con_Col));
+              configmap.at(XFEM::F_Con_Row), configmap.at(XFEM::X_Con_Row),
+              configmap.at(XFEM::F_Con_Col));
         }
 
-        if (configmap.at(Inpar::XFEM::F_Con_n_Col)
+        if (configmap.at(XFEM::F_Con_n_Col)
                 .first)  //(COMMENT: evaluating this separately seems to be more efficient for our
                          // cases)
         {
           nit_p_consistency_master_terms(pres_m, funct_m, normal_pres_timefacfac_,
-              configmap.at(Inpar::XFEM::F_Con_n_Row), configmap.at(Inpar::XFEM::X_Con_n_Row),
-              configmap.at(Inpar::XFEM::F_Con_n_Col));
+              configmap.at(XFEM::F_Con_n_Row), configmap.at(XFEM::X_Con_n_Row),
+              configmap.at(XFEM::F_Con_n_Col));
         }
 
         //-----------------------------------------------------------------
         // viscous consistency term
-        if (configmap.at(Inpar::XFEM::F_Con_Col).first)
+        if (configmap.at(XFEM::F_Con_Col).first)
         {
 #ifndef ENFORCE_URQUIZA_GNBC
           // Comment: Here vderxy_m_normal_transposed_viscm_timefacfac_km_ is used!
-          nit_visc_consistency_master_terms(derxy_m, funct_m, configmap.at(Inpar::XFEM::F_Con_Row),
-              configmap.at(Inpar::XFEM::X_Con_Row), configmap.at(Inpar::XFEM::F_Con_Col));
+          nit_visc_consistency_master_terms(derxy_m, funct_m, configmap.at(XFEM::F_Con_Row),
+              configmap.at(XFEM::X_Con_Row), configmap.at(XFEM::F_Con_Col));
 
 #else  // Todo: @Magnus, what to do with this?
           nit_visc_consistency_master_terms_projected(derxy_m, funct_m, proj_normal_, km_viscm_fac,
@@ -526,47 +510,47 @@ namespace Discret
 #endif
         }
 
-        if (configmap.at(Inpar::XFEM::F_Con_n_Col).first)
+        if (configmap.at(XFEM::F_Con_n_Col).first)
         {
           nit_visc_consistency_master_terms_projected(derxy_m, funct_m, proj_normal_, km_viscm_fac,
-              configmap.at(Inpar::XFEM::F_Con_n_Row), configmap.at(Inpar::XFEM::X_Con_n_Row),
-              configmap.at(Inpar::XFEM::F_Con_n_Col));
+              configmap.at(XFEM::F_Con_n_Row), configmap.at(XFEM::X_Con_n_Row),
+              configmap.at(XFEM::F_Con_n_Col));
         }
 
-        if (configmap.at(Inpar::XFEM::F_Con_t_Col).first)
+        if (configmap.at(XFEM::F_Con_t_Col).first)
         {
           nit_visc_consistency_master_terms_projected(derxy_m, funct_m, proj_tangential_,
-              km_viscm_fac, configmap.at(Inpar::XFEM::F_Con_t_Row),
-              configmap.at(Inpar::XFEM::X_Con_t_Row), configmap.at(Inpar::XFEM::F_Con_t_Col));
+              km_viscm_fac, configmap.at(XFEM::F_Con_t_Row), configmap.at(XFEM::X_Con_t_Row),
+              configmap.at(XFEM::F_Con_t_Col));
         }
 
         //-----------------------------------------------------------------
         // pressure adjoint consistency term
-        if (configmap.at(Inpar::XFEM::F_Adj_Row).first)
+        if (configmap.at(XFEM::F_Adj_Row).first)
         {
           //-----------------------------------------------------------------
           // +++ qnuP option added! +++
           nit_p_adjoint_consistency_master_terms(funct_m, normal_pres_timefacfac_,
-              velint_diff_pres_timefacfac_, configmap.at(Inpar::XFEM::F_Adj_Row),
-              configmap.at(Inpar::XFEM::F_Adj_Col), configmap.at(Inpar::XFEM::X_Adj_Col));
+              velint_diff_pres_timefacfac_, configmap.at(XFEM::F_Adj_Row),
+              configmap.at(XFEM::F_Adj_Col), configmap.at(XFEM::X_Adj_Col));
         }
 
-        if (configmap.at(Inpar::XFEM::F_Adj_n_Row)
+        if (configmap.at(XFEM::F_Adj_n_Row)
                 .first)  //(COMMENT: evaluating this separately seems to be more efficient for our
                          // cases)
         {
           //-----------------------------------------------------------------
           // +++ qnuP option added! +++
           nit_p_adjoint_consistency_master_terms(funct_m, normal_pres_timefacfac_,
-              velint_diff_normal_pres_timefacfac_, configmap.at(Inpar::XFEM::F_Adj_n_Row),
-              configmap.at(Inpar::XFEM::F_Adj_n_Col), configmap.at(Inpar::XFEM::X_Adj_n_Col));
+              velint_diff_normal_pres_timefacfac_, configmap.at(XFEM::F_Adj_n_Row),
+              configmap.at(XFEM::F_Adj_n_Col), configmap.at(XFEM::X_Adj_n_Col));
         }
 
         //-----------------------------------------------------------------
         // viscous adjoint consistency term (and for NavierSlip Penalty Term ([v],{sigma}))
         // Normal Terms!
 
-        if (configmap.at(Inpar::XFEM::F_Adj_n_Row).first)
+        if (configmap.at(XFEM::F_Adj_n_Row).first)
         {
           do_nit_visc_adjoint_and_neumann_master_terms_projected(funct_m,  ///< funct * timefacfac
               derxy_m,                   ///< spatial derivatives of coupling master shape functions
@@ -574,15 +558,14 @@ namespace Discret
               proj_normal_,              ///< projection_matrix
               velint_diff_proj_normal_,  ///< velocity difference projected
               normal,                    ///< normal-vector
-              km_viscm_fac, configmap.at(Inpar::XFEM::F_Adj_n_Row),
-              configmap.at(Inpar::XFEM::F_Adj_n_Col), configmap.at(Inpar::XFEM::X_Adj_n_Col),
-              configmap.at(Inpar::XFEM::FStr_Adj_n_Col));
+              km_viscm_fac, configmap.at(XFEM::F_Adj_n_Row), configmap.at(XFEM::F_Adj_n_Col),
+              configmap.at(XFEM::X_Adj_n_Col), configmap.at(XFEM::FStr_Adj_n_Col));
         }
-        if (configmap.at(Inpar::XFEM::FStr_Adj_n_Col).first)
+        if (configmap.at(XFEM::FStr_Adj_n_Col).first)
           FOUR_C_THROW("(NOT SUPPORTED FOR NORMAL DIR! Check Coercivity!)");
 
         // Tangential Terms!
-        if (configmap.at(Inpar::XFEM::F_Adj_t_Row).first)
+        if (configmap.at(XFEM::F_Adj_t_Row).first)
         {
           do_nit_visc_adjoint_and_neumann_master_terms_projected(funct_m,  ///< funct * timefacfac
               derxy_m,           ///< spatial derivatives of coupling master shape functions
@@ -590,31 +573,27 @@ namespace Discret
               proj_tangential_,  ///< projection_matrix
               velint_diff_proj_tangential_,  ///< velocity difference projected
               normal,                        ///< normal-vector
-              km_viscm_fac, configmap.at(Inpar::XFEM::F_Adj_t_Row),
-              configmap.at(Inpar::XFEM::F_Adj_t_Col), configmap.at(Inpar::XFEM::X_Adj_t_Col),
-              configmap.at(Inpar::XFEM::FStr_Adj_t_Col));
+              km_viscm_fac, configmap.at(XFEM::F_Adj_t_Row), configmap.at(XFEM::F_Adj_t_Col),
+              configmap.at(XFEM::X_Adj_t_Col), configmap.at(XFEM::FStr_Adj_t_Col));
         }
 
-        if (configmap.at(Inpar::XFEM::F_Adj_Row).first)
+        if (configmap.at(XFEM::F_Adj_Row).first)
         {
           nit_visc_adjoint_consistency_master_terms(funct_m,  ///< funct * timefacfac
               derxy_m,       ///< spatial derivatives of coupling master shape functions
               normal,        ///< normal-vector
               km_viscm_fac,  ///< scaling factor
-              configmap.at(Inpar::XFEM::F_Adj_Row), configmap.at(Inpar::XFEM::F_Adj_Col),
-              configmap.at(Inpar::XFEM::X_Adj_Col));
+              configmap.at(XFEM::F_Adj_Row), configmap.at(XFEM::F_Adj_Col),
+              configmap.at(XFEM::X_Adj_Col));
 
-          if (configmap.at(Inpar::XFEM::FStr_Adj_Col).first)
+          if (configmap.at(XFEM::FStr_Adj_Col).first)
             FOUR_C_THROW(
                 "visc Adjoint Stress Term without projection not implemented - feel free!");
         }
 
-        if ((configmap.at(Inpar::XFEM::XF_Con_Col).first ||
-                configmap.at(Inpar::XFEM::XF_Con_n_Col).first ||
-                configmap.at(Inpar::XFEM::XF_Con_t_Col).first ||
-                configmap.at(Inpar::XFEM::XF_Adj_Row).first ||
-                configmap.at(Inpar::XFEM::XF_Adj_n_Row).first ||
-                configmap.at(Inpar::XFEM::XF_Adj_t_Row).first))
+        if ((configmap.at(XFEM::XF_Con_Col).first || configmap.at(XFEM::XF_Con_n_Col).first ||
+                configmap.at(XFEM::XF_Con_t_Col).first || configmap.at(XFEM::XF_Adj_Row).first ||
+                configmap.at(XFEM::XF_Adj_n_Row).first || configmap.at(XFEM::XF_Adj_t_Row).first))
         {
           // TODO: @Christoph:
           //--------------------------------------------------------------------------------
@@ -634,38 +613,38 @@ namespace Discret
           // must use this-pointer because of two-stage lookup!
           this->get_interface_presnp(pres_s);
 
-          if (configmap.at(Inpar::XFEM::XF_Con_Col).first)
+          if (configmap.at(XFEM::XF_Con_Col).first)
           {
             nit_p_consistency_slave_terms(pres_s, funct_m, normal_pres_timefacfac_,
-                configmap.at(Inpar::XFEM::F_Con_Row), configmap.at(Inpar::XFEM::X_Con_Row),
-                configmap.at(Inpar::XFEM::XF_Con_Col));
+                configmap.at(XFEM::F_Con_Row), configmap.at(XFEM::X_Con_Row),
+                configmap.at(XFEM::XF_Con_Col));
           }
 
-          if (configmap.at(Inpar::XFEM::XF_Con_n_Col)
+          if (configmap.at(XFEM::XF_Con_n_Col)
                   .first)  //(COMMENT: evaluating this separately seems to be more efficient for our
                            // cases)
           {
             nit_p_consistency_slave_terms(pres_s, funct_m, normal_pres_timefacfac_,
-                configmap.at(Inpar::XFEM::F_Con_n_Row), configmap.at(Inpar::XFEM::X_Con_n_Row),
-                configmap.at(Inpar::XFEM::XF_Con_n_Col));
+                configmap.at(XFEM::F_Con_n_Row), configmap.at(XFEM::X_Con_n_Row),
+                configmap.at(XFEM::XF_Con_n_Col));
           }
 
           //-----------------------------------------------------------------
           // pressure adjoint consistency term
           // HAS PROJECTION FOR VELOCITY IMPLEMENTED!!!
-          if (configmap.at(Inpar::XFEM::XF_Adj_Row).first)
+          if (configmap.at(XFEM::XF_Adj_Row).first)
           {
             nit_p_adjoint_consistency_slave_terms(normal_pres_timefacfac_,
-                velint_diff_pres_timefacfac_, configmap.at(Inpar::XFEM::XF_Adj_Row),
-                configmap.at(Inpar::XFEM::F_Adj_Col), configmap.at(Inpar::XFEM::X_Adj_Col));
+                velint_diff_pres_timefacfac_, configmap.at(XFEM::XF_Adj_Row),
+                configmap.at(XFEM::F_Adj_Col), configmap.at(XFEM::X_Adj_Col));
           }
-          if (configmap.at(Inpar::XFEM::XF_Adj_n_Row)
+          if (configmap.at(XFEM::XF_Adj_n_Row)
                   .first)  //(COMMENT: evaluating this separately seems to be more efficient for our
                            // cases)
           {
             nit_p_adjoint_consistency_slave_terms(normal_pres_timefacfac_,
-                velint_diff_normal_pres_timefacfac_, configmap.at(Inpar::XFEM::XF_Adj_n_Row),
-                configmap.at(Inpar::XFEM::F_Adj_n_Col), configmap.at(Inpar::XFEM::X_Adj_n_Col));
+                velint_diff_normal_pres_timefacfac_, configmap.at(XFEM::XF_Adj_n_Row),
+                configmap.at(XFEM::F_Adj_n_Col), configmap.at(XFEM::X_Adj_n_Col));
           }
 
           //-----------------------------------------------------------------
@@ -690,13 +669,12 @@ namespace Discret
           vderxy_s_normal_transposed_viscs_timefacfac_ks_.update(1.0, vderxy_s_normal_, 1.0);
           vderxy_s_normal_transposed_viscs_timefacfac_ks_.scale(ks_viscs_fac);
 
-          if (configmap.at(Inpar::XFEM::XF_Con_Col).first)
+          if (configmap.at(XFEM::XF_Con_Col).first)
           {
-            nit_visc_consistency_slave_terms(derxy_s, funct_m, configmap.at(Inpar::XFEM::F_Con_Row),
-                configmap.at(Inpar::XFEM::X_Con_Row), configmap.at(Inpar::XFEM::XF_Con_Col));
+            nit_visc_consistency_slave_terms(derxy_s, funct_m, configmap.at(XFEM::F_Con_Row),
+                configmap.at(XFEM::X_Con_Row), configmap.at(XFEM::XF_Con_Col));
           }
-          if (configmap.at(Inpar::XFEM::XF_Con_n_Col).first ||
-              configmap.at(Inpar::XFEM::XF_Con_t_Col).first)
+          if (configmap.at(XFEM::XF_Con_n_Col).first || configmap.at(XFEM::XF_Con_t_Col).first)
             FOUR_C_THROW("Want to implement projected slave consistency?");
 
           //-----------------------------------------------------------------
@@ -706,29 +684,27 @@ namespace Discret
           derxy_s_viscs_timefacfac_ks.scale(adj_visc_scale_ * ks_viscs_fac);
 
           // TODO: Needs added Projection. (If deemed necessary!)
-          if (configmap.at(Inpar::XFEM::XF_Adj_Row).first)
+          if (configmap.at(XFEM::XF_Adj_Row).first)
           {
             nit_visc_adjoint_consistency_slave_terms(funct_m, derxy_s_viscs_timefacfac_ks, normal,
-                configmap.at(Inpar::XFEM::XF_Adj_Row), configmap.at(Inpar::XFEM::F_Adj_Col),
-                configmap.at(Inpar::XFEM::X_Adj_Col));
+                configmap.at(XFEM::XF_Adj_Row), configmap.at(XFEM::F_Adj_Col),
+                configmap.at(XFEM::X_Adj_Col));
           }
-          if (configmap.at(Inpar::XFEM::XF_Adj_n_Row).first ||
-              configmap.at(Inpar::XFEM::XF_Adj_t_Row).first)
+          if (configmap.at(XFEM::XF_Adj_n_Row).first || configmap.at(XFEM::XF_Adj_t_Row).first)
             FOUR_C_THROW("Want to  implement projected slave adjoint consistency?");
 
           //-----------------------------------------------------------------
           // standard consistency traction jump term
           // Only needed for XTPF
-          if (configmap.at(Inpar::XFEM::F_TJ_Rhs).first ||
-              configmap.at(Inpar::XFEM::X_TJ_Rhs).first)
+          if (configmap.at(XFEM::F_TJ_Rhs).first || configmap.at(XFEM::X_TJ_Rhs).first)
           {
             // funct_s * timefac * fac * kappa_m
             funct_s_timefacfac_km_.update(
-                configmap.at(Inpar::XFEM::X_TJ_Rhs).second * timefacfac, funct_s_, 0.0);
+                configmap.at(XFEM::X_TJ_Rhs).second * timefacfac, funct_s_, 0.0);
 
             // funct_m * timefac * fac * kappa_s
             funct_m_timefacfac_ks_.update(
-                configmap.at(Inpar::XFEM::F_TJ_Rhs).second * timefacfac, funct_m, 0.0);
+                configmap.at(XFEM::F_TJ_Rhs).second * timefacfac, funct_m, 0.0);
 
             nit_traction_consistency_term(
                 funct_m_timefacfac_ks_, funct_s_timefacfac_km_, itraction_jump);
@@ -736,14 +712,13 @@ namespace Discret
 
           //-----------------------------------------------------------------
           // projection matrix approach (Laplace-Beltrami)
-          if (configmap.at(Inpar::XFEM::F_LB_Rhs).first ||
-              configmap.at(Inpar::XFEM::X_LB_Rhs).first)
+          if (configmap.at(XFEM::F_LB_Rhs).first || configmap.at(XFEM::X_LB_Rhs).first)
           {
             Core::LinAlg::Matrix<nsd_, slave_nen_> derxy_s_timefacfac_km(derxy_s);
-            derxy_s_timefacfac_km.scale(configmap.at(Inpar::XFEM::X_LB_Rhs).second * timefacfac);
+            derxy_s_timefacfac_km.scale(configmap.at(XFEM::X_LB_Rhs).second * timefacfac);
 
             Core::LinAlg::Matrix<nsd_, nen_> derxy_m_timefacfac_ks(derxy_m);
-            derxy_m_timefacfac_ks.scale(configmap.at(Inpar::XFEM::F_LB_Rhs).second * timefacfac);
+            derxy_m_timefacfac_ks.scale(configmap.at(XFEM::F_LB_Rhs).second * timefacfac);
 
             nit_projected_traction_consistency_term(
                 derxy_m_timefacfac_ks, derxy_s_timefacfac_km, LB_proj_matrix);
@@ -752,12 +727,9 @@ namespace Discret
         }
 
         // Structural Stress Terms (e.g. non xfluid sided FSI)
-        if (configmap.at(Inpar::XFEM::XS_Con_Col).first ||
-            configmap.at(Inpar::XFEM::XS_Con_n_Col).first ||
-            configmap.at(Inpar::XFEM::XS_Con_t_Col).first ||
-            configmap.at(Inpar::XFEM::XS_Adj_Row).first ||
-            configmap.at(Inpar::XFEM::XS_Adj_n_Row).first ||
-            configmap.at(Inpar::XFEM::XS_Adj_t_Row).first)
+        if (configmap.at(XFEM::XS_Con_Col).first || configmap.at(XFEM::XS_Con_n_Col).first ||
+            configmap.at(XFEM::XS_Con_t_Col).first || configmap.at(XFEM::XS_Adj_Row).first ||
+            configmap.at(XFEM::XS_Adj_n_Row).first || configmap.at(XFEM::XS_Adj_t_Row).first)
         {
           traction_ = Core::LinAlg::Matrix<nsd_, 1>(solid_stress[0].values(), true);
           dtraction_vel_ =
@@ -770,47 +742,46 @@ namespace Discret
           d2traction_vel_[2] = Core::LinAlg::Matrix<nsd_ * slave_nen_, nsd_ * slave_nen_>(
               solid_stress[4].values(), true);
 
-          if (configmap.at(Inpar::XFEM::XS_Con_Col).first)
+          if (configmap.at(XFEM::XS_Con_Col).first)
           {
-            nit_solid_consistency_slave_terms(funct_m, timefacfac,
-                configmap.at(Inpar::XFEM::F_Con_Row), configmap.at(Inpar::XFEM::X_Con_Row),
-                configmap.at(Inpar::XFEM::XS_Con_Col));
+            nit_solid_consistency_slave_terms(funct_m, timefacfac, configmap.at(XFEM::F_Con_Row),
+                configmap.at(XFEM::X_Con_Row), configmap.at(XFEM::XS_Con_Col));
           }
 
-          if (configmap.at(Inpar::XFEM::XS_Con_n_Col).first)
+          if (configmap.at(XFEM::XS_Con_n_Col).first)
           {
             nit_solid_consistency_slave_terms_projected(funct_m, proj_normal_, timefacfac,
-                configmap.at(Inpar::XFEM::F_Con_n_Row), configmap.at(Inpar::XFEM::X_Con_n_Row),
-                configmap.at(Inpar::XFEM::XS_Con_n_Col));
+                configmap.at(XFEM::F_Con_n_Row), configmap.at(XFEM::X_Con_n_Row),
+                configmap.at(XFEM::XS_Con_n_Col));
           }
 
-          if (configmap.at(Inpar::XFEM::XS_Con_t_Col).first)
+          if (configmap.at(XFEM::XS_Con_t_Col).first)
           {
             nit_solid_consistency_slave_terms_projected(funct_m, proj_tangential_, timefacfac,
-                configmap.at(Inpar::XFEM::F_Con_t_Row), configmap.at(Inpar::XFEM::X_Con_t_Row),
-                configmap.at(Inpar::XFEM::XS_Con_t_Col));
+                configmap.at(XFEM::F_Con_t_Row), configmap.at(XFEM::X_Con_t_Row),
+                configmap.at(XFEM::XS_Con_t_Col));
           }
 
-          if (configmap.at(Inpar::XFEM::XS_Adj_Row).first)
+          if (configmap.at(XFEM::XS_Adj_Row).first)
           {
             nit_solid_adjoint_consistency_slave_terms(funct_m, timefacfac, velint_diff_,
-                dtraction_vel_, configmap.at(Inpar::XFEM::XS_Adj_Row),
-                configmap.at(Inpar::XFEM::F_Adj_Col), configmap.at(Inpar::XFEM::X_Adj_Col));
+                dtraction_vel_, configmap.at(XFEM::XS_Adj_Row), configmap.at(XFEM::F_Adj_Col),
+                configmap.at(XFEM::X_Adj_Col));
           }
 
-          if (configmap.at(Inpar::XFEM::XS_Adj_n_Row).first)
+          if (configmap.at(XFEM::XS_Adj_n_Row).first)
           {
             nit_solid_adjoint_consistency_slave_terms_projected(funct_m, timefacfac, proj_normal_,
-                velint_diff_proj_normal_, dtraction_vel_, configmap.at(Inpar::XFEM::XS_Adj_n_Row),
-                configmap.at(Inpar::XFEM::F_Adj_n_Col), configmap.at(Inpar::XFEM::X_Adj_n_Col));
+                velint_diff_proj_normal_, dtraction_vel_, configmap.at(XFEM::XS_Adj_n_Row),
+                configmap.at(XFEM::F_Adj_n_Col), configmap.at(XFEM::X_Adj_n_Col));
           }
 
-          if (configmap.at(Inpar::XFEM::XS_Adj_t_Row).first)
+          if (configmap.at(XFEM::XS_Adj_t_Row).first)
           {
             nit_solid_adjoint_consistency_slave_terms_projected(funct_m, timefacfac,
                 proj_tangential_, velint_diff_proj_tangential_, dtraction_vel_,
-                configmap.at(Inpar::XFEM::XS_Adj_t_Row), configmap.at(Inpar::XFEM::F_Adj_t_Col),
-                configmap.at(Inpar::XFEM::X_Adj_t_Col));
+                configmap.at(XFEM::XS_Adj_t_Row), configmap.at(XFEM::F_Adj_t_Col),
+                configmap.at(XFEM::X_Adj_t_Col));
           }
         }
 
@@ -1106,7 +1077,7 @@ namespace Discret
               proj_tangential,  ///< tangential projection matrix
           const Core::LinAlg::Matrix<nsd_, 1>&
               itraction_jump,  ///< prescribed interface traction, jump height for coupled problems
-          std::map<Inpar::XFEM::CoupTerm, std::pair<bool, double>>&
+          std::map<XFEM::CoupTerm, std::pair<bool, double>>&
               configmap  ///< Interface Terms configuration map
       )
       {
@@ -1142,23 +1113,18 @@ namespace Discret
         // interface velocity vector in gausspoint
         velint_s_.clear();
 
-        if (configmap.at(Inpar::XFEM::X_Adj_Col).first ||
-            configmap.at(Inpar::XFEM::X_Pen_Col).first ||
-            configmap.at(Inpar::XFEM::X_Adj_n_Col).first ||
-            configmap.at(Inpar::XFEM::X_Pen_n_Col).first ||
-            configmap.at(Inpar::XFEM::X_Adj_t_Col).first ||
-            configmap.at(Inpar::XFEM::X_Pen_t_Col).first)
+        if (configmap.at(XFEM::X_Adj_Col).first || configmap.at(XFEM::X_Pen_Col).first ||
+            configmap.at(XFEM::X_Adj_n_Col).first || configmap.at(XFEM::X_Pen_n_Col).first ||
+            configmap.at(XFEM::X_Adj_t_Col).first || configmap.at(XFEM::X_Pen_t_Col).first)
           this->get_interface_veln(velint_s_);
 
         // Calc full veldiff
-        if (configmap.at(Inpar::XFEM::F_Adj_Row).first ||
-            configmap.at(Inpar::XFEM::XF_Adj_Row).first ||
-            configmap.at(Inpar::XFEM::XS_Adj_Row).first ||
-            configmap.at(Inpar::XFEM::F_Pen_Row).first ||
-            configmap.at(Inpar::XFEM::X_Pen_Row).first)
+        if (configmap.at(XFEM::F_Adj_Row).first || configmap.at(XFEM::XF_Adj_Row).first ||
+            configmap.at(XFEM::XS_Adj_Row).first || configmap.at(XFEM::F_Pen_Row).first ||
+            configmap.at(XFEM::X_Pen_Row).first)
         {
-          velint_diff_.update(configmap.at(Inpar::XFEM::F_Adj_Col).second, velint_m,
-              -configmap.at(Inpar::XFEM::X_Adj_Col).second, velint_s_, 0.0);
+          velint_diff_.update(configmap.at(XFEM::F_Adj_Col).second, velint_m,
+              -configmap.at(XFEM::X_Adj_Col).second, velint_s_, 0.0);
           // add the prescribed interface velocity for weak Dirichlet boundary conditions or the
           // jump height for coupled problems
           velint_diff_.update(-1.0, ivelint_jump, 1.0);
@@ -1176,16 +1142,14 @@ namespace Discret
         }
 
         // Calc normal-veldiff
-        if (configmap.at(Inpar::XFEM::F_Adj_n_Row).first ||
-            configmap.at(Inpar::XFEM::XF_Adj_n_Row).first ||
-            configmap.at(Inpar::XFEM::XS_Adj_n_Row).first ||
-            configmap.at(Inpar::XFEM::F_Pen_n_Row).first ||
-            configmap.at(Inpar::XFEM::X_Pen_n_Row).first)
+        if (configmap.at(XFEM::F_Adj_n_Row).first || configmap.at(XFEM::XF_Adj_n_Row).first ||
+            configmap.at(XFEM::XS_Adj_n_Row).first || configmap.at(XFEM::F_Pen_n_Row).first ||
+            configmap.at(XFEM::X_Pen_n_Row).first)
         {
           // velint_diff_proj_normal_ = (u^m_k - u^s_k - u^{jump}_k) P^n_{kj}
           // (([|u|]-u_0)*P^n) Apply from right for consistency
-          velint_diff_normal_.update(configmap.at(Inpar::XFEM::F_Adj_n_Col).second, velint_m,
-              -configmap.at(Inpar::XFEM::X_Adj_n_Col).second, velint_s_, 0.0);
+          velint_diff_normal_.update(configmap.at(XFEM::F_Adj_n_Col).second, velint_m,
+              -configmap.at(XFEM::X_Adj_n_Col).second, velint_s_, 0.0);
           // add the prescribed interface velocity for weak Dirichlet boundary conditions or the
           // jump height for coupled problems
           velint_diff_normal_.update(-1.0, ivelint_jump, 1.0);
@@ -1204,15 +1168,13 @@ namespace Discret
         }
 
         // Calc tangential-veldiff
-        if (configmap.at(Inpar::XFEM::F_Adj_t_Row).first ||
-            configmap.at(Inpar::XFEM::XF_Adj_t_Row).first ||
-            configmap.at(Inpar::XFEM::F_Pen_t_Row).first ||
-            configmap.at(Inpar::XFEM::X_Pen_t_Row).first)
+        if (configmap.at(XFEM::F_Adj_t_Row).first || configmap.at(XFEM::XF_Adj_t_Row).first ||
+            configmap.at(XFEM::F_Pen_t_Row).first || configmap.at(XFEM::X_Pen_t_Row).first)
         {
           // velint_diff_proj_tangential_ = (u^m_k - u^s_k - u^{jump}_k) P^t_{kj}
           // (([|u|]-u_0)*P^t) Apply from right for consistency
-          velint_diff_tangential_.update(configmap.at(Inpar::XFEM::F_Adj_t_Col).second, velint_m,
-              -configmap.at(Inpar::XFEM::X_Adj_t_Col).second, velint_s_, 0.0);
+          velint_diff_tangential_.update(configmap.at(XFEM::F_Adj_t_Col).second, velint_m,
+              -configmap.at(XFEM::X_Adj_t_Col).second, velint_s_, 0.0);
           // add the prescribed interface velocity for weak Dirichlet boundary conditions or the
           // jump height for coupled problems
           velint_diff_tangential_.update(-1.0, ivelint_jump, 1.0);
@@ -1233,20 +1195,18 @@ namespace Discret
         funct_s_m_dyad_.multiply_nt(funct_s_, funct_m);
 
         // penalty term
-        if (fldparaxfem_.interface_terms_previous_state() == Inpar::XFEM::PreviousState_full)
+        if (fldparaxfem_.interface_terms_previous_state() == XFEM::PreviousState_full)
         {
-          if (configmap.at(Inpar::XFEM::F_Pen_Row).first ||
-              configmap.at(Inpar::XFEM::X_Pen_Row).first)
+          if (configmap.at(XFEM::F_Pen_Row).first || configmap.at(XFEM::X_Pen_Row).first)
           {
-            nit_stab_penalty(funct_m, timefacfac, configmap.at(Inpar::XFEM::F_Pen_Row),
-                configmap.at(Inpar::XFEM::X_Pen_Row), configmap.at(Inpar::XFEM::F_Pen_Col),
-                configmap.at(Inpar::XFEM::X_Pen_Col), true);
+            nit_stab_penalty(funct_m, timefacfac, configmap.at(XFEM::F_Pen_Row),
+                configmap.at(XFEM::X_Pen_Row), configmap.at(XFEM::F_Pen_Col),
+                configmap.at(XFEM::X_Pen_Col), true);
           }
 
           // add averaged term
-          if (fldparaxfem_.xff_conv_stab_scaling() == Inpar::XFEM::XFF_ConvStabScaling_upwinding ||
-              fldparaxfem_.xff_conv_stab_scaling() ==
-                  Inpar::XFEM::XFF_ConvStabScaling_only_averaged)
+          if (fldparaxfem_.xff_conv_stab_scaling() == XFEM::XFF_ConvStabScaling_upwinding ||
+              fldparaxfem_.xff_conv_stab_scaling() == XFEM::XFF_ConvStabScaling_only_averaged)
           {
             nit_stab_inflow_averaged_term(funct_m, velint_m, normal, density_m, timefacfac, true);
           }
@@ -1276,83 +1236,80 @@ namespace Discret
         {
           //-----------------------------------------------------------------
           // pressure consistency term
-          if (configmap.at(Inpar::XFEM::F_Con_Col).first)
+          if (configmap.at(XFEM::F_Con_Col).first)
           {
             nit_p_consistency_master_terms(pres_m, funct_m, normal_pres_timefacfac_,
-                configmap.at(Inpar::XFEM::F_Con_Row), configmap.at(Inpar::XFEM::X_Con_Row),
-                configmap.at(Inpar::XFEM::F_Con_Col), true);
+                configmap.at(XFEM::F_Con_Row), configmap.at(XFEM::X_Con_Row),
+                configmap.at(XFEM::F_Con_Col), true);
           }
 
-          if (configmap.at(Inpar::XFEM::F_Con_n_Col)
+          if (configmap.at(XFEM::F_Con_n_Col)
                   .first)  //(COMMENT: evaluating this separately seems to be more efficient for our
                            // cases)
           {
             nit_p_consistency_master_terms(pres_m, funct_m, normal_pres_timefacfac_,
-                configmap.at(Inpar::XFEM::F_Con_n_Row), configmap.at(Inpar::XFEM::X_Con_n_Row),
-                configmap.at(Inpar::XFEM::F_Con_n_Col), true);
+                configmap.at(XFEM::F_Con_n_Row), configmap.at(XFEM::X_Con_n_Row),
+                configmap.at(XFEM::F_Con_n_Col), true);
           }
         }
 
         //-----------------------------------------------------------------
         // viscous consistency term
-        if (configmap.at(Inpar::XFEM::F_Con_Col).first)
+        if (configmap.at(XFEM::F_Con_Col).first)
         {
 #ifndef ENFORCE_URQUIZA_GNBC
           const Core::LinAlg::Matrix<nsd_, nen_>
               dummy;  // as for the evaluation of the rhs this parameter is not used!
           // Comment: Here vderxy_m_normal_transposed_viscm_timefacfac_km_ is used!
-          nit_visc_consistency_master_terms(dummy, funct_m, configmap.at(Inpar::XFEM::F_Con_Row),
-              configmap.at(Inpar::XFEM::X_Con_Row), configmap.at(Inpar::XFEM::F_Con_Col), true);
+          nit_visc_consistency_master_terms(dummy, funct_m, configmap.at(XFEM::F_Con_Row),
+              configmap.at(XFEM::X_Con_Row), configmap.at(XFEM::F_Con_Col), true);
 #else
           FOUR_C_THROW(
               "ENFORCE_URQUIZA_GNBC for NIT_visc_Consistency_MasterRHS?");  //@Magnus: What
                                                                             // should we do here?
 #endif
         }
-        if (configmap.at(Inpar::XFEM::F_Con_n_Col).first)
-          FOUR_C_THROW("F_Con_n_Col will come soon");
-        if (configmap.at(Inpar::XFEM::F_Con_t_Col).first)
-          FOUR_C_THROW("F_Con_t_Col will come soon");
+        if (configmap.at(XFEM::F_Con_n_Col).first) FOUR_C_THROW("F_Con_n_Col will come soon");
+        if (configmap.at(XFEM::F_Con_t_Col).first) FOUR_C_THROW("F_Con_t_Col will come soon");
 
-        if (fldparaxfem_.interface_terms_previous_state() == Inpar::XFEM::PreviousState_full)
+        if (fldparaxfem_.interface_terms_previous_state() == XFEM::PreviousState_full)
         {
           if (not isImplPressure)
           {
             //-----------------------------------------------------------------
             // pressure adjoint consistency term
-            if (configmap.at(Inpar::XFEM::F_Adj_Row).first)
+            if (configmap.at(XFEM::F_Adj_Row).first)
             {
               //-----------------------------------------------------------------
               // +++ qnuP option added! +++
               nit_p_adjoint_consistency_master_terms(funct_m, normal_pres_timefacfac_,
-                  velint_diff_pres_timefacfac_, configmap.at(Inpar::XFEM::F_Adj_Row),
-                  configmap.at(Inpar::XFEM::F_Adj_Col), configmap.at(Inpar::XFEM::X_Adj_Col), true);
+                  velint_diff_pres_timefacfac_, configmap.at(XFEM::F_Adj_Row),
+                  configmap.at(XFEM::F_Adj_Col), configmap.at(XFEM::X_Adj_Col), true);
             }
 
-            if (configmap.at(Inpar::XFEM::F_Adj_n_Row)
+            if (configmap.at(XFEM::F_Adj_n_Row)
                     .first)  //(COMMENT: evaluating this separately seems to be more efficient for
                              // our cases)
             {
               //-----------------------------------------------------------------
               // +++ qnuP option added! +++
               nit_p_adjoint_consistency_master_terms(funct_m, normal_pres_timefacfac_,
-                  velint_diff_normal_pres_timefacfac_, configmap.at(Inpar::XFEM::F_Adj_n_Row),
-                  configmap.at(Inpar::XFEM::F_Adj_n_Col), configmap.at(Inpar::XFEM::X_Adj_n_Col),
-                  true);
+                  velint_diff_normal_pres_timefacfac_, configmap.at(XFEM::F_Adj_n_Row),
+                  configmap.at(XFEM::F_Adj_n_Col), configmap.at(XFEM::X_Adj_n_Col), true);
             }
           }
 
           // Normal Terms!
-          if (configmap.at(Inpar::XFEM::F_Adj_n_Row).first)
+          if (configmap.at(XFEM::F_Adj_n_Row).first)
             FOUR_C_THROW("Implement normal Adjoint Consistency term RHS for NEW OST !");
-          if (configmap.at(Inpar::XFEM::FStr_Adj_n_Col).first)
+          if (configmap.at(XFEM::FStr_Adj_n_Col).first)
             FOUR_C_THROW("(NOT SUPPORTED FOR NORMAL DIR! Check Coercivity!)");
-          if (configmap.at(Inpar::XFEM::F_Adj_t_Row).first)
+          if (configmap.at(XFEM::F_Adj_t_Row).first)
             FOUR_C_THROW("Implement tangential Adjoint Consistency term RHS for NEW OST !");
 
           //-----------------------------------------------------------------
           // viscous adjoint consistency term
-          if (configmap.at(Inpar::XFEM::F_Adj_Row).first)
+          if (configmap.at(XFEM::F_Adj_Row).first)
           {
             const Core::LinAlg::Matrix<nsd_, nen_>
                 dummy;  // as for the evaluation of the rhs this parameter is not used!
@@ -1360,25 +1317,21 @@ namespace Discret
                 dummy,         ///< spatial derivatives of coupling master shape functions
                 normal,        ///< normal-vector
                 km_viscm_fac,  ///< scaling factor
-                configmap.at(Inpar::XFEM::F_Adj_Row), configmap.at(Inpar::XFEM::F_Adj_Col),
-                configmap.at(Inpar::XFEM::X_Adj_Col));
+                configmap.at(XFEM::F_Adj_Row), configmap.at(XFEM::F_Adj_Col),
+                configmap.at(XFEM::X_Adj_Col));
           }
         }
 
         //-----------------------------------------------------------------
         // the following quantities are only required for two-sided coupling
         // kappa_s > 0.0
-        if ((configmap.at(Inpar::XFEM::XF_Con_Col).first ||
-                configmap.at(Inpar::XFEM::XF_Con_n_Col).first ||
-                configmap.at(Inpar::XFEM::XF_Con_t_Col).first ||
-                configmap.at(Inpar::XFEM::XF_Adj_Row).first ||
-                configmap.at(Inpar::XFEM::XF_Adj_n_Row).first ||
-                configmap.at(Inpar::XFEM::XF_Adj_t_Row).first))
+        if ((configmap.at(XFEM::XF_Con_Col).first || configmap.at(XFEM::XF_Con_n_Col).first ||
+                configmap.at(XFEM::XF_Con_t_Col).first || configmap.at(XFEM::XF_Adj_Row).first ||
+                configmap.at(XFEM::XF_Adj_n_Row).first || configmap.at(XFEM::XF_Adj_t_Row).first))
         {
           //-----------------------------------------------------------------
           // pressure consistency term
-          if (configmap.at(Inpar::XFEM::XF_Con_Col).first ||
-              configmap.at(Inpar::XFEM::XF_Con_n_Col).first)
+          if (configmap.at(XFEM::XF_Con_Col).first || configmap.at(XFEM::XF_Con_n_Col).first)
           {
             if (not isImplPressure)
             {
@@ -1386,20 +1339,20 @@ namespace Discret
               // must use this-pointer because of two-stage lookup!
               this->get_interface_presn(presn_s);
 
-              if (configmap.at(Inpar::XFEM::XF_Con_Col).first)
+              if (configmap.at(XFEM::XF_Con_Col).first)
               {
                 nit_p_consistency_slave_terms(presn_s, funct_m, normal_pres_timefacfac_,
-                    configmap.at(Inpar::XFEM::F_Con_Row), configmap.at(Inpar::XFEM::X_Con_Row),
-                    configmap.at(Inpar::XFEM::XF_Con_Col), true);
+                    configmap.at(XFEM::F_Con_Row), configmap.at(XFEM::X_Con_Row),
+                    configmap.at(XFEM::XF_Con_Col), true);
               }
 
-              if (configmap.at(Inpar::XFEM::XF_Con_n_Col)
+              if (configmap.at(XFEM::XF_Con_n_Col)
                       .first)  //(COMMENT: evaluating this separately seems to be more efficient for
                                // our cases)
               {
                 nit_p_consistency_slave_terms(presn_s, funct_m, normal_pres_timefacfac_,
-                    configmap.at(Inpar::XFEM::F_Con_n_Row), configmap.at(Inpar::XFEM::X_Con_n_Row),
-                    configmap.at(Inpar::XFEM::XF_Con_n_Col), true);
+                    configmap.at(XFEM::F_Con_n_Row), configmap.at(XFEM::X_Con_n_Row),
+                    configmap.at(XFEM::XF_Con_n_Col), true);
               }
             }
           }
@@ -1419,40 +1372,37 @@ namespace Discret
           vderxy_s_normal_transposed_viscs_timefacfac_ks_.update(1.0, vderxy_s_normal_, 1.0);
           vderxy_s_normal_transposed_viscs_timefacfac_ks_.scale(ks_viscs_fac);
 
-          if (configmap.at(Inpar::XFEM::XF_Con_Col).first)
+          if (configmap.at(XFEM::XF_Con_Col).first)
           {
             const Core::LinAlg::Matrix<nsd_, slave_nen_>
                 dummy;  // as for the evaluation of the rhs this parameter is not used!
-            nit_visc_consistency_slave_terms(dummy, funct_m, configmap.at(Inpar::XFEM::F_Con_Row),
-                configmap.at(Inpar::XFEM::X_Con_Row), configmap.at(Inpar::XFEM::XF_Con_Col), true);
+            nit_visc_consistency_slave_terms(dummy, funct_m, configmap.at(XFEM::F_Con_Row),
+                configmap.at(XFEM::X_Con_Row), configmap.at(XFEM::XF_Con_Col), true);
           }
-          if (configmap.at(Inpar::XFEM::XF_Con_n_Col).first ||
-              configmap.at(Inpar::XFEM::XF_Con_t_Col).first)
+          if (configmap.at(XFEM::XF_Con_n_Col).first || configmap.at(XFEM::XF_Con_t_Col).first)
             FOUR_C_THROW("Want to implement projected slave consistency?");
 
           // consistency terms evaluated
-          if (fldparaxfem_.interface_terms_previous_state() == Inpar::XFEM::PreviousState_full)
+          if (fldparaxfem_.interface_terms_previous_state() == XFEM::PreviousState_full)
           {
             if (not isImplPressure)
             {
               //-----------------------------------------------------------------
               // pressure adjoint consistency term
               // HAS PROJECTION FOR VELOCITY IMPLEMENTED!!!
-              if (configmap.at(Inpar::XFEM::XF_Adj_Row).first)
+              if (configmap.at(XFEM::XF_Adj_Row).first)
               {
                 nit_p_adjoint_consistency_slave_terms(normal_pres_timefacfac_,
-                    velint_diff_pres_timefacfac_, configmap.at(Inpar::XFEM::XF_Adj_Row),
-                    configmap.at(Inpar::XFEM::F_Adj_Col), configmap.at(Inpar::XFEM::X_Adj_Col),
-                    true);
+                    velint_diff_pres_timefacfac_, configmap.at(XFEM::XF_Adj_Row),
+                    configmap.at(XFEM::F_Adj_Col), configmap.at(XFEM::X_Adj_Col), true);
               }
-              if (configmap.at(Inpar::XFEM::XF_Adj_n_Row)
+              if (configmap.at(XFEM::XF_Adj_n_Row)
                       .first)  //(COMMENT: evaluating this separately seems to be more efficient for
                                // our cases)
               {
                 nit_p_adjoint_consistency_slave_terms(normal_pres_timefacfac_,
-                    velint_diff_normal_pres_timefacfac_, configmap.at(Inpar::XFEM::XF_Adj_n_Row),
-                    configmap.at(Inpar::XFEM::F_Adj_n_Col), configmap.at(Inpar::XFEM::X_Adj_n_Col),
-                    true);
+                    velint_diff_normal_pres_timefacfac_, configmap.at(XFEM::XF_Adj_n_Row),
+                    configmap.at(XFEM::F_Adj_n_Col), configmap.at(XFEM::X_Adj_n_Col), true);
               }
             }
 
@@ -1466,14 +1416,13 @@ namespace Discret
             derxy_s_viscs_timefacfac_ks.scale(adj_visc_scale_ * ks_viscs_fac);
 
             // TODO: Needs added Projection. (If deemed necessary!)
-            if (configmap.at(Inpar::XFEM::XF_Adj_Row).first)
+            if (configmap.at(XFEM::XF_Adj_Row).first)
             {
               nit_visc_adjoint_consistency_slave_terms(funct_m, derxy_s_viscs_timefacfac_ks, normal,
-                  configmap.at(Inpar::XFEM::XF_Adj_Row), configmap.at(Inpar::XFEM::F_Adj_Col),
-                  configmap.at(Inpar::XFEM::X_Adj_Col), true);
+                  configmap.at(XFEM::XF_Adj_Row), configmap.at(XFEM::F_Adj_Col),
+                  configmap.at(XFEM::X_Adj_Col), true);
             }
-            if (configmap.at(Inpar::XFEM::XF_Adj_n_Row).first ||
-                configmap.at(Inpar::XFEM::XF_Adj_t_Row).first)
+            if (configmap.at(XFEM::XF_Adj_n_Row).first || configmap.at(XFEM::XF_Adj_t_Row).first)
               FOUR_C_THROW("Want to  implement projected slave adjoint consistency?");
           }
         }
@@ -1481,15 +1430,15 @@ namespace Discret
         //-----------------------------------------------------------------
         // standard consistency traction jump term
         // Only needed for XTPF
-        if (configmap.at(Inpar::XFEM::F_TJ_Rhs).first || configmap.at(Inpar::XFEM::X_TJ_Rhs).first)
+        if (configmap.at(XFEM::F_TJ_Rhs).first || configmap.at(XFEM::X_TJ_Rhs).first)
         {
           // funct_s * timefac * fac * kappa_m
           funct_s_timefacfac_km_.update(
-              configmap.at(Inpar::XFEM::F_TJ_Rhs).second * timefacfac, funct_s_, 0.0);
+              configmap.at(XFEM::F_TJ_Rhs).second * timefacfac, funct_s_, 0.0);
 
           // funct_m * timefac * fac * kappa_s
           funct_m_timefacfac_ks_.update(
-              configmap.at(Inpar::XFEM::X_TJ_Rhs).second * timefacfac, funct_m, 0.0);
+              configmap.at(XFEM::X_TJ_Rhs).second * timefacfac, funct_m, 0.0);
 
           nit_traction_consistency_term(
               funct_m_timefacfac_ks_, funct_s_timefacfac_km_, itraction_jump);
@@ -1497,16 +1446,16 @@ namespace Discret
 
         //-----------------------------------------------------------------
         // projection matrix approach (Laplace-Beltrami)
-        if (configmap.at(Inpar::XFEM::F_LB_Rhs).first || configmap.at(Inpar::XFEM::X_LB_Rhs).first)
+        if (configmap.at(XFEM::F_LB_Rhs).first || configmap.at(XFEM::X_LB_Rhs).first)
         {
           FOUR_C_THROW(
               "Check if we need the (Laplace-Beltrami) for the old timestep, "
               "then you should not forget to add the LB_proj_matrix as member to this function?");
           //    Core::LinAlg::Matrix<nsd_,slave_nen_> derxy_s_timefacfac_km(derxy_s);
-          //    derxy_s_timefacfac_km.scale(configmap.at(Inpar::XFEM::F_LB_Rhs).second*timefacfac);
+          //    derxy_s_timefacfac_km.scale(configmap.at(XFEM::F_LB_Rhs).second*timefacfac);
           //
           //    Core::LinAlg::Matrix<nsd_,nen_> derxy_m_timefacfac_ks(derxy_m);
-          //    derxy_m_timefacfac_ks.scale(configmap.at(Inpar::XFEM::X_LB_Rhs).second*timefacfac);
+          //    derxy_m_timefacfac_ks.scale(configmap.at(XFEM::X_LB_Rhs).second*timefacfac);
           //
           //    nit_projected_traction_consistency_term(
           //    derxy_m_timefacfac_ks,

@@ -11,9 +11,9 @@
 
 #include "4C_config.hpp"
 
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <map>
 #include <memory>
@@ -93,7 +93,7 @@ namespace XFEM
     //! the XFEM
     void assemble_edge_stab_ghost_penalty(
         Teuchos::ParameterList& eleparams,         ///< element parameter list
-        const Inpar::XFEM::FaceType& face_type,    ///< which type of face std, ghost, ghost-penalty
+        const XFEM::FaceType& face_type,           ///< which type of face std, ghost, ghost-penalty
         Discret::Elements::FluidIntFace* intface,  ///< internal face element
         std::shared_ptr<Core::Mat::Material>& material_m,  ///< material of the master side
         std::shared_ptr<Core::Mat::Material>& material_s,  ///< material of the slave side

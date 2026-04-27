@@ -12,7 +12,7 @@
 
 #include "4C_fsi_input.hpp"
 #include "4C_fsi_monolithic.hpp"
-#include "4C_inpar_xfem.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
 

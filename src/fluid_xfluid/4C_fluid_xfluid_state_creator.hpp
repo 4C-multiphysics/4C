@@ -13,10 +13,10 @@
 #include "4C_cut_enum.hpp"
 #include "4C_cut_input.hpp"
 #include "4C_inpar_fluid.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 

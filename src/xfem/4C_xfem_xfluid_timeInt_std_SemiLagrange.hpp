@@ -47,9 +47,9 @@ namespace XFEM
     //! constructor
     explicit XfluidSemiLagrange(
         XFEM::XfluidTimeintBase& timeInt,  ///< time integration base class object
-        const std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>&
-            reconstr_method,                      ///< reconstruction map for nodes and its dofsets
-        Inpar::XFEM::XFluidTimeInt& timeIntType,  ///< type of time integration
+        const std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>&
+            reconstr_method,                     ///< reconstruction map for nodes and its dofsets
+        XFEM::XFluidTimeIntMethod& timeIntType,  ///< type of time integration
         const std::shared_ptr<Core::LinAlg::Vector<double>> veln,  ///< velocity at time t^n
         const double& dt,                                          ///< time step size
         const double& theta,                                       ///< OST theta

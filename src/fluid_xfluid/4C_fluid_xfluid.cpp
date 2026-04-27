@@ -351,7 +351,7 @@ void FLD::XFluid::set_x_fluid_params()
   maxnumdofsets_ = params_->sublist("XFEM").get<int>("MAX_NUM_DOFSETS");
 
   xfluid_timintapproach_ =
-      Teuchos::getIntegralValue<Inpar::XFEM::XFluidTimeIntScheme>(params_xf_gen, "XFLUID_TIMEINT");
+      Teuchos::getIntegralValue<XFEM::XFluidTimeIntScheme>(params_xf_gen, "XFLUID_TIMEINT");
   xfluid_timint_check_interfacetips_ =
       params_xf_gen.get<bool>("XFLUID_TIMEINT_CHECK_INTERFACETIPS");
   xfluid_timint_check_sliding_on_surface_ =
@@ -363,7 +363,7 @@ void FLD::XFluid::set_x_fluid_params()
 
   // get interface stabilization specific parameters
   coupling_method_ =
-      Teuchos::getIntegralValue<Inpar::XFEM::CouplingMethod>(params_xf_stab, "COUPLING_METHOD");
+      Teuchos::getIntegralValue<XFEM::CouplingMethod>(params_xf_stab, "COUPLING_METHOD");
 
   // set flag if any edge-based fluid stabilization has to integrated as std or gp stabilization
   {
@@ -1147,14 +1147,14 @@ void FLD::XFluid::assemble_mat_and_rhs_vol_terms()
               TEUCHOS_FUNC_TIME_MONITOR(
                   "FLD::XFluid::XFluidState::Evaluate 2) interface (only evaluate)");
 
-              if (coupling_method() == Inpar::XFEM::Hybrid_LM_Cauchy_stress or
-                  coupling_method() == Inpar::XFEM::Hybrid_LM_viscous_stress)
+              if (coupling_method() == XFEM::Hybrid_LM_Cauchy_stress or
+                  coupling_method() == XFEM::Hybrid_LM_viscous_stress)
                 impl->element_xfem_interface_hybrid_lm(ele, *discret_, la[0].lm_,
                     condition_manager_, intpoints_sets[set_counter], bcells, bintpoints,
                     patchcouplm, side_coupling, eleparams, mat, strategy.elematrix1(),
                     strategy.elevector1(), C_ss, cells);
 
-              if (coupling_method() == Inpar::XFEM::Nitsche)
+              if (coupling_method() == XFEM::Nitsche)
                 impl->element_xfem_interface_nit(ele, *discret_, la[0].lm_, condition_manager_,
                     bcells, bintpoints, patchcouplm, eleparams, matptr_m, matptr_s,
                     strategy.elematrix1(), strategy.elevector1(), cells, side_coupling, C_ss,
@@ -2035,9 +2035,9 @@ void FLD::XFluid::compute_error_norms(Core::LinAlg::SerialDenseVector& glob_dom_
           e->boundary_cell_gauss_points_lin(
               bcells, bintpoints, get_cut_wizard()->get_bc_cubaturedegree());
 
-          if (coupling_method() == Inpar::XFEM::Hybrid_LM_Cauchy_stress or
-              coupling_method() == Inpar::XFEM::Hybrid_LM_viscous_stress or
-              coupling_method() == Inpar::XFEM::Nitsche)
+          if (coupling_method() == XFEM::Hybrid_LM_Cauchy_stress or
+              coupling_method() == XFEM::Hybrid_LM_viscous_stress or
+              coupling_method() == XFEM::Nitsche)
           {
             impl->compute_error_interface(ele, *discret_, la[0].lm_, condition_manager_, mat,
                 ele_interf_norms, bcells, bintpoints, cells, *params_);
@@ -2126,12 +2126,12 @@ void FLD::XFluid::print_stabilization_details() const
     Core::IO::cout << "Stabilization type:      "
                    << interfstabparams->get<std::string>("COUPLING_METHOD") << "\n";
 
-    if (coupling_method_ == Inpar::XFEM::Hybrid_LM_Cauchy_stress or
-        coupling_method_ == Inpar::XFEM::Hybrid_LM_viscous_stress)
+    if (coupling_method_ == XFEM::Hybrid_LM_Cauchy_stress or
+        coupling_method_ == XFEM::Hybrid_LM_viscous_stress)
       Core::IO::cout << "HYBRID_LM_L2_PROJ:       "
                      << interfstabparams->get<std::string>("HYBRID_LM_L2_PROJ") << "\n";
 
-    if (coupling_method_ == Inpar::XFEM::Nitsche)
+    if (coupling_method_ == XFEM::Nitsche)
     {
       Core::IO::cout << "NIT_STAB_FAC:                      "
                      << interfstabparams->get<double>("NIT_STAB_FAC") << "\n";
@@ -2141,7 +2141,7 @@ void FLD::XFluid::print_stabilization_details() const
                      << interfstabparams->get<std::string>("VISC_STAB_HK") << "\n";
     }
 
-    if (coupling_method_ != Inpar::XFEM::Hybrid_LM_Cauchy_stress)
+    if (coupling_method_ != XFEM::Hybrid_LM_Cauchy_stress)
       Core::IO::cout << "VISC_ADJOINT_SYMMETRY:             "
                      << interfstabparams->get<std::string>("VISC_ADJOINT_SYMMETRY") << "\n";
 
@@ -3507,8 +3507,8 @@ void FLD::XFluid::x_timint_do_time_step_transfer(const bool screen_out)
   std::vector<std::shared_ptr<Core::LinAlg::Vector<double>>> newRowStateVectors;
 
   // reconstruction map for nodes and its dofsets - how do we have to reconstruct the single dofs
-  std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>> node_to_reconstr_method;
-  std::map<Inpar::XFEM::XFluidTimeInt, std::map<int, std::set<int>>> reconstr_method_to_node;
+  std::map<int, std::vector<XFEM::XFluidTimeIntMethod>> node_to_reconstr_method;
+  std::map<XFEM::XFluidTimeIntMethod, std::map<int, std::set<int>>> reconstr_method_to_node;
   // vector of DOF-IDs which are Dirichlet BCs for ghost penalty reconstruction method
   std::shared_ptr<std::set<int>> dbcgids = std::make_shared<std::set<int>>();
 
@@ -3580,7 +3580,7 @@ void FLD::XFluid::x_timint_do_time_step_transfer(const bool screen_out)
   }  // transfer_dofs_to_new_map
 
   if (xfluid_timintapproach_ ==
-      Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
+      XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
   {
     // project from another mesh, if possible (only for multimesh fluid)
     bool projection_success = x_timint_project_from_embedded_discretization(
@@ -3598,14 +3598,12 @@ void FLD::XFluid::x_timint_do_time_step_transfer(const bool screen_out)
       x_timint_corrective_transfer_vectors_between_steps(xfluid_timeint, xfluid_timintapproach_,
           oldRowStateVectors, newRowStateVectors, dbcgids, screen_out);
 
-      if (!xfluid_timeint->get_node_to_dof_map_for_reconstr(
-                             Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS)
+      if (!xfluid_timeint->get_node_to_dof_map_for_reconstr(XFEM::Xf_TimeInt_by_PROJ_from_DIS)
               .empty())
         FOUR_C_THROW(
             "Even though projection failed, some nodes still demand projection. No alternatives "
             "found for e.g. {}",
-            xfluid_timeint
-                ->get_node_to_dof_map_for_reconstr(Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS)
+            xfluid_timeint->get_node_to_dof_map_for_reconstr(XFEM::Xf_TimeInt_by_PROJ_from_DIS)
                 .begin()
                 ->first);
     }
@@ -3721,8 +3719,8 @@ bool FLD::XFluid::x_timint_do_increment_step_transfer(
   std::vector<std::shared_ptr<Core::LinAlg::Vector<double>>> rowStateVectors_npip;
 
   // reconstruction map for nodes and its dofsets - how do we have to reconstruct the single dofs
-  std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>> node_to_reconstr_method;
-  std::map<Inpar::XFEM::XFluidTimeInt, std::map<int, std::set<int>>> reconstr_method_to_node;
+  std::map<int, std::vector<XFEM::XFluidTimeIntMethod>> node_to_reconstr_method;
+  std::map<XFEM::XFluidTimeIntMethod, std::map<int, std::set<int>>> reconstr_method_to_node;
 
   // vector of DOF-IDs which are Dirichlet BCs for ghost penalty reconstruction method
   std::shared_ptr<std::set<int>> dbcgids = std::make_shared<std::set<int>>();
@@ -3745,14 +3743,14 @@ bool FLD::XFluid::x_timint_do_increment_step_transfer(
   //   exported from row vectors
   //------------------------------------------------------------------------------------
 
-  Inpar::XFEM::XFluidTimeIntScheme timint_method;
+  XFEM::XFluidTimeIntScheme timint_method;
 
   if (firstcall_in_timestep)  // for the first iteration we allow the standard reconstruction method
                               // as we again reconstruct w.r.t t^n
     timint_method = xfluid_timintapproach_;
   else  // for further iterations we just allow for simple copying and ghost-penalty reconstruction
     // for monolithic fsi and also for partitioned fsi it is the best not to allow semi-lagrangean
-    timint_method = Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP;
+    timint_method = XFEM::Xf_TimeIntScheme_STD_by_Copy_AND_GHOST_by_Copy_or_GP;
 
   //-----------------------------time integration----------------------
 
@@ -3786,7 +3784,7 @@ bool FLD::XFluid::x_timint_do_increment_step_transfer(
   }
 
   if (xfluid_timintapproach_ ==
-      Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
+      XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP)
   {
     // project from another mesh, if possible (only for multimesh fluid)
     bool projection_success = x_timint_project_from_embedded_discretization(
@@ -3804,14 +3802,12 @@ bool FLD::XFluid::x_timint_do_increment_step_transfer(
       x_timint_corrective_transfer_vectors_between_steps(xfluid_timeint, xfluid_timintapproach_,
           rowStateVectors_npi, rowStateVectors_npip, dbcgids, screen_out);
 
-      if (!xfluid_timeint->get_node_to_dof_map_for_reconstr(
-                             Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS)
+      if (!xfluid_timeint->get_node_to_dof_map_for_reconstr(XFEM::Xf_TimeInt_by_PROJ_from_DIS)
               .empty())
         FOUR_C_THROW(
             "Even though projection failed, some nodes still hold a projection label. No "
             "alternatives found for e.g. {}",
-            xfluid_timeint
-                ->get_node_to_dof_map_for_reconstr(Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS)
+            xfluid_timeint->get_node_to_dof_map_for_reconstr(XFEM::Xf_TimeInt_by_PROJ_from_DIS)
                 .begin()
                 ->first);
     }
@@ -3948,7 +3944,7 @@ void FLD::XFluid::x_timint_transfer_vectors_between_steps(
  *----------------------------------------------------------------------*/
 void FLD::XFluid::x_timint_corrective_transfer_vectors_between_steps(
     const std::shared_ptr<XFEM::XFluidTimeInt>& xfluid_timeint,  ///< xfluid time integration class
-    const Inpar::XFEM::XFluidTimeIntScheme xfluid_timintapproach,  /// xfluid_timintapproch
+    const XFEM::XFluidTimeIntScheme xfluid_timintapproach,       /// xfluid_timintapproach
     std::vector<std::shared_ptr<const Core::LinAlg::Vector<double>>>&
         oldRowStateVectors,  ///< row map based vectors w.r.t old interface position
     std::vector<std::shared_ptr<Core::LinAlg::Vector<double>>>&
@@ -3959,7 +3955,7 @@ void FLD::XFluid::x_timint_corrective_transfer_vectors_between_steps(
 )
 {
   std::map<int, std::set<int>>& reconstr_map =
-      xfluid_timeint->get_node_to_dof_map_for_reconstr(Inpar::XFEM::Xf_TimeInt_by_PROJ_from_DIS);
+      xfluid_timeint->get_node_to_dof_map_for_reconstr(XFEM::Xf_TimeInt_by_PROJ_from_DIS);
 
   std::vector<int> failed_nodevec;
   failed_nodevec.reserve(reconstr_map.size());
@@ -3997,13 +3993,13 @@ void FLD::XFluid::x_timint_get_reconstruct_status(
 
   if (xfluid_timeint == nullptr) FOUR_C_THROW("xfluid_timint_ - class not available here!");
 
-  std::map<Inpar::XFEM::XFluidTimeInt, int>& reconstr_count = xfluid_timeint->get_reconstr_counts();
+  std::map<XFEM::XFluidTimeIntMethod, int>& reconstr_count = xfluid_timeint->get_reconstr_counts();
 
-  std::map<Inpar::XFEM::XFluidTimeInt, int>::iterator it;
+  std::map<XFEM::XFluidTimeIntMethod, int>::iterator it;
 
-  if ((it = reconstr_count.find(Inpar::XFEM::Xf_TimeInt_GHOST_by_GP)) != reconstr_count.end())
+  if ((it = reconstr_count.find(XFEM::Xf_TimeInt_GHOST_by_GP)) != reconstr_count.end())
     proc_timint_ghost_penalty = it->second;
-  if ((it = reconstr_count.find(Inpar::XFEM::Xf_TimeInt_STD_by_SL)) != reconstr_count.end())
+  if ((it = reconstr_count.find(XFEM::Xf_TimeInt_STD_by_SL)) != reconstr_count.end())
     proc_timint_semi_lagrangean = it->second;
 
   // parallel communication if at least one node has to do a semilagrangean backtracking or ghost
@@ -4268,7 +4264,7 @@ void FLD::XFluid::x_timint_semi_lagrangean(
         dispnp,                             ///< displacement initial col - vector timestep n+1
                                             ///< //if nullptr ... --> no ale displacements
     const Core::LinAlg::Map* olddofcolmap,  ///< dofcolmap at time and interface position t^n
-    std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>&
+    std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>&
         node_to_reconstr_method,  ///< reconstruction map for nodes and its dofsets
     const bool screen_out         ///< screen output?
 )
@@ -4309,7 +4305,7 @@ void FLD::XFluid::x_timint_semi_lagrangean(
   int itemaxFRS_ = 5;
   std::shared_ptr<XFEM::XfluidStd> timeIntStd_ = nullptr;
 
-  Inpar::XFEM::XFluidTimeInt xfemtimeint_ = Inpar::XFEM::Xf_TimeInt_STD_by_SL;
+  XFEM::XFluidTimeIntMethod xfemtimeint_ = XFEM::Xf_TimeInt_STD_by_SL;
 
   if (totalitnumFRS_ == 0)  // construct time int classes once every time step
   {
@@ -4327,7 +4323,7 @@ void FLD::XFluid::x_timint_semi_lagrangean(
 
     switch (xfemtimeint_)
     {
-      case Inpar::XFEM::Xf_TimeInt_STD_by_SL:
+      case XFEM::Xf_TimeInt_STD_by_SL:
       {
         // time integration data for standard dofs, semi-lagrangean approach
         timeIntStd_ = std::make_shared<XFEM::XfluidSemiLagrange>(

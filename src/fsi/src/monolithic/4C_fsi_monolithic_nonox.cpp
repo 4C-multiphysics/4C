@@ -576,7 +576,7 @@ void FSI::MonolithicNoNOX::update()
   recover_lagrange_multiplier();
 
   // In case of ALE relaxation
-  if (fluid_->monolithic_xffsi_approach() != Inpar::XFEM::XFFSI_Full_Newton and
+  if (fluid_->monolithic_xffsi_approach() != XFEM::XFFSI_Full_Newton and
       fluid_->is_ale_relaxation_step(step()))
   {
     if (Core::Communication::my_mpi_rank(get_comm()) == 0)
@@ -609,7 +609,7 @@ void FSI::MonolithicNoNOX::prepare_time_step()
   ale_field()->prepare_time_step();
 
   // no ALE-relaxation or still at the first step? leave!
-  if (fluid_->monolithic_xffsi_approach() == Inpar::XFEM::XFFSI_Full_Newton || step() == 0 ||
+  if (fluid_->monolithic_xffsi_approach() == XFEM::XFFSI_Full_Newton || step() == 0 ||
       !fluid_->is_ale_relaxation_step(step() - 1))
     return;
 

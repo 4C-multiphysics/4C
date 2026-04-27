@@ -15,7 +15,7 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_element_integration_select.hpp"
 #include "4C_fluid_ele_calc_xfem_coupling.hpp"
-#include "4C_inpar_xfem.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <numbers>
 
@@ -46,8 +46,7 @@ namespace XFEM
     /*!
     \brief Get the std - average weights kappa_m and kappa_s for the Nitsche calculations
      */
-    void get_std_average_weights(
-        const Inpar::XFEM::AveragingStrategy averaging_strategy, double& kappa_m);
+    void get_std_average_weights(const XFEM::AveragingStrategy averaging_strategy, double& kappa_m);
 
     //! @name nit_get_trace_estimate_constant
     /*!
@@ -69,7 +68,7 @@ namespace XFEM
             penscaling,  ///< material dependent penalty scaling (e.g. visceff) divided by h
         const double& NIT_stabscaling,  ///< basic nit penalty stab scaling
         const bool& is_pseudo_2D,       ///< is pseudo 2d
-        const Inpar::XFEM::ViscStabTraceEstimate&
+        const XFEM::ViscStabTraceEstimate&
             visc_stab_trace_estimate,  ///< how to estimate the scaling from the trace inequality
         double& NIT_visc_stab_fac      ///< viscous part of Nitsche's penalty term
     );
@@ -134,8 +133,8 @@ namespace XFEM
         const std::map<int, std::vector<Cut::BoundaryCell*>>&
             bcells,  ///< bcells for boundary cell integration
         const std::map<int, std::vector<Core::FE::GaussIntegration>>&
-            bintpoints,  ///< integration points for boundary cell integration
-        const Inpar::XFEM::ViscStabHk visc_stab_hk,  ///< h definition
+            bintpoints,                       ///< integration points for boundary cell integration
+        const XFEM::ViscStabHk visc_stab_hk,  ///< h definition
         std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<distype>> emb =
             nullptr,  ///< pointer to the embedded coupling implementation
         Core::Elements::Element* face = nullptr  ///< side element in 3D
@@ -156,14 +155,13 @@ namespace XFEM
         const bool isstationary,         ///< isstationary
         const double densaf_master,      ///< master density
         const double densaf_slave,       ///< slave density
-        Inpar::XFEM::MassConservationScaling
+        XFEM::MassConservationScaling
             mass_conservation_scaling,  ///< kind of mass conservation scaling
-        Inpar::XFEM::MassConservationCombination
-            mass_conservation_combination,  ///< kind of mass conservation combination
-        const double NITStabScaling,        ///< scaling of nit stab fac
-        Inpar::XFEM::ConvStabScaling
-            ConvStabScaling,  ///< which convective stab. scaling of inflow stab
-        Inpar::XFEM::XffConvStabScaling
+        XFEM::MassConservationCombination
+            mass_conservation_combination,      ///< kind of mass conservation combination
+        const double NITStabScaling,            ///< scaling of nit stab fac
+        XFEM::ConvStabScaling ConvStabScaling,  ///< which convective stab. scaling of inflow stab
+        XFEM::XffConvStabScaling
             XFF_ConvStabScaling,            ///< which convective stab. scaling on XFF interface
         const bool IsConservative = false,  ///< conservative formulation of navier stokes
         bool error_calc = false  ///< when called in error calculation, don't add the inflow terms

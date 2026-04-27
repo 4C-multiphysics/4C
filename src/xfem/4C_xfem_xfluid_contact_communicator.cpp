@@ -42,22 +42,20 @@ void XFEM::XFluidContactComm::initialize_fluid_state(std::shared_ptr<Cut::CutWiz
 
   Teuchos::ParameterList& params_xf_stab = fluidparams->sublist("XFLUID DYNAMIC/STABILIZATION");
 
-  visc_stab_trace_estimate_ = Teuchos::getIntegralValue<Inpar::XFEM::ViscStabTraceEstimate>(
+  visc_stab_trace_estimate_ = Teuchos::getIntegralValue<XFEM::ViscStabTraceEstimate>(
       params_xf_stab, "VISC_STAB_TRACE_ESTIMATE");
-  visc_stab_hk_ =
-      Teuchos::getIntegralValue<Inpar::XFEM::ViscStabHk>(params_xf_stab, "VISC_STAB_HK");
+  visc_stab_hk_ = Teuchos::getIntegralValue<XFEM::ViscStabHk>(params_xf_stab, "VISC_STAB_HK");
   nit_stab_gamma_ = params_xf_stab.get<double>("NIT_STAB_FAC");
   is_pseudo_2d_ = params_xf_stab.get<bool>("IS_PSEUDO_2D");
-  mass_conservation_scaling_ = Teuchos::getIntegralValue<Inpar::XFEM::MassConservationScaling>(
+  mass_conservation_scaling_ = Teuchos::getIntegralValue<XFEM::MassConservationScaling>(
       params_xf_stab, "MASS_CONSERVATION_SCALING");
-  mass_conservation_combination_ =
-      Teuchos::getIntegralValue<Inpar::XFEM::MassConservationCombination>(
-          params_xf_stab, "MASS_CONSERVATION_COMBO");
+  mass_conservation_combination_ = Teuchos::getIntegralValue<XFEM::MassConservationCombination>(
+      params_xf_stab, "MASS_CONSERVATION_COMBO");
 
 
-  Inpar::XFEM::ConvStabScaling ConvStabScaling =
-      Teuchos::getIntegralValue<Inpar::XFEM::ConvStabScaling>(params_xf_stab, "CONV_STAB_SCALING");
-  if (ConvStabScaling != Inpar::XFEM::ConvStabScaling_none)
+  XFEM::ConvStabScaling ConvStabScaling =
+      Teuchos::getIntegralValue<XFEM::ConvStabScaling>(params_xf_stab, "CONV_STAB_SCALING");
+  if (ConvStabScaling != XFEM::ConvStabScaling_none)
     FOUR_C_THROW("ConvStabScaling not handled correctly!");
 
   extrapolate_to_zero_ = Global::Problem::instance()
@@ -101,11 +99,11 @@ void XFEM::XFluidContactComm::initialize_fluid_state(std::shared_ptr<Cut::CutWiz
 
   for (std::size_t mc = 0; mc < mc_.size(); ++mc)
   {
-    if (mc_[mc]->get_averaging_strategy() != Inpar::XFEM::Xfluid_Sided &&
-        mass_conservation_scaling_ != Inpar::XFEM::MassConservationScaling_only_visc)
+    if (mc_[mc]->get_averaging_strategy() != XFEM::Xfluid_Sided &&
+        mass_conservation_scaling_ != XFEM::MassConservationScaling_only_visc)
       FOUR_C_THROW("The implementation does not what you expect!");
-    else if (mc_[mc]->get_averaging_strategy() != Inpar::XFEM::Xfluid_Sided &&
-             visc_stab_trace_estimate_ != Inpar::XFEM::ViscStab_TraceEstimate_eigenvalue)
+    else if (mc_[mc]->get_averaging_strategy() != XFEM::Xfluid_Sided &&
+             visc_stab_trace_estimate_ != XFEM::ViscStab_TraceEstimate_eigenvalue)
       FOUR_C_THROW("The implementation does not what you expect!");
   }
 
@@ -193,9 +191,9 @@ double XFEM::XFluidContactComm::get_fsi_traction(Mortar::Element* ele,
   // one!
   elenormal.update(-1, normal, 0.0);
 
-  if (mc_[mcidx_]->get_averaging_strategy() == Inpar::XFEM::Xfluid_Sided)
+  if (mc_[mcidx_]->get_averaging_strategy() == XFEM::Xfluid_Sided)
     get_penalty_param(fluidele, volumecell, ele_xyze, elenormal, penalty_fac, vel_m);
-  else if (mc_[mcidx_]->get_averaging_strategy() == Inpar::XFEM::Embedded_Sided)
+  else if (mc_[mcidx_]->get_averaging_strategy() == XFEM::Embedded_Sided)
     get_penalty_param(sele, penalty_fac);
   else
     FOUR_C_THROW(
@@ -213,7 +211,7 @@ double XFEM::XFluidContactComm::get_fsi_traction(Mortar::Element* ele,
         std::dynamic_pointer_cast<XFEM::MeshCouplingFPI>(mc_[mcidx_])->calc_porosity(sele, xsi3, J);
   }
 
-  if (mc_[mcidx_]->get_averaging_strategy() == Inpar::XFEM::Xfluid_Sided)
+  if (mc_[mcidx_]->get_averaging_strategy() == XFEM::Xfluid_Sided)
   {
     if (poropressure && distance > 1e-10)
     {
@@ -432,7 +430,7 @@ void XFEM::XFluidContactComm::get_penalty_param(Core::Elements::Element* fluidel
   double h_k;
   double inv_h_k;
   if (last_ele_h_.first != fluidele->id() ||
-      visc_stab_hk_ != Inpar::XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf)
+      visc_stab_hk_ != XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf)
   {
     // 1 // Get Boundary Cells and Gausspoints of this Boundarycells for this fluid element!
     std::map<int, std::vector<Cut::BoundaryCell*>> bcells;
@@ -532,8 +530,8 @@ void XFEM::XFluidContactComm::get_penalty_param(Core::Elements::Element* fluidel
       vel_m, vel_m,
       visc_stab_fac,  ///< Nitsche's viscous scaling part of penalty term
       theta_ * dt_, false, actmat->density(), actmat->density(), mass_conservation_scaling_,
-      mass_conservation_combination_, nit_stab_gamma_, Inpar::XFEM::ConvStabScaling_none,
-      Inpar::XFEM::XFF_ConvStabScaling_none, false, false);
+      mass_conservation_combination_, nit_stab_gamma_, XFEM::ConvStabScaling_none,
+      XFEM::XFF_ConvStabScaling_none, false, false);
   return;
 }
 

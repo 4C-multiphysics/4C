@@ -23,21 +23,21 @@ FOUR_C_NAMESPACE_OPEN
  * Get the std - average weights kappa_m and kappa_s for the Nitsche calculations
  *----------------------------------------------------------------------*/
 void XFEM::Utils::get_std_average_weights(
-    const Inpar::XFEM::AveragingStrategy averaging_strategy, double& kappa_m)
+    const XFEM::AveragingStrategy averaging_strategy, double& kappa_m)
 {
   switch (averaging_strategy)
   {
-    case Inpar::XFEM::Xfluid_Sided:
+    case XFEM::Xfluid_Sided:
     {
       kappa_m = 1.0;
       break;
     }
-    case Inpar::XFEM::Embedded_Sided:
+    case XFEM::Embedded_Sided:
     {
       kappa_m = 0.0;
       break;
     }
-    case Inpar::XFEM::Mean:
+    case XFEM::Mean:
     {
       kappa_m = 0.5;
       break;
@@ -58,7 +58,7 @@ void XFEM::Utils::nit_compute_visc_penalty_stabfac(
     const double& penscaling,  ///< material dependent penalty scaling (e.g. visceff) divided by h
     const double& NIT_stabscaling,  ///< basic nit penalty stab scaling
     const bool& is_pseudo_2D,       ///< is pseudo 2d
-    const Inpar::XFEM::ViscStabTraceEstimate&
+    const XFEM::ViscStabTraceEstimate&
         visc_stab_trace_estimate,  ///< how to estimate the scaling from the trace inequality
     double& NIT_visc_stab_fac      ///< viscous part of Nitsche's penalty term
 )
@@ -117,7 +117,7 @@ void XFEM::Utils::nit_compute_visc_penalty_stabfac(
   NIT_visc_stab_fac = penscaling * NIT_stabscaling;
 
   // compute the final viscous scaling part of Nitsche's penalty term
-  if (visc_stab_trace_estimate == Inpar::XFEM::ViscStab_TraceEstimate_CT_div_by_hk)
+  if (visc_stab_trace_estimate == XFEM::ViscStab_TraceEstimate_CT_div_by_hk)
   {
     // get an estimate of the hp-depending constant C_T satisfying the trace inequality w.r.t the
     // corresponding element (compare different weightings)
@@ -126,7 +126,7 @@ void XFEM::Utils::nit_compute_visc_penalty_stabfac(
     // build the final viscous scaling
     NIT_visc_stab_fac *= C_T;
   }
-  else if (visc_stab_trace_estimate != Inpar::XFEM::ViscStab_TraceEstimate_eigenvalue)
+  else if (visc_stab_trace_estimate != XFEM::ViscStab_TraceEstimate_eigenvalue)
   {
     FOUR_C_THROW(
         "unknown trace-inequality-estimate type for viscous part of Nitsche's penalty term");
@@ -663,8 +663,8 @@ double XFEM::Utils::compute_char_ele_length(Core::Elements::Element* ele,  ///< 
     const std::map<int, std::vector<Cut::BoundaryCell*>>&
         bcells,  ///< bcells for boundary cell integration
     const std::map<int, std::vector<Core::FE::GaussIntegration>>&
-        bintpoints,  ///< integration points for boundary cell integration
-    const Inpar::XFEM::ViscStabHk visc_stab_hk,  ///< h definition
+        bintpoints,                       ///< integration points for boundary cell integration
+    const XFEM::ViscStabHk visc_stab_hk,  ///< h definition
     std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<distype>>
         emb,                       ///< pointer to the embedded coupling implementation
     Core::Elements::Element* face  ///< side element in 3D
@@ -675,9 +675,9 @@ double XFEM::Utils::compute_char_ele_length(Core::Elements::Element* ele,  ///< 
 
   Core::LinAlg::Matrix<3, Core::FE::num_nodes(distype)> xyze(ele_xyze, true);
   const int coup_sid = bintpoints.begin()->first;
-  const Inpar::XFEM::AveragingStrategy averaging_strategy =
+  const XFEM::AveragingStrategy averaging_strategy =
       cond_manager.get_averaging_strategy(coup_sid, ele->id());
-  if (emb == nullptr and averaging_strategy == Inpar::XFEM::Embedded_Sided)
+  if (emb == nullptr and averaging_strategy == XFEM::Embedded_Sided)
     FOUR_C_THROW("no coupling interface available, however Embedded_Sided coupling is activated!");
 
   // characteristic element length to be computed
@@ -694,10 +694,10 @@ double XFEM::Utils::compute_char_ele_length(Core::Elements::Element* ele,  ///< 
     //---------------------------------------------------
     // volume-equivalent diameter
     //---------------------------------------------------
-    case Inpar::XFEM::ViscStab_hk_vol_equivalent:
+    case XFEM::ViscStab_hk_vol_equivalent:
     {
       // evaluate shape functions and derivatives at element center
-      if (averaging_strategy == Inpar::XFEM::Embedded_Sided)
+      if (averaging_strategy == XFEM::Embedded_Sided)
       {
         // evaluate shape functions and derivatives at element center w.r.t embedded element
         meas_vol = emb->eval_element_volume();
@@ -719,9 +719,9 @@ double XFEM::Utils::compute_char_ele_length(Core::Elements::Element* ele,  ///< 
     // ( used to estimate the cut-dependent inverse estimate on cut elements, not useful for sliver
     // and/or dotted cut situations)
     //---------------------------------------------------
-    case Inpar::XFEM::ViscStab_hk_cut_vol_div_by_cut_surf:
+    case XFEM::ViscStab_hk_cut_vol_div_by_cut_surf:
     {
-      if (averaging_strategy == Inpar::XFEM::Embedded_Sided)
+      if (averaging_strategy == XFEM::Embedded_Sided)
         FOUR_C_THROW(
             "ViscStab_hk_cut_vol_div_by_cut_surf not reasonable for Embedded_Sided_Coupling!");
 
@@ -750,9 +750,9 @@ double XFEM::Utils::compute_char_ele_length(Core::Elements::Element* ele,  ///< 
     // cut-dependent inverse estimate on cut elements, however, avoids problems with sliver cuts,
     // not useful for dotted cuts)
     //---------------------------------------------------
-    case Inpar::XFEM::ViscStab_hk_ele_vol_div_by_cut_surf:
+    case XFEM::ViscStab_hk_ele_vol_div_by_cut_surf:
     {
-      if (averaging_strategy == Inpar::XFEM::Embedded_Sided)
+      if (averaging_strategy == XFEM::Embedded_Sided)
         FOUR_C_THROW(
             "ViscStab_hk_ele_vol_div_by_cut_surf not reasonable for Embedded_Sided_Coupling!");
 
@@ -768,9 +768,9 @@ double XFEM::Utils::compute_char_ele_length(Core::Elements::Element* ele,  ///< 
     // full element volume divided by surface measure ( used for uncut situations, standard weak
     // Dirichlet boundary/coupling conditions)
     //---------------------------------------------------
-    case Inpar::XFEM::ViscStab_hk_ele_vol_div_by_ele_surf:
+    case XFEM::ViscStab_hk_ele_vol_div_by_ele_surf:
     {
-      if (averaging_strategy != Inpar::XFEM::Embedded_Sided)
+      if (averaging_strategy != XFEM::Embedded_Sided)
         FOUR_C_THROW(
             "ViscStab_hk_ele_vol_div_by_ele_surf just reasonable for Embedded_Sided_Coupling!");
 
@@ -787,10 +787,10 @@ double XFEM::Utils::compute_char_ele_length(Core::Elements::Element* ele,  ///< 
       break;
     }
     //---------------------------------------------------
-    case Inpar::XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf:
+    case XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf:
       //---------------------------------------------------
       {
-        if (averaging_strategy == Inpar::XFEM::Embedded_Sided)
+        if (averaging_strategy == XFEM::Embedded_Sided)
           FOUR_C_THROW(
               "ViscStab_hk_ele_vol_div_by_max_ele_surf not reasonable for "
               "Embedded_Sided_Coupling!");
@@ -844,14 +844,12 @@ void XFEM::Utils::nit_compute_full_penalty_stabfac(
     const bool isstationary,                     ///< isstationary
     const double densaf_master,                  ///< master density
     const double densaf_slave,                   ///< slave density
-    Inpar::XFEM::MassConservationScaling
-        mass_conservation_scaling,  ///< kind of mass conservation scaling
-    Inpar::XFEM::MassConservationCombination
-        mass_conservation_combination,  ///< kind of mass conservation combination
-    const double NITStabScaling,        ///< scaling of nit stab fac
-    Inpar::XFEM::ConvStabScaling
-        ConvStabScaling,  ///< which convective stab. scaling of inflow stab
-    Inpar::XFEM::XffConvStabScaling
+    XFEM::MassConservationScaling mass_conservation_scaling,  ///< kind of mass conservation scaling
+    XFEM::MassConservationCombination
+        mass_conservation_combination,      ///< kind of mass conservation combination
+    const double NITStabScaling,            ///< scaling of nit stab fac
+    XFEM::ConvStabScaling ConvStabScaling,  ///< which convective stab. scaling of inflow stab
+    XFEM::XffConvStabScaling
         XFF_ConvStabScaling,    ///< which convective stab. scaling on XFF interface
     const bool IsConservative,  ///< conservative formulation of navier stokes
     bool error_calc             ///< when called in error calculation, don't add the inflow terms
@@ -865,7 +863,7 @@ void XFEM::Utils::nit_compute_full_penalty_stabfac(
   /*
    * Depending on the flow regime, the factor alpha of Nitsches penalty term
    * (\alpha * [v],[u]) can take various forms.
-   * Based on Inpar::XFEM::mass_conservation_combination, we choose:
+   * Based on XFEM::mass_conservation_combination, we choose:
    *
    *                       (1)           (2)          (3)
    *                    /  \mu    \rho             h * \rho         \
@@ -887,7 +885,7 @@ void XFEM::Utils::nit_compute_full_penalty_stabfac(
    * multiscale method for incompressible two-phase flow', Int. J. Number. Meth. Engng, 2014
    *
    *
-   * If Inpar::XFEM::MassConservationScaling_only_visc is set, we choose only (1),
+   * If XFEM::MassConservationScaling_only_visc is set, we choose only (1),
    * no matter if the combination option max or sum is active!
    *
    */
@@ -896,7 +894,7 @@ void XFEM::Utils::nit_compute_full_penalty_stabfac(
   // (1)
   NIT_full_stab_fac = NIT_visc_stab_fac;
 
-  if (mass_conservation_scaling == Inpar::XFEM::MassConservationScaling_full)
+  if (mass_conservation_scaling == XFEM::MassConservationScaling_full)
   {
     // TODO: Raffaela: which velocity has to be evaluated for these terms in ALE? the convective
     // velocity or the velint?
@@ -904,7 +902,7 @@ void XFEM::Utils::nit_compute_full_penalty_stabfac(
     double velnorminf_s = velint_s.norm_inf();
 
     // take the maximum of viscous & convective contribution or the sum?
-    if (mass_conservation_combination == Inpar::XFEM::MassConservationCombination_max)
+    if (mass_conservation_combination == XFEM::MassConservationCombination_max)
     {
       NIT_full_stab_fac =
           std::max(NIT_full_stab_fac, NITStabScaling *
@@ -931,11 +929,11 @@ void XFEM::Utils::nit_compute_full_penalty_stabfac(
                              (kappa_m * densaf_master + kappa_s * densaf_slave) / (12.0 * timefac);
     }
   }
-  else if (mass_conservation_scaling != Inpar::XFEM::MassConservationScaling_only_visc)
+  else if (mass_conservation_scaling != XFEM::MassConservationScaling_only_visc)
     FOUR_C_THROW("Unknown scaling choice in calculation of Nitsche's penalty parameter");
 
-  if (IsConservative and (XFF_ConvStabScaling != Inpar::XFEM::XFF_ConvStabScaling_none or
-                             ConvStabScaling != Inpar::XFEM::ConvStabScaling_none))
+  if (IsConservative and (XFF_ConvStabScaling != XFEM::XFF_ConvStabScaling_none or
+                             ConvStabScaling != XFEM::ConvStabScaling_none))
   {
     FOUR_C_THROW(
         "convective stabilization is not available for conservative form of Navier-Stokes, but "
@@ -945,44 +943,44 @@ void XFEM::Utils::nit_compute_full_penalty_stabfac(
   //----------------------------------------------------------------------------------------------
   // add inflow terms to ensure coercivity at inflow boundaries in the convective limit
 
-  if ((ConvStabScaling == Inpar::XFEM::ConvStabScaling_none &&
-          XFF_ConvStabScaling == Inpar::XFEM::XFF_ConvStabScaling_none) ||
-      XFF_ConvStabScaling == Inpar::XFEM::XFF_ConvStabScaling_only_averaged || error_calc)
+  if ((ConvStabScaling == XFEM::ConvStabScaling_none &&
+          XFF_ConvStabScaling == XFEM::XFF_ConvStabScaling_none) ||
+      XFF_ConvStabScaling == XFEM::XFF_ConvStabScaling_only_averaged || error_calc)
     return;
 
   const double veln_normal = velint_m.dot(normal);
 
   double NIT_inflow_stab = 0.0;
 
-  if (XFF_ConvStabScaling == Inpar::XFEM::XFF_ConvStabScaling_upwinding)
+  if (XFF_ConvStabScaling == XFEM::XFF_ConvStabScaling_upwinding)
   {
     NIT_inflow_stab = fabs(veln_normal) * 0.5;
   }
   else
   {
-    if (ConvStabScaling == Inpar::XFEM::ConvStabScaling_abs_inflow)
+    if (ConvStabScaling == XFEM::ConvStabScaling_abs_inflow)
     {
       //      | u*n |
       NIT_inflow_stab = fabs(veln_normal);
     }
-    else if (ConvStabScaling == Inpar::XFEM::ConvStabScaling_inflow)
+    else if (ConvStabScaling == XFEM::ConvStabScaling_inflow)
     {
       //      ( -u*n ) if (u*n)<0 (inflow), conv_stabfac >= 0
       NIT_inflow_stab = std::max(0.0, -veln_normal);
     }
     else
-      FOUR_C_THROW("No valid Inpar::XFEM::ConvStabScaling for xfluid/xfsi problems");
+      FOUR_C_THROW("No valid XFEM::ConvStabScaling for xfluid/xfsi problems");
   }
 
   NIT_inflow_stab *= densaf_master;  // my::densaf_;
 
   // Todo (kruse): it is planned to add the inflow contributions independent from the max. option!
   // This version is only kept to shift the adaption of test results to a single commit.
-  if (mass_conservation_combination == Inpar::XFEM::MassConservationCombination_max)
+  if (mass_conservation_combination == XFEM::MassConservationCombination_max)
   {
     NIT_full_stab_fac = std::max(NIT_full_stab_fac, NIT_inflow_stab);
   }
-  else if (mass_conservation_combination == Inpar::XFEM::MassConservationCombination_sum)
+  else if (mass_conservation_combination == XFEM::MassConservationCombination_sum)
   {
     NIT_full_stab_fac += NIT_inflow_stab;
   }
@@ -1108,43 +1106,43 @@ template double XFEM::Utils::eval_element_volume<Core::FE::CellType::wedge15>(
 template double XFEM::Utils::compute_char_ele_length<Core::FE::CellType::hex8>(
     Core::Elements::Element*, Core::LinAlg::SerialDenseMatrix&, XFEM::ConditionManager&,
     const Cut::plain_volumecell_set&, const std::map<int, std::vector<Cut::BoundaryCell*>>&,
-    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const Inpar::XFEM::ViscStabHk,
+    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const XFEM::ViscStabHk,
     std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<Core::FE::CellType::hex8>>,
     Core::Elements::Element*);
 template double XFEM::Utils::compute_char_ele_length<Core::FE::CellType::hex20>(
     Core::Elements::Element*, Core::LinAlg::SerialDenseMatrix&, XFEM::ConditionManager&,
     const Cut::plain_volumecell_set&, const std::map<int, std::vector<Cut::BoundaryCell*>>&,
-    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const Inpar::XFEM::ViscStabHk,
+    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const XFEM::ViscStabHk,
     std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<Core::FE::CellType::hex20>>,
     Core::Elements::Element*);
 template double XFEM::Utils::compute_char_ele_length<Core::FE::CellType::hex27>(
     Core::Elements::Element*, Core::LinAlg::SerialDenseMatrix&, XFEM::ConditionManager&,
     const Cut::plain_volumecell_set&, const std::map<int, std::vector<Cut::BoundaryCell*>>&,
-    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const Inpar::XFEM::ViscStabHk,
+    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const XFEM::ViscStabHk,
     std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<Core::FE::CellType::hex27>>,
     Core::Elements::Element*);
 template double XFEM::Utils::compute_char_ele_length<Core::FE::CellType::tet4>(
     Core::Elements::Element*, Core::LinAlg::SerialDenseMatrix&, XFEM::ConditionManager&,
     const Cut::plain_volumecell_set&, const std::map<int, std::vector<Cut::BoundaryCell*>>&,
-    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const Inpar::XFEM::ViscStabHk,
+    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const XFEM::ViscStabHk,
     std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<Core::FE::CellType::tet4>>,
     Core::Elements::Element*);
 template double XFEM::Utils::compute_char_ele_length<Core::FE::CellType::tet10>(
     Core::Elements::Element*, Core::LinAlg::SerialDenseMatrix&, XFEM::ConditionManager&,
     const Cut::plain_volumecell_set&, const std::map<int, std::vector<Cut::BoundaryCell*>>&,
-    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const Inpar::XFEM::ViscStabHk,
+    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const XFEM::ViscStabHk,
     std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<Core::FE::CellType::tet10>>,
     Core::Elements::Element*);
 template double XFEM::Utils::compute_char_ele_length<Core::FE::CellType::wedge6>(
     Core::Elements::Element*, Core::LinAlg::SerialDenseMatrix&, XFEM::ConditionManager&,
     const Cut::plain_volumecell_set&, const std::map<int, std::vector<Cut::BoundaryCell*>>&,
-    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const Inpar::XFEM::ViscStabHk,
+    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const XFEM::ViscStabHk,
     std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<Core::FE::CellType::wedge6>>,
     Core::Elements::Element*);
 template double XFEM::Utils::compute_char_ele_length<Core::FE::CellType::wedge15>(
     Core::Elements::Element*, Core::LinAlg::SerialDenseMatrix&, XFEM::ConditionManager&,
     const Cut::plain_volumecell_set&, const std::map<int, std::vector<Cut::BoundaryCell*>>&,
-    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const Inpar::XFEM::ViscStabHk,
+    const std::map<int, std::vector<Core::FE::GaussIntegration>>&, const XFEM::ViscStabHk,
     std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<Core::FE::CellType::wedge15>>,
     Core::Elements::Element*);
 

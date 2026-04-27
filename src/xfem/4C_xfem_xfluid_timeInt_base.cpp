@@ -18,13 +18,13 @@
 #include "4C_cut_volumecell.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_geometry_position_array.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_gmsh.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_xfem_dofset.hpp"
+#include "4C_xfem_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -786,9 +786,9 @@ void XFEM::XfluidTimeintBase::unpack_node(
  *------------------------------------------------------------------------------------------------*/
 XFEM::XfluidStd::XfluidStd(
     XFEM::XfluidTimeintBase& timeInt,  ///< time integration base class object
-    const std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>&
-        reconstr_method,                      ///< reconstruction map for nodes and its dofsets
-    Inpar::XFEM::XFluidTimeInt& timeIntType,  ///< type of time integration
+    const std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>&
+        reconstr_method,                     ///< reconstruction map for nodes and its dofsets
+    XFEM::XFluidTimeIntMethod& timeIntType,  ///< type of time integration
     const std::shared_ptr<Core::LinAlg::Vector<double>> veln,  ///< velocity at time t^n in col map
     const double& dt,                                          ///< time step size
     const bool initialize                                      ///< is initialization?
@@ -816,14 +816,14 @@ XFEM::XfluidStd::XfluidStd(
     {
       Core::Nodes::Node* node = discret_->l_row_node(lnodeid);
 
-      std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>::const_iterator it =
+      std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>::const_iterator it =
           reconstr_method.find(node->id());
       if (it != reconstr_method.end())
       {
         // reconstruction methods just for marked dofsets
         for (size_t i = 0; i < (it->second).size(); i++)
         {
-          if ((it->second)[i] == Inpar::XFEM::Xf_TimeInt_STD_by_SL)
+          if ((it->second)[i] == XFEM::Xf_TimeInt_STD_by_SL)
           {
             Core::LinAlg::Matrix<3, 1> nodedispnp(Core::LinAlg::Initialization::zero);
             if (dispnp_ != nullptr)  // is alefluid

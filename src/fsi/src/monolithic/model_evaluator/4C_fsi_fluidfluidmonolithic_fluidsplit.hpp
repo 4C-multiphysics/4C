@@ -11,7 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_fsi_monolithicfluidsplit.hpp"
-#include "4C_inpar_xfem.hpp"
+#include "4C_xfem_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 

@@ -24,7 +24,6 @@
 #include "4C_inpar_fluid.hpp"
 #include "4C_inpar_s2i.hpp"
 #include "4C_inpar_structure.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_levelset_input.hpp"
 #include "4C_mortar_input.hpp"
@@ -37,6 +36,7 @@
 #include "4C_ssti_input.hpp"
 #include "4C_sti_input.hpp"
 #include "4C_thermo_input.hpp"
+#include "4C_xfem_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -835,7 +835,7 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   ALE::set_valid_conditions(condlist);
   FSI::set_valid_conditions(condlist);
   FPSI::set_valid_conditions(condlist);
-  Inpar::XFEM::set_valid_conditions(condlist);
+  XFEM::set_valid_conditions(condlist);
   BioFilm::set_valid_conditions(condlist);
   ArteryNetwork::set_valid_conditions(condlist);
   Airway::set_valid_conditions(condlist);

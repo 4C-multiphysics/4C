@@ -11,10 +11,10 @@
 
 #include "4C_config.hpp"
 
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <memory>
 #include <set>
@@ -86,12 +86,12 @@ namespace XFEM
           mcfpi_ps_pf_(nullptr),
           mcidx_(0),
           isporo_(false),
-          visc_stab_trace_estimate_(Inpar::XFEM::ViscStab_TraceEstimate_CT_div_by_hk),
-          visc_stab_hk_(Inpar::XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf),
+          visc_stab_trace_estimate_(XFEM::ViscStab_TraceEstimate_CT_div_by_hk),
+          visc_stab_hk_(XFEM::ViscStab_hk_ele_vol_div_by_max_ele_surf),
           nit_stab_gamma_(-1),
           is_pseudo_2d_(false),
-          mass_conservation_scaling_(Inpar::XFEM::MassConservationScaling_only_visc),
-          mass_conservation_combination_(Inpar::XFEM::MassConservationCombination_sum),
+          mass_conservation_scaling_(XFEM::MassConservationScaling_only_visc),
+          mass_conservation_combination_(XFEM::MassConservationCombination_sum),
           dt_(-1),
           theta_(-1),
           parallel_(false),
@@ -309,17 +309,17 @@ namespace XFEM
     bool isporo_;
 
     /// Viscous trace estimate for FSI-Nit-Pen
-    Inpar::XFEM::ViscStabTraceEstimate visc_stab_trace_estimate_;
+    XFEM::ViscStabTraceEstimate visc_stab_trace_estimate_;
     /// h-definition for FSI-Nit-Pen
-    Inpar::XFEM::ViscStabHk visc_stab_hk_;
+    XFEM::ViscStabHk visc_stab_hk_;
     /// reference penalty parameter for FSI-Nit-Pen
     double nit_stab_gamma_;
     /// pseudo 2D flag for 2D simulation with one element in z-direction
     bool is_pseudo_2d_;
-    /// mass conservation scaline on FSI-Nit-Pen
-    Inpar::XFEM::MassConservationScaling mass_conservation_scaling_;
+    /// mass conservation scaling on FSI-Nit-Pen
+    XFEM::MassConservationScaling mass_conservation_scaling_;
     /// How to combine the contribution on FSI-Nit-Pen
-    Inpar::XFEM::MassConservationCombination mass_conservation_combination_;
+    XFEM::MassConservationCombination mass_conservation_combination_;
     /// timestep
     double dt_;
     /// theta factor of OST-scheme

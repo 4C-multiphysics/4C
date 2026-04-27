@@ -40,7 +40,6 @@
 #include "4C_inpar_plasticity.hpp"
 #include "4C_inpar_s2i.hpp"
 #include "4C_inpar_structure.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_io_gridgenerator.hpp"
 #include "4C_io_input_field.hpp"
 #include "4C_io_input_file_utils.hpp"
@@ -71,6 +70,7 @@
 #include "4C_structure_new_monitor_dbc_input.hpp"
 #include "4C_thermo_input.hpp"
 #include "4C_tsi_input.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <iostream>
 #include <string>
@@ -320,7 +320,7 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
   push_specs(specs, Inpar::FLUID::valid_parameters());
   push_specs(specs, Inpar::LowMach::valid_parameters());
   push_specs(specs, Cut::valid_parameters());
-  push_specs(specs, Inpar::XFEM::valid_parameters());
+  push_specs(specs, XFEM::valid_parameters());
   push_specs(specs, Constraints::valid_parameters());
 
   push_specs(specs, Lubrication::valid_parameters());

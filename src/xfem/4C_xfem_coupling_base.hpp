@@ -13,12 +13,12 @@
 
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_material_base.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <memory>
 #include <vector>
@@ -37,10 +37,9 @@ namespace Discret
 
 namespace XFEM
 {
-  using EleCoupCond =
-      std::pair<Inpar::XFEM::EleCouplingCondType, const Core::Conditions::Condition*>;
+  using EleCoupCond = std::pair<XFEM::EleCouplingCondType, const Core::Conditions::Condition*>;
 
-  Inpar::XFEM::EleCouplingCondType cond_type_string_to_enum(const std::string& condname);
+  XFEM::EleCouplingCondType cond_type_string_to_enum(const std::string& condname);
 
   class CouplingBase
   {
@@ -138,37 +137,37 @@ namespace XFEM
       return dis->name();
     }
 
-    std::string type_to_string_for_print(const Inpar::XFEM::EleCouplingCondType& type)
+    std::string type_to_string_for_print(const XFEM::EleCouplingCondType& type)
     {
-      if (type == Inpar::XFEM::CouplingCond_SURF_FSI_PART)
+      if (type == XFEM::CouplingCond_SURF_FSI_PART)
         return "XFSI Partitioned";
-      else if (type == Inpar::XFEM::CouplingCond_SURF_FSI_MONO)
+      else if (type == XFEM::CouplingCond_SURF_FSI_MONO)
         return "XFSI Monolithic";
-      else if (type == Inpar::XFEM::CouplingCond_SURF_FPI_MONO)
+      else if (type == XFEM::CouplingCond_SURF_FPI_MONO)
         return "XFPI Monolithic";
-      else if (type == Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID)
+      else if (type == XFEM::CouplingCond_SURF_FLUIDFLUID)
         return "FLUID-FLUID Coupling";
-      else if (type == Inpar::XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET)
+      else if (type == XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET)
         return "WEAK DIRICHLET BC / LS";
-      else if (type == Inpar::XFEM::CouplingCond_LEVELSET_NEUMANN)
+      else if (type == XFEM::CouplingCond_LEVELSET_NEUMANN)
         return "NEUMANN BC        / LS";
-      else if (type == Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP)
+      else if (type == XFEM::CouplingCond_LEVELSET_NAVIER_SLIP)
         return "NAVIER SLIP BC    / LS";
-      else if (type == Inpar::XFEM::CouplingCond_LEVELSET_TWOPHASE)
+      else if (type == XFEM::CouplingCond_LEVELSET_TWOPHASE)
         return "TWO-PHASE Coupling";
-      else if (type == Inpar::XFEM::CouplingCond_LEVELSET_COMBUSTION)
+      else if (type == XFEM::CouplingCond_LEVELSET_COMBUSTION)
         return "COMBUSTION Coupling";
-      else if (type == Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET)
+      else if (type == XFEM::CouplingCond_SURF_WEAK_DIRICHLET)
         return "WEAK DIRICHLET BC / MESH";
-      else if (type == Inpar::XFEM::CouplingCond_SURF_NEUMANN)
+      else if (type == XFEM::CouplingCond_SURF_NEUMANN)
         return "NEUMANN BC        / MESH";
-      else if (type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP)
+      else if (type == XFEM::CouplingCond_SURF_NAVIER_SLIP)
         return "NAVIER SLIP BC    / MESH";
-      else if (type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
+      else if (type == XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
         return "NAVIER SLIP TWOPHASE BC    / MESH";
-      else if (type == Inpar::XFEM::CouplingCond_EMBEDDEDMESH_SOLID_SURF)
+      else if (type == XFEM::CouplingCond_EMBEDDEDMESH_SOLID_SURF)
         return "EMBEDDEDMESH SOLID SURF COUPLING / MESH";
-      else if (type == Inpar::XFEM::CouplingCond_EMBEDDEDMESH_BACKGROUND_SOLID_VOL)
+      else if (type == XFEM::CouplingCond_EMBEDDEDMESH_BACKGROUND_SOLID_VOL)
         return "XFEM Background Solid Volume";
       else
         FOUR_C_THROW("unsupported coupling condition type {}", type);
@@ -176,17 +175,17 @@ namespace XFEM
       return "UNKNOWN";
     }
 
-    std::string averaging_to_string_for_print(const Inpar::XFEM::AveragingStrategy& strategy)
+    std::string averaging_to_string_for_print(const XFEM::AveragingStrategy& strategy)
     {
-      if (strategy == Inpar::XFEM::Xfluid_Sided)
+      if (strategy == XFEM::Xfluid_Sided)
         return "XFLUID-sided averaging";
-      else if (strategy == Inpar::XFEM::Embedded_Sided)
+      else if (strategy == XFEM::Embedded_Sided)
         return "EMBEDDED-sided averaging";
-      else if (strategy == Inpar::XFEM::Mean)
+      else if (strategy == XFEM::Mean)
         return "MEAN averaging";
-      else if (strategy == Inpar::XFEM::Harmonic)
+      else if (strategy == XFEM::Harmonic)
         return "HARMONIC averaging";
-      else if (strategy == Inpar::XFEM::invalid)
+      else if (strategy == XFEM::invalid)
         return "INVALID";
       else
         FOUR_C_THROW("unsupported averaging strategy {}", strategy);
@@ -219,7 +218,7 @@ namespace XFEM
     std::shared_ptr<Core::FE::Discretization> get_coupling_dis() { return coupl_dis_; }
     std::shared_ptr<Core::FE::Discretization> get_cond_dis() { return cond_dis_; }
 
-    Inpar::XFEM::AveragingStrategy get_averaging_strategy() { return averaging_strategy_; }
+    XFEM::AveragingStrategy get_averaging_strategy() { return averaging_strategy_; }
 
     virtual void prepare_solve() {};
 
@@ -260,7 +259,7 @@ namespace XFEM
       slipcoeff = 0.0;
     }
 
-    std::map<Inpar::XFEM::CoupTerm, std::pair<bool, double>>& get_configurationmap(
+    std::map<XFEM::CoupTerm, std::pair<bool, double>>& get_configurationmap(
         double& kappa_m,                          //< fluid sided weighting
         double& visc_m,                           //< master sided dynamic viscosity
         double& visc_s,                           //< slave sided dynamic viscosity
@@ -288,62 +287,62 @@ namespace XFEM
 
       // In Case we do just use Penalty or Adjoint we should still set the scaling on both, to
       // guarantee we the the correct constraint!
-      if (((configuration_map_.at(Inpar::XFEM::F_Adj_Col).first &&
-               !configuration_map_.at(Inpar::XFEM::F_Pen_Col).first) ||
-              (!configuration_map_.at(Inpar::XFEM::F_Adj_Col).first &&
-                  configuration_map_.at(Inpar::XFEM::F_Pen_Col).first)) &&
-          fabs(configuration_map_.at(Inpar::XFEM::F_Adj_Col).second -
-               configuration_map_.at(Inpar::XFEM::F_Pen_Col).second) > 1e-16)
+      if (((configuration_map_.at(XFEM::F_Adj_Col).first &&
+               !configuration_map_.at(XFEM::F_Pen_Col).first) ||
+              (!configuration_map_.at(XFEM::F_Adj_Col).first &&
+                  configuration_map_.at(XFEM::F_Pen_Col).first)) &&
+          fabs(configuration_map_.at(XFEM::F_Adj_Col).second -
+               configuration_map_.at(XFEM::F_Pen_Col).second) > 1e-16)
         FOUR_C_THROW(
             "{}: You should set Scalings for Adjoint and Penalty Column, even if just one is used, "
             "as we support at the moment just equal penalty and adjoint consistent constraints!",
             cond_name_.c_str());
-      if (((configuration_map_.at(Inpar::XFEM::X_Adj_Col).first &&
-               !configuration_map_.at(Inpar::XFEM::X_Pen_Col).first) ||
-              (!configuration_map_.at(Inpar::XFEM::X_Adj_Col).first &&
-                  configuration_map_.at(Inpar::XFEM::X_Pen_Col).first)) &&
-          fabs(configuration_map_.at(Inpar::XFEM::X_Adj_Col).second -
-               configuration_map_.at(Inpar::XFEM::X_Pen_Col).second) > 1e-16)
+      if (((configuration_map_.at(XFEM::X_Adj_Col).first &&
+               !configuration_map_.at(XFEM::X_Pen_Col).first) ||
+              (!configuration_map_.at(XFEM::X_Adj_Col).first &&
+                  configuration_map_.at(XFEM::X_Pen_Col).first)) &&
+          fabs(configuration_map_.at(XFEM::X_Adj_Col).second -
+               configuration_map_.at(XFEM::X_Pen_Col).second) > 1e-16)
         FOUR_C_THROW(
             "{}: You should set Scalings for Adjoint and Penalty Column, even if just one is used, "
             "as we support at the moment just equal penalty and adjoint consistent constraints!",
             cond_name_.c_str());
-      if (((configuration_map_.at(Inpar::XFEM::F_Adj_n_Col).first &&
-               !configuration_map_.at(Inpar::XFEM::F_Pen_n_Col).first) ||
-              (!configuration_map_.at(Inpar::XFEM::F_Adj_n_Col).first &&
-                  configuration_map_.at(Inpar::XFEM::F_Pen_n_Col).first)) &&
-          fabs(configuration_map_.at(Inpar::XFEM::F_Adj_n_Col).second -
-               configuration_map_.at(Inpar::XFEM::F_Pen_n_Col).second) > 1e-16)
+      if (((configuration_map_.at(XFEM::F_Adj_n_Col).first &&
+               !configuration_map_.at(XFEM::F_Pen_n_Col).first) ||
+              (!configuration_map_.at(XFEM::F_Adj_n_Col).first &&
+                  configuration_map_.at(XFEM::F_Pen_n_Col).first)) &&
+          fabs(configuration_map_.at(XFEM::F_Adj_n_Col).second -
+               configuration_map_.at(XFEM::F_Pen_n_Col).second) > 1e-16)
         FOUR_C_THROW(
             "{}: You should set Scalings for Adjoint and Penalty Column, even if just one is used, "
             "as we support at the moment just equal penalty and adjoint consistent constraints!",
             cond_name_.c_str());
-      if (((configuration_map_.at(Inpar::XFEM::X_Adj_n_Col).first &&
-               !configuration_map_.at(Inpar::XFEM::X_Pen_n_Col).first) ||
-              (!configuration_map_.at(Inpar::XFEM::X_Adj_n_Col).first &&
-                  configuration_map_.at(Inpar::XFEM::X_Pen_n_Col).first)) &&
-          fabs(configuration_map_.at(Inpar::XFEM::X_Adj_n_Col).second -
-               configuration_map_.at(Inpar::XFEM::X_Pen_n_Col).second) > 1e-16)
+      if (((configuration_map_.at(XFEM::X_Adj_n_Col).first &&
+               !configuration_map_.at(XFEM::X_Pen_n_Col).first) ||
+              (!configuration_map_.at(XFEM::X_Adj_n_Col).first &&
+                  configuration_map_.at(XFEM::X_Pen_n_Col).first)) &&
+          fabs(configuration_map_.at(XFEM::X_Adj_n_Col).second -
+               configuration_map_.at(XFEM::X_Pen_n_Col).second) > 1e-16)
         FOUR_C_THROW(
             "{}: You should set Scalings for Adjoint and Penalty Column, even if just one is used, "
             "as we support at the moment just equal penalty and adjoint consistent constraints!",
             cond_name_.c_str());
-      if (((configuration_map_.at(Inpar::XFEM::F_Adj_t_Col).first &&
-               !configuration_map_.at(Inpar::XFEM::F_Pen_t_Col).first) ||
-              (!configuration_map_.at(Inpar::XFEM::F_Adj_t_Col).first &&
-                  configuration_map_.at(Inpar::XFEM::F_Pen_t_Col).first)) &&
-          fabs(configuration_map_.at(Inpar::XFEM::F_Adj_t_Col).second -
-               configuration_map_.at(Inpar::XFEM::F_Pen_t_Col).second) > 1e-16)
+      if (((configuration_map_.at(XFEM::F_Adj_t_Col).first &&
+               !configuration_map_.at(XFEM::F_Pen_t_Col).first) ||
+              (!configuration_map_.at(XFEM::F_Adj_t_Col).first &&
+                  configuration_map_.at(XFEM::F_Pen_t_Col).first)) &&
+          fabs(configuration_map_.at(XFEM::F_Adj_t_Col).second -
+               configuration_map_.at(XFEM::F_Pen_t_Col).second) > 1e-16)
         FOUR_C_THROW(
             "{}: You should set Scalings for Adjoint and Penalty Column, even if just one is used, "
             "as we support at the moment just equal penalty and adjoint consistent constraints!",
             cond_name_.c_str());
-      if (((configuration_map_.at(Inpar::XFEM::X_Adj_t_Col).first &&
-               !configuration_map_.at(Inpar::XFEM::X_Pen_t_Col).first) ||
-              (!configuration_map_.at(Inpar::XFEM::X_Adj_t_Col).first &&
-                  configuration_map_.at(Inpar::XFEM::X_Pen_t_Col).first)) &&
-          fabs(configuration_map_.at(Inpar::XFEM::X_Adj_t_Col).second -
-               configuration_map_.at(Inpar::XFEM::X_Pen_t_Col).second) > 1e-16)
+      if (((configuration_map_.at(XFEM::X_Adj_t_Col).first &&
+               !configuration_map_.at(XFEM::X_Pen_t_Col).first) ||
+              (!configuration_map_.at(XFEM::X_Adj_t_Col).first &&
+                  configuration_map_.at(XFEM::X_Pen_t_Col).first)) &&
+          fabs(configuration_map_.at(XFEM::X_Adj_t_Col).second -
+               configuration_map_.at(XFEM::X_Pen_t_Col).second) > 1e-16)
         FOUR_C_THROW(
             "{}: You should set Scalings for Adjoint and Penalty Column, even if just one is used, "
             "as we support at the moment just equal penalty and adjoint consistent constraints!",
@@ -353,35 +352,31 @@ namespace XFEM
       // terms
       // Check if we need a more general implementation (If constraints between Adjoint and Penalty
       // are not the same!)
-      if (fabs(configuration_map_.at(Inpar::XFEM::F_Adj_Col).second -
-               configuration_map_.at(Inpar::XFEM::F_Pen_Col).second) > 1e-16 ||
-          fabs(configuration_map_.at(Inpar::XFEM::F_Adj_n_Col).second -
-               configuration_map_.at(Inpar::XFEM::F_Pen_n_Col).second) > 1e-16 ||
-          fabs(configuration_map_.at(Inpar::XFEM::F_Adj_t_Col).second -
-               configuration_map_.at(Inpar::XFEM::F_Pen_t_Col).second) > 1e-16 ||
-          fabs(configuration_map_.at(Inpar::XFEM::X_Adj_Col).second -
-               configuration_map_.at(Inpar::XFEM::X_Pen_Col).second) > 1e-16 ||
-          fabs(configuration_map_.at(Inpar::XFEM::X_Adj_n_Col).second -
-               configuration_map_.at(Inpar::XFEM::X_Pen_n_Col).second) > 1e-16 ||
-          fabs(configuration_map_.at(Inpar::XFEM::X_Adj_t_Col).second -
-               configuration_map_.at(Inpar::XFEM::X_Pen_t_Col).second) > 1e-16)
+      if (fabs(configuration_map_.at(XFEM::F_Adj_Col).second -
+               configuration_map_.at(XFEM::F_Pen_Col).second) > 1e-16 ||
+          fabs(configuration_map_.at(XFEM::F_Adj_n_Col).second -
+               configuration_map_.at(XFEM::F_Pen_n_Col).second) > 1e-16 ||
+          fabs(configuration_map_.at(XFEM::F_Adj_t_Col).second -
+               configuration_map_.at(XFEM::F_Pen_t_Col).second) > 1e-16 ||
+          fabs(configuration_map_.at(XFEM::X_Adj_Col).second -
+               configuration_map_.at(XFEM::X_Pen_Col).second) > 1e-16 ||
+          fabs(configuration_map_.at(XFEM::X_Adj_n_Col).second -
+               configuration_map_.at(XFEM::X_Pen_n_Col).second) > 1e-16 ||
+          fabs(configuration_map_.at(XFEM::X_Adj_t_Col).second -
+               configuration_map_.at(XFEM::X_Pen_t_Col).second) > 1e-16)
       {
-        std::cout << "F_Adj_Col/F_Pen_Col: " << configuration_map_.at(Inpar::XFEM::F_Adj_Col).second
-                  << "/" << configuration_map_.at(Inpar::XFEM::F_Pen_Col).second << std::endl;
-        std::cout << "F_Adj_n_Col/F_Pen_n_Col: "
-                  << configuration_map_.at(Inpar::XFEM::F_Adj_n_Col).second << "/"
-                  << configuration_map_.at(Inpar::XFEM::F_Pen_n_Col).second << std::endl;
-        std::cout << "F_Adj_t_Col/F_Pen_t_Col: "
-                  << configuration_map_.at(Inpar::XFEM::F_Adj_t_Col).second << "/"
-                  << configuration_map_.at(Inpar::XFEM::F_Pen_t_Col).second << std::endl;
-        std::cout << "X_Adj_Col/X_Pen_Col: " << configuration_map_.at(Inpar::XFEM::X_Adj_Col).second
-                  << "/" << configuration_map_.at(Inpar::XFEM::X_Pen_Col).second << std::endl;
-        std::cout << "X_Adj_n_Col/X_Pen_n_Col: "
-                  << configuration_map_.at(Inpar::XFEM::X_Adj_n_Col).second << "/"
-                  << configuration_map_.at(Inpar::XFEM::X_Pen_n_Col).second << std::endl;
-        std::cout << "X_Adj_t_Col/X_Pen_t_Col: "
-                  << configuration_map_.at(Inpar::XFEM::X_Adj_t_Col).second << "/"
-                  << configuration_map_.at(Inpar::XFEM::X_Pen_t_Col).second << std::endl;
+        std::cout << "F_Adj_Col/F_Pen_Col: " << configuration_map_.at(XFEM::F_Adj_Col).second << "/"
+                  << configuration_map_.at(XFEM::F_Pen_Col).second << std::endl;
+        std::cout << "F_Adj_n_Col/F_Pen_n_Col: " << configuration_map_.at(XFEM::F_Adj_n_Col).second
+                  << "/" << configuration_map_.at(XFEM::F_Pen_n_Col).second << std::endl;
+        std::cout << "F_Adj_t_Col/F_Pen_t_Col: " << configuration_map_.at(XFEM::F_Adj_t_Col).second
+                  << "/" << configuration_map_.at(XFEM::F_Pen_t_Col).second << std::endl;
+        std::cout << "X_Adj_Col/X_Pen_Col: " << configuration_map_.at(XFEM::X_Adj_Col).second << "/"
+                  << configuration_map_.at(XFEM::X_Pen_Col).second << std::endl;
+        std::cout << "X_Adj_n_Col/X_Pen_n_Col: " << configuration_map_.at(XFEM::X_Adj_n_Col).second
+                  << "/" << configuration_map_.at(XFEM::X_Pen_n_Col).second << std::endl;
+        std::cout << "X_Adj_t_Col/X_Pen_t_Col: " << configuration_map_.at(XFEM::X_Adj_t_Col).second
+                  << "/" << configuration_map_.at(XFEM::X_Pen_t_Col).second << std::endl;
         FOUR_C_THROW(
             "{}: Your consistent constraint for Penalty and Adjoint term is not equal, go to "
             "element level and split up velint_diff_ for penalty and adjoint!",
@@ -438,7 +433,7 @@ namespace XFEM
         const double&
             NITStabScalingTang,  ///< prefactor of Nitsche's scaling in tangential direction
         const bool& IsPseudo2D,  ///< is this a pseudo 2d problem
-        const Inpar::XFEM::ViscStabTraceEstimate
+        const XFEM::ViscStabTraceEstimate
             ViscStab_TraceEstimate  ///< trace estimate for visc stab fac
     );
 
@@ -589,7 +584,7 @@ namespace XFEM
     std::string coupl_name_;
 
     ///< averaging strategy, type of weighting
-    Inpar::XFEM::AveragingStrategy averaging_strategy_;
+    XFEM::AveragingStrategy averaging_strategy_;
 
     int myrank_;
 
@@ -600,7 +595,7 @@ namespace XFEM
     int step_;
 
     ///< map which configures element level (which terms are evaluated & scaled with which value)
-    std::map<Inpar::XFEM::CoupTerm, std::pair<bool, double>> configuration_map_;
+    std::map<XFEM::CoupTerm, std::pair<bool, double>> configuration_map_;
 
     bool issetup_;
 

@@ -117,13 +117,13 @@ namespace XFEM
     void add_mesh_coupling(const std::string& cond_name,
         std::shared_ptr<Core::FE::Discretization> cond_dis, const int coupling_id)
     {
-      if (cond_type_string_to_enum(cond_name) == Inpar::XFEM::CouplingCond_SURF_FSI_PART or
-          cond_type_string_to_enum(cond_name) == Inpar::XFEM::CouplingCond_SURF_FSI_MONO)
+      if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_SURF_FSI_PART or
+          cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_SURF_FSI_MONO)
       {
         mesh_coupl_.push_back(std::make_shared<MeshCouplingFSI>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_));
       }
-      else if (cond_type_string_to_enum(cond_name) == Inpar::XFEM::CouplingCond_SURF_FPI_MONO)
+      else if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_SURF_FPI_MONO)
       {
         mesh_coupl_.push_back(std::make_shared<MeshCouplingFPI>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_, MeshCouplingFPI::ps_ps));
@@ -134,40 +134,38 @@ namespace XFEM
         mesh_coupl_.push_back(std::make_shared<MeshCouplingFPI>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_, MeshCouplingFPI::pf_pf));
       }
-      else if (cond_type_string_to_enum(cond_name) == Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET)
+      else if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_SURF_WEAK_DIRICHLET)
       {
         mesh_coupl_.push_back(std::make_shared<MeshCouplingWeakDirichlet>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_, (bg_dis_ == cond_dis)));
       }
-      else if (cond_type_string_to_enum(cond_name) == Inpar::XFEM::CouplingCond_SURF_NEUMANN)
+      else if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_SURF_NEUMANN)
       {
         mesh_coupl_.push_back(std::make_shared<MeshCouplingNeumann>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_, (bg_dis_ == cond_dis)));
       }
-      else if (cond_type_string_to_enum(cond_name) == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP)
+      else if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_SURF_NAVIER_SLIP)
       {
         mesh_coupl_.push_back(std::make_shared<MeshCouplingNavierSlip>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_, (bg_dis_ == cond_dis)));
       }
-      else if (cond_type_string_to_enum(cond_name) ==
-               Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
+      else if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
       {
         mesh_coupl_.push_back(std::make_shared<MeshCouplingNavierSlipTwoPhase>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_, (bg_dis_ == cond_dis)));
       }
-      else if (cond_type_string_to_enum(cond_name) == Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID)
+      else if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_SURF_FLUIDFLUID)
       {
         mesh_coupl_.push_back(std::make_shared<MeshCouplingFluidFluid>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_));
       }
-      else if (cond_type_string_to_enum(cond_name) ==
-               Inpar::XFEM::CouplingCond_EMBEDDEDMESH_SOLID_SURF)
+      else if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_EMBEDDEDMESH_SOLID_SURF)
       {
         mesh_coupl_.push_back(std::make_shared<MeshCoupling>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_, "", false));
       }
       else if (cond_type_string_to_enum(cond_name) ==
-               Inpar::XFEM::CouplingCond_EMBEDDEDMESH_BACKGROUND_SOLID_VOL)
+               XFEM::CouplingCond_EMBEDDEDMESH_BACKGROUND_SOLID_VOL)
       {
         // do nothing
       }
@@ -184,18 +182,17 @@ namespace XFEM
             cond_dis,  ///< discretization from which the cutter discretization can be derived
         const int coupling_id)
     {
-      if (cond_type_string_to_enum(cond_name) == Inpar::XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET)
+      if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET)
       {
         levelset_coupl_.push_back(std::make_shared<LevelSetCouplingWeakDirichlet>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_));
       }
-      else if (cond_type_string_to_enum(cond_name) == Inpar::XFEM::CouplingCond_LEVELSET_NEUMANN)
+      else if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_LEVELSET_NEUMANN)
       {
         levelset_coupl_.push_back(std::make_shared<LevelSetCouplingNeumann>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_));
       }
-      else if (cond_type_string_to_enum(cond_name) ==
-               Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP)
+      else if (cond_type_string_to_enum(cond_name) == XFEM::CouplingCond_LEVELSET_NAVIER_SLIP)
       {
         levelset_coupl_.push_back(std::make_shared<LevelSetCouplingNavierSlip>(
             bg_dis_, cond_name, cond_dis, coupling_id, time_, step_));
@@ -313,7 +310,7 @@ namespace XFEM
     }
 
 
-    Inpar::XFEM::AveragingStrategy get_averaging_strategy(
+    XFEM::AveragingStrategy get_averaging_strategy(
         const int coup_sid,  ///< the global id of the coupling side
         const int back_eid   ///< the global element id of the background mesh
     )
@@ -337,7 +334,7 @@ namespace XFEM
         FOUR_C_THROW(
             "there is no valid mesh-/levelset-coupling condition object for side: {}", coup_sid);
 
-      return Inpar::XFEM::invalid;
+      return XFEM::invalid;
     }
 
     /// ...
@@ -548,7 +545,7 @@ namespace XFEM
         FOUR_C_THROW(
             "there is no valid mesh-/levelset-coupling condition object for side: {}", coup_sid);
 
-      return EleCoupCond(Inpar::XFEM::CouplingCond_NONE, nullptr);
+      return EleCoupCond(XFEM::CouplingCond_NONE, nullptr);
     }
 
 
@@ -568,27 +565,27 @@ namespace XFEM
     }
 
     /// have coupling matrices to be evaluated or not?
-    bool is_coupling_condition(const Inpar::XFEM::EleCouplingCondType& cond_type)
+    bool is_coupling_condition(const XFEM::EleCouplingCondType& cond_type)
     {
       switch (cond_type)
       {
-        case Inpar::XFEM::CouplingCond_SURF_FSI_MONO:
-        case Inpar::XFEM::CouplingCond_SURF_FPI_MONO:
-        case Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID:
-        case Inpar::XFEM::CouplingCond_LEVELSET_TWOPHASE:
-        case Inpar::XFEM::CouplingCond_LEVELSET_COMBUSTION:
+        case XFEM::CouplingCond_SURF_FSI_MONO:
+        case XFEM::CouplingCond_SURF_FPI_MONO:
+        case XFEM::CouplingCond_SURF_FLUIDFLUID:
+        case XFEM::CouplingCond_LEVELSET_TWOPHASE:
+        case XFEM::CouplingCond_LEVELSET_COMBUSTION:
         {
           return true;
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_FSI_PART:
-        case Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET:
-        case Inpar::XFEM::CouplingCond_SURF_NEUMANN:
-        case Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP:
-        case Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE:
-        case Inpar::XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
-        case Inpar::XFEM::CouplingCond_LEVELSET_NEUMANN:
-        case Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP:
+        case XFEM::CouplingCond_SURF_FSI_PART:
+        case XFEM::CouplingCond_SURF_WEAK_DIRICHLET:
+        case XFEM::CouplingCond_SURF_NEUMANN:
+        case XFEM::CouplingCond_SURF_NAVIER_SLIP:
+        case XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE:
+        case XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
+        case XFEM::CouplingCond_LEVELSET_NEUMANN:
+        case XFEM::CouplingCond_LEVELSET_NAVIER_SLIP:
         {
           return false;
           break;
@@ -649,7 +646,7 @@ namespace XFEM
 
     bool has_moving_interface();
 
-    bool has_averaging_strategy(Inpar::XFEM::AveragingStrategy strategy);
+    bool has_averaging_strategy(XFEM::AveragingStrategy strategy);
 
     void get_coupling_ele_location_vector(const int coup_sid, std::vector<int>& patchlm);
 

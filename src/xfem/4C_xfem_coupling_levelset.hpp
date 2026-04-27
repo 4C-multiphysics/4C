@@ -143,7 +143,7 @@ namespace XFEM
 
 
     // Specify way of creating the projection matrix
-    Inpar::XFEM::ProjToSurface projtosurf_;
+    XFEM::ProjToSurface projtosurf_;
 
     //@}
 
@@ -425,11 +425,11 @@ namespace XFEM
 
       //   Non-smoothed projection matrix
       Core::LinAlg::Matrix<nsd, 1> gradphi;
-      if (projtosurf_ == Inpar::XFEM::Proj_normal)
+      if (projtosurf_ == XFEM::Proj_normal)
       {
         gradphi = normal;
       }
-      else if (projtosurf_ == Inpar::XFEM::Proj_smoothed)
+      else if (projtosurf_ == XFEM::Proj_smoothed)
       {
         // smoothed normal at cutter element nodes, the Gaussian point lies in
         Core::LinAlg::SerialDenseMatrix esmoothedgradphi_test(nsd, nen);
@@ -440,7 +440,7 @@ namespace XFEM
         // Gradients @ GaussPoints
         gradphi.multiply(esmoothedgradphi, funct);
       }
-      else if (projtosurf_ == Inpar::XFEM::Proj_normal_phi)
+      else if (projtosurf_ == XFEM::Proj_normal_phi)
       {
         Core::LinAlg::SerialDenseMatrix ephi_test(nen, 1);
         Core::LinAlg::Matrix<nen, 1> ephi(ephi_test, View);
@@ -450,7 +450,7 @@ namespace XFEM
         // Gradients @ GaussPoints
         gradphi.multiply(derxy, ephi);
       }
-      else if (projtosurf_ == Inpar::XFEM::Proj_normal_smoothed_comb)
+      else if (projtosurf_ == XFEM::Proj_normal_smoothed_comb)
       {
         // smoothed normal at cutter element nodes, the Gaussian point lies in
         Core::LinAlg::SerialDenseMatrix esmoothedgradphi_test(nsd, nen);

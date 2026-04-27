@@ -231,7 +231,7 @@ namespace XFEM
         const int sid  ///< global side element id w.r.t cutter discretization
         ) override
     {
-      if (get_averaging_strategy() == Inpar::XFEM::Xfluid_Sided)
+      if (get_averaging_strategy() == XFEM::Xfluid_Sided)
       {
         return MeshCoupling::get_coupling_element(sid);
       }
@@ -300,7 +300,7 @@ namespace XFEM
     bool init_volcoupling_;
 
     //! when should the local eigenvalue problem be updated
-    Inpar::XFEM::TraceEstimateEigenvalueUpdate trace_estimate_eigenvalue_update_;
+    XFEM::TraceEstimateEigenvalueUpdate trace_estimate_eigenvalue_update_;
 
     //! last reset of local eigenvalue problem
     int reset_step_;
@@ -655,7 +655,7 @@ namespace XFEM
     void prepare_solve() override;
 
     /// Get the corresponding FSI interface law
-    virtual Inpar::XFEM::InterfaceLaw get_interface_law() { return interfacelaw_; }
+    virtual XFEM::InterfaceLaw get_interface_law() { return interfacelaw_; }
 
     /// Register this side on this proc
     void register_side_proc(int sid);
@@ -735,7 +735,7 @@ namespace XFEM
     double timefac_;
 
     //! applied interface law
-    Inpar::XFEM::InterfaceLaw interfacelaw_;
+    XFEM::InterfaceLaw interfacelaw_;
 
     //! Xfluid Contact Communicator
     std::shared_ptr<XFEM::XFluidContactComm> xf_c_comm_;

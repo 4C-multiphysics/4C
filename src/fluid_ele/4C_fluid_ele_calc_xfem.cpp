@@ -937,7 +937,7 @@ namespace Discret
         // get the coupling strategy for coupling of two fields
         const XFEM::EleCoupCond& coupcond =
             cond_manager->get_coupling_condition(coup_sid, my::eid_);
-        const Inpar::XFEM::EleCouplingCondType& cond_type = coupcond.first;
+        const XFEM::EleCouplingCondType& cond_type = coupcond.first;
 
         const std::vector<Core::FE::GaussIntegration>& cutintpoints = i->second;
 
@@ -985,15 +985,15 @@ namespace Discret
           side->location_vector(*cutter_dis, cutla);
           si->add_slave_ele_disp(*cutter_dis, cutla[0].lm_);
 
-          if (cond_type == Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET or
-              cond_type == Inpar::XFEM::CouplingCond_SURF_FSI_PART or
-              cond_type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP or
-              cond_type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
+          if (cond_type == XFEM::CouplingCond_SURF_WEAK_DIRICHLET or
+              cond_type == XFEM::CouplingCond_SURF_FSI_PART or
+              cond_type == XFEM::CouplingCond_SURF_NAVIER_SLIP or
+              cond_type == XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
           {
             si->set_interface_jump_statenp(*cutter_dis, "ivelnp", cutla[0].lm_);
           }
 
-          if (cond_type == Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID)
+          if (cond_type == XFEM::CouplingCond_SURF_FLUIDFLUID)
           {
             // force to get the embedded element, even if background-sided coupling is active
             coupl_ele = cond_manager->get_cond_element(coup_sid);
@@ -1012,7 +1012,7 @@ namespace Discret
           }
         }
 
-        if (cond_manager->has_averaging_strategy(Inpar::XFEM::Xfluid_Sided))
+        if (cond_manager->has_averaging_strategy(XFEM::Xfluid_Sided))
         {
           h_k = XFEM::Utils::compute_char_ele_length<distype>(ele, ele_xyze, *cond_manager, vcSet,
               bcells, bintpoints, fldparaxfem_->visc_stab_hk());
@@ -1091,7 +1091,7 @@ namespace Discret
               // project on boundary element
               si->project_on_side(x_gp_lin, x_side, xi_side);
 
-              if (cond_type == Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID)
+              if (cond_type == XFEM::CouplingCond_SURF_FLUIDFLUID)
                 ci->evaluate(x_side);  // evaluate embedded element's shape functions at gauss-point
                                        // coordinates
             }
@@ -1160,7 +1160,7 @@ namespace Discret
               si->get_interface_velnp(velint_s);
             }
 
-            if (cond_type == Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID)
+            if (cond_type == XFEM::CouplingCond_SURF_FLUIDFLUID)
             {
               u_err.update(1.0, my::velint_, -1.0, velint_s, 0.0);
 
@@ -1295,15 +1295,15 @@ namespace Discret
       // determine, whether this is a Cauchy stress-based (MHCS)
       // or viscous stress-based LM approach (MHVS)
       //--------------------------------------------------------
-      Inpar::XFEM::CouplingMethod coupling_method = fldparaxfem_->get_coupling_method();
+      XFEM::CouplingMethod coupling_method = fldparaxfem_->get_coupling_method();
 
       // check for valid boundary integration type
       switch (coupling_method)
       {
-        case Inpar::XFEM::Hybrid_LM_viscous_stress:
-        case Inpar::XFEM::Hybrid_LM_Cauchy_stress:
+        case XFEM::Hybrid_LM_viscous_stress:
+        case XFEM::Hybrid_LM_Cauchy_stress:
           break;
-        case Inpar::XFEM::Nitsche:
+        case XFEM::Nitsche:
           FOUR_C_THROW(
               "Wrong evaluation routine for Nitsche coupling. Try element_xfem_interface_nit/NIT2 "
               "instead.");
@@ -1315,7 +1315,7 @@ namespace Discret
           break;
       }
 
-      const bool is_MHVS = (coupling_method == Inpar::XFEM::Hybrid_LM_viscous_stress);
+      const bool is_MHVS = (coupling_method == XFEM::Hybrid_LM_viscous_stress);
 
 
       // REMARK: to avoid confusion -
@@ -1323,9 +1323,8 @@ namespace Discret
       // 'boundary cell' = belongs to volume-cell
 
       // do we need convective stabilization?
-      bool add_conv_stab(
-          fldparaxfem_->xff_conv_stab_scaling() != Inpar::XFEM::XFF_ConvStabScaling_none ||
-          fldparaxfem_->conv_stab_scaling() != Inpar::XFEM::ConvStabScaling_none);
+      bool add_conv_stab(fldparaxfem_->xff_conv_stab_scaling() != XFEM::XFF_ConvStabScaling_none ||
+                         fldparaxfem_->conv_stab_scaling() != XFEM::ConvStabScaling_none);
 
       //----------------------------------------------------------------------------
       //                         ELEMENT GEOMETRY
@@ -1476,7 +1475,7 @@ namespace Discret
         const int coup_sid = bc->first;
 
         // get the coupling strategy for coupling of two fields
-        const Inpar::XFEM::AveragingStrategy averaging_strategy =
+        const XFEM::AveragingStrategy averaging_strategy =
             cond_manager->get_averaging_strategy(coup_sid, my::eid_);
 
         begids.insert(coup_sid);
@@ -1503,7 +1502,7 @@ namespace Discret
         patchelementslm.reserve(patchelementslm.size() + ndof_i);
         patchelementslm.insert(patchelementslm.end(), patchlm.begin(), patchlm.end());
 
-        if (averaging_strategy != Inpar::XFEM::Xfluid_Sided)
+        if (averaging_strategy != XFEM::Xfluid_Sided)
           FOUR_C_THROW(
               "Embedded-sided or Mean or Harmonic coupling for stress-based hybrid LM approach is "
               "not yet available!");
@@ -1570,11 +1569,11 @@ namespace Discret
         int coup_sid = i->first;
 
         // get the coupling strategy for coupling of two fields
-        const Inpar::XFEM::AveragingStrategy averaging_strategy =
+        const XFEM::AveragingStrategy averaging_strategy =
             cond_manager->get_averaging_strategy(coup_sid, my::eid_);
         const XFEM::EleCoupCond& coupcond =
             cond_manager->get_coupling_condition(coup_sid, my::eid_);
-        const Inpar::XFEM::EleCouplingCondType& cond_type = coupcond.first;
+        const XFEM::EleCouplingCondType& cond_type = coupcond.first;
 
         const int coup_idx = cond_manager->get_coupling_index(coup_sid, my::eid_);
         std::shared_ptr<XFEM::CouplingBase> coupling = cond_manager->get_coupling_by_idx(coup_idx);
@@ -1633,10 +1632,10 @@ namespace Discret
           side->location_vector(*cutter_dis, cutla);
           si->add_slave_ele_disp(*cutter_dis, cutla[0].lm_);
 
-          if (cond_type == Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET or
-              cond_type == Inpar::XFEM::CouplingCond_SURF_FSI_PART or
-              cond_type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP or
-              cond_type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
+          if (cond_type == XFEM::CouplingCond_SURF_WEAK_DIRICHLET or
+              cond_type == XFEM::CouplingCond_SURF_FSI_PART or
+              cond_type == XFEM::CouplingCond_SURF_NAVIER_SLIP or
+              cond_type == XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
           {
             si->set_interface_jump_statenp(*cutter_dis, "ivelnp", cutla[0].lm_);
             if (my::fldparatimint_->is_new_ost_implementation())
@@ -1650,8 +1649,8 @@ namespace Discret
         if (!(is_ls_coupling_side and
                 !cond_manager->is_coupling(coup_sid, my::eid_)))  // not level-set-WDBC case
         {
-          if (averaging_strategy == Inpar::XFEM::Embedded_Sided or
-              averaging_strategy == Inpar::XFEM::Mean)  // for coupling-sided and two-sided coupling
+          if (averaging_strategy == XFEM::Embedded_Sided or
+              averaging_strategy == XFEM::Mean)  // for coupling-sided and two-sided coupling
             FOUR_C_THROW("embedded or two-sided coupling not supported");
           else
           {
@@ -1701,8 +1700,8 @@ namespace Discret
           Core::LinAlg::SerialDenseMatrix& eleGsui = Cuiui_matrices[0];
           Core::LinAlg::SerialDenseMatrix& eleGuis = Cuiui_matrices[1];
 
-          if (averaging_strategy == Inpar::XFEM::Embedded_Sided or
-              averaging_strategy == Inpar::XFEM::Mean)  // for coupling-sided and two-sided coupling
+          if (averaging_strategy == XFEM::Embedded_Sided or
+              averaging_strategy == XFEM::Mean)  // for coupling-sided and two-sided coupling
             FOUR_C_THROW("embedded or two-sided coupling not supported");
 
           ci[coup_sid] = Discret::Elements::XFLUID::HybridLMInterface<
@@ -1864,8 +1863,7 @@ namespace Discret
               // project on boundary element
               si->project_on_side(x_gp_lin, x_side, xi_side);
 
-              if (averaging_strategy == Inpar::XFEM::Embedded_Sided or
-                  averaging_strategy == Inpar::XFEM::Mean)
+              if (averaging_strategy == XFEM::Embedded_Sided or averaging_strategy == XFEM::Mean)
                 FOUR_C_THROW(
                     "embedded or two-sided weighting not supported");  // evaluate embedded
                                                                        // element's shape functions
@@ -1926,8 +1924,8 @@ namespace Discret
 #ifdef FOUR_C_ENABLE_ASSERTIONS
             // Only Navier Slip used kappa_m,kappa_s and visc_m defined just before!
             // To use Navier Slip specify them correct!
-            if (cond_type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP ||
-                cond_type == Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP)
+            if (cond_type == XFEM::CouplingCond_SURF_NAVIER_SLIP ||
+                cond_type == XFEM::CouplingCond_LEVELSET_NAVIER_SLIP)
               FOUR_C_THROW(
                   "element_xfem_interface_hybrid_lm with Navier Slip, what to do with "
                   "kappa_m/kappa_s "
@@ -1941,8 +1939,8 @@ namespace Discret
                 proj_tangential, LB_proj_matrix, x_gp_lin, normal, si.get(), rst, kappa_m, kappa_s,
                 visc_m, dummy1, dummy2);
 
-            if (cond_type == Inpar::XFEM::CouplingCond_LEVELSET_NEUMANN or
-                cond_type == Inpar::XFEM::CouplingCond_SURF_NEUMANN)
+            if (cond_type == XFEM::CouplingCond_LEVELSET_NEUMANN or
+                cond_type == XFEM::CouplingCond_SURF_NEUMANN)
             {
               //-----------------------------------------------------------------------------
               // evaluate the Neumann boundary condition term
@@ -2093,7 +2091,7 @@ namespace Discret
                 //
                 //            //Get Configuration Map (finally we should modify the configuration
                 //            map here in a way that it fits hybrid LM approach)
-                //            std::map<Inpar::XFEM::CoupTerm, std::pair<bool,double> >&
+                //            std::map<XFEM::CoupTerm, std::pair<bool,double> >&
                 //            hlm_configmap_n = coupling->GetConfigurationmap();
                 //
                 //            si_nit.at(coup_sid)->nit_evaluate_coupling_old_state(
@@ -2112,7 +2110,7 @@ namespace Discret
                 //              ivelintn_jump,
                 //              itractionn_jump,
                 //              hlm_configmap_n,
-                //              Inpar::XFEM::PreviousState_only_consistency
+                //              XFEM::PreviousState_only_consistency
                 //            );
               }
             }  // hybrid lm method
@@ -2651,7 +2649,7 @@ namespace Discret
     {
       // full L2-projection means integration over the full background element,
       // not only the physical part
-      if (fldparaxfem_->hybrid_lm_l2_proj() == Inpar::XFEM::Hybrid_LM_L2_Proj_full)
+      if (fldparaxfem_->hybrid_lm_l2_proj() == XFEM::Hybrid_LM_L2_Proj_full)
       {
         // get the standard set of gauss-points from the intersected element
         for (Core::FE::GaussIntegration::const_iterator iquad = my::intpoints_.begin();
@@ -3303,7 +3301,7 @@ namespace Discret
       // compute characteristic element length for background element in case of background-sided
       // coupling
 
-      if (cond_manager->has_averaging_strategy(Inpar::XFEM::Xfluid_Sided))
+      if (cond_manager->has_averaging_strategy(XFEM::Xfluid_Sided))
       {
         h_k = XFEM::Utils::compute_char_ele_length<distype>(
             ele, ele_xyze, *cond_manager, vcSet, bcells, bintpoints, fldparaxfem_->visc_stab_hk());
@@ -3381,7 +3379,7 @@ namespace Discret
         // get the coupling strategy for coupling of two fields
         const XFEM::EleCoupCond& coupcond =
             cond_manager->get_coupling_condition(coup_sid, my::eid_);
-        const Inpar::XFEM::EleCouplingCondType& cond_type = coupcond.first;
+        const XFEM::EleCouplingCondType& cond_type = coupcond.first;
 
         const int coup_idx = cond_manager->get_coupling_index(coup_sid, my::eid_);
         std::shared_ptr<XFEM::CouplingBase> coupling = cond_manager->get_coupling_by_idx(coup_idx);
@@ -3437,8 +3435,7 @@ namespace Discret
 
           if (mc_fsi != nullptr || mc_fpi != nullptr)
           {
-            if (coupling->get_averaging_strategy() == Inpar::XFEM::Xfluid_Sided &&
-                mc_fsi != nullptr)
+            if (coupling->get_averaging_strategy() == XFEM::Xfluid_Sided && mc_fsi != nullptr)
               assemble_iforce = true;
             else
             {
@@ -3466,10 +3463,10 @@ namespace Discret
           side->location_vector(*cutter_dis, cutla);
           si->add_slave_ele_disp(*cutter_dis, cutla[0].lm_);
 
-          if (cond_type == Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET or
-              cond_type == Inpar::XFEM::CouplingCond_SURF_FSI_PART or
-              cond_type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP or
-              cond_type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
+          if (cond_type == XFEM::CouplingCond_SURF_WEAK_DIRICHLET or
+              cond_type == XFEM::CouplingCond_SURF_FSI_PART or
+              cond_type == XFEM::CouplingCond_SURF_NAVIER_SLIP or
+              cond_type == XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
           {
             si->set_interface_jump_statenp(*cutter_dis, "ivelnp", cutla[0].lm_);
             if (my::fldparatimint_->is_new_ost_implementation())
@@ -3570,8 +3567,7 @@ namespace Discret
           // compute characteristic element length for the case of embedded-sided coupling
 
           // char. length defined by local eigenvalue problem
-          if (fldparaxfem_->visc_stab_trac_estimate() ==
-              Inpar::XFEM::ViscStab_TraceEstimate_eigenvalue)
+          if (fldparaxfem_->visc_stab_trac_estimate() == XFEM::ViscStab_TraceEstimate_eigenvalue)
           {
             inv_hk = cond_manager->get_trace_estimate_max_eigenvalue(coup_sid);
             h_k = 1.0 / inv_hk;
@@ -3751,8 +3747,8 @@ namespace Discret
                 viscaf_master_, viscaf_slave_, rst_slave, eledisp, coupl_ele);
 
             double fulltraction = 0.0;
-            if (cond_type == Inpar::XFEM::CouplingCond_LEVELSET_NEUMANN or
-                cond_type == Inpar::XFEM::CouplingCond_SURF_NEUMANN)
+            if (cond_type == XFEM::CouplingCond_LEVELSET_NEUMANN or
+                cond_type == XFEM::CouplingCond_SURF_NEUMANN)
             {
               //-----------------------------------------------------------------------------
               // evaluate the Neumann boundary condition term
@@ -3774,7 +3770,7 @@ namespace Discret
               TEUCHOS_FUNC_TIME_MONITOR("FluidEleCalcXFEM::nit_evaluate_coupling");
               if (mc_fsi != nullptr)
               {
-                if (mc_fsi->get_interface_law() == Inpar::XFEM::navierslip_contact)
+                if (mc_fsi->get_interface_law() == XFEM::navierslip_contact)
                   fulltraction =
                       XFEM::Utils::evaluate_full_traction(press, my::vderxy_, viscaf_master_,
                           NIT_full_stab_fac, my::velint_, velint_s_, normal_, normal_, velint_s_);
@@ -3797,7 +3793,7 @@ namespace Discret
               }
 
               // Get Configuration Map
-              std::map<Inpar::XFEM::CoupTerm, std::pair<bool, double>>& configmap =
+              std::map<XFEM::CoupTerm, std::pair<bool, double>>& configmap =
                   coupling->get_configurationmap(kappa_m, viscaf_master_, viscaf_slave_,
                       my::densaf_, NIT_visc_stab_fac_tang, NIT_full_stab_fac, x_gp_lin_,
                       coupcond.second, ele, side, my::funct_.data(), my::derxy_.data(), rst_slave,
@@ -3851,9 +3847,9 @@ namespace Discret
                 itractionn_jump_.clear();
 
                 // Safety check
-                if (cond_type == Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP or
-                    cond_type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP or
-                    cond_type == Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
+                if (cond_type == XFEM::CouplingCond_LEVELSET_NAVIER_SLIP or
+                    cond_type == XFEM::CouplingCond_SURF_NAVIER_SLIP or
+                    cond_type == XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
                 {
                   if (my::fldparatimint_->is_new_ost_implementation())
                   {
@@ -3863,8 +3859,8 @@ namespace Discret
                   }
                 }
 
-                if (cond_type != Inpar::XFEM::CouplingCond_LEVELSET_TWOPHASE and
-                    cond_type != Inpar::XFEM::CouplingCond_LEVELSET_COMBUSTION)
+                if (cond_type != XFEM::CouplingCond_LEVELSET_TWOPHASE and
+                    cond_type != XFEM::CouplingCond_LEVELSET_COMBUSTION)
                 {
                   get_interface_jump_vectors_old_state(coupcond, *coupling, ivelintn_jump_,
                       itractionn_jump_, x_gp_lin_, normal_, *si,
@@ -3888,8 +3884,7 @@ namespace Discret
                 // only makes sense for stationary interfaces!
 
                 double NIT_full_stab_fac_n = 0.0;
-                if (fldparaxfem_->interface_terms_previous_state() ==
-                    Inpar::XFEM::PreviousState_full)
+                if (fldparaxfem_->interface_terms_previous_state() == XFEM::PreviousState_full)
                 {
                   velintn_s_.clear();
                   ci->get_interface_veln(velintn_s_);
@@ -3910,7 +3905,7 @@ namespace Discret
                 }
 
                 // Get Configuration Map
-                std::map<Inpar::XFEM::CoupTerm, std::pair<bool, double>> configmap_n =
+                std::map<XFEM::CoupTerm, std::pair<bool, double>> configmap_n =
                     coupling->get_configurationmap(kappa_m, viscaf_master_, viscaf_slave_,
                         my::densaf_, NIT_visc_stab_fac_tang, NIT_full_stab_fac, x_gp_lin_,
                         coupcond.second, ele, side, my::funct_.data(), my::derxy_.data(), rst_slave,
@@ -3998,13 +3993,13 @@ namespace Discret
 
       // [| v |] := vm - vs
 
-      const Inpar::XFEM::EleCouplingCondType& cond_type =
+      const XFEM::EleCouplingCondType& cond_type =
           coupcond.first;  ///< condition type for given interface side
       const Core::Conditions::Condition* cond = coupcond.second;  ///< condition to be evaluated
 
       switch (cond_type)
       {
-        case Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET:
+        case XFEM::CouplingCond_SURF_WEAK_DIRICHLET:
         {
           const std::string& evaltype = cond->parameters().get<std::string>("EVALTYPE");
 
@@ -4022,14 +4017,14 @@ namespace Discret
 
           break;
         }
-        case Inpar::XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
+        case XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
         {
           // evaluate condition function at Gaussian point
           coupling->evaluate_coupling_conditions(ivelint_jump, itraction_jump, x, cond);
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_NEUMANN:
-        case Inpar::XFEM::CouplingCond_LEVELSET_NEUMANN:
+        case XFEM::CouplingCond_SURF_NEUMANN:
+        case XFEM::CouplingCond_LEVELSET_NEUMANN:
         {
           // evaluate condition function at Gaussian point
           if (cond->parameters().get<int>("NUMDOF") == 6)
@@ -4054,31 +4049,31 @@ namespace Discret
           }
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_FSI_PART:
+        case XFEM::CouplingCond_SURF_FSI_PART:
         {
           // evaluate function at nodes at current time
           si->get_interface_jump_velnp(ivelint_jump);
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID:
+        case XFEM::CouplingCond_SURF_FLUIDFLUID:
         {
           // nothing to evaluate as continuity coupling conditions have to be evaluated
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_FSI_MONO:
+        case XFEM::CouplingCond_SURF_FSI_MONO:
         {
           std::dynamic_pointer_cast<XFEM::MeshCouplingFSI>(coupling)
               ->evaluate_structural_cauchy_stress(
                   coupl_ele, rst_slave, eledisp, normal, solid_stress_);
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_FPI_MONO:
+        case XFEM::CouplingCond_SURF_FPI_MONO:
         {
           std::dynamic_pointer_cast<XFEM::MeshCouplingFPI>(coupling)
               ->evaluate_coupling_conditions<distype>(proj_tangential, normal);
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP:
+        case XFEM::CouplingCond_SURF_NAVIER_SLIP:
         {
           bool eval_dirich_at_gp =
               ((cond->parameters().get<std::string>("EVALTYPE")) == "funct_gausspoint");
@@ -4095,7 +4090,7 @@ namespace Discret
 
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE:
+        case XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE:
         {
           bool eval_dirich_at_gp =
               ((cond->parameters().get<std::string>("EVALTYPE")) == "funct_gausspoint");
@@ -4107,7 +4102,7 @@ namespace Discret
 
           break;
         }
-        case Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP:
+        case XFEM::CouplingCond_LEVELSET_NAVIER_SLIP:
         {
           std::dynamic_pointer_cast<XFEM::LevelSetCouplingNavierSlip>(coupling)
               ->evaluate_coupling_conditions<distype>(ivelint_jump, itraction_jump, x, cond,
@@ -4128,9 +4123,9 @@ namespace Discret
       //  If it is a Navier-Slip coupling, the matrix is provided from the Evaluation.
       //   Furthermore, if it is a Laplace-Beltrami way of calculating the surface tension,
       //   do not fill the matrix as it contains the "projection matrix" for LB implementation.
-      if (cond_type != Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP and
-          cond_type != Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP and
-          cond_type != Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
+      if (cond_type != XFEM::CouplingCond_LEVELSET_NAVIER_SLIP and
+          cond_type != XFEM::CouplingCond_SURF_NAVIER_SLIP and
+          cond_type != XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
       {
         // Create normal projection matrix.
         Core::LinAlg::Matrix<nsd_, nsd_> eye(Core::LinAlg::Initialization::zero);
@@ -4169,13 +4164,13 @@ namespace Discret
     {
       // [| v |] := vm - vs
 
-      const Inpar::XFEM::EleCouplingCondType& cond_type =
+      const XFEM::EleCouplingCondType& cond_type =
           coupcond.first;  ///< condition type for given interface side
       const Core::Conditions::Condition* cond = coupcond.second;  ///< condition to be evaluated
 
       switch (cond_type)
       {
-        case Inpar::XFEM::CouplingCond_SURF_WEAK_DIRICHLET:
+        case XFEM::CouplingCond_SURF_WEAK_DIRICHLET:
         {
           const std::string& evaltype = cond->parameters().get<std::string>("EVALTYPE");
 
@@ -4193,40 +4188,40 @@ namespace Discret
 
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_NEUMANN:
-        case Inpar::XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
-        case Inpar::XFEM::CouplingCond_LEVELSET_NEUMANN:
+        case XFEM::CouplingCond_SURF_NEUMANN:
+        case XFEM::CouplingCond_LEVELSET_WEAK_DIRICHLET:
+        case XFEM::CouplingCond_LEVELSET_NEUMANN:
         {
           // evaluate condition function at Gaussian point
           coupling.evaluate_coupling_conditions_old_state(ivelintn_jump, itractionn_jump, x, cond);
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP:
-        case Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP:
-        case Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE:
+        case XFEM::CouplingCond_SURF_NAVIER_SLIP:
+        case XFEM::CouplingCond_LEVELSET_NAVIER_SLIP:
+        case XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE:
         {
           FOUR_C_THROW("Navier Slip Condition not implemented for NEWOst yet!");
           // here you would need the dyn_visc for summing up vel_jump and traction_jump...
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_FSI_PART:
+        case XFEM::CouplingCond_SURF_FSI_PART:
         {
           // evaluate function at nodes at current time
           si.get_interface_jump_veln(ivelintn_jump);
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_FLUIDFLUID:
-        case Inpar::XFEM::CouplingCond_SURF_FSI_MONO:
+        case XFEM::CouplingCond_SURF_FLUIDFLUID:
+        case XFEM::CouplingCond_SURF_FSI_MONO:
         {
           // nothing to evaluate as continuity coupling conditions have to be evaluated
           break;
         }
-        case Inpar::XFEM::CouplingCond_SURF_FPI_MONO:
+        case XFEM::CouplingCond_SURF_FPI_MONO:
         {
           FOUR_C_THROW("Fluid Poro Structure Interaction not implemented for NEWOst yet!");
           break;
         }
-        case Inpar::XFEM::CouplingCond_LEVELSET_TWOPHASE:
+        case XFEM::CouplingCond_LEVELSET_TWOPHASE:
         {
           // Spatial velocity gradient for slave side
           Core::LinAlg::Matrix<nsd_, nsd_> vderxyn_s(Core::LinAlg::Initialization::zero);
@@ -4264,7 +4259,7 @@ namespace Discret
 
           break;
         }
-        case Inpar::XFEM::CouplingCond_LEVELSET_COMBUSTION:
+        case XFEM::CouplingCond_LEVELSET_COMBUSTION:
         {
           // TODO: evaluate the ivelint_jump and the itraction_jump
           break;
@@ -4335,8 +4330,8 @@ namespace Discret
                                  ///< stabilizations
     )
     {
-      if (fldparaxfem_->get_coupling_method() != Inpar::XFEM::Hybrid_LM_Cauchy_stress &&
-          fldparaxfem_->get_coupling_method() != Inpar::XFEM::Hybrid_LM_viscous_stress)
+      if (fldparaxfem_->get_coupling_method() != XFEM::Hybrid_LM_Cauchy_stress &&
+          fldparaxfem_->get_coupling_method() != XFEM::Hybrid_LM_viscous_stress)
         FOUR_C_THROW("Do not call this method with a non-Lagrange multiplier based approach!");
 
       for (std::set<int>::const_iterator bgid = begids.begin(); bgid != begids.end(); ++bgid)

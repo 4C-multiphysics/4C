@@ -112,7 +112,7 @@ void XFEM::XfemEdgeStab::evaluate_edge_stab_ghost_penalty(
   std::vector<int> nds_slave;
   nds_slave.reserve(p_slave_numnode);
 
-  Inpar::XFEM::FaceType face_type;
+  XFEM::FaceType face_type;
 
   int num_edgestab = 0;      // how often to stabilize this face for edgebased stabilizations
   int num_ghostpenalty = 0;  // how often to stabilize this face for ghost penalty stabilizations
@@ -136,7 +136,7 @@ void XFEM::XfemEdgeStab::evaluate_edge_stab_ghost_penalty(
     if (matptr_m->material_type() == Core::Materials::m_matlist)
       FOUR_C_THROW("The edgebased algo can not handle matlist at the moment, for this entry!");
 
-    face_type = Inpar::XFEM::face_type_std;
+    face_type = XFEM::face_type_std;
 
     {
       TEUCHOS_FUNC_TIME_MONITOR("XFEM::Edgestab EOS: create nds");
@@ -266,10 +266,10 @@ void XFEM::XfemEdgeStab::evaluate_edge_stab_ghost_penalty(
             {
               num_ghostpenalty++;
 
-              face_type = Inpar::XFEM::face_type_ghost_penalty;
+              face_type = XFEM::face_type_ghost_penalty;
             }
             else
-              face_type = Inpar::XFEM::face_type_std;
+              face_type = XFEM::face_type_std;
 
             XFEM::Utils::get_volume_cell_material(p_master, matptr_m, (*f)->position());
             XFEM::Utils::get_volume_cell_material(p_slave, matptr_s, (*f)->position());
@@ -306,7 +306,7 @@ void XFEM::XfemEdgeStab::evaluate_edge_stab_ghost_penalty(
         else
         {
           // facet is inside!
-          face_type = Inpar::XFEM::face_type_ghost;
+          face_type = XFEM::face_type_ghost;
         }
 
       }  // loop facets
@@ -406,10 +406,10 @@ void XFEM::XfemEdgeStab::evaluate_edge_stab_ghost_penalty(
             {
               num_ghostpenalty++;
 
-              face_type = Inpar::XFEM::face_type_ghost_penalty;
+              face_type = XFEM::face_type_ghost_penalty;
             }
             else
-              face_type = Inpar::XFEM::face_type_std;
+              face_type = XFEM::face_type_std;
 
             XFEM::Utils::get_volume_cell_material(p_master, matptr_m, (*f)->position());
             XFEM::Utils::get_volume_cell_material(p_slave, matptr_s, (*f)->position());
@@ -444,7 +444,7 @@ void XFEM::XfemEdgeStab::evaluate_edge_stab_ghost_penalty(
         else
         {
           // facet is inside!
-          face_type = Inpar::XFEM::face_type_ghost;
+          face_type = XFEM::face_type_ghost;
         }
       }  // loop facets
     }
@@ -533,23 +533,23 @@ void XFEM::XfemEdgeStab::evaluate_edge_stab_ghost_penalty(
             if (p_master_handle->is_intersected())
             {
               num_ghostpenalty++;
-              face_type = Inpar::XFEM::face_type_ghost_penalty;
+              face_type = XFEM::face_type_ghost_penalty;
             }
             else
-              face_type = Inpar::XFEM::face_type_std;
+              face_type = XFEM::face_type_std;
           }
           else if (p_slave_handle != nullptr)
           {
             if (p_slave_handle->is_intersected())
             {
               num_ghostpenalty++;
-              face_type = Inpar::XFEM::face_type_ghost_penalty;
+              face_type = XFEM::face_type_ghost_penalty;
             }
             else
-              face_type = Inpar::XFEM::face_type_std;
+              face_type = XFEM::face_type_std;
           }
           else
-            face_type = Inpar::XFEM::face_type_std;
+            face_type = XFEM::face_type_std;
 
 
           // Get materials:
@@ -589,7 +589,7 @@ void XFEM::XfemEdgeStab::evaluate_edge_stab_ghost_penalty(
  *----------------------------------------------------------------------*/
 void XFEM::XfemEdgeStab::assemble_edge_stab_ghost_penalty(
     Teuchos::ParameterList& eleparams,         ///< element parameter list
-    const Inpar::XFEM::FaceType& face_type,    ///< which type of face std, ghost, ghost-penalty
+    const XFEM::FaceType& face_type,           ///< which type of face std, ghost, ghost-penalty
     Discret::Elements::FluidIntFace* intface,  ///< internal face element
     std::shared_ptr<Core::Mat::Material>& material_m,  ///< material of the master side
     std::shared_ptr<Core::Mat::Material>& material_s,  ///< material of the slave side
@@ -699,8 +699,8 @@ void XFEM::XfemEdgeStab::evaluate_edge_stab_std(
   //--------------------------------------------------------------------------------------------
 
   // call evaluate and assemble routine
-  assemble_edge_stab_ghost_penalty(eleparams, Inpar::XFEM::face_type_std, faceele, matptr_m,
-      matptr_s, nds_master, nds_slave, *xdiscret, systemmatrix, systemvector);
+  assemble_edge_stab_ghost_penalty(eleparams, XFEM::face_type_std, faceele, matptr_m, matptr_s,
+      nds_master, nds_slave, *xdiscret, systemmatrix, systemvector);
 
   //--------------------------------------------------------------------------------------------
 
@@ -772,8 +772,8 @@ void XFEM::XfemEdgeStab::evaluate_edge_stab_boundary_gp(
 
 
   // call evaluate and assemble routine
-  assemble_edge_stab_ghost_penalty(eleparams, Inpar::XFEM::face_type_boundary_ghost_penalty,
-      faceele, matptr_m, matptr_s, nds_master, nds_slave, *xdiscret, systemmatrix, systemvector);
+  assemble_edge_stab_ghost_penalty(eleparams, XFEM::face_type_boundary_ghost_penalty, faceele,
+      matptr_m, matptr_s, nds_master, nds_slave, *xdiscret, systemmatrix, systemvector);
 
   //--------------------------------------------------------------------------------------------
 

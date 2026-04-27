@@ -12,8 +12,8 @@
 
 #include "4C_fluid_ele_parameter_timint.hpp"
 #include "4C_inpar_fluid.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_utils_singleton_owner.hpp"
+#include "4C_xfem_input.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
@@ -94,8 +94,8 @@ namespace Discret
       //! specific fluid xfem (ghost-penalty) parameters are set for the face and return if
       //! stabilization for current face is required
       bool set_face_specific_fluid_xfem_parameter(
-          const Inpar::XFEM::FaceType& face_type,  ///< which type of face std, ghost, ghost-penalty
-          Teuchos::ParameterList& params           ///< parameter list
+          const XFEM::FaceType& face_type,  ///< which type of face std, ghost, ghost-penalty
+          Teuchos::ParameterList& params    ///< parameter list
       );
 
       //! set flag if step is a ghost-penalty reconstruction step for xfluid time integration

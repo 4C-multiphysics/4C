@@ -36,7 +36,7 @@ void Adapter::FluidFluidFSI::init()
 {
   // determine the type of monolithic approach
   const Teuchos::ParameterList& xfluiddyn = params_->sublist("XFLUID DYNAMIC/GENERAL");
-  monolithic_approach_ = Teuchos::getIntegralValue<Inpar::XFEM::MonolithicXffsiApproach>(
+  monolithic_approach_ = Teuchos::getIntegralValue<XFEM::MonolithicXffsiApproach>(
       xfluiddyn, "MONOLITHIC_XFFSI_APPROACH");
 
   // should ALE-relaxation be carried out?
@@ -64,8 +64,8 @@ void Adapter::FluidFluidFSI::init()
 void Adapter::FluidFluidFSI::prepare_time_step()
 {
   if (interface()->fsi_cond_relevant() &&
-      (monolithic_approach_ == Inpar::XFEM::XFFSI_FixedALE_Partitioned ||
-          monolithic_approach_ == Inpar::XFEM::XFFSI_FixedALE_Interpolation))
+      (monolithic_approach_ == XFEM::XFFSI_FixedALE_Partitioned ||
+          monolithic_approach_ == XFEM::XFFSI_FixedALE_Interpolation))
   {
     xfluidfluid_->set_interface_fixed();
   }
@@ -97,8 +97,8 @@ void Adapter::FluidFluidFSI::solve()
 void Adapter::FluidFluidFSI::update()
 {
   if (interface()->fsi_cond_relevant() && is_ale_relaxation_step(step()) &&
-      (monolithic_approach_ == Inpar::XFEM::XFFSI_FixedALE_Partitioned ||
-          monolithic_approach_ == Inpar::XFEM::XFFSI_FixedALE_Interpolation))
+      (monolithic_approach_ == XFEM::XFFSI_FixedALE_Partitioned ||
+          monolithic_approach_ == XFEM::XFFSI_FixedALE_Interpolation))
   {
     // allow new interface position
     xfluidfluid_->set_interface_free();
@@ -109,10 +109,10 @@ void Adapter::FluidFluidFSI::update()
     // fix interface position again
     xfluidfluid_->set_interface_fixed();
 
-    if (monolithic_approach_ == Inpar::XFEM::XFFSI_FixedALE_Partitioned)
+    if (monolithic_approach_ == XFEM::XFFSI_FixedALE_Partitioned)
       xfluidfluid_->update_monolithic_fluid_solution(FluidFSI::interface()->fsi_cond_map());
 
-    if (monolithic_approach_ == Inpar::XFEM::XFFSI_FixedALE_Interpolation)
+    if (monolithic_approach_ == XFEM::XFFSI_FixedALE_Interpolation)
       xfluidfluid_->interpolate_embedded_state_vectors();
 
     // refresh the merged fluid map extractor
@@ -171,14 +171,14 @@ void Adapter::FluidFluidFSI::evaluate(std::shared_ptr<const Core::LinAlg::Vector
         stepinc  ///< solution increment between time step n and n+1
 )
 {
-  if (monolithic_approach_ == Inpar::XFEM::XFFSI_Full_Newton)
+  if (monolithic_approach_ == XFEM::XFFSI_Full_Newton)
     *xfluidfluid_->write_access_disp_old_state() = *fluidimpl_->dispnp();
 
   // call the usual routine
   xfluidfluid_->evaluate(stepinc);
 
   // for fixed ALE approach, we only refresh the global fluid map extractor in update()
-  if (monolithic_approach_ != Inpar::XFEM::XFFSI_Full_Newton) return;
+  if (monolithic_approach_ != XFEM::XFFSI_Full_Newton) return;
 
   // this is the case of a full Newton approach: update the map extractor, as fluid DOFs possibly
   // have changed!

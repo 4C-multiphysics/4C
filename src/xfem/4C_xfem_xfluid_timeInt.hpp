@@ -13,8 +13,8 @@
 
 #include "4C_cut_node.hpp"
 #include "4C_cut_utils.hpp"
-#include "4C_inpar_xfem.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_xfem_input.hpp"
 
 class Map;
 
@@ -75,11 +75,11 @@ namespace XFEM
         const std::shared_ptr<Cut::CutWizard>& wizard_old,                 /// cut wizard at t^n
         const std::shared_ptr<Cut::CutWizard>& wizard_new,                 /// cut wizard at t^(n+1)
         const std::shared_ptr<XFEM::XFEMDofSet>& dofset_old,               /// XFEM dofset at t^n
-        const std::shared_ptr<XFEM::XFEMDofSet>& dofset_new,           /// XFEM dofset at t^(n+1)
-        const Inpar::XFEM::XFluidTimeIntScheme xfluid_timintapproach,  /// xfluid_timintapproch
-        std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>&
+        const std::shared_ptr<XFEM::XFEMDofSet>& dofset_new,    /// XFEM dofset at t^(n+1)
+        const XFEM::XFluidTimeIntScheme xfluid_timintapproach,  /// xfluid_timintapproach
+        std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>&
             node_to_reconstr_method,  /// reconstruction map for nodes and its dofsets
-        std::map<Inpar::XFEM::XFluidTimeInt, std::map<int, std::set<int>>>&
+        std::map<XFEM::XFluidTimeIntMethod, std::map<int, std::set<int>>>&
             reconstr_method_to_node,  /// inverse reconstruction map for nodes and its dofsets
         const int step,               /// global time step
         const bool xfluid_timint_check_interfacetips,      /// check interfacetips?
@@ -115,12 +115,12 @@ namespace XFEM
 
     /// get for each type of reconstruction method the number of nodes for that this method has to
     /// be applied on this proc
-    std::map<Inpar::XFEM::XFluidTimeInt, int>& get_reconstr_counts() { return reconstr_counts_; };
+    std::map<XFEM::XFluidTimeIntMethod, int>& get_reconstr_counts() { return reconstr_counts_; };
 
     /// get for each type of reconstruction method the node ids with corresponding dof its for
     /// that this method has to be applied on this proc
     std::map<int, std::set<int>>& get_node_to_dof_map_for_reconstr(
-        Inpar::XFEM::XFluidTimeInt reconstr);
+        XFEM::XFluidTimeIntMethod reconstr);
 
     /// get permutation map for ghost dofs
     std::shared_ptr<std::map<int, int>> get_permutation_map() { return permutation_map_; };
@@ -139,7 +139,7 @@ namespace XFEM
     );
 
     /// returns matching std::string for each reconstruction method
-    std::string map_method_enum_to_string(const Inpar::XFEM::XFluidTimeInt term);
+    std::string map_method_enum_to_string(const XFEM::XFluidTimeIntMethod term);
 
     /// all surrounding elements non-intersected?
     bool non_intersected_elements(Core::Nodes::Node* n, Cut::CutWizard& wizard);
@@ -157,7 +157,7 @@ namespace XFEM
     void copy_dofs(const Core::Nodes::Node* node,  /// drt node
         const int nds_new,                         /// nodal dofset at t^(n+1)
         const int nds_old,                         /// nodal dofset at t^n
-        const Inpar::XFEM::XFluidTimeInt method,   /// reconstruction method
+        const XFEM::XFluidTimeIntMethod method,    /// reconstruction method
         const std::vector<std::shared_ptr<Core::LinAlg::Vector<double>>>&
             newRowStateVectors,  /// row map based state vectors at t^(n+1)
         const std::vector<std::shared_ptr<const Core::LinAlg::Vector<double>>>&
@@ -169,8 +169,8 @@ namespace XFEM
     void mark_dofs(const Core::Nodes::Node* node,  /// drt node
         const int nds_new,                         /// nodal dofset at t^(n+1)
         const std::vector<std::shared_ptr<Core::LinAlg::Vector<double>>>&
-            newRowStateVectors,                   /// row map based state vectors at t^(n+1)
-        const Inpar::XFEM::XFluidTimeInt method,  /// reconstruction method
+            newRowStateVectors,                  /// row map based state vectors at t^(n+1)
+        const XFEM::XFluidTimeIntMethod method,  /// reconstruction method
         const std::shared_ptr<std::set<int>>
             dbcgids  /// set of dof gids that must not be changed by ghost penalty reconstruction
     );
@@ -178,14 +178,14 @@ namespace XFEM
     /// mark one specific nodal dofset with used for export
     void mark_dofs_for_export(const int nid,  /// node id
         const int dofset,                     /// ghost dofset number
-        const Inpar::XFEM::XFluidTimeInt
+        const XFEM::XFluidTimeIntMethod
             method  /// reconstruction method used for marking the nodal dofset
     );
 
     /// set the reconstruction method for current nodal dofset, return if set
     bool set_reconstr_method(const Core::Nodes::Node* node,  /// drt node
         const int nds_new,                                   /// nodal dofset at t^(n+1)
-        const Inpar::XFEM::XFluidTimeInt method              /// which type of reconstruction method
+        const XFEM::XFluidTimeIntMethod method               /// which type of reconstruction method
     );
 
     /// identify cellsets at time t^n with cellsets at time t^(n+1)
@@ -270,18 +270,18 @@ namespace XFEM
     int myrank_;
     int numproc_;
 
-    Inpar::XFEM::XFluidTimeIntScheme timeint_scheme_;  /// which type of time integration scheme
-                                                       /// shall be used for reconstructing values
+    XFEM::XFluidTimeIntScheme timeint_scheme_;  /// which type of time integration scheme
+                                                /// shall be used for reconstructing values
 
-    std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>&
+    std::map<int, std::vector<XFEM::XFluidTimeIntMethod>>&
         node_to_reconstr_method_;  /// map of nodeIds and reconstruction method for all nodal
                                    /// dofsets
 
-    std::map<Inpar::XFEM::XFluidTimeInt, std::map<int, std::set<int>>>&
+    std::map<XFEM::XFluidTimeIntMethod, std::map<int, std::set<int>>>&
         reconstr_method_to_node_;  /// map of reconstruction method to map of node-id and nodal
                                    /// dofset-id (inverse to node_to_reconstr_method)
 
-    std::map<Inpar::XFEM::XFluidTimeInt, int>
+    std::map<XFEM::XFluidTimeIntMethod, int>
         reconstr_counts_;  /// counts the number of dofsets that have to be reconstructed using
                            /// each method
 
