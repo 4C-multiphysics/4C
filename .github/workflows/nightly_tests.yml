@@ -489,3 +489,81 @@ jobs:
         with:
           junit-report-base-name: gcc13_asan_test_report
           retention-days: 2
+
+  clang18_performance_tests_build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:35e0657d
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker_clang
+          build-targets: full
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "false"
+          additional-cmake-flags: "-DFOUR_C_ENABLE_FULL_PERFORMANCE_TESTS=ON -DFOUR_C_PERFORMANCE_TESTS_COLLECTION_FILE=clang18_performance_tests_data.json"
+      - uses: ./.github/actions/upload_directory
+        name: Upload 4C build
+        with:
+          directory: ${{ github.workspace }}/build
+          retention-days: 1
+          name: clang18_performance_tests_build
+
+  clang18_performance_tests_test:
+    needs: clang18_performance_tests_build
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:35e0657d
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install git-lfs
+        run: |
+          apt-get update
+          apt-get install -y git-lfs
+      - uses: actions/checkout@v6
+        with:
+          # for performance tests, we need to checkout the large meshes
+          lfs: true
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+      - name: Setup developer environment for testing
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - uses: ./.github/actions/download_directory
+        with:
+          name: clang18_performance_tests_build
+          destination: ${{ github.workspace }}/build
+      - name: Test
+        run: |
+          cd $GITHUB_WORKSPACE/build
+          # Note: Do not run performance tests in parallel
+          time ctest -L performance_tests --output-on-failure --output-junit $GITHUB_WORKSPACE/clang18_performance_tests_test_report.xml
+      - name: Upload test report
+        uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: clang18_performance_tests_test_report.xml
+          path: |
+            ${{ github.workspace }}/clang18_performance_tests_test_report.xml
+          retention-days: 1
+      - name: Upload performance test data
+        uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: clang18_performance_tests_data.json
+          path: |
+            ${{ github.workspace }}/build/clang18_performance_tests_data.json
+          retention-days: 30

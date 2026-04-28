@@ -94,6 +94,23 @@ else()
   message(STATUS "Benchmark tests with Google Benchmark: disabled")
 endif()
 
+four_c_process_global_option(
+  FOUR_C_ENABLE_FULL_PERFORMANCE_TESTS
+  DESCRIPTION
+  "Enable full scale performance tests (instead of minimal ones)."
+  DEFAULT
+  OFF
+  )
+four_c_process_cache_variable(
+  FOUR_C_PERFORMANCE_TESTS_COLLECTION_FILE
+  TYPE
+  PATH
+  DESCRIPTION
+  "Path to the collection file for the performance test results."
+  DEFAULT
+  ${PROJECT_BINARY_DIR}/performance_test_results.json
+  )
+
 # setup test for installation
 set(FOUR_C_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/cmake/4C)
 configure_file(

@@ -216,6 +216,7 @@ add_subdirectory(unittests)
 add_subdirectory(tests/benchmark_tests)
 add_subdirectory(tests/cut_test)
 include(tests/list_of_tests.cmake)
+include(tests/performance_tests/list_of_performance_tests.cmake)
 
 # Installation
 include(cmake/setup_install.cmake)

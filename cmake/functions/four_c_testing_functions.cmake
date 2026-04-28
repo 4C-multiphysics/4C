@@ -206,7 +206,7 @@ function(_add_test_with_options)
       INPUT_FILE
       OUTPUT_DIR
       )
-  set(multiValueArgs TEST_COMMAND REQUIRED_DEPENDENCIES LABELS)
+  set(multiValueArgs TEST_COMMAND REQUIRED_DEPENDENCIES LABELS CLEANUP_FIXTURES)
   cmake_parse_arguments(
     _parsed
     "${options}"
@@ -220,6 +220,10 @@ function(_add_test_with_options)
   endif()
 
   assert_required_arguments(_parsed NAME_OF_TEST TEST_COMMAND)
+
+  if(NOT DEFINED _parsed_CLEANUP_FIXTURES)
+    set(_parsed_CLEANUP_FIXTURES "")
+  endif()
 
   if(NOT DEFINED _parsed_ADDITIONAL_FIXTURE)
     set(_parsed_ADDITIONAL_FIXTURE "")
@@ -237,6 +241,9 @@ function(_add_test_with_options)
     set(_parsed_LABELS "")
   endif()
 
+  # ensure that the cleanup fixture is added
+  list(APPEND _parsed_CLEANUP_FIXTURES "test_cleanup")
+
   # add all required dependencies from the additional fixture, if specified
   if(NOT _parsed_ADDITIONAL_FIXTURE STREQUAL "")
     append_required_dependencies_from(${_parsed_ADDITIONAL_FIXTURE} _parsed_REQUIRED_DEPENDENCIES)
@@ -247,17 +254,23 @@ function(_add_test_with_options)
 
   if(NOT skip_message STREQUAL "")
     # The dummy test needs to report a arbitrary error code that ctest interprets as "skipped".
-    set(dummy_command "echo \"${message}\"; exit 42")
+    set(dummy_command "echo \"${skip_message}\"; exit 42")
     # Add a dummy test that just prints the skip message instead of the real test
     add_test(NAME ${_parsed_NAME_OF_TEST} COMMAND bash -c "${dummy_command}")
     set_tests_properties(${_parsed_NAME_OF_TEST} PROPERTIES SKIP_RETURN_CODE 42)
-    message(VERBOSE "Skipping test ${_parsed_NAME_OF_TEST}: ${_parsed_SKIP_WITH_MESSAGE}")
+    message(VERBOSE "Skipping test ${_parsed_NAME_OF_TEST}: ${skip_message}")
+
+    # Note: Cleanup fixtures are not required for skipped tests
+    require_fixture(${_parsed_NAME_OF_TEST} "${_parsed_ADDITIONAL_FIXTURE}")
   else()
     # Add the real test
     add_test(NAME ${_parsed_NAME_OF_TEST} COMMAND bash -c "${_parsed_TEST_COMMAND}")
+
+    require_fixture(
+      ${_parsed_NAME_OF_TEST} "${_parsed_ADDITIONAL_FIXTURE};${_parsed_CLEANUP_FIXTURES}"
+      )
   endif()
 
-  require_fixture(${_parsed_NAME_OF_TEST} "${_parsed_ADDITIONAL_FIXTURE};test_cleanup")
   set_environment(${_parsed_NAME_OF_TEST})
   set_processors(${_parsed_NAME_OF_TEST} ${_parsed_TOTAL_PROCS})
   define_setup_fixture(${_parsed_NAME_OF_TEST} ${_parsed_NAME_OF_TEST})

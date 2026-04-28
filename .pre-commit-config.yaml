@@ -61,6 +61,10 @@ repos:
         exclude_types: [c, c++]
       - id: no-commit-to-branch
         name: Don't commit to main
+      - id: check-added-large-files
+        name: Check for added large files
+        args: ["--maxkb=500"]
+        files: ^tests/performance_tests/.*
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.5

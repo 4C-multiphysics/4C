@@ -1,0 +1,89 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: Structure
+IO:
+  OUTPUT_BIN: true
+  STRUCT_DISP: true
+  FILESTEPS: 1000
+  VERBOSITY: Standard
+  STRUCT_STRAIN: gl
+  STRUCT_STRESS: cauchy
+  OUTPUT_SPRING: true
+  WRITE_INITIAL_STATE: true
+IO/RUNTIME VTK OUTPUT:
+  OUTPUT_DATA_FORMAT: binary
+  INTERVAL_STEPS: 1
+  EVERY_ITERATION: false
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  ELEMENT_OWNER: true
+  STRESS_STRAIN: true
+SOLVER 1:
+  NAME: Structure_Solver
+  SOLVER: Belos
+  SOLVER_XML_FILE: "iterative_gmres_template.xml"
+  AZPREC: MueLu
+  PRECONDITIONER_XML_FILE: "elasticity_template.xml"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: Standard
+  DYNAMICTYPE: Statics
+  RESULTSEVERY: 1
+  RESTARTEVERY: 1
+  TIMESTEP: 0.5
+  NUMSTEP: 2
+  MAXTIME: 1.0
+  TOLDISP: 1e-6
+  TOLRES: 1e-6
+  LINEAR_SOLVER: 1
+  NLNSOL: fullnewton
+  LOADLIN: true
+STRUCT NOX/Printing:
+  Outer Iteration: true
+  Inner Iteration: false
+  Outer Iteration StatusTest: false
+MATERIALS:
+  - MAT: 1
+    MAT_ElastHyper:
+      NUMMAT: 1
+      MATIDS: [2]
+      DENS: 0.1
+  - MAT: 2
+    ELAST_CoupNeoHooke:
+      YOUNG: 200
+      NUE: 0.25
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: t
+DESIGN SURF DIRICH CONDITIONS:
+  - NODE_SET_NAME: xm
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - NODE_SET_NAME: xp
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.02, 0.01, 0.05]
+    FUNCT: [1, 1, 1]
+DESIGN SURF NEUMANN CONDITIONS:
+  - NODE_SET_NAME: inner
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [-3, 0, 0]
+    FUNCT: [1, 0, 0]
+    TYPE: orthopressure
+  - NODE_SET_NAME: outer
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [-3, 0, 0]
+    FUNCT: [1, 0, 0]
+    TYPE: orthopressure
+STRUCTURE GEOMETRY:
+  SHOW_INFO: "summary"
+  ELEMENT_BLOCKS:
+    - ID: 1
+      SOLID:
+        TET10:
+          MAT: 1
+          KINEM: nonlinear
+  FILE: "@MESH_FILE@"
