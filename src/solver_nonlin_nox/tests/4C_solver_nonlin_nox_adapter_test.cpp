@@ -121,4 +121,73 @@ namespace
       EXPECT_NEAR(x.get_values()[0], 0.0, 1.0e-8);
     }
   }
+
+  TEST(SolverNonlinNoxAdapter, RepeatedSolveReinitializesState)
+  {
+    MPI_Comm comm = MPI_COMM_WORLD;
+
+    Core::LinAlg::Map map(1, 0, comm);
+    Core::LinAlg::Vector<double> x(map, true);
+    Core::LinAlg::SparseMatrix jacobian(map, map, 1);
+
+    if (x.local_length() > 0) x.replace_global_value(0, 0.0);
+
+    Teuchos::ParameterList solver_params;
+    solver_params.set("SOLVER", Core::LinearSolver::SolverType::UMFPACK);
+    solver_params.set("NAME", "NoxAdapterSolver");
+    const auto get_solver_params = [&](int) -> const Teuchos::ParameterList&
+    { return solver_params; };
+
+    auto linear_solver = Teuchos::make_rcp<Core::LinAlg::Solver>(
+        solver_params, comm, get_solver_params, Core::IO::Verbositylevel::minimal);
+
+    Teuchos::ParameterList nox_params = create_test_nox_parameter_list();
+
+    std::map<FourC::NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>> solver_map;
+    solver_map[FourC::NOX::Nln::sol_generic] = linear_solver;
+
+    double target = 0.1;
+    FourC::NOX::Nln::Adapter::ResidualCallback residual_callback =
+        [&](const Core::LinAlg::Vector<double>& x_vec, Core::LinAlg::Vector<double>& f_vec,
+            FourC::NOX::Nln::FillType) -> bool
+    {
+      if (x_vec.local_length() == 0) return true;
+      f_vec.replace_local_value(0, x_vec.get_values()[0] - target);
+      return true;
+    };
+
+    FourC::NOX::Nln::Adapter::JacobianCallback jacobian_callback =
+        [&](const Core::LinAlg::Vector<double>& x_vec, Core::LinAlg::SparseOperator& jac) -> bool
+    {
+      auto& jac_matrix = dynamic_cast<Core::LinAlg::SparseMatrix&>(jac);
+      jac_matrix.reset();
+      if (x_vec.local_length() > 0) jac_matrix.set_value(1.0, 0, 0);
+      jac_matrix.complete();
+      return true;
+    };
+
+    FourC::NOX::Nln::Adapter adapter(comm, nox_params, solver_map, x, jacobian,
+        std::move(residual_callback), std::move(jacobian_callback));
+
+    const unsigned int iterations_step_1 = adapter.solve();
+    EXPECT_GT(iterations_step_1, 0u);
+
+    double x_after_step_1 = 0.0;
+    if (x.local_length() > 0)
+    {
+      x_after_step_1 = x.get_values()[0];
+      EXPECT_NEAR(x_after_step_1, 0.1, 1.0e-12);
+    }
+
+    target = 0.2;
+    const unsigned int iterations_step_2 = adapter.solve();
+    EXPECT_GT(iterations_step_2, 0u);
+
+    if (x.local_length() > 0)
+    {
+      const double x_after_step_2 = x.get_values()[0];
+      EXPECT_NEAR(x_after_step_2, 0.2, 1.0e-12);
+      EXPECT_GT(std::abs(x_after_step_2 - x_after_step_1), 1.0e-6);
+    }
+  }
 }  // namespace

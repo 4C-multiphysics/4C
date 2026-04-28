@@ -146,6 +146,7 @@ NOX::Nln::Adapter::Adapter(MPI_Comm comm, const Teuchos::ParameterList& nox_para
 unsigned int NOX::Nln::Adapter::solve()
 {
   FOUR_C_ASSERT_ALWAYS(!nox_solver_.is_null(), "Adapter is not fully initialized.");
+  nox_solver_->reset(*x_nox_);
 
   const auto status = nox_solver_->solve();
   nox_problem_->check_final_status(status);
