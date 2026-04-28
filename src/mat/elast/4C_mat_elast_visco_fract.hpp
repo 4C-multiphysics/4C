@@ -25,7 +25,7 @@ namespace Mat
        * @brief material parameters for viscous contribution according the FSLS-model
        *
        * <h3>Input line</h3>
-       * MAT 1 VISCO_Fract TAU 0.1 ALPHA 0.5 BETA 1
+       * MAT 1 VISCO_FSLS TAU 0.1 ALPHA 0.5 BETA 1
        */
       class Fract : public Core::Mat::PAR::Parameter
       {
@@ -65,7 +65,7 @@ namespace Mat
      * A springpot is between a spring and a dashpot. The parameter alpha regulates
      * how much damping is introduced.
      * Alpha=0, means the springpot is a spring
-     * Alpha=1, means the springpot is a dashpot; this is equal to the GenMax Material
+     * Alpha=1, means the springpot is a dashpot; this is equal to a generalized Maxwell branch
      *
      * <h3>References</h3>
      * <ul>

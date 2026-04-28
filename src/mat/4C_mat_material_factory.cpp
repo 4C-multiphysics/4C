@@ -808,7 +808,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     }
     case Core::Materials::mes_genmax:
     {
-      return make_parameter_impl<Mat::Elastic::PAR::GenMax>(id, type, input_data);
+      FOUR_C_THROW(
+          "Material type VISCO_GenMax was removed (MAT {}, internal type {}). Use "
+          "VISCO_GeneralizedMaxwell with VISCO_GeneralizedMaxwellBranch instead.",
+          id, static_cast<int>(type));
     }
     case Core::Materials::mes_generalizedgenmax:
     {
@@ -888,7 +891,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     }
     case Core::Materials::mes_viscopart:
     {
-      return make_parameter_impl<Mat::Elastic::PAR::ViscoPart>(id, type, input_data);
+      FOUR_C_THROW(
+          "Material type VISCO_PART was removed (MAT {}, internal type {}). Use "
+          "VISCO_GeneralizedMaxwellBranch instead.",
+          id, static_cast<int>(type));
     }
     case Core::Materials::mes_structuraltensorstratgy:
     {

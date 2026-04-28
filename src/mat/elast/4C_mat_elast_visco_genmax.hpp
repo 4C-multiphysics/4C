@@ -25,8 +25,8 @@ namespace Mat
        * @brief material parameters for viscous contribution according the SLS-model
        *
        * <h3>Input line</h3>
-       * MAT 1 VISCO_GenMax TAU 0.1 BETA 1 SOLVE OST
-       * MAT 1 VISCO_GenMax TAU 0.1 BETA 1 SOLVE CONVOL
+       * MAT 1 VISCO_GenMax TAU 0.1 BETA 1 SOLVE OneStepTheta
+       * MAT 1 VISCO_GenMax TAU 0.1 BETA 1 SOLVE ExponentialTimeDiscretization
        */
       class GenMax : public Core::Mat::PAR::Parameter
       {

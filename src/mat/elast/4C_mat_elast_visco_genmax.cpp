@@ -17,6 +17,11 @@ Mat::Elastic::PAR::GenMax::GenMax(const Core::Mat::PAR::Parameter::Data& matdata
       beta_(matdata.parameters.get<double>("BETA")),
       solve_(matdata.parameters.get<std::string>("SOLVE"))
 {
+  if (solve_ != "OneStepTheta" && solve_ != "ExponentialTimeDiscretization")
+    FOUR_C_THROW(
+        "Invalid input for SOLVE='{}' in VISCO_GenMax (MAT {}). Use OneStepTheta or "
+        "ExponentialTimeDiscretization.",
+        solve_, matdata.id);
 }
 
 Mat::Elastic::GenMax::GenMax(Mat::Elastic::PAR::GenMax* params) : params_(params) {}

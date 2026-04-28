@@ -572,15 +572,15 @@ namespace Mat
               solve  //!< solution variant for time evolution of viscous stress (just for genmax)
       ) {};
 
-      //! GeneralizedGenMax
+      //! GeneralizedMaxwell
       virtual void read_material_parameters(int& numbranch,  //!< number of visco branches
           const std::vector<int>*& matids,                   //!< material ids of visco branches
           std::string& solve  //!< solution variant for time evolution of viscous stress
       ) {};
 
-      //! GeneralizedGenMax
-      virtual void read_material_parameters(double& nummat,  //!< number of visco branches
-          const std::vector<int>*& matids                    //!< material ids of visco branches
+      //! GeneralizedMaxwellBranch
+      virtual void read_material_parameters(double& tau,  //!< branch relaxation time
+          int& matid                                      //!< material id of branch elasticity
       ) {};
 
       /// Retrieve stress and cmat of summand for fiber directions with respect to modified strains

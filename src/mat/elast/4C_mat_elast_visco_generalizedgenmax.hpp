@@ -26,8 +26,9 @@ namespace Mat
        * generalized Maxwell model
        *
        * <h3>Input line</h3>
-       *  MAT 1 VISCO_GeneralizedGenMax NUMBRANCH 3 MATIDS 4 5 6 SOLVE CONVOL
-       *  MAT 1 VISCO_GeneralizedGenMax NUMBRANCH 3 MATIDS 4 5 6 SOLVE OST
+       *  MAT 1 VISCO_GeneralizedMaxwell NUMBRANCH 3 MATIDS 4 5 6 SOLVE
+       *  ExponentialTimeDiscretization
+       *  MAT 1 VISCO_GeneralizedMaxwell NUMBRANCH 3 MATIDS 4 5 6 SOLVE OneStepTheta
        */
       class GeneralizedGenMax : public Core::Mat::PAR::Parameter
       {
@@ -55,7 +56,7 @@ namespace Mat
        * generalized Maxwell model
        *
        * <h3>Input line</h3>
-       * MAT 1 VISCO_BRANCH NUMMAT 2 MATIDS 2 3
+       * MAT 1 VISCO_GeneralizedMaxwellBranch TAU 1.5 MATID 2
        */
       class ViscoBranch : public Core::Mat::PAR::Parameter
       {
@@ -68,8 +69,8 @@ namespace Mat
 
         /// material parameters
 
-        double nummat_;
-        const std::vector<int> matids_;
+        double tau_;
+        int matid_;
 
 
         //@}
@@ -84,31 +85,6 @@ namespace Mat
           return nullptr;
         };
       };  // class ViscoBranch
-
-      /*!
-       * @brief material parameters for viscous contribution to a viscoelastic branch of a
-       * generalized Maxwell model
-       *
-       * <h3>Input line</h3>
-       * MAT 1 VISCO_PART TAU 1.5
-       */
-      class ViscoPart : public Core::Mat::PAR::Parameter
-      {
-       public:
-        /// standard constructor
-        ViscoPart(const Core::Mat::PAR::Parameter::Data& matdata);
-
-        /// @name material parameters
-        //@{
-
-        /// material parameters
-        double tau_;
-
-        //@}
-
-        /// create material instance of matching type with my parameters
-        std::shared_ptr<Core::Mat::Material> create_material() override { return nullptr; };
-      };  // class ViscoPart
 
     }  // namespace PAR
 
@@ -142,6 +118,8 @@ namespace Mat
       {
         return branchespotsum_;
       }
+
+      std::vector<double> get_branchtaus() const { return branchtau_; }
       //@}
 
       /// Indicator for formulation
@@ -178,6 +156,8 @@ namespace Mat
      protected:
       /// summands of the GeneralizedGenMax material or each branch
       std::vector<std::vector<std::shared_ptr<Mat::Elastic::Summand>>> branchespotsum_;
+      /// branch relaxation parameters
+      std::vector<double> branchtau_;
       /// summands in one particular branch
       std::vector<std::shared_ptr<Mat::Elastic::Summand>> internalpotsum_;
     };
@@ -200,8 +180,8 @@ namespace Mat
       //@}
 
       /// Read material parameters
-      void read_material_parameters(double& nummat,  ///< number of materials in one branch
-          const std::vector<int>*& matids            ///< matierial IDs of each part of the branch
+      void read_material_parameters(double& tau,  ///< branch relaxation time
+          int& matid                              ///< material ID of branch elasticity
           ) override;
 
       /// Indicator for formulation
@@ -224,59 +204,6 @@ namespace Mat
 
     };  // class ViscoBranch
 
-
-    class ViscoPart : public Summand
-    {
-     public:
-      /// constructor with given material parameters
-      ViscoPart(Mat::Elastic::PAR::ViscoPart* params);
-
-      /// @name Access material constants
-      //@{
-
-      /// material type
-      Core::Materials::MaterialType material_type() const override
-      {
-        return Core::Materials::mes_viscopart;
-      }
-
-      //@}
-
-      /// Read material parameters
-      virtual void read_material_parameters(
-          double& tau  ///< viscous contribution to viscoelastic part
-      );
-
-      /// Indicator for formulation
-      void specify_formulation(
-          bool& isoprinc,     ///< global indicator for isotropic principal formulation
-          bool& isomod,       ///< global indicator for isotropic split formulation
-          bool& anisoprinc,   ///< global indicator for anisotropic principal formulation
-          bool& anisomod,     ///< global indicator for anisotropic split formulation
-          bool& viscogeneral  ///< general indicator, if one viscoelastic formulation is used
-          ) override
-      {
-        viscogeneral = true;
-        return;
-      };
-
-      /// Indicator for the chosen viscoelastic formulations
-      void specify_visco_formulation(
-          bool& isovisco,     ///< global indicator for isotropic, split and viscous formulation
-          bool& viscogenmax,  ///< global indicator for viscous contribution according the SLS-Model
-          bool& viscogeneralizedgenmax,  ///< global indicator for viscoelastic contribution
-                                         ///< according to the generalized Maxwell Model
-          bool& viscofract  ///< global indicator for viscous contribution according the FSLS-Model
-          ) override
-      {
-        return;
-      };
-
-     private:
-      /// my material parameters
-      Mat::Elastic::PAR::ViscoPart* params_;
-
-    };  // class ViscoPart
 
   }  // namespace Elastic
 }  // namespace Mat

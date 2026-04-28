@@ -216,13 +216,13 @@ std::string_view Core::Materials::to_string(Core::Materials::MaterialType materi
     case mes_genmax:
       return "VISCO_GenMax";
     case mes_fract:
-      return "VISCO_Fract";
+      return "VISCO_FSLS";
     case mes_viscopart:
       return "VISCO_PART";
     case mes_generalizedgenmax:
-      return "VISCO_GeneralizedGenMax";
+      return "VISCO_GeneralizedMaxwell";
     case mes_viscobranch:
-      return "VISCO_BRANCH";
+      return "VISCO_GeneralizedMaxwellBranch";
     case m_cnst_art:
       return "MAT_CNST_ART";
     case m_thermo_fourier:

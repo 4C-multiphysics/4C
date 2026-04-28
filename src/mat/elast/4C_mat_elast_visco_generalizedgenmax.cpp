@@ -20,10 +20,15 @@ Mat::Elastic::PAR::GeneralizedGenMax::GeneralizedGenMax(
       matids_(matdata.parameters.get<std::vector<int>>("MATIDS")),
       solve_(matdata.parameters.get<std::string>("SOLVE"))
 {
+  if (solve_ != "OneStepTheta" && solve_ != "ExponentialTimeDiscretization")
+    FOUR_C_THROW(
+        "Invalid input for SOLVE='{}' in VISCO_GeneralizedMaxwell (MAT {}). Use "
+        "OneStepTheta or ExponentialTimeDiscretization.",
+        solve_, matdata.id);
 }
 
 Mat::Elastic::GeneralizedGenMax::GeneralizedGenMax(Mat::Elastic::PAR::GeneralizedGenMax* params)
-    : params_(params), branchespotsum_(0), internalpotsum_(0)
+    : params_(params), branchespotsum_(0), branchtau_(0), internalpotsum_(0)
 {
   // loop over materials of GeneralizedGenMax (branches)
   std::vector<int>::const_iterator m;
@@ -33,26 +38,34 @@ Mat::Elastic::GeneralizedGenMax::GeneralizedGenMax(Mat::Elastic::PAR::Generalize
     internalpotsum_.clear();
     // get parameters of each branch
     const int matid = *m;
-    std::shared_ptr<Mat::Elastic::Summand> ViscoBranch = Mat::Elastic::Summand::factory(matid);
+    std::shared_ptr<Mat::Elastic::Summand> visco_branch = Mat::Elastic::Summand::factory(matid);
 
-    double nummat = -1.0;
-    const std::vector<int>* branchmatids = nullptr;
+    double tau = -1.0;
+    int branchmatid = -1;
 
-    ViscoBranch->read_material_parameters(nummat, branchmatids);
+    visco_branch->read_material_parameters(tau, branchmatid);
 
-    // loop over materials of ViscoBranch (components of the viscoelastic branch)
-    for (int i = 0; i < nummat; ++i)
-    {
-      // get parameters of each component
-      int curmatid = branchmatids->at(i);
-      std::shared_ptr<Mat::Elastic::Summand> sum = Mat::Elastic::Summand::factory(curmatid);
-      if (sum == nullptr) FOUR_C_THROW("Failed to allocate");
-      // write summand in the vector of summands of each branch
-      internalpotsum_.push_back(sum);
-    }
+    if (tau <= 0.0)
+      FOUR_C_THROW(
+          "Invalid branch relaxation time TAU={}. TAU has to be positive in "
+          "VISCO_GeneralizedMaxwellBranch.",
+          tau);
+
+    if (branchmatid <= 0)
+      FOUR_C_THROW(
+          "Invalid branch elasticity material id MATID={}. MATID has to be positive in "
+          "VISCO_GeneralizedMaxwellBranch.",
+          branchmatid);
+
+    std::shared_ptr<Mat::Elastic::Summand> sum = Mat::Elastic::Summand::factory(branchmatid);
+    if (sum == nullptr) FOUR_C_THROW("Failed to allocate");
+
+    // write summand in the vector of summands of each branch
+    internalpotsum_.push_back(sum);
 
     // write into vector of summands of the GeneralizedGenMax material
     branchespotsum_.push_back(internalpotsum_);
+    branchtau_.push_back(tau);
 
   }  // end for-loop over branches
 }
@@ -68,28 +81,17 @@ void Mat::Elastic::GeneralizedGenMax::read_material_parameters(
 // Viscobranch
 Mat::Elastic::PAR::ViscoBranch::ViscoBranch(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
-      nummat_(matdata.parameters.get<int>("NUMMAT")),
-      matids_(matdata.parameters.get<std::vector<int>>("MATIDS"))
+      tau_(matdata.parameters.get<double>("TAU")),
+      matid_(matdata.parameters.get<int>("MATID"))
 {
 }
 
 Mat::Elastic::ViscoBranch::ViscoBranch(Mat::Elastic::PAR::ViscoBranch* params) : params_(params) {}
 
-void Mat::Elastic::ViscoBranch::read_material_parameters(
-    double& nummat, const std::vector<int>*& matids)
+void Mat::Elastic::ViscoBranch::read_material_parameters(double& tau, int& matid)
 {
-  nummat = params_->nummat_;
-  matids = &params_->matids_;
+  tau = params_->tau_;
+  matid = params_->matid_;
 }
-
-// Viscopart
-Mat::Elastic::PAR::ViscoPart::ViscoPart(const Core::Mat::PAR::Parameter::Data& matdata)
-    : Parameter(matdata), tau_(matdata.parameters.get<double>("TAU"))
-{
-}
-
-Mat::Elastic::ViscoPart::ViscoPart(Mat::Elastic::PAR::ViscoPart* params) : params_(params) {}
-
-void Mat::Elastic::ViscoPart::read_material_parameters(double& tau) { tau = params_->tau_; }
 
 FOUR_C_NAMESPACE_CLOSE

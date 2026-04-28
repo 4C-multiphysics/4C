@@ -38,41 +38,32 @@ MATERIALS:
       YOUNG: 1000
       NUE: 0.1
   - MAT: 3
-    VISCO_GeneralizedGenMax:
+    VISCO_GeneralizedMaxwell:
       NUMBRANCH: 3
       MATIDS: [4, 5, 6]
-      SOLVE: "OST"
+      SOLVE: "OneStepTheta"
   - MAT: 4
-    VISCO_BRANCH:
-      NUMMAT: 2
-      MATIDS: [40, 41]
+    VISCO_GeneralizedMaxwellBranch:
+      TAU: 0.5
+      MATID: 40
   - MAT: 40
     ELAST_CoupNeoHooke:
       YOUNG: 300
-  - MAT: 41
-    VISCO_PART:
-      TAU: 0.5
   - MAT: 5
-    VISCO_BRANCH:
-      NUMMAT: 2
-      MATIDS: [50, 51]
+    VISCO_GeneralizedMaxwellBranch:
+      TAU: 0.75
+      MATID: 50
   - MAT: 50
     ELAST_CoupSVK:
       YOUNG: 700
       NUE: 0
-  - MAT: 51
-    VISCO_PART:
-      TAU: 0.75
   - MAT: 6
-    VISCO_BRANCH:
-      NUMMAT: 2
-      MATIDS: [60, 61]
+    VISCO_GeneralizedMaxwellBranch:
+      TAU: 1.1
+      MATID: 60
   - MAT: 60
     ELAST_CoupNeoHooke:
       YOUNG: 800
-  - MAT: 61
-    VISCO_PART:
-      TAU: 1.1
 FUNCT1:
   - COMPONENT: 0
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"

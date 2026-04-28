@@ -373,6 +373,14 @@ void Mat::ViscoElastHyper::setup(int numgp, const Discret::Elements::Fibers& fib
     }
   }
 
+  if (viscogenmax_)
+  {
+    FOUR_C_THROW(
+        "VISCO_GenMax was removed in MAT_ViscoElastHyper (MAT {}). Use "
+        "VISCO_GeneralizedMaxwell with VISCO_GeneralizedMaxwellBranch instead.",
+        params_->id());
+  }
+
   // Initialise/allocate history variables 09/13
   const Core::LinAlg::Matrix<6, 1> emptyvec(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<6, 1> idvec(Core::LinAlg::Initialization::zero);
@@ -624,12 +632,10 @@ void Mat::ViscoElastHyper::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* de
   // add contribution of viscogenmax-material
   if (viscogenmax_)
   {
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Q(
-        Core::LinAlg::Initialization::zero);  // artificial viscous stress
-    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatq(Core::LinAlg::Initialization::zero);
-    evaluate_visco_gen_max(&stress_view, &cmat_view, Q, cmatq, params, context, gp);
-    stress_view.update(1.0, Q, 1.0);
-    cmat_view.update(1.0, cmatq, 1.0);
+    FOUR_C_THROW(
+        "VISCO_GenMax was removed in MAT_ViscoElastHyper (MAT {}). Use "
+        "VISCO_GeneralizedMaxwell with VISCO_GeneralizedMaxwellBranch instead.",
+        params_->id());
   }
 
   // add contribution of generalized Maxwell model
@@ -881,7 +887,7 @@ void Mat::ViscoElastHyper::evaluate_visco_gen_max(Core::LinAlg::Matrix<6, 1>* st
   for (unsigned int p = 0; p < potsum_.size(); ++p)
     potsum_[p]->read_material_parameters_visco(tau, beta, alpha, solve);
 
-  if (solve == "OST")
+  if (solve == "OneStepTheta")
   {
     // initialize scalars
     double lambdascalar1(true);
@@ -937,7 +943,7 @@ void Mat::ViscoElastHyper::evaluate_visco_gen_max(Core::LinAlg::Matrix<6, 1>* st
     // contribution : Cmat_vis = Cmat_inf*deltascalar
     cmatq.update(deltascalar, *cmat, 1.0);
   }
-  else if (solve == "CONVOL")
+  else if (solve == "ExponentialTimeDiscretization")
   {
     // initialize scalars
     double xiscalar1(true);
@@ -972,7 +978,10 @@ void Mat::ViscoElastHyper::evaluate_visco_gen_max(Core::LinAlg::Matrix<6, 1>* st
     cmatq.update(xiscalar2, *cmat, 1.0);
   }
   else
-    FOUR_C_THROW("Invalid input. Try valid input OST or CONVOL");
+    FOUR_C_THROW(
+        "Invalid input for SOLVE='{}'. Try valid input OneStepTheta or "
+        "ExponentialTimeDiscretization",
+        solve);
   return;
 }  // end evaluate_visco_gen_max
 
@@ -984,13 +993,13 @@ void Mat::ViscoElastHyper::evaluate_visco_generalized_gen_max(Core::LinAlg::Matr
     const int gp, const int eleGID)
 {
   int numbranch = -1;
-  double tau = -1.0;
   std::string solve = "";
   const std::vector<int>* matids = nullptr;
   std::vector<std::shared_ptr<Mat::Elastic::Summand>> branchpotsum(
       0);  // vector of summands in one branch
   std::vector<std::vector<std::shared_ptr<Mat::Elastic::Summand>>> branchespotsum(
       0);  // vector for each branch of vectors of summands in each branch
+  std::vector<double> branchtau(0);
 
   // get parameters of ViscoGeneralizedGenMax
   for (unsigned int p = 0; p < potsum_.size(); ++p)
@@ -1002,8 +1011,16 @@ void Mat::ViscoElastHyper::evaluate_visco_generalized_gen_max(Core::LinAlg::Matr
     {
       GeneralizedGenMax->read_material_parameters(numbranch, matids, solve);
       branchespotsum = GeneralizedGenMax->get_branchespotsum();
+      branchtau = GeneralizedGenMax->get_branchtaus();
     }
   }
+
+  if (numbranch < 0 || branchespotsum.size() != static_cast<unsigned int>(numbranch) ||
+      branchtau.size() != static_cast<unsigned int>(numbranch))
+    FOUR_C_THROW(
+        "Failed to initialize VISCO_GeneralizedMaxwell branches. Expected {} branches, got {} "
+        "branch definitions and {} branch relaxation times.",
+        numbranch, branchespotsum.size(), branchtau.size());
 
   Core::LinAlg::Matrix<6, 6> cmatqbranch(Core::LinAlg::Initialization::zero);
   std::vector<Core::LinAlg::Matrix<6, 1>> S(numbranch);
@@ -1044,6 +1061,7 @@ void Mat::ViscoElastHyper::evaluate_visco_generalized_gen_max(Core::LinAlg::Matr
   {
     // get parameter of each visco branch
     branchpotsum = branchespotsum[i];
+    const double tau = branchtau.at(i);
 
     branchProperties.clear();
     elast_hyper_properties(branchpotsum, branchProperties);
@@ -1094,18 +1112,10 @@ void Mat::ViscoElastHyper::evaluate_visco_generalized_gen_max(Core::LinAlg::Matr
     S.at(i).update(1.0, Core::LinAlg::make_stress_like_voigt_view(stressiso), 1.0);
     cmatqbranch.update(1.0, Core::LinAlg::make_stress_like_voigt_view(cmatiso), 1.0);
 
-    // get Parameter of ViscoGeneralizedGenMax
-    for (unsigned int q = 0; q < branchpotsum.size(); ++q)
-    {
-      std::shared_ptr<Mat::Elastic::ViscoPart> ViscoPart =
-          std::dynamic_pointer_cast<Mat::Elastic::ViscoPart>(branchpotsum[q]);
-      if (ViscoPart != nullptr) ViscoPart->read_material_parameters(tau);
-    }
-
     // make sure Qbranch in this branch is empty
     Qbranch.at(i).clear();
     double deltascalar = 1.0;
-    if (solve == "OST")
+    if (solve == "OneStepTheta")
     {
       // initialize scalars
       double lambdascalar1(true);
@@ -1144,7 +1154,7 @@ void Mat::ViscoElastHyper::evaluate_visco_generalized_gen_max(Core::LinAlg::Matr
       Qbranch.at(i).update(-1.0, S_n.at(i), 1.0);
       Qbranch.at(i).scale(lambdascalar1);
     }
-    else if (solve == "CONVOL")
+    else if (solve == "ExponentialTimeDiscretization")
     {
       // initialize scalars
       double xiscalar1(true);
@@ -1164,7 +1174,10 @@ void Mat::ViscoElastHyper::evaluate_visco_generalized_gen_max(Core::LinAlg::Matr
       Qbranch.at(i).update(-xiscalar2, S_n.at(i), 1.0);
     }
     else
-      FOUR_C_THROW("Invalid input. Try valid input THETA or CONVOL");
+      FOUR_C_THROW(
+          "Invalid input for SOLVE='{}'. Try valid input OneStepTheta or "
+          "ExponentialTimeDiscretization",
+          solve);
 
     // sum up branches
     Q.update(1.0, Qbranch.at(i), 1.0);
@@ -1200,7 +1213,9 @@ void Mat::ViscoElastHyper::evaluate_visco_fract(Core::LinAlg::Matrix<6, 1> stres
 
   // safety checks for alpha
   if (alpha == 1)
-    FOUR_C_THROW("Alpha cannot be 1 in fractional viscoelasticity. Use Genmax instead.");
+    FOUR_C_THROW(
+        "Alpha cannot be 1 in fractional viscoelasticity. Use VISCO_GeneralizedMaxwell "
+        "instead.");
 
   if (alpha < 0) FOUR_C_THROW("Alpha has to be between 0 and 1 in fractional viscoelasticity.");
 

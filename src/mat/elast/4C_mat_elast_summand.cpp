@@ -196,8 +196,10 @@ std::shared_ptr<Mat::Elastic::Summand> Mat::Elastic::Summand::factory(int matnum
     }
     case Core::Materials::mes_genmax:
     {
-      auto* params = dynamic_cast<Mat::Elastic::PAR::GenMax*>(curmat);
-      return std::make_shared<GenMax>(params);
+      FOUR_C_THROW(
+          "Material type VISCO_GenMax was removed (MAT {}, internal type {}). Use "
+          "VISCO_GeneralizedMaxwell with VISCO_GeneralizedMaxwellBranch instead.",
+          matnum, static_cast<int>(curmat->type()));
     }
     case Core::Materials::mes_generalizedgenmax:
     {
@@ -297,8 +299,10 @@ std::shared_ptr<Mat::Elastic::Summand> Mat::Elastic::Summand::factory(int matnum
     }
     case Core::Materials::mes_viscopart:
     {
-      auto* params = dynamic_cast<Mat::Elastic::PAR::ViscoPart*>(curmat);
-      return std::make_shared<ViscoPart>(params);
+      FOUR_C_THROW(
+          "Material type VISCO_PART was removed (MAT {}, internal type {}). Use "
+          "VISCO_GeneralizedMaxwellBranch instead.",
+          matnum, static_cast<int>(curmat->type()));
     }
     default:
       FOUR_C_THROW("cannot deal with type {}", curmat->type());
