@@ -180,17 +180,24 @@ namespace CommonParameters
         parameter<Core::IO::MeshInput::VerbosityLevel>("SHOW_INFO",
             {
                 .description = "Choose verbosity of reporting element, node and set info for "
-                               "the exodus file after reading.",
+                               "the external mesh file after reading.",
                 .enum_value_description = Core::IO::MeshInput::describe,
                 .default_value = Core::IO::MeshInput::VerbosityLevel::none,
             }),
         // Once we support more formats, we should add a "TYPE" parameter for the file format.
         list("ELEMENT_BLOCKS",
             all_of({
-                parameter<int>(
-                    "ID", {.description = "ID of the element block in the exodus file."}),
+                parameter<std::optional<int>>(
+                    "ID", {.description = "ID of the element block in the external mesh file. Only "
+                                          "allowed if NAME is not specified."}),
+                parameter<std::optional<std::string>>(
+                    "NAME", {.description = "Name of the element block in the external mesh file. "
+                                            "Only allowed if ID is not specified."}),
                 all_possible_elements_spec,
-            })),
+            }),
+            {.description = "List of element blocks to read from the external mesh file. Element "
+                            "blocks can be identified by either their ID or their NAME in the "
+                            "external mesh file."}),
     });
 
     const auto add_geometry_section = [&](auto& specs, const std::string& field_identifier)

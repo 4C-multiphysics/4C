@@ -25,12 +25,15 @@
 #include "4C_rebalance.hpp"
 #include "4C_rebalance_graph_based.hpp"
 #include "4C_rebalance_print.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
 
+#include <iostream>
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -564,87 +567,150 @@ namespace
     }
   }
 
+  const auto& find_element_block_by_id(
+      const int id, const std::unordered_map<Core::IO::MeshInput::ExternalIdType,
+                        Core::IO::MeshInput::CellBlockReference<3, true>>& mesh_blocks_by_id)
+  {
+    // try to find the block with the given ID in the external mesh
+    if (auto it = mesh_blocks_by_id.find(id); it != mesh_blocks_by_id.end())
+    {
+      return it->second;
+    }
+    else
+    {
+      FOUR_C_THROW("Element block with ID: {} not found in the external mesh file.", id);
+    }
+  }
+
+  const auto& find_element_block_by_name(const std::string& name,
+      const std::unordered_map<std::string,
+          std::vector<Core::IO::MeshInput::CellBlockReference<3, true>>>& mesh_blocks_by_name)
+  {
+    // try to find the block(s) with the given NAME in the external mesh.
+    // We allow multiple blocks with the same name in the external mesh,
+    // but we do not allow the input to select multiple blocks with the same name.
+    if (auto it = mesh_blocks_by_name.find(name); it != mesh_blocks_by_name.end())
+    {
+      FOUR_C_ASSERT_ALWAYS(it->second.size() == 1,
+          "Element block with NAME: '{}' is not unique in the external mesh file ({} occurrences "
+          "found).",
+          name, it->second.size());
+
+      // use the first (and only) block ID
+      return it->second.front();
+    }
+    FOUR_C_THROW("Element block with NAME: '{}' not found in the external mesh file.", name);
+  }
+
   void read_external_mesh(const Core::IO::InputFile& input,
       Core::IO::Internal::MeshReader& mesh_reader,
       const Core::Rebalance::RebalanceParameters& parameters, MPI_Comm comm)
   {
     TEUCHOS_FUNC_TIME_MONITOR("Core::IO::MeshReader::read_external_mesh");
-    auto my_rank = Core::Communication::my_mpi_rank(comm);
 
-    if (my_rank == 0)
+    // Non-root ranks get an empty mesh and return early
+    if (Core::Communication::my_mpi_rank(comm) != 0)
     {
-      FOUR_C_ASSERT(mesh_reader.mesh_on_rank_zero != nullptr, "Internal error.");
-      auto& mesh = *mesh_reader.mesh_on_rank_zero;
-
-      Core::IO::InputParameterContainer data;
-      input.match_section(mesh_reader.section_name, data);
-
-      const auto& geometry_data = data.group(mesh_reader.section_name);
-      const auto& element_block_data = geometry_data.get_list("ELEMENT_BLOCKS");
-
-      Core::Elements::ElementDefinition element_definition;
-
-      std::vector<int> skipped_blocks;
-
-      std::map<Core::IO::MeshInput::ExternalIdType, std::shared_ptr<Core::Elements::Element>>
-          user_elements;
-
-      int ele_count = 0;
-      std::vector<Core::IO::MeshInput::ExternalIdType> relevant_blocks;
-      for (const auto& cell_block : mesh.cell_blocks())
-      {
-        // Look into the input file to find out which elements we need to assign to this block.
-        const int eb_id = cell_block.id();
-        auto current_block_data = std::ranges::find_if(element_block_data,
-            [eb_id](const auto& e) { return e.template get<int>("ID") == eb_id; });
-        if (current_block_data == element_block_data.end())
-        {
-          skipped_blocks.emplace_back(eb_id);
-          continue;
-        }
-
-        relevant_blocks.emplace_back(eb_id);
-
-        const auto [element_name, cell_type, specific_data] =
-            element_definition.unpack_element_data(*current_block_data);
-
-        FOUR_C_ASSERT_ALWAYS(cell_type == cell_block.cell_type(),
-            "Element block '{}' has cell type '{}' but your given element definition for '{}' has "
-            "cell type '{}'.",
-            eb_id, cell_block.cell_type(), element_name, cell_type);
-
-        size_t cell_id_in_block = 0;
-        for (const auto& cell : cell_block.cells())
-        {
-          // Do not yet use the external cell ID. 4C is not yet prepared to deal with this!
-          // replace ele_count with cell.external_id once possible
-          auto ele =
-              Core::Communication::factory(element_name, cell_block.cell_type(), ele_count, 0);
-          if (!ele) FOUR_C_THROW("element creation failed");
-          ele->set_node_ids(cell.size(), cell.data());
-          Core::IO::MeshInput::ElementDataFromCellData element_data{
-              cell_block.cell_data(), cell_id_in_block, mesh.converters()};
-          ele->read_element(element_name, cell_block.cell_type(), specific_data, element_data);
-
-          user_elements.emplace(ele_count, std::move(ele));
-          ele_count++;
-          cell_id_in_block++;
-        }
-      }
-
-      mesh_reader.filtered_mesh_on_rank_zero.emplace(
-          mesh.filter_by_cell_block_ids(relevant_blocks));
-
-      // Rank zero provides the actual data.
       mesh_reader.target_discretization.fill_from_mesh(
-          *mesh_reader.filtered_mesh_on_rank_zero, user_elements, {}, parameters);
+          Core::IO::MeshInput::Mesh<3>{}, {}, {}, parameters);
+      return;
     }
-    // Other ranks
-    else
+
+    // Only rank 0 reads the mesh file and fills the discretization
+
+    FOUR_C_ASSERT(mesh_reader.mesh_on_rank_zero != nullptr, "Internal error.");
+    const auto& mesh = *mesh_reader.mesh_on_rank_zero;
+    const auto& [mesh_blocks_by_id, mesh_blocks_by_name] = mesh.create_cell_block_lookup_tables();
+
+    /// Collection of valid element definitions
+    Core::Elements::ElementDefinition element_definition;
+
+    /// Initialize a map to store all elements read from the external mesh
+    std::map<Core::IO::MeshInput::ExternalIdType, std::shared_ptr<Core::Elements::Element>>
+        user_elements;
+
+    int ele_count = 0;
+
+    /// All element block IDs that are referenced in the input and found in the external mesh.
+    std::set<Core::IO::MeshInput::ExternalIdType> relevant_blocks;
+
+    // Parse input section
+    Core::IO::InputParameterContainer data;
+    input.match_section(mesh_reader.section_name, data);
+    const auto& element_block_data =
+        data.group(mesh_reader.section_name).get_list("ELEMENT_BLOCKS");
+
+    // loop over element block definitions in the input
+    for (const auto& current_element_block_input : element_block_data)
     {
-      Core::IO::MeshInput::Mesh<3> empty_mesh_other_ranks;
-      mesh_reader.target_discretization.fill_from_mesh(empty_mesh_other_ranks, {}, {}, parameters);
+      const auto input_id = current_element_block_input.get<std::optional<int>>("ID");
+      const auto input_name = current_element_block_input.get<std::optional<std::string>>("NAME");
+
+      FOUR_C_ASSERT_ALWAYS((input_id.has_value() != input_name.has_value()),
+          "Element block definition must specify exactly one of ID or NAME but got {}.",
+          input_id.has_value()
+              ? "ID: " + std::to_string(*input_id) + " and NAME: '" + *input_name + "'"
+              : "neither");
+
+      const auto& cell_block = [&]() -> const Core::IO::MeshInput::CellBlockReference<3, true>&
+      {
+        if (input_id.has_value())
+        {
+          return find_element_block_by_id(*input_id, mesh_blocks_by_id);
+        }
+        if (input_name.has_value())
+        {
+          return find_element_block_by_name(*input_name, mesh_blocks_by_name);
+        }
+        FOUR_C_THROW(
+            "Element block definition must specify exactly one of ID or NAME but got neither.");
+      }();
+
+      const auto inserted = relevant_blocks.insert(cell_block.id()).second;
+      FOUR_C_ASSERT_ALWAYS(inserted,
+          "Element block with {} is referenced more than once in the input file.",
+          (input_id.has_value() ? "ID: " + std::to_string(*input_id)
+                                : "NAME: '" + *input_name + "'"));
+
+      const auto& [element_name, cell_type, specific_data] =
+          element_definition.unpack_element_data(current_element_block_input);
+
+      FOUR_C_ASSERT_ALWAYS(cell_type == cell_block.cell_type(),
+          "Element block with {} has cell type '{}' but your given element definition for '{}' "
+          "has cell type '{}'.",
+          (input_id.has_value() ? "ID: " + std::to_string(*input_id)
+                                : "NAME: '" + *input_name + "'"),
+          cell_block.cell_type(), element_name, cell_type);
+
+      // Build elements from cells
+      size_t cell_id_in_block = 0;
+      for (const auto& cell : cell_block.cells())
+      {
+        // Do not yet use the external cell ID. 4C is not yet prepared to deal with this!
+        // replace ele_count with cell.external_id once possible
+        auto ele = Core::Communication::factory(element_name, cell_block.cell_type(), ele_count, 0);
+        if (!ele) FOUR_C_THROW("element creation failed");
+        ele->set_node_ids(cell.size(), cell.data());
+        Core::IO::MeshInput::ElementDataFromCellData element_data{
+            cell_block.cell_data(), cell_id_in_block, mesh.converters()};
+        ele->read_element(element_name, cell_block.cell_type(), specific_data, element_data);
+
+        user_elements.emplace(ele_count, std::move(ele));
+        ele_count++;
+        cell_id_in_block++;
+      }
     }
+
+    FOUR_C_ASSERT_ALWAYS(!relevant_blocks.empty(),
+        "None of the element blocks specified in the input file could be found in the external "
+        "mesh. Please check your input and mesh files.");
+
+    mesh_reader.filtered_mesh_on_rank_zero.emplace(
+        mesh.filter_by_cell_block_ids(std::vector(relevant_blocks.begin(), relevant_blocks.end())));
+
+    // Rank zero provides the actual data.
+    mesh_reader.target_discretization.fill_from_mesh(
+        *mesh_reader.filtered_mesh_on_rank_zero, user_elements, {}, parameters);
   }
 }  // namespace
 
