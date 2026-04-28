@@ -36,6 +36,25 @@ four_c_performance_test(
   ${PROJECT_SOURCE_DIR}/tests/input_files/xml/multigrid/elasticity_template.xml
   ${PROJECT_SOURCE_DIR}/tests/input_files/xml/linear_solver/iterative_gmres_template.xml
   )
+four_c_performance_test(
+  TEST_FILE
+  ssi_mono_battery.4C.yaml
+  MESH
+  ssi_mono_battery.vtu
+  NP_MINIMAL
+  2
+  NP_FULL
+  4
+  REQUIRED_DEPENDENCIES
+  VTK
+  TRILINOS_MUMPS
+  COPY_FILES
+  ${PROJECT_SOURCE_DIR}/tests/input_files/xml/linear_solver/iterative_gmres_template_adaptive_tolerance.xml
+  ${PROJECT_SOURCE_DIR}/tests/input_files/xml/block_preconditioner/electrochemistry_BGS-AMG_5x5.xml
+  ${PROJECT_SOURCE_DIR}/tests/input_files/xml/block_preconditioner/solid_scatra_BGS-AMG_6x6.xml
+  ${PROJECT_SOURCE_DIR}/tests/input_files/xml/block_preconditioner/solid_scatra_BGS-AMG_6x6_init.xml
+  ${PROJECT_SOURCE_DIR}/tests/performance_tests/Kremer_2019_OCP_NMC622.csv
+  )
 
 if(DEFINED FOUR_C_PERFORMANCE_TESTS_COLLECTION_FILE
    AND NOT "${FOUR_C_PERFORMANCE_TESTS_COLLECTION_FILE}" STREQUAL ""
