@@ -1,0 +1,576 @@
+PROBLEM SIZE:
+  DIM: 3
+PROBLEM TYPE:
+  PROBLEMTYPE: Structure_Scalar_Interaction
+IO:
+  STDOUTEVERY: 0
+  STRUCT_STRESS: Cauchy
+  STRUCT_STRAIN: GL
+  ELEMENT_MAT_ID: true
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: GenAlpha
+  INT_STRATEGY: Standard
+  LINEAR_SOLVER: 3
+STRUCTURAL DYNAMIC/GENALPHA:
+  GENAVG: TrLike
+  RHO_INF: 0.95
+SCALAR TRANSPORT DYNAMIC:
+  SOLVERTYPE: nonlinear
+  INITIALFIELD: field_by_condition
+  LINEAR_SOLVER: 2
+  VELOCITYFIELD: Navier_Stokes
+  CONVFORM: conservative
+  SKIPINITDER: true
+  MATRIXTYPE: block_condition
+SCALAR TRANSPORT DYNAMIC/STABILIZATION:
+  STABTYPE: no_stabilization
+  DEFINITION_TAU: Zero
+  EVALUATION_TAU: integration_point
+  EVALUATION_MAT: integration_point
+ELCH CONTROL:
+  DIFFCOND_FORMULATION: true
+  EQUPOT: divi
+  COUPLE_BOUNDARY_FLUXES: false
+  FARADAY_CONSTANT: 9.64853328959e+4
+  GAS_CONSTANT: 8.314459848e+0
+  ELECTRODE_INFO_EVERY_STEP: true
+SCALAR TRANSPORT DYNAMIC/S2I COUPLING:
+  COUPLINGTYPE: MatchingNodes
+  MESHTYING_CONDITIONS_INDEPENDENT_SETUP: true
+SSI CONTROL:
+  NUMSTEP: 1
+  MAXTIME: 50.0e3
+  TIMESTEP: 50.0e3
+  COUPALGO: ssi_Monolithic
+  SCATRATIMINTTYPE: Elch
+  RESULTSEVERY: 1
+  RESTARTEVERY: 100
+SSI CONTROL/MONOLITHIC:
+  LINEAR_SOLVER: 1
+  MATRIXTYPE: block
+  EQUILIBRATION: rows_maindiag
+  CONVTOL: 1.0e-6
+SSI CONTROL/ELCH:
+  INITPOTCALC: true
+  INIT_POT_CALC_LINEAR_SOLVER: 4
+SOLVER 1:
+  SOLVER: Belos
+  SOLVER_XML_FILE: "iterative_gmres_template_adaptive_tolerance.xml"
+  AZPREC: Teko
+  PRECONDITIONER_XML_FILE: "solid_scatra_BGS-AMG_6x6.xml"
+  THROW_IF_UNCONVERGED: true
+SOLVER 2:
+  SOLVER: Belos
+  SOLVER_XML_FILE: "iterative_gmres_template_adaptive_tolerance.xml"
+  AZPREC: Teko
+  PRECONDITIONER_XML_FILE: "electrochemistry_BGS-AMG_5x5.xml"
+SOLVER 3:
+  SOLVER: MUMPS
+SOLVER 4:
+  SOLVER: Belos
+  SOLVER_XML_FILE: "iterative_gmres_template_adaptive_tolerance.xml"
+  AZPREC: Teko
+  PRECONDITIONER_XML_FILE: "solid_scatra_BGS-AMG_6x6_init.xml"
+MATERIALS:
+  - MAT: 1
+    MAT_electrode:
+      DIFF_COEF_CONC_DEP_FUNCT: 7
+      DIFF_COEF_TEMP_SCALE_FUNCT: 0
+      COND_CONC_DEP_FUNCT: 6
+      COND_TEMP_SCALE_FUNCT: 0
+      DIFF_PARA_NUM: 1
+      DIFF_PARA: [1.0]
+      COND_PARA_NUM: 1
+      COND_PARA: [1.0]
+      C_MAX: 5.19e4
+      CHI_MAX: 1.0
+      OCP_MODEL:
+        Function:
+          OCP_FUNCT_NUM: 9
+        X_MIN: 0.3
+        X_MAX: 1.0
+  - MAT: 2
+    MAT_MultiplicativeSplitDefgradElastHyper:
+      NUMMATEL: 1
+      MATIDSEL: [3]
+      NUMFACINEL: 1
+      INELDEFGRADFACIDS: [4]
+      DENS: 5.031e3
+  - MAT: 3
+    ELAST_CoupNeoHooke:
+      YOUNG: 1.751e11
+      NUE: 0.3
+  - MAT: 4
+    MAT_InelasticDefgradPolyIntercalFracIso:
+      SCALAR1: 1
+      SCALAR1_RefConc: 2.10e4
+      POLY_PARA_NUM: 8
+      POLY_PARAMS: [0.000444577043098, -1.24116361022373, 9.30461909734883, -29.44977325195, 49.1126838772603,
+        -45.1097641074935, 21.5994362668471, -4.21656846170118]
+      X_min: 0.18
+      X_max: 1.15
+      MATID: 1
+  - MAT: 5
+    MAT_elchmat:
+      NUMDOF: 2
+      NUMSCAL: 1
+      NUMPHASE: 1
+      PHASEIDS: [6]
+  - MAT: 6
+    MAT_elchphase:
+      EPSILON: 1.0
+      TORTUOSITY: 1.0
+      NUMMAT: 1
+      MATIDS: [7]
+  - MAT: 7
+    MAT_newman:
+      VALENCE: 1.0
+      DIFF_COEF_CONC_DEP_FUNCT: -1
+      DIFF_COEF_TEMP_SCALE_FUNCT: 0
+      COND_CONC_DEP_FUNCT: -1
+      COND_TEMP_SCALE_FUNCT: 0
+      DIFF_PARA_NUM: 1
+      DIFF_PARA: [0.0]
+      COND_PARA_NUM: 1
+      COND_PARA: [1.2e1]
+      TRANSNR: -1
+      THERMFAC: 0
+      TRANS_PARA_NUM: 1
+      TRANS_PARA: [1.0]
+  - MAT: 8
+    MAT_MultiplicativeSplitDefgradElastHyper:
+      NUMMATEL: 1
+      MATIDSEL: [9]
+      NUMFACINEL: 1
+      INELDEFGRADFACIDS: [10]
+      DENS: 1.88e3
+  - MAT: 9
+    ELAST_CoupNeoHooke:
+      YOUNG: 2.89e10
+      NUE: 0.27
+  - MAT: 10
+    MAT_InelasticDefgradNoGrowth: {}
+  - MAT: 11
+    MAT_electrode:
+      DIFF_COEF_CONC_DEP_FUNCT: -1
+      DIFF_COEF_TEMP_SCALE_FUNCT: 0
+      COND_CONC_DEP_FUNCT: -1
+      COND_TEMP_SCALE_FUNCT: 0
+      DIFF_PARA_NUM: 1
+      DIFF_PARA: [1.0]
+      COND_PARA_NUM: 1
+      COND_PARA: [1.0e8]
+      C_MAX: 1.0e8
+      CHI_MAX: 1.0
+      OCP_MODEL:
+        Function:
+          OCP_FUNCT_NUM: 8
+        X_MIN: -1
+        X_MAX: -1
+  - MAT: 12
+    MAT_MultiplicativeSplitDefgradElastHyper:
+      NUMMATEL: 1
+      MATIDSEL: [13]
+      NUMFACINEL: 1
+      INELDEFGRADFACIDS: [14]
+      DENS: 5.34e2
+  - MAT: 13
+    ELAST_CoupNeoHooke:
+      YOUNG: 4.9e9
+      NUE: 0.42
+  - MAT: 14
+    MAT_InelasticDefgradLinScalarAniso:
+      SCALAR1: 1
+      SCALAR1_MolarGrowthFac: 1.2998e-5
+      SCALAR1_RefConc: 7.6934e4
+      GrowthDirection: [0.0, 0.0, 1.0]
+  - MAT: 15
+    MAT_electrode:
+      DIFF_COEF_CONC_DEP_FUNCT: -1
+      DIFF_COEF_TEMP_SCALE_FUNCT: 0
+      COND_CONC_DEP_FUNCT: -1
+      COND_TEMP_SCALE_FUNCT: 0
+      DIFF_PARA_NUM: 1
+      DIFF_PARA: [1.0]
+      COND_PARA_NUM: 1
+      COND_PARA: [5.81e10]
+      C_MAX: 1.0e6
+      CHI_MAX: 1.0
+      OCP_MODEL:
+        Function:
+          OCP_FUNCT_NUM: 8
+        X_MIN: -1
+        X_MAX: -1
+  - MAT: 16
+    MAT_MultiplicativeSplitDefgradElastHyper:
+      NUMMATEL: 1
+      MATIDSEL: [17]
+      NUMFACINEL: 1
+      INELDEFGRADFACIDS: [10]
+      DENS: 8.96e3
+  - MAT: 17
+    ELAST_CoupNeoHooke:
+      YOUNG: 1.30e11
+      NUE: 0.34
+  - MAT: 18
+    MAT_electrode:
+      DIFF_COEF_CONC_DEP_FUNCT: -1
+      DIFF_COEF_TEMP_SCALE_FUNCT: 0
+      COND_CONC_DEP_FUNCT: -1
+      COND_TEMP_SCALE_FUNCT: 0
+      DIFF_PARA_NUM: 1
+      DIFF_PARA: [1.0]
+      COND_PARA_NUM: 1
+      COND_PARA: [3.77e10]
+      C_MAX: 1.0e6
+      CHI_MAX: 1.0
+      OCP_MODEL:
+        Function:
+          OCP_FUNCT_NUM: 8
+        X_MIN: -1
+        X_MAX: -1
+  - MAT: 19
+    MAT_MultiplicativeSplitDefgradElastHyper:
+      NUMMATEL: 1
+      MATIDSEL: [20]
+      NUMFACINEL: 1
+      INELDEFGRADFACIDS: [10]
+      DENS: 2.70e3
+  - MAT: 20
+    ELAST_CoupNeoHooke:
+      YOUNG: 7.00e10
+      NUE: 0.35
+CLONING MATERIAL MAP:
+  - SRC_FIELD: structure
+    SRC_MAT: 2
+    TAR_FIELD: scatra
+    TAR_MAT: 1
+  - SRC_FIELD: structure
+    SRC_MAT: 8
+    TAR_FIELD: scatra
+    TAR_MAT: 5
+  - SRC_FIELD: structure
+    SRC_MAT: 12
+    TAR_FIELD: scatra
+    TAR_MAT: 11
+  - SRC_FIELD: structure
+    SRC_MAT: 16
+    TAR_FIELD: scatra
+    TAR_MAT: 15
+  - SRC_FIELD: structure
+    SRC_MAT: 19
+    TAR_FIELD: scatra
+    TAR_MAT: 18
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "7.6934e4"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.007"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.03e4"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0221"
+FUNCT3:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "2.10e4"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "4.20"
+FUNCT4:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.2e3"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "4.21"
+FUNCT5:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.2e3"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+FUNCT6:
+  - SYMBOLIC_FUNCTION_OF_TIME: "1.0e5*exp(-202.90*s^4+322.38*s^3-178.23*s^2+50.06*s-13.47)"
+  - VARIABLE: 0
+    NAME: "s"
+    TYPE: "multifunction"
+    NUMPOINTS: 2
+    TIMES: [0, 1.0e16]
+    DESCRIPTION: ["1-t/5.19e4"]
+FUNCT7:
+  - SYMBOLIC_FUNCTION_OF_TIME: "exp(9.3764575854e5*s^9-5.4262087319e6*s^8+1.3688556703e7*s^7-1.9734363260e7*s^6+1.7897244160e7*s^5-1.0576735297e7*s^4+4.0688465295e6*s^3-9.8167452940e5*s^2+1.3468923578e5*s-8.0270847914e3)"
+  - VARIABLE: 0
+    NAME: "s"
+    TYPE: "multifunction"
+    NUMPOINTS: 2
+    TIMES: [0, 1.0e16]
+    DESCRIPTION: ["t/5.19e4"]
+FUNCT8:
+  - FASTPOLYNOMIAL:
+      NUMCOEFF: 1
+      COEFF: [0.0]
+FUNCT9:
+  - CUBIC_SPLINE_FROM_CSV:
+      CSV: "Kremer_2019_OCP_NMC622.csv"
+DESIGN SCATRA VOL CONDITIONS / PARTITIONING:
+  - E: 1
+    ENTITY_TYPE: node_set_id
+  - E: 2
+    ENTITY_TYPE: node_set_id
+  - E: 3
+    ENTITY_TYPE: node_set_id
+  - E: 4
+    ENTITY_TYPE: node_set_id
+  - E: 5
+    ENTITY_TYPE: node_set_id
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 6
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [null, null, null]
+  - E: 17
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [null, null, null]
+  - E: 19
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [0, 1, 0]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [null, null, null]
+  - E: 18
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [null, null, null]
+DESIGN SURF TRANSPORT DIRICH CONDITIONS:
+  - E: 6
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 2
+    ONOFF: [0, 1]
+    VAL: [0.0, 0.0]
+    FUNCT: [null, null]
+DESIGN VOL INITIAL FIELD CONDITIONS:
+  - E: 1
+    ENTITY_TYPE: node_set_id
+    FIELD: ScaTra
+    FUNCT: 3
+  - E: 2
+    ENTITY_TYPE: node_set_id
+    FIELD: ScaTra
+    FUNCT: 2
+  - E: 3
+    ENTITY_TYPE: node_set_id
+    FIELD: ScaTra
+    FUNCT: 1
+  - E: 4
+    ENTITY_TYPE: node_set_id
+    FIELD: ScaTra
+    FUNCT: 4
+  - E: 5
+    ENTITY_TYPE: node_set_id
+    FIELD: ScaTra
+    FUNCT: 5
+DESIGN S2I KINETICS SURF CONDITIONS:
+  - E: 8
+    ENTITY_TYPE: node_set_id
+    ConditionID: 0
+    INTERFACE_SIDE: Slave
+    KINETIC_MODEL: ConstantInterfaceResistance
+    ONOFF: [0, 1]
+    RESISTANCE: 2.0e-3
+    E-: 1
+    IS_PSEUDO_CONTACT: false
+  - E: 7
+    ENTITY_TYPE: node_set_id
+    ConditionID: 0
+    INTERFACE_SIDE: Master
+  - E: 9
+    ENTITY_TYPE: node_set_id
+    ConditionID: 1
+    INTERFACE_SIDE: Slave
+    KINETIC_MODEL: Butler-VolmerReduced
+    NUMSCAL: 1
+    STOICHIOMETRIES: [-1]
+    E-: 1
+    K_R: 9.193e-5
+    ALPHA_A: 0.5
+    ALPHA_C: 0.5
+    IS_PSEUDO_CONTACT: false
+  - E: 10
+    ENTITY_TYPE: node_set_id
+    ConditionID: 1
+    INTERFACE_SIDE: Master
+  - E: 12
+    ENTITY_TYPE: node_set_id
+    ConditionID: 2
+    INTERFACE_SIDE: Master
+  - E: 11
+    ENTITY_TYPE: node_set_id
+    ConditionID: 2
+    INTERFACE_SIDE: Slave
+    KINETIC_MODEL: Butler-VolmerReduced
+    NUMSCAL: 1
+    STOICHIOMETRIES: [-1]
+    E-: 1
+    K_R: 5.161e-5
+    ALPHA_A: 0.5
+    ALPHA_C: 0.5
+    IS_PSEUDO_CONTACT: false
+  - E: 13
+    ENTITY_TYPE: node_set_id
+    ConditionID: 3
+    INTERFACE_SIDE: Master
+  - E: 14
+    ENTITY_TYPE: node_set_id
+    ConditionID: 3
+    INTERFACE_SIDE: Slave
+    KINETIC_MODEL: ConstantInterfaceResistance
+    ONOFF: [0, 1]
+    RESISTANCE: 2.0e-3
+    E-: 1
+    IS_PSEUDO_CONTACT: false
+  - E: 15
+    ENTITY_TYPE: node_set_id
+    ConditionID: 4
+    INTERFACE_SIDE: Master
+  - E: 16
+    ENTITY_TYPE: node_set_id
+    ConditionID: 4
+    INTERFACE_SIDE: Slave
+    KINETIC_MODEL: NoInterfaceFlux
+DESIGN ELECTRODE STATE OF CHARGE VOL CONDITIONS:
+  - E: 1
+    ENTITY_TYPE: node_set_id
+    ConditionID: 0
+    C_0%: 5.19e4
+    C_100%: 2.1e4
+    ONE_HOUR: 3600.0e3
+DESIGN CELL VOLTAGE SURF CONDITIONS:
+  - E: 6
+    ENTITY_TYPE: node_set_id
+    ConditionID: 0
+  - E: 17
+    ENTITY_TYPE: node_set_id
+    ConditionID: 1
+DESIGN CCCV CELL CYCLING SURF CONDITIONS:
+  - E: 17
+    ENTITY_TYPE: node_set_id
+    NUMBER_OF_HALF_CYCLES: 1
+    BEGIN_WITH_CHARGING: 0
+    CONDITION_ID_FOR_CHARGE: 1
+    CONDITION_ID_FOR_DISCHARGE: 2
+    INIT_RELAX_TIME: -1.0
+    ADAPTIVE_TIME_STEPPING_INIT_RELAX: 0
+    NUM_ADD_ADAPT_TIME_STEPS: 3
+    MIN_TIME_STEPS_DURING_INIT_RELAX: 0
+DESIGN CCCV HALF-CYCLE SURF CONDITIONS:
+  - E: 17
+    ENTITY_TYPE: node_set_id
+    ConditionID: 1
+    CURRENT: 1.45939241507534e-04
+    CUT_OFF_VOLTAGE: 4.3
+    CUT_OFF_C_RATE: 1000.0
+    RELAX_TIME: -1.0
+    ADAPTIVE_TIME_STEPPING_PHASE_ON_OFF: [0, 0, 0]
+  - E: 17
+    ENTITY_TYPE: node_set_id
+    ConditionID: 2
+    CURRENT: -1.45939241507534e-04
+    CUT_OFF_VOLTAGE: 2.8
+    CUT_OFF_C_RATE: 1000.0
+    RELAX_TIME: -1.0
+    ADAPTIVE_TIME_STEPPING_PHASE_ON_OFF: [0, 0, 0]
+DESIGN SSI INTERFACE MESHTYING SURF CONDITIONS:
+  - E: 8
+    ENTITY_TYPE: node_set_id
+    ConditionID: 0
+    INTERFACE_SIDE: Slave
+    S2I_KINETICS_ID: 0
+  - E: 7
+    ENTITY_TYPE: node_set_id
+    ConditionID: 0
+    INTERFACE_SIDE: Master
+    S2I_KINETICS_ID: 0
+  - E: 9
+    ENTITY_TYPE: node_set_id
+    ConditionID: 1
+    INTERFACE_SIDE: Slave
+    S2I_KINETICS_ID: 1
+  - E: 10
+    ENTITY_TYPE: node_set_id
+    ConditionID: 1
+    INTERFACE_SIDE: Master
+    S2I_KINETICS_ID: 1
+  - E: 12
+    ENTITY_TYPE: node_set_id
+    ConditionID: 2
+    INTERFACE_SIDE: Master
+    S2I_KINETICS_ID: 2
+  - E: 11
+    ENTITY_TYPE: node_set_id
+    ConditionID: 2
+    INTERFACE_SIDE: Slave
+    S2I_KINETICS_ID: 2
+  - E: 13
+    ENTITY_TYPE: node_set_id
+    ConditionID: 3
+    INTERFACE_SIDE: Master
+    S2I_KINETICS_ID: 3
+  - E: 14
+    ENTITY_TYPE: node_set_id
+    ConditionID: 3
+    INTERFACE_SIDE: Slave
+    S2I_KINETICS_ID: 3
+  - E: 15
+    ENTITY_TYPE: node_set_id
+    ConditionID: 4
+    INTERFACE_SIDE: Master
+    S2I_KINETICS_ID: 4
+  - E: 16
+    ENTITY_TYPE: node_set_id
+    ConditionID: 4
+    INTERFACE_SIDE: Slave
+    S2I_KINETICS_ID: 4
+STRUCTURE GEOMETRY:
+  SHOW_INFO: "summary"
+  ELEMENT_BLOCKS:
+    - ID: 1
+      SOLIDSCATRA:
+        TET4:
+          MAT: 2
+          KINEM: nonlinear
+          TYPE: "ElchElectrode"
+    - ID: 2
+      SOLIDSCATRA:
+        TET4:
+          MAT: 8
+          KINEM: nonlinear
+          TYPE: "ElchDiffCond"
+    - ID: 3
+      SOLIDSCATRA:
+        TET4:
+          MAT: 12
+          KINEM: nonlinear
+          TYPE: "ElchElectrode"
+    - ID: 4
+      SOLIDSCATRA:
+        TET4:
+          MAT: 19
+          KINEM: nonlinear
+          TYPE: "ElchElectrode"
+    - ID: 5
+      SOLIDSCATRA:
+        TET4:
+          MAT: 16
+          KINEM: nonlinear
+          TYPE: "ElchElectrode"
+  FILE: "@MESH_FILE@"
