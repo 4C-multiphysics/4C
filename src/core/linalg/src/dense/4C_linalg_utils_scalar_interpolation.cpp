@@ -13,6 +13,7 @@
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <algorithm>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -199,7 +200,11 @@ std::vector<double> Core::LinAlg::calculate_normalized_weights(
       {
         double norm = ref_locs_tmp[i].norm2();
         if (norm < interp_params.distance_threshold)
+        {
+          std::fill(weights.begin(), weights.end(), 0.0);  // reset all weights to 0.0
           weights[i] = 1.0;
+          break;  // no need to continue
+        }
         else
           weights[i] = 1.0 / std::pow(norm, exponent);
       }
@@ -212,7 +217,11 @@ std::vector<double> Core::LinAlg::calculate_normalized_weights(
       {
         double norm = ref_locs_tmp[i].norm2();
         if (norm < interp_params.distance_threshold)
+        {
+          std::fill(weights.begin(), weights.end(), 0.0);  // reset all weights to 0.0
           weights[i] = 1.0;
+          break;  // no need to continue
+        }
         else
           weights[i] = std::exp(-1.0 * interp_params.exponential_decay_c * norm * norm);
       }
@@ -231,13 +240,11 @@ std::vector<double> Core::LinAlg::calculate_normalized_weights(
       FOUR_C_THROW("Unknown weighting function.");
   }
 
-  // if one of the weights is 1.0: zero out all other weights and return directly
+  // if one of the weights is 1.0: return directly, since the other ones are 0.0 anyway
   for (unsigned int i = 0; i < weights.size(); ++i)
   {
     if (weights[i] == 1.0)
     {
-      for (auto& w : weights) w = 0.0;
-      weights[i] = 1.0;  // set the weight to 1.0 for the closest point
       return weights;
     }
   }

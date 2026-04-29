@@ -28,7 +28,7 @@ namespace
   {
     using namespace Core::LinAlg;
 
-    // 1D
+    // Setup dimension of interpolation locations
     constexpr unsigned int loc_dim = 3;
 
     // Reference locations: -1.0, 1.0
@@ -64,11 +64,63 @@ namespace
     for (size_t i = 0; i < weights.size(); ++i) ASSERT_NEAR(weights[i], weights_ref[i], 1e-8);
   }
 
+
+  TEST(LinalgScalarInterpolationTest, CalculateNormalizedWeights1DInverseDistanceAtRefLocations)
+  {
+    using namespace Core::LinAlg;
+
+    // Setup dimension of interpolation locations
+    constexpr unsigned int loc_dim = 3;
+
+    // Reference locations: 0.0, 1.0
+    std::vector<Core::LinAlg::Matrix<loc_dim, 1>> ref_locs;
+    Core::LinAlg::Matrix<loc_dim, 1> loc1(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<loc_dim, 1> loc2(Core::LinAlg::Initialization::zero);
+    loc1(0, 0) = 0.0;
+    loc2(0, 0) = 1.0;
+    ref_locs.push_back(loc1);
+    ref_locs.push_back(loc2);
+
+    // Interpolation location: 0.0
+    Core::LinAlg::Matrix<loc_dim, 1> interp_loc(Core::LinAlg::Initialization::zero);
+    interp_loc(0, 0) = 0.0;
+
+    // Weighting function: inverse distance
+    ScalarInterpolationWeightingFunction weight_func =
+        ScalarInterpolationWeightingFunction::inverse_distance;
+
+    // Interpolation parameters
+    ScalarInterpolationParams interp_params;
+    interp_params.distance_threshold = 1e-12;
+    interp_params.inverse_distance_power = 1.0;  // Use power of 1 for inverse distance
+
+    // Call the function
+    std::vector<double> weights = Core::LinAlg::calculate_normalized_weights(
+        ref_locs, interp_loc, weight_func, interp_params);
+
+    // So weights should be [1.0, 0.0]
+    std::vector<double> weights_ref = {1.0, 0.0};
+
+    ASSERT_EQ(weights.size(), 2);
+    for (size_t i = 0; i < weights.size(); ++i) ASSERT_NEAR(weights[i], weights_ref[i], 1e-8);
+
+
+    // And the same for interpolation location: 1.0
+    interp_loc(0, 0) = 1.0;
+    weights = Core::LinAlg::calculate_normalized_weights(
+        ref_locs, interp_loc, weight_func, interp_params);
+    ASSERT_EQ(weights.size(), 2);
+    weights_ref = {0.0, 1.0};
+    for (size_t i = 0; i < weights.size(); ++i) ASSERT_NEAR(weights[i], weights_ref[i], 1e-8);
+  }
+
+
+
   TEST(LinalgScalarInterpolationTest, CalculateNormalizedWeights1DExponential)
   {
     using namespace Core::LinAlg;
 
-    // 1D
+    // Setup dimension of interpolation locations
     constexpr unsigned int loc_dim = 3;
 
     // Reference locations: -1.0, 1.0
@@ -108,6 +160,57 @@ namespace
     ASSERT_EQ(weights.size(), 2);
     for (size_t i = 0; i < weights.size(); ++i) ASSERT_NEAR(weights[i], weights_ref[i], 1e-8);
   }
+
+
+  TEST(LinalgScalarInterpolationTest, CalculateNormalizedWeights1DExponentialAtRefLocations)
+  {
+    using namespace Core::LinAlg;
+
+    // Setup dimension of interpolation locations
+    constexpr unsigned int loc_dim = 3;
+
+    // Reference locations: 0.0, 1.0
+    std::vector<Core::LinAlg::Matrix<loc_dim, 1>> ref_locs;
+    Core::LinAlg::Matrix<loc_dim, 1> loc1(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<loc_dim, 1> loc2(Core::LinAlg::Initialization::zero);
+    loc1(0, 0) = 0.0;
+    loc2(0, 0) = 1.0;
+    ref_locs.push_back(loc1);
+    ref_locs.push_back(loc2);
+
+    // Interpolation location: 0.0
+    Core::LinAlg::Matrix<loc_dim, 1> interp_loc(Core::LinAlg::Initialization::zero);
+    interp_loc(0, 0) = 0.0;
+
+    // Weighting function: exponential
+    ScalarInterpolationWeightingFunction weight_func =
+        ScalarInterpolationWeightingFunction::exponential;
+
+    // Interpolation parameters
+    ScalarInterpolationParams interp_params;
+    interp_params.distance_threshold = 1e-12;
+    interp_params.exponential_decay_c = 1.0;  // decay parameter
+
+    // Call the function
+    std::vector<double> weights = Core::LinAlg::calculate_normalized_weights(
+        ref_locs, interp_loc, weight_func, interp_params);
+
+    // Expected weights: 1.0 and 0.0
+    std::vector<double> weights_ref = {1.0, 0.0};
+
+    ASSERT_EQ(weights.size(), 2);
+    for (size_t i = 0; i < weights.size(); ++i) ASSERT_NEAR(weights[i], weights_ref[i], 1e-8);
+
+
+    // And the same for interpolation location: 1.0
+    interp_loc(0, 0) = 1.0;
+    weights = Core::LinAlg::calculate_normalized_weights(
+        ref_locs, interp_loc, weight_func, interp_params);
+    ASSERT_EQ(weights.size(), 2);
+    weights_ref = {0.0, 1.0};
+    for (size_t i = 0; i < weights.size(); ++i) ASSERT_NEAR(weights[i], weights_ref[i], 1e-8);
+  }
+
 
   TEST(LinalgScalarInterpolationTest, LogInterpolation_ManualData)
   {
