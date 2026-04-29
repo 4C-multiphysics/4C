@@ -11,13 +11,10 @@
 #include "4C_comm_parobject.hpp"
 #include "4C_global_data.hpp"
 #include "4C_inpar_structure.hpp"
-#include "4C_linalg_FADmatrix_utils.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
-#include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
-#include "4C_mat_material_factory.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_stvenantkirchhoff.hpp"
 #include "4C_material_base.hpp"
@@ -42,6 +39,9 @@ Mat::PAR::PlasticDruckerPrager::PlasticDruckerPrager(const Core::Mat::PAR::Param
       tang_(matdata.parameters.get<std::string>("TANG")),
       itermax_(matdata.parameters.get<int>("MAXITER"))
 {
+  FOUR_C_ASSERT_ALWAYS(cohesion_ > 1.0e-14, "Cohesion must be positive, but got {}.", cohesion_);
+  FOUR_C_ASSERT_ALWAYS(poissonratio_ < 0.5 - 1.0e-14,
+      "Poisson's ratio must be strictly less than 0.5, but got {}.", poissonratio_);
 }
 
 std::shared_ptr<Core::Mat::Material> Mat::PAR::PlasticDruckerPrager::create_material()
@@ -115,24 +115,24 @@ void Mat::PlasticDruckerPrager::unpack(Core::Communication::UnpackBuffer& buffer
 
     if (histsize == 0) isinit_ = false;
 
-    strainpllast_ = std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>();
-    strainplcurr_ = std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>();
+    strainpllast_ = std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>();
+    strainplcurr_ = std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>();
     strainbarpllast_ = std::vector<double>();
     strainbarplcurr_ = std::vector<double>();
     for (int var = 0; var < histsize; ++var)
     {
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vector(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::SymmetricTensor<double, 3, 3> tmp_tensor{};
       double tmp_scalar = 0.0;
 
       // last converged states are unpacked
-      extract_from_pack(buffer, tmp_vector);
-      strainpllast_.push_back(tmp_vector);
+      extract_from_pack(buffer, tmp_tensor);
+      strainpllast_.push_back(tmp_tensor);
       extract_from_pack(buffer, tmp_scalar);
       strainbarpllast_.push_back(tmp_scalar);
 
       // current iteration states are unpacked
-      extract_from_pack(buffer, tmp_vector);
-      strainplcurr_.push_back(tmp_vector);
+      extract_from_pack(buffer, tmp_tensor);
+      strainplcurr_.push_back(tmp_tensor);
       extract_from_pack(buffer, tmp_scalar);
       strainbarplcurr_.push_back(tmp_scalar);
     }
@@ -141,11 +141,17 @@ void Mat::PlasticDruckerPrager::unpack(Core::Communication::UnpackBuffer& buffer
 void Mat::PlasticDruckerPrager::setup(int numgp, const Discret::Elements::Fibers& fibers,
     const std::optional<Discret::Elements::CoordinateSystem>& coord_system)
 {
-  strainpllast_.resize(numgp);
-  strainplcurr_.resize(numgp);
+  strainpllast_ = std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>(numgp);
+  strainplcurr_ = std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>(numgp);
 
-  strainbarpllast_.resize(numgp);
-  strainbarplcurr_.resize(numgp);
+  strainbarpllast_.assign(numgp, 0.0);
+  strainbarplcurr_.assign(numgp, 0.0);
+
+  for (int i = 0; i < numgp; ++i)
+  {
+    strainpllast_.at(i).fill(0.0);
+    strainplcurr_.at(i).fill(0.0);
+  }
 
   isinit_ = true;
 }
@@ -155,7 +161,7 @@ void Mat::PlasticDruckerPrager::update()
   strainpllast_ = strainplcurr_;
   strainbarpllast_ = strainbarplcurr_;
 
-  std::for_each(strainplcurr_.begin(), strainplcurr_.end(), [](auto& item) { item.clear(); });
+  std::for_each(strainplcurr_.begin(), strainplcurr_.end(), [](auto& item) { item.fill(0.0); });
   std::fill(strainbarplcurr_.begin(), strainbarplcurr_.end(), 0.0);
 }
 
@@ -171,220 +177,127 @@ void Mat::PlasticDruckerPrager::setup_cmat(
 
 void Mat::PlasticDruckerPrager::setup_cmat_elasto_plastic_cone(
     Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, double Dgamma, double G, double Kappa,
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1>& devstrain, double xi, double Hiso, double eta,
-    double etabar) const
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& devstrain, double xi, double Hiso,
+    double eta, double etabar) const
 {
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmat_view =
-      Core::LinAlg::make_stress_like_voigt_view(cmat);
-  cmat_view.clear();
+  constexpr auto id2 = Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
+  constexpr auto Is = Core::LinAlg::TensorGenerators::symmetric_identity<double, 3, 3, 3, 3>;
+  constexpr auto Id = Is - 1.0 / 3.0 * dyadic(id2, id2);
 
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> id2(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Voigt::identity_matrix(id2);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> id4sharp(Core::LinAlg::Initialization::zero);
-  for (int i = 0; i < 3; i++) id4sharp(i, i) = 1.0;
-  for (int i = 3; i < 6; i++) id4sharp(i, i) = 0.5;
+  const double nd = std::sqrt(ddot(devstrain, devstrain));
+  const auto D = devstrain / nd;
 
-  const double normdevstrain =
-      sqrt(devstrain(0) * devstrain(0) + devstrain(1) * devstrain(1) + devstrain(2) * devstrain(2) +
-           2 * (devstrain(3) * devstrain(3) + devstrain(4) * devstrain(4) +
-                   devstrain(5) * devstrain(5)));
-  const double epfac = 2 * G * (1 - (Dgamma / sqrt(2) / normdevstrain));
+  const double A = 1.0 / (G + Kappa * etabar * eta + xi * xi * Hiso);
+  const double epfac = 2.0 * G * (1.0 - Dgamma / (std::sqrt(2.0) * nd));
+  const double epfac2 = 2.0 * G * (Dgamma / (std::sqrt(2.0) * nd) - G * A);
+  const double epfac3 = -std::sqrt(2.0) * G * A * Kappa;
+  const double epfac4 = Kappa * (1.0 - Kappa * eta * etabar * A);
 
-  cmat_view.update(epfac, id4sharp, 1.0);
-
-  double epfac1 = 0.0;
-  double epfac2 = 0.0;
-  double epfac3 = 0.0;
-  double epfac4 = 0.0;
-  epfac1 = epfac / (-3.0);
-  cmat_view.multiply_nt(epfac1, id2, id2, 1.0);
-
-  double A = 0.0;
-  A = 1 / (G + Kappa * etabar * eta + xi * xi * Hiso);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> D(Core::LinAlg::Initialization::zero);
-  D.update(1 / normdevstrain, devstrain);
-  epfac2 = 2 * G * (Dgamma / (sqrt(2) * normdevstrain) - G * A);
-
-  for (int k = 0; k < 6; ++k)
-  {
-    for (int i = 0; i < 6; ++i)
-    {
-      cmat_view(i, k) += epfac2 * D(i) * D(k);
-    }
-  }
-
-  epfac3 = -sqrt(2) * G * A * Kappa;
-
-  for (int k = 0; k < 6; ++k)
-  {
-    for (int i = 0; i < 6; ++i)
-    {
-      cmat_view(k, i) += epfac3 * (eta * D(k) * id2(i) + etabar * id2(k) * D(i));
-    }
-  }
-
-  epfac4 = Kappa * (1 - Kappa * eta * etabar * A);
-
-  for (int k = 0; k < 6; ++k)
-  {
-    for (int i = 0; i < 6; ++i)
-    {
-      cmat_view(i, k) += epfac4 * id2(k) * id2(i);
-    }
-  }
+  cmat = epfac * Id + epfac2 * dyadic(D, D) +
+         epfac3 * (eta * dyadic(D, id2) + etabar * dyadic(id2, D)) + epfac4 * dyadic(id2, id2);
 }
 
 void Mat::PlasticDruckerPrager::setup_cmat_elasto_plastic_apex(
-    Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, double Kappa,
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1>& devstrain, double xi, double Hiso, double eta,
-    double etabar) const
+    Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, double Kappa, double xi, double Hiso,
+    double eta, double etabar) const
 {
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmat_view =
-      Core::LinAlg::make_stress_like_voigt_view(cmat);
-
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> id2(Core::LinAlg::Initialization::zero);
-  for (int i = 0; i < 3; i++) id2(i) = 1.0;
-  double epfac = 0.0;
-  epfac = Kappa * (1 - Kappa / (Kappa + xi / eta * xi / etabar * Hiso));
-  cmat_view.clear();
-  cmat_view.multiply_nt(epfac, id2, id2, 0.0);
+  constexpr auto id2 = Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
+  const double epfac = Kappa * (1.0 - Kappa / (Kappa + xi / eta * xi / etabar * Hiso));
+  cmat = epfac * dyadic(id2, id2);
 }
 
-template <typename ScalarT>
-void Mat::PlasticDruckerPrager::evaluate_fad(const Core::LinAlg::Matrix<3, 3>* defgrd,
-    const Core::LinAlg::Matrix<6, 1, ScalarT>& linstrain, const Teuchos::ParameterList& params,
-    Core::LinAlg::Matrix<6, 1, ScalarT>& stress,
-    Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, const int gp, const int eleGID)
+void Mat::PlasticDruckerPrager::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* defgrad,
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
+    const Teuchos::ParameterList& params, const EvaluationContext<3>& context,
+    Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,
+    Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, int gp, int eleGID)
 {
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> plstrain(Core::LinAlg::Initialization::zero);
-
-  ScalarT young = params_->youngs_;
-  ScalarT nu = params_->poissonratio_;
-  ScalarT Hiso = params_->isohard_;
-  ScalarT cohesion = params_->cohesion_;
-  ScalarT eta = params_->eta_;
-  ScalarT xi = params_->xi_;
-  ScalarT etabar = params_->etabar_;
+  const double young = params_->youngs_;
+  const double nu = params_->poissonratio_;
+  const double Hiso = params_->isohard_;
+  const double cohesion = params_->cohesion_;
+  const double eta = params_->eta_;
+  const double xi = params_->xi_;
+  const double etabar = params_->etabar_;
   const int itermax = params_->itermax_;
-  const std::string tang_str = params_->tang_;
-  ScalarT G = 0.0;
-  G = young / (2.0 * (1.0 + nu));
-  ScalarT kappa = 0.0;
-  kappa = young / (3.0 * (1.0 - 2.0 * nu));
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> id2(Core::LinAlg::Initialization::zero);
-  for (int i = 0; i < 3; i++) id2(i) = 1.0;
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> strain(linstrain);
-  const int tang = std::invoke(
-      [tang_str]() -> int
-      {
-        if (tang_str == "consistent")
-          return 1;
-        else if (tang_str == "elastic")
-          return 0;
-        else
-          return 1;
-      });
+  const std::string& tang_str = params_->tang_;
 
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> strain_p(
-      Core::LinAlg::Initialization::uninitialized);
-  for (int i = 0; i < 6; i++) strain_p(i, 0) = strainpllast_.at(gp)(i, 0);
-  ScalarT strainbar_p = 0.0;
-  strainbar_p = (strainbarpllast_.at(gp));
-  if (strainbarpllast_.at(gp) < 0.0)
-    FOUR_C_THROW("accumulated plastic strain has to be equal to or greater than zero!");
+  const double G = young / (2.0 * (1.0 + nu));
+  const double kappa = young / (3.0 * (1.0 - 2.0 * nu));
+  constexpr auto id2 = Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
 
-  for (int i = 3; i < 6; ++i) strain(i) /= 2.0;
-  for (int i = 3; i < 6; ++i) strain_p(i) /= 2.0;
+  const bool use_consistent_tangent = (tang_str != "elastic");
 
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> strain_e(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> trialstrain_e(
-      Core::LinAlg::Initialization::uninitialized);
-  trialstrain_e.update(1.0, strain, (-1.0), strain_p);
-  ScalarT tracestrain = trialstrain_e(0) + trialstrain_e(1) + trialstrain_e(2);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> volumetricstrain(
-      Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> id2Scalar(Core::LinAlg::Initialization::zero);
-  for (int i = 0; i < NUM_STRESS_3D; ++i) id2Scalar(i) = static_cast<ScalarT>(id2(i));
-  volumetricstrain.update((tracestrain / 3.0), id2Scalar);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> devstrain(
-      Core::LinAlg::Initialization::uninitialized);
-  devstrain.update(1.0, trialstrain_e, (-1.0), volumetricstrain);
+  FOUR_C_ASSERT_ALWAYS(strainbarpllast_.at(gp) >= 0.0,
+      "accumulated plastic strain has to be equal to or greater than zero!");
 
-  ScalarT p = kappa * tracestrain;
-  ScalarT p_trial = p;
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> devstress(
-      Core::LinAlg::Initialization::uninitialized);
-  devstress.update((2.0 * G), devstrain);
+  // Elastic predictor
+  const Core::LinAlg::SymmetricTensor<double, 3, 3> trialstrain_e = glstrain - strainpllast_.at(gp);
+  const double tracestrain = trace(trialstrain_e);
+  const Core::LinAlg::SymmetricTensor<double, 3, 3> devstrain =
+      trialstrain_e - id2 * (tracestrain / 3.0);
 
-  ScalarT J2 = 1.0 / 2.0 *
-                   (devstress(0) * devstress(0) + devstress(1) * devstress(1) +
-                       devstress(2) * devstress(2)) +
-               devstress(3) * devstress(3) + devstress(4) * devstress(4) +
-               devstress(5) * devstress(5);
-  ScalarT Phi_trial = 0.0;
-  Phi_trial = std::sqrt(J2) + eta * p - xi * cohesion - xi * Hiso * strainbar_p;
-  ScalarT Dgamma = 0.0;
-  ScalarT dstrainv = 0.0;
-  if (Phi_trial / abs(cohesion) > params_->abstol_)
+  double p = kappa * tracestrain;
+  const double p_trial = p;
+  Core::LinAlg::SymmetricTensor<double, 3, 3> devstress = 2.0 * G * devstrain;
+
+  const double J2 = 0.5 * ddot(devstress, devstress);
+  double strainbar_p = strainbarpllast_.at(gp);
+  const double Phi_trial = std::sqrt(J2) + eta * p_trial - xi * cohesion - xi * Hiso * strainbar_p;
+
+  double Dgamma = 0.0;
+  double dstrainv = 0.0;
+
+  if (Phi_trial / std::abs(cohesion) > params_->abstol_)
   {
-    auto returnToConeFunctAndDeriv = [this, &G, &kappa, &Phi_trial](ScalarT Dgamma_init)
+    // Return to cone
+    auto returnToConeFunctAndDeriv = [this, &G, &kappa, &Phi_trial](double Dgamma_init)
     { return this->return_to_cone_funct_and_deriv(Dgamma_init, G, kappa, Phi_trial); };
 
-    const double tol = params_->abstol_;
-    Dgamma =
-        Core::Utils::solve_local_newton(returnToConeFunctAndDeriv, Dgamma, tol * cohesion, itermax);
-    strainbar_p = (strainbarpllast_.at(gp)) + xi * Dgamma;
-    devstress.scale(1.0 - (G * Dgamma / std::sqrt(J2)));
-    p = p_trial - kappa * etabar * Dgamma;
-    if ((std::sqrt(J2) - G * Dgamma) / abs(cohesion) < params_->abstol_)
+    Dgamma = Core::Utils::solve_local_newton(
+        returnToConeFunctAndDeriv, Dgamma, params_->abstol_ * cohesion, itermax);
+
+    if ((std::sqrt(J2) - G * Dgamma) / std::abs(cohesion) < params_->abstol_)
     {
-      strainbar_p = (strainbarpllast_.at(gp));
-      auto returnToApexFunctAndDeriv = [this, &p_trial, &kappa, &strainbar_p](ScalarT dstrainv_init)
+      // Return to apex
+      strainbar_p = strainbarpllast_.at(gp);
+      auto returnToApexFunctAndDeriv = [this, &p_trial, &kappa, &strainbar_p](double dstrainv_init)
       { return this->return_to_apex_funct_and_deriv(dstrainv_init, p_trial, kappa, strainbar_p); };
 
-      const double tol = params_->abstol_;
       dstrainv = Core::Utils::solve_local_newton(
-          returnToApexFunctAndDeriv, dstrainv, tol * cohesion, itermax);
-      strainbar_p = (strainbarpllast_.at(gp)) + xi / eta * dstrainv;
+          returnToApexFunctAndDeriv, dstrainv, params_->abstol_ * cohesion, itermax);
+      strainbar_p = strainbarpllast_.at(gp) + xi / eta * dstrainv;
       p = p_trial - kappa * dstrainv;
-      for (int i = 0; i < 6; i++) devstress(i) = 0.0;
-    }
-    PlasticDruckerPrager::stress(p, devstress, stress);
-    strain_e.update(1 / G / 2, devstress, p / kappa / 3, id2Scalar);
-    for (int i = 3; i < 6; ++i) strain_e(i) *= 2.0;
-    for (int i = 3; i < 6; ++i) strain(i) *= 2.0;
-    strain_p.update(1.0, strain, -1.0, strain_e);
-
-    strainplcurr_.at(gp) = Core::FADUtils::cast_to_double(strain_p);
-    strainbarplcurr_.at(gp) = Core::FADUtils::cast_to_double(strainbar_p);
-  }
-  else
-  {
-    PlasticDruckerPrager::stress(p, devstress, stress);
-    strain_e.update(trialstrain_e);
-    for (int i = 3; i < 6; ++i) strain_e(i) *= 2.0;
-    for (int i = 3; i < 6; ++i) strain(i) *= 2.0;
-
-    strainplcurr_.at(gp) = strainpllast_.at(gp);
-    strainbarplcurr_.at(gp) = strainbarpllast_.at(gp);
-  }
-  if ((Phi_trial > 0) && (tang == 1))
-  {
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstraindouble =
-        Core::FADUtils::cast_to_double(devstrain);
-    if (dstrainv != 0.0)
-    {
-      setup_cmat_elasto_plastic_apex(cmat, Core::FADUtils::cast_to_double(kappa), devstraindouble,
-          Core::FADUtils::cast_to_double(xi), Core::FADUtils::cast_to_double(Hiso),
-          Core::FADUtils::cast_to_double(eta), Core::FADUtils::cast_to_double(etabar));
+      devstress.fill(0.0);
     }
     else
     {
-      setup_cmat_elasto_plastic_cone(cmat, Core::FADUtils::cast_to_double(Dgamma),
-          Core::FADUtils::cast_to_double(G), Core::FADUtils::cast_to_double(kappa), devstraindouble,
-          Core::FADUtils::cast_to_double(xi), Core::FADUtils::cast_to_double(Hiso),
-          Core::FADUtils::cast_to_double(eta), Core::FADUtils::cast_to_double(etabar));
+      strainbar_p = strainbarpllast_.at(gp) + xi * Dgamma;
+      devstress *= (1.0 - G * Dgamma / std::sqrt(J2));
+      p = p_trial - kappa * etabar * Dgamma;
     }
+
+    stress = devstress + p * id2;
+
+    // Recover elastic strain from updated stress: strain_e = s/(2G) + p/(3*kappa)*I
+    const Core::LinAlg::SymmetricTensor<double, 3, 3> strain_e =
+        devstress * (1.0 / (2.0 * G)) + id2 * (p / (3.0 * kappa));
+    strainplcurr_.at(gp) = glstrain - strain_e;
+    strainbarplcurr_.at(gp) = strainbar_p;
+  }
+  else
+  {
+    stress = devstress + p * id2;
+    strainplcurr_.at(gp) = strainpllast_.at(gp);
+    strainbarplcurr_.at(gp) = strainbarpllast_.at(gp);
+  }
+
+  if ((Phi_trial > 0.0) && use_consistent_tangent)
+  {
+    if (dstrainv != 0.0)
+      setup_cmat_elasto_plastic_apex(cmat, kappa, xi, Hiso, eta, etabar);
+    else
+      setup_cmat_elasto_plastic_cone(cmat, Dgamma, G, kappa, devstrain, xi, Hiso, eta, etabar);
   }
   else
   {
@@ -414,10 +327,11 @@ bool Mat::PlasticDruckerPrager::evaluate_output_data(
   {
     for (std::size_t gp = 0; gp < strainplcurr_.size(); ++gp)
     {
-      const double* values = strainplcurr_.at(gp).data();
+      const Core::LinAlg::Matrix<6, 1> voigt_strain =
+          Core::LinAlg::make_strain_like_voigt_matrix(strainplcurr_.at(gp));
       for (std::size_t i = 0; i < 6; ++i)
       {
-        data(gp, i) = values[i];
+        data(gp, i) = voigt_strain(i, 0);
       }
     }
     return true;
@@ -425,68 +339,33 @@ bool Mat::PlasticDruckerPrager::evaluate_output_data(
   return false;
 }
 
-template <typename T>
-void Mat::PlasticDruckerPrager::stress(const T p,
-    const Core::LinAlg::Matrix<NUM_STRESS_3D, 1, T>& devstress,
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1, T>& stress) const
+std::pair<double, double> Mat::PlasticDruckerPrager::return_to_cone_funct_and_deriv(
+    double Dgamma, double G, double kappa, double Phi_trial)
 {
-  stress.update(devstress);
-  for (int i = 0; i < 3; ++i) stress(i) += p;
-}
-
-template <typename T>
-std::pair<T, T> Mat::PlasticDruckerPrager::return_to_cone_funct_and_deriv(
-    T Dgamma, T G, T kappa, T Phi_trial)
-{
-  double Hiso = params_->isohard_;
-  double eta = params_->eta_;
-  double xi = params_->xi_;
-  double etabar = params_->etabar_;
-  T Res = Phi_trial - Dgamma * (G + eta * kappa * etabar) - (xi * xi * Dgamma * Hiso);
-  T d = -G - (kappa * etabar * eta) - (xi * xi * Hiso);
+  const double Hiso = params_->isohard_;
+  const double eta = params_->eta_;
+  const double xi = params_->xi_;
+  const double etabar = params_->etabar_;
+  double Res = Phi_trial - Dgamma * (G + eta * kappa * etabar) - (xi * xi * Dgamma * Hiso);
+  double d = -G - (kappa * etabar * eta) - (xi * xi * Hiso);
   return {Res, d};
 }
 
-template <typename T>
-std::pair<T, T> Mat::PlasticDruckerPrager::return_to_apex_funct_and_deriv(
-    T dstrainv, T p, T kappa, T strainbar_p)
+std::pair<double, double> Mat::PlasticDruckerPrager::return_to_apex_funct_and_deriv(
+    double dstrainv, double p, double kappa, double strainbar_p)
 {
-  double Hiso = params_->isohard_;
-  double eta = params_->eta_;
-  double xi = params_->xi_;
-  double cohesion = params_->cohesion_;
-  double etabar = params_->etabar_;
-  double alpha = xi / eta;
-  double beta = xi / etabar;
-  T Res =
+  const double Hiso = params_->isohard_;
+  const double eta = params_->eta_;
+  const double xi = params_->xi_;
+  const double cohesion = params_->cohesion_;
+  const double etabar = params_->etabar_;
+  const double alpha = xi / eta;
+  const double beta = xi / etabar;
+  double Res =
       beta * cohesion + beta * strainbar_p * Hiso - p + dstrainv * (alpha * beta * Hiso + kappa);
-  T d = xi * xi / eta / etabar * Hiso + kappa;
+  double d = xi * xi / eta / etabar * Hiso + kappa;
   return {Res, d};
 }
 
-template void Mat::PlasticDruckerPrager::evaluate_fad<double>(const Core::LinAlg::Matrix<3, 3>*,
-    const Core::LinAlg::Matrix<6, 1, double>&, const Teuchos::ParameterList&,
-    Core::LinAlg::Matrix<6, 1, double>&, Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>&, int gp,
-    int eleGID);
-template void Mat::PlasticDruckerPrager::evaluate_fad<FAD>(const Core::LinAlg::Matrix<3, 3>*,
-    const Core::LinAlg::Matrix<6, 1, FAD>&, const Teuchos::ParameterList&,
-    Core::LinAlg::Matrix<6, 1, FAD>&, Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>&, int gp,
-    int eleGID);
-template void Mat::PlasticDruckerPrager::stress<double>(const double p,
-    const Core::LinAlg::Matrix<NUM_STRESS_3D, 1, double>& devstress,
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1, double>& stress) const;
-template void Mat::PlasticDruckerPrager::stress<FAD>(const FAD p,
-    const Core::LinAlg::Matrix<NUM_STRESS_3D, 1, FAD>& devstress,
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1, FAD>& stress) const;
-template std::pair<double, double>
-Mat::PlasticDruckerPrager::return_to_cone_funct_and_deriv<double>(
-    double Dgamma, double G, double kappa, double Phi_trial);
-template std::pair<FAD, FAD> Mat::PlasticDruckerPrager::return_to_cone_funct_and_deriv<FAD>(
-    FAD Dgamma, FAD G, FAD kappa, FAD Phi_trial);
-template std::pair<double, double>
-Mat::PlasticDruckerPrager::return_to_apex_funct_and_deriv<double>(
-    double dstrainv, double p, double kappa, double strainbar_p);
-template std::pair<FAD, FAD> Mat::PlasticDruckerPrager::return_to_apex_funct_and_deriv<FAD>(
-    FAD dstrainv, FAD p, FAD kappa, FAD strainbar_p);
 
 FOUR_C_NAMESPACE_CLOSE
