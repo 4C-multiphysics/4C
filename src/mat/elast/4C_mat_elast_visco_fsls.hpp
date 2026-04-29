@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_MAT_ELAST_VISCO_FRACT_HPP
-#define FOUR_C_MAT_ELAST_VISCO_FRACT_HPP
+#ifndef FOUR_C_MAT_ELAST_VISCO_FSLS_HPP
+#define FOUR_C_MAT_ELAST_VISCO_FSLS_HPP
 
 #include "4C_config.hpp"
 
@@ -27,11 +27,11 @@ namespace Mat
        * <h3>Input line</h3>
        * MAT 1 VISCO_FSLS TAU 0.1 ALPHA 0.5 BETA 1
        */
-      class Fract : public Core::Mat::PAR::Parameter
+      class Fsls : public Core::Mat::PAR::Parameter
       {
        public:
         /// standard constructor
-        Fract(const Core::Mat::PAR::Parameter::Data& matdata);
+        Fsls(const Core::Mat::PAR::Parameter::Data& matdata);
 
         /// @name material parameters
         //@{
@@ -52,12 +52,12 @@ namespace Mat
               "Mat::Elastic::Summand::Factory.");
           return nullptr;
         };
-      };  // class Fract
+      };  // class Fsls
     }  // namespace PAR
 
 
     /*!
-     * @brief Material Viscofract
+     * @brief Material VISCO_FSLS
      *
      * This material offers a viscous and hyperelastic part. The model consists
      * of one spring in parallel to one sequential branch of a spring and a springpot.
@@ -73,11 +73,11 @@ namespace Mat
      *          Large Deformations
      * </ul>
      */
-    class Fract : public Summand
+    class Fsls : public Summand
     {
      public:
       /// constructor with given material parameters
-      Fract(Mat::Elastic::PAR::Fract* params);
+      Fsls(Mat::Elastic::PAR::Fsls* params);
 
       /// @name Access material constants
       //@{
@@ -85,7 +85,7 @@ namespace Mat
       /// material type
       Core::Materials::MaterialType material_type() const override
       {
-        return Core::Materials::mes_fract;
+        return Core::Materials::mes_fsls;
       }
 
       //@}
@@ -93,9 +93,8 @@ namespace Mat
       /// Read material parameters
       void read_material_parameters_visco(double& tau,  ///< relaxation parameter tau
           double& beta,                                 ///< emphasis of viscous to elastic part
-          double& alpha,  ///< fractional order derivative (just for visoc_fract)
-          std::string&
-              solve  //!< variant of the solution of the evolution integral (just for genmax)
+          double& alpha,                                ///< fractional order derivative (for FSLS)
+          std::string& solve  ///< unused for FSLS; kept for interface compatibility
           ) override;
 
       /// Indicator for formulation
@@ -113,20 +112,19 @@ namespace Mat
 
       /// Indicator for the chosen viscoelastic formulations
       void specify_visco_formulation(
-          bool& isovisco,     ///< global indicator for isotropic, split and viscous formulation
-          bool& viscogenmax,  ///< global indicator for viscous contribution according the SLS-Model
-          bool& viscogeneralizedgenmax,  ///< global indicator for viscoelastic contribution
-                                         ///< according to the generalized Maxwell Model
-          bool& viscofract  ///< global indicator for viscous contribution according the FSLS-Model
+          bool& visco_iso_rate,  ///< global indicator for isotropic rate-dependent visco response
+          bool& visco_legacy_sls_removed,   ///< global indicator for removed legacy SLS model
+          bool& visco_generalized_maxwell,  ///< global indicator for generalized Maxwell model
+          bool& visco_fsls                  ///< global indicator for FSLS model
           ) override
       {
-        viscofract = true;
+        visco_fsls = true;
         return;
       };
 
      private:
       /// my material parameters
-      Mat::Elastic::PAR::Fract* params_;
+      Mat::Elastic::PAR::Fsls* params_;
     };
 
   }  // namespace Elastic

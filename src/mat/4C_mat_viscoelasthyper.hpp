@@ -167,12 +167,7 @@ namespace Mat
     }
 
     /// Check if history variables are already initialized
-    virtual bool initialized() const
-    {
-      return isinitvis_ && (histscgcurr_ != nullptr);
-      return isinitvis_ && (histstresscurr_ != nullptr);
-      return isinitvis_ && (histartstresscurr_ != nullptr);
-    }
+    virtual bool initialized() const { return isinitvis_ && (histscgcurr_ != nullptr); }
 
     /// hyperelastic stress response plus elasticity tensor
     void evaluate(const Core::LinAlg::Tensor<double, 3, 3>* defgrad,
@@ -221,37 +216,27 @@ namespace Mat
         Core::LinAlg::Matrix<6, 1>& id2, Core::LinAlg::Matrix<6, 1>& icg,
         Core::LinAlg::Matrix<6, 6>& id4, Core::LinAlg::Matrix<6, 1>& modrcgrate);
 
-    /// calculates the stress and elasticitiy tensor for the viscous Genmax-material
-    /// depending on the viscoelastic material isochoric-principal, isochoric-modified
-    /// (volumetric and isochoric equal treaded) or anisotropic stresses and elasticity
-    /// tensors are added
-    virtual void evaluate_visco_gen_max(Core::LinAlg::Matrix<6, 1>* stress,
-        Core::LinAlg::Matrix<6, 6>* cmat, Core::LinAlg::Matrix<6, 1>& Q,
-        Core::LinAlg::Matrix<6, 6>& cmatq, const Teuchos::ParameterList& params,
-        const Mat::EvaluationContext<3>& context, int gp);
-
-    /// calculates the stress and elasticitiy tensor for the GeneneralizedMax-material
-    virtual void evaluate_visco_generalized_gen_max(Core::LinAlg::Matrix<6, 1>& Q,
+    /// calculates the stress and elasticitiy tensor for the generalized Maxwell material
+    virtual void evaluate_visco_generalized_maxwell(Core::LinAlg::Matrix<6, 1>& Q,
         Core::LinAlg::Matrix<6, 6>& cmatq, const Teuchos::ParameterList& params,
         const Mat::EvaluationContext<3>& context, const Core::LinAlg::Matrix<6, 1>* glstrain,
         int gp, int eleGID);
 
-    /// calculates the stress and elasticity tensor for the viscos Fract-material
+    /// calculates the stress and elasticity tensor for the VISCO_FSLS model
     /// depending on the viscoelastic material isochoric-principal, isochoric-modified
     /// (volumetric and isochoric equal treaded) or anisotropic stresses and elasticity
     /// tensors are added
-    virtual void evaluate_visco_fract(Core::LinAlg::Matrix<6, 1> stress,
+    virtual void evaluate_visco_fsls(Core::LinAlg::Matrix<6, 1> stress,
         Core::LinAlg::Matrix<6, 6> cmat, Core::LinAlg::Matrix<6, 1>& Q,
         Core::LinAlg::Matrix<6, 6>& cmatq, const Teuchos::ParameterList& params,
         const Mat::EvaluationContext<3>& context, int gp);
 
     /// @name Flags to specify the viscous formulations
     //@{
-    bool isovisco_;     ///< global indicator for isotropic split viscous formulation
-    bool viscogenmax_;  ///< global indicator for viscous contribution according the SLS-Model
-    bool viscogeneralizedgenmax_;  ///< global indicator for viscous contribution of the branches
-                                   ///< according to the generalized Maxwell model
-    bool viscofract_;  ///< global indicator for viscous contribution according the FSLS-Model
+    bool isovisco_;                   ///< global indicator for isotropic split viscous formulation
+    bool visco_generalized_maxwell_;  ///< global indicator for viscous contribution of branches
+                                      ///< according to the generalized Maxwell model
+    bool visco_fsls_;  ///< global indicator for viscous contribution according the FSLS model
                        //@}
 
    private:
@@ -264,14 +249,6 @@ namespace Mat
         histmodrcgcurr_;  ///< current decoupled Cauchy-Green-Tensor
     std::shared_ptr<std::vector<Core::LinAlg::Matrix<6, 1>>>
         histmodrcglast_;  ///< decoupled Cauchy-Green-Tensor of last converged state
-    std::shared_ptr<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>
-        histstresscurr_;  ///< current stress
-    std::shared_ptr<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>
-        histstresslast_;  ///< stress of last converged state
-    std::shared_ptr<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>
-        histartstresscurr_;  ///< current stress
-    std::shared_ptr<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>
-        histartstresslast_;  ///< stress of last converged state
     std::shared_ptr<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>
         histbranchstresscurr_;  ///< current stress of the branches
     std::shared_ptr<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>
@@ -281,9 +258,9 @@ namespace Mat
     std::shared_ptr<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>
         histbranchelaststresslast_;  ///< elastic stress of the branches of last converged state
     std::shared_ptr<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>
-        histfractartstresscurr_;  ///< current artificial stress of fractional SLS-model
+        histfslsartstresscurr_;  ///< current artificial stress of FSLS model
     std::shared_ptr<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>
-        histfractartstresslastall_;  ///< artificial fractional stress of all last converged states
+        histfslsartstresslastall_;  ///< artificial FSLS stress history of converged states
 
     bool isinitvis_;  ///< indicates if #Initialized routine has been called
   };  // class ViscoElastHyper

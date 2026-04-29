@@ -215,7 +215,7 @@ std::string_view Core::Materials::to_string(Core::Materials::MaterialType materi
       return "VISCO_IsoRateDep";
     case mes_genmax:
       return "VISCO_GenMax";
-    case mes_fract:
+    case mes_fsls:
       return "VISCO_FSLS";
     case mes_viscopart:
       return "VISCO_PART";

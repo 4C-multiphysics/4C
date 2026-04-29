@@ -219,7 +219,7 @@ namespace Core::Materials
     mes_coupvarga,           ///< isotropic Varga material
     mes_genmax,              ///< viscous contribution according to SLS-Model,
     mes_generalizedgenmax,   ///< viscoelastic branches of the generalized Maxwell Model
-    mes_fract,               ///< viscous contribution according to FSLS-Model,
+    mes_fsls,                ///< viscous contribution according to FSLS model,
     mes_viscopart,           ///< viscous part of generalized Maxwell Model
     mes_viscobranch,         ///< viscoelastic branch of generalized Maxwell Model
     mes_iso1pow,          ///< isochoric general power hyperelastic potential summand for modinv I

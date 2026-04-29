@@ -5,13 +5,13 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_mat_elast_visco_fract.hpp"
+#include "4C_mat_elast_visco_fsls.hpp"
 
 #include "4C_material_parameter_base.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
-Mat::Elastic::PAR::Fract::Fract(const Core::Mat::PAR::Parameter::Data& matdata)
+Mat::Elastic::PAR::Fsls::Fsls(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
       tau_(matdata.parameters.get<double>("TAU")),
       alpha_(matdata.parameters.get<double>("ALPHA")),
@@ -19,9 +19,9 @@ Mat::Elastic::PAR::Fract::Fract(const Core::Mat::PAR::Parameter::Data& matdata)
 {
 }
 
-Mat::Elastic::Fract::Fract(Mat::Elastic::PAR::Fract* params) : params_(params) {}
+Mat::Elastic::Fsls::Fsls(Mat::Elastic::PAR::Fsls* params) : params_(params) {}
 
-void Mat::Elastic::Fract::read_material_parameters_visco(
+void Mat::Elastic::Fsls::read_material_parameters_visco(
     double& tau, double& beta, double& alpha, std::string& solve)
 {
   tau = params_->tau_;

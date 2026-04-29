@@ -1,6 +1,6 @@
 TITLE:
   - "Testcase for testing viscoelasthyper-toolbox with new solid elements."
-  - "And summands: genmax, iso1pow, fract"
+  - "And summands: generalized maxwell, iso1pow, fsls"
 PROBLEM TYPE:
   PROBLEMTYPE: "Structure"
 DISCRETISATION:

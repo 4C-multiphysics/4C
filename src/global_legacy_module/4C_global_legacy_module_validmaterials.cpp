@@ -2406,7 +2406,7 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*--------------------------------------------------------------------*/
   // viscos contribution to visohyperelastic material according to FSLS-Model
   {
-    known_materials[Core::Materials::mes_fract] = group("VISCO_FSLS",
+    known_materials[Core::Materials::mes_fsls] = group("VISCO_FSLS",
         {
             parameter<double>("TAU", {.description = "relaxation parameter"}),
             parameter<double>("ALPHA", {.description = "fractional order derivative"}),
@@ -2425,7 +2425,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description = "the list material IDs", .size = from_parameter<int>("NUMBRANCH")}),
             parameter<std::string>("SOLVE",
                 {.description = "Solution for evolution equation: OneStepTheta (default) or "
-                                "ExponentialTimeDiscretization (convolution integral)"}),
+                                "ExponentialTimeDiscretization (convolution integral)",
+                    .default_value = "OneStepTheta"}),
         },
         {.description = "Generalized Maxwell model"});
   }

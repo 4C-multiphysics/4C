@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_mat_elast_visco_generalizedgenmax.hpp"
+#include "4C_mat_elast_visco_generalizedmaxwell.hpp"
 
 #include "4C_global_data.hpp"
 #include "4C_mat_par_bundle.hpp"
@@ -13,7 +13,7 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-Mat::Elastic::PAR::GeneralizedGenMax::GeneralizedGenMax(
+Mat::Elastic::PAR::GeneralizedMaxwell::GeneralizedMaxwell(
     const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
       numbranch_(matdata.parameters.get<int>("NUMBRANCH")),
@@ -27,10 +27,10 @@ Mat::Elastic::PAR::GeneralizedGenMax::GeneralizedGenMax(
         solve_, matdata.id);
 }
 
-Mat::Elastic::GeneralizedGenMax::GeneralizedGenMax(Mat::Elastic::PAR::GeneralizedGenMax* params)
+Mat::Elastic::GeneralizedMaxwell::GeneralizedMaxwell(Mat::Elastic::PAR::GeneralizedMaxwell* params)
     : params_(params), branchespotsum_(0), branchtau_(0), internalpotsum_(0)
 {
-  // loop over materials of GeneralizedGenMax (branches)
+  // loop over materials of GeneralizedMaxwell (branches)
   std::vector<int>::const_iterator m;
   for (m = params_->matids_.begin(); m != params_->matids_.end(); ++m)
   {
@@ -63,14 +63,14 @@ Mat::Elastic::GeneralizedGenMax::GeneralizedGenMax(Mat::Elastic::PAR::Generalize
     // write summand in the vector of summands of each branch
     internalpotsum_.push_back(sum);
 
-    // write into vector of summands of the GeneralizedGenMax material
+    // write into vector of summands of the GeneralizedMaxwell material
     branchespotsum_.push_back(internalpotsum_);
     branchtau_.push_back(tau);
 
   }  // end for-loop over branches
 }
 
-void Mat::Elastic::GeneralizedGenMax::read_material_parameters(
+void Mat::Elastic::GeneralizedMaxwell::read_material_parameters(
     int& numbranch, const std::vector<int>*& matids, std::string& solve)
 {
   numbranch = params_->numbranch_;

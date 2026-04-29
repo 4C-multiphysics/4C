@@ -564,12 +564,11 @@ namespace Mat
           int gp,  ///< Gauss point
           int eleGID) {};
 
-      //! Read material parameters of viscogenmax or viscofract
+      //! Read material parameters of viscoelastic scalar models
       virtual void read_material_parameters_visco(double& tau,  ///< relaxation parameter tau
-          double& beta,   ///< emphasis of viscous to elastic part
-          double& alpha,  ///< fractional order derivative (just for visoc_fract)
-          std::string&
-              solve  //!< solution variant for time evolution of viscous stress (just for genmax)
+          double& beta,       ///< emphasis of viscous to elastic part
+          double& alpha,      ///< fractional order derivative (for FSLS)
+          std::string& solve  //!< time integration label (used by legacy/removed SLS material)
       ) {};
 
       //! GeneralizedMaxwell
@@ -693,12 +692,10 @@ namespace Mat
 
       //! Indicator for the chosen viscoelastic formulations
       virtual void specify_visco_formulation(
-          bool& isovisco,     ///< global indicator for isotropic, split and viscous formulation
-          bool& viscogenmax,  ///< global indicator for viscous contribution according to the
-                              ///< SLS-Model
-          bool& viscogeneralizedgenmax,  ///< global indicator for viscoelastic contribution
-                                         ///< according to the generalized Maxwell Model
-          bool& viscofract  ///< global indicator for viscous contribution according the FSLS-Model
+          bool& visco_iso_rate,  ///< global indicator for isotropic rate-dependent visco response
+          bool& visco_legacy_sls_removed,   ///< global indicator for removed legacy SLS model
+          bool& visco_generalized_maxwell,  ///< global indicator for generalized Maxwell model
+          bool& visco_fsls                  ///< global indicator for FSLS model
       ) { /* do nothing for non viscoelastic material models */ };
 
       //@}

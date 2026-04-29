@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_MAT_ELAST_VISCO_GENERALIZEDGENMAX_HPP
-#define FOUR_C_MAT_ELAST_VISCO_GENERALIZEDGENMAX_HPP
+#ifndef FOUR_C_MAT_ELAST_VISCO_GENERALIZEDMAXWELL_HPP
+#define FOUR_C_MAT_ELAST_VISCO_GENERALIZEDMAXWELL_HPP
 
 #include "4C_config.hpp"
 
@@ -30,11 +30,11 @@ namespace Mat
        *  ExponentialTimeDiscretization
        *  MAT 1 VISCO_GeneralizedMaxwell NUMBRANCH 3 MATIDS 4 5 6 SOLVE OneStepTheta
        */
-      class GeneralizedGenMax : public Core::Mat::PAR::Parameter
+      class GeneralizedMaxwell : public Core::Mat::PAR::Parameter
       {
        public:
         /// standard constructor
-        GeneralizedGenMax(const Core::Mat::PAR::Parameter::Data& matdata);
+        GeneralizedMaxwell(const Core::Mat::PAR::Parameter::Data& matdata);
 
         /// @name material parameters
         //@{
@@ -48,7 +48,7 @@ namespace Mat
         /// create material instance of matching type with my parameters
 
         std::shared_ptr<Core::Mat::Material> create_material() override { return nullptr; };
-      };  // class GeneralizedGenMax
+      };  // class GeneralizedMaxwell
 
 
       /*!
@@ -90,11 +90,11 @@ namespace Mat
 
 
 
-    class GeneralizedGenMax : public Summand
+    class GeneralizedMaxwell : public Summand
     {
      public:
       /// constructor with given material parameters
-      GeneralizedGenMax(Mat::Elastic::PAR::GeneralizedGenMax* params);
+      GeneralizedMaxwell(Mat::Elastic::PAR::GeneralizedMaxwell* params);
 
       /// @name Access material constants
       //@{
@@ -137,24 +137,23 @@ namespace Mat
 
       /// Indicator for the chosen viscoelastic formulations
       void specify_visco_formulation(
-          bool& isovisco,     ///< global indicator for isotropic, split and viscous formulation
-          bool& viscogenmax,  ///< global indicator for viscous contribution according the SLS-Model
-          bool& viscogeneralizedgenmax,  ///< global indicator for viscoelastic contribution
-                                         ///< according to the generalized Maxwell Model
-          bool& viscofract  ///< global indicator for viscous contribution according the FSLS-Model
+          bool& visco_iso_rate,  ///< global indicator for isotropic rate-dependent visco response
+          bool& visco_legacy_sls_removed,   ///< global indicator for removed legacy SLS model
+          bool& visco_generalized_maxwell,  ///< global indicator for generalized Maxwell model
+          bool& visco_fsls                  ///< global indicator for FSLS model
           ) override
       {
-        viscogeneralizedgenmax = true;
+        visco_generalized_maxwell = true;
         return;
       };
 
 
      private:
       /// my material parameters
-      Mat::Elastic::PAR::GeneralizedGenMax* params_;
+      Mat::Elastic::PAR::GeneralizedMaxwell* params_;
 
      protected:
-      /// summands of the GeneralizedGenMax material or each branch
+      /// summands of the GeneralizedMaxwell material or each branch
       std::vector<std::vector<std::shared_ptr<Mat::Elastic::Summand>>> branchespotsum_;
       /// branch relaxation parameters
       std::vector<double> branchtau_;
