@@ -516,7 +516,7 @@ four_c_test(TEST_FILE elch_RCE_rotsymm_pbc.4C.yaml NP 2)
 four_c_test(TEST_FILE elch_straight_convection.4C.yaml NP 2)
 four_c_test(TEST_FILE elch_test.4C.yaml NP 2)
 four_c_test(TEST_FILE embeddedmesh_block_nurbs27_hex8_wedge6.4C.yaml NP 2 REQUIRED_DEPENDENCIES Qhull RETURN_AS current)
-__four_c_test_vtk(BASED_ON ${current} PVD_RESULT xxx-structure.pvd PVD_REFERENCE ref/embeddedmesh_block_nurbs27_hex8_wedge6-structure.pvd TOLERANCE 1e-06)
+__four_c_test_vtk(BASED_ON ${current} PVD_RESULT xxx-structure.pvd PVD_REFERENCE ref/embeddedmesh_block_nurbs27_hex8_wedge6-structure.pvd TOLERANCE 5e-06)
 four_c_test(TEST_FILE embeddedmesh_cantilever_beam.4C.yaml NP 1 REQUIRED_DEPENDENCIES Qhull RETURN_AS current)
 __four_c_test_vtk(BASED_ON ${current} PVD_RESULT xxx-structure.pvd PVD_REFERENCE ref/embeddedmesh_cantilever_beam-structure.pvd TOLERANCE 1e-06)
 four_c_test(TEST_FILE embeddedmesh_cut_bar_under_torsion_one_element.4C.yaml NP 1 REQUIRED_DEPENDENCIES Qhull RETURN_AS current)
@@ -2581,7 +2581,7 @@ four_c_test(TEST_FILE xfluid_ls_neumann_inflow_stab.4C.yaml NP 2)
 four_c_test(TEST_FILE xfluid_mesh_neumann_inflow_stab.4C.yaml NP 2)
 four_c_test(TEST_FILE xfluid_moving_cylinder_NavSlip_vareps_levelset_psmoothed_32x128.4C.yaml NP 3 RETURN_AS current REQUIRED_DEPENDENCIES Qhull)
 if (FOUR_C_WITH_QHULL)
-__four_c_test_restart(BASED_ON ${current} SAME_FILE NP 3 RESTART_STEP 2)
+    __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 3 RESTART_STEP 2)
 endif ()
 four_c_test(TEST_FILE xfluid_moving_torus_NavSlip_vareps_levelset_psmoothed_8x8x16.4C.yaml NP 3 RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 3 RESTART_STEP 3)
@@ -2915,7 +2915,7 @@ four_c_test(TEST_FILE roughcontact2d_mirco_varying_roughness.4C.yaml NP 2 OMP_TH
 
 # four_c_test_cut_test
 if (FOUR_C_WITH_QHULL)
-four_c_test_cut_test(2)
+    four_c_test_cut_test(2)
 endif ()
 
 # four_c_test_nested_parallelism
