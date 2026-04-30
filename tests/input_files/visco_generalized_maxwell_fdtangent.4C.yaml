@@ -58,10 +58,22 @@ MATERIALS:
       C: 25910.38
       D: 3
   - MAT: 5
-    VISCO_GenMax:
+    VISCO_GeneralizedMaxwell:
+      NUMBRANCH: 3
+      MATIDS: [6, 7, 8]
+      SOLVE: "OneStepTheta"
+  - MAT: 6
+    VISCO_GeneralizedMaxwellBranch:
       TAU: 0.1
-      BETA: 1
-      SOLVE: "OST"
+      MATID: 2
+  - MAT: 7
+    VISCO_GeneralizedMaxwellBranch:
+      TAU: 0.1
+      MATID: 3
+  - MAT: 8
+    VISCO_GeneralizedMaxwellBranch:
+      TAU: 0.1
+      MATID: 4
 NODE COORDS:
   - "NODE 1 COORD 4.479155e+00 1.817528e+00 0.000000e+00"
   - "NODE 2 COORD 4.676285e+00 1.814495e+00 0.000000e+00"

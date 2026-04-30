@@ -2404,23 +2404,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   }
 
   /*--------------------------------------------------------------------*/
-  // viscos contribution to visohyperelastic material according to SLS-Model
-  {
-    known_materials[Core::Materials::mes_genmax] = group("VISCO_GenMax",
-        {
-            parameter<double>("TAU", {.description = "relaxation parameter"}),
-            parameter<double>("BETA", {.description = "emphasis of viscous to elastic part"}),
-            parameter<std::string>(
-                "SOLVE", {.description = "Solution of evolution equation via: OST (default) or "
-                                         "CONVOL (convolution integral)"}),
-        },
-        {.description = "Viscous contribution according to SLS-Model"});
-  }
-
-  /*--------------------------------------------------------------------*/
   // viscos contribution to visohyperelastic material according to FSLS-Model
   {
-    known_materials[Core::Materials::mes_fract] = group("VISCO_Fract",
+    known_materials[Core::Materials::mes_fsls] = group("VISCO_FSLS",
         {
             parameter<double>("TAU", {.description = "relaxation parameter"}),
             parameter<double>("ALPHA", {.description = "fractional order derivative"}),
@@ -2430,41 +2416,31 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   }
 
   /*--------------------------------------------------------------------*/
-  // viscous contribution of a branch of a generalized Maxwell model
-  {
-    known_materials[Core::Materials::mes_viscopart] = group("VISCO_PART",
-        {
-            parameter<double>("TAU",
-                {.description = "dynamic viscosity divided by young's modulus of the branch"}),
-        },
-        {.description = "Viscous contribution of a viscoelastic Branch"});
-  }
-  /*--------------------------------------------------------------------*/
   // viscoelatic branches of a generalized Maxwell model
   {
-    known_materials[Core::Materials::mes_generalizedgenmax] = group("VISCO_GeneralizedGenMax",
+    known_materials[Core::Materials::mes_generalizedgenmax] = group("VISCO_GeneralizedMaxwell",
         {
             parameter<int>("NUMBRANCH", {.description = "number of viscoelastic branches"}),
             parameter<std::vector<int>>("MATIDS",
                 {.description = "the list material IDs", .size = from_parameter<int>("NUMBRANCH")}),
-            parameter<std::string>(
-                "SOLVE", {.description = "Solution for evolution equation: OST (default) or CONVOL "
-                                         "(convolution integral)"}),
+            parameter<std::string>("SOLVE",
+                {.description = "Solution for evolution equation: OneStepTheta (default) or "
+                                "ExponentialTimeDiscretization (convolution integral)",
+                    .default_value = "OneStepTheta"}),
         },
-        {.description = "Viscoelastic Branches of generalized Maxwell"});
+        {.description = "Generalized Maxwell model"});
   }
 
   /*--------------------------------------------------------------------*/
-  // description of a viscoelatic branch of a generalized Maxwell model
+  // description of a viscoelastic branch of a generalized Maxwell model
   {
-    known_materials[Core::Materials::mes_viscobranch] = group("VISCO_BRANCH",
+    known_materials[Core::Materials::mes_viscobranch] = group("VISCO_GeneralizedMaxwellBranch",
         {
-            parameter<int>(
-                "NUMMAT", {.description = "number of materials in the viscoelastic branch"}),
-            parameter<std::vector<int>>("MATIDS",
-                {.description = "the list material IDs", .size = from_parameter<int>("NUMMAT")}),
+            parameter<double>(
+                "TAU", {.description = "dynamic viscosity divided by branch stiffness"}),
+            parameter<int>("MATID", {.description = "material ID of branch elasticity rule"}),
         },
-        {.description = "Viscoelastic Branch (viscous and elastic contribution)"});
+        {.description = "Viscoelastic branch for generalized Maxwell model"});
   }
 
   /*--------------------------------------------------------------------*/

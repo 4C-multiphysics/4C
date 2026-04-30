@@ -5,28 +5,27 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_mat_elast_visco_genmax.hpp"
+#include "4C_mat_elast_visco_fsls.hpp"
 
 #include "4C_material_parameter_base.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
-Mat::Elastic::PAR::GenMax::GenMax(const Core::Mat::PAR::Parameter::Data& matdata)
+Mat::Elastic::PAR::Fsls::Fsls(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
       tau_(matdata.parameters.get<double>("TAU")),
-      beta_(matdata.parameters.get<double>("BETA")),
-      solve_(matdata.parameters.get<std::string>("SOLVE"))
+      alpha_(matdata.parameters.get<double>("ALPHA")),
+      beta_(matdata.parameters.get<double>("BETA"))
 {
 }
 
-Mat::Elastic::GenMax::GenMax(Mat::Elastic::PAR::GenMax* params) : params_(params) {}
+Mat::Elastic::Fsls::Fsls(Mat::Elastic::PAR::Fsls* params) : params_(params) {}
 
-void Mat::Elastic::GenMax::read_material_parameters_visco(
+void Mat::Elastic::Fsls::read_material_parameters_visco(
     double& tau, double& beta, double& alpha, std::string& solve)
 {
   tau = params_->tau_;
+  alpha = params_->alpha_;
   beta = params_->beta_;
-  solve = params_->solve_;
 }
-
 FOUR_C_NAMESPACE_CLOSE
