@@ -360,6 +360,9 @@ BeamInteraction::create_beam_to_solid_volume_pair_mortar(const Core::FE::CellTyp
     case BeamToSolid::BeamToSolidMortarShapefunctions::line4:
       return create_beam_to_solid_volume_pair_mortar<BtsClass, BtsMortarTemplateArguments...,
           GeometryPair::t_line4>(shape, other_mortar_shape_function...);
+    case BeamToSolid::BeamToSolidMortarShapefunctions::dual_hermite:
+      return create_beam_to_solid_volume_pair_mortar<BtsClass, BtsMortarTemplateArguments...,
+          GeometryPair::t_hermite_dual>(shape, other_mortar_shape_function...);
     default:
       FOUR_C_THROW("Wrong mortar shape function.");
       return nullptr;

@@ -130,6 +130,10 @@ BeamInteraction::mortar_shape_functions_to_number_of_lagrange_values(
       const int n_fourier_modes = beam_to_volume_parameters->get_number_of_fourier_modes();
       return (n_fourier_modes * 2 + 1);
     }
+    else if (shape_function == BeamToSolid::BeamToSolidMortarShapefunctions::dual_hermite)
+    {
+      return 2;
+    }
     else
     {
       return 1;
@@ -162,6 +166,12 @@ BeamInteraction::mortar_shape_functions_to_number_of_lagrange_values(
     {
       const unsigned int n_lambda_node = 1 * n_dim * number_of_values_per_entry;
       const unsigned int n_lambda_element = 2 * n_dim * number_of_values_per_entry;
+      return {n_lambda_node, n_lambda_element};
+    }
+    case BeamToSolid::BeamToSolidMortarShapefunctions::dual_hermite:
+    {
+      const unsigned int n_lambda_node = n_dim * number_of_values_per_entry;
+      const unsigned int n_lambda_element = 0;
       return {n_lambda_node, n_lambda_element};
     }
     default:
@@ -920,50 +930,62 @@ namespace BeamInteraction
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex8, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex8, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex8, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex8, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex20, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex20, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex20, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex20, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex27, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex27, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex27, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_hex27, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tet4, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tet4, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tet4, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_tet4, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tet10, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tet10, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tet10, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_tet10, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_nurbs27, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_nurbs27, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_nurbs27, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_nurbs27, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad4, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad4, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad4, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad4, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad8, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad8, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad8, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad8, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad9, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad9, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad9, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_quad9, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tri3, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tri3, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tri3, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_tri3, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tri6, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tri6, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_tri6, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_tri6, t_hermite_dual);
 
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_nurbs9, t_line2);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_nurbs9, t_line3);
   initialize_template_assemble_local_mortar_contributions(t_hermite, t_nurbs9, t_line4);
+  initialize_template_assemble_local_mortar_contributions(t_hermite, t_nurbs9, t_hermite_dual);
 }  // namespace BeamInteraction
 
 FOUR_C_NAMESPACE_CLOSE
