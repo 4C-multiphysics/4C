@@ -46,7 +46,10 @@ namespace Core::LinAlg
     /// (i.e., 1 / (distance^power))
     std::optional<double> inverse_distance_power;
 
-    double distance_threshold = 1.0e-8;  ///< threshold for distance to avoid singularities
+    /// distance threshold below which a reference point is considered coincident with the
+    /// interpolation point; if any reference point is within this threshold, its weight is set
+    /// to 1.0 and all others to 0.0
+    double distance_threshold = 1.0e-8;
   };
 
   /**
