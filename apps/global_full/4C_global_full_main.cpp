@@ -29,6 +29,14 @@
 #ifdef FOUR_C_ENABLE_FE_TRAPPING
 #include <cfenv>
 #endif
+//#/#{
+#include <Tpetra_Map.hpp>
+#include <Tpetra_Vector.hpp>
+
+#include <Teuchos_CommHelpers.hpp>
+#include <Teuchos_DefaultMpiComm.hpp>
+#include <Teuchos_RCP.hpp>
+//#/#}
 
 using namespace FourC;
 
@@ -67,6 +75,53 @@ int main(int argc, char* argv[])
       .np_type = arguments.nptype,
       .diffgroup = arguments.diffgroup,
   };
+  
+    // # TEST KOKKOS STUFF HERE:{
+  // Kokkos
+  {
+  using ExecSpace_DefaultHost_t = Kokkos::DefaultHostExecutionSpace;
+    using ExecSpace_Default_t = Kokkos::DefaultExecutionSpace;
+    using MemorySpace_Host_t = Kokkos::HostSpace;
+    using MemorySpace_ofDefaultExec_t = ExecSpace_Default_t::memory_space;
+    using Device_Host_t = Kokkos::Device<ExecSpace_DefaultHost_t, MemorySpace_Host_t>;
+    using Device_Default_t = Kokkos::Device<ExecSpace_Default_t, MemorySpace_ofDefaultExec_t>;
+
+    using ViewVector_d = Kokkos::View<double*, Kokkos::LayoutLeft, Device_Default_t>;
+    using ViewMatrix_d = Kokkos::View<double**, Kokkos::LayoutLeft, Device_Default_t>;
+
+      std::cout << "-- Kokkos information --\n";
+      std::cout << "Threads in use: " << ExecSpace_Default_t().concurrency() << "\n";
+      std::cout << "Default execution space: " << typeid(ExecSpace_Default_t).name() << "\n";
+      std::cout << "Default host execution space: " << typeid(ExecSpace_DefaultHost_t).name() << "\n";
+      std::cout << "Default memory space: " << typeid(MemorySpace_ofDefaultExec_t).name() << "\n";
+      std::cout << "Default host memory space: " << typeid(MemorySpace_Host_t).name() << "\n";
+      std::cout << "Num devices = " << Kokkos::num_devices() << "\n";
+      std::cout << "\n";
+
+  }
+
+
+  // TPETRA
+  {
+    using LO = int;
+    using GO = int;
+    using map_type = Tpetra::Map<LO, GO>;
+    using vec_type = Tpetra::Vector<double, LO, GO>;
+
+
+
+    using node_type = typename vec_type::node_type;
+    using device_type = typename vec_type::device_type;
+    using execution_space = typename vec_type::execution_space;
+    using memory_space = typename device_type::memory_space;
+
+      std::cout << "-- Tpetra type information --\n";
+      std::cout << "vec_type::node_type        = " << typeid(node_type).name() << '\n';
+      std::cout << "vec_type::device_type      = " << typeid(device_type).name() << '\n';
+      std::cout << "vec_type::execution_space  = " << typeid(execution_space).name() << '\n';
+      std::cout << "vec_type::memory_space     = " << typeid(memory_space).name() << '\n';
+      std::cout << '\n';
+  }
 
   // Initialize communicators and use RAII to ensure that they are finalized properly in the end.
   // Note: Communicators must be finalized after singleton cleanup and before MPI finalization

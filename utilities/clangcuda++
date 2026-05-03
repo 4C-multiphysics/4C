@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+
+# This is a compiler wrapper around clang++ for building 4C when using a Kokkos installation with the Cuda backend enabled, due to issues with nvcc and the nvcc_wrapper provided by Kokkos.
+#
+# When relevant, this wrapper should be used as the CXX_COMPILER or OMPI_CXX backend in combination with CMake flags to signal which targets (or objects) should be compiled for CUDA device, CUDA host-only, or normal (non-CUDA) C++.
+#
+# The following environment variables can be used to override the defaults:
+# - CLANGCUDA_CLANG: path to clang++
+# - CLANGCUDA_CUDA_PATH: path to the CUDA toolkit
+# - CLANGCUDA_ARCH: GPU architecture to target (default is sm_90)
+# - CLANGCUDA_LOG: optional path to a log file for recording final commands
+
+clang="${CLANGCUDA_CLANG:-/bin/clang++}"
+cuda_path="${CLANGCUDA_CUDA_PATH:-${CUDA_HOME:-/usr/local/cuda}}"
+
+compile=0
+cuda_host_only=0
+cuda_device=0
+arch="${CLANGCUDA_ARCH:-sm_90}"
+
+args=()
+skip_next_x=0
+
+for arg in "$@"; do
+  if [[ "$skip_next_x" == "1" ]]; then
+    skip_next_x=0
+    continue
+  fi
+
+  case "$arg" in
+    -c)
+      compile=1
+      args+=("$arg")
+      ;;
+
+    -DFOUR_C_CLANGCUDA_HOST_ONLY)
+      cuda_host_only=1
+      args+=("$arg")
+      ;;
+
+    -DFOUR_C_CLANGCUDA_DEVICE_COMPILE)
+      cuda_device=1
+      args+=("$arg")
+      ;;
+
+    *.cu)
+      cuda_device=1
+      args+=("$arg")
+      ;;
+
+    -extended-lambda|--extended-lambda|--expt-extended-lambda|-expt-extended-lambda)
+      ;;
+
+    -expt-relaxed-constexpr|--expt-relaxed-constexpr)
+      ;;
+
+    -arch=sm_*|--cuda-gpu-arch=sm_*)
+      # Ignore incoming arch flags. Wrapper decides from CLANGCUDA_ARCH or default.
+      ;;
+
+    -ccbin=*|--compiler-bindir=*)
+      ;;
+
+    -x)
+      # Drop incoming language override and the following language token.
+      skip_next_x=1
+      ;;
+
+    *)
+      args+=("$arg")
+      ;;
+  esac
+done
+
+# Sanity check
+if [[ "$cuda_host_only" == "1" && "$cuda_device" == "1" ]]; then
+  has_explicit_device=0
+  for arg in "$@"; do
+    if [[ "$arg" == "-DFOUR_C_CLANGCUDA_DEVICE_COMPILE" ]]; then
+      has_explicit_device=1
+      break
+    fi
+  done
+
+  if [[ "$has_explicit_device" == "1" ]]; then
+    echo "clangcuda++ wrapper error: both FOUR_C_CLANGCUDA_HOST_ONLY and FOUR_C_CLANGCUDA_DEVICE_COMPILE were set" >&2
+    exit 1
+  fi
+fi
+
+if [[ "$compile" == "1" && "$cuda_host_only" == "1" ]]; then
+  final=(
+    "$clang"
+    -x cuda
+    --cuda-host-only
+    --cuda-path="$cuda_path"
+    --cuda-gpu-arch="$arch"
+    -Wno-unknown-cuda-version
+    "${args[@]}"
+  )
+elif [[ "$compile" == "1" && "$cuda_device" == "1" ]]; then
+  final=(
+    "$clang"
+    -x cuda
+    --cuda-path="$cuda_path"
+    --cuda-gpu-arch="$arch"
+    -Wno-unknown-cuda-version
+    "${args[@]}"
+  )
+else
+  final=(
+    "$clang"
+    -Wno-unknown-cuda-version
+    "${args[@]}"
+  )
+fi
+
+if [[ -n "$CLANGCUDA_LOG" ]]; then
+  printf '%q ' "${final[@]}" >> "$CLANGCUDA_LOG"
+  printf '\n' >> "$CLANGCUDA_LOG"
+fi
+
+exec "${final[@]}"
