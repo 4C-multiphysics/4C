@@ -1,21 +1,28 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# This is a compiler wrapper around clang++ for building 4C when using a Kokkos installation with the Cuda backend enabled, due to issues with nvcc and the nvcc_wrapper provided by Kokkos.
+# This file is part of 4C multiphysics licensed under the
+# GNU Lesser General Public License v3.0 or later.
 #
-# When relevant, this wrapper should be used as the CXX_COMPILER or OMPI_CXX backend in combination with CMake flags to signal which targets (or objects) should be compiled for CUDA device, CUDA host-only, or normal (non-CUDA) C++.
+# See the LICENSE.md file in the top-level for license information.
+#
+# SPDX-License-Identifier: LGPL-3.0-or-later
+
+# This is a compiler wrapper around clang++ for building a project which uses Kokkos with the Cuda backend enabled, due to issues with nvcc and the nvcc_wrapper provided by Kokkos.
+#
+# When relevant, this wrapper should be used as the CXX_COMPILER or OMPI_CXX backend in combination with CMake flags to signal which targets (or objects) should be compiled for CUDA device (CLANGCUDA_MODE_DEVICE), CUDA host-only (CLANGCUDA_MODE_HOST), or normal (non-CUDA) C++.
 #
 # The following environment variables can be used to override the defaults:
-# - CLANGCUDA_CLANG: path to clang++
+# - CLANGCUDA_CLANG_PATH: path to clang++
 # - CLANGCUDA_CUDA_PATH: path to the CUDA toolkit
 # - CLANGCUDA_ARCH: GPU architecture to target (default is sm_90)
 # - CLANGCUDA_LOG: optional path to a log file for recording final commands
 
-clang="${CLANGCUDA_CLANG:-/bin/clang++}"
+clang="${CLANGCUDA_CLANG_PATH:-/bin/clang++}"
 cuda_path="${CLANGCUDA_CUDA_PATH:-${CUDA_HOME:-/usr/local/cuda}}"
 
 compile=0
-cuda_host_only=0
-cuda_device=0
+mode_cuda_host=0
+mode_cuda_device=0
 arch="${CLANGCUDA_ARCH:-sm_90}"
 
 args=()
@@ -33,18 +40,13 @@ for arg in "$@"; do
       args+=("$arg")
       ;;
 
-    -DFOUR_C_CLANGCUDA_HOST_ONLY)
-      cuda_host_only=1
+    -DCLANGCUDA_MODE_HOST)
+      mode_cuda_host=1
       args+=("$arg")
       ;;
 
-    -DFOUR_C_CLANGCUDA_DEVICE_COMPILE)
-      cuda_device=1
-      args+=("$arg")
-      ;;
-
-    *.cu)
-      cuda_device=1
+    -DCLANGCUDA_MODE_DEVICE)
+      mode_cuda_device=1
       args+=("$arg")
       ;;
 
@@ -73,22 +75,22 @@ for arg in "$@"; do
 done
 
 # Sanity check
-if [[ "$cuda_host_only" == "1" && "$cuda_device" == "1" ]]; then
+if [[ "$mode_cuda_host" == "1" && "$mode_cuda_device" == "1" ]]; then
   has_explicit_device=0
   for arg in "$@"; do
-    if [[ "$arg" == "-DFOUR_C_CLANGCUDA_DEVICE_COMPILE" ]]; then
+    if [[ "$arg" == "-DCLANGCUDA_MODE_DEVICE" ]]; then
       has_explicit_device=1
       break
     fi
   done
 
   if [[ "$has_explicit_device" == "1" ]]; then
-    echo "clangcuda++ wrapper error: both FOUR_C_CLANGCUDA_HOST_ONLY and FOUR_C_CLANGCUDA_DEVICE_COMPILE were set" >&2
+    echo "clangcuda++ wrapper error: both CLANGCUDA_MODE_HOST and CLANGCUDA_MODE_DEVICE were set" >&2
     exit 1
   fi
 fi
 
-if [[ "$compile" == "1" && "$cuda_host_only" == "1" ]]; then
+if [[ "$compile" == "1" && "$mode_cuda_host" == "1" ]]; then
   final=(
     "$clang"
     -x cuda
@@ -98,7 +100,7 @@ if [[ "$compile" == "1" && "$cuda_host_only" == "1" ]]; then
     -Wno-unknown-cuda-version
     "${args[@]}"
   )
-elif [[ "$compile" == "1" && "$cuda_device" == "1" ]]; then
+elif [[ "$compile" == "1" && "$mode_cuda_device" == "1" ]]; then
   final=(
     "$clang"
     -x cuda
