@@ -276,6 +276,13 @@ void Solid::MonitorDbc::create_reaction_maps(const Core::FE::Discretization& dis
 {
   const auto onoff = rcond.parameters().get<std::vector<int>>("ONOFF");
   const auto* nids = rcond.get_nodes();
+
+  // Iterate only over the spatial dimensions present in the discretisation.
+  // ONOFF has size NUMDOF (=n_dim for solids), so onoff[2] is out-of-bounds in 2D.
+  // react_maps[] is still sized DIM=3 by the caller; the trailing slot stays as an
+  // empty (valid) map so downstream 3D-iterating code keeps working.
+  const unsigned n_dim = discret.n_dim();
+
   std::vector<int> my_dofs[DIM];
   int ndof = 0;
   for (int i : onoff) ndof += i;
@@ -290,7 +297,7 @@ void Solid::MonitorDbc::create_reaction_maps(const Core::FE::Discretization& dis
 
     const Core::Nodes::Node* node = discret.l_row_node(rlid);
 
-    for (unsigned i = 0; i < DIM; ++i)
+    for (unsigned i = 0; i < n_dim; ++i)
       if (onoff[i] == 1) my_dofs[i].push_back(discret.dof(node, i));
   }
 
@@ -540,8 +547,13 @@ double Solid::MonitorDbc::get_reaction_force(Core::LinAlg::Matrix<DIM, 1>& rforc
   Core::LinAlg::Vector<double> complete_freact(*gstate_ptr_->get_freact_np());
   dbc_ptr_->rotate_global_to_local(complete_freact);
 
+  // Storage stays 3D (Matrix<DIM,1>); only loop over the dimensions that actually
+  // have DOFs. react_maps[2] is a valid empty map in 2D, but skipping it makes
+  // the intent explicit and keeps this function in sync with get_reaction_moment.
+  const unsigned n_dim = discret_ptr_->n_dim();
+
   Core::LinAlg::Matrix<DIM, 1> lrforce_xyz(Core::LinAlg::Initialization::zero);
-  for (unsigned d = 0; d < DIM; ++d)
+  for (unsigned d = 0; d < n_dim; ++d)
   {
     std::shared_ptr<Core::LinAlg::Vector<double>> partial_freact_ptr =
         Core::LinAlg::extract_my_vector(complete_freact, *(react_maps[d]));
@@ -566,11 +578,17 @@ double Solid::MonitorDbc::get_reaction_moment(Core::LinAlg::Matrix<DIM, 1>& rmom
   Core::LinAlg::Vector<double> complete_freact(*gstate_ptr_->get_freact_np());
   dbc_ptr_->rotate_global_to_local(complete_freact);
 
+  // Use the actual spatial dimension of the discretisation for DOF-indexed loops.
+  // The 3-component storage matrices below remain 3D because cross_product is only
+  // defined in 3D; the out-of-plane components stay zero in 2D, which is physically
+  // correct (the only non-trivial 2D reaction moment is m_z = x*F_y - y*F_x).
+  const unsigned n_dim = discret_ptr_->n_dim();
+
   Core::LinAlg::Matrix<DIM, 1> lrmoment_xyz(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<DIM, 1> node_reaction_force(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<DIM, 1> node_position(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<DIM, 1> node_reaction_moment(Core::LinAlg::Initialization::zero);
-  std::vector<int> node_gid(3);
+  std::vector<int> node_gid(n_dim);
 
   const auto onoff = rcond->parameters().get<std::vector<int>>("ONOFF");
   const std::vector<int>* nids = rcond->get_nodes();
@@ -578,7 +596,7 @@ double Solid::MonitorDbc::get_reaction_moment(Core::LinAlg::Matrix<DIM, 1>& rmom
   int ndof = 0;
   for (int i : onoff) ndof += i;
 
-  for (unsigned i = 0; i < DIM; ++i) my_dofs[i].reserve(nids->size() * ndof);
+  for (unsigned i = 0; i < n_dim; ++i) my_dofs[i].reserve(nids->size() * ndof);
 
   for (int nid : *nids)
   {
@@ -588,15 +606,16 @@ double Solid::MonitorDbc::get_reaction_moment(Core::LinAlg::Matrix<DIM, 1>& rmom
 
     const Core::Nodes::Node* node = discret_ptr_->l_row_node(rlid);
 
-    for (unsigned i = 0; i < DIM; ++i) node_gid[i] = discret_ptr_->dof(node, i);
+    for (unsigned i = 0; i < n_dim; ++i) node_gid[i] = discret_ptr_->dof(node, i);
 
     std::vector<double> mydisp = Core::FE::extract_values(*dispn, node_gid);
-    for (unsigned i = 0; i < DIM; ++i) node_position(i) = node->x()[i] + mydisp[i];
+    node_position.put_scalar(0.0);
+    for (unsigned i = 0; i < n_dim; ++i) node_position(i) = node->x()[i] + mydisp[i];
 
     // Get the reaction force at this node. This force will only contain non-zero values at the DOFs
     // where the DBC is active.
     node_reaction_force.put_scalar(0.0);
-    for (unsigned i = 0; i < DIM; ++i)
+    for (unsigned i = 0; i < n_dim; ++i)
     {
       if (onoff[i] == 1)
       {
