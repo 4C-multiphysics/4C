@@ -35,6 +35,10 @@
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
+#include <algorithm>
+#include <limits>
+#include <numeric>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------------*
@@ -49,7 +53,8 @@ Solid::TimeInt::Base::Base()
       datasdyn_(nullptr),
       dataglobalstate_(nullptr),
       int_ptr_(nullptr),
-      dbc_ptr_(nullptr)
+      dbc_ptr_(nullptr),
+      last_dynamic_rebalance_step_(std::numeric_limits<int>::min() / 2)
 {
   // empty constructor
 }
@@ -122,6 +127,57 @@ void Solid::TimeInt::Base::post_setup()
 {
   check_init_setup();
   int_ptr_->post_setup();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::TimeInt::Base::post_output()
+{
+  check_init_setup();
+
+  const auto& rebalance_config = datasdyn_->get_dynamic_rebalance_config();
+  if (!rebalance_config.enabled) return;
+
+  const std::vector<double> rank_eval_times =
+      dataglobalstate_->get_discret()->get_rank_eval_times();
+  if (rank_eval_times.empty()) return;
+
+  const auto max_it = std::ranges::max_element(rank_eval_times);
+  if (*max_it <= 1.0e-12) return;
+
+  const double mean_eval_time =
+      std::accumulate(rank_eval_times.begin(), rank_eval_times.end(), 0.0) /
+      static_cast<double>(rank_eval_times.size());
+  if (mean_eval_time <= 1.0e-12) return;
+
+  const int window_steps = std::max(1, rebalance_config.window_steps);
+  const int cooldown_steps = std::max(0, rebalance_config.cooldown_steps);
+
+  const double imbalance = *max_it / mean_eval_time;
+  dynamic_rebalance_imbalance_history_.push_back(imbalance);
+  while (static_cast<int>(dynamic_rebalance_imbalance_history_.size()) > window_steps)
+    dynamic_rebalance_imbalance_history_.pop_front();
+
+  if (static_cast<int>(dynamic_rebalance_imbalance_history_.size()) < window_steps) return;
+
+  const double averaged_imbalance =
+      std::accumulate(dynamic_rebalance_imbalance_history_.begin(),
+          dynamic_rebalance_imbalance_history_.end(), 0.0) /
+      static_cast<double>(dynamic_rebalance_imbalance_history_.size());
+  if (averaged_imbalance <= rebalance_config.imbalance_threshold) return;
+
+  const int current_step = get_step_n();
+  if (current_step - last_dynamic_rebalance_step_ < cooldown_steps) return;
+
+  Core::IO::cout << "====== Dynamic structure redistribution triggered after step " << current_step
+                 << " (rolling imbalance " << averaged_imbalance << ", threshold "
+                 << rebalance_config.imbalance_threshold << ")" << Core::IO::endl;
+
+  if (perform_dynamic_rebalance())
+  {
+    last_dynamic_rebalance_step_ = current_step;
+    dynamic_rebalance_imbalance_history_.clear();
+  }
 }
 
 /*----------------------------------------------------------------------------*

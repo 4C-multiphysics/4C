@@ -15,6 +15,8 @@
 #include "4C_structure_new_timint_basedataio.hpp"
 #include "4C_structure_new_timint_basedatasdyn.hpp"
 
+#include <deque>
+
 // forward declaration
 namespace Core::LinAlg
 {
@@ -99,7 +101,7 @@ namespace Solid
       void pre_solve() override {}
 
       /// wrapper for things that should be done after convergence of Newton scheme
-      void post_output() override {}
+      void post_output() override;
 
       /// things that should be done after the actual time loop is finished
       void post_time_loop() override;
@@ -877,6 +879,9 @@ namespace Solid
 
       /// pointer to the dirichlet boundary condition handler
       std::shared_ptr<Solid::Dbc> dbc_ptr_;
+
+      std::deque<double> dynamic_rebalance_imbalance_history_;
+      int last_dynamic_rebalance_step_;
     };  // class Base
   }  // namespace TimeInt
 }  // namespace Solid
