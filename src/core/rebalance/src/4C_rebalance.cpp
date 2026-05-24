@@ -145,14 +145,14 @@ void Core::Rebalance::rebalance_discretization(Core::FE::Discretization& discret
 
   if (graph)
   {
-    const std::optional<Core::Rebalance::PartitionWeights> sanity_check_weights =
+    const std::optional<Core::Rebalance::PartitionWeights> effective_partition_weights =
         partition_weights != nullptr
-            ? std::make_optional(Core::Rebalance::build_uniform_partition_weights(*graph))
+            ? std::make_optional(
+                  Core::Rebalance::build_eval_time_partition_weights(discretization, *graph))
             : std::nullopt;
-    const Core::Rebalance::PartitionWeights* effective_partition_weights =
-        sanity_check_weights ? &sanity_check_weights.value() : partition_weights;
     std::tie(rowmap, colmap) = do_rebalance_discretization(*graph, discretization, rebalanceMethod,
-        rebalanceParams, parameters, comm, effective_partition_weights);
+        rebalanceParams, parameters, comm,
+        effective_partition_weights ? &effective_partition_weights.value() : partition_weights);
   }
   else
   {

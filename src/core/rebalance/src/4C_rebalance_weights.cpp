@@ -69,51 +69,41 @@ Core::Rebalance::PartitionWeights Core::Rebalance::build_static_partition_weight
 }
 
 Core::Rebalance::PartitionWeights Core::Rebalance::build_eval_time_partition_weights(
-    const Core::FE::Discretization& dis)
-{
-  const Core::LinAlg::Map* noderowmap = dis.node_row_map();
-
-  PartitionWeights weights{
-      .node_weights = std::make_shared<Core::LinAlg::Vector<double>>(*noderowmap, true),
-      .edge_weights = nullptr};
-
-  for (int i = 0; i < dis.element_row_map()->num_my_elements(); ++i)
-  {
-    Core::Elements::Element* ele = dis.l_row_element(i);
-    const std::vector<int> lm = build_local_node_ids(*ele);
-    const std::vector<int> lmrowowner = build_local_node_owners(*ele);
-
-    const double element_eval_time = std::max(ele->eval_time(), 1.0e-12);
-    Core::LinAlg::SerialDenseVector nodeweights_ele(ele->num_node());
-    const double nodal_weight = element_eval_time / static_cast<double>(ele->num_node());
-    for (int n = 0; n < ele->num_node(); ++n) nodeweights_ele[n] = nodal_weight;
-
-    Core::LinAlg::assemble(*weights.node_weights, nodeweights_ele, lm, lmrowowner);
-  }
-
-  return weights;
-}
-
-Core::Rebalance::PartitionWeights Core::Rebalance::build_uniform_partition_weights(
-    const Core::LinAlg::Graph& graph)
+    const Core::FE::Discretization& dis, const Core::LinAlg::Graph& graph)
 {
   const Core::LinAlg::Map& graph_row_map = graph.row_map();
   const Core::LinAlg::Map point_row_map(graph_row_map.num_global_elements(),
       graph_row_map.num_my_elements(), graph_row_map.my_global_elements(),
       graph_row_map.index_base(), graph.get_comm());
 
+  const double local_eval_time_sum = [&dis]()
+  {
+    double sum = 0.0;
+    for (int i = 0; i < dis.element_row_map()->num_my_elements(); ++i)
+    {
+      const Core::Elements::Element* ele = dis.l_row_element(i);
+      sum += std::max(ele->eval_time(), 1.0e-12);
+    }
+    return sum;
+  }();
+  const double global_eval_time_sum =
+      Core::Communication::sum_all(local_eval_time_sum, dis.get_comm());
+  const double average_eval_time = std::max(
+      global_eval_time_sum / static_cast<double>(dis.element_row_map()->num_global_elements()),
+      1.0e-12);
+
   PartitionWeights weights{
       .node_weights = std::make_shared<Core::LinAlg::Vector<double>>(point_row_map, true),
       .edge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(point_row_map, 15)};
 
-  weights.node_weights->put_scalar(1.0);
+  weights.node_weights->put_scalar(0.001);
 
   for (int local_row = 0; local_row < graph_row_map.num_my_elements(); ++local_row)
   {
     const int global_row = graph_row_map.gid(local_row);
     std::span<int> indices;
     graph.extract_local_row_view(local_row, indices);
-    std::vector<double> values(indices.size(), 1.0);
+    std::vector<double> values(indices.size(), average_eval_time);
     weights.edge_weights->insert_global_values(
         global_row, static_cast<int>(indices.size()), values.data(), indices.data());
   }

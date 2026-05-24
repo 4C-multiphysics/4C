@@ -138,9 +138,7 @@ bool Solid::TimeInt::Base::perform_dynamic_rebalance()
       Teuchos::getIntegralValue<Core::Rebalance::RebalanceType>(rebalance_params, "REBALANCE_TYPE");
   parameters.mesh_partitioning_parameters.min_ele_per_proc =
       rebalance_params.get<int>("MIN_ELE_PER_PROC");
-  const Core::Rebalance::PartitionWeights partition_weights =
-      Core::Rebalance::build_eval_time_partition_weights(*dataglobalstate_->get_discret());
-
+  const Core::Rebalance::PartitionWeights partition_weights;
   dataglobalstate_->redistribute_and_preserve_state(parameters, &partition_weights);
 
   const auto rebuild_after_redistribution = [this]()

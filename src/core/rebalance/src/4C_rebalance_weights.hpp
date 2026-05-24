@@ -32,16 +32,13 @@ namespace Core::Rebalance
   PartitionWeights build_static_partition_weights(const Core::FE::Discretization& dis);
 
   /**
-   * Build repartitioning weights from measured element evaluation time.
+   * Build repartitioning weights on the rebalance graph map.
    *
-   * The current model uses vertex weights only and leaves edge weights unset.
+   * For the current test setup, every node weight is set to 0.001 and every graph edge weight is
+   * set to the global average element evaluation time.
    */
-  PartitionWeights build_eval_time_partition_weights(const Core::FE::Discretization& dis);
-
-  /**
-   * Build a sanity-check weight set with unit weight on every graph vertex and every graph edge.
-   */
-  PartitionWeights build_uniform_partition_weights(const Core::LinAlg::Graph& graph);
+  PartitionWeights build_eval_time_partition_weights(
+      const Core::FE::Discretization& dis, const Core::LinAlg::Graph& graph);
 }  // namespace Core::Rebalance
 
 FOUR_C_NAMESPACE_CLOSE
