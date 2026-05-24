@@ -684,10 +684,10 @@ void Core::FE::Discretization::reset_element_eval_timers()
 std::vector<double> Core::FE::Discretization::get_rank_eval_times_on_root() const
 {
   double my_eval_time_sum = 0.0;
-  for (auto* ele : elecolptr_)
+  for (auto* ele : elerowptr_)
   {
     FOUR_C_ASSERT(ele != nullptr,
-        "Encountered null local column element while getting evaluation timers in "
+        "Encountered null local row element while getting evaluation timers in "
         "discretization {}!",
         name_);
     my_eval_time_sum += ele->eval_time();
@@ -701,6 +701,25 @@ std::vector<double> Core::FE::Discretization::get_rank_eval_times_on_root() cons
     gathered_eval_times = eval_times.data();
   }
   Core::Communication::gather_to_root(&my_eval_time_sum, gathered_eval_times, 1, get_comm());
+  return eval_times;
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+std::vector<double> Core::FE::Discretization::get_rank_eval_times() const
+{
+  double my_eval_time_sum = 0.0;
+  for (auto* ele : elerowptr_)
+  {
+    FOUR_C_ASSERT(ele != nullptr,
+        "Encountered null local row element while getting evaluation timers in "
+        "discretization {}!",
+        name_);
+    my_eval_time_sum += ele->eval_time();
+  }
+
+  std::vector<double> eval_times(Core::Communication::num_mpi_ranks(get_comm()));
+  Core::Communication::gather_all(&my_eval_time_sum, eval_times.data(), 1, get_comm());
   return eval_times;
 }
 

@@ -76,8 +76,10 @@ namespace Solid
        *  Rayleigh damping matrix only once during the compute_mass_matrix_and_init_acc routine.
        *
 
-       *  */
+      *  */
       bool initialize_inertia_and_damping();
+      bool initialize_inertia_and_damping(const Core::LinAlg::Vector<double>& displacement,
+          const Core::LinAlg::Vector<double>* velocity = nullptr);
 
       //! derived
       bool assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;

@@ -70,6 +70,9 @@ namespace Solid
       /// (e.g. compute mass matrix, initial accelerations, ...)
       void post_setup() override;
 
+      /// Redistribute a pure structure discretization using measured evaluation times.
+      bool perform_dynamic_rebalance();
+
       /// tests if there are more time steps to do
       [[nodiscard]] bool not_finished() const override;
 
@@ -854,6 +857,8 @@ namespace Solid
               "state object and in the NOX group!");
         }
       }
+
+      virtual void rebuild_solver_after_redistribution() {}
 
      private:
       /// pointer to the different data containers

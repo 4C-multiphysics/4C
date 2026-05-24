@@ -15,12 +15,14 @@
 #include "4C_fem_discretization_utils.hpp"
 #include "4C_fem_general_largerotations.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_multi_vector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_solver_nonlin_nox_group.hpp"
 #include "4C_solver_nonlin_nox_group_prepostoperator.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
@@ -32,6 +34,8 @@
 #include "4C_utils_enum.hpp"
 
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
+
+#include <array>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -219,6 +223,206 @@ void Solid::TimeInt::BaseDataGlobalState::setup()
   set_initial_fields();
 
   issetup_ = true;
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
+    const Core::Rebalance::RebalanceParameters& rebalance_parameters)
+{
+  check_init_setup();
+
+  FOUR_C_ASSERT(discret_->element_row_map() != nullptr,
+      "The discretization has to be fill_complete() before redistribution.");
+
+  const int local_max_nodal_dofs = [&]()
+  {
+    int max_nodal_dofs = 0;
+    for (int node_i = 0; node_i < discret_->num_my_row_nodes(); ++node_i)
+      max_nodal_dofs = std::max(max_nodal_dofs, discret_->num_dof(discret_->l_row_node(node_i)));
+    return max_nodal_dofs;
+  }();
+  const int max_nodal_dofs = Core::Communication::max_all(local_max_nodal_dofs, comm_);
+
+  const auto pack_nodal_state = [this, max_nodal_dofs](const Core::LinAlg::Vector<double>& vector)
+  {
+    auto nodal_state = std::make_shared<Core::LinAlg::MultiVector<double>>(
+        *discret_->node_row_map(), max_nodal_dofs, true);
+
+    for (int node_i = 0; node_i < discret_->num_my_row_nodes(); ++node_i)
+    {
+      const Core::Nodes::Node* node = discret_->l_row_node(node_i);
+      const std::vector<int> node_dofs = discret_->dof(0, node);
+
+      for (int dof_i = 0; dof_i < static_cast<int>(node_dofs.size()); ++dof_i)
+      {
+        const int dof_lid = vector.get_map().lid(node_dofs[dof_i]);
+        if (dof_lid < 0) continue;
+        nodal_state->replace_local_value(node_i, dof_i, vector.local_values_as_span()[dof_lid]);
+      }
+    }
+
+    return nodal_state;
+  };
+
+  const auto pack_nodal_mstep = [&pack_nodal_state](
+                                    TimeStepping::TimIntMStep<Core::LinAlg::Vector<double>>& state)
+  {
+    const auto [step_past, step_future] = state.get_steps();
+    std::vector<std::shared_ptr<Core::LinAlg::MultiVector<double>>> nodal_state_per_step(
+        step_future - step_past + 1);
+
+    for (int step = step_past; step <= step_future; ++step)
+      nodal_state_per_step[step - step_past] = pack_nodal_state(state[step]);
+
+    return nodal_state_per_step;
+  };
+
+  struct PreservedMstepState
+  {
+    TimeStepping::TimIntMStep<Core::LinAlg::Vector<double>>* state;
+    std::vector<std::shared_ptr<Core::LinAlg::MultiVector<double>>> nodal_state_per_step;
+  };
+
+  struct PreservedVectorState
+  {
+    std::shared_ptr<Core::LinAlg::Vector<double>>* state;
+    std::shared_ptr<Core::LinAlg::MultiVector<double>> nodal_state;
+  };
+
+  struct RemappedVectorState
+  {
+    std::shared_ptr<Core::LinAlg::Vector<double>>* state;
+  };
+
+  // Preserve the converged structural primary states by node identity across redistribution.
+  std::array preserved_mstep_states = {
+      PreservedMstepState{&dis_, pack_nodal_mstep(dis_)},
+      PreservedMstepState{&vel_, pack_nodal_mstep(vel_)},
+      PreservedMstepState{&acc_, pack_nodal_mstep(acc_)},
+  };
+  std::array preserved_vector_states = {
+      PreservedVectorState{&disnp_, pack_nodal_state(*disnp_)},
+      PreservedVectorState{&velnp_, pack_nodal_state(*velnp_)},
+      PreservedVectorState{&accnp_, pack_nodal_state(*accnp_)},
+  };
+  std::array remapped_vector_states = {
+      RemappedVectorState{&fintn_},
+      RemappedVectorState{&fintnp_},
+      RemappedVectorState{&fextn_},
+      RemappedVectorState{&fextnp_},
+      RemappedVectorState{&freactn_},
+      RemappedVectorState{&freactnp_},
+      RemappedVectorState{&finertialn_},
+      RemappedVectorState{&finertialnp_},
+      RemappedVectorState{&fviscon_},
+      RemappedVectorState{&fvisconp_},
+      RemappedVectorState{&fstructold_},
+  };
+
+  Core::Rebalance::rebalance_discretization(
+      *discret_, *discret_->element_row_map(), rebalance_parameters, comm_);
+
+  const int fill_complete_error = discret_->fill_complete();
+  if (fill_complete_error)
+    FOUR_C_THROW(
+        "fill_complete() returned err={} after dynamic redistribution.", fill_complete_error);
+
+  const auto overwrite_nodal_state = [this, max_nodal_dofs](
+                                         const Core::LinAlg::MultiVector<double>& old_nodal_state,
+                                         Core::LinAlg::Vector<double>& vector)
+  {
+    Core::LinAlg::MultiVector<double> new_nodal_state(
+        *discret_->node_row_map(), max_nodal_dofs, true);
+    Core::LinAlg::export_to(old_nodal_state, new_nodal_state);
+
+    for (int node_i = 0; node_i < discret_->num_my_row_nodes(); ++node_i)
+    {
+      const Core::Nodes::Node* node = discret_->l_row_node(node_i);
+      const std::vector<int> node_dofs = discret_->dof(0, node);
+
+      for (int dof_i = 0; dof_i < static_cast<int>(node_dofs.size()); ++dof_i)
+      {
+        const int dof_lid = vector.get_map().lid(node_dofs[dof_i]);
+        if (dof_lid < 0) continue;
+        vector.replace_local_value(
+            dof_lid, new_nodal_state.get_vector(dof_i).local_values_as_span()[node_i]);
+      }
+    }
+  };
+
+  const auto remap_vector = [this](std::shared_ptr<Core::LinAlg::Vector<double>>& vector_ptr)
+  {
+    auto old_vector = vector_ptr;
+    vector_ptr = std::make_shared<Core::LinAlg::Vector<double>>(*dof_row_map_view(), true);
+    Core::LinAlg::export_to(*old_vector, *vector_ptr);
+  };
+
+  const auto remap_mstep = [this](TimeStepping::TimIntMStep<Core::LinAlg::Vector<double>>& state)
+  {
+    const auto [step_past, step_future] = state.get_steps();
+    TimeStepping::TimIntMStep<Core::LinAlg::Vector<double>> remapped_state(
+        step_past, step_future, dof_row_map_view(), true);
+    for (int step = step_past; step <= step_future; ++step)
+      Core::LinAlg::export_to(state[step], remapped_state[step]);
+    state = std::move(remapped_state);
+  };
+
+  const auto remap_and_restore_mstep =
+      [&remap_mstep, &overwrite_nodal_state](
+          TimeStepping::TimIntMStep<Core::LinAlg::Vector<double>>& state,
+          const std::vector<std::shared_ptr<Core::LinAlg::MultiVector<double>>>&
+              old_nodal_state_per_step)
+  {
+    remap_mstep(state);
+    const auto [step_past, step_future] = state.get_steps();
+    for (int step = step_past; step <= step_future; ++step)
+      overwrite_nodal_state(*old_nodal_state_per_step[step - step_past], state[step]);
+  };
+
+  const auto remap_and_restore_vector =
+      [&remap_vector, &overwrite_nodal_state](
+          std::shared_ptr<Core::LinAlg::Vector<double>>& vector_ptr,
+          const std::shared_ptr<Core::LinAlg::MultiVector<double>>& old_nodal_state)
+  {
+    remap_vector(vector_ptr);
+    overwrite_nodal_state(*old_nodal_state, *vector_ptr);
+  };
+
+  for (auto& preserved_mstep_state : preserved_mstep_states)
+    remap_and_restore_mstep(
+        *preserved_mstep_state.state, preserved_mstep_state.nodal_state_per_step);
+
+  for (auto& preserved_vector_state : preserved_vector_states)
+    remap_and_restore_vector(*preserved_vector_state.state, preserved_vector_state.nodal_state);
+
+  // Redistribution happens only after a converged step. Re-synchronize the current "last
+  // converged" states from the restored n+1 state before any reset-to-last-converged path
+  // consumes dis_n/vel_n/acc_n on the redistributed discretization.
+  dis_[0].update(1.0, *disnp_, 0.0);
+  vel_[0].update(1.0, *velnp_, 0.0);
+  acc_[0].update(1.0, *accnp_, 0.0);
+
+  // Force-like and history-adjacent vectors stay on plain DOF-based remapping.
+  for (auto& remapped_vector_state : remapped_vector_states)
+    remap_vector(*remapped_vector_state.state);
+
+  jac_ = nullptr;
+  stiff_ = nullptr;
+  mass_ = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map_view(), 81, true, true);
+  if (datasdyn_->get_damping_type() != Inpar::Solid::damp_none)
+    damp_ = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map_view(), 81, true, true);
+  else
+    damp_ = nullptr;
+
+  model_maps_.clear();
+  model_block_id_.clear();
+  max_block_num_ = 0;
+  gproblem_map_ptr_ = nullptr;
+  blockextractor_ = Core::LinAlg::MultiMapExtractor();
+  mapextractors_.clear();
+  rotvecextractor_ = Core::LinAlg::MultiMapExtractor();
+  pressextractor_ = nullptr;
 }
 
 /*----------------------------------------------------------------------------*

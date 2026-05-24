@@ -37,6 +37,12 @@ namespace Core::Rebalance
                   // via a global collision search
   };
 
+  enum class WeightingStrategy
+  {
+    static_cost,
+    measured_eval_time
+  };
+
   struct MeshPartitioningParameters
   {
     /**
@@ -77,6 +83,11 @@ namespace Core::Rebalance
      * General verbosity settings and I/O parameters.
      */
     Teuchos::ParameterList io_parameters;
+
+    /**
+     * Strategy used to derive repartitioning weights.
+     */
+    WeightingStrategy weighting_strategy = WeightingStrategy::static_cost;
   };
 
 

@@ -19,17 +19,20 @@
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_structure_new_dbc.hpp"
 #include "4C_structure_new_enum_lists.hpp"
 #include "4C_structure_new_factory.hpp"
 #include "4C_structure_new_integrator.hpp"
 #include "4C_structure_new_model_evaluator_data.hpp"
 #include "4C_structure_new_model_evaluator_factory.hpp"
+#include "4C_structure_new_model_evaluator_structure.hpp"
 #include "4C_structure_new_resulttest.hpp"
 #include "4C_structure_new_timint_basedataio_runtime_vtp_output.hpp"
 #include "4C_utils_enum.hpp"
 
 #include <Teuchos_ParameterList.hpp>
+#include <Teuchos_StandardParameterEntryValidators.hpp>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -118,6 +121,59 @@ void Solid::TimeInt::Base::post_setup()
 {
   check_init_setup();
   int_ptr_->post_setup();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+bool Solid::TimeInt::Base::perform_dynamic_rebalance()
+{
+  check_init_setup();
+
+  const Teuchos::ParameterList& rebalance_params =
+      Global::Problem::instance()->structural_dynamic_params().sublist("DYNAMIC REBALANCE");
+
+  Core::Rebalance::RebalanceParameters parameters;
+  parameters.mesh_partitioning_parameters.rebalance_type =
+      Teuchos::getIntegralValue<Core::Rebalance::RebalanceType>(rebalance_params, "REBALANCE_TYPE");
+  parameters.mesh_partitioning_parameters.min_ele_per_proc =
+      rebalance_params.get<int>("MIN_ELE_PER_PROC");
+  // Use measured evaluation time only to trigger redistribution. The PHG repartitioning path
+  // remains on the stable default weighting until a robust timing-weighted variant exists.
+  parameters.weighting_strategy = Core::Rebalance::WeightingStrategy::static_cost;
+
+  dataglobalstate_->redistribute_and_preserve_state(parameters);
+
+  const auto rebuild_after_redistribution = [this]()
+  {
+    dbc_ptr_ = Solid::build_dbc(data_sdyn());
+    dbc_ptr_->init(dataglobalstate_->get_discret(), dataglobalstate_->get_freact_np(),
+        Core::Utils::shared_ptr_from_ref(*this));
+    dbc_ptr_->setup();
+
+    int_ptr_->init(data_s_dyn_ptr(), data_global_state_ptr(), data_io_ptr(), dbc_ptr_,
+        Core::Utils::shared_ptr_from_ref(*this));
+    int_ptr_->rebuild_after_redistribution();
+    rebuild_solver_after_redistribution();
+
+    // Redistribution happens only after a converged step. Restore the redistributed model state
+    // via the existing rollback path before the next predictor touches element/material trial
+    // state.
+    int_ptr_->reset_step_state();
+
+    auto& structure_model = dynamic_cast<Solid::ModelEvaluator::Structure&>(
+        int_ptr_->evaluator(Inpar::Solid::model_structure));
+    if (!structure_model.initialize_inertia_and_damping(
+            *dataglobalstate_->get_dis_np(), dataglobalstate_->get_vel_np().get()))
+      FOUR_C_THROW("Failed to rebuild structural inertia and damping after redistribution.");
+  };
+
+  rebuild_after_redistribution();
+
+  if (dataglobalstate_->get_discret()->time_ele_evaluations())
+    dataglobalstate_->get_discret()->reset_element_eval_timers();
+
+  set_state_in_sync_with_nox_group(true);
+  return true;
 }
 
 

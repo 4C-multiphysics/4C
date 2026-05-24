@@ -100,6 +100,28 @@ void Solid::Integrator::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+void Solid::Integrator::rebuild_after_redistribution()
+{
+  check_init();
+
+  eval_data_ptr_ = std::make_shared<Solid::ModelEvaluator::Data>();
+  eval_data_ptr_->init(timint_ptr_);
+  eval_data_ptr_->setup();
+
+  modelevaluator_ptr_ = std::make_shared<Solid::ModelEvaluatorManager>();
+  modelevaluator_ptr_->init(eval_data_ptr_, sdyn_ptr_, gstate_ptr_, io_ptr_,
+      Core::Utils::shared_ptr_from_ref(*this), timint_ptr_);
+  modelevaluator_ptr_->setup();
+
+  monitor_dbc_ptr_ = std::make_shared<Solid::MonitorDbc>();
+  monitor_dbc_ptr_->init(io_ptr_, *gstate_ptr_->get_discret(), *gstate_ptr_, *dbc_ptr_);
+  monitor_dbc_ptr_->setup();
+
+  mt_energy_.setup();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 void Solid::Integrator::set_initial_displacement(
     const Solid::InitialDisp init, const int startfuncno)
 {

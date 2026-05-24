@@ -92,6 +92,9 @@ namespace Solid
     //! Setup (has to be implemented by the derived classes)
     virtual void setup();
 
+    //! Rebuild map-dependent integrator internals after a discretization redistribution.
+    void rebuild_after_redistribution();
+
     //! Post setup operation (compute initial equilibrium state), should be run directly after the
     //! setup routine has been finished
     virtual void post_setup() = 0;

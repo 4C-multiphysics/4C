@@ -15,6 +15,7 @@
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_multi_vector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <memory>
@@ -111,7 +112,8 @@ namespace Core::Rebalance
   */
   std::pair<std::shared_ptr<Core::LinAlg::Vector<double>>,
       std::shared_ptr<Core::LinAlg::SparseMatrix>>
-  build_weights(const Core::FE::Discretization& dis);
+  build_weights(const Core::FE::Discretization& dis,
+      WeightingStrategy weighting_strategy = WeightingStrategy::static_cost);
 
   /*!
   \brief Build node graph of a given  discretization

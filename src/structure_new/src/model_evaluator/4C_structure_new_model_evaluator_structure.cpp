@@ -299,12 +299,9 @@ bool Solid::ModelEvaluator::Structure::initialize_inertia_and_damping()
       nullptr, nullptr, nullptr};
   std::array<std::shared_ptr<Core::LinAlg::SparseOperator>, 2> eval_mat = {nullptr, nullptr};
 
-  // create vector with zero entries
   std::shared_ptr<const Core::LinAlg::Vector<double>> zeros =
       integrator().get_dbc().get_zeros_ptr();
 
-  // set vector values needed by elements
-  // --> initially zero !!!
   discret().clear_state();
   discret().set_state(0, "residual displacement", *zeros);
   discret().set_state(0, "displacement", *zeros);
@@ -321,6 +318,35 @@ bool Solid::ModelEvaluator::Structure::initialize_inertia_and_damping()
   fill_complete();
 
   // assemble the rayleigh damping matrix
+  rayleigh_damping_matrix();
+
+  return eval_error_check();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+bool Solid::ModelEvaluator::Structure::initialize_inertia_and_damping(
+    const Core::LinAlg::Vector<double>& displacement, const Core::LinAlg::Vector<double>* velocity)
+{
+  check_init_setup();
+
+  std::array<std::shared_ptr<Core::LinAlg::Vector<double>>, 3> eval_vec = {
+      nullptr, nullptr, nullptr};
+  std::array<std::shared_ptr<Core::LinAlg::SparseOperator>, 2> eval_mat = {nullptr, nullptr};
+
+  discret().clear_state();
+  discret().set_state(0, "residual displacement", *integrator().get_dbc().get_zeros_ptr());
+  discret().set_state(0, "displacement", displacement);
+  if (velocity != nullptr and eval_data().get_damping_type() == Inpar::Solid::damp_material)
+    discret().set_state(0, "velocity", *velocity);
+
+  static_contributions(eval_mat.data(), eval_vec.data());
+  material_damping_contributions(eval_mat.data());
+  inertial_contributions(eval_mat.data(), eval_vec.data());
+
+  evaluate_internal(eval_mat.data(), eval_vec.data());
+
+  fill_complete();
   rayleigh_damping_matrix();
 
   return eval_error_check();

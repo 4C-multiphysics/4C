@@ -10,6 +10,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_fem_general_utils_local_connectivity_matrices.hpp"
 #include "4C_geometric_search_bounding_volume.hpp"
 #include "4C_geometric_search_distributed_tree.hpp"
 #include "4C_linalg_transfer.hpp"
@@ -23,9 +24,52 @@
 #include <Zoltan2_XpetraCrsGraphAdapter.hpp>
 #include <Zoltan2_XpetraMultiVectorAdapter.hpp>
 
+#include <algorithm>
 #include <utility>
 
 FOUR_C_NAMESPACE_OPEN
+
+namespace
+{
+  void build_nodal_connectivity_for_weight(const Core::Elements::Element& ele, double weight,
+      Core::LinAlg::SerialDenseMatrix& edgeweights, Core::LinAlg::SerialDenseVector& nodeweights)
+  {
+    const int numnode = ele.num_node();
+    nodeweights.size(numnode);
+    edgeweights.shape(numnode, numnode);
+
+    for (int n = 0; n < numnode; ++n)
+    {
+      nodeweights[n] = weight;
+      for (int k = 0; k < numnode; ++k) edgeweights(n, k) = 1.0;
+    }
+
+    weight *= weight;
+
+    std::vector<std::vector<int>> lines = Core::FE::get_ele_node_numbering_lines(ele.shape());
+    const size_t nodesperline = lines[0].size();
+    if (nodesperline == 2)
+    {
+      for (const auto& line : lines)
+      {
+        edgeweights(line[0], line[1]) = weight;
+        edgeweights(line[1], line[0]) = weight;
+      }
+    }
+    else if (nodesperline == 3)
+    {
+      for (const auto& line : lines)
+      {
+        edgeweights(line[0], line[1]) = weight;
+        edgeweights(line[1], line[0]) = weight;
+        edgeweights(line[1], line[2]) = weight;
+        edgeweights(line[2], line[1]) = weight;
+      }
+    }
+    else
+      FOUR_C_THROW("Unsupported line topology while building repartition weights.");
+  }
+}  // namespace
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
@@ -159,7 +203,8 @@ Core::Rebalance::rebalance_coordinates(const Core::LinAlg::MultiVector<double>& 
 /*----------------------------------------------------------------------*/
 std::pair<std::shared_ptr<Core::LinAlg::Vector<double>>,
     std::shared_ptr<Core::LinAlg::SparseMatrix>>
-Core::Rebalance::build_weights(const Core::FE::Discretization& dis)
+Core::Rebalance::build_weights(
+    const Core::FE::Discretization& dis, WeightingStrategy weighting_strategy)
 {
   const Core::LinAlg::Map* noderowmap = dis.node_row_map();
 
@@ -185,8 +230,15 @@ Core::Rebalance::build_weights(const Core::FE::Discretization& dis)
     Core::LinAlg::SerialDenseMatrix edgeweigths_ele;
     Core::LinAlg::SerialDenseVector nodeweights_ele;
 
-    // evaluate elements to get their evaluation cost
-    ele->nodal_connectivity(edgeweigths_ele, nodeweights_ele);
+    if (weighting_strategy == WeightingStrategy::measured_eval_time)
+    {
+      build_nodal_connectivity_for_weight(
+          *ele, std::max(ele->eval_time(), 1.0e-12), edgeweigths_ele, nodeweights_ele);
+    }
+    else
+    {
+      ele->nodal_connectivity(edgeweigths_ele, nodeweights_ele);
+    }
 
     Core::LinAlg::assemble(*crs_ge_weights, edgeweigths_ele, lm, lmrowowner, lm);
     Core::LinAlg::assemble(*vweights, nodeweights_ele, lm, lmrowowner);

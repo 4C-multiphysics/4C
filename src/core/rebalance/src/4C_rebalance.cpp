@@ -23,6 +23,12 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
     MPI_Comm comm)
 {
   std::shared_ptr<Core::LinAlg::Map> rowmap, colmap;
+  std::shared_ptr<Core::LinAlg::Vector<double>> node_weights = nullptr;
+  std::shared_ptr<Core::LinAlg::SparseMatrix> edge_weights = nullptr;
+
+  if (parameters.weighting_strategy != Core::Rebalance::WeightingStrategy::static_cost)
+    std::tie(node_weights, edge_weights) =
+        Core::Rebalance::build_weights(discretization, parameters.weighting_strategy);
 
   switch (rebalanceMethod)
   {
@@ -36,11 +42,18 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
       Teuchos::ParameterList& zparams = rebalanceParams.sublist("zoltan_parameters", false);
       zparams.set("DEBUG_LEVEL", "0");
 
-      std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(graph, rebalanceParams);
+      std::tie(rowmap, colmap) =
+          Core::Rebalance::rebalance_node_maps(graph, rebalanceParams, node_weights, edge_weights);
       break;
     }
     case Core::Rebalance::RebalanceType::multijagged:
     {
+      if (parameters.weighting_strategy == Core::Rebalance::WeightingStrategy::measured_eval_time)
+      {
+        FOUR_C_THROW(
+            "Measured eval-time weighting is not implemented for multijagged repartitioning.");
+      }
+
       if (!Core::Communication::my_mpi_rank(comm))
         std::cout << "Redistributing using recursive coordinate bisection .........\n";
 
@@ -65,11 +78,17 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
           extract_node_coordinates(discretization);
 
       std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(
-          graph, rebalanceParams, nullptr, nullptr, coordinates);
+          graph, rebalanceParams, node_weights, edge_weights, coordinates);
       break;
     }
     case Core::Rebalance::RebalanceType::monolithic:
     {
+      if (parameters.weighting_strategy == Core::Rebalance::WeightingStrategy::measured_eval_time)
+      {
+        FOUR_C_THROW(
+            "Measured eval-time weighting is not implemented for monolithic repartitioning.");
+      }
+
       if (!Core::Communication::my_mpi_rank(comm))
         std::cout << "Redistributing using monolithic hypergraph .........\n";
 
@@ -95,8 +114,8 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
               Core::GeometricSearch::GeometricSearchParams(
                   parameters.geometric_search_parameters, parameters.io_parameters));
 
-      std::tie(rowmap, colmap) =
-          Core::Rebalance::rebalance_node_maps(*enriched_graph, rebalanceParams);
+      std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(
+          *enriched_graph, rebalanceParams, node_weights, edge_weights);
       break;
     }
     default:

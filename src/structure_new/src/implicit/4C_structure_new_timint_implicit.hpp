@@ -128,6 +128,8 @@ namespace Solid
       //! returns the current solution group
       [[nodiscard]] const ::NOX::Abstract::Group& get_solution_group() const override;
 
+      void rebuild_solver_after_redistribution() override;
+
       Solid::IMPLICIT::Generic& impl_int()
       {
         check_init_setup();

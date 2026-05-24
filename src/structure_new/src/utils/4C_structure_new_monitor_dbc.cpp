@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <ranges>
 #include <string>
+#include <set>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -57,6 +58,32 @@ void Solid::MonitorDbc::init(const std::shared_ptr<Solid::TimeInt::BaseDataIO>& 
 
   // copy the information of the tagged Dirichlet condition into a new
   // auxiliary "ReactionForce" condition and build the related geometry
+  std::set<std::string> monitor_reaction_force_names;
+  for (const Core::Conditions::Condition* tagged_cond : tagged_conds)
+  {
+    monitor_reaction_force_names.insert(
+        (tagged_cond->entity_type() == Core::Conditions::EntityType::node_set_name)
+            ? tagged_cond->node_set_name()
+            : std::to_string(1 + get_unique_id(tagged_cond->id(), tagged_cond->g_type())));
+  }
+
+  std::vector<std::shared_ptr<Core::Conditions::Condition>> preserved_reaction_force_conditions;
+  if (discret.has_condition("ReactionForce"))
+  {
+    std::vector<const Core::Conditions::Condition*> existing_reaction_force_conditions;
+    discret.get_condition("ReactionForce", existing_reaction_force_conditions);
+    for (const Core::Conditions::Condition* existing_reaction_force_condition :
+        existing_reaction_force_conditions)
+    {
+      if (monitor_reaction_force_names.contains(existing_reaction_force_condition->node_set_name()))
+        continue;
+
+      preserved_reaction_force_conditions.emplace_back(
+          existing_reaction_force_condition->copy_without_geometry().release());
+    }
+  }
+
+  discret.replace_conditions("ReactionForce", preserved_reaction_force_conditions);
   for (const Core::Conditions::Condition* tagged_cond : tagged_conds)
     rconds.push_back(create_reaction_force_condition(*tagged_cond));
 

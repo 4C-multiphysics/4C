@@ -841,7 +841,10 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
           "problem types, disable these options or implement element timing support for the "
           "corresponding problem type before enabling them.");
     }
-    dis->set_time_ele_evaluations(time_ele_evaluations);
+    dis->set_time_ele_evaluations(
+        time_ele_evaluations or
+        (problem.get_problem_type() == Core::ProblemType::structure and
+            problem.structural_dynamic_params().sublist("DYNAMIC REBALANCE").get<bool>("ENABLED")));
 
     problem.add_dis(name, dis);
 
