@@ -76,6 +76,12 @@ namespace Solid
       /// tests if there are more time steps to do
       [[nodiscard]] bool not_finished() const override;
 
+      const Solid::TimeInt::DynamicRebalanceConfig& get_dynamic_rebalance_config() const
+      {
+        check_init_setup();
+        return datasdyn_->get_dynamic_rebalance_config();
+      }
+
       /// reset everything (needed for biofilm simulations)
       void reset() override;
 

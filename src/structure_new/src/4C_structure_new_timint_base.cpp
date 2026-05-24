@@ -130,14 +130,10 @@ bool Solid::TimeInt::Base::perform_dynamic_rebalance()
 {
   check_init_setup();
 
-  const Teuchos::ParameterList& rebalance_params =
-      Global::Problem::instance()->structural_dynamic_params().sublist("DYNAMIC REBALANCE");
+  const auto& rebalance_config = datasdyn_->get_dynamic_rebalance_config();
 
   Core::Rebalance::RebalanceParameters parameters;
-  parameters.mesh_partitioning_parameters.rebalance_type =
-      Teuchos::getIntegralValue<Core::Rebalance::RebalanceType>(rebalance_params, "REBALANCE_TYPE");
-  parameters.mesh_partitioning_parameters.min_ele_per_proc =
-      rebalance_params.get<int>("MIN_ELE_PER_PROC");
+  parameters.mesh_partitioning_parameters = rebalance_config.mesh_partitioning_parameters;
   const Core::Rebalance::PartitionWeights partition_weights;
   dataglobalstate_->redistribute_and_preserve_state(parameters, &partition_weights);
 
