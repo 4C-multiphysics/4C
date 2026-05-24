@@ -40,6 +40,7 @@
 #include "4C_mat_scatra_multiscale.hpp"
 #include "4C_particle_engine_particlereader.hpp"
 #include "4C_rebalance_graph_based.hpp"
+#include "4C_rebalance_weights.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_xfem_discretization.hpp"
@@ -929,9 +930,10 @@ void Global::read_micro_fields(Global::Problem& problem, const std::filesystem::
     // do weighted repartitioning to obtain new row/column maps
     Teuchos::ParameterList rebalanceParams;
     std::shared_ptr<const Core::LinAlg::Graph> nodeGraph = macro_dis->build_node_graph();
-    const auto& [nodeWeights, edgeWeights] = Core::Rebalance::build_weights(*macro_dis);
-    const auto& [rownodes, colnodes] =
-        Core::Rebalance::rebalance_node_maps(*nodeGraph, rebalanceParams, nodeWeights, edgeWeights);
+    const Core::Rebalance::PartitionWeights partition_weights =
+        Core::Rebalance::build_static_partition_weights(*macro_dis);
+    const auto& [rownodes, colnodes] = Core::Rebalance::rebalance_node_maps(*nodeGraph,
+        rebalanceParams, partition_weights.node_weights, partition_weights.edge_weights);
 
     // rebuild the discretization with new maps
     macro_dis->redistribute({*rownodes, *colnodes});

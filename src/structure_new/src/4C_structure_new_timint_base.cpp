@@ -20,6 +20,7 @@
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_rebalance.hpp"
+#include "4C_rebalance_weights.hpp"
 #include "4C_structure_new_dbc.hpp"
 #include "4C_structure_new_enum_lists.hpp"
 #include "4C_structure_new_factory.hpp"
@@ -137,11 +138,10 @@ bool Solid::TimeInt::Base::perform_dynamic_rebalance()
       Teuchos::getIntegralValue<Core::Rebalance::RebalanceType>(rebalance_params, "REBALANCE_TYPE");
   parameters.mesh_partitioning_parameters.min_ele_per_proc =
       rebalance_params.get<int>("MIN_ELE_PER_PROC");
-  // Use measured evaluation time only to trigger redistribution. The PHG repartitioning path
-  // remains on the stable default weighting until a robust timing-weighted variant exists.
-  parameters.weighting_strategy = Core::Rebalance::WeightingStrategy::static_cost;
+  const Core::Rebalance::PartitionWeights partition_weights =
+      Core::Rebalance::build_eval_time_partition_weights(*dataglobalstate_->get_discret());
 
-  dataglobalstate_->redistribute_and_preserve_state(parameters);
+  dataglobalstate_->redistribute_and_preserve_state(parameters, &partition_weights);
 
   const auto rebuild_after_redistribution = [this]()
   {

@@ -37,8 +37,9 @@ namespace Core::FE
 
 namespace Core::Rebalance
 {
+  struct PartitionWeights;
   struct RebalanceParameters;
-}
+}  // namespace Core::Rebalance
 
 namespace Discret
 {
@@ -116,7 +117,8 @@ namespace Solid
 
       /// Redistribute the discretization and remap all global state vectors to the new maps.
       void redistribute_and_preserve_state(
-          const Core::Rebalance::RebalanceParameters& rebalance_parameters);
+          const Core::Rebalance::RebalanceParameters& rebalance_parameters,
+          const Core::Rebalance::PartitionWeights* partition_weights = nullptr);
 
       /// read initial field conditions
       void set_initial_fields();

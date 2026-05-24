@@ -11,6 +11,7 @@
 #include "4C_fem_discretization_utils.hpp"
 #include "4C_rebalance_graph_based.hpp"
 #include "4C_rebalance_print.hpp"
+#include "4C_rebalance_weights.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
@@ -20,15 +21,13 @@ static std::pair<std::shared_ptr<Core::LinAlg::Map>, std::shared_ptr<Core::LinAl
 do_rebalance_discretization(const Core::LinAlg::Graph& graph,
     Core::FE::Discretization& discretization, Core::Rebalance::RebalanceType rebalanceMethod,
     Teuchos::ParameterList& rebalanceParams, const Core::Rebalance::RebalanceParameters& parameters,
-    MPI_Comm comm)
+    MPI_Comm comm, const Core::Rebalance::PartitionWeights* partition_weights)
 {
   std::shared_ptr<Core::LinAlg::Map> rowmap, colmap;
-  std::shared_ptr<Core::LinAlg::Vector<double>> node_weights = nullptr;
-  std::shared_ptr<Core::LinAlg::SparseMatrix> edge_weights = nullptr;
-
-  if (parameters.weighting_strategy != Core::Rebalance::WeightingStrategy::static_cost)
-    std::tie(node_weights, edge_weights) =
-        Core::Rebalance::build_weights(discretization, parameters.weighting_strategy);
+  const std::shared_ptr<Core::LinAlg::Vector<double>> node_weights =
+      partition_weights != nullptr ? partition_weights->node_weights : nullptr;
+  const std::shared_ptr<Core::LinAlg::SparseMatrix> edge_weights =
+      partition_weights != nullptr ? partition_weights->edge_weights : nullptr;
 
   switch (rebalanceMethod)
   {
@@ -48,12 +47,6 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
     }
     case Core::Rebalance::RebalanceType::multijagged:
     {
-      if (parameters.weighting_strategy == Core::Rebalance::WeightingStrategy::measured_eval_time)
-      {
-        FOUR_C_THROW(
-            "Measured eval-time weighting is not implemented for multijagged repartitioning.");
-      }
-
       if (!Core::Communication::my_mpi_rank(comm))
         std::cout << "Redistributing using recursive coordinate bisection .........\n";
 
@@ -83,12 +76,6 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
     }
     case Core::Rebalance::RebalanceType::monolithic:
     {
-      if (parameters.weighting_strategy == Core::Rebalance::WeightingStrategy::measured_eval_time)
-      {
-        FOUR_C_THROW(
-            "Measured eval-time weighting is not implemented for monolithic repartitioning.");
-      }
-
       if (!Core::Communication::my_mpi_rank(comm))
         std::cout << "Redistributing using monolithic hypergraph .........\n";
 
@@ -126,7 +113,8 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
 }
 
 void Core::Rebalance::rebalance_discretization(Core::FE::Discretization& discretization,
-    const Core::LinAlg::Map& row_elements, const RebalanceParameters& parameters, MPI_Comm comm)
+    const Core::LinAlg::Map& row_elements, const RebalanceParameters& parameters, MPI_Comm comm,
+    const PartitionWeights* partition_weights)
 {
   std::shared_ptr<const Core::LinAlg::Graph> graph = nullptr;
 
@@ -157,8 +145,14 @@ void Core::Rebalance::rebalance_discretization(Core::FE::Discretization& discret
 
   if (graph)
   {
-    std::tie(rowmap, colmap) = do_rebalance_discretization(
-        *graph, discretization, rebalanceMethod, rebalanceParams, parameters, comm);
+    const std::optional<Core::Rebalance::PartitionWeights> sanity_check_weights =
+        partition_weights != nullptr
+            ? std::make_optional(Core::Rebalance::build_uniform_partition_weights(*graph))
+            : std::nullopt;
+    const Core::Rebalance::PartitionWeights* effective_partition_weights =
+        sanity_check_weights ? &sanity_check_weights.value() : partition_weights;
+    std::tie(rowmap, colmap) = do_rebalance_discretization(*graph, discretization, rebalanceMethod,
+        rebalanceParams, parameters, comm, effective_partition_weights);
   }
   else
   {

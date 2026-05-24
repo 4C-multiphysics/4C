@@ -13,6 +13,8 @@
 #include <mpi.h>
 #include <Teuchos_ParameterList.hpp>
 
+#include <memory>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::FE
@@ -23,7 +25,10 @@ namespace Core::FE
 namespace Core::LinAlg
 {
   class Map;
-}
+  class SparseMatrix;
+  template <typename T>
+  class Vector;
+}  // namespace Core::LinAlg
 
 namespace Core::Rebalance
 {
@@ -35,12 +40,6 @@ namespace Core::Rebalance
     multijagged,  //< multijagged, geometric based partitioning
     monolithic    //< hypergraph based partitioning by using a global monolithic graph constructed
                   // via a global collision search
-  };
-
-  enum class WeightingStrategy
-  {
-    static_cost,
-    measured_eval_time
   };
 
   struct MeshPartitioningParameters
@@ -64,6 +63,12 @@ namespace Core::Rebalance
   };
 
 
+  struct PartitionWeights
+  {
+    std::shared_ptr<Core::LinAlg::Vector<double>> node_weights = nullptr;
+    std::shared_ptr<Core::LinAlg::SparseMatrix> edge_weights = nullptr;
+  };
+
   /**
    * Additional parameters that govern the rebalancing process.
    */
@@ -83,11 +88,6 @@ namespace Core::Rebalance
      * General verbosity settings and I/O parameters.
      */
     Teuchos::ParameterList io_parameters;
-
-    /**
-     * Strategy used to derive repartitioning weights.
-     */
-    WeightingStrategy weighting_strategy = WeightingStrategy::static_cost;
   };
 
 
@@ -100,7 +100,8 @@ namespace Core::Rebalance
    * This is a collective call over all ranks in @p comm.
    */
   void rebalance_discretization(Core::FE::Discretization& discretization,
-      const Core::LinAlg::Map& row_elements, const RebalanceParameters& parameters, MPI_Comm comm);
+      const Core::LinAlg::Map& row_elements, const RebalanceParameters& parameters, MPI_Comm comm,
+      const PartitionWeights* partition_weights = nullptr);
 }  // namespace Core::Rebalance
 
 FOUR_C_NAMESPACE_CLOSE

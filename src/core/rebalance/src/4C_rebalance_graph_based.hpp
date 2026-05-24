@@ -15,7 +15,6 @@
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_multi_vector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
-#include "4C_rebalance.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <memory>
@@ -102,18 +101,6 @@ namespace Core::Rebalance
   rebalance_coordinates(const Core::LinAlg::MultiVector<double>& initialCoordinates,
       Teuchos::ParameterList& rebalanceParams,
       const Core::LinAlg::MultiVector<double>& initialWeights);
-
-  /*!
-  \brief Create node and edge weights based on element connectivity
-
-  @param[in] dis discretization used to build the weights
-
-  @return Node and edge weights to be used for repartitioning
-  */
-  std::pair<std::shared_ptr<Core::LinAlg::Vector<double>>,
-      std::shared_ptr<Core::LinAlg::SparseMatrix>>
-  build_weights(const Core::FE::Discretization& dis,
-      WeightingStrategy weighting_strategy = WeightingStrategy::static_cost);
 
   /*!
   \brief Build node graph of a given  discretization
