@@ -41,6 +41,7 @@
 #include "4C_particle_engine_particlereader.hpp"
 #include "4C_rebalance_graph_based.hpp"
 #include "4C_rebalance_weights.hpp"
+#include "4C_structure_new_timint_basedatasdyn.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_xfem_discretization.hpp"
@@ -842,10 +843,13 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
           "problem types, disable these options or implement element timing support for the "
           "corresponding problem type before enabling them.");
     }
-    dis->set_time_ele_evaluations(
-        time_ele_evaluations or
-        (problem.get_problem_type() == Core::ProblemType::structure and
-            problem.structural_dynamic_params().sublist("DYNAMIC REBALANCE").get<bool>("ENABLED")));
+    const bool dynamic_rebalance_enabled =
+        problem.get_problem_type() == Core::ProblemType::structure
+            ? Solid::TimeInt::parse_dynamic_rebalance_config(
+                  problem.structural_dynamic_params().sublist("DYNAMIC REBALANCE"))
+                  .enabled
+            : false;
+    dis->set_time_ele_evaluations(time_ele_evaluations or dynamic_rebalance_enabled);
 
     problem.add_dis(name, dis);
 
