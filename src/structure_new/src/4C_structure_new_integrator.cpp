@@ -104,6 +104,13 @@ void Solid::Integrator::rebuild_after_redistribution()
 {
   check_init();
 
+  if (modelevaluator_ptr_ != nullptr)
+  {
+    auto& structure_model = dynamic_cast<Solid::ModelEvaluator::Structure&>(
+        modelevaluator_ptr_->evaluator(Inpar::Solid::model_structure));
+    structure_model.preserve_runtime_output_writers_for_rebuild();
+  }
+
   eval_data_ptr_ = std::make_shared<Solid::ModelEvaluator::Data>();
   eval_data_ptr_->init(timint_ptr_);
   eval_data_ptr_->setup();

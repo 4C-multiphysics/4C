@@ -40,6 +40,9 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+std::unique_ptr<Core::IO::RuntimeCsvWriter>
+    Solid::ModelEvaluator::Structure::preserved_runtime_csvwriter_rank_eval_times_ = nullptr;
+
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 Solid::ModelEvaluator::Structure::Structure()
@@ -69,11 +72,18 @@ void Solid::ModelEvaluator::Structure::setup()
 
   if (Global::Problem::instance()->io_params().get<bool>("PER_RANK_EVAL_TIME"))
   {
-    runtime_csvwriter_rank_eval_times_ = std::make_unique<Core::IO::RuntimeCsvWriter>(
-        Core::Communication::my_mpi_rank(discret().get_comm()), discret_ptr()->writer()->output(),
-        "rank_eval_time");
-    runtime_csvwriter_rank_eval_times_->register_data_vector(
-        "RankEvalTime", Core::Communication::num_mpi_ranks(discret().get_comm()), 16);
+    if (preserved_runtime_csvwriter_rank_eval_times_ != nullptr)
+    {
+      runtime_csvwriter_rank_eval_times_ = std::move(preserved_runtime_csvwriter_rank_eval_times_);
+    }
+    else
+    {
+      runtime_csvwriter_rank_eval_times_ = std::make_unique<Core::IO::RuntimeCsvWriter>(
+          Core::Communication::my_mpi_rank(discret().get_comm()), discret_ptr()->writer()->output(),
+          "rank_eval_time");
+      runtime_csvwriter_rank_eval_times_->register_data_vector(
+          "RankEvalTime", Core::Communication::num_mpi_ranks(discret().get_comm()), 16);
+    }
   }
 
 
@@ -143,6 +153,14 @@ void Solid::ModelEvaluator::Structure::setup()
 
   // set flag
   issetup_ = true;
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Structure::preserve_runtime_output_writers_for_rebuild()
+{
+  if (runtime_csvwriter_rank_eval_times_ != nullptr)
+    preserved_runtime_csvwriter_rank_eval_times_ = std::move(runtime_csvwriter_rank_eval_times_);
 }
 
 /*----------------------------------------------------------------------------*
