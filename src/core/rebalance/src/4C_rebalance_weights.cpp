@@ -96,7 +96,32 @@ Core::Rebalance::PartitionWeights Core::Rebalance::build_eval_time_partition_wei
       .node_weights = std::make_shared<Core::LinAlg::Vector<double>>(point_row_map, true),
       .edge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(point_row_map, 15)};
 
-  weights.node_weights->put_scalar(0.001);
+  std::vector<double> adjacent_eval_time_sum(point_row_map.num_my_elements(), 0.0);
+  std::vector<int> adjacent_element_count(point_row_map.num_my_elements(), 0);
+
+  for (int i = 0; i < dis.element_row_map()->num_my_elements(); ++i)
+  {
+    const Core::Elements::Element* ele = dis.l_row_element(i);
+    const double element_eval_time = std::max(ele->eval_time(), 1.0e-12);
+    const std::vector<int> node_ids = build_local_node_ids(*ele);
+    for (const int node_id : node_ids)
+    {
+      const int local_node_id = point_row_map.lid(node_id);
+      if (local_node_id == -1) continue;
+      adjacent_eval_time_sum[local_node_id] += element_eval_time;
+      adjacent_element_count[local_node_id] += 1;
+    }
+  }
+
+  for (int local_node_id = 0; local_node_id < point_row_map.num_my_elements(); ++local_node_id)
+  {
+    const double average_adjacent_eval_time =
+        adjacent_element_count[local_node_id] > 0
+            ? adjacent_eval_time_sum[local_node_id] /
+                  static_cast<double>(adjacent_element_count[local_node_id])
+            : 1.0e-12;
+    weights.node_weights->replace_local_value(local_node_id, average_adjacent_eval_time);
+  }
 
   for (int local_row = 0; local_row < graph_row_map.num_my_elements(); ++local_row)
   {

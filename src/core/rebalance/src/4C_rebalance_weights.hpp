@@ -34,8 +34,8 @@ namespace Core::Rebalance
   /**
    * Build repartitioning weights on the rebalance graph map.
    *
-   * For the current test setup, every node weight is set to 0.001 and every graph edge weight is
-   * set to the global average element evaluation time.
+   * Node weights are set to the average evaluation time of adjacent owned elements, while every
+   * graph edge weight is set to the global average element evaluation time.
    */
   PartitionWeights build_eval_time_partition_weights(
       const Core::FE::Discretization& dis, const Core::LinAlg::Graph& graph);
