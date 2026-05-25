@@ -17,7 +17,7 @@
 # - CLANGCUDA_ARCH: GPU architecture to target (default is sm_90)
 # - CLANGCUDA_LOG: optional path to a log file for recording final commands
 
-clang="${CLANGCUDA_CLANG_PATH:-/bin/clang++}"
+clang_path="${CLANGCUDA_CLANG_PATH:-/bin/clang++}"
 cuda_path="${CLANGCUDA_CUDA_PATH:-${CUDA_HOME:-/usr/local/cuda}}"
 
 compile=0
@@ -92,7 +92,7 @@ fi
 
 if [[ "$compile" == "1" && "$mode_cuda_host" == "1" ]]; then
   final=(
-    "$clang"
+    "$clang_path"
     -x cuda
     --cuda-host-only
     --cuda-path="$cuda_path"
@@ -102,7 +102,7 @@ if [[ "$compile" == "1" && "$mode_cuda_host" == "1" ]]; then
   )
 elif [[ "$compile" == "1" && "$mode_cuda_device" == "1" ]]; then
   final=(
-    "$clang"
+    "$clang_path"
     -x cuda
     --cuda-path="$cuda_path"
     --cuda-gpu-arch="$arch"
@@ -111,7 +111,7 @@ elif [[ "$compile" == "1" && "$mode_cuda_device" == "1" ]]; then
   )
 else
   final=(
-    "$clang"
+    "$clang_path"
     -Wno-unknown-cuda-version
     "${args[@]}"
   )
