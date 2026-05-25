@@ -134,7 +134,13 @@ void Solid::TimeInt::Base::post_setup()
 void Solid::TimeInt::Base::post_output()
 {
   check_init_setup();
+  maybe_perform_dynamic_rebalance();
+}
 
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::TimeInt::Base::maybe_perform_dynamic_rebalance()
+{
   const auto& rebalance_config = datasdyn_->get_dynamic_rebalance_config();
   if (!rebalance_config.enabled) return;
 

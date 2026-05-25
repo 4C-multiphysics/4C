@@ -833,6 +833,12 @@ namespace Solid
        *  */
       void initialize_energy_file_stream_and_write_headers();
 
+      /** \brief Compute average rolling imbalance and call perform_dynamic_rebalance()
+       *         when it exceeds STRUCTURAL DYNAMIC/DYNAMIC: IMBALANCE_THRESHOLD
+       *
+       *  */
+      void maybe_perform_dynamic_rebalance();
+
      protected:
       /// flag indicating if init() has been called
       bool isinit_;
