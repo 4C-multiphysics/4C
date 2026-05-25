@@ -433,13 +433,14 @@ namespace Inpar
                   false})); /*--------------------------------------------------------------------*/
       specs.push_back(group("STRUCTURAL DYNAMIC/DYNAMIC REBALANCE",
           {
-              parameter<bool>("ENABLED",
-                  {.description = "Enable timing-based dynamic redistribution for pure structure "
-                                  "problems in the standard time loop.",
-                      .default_value = false}),
+              parameter<bool>(
+                  "ENABLED", {.description = "Enable dynamic rebalance based on "
+                                             "Core::Elements::Element::evaluate() times "
+                                             "for pure structure problems.",
+                                 .default_value = false}),
               parameter<double>("IMBALANCE_THRESHOLD",
-                  {.description = "Trigger redistribution if the rolling average of the "
-                                  "max-to-min rank evaluation time ratio exceeds this value.",
+                  {.description = "Trigger rebalance if the rolling average of the "
+                                  "max-to-mean rank evaluation time ratio exceeds this value.",
                       .default_value = 1.5}),
               parameter<int>("WINDOW_STEPS",
                   {.description =
