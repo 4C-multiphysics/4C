@@ -67,6 +67,11 @@ namespace Solid
     //! Setup class variables
     virtual void setup();
 
+    //! Rebuild map-dependent DBC internals after a discretization redistribution.
+    void rebuild_after_redistribution(const std::shared_ptr<Core::FE::Discretization>& discret,
+        const std::shared_ptr<Core::LinAlg::Vector<double>>& freact,
+        const std::shared_ptr<const Solid::TimeInt::Base>& timint_ptr);
+
     /*! \brief Apply the DBC to system of equations
      *
      *  \note Stay in the local coordinate system and do not rotate back (if locSys is defined).*/

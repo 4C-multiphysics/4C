@@ -27,7 +27,6 @@
 #include "4C_structure_new_integrator.hpp"
 #include "4C_structure_new_model_evaluator_data.hpp"
 #include "4C_structure_new_model_evaluator_factory.hpp"
-#include "4C_structure_new_model_evaluator_structure.hpp"
 #include "4C_structure_new_resulttest.hpp"
 #include "4C_structure_new_timint_basedataio_runtime_vtp_output.hpp"
 #include "4C_utils_enum.hpp"
@@ -199,31 +198,10 @@ bool Solid::TimeInt::Base::perform_dynamic_rebalance()
   parameters.edge_weight_multiplier = rebalance_config.edge_weight_multiplier;
   dataglobalstate_->redistribute_and_preserve_state(parameters, rebalance_config.enabled);
 
-  const auto rebuild_after_redistribution = [this]()
-  {
-    dbc_ptr_ = Solid::build_dbc(data_sdyn());
-    dbc_ptr_->init(dataglobalstate_->get_discret(), dataglobalstate_->get_freact_np(),
-        Core::Utils::shared_ptr_from_ref(*this));
-    dbc_ptr_->setup();
-
-    int_ptr_->init(data_s_dyn_ptr(), data_global_state_ptr(), data_io_ptr(), dbc_ptr_,
-        Core::Utils::shared_ptr_from_ref(*this));
-    int_ptr_->rebuild_after_redistribution();
-    rebuild_solver_after_redistribution();
-
-    // Redistribution happens only after a converged step. Restore the redistributed model state
-    // via the existing rollback path before the next predictor touches element/material trial
-    // state.
-    int_ptr_->reset_step_state();
-
-    auto& structure_model = dynamic_cast<Solid::ModelEvaluator::Structure&>(
-        int_ptr_->evaluator(Inpar::Solid::model_structure));
-    if (!structure_model.initialize_inertia_and_damping(
-            *dataglobalstate_->get_dis_np(), dataglobalstate_->get_vel_np().get()))
-      FOUR_C_THROW("Failed to rebuild structural inertia and damping after redistribution.");
-  };
-
-  rebuild_after_redistribution();
+  dbc_ptr_->rebuild_after_redistribution(dataglobalstate_->get_discret(),
+      dataglobalstate_->get_freact_np(), Core::Utils::shared_ptr_from_ref(*this));
+  int_ptr_->rebuild_after_redistribution(dbc_ptr_);
+  rebuild_solver_after_redistribution();
 
   if (dataglobalstate_->get_discret()->time_ele_evaluations())
     dataglobalstate_->get_discret()->reset_element_eval_timers();

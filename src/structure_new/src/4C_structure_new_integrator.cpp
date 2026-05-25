@@ -100,7 +100,7 @@ void Solid::Integrator::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::Integrator::rebuild_after_redistribution()
+void Solid::Integrator::rebuild_after_redistribution(const std::shared_ptr<Solid::Dbc>& dbc_ptr)
 {
   check_init();
 
@@ -110,6 +110,8 @@ void Solid::Integrator::rebuild_after_redistribution()
         modelevaluator_ptr_->evaluator(Inpar::Solid::model_structure));
     structure_model.preserve_runtime_output_writers_for_rebuild();
   }
+
+  init(sdyn_ptr_, gstate_ptr_, io_ptr_, dbc_ptr, timint_ptr_);
 
   eval_data_ptr_ = std::make_shared<Solid::ModelEvaluator::Data>();
   eval_data_ptr_->init(timint_ptr_);
@@ -125,6 +127,18 @@ void Solid::Integrator::rebuild_after_redistribution()
   monitor_dbc_ptr_->setup();
 
   mt_energy_.setup();
+  issetup_ = true;
+
+  // Redistribution happens only after a converged step. Restore the redistributed model state
+  // via the existing rollback path before the next predictor touches element/material trial
+  // state, then rebuild the structural inertia and damping operators on the new maps.
+  reset_step_state();
+
+  auto& structure_model =
+      dynamic_cast<Solid::ModelEvaluator::Structure&>(evaluator(Inpar::Solid::model_structure));
+  if (!structure_model.initialize_inertia_and_damping(
+          *gstate_ptr_->get_dis_np(), gstate_ptr_->get_vel_np().get()))
+    FOUR_C_THROW("Failed to rebuild structural inertia and damping after redistribution.");
 }
 
 /*----------------------------------------------------------------------------*
