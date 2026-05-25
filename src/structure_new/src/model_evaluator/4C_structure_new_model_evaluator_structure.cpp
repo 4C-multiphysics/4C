@@ -317,9 +317,12 @@ bool Solid::ModelEvaluator::Structure::initialize_inertia_and_damping()
       nullptr, nullptr, nullptr};
   std::array<std::shared_ptr<Core::LinAlg::SparseOperator>, 2> eval_mat = {nullptr, nullptr};
 
+  // create vector with zero entries
   std::shared_ptr<const Core::LinAlg::Vector<double>> zeros =
       integrator().get_dbc().get_zeros_ptr();
 
+  // set vector values needed by elements
+  // --> initially zero !!!
   discret().clear_state();
   discret().set_state(0, "residual displacement", *zeros);
   discret().set_state(0, "displacement", *zeros);
