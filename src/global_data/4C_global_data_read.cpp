@@ -831,10 +831,16 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
         dis = std::make_shared<Core::FE::DiscretizationHDG>(name, comm, problem.n_dim());
         break;
     }
+    const bool dynamic_rebalance_enabled =
+        problem.get_problem_type() == Core::ProblemType::structure
+            ? Solid::TimeInt::parse_dynamic_rebalance_config(
+                  problem.structural_dynamic_params().sublist("DYNAMIC REBALANCE"))
+                  .enabled
+            : false;
 
     const bool time_ele_evaluations =
         problem.io_params().sublist("RUNTIME VTK OUTPUT").get<bool>("ELEMENT_EVAL_TIME") or
-        problem.io_params().get<bool>("PER_RANK_EVAL_TIME");
+        problem.io_params().get<bool>("PER_RANK_EVAL_TIME") or dynamic_rebalance_enabled;
     if (time_ele_evaluations and problem.get_problem_type() != Core::ProblemType::structure)
     {
       FOUR_C_THROW(
@@ -843,13 +849,7 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
           "problem types, disable these options or implement element timing support for the "
           "corresponding problem type before enabling them.");
     }
-    const bool dynamic_rebalance_enabled =
-        problem.get_problem_type() == Core::ProblemType::structure
-            ? Solid::TimeInt::parse_dynamic_rebalance_config(
-                  problem.structural_dynamic_params().sublist("DYNAMIC REBALANCE"))
-                  .enabled
-            : false;
-    dis->set_time_ele_evaluations(time_ele_evaluations or dynamic_rebalance_enabled);
+    dis->set_time_ele_evaluations(time_ele_evaluations);
 
     problem.add_dis(name, dis);
 
