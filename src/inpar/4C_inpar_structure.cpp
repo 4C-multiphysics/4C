@@ -447,14 +447,19 @@ namespace Inpar
                           "Number of converged steps used in the rolling imbalance average.",
                       .default_value = 3}),
               parameter<int>("COOLDOWN_STEPS",
-                  {.description = "Minimum number of converged steps between redistributions.",
+                  {.description = "Minimum number of converged steps between rebalances.",
                       .default_value = 3}),
               parameter<double>("IMBALANCE_TOL",
                   {.description = "Target imbalance tolerance passed to the repartitioner.",
                       .default_value = 1.1}),
-              parameter<int>("MIN_ELE_PER_PROC",
-                  {.description = "Minimum number of elements per processor during redistribution.",
-                      .default_value = 0}),
+              parameter<int>(
+                  "MIN_ELE_PER_PROC", {.description = "Minimum number of elements per processor "
+                                                      "used for during dynamic rebalances.",
+                                          .default_value = 0}),
+              parameter<double>("EDGE_WEIGHT_MULTIPLIER",
+                  {.description = "Multiplier applied graph edge weights during dynamic rebalance. "
+                                  "Represents the inter-rank communication overhead per edge.",
+                      .default_value = 1.0}),
               deprecated_selection<Core::Rebalance::RebalanceType>("REBALANCE_TYPE",
                   {
                       {"Hypergraph", Core::Rebalance::RebalanceType::hypergraph},
@@ -464,7 +469,7 @@ namespace Inpar
                       {"Monolithic", Core::Rebalance::RebalanceType::monolithic},
                       {"monolithic", Core::Rebalance::RebalanceType::monolithic},
                   },
-                  {.description = "Partitioning algorithm used for dynamic redistribution.",
+                  {.description = "Partitioning algorithm used for dynamic rebalance.",
                       .default_value = Core::Rebalance::RebalanceType::hypergraph}),
           },
           {.required = false}));

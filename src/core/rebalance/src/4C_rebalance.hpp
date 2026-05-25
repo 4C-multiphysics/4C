@@ -80,6 +80,12 @@ namespace Core::Rebalance
     MeshPartitioningParameters mesh_partitioning_parameters;
 
     /**
+     * Multiplier applied to the graph edge weights constructed from the global average element
+     * evaluation time during eval-time-based repartitioning.
+     */
+    double edge_weight_multiplier = 1.0;
+
+    /**
      * Geometric search parameters for certain partitioning methods.
      */
     Teuchos::ParameterList geometric_search_parameters;

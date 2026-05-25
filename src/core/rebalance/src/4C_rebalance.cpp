@@ -147,8 +147,8 @@ void Core::Rebalance::rebalance_discretization(Core::FE::Discretization& discret
   {
     const std::optional<Core::Rebalance::PartitionWeights> effective_partition_weights =
         use_eval_time_weights
-            ? std::make_optional(
-                  Core::Rebalance::build_eval_time_partition_weights(discretization, *graph))
+            ? std::make_optional(Core::Rebalance::build_eval_time_partition_weights(
+                  discretization, *graph, parameters.edge_weight_multiplier))
             : std::nullopt;
     std::tie(rowmap, colmap) = do_rebalance_discretization(*graph, discretization, rebalanceMethod,
         rebalanceParams, parameters, comm,
