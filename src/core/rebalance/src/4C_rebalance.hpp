@@ -101,7 +101,7 @@ namespace Core::Rebalance
    */
   void rebalance_discretization(Core::FE::Discretization& discretization,
       const Core::LinAlg::Map& row_elements, const RebalanceParameters& parameters, MPI_Comm comm,
-      const PartitionWeights* partition_weights = nullptr);
+      bool use_eval_time_weights = false);
 }  // namespace Core::Rebalance
 
 FOUR_C_NAMESPACE_CLOSE

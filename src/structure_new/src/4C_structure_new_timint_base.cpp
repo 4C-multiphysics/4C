@@ -190,8 +190,7 @@ bool Solid::TimeInt::Base::perform_dynamic_rebalance()
 
   Core::Rebalance::RebalanceParameters parameters;
   parameters.mesh_partitioning_parameters = rebalance_config.mesh_partitioning_parameters;
-  const Core::Rebalance::PartitionWeights partition_weights;
-  dataglobalstate_->redistribute_and_preserve_state(parameters, &partition_weights);
+  dataglobalstate_->redistribute_and_preserve_state(parameters, rebalance_config.enabled);
 
   const auto rebuild_after_redistribution = [this]()
   {

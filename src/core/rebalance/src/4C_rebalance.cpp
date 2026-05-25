@@ -114,7 +114,7 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
 
 void Core::Rebalance::rebalance_discretization(Core::FE::Discretization& discretization,
     const Core::LinAlg::Map& row_elements, const RebalanceParameters& parameters, MPI_Comm comm,
-    const PartitionWeights* partition_weights)
+    bool use_eval_time_weights)
 {
   std::shared_ptr<const Core::LinAlg::Graph> graph = nullptr;
 
@@ -146,13 +146,13 @@ void Core::Rebalance::rebalance_discretization(Core::FE::Discretization& discret
   if (graph)
   {
     const std::optional<Core::Rebalance::PartitionWeights> effective_partition_weights =
-        partition_weights != nullptr
+        use_eval_time_weights
             ? std::make_optional(
                   Core::Rebalance::build_eval_time_partition_weights(discretization, *graph))
             : std::nullopt;
     std::tie(rowmap, colmap) = do_rebalance_discretization(*graph, discretization, rebalanceMethod,
         rebalanceParams, parameters, comm,
-        effective_partition_weights ? &effective_partition_weights.value() : partition_weights);
+        effective_partition_weights ? &effective_partition_weights.value() : nullptr);
   }
   else
   {

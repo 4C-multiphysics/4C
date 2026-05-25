@@ -228,8 +228,7 @@ void Solid::TimeInt::BaseDataGlobalState::setup()
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
-    const Core::Rebalance::RebalanceParameters& rebalance_parameters,
-    const Core::Rebalance::PartitionWeights* partition_weights)
+    const Core::Rebalance::RebalanceParameters& rebalance_parameters, bool use_eval_time_weights)
 {
   check_init_setup();
 
@@ -322,7 +321,7 @@ void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
   };
 
   Core::Rebalance::rebalance_discretization(
-      *discret_, *discret_->element_row_map(), rebalance_parameters, comm_, partition_weights);
+      *discret_, *discret_->element_row_map(), rebalance_parameters, comm_, use_eval_time_weights);
 
   const int fill_complete_error = discret_->fill_complete();
   if (fill_complete_error)
