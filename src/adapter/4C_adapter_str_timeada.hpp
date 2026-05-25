@@ -95,7 +95,11 @@ namespace Adapter
     void output(bool forced_writerestart = false) override;
 
     /// wrapper for things that should be done after the output
-    void post_output() override {};
+    void post_output() override
+    {
+      // first forward to base class which forwards to structure_->post_output();
+      StructureWrapper::post_output();
+    };
 
     //! Provide the name
     virtual Solid::TimAdaKind method_name() const = 0;
