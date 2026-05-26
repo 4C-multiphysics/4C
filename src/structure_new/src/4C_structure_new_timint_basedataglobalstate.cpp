@@ -235,6 +235,7 @@ void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
   FOUR_C_ASSERT(discret_->element_row_map() != nullptr,
       "The discretization has to be fill_complete() before redistribution.");
 
+  // get max dofs on this rank
   const int local_max_nodal_dofs = [&]()
   {
     int max_nodal_dofs = 0;
@@ -242,10 +243,12 @@ void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
       max_nodal_dofs = std::max(max_nodal_dofs, discret_->num_dof(discret_->l_row_node(node_i)));
     return max_nodal_dofs;
   }();
+  // max over all ranks
   const int max_nodal_dofs = Core::Communication::max_all(local_max_nodal_dofs, comm_);
 
   const auto pack_nodal_state = [this, max_nodal_dofs](const Core::LinAlg::Vector<double>& vector)
   {
+    // Stores vector over all ranks
     auto nodal_state = std::make_shared<Core::LinAlg::MultiVector<double>>(
         *discret_->node_row_map(), max_nodal_dofs, true);
 
@@ -253,7 +256,6 @@ void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
     {
       const Core::Nodes::Node* node = discret_->l_row_node(node_i);
       const std::vector<int> node_dofs = discret_->dof(0, node);
-
       for (int dof_i = 0; dof_i < static_cast<int>(node_dofs.size()); ++dof_i)
       {
         const int dof_lid = vector.get_map().lid(node_dofs[dof_i]);
@@ -269,6 +271,7 @@ void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
                                     TimeStepping::TimIntMStep<Core::LinAlg::Vector<double>>& state)
   {
     const auto [step_past, step_future] = state.get_steps();
+    // for every time step one MultiVector
     std::vector<std::shared_ptr<Core::LinAlg::MultiVector<double>>> nodal_state_per_step(
         step_future - step_past + 1);
 
@@ -295,7 +298,7 @@ void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
     std::shared_ptr<Core::LinAlg::Vector<double>>* state;
   };
 
-  // Preserve the converged structural primary states by node identity across redistribution.
+  // Preserve the structural states by node identity across redistribution.
   std::array preserved_mstep_states = {
       PreservedMstepState{&dis_, pack_nodal_mstep(dis_)},
       PreservedMstepState{&vel_, pack_nodal_mstep(vel_)},
@@ -306,6 +309,7 @@ void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
       PreservedVectorState{&velnp_, pack_nodal_state(*velnp_)},
       PreservedVectorState{&accnp_, pack_nodal_state(*accnp_)},
   };
+  // can be derived from primary state
   std::array remapped_vector_states = {
       RemappedVectorState{&fintn_},
       RemappedVectorState{&fintnp_},
