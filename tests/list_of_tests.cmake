@@ -2050,6 +2050,8 @@ __four_c_test_add_csv_yaml_comparison(BASED_ON ${current} RESULT_FILE xxx-1-1000
 four_c_test(TEST_FILE solid_monitor_dbc_yaml_with_condition_information.4C.yaml NP 2 RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 1 RETURN_AS current)
 __four_c_test_add_csv_yaml_comparison(BASED_ON ${current} RESULT_FILE xxx-1-10001_monitor_dbc.yaml REFERENCE_FILE ref/solid_monitor_dbc_yaml_with_condition_information-1-10001_monitor_dbc.yaml TOL_R 1e-10 TOL_A 1e-12)
+four_c_test(TEST_FILE solid_monitor_dbc_2d.4C.yaml NP 1 RETURN_AS current)
+__four_c_test_add_csv_yaml_comparison(BASED_ON ${current} RESULT_FILE xxx-1001_monitor_dbc.csv REFERENCE_FILE ref/solid_monitor_dbc_2d_1001.csv TOL_R 1e-10 TOL_A 1e-12)
 four_c_test(TEST_FILE solid_runtime_vtk_2d.4C.yaml NP 2 RETURN_AS current)
 __four_c_test_vtk(BASED_ON ${current} PVD_RESULT xxx-structure.pvd PVD_REFERENCE ref/solid_runtime_vtk_2d-vtk-files/test-structure.pvd TOLERANCE 1e-06)
 four_c_test(TEST_FILE solid_runtime_vtk_offset.4C.yaml NP 2 RETURN_AS current)

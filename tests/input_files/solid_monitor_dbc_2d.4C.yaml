@@ -1,0 +1,78 @@
+TITLE:
+  - "Regression test for the monitor_dbc moment-loop bug in 2D problems."
+  - "A 2x1 plane-strain QUAD4 mesh with a tagged LINE Dirichlet condition on"
+  - "the left edge and a y-dependent Neumann pull on the right edge."
+  - "Before the fix, Solid::MonitorDbc::get_reaction_moment iterated over a"
+  - "hard-coded DIM=3 even in 2D, accessing a non-existent third DOF and the"
+  - "uninitialised z-component of the displacement vector. The resulting"
+  - "garbage values in node_position[2] and mydisp[2] entered cross_product"
+  - "and produced astronomical moment entries, frequently triggering an FPE"
+  - "OVERFLOW during the structural predictor."
+PROBLEM SIZE:
+  DIM: 2
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO/MONITOR STRUCTURE DBC:
+  INTERVAL_STEPS: 1
+  FILE_TYPE: csv
+  WRITE_CONDITION_INFORMATION: false
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  RESULTSEVERY: 1
+  RESTARTEVERY: 0
+  TIMESTEP: 0.5
+  NUMSTEP: 2
+  MAXTIME: 1.0
+  TOLDISP: 1e-09
+  TOLRES: 1e-09
+  LOADLIN: true
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "Superlu"
+  NAME: "Structure_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 100.0
+      NUE: 0.0
+      DENS: 0.0
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "(1+0.3*y)*t"
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 2
+    ONOFF: [1, 1]
+    VAL: [0.0, 0.0]
+    FUNCT: [0, 0]
+    TAG: monitor_reaction
+DESIGN LINE NEUMANN CONDITIONS:
+  - E: 2
+    NUMDOF: 2
+    ONOFF: [1, 0]
+    VAL: [10.0, 0.0]
+    FUNCT: [1, 0]
+DLINE-NODE TOPOLOGY:
+  - "NODE 1 DLINE 1"
+  - "NODE 3 DLINE 1"
+  - "NODE 5 DLINE 1"
+  - "NODE 2 DLINE 2"
+  - "NODE 4 DLINE 2"
+  - "NODE 6 DLINE 2"
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
+  - "NODE 3 DSURFACE 1"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 5 DSURFACE 1"
+  - "NODE 6 DSURFACE 1"
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 1.0 0.0 0.0"
+  - "NODE 3 COORD 0.0 0.5 0.0"
+  - "NODE 4 COORD 1.0 0.5 0.0"
+  - "NODE 5 COORD 0.0 1.0 0.0"
+  - "NODE 6 COORD 1.0 1.0 0.0"
+STRUCTURE ELEMENTS:
+  - "1 SOLID QUAD4 1 2 4 3 MAT 1 KINEM nonlinear THICKNESS 1.0 PLANE_ASSUMPTION plane_strain"
+  - "2 SOLID QUAD4 3 4 6 5 MAT 1 KINEM nonlinear THICKNESS 1.0 PLANE_ASSUMPTION plane_strain"
