@@ -198,8 +198,9 @@ bool Solid::TimeInt::Base::perform_dynamic_rebalance()
   parameters.edge_weight_multiplier = rebalance_config.edge_weight_multiplier;
   dataglobalstate_->redistribute_and_preserve_state(parameters, rebalance_config.enabled);
 
-  dbc_ptr_->rebuild_after_redistribution(dataglobalstate_->get_discret(),
-      dataglobalstate_->get_freact_np(), Core::Utils::shared_ptr_from_ref(*this));
+  dbc_ptr_->init(dataglobalstate_->get_discret(), dataglobalstate_->get_freact_np(),
+      Core::Utils::shared_ptr_from_ref(*this));
+  dbc_ptr_->setup();
   int_ptr_->rebuild_after_redistribution(dbc_ptr_);
   rebuild_solver_after_redistribution();
 

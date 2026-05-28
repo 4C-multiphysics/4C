@@ -117,19 +117,6 @@ void Solid::Dbc::setup()
   issetup_ = true;
 }
 
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-void Solid::Dbc::rebuild_after_redistribution(
-    const std::shared_ptr<Core::FE::Discretization>& discret,
-    const std::shared_ptr<Core::LinAlg::Vector<double>>& freact,
-    const std::shared_ptr<const Solid::TimeInt::Base>& timint_ptr)
-{
-  init(discret, freact, timint_ptr);
-  setup();
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
 void Solid::Dbc::check_init() const { FOUR_C_ASSERT(is_init(), "Call init() first!"); }
 
 /*----------------------------------------------------------------------------*

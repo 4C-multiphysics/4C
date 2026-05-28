@@ -291,21 +291,17 @@ void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
   for (auto& remapped_vector_state : remapped_vector_states)
     remap_vector(*remapped_vector_state.state);
 
-  // Redistribution happens only after a converged step. Re-synchronize the current "last
-  // converged" states from the remapped n+1 state before any reset-to-last-converged path
-  // consumes dis_n/vel_n/acc_n on the redistributed discretization.
-  dis_[0].update(1.0, *disnp_, 0.0);
-  vel_[0].update(1.0, *velnp_, 0.0);
-  acc_[0].update(1.0, *accnp_, 0.0);
-
+  // These matrices are map dependent and no longer correct after redistribution
   jac_ = nullptr;
   stiff_ = nullptr;
+  // mass_ and damp_ have to be initialized. This is also done in setup()
   mass_ = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map_view(), 81, true, true);
   if (datasdyn_->get_damping_type() != Inpar::Solid::damp_none)
     damp_ = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map_view(), 81, true, true);
   else
     damp_ = nullptr;
 
+  // These are invalid after redistribution
   model_maps_.clear();
   model_block_id_.clear();
   max_block_num_ = 0;
