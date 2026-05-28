@@ -209,7 +209,7 @@ namespace Core::IO
         // We have to make sure that this dof is actually available at this node. It can happen that
         // this is not the case e.g. in multi-scale simulations where different nodes in the mesh
         // have a different number of dofs.
-        // Since this is not supported by vtu, we add a NaN in this case, see else branch
+        // Keep the requested vector size and pad missing components with 0.0, see else branch
         if (nodedofs.size() > read_result_data_from_dofindex + idof)
         {
           const int lid =
@@ -218,7 +218,7 @@ namespace Core::IO
         }
         else
         {
-          vtu_point_result_data.push_back(std::numeric_limits<double>::quiet_NaN());
+          vtu_point_result_data.push_back(0.0);
         }
       }
     }
