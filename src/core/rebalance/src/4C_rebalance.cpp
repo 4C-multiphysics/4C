@@ -11,7 +11,6 @@
 #include "4C_fem_discretization_utils.hpp"
 #include "4C_rebalance_graph_based.hpp"
 #include "4C_rebalance_print.hpp"
-#include "4C_rebalance_weights.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 

@@ -13,7 +13,9 @@
 #include "4C_geometric_search_bounding_volume.hpp"
 #include "4C_geometric_search_distributed_tree.hpp"
 #include "4C_linalg_transfer.hpp"
+#include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
@@ -24,6 +26,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -153,6 +156,116 @@ Core::Rebalance::rebalance_coordinates(const Core::LinAlg::MultiVector<double>& 
 
   return {std::make_shared<Core::LinAlg::MultiVector<double>>(*balancedCoordinates),
       std::make_shared<Core::LinAlg::MultiVector<double>>(*balancedWeights)};
+}
+
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+Core::Rebalance::PartitionWeights Core::Rebalance::build_static_partition_weights(
+    const Core::FE::Discretization& dis)
+{
+  const Core::LinAlg::Map* noderowmap = dis.node_row_map();
+
+  auto crs_ge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(*noderowmap, 15);
+  std::shared_ptr<Core::LinAlg::Vector<double>> vweights =
+      std::make_shared<Core::LinAlg::Vector<double>>(*noderowmap, true);
+
+  for (int i = 0; i < dis.element_row_map()->num_my_elements(); ++i)
+  {
+    Core::Elements::Element* ele = dis.l_row_element(i);
+    const Core::Nodes::Node* const* nodes = ele->nodes();
+    const int numnode = ele->num_node();
+    std::vector<int> lm(numnode);
+    std::vector<int> lmrowowner(numnode);
+    for (int n = 0; n < numnode; ++n)
+    {
+      lm[n] = nodes[n]->id();
+      lmrowowner[n] = nodes[n]->owner();
+    }
+
+    Core::LinAlg::SerialDenseMatrix edgeweights_ele;
+    Core::LinAlg::SerialDenseVector nodeweights_ele;
+    ele->nodal_connectivity(edgeweights_ele, nodeweights_ele);
+
+    Core::LinAlg::assemble(*crs_ge_weights, edgeweights_ele, lm, lmrowowner, lm);
+    Core::LinAlg::assemble(*vweights, nodeweights_ele, lm, lmrowowner);
+  }
+
+  crs_ge_weights->complete();
+
+  return {.node_weights = std::move(vweights), .edge_weights = std::move(crs_ge_weights)};
+}
+
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+Core::Rebalance::PartitionWeights Core::Rebalance::build_eval_time_partition_weights(
+    const Core::FE::Discretization& dis, const Core::LinAlg::Graph& graph,
+    const double edge_weight_multiplier)
+{
+  const Core::LinAlg::Map& graph_row_map = graph.row_map();
+  const Core::LinAlg::Map point_row_map(graph_row_map.num_global_elements(),
+      graph_row_map.num_my_elements(), graph_row_map.my_global_elements(),
+      graph_row_map.index_base(), graph.get_comm());
+
+  const double local_eval_time_sum = [&dis]()
+  {
+    double sum = 0.0;
+    for (int i = 0; i < dis.element_row_map()->num_my_elements(); ++i)
+    {
+      const Core::Elements::Element* ele = dis.l_row_element(i);
+      sum += std::max(ele->eval_time(), 1.0e-12);
+    }
+    return sum;
+  }();
+  const double global_eval_time_sum =
+      Core::Communication::sum_all(local_eval_time_sum, dis.get_comm());
+  const double average_eval_time = std::max(
+      global_eval_time_sum / static_cast<double>(dis.element_row_map()->num_global_elements()),
+      1.0e-12);
+  const double scaled_average_eval_time = edge_weight_multiplier * average_eval_time;
+
+  PartitionWeights weights{
+      .node_weights = std::make_shared<Core::LinAlg::Vector<double>>(point_row_map, true),
+      .edge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(point_row_map, 15)};
+
+  std::vector<double> adjacent_eval_time_sum(point_row_map.num_my_elements(), 0.0);
+  std::vector<int> adjacent_element_count(point_row_map.num_my_elements(), 0);
+
+  for (int i = 0; i < dis.element_row_map()->num_my_elements(); ++i)
+  {
+    const Core::Elements::Element* ele = dis.l_row_element(i);
+    const double element_eval_time = std::max(ele->eval_time(), 1.0e-12);
+    const Core::Nodes::Node* const* nodes = ele->nodes();
+    for (int n = 0; n < ele->num_node(); ++n)
+    {
+      const int local_node_id = point_row_map.lid(nodes[n]->id());
+      if (local_node_id == -1) continue;
+      adjacent_eval_time_sum[local_node_id] += element_eval_time;
+      adjacent_element_count[local_node_id] += 1;
+    }
+  }
+
+  for (int local_node_id = 0; local_node_id < point_row_map.num_my_elements(); ++local_node_id)
+  {
+    const double average_adjacent_eval_time =
+        adjacent_element_count[local_node_id] > 0
+            ? adjacent_eval_time_sum[local_node_id] /
+                  static_cast<double>(adjacent_element_count[local_node_id])
+            : 1.0e-12;
+    weights.node_weights->replace_local_value(local_node_id, average_adjacent_eval_time);
+  }
+
+  for (int local_row = 0; local_row < graph_row_map.num_my_elements(); ++local_row)
+  {
+    const int global_row = graph_row_map.gid(local_row);
+    std::span<int> indices;
+    graph.extract_local_row_view(local_row, indices);
+    std::vector<double> values(indices.size(), scaled_average_eval_time);
+    weights.edge_weights->insert_global_values(
+        global_row, static_cast<int>(indices.size()), values.data(), indices.data());
+  }
+
+  weights.edge_weights->complete();
+  return weights;
 }
 
 std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_graph(

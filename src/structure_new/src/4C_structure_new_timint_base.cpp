@@ -20,7 +20,6 @@
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_rebalance.hpp"
-#include "4C_rebalance_weights.hpp"
 #include "4C_structure_new_dbc.hpp"
 #include "4C_structure_new_enum_lists.hpp"
 #include "4C_structure_new_factory.hpp"
