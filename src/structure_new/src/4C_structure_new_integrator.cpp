@@ -113,10 +113,6 @@ void Solid::Integrator::rebuild_after_redistribution(const std::shared_ptr<Solid
 
   init(sdyn_ptr_, gstate_ptr_, io_ptr_, dbc_ptr, timint_ptr_);
 
-  eval_data_ptr_ = std::make_shared<Solid::ModelEvaluator::Data>();
-  eval_data_ptr_->init(timint_ptr_);
-  eval_data_ptr_->setup();
-
   modelevaluator_ptr_ = std::make_shared<Solid::ModelEvaluatorManager>();
   modelevaluator_ptr_->init(eval_data_ptr_, sdyn_ptr_, gstate_ptr_, io_ptr_,
       Core::Utils::shared_ptr_from_ref(*this), timint_ptr_);
