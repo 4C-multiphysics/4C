@@ -120,7 +120,7 @@ void Solid::Integrator::rebuild_after_redistribution()
   // Redistribution happens only after a converged step. Restore the redistributed model state
   // via the existing rollback path before the next predictor touches element/material trial
   // state, then rebuild the structural inertia and damping operators on the new maps.
-  reset_step_state();
+  // reset_step_state();
 
   if (!structure_model.initialize_inertia_and_damping(
           *gstate_ptr_->get_dis_np(), gstate_ptr_->get_vel_np().get()))
