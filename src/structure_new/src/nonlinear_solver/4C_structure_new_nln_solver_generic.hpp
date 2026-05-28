@@ -68,6 +68,9 @@ namespace Solid
          */
         virtual void reset() = 0;
 
+        //! Refresh solver-side map-dependent state after a redistribution.
+        virtual void refresh_after_redistribution() = 0;
+
         //! Solve the non-linear problem
         virtual Solid::ConvergenceStatus solve() = 0;
 

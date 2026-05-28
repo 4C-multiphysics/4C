@@ -78,31 +78,6 @@ void Solid::TimeInt::Implicit::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::TimeInt::Implicit::rebuild_solver_after_redistribution()
-{
-  check_init();
-
-  implint_ptr_ = std::dynamic_pointer_cast<Solid::IMPLICIT::Generic>(integrator_ptr());
-
-  std::shared_ptr<Solid::TimeInt::NoxInterface> noxinterface_ptr =
-      std::make_shared<Solid::TimeInt::NoxInterface>();
-  noxinterface_ptr->init(
-      data_global_state_ptr(), implint_ptr_, dbc_ptr(), Core::Utils::shared_ptr_from_ref(*this));
-  noxinterface_ptr->setup();
-
-  const Inpar::Solid::PredEnum predtype = data_sdyn().get_predictor_type();
-  predictor_ptr_ = Solid::Predict::build_predictor(predtype);
-  predictor_ptr_->init(predtype, implint_ptr_, dbc_ptr(), data_global_state_ptr(), data_io_ptr(),
-      data_sdyn().get_nox_params_ptr());
-  predictor_ptr_->setup();
-
-  const Inpar::Solid::NonlinSolTech nlnSolverType = data_sdyn().get_nln_solver_type();
-  nlnsolver_ptr_ = Solid::Nln::SOLVER::build_nln_solver(nlnSolverType, data_global_state_ptr(),
-      data_s_dyn_ptr(), noxinterface_ptr, implint_ptr_, Core::Utils::shared_ptr_from_ref(*this));
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
 void Solid::TimeInt::Implicit::set_state(const std::shared_ptr<Core::LinAlg::Vector<double>>& x)
 {
   integrator_ptr()->set_state(*x);
