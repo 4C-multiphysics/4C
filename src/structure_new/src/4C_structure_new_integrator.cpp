@@ -104,13 +104,24 @@ void Solid::Integrator::rebuild_after_redistribution()
 {
   check_init();
 
+  auto& structure_model =
+      dynamic_cast<Solid::ModelEvaluator::Structure&>(evaluator(Inpar::Solid::model_structure));
+  structure_model.setup();
+  global_state().setup_block_information(structure_model, Inpar::Solid::model_structure);
+  global_state().setup_multi_map_extractor();
+  global_state().setup_element_technology_map_extractors();
+
+  // rebuild monitor_dbc_ptr_ because of stale "ReactionForce" react_maps_
+  auto refreshed_monitor_dbc = std::make_shared<Solid::MonitorDbc>();
+  refreshed_monitor_dbc->init(io_ptr_, *gstate_ptr_->get_discret(), *gstate_ptr_, *dbc_ptr_);
+  refreshed_monitor_dbc->setup();
+  monitor_dbc_ptr_ = std::move(refreshed_monitor_dbc);
+
   // Redistribution happens only after a converged step. Restore the redistributed model state
   // via the existing rollback path before the next predictor touches element/material trial
   // state, then rebuild the structural inertia and damping operators on the new maps.
   reset_step_state();
 
-  auto& structure_model =
-      dynamic_cast<Solid::ModelEvaluator::Structure&>(evaluator(Inpar::Solid::model_structure));
   if (!structure_model.initialize_inertia_and_damping(
           *gstate_ptr_->get_dis_np(), gstate_ptr_->get_vel_np().get()))
     FOUR_C_THROW("Failed to rebuild structural inertia and damping after redistribution.");
