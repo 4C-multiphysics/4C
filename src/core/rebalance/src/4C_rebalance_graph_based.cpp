@@ -169,10 +169,11 @@ Core::Rebalance::PartitionWeights Core::Rebalance::build_static_partition_weight
   std::shared_ptr<Core::LinAlg::Vector<double>> vweights =
       std::make_shared<Core::LinAlg::Vector<double>>(*noderowmap, true);
 
+  // loop all row elements and get their cost of evaluation
   for (int i = 0; i < dis.element_row_map()->num_my_elements(); ++i)
   {
     Core::Elements::Element* ele = dis.l_row_element(i);
-    const Core::Nodes::Node* const* nodes = ele->nodes();
+    Core::Nodes::Node** nodes = ele->nodes();
     const int numnode = ele->num_node();
     std::vector<int> lm(numnode);
     std::vector<int> lmrowowner(numnode);
@@ -182,8 +183,10 @@ Core::Rebalance::PartitionWeights Core::Rebalance::build_static_partition_weight
       lmrowowner[n] = nodes[n]->owner();
     }
 
+    // element vector and matrix for weights of nodes and edges
     Core::LinAlg::SerialDenseMatrix edgeweights_ele;
     Core::LinAlg::SerialDenseVector nodeweights_ele;
+    // evaluate elements to get their evaluation cost
     ele->nodal_connectivity(edgeweights_ele, nodeweights_ele);
 
     Core::LinAlg::assemble(*crs_ge_weights, edgeweights_ele, lm, lmrowowner, lm);
@@ -192,7 +195,7 @@ Core::Rebalance::PartitionWeights Core::Rebalance::build_static_partition_weight
 
   crs_ge_weights->complete();
 
-  return {.node_weights = std::move(vweights), .edge_weights = std::move(crs_ge_weights)};
+  return {vweights, crs_ge_weights};
 }
 
 /*----------------------------------------------------------------------*/
