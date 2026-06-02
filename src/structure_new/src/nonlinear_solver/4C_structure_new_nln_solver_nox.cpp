@@ -119,6 +119,7 @@ void Solid::Nln::SOLVER::Nox::rebuild_problem_state()
   problem_->create_status_tests(ostatus_, istatus_);
 }
 
+
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void Solid::Nln::SOLVER::Nox::reset()
