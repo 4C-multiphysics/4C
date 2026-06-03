@@ -46,6 +46,8 @@ namespace Solid
 
       void setup() override;
 
+      void remap_after_redistribution();
+
       //! @name Derived public Solid::ModelEvaluator::Generic methods
       //! @{
 

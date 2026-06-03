@@ -106,7 +106,7 @@ void Solid::Integrator::rebuild_after_redistribution()
 
   auto& structure_model =
       dynamic_cast<Solid::ModelEvaluator::Structure&>(evaluator(Inpar::Solid::model_structure));
-  structure_model.setup();
+  structure_model.remap_after_redistribution();
   global_state().setup_block_information(structure_model, Inpar::Solid::model_structure);
   global_state().setup_multi_map_extractor();
   global_state().setup_element_technology_map_extractors();

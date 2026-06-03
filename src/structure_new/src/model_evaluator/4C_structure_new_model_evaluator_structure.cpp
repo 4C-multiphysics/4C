@@ -157,6 +157,23 @@ void Solid::ModelEvaluator::Structure::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Structure::remap_after_redistribution()
+{
+  check_init();
+
+  stiff_ptr_ = dynamic_cast<Core::LinAlg::SparseMatrix*>(
+      global_state().create_structural_stiffness_matrix_block());
+  FOUR_C_ASSERT(stiff_ptr_ != nullptr, "Dynamic cast to Core::LinAlg::SparseMatrix failed!");
+
+  stiff_ptc_ptr_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      *global_state().dof_row_map_view(), 81, true, true);
+
+  masslin_type_ = tim_int().get_data_sdyn().get_mass_lin_type();
+  dis_incr_ptr_ = std::make_shared<Core::LinAlg::Vector<double>>(dis_np().get_map(), true);
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluator::Structure::preserve_runtime_output_writers_for_rebuild()
 {
   if (runtime_csvwriter_rank_eval_times_ != nullptr)
