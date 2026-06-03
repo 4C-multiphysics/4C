@@ -159,6 +159,38 @@ std::shared_ptr<Core::Conditions::Condition> Solid::MonitorDbc::create_reaction_
   return rcond_ptr;
 }
 
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::MonitorDbc::remap_reaction_maps()
+{
+  throw_if_not_init();
+  throw_if_not_setup();
+
+  if (isempty_) return;
+
+  discret_ptr_->fill_complete({
+      .assign_degrees_of_freedom = false,
+      .init_elements = false,
+      .do_boundary_conditions = true,
+  });
+
+  react_maps_.clear();
+
+  std::vector<const Core::Conditions::Condition*> rconds;
+  discret_ptr_->get_condition("ReactionForce", rconds);
+  for (const auto& rcond_ptr : rconds)
+  {
+    const Core::Conditions::Condition& rcond = *rcond_ptr;
+    auto ipair = react_maps_.insert(std::make_pair(
+        rcond.node_set_name(), std::vector<std::shared_ptr<Core::LinAlg::Map>>(3, nullptr)));
+
+    if (not ipair.second)
+      FOUR_C_THROW("The reaction condition id #{} seems to be non-unique!", rcond.node_set_name());
+
+    create_reaction_maps(*discret_ptr_, rcond, ipair.first->second.data());
+  }
+}
+
 void Solid::MonitorDbc::read_restart_yaml_file(const Core::Conditions::Condition& rcond)
 {
   const std::string full_restart_dirpath(

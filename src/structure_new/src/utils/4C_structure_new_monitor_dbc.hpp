@@ -70,6 +70,8 @@ namespace Solid
         Core::FE::Discretization& discret, Solid::TimeInt::BaseDataGlobalState& gstate,
         Solid::Dbc& dbc);
 
+    void remap_reaction_maps();
+
     /// setup new class members
     void setup();
 
