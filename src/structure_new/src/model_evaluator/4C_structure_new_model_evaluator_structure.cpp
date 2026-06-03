@@ -379,7 +379,9 @@ bool Solid::ModelEvaluator::Structure::initialize_inertia_and_damping(
     discret().set_state(0, "velocity", *velocity);
 
   static_contributions(eval_mat.data(), eval_vec.data());
+  // rebuilds damp_
   material_damping_contributions(eval_mat.data());
+  // rebuilds mass_
   inertial_contributions(eval_mat.data(), eval_vec.data());
 
   evaluate_internal(eval_mat.data(), eval_vec.data());
