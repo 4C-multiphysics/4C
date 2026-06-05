@@ -70,9 +70,13 @@ namespace Core::Rebalance
     std::shared_ptr<Core::LinAlg::SparseMatrix> edge_weights = nullptr;
   };
 
-  /**
-   * Build the default static repartitioning weights from the element connectivity.
-   */
+  /*!
+  \brief Create node and edge weights based on element connectivity
+
+  @param[in] dis discretization used to build the weights
+
+  @return Node and edge weights to be used for repartitioning
+  */
   PartitionWeights build_static_partition_weights(const Core::FE::Discretization& dis);
 
   /**
