@@ -158,9 +158,6 @@ namespace Solid
       //! derived
       void runtime_output_step_state() const override;
 
-      //! Preserve runtime output writers across a redistribution-triggered rebuild.
-      void preserve_runtime_output_writers_for_rebuild();
-
       //! derived
       std::shared_ptr<const Core::LinAlg::Map> get_block_dof_row_map_ptr() const override;
 
@@ -534,10 +531,6 @@ namespace Solid
 
       //! csv writer for per rank per timestep evaluation times
       std::unique_ptr<Core::IO::RuntimeCsvWriter> runtime_csvwriter_rank_eval_times_;
-
-      //! temporary storage to carry the rank-eval-time csv writer across rebuilds
-      static std::unique_ptr<Core::IO::RuntimeCsvWriter>
-          preserved_runtime_csvwriter_rank_eval_times_;
 
       //! mass linearization type
       Solid::MassLin masslin_type_;
