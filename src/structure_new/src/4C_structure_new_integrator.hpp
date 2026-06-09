@@ -93,7 +93,7 @@ namespace Solid
     virtual void setup();
 
     //! Restore integrator state after a discretization redistribution.
-    void rebuild_after_redistribution();
+    void remap_after_redistribution();
 
     //! Post setup operation (compute initial equilibrium state), should be run directly after the
     //! setup routine has been finished

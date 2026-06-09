@@ -100,7 +100,7 @@ void Solid::Integrator::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::Integrator::rebuild_after_redistribution()
+void Solid::Integrator::remap_after_redistribution()
 {
   check_init();
 

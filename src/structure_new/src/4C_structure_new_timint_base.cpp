@@ -200,8 +200,8 @@ bool Solid::TimeInt::Base::perform_dynamic_rebalance()
   dbc_ptr_->init(dataglobalstate_->get_discret(), dataglobalstate_->get_freact_np(),
       Core::Utils::shared_ptr_from_ref(*this));
   dbc_ptr_->setup();
-  int_ptr_->rebuild_after_redistribution();
-  rebuild_solver_after_redistribution();
+  int_ptr_->remap_after_redistribution();
+  remap_solver_after_redistribution();
 
   if (dataglobalstate_->get_discret()->time_ele_evaluations())
     dataglobalstate_->get_discret()->reset_element_eval_timers();

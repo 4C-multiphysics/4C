@@ -872,7 +872,7 @@ namespace Solid
         }
       }
 
-      virtual void rebuild_solver_after_redistribution() {}
+      virtual void remap_solver_after_redistribution() {}
 
      private:
       /// pointer to the different data containers

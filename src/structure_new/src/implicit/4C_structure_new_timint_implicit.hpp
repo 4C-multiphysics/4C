@@ -129,7 +129,7 @@ namespace Solid
       //! returns the current solution group
       [[nodiscard]] const ::NOX::Abstract::Group& get_solution_group() const override;
 
-      void rebuild_solver_after_redistribution() override
+      void remap_solver_after_redistribution() override
       {
         nlnsolver_ptr_->refresh_after_redistribution();
       }
