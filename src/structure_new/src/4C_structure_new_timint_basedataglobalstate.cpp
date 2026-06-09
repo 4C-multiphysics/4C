@@ -551,6 +551,8 @@ void Solid::TimeInt::BaseDataGlobalState::setup_element_technology_map_extractor
 {
   check_init();
 
+  mapextractors_.clear();
+
   // loop all active element technologies
   const std::set<Solid::EleTech>& ele_techs = datasdyn_->get_element_technologies();
   for (const Solid::EleTech et : ele_techs)
