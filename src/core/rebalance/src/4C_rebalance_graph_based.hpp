@@ -102,6 +102,30 @@ namespace Core::Rebalance
       Teuchos::ParameterList& rebalanceParams,
       const Core::LinAlg::MultiVector<double>& initialWeights);
 
+  struct PartitionWeights
+  {
+    std::shared_ptr<Core::LinAlg::Vector<double>> node_weights = nullptr;
+    std::shared_ptr<Core::LinAlg::SparseMatrix> edge_weights = nullptr;
+  };
+
+  /*!
+  \brief Create node and edge weights based on element connectivity
+
+  @param[in] dis discretization used to build the weights
+
+  @return Node and edge weights to be used for repartitioning
+  */
+  PartitionWeights build_static_partition_weights(const Core::FE::Discretization& dis);
+
+  /**
+   * Build repartitioning weights on the rebalance graph map.
+   *
+   * Node weights are set to the average evaluation time of adjacent owned elements, while every
+   * graph edge weight is set to the scaled global average element evaluation time.
+   */
+  PartitionWeights build_eval_time_partition_weights(const Core::FE::Discretization& dis,
+      const Core::LinAlg::Graph& graph, double edge_weight_multiplier);
+
   /*!
   \brief Build node graph of a given  discretization
 
