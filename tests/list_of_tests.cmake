@@ -2023,6 +2023,25 @@ four_c_test(TEST_FILE solid_nodal_fiber.4C.yaml NP 2)
 four_c_test(TEST_FILE solid_nodal_fiber_eletypes.4C.yaml NP 2)
 four_c_test(TEST_FILE solid_nurbs27_hex8_ele_neumann_bcs.4C.yaml NP 1 RETURN_AS current)
 __four_c_test_vtk(BASED_ON ${current} PVD_RESULT xxx-structure.pvd PVD_REFERENCE ref/solid_nurbs27_hex8_ele_neumann_bcs-structure.pvd TOLERANCE 1e-08)
+four_c_test(TEST_FILE solid_dynamic_rebalance_simple_5x2x1.4C.yaml NP 2 RETURN_AS current)
+set(solid_dynamic_rebalance_simple_5x2x1_base ${current})
+four_c_test(TEST_FILE solid_dynamic_rebalance_simple_5x2x1_rebal.4C.yaml NP 2 RETURN_AS current)
+set(solid_dynamic_rebalance_simple_5x2x1_rebal ${current})
+__four_c_test_add_csv_yaml_comparison_between_tests(
+  BASED_ON ${solid_dynamic_rebalance_simple_5x2x1_base}
+  COMPARE_TO ${solid_dynamic_rebalance_simple_5x2x1_rebal}
+  RESULT_FILE xxx-10004_monitor_dbc.csv
+  COMPARE_FILE xxx-10004_monitor_dbc.csv
+  TOL_R 1e-12
+  TOL_A 1e-12
+  )
+__four_c_test_timings(
+  BASED_ON ${solid_dynamic_rebalance_simple_5x2x1_rebal}
+  TIMINGS_FILE xxx-timings.yaml
+  TIMERS Rebalance::rebalance_graph Rebalance::rebalance_node_maps
+  MIN_CALLS 6 6
+  MAX_CALLS 6 6
+  )
 four_c_test(TEST_FILE solid_runtime_gauss_point_quantity_output_element_center.4C.yaml RETURN_AS current REQUIRED_DEPENDENCIES TRILINOS_MUMPS)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE RESTART_STEP 5 REQUIRED_DEPENDENCIES TRILINOS_MUMPS)
 __four_c_test_vtk(BASED_ON ${current} PVD_RESULT xxx-structure.pvd PVD_REFERENCE ref/solid_runtime_gauss_point_quantity_output_element_center-vtk/structure.pvd TOLERANCE 1e-08)

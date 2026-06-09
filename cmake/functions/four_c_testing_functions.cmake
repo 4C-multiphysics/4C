@@ -659,6 +659,84 @@ function(__four_c_test_add_csv_yaml_comparison)
 endfunction()
 
 ##
+# Define a comparison test that compares a csv or yaml result file created by one test against
+# the result file created by another test
+#
+# required parameters:
+#   BASED_ON:              name of the first base test that created the first result file
+#   COMPARE_TO:            name of the second base test that created the second result file
+#   RESULT_FILE:           name of the result file created by BASED_ON
+#   COMPARE_FILE:          name of the result file created by COMPARE_TO
+#   TOL_R:                 relative tolerance for comparison
+#   TOL_A:                 absolute tolerance for comparison
+#
+# optional parameters:
+#   LABELS:                add labels to the test
+#   REQUIRED_DEPENDENCIES: any required external dependencies. The test will be skipped if the dependencies are not met.
+#
+function(__four_c_test_add_csv_yaml_comparison_between_tests)
+  set(options "")
+  set(oneValueArgs
+      BASED_ON
+      COMPARE_TO
+      RESULT_FILE
+      COMPARE_FILE
+      TOL_R
+      TOL_A
+      )
+  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES)
+  cmake_parse_arguments(
+    _parsed
+    "${options}"
+    "${oneValueArgs}"
+    "${multiValueArgs}"
+    ${ARGN}
+    )
+
+  if(DEFINED _parsed_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "There are unparsed arguments: ${_parsed_UNPARSED_ARGUMENTS}!")
+  endif()
+
+  assert_required_arguments(
+    _parsed
+    BASED_ON
+    COMPARE_TO
+    RESULT_FILE
+    COMPARE_FILE
+    TOL_R
+    TOL_A
+    )
+
+  set(name_of_csv_comparison_test
+      "${_parsed_BASED_ON}-csv_comparison-${_parsed_COMPARE_TO}-${_parsed_RESULT_FILE}"
+      )
+  get_test_property(${_parsed_BASED_ON} _internal_OUTPUT_DIR test_directory)
+  get_test_property(${_parsed_COMPARE_TO} _internal_OUTPUT_DIR compare_directory)
+
+  set(csv_comparison_command
+      "diff-with-tolerance ${test_directory}/${_parsed_RESULT_FILE} ${compare_directory}/${_parsed_COMPARE_FILE} ${_parsed_TOL_R} ${_parsed_TOL_A}"
+      )
+
+  append_required_dependencies_from(${_parsed_BASED_ON} _parsed_REQUIRED_DEPENDENCIES)
+  append_required_dependencies_from(${_parsed_COMPARE_TO} _parsed_REQUIRED_DEPENDENCIES)
+  list(APPEND _parsed_REQUIRED_DEPENDENCIES "Python")
+  _add_test_with_options(
+    NAME_OF_TEST
+    ${name_of_csv_comparison_test}
+    TEST_COMMAND
+    ${csv_comparison_command}
+    LABELS
+    "${_parsed_LABELS}"
+    REQUIRED_DEPENDENCIES
+    "${_parsed_REQUIRED_DEPENDENCIES}"
+    )
+  set_tests_properties(
+    ${name_of_csv_comparison_test}
+    PROPERTIES FIXTURES_REQUIRED "${_parsed_BASED_ON};${_parsed_COMPARE_TO};test_cleanup"
+    )
+endfunction()
+
+##
 # Define a comparison test that checks the header row of a CSV result file.
 #
 # required parameters:
@@ -1117,6 +1195,7 @@ endfunction()
 # optional parameters:
 #   MAX_TIMES:                    List of maximum times for the timers to compare (either empty or matching the length of TIMERS).
 #   MAX_CALLS:                    List of maximum calls for the timers to compare (either empty or matching the length of TIMERS).
+#   MIN_CALLS:                    List of minimum calls for the timers to compare (either empty or matching the length of TIMERS).
 #   LABELS:                       Add labels to the test
 #   REQUIRED_DEPENDENCIES:        Any required external dependencies. The test will be skipped if the dependencies are not met.
 #                                 Either a dependency, e.g. "Trilinos", or a dependency with a version constraint, e.g. "Trilinos>=2025.2".
@@ -1130,6 +1209,7 @@ function(__four_c_test_timings)
       TIMERS
       MAX_TIMES
       MAX_CALLS
+      MIN_CALLS
       LABELS
       REQUIRED_DEPENDENCIES
       )
@@ -1166,9 +1246,14 @@ function(__four_c_test_timings)
     list(JOIN _parsed_MAX_CALLS " " merged_num_calls_to_compare)
   endif()
 
+  set(merged_min_num_calls_to_compare "")
+  if(DEFINED _parsed_MIN_CALLS)
+    list(JOIN _parsed_MIN_CALLS " " merged_min_num_calls_to_compare)
+  endif()
+
   set(name_of_test "${_parsed_BASED_ON}-timings")
   set(test_command
-      "check-timings ${test_directory}/${_parsed_TIMINGS_FILE} ${merged_timers_to_compare} --expected-max-time ${merged_times_to_compare} --expected-max-num-calls ${merged_num_calls_to_compare}"
+      "check-timings ${test_directory}/${_parsed_TIMINGS_FILE} ${merged_timers_to_compare} --expected-max-time ${merged_times_to_compare} --expected-max-num-calls ${merged_num_calls_to_compare} --expected-min-num-calls ${merged_min_num_calls_to_compare}"
       )
 
   # Ensure that Python is listed as required dependency

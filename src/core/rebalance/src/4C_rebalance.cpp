@@ -40,6 +40,7 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
       Teuchos::ParameterList& zparams = rebalanceParams.sublist("zoltan_parameters", false);
       zparams.set("DEBUG_LEVEL", "0");
 
+      // compute new row and column maps for rank ownership
       std::tie(rowmap, colmap) =
           Core::Rebalance::rebalance_node_maps(graph, rebalanceParams, node_weights, edge_weights);
       break;
@@ -69,6 +70,7 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
       std::shared_ptr<Core::LinAlg::MultiVector<double>> coordinates =
           extract_node_coordinates(discretization);
 
+      // compute new row and column maps for rank ownership
       std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(
           graph, rebalanceParams, node_weights, edge_weights, coordinates);
       break;
