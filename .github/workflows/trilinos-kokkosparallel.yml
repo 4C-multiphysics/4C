@@ -1,0 +1,141 @@
+name: Trilinos with shared memory parallelism enabled through OpenMP and CUDA backends (through Kokkos)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 6'
+
+env:
+  IMAGE_NAME: ghcr.io/4c-multiphysics/4c-dependencies-trilinos
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push-trilinos-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Log in to the Container registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          labels: |
+            org.opencontainers.image.description=Image containing all the dependencies required for building and testing 4C based on the specified Trilinos commit ref
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          file: docker/trilinos_kokkosparallel/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:kokkosparallel
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build_kokkoscuda:
+    needs: build-and-push-trilinos-image
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos:kokkosparallel
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    env:
+      OMPI_CXX: ${{ github.workspace }}/utilities/clangcuda++
+      OMPI_CC: /usr/bin/clang
+      CLANGCUDA_CLANG_PATH: /usr/bin/clang++
+      CLANGCUDA_CUDA_PATH: /usr/local/cuda
+      CLANGCUDA_ARCH: sm_90
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker_kokkoscuda_clangcuda
+          build-targets: full
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "false"
+
+  build_kokkosopenmp:
+    needs: build-and-push-trilinos-image
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos:kokkosparallel
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker_kokkosopenmp
+          build-targets: full
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "false"
+      - uses: ./.github/actions/upload_directory
+        with:
+          directory: ${{ github.workspace }}/build
+          retention-days: 1
+          name: trilinos_kokkosopenmp_build
+      - uses: ./.github/actions/chunk_test_suite
+        id: set-matrix
+        with:
+          build-directory: ${{ github.workspace }}/build
+          source-directory: ${{ github.workspace }}
+          number-of-chunks: 15
+          junit-report-artifact-name: trilinos_test_report.xml
+
+  test_openmp:
+    needs: build_kokkosopenmp
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos:kokkosparallel
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    strategy:
+      fail-fast: false
+      matrix:
+        test-chunk: ${{fromJson(needs.build_kokkosopenmp.outputs.test-chunks)}}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup developer environment for testing
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - uses: ./.github/actions/download_directory
+        with:
+          name: trilinos_kokkosopenmp_build
+          destination: ${{ github.workspace }}/build
+      - name: Test
+        run: |
+          cd $GITHUB_WORKSPACE/build
+          ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/trilinos_test_report-$TEST_CHUNK.xml
+        env:
+          TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Upload test report
+        if: success() || failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trilinos_test_report-${{ matrix.test-chunk }}.xml
+          path: |
+            ${{ github.workspace }}/trilinos_test_report-${{ matrix.test-chunk }}.xml
+          retention-days: 1

@@ -608,7 +608,7 @@ This will install |FOURC| in the specified location. You can then use the instal
 .. _build4Cwithkokkoscuda:
 
 Building |FOURC| with OpenMP and CUDA support through Kokkos
-------------------------------------------------
+------------------------------------------------------------
 
 |FOURC| is primarily developed around MPI parallelism, but also offers the ability to use shared memory parallelism through `Kokkos <https://kokkos.org/> _`, enabling hybrid parallelism on the CPU through OpenMP and GPU acceleration through CUDA.
 

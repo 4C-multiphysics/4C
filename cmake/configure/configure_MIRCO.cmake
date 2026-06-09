@@ -29,7 +29,7 @@ if(FOUR_C_MIRCO_FIND_INSTALLED)
 else() # Fetch MIRCO from GIT repository
   # Turn off googletest in MIRCO so that it does not interfere with 4C.
   set(GTEST_IN_MIRCO "OFF")
-  # Explicitly turn off "*_IN_MIRCO", so that MIRCO uses upstream targets
+  # Explicitly turn off `*_IN_MIRCO`, so that MIRCO uses upstream targets
   set(RYML_IN_MIRCO "OFF")
   set(KOKKOS_IN_MIRCO "OFF")
   set(KOKKOS_KERNELS_IN_MIRCO "OFF")
@@ -42,7 +42,7 @@ else() # Fetch MIRCO from GIT repository
   endif()
 
   set(MIRCO_GIT_REPO "https://github.com/imcs-compsim/MIRCO.git")
-  set(MIRCO_GIT_TAG "de05a25cf595510b8e315d91aa56b6f7a69ad727") # latest hash 03.05.2026
+  set(MIRCO_GIT_TAG "8b049a6462eba5809d7cffe039a77f3bc5593767") # latest hash 02.06.2026
 
   set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
   fetchcontent_declare(

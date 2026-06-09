@@ -152,6 +152,33 @@
         "FOUR_C_WITH_QHULL": "OFF",
         "FOUR_C_ENABLE_PYTHON_BINDINGS": "OFF"
       }
+    },
+    {
+      "name": "docker_kokkoscuda_clangcuda",
+      "displayName": "Release build for CUDA-enabled Kokkos",
+      "description": "Release build using clangcuda++ compiler wrapper for CUDA-enabled Kokkos",
+      "inherits": [
+        ".docker_base"
+      ],
+      "cacheVariables": {
+        "FOUR_C_CLANGCUDA": "ON",
+        "FOUR_C_TRILINOS_ROOT": "/opt/4C-dependencies/tk_cuda",
+        "FOUR_C_WITH_ARBORX": "OFF",
+        "FOUR_C_WITH_DEAL_II": "OFF",
+        "FOUR_C_ENABLE_METADATA_GENERATION": "OFF"
+      }
+    },
+    {
+      "name": "docker_kokkosopenmp",
+      "displayName": "Release build forOpenMP-enabled Kokkos",
+      "description": "Release build forOpenMP-enabled Kokkos",
+      "inherits": [
+        ".docker_base"
+      ],
+      "cacheVariables": {
+        "FOUR_C_TRILINOS_ROOT": "/opt/4C-dependencies/tk_openmp",
+        "FOUR_C_DEAL_II_ROOT": "/opt/4C-dependencies/tk_openmp"
+      }
     }
   ]
 }
