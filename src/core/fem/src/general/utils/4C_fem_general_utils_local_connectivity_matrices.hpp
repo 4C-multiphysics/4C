@@ -326,6 +326,9 @@ namespace Core::FE
       {0.0, 1.0, 0.0}, {0.5, 0.0, 1.0}, {0.5, 0.5, 1.0}, {0.0, 0.5, 1.0}, {0.5, 0.0, 0.0},
       {0.5, 0.5, 0.0}, {0.0, 0.5, 0.0}};
 
+  //! reference parameter coordinates for a point1
+  const double eleNodeNumbering_point1_nodes_reference[1][1] = {{0.0}};
+
   //! reference parameter coordinates for a line3
   const double eleNodeNumbering_line3_nodes_reference[3][1] = {{-1.0}, {1.0}, {0.0}};
 
