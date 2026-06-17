@@ -97,6 +97,10 @@ namespace Solid
 
       //@}
 
+     protected:
+      //! Refresh cached force pointers after redistribution.
+      void remap_integrator_state_after_redistribution() override;
+
      private:
       bool modexpleuler_;  //!< modified explicit Euler equation (veln_ instead of vel_ for
                            //!< calc of disn_), default: true

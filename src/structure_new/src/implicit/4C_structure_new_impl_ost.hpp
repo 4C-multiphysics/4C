@@ -163,6 +163,9 @@ namespace Solid
       //! reset the time step dependent parameters for the element evaluation [derived]
       void reset_eval_params() override;
 
+      //! Refresh cached force pointers and map-dependent helper vectors after redistribution.
+      void remap_integrator_state_after_redistribution() override;
+
      private:
       /*! \brief Add the viscous and mass contributions to the right hand side (TR-rule)
        *

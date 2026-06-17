@@ -383,6 +383,9 @@ namespace Solid
     //! reset the time step dependent parameters for the element evaluation
     virtual void reset_eval_params() {};
 
+    //! Refresh time-integrator-owned cached vectors and helpers after redistribution.
+    virtual void remap_integrator_state_after_redistribution() {}
+
     double get_condensed_global_norm(const NOX::Nln::StatusTest::QuantityType& qtype,
         const enum ::NOX::Abstract::Vector::NormType& normtype, double& mynorm) const;
 

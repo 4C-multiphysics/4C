@@ -77,6 +77,20 @@ void Solid::EXPLICIT::AdamsBashforthX<t_order>::setup()
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 template <int t_order>
+void Solid::EXPLICIT::AdamsBashforthX<t_order>::remap_integrator_state_after_redistribution()
+{
+  check_init();
+
+  finertian_ptr_ = global_state().get_finertial_n();
+  finertianp_ptr_ = global_state().get_finertial_np();
+
+  fviscon_ptr_ = global_state().get_fvisco_n();
+  fvisconp_ptr_ = global_state().get_fvisco_np();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+template <int t_order>
 void Solid::EXPLICIT::AdamsBashforthX<t_order>::post_setup()
 {
   check_init_setup();

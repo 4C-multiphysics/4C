@@ -4,8 +4,7 @@ PROBLEM SIZE:
   DIM: 3
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: Standard
-  DYNAMICTYPE: Statics
-  NEGLECTINERTIA: true
+  DYNAMICTYPE: GenAlpha
   TIMESTEP: 0.02
   RESTARTEVERY: 120
   NUMSTEP: 10
@@ -37,7 +36,7 @@ MATERIALS:
     MAT_Struct_StVenantKirchhoff:
       YOUNG: 1000
       NUE: 0.3
-      DENS: 0
+      DENS: 1.0
 SOLVER 1:
   SOLVER: MUMPS
   NAME: direct_solver

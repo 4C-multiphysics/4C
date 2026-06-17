@@ -104,6 +104,8 @@ void Solid::Integrator::remap_after_redistribution()
 {
   check_init();
 
+  remap_integrator_state_after_redistribution();
+
   auto& structure_model =
       dynamic_cast<Solid::ModelEvaluator::Structure&>(evaluator(Inpar::Solid::model_structure));
   structure_model.remap_after_redistribution();

@@ -61,6 +61,19 @@ void Solid::EXPLICIT::ForwardEuler::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+void Solid::EXPLICIT::ForwardEuler::remap_integrator_state_after_redistribution()
+{
+  check_init();
+
+  finertian_ptr_ = global_state().get_finertial_n();
+  finertianp_ptr_ = global_state().get_finertial_np();
+
+  fviscon_ptr_ = global_state().get_fvisco_n();
+  fvisconp_ptr_ = global_state().get_fvisco_np();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 void Solid::EXPLICIT::ForwardEuler::post_setup()
 {
   check_init_setup();
