@@ -195,6 +195,8 @@ bool Solid::TimeInt::Base::perform_dynamic_rebalance()
   Core::Rebalance::RebalanceParameters parameters;
   parameters.mesh_partitioning_parameters = rebalance_config.mesh_partitioning_parameters;
   parameters.edge_weight_multiplier = rebalance_config.edge_weight_multiplier;
+  parameters.geometric_search_parameters = Global::Problem::instance()->geometric_search_params();
+  parameters.io_parameters = Global::Problem::instance()->io_params();
   dataglobalstate_->redistribute_and_preserve_state(parameters, rebalance_config.enabled);
 
   dbc_ptr_->init(dataglobalstate_->get_discret(), dataglobalstate_->get_freact_np(),
