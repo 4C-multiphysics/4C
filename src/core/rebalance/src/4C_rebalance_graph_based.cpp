@@ -261,7 +261,7 @@ Core::Rebalance::PartitionWeights Core::Rebalance::build_eval_time_partition_wei
   {
     const int global_row = graph_row_map.gid(local_row);
     std::span<int> indices;
-    graph.extract_local_row_view(local_row, indices);
+    graph.extract_global_row_view(global_row, indices);
     std::vector<double> values(indices.size(), scaled_average_eval_time);
     weights.edge_weights->insert_global_values(
         global_row, static_cast<int>(indices.size()), values.data(), indices.data());
