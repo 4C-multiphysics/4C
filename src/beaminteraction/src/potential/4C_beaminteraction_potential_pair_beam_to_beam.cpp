@@ -2147,6 +2147,17 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   cos_alpha_deriv_r_xixi_target_deriv_r_target.scale(signum_tangentsscalarproduct);
   cos_alpha_deriv_r_xixi_target_deriv_r_xi_target.scale(signum_tangentsscalarproduct);
 
+  // Distributed endpoint moment compensation strategy
+  double endpoint_moment_compensation = 1.0;
+  if (params()->potential_reduction_endpoint_moment_compensation)
+  {
+    // if endpoint moment compensation is enabled, the distributed end point moment arising from the
+    // variation of the closest point projection is compensated. Here we need to remove certain
+    // contributions from the stiffness matrix that correspond to the distributed end point moment,
+    // which is equivalent to setting the endpoint_moment_compensation factor to zero.
+    endpoint_moment_compensation = 0.0;
+  }
+
 
   // assemble all pre-computed terms into the stiffness matrices
   for (unsigned int irowdofperdim = 0; irowdofperdim < num_dofs_per_spatial_dimension;
@@ -2189,7 +2200,8 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
           stiffmat21(3 * irowdofperdim + irowdim, 3 * icolumndofperdim + icolumndim) +=
               (N_i_target(irowdofperdim) * xi_target_partial_r_target(irowdim) +
-                  N_i_xi_target(irowdofperdim) * xi_target_partial_r_xi_target(irowdim)) *
+                  N_i_xi_target(irowdofperdim) * endpoint_moment_compensation *
+                      xi_target_partial_r_xi_target(irowdim)) *
               (pot_red_fac_2ndderiv_xi_target * xi_target_partial_r_source(icolumndim) *
                       N_i_source(icolumndofperdim) * pot_ia +
                   pot_red_fac_deriv_xi_target *
@@ -2202,7 +2214,8 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
           stiffmat22(3 * irowdofperdim + irowdim, 3 * icolumndofperdim + icolumndim) +=
               (N_i_target(irowdofperdim) * xi_target_partial_r_target(irowdim) +
-                  N_i_xi_target(irowdofperdim) * xi_target_partial_r_xi_target(irowdim)) *
+                  N_i_xi_target(irowdofperdim) * endpoint_moment_compensation *
+                      xi_target_partial_r_xi_target(irowdim)) *
               (pot_red_fac_2ndderiv_xi_target *
                       (xi_target_partial_r_target(icolumndim) * N_i_target(icolumndofperdim) +
                           xi_target_partial_r_xi_target(icolumndim) *
@@ -2231,15 +2244,21 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
                   xi_target_partial_r_source_partial_r_xixi_target(irowdim, icolumndim) *
                       N_i_xixi_target(icolumndofperdim));
 
+          // The direct variation of r_xi_target is always active; the remaining terms are scaled
+          // by the distributed endpoint moment compensation in the potential reduction strategy
           stiffmat21(3 * irowdofperdim + irowdim, 3 * icolumndofperdim + icolumndim) +=
               pot_red_fac_deriv_xi_target * pot_ia *
               (N_i_target(irowdofperdim) *
                       xi_target_partial_r_target_partial_r_source(irowdim, icolumndim) *
                       N_i_source(icolumndofperdim) +
                   N_i_xi_target(irowdofperdim) *
-                      xi_target_partial_r_xi_target_partial_r_source(irowdim, icolumndim) *
+                      (endpoint_moment_compensation *
+                              xi_target_partial_r_xi_target_partial_r_source(irowdim, icolumndim) +
+                          (1.0 - endpoint_moment_compensation) *
+                              xi_target_partial_r_target(irowdim) *
+                              xi_target_partial_r_source(icolumndim)) *
                       N_i_source(icolumndofperdim) +
-                  N_i_xixi_target(irowdofperdim) *
+                  N_i_xixi_target(irowdofperdim) * endpoint_moment_compensation *
                       (xi_target_partial_r_xixi_target_partial_r_source(irowdim, icolumndim) *
                           N_i_source(icolumndofperdim)));
 
@@ -2253,13 +2272,24 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
                           xi_target_partial_r_target_partial_r_xixi_target(irowdim, icolumndim) *
                               N_i_xixi_target(icolumndofperdim)) +
                   N_i_xi_target(irowdofperdim) *
-                      (xi_target_partial_r_xi_target_partial_r_target(irowdim, icolumndim) *
+                      ((endpoint_moment_compensation *
+                               xi_target_partial_r_xi_target_partial_r_target(irowdim, icolumndim) +
+                           (1.0 - endpoint_moment_compensation) *
+                               xi_target_partial_r_target(irowdim) *
+                               xi_target_partial_r_target(icolumndim)) *
                               N_i_target(icolumndofperdim) +
-                          xi_target_partial_r_xi_target_partial_r_xi_target(irowdim, icolumndim) *
+                          (endpoint_moment_compensation *
+                                  xi_target_partial_r_xi_target_partial_r_xi_target(
+                                      irowdim, icolumndim) +
+                              (1.0 - endpoint_moment_compensation) *
+                                  xi_target_partial_r_target(irowdim) *
+                                  xi_target_partial_r_xi_target(icolumndim)) *
                               N_i_xi_target(icolumndofperdim) +
-                          xi_target_partial_r_xi_target_partial_r_xixi_target(irowdim, icolumndim) *
+                          endpoint_moment_compensation *
+                              xi_target_partial_r_xi_target_partial_r_xixi_target(
+                                  irowdim, icolumndim) *
                               N_i_xixi_target(icolumndofperdim)) +
-                  N_i_xixi_target(irowdofperdim) *
+                  N_i_xixi_target(irowdofperdim) * endpoint_moment_compensation *
                       (xi_target_partial_r_xixi_target_partial_r_target(irowdim, icolumndim) *
                               N_i_target(icolumndofperdim) +
                           xi_target_partial_r_xixi_target_partial_r_xi_target(irowdim, icolumndim) *
@@ -3606,9 +3636,13 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
 
 
   // distributed moment on target
-  m_pseudo.update_t(Core::FADUtils::cast_to_double(pot_red_fac_deriv_xi_target) *
-                        Core::FADUtils::cast_to_double(interaction_potential_GP),
-      Core::FADUtils::cast_to_double<T, 1, 3>(xi_target_partial_r_xi_target));
+  // if parameter is true, we do not evaluate this contribution
+  if (!params()->potential_reduction_endpoint_moment_compensation)
+  {
+    m_pseudo.update_t(Core::FADUtils::cast_to_double(pot_red_fac_deriv_xi_target) *
+                          Core::FADUtils::cast_to_double(interaction_potential_GP),
+        Core::FADUtils::cast_to_double<T, 1, 3>(xi_target_partial_r_xi_target));
+  }
 
   m_pseudo.update(Core::FADUtils::cast_to_double(potential_reduction_factor_GP) *
                       Core::FADUtils::cast_to_double(pot_ia_deriv_cos_alpha),
@@ -3669,9 +3703,13 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
           xi_target_partial_r_target(jdim);
 
       // target beam => end point moment
-      force_pot_target_GP(3 * idofperdim + jdim) +=
-          N_i_xi_target(idofperdim) * pot_red_fac_deriv_xi_target * interaction_potential_GP *
-          xi_target_partial_r_xi_target(jdim);
+      // if compensation is on, we do not evaluate this contribution
+      if (!params()->potential_reduction_endpoint_moment_compensation)
+      {
+        force_pot_target_GP(3 * idofperdim + jdim) +=
+            N_i_xi_target(idofperdim) * pot_red_fac_deriv_xi_target * interaction_potential_GP *
+            xi_target_partial_r_xi_target(jdim);
+      }
 
       // target beam => radial (attractive / repulsive) force
       force_pot_target_GP(3 * idofperdim + jdim) +=

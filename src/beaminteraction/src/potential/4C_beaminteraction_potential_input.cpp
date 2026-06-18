@@ -92,6 +92,13 @@ Core::IO::InputSpec BeamInteraction::Potential::valid_parameters()
                   .default_value = ReductionFunction::cosine,
                   .store = in_struct(&BeamPotentialParameters::potential_reduction_function)}),
 
+          parameter<bool>("potential_reduction_endpoint_moment_compensation",
+              {.description = "Option to compensate/remove the distributed endpoint moment arising "
+                              "in the potential reduction strategy",
+                  .default_value = false,
+                  .store = in_struct(
+                      &BeamPotentialParameters::potential_reduction_endpoint_moment_compensation)}),
+
           group<BeamPotentialRegularizationParameters>("regularization",
               {
                   parameter<Potential::RegularizationType>("type",
