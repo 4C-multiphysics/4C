@@ -1456,7 +1456,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
       BeamInteraction::Potential::Geo::
           calc_linearization_point_to_curve_projection_parameter_coord_target<numnodes,
               numnodalvalues>(lin_xi_source_targetDofs, lin_xi_target_targetDofs, dist_ul,
-              r_xi_target, r_xixi_target, N_source, N_target, N_xixi_target);
+              r_xi_target, r_xixi_target, N_source, N_target, N_xi_target);
 
 
       BeamInteraction::Potential::Geo::
