@@ -61,7 +61,8 @@ namespace Solid
       Base();
 
       /// initialize (all already existing) class variables
-      virtual void init(const std::shared_ptr<Solid::TimeInt::BaseDataIO> dataio,
+      virtual void init(Global::Problem& problem,
+          const std::shared_ptr<Solid::TimeInt::BaseDataIO> dataio,
           const std::shared_ptr<Solid::TimeInt::BaseDataSDyn> datasdyn,
           const std::shared_ptr<Solid::TimeInt::BaseDataGlobalState> dataglobalstate);
 
@@ -875,6 +876,8 @@ namespace Solid
       virtual void remap_solver_after_redistribution() {}
 
      private:
+      Global::Problem* problem_ = nullptr;
+
       /// pointer to the different data containers
       std::shared_ptr<BaseDataIO> dataio_;
       std::shared_ptr<BaseDataSDyn> datasdyn_;

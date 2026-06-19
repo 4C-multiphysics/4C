@@ -59,7 +59,8 @@ Solid::TimeInt::Base::Base()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::TimeInt::Base::init(const std::shared_ptr<Solid::TimeInt::BaseDataIO> dataio,
+void Solid::TimeInt::Base::init(Global::Problem& problem,
+    const std::shared_ptr<Solid::TimeInt::BaseDataIO> dataio,
     const std::shared_ptr<Solid::TimeInt::BaseDataSDyn> datasdyn,
     const std::shared_ptr<Solid::TimeInt::BaseDataGlobalState> dataglobalstate)
 {
@@ -71,6 +72,7 @@ void Solid::TimeInt::Base::init(const std::shared_ptr<Solid::TimeInt::BaseDataIO
   // ---------------------------------------------------------------------------
   // initialize the data container ptrs
   // ---------------------------------------------------------------------------
+  problem_ = &problem;
   dataio_ = dataio;
   datasdyn_ = datasdyn;
   dataglobalstate_ = dataglobalstate;
@@ -189,14 +191,15 @@ void Solid::TimeInt::Base::maybe_perform_dynamic_rebalance()
 bool Solid::TimeInt::Base::perform_dynamic_rebalance()
 {
   check_init_setup();
+  FOUR_C_ASSERT(problem_, "Problem context not initialized");
 
   const auto& rebalance_config = datasdyn_->get_dynamic_rebalance_config();
 
   Core::Rebalance::RebalanceParameters parameters;
   parameters.mesh_partitioning_parameters = rebalance_config.mesh_partitioning_parameters;
   parameters.edge_weight_multiplier = rebalance_config.edge_weight_multiplier;
-  parameters.geometric_search_parameters = Global::Problem::instance()->geometric_search_params();
-  parameters.io_parameters = Global::Problem::instance()->io_params();
+  parameters.geometric_search_parameters = problem_->geometric_search_params();
+  parameters.io_parameters = problem_->io_params();
   dataglobalstate_->redistribute_and_preserve_state(parameters, rebalance_config.enabled);
 
   dbc_ptr_->init(dataglobalstate_->get_discret(), dataglobalstate_->get_freact_np(),

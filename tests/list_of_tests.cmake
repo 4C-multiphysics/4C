@@ -2025,7 +2025,7 @@ four_c_test(TEST_FILE solid_nurbs27_hex8_ele_neumann_bcs.4C.yaml NP 1 RETURN_AS 
 __four_c_test_vtk(BASED_ON ${current} PVD_RESULT xxx-structure.pvd PVD_REFERENCE ref/solid_nurbs27_hex8_ele_neumann_bcs-structure.pvd TOLERANCE 1e-08)
 four_c_test(TEST_FILE solid_dynamic_rebalance_simple_5x2x1.4C.yaml NP 2 RETURN_AS current)
 set(solid_dynamic_rebalance_simple_5x2x1_base ${current})
-four_c_test(TEST_FILE solid_dynamic_rebalance_simple_5x2x1_rebal.4C.yaml NP 2 RETURN_AS current REQUIRED_DEPENDENCIES ArborX)
+four_c_test(TEST_FILE solid_dynamic_rebalance_simple_5x2x1_rebal.4C.yaml NP 2 RETURN_AS current)
 set(solid_dynamic_rebalance_simple_5x2x1_rebal ${current})
 __four_c_test_add_csv_yaml_comparison_between_tests(
   BASED_ON ${solid_dynamic_rebalance_simple_5x2x1_base}

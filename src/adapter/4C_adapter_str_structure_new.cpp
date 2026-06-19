@@ -764,7 +764,7 @@ void Adapter::StructureBaseAlgorithmNew::set_time_integration_strategy(
     const std::shared_ptr<Solid::TimeInt::BaseDataGlobalState>& dataglobalstate, const int& restart)
 {
   ti_strategy = Solid::TimeInt::build_strategy(*sdyn_);
-  ti_strategy->init(dataio, datasdyn, dataglobalstate);
+  ti_strategy->init(problem_, dataio, datasdyn, dataglobalstate);
 
   /* In the restart case, we Setup the structural time integration after the
    * discretization has been redistributed. See Solid::TimeInt::Base::read_restart()
