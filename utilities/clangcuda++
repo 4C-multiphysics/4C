@@ -56,6 +56,9 @@ for arg in "$@"; do
     -expt-relaxed-constexpr|--expt-relaxed-constexpr)
       ;;
 
+    -Wext-lambda-captures-this)
+      ;;
+
     -arch=sm_*|--cuda-gpu-arch=sm_*)
       # Ignore incoming arch flags. Wrapper decides from CLANGCUDA_ARCH or default.
       ;;

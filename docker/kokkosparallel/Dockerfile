@@ -88,10 +88,10 @@ RUN /dependencies/current/cmake/install.sh /usr/local
 RUN /dependencies/current/superlu_dist/install.sh ${INSTALL_DIR}
 
 # Install Trilinos 2025.6 with Kokkos' CUDA backend enabled
-RUN /dependencies/trilinos_kokkosparallel/trilinos/install_cuda.sh ${INSTALL_DIR}/tk_cuda
+RUN /dependencies/kokkosparallel/trilinos/install_cuda.sh ${INSTALL_DIR}/tk_cuda
 
 # Install Trilinos 2025.6 with Kokkos' OpenMP backend enabled
-RUN /dependencies/trilinos_kokkosparallel/trilinos/install_openmp.sh ${INSTALL_DIR}/tk_openmp
+RUN /dependencies/kokkosparallel/trilinos/install_openmp.sh ${INSTALL_DIR}/tk_openmp
 # Install deal.II (needs to happen after Trilinos and within the same installation directory)
 RUN /dependencies/current/dealii/install.sh ${INSTALL_DIR}/tk_openmp
 

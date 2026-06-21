@@ -242,11 +242,19 @@ four_c_process_global_option(
   DEFAULT
   OFF
   )
-if(FOUR_C_CLANGCUDA AND FOUR_C_WITH_ARBORX)
-  message(
-    WARNING
-      "Enabling both FOUR_C_CLANGCUDA and FOUR_C_WITH_ARBORX is not advised. This requires using an external CUDA-enabled ArborX installation and has not been tested."
-    )
+if(FOUR_C_CLANGCUDA)
+  if(FOUR_C_WITH_ARBORX)
+    message(
+      WARNING
+        "Enabling both FOUR_C_CLANGCUDA and FOUR_C_WITH_ARBORX is not advised. This requires using an external CUDA-enabled ArborX installation and has not been tested."
+      )
+  endif()
+  if(FOUR_C_WITH_VTK)
+    message(
+      WARNING
+        "Enabling both FOUR_C_CLANGCUDA and FOUR_C_WITH_VTK currently causes compilation errors."
+      )
+  endif()
 endif()
 
 ##

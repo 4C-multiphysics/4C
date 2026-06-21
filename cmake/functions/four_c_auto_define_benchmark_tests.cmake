@@ -30,6 +30,18 @@ function(_set_up_benchmark_test_target _module_under_test _target)
 
   target_link_libraries(${_target} PRIVATE unittests_common)
 
+  if(FOUR_C_CLANGCUDA)
+    set_target_properties(
+      ${_target}
+      PROPERTIES CXX_COMPILER_LAUNCHER ""
+                 C_COMPILER_LAUNCHER ""
+                 CUDA_COMPILER_LAUNCHER ""
+                 RULE_LAUNCH_COMPILE ""
+                 RULE_LAUNCH_LINK ""
+      )
+    target_compile_definitions(${_target} PRIVATE CLANGCUDA_MODE_DEVICE)
+  endif()
+
   add_test(
     NAME ${_target}
     COMMAND

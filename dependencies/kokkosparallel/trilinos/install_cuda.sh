@@ -20,9 +20,6 @@ NPROCS=${NPROCS:=4}
 VERSION="f4d642715185dca1b94c91f434a2cf6db9f82014"
 #CHECKSUM=""
 
-
-# Location of script to apply patches later
-SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CMAKE_COMMAND=cmake
 
 git clone https://github.com/trilinos/Trilinos.git

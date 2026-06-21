@@ -1,0 +1,147 @@
+name: buildtest_kokkosparallel
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kokkosopenmp_build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos:kokkosparallel
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
+    steps:
+      - uses: actions/checkout@v6
+      # - name: Check docker hash
+      #   uses: ./.github/actions/compute-and-check-dependencies-hash
+      #   with:
+      #     compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker_kokkosopenmp
+          build-targets: full
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "false"
+      - uses: ./.github/actions/upload_directory
+        name: Upload 4C build
+        with:
+          directory: ${{ github.workspace }}/build
+          retention-days: 1
+          name: kokkosopenmp_build
+      - uses: ./.github/actions/chunk_test_suite
+        id: set-matrix
+        with:
+          build-directory: ${{ github.workspace }}/build
+          source-directory: ${{ github.workspace }}
+          number-of-chunks: 15
+          junit-report-artifact-name: kokkosopenmp_test_report.xml
+
+  kokkosopenmp_test:
+    needs: kokkosopenmp_build
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos:kokkosparallel
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    strategy:
+      fail-fast: false
+      matrix:
+        test-chunk: ${{fromJson(needs.kokkosopenmp_build.outputs.test-chunks)}}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      # - name: Check docker hash
+      #   uses: ./.github/actions/compute-and-check-dependencies-hash
+      #   with:
+      #     compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+      - name: Setup developer environment for testing
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - uses: ./.github/actions/download_directory
+        with:
+          name: kokkosopenmp_build
+          destination: ${{ github.workspace }}/build
+      - name: Test
+        run: |
+          cd $GITHUB_WORKSPACE/build
+          ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/kokkosopenmp_test_report-$TEST_CHUNK.xml
+        env:
+          TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Upload test report
+        if: success() || failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: kokkosopenmp_test_report-${{ matrix.test-chunk }}.xml
+          path: |
+            ${{ github.workspace }}/kokkosopenmp_test_report-${{ matrix.test-chunk }}.xml
+          retention-days: 1
+
+  kokkosopenmp_test_report:
+    needs: kokkosopenmp_test
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main' && (success() || failure())
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github
+      - uses: ./.github/actions/merge_junit_report_artifacts
+        with:
+          junit-report-base-name: kokkosopenmp_test_report
+          retention-days: 1
+
+  kokkoscuda_build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos:kokkosparallel
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    env:
+      OMPI_CXX: ${{ github.workspace }}/utilities/clangcuda++
+      OMPI_CC: /usr/bin/clang
+      CLANGCUDA_CLANG_PATH: /usr/bin/clang++
+      CLANGCUDA_CUDA_PATH: /usr/local/cuda
+      CLANGCUDA_ARCH: sm_90
+    steps:
+      - uses: actions/checkout@v6
+      # - name: Check docker hash
+      #   uses: ./.github/actions/compute-and-check-dependencies-hash
+      #   with:
+      #     compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker_kokkoscuda_clangcuda
+          build-targets: 4C
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "false"
+
+  ensure_all_tests_pass:
+    needs:
+      - kokkoscuda_build
+      - kokkosopenmp_build
+      - kokkosopenmp_test
+      - kokkosopenmp_test_report
+    runs-on: ubuntu-latest
+    if: always() && github.ref != 'refs/heads/main'
+    steps:
+      - name: Check for successful builds and tests
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}

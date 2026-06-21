@@ -71,24 +71,6 @@ find_package(Trilinos REQUIRED)
 message(STATUS "Trilinos version: ${Trilinos_VERSION}")
 message(STATUS "Trilinos packages: ${Trilinos_PACKAGE_LIST}")
 
-if(FOUR_C_CLANGCUDA)
-  set(CMAKE_CXX_COMPILER_LAUNCHER
-      ""
-      CACHE STRING "" FORCE
-      )
-  set(CMAKE_C_COMPILER_LAUNCHER
-      ""
-      CACHE STRING "" FORCE
-      )
-  set(CMAKE_CUDA_COMPILER_LAUNCHER
-      ""
-      CACHE STRING "" FORCE
-      )
-
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "")
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "")
-endif()
-
 # Figure out the version.
 if(EXISTS "${Trilinos_DIR}/../../../TrilinosRepoVersion.txt")
   file(STRINGS "${Trilinos_DIR}/../../../TrilinosRepoVersion.txt" TrilinosRepoVersionFile)
