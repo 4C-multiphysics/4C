@@ -101,7 +101,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::allreduce_e_map(
 
   if (Core::Communication::my_mpi_rank(emap.get_comm()) == pid)
   {
-    rmap = std::make_shared<Core::LinAlg::Map>(-1, rv.size(), rv.data(), 0, emap.get_comm());
+    rmap = std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(rv), 0, emap.get_comm());
     // check the map
     FOUR_C_ASSERT(rmap->num_my_elements() == rmap->num_global_elements(),
         "Processor with pid does not get all map elements");
@@ -109,7 +109,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::allreduce_e_map(
   else
   {
     rv.clear();
-    rmap = std::make_shared<Core::LinAlg::Map>(-1, 0, nullptr, 0, emap.get_comm());
+    rmap = std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>{}, 0, emap.get_comm());
     // check the map
     FOUR_C_ASSERT(rmap->num_my_elements() == 0, "At least one proc will keep a map element");
   }
@@ -128,7 +128,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::allreduce_e_map(const Core::Lin
   allreduce_e_map(rv, emap);
   std::shared_ptr<Core::LinAlg::Map> rmap;
 
-  rmap = std::make_shared<Core::LinAlg::Map>(-1, rv.size(), rv.data(), 0, emap.get_comm());
+  rmap = std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(rv), 0, emap.get_comm());
 
   return rmap;
 }
@@ -146,7 +146,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::allreduce_overlapping_e_map(
   std::set<int> rs(rv.begin(), rv.end());
   rv.assign(rs.begin(), rs.end());
 
-  return std::make_shared<Core::LinAlg::Map>(-1, rv.size(), rv.data(), 0, emap.get_comm());
+  return std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(rv), 0, emap.get_comm());
 }
 
 /*----------------------------------------------------------------------*
@@ -165,7 +165,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::allreduce_overlapping_e_map(
     std::set<int> rs(rv.begin(), rv.end());
     rv.assign(rs.begin(), rs.end());
 
-    rmap = std::make_shared<Core::LinAlg::Map>(-1, rv.size(), rv.data(), 0, emap.get_comm());
+    rmap = std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(rv), 0, emap.get_comm());
     // check the map
     FOUR_C_ASSERT(rmap->num_my_elements() == rmap->num_global_elements(),
         "Processor with pid does not get all map elements");
@@ -173,7 +173,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::allreduce_overlapping_e_map(
   else
   {
     rv.clear();
-    rmap = std::make_shared<Core::LinAlg::Map>(-1, 0, nullptr, 0, emap.get_comm());
+    rmap = std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>{}, 0, emap.get_comm());
     // check the map
     FOUR_C_ASSERT(rmap->num_my_elements() == 0, "At least one proc will keep a map element");
   }

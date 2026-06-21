@@ -202,7 +202,7 @@ std::shared_ptr<Core::LinAlg::Map> XFEM::DiscretizationXFEM::extend_map(
   }
 
   return std::make_shared<Core::LinAlg::Map>(
-      -1, dstgids.size(), dstgids.data(), 0, srcmap->get_comm());
+      -1, std::span<const int>(dstgids), 0, srcmap->get_comm());
 }
 
 /*----------------------------------------------------------------------*

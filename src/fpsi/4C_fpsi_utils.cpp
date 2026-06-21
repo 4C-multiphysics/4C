@@ -553,7 +553,7 @@ void FPSI::InterfaceUtils::redistribute_interface(Core::FE::Discretization& mast
       int globalsize;
       globalsize = Core::Communication::sum_all(myglobalelementsize, comm);
       Core::LinAlg::Map newelecolmap(
-          globalsize, myglobalelementsize, myglobalelements.data(), 0, comm);
+          globalsize, std::span<const int>(myglobalelements.data(), myglobalelementsize), 0, comm);
 
       if (mastereleid == printid)
       {

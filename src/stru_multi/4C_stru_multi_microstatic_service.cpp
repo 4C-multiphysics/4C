@@ -89,9 +89,12 @@ void MultiScale::MicroStatic::set_up_homogenization()
   }
 
   // create map based on the determined dofs of prescribed and free nodes
-  pdof_ = std::make_shared<Core::LinAlg::Map>(-1, np_, pdof.data(), 0, discret_->get_comm());
-  fdof_ =
-      std::make_shared<Core::LinAlg::Map>(-1, ndof_ - np_, fdof.data(), 0, discret_->get_comm());
+
+  pdof_ = std::make_shared<Core::LinAlg::Map>(
+      -1, std::span<const int>(pdof.data(), np_), 0, discret_->get_comm());
+
+  fdof_ = std::make_shared<Core::LinAlg::Map>(
+      -1, std::span<const int>(fdof.data(), ndof_ - np_), 0, discret_->get_comm());
 
   // create importer
   importp_ = std::make_shared<Core::LinAlg::Import>(*pdof_, (*discret_->dof_row_map()));

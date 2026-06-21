@@ -36,7 +36,7 @@ namespace
     std::vector<int> gids(num_rows);
     std::iota(gids.begin(), gids.end(), 0);
 
-    const Core::LinAlg::Map map(num_rows, num_rows, gids.data(), 0, MPI_COMM_WORLD);
+    const Core::LinAlg::Map map(num_rows, std::span<const int>(gids), 0, MPI_COMM_WORLD);
     ASSERT_FALSE(map.linear_map());
 
     auto matrix = std::make_shared<Core::LinAlg::SparseMatrix>(map, 3);

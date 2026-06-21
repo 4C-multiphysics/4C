@@ -44,13 +44,14 @@ namespace
       SCOPED_TRACE(num_blocks);
       std::vector<int> gids(num_blocks);
       for (int i = 0; i < num_blocks; ++i) gids[i] = rank * num_blocks + i;
-      Core::LinAlg::Map row_map(-1, num_blocks, gids.data(), 0, comm_);
+      Core::LinAlg::Map row_map(-1, std::span<const int>(gids), 0, comm_);
       Core::LinAlg::SparseMatrix matrix(
           row_map, num_blocks * num_ranks, StorageProfile::static_profile);
       std::vector<std::shared_ptr<const Core::LinAlg::Map>> maps;
       for (int i = 0; i < num_blocks; ++i)
       {
-        maps.push_back(std::make_shared<Core::LinAlg::Map>(-1, 1, &gids[i], 0, comm_));
+        maps.push_back(
+            std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(&gids[i], 1), 0, comm_));
         for (int owner = 0; owner < num_ranks; ++owner)
           for (int j = 0; j < num_blocks; ++j)
             matrix.assemble(100.0 * owner + 10.0 * i + j + 1.0, gids[i], owner * num_blocks + j);
@@ -91,7 +92,7 @@ namespace
   {
     const int rank = Core::Communication::my_mpi_rank(comm_);
     const std::vector<int> gids{2 * rank, 2 * rank + 1};
-    Core::LinAlg::Map row_map(-1, 2, gids.data(), 0, comm_);
+    Core::LinAlg::Map row_map(-1, std::span<const int>(gids), 0, comm_);
     Core::LinAlg::SparseMatrix matrix(row_map, 1, StorageProfile::static_profile);
     matrix.assemble(2.0, gids[0], gids[0]);
     matrix.assemble(3.0, gids[1], gids[1]);
@@ -129,12 +130,11 @@ namespace
     const int rank = Core::Communication::my_mpi_rank(comm_);
     const int num_ranks = Core::Communication::num_mpi_ranks(comm_);
     const std::vector<int> slave_gids = rank == 0 ? std::vector<int>{0, 1} : std::vector<int>{};
-    Core::LinAlg::Map slave_map(
-        -1, static_cast<int>(slave_gids.size()), slave_gids.data(), 0, comm_);
+    Core::LinAlg::Map slave_map(-1, std::span<const int>(slave_gids), 0, comm_);
     const int master_gid = 10 + rank;
-    Core::LinAlg::Map master_map(-1, 1, &master_gid, 0, comm_);
+    Core::LinAlg::Map master_map(-1, std::span<const int>(&master_gid, 1), 0, comm_);
     const int domain_gid = 20 + rank;
-    Core::LinAlg::Map domain_map(-1, 1, &domain_gid, 0, comm_);
+    Core::LinAlg::Map domain_map(-1, std::span<const int>(&domain_gid, 1), 0, comm_);
 
     Core::LinAlg::SparseMatrix a(slave_map, num_ranks, StorageProfile::static_profile);
     Core::LinAlg::SparseMatrix b(slave_map, num_ranks, StorageProfile::static_profile);
@@ -192,7 +192,7 @@ namespace
   {
     const int rank = Core::Communication::my_mpi_rank(comm_);
     const std::vector<int> gids{2 * rank, 2 * rank + 1};
-    Core::LinAlg::Map row_map(-1, 2, gids.data(), 0, comm_);
+    Core::LinAlg::Map row_map(-1, std::span<const int>(gids), 0, comm_);
     for (const auto matrix_type :
         {Core::LinAlg::SparseMatrix::CRS_MATRIX, Core::LinAlg::SparseMatrix::FE_MATRIX})
     {
@@ -229,7 +229,7 @@ namespace
   TEST_F(SparseAlgebraStaticProfileTest, RejectStaticProfileForFEMatrix)
   {
     const int rank = Core::Communication::my_mpi_rank(comm_);
-    Core::LinAlg::Map row_map(-1, 1, &rank, 0, comm_);
+    Core::LinAlg::Map row_map(-1, std::span<const int>(&rank, 1), 0, comm_);
     EXPECT_ANY_THROW(Core::LinAlg::SparseMatrix(row_map, 1, StorageProfile::static_profile, true,
         false, Core::LinAlg::SparseMatrix::FE_MATRIX));
   }
@@ -240,7 +240,7 @@ namespace
   {
     const int rank = Core::Communication::my_mpi_rank(comm_);
     const int num_ranks = Core::Communication::num_mpi_ranks(comm_);
-    Core::LinAlg::Map row_map(-1, 1, &rank, 0, comm_);
+    Core::LinAlg::Map row_map(-1, std::span<const int>(&rank, 1), 0, comm_);
     Core::LinAlg::SparseMatrix matrix(row_map, 1, StorageProfile::dynamic_profile, true, false,
         Core::LinAlg::SparseMatrix::FE_MATRIX);
     matrix.fe_assemble(2.0, rank, rank);
@@ -259,7 +259,7 @@ namespace
   {
     const int rank = Core::Communication::my_mpi_rank(comm_);
     const std::vector<int> gids{2 * rank, 2 * rank + 1};
-    Core::LinAlg::Map row_map(-1, 2, gids.data(), 0, comm_);
+    Core::LinAlg::Map row_map(-1, std::span<const int>(gids), 0, comm_);
     for (const auto matrix_type :
         {Core::LinAlg::SparseMatrix::CRS_MATRIX, Core::LinAlg::SparseMatrix::FE_MATRIX})
     {

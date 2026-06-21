@@ -65,7 +65,7 @@ namespace
     std::vector<int> global_ids(static_cast<std::size_t>(size));
     std::iota(global_ids.begin(), global_ids.end(), 0);
     fixture.locally_relevant_dof_map = std::make_unique<Core::LinAlg::Map>(
-        -1, global_ids.size(), global_ids.data(), 0, MPI_COMM_WORLD);
+        -1, std::span<const int>(global_ids), 0, MPI_COMM_WORLD);
   }
 
   void add_pressure_boundary_conditions(
