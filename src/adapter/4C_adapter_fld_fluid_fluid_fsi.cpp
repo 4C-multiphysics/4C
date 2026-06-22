@@ -267,10 +267,10 @@ std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> Adapter::FluidFluidFSI::sha
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Adapter::FluidFluidFSI::setup_interface(const int nds_master)
+void Adapter::FluidFluidFSI::setup_interface(const int target_dofset_number)
 {
-  // check nds_master
-  if (nds_master != 0) FOUR_C_THROW("nds_master is supposed to be 0 here");
+  // check target_dofset_number
+  if (target_dofset_number != 0) FOUR_C_THROW("target_dofset_number is supposed to be 0 here");
 
   if (mergedfluidinterface_ == nullptr)
   {

@@ -470,13 +470,13 @@ void FSI::FluidFluidMonolithicFluidSplitNoNOX::setup_system_matrix()
   s->un_complete();
 
   (*fggtransform_)(fgg, (1.0 - stiparam) / (1.0 - ftiparam) * scale * timescale,
-      Coupling::Adapter::CouplingSlaveConverter(coupsf),
-      Coupling::Adapter::CouplingSlaveConverter(coupsf), *s, true, true);
+      Coupling::Adapter::CouplingSourceConverter(coupsf),
+      Coupling::Adapter::CouplingSourceConverter(coupsf), *s, true, true);
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> lfgi =
       std::make_shared<Core::LinAlg::SparseMatrix>(s->row_map(), 81, false);
   (*fgitransform_)(fgi, (1.0 - stiparam) / (1.0 - ftiparam) * scale,
-      Coupling::Adapter::CouplingSlaveConverter(coupsf), *lfgi);
+      Coupling::Adapter::CouplingSourceConverter(coupsf), *lfgi);
 
   lfgi->complete(fgi.domain_map(), s->range_map());
 
@@ -484,12 +484,12 @@ void FSI::FluidFluidMonolithicFluidSplitNoNOX::setup_system_matrix()
 
   Core::LinAlg::SparseMatrix lfig(fig.row_map(), 81, false);
   (*figtransform_)(f->full_row_map(), f->full_col_map(), fig, timescale,
-      Coupling::Adapter::CouplingSlaveConverter(coupsf), systemmatrix_->matrix(1, 0));
+      Coupling::Adapter::CouplingSourceConverter(coupsf), systemmatrix_->matrix(1, 0));
 
   systemmatrix_->assign(1, 1, Core::LinAlg::DataAccess::Share, fii);
 
   (*aigtransform_)(a->full_row_map(), a->full_col_map(), aig, 1.,
-      Coupling::Adapter::CouplingSlaveConverter(coupsa), systemmatrix_->matrix(2, 0));
+      Coupling::Adapter::CouplingSourceConverter(coupsa), systemmatrix_->matrix(2, 0));
 
   systemmatrix_->assign(2, 2, Core::LinAlg::DataAccess::Share, aii);
 
@@ -507,13 +507,13 @@ void FSI::FluidFluidMonolithicFluidSplitNoNOX::setup_system_matrix()
 
     // reuse transform objects to add shape derivative matrices to structural blocks
     (*figtransform_)(f->full_row_map(), f->full_col_map(), fmig, 1.,
-        Coupling::Adapter::CouplingSlaveConverter(coupsf), systemmatrix_->matrix(1, 0), false,
+        Coupling::Adapter::CouplingSourceConverter(coupsf), systemmatrix_->matrix(1, 0), false,
         true);
 
 
     (*fmggtransform_)(fmgg, (1.0 - stiparam) / (1.0 - ftiparam) * scale,
-        Coupling::Adapter::CouplingSlaveConverter(coupsf),
-        Coupling::Adapter::CouplingSlaveConverter(coupsf), *s, false, true);
+        Coupling::Adapter::CouplingSourceConverter(coupsf),
+        Coupling::Adapter::CouplingSourceConverter(coupsf), *s, false, true);
 
     // We cannot copy the pressure value. It is not used anyway. So no exact
     // match here.
@@ -523,7 +523,7 @@ void FSI::FluidFluidMonolithicFluidSplitNoNOX::setup_system_matrix()
     {
       Core::LinAlg::SparseMatrix lfmgi(s->row_map(), 81, false);
       (*fmgitransform_)(fmgi, (1.0 - stiparam) / (1.0 - ftiparam) * scale,
-          Coupling::Adapter::CouplingSlaveConverter(coupsf),
+          Coupling::Adapter::CouplingSourceConverter(coupsf),
           Coupling::Adapter::CouplingTargetConverter(coupfa), lfmgi, false, false);
 
       lfmgi.complete(aii.domain_map(), s->range_map());

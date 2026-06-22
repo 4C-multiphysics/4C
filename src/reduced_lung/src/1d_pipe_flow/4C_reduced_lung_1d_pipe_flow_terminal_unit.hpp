@@ -22,7 +22,7 @@ namespace ReducedLung1DPipe
     /**
      * @brief Container for all terminal unit elements.
      *
-     * Stores identifiers and physical parameters (volume, area, velocity) for each terminal unit,
+     * Stores identifiers for each terminal unit,
      * which are used across all rheological and elasticity models.
      */
     struct TerminalUnitData
@@ -31,9 +31,6 @@ namespace ReducedLung1DPipe
       int global_node_id;
       // Owner
       int node_owner;
-      // Physical quantities of each terminal unit.
-      double volume_v;
-      double reference_volume_v0;
     };
 
     // ----- Rheological models of viscoelasticity -----
@@ -100,7 +97,40 @@ namespace ReducedLung1DPipe
     using ElasticityModel = std::variant<LinearElasticity, OgdenHyperelasticity>;
 
     /**
-     * @brief Encapsulates a combination of rheological and elasticity models.
+     * @brief Windkessel model (3-element RCR model).
+     *
+     * The model consists of a proximal resistance R_p, a compliance C, and a distal resistance R_d.
+     * The pressure at the periphery (after R_d) is given by pressure_peripheral.
+     * The internal state variable windkessel_pressure_wk represents the pressure in the
+     * 0D windkessel model.
+     */
+    struct WindkesselModel
+    {
+      double proximal_resistance_R_p;
+      double compliance_C;
+      double distal_resistance_R_d;
+      double pressure_peripheral;
+      double windkessel_pressure_wk;
+    };
+
+    /**
+     * @brief Combination of rheological and elasticity models for terminal units.
+     */
+    struct RheologicalElasticityModel
+    {
+      RheologicalModel rheological_model;
+      ElasticityModel elasticity_model;
+      double volume_v;
+      double reference_volume_v0;
+    };
+
+    /**
+     * @brief Variant type for terminal unit models.
+     */
+    using TerminalUnitModelVariant = std::variant<RheologicalElasticityModel, WindkesselModel>;
+
+    /**
+     * @brief Encapsulates a terminal unit model.
      *
      * Stores the element-specific data and associated evaluation functions
      * (residuals, jacobians, internal state updates, end-of-timestep routines) for a given model
@@ -109,8 +139,7 @@ namespace ReducedLung1DPipe
     struct TerminalUnitModel
     {
       TerminalUnitData data;
-      RheologicalModel rheological_model;
-      ElasticityModel elasticity_model;
+      TerminalUnitModelVariant model;
 
       /**
        * Evaluates the residual and the jacobian on a terminal unit depending on area A.
@@ -153,6 +182,9 @@ namespace ReducedLung1DPipe
           double density_rho, double characteristic_W_outgoing);
     };
 
+    TerminalUnitModel create_terminal_unit_model(
+        const ReducedLung1dPipeFlow::Parameters& params, int global_id, int node_owner);
+
     /**
      * Evaluates the linear elastic pressure if ElasticityModel == LinearElasticity.
      * @param linear_elastic_model Chosen model: LinearElasticity
@@ -161,8 +193,8 @@ namespace ReducedLung1DPipe
      * @param dt Time step size.
      * @return p_el
      */
-    double evaluate_linear_elastic_pressure(
-        LinearElasticity& linear_elastic_model, const TerminalUnitData& data, double Q, double dt);
+    double evaluate_linear_elastic_pressure(LinearElasticity& linear_elastic_model,
+        const RheologicalElasticityModel& terminal_unit_model, double Q, double dt);
 
     /**
      * Evaluates the linear elastic pressure gradient with respect to area A if ElasticityModel ==
@@ -174,18 +206,18 @@ namespace ReducedLung1DPipe
      * @return dpel_dA
      */
     double evaluate_linear_elastic_pressure_gradient(LinearElasticity& linear_elastic_model,
-        const TerminalUnitData& data, double dQdA, double dt);
+        const RheologicalElasticityModel& terminal_unit_model, double dQdA, double dt);
 
     /**
      * Evaluates the Ogden Hyperelastic pressure p_el.
      * @param ogden_hyperelastic_model  Chosen model: OgdenHyperelasticity
      * @param Q Flow as function of area A: Q = A * u
-     * @param data TerminalUnitData storing geometrical information of terminal node.
+     * @param terminal_unit_model TerminalUnitData storing geometrical information of terminal node.
      * @param dt Time step size.
      * @return p_el
      */
     double evaluate_ogden_hyperelastic_pressure(OgdenHyperelasticity& ogden_hyperelastic_model,
-        double Q, const TerminalUnitData& data, double dt);
+        const double Q, const RheologicalElasticityModel& terminal_unit_model, double dt);
 
     /**
      * Evaluate Ogden Hyperelastic pressure gradient, derivative of p_el w.r.t. A.
@@ -197,8 +229,8 @@ namespace ReducedLung1DPipe
      * @return derivative of elastic pressure w.r.t A
      */
     double evaluate_ogden_hyperelastic_pressure_gradient(
-        OgdenHyperelasticity& ogden_hyperelastic_model, const TerminalUnitData& data, double Q,
-        double dQdA, double dt);
+        OgdenHyperelasticity& ogden_hyperelastic_model,
+        const RheologicalElasticityModel& terminal_unit_model, double Q, double dQdA, double dt);
 
     /**
      * Evaluate residual when RheologyModel is Kelvin Voigt.
@@ -214,7 +246,7 @@ namespace ReducedLung1DPipe
      */
     double evaluate_kelvin_voigt_residual(double area_A, double velocity_u,
         double reference_area_A0, double beta, double Pext, const KelvinVoigt& kelvin_voigt_model,
-        double elastic_pressure_p_el, const TerminalUnitData& data);
+        double elastic_pressure_p_el, const RheologicalElasticityModel& terminal_unit_model);
 
     /**
      * Evaluate residual when RheologyModel is Four Element Maxwell.
@@ -232,7 +264,7 @@ namespace ReducedLung1DPipe
     double evaluate_four_element_maxwell_residual(double area_A, double velocity_u,
         double reference_area_A0, double beta, double Pext,
         const FourElementMaxwell& four_element_maxwell_model, double elastic_pressure_p_el,
-        double dt, const TerminalUnitData& data);
+        double dt, const RheologicalElasticityModel& terminal_unit_model);
 
     /**
      * Calculates jacobian df/dA for KelvinVoigt model.
@@ -244,7 +276,8 @@ namespace ReducedLung1DPipe
      * @return jacobian
      */
     double evaluate_kelvin_voigt_jacobian(double area_A, double dQdA, double beta,
-        const KelvinVoigt& kelvin_voigt_model, double dp_el_dA, const TerminalUnitData& data);
+        const KelvinVoigt& kelvin_voigt_model, double dp_el_dA,
+        const RheologicalElasticityModel& terminal_unit_model);
 
     /**
      * Calculates jacobian df/dA for FourElementMaxwell model.
@@ -259,7 +292,7 @@ namespace ReducedLung1DPipe
      */
     double evaluate_four_element_maxwell_jacobian(double area_A, double dQdA, double beta,
         const FourElementMaxwell& four_element_maxwell_model, double dp_el_dA, double dt,
-        const TerminalUnitData& data);
+        const RheologicalElasticityModel& terminal_unit_model);
 
     /**
      * Initializes the corresponding rheological model.
@@ -280,6 +313,16 @@ namespace ReducedLung1DPipe
     ElasticityModel create_elasticity_model(
         const ReducedLung1dPipeFlow::Parameters::TerminalUnits::ElasticityModel& elasticity_model,
         int global_id);
+
+    WindkesselModel create_windkessel_model(
+        const ReducedLung1dPipeFlow::Parameters::TerminalUnits::WindkesselModel& windkessel_model,
+        int global_id);
+
+    double evaluate_windkessel_residual(double area_A, double velocity_u, double reference_area_A0,
+        double beta, double Pext, const WindkesselModel& wk_model);
+
+    double evaluate_windkessel_jacobian(
+        double area_A, double dQdA, double beta, const WindkesselModel& wk_model);
 
   }  // namespace TerminalUnit
 }  // namespace ReducedLung1DPipe

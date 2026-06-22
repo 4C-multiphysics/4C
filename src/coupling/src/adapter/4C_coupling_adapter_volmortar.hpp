@@ -137,33 +137,33 @@ namespace Coupling::Adapter
         std::shared_ptr<VolMortar::Utils::DefaultMaterialStrategy> materialstrategy = nullptr);
 
 
-    /** \name Conversion between master and slave */
+    /** \name Conversion between target and source */
     //@{
     /// There are different versions to satisfy all needs. The basic
     /// idea is the same for all of them.
 
 
-    /// transfer a dof vector from master to slave
+    /// transfer a dof vector from target to source
     std::shared_ptr<Core::LinAlg::Vector<double>> target_to_source(
         const Core::LinAlg::Vector<double>& mv) const override;
 
-    /// transfer a dof vector from slave to master
+    /// transfer a dof vector from source to target
     std::shared_ptr<Core::LinAlg::Vector<double>> source_to_target(
         const Core::LinAlg::Vector<double>& sv) const override;
 
-    /// transfer a dof vector from master to slave
+    /// transfer a dof vector from target to source
     std::shared_ptr<Core::LinAlg::MultiVector<double>> target_to_source(
         const Core::LinAlg::MultiVector<double>& mv) const override;
 
-    /// transfer a dof vector from slave to master
+    /// transfer a dof vector from source to target
     std::shared_ptr<Core::LinAlg::MultiVector<double>> source_to_target(
         const Core::LinAlg::MultiVector<double>& sv) const override;
 
-    /// transfer a dof vector from master to slave
+    /// transfer a dof vector from target to source
     void target_to_source(const Core::LinAlg::MultiVector<double>& mv,
         Core::LinAlg::MultiVector<double>& sv) const override;
 
-    /// transfer a dof vector from slave to master
+    /// transfer a dof vector from source to target
     void source_to_target(const Core::LinAlg::MultiVector<double>& sv,
         Core::LinAlg::MultiVector<double>& mv) const override;
 
@@ -172,10 +172,10 @@ namespace Coupling::Adapter
     /** \name Coupled maps */
     //@{
 
-    /// the interface dof map of the master side
+    /// the interface dof map of the target side
     std::shared_ptr<const Core::LinAlg::Map> target_dof_map() const override;
 
-    /// the interface dof map of the slave side
+    /// the interface dof map of the source side
     std::shared_ptr<const Core::LinAlg::Map> source_dof_map() const override;
 
     //@}
@@ -218,8 +218,8 @@ namespace Coupling::Adapter
     std::shared_ptr<Core::LinAlg::SparseMatrix>
         p21_;  ///< global Mortar projection matrix P Omega_1 -> Omega_2
 
-    std::shared_ptr<Core::FE::Discretization> masterdis_;
-    std::shared_ptr<Core::FE::Discretization> slavedis_;
+    std::shared_ptr<Core::FE::Discretization> target_dis_;
+    std::shared_ptr<Core::FE::Discretization> source_dis_;
 
     std::vector<int>* coupleddof12_;
     std::vector<int>* coupleddof21_;

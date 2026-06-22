@@ -202,11 +202,11 @@ void Core::LinearSolver::MueLuPreconditioner::setup(
 
       if (source_dof_map == nullptr) FOUR_C_THROW("Interface contact map is not available!");
 
-      Teuchos::RCP<EpetraMap> ep_slave_dof_map =
+      Teuchos::RCP<EpetraMap> ep_source_dof_map =
           Teuchos::make_rcp<EpetraMap>(Teuchos::rcpFromRef(source_dof_map->get_epetra_map()));
 
       H_->GetLevel(0)->Set("Primal interface DOF map",
-          Teuchos::rcp_dynamic_cast<const Xpetra::Map<LO, GO, NO>>(ep_slave_dof_map, true));
+          Teuchos::rcp_dynamic_cast<const Xpetra::Map<LO, GO, NO>>(ep_source_dof_map, true));
     }
 
     if (muelulist_.sublist("Belos Parameters").isParameter("Interface DualNodeID to PrimalNodeID"))

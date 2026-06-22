@@ -510,7 +510,7 @@ void get_nurbs_information(const Core::Elements::Element& interface_element,
 
   // Get the knots and weights for this element.
   const bool zero_size = Core::FE::Nurbs::get_knot_vector_and_weights_for_nurbs_boundary(
-      &interface_element, face_element->face_master_number(), face_element->parent_element_id(),
+      &interface_element, face_element->face_target_number(), face_element->parent_element_id(),
       *(Global::Problem::instance()->get_dis("structure")), mypknots, myknots, cp_weights,
       normalfac);
   if (zero_size)

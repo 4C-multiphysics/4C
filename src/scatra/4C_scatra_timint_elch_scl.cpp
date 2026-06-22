@@ -606,7 +606,7 @@ void ScaTra::ScaTraTimIntElchSCL::setup_coupling()
         case S2I::side_source:
           my_macro_slave_node_gids.emplace_back(coupling_node_gid);
           break;
-        case S2I::side_master:
+        case S2I::side_target:
           my_macro_master_node_gids.emplace_back(coupling_node_gid);
           break;
         default:
@@ -634,7 +634,7 @@ void ScaTra::ScaTraTimIntElchSCL::setup_coupling()
       if (fist_macro_slave_dof_gid == slave_dof_gid)
       {
         const int first_macro_master_dof_gid =
-            macro_coupling_adapter->perm_master_dof_map()->gid(slave_dof_lid);
+            macro_coupling_adapter->permuted_target_dof_map()->gid(slave_dof_lid);
         my_macro_slave_node_master_dof_gids.insert(
             std::make_pair(my_macro_slave_node_gid, first_macro_master_dof_gid));
         break;
@@ -771,7 +771,7 @@ void ScaTra::ScaTraTimIntElchSCL::setup_coupling()
       {
         my_slave_dofs.emplace_back(slave_gid);
         my_perm_master_dofs.emplace_back(
-            macro_micro_coupling_adapter_temp.perm_master_dof_map()->gid(slave_lid));
+            macro_micro_coupling_adapter_temp.permuted_target_dof_map()->gid(slave_lid));
         break;
       }
     }
@@ -785,7 +785,8 @@ void ScaTra::ScaTraTimIntElchSCL::setup_coupling()
       master_lid < macro_micro_coupling_adapter_temp.target_dof_map()->num_my_elements();
       ++master_lid)
   {
-    const int slave_gid = macro_micro_coupling_adapter_temp.perm_source_dof_map()->gid(master_lid);
+    const int slave_gid =
+        macro_micro_coupling_adapter_temp.permuted_source_dof_map()->gid(master_lid);
     const int master_gid = macro_micro_coupling_adapter_temp.target_dof_map()->gid(master_lid);
     if (std::find(glob_slave_dofs.begin(), glob_slave_dofs.end(), slave_gid) !=
         glob_slave_dofs.end())
@@ -797,17 +798,17 @@ void ScaTra::ScaTraTimIntElchSCL::setup_coupling()
 
   auto source_dof_map = std::make_shared<Core::LinAlg::Map>(
       -1, static_cast<int>(my_slave_dofs.size()), my_slave_dofs.data(), 0, comm);
-  auto perm_source_dof_map = std::make_shared<Core::LinAlg::Map>(
+  auto permuted_source_dof_map = std::make_shared<Core::LinAlg::Map>(
       -1, static_cast<int>(my_perm_slave_dofs.size()), my_perm_slave_dofs.data(), 0, comm);
   auto target_dof_map = std::make_shared<Core::LinAlg::Map>(
       -1, static_cast<int>(my_master_dofs.size()), my_master_dofs.data(), 0, comm);
-  auto perm_master_dof_map = std::make_shared<Core::LinAlg::Map>(
+  auto permuted_target_dof_map = std::make_shared<Core::LinAlg::Map>(
       -1, static_cast<int>(my_perm_master_dofs.size()), my_perm_master_dofs.data(), 0, comm);
 
 
   macro_micro_coupling_adapter_ = std::make_shared<Coupling::Adapter::Coupling>();
   macro_micro_coupling_adapter_->setup_coupling(
-      source_dof_map, perm_source_dof_map, target_dof_map, perm_master_dof_map);
+      source_dof_map, permuted_source_dof_map, target_dof_map, permuted_target_dof_map);
 
   macro_coupling_dofs_ = std::make_shared<Core::LinAlg::MapExtractor>(
       *dof_row_map(), macro_micro_coupling_adapter_->target_dof_map());
@@ -936,7 +937,7 @@ void ScaTra::ScaTraTimIntElchSCL::assemble_and_apply_mesh_tying()
 
       Core::LinAlg::matrix_add(*system_matrix(), false, 1.0, *sparse_systemmatrix, 1.0);
 
-      Coupling::Adapter::CouplingSlaveConverter micro_side_converter(
+      Coupling::Adapter::CouplingSourceConverter micro_side_converter(
           *macro_micro_coupling_adapter_);
 
       // micro: interior - interior
@@ -967,7 +968,7 @@ void ScaTra::ScaTraTimIntElchSCL::assemble_and_apply_mesh_tying()
 
       Core::LinAlg::matrix_add(*system_matrix(), false, 1.0, block_systemmatrix->matrix(0, 0), 1.0);
 
-      Coupling::Adapter::CouplingSlaveConverter micro_side_converter(
+      Coupling::Adapter::CouplingSourceConverter micro_side_converter(
           *macro_micro_coupling_adapter_);
 
       // micro: interior - interior

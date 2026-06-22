@@ -34,6 +34,12 @@ namespace
   {
     return Core::LinAlg::assume_symmetry(Core::LinAlg::transpose(F) * F);
   }
+
+  [[nodiscard]] Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_inelastic_inv_cauchy_green(
+      const Core::LinAlg::Tensor<double, 3, 3>& iFext)
+  {
+    return Core::LinAlg::assume_symmetry(iFext * Core::LinAlg::transpose(iFext));
+  }
 }  // namespace
 
 Mixture::PAR::MixtureConstituentRemodelFiberImpl::MixtureConstituentRemodelFiberImpl(
@@ -49,7 +55,8 @@ Mixture::PAR::MixtureConstituentRemodelFiberImpl::MixtureConstituentRemodelFiber
       poisson_decay_time_(matdata.parameters.get<double>("DECAY_TIME")),
       growth_constant_(matdata.parameters.get<double>("GROWTH_CONSTANT")),
       deposition_stretch_(matdata.parameters.get<double>("DEPOSITION_STRETCH")),
-      deposition_stretch_timefunc_num_(matdata.parameters.get<int>("DEPOSITION_STRETCH_TIMEFUNCT"))
+      deposition_stretch_timefunc_num_(matdata.parameters.get<int>("DEPOSITION_STRETCH_TIMEFUNCT")),
+      inelastic_external_deformation_(matdata.parameters.get<bool>("INELASTIC_GROWTH"))
 {
 }
 
@@ -210,13 +217,26 @@ Mixture::MixtureConstituentRemodelFiberImpl::evaluate_current_cmat(
   // additional linearization from implicit integration
   if (params_->enable_growth_)
   {
-    Core::LinAlg::SymmetricTensor<double, 3, 3> d_lambda_r_d_cauchy_green =
-        remodel_fiber_[gp].evaluate_d_current_lambda_r_d_lambda_f_sq() *
+    const Core::LinAlg::SymmetricTensor<double, 3, 3> d_lambdafsq_dc =
         evaluate_d_lambdafsq_dc(gp, eleGID);
+
+    Core::LinAlg::SymmetricTensor<double, 3, 3> d_lambda_r_d_cauchy_green =
+        remodel_fiber_[gp].evaluate_d_current_lambda_r_d_lambda_f_sq() * d_lambdafsq_dc;
 
     const double dpk2dlambdar = remodel_fiber_[gp].evaluate_d_current_fiber_pk2_stress_d_lambda_r();
     cmat += 2.0 * dpk2dlambdar *
             Core::LinAlg::dyadic(structural_tensors_[gp], d_lambda_r_d_cauchy_green);
+
+    // additional linearization in case of inelastic growth laws
+    if (params_->inelastic_external_deformation_)
+    {
+      const double dpk2dlambdaext =
+          remodel_fiber_[gp].evaluate_d_current_fiber_pk2_stress_d_lambda_ext();
+      const Core::LinAlg::SymmetricTensor<double, 3, 3> d_growth_scalar_d_cauchy_green =
+          remodel_fiber_[gp].evaluate_d_current_growth_scalar_d_lambda_f_sq() * d_lambdafsq_dc;
+      cmat += 2.0 * dpk2dlambdaext * remodel_fiber_[gp].get_d_lambda_ext_d_growth_scalar() *
+              Core::LinAlg::dyadic(structural_tensors_[gp], d_growth_scalar_d_cauchy_green);
+    }
   }
 
   return cmat;
@@ -271,10 +291,66 @@ void Mixture::MixtureConstituentRemodelFiberImpl::evaluate_elastic_part(
     Core::LinAlg::SymmetricTensor<double, 3, 3>& S_stress,
     Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, int gp, int eleGID)
 {
-  FOUR_C_THROW(
-      "The implicit remodel fiber cannot be evaluated with an additional inelastic deformation. "
-      "You can either use the explicit remodel fiber or use a growth strategy without an inelastic "
-      "external deformation.");
+  if (!params_->inelastic_external_deformation_)
+  {
+    FOUR_C_THROW(
+        "You specified that there is no inelastic external deformation in the input file, but this "
+        "method is only called if there is one. Probably, you are using a mixture rule with "
+        "inelastic growth. You have to set INELASTIC_GROWTH to true or use a different growth "
+        "rule.");
+  }
+
+  FOUR_C_ASSERT(context.time_step_size, "Time step size not given in evaluation context.");
+  const double dt = *context.time_step_size;
+
+  FOUR_C_ASSERT(std::cmp_greater_equal(structural_tensors_.size(), gp + 1),
+      "structural_tensors_ must be initialized by prepare_inelastic_growth_tangent before "
+      "evaluate_elastic_part is called.");
+
+  Core::LinAlg::SymmetricTensor<double, 3, 3> C = evaluate_cauchy_green(FM);
+
+  const double lambda_f = evaluate_lambdaf(C, gp, eleGID);
+  const double lambda_ext = evaluate_lambda_ext(iFextin, gp, eleGID);
+  remodel_fiber_[gp].set_state(lambda_f, lambda_ext);
+
+  if (params_->enable_growth_) integrate_local_evolution_equations(dt, gp, eleGID);
+
+  S_stress = evaluate_current_pk2(gp, eleGID);
+  cmat = evaluate_current_cmat(gp, eleGID);
+}
+
+double Mixture::MixtureConstituentRemodelFiberImpl::evaluate_lambda_ext(
+    const Core::LinAlg::Tensor<double, 3, 3>& iFext, const int gp, const int eleGID) const
+{
+  return 1.0 / std::sqrt(Core::LinAlg::ddot(
+                   evaluate_inelastic_inv_cauchy_green(iFext), structural_tensors_[gp]));
+}
+
+void Mixture::MixtureConstituentRemodelFiberImpl::prepare_inelastic_growth_tangent(
+    const Core::LinAlg::Tensor<double, 3, 3>& iFg,
+    const Core::LinAlg::Tensor<double, 3, 3>& d_iFg_d_growth_scalar,
+    const Mat::EvaluationContext<3>& context, int gp, int eleGID)
+{
+  if (!params_->inelastic_external_deformation_) return;
+
+  if (static_cast<int>(structural_tensors_.size()) < gp + 1)
+  {
+    FOUR_C_ASSERT(std::cmp_equal(structural_tensors_.size(), gp),
+        "Expecting the Gauss points to be called in order!");
+    Core::LinAlg::Tensor<double, 3> orientation =
+        params_->fiber_orientation.interpolate(eleGID, context.xi->as_span());
+    structural_tensors_.emplace_back(Core::LinAlg::self_dyadic(orientation));
+  }
+
+  const double lambda_ext = evaluate_lambda_ext(iFg, gp, eleGID);
+
+  // d_lambda_ext_d_growth_scalar = -lambda_ext^3 * (iFg * A_fiber) : d_iFg_d_growth_scalar
+  const double d_lambda_ext_d_growth_scalar =
+      -std::pow(lambda_ext, 3) *
+      Core::LinAlg::ddot(
+          iFg * Core::LinAlg::get_full(structural_tensors_[gp]), d_iFg_d_growth_scalar);
+
+  remodel_fiber_[gp].set_d_lambda_ext_d_growth_scalar(d_lambda_ext_d_growth_scalar);
 }
 
 double Mixture::MixtureConstituentRemodelFiberImpl::get_growth_scalar(int gp) const

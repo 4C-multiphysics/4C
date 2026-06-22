@@ -25,10 +25,10 @@ jobs:
       test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
     steps:
       - uses: actions/checkout@v6
-      # - name: Check docker hash
-      #   uses: ./.github/actions/compute-and-check-dependencies-hash
-      #   with:
-      #     compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
       - uses: ./.github/actions/build_4C
         with:
           cmake-preset: docker_kokkosopenmp
@@ -65,10 +65,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v6
-      # - name: Check docker hash
-      #   uses: ./.github/actions/compute-and-check-dependencies-hash
-      #   with:
-      #     compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
       - name: Setup developer environment for testing
         run: |
           cd $GITHUB_WORKSPACE
@@ -121,10 +121,10 @@ jobs:
       CLANGCUDA_ARCH: sm_90
     steps:
       - uses: actions/checkout@v6
-      # - name: Check docker hash
-      #   uses: ./.github/actions/compute-and-check-dependencies-hash
-      #   with:
-      #     compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
       - uses: ./.github/actions/build_4C
         with:
           cmake-preset: docker_kokkoscuda_clangcuda

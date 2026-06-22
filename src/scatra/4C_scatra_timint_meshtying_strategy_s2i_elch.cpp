@@ -1236,7 +1236,7 @@ void ScaTra::MeshtyingStrategyS2IElchSCL::setup_meshtying()
             *s2imeshtying_condition->get_nodes(), islavenodegidset);
         break;
       }
-      case S2I::side_master:
+      case S2I::side_target:
       {
         Core::Communication::add_owned_node_gid_from_list(*scatratimint_->discretization(),
             *s2imeshtying_condition->get_nodes(), imasternodegidset);

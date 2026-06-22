@@ -95,7 +95,6 @@ MATERIALS:
       COMPRESSION: false
   - MAT: 14
     MIX_Constituent_ElastHyper:
-      NUMMAT: 1
       MATIDS: [141]
       PRESTRESS_STRATEGY: 149
   - MAT: 141

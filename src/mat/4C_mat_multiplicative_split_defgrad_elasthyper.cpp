@@ -11,6 +11,7 @@
 #include "4C_global_data.hpp"
 #include "4C_legacy_enum_definitions_materials.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_fixedsizematrix_generators.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
@@ -236,7 +237,7 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate(
       evaluate_kinematic_quantities(*this, *inelastic_, defgrd_mat, gp, eleGID);
 
   // compute stress factors
-  StressFactors stress_factors;
+  Mat::StressFactors stress_factors;
   Mat::calculate_gamma_delta(stress_factors.gamma, stress_factors.delta, kinematic_quantities.prinv,
       kinematic_quantities.dPIe, kinematic_quantities.ddPIIe);
 
@@ -295,14 +296,16 @@ Mat::MultiplicativeSplitDefgradElastHyper::evaluate_d_stress_d_scalar(
 
   KinematicQuantities kinematic_quantities =
       evaluate_kinematic_quantities(*this, *inelastic_, defgrad_mat, gp, eleGID);
-  StressFactors stress_factors;
+  Mat::StressFactors stress_factors;
   Mat::calculate_gamma_delta(stress_factors.gamma, stress_factors.delta, kinematic_quantities.prinv,
       kinematic_quantities.dPIe, kinematic_quantities.ddPIIe);
-  Core::LinAlg::Matrix<6, 9> dSdiFin = evaluated_sdi_fin(kinematic_quantities, stress_factors);
 
   Core::LinAlg::SymmetricTensor<double, 3, 3> d_stress_d_scalar{};
   Core::LinAlg::Matrix<6, 1> d_stress_d_scalar_view =
       Core::LinAlg::make_stress_like_voigt_view(d_stress_d_scalar);
+
+  Core::LinAlg::Matrix<6, 9> dSdiFin = evaluated_sdi_fin(kinematic_quantities, stress_factors);
+
   evaluate_od_stiff_mat(source, &defgrad_mat, dSdiFin, d_stress_d_scalar_view);
   return d_stress_d_scalar;
 }
@@ -531,8 +534,8 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_linearization_od(
  *--------------------------------------------------------------------*/
 void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_stress_cmat_iso(
     const Mat::MultiplicativeSplitDefgradElastHyper::KinematicQuantities& kinemat_quant,
-    const Mat::MultiplicativeSplitDefgradElastHyper::StressFactors& stress_fact,
-    Core::LinAlg::Matrix<6, 1>& stress, Core::LinAlg::Matrix<6, 6>& cmatiso) const
+    const Mat::StressFactors& stress_fact, Core::LinAlg::Matrix<6, 1>& stress,
+    Core::LinAlg::Matrix<6, 6>& cmatiso) const
 {
   // extract variables from kinemat_quant
   const Core::LinAlg::Matrix<6, 1>& iCV = kinemat_quant.iCV;
@@ -667,7 +670,7 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_invariant_derivatives(
  *--------------------------------------------------------------------*/
 Core::LinAlg::Matrix<6, 9> Mat::MultiplicativeSplitDefgradElastHyper::evaluated_sdi_fin(
     const Mat::MultiplicativeSplitDefgradElastHyper::KinematicQuantities& kinemat_quant,
-    const Mat::MultiplicativeSplitDefgradElastHyper::StressFactors& stress_fact) const
+    const Mat::StressFactors& stress_fact) const
 {
   // declare output variables
   Core::LinAlg::Matrix<6, 9> dSdiFin{Core::LinAlg::Initialization::zero};
@@ -994,7 +997,11 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_od_stiff_mat(PAR::Inela
   // implementation accordingly
   if (num_contributions == 1)
   {
-    facdefgradin[0].second->evaluate_od_stiff_mat(defgrad, iFinjM[0].second, dSdiFin, dstressdx);
+    if (facdefgradin[0].first == source)
+    {
+      facdefgradin[0].second->evaluate_od_stiff_mat(
+          defgrad, Core::LinAlg::identity_matrix<3>(), iFinjM[0].second, dSdiFin, dstressdx);
+    }
   }
   else if (num_contributions > 1)
   {
@@ -1051,7 +1058,7 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_od_stiff_mat(PAR::Inela
             1.0, producta, productb, diFindiFinj);
         dSdiFinj.multiply(1.0, dSdiFin, diFindiFinj, 0.0);
         facdefgradin[i].second->evaluate_od_stiff_mat(
-            defgrad, iFinjM[i].second, dSdiFinj, dstressdx);
+            defgrad, productb, iFinjM[i].second, dSdiFinj, dstressdx);
       }
     }
   }

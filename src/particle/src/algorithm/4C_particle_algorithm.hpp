@@ -298,6 +298,9 @@ namespace Particle
     /*!
      * \brief check maximum position increment
      *
+     * The function throws an error if the maximum position increment is larger than the minimum bin
+     * size. This means that a particle traveled further than one bin such that potential particle
+     * interactions might be missed
      *
      * \return flag indicating load transfer is needed due to maximum position increment
      */
@@ -307,9 +310,9 @@ namespace Particle
      * \brief get maximum particle position increment since last transfer
      *
      *
-     * \param allprocmaxpositionincrement maximum particle position increment
+     * \return maximum particle position increment of all procs
      */
-    void get_max_particle_position_increment(double& allprocmaxpositionincrement);
+    double get_max_particle_position_increment();
 
     /*!
      * \brief transfer load between processors

@@ -1,0 +1,183 @@
+TITLE:
+  - "Regression test for a pressure-based poroelastic beam under its own weight with MAT_StructPoro wrapping
+    MAT_ViscoElastHyper as solid skeleton."
+  - "The wrapped skeleton uses VISCO_QuasiLinearGeneralizedMaxwell."
+  - "The example resembles the viscoelastic relaxation of a clamped porous beam filled with water under
+    it's own weight."
+PROBLEM SIZE:
+  DIM: 2
+PROBLEM TYPE:
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity"
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "OneStepTheta"
+  LINEAR_SOLVER: 1
+STRUCTURAL DYNAMIC/ONESTEPTHETA:
+  THETA: 1
+porofluid_elasticity_dynamic:
+  total_simulation_time: 1
+  time_integration:
+    number_of_time_steps: 100
+    theta: 1
+    time_step_size: 0.01
+  coupling_scheme: twoway_monolithic
+porofluid_elasticity_dynamic/monolithic:
+  nonlinear_solver:
+    linear_solver_id: 1
+    residual:
+      global_tolerance: 1e-06
+    increment:
+      global_tolerance: 1e-06
+porofluid_dynamic:
+  initial_condition:
+    type: by_condition
+  body_force_function: 2
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "solver"
+MATERIALS:
+  - MAT: 1
+    MAT_FluidPoroMultiPhase:
+      LOCAL: false
+      PERMEABILITY: 1
+      NUMMAT: 1
+      MATIDS: [12]
+      NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE: 1
+  - MAT: 12
+    MAT_FluidPoroSinglePhase:
+      DENSITYLAWID: 122
+      DENSITY: 1.0e-6
+      RELPERMEABILITYLAWID: 125
+      VISCOSITY_LAW_ID: 124
+      DOFTYPEID: 121
+  - MAT: 121
+    MAT_FluidPoroSinglePhaseDofPressure:
+      PHASELAWID: 123
+  - MAT: 122
+    MAT_PoroDensityLawExp:
+      BULKMODULUS: 1.0e+12
+  - MAT: 123
+    MAT_PhaseLawConstraint: {}
+  - MAT: 124
+    MAT_FluidPoroViscosityLawConstant:
+      VALUE: 1e-6
+  - MAT: 125
+    MAT_FluidPoroRelPermeabilityLawConstant:
+      VALUE: 1
+  - MAT: 2
+    MAT_StructPoro:
+      MATID: 501
+      POROLAWID: 502
+      INITPOROSITY: 0.8
+  - MAT: 501
+    MAT_ViscoElastHyper:
+      NUMMAT: 2
+      MATIDS: [505, 506]
+      DENS: 1.0e-6
+  - MAT: 505
+    ELAST_CoupNeoHooke:
+      YOUNG: 1
+      NUE: 0.3
+  - MAT: 506
+    VISCO_QuasiLinearGeneralizedMaxwell:
+      BETA: [0.25, 0.05]
+      TAU: [0.1, 1.0]
+      SOLVE: "ExponentialTimeDiscretization"
+      VISCOSITY: 0.001
+  - MAT: 502
+    MAT_PoroLawDensityDependent:
+      DENSITYLAWID: 503
+  - MAT: 503
+    MAT_PoroDensityLawExp:
+      BULKMODULUS: 100e+15
+
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 2
+    TAR_FIELD: "porofluid"
+    TAR_MAT: 1
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "9810.0"
+
+RESULT DESCRIPTION:
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 7
+      QUANTITY: "phi1"
+      VALUE: -1.24451350574152672e-01
+      TOLERANCE: 1e-09
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 14
+      QUANTITY: "phi1"
+      VALUE: -3.60947802716965194e-02
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispy"
+      VALUE: -1.12241834997579080e+01
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 14
+      QUANTITY: "dispy"
+      VALUE: -1.22174180349224528e+01
+      TOLERANCE: 1e-09
+
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 2
+    ONOFF: [1, 1]
+    VAL: [0.0, 0.0]
+    FUNCT: [0, 0]
+
+DESIGN SURF INITIAL FIELD CONDITIONS:
+  - E: 2
+    FIELD: PoroMultiFluid
+    FUNCT: 1
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 2"
+  - "NODE 2 DSURFACE 2"
+  - "NODE 3 DSURFACE 2"
+  - "NODE 4 DSURFACE 2"
+  - "NODE 5 DSURFACE 2"
+  - "NODE 6 DSURFACE 2"
+  - "NODE 7 DSURFACE 2"
+  - "NODE 8 DSURFACE 2"
+  - "NODE 9 DSURFACE 2"
+  - "NODE 10 DSURFACE 2"
+  - "NODE 11 DSURFACE 2"
+  - "NODE 12 DSURFACE 2"
+  - "NODE 13 DSURFACE 2"
+  - "NODE 14 DSURFACE 2"
+DLINE-NODE TOPOLOGY:
+  - "NODE 1 DLINE 1"
+  - "NODE 8 DLINE 1"
+NODE COORDS:
+  - "NODE 1 COORD 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 2 COORD 10.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 3 COORD 20.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 4 COORD 30.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 5 COORD 40.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 6 COORD 50.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 7 COORD 60.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 8 COORD 00.0000000000000000e+00 10.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 9 COORD 10.0000000000000000e+00 10.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 10 COORD 20.0000000000000000e+00 10.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 11 COORD 30.0000000000000000e+00 10.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 12 COORD 40.0000000000000000e+00 10.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 13 COORD 50.0000000000000000e+00 10.0000000000000000e+00 0.0000000000000000e+00"
+  - "NODE 14 COORD 60.0000000000000000e+00 10.0000000000000000e+00 0.0000000000000000e+00"
+STRUCTURE ELEMENTS:
+  - "1 SOLIDPORO_PRESSURE_BASED QUAD4 1 2 9 8 MAT 2 KINEM nonlinear THICKNESS 1 PLANE_ASSUMPTION plane_strain"
+  - "2 SOLIDPORO_PRESSURE_BASED QUAD4 2 3 10 9 MAT 2 KINEM nonlinear THICKNESS 1 PLANE_ASSUMPTION plane_strain"
+  - "3 SOLIDPORO_PRESSURE_BASED QUAD4 3 4 11 10 MAT 2 KINEM nonlinear THICKNESS 1 PLANE_ASSUMPTION plane_strain"
+  - "4 SOLIDPORO_PRESSURE_BASED QUAD4 4 5 12 11 MAT 2 KINEM nonlinear THICKNESS 1 PLANE_ASSUMPTION plane_strain"
+  - "5 SOLIDPORO_PRESSURE_BASED QUAD4 5 6 13 12 MAT 2 KINEM nonlinear THICKNESS 1 PLANE_ASSUMPTION plane_strain"
+  - "6 SOLIDPORO_PRESSURE_BASED QUAD4 6 7 14 13 MAT 2 KINEM nonlinear THICKNESS 1 PLANE_ASSUMPTION plane_strain"

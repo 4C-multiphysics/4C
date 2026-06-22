@@ -1,0 +1,91 @@
+TITLE:
+  - "8 elements form a continuous tube."
+  - "Flow bc at tube inlet, 2-element windkessel model at outlet."
+  - "Test 1D wave propagation through a uniform tube with windkessel boundary condition."
+reduced_lung:
+  general:
+    final_time: 0.1
+    steps: 1000
+    result_every: 10000
+    fluid_properties:
+      density_rho: 1060
+      viscosity_mu: 4e-3
+    geometry_parameters:
+      reference_area_A0:
+        constant: 2.2e-4
+      thickness_th:
+        constant: 3e-4
+    material_parameters:
+      Poisson_ratio_nue: 0.5
+      Young_E:
+        constant: 7e5
+    boundary_conditions:
+      function_ID: 1
+      input: flow
+      output: terminal_unit
+      condition_outflow: 0
+    terminal_units:
+      terminal_unit_type:
+        constant: Windkessel
+      windkessel_model:
+        proximal_resistance_R_p:
+          constant: 3.38e8
+        compliance_C:
+          constant: 1.75e-10
+        distal_resistance_R_d:
+          constant: 1.78e9
+        pressure_peripheral:
+          constant: 0
+PROBLEM TYPE:
+  PROBLEMTYPE: "Reduced_Lung_1D_Pipe_Flow"
+IO/RUNTIME VTK OUTPUT:
+  OUTPUT_DATA_FORMAT: ascii
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Arterial_Network_Solver"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "1e-6*t"
+
+NODE COORDS:
+  - NODE 1 COORD 0.00 0.000 0.000
+  - NODE 2 COORD 0.01 0.000 0.000
+  - NODE 3 COORD 0.02 0.000 0.000
+  - NODE 4 COORD 0.03 0.000 0.000
+  - NODE 5 COORD 0.04 0.000 0.000
+  - NODE 6 COORD 0.05 0.000 0.000
+  - NODE 7 COORD 0.06 0.000 0.000
+  - NODE 8 COORD 0.07 0.000 0.000
+  - NODE 9 COORD 0.08 0.000 0.000
+ARTERY ELEMENTS:
+  - 1 ART LINE2 1 2 MAT 1 GP 5 TYPE LinExp DIAM 1
+  - 2 ART LINE2 2 3 MAT 1 GP 5 TYPE LinExp DIAM 1
+  - 3 ART LINE2 3 4 MAT 1 GP 5 TYPE LinExp DIAM 1
+  - 4 ART LINE2 4 5 MAT 1 GP 5 TYPE LinExp DIAM 1
+  - 5 ART LINE2 5 6 MAT 1 GP 5 TYPE LinExp DIAM 1
+  - 6 ART LINE2 6 7 MAT 1 GP 5 TYPE LinExp DIAM 1
+  - 7 ART LINE2 7 8 MAT 1 GP 5 TYPE LinExp DIAM 1
+  - 8 ART LINE2 8 9 MAT 1 GP 5 TYPE LinExp DIAM 1
+MATERIALS:
+  - MAT: 1
+    MAT_CNST_ART:
+      VISCOSITY: 0.04
+      DENS: 0.001
+      YOUNG: 400000
+      NUE: 0.5
+      TH: 1.63
+      PEXT1: 0
+      PEXT2: 0
+RESULT DESCRIPTION:
+  - ARTNET:
+      DIS: "artery"
+      NODE: 9
+      QUANTITY: "flow"
+      VALUE: 0.0000000099972843
+      TOLERANCE: 1e-12
+  - ARTNET:
+      DIS: "artery"
+      NODE: 1
+      QUANTITY: "flow"
+      VALUE: 0.00000010022698
+      TOLERANCE: 1e-12
+

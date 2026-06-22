@@ -402,6 +402,12 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                           .store = in_struct(
                               &ReducedLungParameters::Dynamics::nonlinear_increment_tolerance),
                       }),
+                  parameter<ReducedLungParameters::OutputVerbosity>("output_verbosity",
+                      {
+                          .description = "Output verbosity level.",
+                          .default_value = ReducedLungParameters::OutputVerbosity::minimal,
+                          .store = in_struct(&ReducedLungParameters::Dynamics::output_verbosity),
+                      }),
               },
               {
                   .required = true,

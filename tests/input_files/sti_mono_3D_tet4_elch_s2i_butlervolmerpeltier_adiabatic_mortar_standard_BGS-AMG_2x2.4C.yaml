@@ -53,23 +53,14 @@ SOLVER 2:
 MATERIALS:
   - MAT: 1
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [2e-10]
-      COND_PARA_NUM: 1
-      COND_PARA: [100000]
+      DIFF_COEF: 2e-10
+      COND: 100000.0
       C_MAX: 16.1
       CHI_MAX: 1
       OCP_MODEL:
         Redlich-Kister:
-          OCP_PARA_NUM: 16
           OCP_PARA: [11652, -3268, 3955, -4573, 6147, -3339, 11170, 299.7, -48660, 136.2, 137300, -21290,
             -172200, 39560, 93020, -32800]
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 2
     MAT_elchmat:
       NUMDOF: 2
@@ -78,23 +69,14 @@ MATERIALS:
       PHASEIDS: [4]
   - MAT: 3
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [3.7e-10]
-      COND_PARA_NUM: 1
-      COND_PARA: [10000]
+      DIFF_COEF: 3.7e-10
+      COND: 10000.0
       C_MAX: 23.9
       CHI_MAX: 1
       OCP_MODEL:
         Redlich-Kister:
-          OCP_PARA_NUM: 21
           OCP_PARA: [395461.6, -76760, 37990, -28730, 11690, 14510, -89380, 167100, -72360, -174600, -406700,
             953400, 589700, -745500, -1.102e+06, -292700, 721400, 902900, -159900, 665800, -1.084e+06]
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 4
     MAT_elchphase:
       EPSILON: 1
@@ -104,18 +86,11 @@ MATERIALS:
   - MAT: 5
     MAT_newman:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      THERMFAC: 0
-      COND_CONC_DEP_FUNCT: -11
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [0.00026]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [0.363]
-      COND_PARA_NUM: 3
-      COND_PARA: [1580, 0.85, 1.4]
+      TRANSFERENCE_NR: 0.363
+      THERM_FAC: 1.0
+      COND: 1.0
+      COND_CONC_SCALE_FUNCT: 5
+      DIFF_COEF: 0.00026
   - MAT: 6
     MAT_soret:
       CAPA: 1050
@@ -165,6 +140,9 @@ FUNCT3:
 FUNCT4:
   - COMPONENT: 0
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "300.0"
+FUNCT5:
+  # conductivity as a function of concentration according to Goldin et al. 2012; 10.1016/j.electacta.2011.12.119
+  - SYMBOLIC_FUNCTION_OF_TIME: "1580.0*t*exp(0.85*t^1.4)"
 RESULT DESCRIPTION:
   - SCATRA:
       DIS: "scatra"

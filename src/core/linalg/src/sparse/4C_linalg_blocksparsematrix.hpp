@@ -237,7 +237,7 @@ namespace Core::LinAlg
       There are strange algorithms that need to split a large sparse matrix into
       blocks. Such things happen, e.g., in FSI calculations with internal and
       interface splits, in fluid projection preconditioners or in contact
-      simulations with slave and master sides. Unfortunately splitting a huge
+      simulations with source and target sides. Unfortunately splitting a huge
       sparse matrix in (possibly) many blocks is nontrivial and expensive. So
       the idea here is to assemble into a block matrix in the first place.
 

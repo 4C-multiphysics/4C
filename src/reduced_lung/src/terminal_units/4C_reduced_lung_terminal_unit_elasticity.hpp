@@ -121,6 +121,11 @@ namespace ReducedLung::TerminalUnits::Elasticity
       ElasticityModel& elasticity_model);
 
   /**
+   * @brief Build output evaluator callback for the concrete elasticity variant.
+   */
+  OutputEvaluator make_output_evaluator(ElasticityModel& elasticity_model);
+
+  /**
    * @brief Append element parameters and initialize internal vectors for a concrete elasticity
    * model.
    */

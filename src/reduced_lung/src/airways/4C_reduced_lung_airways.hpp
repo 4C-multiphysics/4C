@@ -32,6 +32,7 @@ namespace ReducedLung::Airways
     JacobianEvaluator jacobian_evaluator;
     InternalStateUpdater internal_state_updater;
     EndOfTimestepRoutine end_of_timestep_routine;
+    OutputEvaluator output_evaluator;
   };
 
   /**

@@ -20,6 +20,7 @@
 #include "4C_mat_inelastic_defgrad_factors_service.hpp"
 #include "4C_mat_micromaterial.hpp"
 #include "4C_mat_scatra_growth_remodel.hpp"
+#include "4C_mat_scatra_nonlocal_stimulus.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
 
 #include <filesystem>
@@ -35,6 +36,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
 {
   using namespace Core::IO::InputSpecBuilders;
   std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> known_materials;
+
+  const auto size_from_optional_count = [](const std::string& count_parameter_name)
+  {
+    return [count_parameter_name](const Core::IO::InputParameterContainer& container)
+    { return container.get<std::optional<int>>(count_parameter_name).value_or(0); };
+  };
 
   /*----------------------------------------------------------------------*/
   // Newtonian fluid
@@ -400,6 +407,22 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   }
 
   /*----------------------------------------------------------------------*/
+  // scalar transport material for non-local G&R stimulus (Helmholtz smoothing)
+  {
+    known_materials[Core::Materials::m_scatra_nl_stimulus] = group("MAT_scatra_nl_stimulus",
+        {
+            parameter<double>("CHAR_LENGTH_SQ",
+                {.description =
+                        "Squared characteristic length scale lc for the Helmholtz equation"}),
+            parameter<int>("STRUCTURE_MAT_ID",
+                {.description = "Material ID of the MixtureConstituentRemodelFiberSsi constituent "
+                                "that provides the local stimulus"}),
+        },
+        {.description = "Helmholtz equation for non-local G&R stimulus: "
+                        "psi - lc^2 * laplace(psi) = (sigma-sigma_h)"});
+  }
+
+  /*----------------------------------------------------------------------*/
 
   /*----------------------------------------------------------------------*/
   // scalar transport material for multi-scale approach
@@ -512,34 +535,45 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
 
     known_materials[Core::Materials::m_muscle_combo] = group("MAT_Muscle_Combo",
         {
-            parameter<double>("ALPHA", {.description = "experimentally fitted material parameter",
-                                           .validator = positive<double>()}),
-            parameter<double>("BETA", {.description = "experimentally fitted material parameter",
-                                          .validator = positive<double>()}),
-            parameter<double>("GAMMA", {.description = "experimentally fitted material parameter",
-                                           .validator = positive<double>()}),
-            parameter<double>(
-                "KAPPA", {.description = "material parameter for coupled volumetric contribution"}),
-            parameter<double>(
-                "OMEGA0", {.description = "weighting factor for isotropic tissue constituents",
-                              .validator = in_range<double>(0.0, 1.0)}),
-            parameter<double>("POPT", {.description = "tetanised optimal (maximal) active stress",
-                                          .validator = positive_or_zero<double>()}),
-            parameter<double>("LAMBDAMIN",
-                {.description = "minimal active fiber stretch", .validator = positive<double>()}),
-            parameter<double>("LAMBDAOPT",
-                {.description =
-                        "optimal active fiber stretch related to active nominal stress maximum",
-                    .validator = positive<double>()}),
-            one_of({
-                parameter<int>("ACTIVATION_FUNCTION_ID",
-                    {.description =
-                            "function id for time- and space-dependency of muscle activation"}),
-                input_field<std::vector<std::pair<double, double>>>("ACTIVATION_VALUES",
-                    {.description = "json input file containing a map of "
-                                    "elementwise-defined discrete values "
-                                    "for time- and space-dependency of muscle activation"}),
-            }),
+            group("PASSIVE",
+                {
+                    parameter<double>(
+                        "ALPHA", {.description = "experimentally fitted material parameter",
+                                     .validator = positive<double>()}),
+                    parameter<double>(
+                        "BETA", {.description = "experimentally fitted material parameter",
+                                    .validator = positive<double>()}),
+                    parameter<double>(
+                        "GAMMA", {.description = "experimentally fitted material parameter",
+                                     .validator = positive<double>()}),
+                    parameter<double>("OMEGA0",
+                        {.description = "weighting factor for isotropic tissue constituents",
+                            .validator = in_range<double>(0.0, 1.0)}),
+                    parameter<double>("KAPPA",
+                        {.description = "material parameter for coupled volumetric contribution"}),
+                },
+                {.description = "Passive material parameters"}),
+            group("ACTIVE",
+                {parameter<double>(
+                     "POPT", {.description = "tetanised optimal (maximal) active stress",
+                                 .validator = positive_or_zero<double>()}),
+                    parameter<double>("LAMBDAMIN", {.description = "minimal active fiber stretch",
+                                                       .validator = positive<double>()}),
+                    parameter<double>(
+                        "LAMBDAOPT", {.description = "optimal active fiber stretch related to "
+                                                     "active nominal stress maximum",
+                                         .validator = positive<double>()}),
+                    one_of({
+                        parameter<int>("ACTIVATION_FUNCTION_ID",
+                            {.description = "function id for time- and space-dependency of muscle "
+                                            "activation",
+                                .validator = positive<int>()}),
+                        input_field<std::vector<std::pair<double, double>>>("ACTIVATION_VALUES",
+                            {.description = "json input file containing a map of "
+                                            "elementwise-defined discrete values "
+                                            "for time- and space-dependency of muscle activation"}),
+                    })},
+                {.description = "Active material parameters", .required = false}),
             parameter<double>(
                 "DENS", {.description = "density", .validator = positive_or_zero<double>()}),
             interpolated_input_field<Core::LinAlg::Tensor<double, 3>, Mat::FiberInterpolation>(
@@ -691,91 +725,101 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   }
 
   /*----------------------------------------------------------------------*/
-  // material parameters for ion species in electrolyte solution (ehrl 07/12)
+  // material parameters for ion species in electrolyte solution
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
     known_materials[Core::Materials::m_newman] = group("MAT_newman",
         {
             parameter<double>("VALENCE", {.description = "valence (= charge number)"}),
-            parameter<int>("DIFF_COEF_CONC_DEP_FUNCT",
-                {.description = "function number of function describing concentration dependence "
-                                "of diffusion coefficient"}),
-            parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT",
-                {.description =
-                        "FUNCT number describing temperature scaling of diffusion coefficient"}),
-            parameter<int>("TRANSNR", {.description = "curve number for transference number"}),
-            parameter<int>("THERMFAC", {.description = "curve number for thermodynamic factor"}),
-            parameter<int>(
-                "COND_CONC_DEP_FUNCT", {.description = "function number of function describing "
-                                                       "concentration dependence of conductivity"}),
-            parameter<int>("COND_TEMP_SCALE_FUNCT",
-                {.description = "FUNCT number describing temperature scaling of conductivity"}),
-            parameter<int>(
-                "DIFF_PARA_NUM", {.description = "number of parameters for diffusion coefficient",
-                                     .default_value = 0}),
-            parameter<std::vector<double>>(
-                "DIFF_PARA", {.description = "parameters for diffusion coefficient",
-                                 .default_value = std::vector<double>{},
-                                 .size = from_parameter<int>("DIFF_PARA_NUM")}),
-            parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA_NUM",
-                {.description = "number of parameters for scaling function describing temperature "
-                                "dependence of diffusion coefficient",
-                    .default_value = 0}),
-            parameter<std::vector<double>>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA",
-                {.description = "parameters for function describing temperature dependence of "
+            parameter<double>(
+                "DIFF_COEF", {.description = "value of the diffusion coefficient without "
+                                             "concentration or temperature dependence",
+                                 .validator = positive<double>()}),
+            parameter<std::optional<int>>("DIFF_COEF_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing concentration scaling of the "
                                 "diffusion coefficient",
-                    .default_value = std::vector<double>{},
-                    .size = from_parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA_NUM")}),
-            parameter<int>(
-                "TRANS_PARA_NUM", {.description = "number of parameters for transference number",
-                                      .default_value = 0}),
-            parameter<std::vector<double>>(
-                "TRANS_PARA", {.description = "parameters for transference number",
-                                  .default_value = std::vector<double>{},
-                                  .size = from_parameter<int>("TRANS_PARA_NUM")}),
-            parameter<int>(
-                "THERM_PARA_NUM", {.description = "number of parameters for thermodynamic factor",
-                                      .default_value = 0}),
-            parameter<std::vector<double>>(
-                "THERM_PARA", {.description = "parameters for thermodynamic factor",
-                                  .default_value = std::vector<double>{},
-                                  .size = from_parameter<int>("THERM_PARA_NUM")}),
-            parameter<int>("COND_PARA_NUM",
-                {.description = "number of parameters for conductivity", .default_value = 0}),
-            parameter<std::vector<double>>(
-                "COND_PARA", {.description = "parameters for conductivity",
-                                 .default_value = std::vector<double>{},
-                                 .size = from_parameter<int>("COND_PARA_NUM")}),
-            parameter<int>("COND_TEMP_SCALE_FUNCT_PARA_NUM",
-                {.description = "number of parameters for temperature scaling of conductivity",
-                    .default_value = 0}),
-            parameter<std::vector<double>>("COND_TEMP_SCALE_FUNCT_PARA",
-                {.description = "parameters for temperature scaling of conductivity",
-                    .default_value = std::vector<double>{},
-                    .size = from_parameter<int>("COND_TEMP_SCALE_FUNCT_PARA_NUM")}),
+                    .validator = null_or(positive<int>())}),
+            parameter<std::optional<int>>("DIFF_COEF_TEMP_SCALE_FUNCT",
+                {.description = "optional function number describing temperature scaling of the"
+                                "diffusion coefficient",
+                    .validator = null_or(positive<int>())}),
+            parameter<double>("TRANSFERENCE_NR",
+                {.description = "value of the transference number without concentration dependence",
+                    .validator = positive<double>()}),
+            parameter<std::optional<int>>("TRANSFERENCE_NR_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing the concentration scaling of "
+                                "the transference number",
+                    .validator = null_or(positive<int>())}),
+            parameter<double>("THERM_FAC",
+                {.description =
+                        "value of the thermodynamic factor without concentration dependence",
+                    .validator = positive<double>()}),
+            parameter<std::optional<int>>("THERM_FAC_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing the concentration scaling of "
+                                "the thermodynamic factor",
+                    .validator = null_or(positive<int>())}),
+            parameter<double>("COND",
+                {.description =
+                        "value of the conductivity without concentration or temperature dependence",
+                    .validator = positive<double>()}),
+            parameter<std::optional<int>>("COND_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing the concentration scaling of "
+                                "the conductivity",
+                    .validator = null_or(positive<int>())}),
+            parameter<std::optional<int>>("COND_TEMP_SCALE_FUNCT",
+                {.description = "optional function number describing the temperature scaling of "
+                                "the conductivity",
+                    .validator = null_or(positive<int>())}),
         },
         {.description = "material parameters for ion species in electrolyte solution"});
   }
 
   /*----------------------------------------------------------------------*/
-  // material parameters for ion species in electrolyte solution for multi-scale approach (fang
-  // 07/17)
+  // material parameters for ion species in electrolyte solution for multiscale approach
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
     known_materials[Core::Materials::m_newman_multiscale] = group("MAT_newman_multiscale",
         {
             parameter<double>("VALENCE", {.description = "valence (= charge number)"}),
-            parameter<int>("DIFF_COEF_CONC_DEP_FUNCT",
-                {.description = "function number of function describing concentration dependence "
-                                "of diffusion coefficient"}),
-            parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT",
+            parameter<double>(
+                "DIFF_COEF", {.description = "value of the diffusion coefficient without "
+                                             "concentration or temperature dependence",
+                                 .validator = positive<double>()}),
+            parameter<std::optional<int>>("DIFF_COEF_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing concentration scaling of the "
+                                "diffusion coefficient",
+                    .validator = null_or(positive<int>())}),
+            parameter<std::optional<int>>("DIFF_COEF_TEMP_SCALE_FUNCT",
+                {.description = "optional function number describing temperature scaling of the"
+                                "diffusion coefficient",
+                    .validator = null_or(positive<int>())}),
+            parameter<double>("TRANSFERENCE_NR",
+                {.description = "value of the transference number without concentration dependence",
+                    .validator = positive<double>()}),
+            parameter<std::optional<int>>("TRANSFERENCE_NR_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing the concentration scaling of "
+                                "the transference number",
+                    .validator = null_or(positive<int>())}),
+            parameter<double>("THERM_FAC",
                 {.description =
-                        "FUNCT number describing temperature scaling of diffusion coefficient"}),
-            parameter<int>("TRANSNR", {.description = "curve number for transference number"}),
-            parameter<int>("THERMFAC", {.description = "curve number for thermodynamic factor"}),
-            parameter<int>(
-                "COND_CONC_DEP_FUNCT", {.description = "function number of function describing "
-                                                       "concentration dependence of conductivity"}),
-            parameter<int>("COND_TEMP_SCALE_FUNCT",
-                {.description = "FUNCT number describing temperature scaling of conductivity"}),
+                        "value of the thermodynamic factor without concentration dependence",
+                    .validator = positive<double>()}),
+            parameter<std::optional<int>>("THERM_FAC_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing the concentration scaling of "
+                                "the thermodynamic factor",
+                    .validator = null_or(positive<int>())}),
+            parameter<double>("COND",
+                {.description =
+                        "value of the conductivity without concentration or temperature dependence",
+                    .validator = positive<double>()}),
+            parameter<std::optional<int>>("COND_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing the concentration scaling of "
+                                "the conductivity",
+                    .validator = null_or(positive<int>())}),
+            parameter<std::optional<int>>("COND_TEMP_SCALE_FUNCT",
+                {.description = "optional function number describing the temperature scaling of "
+                                "the conductivity",
+                    .validator = null_or(positive<int>())}),
             parameter<double>("ELECTRONIC_COND", {.description = "electronic conductivity"}),
             parameter<int>("ELECTRONIC_COND_CONC_SCALE_FUNC_NUM",
                 {.description = "FUNCT number describing concentration dependence of electronic "
@@ -784,107 +828,47 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<std::string>("MICROFILE",
                 {.description = "input file for micro scale", .default_value = "filename.dat"}),
             parameter<int>("MICRODIS_NUM", {.description = "number of micro-scale discretization"}),
-            // optional parameters for implemented concentration-depending functions
-            parameter<int>(
-                "DIFF_PARA_NUM", {.description = "number of parameters for diffusion coefficient",
-                                     .default_value = 0}),
-            parameter<std::vector<double>>(
-                "DIFF_PARA", {.description = "parameters for diffusion coefficient",
-                                 .default_value = std::vector<double>{},
-                                 .size = from_parameter<int>("DIFF_PARA_NUM")}),
-            parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA_NUM",
-                {.description = "number of parameters for scaling function describing temperature "
-                                "dependence of diffusion coefficient",
-                    .default_value = 0}),
-            parameter<std::vector<double>>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA",
-                {.description = "parameters for function describing temperature dependence of "
-                                "diffusion coefficient",
-                    .default_value = std::vector<double>{},
-                    .size = from_parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA_NUM")}),
-            parameter<int>(
-                "TRANS_PARA_NUM", {.description = "number of parameters for transference number",
-                                      .default_value = 0}),
-            parameter<std::vector<double>>(
-                "TRANS_PARA", {.description = "parameters for transference number",
-                                  .default_value = std::vector<double>{},
-                                  .size = from_parameter<int>("TRANS_PARA_NUM")}),
-            parameter<int>(
-                "THERM_PARA_NUM", {.description = "number of parameters for thermodynamic factor",
-                                      .default_value = 0}),
-            parameter<std::vector<double>>(
-                "THERM_PARA", {.description = "parameters for thermodynamic factor",
-                                  .default_value = std::vector<double>{},
-                                  .size = from_parameter<int>("THERM_PARA_NUM")}),
-            parameter<int>("COND_PARA_NUM",
-                {.description = "number of parameters for ionic conductivity", .default_value = 0}),
-            parameter<std::vector<double>>(
-                "COND_PARA", {.description = "parameters for ionic conductivity",
-                                 .default_value = std::vector<double>{},
-                                 .size = from_parameter<int>("COND_PARA_NUM")}),
-            parameter<int>("COND_TEMP_SCALE_FUNCT_PARA_NUM",
-                {.description = "number of parameters for temperature scaling of conductivity",
-                    .default_value = 0}),
-            parameter<std::vector<double>>("COND_TEMP_SCALE_FUNCT_PARA",
-                {.description = "parameters for temperature scaling of conductivity",
-                    .default_value = std::vector<double>{},
-                    .size = from_parameter<int>("COND_TEMP_SCALE_FUNCT_PARA_NUM")}),
         },
         {.description = "material parameters for ion species in electrolyte solution for "
                         "multi-scale approach"});
   }
 
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
     known_materials[Core::Materials::m_scl] = group("MAT_scl",
         {
             parameter<double>("VALENCE", {.description = "valence/charge number"}),
-            parameter<int>("DIFF_COEF_CONC_DEP_FUNCT",
-                {.description = "function number of function describing concentration dependence "
-                                "of diffusion coefficient"}),
-            parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT",
-                {.description =
-                        "function number describing temperature scaling of diffusion coefficient"}),
-            parameter<int>("TRANSNR", {.description = "curve number for transference number"}),
-            parameter<int>(
-                "COND_CONC_DEP_FUNCT", {.description = "function number of function describing "
-                                                       "concentration dependence of conductivity"}),
-            parameter<int>("COND_TEMP_SCALE_FUNCT",
-                {.description = "function number describing temperature scaling of conductivity"}),
-            parameter<int>(
-                "DIFF_PARA_NUM", {.description = "number of parameters for diffusion coefficient",
-                                     .default_value = 0}),
-            parameter<std::vector<double>>(
-                "DIFF_PARA", {.description = "parameters for diffusion coefficient",
-                                 .default_value = std::vector<double>{},
-                                 .size = from_parameter<int>("DIFF_PARA_NUM")}),
-            parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA_NUM",
-                {.description = "number of parameters for scaling function describing temperature "
-                                "dependence of diffusion coefficient",
-                    .default_value = 0}),
-            parameter<std::vector<double>>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA",
-                {.description = "parameters for function describing temperature dependence of "
+            parameter<double>(
+                "DIFF_COEF", {.description = "value of the diffusion coefficient without "
+                                             "concentration or temperature dependence",
+                                 .validator = positive<double>()}),
+            parameter<std::optional<int>>("DIFF_COEF_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing concentration scaling of the "
                                 "diffusion coefficient",
-                    .default_value = std::vector<double>{},
-                    .size = from_parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA_NUM")}),
-            parameter<int>(
-                "TRANS_PARA_NUM", {.description = "number of parameters for transference number",
-                                      .default_value = 0}),
-            parameter<std::vector<double>>(
-                "TRANS_PARA", {.description = "parameters for transference number",
-                                  .default_value = std::vector<double>{},
-                                  .size = from_parameter<int>("TRANS_PARA_NUM")}),
-            parameter<int>("COND_PARA_NUM",
-                {.description = "number of parameters for conductivity", .default_value = 0}),
-            parameter<std::vector<double>>(
-                "COND_PARA", {.description = "parameters for conductivity",
-                                 .default_value = std::vector<double>{},
-                                 .size = from_parameter<int>("COND_PARA_NUM")}),
-            parameter<int>("COND_TEMP_SCALE_FUNCT_PARA_NUM",
-                {.description = "number of parameters for temperature scaling of conductivity",
-                    .default_value = 0}),
-            parameter<std::vector<double>>("COND_TEMP_SCALE_FUNCT_PARA",
-                {.description = "parameters for temperature scaling of conductivity",
-                    .default_value = std::vector<double>{},
-                    .size = from_parameter<int>("COND_TEMP_SCALE_FUNCT_PARA_NUM")}),
+                    .validator = null_or(positive<int>())}),
+            parameter<std::optional<int>>("DIFF_COEF_TEMP_SCALE_FUNCT",
+                {.description = "optional function number describing temperature scaling of the"
+                                "diffusion coefficient",
+                    .validator = null_or(positive<int>())}),
+            parameter<double>("COND",
+                {.description =
+                        "value of the conductivity without concentration or temperature dependence",
+                    .validator = positive<double>()}),
+            parameter<std::optional<int>>("COND_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing the concentration scaling of "
+                                "the conductivity",
+                    .validator = null_or(positive<int>())}),
+            parameter<std::optional<int>>("COND_TEMP_SCALE_FUNCT",
+                {.description = "optional function number describing the temperature scaling of "
+                                "the conductivity",
+                    .validator = null_or(positive<int>())}),
+            parameter<double>("TRANSFERENCE_NR",
+                {.description = "value of the transference number without concentration dependence",
+                    .validator = positive<double>()}),
+            parameter<std::optional<int>>("TRANSFERENCE_NR_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing the concentration scaling of "
+                                "the transference number",
+                    .validator = null_or(positive<int>())}),
             parameter<double>("MAX_CONC", {.description = "maximum cation concentration"}),
             parameter<int>("EXTRAPOL_DIFF",
                 {.description = "strategy for extrapolation of diffusion coefficient below 0 and "
@@ -901,64 +885,47 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
 
 
   /*----------------------------------------------------------------------*/
-  // electrode material (fang 02/15)
+  // electrode material
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
     known_materials[Core::Materials::m_electrode] = group("MAT_electrode",
         {
             // diffusivity and electronic conductivity
-            parameter<int>("DIFF_COEF_CONC_DEP_FUNCT",
-                {.description = "function number of function describing concentration dependence "
-                                "of diffusion coefficient"}),
-            parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT",
-                {.description =
-                        "FUNCT number describing temperature scaling of diffusion coefficient"}),
-            parameter<int>(
-                "COND_CONC_DEP_FUNCT", {.description = "function number of function describing "
-                                                       "concentration dependence of conductivity"}),
-            parameter<int>("COND_TEMP_SCALE_FUNCT",
-                {.description = "FUNCT number describing temperature scaling of conductivity"}),
-
-            // optional parameters for concentration dependency of diffusivity and electronic
-            // conductivity
-            parameter<int>(
-                "DIFF_PARA_NUM", {.description = "number of parameters for diffusion coefficient",
-                                     .default_value = 0}),
-            parameter<std::vector<double>>(
-                "DIFF_PARA", {.description = "parameters for diffusion coefficient",
-                                 .default_value = std::vector<double>{},
-                                 .size = from_parameter<int>("DIFF_PARA_NUM")}),
-            parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA_NUM",
-                {.description = "number of parameters for scaling function describing temperature "
-                                "dependence of diffusion coefficient",
-                    .default_value = 0}),
-            parameter<std::vector<double>>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA",
-                {.description = "parameters for function describing temperature dependence of "
+            parameter<double>(
+                "DIFF_COEF", {.description = "value of the diffusion coefficient without "
+                                             "concentration or temperature dependence",
+                                 .validator = positive<double>()}),
+            parameter<std::optional<int>>("DIFF_COEF_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing concentration scaling of the "
                                 "diffusion coefficient",
-                    .default_value = std::vector<double>{},
-                    .size = from_parameter<int>("DIFF_COEF_TEMP_SCALE_FUNCT_PARA_NUM")}),
-            parameter<int>(
-                "COND_PARA_NUM", {.description = "number of parameters for electronic conductivity",
-                                     .default_value = 0}),
-            parameter<std::vector<double>>(
-                "COND_PARA", {.description = "parameters for electronic conductivity",
-                                 .default_value = std::vector<double>{},
-                                 .size = from_parameter<int>("COND_PARA_NUM")}),
-            parameter<int>("COND_TEMP_SCALE_FUNCT_PARA_NUM",
-                {.description = "number of parameters for temperature scaling of conductivity",
-                    .default_value = 0}),
-            parameter<std::vector<double>>("COND_TEMP_SCALE_FUNCT_PARA",
-                {.description = "parameters for temperature scaling of conductivity",
-                    .default_value = std::vector<double>{},
-                    .size = from_parameter<int>("COND_TEMP_SCALE_FUNCT_PARA_NUM")}),
+                    .validator = null_or(positive<int>())}),
+            parameter<std::optional<int>>("DIFF_COEF_TEMP_SCALE_FUNCT",
+                {.description = "optional function number describing temperature scaling of the"
+                                "diffusion coefficient",
+                    .validator = null_or(positive<int>())}),
+            parameter<double>("COND",
+                {.description =
+                        "value of the conductivity without concentration or temperature dependence",
+                    .validator = positive<double>()}),
+            parameter<std::optional<int>>("COND_CONC_SCALE_FUNCT",
+                {.description = "optional function number describing the concentration scaling of "
+                                "the conductivity",
+                    .validator = null_or(positive<int>())}),
+            parameter<std::optional<int>>("COND_TEMP_SCALE_FUNCT",
+                {.description = "optional function number describing the temperature scaling of "
+                                "the conductivity",
+                    .validator = null_or(positive<int>())}),
             // saturation value of intercalated Lithium concentration
             parameter<double>(
-                "C_MAX", {.description = "saturation value of intercalated Lithium concentration"}),
+                "C_MAX", {.description = "saturation value of intercalated Lithium concentration",
+                             .validator = in_range(1.0e-12, std::numeric_limits<double>::max())}),
 
             // lithiation value corresponding to saturation value of intercalated Lithium
             // concentration
             parameter<double>(
                 "CHI_MAX", {.description = "lithiation value corresponding to saturation value of "
-                                           "intercalated Lithium concentration 'C_MAX'"}),
+                                           "intercalated Lithium concentration 'C_MAX'",
+                               .validator = positive<double>()}),
 
             // model for half cell open circuit potential of electrode
             group("OCP_MODEL",
@@ -976,35 +943,38 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                 }),
                             group("Redlich-Kister",
                                 {
-                                    parameter<int>("OCP_PARA_NUM",
-                                        {
-                                            .description = "number of parameters underlying half "
-                                                           "cell open circuit potential model",
-                                        }),
-                                    parameter<std::vector<double>>("OCP_PARA",
-                                        {.description = "parameters underlying half cell open "
-                                                        "circuit potential model",
-                                            .size = from_parameter<int>("OCP_PARA_NUM")}),
+                                    parameter<std::vector<double>>(
+                                        "OCP_PARA", {.description = "parameters underlying open "
+                                                                    "circuit potential model"}),
                                 }),
                             group("Taralov",
                                 {
-                                    parameter<std::vector<double>>("OCP_PARA",
-                                        {.description = "parameters underlying half cell open "
-                                                        "circuit potential model",
-                                            .size = 13}),
+                                    parameter<std::vector<double>>(
+                                        "OCP_PARA", {.description = "parameters underlying open "
+                                                                    "circuit potential model",
+                                                        .size = 13}),
                                 }),
                         },
                         store_index_as<Mat::PAR::OCPModels>("OCP_MODEL")),
-                    parameter<double>(
-                        "X_MIN", {.description = "lower bound of range of validity as a fraction "
-                                                 "of C_MAX for ocp calculation model"}),
-                    parameter<double>(
-                        "X_MAX", {.description = "upper bound of range of validity as a fraction "
-                                                 "of C_MAX for ocp calculation model"}),
+
+                    group("LITHIATION_BOUNDS",
+                        {
+                            parameter<double>("X_MIN",
+                                {.description = "lower bound of range of validity as a fraction "
+                                                "of C_MAX for ocp calculation model",
+                                    .validator = in_range(0.0, 1.0)}),
+                            parameter<double>("X_MAX",
+                                {.description = "upper bound of range of validity as a fraction "
+                                                "of C_MAX for ocp calculation model",
+                                    .validator = in_range(0.0, 1.0)}),
+                        },
+                        {.description =
+                                "Optional lithiation bounds of range of validity as a fraction of "
+                                "C_MAX for ocp calculation model",
+                            .required = false}),
                 }),
         },
         {.description = "electrode material"});
-    ;
   }
 
   /*----------------------------------------------------------------------*/
@@ -1594,12 +1564,23 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<int>("NUMMAT", {.description = "number of materials/potentials in list"}),
             parameter<std::vector<int>>("MATIDS", {.description = "the list material/potential IDs",
                                                       .size = from_parameter<int>("NUMMAT")}),
+            parameter<std::optional<int>>(
+                "NUMELAST", {.description = "explicit number of purely elastic summands"}),
+            parameter<std::optional<std::vector<int>>>(
+                "ELAST_MATIDS", {.description = "explicit purely elastic summand IDs",
+                                    .size = size_from_optional_count("NUMELAST")}),
+            parameter<std::optional<int>>(
+                "NUMVISCO", {.description = "explicit number of visco summands"}),
+            parameter<std::optional<std::vector<int>>>(
+                "VISCO_MATIDS", {.description = "explicit visco summand IDs",
+                                    .size = size_from_optional_count("NUMVISCO")}),
             parameter<double>("DENS", {.description = "material mass density"}),
             parameter<int>("POLYCONVEX",
                 {.description = "1.0 if polyconvexity of system is checked", .default_value = 0}),
         },
-        {.description = "Viscohyperelastic material compatible with the collection of hyperelastic "
-                        "materials"});
+        {.description = "Viscohyperelastic material. Uses NUMMAT/MATIDS as the complete summand "
+                        "list and supports explicit elastic/visco splits with NUMELAST/"
+                        "ELAST_MATIDS and NUMVISCO/VISCO_MATIDS."});
   }
 
   /*----------------------------------------------------------------------*/
@@ -2390,7 +2371,7 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {
             parameter<double>("N", {.description = "material parameter"}),
         },
-        {.description = "Isotropic viscous contribution of myocardial matrix"});
+        {.description = "Iso-rate viscous contribution of myocardial matrix"});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2400,71 +2381,74 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {
             parameter<double>("N", {.description = "material parameter"}),
         },
-        {.description = "Isochoric rate dependent viscous material"});
-  }
-
-  /*--------------------------------------------------------------------*/
-  // viscos contribution to visohyperelastic material according to SLS-Model
-  {
-    known_materials[Core::Materials::mes_genmax] = group("VISCO_GenMax",
-        {
-            parameter<double>("TAU", {.description = "relaxation parameter"}),
-            parameter<double>("BETA", {.description = "emphasis of viscous to elastic part"}),
-            parameter<std::string>(
-                "SOLVE", {.description = "Solution of evolution equation via: OST (default) or "
-                                         "CONVOL (convolution integral)"}),
-        },
-        {.description = "Viscous contribution according to SLS-Model"});
+        {.description = "Isochoric iso-rate viscous summand"});
   }
 
   /*--------------------------------------------------------------------*/
   // viscos contribution to visohyperelastic material according to FSLS-Model
   {
-    known_materials[Core::Materials::mes_fract] = group("VISCO_Fract",
+    known_materials[Core::Materials::mes_fsls] = group("VISCO_FSLS",
         {
             parameter<double>("TAU", {.description = "relaxation parameter"}),
             parameter<double>("ALPHA", {.description = "fractional order derivative"}),
             parameter<double>("BETA", {.description = "emphasis of viscous to elastic part"}),
         },
-        {.description = "Viscous contribution according to FSLS-Model"});
+        {.description = "Fractional standard linear solid visco summand"});
   }
 
   /*--------------------------------------------------------------------*/
-  // viscous contribution of a branch of a generalized Maxwell model
-  {
-    known_materials[Core::Materials::mes_viscopart] = group("VISCO_PART",
-        {
-            parameter<double>("TAU",
-                {.description = "dynamic viscosity divided by young's modulus of the branch"}),
-        },
-        {.description = "Viscous contribution of a viscoelastic Branch"});
-  }
-  /*--------------------------------------------------------------------*/
   // viscoelatic branches of a generalized Maxwell model
   {
-    known_materials[Core::Materials::mes_generalizedgenmax] = group("VISCO_GeneralizedGenMax",
+    known_materials[Core::Materials::mes_generalizedmaxwell] = group("VISCO_GeneralizedMaxwell",
         {
             parameter<int>("NUMBRANCH", {.description = "number of viscoelastic branches"}),
             parameter<std::vector<int>>("MATIDS",
                 {.description = "the list material IDs", .size = from_parameter<int>("NUMBRANCH")}),
-            parameter<std::string>(
-                "SOLVE", {.description = "Solution for evolution equation: OST (default) or CONVOL "
-                                         "(convolution integral)"}),
+            parameter<std::string>("SOLVE",
+                {.description = "Solution for evolution equation: OneStepTheta (default) or "
+                                "ExponentialTimeDiscretization (convolution integral)",
+                    .default_value = "OneStepTheta"}),
         },
-        {.description = "Viscoelastic Branches of generalized Maxwell"});
+        {.description = "Top-level generalized Maxwell visco summand"});
   }
 
   /*--------------------------------------------------------------------*/
-  // description of a viscoelatic branch of a generalized Maxwell model
+  // quasi-linear Fung-type generalized Maxwell model
   {
-    known_materials[Core::Materials::mes_viscobranch] = group("VISCO_BRANCH",
+    using namespace Core::IO::InputSpecBuilders::Validators;
+
+    known_materials[Core::Materials::mes_quasilineargeneralizedmaxwell] =
+        group("VISCO_QuasiLinearGeneralizedMaxwell",
+            {
+                parameter<std::vector<double>>(
+                    "BETA", {.description = "dimensionless relative branch stress weights",
+                                .validator = all_elements(positive_or_zero<double>())}),
+                parameter<std::vector<double>>(
+                    "TAU", {.description = "positive branch relaxation times",
+                               .validator = all_elements(positive<double>())}),
+                deprecated_selection<std::string>("SOLVE",
+                    {"OneStepTheta", "ExponentialTimeDiscretization"},
+                    {.description = "Solution for evolution equation: OneStepTheta (default) or "
+                                    "ExponentialTimeDiscretization (first-order exponential time "
+                                    "discretization with backward-difference forcing)",
+                        .default_value = "OneStepTheta"}),
+                parameter<double>("VISCOSITY", {.description = "parallel dashpot viscosity",
+                                                   .default_value = 0.0,
+                                                   .validator = positive_or_zero<double>()}),
+            },
+            {.description = "Fung-type quasi-linear generalized Maxwell viscoelastic summand"});
+  }
+
+  /*--------------------------------------------------------------------*/
+  // description of a viscoelastic branch of a generalized Maxwell model
+  {
+    known_materials[Core::Materials::mes_viscobranch] = group("VISCO_GeneralizedMaxwellBranch",
         {
-            parameter<int>(
-                "NUMMAT", {.description = "number of materials in the viscoelastic branch"}),
-            parameter<std::vector<int>>("MATIDS",
-                {.description = "the list material IDs", .size = from_parameter<int>("NUMMAT")}),
+            parameter<double>(
+                "TAU", {.description = "dynamic viscosity divided by branch stiffness"}),
+            parameter<int>("MATID", {.description = "material ID of branch elasticity rule"}),
         },
-        {.description = "Viscoelastic Branch (viscous and elastic contribution)"});
+        {.description = "Branch definition for a generalized Maxwell visco summand"});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2653,6 +2637,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                         .default_value = std::vector{0},
                         .size = from_parameter<int>("NUMFACINEL")}),
                 parameter<double>("DENS", {.description = "material mass density"}),
+                parameter<double>("REF_TEMPERATURE",
+                    {.description = "reference temperature for thermoelastic expansion.",
+                        .default_value = 0.0,
+                        .validator = Validators::positive_or_zero<double>()}),
+                parameter<double>("THERMAL_EXPANSION_COEFFICIENT",
+                    {.description = "coefficient of thermal expansion $\\alpha_T$",
+                        .default_value = 0.0}),
             },
             {.description = "multiplicative split of deformation gradient"});
   }
@@ -2832,6 +2823,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "FIBER_READER_ID", {.description = "MAT ID of the used fiber direction reader for "
                                                    "transversely isotropic behavior",
                                        .validator = positive<int>()}),
+            parameter<double>("TAYLOR_QUINNEY_COEFFICIENT",
+                {.description =
+                        "Taylor-Quinney coefficient $\\xi_{TQ}$ modeling the internal dissipation",
+                    .default_value = 0.0,
+                    .validator = positive_or_zero<double>()}),
             parameter<std::optional<double>>(
                 "YIELD_COND_A", {.description = "transversely isotropic version of the Hill(1948) "
                                                 "yield condition: parameter A, following the "
@@ -2962,44 +2958,47 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     using namespace Core::IO::InputSpecBuilders::Validators;
 
-    known_materials[Core::Materials::mvl_reformulated_Johnson_Cook] =
-        group("MAT_ViscoplasticLawReformulatedJohnsonCook",
-            {
-                parameter<double>("STRAIN_RATE_PREFAC",
-                    {.description = "reference plastic strain rate $\\dot{P}_0$",
-                        .validator = positive<double>()}),
-                parameter<double>("STRAIN_RATE_EXP_FAC",
-                    {.description = "exponential factor of plastic strain rate $C$",
-                        .validator = positive<double>()}),
-                parameter<double>("INIT_YIELD_STRENGTH",
-                    {.description = "initial yield strength of the material $A_0$",
-                        .validator = positive<double>()}),
-                parameter<double>("ISOTROP_HARDEN_PREFAC",
-                    {.description =
-                            "prefactor of the isotropic hardening stress / hardening modulus $B_0$",
-                        .validator = positive_or_zero<double>()}),
-                parameter<double>("ISOTROP_HARDEN_EXP",
-                    {.description = "exponent of the isotropic hardening stress $n$",
-                        .validator = positive_or_zero<double>()}),
-                parameter<double>("REF_TEMPERATURE",
-                    {.description = "reference temperature $T_0$ for evaluating the "
-                                    "yield strength $A_0$ and the hardening "
-                                    "modulus $B_0$",
-                        .validator = positive<double>()}),
-                parameter<double>(
-                    "MELT_TEMPERATURE", {.description = "melting temperature $T_{\\mathrm{melt}}$",
-                                            .validator = positive<double>()}),
-                parameter<double>("TEMPERATURE_SENS", {.description = "temperature sensitivity $m$",
-                                                          .validator = positive_or_zero<double>()}),
+    known_materials[Core::Materials::mvl_reformulated_Johnson_Cook] = group(
+        "MAT_ViscoplasticLawReformulatedJohnsonCook",
+        {
+            parameter<double>(
+                "STRAIN_RATE_PREFAC", {.description = "reference plastic strain rate $\\dot{P}_0$",
+                                          .validator = positive<double>()}),
+            parameter<double>("STRAIN_RATE_EXP_FAC",
+                {.description = "exponential factor of plastic strain rate $C$",
+                    .validator = positive<double>()}),
+            parameter<double>("INIT_YIELD_STRENGTH",
+                {.description = "initial yield strength of the material $A_0$",
+                    .validator = positive<double>()}),
+            parameter<double>("ISOTROP_HARDEN_PREFAC",
+                {.description =
+                        "prefactor of the isotropic hardening stress / hardening modulus $B_0$",
+                    .validator = positive_or_zero<double>()}),
+            parameter<double>("ISOTROP_HARDEN_EXP",
+                {.description = "exponent of the isotropic hardening stress $n$",
+                    .validator = positive_or_zero<double>()}),
+            parameter<double>("REF_TEMPERATURE",
+                {.description = "reference temperature $T_0$ for evaluating the "
+                                "yield strength $A_0$ and the hardening "
+                                "modulus $B_0$. Has no effect for isothermal simulations.",
+                    .validator = positive<double>()}),
+            parameter<double>(
+                "MELT_TEMPERATURE", {.description = "melting temperature $T_{\\mathrm{melt}}$. Has "
+                                                    "no effect for isothermal simulations.",
+                                        .validator = positive<double>()}),
+            parameter<double>("TEMPERATURE_SENS",
+                {.description =
+                        "temperature sensitivity $m$. Has no effect for isothermal simulations.",
+                    .validator = positive<double>()}),
 
-            },
-            {.description = "Reformulation of the Johnson-Cook viscoplastic law (comprising flow "
-                            "rule $\\dot{P} = \\dot{P}_0 \\exp \\left( \\frac{ \\sigma_{eq}}{C "
-                            "\\sigma_{\\mathrm{Y}}} - \\frac{1}{C} \\right) - \\dot{P}_0$ and "
-                            "hardening law $\\sigma_{\\mathrm{Y}} = (A_0 + "
-                            "B_0 \\cdot P^{n}) \\cdot (1 - \\frac{T^m - "
-                            "T_{0}^m}{T_{\\mathrm{melt}}^m - T_{0}^m})$), "
-                            "as shown in Mareau et al. (Mechanics of Materials 143, 2020)"});
+        },
+        {.description = "Reformulation of the Johnson-Cook viscoplastic law (comprising flow "
+                        "rule $\\dot{P} = \\dot{P}_0 \\exp \\left( \\frac{ \\sigma_{eq}}{C "
+                        "\\sigma_{\\mathrm{Y}}} - \\frac{1}{C} \\right) - \\dot{P}_0$ and "
+                        "hardening law $\\sigma_{\\mathrm{Y}} = (A_0 + "
+                        "B_0 \\cdot P^{n}) \\cdot (1 - \\frac{T^m - "
+                        "T_{0}^m}{T_{\\mathrm{melt}}^m - T_{0}^m})$), "
+                        "as shown in Mareau et al. (Mechanics of Materials 143, 2020)"});
   }
 
   /*----------------------------------------------------------------------*/
@@ -4115,10 +4114,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mix_elasthyper] = group("MIX_Constituent_ElastHyper",
         {
-            parameter<int>("NUMMAT", {.description = "number of summands"}),
             parameter<std::vector<int>>(
-                "MATIDS", {.description = "list material IDs of the summands",
-                              .size = from_parameter<int>("NUMMAT")}),
+                "MATIDS", {.description = "list material IDs of the summands"}),
             parameter<int>(
                 "PRESTRESS_STRATEGY", {.description = "Material id of the prestress strategy "
                                                       "(optional, by default no prestretch)",
@@ -4352,17 +4349,30 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<bool>("INELASTIC_GROWTH",
                 {.description = "Mixture rule has inelastic growth (default false)",
                     .default_value = false}),
-            parameter<int>("GROWTH_SCALAR_ID",
+            parameter<std::optional<int>>("GROWTH_SCALAR_ID",
                 {.description =
-                        "Index of the corresponding growth scalar material in the scatra matlist",
-                    .validator = positive_or_zero<int>()}),
-            parameter<int>(
-                "REMODELING_SCALAR_ID", {.description = "Index of the corresponding remodeling "
-                                                        "scalar material in the scatra matlist",
-                                            .validator = positive_or_zero<int>()}),
+                        "Index of the corresponding growth scalar material in the scatra matlist "
+                        "(leave unset to disable)",
+                    .validator = null_or(positive_or_zero<int>())}),
+            parameter<std::optional<int>>("REMODELING_SCALAR_ID",
+                {.description =
+                        "Index of the corresponding remodeling scalar material in the scatra "
+                        "matlist (leave unset to disable)",
+                    .validator = null_or(positive_or_zero<int>())}),
+            parameter<std::optional<int>>("NONLOCAL_STIMULUS_SCALAR_ID",
+                {.description = "Index of the non-local stimulus scalar in the scatra matlist "
+                                "(leave unset to disable)",
+                    .validator = null_or(positive_or_zero<int>())}),
+            parameter<bool>("IMPLICIT_INTEGRATION",
+                {.description =
+                        "Integrate growth_scalar and lambda_r implicitly at each Newton iteration. "
+                        "Default: false.",
+                    .default_value = false}),
         },
         {.description =
-                "A 1D constituent where the g&r evolution is solved in a coupled ssi framework"});
+                "A 1D constituent where the g&r evolution ODEs can be solved either as own scatra "
+                "dofs (using GROWTH_SCALAR_ID & REMODELING_SCALAR_ID) or Gauss-point wise based on "
+                "a non-local stimulus (using NONLOCAL_STIMULUS_SCALAR_ID)."});
   }
 
   /*----------------------------------------------------------------------*/
@@ -4418,6 +4428,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description = "Id of the time function to scale the deposition stretch "
                                 "(Default: 0=None)",
                     .default_value = 0}),
+            parameter<bool>("INELASTIC_GROWTH",
+                {.description = "Mixture rule has inelastic growth (default false)",
+                    .default_value = false}),
         },
         {.description = "A 1D constituent that remodels"});
   }

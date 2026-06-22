@@ -17,6 +17,8 @@
 [![docs/documentation](./utilities/assets/badges/documentation_documentation.svg)](https://4c-multiphysics.github.io/4C/documentation/)
 [![docs/doxygen](./utilities/assets/badges/documentation_doxygen.svg)](https://4c-multiphysics.github.io/4C/doxygen/)
 [![coverage report](https://4c-multiphysics.github.io/4C/coverage_report/badge_coverage.svg)](https://4c-multiphysics.github.io/4C/coverage_report)
+[![performance_results](./utilities/assets/badges/performance_results.svg)](https://4c-multiphysics.github.io/4C/performance_report/report.html)
+[![benchmark_results](./utilities/assets/badges/benchmark_results.svg)](https://4c-multiphysics.github.io/4C/benchmark_test_report/report.html)
 
 </div>
 
@@ -27,6 +29,7 @@
 [![workflows/nightly_tests](https://github.com/4C-multiphysics/4C/actions/workflows/nightly_tests.yml/badge.svg?branch=main)](https://github.com/4C-multiphysics/4C/actions/workflows/nightly_tests.yml?query=branch%3Amain)
 [![workflows/documentation](https://github.com/4C-multiphysics/4C/actions/workflows/documentation.yml/badge.svg?branch=main)](https://github.com/4C-multiphysics/4C/actions/workflows/documentation.yml?query=branch%3Amain)
 [![workflows/coverage](https://github.com/4C-multiphysics/4C/actions/workflows/coverage.yml/badge.svg?branch=main)](https://github.com/4C-multiphysics/4C/actions/workflows/coverage.yml?query=branch%3Amain)
+[![performance_report](https://github.com/4C-multiphysics/4C/actions/workflows/performance_report.yml/badge.svg?branch=main)](https://github.com/4C-multiphysics/4C/actions/workflows/performance_report.yml?query=branch%3Amain)
 
 </div>
 

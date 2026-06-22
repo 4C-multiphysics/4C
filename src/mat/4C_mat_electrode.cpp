@@ -22,40 +22,49 @@ Mat::PAR::Electrode::Electrode(const Core::Mat::PAR::Parameter::Data& matdata)
     : ElchSingleMat(matdata),
       cmax_(matdata.parameters.get<double>("C_MAX")),
       chimax_(matdata.parameters.get<double>("CHI_MAX")),
-      ocpmodel_(matdata.parameters.group("OCP_MODEL").get<OCPModels>("OCP_MODEL")),
-      xmin_(matdata.parameters.group("OCP_MODEL").get<double>("X_MIN")),
-      xmax_(matdata.parameters.group("OCP_MODEL").get<double>("X_MAX"))
+      ocpmodel_(matdata.parameters.group("OCP_MODEL").get<OCPModels>("OCP_MODEL"))
 {
   const auto& ocpmodel = matdata.parameters.group("OCP_MODEL");
 
   switch (ocpmodel_)
   {
     case OCPModels::function:
-      ocpfunctnum_ = ocpmodel.group("Function").get<int>("OCP_FUNCT_NUM");
+    {
+      ocp_function_num_ = ocpmodel.group("Function").get<int>("OCP_FUNCT_NUM");
       break;
+    }
     case OCPModels::redlichkister:
+    {
       ocppara_ = ocpmodel.group("Redlich-Kister").get<std::vector<double>>("OCP_PARA");
+      FOUR_C_ASSERT_ALWAYS(ocppara_.size() == 16 or ocppara_.size() == 21,
+          "Currently used parameterization of the Redlich-Kister model can only have 16 or 21 "
+          "parameters! You set {} in the input file. Check your input file or adapt the "
+          "implementation.",
+          ocppara_.size());
       break;
+    }
     case OCPModels::taralov:
+    {
       ocppara_ = ocpmodel.group("Taralov").get<std::vector<double>>("OCP_PARA");
       break;
+    }
     default:
       FOUR_C_THROW("Unknown OCPModel");
   }
 
-  // safety checks
-  if (cmax_ < 1.0e-12)
-    FOUR_C_THROW("Saturation value c_max of intercalated Lithium concentration is too small!");
-  if ((xmin_ > 1.0) or (xmax_ > 1.0))
+  if (ocpmodel.has_group("LITHIATION_BOUNDS"))
   {
-    FOUR_C_THROW(
-        "Lower bound (X_MIN) and upper bound (X_MAX) of range of validity for ocp calculation "
-        "model cannot be larger than one since X is calculated as c/c_max! If you do not want to "
-        "prescribe bounds, you have to set the two variables to negative values. "
-        "If you set the bounds to realistic values (i.e. [0,1]) you will get a warning printed to "
-        "the screen if bounds are violated throughout the simulation time!");
+    const auto& lithiation_bounds = ocpmodel.group("LITHIATION_BOUNDS");
+    lithiation_bounds_.emplace(LithiationBounds{.x_min = lithiation_bounds.get<double>("X_MIN"),
+        .x_max = lithiation_bounds.get<double>("X_MAX")});
+
+    const auto x_min = lithiation_bounds_->x_min;
+    const auto x_max = lithiation_bounds_->x_max;
+    FOUR_C_ASSERT_ALWAYS(x_min < x_max,
+        "Lower bound (X_MIN: {}) of range of validity for ocp calculation model needs to be "
+        "smaller than upper bound (X_MAX: {})!",
+        x_min, x_max);
   }
-  if (xmin_ > xmax_) FOUR_C_THROW("X_MIN cannot be larger than X_MAX!");
 }
 
 /*----------------------------------------------------------------------*
@@ -63,6 +72,41 @@ Mat::PAR::Electrode::Electrode(const Core::Mat::PAR::Parameter::Data& matdata)
 std::shared_ptr<Core::Mat::Material> Mat::PAR::Electrode::create_material()
 {
   return std::make_shared<Mat::Electrode>(this);
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+const Core::Utils::FunctionOfScalar& Mat::PAR::Electrode::ocp_function()
+{
+  if (!ocp_function_.has_value())
+  {
+    ocp_function_.emplace(
+        Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfScalar>(
+            ocp_function_num_));
+  }
+  return ocp_function_->get();
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+double Mat::PAR::Electrode::x_min() const
+{
+  FOUR_C_ASSERT_ALWAYS(lithiation_bounds_.has_value(),
+      "You try to access the lower bound (X_MIN) of the range of validity for the ocp "
+      "calculation model, but no lithiation bounds have been set in the input!");
+
+  return lithiation_bounds_->x_min;
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+double Mat::PAR::Electrode::x_max() const
+{
+  FOUR_C_ASSERT_ALWAYS(lithiation_bounds_.has_value(),
+      "You try to access the upper bound (X_MAX) of the range of validity for the ocp calculation "
+      "model, but no lithiation bounds have been set in the input!");
+
+  return lithiation_bounds_->x_max;
 }
 
 
@@ -80,14 +124,14 @@ Core::Communication::ParObject* Mat::ElectrodeType::create(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-Mat::Electrode::Electrode(Mat::PAR::Electrode* params) : params_(params) {}
+Mat::Electrode::Electrode(Mat::PAR::Electrode* params) : ElchSingleMat(params), params_(params) {}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Mat::Electrode::pack(Core::Communication::PackBuffer& data) const
 {
   // pack type of this instance of ParObject
-  int type = unique_par_object_id();
+  const int type = unique_par_object_id();
   add_to_pack(data, type);
 
   int matid = -1;
@@ -113,7 +157,10 @@ void Mat::Electrode::unpack(Core::Communication::UnpackBuffer& buffer)
       Core::Mat::PAR::Parameter* mat =
           Global::Problem::instance(probinst)->materials()->parameter_by_id(matid);
       if (mat->type() == material_type())
+      {
         params_ = static_cast<Mat::PAR::Electrode*>(mat);
+        set_elch_single_mat_params(params_);
+      }
       else
         FOUR_C_THROW("Type of parameter material {} does not fit to calling type {}", mat->type(),
             material_type());
@@ -133,14 +180,13 @@ double Mat::Electrode::compute_open_circuit_potential(
 
   // print warning to screen if prescribed interval of validity for ocp calculation model is given
   // but not satisfied
-  if (((X < params_->xmin_) or (X > params_->xmax_)) and params_->xmax_ >= 0.0)
+  if (params_->lithiation_bounds_.has_value() and (X < params_->x_min() or X > params_->x_max()))
   {
     std::cout << "WARNING: intercalation fraction X = c/c_max is violating prescribed bounds of "
                  "ocp calculation model. Calculated values might therefore not be reasonable!"
               << '\n';
-    std::cout << "X: " << X << " lower bound is: " << params_->xmin_
-              << " upper bound is: " << params_->xmax_ << '\n'
-              << '\n';
+    std::cout << "X: " << X << " lower bound is: " << params_->x_min()
+              << " upper bound is: " << params_->x_max() << "\n\n";
   }
 
   // physically reasonable intercalation fraction
@@ -148,19 +194,15 @@ double Mat::Electrode::compute_open_circuit_potential(
   {
     switch (params_->ocpmodel_)
     {
-      // half cell open circuit potential obtained from cubic spline interpolation of *.csv data
-      // points
+      // open circuit potential obtained from function
       case Mat::PAR::OCPModels::function:
       {
-        const int ocp_function_number = params_->ocpfunctnum_;
-        ocp = Global::Problem::instance()
-                  ->function_by_id<Core::Utils::FunctionOfScalar>(ocp_function_number)
-                  .evaluate(X);
+        ocp = params_->ocp_function().evaluate(X);
 
         break;
       }
 
-      // half cell open circuit potential according to Redlich-Kister expansion
+      // open circuit potential according to Redlich-Kister expansion
       case Mat::PAR::OCPModels::redlichkister:
       {
         // cf. Colclasure and Kee, Electrochimica Acta 55 (2010) 8960:
@@ -246,20 +288,16 @@ double Mat::Electrode::compute_d_open_circuit_potential_d_intercalation_fraction
   {
     switch (params_->ocpmodel_)
     {
-      // derivative of half cell open circuit potential w.r.t. concentration, obtained from cubic
-      // spline interpolation of *.csv data points
+      // derivative of the open circuit potential w.r.t. concentration, obtained from function
       case Mat::PAR::OCPModels::function:
       {
-        const int ocp_function_number = params_->ocpfunctnum_;
-        d_ocp_dX = Global::Problem::instance()
-                       ->function_by_id<Core::Utils::FunctionOfScalar>(ocp_function_number)
-                       .evaluate_derivative(X, 1);
+        d_ocp_dX = params_->ocp_function().evaluate_derivative(X, 1);
 
         break;
       }
 
-      // derivative of half cell open circuit potential w.r.t. concentration according to
-      // Redlich-Kister expansion
+      // derivative of the open circuit potential w.r.t. concentration according to Redlich-Kister
+      // expansion
       case Mat::PAR::OCPModels::redlichkister:
       {
         // cf. Colclasure and Kee, Electrochimica Acta 55 (2010) 8960:
@@ -351,19 +389,16 @@ double Mat::Electrode::compute_d2_open_circuit_potential_d_concentration_d_conce
   {
     switch (params_->ocpmodel_)
     {
-      // second derivative of half cell open circuit potential w.r.t. concentration, obtained from
-      // cubic spline interpolation of *.csv data points
+      // second derivative of the open circuit potential w.r.t. concentration, obtained from
+      // function
       case Mat::PAR::OCPModels::function:
       {
-        const int ocp_function_number = params_->ocpfunctnum_;
-        d2_ocp_dX2 = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfScalar>(ocp_function_number)
-                         .evaluate_derivative(X, 2);
+        d2_ocp_dX2 = params_->ocp_function().evaluate_derivative(X, 2);
 
         break;
       }
 
-      // second derivative of half cell open circuit potential w.r.t. concentration according to
+      // second derivative of the open circuit potential w.r.t. concentration according to
       // Redlich-Kister expansion
       case Mat::PAR::OCPModels::redlichkister:
       {

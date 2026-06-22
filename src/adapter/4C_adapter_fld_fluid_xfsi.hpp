@@ -121,7 +121,7 @@ namespace Adapter
         std::shared_ptr<const Core::LinAlg::Vector<double>> fluiddisp) override;
 
     void set_mesh_map(
-        std::shared_ptr<const Core::LinAlg::Map> mm, const int nds_master = 0) override;
+        std::shared_ptr<const Core::LinAlg::Map> mm, const int target_dofset_number = 0) override;
 
     /// return coupling matrix between fluid and structure as sparse matrices
     std::shared_ptr<Core::LinAlg::SparseMatrix> c_struct_fluid_matrix();

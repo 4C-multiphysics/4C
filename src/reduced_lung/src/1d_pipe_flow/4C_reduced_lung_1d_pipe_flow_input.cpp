@@ -76,6 +76,7 @@ Core::IO::InputSpec ReducedLung1dPipeFlow::valid_parameters()
       },
       {
           .description = "Rheological model of the terminal unit.",
+          .required = false,
           .store = in_struct(&Parameters::TerminalUnits::rheological_model),
       });
 
@@ -90,6 +91,10 @@ Core::IO::InputSpec ReducedLung1dPipeFlow::valid_parameters()
                   .store =
                       in_struct(&Parameters::TerminalUnits::ElasticityModel::elasticity_model_type),
               }),
+          input_field<double>("acinar_reference_volume_v0",
+              {.description = "Reference volume of acinus at terminal unit.",
+                  .store =
+                      in_struct(&Parameters::TerminalUnits::ElasticityModel::acinar_volume_v)}),
           group<Parameters::TerminalUnits::ElasticityModel::Linear>("linear",
               {
                   input_field<double>("elasticity_e",
@@ -197,7 +202,7 @@ Core::IO::InputSpec ReducedLung1dPipeFlow::valid_parameters()
                                           BoundaryConditions::function_id_inflow)}),
                           parameter<double>("condition_outflow",
                               {.description = "Condition applied at the outlet, either pressure "
-                                              "(mmHg) or reflection.",
+                                              "or reflection.",
                                   .store = in_struct(
                                       &Parameters::BoundaryConditions::condition_outflow)}),
                           parameter<std::optional<double>>("cycle_period",
@@ -216,11 +221,38 @@ Core::IO::InputSpec ReducedLung1dPipeFlow::valid_parameters()
 
                   group<Parameters::TerminalUnits>("terminal_units",
                       {
+                          input_field<Parameters::TerminalUnits::TerminalUnitType>(
+                              "terminal_unit_type",
+                              {
+                                  .description = "Type of terminal unit model.",
+                                  .store =
+                                      in_struct(&Parameters::TerminalUnits::terminal_unit_type),
+                              }),
                           rheological_model_spec_terminal_unit,
                           elasticity_model_spec_terminal_units,
-                          input_field<double>("acinar_reference_volume_v0",
-                              {.description = "Reference volume of acinus at terminal unit.",
-                                  .store = in_struct(&Parameters::TerminalUnits::acinar_volume_v)}),
+                          group<Parameters::TerminalUnits::WindkesselModel>("windkessel_model",
+                              {
+                                  input_field<double>("proximal_resistance_R_p",
+                                      {.description = "Proximal resistance of Windkessel model.",
+                                          .store = in_struct(&Parameters::TerminalUnits::
+                                                  WindkesselModel::proximal_resistance_R_p)}),
+                                  input_field<double>("compliance_C",
+                                      {.description = "Compliance of Windkessel model.",
+                                          .store = in_struct(&Parameters::TerminalUnits::
+                                                  WindkesselModel::compliance_C)}),
+                                  input_field<double>("distal_resistance_R_d",
+                                      {.description = "Distal resistance of Windkessel model.",
+                                          .store = in_struct(&Parameters::TerminalUnits::
+                                                  WindkesselModel::distal_resistance_R_d)}),
+                                  input_field<double>("pressure_peripheral",
+                                      {.description = "Peripheral pressure after Windkessel model.",
+                                          .store = in_struct(&Parameters::TerminalUnits::
+                                                  WindkesselModel::pressure_peripheral)}),
+                              },
+                              {.description = "Windkessel (RCR) model for terminal units.",
+                                  .required = false,
+                                  .store =
+                                      in_struct(&Parameters::TerminalUnits::windkessel_model)}),
                       },
                       {.description = "Terminal units.",
                           .required = false,

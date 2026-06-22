@@ -772,11 +772,11 @@ std::shared_ptr<const Core::LinAlg::SparseMatrix> ALE::Ale::get_loc_sys_trafo() 
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-void ALE::Ale::update_slave_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& a)
+void ALE::Ale::update_source_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& a)
 {
   if (msht_ != ALE::no_meshtying)
   {
-    meshtying_->update_slave_dof(a, dispnp_);
+    meshtying_->update_source_dof(a, dispnp_);
     meshtying_->recover(a);
   }
 }

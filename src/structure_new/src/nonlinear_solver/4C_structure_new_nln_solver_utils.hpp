@@ -82,9 +82,7 @@ namespace Solid
        *  the NormF case and imagine the following status test settings:
        *
        *  NORMCOMBI_RESFINCO           AND        (RESIDUAL and PRESSURE)
-       *  NORMCOMBI_EASRES             OR         (RESIDUAL or  EAS)
        *  NORMCOMBI_RESFCONSTR         AND        (RESIDUAL and CONTACT)
-       *  NORMCOMBI_RESFPLASTCONSTR    OR         (RESIDUAL or  PLASTICITY)
        *
        *  Following will happen:
        *

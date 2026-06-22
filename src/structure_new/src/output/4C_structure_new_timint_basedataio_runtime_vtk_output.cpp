@@ -27,6 +27,7 @@ void Solid::TimeInt::ParamsRuntimeOutput::init(
   output_interval_steps_ = IO_vtk_structure_paramslist.get<int>("INTERVAL_STEPS");
   output_step_offset_ = IO_vtk_structure_paramslist.get<int>("STEP_OFFSET");
   output_every_iteration_ = IO_vtk_structure_paramslist.get<bool>("EVERY_ITERATION");
+  output_element_eval_times_ = IO_vtk_structure_paramslist.get<bool>("ELEMENT_EVAL_TIME");
 
   // check for output of structure discretization which is to be handled by an own writer object
   output_structure_ =

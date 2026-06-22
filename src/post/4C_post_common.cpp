@@ -68,14 +68,6 @@ PostProblem::PostProblem(Teuchos::CommandLineProcessor& CLP, int argc, char** ar
   CLP.setOption("strain", &straintype_,
       "strain output type [cxyz, ndxyz, cxyz_ndxyz, c123, nd123, c123_nd123]");
   CLP.setOption("mortar", &mortar_string, "Do post-processing of mortar interfaces [yes]");
-  CLP.setOption("heatfluxtype", &heatfluxtype_,
-      "heatflux output type [cxyz, ndxyz, cxyz_ndxyz, c123, nd123, c123_nd123]");
-  CLP.setOption("heatflux", &heatfluxtype_,
-      "heatflux output type [cxyz, ndxyz, cxyz_ndxyz, c123, nd123, c123_nd123]");
-  CLP.setOption("tempgradtype", &tempgradtype_,
-      "tempgrad output type [cxyz, ndxyz, cxyz_ndxyz, c123, nd123, c123_nd123]");
-  CLP.setOption("tempgrad", &tempgradtype_,
-      "tempgrad output type [cxyz, ndxyz, cxyz_ndxyz, c123, nd123, c123_nd123]");
   CLP.setOption("rotation", &struct_rot_, "structural rotation matrix R [yes]");
   CLP.setOption("structmatdisp", &struct_mat_disp_, "material displacement output output [yes]");
   CLP.setOption("outputtype", &outputtype_,
@@ -129,16 +121,6 @@ PostProblem::PostProblem(Teuchos::CommandLineProcessor& CLP, int argc, char** ar
   if (straintype_ == "")
   {
     straintype_ = "none";
-  }
-
-  if (heatfluxtype_ == "")
-  {
-    heatfluxtype_ = "none";
-  }
-
-  if (tempgradtype_ == "")
-  {
-    tempgradtype_ = "none";
   }
 
   if (outputtype_ == "")

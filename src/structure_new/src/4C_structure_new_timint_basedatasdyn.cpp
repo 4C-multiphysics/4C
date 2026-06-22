@@ -215,21 +215,14 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
     tol_inco_ = sdynparams.get<double>("TOLINCO");
     toltype_inco_ = Inpar::Solid::convnorm_abs;
 
-    tol_eas_res_ = Global::Problem::instance()->semi_smooth_plast_params().get<double>("TOLEASRES");
     toltype_eas_res_ = Inpar::Solid::convnorm_abs;
 
-    tol_eas_incr_ =
-        Global::Problem::instance()->semi_smooth_plast_params().get<double>("TOLEASINCR");
     toltype_eas_incr_ = Inpar::Solid::convnorm_abs;
 
     normcombo_disp_pres_ =
         Teuchos::getIntegralValue<Inpar::Solid::BinaryOp>(sdynparams, "NORMCOMBI_DISPPRES");
     normcombo_fres_inco_ =
         Teuchos::getIntegralValue<Inpar::Solid::BinaryOp>(sdynparams, "NORMCOMBI_RESFINCO");
-    normcombo_fres_eas_res_ = Teuchos::getIntegralValue<Inpar::Solid::BinaryOp>(
-        Global::Problem::instance()->semi_smooth_plast_params(), "NORMCOMBI_EASRES");
-    normcombo_disp_eas_incr_ = Teuchos::getIntegralValue<Inpar::Solid::BinaryOp>(
-        Global::Problem::instance()->semi_smooth_plast_params(), "NORMCOMBI_EASINCR");
     normcombo_fres_disp_ =
         Teuchos::getIntegralValue<Inpar::Solid::BinaryOp>(sdynparams, "NORMCOMBI_RESFDISP");
 
@@ -387,9 +380,6 @@ double Solid::TimeInt::BaseDataSDyn::get_incr_tolerance(
       break;
     case NOX::Nln::StatusTest::quantity_pressure:
       return tol_pres_;
-      break;
-    case NOX::Nln::StatusTest::quantity_eas:
-      return tol_eas_incr_;
       break;
     default:
       FOUR_C_THROW(

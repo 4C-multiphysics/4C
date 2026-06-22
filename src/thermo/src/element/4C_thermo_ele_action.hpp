@@ -29,7 +29,6 @@ namespace Thermo
     calc_thermo_fintcapa,
     calc_thermo_finttang,
     calc_thermo_heatflux,
-    postproc_thermo_heatflux,
     integrate_shape_functions,
     calc_thermo_update_istep,
     calc_thermo_reset_istep,

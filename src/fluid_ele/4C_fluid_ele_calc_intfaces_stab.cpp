@@ -981,21 +981,21 @@ int Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
   {
     // get the local gp coordinates w.r.t parent (master) element
     Core::FE::boundary_gp_to_parent_gp3(
-        p_xi_points_, face_xi_points_master_, pdistype, distype, intface->face_master_number());
+        p_xi_points_, face_xi_points_master_, pdistype, distype, intface->face_target_number());
 
     // get the local gp coordinates w.r.t parent (master) element
     Core::FE::boundary_gp_to_parent_gp3(
-        n_xi_points_, face_xi_points_slave_, ndistype, distype, intface->face_slave_number());
+        n_xi_points_, face_xi_points_slave_, ndistype, distype, intface->face_source_number());
   }
   else if (nsd_ == 2)
   {
     // get the local gp coordinates w.r.t parent (master) element
     Core::FE::boundary_gp_to_parent_gp2(
-        p_xi_points_, face_xi_points_master_, pdistype, distype, intface->face_master_number());
+        p_xi_points_, face_xi_points_master_, pdistype, distype, intface->face_target_number());
 
     // get the local gp coordinates w.r.t neighbor (slave) element
     Core::FE::boundary_gp_to_parent_gp2(
-        n_xi_points_, face_xi_points_slave_, ndistype, distype, intface->face_slave_number());
+        n_xi_points_, face_xi_points_slave_, ndistype, distype, intface->face_source_number());
   }
   else
     FOUR_C_THROW("invalid nsd");
@@ -3122,8 +3122,8 @@ double Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
   double patch_hk = 0.0;
 
   // do not consider the face/line itself
-  const int side_id_master = intface->face_master_number();
-  const int side_id_slave = intface->face_slave_number();
+  const int side_id_master = intface->face_target_number();
+  const int side_id_slave = intface->face_source_number();
 
   if (nsd_ == 3)
   {
@@ -3303,7 +3303,7 @@ Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::comput
 {
   if (nsd_ == 3)
   {
-    const int side_id_master = intface->face_master_number();
+    const int side_id_master = intface->face_target_number();
 
     unsigned int nnode_psurf =
         m_connectivity_[side_id_master].size();  // this number changes for pyramids or wedges
@@ -3336,7 +3336,7 @@ Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::comput
   }
   else if (nsd_ == 2)
   {
-    const int line_id_master = intface->face_master_number();
+    const int line_id_master = intface->face_target_number();
 
     unsigned int nnode_pline =
         m_connectivity_[line_id_master].size();  // this number changes for pyramids or wedges
@@ -3375,8 +3375,8 @@ double Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
     Discret::Elements::FluidIntFace* intface                     ///< intface element
 )
 {
-  const int side_id_master = intface->face_master_number();
-  const int side_id_slave = intface->face_slave_number();
+  const int side_id_master = intface->face_target_number();
+  const int side_id_slave = intface->face_source_number();
 
   // determine the opposite side to the internal face for master and slave parent element
   int opposite_side_id_master = find_opposite_surface(pdistype, side_id_master);

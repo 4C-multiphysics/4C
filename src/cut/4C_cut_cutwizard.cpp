@@ -386,7 +386,7 @@ void evaluate_position_on_nurbs9(Core::Elements::Element* element,
 
   // Get the knots and weights for this element.
   const bool zero_size = Core::FE::Nurbs::get_knot_vector_and_weights_for_nurbs_boundary(element,
-      face_element->face_master_number(), face_element->parent_element_id(), *cutterdis.get(),
+      face_element->face_target_number(), face_element->parent_element_id(), *cutterdis.get(),
       mypknots, myknots, weights, normalfac);
   if (zero_size)
     FOUR_C_THROW("get_knot_vector_and_weights_for_nurbs_boundary has to return a non zero size.");

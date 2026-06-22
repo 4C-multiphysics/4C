@@ -39,17 +39,17 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
   FOUR_C_ASSERT(state.get_map().point_same_as(*dis.dof_row_map()), "Only works for same maps.");
 
   // handle pbcs if existing
-  // build inverse map from slave to master nodes
-  std::map<int, int> slavetomastercolnodesmap;
+  // build inverse map from source to target nodes
+  std::map<int, int> source_to_target_colnodesmap;
   const std::map<int, std::vector<int>>* allcoupledcolnodes = dis.get_all_pbc_coupled_col_nodes();
 
   if (allcoupledcolnodes)
   {
-    for (const auto& [master_gid, slave_gids] : *allcoupledcolnodes)
+    for (const auto& [target_gid, source_gids] : *allcoupledcolnodes)
     {
-      for (const auto slave_gid : slave_gids)
+      for (const auto source_gid : source_gids)
       {
-        slavetomastercolnodesmap[slave_gid] = master_gid;
+        source_to_target_colnodesmap[source_gid] = target_gid;
       }
     }
   }
@@ -67,8 +67,8 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
   for (int i = 0; i < fullnodecolmap->num_my_elements(); ++i)
   {
     const int nodeid = fullnodecolmap->gid(i);
-    // do not add slave pbc nodes to reduced node maps
-    if (slavetomastercolnodesmap.count(nodeid) == 0)
+    // do not add source pbc nodes to reduced node maps
+    if (source_to_target_colnodesmap.count(nodeid) == 0)
     {
       // fill reduced node col map
       reducednodecolmap.push_back(nodeid);
@@ -77,10 +77,10 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
     }
   }
 
-  // build node row map which does not include slave pbc nodes
+  // build node row map which does not include source pbc nodes
   Core::LinAlg::Map noderowmap(
       -1, (int)reducednoderowmap.size(), reducednoderowmap.data(), 0, fullnoderowmap->get_comm());
-  // build node col map which does not include slave pbc nodes
+  // build node col map which does not include source pbc nodes
   Core::LinAlg::Map nodecolmap(
       -1, (int)reducednodecolmap.size(), reducednodecolmap.data(), 0, fullnodecolmap->get_comm());
 
@@ -176,7 +176,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
       // continue with next node in case a ghost node is inner node
       if (node->owner() != myrank) continue;
 
-      // distinction between normal inner node and pbc master node
+      // distinction between normal inner node and pbc target node
       if (allcoupledcolnodes->find(nodegid) == allcoupledcolnodes->end())
       {
         //---------------------------------------------
@@ -224,29 +224,29 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
       else
       {
         //---------------------------------------------
-        // we have a pbc master node which is inner node
+        // we have a pbc target node which is inner node
         //---------------------------------------------
 
-        // get master nodes and corresponding slave nodes
-        std::map<int, std::vector<int>>::const_iterator masternode =
+        // get target nodes and corresponding source nodes
+        std::map<int, std::vector<int>>::const_iterator target_node =
             allcoupledcolnodes->find(nodegid);
-        std::vector<int> slavenodeids = masternode->second;
-        const int numslavenodes = (int)(masternode->second.size());
-        // containers for adjacent elements to slave+master nodes
+        std::vector<int> source_node_ids = target_node->second;
+        const int num_source_nodes = (int)(target_node->second.size());
+        // containers for adjacent elements to source+target nodes
         std::vector<IteratorRange<DiscretizationIterator<ConstElementRef>>> adjacenteles;
         std::vector<double> offset(dim, 0.0);
-        std::vector<std::vector<double>> eleoffsets(numslavenodes + 1, offset);
-        for (int s = 0; s < numslavenodes; ++s)
+        std::vector<std::vector<double>> eleoffsets(num_source_nodes + 1, offset);
+        for (int s = 0; s < num_source_nodes; ++s)
         {
-          const Core::Nodes::Node* slavenode = dis.g_node(slavenodeids[s]);
-          // compute offset for slave elements
+          const Core::Nodes::Node* source_node = dis.g_node(source_node_ids[s]);
+          // compute offset for source elements
           for (int d = 0; d < dim; ++d)
-            eleoffsets[s][d] = (node->x()[d] - slavenode->x()[d]) /* + ALE DISP */;
+            eleoffsets[s][d] = (node->x()[d] - source_node->x()[d]) /* + ALE DISP */;
 
-          // add adjacent elements of slave nodes to vector
-          adjacenteles.emplace_back(slavenode->adjacent_elements());
+          // add adjacent elements of source nodes to vector
+          adjacenteles.emplace_back(source_node->adjacent_elements());
         }
-        // add elements connected to master node -> offset is zero for master elements
+        // add elements connected to target node -> offset is zero for target elements
         adjacenteles.emplace_back(node->adjacent_elements());
 
         // patch-recovery for each entry of the velocity gradient
@@ -289,13 +289,13 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
           // write solution vector
           nodevec.replace_global_values(1, &nodegid, &recoveredgradient, j);
         }
-      }  // end inner pbc master node
+      }  // end inner pbc target node
     }  // end inner nodes
     else
     {
       // we have a boundary node here -> patch is set up for closest inner node
 
-      // distinction between normal boundary node and pbc master boundary node
+      // distinction between normal boundary node and pbc target boundary node
       if (allcoupledcolnodes->find(nodegid) == allcoupledcolnodes->end())
       {
         //---------------------------------------------
@@ -384,10 +384,10 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
       else
       {
         //---------------------------------------------
-        // we have a pbc master node at the boundary
+        // we have a pbc target node at the boundary
         //---------------------------------------------
 
-        // often bounds are axis aligned -> another pbc (master) node is closest node
+        // often bounds are axis aligned -> another pbc (target) node is closest node
         auto adjacentele = node->adjacent_elements();
 
         // leave here if the boundary node is a ghost node and has no adjacent elements on this proc
@@ -424,7 +424,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
 
         // build patch for closest node and evaluate patch at boundary node
 
-        // get master nodes and corresponding slave nodes
+        // get target nodes and corresponding source nodes
         const Core::Nodes::Node* closestnode = dis.g_node(closestnodeid);
 
         // leave here in case the closest node is a ghost node
@@ -432,42 +432,42 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
         // this will result in off processor assembling (boundary node as ghost node)
         if (closestnode->owner() != myrank) continue;
 
-        auto masternode = allcoupledcolnodes->find(closestnodeid);
+        auto target_node = allcoupledcolnodes->find(closestnodeid);
 
-        int numslavenodes = -1;
-        if (masternode != allcoupledcolnodes->end())
+        int num_source_nodes = -1;
+        if (target_node != allcoupledcolnodes->end())
         {
-          // closest node is (as expected) a master node
-          numslavenodes = (int)(masternode->second.size());
+          // closest node is (as expected) a target node
+          num_source_nodes = (int)(target_node->second.size());
         }
-        else if (slavetomastercolnodesmap.count(closestnodeid) != 0)
+        else if (source_to_target_colnodesmap.count(closestnodeid) != 0)
         {
-          // closest node is (surprisingly) a slave node
-          int mastergid = slavetomastercolnodesmap[closestnodeid];
-          masternode = allcoupledcolnodes->find(mastergid);
-          numslavenodes = (int)(masternode->second.size());
+          // closest node is (surprisingly) a source node
+          int target_gid = source_to_target_colnodesmap[closestnodeid];
+          target_node = allcoupledcolnodes->find(target_gid);
+          num_source_nodes = (int)(target_node->second.size());
         }
         else
         {
           // closest node is a standard node
-          numslavenodes = 0;
+          num_source_nodes = 0;
         }
 
-        // containers for adjacent elements to slave+master nodes
+        // containers for adjacent elements to source+target nodes
         std::vector<IteratorRange<DiscretizationIterator<ConstElementRef>>> closestnodeadjacenteles;
         std::vector<double> offset(dim, 0.0);
-        std::vector<std::vector<double>> eleoffsets(numslavenodes + 1, offset);
-        for (int s = 0; s < numslavenodes; ++s)
+        std::vector<std::vector<double>> eleoffsets(num_source_nodes + 1, offset);
+        for (int s = 0; s < num_source_nodes; ++s)
         {
-          const Core::Nodes::Node* slavenode = dis.g_node(masternode->second[s]);
-          // compute offset for slave elements
+          const Core::Nodes::Node* source_node = dis.g_node(target_node->second[s]);
+          // compute offset for source elements
           for (int d = 0; d < dim; ++d)
-            eleoffsets[s][d] = (closestnode->x()[d] - slavenode->x()[d]); /* + ALE DISP */
+            eleoffsets[s][d] = (closestnode->x()[d] - source_node->x()[d]); /* + ALE DISP */
 
-          // add adjacent elements of slave nodes to vectors
-          closestnodeadjacenteles.emplace_back(slavenode->adjacent_elements());
+          // add adjacent elements of source nodes to vectors
+          closestnodeadjacenteles.emplace_back(source_node->adjacent_elements());
         }
-        // add elements connected to master node -> offset is zero for master elements
+        // add elements connected to target node -> offset is zero for target elements
         closestnodeadjacenteles.emplace_back(closestnode->adjacent_elements());
 
         // patch-recovery for each entry of the velocity gradient
@@ -515,7 +515,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
           // write solution vector
           nodevec.replace_global_values(1, &nodegid, &recoveredgradient, j);
         }
-      }  // end boundary master pbc node
+      }  // end boundary target pbc node
     }  // end boundary nodes
 
   }  // end loop over all nodes
@@ -527,8 +527,8 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
   if (noderowmap.point_same_as(*fullnoderowmap))
     return std::make_shared<Core::LinAlg::MultiVector<double>>(nodevec.as_multi_vector());
 
-  // solution vector based on full row map in which the solution of the master node is inserted into
-  // slave nodes
+  // solution vector based on full row map in which the solution of the target node is inserted into
+  // source nodes
   std::shared_ptr<Core::LinAlg::MultiVector<double>> fullnodevec =
       std::make_shared<Core::LinAlg::MultiVector<double>>(*fullnoderowmap, numvec);
 
@@ -536,14 +536,14 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
   {
     const int nodeid = fullnoderowmap->gid(i);
 
-    std::map<int, int>::iterator slavemasterpair = slavetomastercolnodesmap.find(nodeid);
-    if (slavemasterpair != slavetomastercolnodesmap.end())
+    std::map<int, int>::iterator source_target_pair = source_to_target_colnodesmap.find(nodeid);
+    if (source_target_pair != source_to_target_colnodesmap.end())
     {
-      const int mastergid = slavemasterpair->second;
-      const int masterlid = noderowmap.lid(mastergid);
+      const int target_gid = source_target_pair->second;
+      const int target_lid = noderowmap.lid(target_gid);
       for (int j = 0; j < numvec; ++j)
         fullnodevec->replace_local_value(
-            i, j, nodevec.as_multi_vector().get_vector(j).get_values()[masterlid]);
+            i, j, nodevec.as_multi_vector().get_vector(j).get_values()[target_lid]);
     }
     else
     {

@@ -10,7 +10,6 @@
 #include "4C_adapter_coupling_nonlin_mortar.hpp"
 #include "4C_adapter_fld_poro.hpp"
 #include "4C_adapter_str_fpsiwrapper.hpp"
-#include "4C_contact_interface.hpp"
 #include "4C_coupling_adapter.hpp"
 #include "4C_coupling_adapter_converter.hpp"
 #include "4C_fem_discretization.hpp"
@@ -19,7 +18,6 @@
 #include "4C_fluid_utils_mapextractor.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
-#include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
@@ -27,13 +25,15 @@
 
 #include <Teuchos_TimeMonitor.hpp>
 
+#include <utility>
+
 FOUR_C_NAMESPACE_OPEN
 
 
 PoroElast::MonolithicSplitNoPenetration::MonolithicSplitNoPenetration(MPI_Comm comm,
     const Teuchos::ParameterList& timeparams,
     std::shared_ptr<Core::LinAlg::MapExtractor> porosity_splitter)
-    : MonolithicSplit(comm, timeparams, porosity_splitter), normrhs_nopenetration_(-1.0)
+    : MonolithicSplit(comm, timeparams, std::move(porosity_splitter)), normrhs_nopenetration_(-1.0)
 {
   auto& problem = *Global::Problem::instance();
 
@@ -54,6 +54,25 @@ PoroElast::MonolithicSplitNoPenetration::MonolithicSplitNoPenetration(MPI_Comm c
   mortar_adapter_ = std::make_shared<Adapter::CouplingNonLinMortar>(problem, problem.n_dim(),
       problem.mortar_coupling_params(), problem.contact_dynamic_params(),
       problem.spatial_approximation_type());
+
+  auto structure_dis = structure_field()->discretization();
+  double time(0.0);
+
+  // update time if it is a restarted simulation
+  if (const int restart_step = problem.restart(); restart_step > 0)
+  {
+    Core::IO::DiscretizationReader reader(
+        *structure_dis, Global::Problem::instance()->input_control_file(), restart_step);
+
+    time = reader.read_double("time");
+  }
+
+  auto use_all_elements = [](const Core::Elements::Element* element) { return true; };
+  visualization_writer_ = std::make_unique<Core::IO::DiscretizationVisualizationWriterMesh>(
+      structure_dis,
+      Core::IO::visualization_parameters_factory(
+          problem.io_params().sublist("RUNTIME VTK OUTPUT"), *problem.output_control_file(), time),
+      use_all_elements, "poroelast_monolithicsplit_nopenetration");
 }
 
 void PoroElast::MonolithicSplitNoPenetration::setup_system()
@@ -523,9 +542,9 @@ void PoroElast::MonolithicSplitNoPenetration::apply_fluid_coupl_matrix(
   {
     if (diag->local_values_as_span()[i] == 0.0)
     {
-      (*diag).get_values()[i] = 1.0;
+      diag->get_values()[i] = 1.0;
       std::cout << "--- --- --- WARNING: D-Matrix Diagonal Element " << i
-                << " is zero!!! --- --- ---" << std::endl;
+                << " is zero!!! --- --- ---\n";
     }
   }
 
@@ -541,10 +560,10 @@ void PoroElast::MonolithicSplitNoPenetration::apply_fluid_coupl_matrix(
   // Transform also column map of D-Matrix
   (*k_d_transform_)(*fluid_field()->interface()->fsi_cond_map(),
       fluid_field()->block_system_matrix()->matrix(1, 1).col_map(), *tmp_k_D, 1.0,
-      Coupling::Adapter::CouplingSlaveConverter(*icoupfs_), *k_d_);
+      Coupling::Adapter::CouplingSourceConverter(*icoupfs_), *k_d_);
 
   (*k_inv_d_transform_)(
-      *invd, 1.0, Coupling::Adapter::CouplingSlaveConverter(*icoupfs_), *k_inv_d_, false);
+      *invd, 1.0, Coupling::Adapter::CouplingSourceConverter(*icoupfs_), *k_inv_d_, false);
 
   double stiparam = structure_field()->tim_int_param();
 
@@ -555,7 +574,7 @@ void PoroElast::MonolithicSplitNoPenetration::apply_fluid_coupl_matrix(
   (*k_d_lin_transform_)(*fluid_field()->interface()->fsi_cond_map(),
       fluid_field()->block_system_matrix()->matrix(1, 1).col_map(), *tmp_k_DLin,
       1.0 - stiparam,  // *= b
-      Coupling::Adapter::CouplingSlaveConverter(*icoupfs_),
+      Coupling::Adapter::CouplingSourceConverter(*icoupfs_),
       (std::static_pointer_cast<Core::LinAlg::BlockSparseMatrixBase>(k_fs))->matrix(1, 1), true,
       true);
 
@@ -572,8 +591,7 @@ void PoroElast::MonolithicSplitNoPenetration::apply_fluid_coupl_matrix(
 }
 
 void PoroElast::MonolithicSplitNoPenetration::apply_str_coupl_matrix(
-    std::shared_ptr<Core::LinAlg::SparseOperator> k_sf  //!< off-diagonal tangent matrix term
-)
+    const std::shared_ptr<Core::LinAlg::SparseOperator> k_sf)
 {
   // call base class
   Monolithic::apply_str_coupl_matrix(k_sf);
@@ -597,16 +615,38 @@ void PoroElast::MonolithicSplitNoPenetration::update()
       *k_d_, Core::LinAlg::DataAccess::Copy);  // store D-Matrix from last timestep
 }
 
-void PoroElast::MonolithicSplitNoPenetration::output(bool forced_writerestart)
+void PoroElast::MonolithicSplitNoPenetration::output(const bool forced_writerestart)
 {
   // call base class
   MonolithicSplit::output(forced_writerestart);
 
-  // for now, we always write the lagrange multiplier
-  std::shared_ptr<Core::LinAlg::Vector<double>> fulllambda =
+  // do the runtime output
+  {
+    visualization_writer_->reset();
+
+    // for now, we always write the lagrange multiplier
+    auto full_lambda = Core::LinAlg::Vector<double>(*structure_field()->dof_row_map());
+    Core::LinAlg::export_to(*lambdanp_, full_lambda);
+
+    const auto struct_dis = structure_field()->discretization();
+    const int numdof = struct_dis->num_dof(0, struct_dis->l_row_node(0));
+    const std::vector<std::optional<std::string>> context(numdof, "poronopencond_lambda");
+
+    visualization_writer_->append_result_data_vector_with_context(
+        full_lambda, Core::IO::OutputEntity::dof, context);
+
+    visualization_writer_->write_to_disk(time(), step());
+  }
+
+  output_restart();
+}
+
+void PoroElast::MonolithicSplitNoPenetration::output_restart()
+{
+  const auto full_lambda =
       std::make_shared<Core::LinAlg::Vector<double>>(*structure_field()->dof_row_map());
-  Core::LinAlg::export_to(*lambdanp_, *fulllambda);
-  structure_field()->disc_writer()->write_vector("poronopencond_lambda", fulllambda);
+  Core::LinAlg::export_to(*lambdanp_, *full_lambda);
+  structure_field()->disc_writer()->write_vector("poronopencond_lambda", full_lambda);
 }
 
 void PoroElast::MonolithicSplitNoPenetration::setup_coupling_and_matrices()
@@ -662,12 +702,18 @@ void PoroElast::MonolithicSplitNoPenetration::setup_coupling_and_matrices()
 void PoroElast::MonolithicSplitNoPenetration::prepare_time_step()
 {
   // call base class
+  // note: after discussion with a former user of this framework it is very likely that this is the
+  // desired behavior. Static analyzers are complaining as MonolithicSplitNoPenetration should not
+  // inherit from MonolithicSplit
   PoroElast::Monolithic::prepare_time_step();
 }
 
 void PoroElast::MonolithicSplitNoPenetration::read_restart(const int step)
 {
   // call base class
+  // note: after discussion with a former user of this framework it is very likely that this is the
+  // desired behavior. Static analyzers are complaining as MonolithicSplitNoPenetration should not
+  // inherit from MonolithicSplit
   PoroElast::PoroBase::read_restart(step);
 
   // get lagrange multiplier and D matrix
@@ -676,14 +722,14 @@ void PoroElast::MonolithicSplitNoPenetration::read_restart(const int step)
     // get the structure reader (this is where the lagrange multiplier was saved)
     Core::IO::DiscretizationReader reader(*structure_field()->discretization(),
         Global::Problem::instance()->input_control_file(), structure_field()->step());
-    std::shared_ptr<Core::LinAlg::Vector<double>> fulllambda =
+    const auto full_lambda =
         std::make_shared<Core::LinAlg::Vector<double>>(*structure_field()->dof_row_map());
 
     // this is the lagrange multiplier on the whole structure field
-    reader.read_vector(fulllambda, "poronopencond_lambda");
+    reader.read_vector(full_lambda, "poronopencond_lambda");
 
     // extract lambda on fsi interface vector
-    lambda_ = structure_field()->interface()->extract_fsi_cond_vector(*fulllambda);
+    lambda_ = structure_field()->interface()->extract_fsi_cond_vector(*full_lambda);
     lambdanp_->update(1.0, *lambda_, 0.0);
 
     // call an additional evaluate to get the old D matrix

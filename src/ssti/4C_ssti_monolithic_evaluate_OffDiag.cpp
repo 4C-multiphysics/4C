@@ -220,7 +220,7 @@ void SSTI::ThermoStructureOffDiagCoupling::copy_slave_to_master_thermo_structure
           auto source_dof_map = meshtying->slave_master_coupling()->source_dof_map();
           auto slave_side_converter_struct = meshtying->slave_side_converter();
 
-          auto slave_side_converter_thermo = Coupling::Adapter::CouplingSlaveConverter(
+          auto slave_side_converter_thermo = Coupling::Adapter::CouplingSourceConverter(
               *meshtying_strategy_thermo_->coupling_adapter());
 
           Coupling::Adapter::MatrixLogicalSplitAndTransform()(blockslavematrix->matrix(iblock, 0),
@@ -256,7 +256,7 @@ void SSTI::ThermoStructureOffDiagCoupling::copy_slave_to_master_thermo_structure
       {
         auto source_dof_map = meshtying->slave_master_coupling()->source_dof_map();
         auto slave_side_converter_struct = meshtying->slave_side_converter();
-        auto slave_side_converter_thermo = Coupling::Adapter::CouplingSlaveConverter(
+        auto slave_side_converter_thermo = Coupling::Adapter::CouplingSourceConverter(
             *meshtying_strategy_thermo_->coupling_adapter());
 
         Coupling::Adapter::MatrixLogicalSplitAndTransform()(*sparseslavematrix,
@@ -351,7 +351,7 @@ void SSTI::ThermoStructureOffDiagCoupling::evaluate_thermo_structure_interface_s
         // converter between old slave dofs from input and actual slave dofs from current mesh tying
         // adapter
         auto slave_slave_converter =
-            Coupling::Adapter::CouplingSlaveConverter(*slave_slave_transformation);
+            Coupling::Adapter::CouplingSourceConverter(*slave_slave_transformation);
 
         // old slave dofs from input
         auto slave_map = slave_slave_transformation->source_dof_map();
@@ -392,7 +392,7 @@ void SSTI::ThermoStructureOffDiagCoupling::evaluate_thermo_structure_interface_s
         // converter between old slave dofs from input and actual slave dofs from current mesh tying
         // adapter
         auto slave_slave_converter =
-            Coupling::Adapter::CouplingSlaveConverter(*slave_slave_transformation);
+            Coupling::Adapter::CouplingSourceConverter(*slave_slave_transformation);
 
         // old slave dofs from input
         auto slave_map = slave_slave_transformation->source_dof_map();

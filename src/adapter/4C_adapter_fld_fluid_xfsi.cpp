@@ -149,10 +149,10 @@ void Adapter::XFluidFSI::apply_struct_mesh_displacement(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Adapter::XFluidFSI::set_mesh_map(
-    std::shared_ptr<const Core::LinAlg::Map> mm, const int nds_master)
+    std::shared_ptr<const Core::LinAlg::Map> mm, const int target_dofset_number)
 {
-  // check nds_master
-  if (nds_master != 0) FOUR_C_THROW("nds_master is supposed to be 0 here");
+  // check target_dofset_number
+  if (target_dofset_number != 0) FOUR_C_THROW("target_dofset_number is supposed to be 0 here");
 
   meshmap_->setup(*xfluid_->discretisation_xfem()->initial_dof_row_map(), mm,
       Core::LinAlg::split_map(*xfluid_->discretisation_xfem()->initial_dof_row_map(), *mm));

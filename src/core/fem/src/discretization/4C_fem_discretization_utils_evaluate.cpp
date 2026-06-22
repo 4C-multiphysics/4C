@@ -67,9 +67,9 @@ namespace
       {
         TEUCHOS_FUNC_TIME_MONITOR("Core::FE::Evaluate elements");
         // call the element evaluate method
-        int err =
-            actele->evaluate(eparams, discret, la, strategy.elematrix1(), strategy.elematrix2(),
-                strategy.elevector1(), strategy.elevector2(), strategy.elevector3());
+        int err = actele->evaluate_with_timing(eparams, discret, la, strategy.elematrix1(),
+            strategy.elematrix2(), strategy.elevector1(), strategy.elevector2(),
+            strategy.elevector3());
         if (err)
           FOUR_C_THROW("Proc {}: Element {} returned err={}",
               Core::Communication::my_mpi_rank(discret.get_comm()), actele->id(), err);

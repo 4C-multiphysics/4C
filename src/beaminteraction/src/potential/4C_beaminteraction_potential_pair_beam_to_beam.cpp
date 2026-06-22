@@ -13,6 +13,7 @@
 #include "4C_beaminteraction_potential_input.hpp"
 #include "4C_fem_general_largerotations.hpp"
 #include "4C_fem_general_utils_integration.hpp"
+#include "4C_fem_general_utils_polynomial.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
@@ -3410,27 +3411,63 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
     // determine potential reduction factor (target beam can only consist of one element!)
     if (left_length_to_edge < potential_reduction_length.value())
     {
-      potential_reduction_factor_GP = 0.5 - 0.5 * std::cos(std::numbers::pi * left_length_to_edge /
-                                                           potential_reduction_length.value());
       length_to_edge = left_length_to_edge;
     }
     else if (right_length_to_edge < potential_reduction_length.value())
     {
-      potential_reduction_factor_GP = 0.5 - 0.5 * std::cos(std::numbers::pi * right_length_to_edge /
-                                                           potential_reduction_length.value());
       length_to_edge = right_length_to_edge;
       right_node = true;
     }
 
-    if ((length_to_edge < potential_reduction_length.value()) && (length_to_edge != -1.0))
+    if (length_to_edge != -1.0)
     {
-      pot_red_fac_deriv_l_edge =
-          0.5 * std::numbers::pi / potential_reduction_length.value() *
-          std::sin(std::numbers::pi * length_to_edge / potential_reduction_length.value());
-      pot_red_fac_2ndderiv_l_edge =
-          0.5 * std::numbers::pi * std::numbers::pi /
-          (potential_reduction_length.value() * potential_reduction_length.value()) *
-          std::cos(std::numbers::pi * length_to_edge / potential_reduction_length.value());
+      if (params()->potential_reduction_function ==
+          BeamInteraction::Potential::ReductionFunction::cosine)
+      {
+        potential_reduction_factor_GP = 0.5 - 0.5 * std::cos(std::numbers::pi * length_to_edge /
+                                                             potential_reduction_length.value());
+        pot_red_fac_deriv_l_edge =
+            0.5 * std::numbers::pi / potential_reduction_length.value() *
+            std::sin(std::numbers::pi * length_to_edge / potential_reduction_length.value());
+        pot_red_fac_2ndderiv_l_edge =
+            0.5 * std::numbers::pi * std::numbers::pi /
+            (potential_reduction_length.value() * potential_reduction_length.value()) *
+            std::cos(std::numbers::pi * length_to_edge / potential_reduction_length.value());
+      }
+      else if (params()->potential_reduction_function ==
+               BeamInteraction::Potential::ReductionFunction::polynomial_5)
+      {
+        Core::FE::Polynomial polynomial =
+            Core::FE::Polynomial({0, 0, 0, 10 / std::pow(potential_reduction_length.value(), 3),
+                -15 / std::pow(potential_reduction_length.value(), 4),
+                6 / std::pow(potential_reduction_length.value(), 5)});
+
+        potential_reduction_factor_GP =
+            polynomial.evaluate(Core::FADUtils::cast_to_double(length_to_edge));
+
+        pot_red_fac_deriv_l_edge =
+            polynomial.evaluate_derivative(Core::FADUtils::cast_to_double(length_to_edge), 1);
+
+        pot_red_fac_2ndderiv_l_edge =
+            polynomial.evaluate_derivative(Core::FADUtils::cast_to_double(length_to_edge), 2);
+      }
+      else if (params()->potential_reduction_function ==
+               BeamInteraction::Potential::ReductionFunction::polynomial_7)
+      {
+        Core::FE::Polynomial polynomial =
+            Core::FE::Polynomial({0, 0, 0, 0, 35 / std::pow(potential_reduction_length.value(), 4),
+                -84 / std::pow(potential_reduction_length.value(), 5),
+                70 / std::pow(potential_reduction_length.value(), 6),
+                -20 / std::pow(potential_reduction_length.value(), 7)});
+
+        potential_reduction_factor_GP =
+            polynomial.evaluate(Core::FADUtils::cast_to_double(length_to_edge));
+        pot_red_fac_deriv_l_edge =
+            polynomial.evaluate_derivative(Core::FADUtils::cast_to_double(length_to_edge), 1);
+
+        pot_red_fac_2ndderiv_l_edge =
+            polynomial.evaluate_derivative(Core::FADUtils::cast_to_double(length_to_edge), 2);
+      }
     }
 
     l_edge_deriv_xi_target = 0.5 * ele2length_;

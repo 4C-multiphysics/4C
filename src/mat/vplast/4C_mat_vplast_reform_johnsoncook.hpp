@@ -212,9 +212,9 @@ namespace Mat
          * @brief Computes log(B * N) for the Johnson-Cook hardening law, assuming B * N > 0.0
          *
          *
-         *@param[in] B Hardening prefactor.
-         *@param[in] Hardening exponent.
-         *@return logarithm log(B * N)
+         * @param[in] B Hardening prefactor.
+         * @param[in] N Hardening exponent.
+         * @return logarithm log(B * N)
          */
         double set_log_b_n(const double B, const double N)
         {
@@ -230,6 +230,16 @@ namespace Mat
       /// temperature ratio \f$ D_T = 1 - \frac{T^M - T_{\mathrm{ref}}^M}{T_{\mathrm{melt}}^M -
       /// T_{\mathrm{ref}}^M} \f$
       double temperature_ratio_ = 1.0;
+
+      /// logarithm of temperature ratio \f$ \log(D_T) =  \log( 1 - \frac{T^M -
+      /// T_{\mathrm{ref}}^M}{T_{\mathrm{melt}}^M - T_{\mathrm{ref}}^M} ) \f$
+      double log_temperature_ratio_;
+
+      /// logarithm of negative temperature ratio derivative wrt temperature \f$ \log( - \partial
+      /// D_T / \partial T) = \log(M
+      /// \frac{T^{M-1}}{T_{\mathrm{melt}}^M - T_{\mathrm{ref}}^M} ) \f$
+      double log_neg_temperature_ratio_deriv_;
+
 
       //! struct containing quantities at different time points (i.e., "current" at \f[ t_{n+1} \f])
       struct TimeStepQuantities

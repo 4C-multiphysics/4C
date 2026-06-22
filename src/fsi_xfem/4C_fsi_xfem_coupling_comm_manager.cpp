@@ -374,7 +374,7 @@ XFEM::CouplingCommManager::get_coupling_converter(int idxA, int idxB)
   }
   else if (idxA > idxB)
   {
-    return std::make_shared<Coupling::Adapter::CouplingSlaveConverter>(*get_coupling(idxB, idxA));
+    return std::make_shared<Coupling::Adapter::CouplingSourceConverter>(*get_coupling(idxB, idxA));
   }
   else
   {

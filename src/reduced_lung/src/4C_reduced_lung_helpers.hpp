@@ -22,8 +22,12 @@
 #include <Teuchos_ParameterList.hpp>
 
 #include <functional>
+#include <limits>
 #include <map>
 #include <optional>
+#include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -93,6 +97,32 @@ namespace ReducedLung
     Core::LinAlg::Vector<double>& locally_relevant_dofs;  ///< Ghosted dof vector.
     Core::LinAlg::Vector<double>& x;                      ///< NOX solution vector.
     Core::LinAlg::SparseOperator& jacobian;               ///< NOX Jacobian operator.
+  };
+
+  /**
+   * @brief Collector for runtime output data vectors.
+   *
+   * Manages creation and storage of output vectors for different verbosity levels.
+   */
+  struct RuntimeOutputCollector
+  {
+    const Core::LinAlg::Map& element_row_map;
+    std::map<std::string, Core::LinAlg::Vector<double>> vectors;
+
+    explicit RuntimeOutputCollector(const Core::LinAlg::Map& map) : element_row_map(map) {}
+
+    Core::LinAlg::Vector<double>& get_or_create_vector(const std::string& name)
+    {
+      auto it = vectors.find(name);
+      if (it == vectors.end())
+      {
+        auto res = vectors.emplace(std::piecewise_construct, std::forward_as_tuple(name),
+            std::forward_as_tuple(element_row_map, true));
+        res.first->second.put_scalar(std::numeric_limits<double>::quiet_NaN());
+        return res.first->second;
+      }
+      return it->second;
+    }
   };
 
   /**
@@ -302,7 +332,8 @@ namespace ReducedLung
       const Airways::AirwayContainer& airways,
       const TerminalUnits::TerminalUnitContainer& terminal_units,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs,
-      const Core::LinAlg::Map* element_row_map);
+      const Core::LinAlg::Map* element_row_map, ReducedLungParameters::OutputVerbosity verbosity);
+
 }  // namespace ReducedLung
 
 FOUR_C_NAMESPACE_CLOSE

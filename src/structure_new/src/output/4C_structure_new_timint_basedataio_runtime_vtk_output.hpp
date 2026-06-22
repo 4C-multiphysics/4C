@@ -77,6 +77,13 @@ namespace Solid
         return output_beams_;
       };
 
+      /// whether to write element evaluation times to vtk output
+      bool output_element_eval_times() const
+      {
+        check_init_setup();
+        return output_element_eval_times_;
+      }
+
       /// get the data container for parameters regarding beams
       std::shared_ptr<const Discret::Elements::StructureRuntimeOutputParams> get_structure_params()
           const
@@ -130,6 +137,9 @@ namespace Solid
 
       /// whether to write special output for beam elements
       bool output_beams_ = false;
+
+      /// whether to write element evaluation times to vtk output
+      bool output_element_eval_times_ = false;
 
       /// data container for input parameters related to output of structure at runtime
       std::shared_ptr<Discret::Elements::StructureRuntimeOutputParams>

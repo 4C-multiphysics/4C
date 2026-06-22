@@ -27,7 +27,7 @@ namespace S2I
   {
     side_undefined,
     side_source,
-    side_master
+    side_target
   };
 
   //! type of mesh coupling

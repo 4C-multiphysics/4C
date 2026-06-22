@@ -57,7 +57,17 @@ namespace ReducedLung1dPipeFlow
     // information on terminal units where 1D is coupled to 0D
     struct TerminalUnits
     {
-      Core::IO::InputField<double> acinar_volume_v;
+      /**
+       * Enum to select the type of terminal unit model.
+       */
+      enum class TerminalUnitType : std::uint8_t
+      {
+        RheologicalElasticity,  ///< Existing rheological + elasticity models
+        Windkessel              ///< 3-element Windkessel (RCR) model
+      };
+
+      Core::IO::InputField<TerminalUnitType> terminal_unit_type;
+
       struct RheologicalModel
       {
         /**
@@ -87,6 +97,7 @@ namespace ReducedLung1dPipeFlow
 
       struct ElasticityModel
       {
+        Core::IO::InputField<double> acinar_volume_v;
         /**
          * Enum to distinguish between different elasticity models for the terminal units in the 1D
          * reduced lung implementation.
@@ -110,6 +121,14 @@ namespace ReducedLung1dPipeFlow
           Core::IO::InputField<double> ogden_parameter_beta;
         } ogden;
       } elasticity_model;
+
+      struct WindkesselModel
+      {
+        Core::IO::InputField<double> proximal_resistance_R_p;  ///< Proximal resistance
+        Core::IO::InputField<double> compliance_C;             ///< Compliance
+        Core::IO::InputField<double> distal_resistance_R_d;    ///< Distal resistance
+        Core::IO::InputField<double> pressure_peripheral;      ///< Peripheral pressure
+      } windkessel_model;
     } terminal_units;
   };
   Core::IO::InputSpec valid_parameters();

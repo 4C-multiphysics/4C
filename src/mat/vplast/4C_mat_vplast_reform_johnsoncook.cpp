@@ -84,6 +84,7 @@ void Mat::Viscoplastic::ReformulatedJohnsonCook::pre_evaluate(
 
   // set temperature ratio
   temperature_ratio_ = 1.0;
+  log_temperature_ratio_ = 0.0;
   if (T != T_ref)
   {
     FOUR_C_ASSERT_ALWAYS(T_ref < T_melt,
@@ -92,7 +93,12 @@ void Mat::Viscoplastic::ReformulatedJohnsonCook::pre_evaluate(
         T_ref, T_melt);
     temperature_ratio_ =
         1.0 - (std::pow(T, M) - std::pow(T_ref, M)) / (std::pow(T_melt, M) - std::pow(T_ref, M));
+    log_temperature_ratio_ = std::log(temperature_ratio_);
   }
+
+  // set temperature ratio derivative
+  log_neg_temperature_ratio_deriv_ =
+      std::log(M * (std::pow(T, M - 1.0)) / (std::pow(T_melt, M) - std::pow(T_ref, M)));
 }
 
 /*--------------------------------------------------------------------*
@@ -210,6 +216,7 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
   // declare derivatives to be computed
   double deriv_equiv_stress{0.0};
   double deriv_plastic_strain{0.0};
+  double deriv_temperature{0.0};
 
   // first set error status to "no errors"
   err_status = ViscoplastErrorType::no_errors;
@@ -229,7 +236,7 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
   {
     err_status = ViscoplastErrorType::negative_plastic_strain;
     return InelasticDefgradTransvIsotropElastViscoplastUtils::PlasticStrainRateDerivs{
-        .deriv_equiv_stress = 0.0, .deriv_plastic_strain = 0.0};
+        .deriv_equiv_stress = 0.0, .deriv_plastic_strain = 0.0, .deriv_temperature = 0.0};
   }
 
   // extraction of the yield strength from the plastic strain and the material parameters
@@ -244,6 +251,8 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
       EnumTools::enum_name(yield_strength_err_status));
   const double log_yield_strength = std::log(yield_strength);
   const double inv_yield_strength = 1.0 / yield_strength;
+  const double log_yield_strength_reference_temperature =
+      log_yield_strength - log_temperature_ratio_;
 
 
   // logarithms of equivalent stress and plastic strain
@@ -263,6 +272,13 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
                              const_pars_.e * (equiv_stress * inv_yield_strength - 1.0) -
                              log_yield_strength;
 
+    const double log_neg_d_yield_strength_d_temperature =
+        log_yield_strength_reference_temperature + log_neg_temperature_ratio_deriv_;
+
+    const double log_deriv_temperature =
+        const_pars_.log_p_e + const_pars_.e * (equiv_stress * inv_yield_strength - 1.0) +
+        log_equiv_stress - 2.0 * log_yield_strength + log_neg_d_yield_strength_d_temperature;
+
     // verify whether the maximum plastic strain derivative increment is larger than 0, since we
     // will take its logarithm
     FOUR_C_ASSERT_ALWAYS(max_plastic_strain_deriv_incr > 0.0,
@@ -274,42 +290,48 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
     {
       // check overflow error using these logarithms
       double log_max_plastic_strain_deriv_value = std::log(max_plastic_strain_deriv_incr);
-      if ((log_dt + log_deriv_sigma > log_max_plastic_strain_deriv_value))
+      if ((log_dt + log_deriv_sigma > log_max_plastic_strain_deriv_value) or
+          (log_dt + log_deriv_temperature > log_max_plastic_strain_deriv_value))
       {
         err_status = ViscoplastErrorType::failed_computation_flow_resistance_derivs;
         return InelasticDefgradTransvIsotropElastViscoplastUtils::PlasticStrainRateDerivs{
-            .deriv_equiv_stress = 0.0, .deriv_plastic_strain = 0.0};
+            .deriv_equiv_stress = 0.0, .deriv_plastic_strain = 0.0, .deriv_temperature = 0.0};
       }
 
       // compute the exact derivatives using these logarithms
       deriv_equiv_stress = std::exp(log_deriv_sigma);
       deriv_plastic_strain = 0.0;
+      deriv_temperature = std::exp(log_deriv_temperature);
     }
     // hardening case
     else
     {
-      const double log_deriv_eps =
+      const double log_neg_deriv_eps =
           const_pars_.log_p_e + const_pars_.e * (equiv_stress * inv_yield_strength - 1.0) +
           log_equiv_stress - 2.0 * log_yield_strength + const_pars_.log_B_N +
-          (const_pars_.N - 1.0) * log_equiv_plastic_strain;
+          (const_pars_.N - 1.0) * log_equiv_plastic_strain + log_temperature_ratio_;
       // check overflow error using these logarithms
       double log_max_plastic_strain_deriv_value = std::log(max_plastic_strain_deriv_incr);
-      if ((log_dt + log_deriv_sigma > log_max_plastic_strain_deriv_value) &&
-          (log_dt + log_deriv_eps > log_max_plastic_strain_deriv_value))
+      if ((log_dt + log_deriv_sigma > log_max_plastic_strain_deriv_value) or
+          (log_dt + log_neg_deriv_eps > log_max_plastic_strain_deriv_value) or
+          (log_dt + log_deriv_temperature > log_max_plastic_strain_deriv_value))
       {
         err_status = ViscoplastErrorType::failed_computation_flow_resistance_derivs;
         return InelasticDefgradTransvIsotropElastViscoplastUtils::PlasticStrainRateDerivs{
-            .deriv_equiv_stress = 0.0, .deriv_plastic_strain = 0.0};
+            .deriv_equiv_stress = 0.0, .deriv_plastic_strain = 0.0, .deriv_temperature = 0.0};
       }
 
       // compute the exact derivatives using these logarithms
       deriv_equiv_stress = std::exp(log_deriv_sigma);
-      deriv_plastic_strain = -std::exp(log_deriv_eps);
+      deriv_plastic_strain = -std::exp(log_neg_deriv_eps);
+      deriv_temperature = std::exp(log_deriv_temperature);
     }
   }
 
   return InelasticDefgradTransvIsotropElastViscoplastUtils::PlasticStrainRateDerivs{
-      .deriv_equiv_stress = deriv_equiv_stress, .deriv_plastic_strain = deriv_plastic_strain};
+      .deriv_equiv_stress = deriv_equiv_stress,
+      .deriv_plastic_strain = deriv_plastic_strain,
+      .deriv_temperature = deriv_temperature};
 }
 
 void Mat::Viscoplastic::ReformulatedJohnsonCook::setup(const int numgp,

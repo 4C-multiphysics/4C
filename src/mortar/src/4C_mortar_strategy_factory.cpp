@@ -131,7 +131,7 @@ void Mortar::STRATEGY::Factory::prepare_nurbs_element(const Core::FE::Discretiza
   if (!faceele) FOUR_C_THROW("Cast to FaceElement failed!");
 
   bool zero_size = knots->get_boundary_ele_and_parent_knots(parentknots, mortarknots, normalfac,
-      faceele->parent_target_element()->id(), faceele->face_master_number());
+      faceele->parent_target_element()->id(), faceele->face_target_number());
 
   // store nurbs specific data to node
   cele.zero_sized() = zero_size;

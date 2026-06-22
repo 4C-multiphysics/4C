@@ -39,25 +39,25 @@ XFEM::XfpCouplingManager::XfpCouplingManager(std::shared_ptr<XFEM::ConditionMana
       condmanager->get_mesh_coupling(cond_name_ps_ps_));
   if (mcfpi_ps_ps_ == nullptr) FOUR_C_THROW(" Failed to get MeshCouplingFPI for Porostructure!");
   mcfpi_ps_ps_->initialize_struct_pres_map(*poro_->fluid_structure_coupling().source_dof_map(),
-      *poro_->fluid_structure_coupling().perm_master_dof_map());
+      *poro_->fluid_structure_coupling().permuted_target_dof_map());
 
   mcfpi_ps_pf_ = std::dynamic_pointer_cast<XFEM::MeshCouplingFPI>(
       condmanager->get_mesh_coupling(cond_name_ps_pf_));
   if (mcfpi_ps_pf_ == nullptr) FOUR_C_THROW(" Failed to get MeshCouplingFPI for Porofluid!");
   mcfpi_ps_pf_->initialize_struct_pres_map(*poro_->fluid_structure_coupling().source_dof_map(),
-      *poro_->fluid_structure_coupling().perm_master_dof_map());
+      *poro_->fluid_structure_coupling().permuted_target_dof_map());
 
   mcfpi_pf_ps_ = std::dynamic_pointer_cast<XFEM::MeshCouplingFPI>(
       condmanager->get_mesh_coupling(cond_name_pf_ps_));
   if (mcfpi_pf_ps_ == nullptr) FOUR_C_THROW(" Failed to get MeshCouplingFPI for Porofluid!");
   mcfpi_pf_ps_->initialize_struct_pres_map(*poro_->fluid_structure_coupling().source_dof_map(),
-      *poro_->fluid_structure_coupling().perm_master_dof_map());
+      *poro_->fluid_structure_coupling().permuted_target_dof_map());
 
   mcfpi_pf_pf_ = std::dynamic_pointer_cast<XFEM::MeshCouplingFPI>(
       condmanager->get_mesh_coupling(cond_name_pf_pf_));
   if (mcfpi_pf_pf_ == nullptr) FOUR_C_THROW(" Failed to get MeshCouplingFPI for Porofluid!");
   mcfpi_pf_pf_->initialize_struct_pres_map(*poro_->fluid_structure_coupling().source_dof_map(),
-      *poro_->fluid_structure_coupling().perm_master_dof_map());
+      *poro_->fluid_structure_coupling().permuted_target_dof_map());
 
   // safety check
   if (!mcfpi_ps_ps_->i_dispnp()->get_map().same_as(*get_map_extractor(0)->map(1)))

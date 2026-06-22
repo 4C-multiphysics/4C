@@ -430,10 +430,6 @@ namespace Discret
           const Core::Elements::LocationArray& la, std::vector<double>& mydisp,
           std::vector<double>& myvel) const;
 
-      //! copy matrix contents into character vector
-      void copy_matrix_into_char_vector(
-          std::vector<char>& data, const Core::LinAlg::Matrix<nquad_, nsd_>& stuff) const;
-
       //! actual values of temperatures T_{n+1}
       Core::LinAlg::Matrix<nen_, 1> etempn_;
       //! temperatures in last time step T_{n}

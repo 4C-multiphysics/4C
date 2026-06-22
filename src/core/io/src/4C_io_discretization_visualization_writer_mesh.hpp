@@ -191,6 +191,13 @@ namespace Core::IO
     void append_element_gid(const std::string& resultname);
 
     /**
+     * \brief Write the internal element evaluation times for each element
+     *
+     * @param resultname (in) Name of the field in the visualization file
+     */
+    void append_element_eval_time(const std::string& resultname);
+
+    /**
      * \brief Write ghosting information to the elements
      *
      * For more details look at the documentation to Core::IO::append_element_ghosting_information

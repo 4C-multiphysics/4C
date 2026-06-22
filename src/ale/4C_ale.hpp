@@ -315,7 +315,7 @@ namespace ALE
     std::shared_ptr<const Core::LinAlg::SparseMatrix> get_loc_sys_trafo() const;
 
     //! Update slave dofs for multifield simulations with ale
-    void update_slave_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& a) override;
+    void update_source_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& a) override;
 
     //! Return locsys manager
     std::shared_ptr<Core::Conditions::LocsysManager> locsys_manager() override

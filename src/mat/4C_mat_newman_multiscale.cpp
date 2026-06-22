@@ -16,7 +16,6 @@
 FOUR_C_NAMESPACE_OPEN
 
 /*--------------------------------------------------------------------*
- | constructor                                             fang 07/17 |
  *--------------------------------------------------------------------*/
 Mat::PAR::NewmanMultiScale::NewmanMultiScale(const Core::Mat::PAR::Parameter::Data& matdata)
     : Newman(matdata),
@@ -26,9 +25,7 @@ Mat::PAR::NewmanMultiScale::NewmanMultiScale(const Core::Mat::PAR::Parameter::Da
 {
 }
 
-
 /*--------------------------------------------------------------------*
- | create instance of Newman multi-scale material          fang 07/17 |
  *--------------------------------------------------------------------*/
 std::shared_ptr<Core::Mat::Material> Mat::PAR::NewmanMultiScale::create_material()
 {
@@ -38,41 +35,29 @@ std::shared_ptr<Core::Mat::Material> Mat::PAR::NewmanMultiScale::create_material
 
 Mat::NewmanMultiScaleType Mat::NewmanMultiScaleType::instance_;
 
-
 /*--------------------------------------------------------------------*
- | unpack instance of Newman multi-scale material          fang 07/17 |
  *--------------------------------------------------------------------*/
 Core::Communication::ParObject* Mat::NewmanMultiScaleType::create(
     Core::Communication::UnpackBuffer& buffer)
 {
-  Mat::NewmanMultiScale* NewmanMultiScale = new Mat::NewmanMultiScale();
+  auto* const NewmanMultiScale = new Mat::NewmanMultiScale();
   NewmanMultiScale->unpack(buffer);
   return NewmanMultiScale;
 }
 
-
 /*--------------------------------------------------------------------*
- | construct empty Newman multi-scale material             fang 07/17 |
  *--------------------------------------------------------------------*/
-Mat::NewmanMultiScale::NewmanMultiScale() : params_(nullptr) {}
-
-
-/*--------------------------------------------------------------------------------------*
- | construct Newman multi-scale material with specific material parameters   fang 07/17 |
- *--------------------------------------------------------------------------------------*/
 Mat::NewmanMultiScale::NewmanMultiScale(Mat::PAR::NewmanMultiScale* params)
     : Newman(params), params_(params)
 {
 }
 
-
 /*--------------------------------------------------------------------*
- | pack material for communication purposes                fang 07/17 |
  *--------------------------------------------------------------------*/
 void Mat::NewmanMultiScale::pack(Core::Communication::PackBuffer& data) const
 {
   // pack type of this instance of ParObject
-  int type = unique_par_object_id();
+  const int type = unique_par_object_id();
   add_to_pack(data, type);
 
   int matid = -1;
@@ -83,9 +68,7 @@ void Mat::NewmanMultiScale::pack(Core::Communication::PackBuffer& data) const
   Newman::pack(data);
 }
 
-
 /*--------------------------------------------------------------------*
- | unpack data from a char vector                          fang 07/17 |
  *--------------------------------------------------------------------*/
 void Mat::NewmanMultiScale::unpack(Core::Communication::UnpackBuffer& buffer)
 {

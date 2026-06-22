@@ -42,9 +42,6 @@ namespace Mixture
       /// Material id of the prestress strategy
       const int matid_prestress_strategy_;
 
-      /// number of summands
-      const int nummat_;
-
       /// List of material ids of the summands
       const std::vector<int> matids_;
       /// @}

@@ -200,6 +200,13 @@ namespace Solid
         return firstoutputofrun_;
       };
 
+      /// Whether to output evaluation times for each rank to a csv file
+      const bool& output_per_rank_eval_time() const
+      {
+        check_init_setup();
+        return output_per_rank_eval_time_;
+      };
+
       /// Print infos to standard out every n step
       const int& get_print2_screen_every_n_step() const
       {
@@ -321,6 +328,9 @@ namespace Solid
 
       /// flag whether this output step is the first one (restarted or not)
       bool firstoutputofrun_;
+
+      /// output of evaluation times for each rank to a csv file
+      bool output_per_rank_eval_time_;
 
       /// print infos to standard out every n steps
       int printscreen_;

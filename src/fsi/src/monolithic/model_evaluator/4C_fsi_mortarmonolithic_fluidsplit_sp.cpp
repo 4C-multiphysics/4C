@@ -876,7 +876,7 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::setup_system_matrix(
       std::make_shared<Core::LinAlg::SparseMatrix>(ale_inner_inner.row_map(), 81, false);
   (*ale_inner_interf_transform_)(aleblock->full_row_map(), aleblock->full_col_map(),
       ale_inner_interf, 1.,
-      Coupling::Adapter::CouplingSlaveConverter(interface_fluid_ale_coupling()),
+      Coupling::Adapter::CouplingSourceConverter(interface_fluid_ale_coupling()),
       *aux_ale_inner_interf);
 
   aux_ale_inner_interf->scale(1. / fluid_timescale);
@@ -949,7 +949,7 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::setup_system_matrix(
     // Addressing contribution to block (3,5)
     (*fluid_mesh_inner_inner_transform_)(fluid_shape_deriv->full_row_map(),
         fluid_shape_deriv->full_col_map(), fluid_mesh_inner_inner, 1.,
-        Coupling::Adapter::CouplingSlaveConverter(coup_fluid_ale), mat.matrix(1, 2), false);
+        Coupling::Adapter::CouplingSourceConverter(coup_fluid_ale), mat.matrix(1, 2), false);
 
     // Addressing contribution to block (4,4)
     Core::LinAlg::SparseMatrix aux_fluid_mesh_interf_interf(

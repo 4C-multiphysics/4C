@@ -154,12 +154,6 @@ namespace Mat
         double concentration, Core::LinAlg::Matrix<9, 1>& d_F_dx);
     //@}
 
-    /*!
-     * @brief Return whether material includes a varying material density
-     */
-    virtual bool varying_density() const { return false; }
-
-
     //! @name Handling of Gauss point data
     /*!
      * @brief Check if element kinematics and material kinematics are compatible

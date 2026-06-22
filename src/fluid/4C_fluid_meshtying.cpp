@@ -37,7 +37,7 @@ FLD::Meshtying::Meshtying(std::shared_ptr<Core::FE::Discretization> dis,
       dofrowmap_(nullptr),
       problemrowmap_(nullptr),
       gndofrowmap_(nullptr),
-      gsmdofrowmap_(nullptr),
+      gsource_target_dof_row_map_(nullptr),
       gsdofrowmap_(nullptr),
       gmdofrowmap_(nullptr),
       mergedmap_(nullptr),
@@ -151,10 +151,10 @@ void FLD::Meshtying::setup_meshtying(const std::vector<int>& coupleddof, const b
       gmdofrowmap_ = adaptermeshtying_->target_dof_map();
 
       // merge dofrowmap for slave and master discretization
-      gsmdofrowmap_ = Core::LinAlg::merge_map(*gmdofrowmap_, *gsdofrowmap_, false);
+      gsource_target_dof_row_map_ = Core::LinAlg::merge_map(*gmdofrowmap_, *gsdofrowmap_, false);
 
       // dofrowmap for discretisation without slave and master dofrowmap
-      gndofrowmap_ = Core::LinAlg::split_map(*dofrowmap_, *gsmdofrowmap_);
+      gndofrowmap_ = Core::LinAlg::split_map(*dofrowmap_, *gsource_target_dof_row_map_);
 
       // map for 2x2 (uncoupled dof's & master dof's)
       mergedmap_ = Core::LinAlg::merge_map(*gndofrowmap_, *gmdofrowmap_, false);
@@ -226,10 +226,10 @@ void FLD::Meshtying::setup_meshtying(const std::vector<int>& coupleddof, const b
       gmdofrowmap_ = adaptermeshtying_->target_dof_map();
 
       // merge dofrowmap for slave and master discretization
-      gsmdofrowmap_ = Core::LinAlg::merge_map(*gmdofrowmap_, *gsdofrowmap_, false);
+      gsource_target_dof_row_map_ = Core::LinAlg::merge_map(*gmdofrowmap_, *gsdofrowmap_, false);
 
       // dofrowmap for discretisation without slave and master dofrowmap
-      gndofrowmap_ = Core::LinAlg::split_map(*dofrowmap_, *gsmdofrowmap_);
+      gndofrowmap_ = Core::LinAlg::split_map(*dofrowmap_, *gsource_target_dof_row_map_);
 
       if (myrank_ == 0)
       {
@@ -379,7 +379,7 @@ void FLD::Meshtying::project_master_to_slave_for_overlapping_bc(
     // std::cout << "BEFORE projection from master to slave side" << std::endl;
     // OutputVectorSplit(velnp);
 
-    update_slave_dof(velnp, velnp);
+    update_source_dof(velnp, velnp);
 
     // std::cout << "AFTER projection from master to slave side" << std::endl;
     // OutputVectorSplit(velnp);
@@ -610,7 +610,7 @@ void FLD::Meshtying::solve_meshtying(Core::LinAlg::Solver& solver,
         Core::LinAlg::export_to(*res, *residual);
 
         // compute and update slave dof's
-        update_slave_dof(*incvel, velnp);
+        update_source_dof(*incvel, velnp);
       }
     }
     break;
@@ -654,7 +654,7 @@ void FLD::Meshtying::solve_meshtying(Core::LinAlg::Solver& solver,
         Core::LinAlg::export_to(*inc, *incvel);
         Core::LinAlg::export_to(*res, *residual);
         // compute and update slave dof's
-        update_slave_dof(*incvel, velnp);
+        update_source_dof(*incvel, velnp);
       }
     }
     break;
@@ -668,7 +668,7 @@ void FLD::Meshtying::solve_meshtying(Core::LinAlg::Solver& solver,
       {
         TEUCHOS_FUNC_TIME_MONITOR("Meshtying:  3.3)   - Update");
         // compute and update slave dof's
-        update_slave_dof(*incvel, velnp);
+        update_source_dof(*incvel, velnp);
       }
     }
     break;
@@ -791,14 +791,16 @@ void FLD::Meshtying::split_vector(Core::LinAlg::Vector<double>& vector,
   /**********************************************************************/
 
   // do the vector splitting smn -> sm+n
-  Core::LinAlg::split_vector(*dofrowmap_, vector, gsmdofrowmap_, fsm, gndofrowmap_, fn);
+  Core::LinAlg::split_vector(
+      *dofrowmap_, vector, gsource_target_dof_row_map_, fsm, gndofrowmap_, fn);
 
   // we want to split fsm into 2 groups s,m
   fs = std::make_shared<Core::LinAlg::Vector<double>>(*gsdofrowmap_);
   fm = std::make_shared<Core::LinAlg::Vector<double>>(*gmdofrowmap_);
 
   // do the vector splitting sm -> s+m
-  Core::LinAlg::split_vector(*gsmdofrowmap_, *fsm, gsdofrowmap_, fs, gmdofrowmap_, fm);
+  Core::LinAlg::split_vector(
+      *gsource_target_dof_row_map_, *fsm, gsdofrowmap_, fs, gmdofrowmap_, fm);
 
   // splitvector[ii]
   // fn [0]
@@ -1191,7 +1193,7 @@ void FLD::Meshtying::condensation_operation_block_matrix(
 /*  Compute and update Slave DOF's          ehrl (04/11) */
 /* (including ALE case   vg 01/14)                       */
 /*-------------------------------------------------------*/
-void FLD::Meshtying::update_slave_dof(
+void FLD::Meshtying::update_source_dof(
     Core::LinAlg::Vector<double>& inc, Core::LinAlg::Vector<double>& velnp)
 {
   TEUCHOS_FUNC_TIME_MONITOR("Meshtying:  3.4)   - Update slave DOF");

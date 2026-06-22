@@ -339,6 +339,11 @@ namespace Mat
 
       //! get ID of the viscoplasticity law
       [[nodiscard]] int viscoplastic_law_id() const { return viscoplastic_law_id_; }
+      //! get Taylor-Quinney coefficient \f$ \xi_{TQ}\f$
+      [[nodiscard]] double taylor_quinney_coefficient() const
+      {
+        return taylor_quinney_coefficient_;
+      }
       //! get global ID of the fiber reader material
       [[nodiscard]] int fiber_reader_gid() const { return fiber_reader_gid_; }
       //! get yield condition parameter \f[ A \f]
@@ -414,6 +419,9 @@ namespace Mat
      private:
       //! ID of the viscoplasticity law
       const int viscoplastic_law_id_;
+
+      //! Taylor-Quinney coefficient \f$ \xi_{TQ}\f$
+      const double taylor_quinney_coefficient_;
 
       //! global ID of the material used for fiber reading (transversely isotropic)
       const int fiber_reader_gid_;
@@ -636,6 +644,8 @@ namespace Mat
      *        cross-linearizations
      *
      * @param[in] defgrad Deformation gradient
+     * @param[in] iFin_other Already computed inverse inelastic deformation gradient
+     *              (from already computed inelastic factors in the multiplicative split material)
      * @param[in] iFinjM  Inverse inelastic deformation gradient of current inelastic contribution
      *                    as 3x3 matrix
      * @param[in] dSdiFinj  Derivative of 2nd Piola Kirchhoff stresses w.r.t. the inverse inelastic
@@ -644,8 +654,8 @@ namespace Mat
      *                          of different field
      */
     virtual void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
-        Core::LinAlg::Matrix<6, 1>& dstressdx) = 0;
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdx) = 0;
 
     /*!
      * @brief pre-evaluation, intended to be used for stuff that has to be done only once per
@@ -756,8 +766,8 @@ namespace Mat
         const Core::LinAlg::Matrix<3, 3>& iFin_other, Core::LinAlg::Matrix<3, 3>& iFinM) override;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
-        Core::LinAlg::Matrix<6, 1>& dstressdx) override;
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdx) override;
 
     PAR::InelasticSource get_inelastic_source() override;
 
@@ -810,7 +820,8 @@ namespace Mat
         Core::LinAlg::Matrix<3, 3>& iFinM) override = 0;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
         Core::LinAlg::Matrix<6, 1>& dstressdx) override = 0;
 
     PAR::InelasticSource get_inelastic_source() override = 0;
@@ -872,8 +883,8 @@ namespace Mat
         const Core::LinAlg::Matrix<3, 3>& iFin_other, Core::LinAlg::Matrix<3, 3>& iFinM) override;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
-        Core::LinAlg::Matrix<6, 1>& dstressdx) override
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdx) override
     {
     }
 
@@ -936,8 +947,8 @@ namespace Mat
         const Core::LinAlg::Matrix<3, 3>& iFin_other, Core::LinAlg::Matrix<3, 3>& iFinM) override;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
-        Core::LinAlg::Matrix<6, 1>& dstressdx) override
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdx) override
     {
     }
 
@@ -990,7 +1001,8 @@ namespace Mat
         Core::LinAlg::Matrix<3, 3>& iFinM) override = 0;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
         Core::LinAlg::Matrix<6, 1>& dstressdx) override = 0;
 
     PAR::InelasticSource get_inelastic_source() override = 0;
@@ -1083,7 +1095,8 @@ namespace Mat
         double detjacobian, Core::LinAlg::Tensor<double, 3, 3>& dFindx) override = 0;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
         Core::LinAlg::Matrix<6, 1>& dstressdx) override = 0;
 
     Mat::PAR::InelasticSource get_inelastic_source() override;
@@ -1145,8 +1158,8 @@ namespace Mat
         double detjacobian, Core::LinAlg::Tensor<double, 3, 3>& dFindx) override;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
-        Core::LinAlg::Matrix<6, 1>& dstressdc) override;
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdc) override;
 
     Mat::PAR::InelasticSource get_inelastic_source() override;
 
@@ -1216,8 +1229,8 @@ namespace Mat
         double detjacobian, Core::LinAlg::Tensor<double, 3, 3>& dFindx) override;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
-        Core::LinAlg::Matrix<6, 1>& dstressdc) override;
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdc) override;
 
     Mat::PAR::InelasticSource get_inelastic_source() override;
 
@@ -1282,8 +1295,8 @@ namespace Mat
         double detjacobian, Core::LinAlg::Tensor<double, 3, 3>& dFindx) override;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
-        Core::LinAlg::Matrix<6, 1>& dstressdc) override;
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdc) override;
 
     [[nodiscard]] Mat::PAR::InelasticDefgradPolyIntercalFrac* parameter() const override
     {
@@ -1347,8 +1360,8 @@ namespace Mat
         double detjacobian, Core::LinAlg::Tensor<double, 3, 3>& dFindx) override;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
-        Core::LinAlg::Matrix<6, 1>& dstressdc) override;
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdc) override;
 
     [[nodiscard]] Mat::PAR::InelasticDefgradPolyIntercalFracAniso* parameter() const override
     {
@@ -1393,8 +1406,8 @@ namespace Mat
         const Core::LinAlg::Matrix<3, 3>& iFin_other, Core::LinAlg::Matrix<3, 3>& iFinM) override;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
-        Core::LinAlg::Matrix<6, 1>& dstressdT) override;
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdT) override;
 
     Mat::PAR::InelasticSource get_inelastic_source() override;
 
@@ -1473,14 +1486,18 @@ namespace Mat
      * @param[in] pot_sum_el elastic components / potential summands (only isotropic)
      * @param[in] pot_sum_el_transv_iso elastic components / potential summands (only transversely
      * isotropic)
+     * @param[in] thermal_expansion_coefficient Isotropic thermal expansion coefficient (provided by
+     * the parent material)
+     * @param[in] ref_temperature Reference temperature for thermal expansion (provided by the
+     * parent material)
      */
 
     explicit InelasticDefgradTransvIsotropElastViscoplast(Core::Mat::PAR::Parameter* params,
         std::shared_ptr<Mat::Viscoplastic::Law> viscoplastic_law,
         Mat::Elastic::CoupTransverselyIsotropic fiber_reader,
         std::vector<std::shared_ptr<Mat::Elastic::Summand>> pot_sum_el,
-        std::vector<std::shared_ptr<Mat::Elastic::CoupTransverselyIsotropic>>
-            pot_sum_el_transv_iso);
+        std::vector<std::shared_ptr<Mat::Elastic::CoupTransverselyIsotropic>> pot_sum_el_transv_iso,
+        const double thermal_expansion_coefficient, const double ref_temperature);
 
     [[nodiscard]] Core::Materials::MaterialType material_type() const override
     {
@@ -1495,16 +1512,40 @@ namespace Mat
     void evaluate_inelastic_def_grad_derivative(
         double detjacobian, Core::LinAlg::Tensor<double, 3, 3>& dFindx) override
     {
+      // Only needed for scalar transport problems, but not for tsi.
     }
 
     void evaluate_inverse_inelastic_def_grad(const Core::LinAlg::Matrix<3, 3>* defgrad,
         const Core::LinAlg::Matrix<3, 3>& iFin_other, Core::LinAlg::Matrix<3, 3>& iFinM) override;
 
     void evaluate_od_stiff_mat(const Core::LinAlg::Matrix<3, 3>* defgrad,
-        const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 9>& dSdiFinj,
-        Core::LinAlg::Matrix<6, 1>& dstressdT) override {};
+        const Core::LinAlg::Matrix<3, 3>& iFin_other, const Core::LinAlg::Matrix<3, 3>& iFinjM,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdT) override;
 
-    Mat::PAR::InelasticSource get_inelastic_source() override { return PAR::InelasticSource::none; }
+    /*!
+     * @brief Evaluate the Tayor-Quinney heat source and its linearizations introduced by
+     * this inelastic factor.
+     *
+     * @param[in] context Evaluation context, providing access to the current timestep and total
+     * time
+     * @param[in] gp Gauss point
+     * @param[in] eleGID global element ID
+     * @param[in] defgrad Deformation gradient
+     * @param[in] iFin_other Already computed inverse inelastic deformation gradient
+     *              (from already computed inelastic factors in the multiplicative split material)
+     * @param[in] temperature Absolute current temperature
+     * @return mechanical dissipation heat source and derivatives w.r.t. temperature and the right
+     *         Cauchy-Green tensor
+     */
+    [[nodiscard]] HeatSource evaluate_taylor_quinney_heat_source(
+        const EvaluationContext<3>& context, const int gp, const int eleGID,
+        const Core::LinAlg::Matrix<3, 3>* defgrad, const Core::LinAlg::Matrix<3, 3>& iFin_other,
+        const double temperature);
+
+    Mat::PAR::InelasticSource get_inelastic_source() override
+    {
+      return PAR::InelasticSource::temperature;
+    }
 
     [[nodiscard]] Mat::PAR::InelasticDefgradTransvIsotropElastViscoplast* parameter() const override
     {
@@ -1548,6 +1589,7 @@ namespace Mat
      * plastic strain
      *
      * @param[in] CM right Cauchy-Green deformation tensor \f[ \boldsymbol{C} \f] in matrix form
+     * @param[in] temperature absolute temperature
      * @param[in] iFinM inverse inelastic deformation gradient
      *                  \f[ \boldsymbol{F}_{\text{in}}^{-1} \f] in matrix form
      * @param[in] plastic_strain plastic strain  \f$ \varepsilon_{\text{p}} \f$
@@ -1558,8 +1600,8 @@ namespace Mat
      * been evaluated
      */
     InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantities evaluate_state_quantities(
-        const Core::LinAlg::Matrix<3, 3>& CM, const Core::LinAlg::Matrix<3, 3>& iFinM,
-        const double plastic_strain,
+        const Core::LinAlg::Matrix<3, 3>& CM, const double temperature,
+        const Core::LinAlg::Matrix<3, 3>& iFinM, const double plastic_strain,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status, const double dt,
         const InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityEvalType& eval_type)
         const;
@@ -1569,6 +1611,7 @@ namespace Mat
      * plastic strain (for a given/calculated state)
      *
      * @param[in] CM right Cauchy-Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
+     * @param[in] temperature absolute temperature
      * @param[in] iFinM inverse inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1}
      *                  \f$ in matrix form
      * @param[in] plastic_strain plastic strain  \f$ \varepsilon_{\text{p}} \f$
@@ -1584,7 +1627,8 @@ namespace Mat
      */
     InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivatives
     evaluate_state_quantity_derivatives(const Core::LinAlg::Matrix<3, 3>& CM,
-        const Core::LinAlg::Matrix<3, 3>& iFinM, const double plastic_strain,
+        const double temperature, const Core::LinAlg::Matrix<3, 3>& iFinM,
+        const double plastic_strain,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status, const double dt,
         const InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivEvalType&
             eval_type,
@@ -1607,6 +1651,13 @@ namespace Mat
 
     //! parameter list
     Teuchos::ParameterList params_;
+
+    /// thermal expansion coefficient
+    const double thermal_expansion_coefficient_;
+
+    /// reference temperature for thermal expansion
+    const double ref_temperature_;
+
 
     //! map to elastic materials/potential summands (only isotropic)
     std::vector<std::shared_ptr<Mat::Elastic::Summand>> potsumel_;
@@ -1635,6 +1686,10 @@ namespace Mat
     //! tracker for quantities at the last and current time points (i.e., at \f[ t_n \f] and
     //! \f[ t_{n+1} \f], respectively) for all Gauss points simultaneously
     InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities time_step_quantities_;
+
+    //! Cache to store thermo-mechanical coupling quantities across public evaluation calls
+    InelasticDefgradTransvIsotropElastViscoplastUtils::ThermoMechanicalCouplingCache
+        thermo_mechanical_coupling_cache_;
 
     //! evaluated state quantities
     InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantities state_quantities_;
@@ -1672,6 +1727,7 @@ namespace Mat
      * contribution.
      *
      * @param[in] CM right Cauchy_Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
+     * @param[in] temperature absolute temperature
      * @param[in] iFinM_pred predictor of the inverse inelastic deformation gradient \f$
      * \bm{F}_{\text{in, pred}} \f$
      * @param[in] plastic_strain_pred predictor of the plastic strain \f$ \varepsilon_{\text{p,
@@ -1679,7 +1735,7 @@ namespace Mat
      * @param[out] err_status error status
      * @return boolean value: true (predictor = solution), or false (predictor != solution)
      */
-    bool check_elastic_predictor(const Core::LinAlg::Matrix<3, 3>& CM,
+    bool check_elastic_predictor(const Core::LinAlg::Matrix<3, 3>& CM, const double temperature,
         const Core::LinAlg::Matrix<3, 3>& iFinM_pred, const double plastic_strain_pred,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
@@ -1690,6 +1746,7 @@ namespace Mat
      * are used for the computation of the residual!
      *
      * @param[in] CM right Cauchy_Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
+     * @param[in] temperature absolute temperature
      * @param[in] x vector of Local Newton Loop unknowns, composed of the components of the
      * inverse inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1} \f$ and plastic
      * strain \f$ \varepsilon_{\text{p}} \f$
@@ -1703,9 +1760,9 @@ namespace Mat
      * @return  residual of the LNL equations
      */
     Core::LinAlg::Matrix<10, 1> evaluate_local_newton_residual(const Core::LinAlg::Matrix<3, 3>& CM,
-        const Core::LinAlg::Matrix<10, 1>& x, const double last_plastic_strain,
-        const Core::LinAlg::Matrix<3, 3>& last_iFinM, const double dt,
-        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+        const double temperature, const Core::LinAlg::Matrix<10, 1>& x,
+        const double last_plastic_strain, const Core::LinAlg::Matrix<3, 3>& last_iFinM,
+        const double dt, InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
 
     /*!
@@ -1771,6 +1828,7 @@ namespace Mat
      * previously when calculating the residual.
      *
      * @param[in] CM right Cauchy_Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
+     * @param[in] temperature absolute temperature
      * @param[in] x vector of Local Newton Loop unknowns, composed of the components of the
      * inverse inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1} \f$ and plastic
      * strain \f$ \varepsilon_{\text{p}} \f$
@@ -1785,9 +1843,10 @@ namespace Mat
      *         \f$ \boldsymbol{J} \f$
      */
     Core::LinAlg::Matrix<10, 10> evaluate_local_newton_jacobian(
-        const Core::LinAlg::Matrix<3, 3>& CM, const Core::LinAlg::Matrix<10, 1>& x,
-        const double last_plastic_strain, const Core::LinAlg::Matrix<3, 3>& last_iFinM,
-        const double dt, InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+        const Core::LinAlg::Matrix<3, 3>& CM, const double temperature,
+        const Core::LinAlg::Matrix<10, 1>& x, const double last_plastic_strain,
+        const Core::LinAlg::Matrix<3, 3>& last_iFinM, const double dt,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /*!
      * @brief Performs the viscoplastic corrector step of the return mapping.
@@ -1796,6 +1855,7 @@ namespace Mat
      * problematic numerical states, marked with an error status, are encountered
      *
      * @param[in] defgrad deformation gradient \f$ \boldsymbol{F} \f$ in matrix form
+     * @param[in] temperature absolute temperature
      * @param[in] x initial guess of Local Newton Loop, composed of the components of the
      *              inverse inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1} \f$
      *              and plastic strain \f$ \varepsilon_{\text{p}} \f$
@@ -1804,7 +1864,7 @@ namespace Mat
      * x
      */
     Core::LinAlg::Matrix<10, 1> viscoplastic_correction(const Core::LinAlg::Matrix<3, 3>& defgrad,
-        const Core::LinAlg::Matrix<10, 1>& x,
+        const double temperature, const Core::LinAlg::Matrix<10, 1>& x,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /*!
@@ -1815,31 +1875,132 @@ namespace Mat
      * solution of a single substep in the substep loop.
      *
      * @param[in] CM right Cauchy-Green deformation tensor at current time instant
+     * @param[in] temperature absolute temperature
      * @param[in] last_plastic_strain plastic strain at the previous time instant
      * @param[in] last_iFinM inverse inelastic deformation gradient at the previous time instant
      * @param[in] dt time step size to use for evaluation
      * @param[in,out] sol current (in) / updated (out) solution of the Local Newton Loop
      * @param[in,out] err_status error status
      */
-    void local_newton_loop(const Core::LinAlg::Matrix<3, 3>& CM, const double last_plastic_strain,
-        const Core::LinAlg::Matrix<3, 3>& last_iFinM, const double dt,
-        Core::LinAlg::Matrix<10, 1>& sol,
+    void local_newton_loop(const Core::LinAlg::Matrix<3, 3>& CM, const double temperature,
+        const double last_plastic_strain, const Core::LinAlg::Matrix<3, 3>& last_iFinM,
+        const double dt, Core::LinAlg::Matrix<10, 1>& sol,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
 
     /*!
+     * @brief History variables computed by the return mapping procedure.
+     */
+    struct HistoryVariables
+    {
+      //! inverse plastic deformation gradient \f$ \boldsymbol{F}_{\mathrm{p}}^{-1} \f$
+      Core::LinAlg::Matrix<3, 3> inv_plastic_defgrad{Core::LinAlg::Initialization::zero};
+      //! equivalent plastic strain \f$ \varepsilon_{\mathrm{p}} \f$
+      double plastic_strain = 0.0;
+    };
+
+    /*!
      * @brief Performs return mapping (elastic predictor - viscoplastic / plastic corrector
-     * procedure) at each GP. It first evaluates whether the elastic predictor is a consistent
+     * procedure) for the current GP and updates the current values of the time_step_quantities_.
+     * It first evaluates whether the elastic predictor is a consistent
      * solution, and performs the local time integration (Local Newton Loop) afterwards if that is
      * not the case.
      *
      * @param[in] FredM reduced deformation gradient \f$ \boldsymbol{F}_{\text{red}} =
      * \boldsymbol{F} \boldsymbol{F_{\text{in,other}}^{-1}} \f$ accounting for all the already
-     * computed inelastic defgrad factors
-     * @return inverse inelastic deformation gradient \boldsymbol{F}_{\text{in}}^{-1}
+     * computed inelastic defgrad factors. Stored in time_step_quantities_.
+     * @param[in] temperature current absolute temperature. Stored in time_step_quantities_.
+     * @return the history variables
+     *
+     * @note After a return_mapping, the state_quantitities_ are valid for the current GP and
+     * state defined by FredM and temperature.
      */
-    Core::LinAlg::Matrix<3, 3> return_mapping(const Core::LinAlg::Matrix<3, 3>& FredM);
+    HistoryVariables return_mapping(
+        const Core::LinAlg::Matrix<3, 3>& FredM, const double temperature);
 
+    /**
+     * @brief Evaluates the analytical derivatives of the history variables with respect to
+     * temperature.
+     *
+     * The history variable derivatives are cached per Gauss point and reused if already available.
+     * The thermo-mechanical coupling state cache is updated as a side effect from the full state
+     * quantities evaluated by this method.
+     *
+     * The analytical linearization is only evaluated for active plastic flow,
+     * i.e. if the equivalent plastic strain rate is non-zero. In this case,
+     * a local linear system is assembled and solved
+     * to determine the total temperature derivatives of the history variables.
+     *
+     * Currently, analytical off-diagonal stiffness integration is implemented
+     * only for logarithmic local time integration.
+     *
+     * @param CredM Right Cauchy-Green deformation tensor.
+     * @param temperature Current temperature.
+     * @param err_status Error flag describing the evaluation status.
+     * @return derivatives of the history variables with respect to temperature
+     */
+    InelasticDefgradTransvIsotropElastViscoplastUtils::HistoryVariablesDerivativesWrtTemperature
+    evaluate_history_variables_wrt_temperature(const Core::LinAlg::Matrix<3, 3>& CredM,
+        const double temperature,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+
+    /**
+     * @brief Evaluates the analytical linearization of the history variables with
+     * respect to the right Cauchy-Green deformation tensor.
+     * The history variable derivatives are cached per Gauss point and reused if already available.
+     * The thermo-mechanical coupling state cache is updated as a side effect from the full state
+     * quantities evaluated by this method.
+     *
+     * The analytical linearization is only evaluated for active plastic flow,
+     * i.e. if the equivalent plastic strain rate is non-zero. In this case,
+     * a local linear system is assembled and solved
+     * to determine the total Cauchy-Green derivatives of the history variables.
+     *
+     * @param CredM Right Cauchy-Green deformation tensor.
+     * @param temperature Current temperature.
+     * @param err_status Error flag describing the evaluation status.
+     *
+     * @return derivatives of the history variables with respect to the right Cauchy-Green
+     * deformation tensor
+     */
+    InelasticDefgradTransvIsotropElastViscoplastUtils::HistoryVariablesDerivativesWrtCauchyGreen
+    evaluate_history_variables_wrt_cauchy_green(const Core::LinAlg::Matrix<3, 3>& CredM,
+        const double temperature,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+
+    /*!
+     * @brief Evaluates the reduced state quantities needed by thermo-mechanical coupling.
+     *
+     * If the reduced state was cached by a previous public evaluation call, it is returned
+     * directly. Otherwise, this method evaluates the full state quantities for the current state
+     * and fills the reduced coupling-state cache.
+     *
+     * @param[in] CredM Right Cauchy-Green deformation tensor
+     * @param[in] temperature Current temperature
+     * @param[out] err_status Error flag describing the evaluation status
+     * @return thermo-mechanical coupling state
+     */
+    InelasticDefgradTransvIsotropElastViscoplastUtils::ThermoMechanicalCouplingState
+    evaluate_thermo_mechanical_coupling_state(const Core::LinAlg::Matrix<3, 3>& CredM,
+        const double temperature,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+
+    /*!
+     * @brief Evaluates the reduced state quantity derivatives needed by thermo-mechanical coupling.
+     *
+     * If the reduced state derivatives were cached by a previous public evaluation call, they are
+     * returned directly. Otherwise, this method evaluates the full state quantities and derivatives
+     * for the current state and fills the reduced coupling-state cache.
+     *
+     * @param[in] CredM Right Cauchy-Green deformation tensor
+     * @param[in] temperature Current temperature
+     * @param[out] err_status Error flag describing the evaluation status
+     * @return thermo-mechanical coupling state derivatives
+     */
+    InelasticDefgradTransvIsotropElastViscoplastUtils::ThermoMechanicalCouplingStateDerivatives
+    evaluate_thermo_mechanical_coupling_state_derivatives(const Core::LinAlg::Matrix<3, 3>& CredM,
+        const double temperature,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
 
     /*!
@@ -1885,16 +2046,40 @@ namespace Mat
      * @param[in] FredM reduced deformation gradient \f$ \boldsymbol{F}_{\text{red}} =
      * \boldsymbol{F} \boldsymbol{F_{\text{in,other}}^{-1}} \f$ accounting for all the already
      * computed inelastic defgrad factors
+     * @param[in] temperature absolute temperature
      * @param[out] cmatadd Additional elasticity stiffness
-     * @param[in] iFin_other Already computed inverse inelastic deformation gradient
-     *              (from already computed inelastic factors in the multiplicative split material)
      * @param[in] dSdiFinj Derivative of 2nd Piola Kirchhoff stresses w.r.t. the inverse inelastic
      *                     deformation gradient of current inelastic contribution
      *
      */
     void evaluate_additional_cmat_perturb_based(const Core::LinAlg::Matrix<3, 3>& FredM,
-        Core::LinAlg::Matrix<6, 6>& cmatadd, const Core::LinAlg::Matrix<3, 3>& iFin_other,
+        const double temperature, Core::LinAlg::Matrix<6, 6>& cmatadd,
         const Core::LinAlg::Matrix<6, 9>& dSdiFinj);
+
+    /*!
+     * @brief Evaluate the off-diagonal stiffness contribution using a temperature perturbation.
+     *
+     * @param[in] FredM reduced deformation gradient
+     * @param[in] temperature absolute temperature
+     * @param[in,out] dstressdT contains already the partial derivative of the second
+     * Piola-Kirchhoff stresses w.r.t. temperature. This method adds the contribution of the history
+     * variable derivatives to this matrix.
+     * @param[in] dSdiFinj derivative of 2nd Piola Kirchhoff stresses w.r.t. the inverse inelastic
+     *                     deformation gradient of current inelastic contribution
+     */
+    void evaluate_od_stiff_mat_perturb_based(const Core::LinAlg::Matrix<3, 3>& FredM,
+        const double temperature, Core::LinAlg::Matrix<6, 1>& dstressdT,
+        const Core::LinAlg::Matrix<6, 9>& dSdiFinj);
+
+    /*!
+     * @brief Evaluate derivatives of the Taylor-Quinney heat source by perturbing the reduced
+     * deformation gradient and the temperature.
+     *
+     * @param[in] FredM reduced deformation gradient
+     * @param[in] temperature absolute temperature
+     */
+    HeatSource evaluate_taylor_quinney_heat_source_perturb_based(
+        const Core::LinAlg::Matrix<3, 3>& FredM, const double temperature);
 
     /*!
      * @brief Get an extensive error message to be displayed when the

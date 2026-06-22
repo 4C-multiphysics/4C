@@ -20,6 +20,7 @@
 
 #include <Shards_BasicTopologies.hpp>
 
+#include <chrono>
 #include <utility>
 #include <vector>
 
@@ -123,7 +124,7 @@ Core::FE::CellType Core::Elements::shards_key_to_dis_type(const unsigned& key)
  |  ctor (public)                                            mwgee 11/06|
  *----------------------------------------------------------------------*/
 Core::Elements::Element::Element(int id, int owner)
-    : ParObject(), id_(id), lid_(-1), owner_(owner), mat_(1, nullptr)
+    : ParObject(), id_(id), eval_time_(0.0), lid_(-1), owner_(owner), mat_(1, nullptr)
 {
 }
 
@@ -133,6 +134,7 @@ Core::Elements::Element::Element(int id, int owner)
 Core::Elements::Element::Element(const Element& old)
     : ParObject(old),
       id_(old.id_),
+      eval_time_(old.eval_time_),
       lid_(old.lid_),
       owner_(old.owner_),
       nodeid_(old.nodeid_),
@@ -297,7 +299,7 @@ void Core::Elements::Element::unpack(Core::Communication::UnpackBuffer& buffer)
     mat_[0] = nullptr;
   }
 
-  // node_, face_, parent_master_, parent_slave_ are NOT communicated
+  // node_, face_, parent_target_, parent_source_ are NOT communicated
   node_.resize(0);
   face_.clear();
 }
@@ -650,7 +652,37 @@ void Core::Elements::Element::set_face(
   face_[faceindex] = Core::Utils::shared_ptr_from_ref<Core::Elements::FaceElement>(*faceelement);
 }
 
+int Core::Elements::Element::evaluate_with_timing(Teuchos::ParameterList& params,
+    Core::FE::Discretization& discretization, LocationArray& la,
+    Core::LinAlg::SerialDenseMatrix& elemat1, Core::LinAlg::SerialDenseMatrix& elemat2,
+    Core::LinAlg::SerialDenseVector& elevec1, Core::LinAlg::SerialDenseVector& elevec2,
+    Core::LinAlg::SerialDenseVector& elevec3)
+{
+  const auto start_time = discretization.time_ele_evaluations()
+                              ? std::chrono::steady_clock::now()
+                              : std::chrono::steady_clock::time_point{};
+  const int err = evaluate(params, discretization, la, elemat1, elemat2, elevec1, elevec2, elevec3);
+  if (discretization.time_ele_evaluations())
+    eval_time_ +=
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count();
+  return err;
+}
 
+int Core::Elements::Element::evaluate_with_timing(Teuchos::ParameterList& params,
+    Core::FE::Discretization& discretization, std::vector<int>& lm,
+    Core::LinAlg::SerialDenseMatrix& elemat1, Core::LinAlg::SerialDenseMatrix& elemat2,
+    Core::LinAlg::SerialDenseVector& elevec1, Core::LinAlg::SerialDenseVector& elevec2,
+    Core::LinAlg::SerialDenseVector& elevec3)
+{
+  const auto start_time = discretization.time_ele_evaluations()
+                              ? std::chrono::steady_clock::now()
+                              : std::chrono::steady_clock::time_point{};
+  const int err = evaluate(params, discretization, lm, elemat1, elemat2, elevec1, elevec2, elevec3);
+  if (discretization.time_ele_evaluations())
+    eval_time_ +=
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count();
+  return err;
+}
 
 /*----------------------------------------------------------------------*
  |  evaluate element dummy (public)                          mwgee 12/06|
@@ -802,10 +834,10 @@ Core::GeometricSearch::BoundingVolume Core::Elements::Element::get_bounding_volu
  *----------------------------------------------------------------------*/
 Core::Elements::FaceElement::FaceElement(const int id, const int owner)
     : Element(id, owner),
-      parent_master_(nullptr),
-      parent_slave_(nullptr),
-      lface_master_(-1),
-      lface_slave_(-1),
+      parent_target_(nullptr),
+      parent_source_(nullptr),
+      lface_target_(-1),
+      lface_source_(-1),
       parent_id_(-1)
 {
 }
@@ -817,10 +849,10 @@ Core::Elements::FaceElement::FaceElement(const int id, const int owner)
  *----------------------------------------------------------------------*/
 Core::Elements::FaceElement::FaceElement(const Core::Elements::FaceElement& old)
     : Element(old),
-      parent_master_(old.parent_master_),
-      parent_slave_(old.parent_slave_),
-      lface_master_(old.lface_master_),
-      lface_slave_(old.lface_slave_),
+      parent_target_(old.parent_target_),
+      parent_source_(old.parent_source_),
+      lface_target_(old.lface_target_),
+      lface_source_(old.lface_source_),
       localtrafomap_(old.localtrafomap_),
       parent_id_(old.parent_id_)
 {
@@ -836,9 +868,9 @@ void Core::Elements::FaceElement::pack(Core::Communication::PackBuffer& data) co
   add_to_pack(data, type);
   // add base class Discret::Element
   Core::Elements::Element::pack(data);
-  // add lface_master_
-  add_to_pack(data, lface_master_);
-  // Pack Parent Id, used to set parent_master_ after parallel communication!
+  // add lface_target_
+  add_to_pack(data, lface_target_);
+  // Pack Parent Id, used to set parent_target_ after parallel communication!
   add_to_pack(data, parent_id_);
 }
 
@@ -854,8 +886,8 @@ void Core::Elements::FaceElement::unpack(Core::Communication::UnpackBuffer& buff
   // extract base class Element
   Core::Elements::Element::unpack(buffer);
 
-  // lface_master_
-  extract_from_pack(buffer, lface_master_);
+  // lface_target_
+  extract_from_pack(buffer, lface_target_);
   // Parent Id
   extract_from_pack(buffer, parent_id_);
 }

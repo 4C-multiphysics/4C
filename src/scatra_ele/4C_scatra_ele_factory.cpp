@@ -28,6 +28,7 @@
 #include "4C_scatra_ele_calc_ls.hpp"
 #include "4C_scatra_ele_calc_lsreinit.hpp"
 #include "4C_scatra_ele_calc_no_physics.hpp"
+#include "4C_scatra_ele_calc_nonlocal_stimulus.hpp"
 #include "4C_scatra_ele_calc_poro.hpp"
 #include "4C_scatra_ele_calc_poro_reac.hpp"
 #include "4C_scatra_ele_calc_poro_reac_ECM.hpp"
@@ -422,6 +423,11 @@ Discret::Elements::ScaTraEleInterface* Discret::Elements::ScaTraFactory::define_
     case ScaTra::impltype_gr:
     {
       return Discret::Elements::ScaTraEleCalcGrowthRemodel<distype, probdim>::instance(
+          numdofpernode, numscal, disname);
+    }
+    case ScaTra::impltype_nl_stimulus:
+    {
+      return Discret::Elements::ScaTraEleCalcNonlocalStimulus<distype, probdim>::instance(
           numdofpernode, numscal, disname);
     }
     case ScaTra::impltype_one_d_artery:

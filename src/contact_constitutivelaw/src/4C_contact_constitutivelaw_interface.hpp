@@ -43,7 +43,7 @@ namespace CONTACT
         bool selfcontact, const int contactconstitutivelawid);
 
     /**
-     * \brief Evaluate regularized normal forces at slave nodes
+     * \brief Evaluate regularized normal forces at source nodes
      *
      * Assemble gap-computed lagrange multipliers and nodal linlambda derivatives into nodal
      * quantities using the Macauley bracket
@@ -72,7 +72,7 @@ namespace CONTACT
     void assemble_reg_normal_forces(bool& localisincontact, bool& localactivesetchange) override;
 
     /**
-     * \brief Evaluate regularized normal forces at slave nodes
+     * \brief Evaluate regularized normal forces at source nodes
      *
      * Throws an error since frictional contact is not implemented, yet.
      */

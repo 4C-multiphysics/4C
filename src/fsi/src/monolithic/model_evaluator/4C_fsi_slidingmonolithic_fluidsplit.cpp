@@ -849,7 +849,7 @@ void FSI::SlidingMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSp
   std::shared_ptr<Core::LinAlg::SparseMatrix> laig =
       std::make_shared<Core::LinAlg::SparseMatrix>(aii.row_map(), 81, false);
   (*aigtransform_)(a->full_row_map(), a->full_col_map(), aig, 1.,
-      Coupling::Adapter::CouplingSlaveConverter(interface_fluid_ale_coupling()), *laig);
+      Coupling::Adapter::CouplingSourceConverter(interface_fluid_ale_coupling()), *laig);
 
   laig->complete(f->matrix(1, 1).domain_map(), aii.range_map());
   std::shared_ptr<Core::LinAlg::SparseMatrix> llaig =
@@ -1380,7 +1380,7 @@ void FSI::SlidingMonolithicFluidSplit::extract_field_vectors(
   std::shared_ptr<Core::LinAlg::Vector<double>> a =
       fsi_ale_field()->fsi_interface()->insert_other_vector(*aox);
   ale_field()->interface()->insert_fsi_cond_vector(*acx, *a);
-  ale_field()->update_slave_dof(a);
+  ale_field()->update_source_dof(a);
   ax = a;
 
   // ---------------------------------------------------------------------------
@@ -1398,7 +1398,7 @@ void FSI::SlidingMonolithicFluidSplit::extract_field_vectors(
   std::shared_ptr<Core::LinAlg::Vector<double>> f =
       fsi_fluid_field()->fsi_interface()->insert_other_vector(*fox);
   fluid_field()->interface()->insert_fsi_cond_vector(*fcx, *f);
-  fluid_field()->update_slave_dof(f);
+  fluid_field()->update_source_dof(f);
   fx = f;
 
   // ---------------------------------------------------------------------------

@@ -21,12 +21,12 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 Coupling::Adapter::Coupling::Coupling()
-    : masterdofmap_(nullptr),
-      permmasterdofmap_(nullptr),
-      slavedofmap_(nullptr),
-      permslavedofmap_(nullptr),
-      masterexport_(nullptr),
-      slaveexport_(nullptr),
+    : target_dof_map_(nullptr),
+      permuted_target_dof_map_(nullptr),
+      source_dof_map_(nullptr),
+      permuted_source_dof_map_(nullptr),
+      target_export_(nullptr),
+      source_export_(nullptr),
       matmm_(nullptr),
       matsm_(nullptr),
       matmm_trans_(nullptr),
@@ -39,43 +39,45 @@ Coupling::Adapter::Coupling::Coupling()
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Coupling::Adapter::Coupling::setup_condition_coupling(
-    const Core::FE::Discretization& masterdis,
-    std::shared_ptr<const Core::LinAlg::Map> mastercondmap,
-    const Core::FE::Discretization& slavedis, std::shared_ptr<const Core::LinAlg::Map> slavecondmap,
-    const std::string& condname, const std::vector<int>& masterdofs,
-    const std::vector<int>& slavedofs, bool matchall, const int nds_master, const int nds_slave)
+    const Core::FE::Discretization& target_dis,
+    std::shared_ptr<const Core::LinAlg::Map> target_cond_map,
+    const Core::FE::Discretization& source_dis,
+    std::shared_ptr<const Core::LinAlg::Map> source_cond_map, const std::string& condname,
+    const std::vector<int>& target_dofs, const std::vector<int>& source_dofs, bool matchall,
+    const int target_dofset_number, const int source_dofset_number)
 {
-  const int numdof = masterdofs.size();
-  const int numdof_slave = slavedofs.size();
-  if (numdof != numdof_slave)
-    FOUR_C_THROW("Received {} master DOFs, but {} slave DOFs", numdof, numdof_slave);
+  const int numdof = target_dofs.size();
+  const int num_dof_source = source_dofs.size();
+  if (numdof != num_dof_source)
+    FOUR_C_THROW("Received {} target DOFs, but {} source DOFs", numdof, num_dof_source);
 
-  auto masternodes_set = Core::Conditions::find_conditioned_node_ids(
-      masterdis, condname, Core::Conditions::LookFor::locally_owned);
-  std::vector<int> masternodes(masternodes_set.begin(), masternodes_set.end());
-  auto slavenodes_set = Core::Conditions::find_conditioned_node_ids(
-      slavedis, condname, Core::Conditions::LookFor::locally_owned);
-  std::vector<int> slavenodes(slavenodes_set.begin(), slavenodes_set.end());
+  auto target_nodes_set = Core::Conditions::find_conditioned_node_ids(
+      target_dis, condname, Core::Conditions::LookFor::locally_owned);
+  std::vector<int> target_nodes(target_nodes_set.begin(), target_nodes_set.end());
+  auto source_nodes_set = Core::Conditions::find_conditioned_node_ids(
+      source_dis, condname, Core::Conditions::LookFor::locally_owned);
+  std::vector<int> source_nodes(source_nodes_set.begin(), source_nodes_set.end());
 
-  int localmastercount = static_cast<int>(masternodes.size());
-  int mastercount;
-  int localslavecount = static_cast<int>(slavenodes.size());
-  int slavecount;
+  int local_target_count = static_cast<int>(target_nodes.size());
+  int target_count;
+  int local_source_count = static_cast<int>(source_nodes.size());
+  int source_count;
 
-  mastercount = Core::Communication::sum_all(localmastercount, masterdis.get_comm());
-  slavecount = Core::Communication::sum_all(localslavecount, slavedis.get_comm());
+  target_count = Core::Communication::sum_all(local_target_count, target_dis.get_comm());
+  source_count = Core::Communication::sum_all(local_source_count, source_dis.get_comm());
 
-  if (mastercount != slavecount)
-    FOUR_C_THROW("got {} master nodes but {} slave nodes for coupling", mastercount, slavecount);
+  if (target_count != source_count)
+    FOUR_C_THROW(
+        "got {} target nodes but {} source nodes for coupling", target_count, source_count);
 
-  setup_coupling(masterdis, slavedis, masternodes, slavenodes, masterdofs, slavedofs, matchall,
-      1.0e-3, nds_master, nds_slave);
+  setup_coupling(target_dis, source_dis, target_nodes, source_nodes, target_dofs, source_dofs,
+      matchall, 1.0e-3, target_dofset_number, source_dofset_number);
 
   // test for completeness
-  if (static_cast<int>(masternodes.size()) * numdof != masterdofmap_->num_my_elements())
-    FOUR_C_THROW("failed to setup master nodes properly");
-  if (static_cast<int>(slavenodes.size()) * numdof != slavedofmap_->num_my_elements())
-    FOUR_C_THROW("failed to setup slave nodes properly");
+  if (static_cast<int>(target_nodes.size()) * numdof != target_dof_map_->num_my_elements())
+    FOUR_C_THROW("failed to setup target nodes properly");
+  if (static_cast<int>(source_nodes.size()) * numdof != source_dof_map_->num_my_elements())
+    FOUR_C_THROW("failed to setup source nodes properly");
 
   // Now swap in the maps we already had.
   // So we did a little more work than required. But there are cases
@@ -85,319 +87,336 @@ void Coupling::Adapter::Coupling::setup_condition_coupling(
   // The point is to make sure there is only one map for each
   // interface.
 
-  if (not masterdofmap_->point_same_as(*mastercondmap)) FOUR_C_THROW("master dof map mismatch");
+  if (not target_dof_map_->point_same_as(*target_cond_map)) FOUR_C_THROW("target dof map mismatch");
 
-  if (not slavedofmap_->point_same_as(*slavecondmap))
+  if (not source_dof_map_->point_same_as(*source_cond_map))
   {
-    FOUR_C_THROW("slave dof map mismatch");
+    FOUR_C_THROW("source dof map mismatch");
   }
 
-  masterdofmap_ = mastercondmap;
-  masterexport_ = std::make_shared<Core::LinAlg::Export>(*permmasterdofmap_, *masterdofmap_);
+  target_dof_map_ = target_cond_map;
+  target_export_ =
+      std::make_shared<Core::LinAlg::Export>(*permuted_target_dof_map_, *target_dof_map_);
 
-  slavedofmap_ = slavecondmap;
-  slaveexport_ = std::make_shared<Core::LinAlg::Export>(*permslavedofmap_, *slavedofmap_);
+  source_dof_map_ = source_cond_map;
+  source_export_ =
+      std::make_shared<Core::LinAlg::Export>(*permuted_source_dof_map_, *source_dof_map_);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Coupling::Adapter::Coupling::setup_condition_coupling(
-    const Core::FE::Discretization& masterdis,
-    std::shared_ptr<const Core::LinAlg::Map> mastercondmap,
-    const Core::FE::Discretization& slavedis, std::shared_ptr<const Core::LinAlg::Map> slavecondmap,
-    const std::string& condname, const int numdof, bool matchall, const int nds_master,
-    const int nds_slave)
+    const Core::FE::Discretization& target_dis,
+    std::shared_ptr<const Core::LinAlg::Map> target_cond_map,
+    const Core::FE::Discretization& source_dis,
+    std::shared_ptr<const Core::LinAlg::Map> source_cond_map, const std::string& condname,
+    const int numdof, bool matchall, const int target_dofset_number, const int source_dofset_number)
 {
-  setup_condition_coupling(masterdis, mastercondmap, slavedis, slavecondmap, condname,
+  setup_condition_coupling(target_dis, target_cond_map, source_dis, source_cond_map, condname,
       build_dof_vector_from_num_dof(numdof), build_dof_vector_from_num_dof(numdof), matchall,
-      nds_master, nds_slave);
+      target_dofset_number, source_dofset_number);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& masterdis,
-    const Core::FE::Discretization& slavedis, const std::vector<int>& masternodes,
-    const std::vector<int>& slavenodes, const std::vector<int>& masterdofs,
-    const std::vector<int>& slavedofs, const bool matchall, const double tolerance,
-    const int nds_master, const int nds_slave)
+void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& target_dis,
+    const Core::FE::Discretization& source_dis, const std::vector<int>& target_nodes,
+    const std::vector<int>& source_nodes, const std::vector<int>& target_dofs,
+    const std::vector<int>& source_dofs, const bool matchall, const double tolerance,
+    const int target_dofset_number, const int source_dofset_number)
 {
-  std::vector<int> patchedmasternodes(masternodes);
-  std::vector<int> permslavenodes;
-  match_nodes(
-      masterdis, slavedis, patchedmasternodes, permslavenodes, slavenodes, matchall, tolerance);
+  std::vector<int> patched_target_nodes(target_nodes);
+  std::vector<int> permuted_source_nodes;
+  match_nodes(target_dis, source_dis, patched_target_nodes, permuted_source_nodes, source_nodes,
+      matchall, tolerance);
 
   // maps in original distribution
 
-  std::shared_ptr<Core::LinAlg::Map> masternodemap = std::make_shared<Core::LinAlg::Map>(
-      -1, patchedmasternodes.size(), patchedmasternodes.data(), 0, masterdis.get_comm());
+  std::shared_ptr<Core::LinAlg::Map> target_node_map = std::make_shared<Core::LinAlg::Map>(
+      -1, patched_target_nodes.size(), patched_target_nodes.data(), 0, target_dis.get_comm());
 
-  std::shared_ptr<Core::LinAlg::Map> slavenodemap = std::make_shared<Core::LinAlg::Map>(
-      -1, slavenodes.size(), slavenodes.data(), 0, slavedis.get_comm());
+  std::shared_ptr<Core::LinAlg::Map> source_node_map = std::make_shared<Core::LinAlg::Map>(
+      -1, source_nodes.size(), source_nodes.data(), 0, source_dis.get_comm());
 
-  std::shared_ptr<Core::LinAlg::Map> permslavenodemap = std::make_shared<Core::LinAlg::Map>(
-      -1, permslavenodes.size(), permslavenodes.data(), 0, slavedis.get_comm());
+  std::shared_ptr<Core::LinAlg::Map> permuted_source_node_map = std::make_shared<Core::LinAlg::Map>(
+      -1, permuted_source_nodes.size(), permuted_source_nodes.data(), 0, source_dis.get_comm());
 
-  finish_coupling(masterdis, slavedis, masternodemap, slavenodemap, permslavenodemap, masterdofs,
-      slavedofs, nds_master, nds_slave);
+  finish_coupling(target_dis, source_dis, target_node_map, source_node_map,
+      permuted_source_node_map, target_dofs, source_dofs, target_dofset_number,
+      source_dofset_number);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& masterdis,
-    const Core::FE::Discretization& slavedis, const std::vector<int>& masternodes,
-    const std::vector<int>& slavenodes, const int numdof, const bool matchall,
-    const double tolerance, const int nds_master, const int nds_slave)
+void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& target_dis,
+    const Core::FE::Discretization& source_dis, const std::vector<int>& target_nodes,
+    const std::vector<int>& source_nodes, const int numdof, const bool matchall,
+    const double tolerance, const int target_dofset_number, const int source_dofset_number)
 {
-  setup_coupling(masterdis, slavedis, masternodes, slavenodes,
+  setup_coupling(target_dis, source_dis, target_nodes, source_nodes,
       build_dof_vector_from_num_dof(numdof), build_dof_vector_from_num_dof(numdof), matchall,
-      tolerance, nds_master, nds_slave);
+      tolerance, target_dofset_number, source_dofset_number);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Coupling::Adapter::Coupling::setup_coupling(
-    std::shared_ptr<const Core::LinAlg::Map> slavedofmap,
-    std::shared_ptr<const Core::LinAlg::Map> permslavedofmap,
-    std::shared_ptr<const Core::LinAlg::Map> masterdofmap,
-    std::shared_ptr<const Core::LinAlg::Map> permmasterdofmap)
+    std::shared_ptr<const Core::LinAlg::Map> source_dof_map,
+    std::shared_ptr<const Core::LinAlg::Map> permuted_source_dof_map,
+    std::shared_ptr<const Core::LinAlg::Map> target_dof_map,
+    std::shared_ptr<const Core::LinAlg::Map> permuted_target_dof_map)
 {
-  masterdofmap_ = masterdofmap;
-  slavedofmap_ = slavedofmap;
-  permmasterdofmap_ = permmasterdofmap;
-  permslavedofmap_ = permslavedofmap;
+  target_dof_map_ = target_dof_map;
+  source_dof_map_ = source_dof_map;
+  permuted_target_dof_map_ = permuted_target_dof_map;
+  permuted_source_dof_map_ = permuted_source_dof_map;
 
-  masterexport_ = std::make_shared<Core::LinAlg::Export>(*permmasterdofmap_, *masterdofmap_);
-  slaveexport_ = std::make_shared<Core::LinAlg::Export>(*permslavedofmap_, *slavedofmap_);
+  target_export_ =
+      std::make_shared<Core::LinAlg::Export>(*permuted_target_dof_map_, *target_dof_map_);
+  source_export_ =
+      std::make_shared<Core::LinAlg::Export>(*permuted_source_dof_map_, *source_dof_map_);
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& masterdis,
-    const Core::FE::Discretization& slavedis, const Core::LinAlg::Map& masternodes,
-    const Core::LinAlg::Map& slavenodes, const int numdof, const bool matchall,
-    const double tolerance, const int nds_master, const int nds_slave)
+void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& target_dis,
+    const Core::FE::Discretization& source_dis, const Core::LinAlg::Map& target_nodes,
+    const Core::LinAlg::Map& source_nodes, const int numdof, const bool matchall,
+    const double tolerance, const int target_dofset_number, const int source_dofset_number)
 {
-  if (masternodes.num_global_elements() != slavenodes.num_global_elements() and matchall)
-    FOUR_C_THROW("got {} master nodes but {} slave nodes for coupling",
-        masternodes.num_global_elements(), slavenodes.num_global_elements());
+  if (target_nodes.num_global_elements() != source_nodes.num_global_elements() and matchall)
+    FOUR_C_THROW("got {} target nodes but {} source nodes for coupling",
+        target_nodes.num_global_elements(), source_nodes.num_global_elements());
 
-  std::vector<int> mastervect(masternodes.my_global_elements(),
-      masternodes.my_global_elements() + masternodes.num_my_elements());
-  std::vector<int> slavevect(slavenodes.my_global_elements(),
-      slavenodes.my_global_elements() + slavenodes.num_my_elements());
-  std::vector<int> permslavenodes;
+  std::vector<int> target_vect(target_nodes.my_global_elements(),
+      target_nodes.my_global_elements() + target_nodes.num_my_elements());
+  std::vector<int> source_vect(source_nodes.my_global_elements(),
+      source_nodes.my_global_elements() + source_nodes.num_my_elements());
+  std::vector<int> permuted_source_nodes;
 
-  match_nodes(masterdis, slavedis, mastervect, permslavenodes, slavevect, matchall, tolerance);
+  match_nodes(
+      target_dis, source_dis, target_vect, permuted_source_nodes, source_vect, matchall, tolerance);
 
   // maps in original distribution
 
-  std::shared_ptr<Core::LinAlg::Map> masternodemap = std::make_shared<Core::LinAlg::Map>(
-      -1, mastervect.size(), mastervect.data(), 0, masterdis.get_comm());
+  std::shared_ptr<Core::LinAlg::Map> target_node_map = std::make_shared<Core::LinAlg::Map>(
+      -1, target_vect.size(), target_vect.data(), 0, target_dis.get_comm());
 
-  std::shared_ptr<Core::LinAlg::Map> slavenodemap = std::make_shared<Core::LinAlg::Map>(slavenodes);
+  std::shared_ptr<Core::LinAlg::Map> source_node_map =
+      std::make_shared<Core::LinAlg::Map>(source_nodes);
 
-  std::shared_ptr<Core::LinAlg::Map> permslavenodemap = std::make_shared<Core::LinAlg::Map>(
-      -1, permslavenodes.size(), permslavenodes.data(), 0, slavedis.get_comm());
+  std::shared_ptr<Core::LinAlg::Map> permuted_source_node_map = std::make_shared<Core::LinAlg::Map>(
+      -1, permuted_source_nodes.size(), permuted_source_nodes.data(), 0, source_dis.get_comm());
 
-  finish_coupling(masterdis, slavedis, masternodemap, slavenodemap, permslavenodemap,
-      build_dof_vector_from_num_dof(numdof), build_dof_vector_from_num_dof(numdof), nds_master,
-      nds_slave);
+  finish_coupling(target_dis, source_dis, target_node_map, source_node_map,
+      permuted_source_node_map, build_dof_vector_from_num_dof(numdof),
+      build_dof_vector_from_num_dof(numdof), target_dofset_number, source_dofset_number);
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& masterdis,
-    const Core::FE::Discretization& slavedis, const Core::LinAlg::Map& masternodemap,
-    const Core::LinAlg::Map& slavenodemap, const Core::LinAlg::Map& permslavenodemap,
+void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& target_dis,
+    const Core::FE::Discretization& source_dis, const Core::LinAlg::Map& target_node_map,
+    const Core::LinAlg::Map& source_node_map, const Core::LinAlg::Map& permuted_source_node_map,
     const int numdof)
 {
-  if (masternodemap.num_global_elements() != slavenodemap.num_global_elements())
-    FOUR_C_THROW("got {} master nodes but {} slave nodes for coupling",
-        masternodemap.num_global_elements(), slavenodemap.num_global_elements());
+  if (target_node_map.num_global_elements() != source_node_map.num_global_elements())
+    FOUR_C_THROW("got {} target nodes but {} source nodes for coupling",
+        target_node_map.num_global_elements(), source_node_map.num_global_elements());
 
   // just copy maps
 
-  std::shared_ptr<Core::LinAlg::Map> mymasternodemap =
-      std::make_shared<Core::LinAlg::Map>(masternodemap);
+  std::shared_ptr<Core::LinAlg::Map> my_target_node_map =
+      std::make_shared<Core::LinAlg::Map>(target_node_map);
 
-  std::shared_ptr<Core::LinAlg::Map> myslavenodemap =
-      std::make_shared<Core::LinAlg::Map>(slavenodemap);
+  std::shared_ptr<Core::LinAlg::Map> my_source_node_map =
+      std::make_shared<Core::LinAlg::Map>(source_node_map);
 
-  std::shared_ptr<Core::LinAlg::Map> mypermslavenodemap =
-      std::make_shared<Core::LinAlg::Map>(permslavenodemap);
+  std::shared_ptr<Core::LinAlg::Map> my_permuted_source_node_map =
+      std::make_shared<Core::LinAlg::Map>(permuted_source_node_map);
 
-  // build slave to master permutation and dof all maps
-  finish_coupling(masterdis, slavedis, mymasternodemap, myslavenodemap, mypermslavenodemap,
-      build_dof_vector_from_num_dof(numdof), build_dof_vector_from_num_dof(numdof));
+  // build source to target permutation and dof all maps
+  finish_coupling(target_dis, source_dis, my_target_node_map, my_source_node_map,
+      my_permuted_source_node_map, build_dof_vector_from_num_dof(numdof),
+      build_dof_vector_from_num_dof(numdof));
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Coupling::Adapter::Coupling::setup_coupling(
-    const Core::FE::Discretization& masterdis, const Core::FE::Discretization& slavedis)
+    const Core::FE::Discretization& target_dis, const Core::FE::Discretization& source_dis)
 {
   // safety check
-  if (masterdis.dof_row_map()->num_global_elements() !=
-      slavedis.dof_row_map()->num_global_elements())
-    FOUR_C_THROW("got {} master nodes but {} slave nodes for coupling",
-        masterdis.dof_row_map()->num_global_elements(),
-        slavedis.dof_row_map()->num_global_elements());
+  if (target_dis.dof_row_map()->num_global_elements() !=
+      source_dis.dof_row_map()->num_global_elements())
+    FOUR_C_THROW("got {} target nodes but {} source nodes for coupling",
+        target_dis.dof_row_map()->num_global_elements(),
+        source_dis.dof_row_map()->num_global_elements());
 
-  // get master dof maps and build exporter
-  permmasterdofmap_ = std::make_shared<Core::LinAlg::Map>(*slavedis.dof_row_map());
-  masterdofmap_ = std::make_shared<Core::LinAlg::Map>(*masterdis.dof_row_map());
-  masterexport_ = std::make_shared<Core::LinAlg::Export>(*permmasterdofmap_, *masterdofmap_);
+  // get target dof maps and build exporter
+  permuted_target_dof_map_ = std::make_shared<Core::LinAlg::Map>(*source_dis.dof_row_map());
+  target_dof_map_ = std::make_shared<Core::LinAlg::Map>(*target_dis.dof_row_map());
+  target_export_ =
+      std::make_shared<Core::LinAlg::Export>(*permuted_target_dof_map_, *target_dof_map_);
 
-  // get slave dof maps and build exporter
-  permslavedofmap_ = std::make_shared<Core::LinAlg::Map>(*masterdis.dof_row_map());
-  slavedofmap_ = std::make_shared<Core::LinAlg::Map>(*slavedis.dof_row_map());
-  slaveexport_ = std::make_shared<Core::LinAlg::Export>(*permslavedofmap_, *slavedofmap_);
+  // get source dof maps and build exporter
+  permuted_source_dof_map_ = std::make_shared<Core::LinAlg::Map>(*target_dis.dof_row_map());
+  source_dof_map_ = std::make_shared<Core::LinAlg::Map>(*source_dis.dof_row_map());
+  source_export_ =
+      std::make_shared<Core::LinAlg::Export>(*permuted_source_dof_map_, *source_dof_map_);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& masterdis,
-    const Core::FE::Discretization& slavedis, const std::vector<std::vector<int>>& masternodes_vec,
-    const std::vector<std::vector<int>>& slavenodes_vec, const int numdof, const bool matchall,
-    const double tolerance, const int nds_master, const int nds_slave)
+void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& target_dis,
+    const Core::FE::Discretization& source_dis,
+    const std::vector<std::vector<int>>& target_nodes_vec,
+    const std::vector<std::vector<int>>& source_nodes_vec, const int numdof, const bool matchall,
+    const double tolerance, const int target_dofset_number, const int source_dofset_number)
 {
-  // vectors with master and slave node maps (from input) for every coupling condition
-  // Permuted slave node map for each coupling conditions from match_nodes()
-  std::vector<std::shared_ptr<const Core::LinAlg::Map>> masternodemap_cond;
-  std::vector<std::shared_ptr<const Core::LinAlg::Map>> slavenodemap_cond;
-  std::vector<std::shared_ptr<const Core::LinAlg::Map>> permslavenodemap_cond;
+  // vectors with target and source node maps (from input) for every coupling condition
+  // Permuted source node map for each coupling conditions from match_nodes()
+  std::vector<std::shared_ptr<const Core::LinAlg::Map>> target_node_map_cond;
+  std::vector<std::shared_ptr<const Core::LinAlg::Map>> source_node_map_cond;
+  std::vector<std::shared_ptr<const Core::LinAlg::Map>> permuted_source_node_map_cond;
 
-  for (unsigned i = 0; i < masternodes_vec.size(); ++i)
+  for (unsigned i = 0; i < target_nodes_vec.size(); ++i)
   {
-    std::vector<int> masternodes = masternodes_vec.at(i);
-    std::vector<int> slavenodes = slavenodes_vec.at(i);
+    std::vector<int> target_nodes = target_nodes_vec.at(i);
+    std::vector<int> source_nodes = source_nodes_vec.at(i);
 
-    std::vector<int> permslavenodes;
+    std::vector<int> permuted_source_nodes;
 
-    match_nodes(masterdis, slavedis, masternodes, permslavenodes, slavenodes, matchall, tolerance);
+    match_nodes(target_dis, source_dis, target_nodes, permuted_source_nodes, source_nodes, matchall,
+        tolerance);
 
-    masternodemap_cond.push_back(std::make_shared<Core::LinAlg::Map>(
-        -1, masternodes.size(), masternodes.data(), 0, masterdis.get_comm()));
-    slavenodemap_cond.push_back(std::make_shared<Core::LinAlg::Map>(
-        -1, slavenodes.size(), slavenodes.data(), 0, slavedis.get_comm()));
-    permslavenodemap_cond.push_back(std::make_shared<Core::LinAlg::Map>(
-        -1, permslavenodes.size(), permslavenodes.data(), 0, slavedis.get_comm()));
+    target_node_map_cond.push_back(std::make_shared<Core::LinAlg::Map>(
+        -1, target_nodes.size(), target_nodes.data(), 0, target_dis.get_comm()));
+    source_node_map_cond.push_back(std::make_shared<Core::LinAlg::Map>(
+        -1, source_nodes.size(), source_nodes.data(), 0, source_dis.get_comm()));
+    permuted_source_node_map_cond.push_back(std::make_shared<Core::LinAlg::Map>(
+        -1, permuted_source_nodes.size(), permuted_source_nodes.data(), 0, source_dis.get_comm()));
   }
 
-  // merge maps for all conditions, but keep order (= keep assignment of permuted slave node map and
-  // master map)
-  auto masternodemap = Core::LinAlg::MultiMapExtractor::merge_maps_keep_order(masternodemap_cond);
-  auto slavenodemap = Core::LinAlg::MultiMapExtractor::merge_maps_keep_order(slavenodemap_cond);
-  auto permslavenodemap =
-      Core::LinAlg::MultiMapExtractor::merge_maps_keep_order(permslavenodemap_cond);
+  // merge maps for all conditions, but keep order (= keep assignment of permuted source node map
+  // and target map)
+  auto target_node_map =
+      Core::LinAlg::MultiMapExtractor::merge_maps_keep_order(target_node_map_cond);
+  auto source_node_map =
+      Core::LinAlg::MultiMapExtractor::merge_maps_keep_order(source_node_map_cond);
+  auto permuted_source_node_map =
+      Core::LinAlg::MultiMapExtractor::merge_maps_keep_order(permuted_source_node_map_cond);
 
-  finish_coupling(masterdis, slavedis, masternodemap, slavenodemap, permslavenodemap,
-      build_dof_vector_from_num_dof(numdof), build_dof_vector_from_num_dof(numdof), nds_master,
-      nds_slave);
+  finish_coupling(target_dis, source_dis, target_node_map, source_node_map,
+      permuted_source_node_map, build_dof_vector_from_num_dof(numdof),
+      build_dof_vector_from_num_dof(numdof), target_dofset_number, source_dofset_number);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::match_nodes(const Core::FE::Discretization& masterdis,
-    const Core::FE::Discretization& slavedis, std::vector<int>& masternodes,
-    std::vector<int>& permslavenodes, const std::vector<int>& slavenodes, const bool matchall,
-    const double tolerance)
+void Coupling::Adapter::Coupling::match_nodes(const Core::FE::Discretization& target_dis,
+    const Core::FE::Discretization& source_dis, std::vector<int>& target_nodes,
+    std::vector<int>& permuted_source_nodes, const std::vector<int>& source_nodes,
+    const bool matchall, const double tolerance)
 {
-  // match master and slave nodes using octree
+  // match target and source nodes using octree
   auto tree = Core::GeometricSearch::NodeMatchingOctree();
-  tree.init(masterdis, masternodes, 150, tolerance);
+  tree.init(target_dis, target_nodes, 150, tolerance);
   tree.setup();
 
   std::map<int, std::pair<int, double>> coupling;
-  tree.find_match(slavedis, slavenodes, coupling);
+  tree.find_match(source_dis, source_nodes, coupling);
 
-  if (masternodes.size() != coupling.size() and matchall)
+  if (target_nodes.size() != coupling.size() and matchall)
     FOUR_C_THROW(
-        "Did not get 1:1 correspondence. \nmasternodes.size()={} ({}), coupling.size()={} ({})",
-        masternodes.size(), masterdis.name().c_str(), coupling.size(), slavedis.name().c_str());
+        "Did not get 1:1 correspondence. \ntargetnodes.size()={} ({}), coupling.size()={} ({})",
+        target_nodes.size(), target_dis.name().c_str(), coupling.size(), source_dis.name().c_str());
 
   // extract permutation
 
-  std::vector<int> patchedmasternodes;
-  patchedmasternodes.reserve(coupling.size());
-  permslavenodes.reserve(slavenodes.size());
+  std::vector<int> patched_target_nodes;
+  patched_target_nodes.reserve(coupling.size());
+  permuted_source_nodes.reserve(source_nodes.size());
 
-  for (int gid : masternodes)
+  for (int gid : target_nodes)
   {
-    // We allow to hand in master nodes that do not take part in the
+    // We allow to hand in target nodes that do not take part in the
     // coupling. If this is undesired behaviour the user has to make
     // sure all nodes were used.
     if (coupling.find(gid) != coupling.end())
     {
       std::pair<int, double>& coupled = coupling[gid];
-      patchedmasternodes.push_back(gid);
-      permslavenodes.push_back(coupled.first);
+      patched_target_nodes.push_back(gid);
+      permuted_source_nodes.push_back(coupled.first);
     }
   }
 
-  // return new list of master nodes via reference
-  swap(masternodes, patchedmasternodes);
+  // return new list of target nodes via reference
+  swap(target_nodes, patched_target_nodes);
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::finish_coupling(const Core::FE::Discretization& masterdis,
-    const Core::FE::Discretization& slavedis, std::shared_ptr<Core::LinAlg::Map> masternodemap,
-    std::shared_ptr<Core::LinAlg::Map> slavenodemap,
-    std::shared_ptr<Core::LinAlg::Map> permslavenodemap, const std::vector<int>& masterdofs,
-    const std::vector<int>& slavedofs, const int nds_master, const int nds_slave)
+void Coupling::Adapter::Coupling::finish_coupling(const Core::FE::Discretization& target_dis,
+    const Core::FE::Discretization& source_dis, std::shared_ptr<Core::LinAlg::Map> target_node_map,
+    std::shared_ptr<Core::LinAlg::Map> source_node_map,
+    std::shared_ptr<Core::LinAlg::Map> permuted_source_node_map,
+    const std::vector<int>& target_dofs, const std::vector<int>& source_dofs,
+    const int target_dofset_number, const int source_dofset_number)
 {
   // we expect to get maps of exactly the same shape
-  if (not masternodemap->point_same_as(*permslavenodemap))
-    FOUR_C_THROW("master and permuted slave node maps do not match");
+  if (not target_node_map->point_same_as(*permuted_source_node_map))
+    FOUR_C_THROW("target and permuted source node maps do not match");
 
-  // export master nodes to slave node distribution
+  // export target nodes to source node distribution
 
-  // To do so we create vectors that contain the values of the master
-  // maps, assigned to the slave maps. On the master side we actually
+  // To do so we create vectors that contain the values of the target
+  // maps, assigned to the source maps. On the target side we actually
   // create just a view on the map! This vector must not be changed!
-  std::shared_ptr<Core::LinAlg::Vector<int>> masternodevec =
+  std::shared_ptr<Core::LinAlg::Vector<int>> target_node_vec =
       std::make_shared<Core::LinAlg::Vector<int>>(
-          *permslavenodemap, masternodemap->my_global_elements());
+          *permuted_source_node_map, target_node_map->my_global_elements());
 
-  std::shared_ptr<Core::LinAlg::Vector<int>> permmasternodevec =
-      std::make_shared<Core::LinAlg::Vector<int>>(*slavenodemap);
+  std::shared_ptr<Core::LinAlg::Vector<int>> permuted_target_node_vec =
+      std::make_shared<Core::LinAlg::Vector<int>>(*source_node_map);
 
-  Core::LinAlg::Export masternodeexport(*permslavenodemap, *slavenodemap);
-  permmasternodevec->export_to(*masternodevec, masternodeexport, Core::LinAlg::CombineMode::insert);
+  Core::LinAlg::Export target_node_export(*permuted_source_node_map, *source_node_map);
+  permuted_target_node_vec->export_to(
+      *target_node_vec, target_node_export, Core::LinAlg::CombineMode::insert);
 
-  std::shared_ptr<const Core::LinAlg::Map> permmasternodemap =
-      std::make_shared<Core::LinAlg::Map>(-1, permmasternodevec->local_length(),
-          permmasternodevec->get_local_values().data(), 0, masterdis.get_comm());
+  std::shared_ptr<const Core::LinAlg::Map> permuted_target_node_map =
+      std::make_shared<Core::LinAlg::Map>(-1, permuted_target_node_vec->local_length(),
+          permuted_target_node_vec->get_local_values().data(), 0, target_dis.get_comm());
 
-  if (not slavenodemap->point_same_as(*permmasternodemap))
-    FOUR_C_THROW("slave and permuted master node maps do not match");
+  if (not source_node_map->point_same_as(*permuted_target_node_map))
+    FOUR_C_THROW("source and permuted target node maps do not match");
 
-  masternodevec = nullptr;
-  permmasternodevec = nullptr;
+  target_node_vec = nullptr;
+  permuted_target_node_vec = nullptr;
 
-  build_dof_maps(masterdis, slavedis, masternodemap, slavenodemap, permmasternodemap,
-      permslavenodemap, masterdofs, slavedofs, nds_master, nds_slave);
+  build_dof_maps(target_dis, source_dis, target_node_map, source_node_map, permuted_target_node_map,
+      permuted_source_node_map, target_dofs, source_dofs, target_dofset_number,
+      source_dofset_number);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::build_dof_maps(const Core::FE::Discretization& masterdis,
-    const Core::FE::Discretization& slavedis,
-    const std::shared_ptr<const Core::LinAlg::Map>& masternodemap,
-    const std::shared_ptr<const Core::LinAlg::Map>& slavenodemap,
-    const std::shared_ptr<const Core::LinAlg::Map>& permmasternodemap,
-    const std::shared_ptr<const Core::LinAlg::Map>& permslavenodemap,
-    const std::vector<int>& masterdofs, const std::vector<int>& slavedofs, const int nds_master,
-    const int nds_slave)
+void Coupling::Adapter::Coupling::build_dof_maps(const Core::FE::Discretization& target_dis,
+    const Core::FE::Discretization& source_dis,
+    const std::shared_ptr<const Core::LinAlg::Map>& target_node_map,
+    const std::shared_ptr<const Core::LinAlg::Map>& source_node_map,
+    const std::shared_ptr<const Core::LinAlg::Map>& permuted_target_node_map,
+    const std::shared_ptr<const Core::LinAlg::Map>& permuted_source_node_map,
+    const std::vector<int>& target_dofs, const std::vector<int>& source_dofs,
+    const int target_dofset_number, const int source_dofset_number)
 {
-  build_dof_maps(masterdis, *masternodemap, *permmasternodemap, masterdofmap_, permmasterdofmap_,
-      masterexport_, masterdofs, nds_master);
-  build_dof_maps(slavedis, *slavenodemap, *permslavenodemap, slavedofmap_, permslavedofmap_,
-      slaveexport_, slavedofs, nds_slave);
+  build_dof_maps(target_dis, *target_node_map, *permuted_target_node_map, target_dof_map_,
+      permuted_target_dof_map_, target_export_, target_dofs, target_dofset_number);
+  build_dof_maps(source_dis, *source_node_map, *permuted_source_node_map, source_dof_map_,
+      permuted_source_dof_map_, source_export_, source_dofs, source_dofset_number);
 }
 
 /*----------------------------------------------------------------------*/
@@ -457,22 +476,22 @@ void Coupling::Adapter::Coupling::build_dof_maps(const Core::FE::Discretization&
 
     if (!thiscond.empty())
     {
-      // loop them and check, whether this is a pbc pure master node
+      // loop them and check, whether this is a pbc pure target node
       // for all previous conditions
-      unsigned ntimesmaster = 0;
+      unsigned n_times_target = 0;
       for (auto& cond : thiscond)
       {
-        const auto& mymasterslavetoggle = cond->parameters().get<std::string>("MASTER_OR_SLAVE");
+        const auto& target_source_toggle = cond->parameters().get<std::string>("MASTER_OR_SLAVE");
 
-        if (mymasterslavetoggle == "Master")
+        if (target_source_toggle == "Master")
         {
-          ++ntimesmaster;
+          ++n_times_target;
         }
       }
 
-      if (ntimesmaster < thiscond.size())
+      if (n_times_target < thiscond.size())
       {
-        // this node is not a master and does not own its own dofs
+        // this node is not a target and does not own its own dofs
         continue;
       }
     }
@@ -527,12 +546,12 @@ void Coupling::Adapter::Coupling::build_dof_maps(const Core::FE::Discretization&
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::Vector<double>> Coupling::Adapter::Coupling::target_to_source(
-    const Core::LinAlg::Vector<double>& mv) const
+    const Core::LinAlg::Vector<double>& tv) const
 {
   std::shared_ptr<Core::LinAlg::Vector<double>> sv =
-      std::make_shared<Core::LinAlg::Vector<double>>(*slavedofmap_);
+      std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_map_);
 
-  target_to_source(mv, *sv);
+  target_to_source(tv, *sv);
 
   return sv;
 }
@@ -543,24 +562,24 @@ std::shared_ptr<Core::LinAlg::Vector<double>> Coupling::Adapter::Coupling::targe
 std::shared_ptr<Core::LinAlg::Vector<double>> Coupling::Adapter::Coupling::source_to_target(
     const Core::LinAlg::Vector<double>& sv) const
 {
-  std::shared_ptr<Core::LinAlg::Vector<double>> mv =
-      std::make_shared<Core::LinAlg::Vector<double>>(*masterdofmap_);
+  std::shared_ptr<Core::LinAlg::Vector<double>> tv =
+      std::make_shared<Core::LinAlg::Vector<double>>(*target_dof_map_);
 
-  source_to_target(sv, *mv);
+  source_to_target(sv, *tv);
 
-  return mv;
+  return tv;
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::FEVector<double>> Coupling::Adapter::Coupling::target_to_source(
-    const Core::LinAlg::FEVector<double>& mv) const
+    const Core::LinAlg::FEVector<double>& tv) const
 {
   std::shared_ptr<Core::LinAlg::FEVector<double>> sv =
-      std::make_shared<Core::LinAlg::FEVector<double>>(*slavedofmap_, mv.num_vectors());
+      std::make_shared<Core::LinAlg::FEVector<double>>(*source_dof_map_, tv.num_vectors());
 
-  target_to_source(mv.as_multi_vector(), sv->as_multi_vector());
+  target_to_source(tv.as_multi_vector(), sv->as_multi_vector());
 
   return sv;
 }
@@ -571,24 +590,24 @@ std::shared_ptr<Core::LinAlg::FEVector<double>> Coupling::Adapter::Coupling::tar
 std::shared_ptr<Core::LinAlg::FEVector<double>> Coupling::Adapter::Coupling::source_to_target(
     const Core::LinAlg::FEVector<double>& sv) const
 {
-  std::shared_ptr<Core::LinAlg::FEVector<double>> mv =
-      std::make_shared<Core::LinAlg::FEVector<double>>(*masterdofmap_, sv.num_vectors());
+  std::shared_ptr<Core::LinAlg::FEVector<double>> tv =
+      std::make_shared<Core::LinAlg::FEVector<double>>(*target_dof_map_, sv.num_vectors());
 
-  source_to_target(sv.as_multi_vector(), mv->as_multi_vector());
+  source_to_target(sv.as_multi_vector(), tv->as_multi_vector());
 
-  return mv;
+  return tv;
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::MultiVector<double>> Coupling::Adapter::Coupling::target_to_source(
-    const Core::LinAlg::MultiVector<double>& mv) const
+    const Core::LinAlg::MultiVector<double>& tv) const
 {
   std::shared_ptr<Core::LinAlg::MultiVector<double>> sv =
-      std::make_shared<Core::LinAlg::MultiVector<double>>(*slavedofmap_, mv.num_vectors());
+      std::make_shared<Core::LinAlg::MultiVector<double>>(*source_dof_map_, tv.num_vectors());
 
-  target_to_source(mv, *sv);
+  target_to_source(tv, *sv);
 
   return sv;
 }
@@ -599,213 +618,173 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Coupling::Adapter::Coupling::
 std::shared_ptr<Core::LinAlg::MultiVector<double>> Coupling::Adapter::Coupling::source_to_target(
     const Core::LinAlg::MultiVector<double>& sv) const
 {
-  std::shared_ptr<Core::LinAlg::MultiVector<double>> mv =
-      std::make_shared<Core::LinAlg::MultiVector<double>>(*masterdofmap_, sv.num_vectors());
+  std::shared_ptr<Core::LinAlg::MultiVector<double>> tv =
+      std::make_shared<Core::LinAlg::MultiVector<double>>(*target_dof_map_, sv.num_vectors());
 
-  source_to_target(sv, *mv);
+  source_to_target(sv, *tv);
 
-  return mv;
+  return tv;
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Coupling::Adapter::Coupling::target_to_source(
-    const Core::LinAlg::MultiVector<double>& mv, Core::LinAlg::MultiVector<double>& sv) const
+    const Core::LinAlg::MultiVector<double>& tv, Core::LinAlg::MultiVector<double>& sv) const
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-  if (not mv.get_map().point_same_as(*masterdofmap_))
-    FOUR_C_THROW("master dof map vector expected");
-  if (not sv.get_map().point_same_as(*slavedofmap_)) FOUR_C_THROW("slave dof map vector expected");
-  if (sv.num_vectors() != mv.num_vectors())
-    FOUR_C_THROW("column number mismatch {}!={}", sv.num_vectors(), mv.num_vectors());
+  if (not tv.get_map().point_same_as(*target_dof_map_))
+    FOUR_C_THROW("target dof map vector expected");
+  if (not sv.get_map().point_same_as(*source_dof_map_))
+    FOUR_C_THROW("source dof map vector expected");
+  if (sv.num_vectors() != tv.num_vectors())
+    FOUR_C_THROW("column number mismatch {}!={}", sv.num_vectors(), tv.num_vectors());
 #endif
 
-  Core::LinAlg::MultiVector<double> perm(*permslavedofmap_, mv.num_vectors());
+  Core::LinAlg::MultiVector<double> perm(*permuted_source_dof_map_, tv.num_vectors());
   std::copy(
-      mv.get_values(), mv.get_values() + (mv.local_length() * mv.num_vectors()), perm.get_values());
+      tv.get_values(), tv.get_values() + (tv.local_length() * tv.num_vectors()), perm.get_values());
 
-  sv.export_to(perm, *slaveexport_, Core::LinAlg::CombineMode::insert);
+  sv.export_to(perm, *source_export_, Core::LinAlg::CombineMode::insert);
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Coupling::Adapter::Coupling::target_to_source(
-    const Core::LinAlg::Vector<int>& mv, Core::LinAlg::Vector<int>& sv) const
+    const Core::LinAlg::Vector<int>& tv, Core::LinAlg::Vector<int>& sv) const
 {
-  Core::LinAlg::Vector<int> perm(*permslavedofmap_);
-  std::ranges::copy(mv.get_local_values(), perm.get_local_values().begin());
+  Core::LinAlg::Vector<int> perm(*permuted_source_dof_map_);
+  std::ranges::copy(tv.get_local_values(), perm.get_local_values().begin());
 
-  sv.export_to(perm, *slaveexport_, Core::LinAlg::CombineMode::insert);
+  sv.export_to(perm, *source_export_, Core::LinAlg::CombineMode::insert);
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Coupling::Adapter::Coupling::source_to_target(
-    const Core::LinAlg::MultiVector<double>& sv, Core::LinAlg::MultiVector<double>& mv) const
+    const Core::LinAlg::MultiVector<double>& sv, Core::LinAlg::MultiVector<double>& tv) const
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-  if (not mv.get_map().point_same_as(*masterdofmap_))
-    FOUR_C_THROW("master dof map vector expected");
-  if (not sv.get_map().point_same_as(*slavedofmap_))
+  if (not tv.get_map().point_same_as(*target_dof_map_))
+    FOUR_C_THROW("target dof map vector expected");
+  if (not sv.get_map().point_same_as(*source_dof_map_))
   {
-    std::cout << "slavedofmap_" << std::endl;
-    std::cout << *slavedofmap_ << std::endl;
+    std::cout << "source_dof_map_" << std::endl;
+    std::cout << *source_dof_map_ << std::endl;
     std::cout << "sv" << std::endl;
     std::cout << sv.get_map() << std::endl;
-    FOUR_C_THROW("slave dof map vector expected");
+    FOUR_C_THROW("source dof map vector expected");
   }
-  if (sv.num_vectors() != mv.num_vectors())
-    FOUR_C_THROW("column number mismatch {}!={}", sv.num_vectors(), mv.num_vectors());
+  if (sv.num_vectors() != tv.num_vectors())
+    FOUR_C_THROW("column number mismatch {}!={}", sv.num_vectors(), tv.num_vectors());
 #endif
 
-  Core::LinAlg::MultiVector<double> perm(*permmasterdofmap_, sv.num_vectors());
+  Core::LinAlg::MultiVector<double> perm(*permuted_target_dof_map_, sv.num_vectors());
   std::copy(
       sv.get_values(), sv.get_values() + (sv.local_length() * sv.num_vectors()), perm.get_values());
 
-  mv.export_to(perm, *masterexport_, Core::LinAlg::CombineMode::insert);
+  tv.export_to(perm, *target_export_, Core::LinAlg::CombineMode::insert);
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Coupling::Adapter::Coupling::source_to_target(
-    const Core::LinAlg::Vector<int>& sv, Core::LinAlg::Vector<int>& mv) const
+    const Core::LinAlg::Vector<int>& sv, Core::LinAlg::Vector<int>& tv) const
 {
-  Core::LinAlg::Vector<int> perm(*permmasterdofmap_);
+  Core::LinAlg::Vector<int> perm(*permuted_target_dof_map_);
   std::ranges::copy(sv.get_local_values(), perm.get_local_values().begin());
 
-  mv.export_to(perm, *masterexport_, Core::LinAlg::CombineMode::insert);
+  tv.export_to(perm, *target_export_, Core::LinAlg::CombineMode::insert);
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::fill_master_to_slave_map(std::map<int, int>& rowmap) const
+void Coupling::Adapter::Coupling::fill_target_to_source_map(std::map<int, int>& rowmap) const
 {
-  for (int i = 0; i < masterdofmap_->num_my_elements(); ++i)
+  for (int i = 0; i < target_dof_map_->num_my_elements(); ++i)
   {
-    rowmap[masterdofmap_->gid(i)] = permslavedofmap_->gid(i);
+    rowmap[target_dof_map_->gid(i)] = permuted_source_dof_map_->gid(i);
   }
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::fill_slave_to_master_map(std::map<int, int>& rowmap) const
+void Coupling::Adapter::Coupling::fill_source_to_target_map(std::map<int, int>& rowmap) const
 {
-  for (int i = 0; i < slavedofmap_->num_my_elements(); ++i)
+  for (int i = 0; i < source_dof_map_->num_my_elements(); ++i)
   {
-    rowmap[slavedofmap_->gid(i)] = permmasterdofmap_->gid(i);
+    rowmap[source_dof_map_->gid(i)] = permuted_target_dof_map_->gid(i);
   }
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-std::shared_ptr<Core::LinAlg::Map> Coupling::Adapter::Coupling::slave_to_master_map(
-    Core::LinAlg::Map& slave)
+std::shared_ptr<Core::LinAlg::Map> Coupling::Adapter::Coupling::source_to_target_map(
+    Core::LinAlg::Map& source)
 {
   int nummyele = 0;
   std::vector<int> globalelements;
-  const std::shared_ptr<Core::LinAlg::Map> slavemap = Core::LinAlg::allreduce_e_map(slave);
-  for (int i = 0; i < slavemap->num_my_elements(); ++i)
+  const std::shared_ptr<Core::LinAlg::Map> source_map = Core::LinAlg::allreduce_e_map(source);
+  for (int i = 0; i < source_map->num_my_elements(); ++i)
   {
-    int lid = permslavedofmap_->lid(slavemap->gid(i));
+    int lid = permuted_source_dof_map_->lid(source_map->gid(i));
     if (lid != -1)
     {
-      globalelements.push_back(masterdofmap_->gid(lid));
+      globalelements.push_back(target_dof_map_->gid(lid));
       nummyele++;
     }
   }
 
   return std::make_shared<Core::LinAlg::Map>(
-      -1, nummyele, globalelements.data(), 0, slave.get_comm());
+      -1, nummyele, globalelements.data(), 0, source.get_comm());
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::Map> Coupling::Adapter::Coupling::target_to_source_map(
-    Core::LinAlg::Map& master)
+    Core::LinAlg::Map& target)
 {
   int nummyele = 0;
   std::vector<int> globalelements;
-  const std::shared_ptr<Core::LinAlg::Map> mastermap = Core::LinAlg::allreduce_e_map(master);
-  for (int i = 0; i < mastermap->num_my_elements(); ++i)
+  const std::shared_ptr<Core::LinAlg::Map> target_map = Core::LinAlg::allreduce_e_map(target);
+  for (int i = 0; i < target_map->num_my_elements(); ++i)
   {
-    int lid = permmasterdofmap_->lid(mastermap->gid(i));
+    int lid = permuted_target_dof_map_->lid(target_map->gid(i));
     if (lid != -1)
     {
-      globalelements.push_back(slavedofmap_->gid(lid));
+      globalelements.push_back(source_dof_map_->gid(lid));
       nummyele++;
     }
   }
 
   return std::make_shared<Core::LinAlg::Map>(
-      -1, nummyele, globalelements.data(), 0, master.get_comm());
+      -1, nummyele, globalelements.data(), 0, target.get_comm());
 }
 
-
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-std::shared_ptr<Core::LinAlg::SparseMatrix> Coupling::Adapter::Coupling::master_to_perm_master(
-    const Core::LinAlg::SparseMatrix& sm) const
+void Coupling::Adapter::Coupling::setup_coupling_matrices(
+    const Core::LinAlg::Map& shifted_target_map, const Core::LinAlg::Map& target_domain_map,
+    const Core::LinAlg::Map& source_domain_map)
 {
-  auto permsm =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*permmasterdofmap_, sm.max_num_entries());
+  // we always use the target_dof_map for the domain
+  matmm_ = std::make_shared<Core::LinAlg::SparseMatrix>(shifted_target_map, 1);
+  matsm_ = std::make_shared<Core::LinAlg::SparseMatrix>(shifted_target_map, 1);
+  matmm_trans_ = std::make_shared<Core::LinAlg::SparseMatrix>(target_domain_map, 1);
+  matsm_trans_ = std::make_shared<Core::LinAlg::SparseMatrix>(*permuted_source_dof_map(), 1);
 
-  // OK. You cannot use the same exporter for different matrices. So we
-  // recreate one all the time... This has to be optimized later on.
-  Core::LinAlg::Export exporter(*permmasterdofmap_, *masterdofmap_);
-  permsm->import(sm, exporter, Core::LinAlg::CombineMode::insert);
-  permsm->complete(sm.domain_map(), *permmasterdofmap_);
-
-  return permsm;
-}
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-std::shared_ptr<Core::LinAlg::SparseMatrix> Coupling::Adapter::Coupling::slave_to_perm_slave(
-    const Core::LinAlg::SparseMatrix& sm) const
-{
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-  if (not sm.row_map().point_same_as(*slavedofmap_)) FOUR_C_THROW("slave dof map vector expected");
-  if (not sm.filled()) FOUR_C_THROW("matrix must be filled");
-#endif
-
-  auto permsm =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*permslavedofmap_, sm.max_num_entries());
-
-  // OK. You cannot use the same exporter for different matrices. So we
-  // recreate one all the time... This has to be optimized later on.
-  Core::LinAlg::Export exporter(*permslavedofmap_, *slavedofmap_);
-  permsm->import(sm, exporter, Core::LinAlg::CombineMode::insert);
-  permsm->complete(sm.domain_map(), *permslavedofmap_);
-
-  return permsm;
-}
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-void Coupling::Adapter::Coupling::setup_coupling_matrices(const Core::LinAlg::Map& shiftedmastermap,
-    const Core::LinAlg::Map& masterdomainmap, const Core::LinAlg::Map& slavedomainmap)
-{
-  // we always use the masterdofmap for the domain
-  matmm_ = std::make_shared<Core::LinAlg::SparseMatrix>(shiftedmastermap, 1);
-  matsm_ = std::make_shared<Core::LinAlg::SparseMatrix>(shiftedmastermap, 1);
-  matmm_trans_ = std::make_shared<Core::LinAlg::SparseMatrix>(masterdomainmap, 1);
-  matsm_trans_ = std::make_shared<Core::LinAlg::SparseMatrix>(*perm_source_dof_map(), 1);
-
-  int length = shiftedmastermap.num_my_elements();
+  int length = shifted_target_map.num_my_elements();
   double one = 1.;
   for (int i = 0; i < length; ++i)
   {
-    int sgid = perm_source_dof_map()->gid(i);
+    int sgid = permuted_source_dof_map()->gid(i);
     int mgid = target_dof_map()->gid(i);
-    int shiftedmgid = shiftedmastermap.gid(i);
+    int shiftedmgid = shifted_target_map.gid(i);
 
     matmm_->insert_global_values(shiftedmgid, 1, &one, &mgid);
     matsm_->insert_global_values(shiftedmgid, 1, &one, &sgid);
@@ -813,108 +792,60 @@ void Coupling::Adapter::Coupling::setup_coupling_matrices(const Core::LinAlg::Ma
     matsm_trans_->insert_global_values(sgid, 1, &one, &shiftedmgid);
   }
 
-  matmm_->complete(masterdomainmap, shiftedmastermap);
-  matsm_->complete(slavedomainmap, shiftedmastermap);
-  matmm_trans_->complete(shiftedmastermap, masterdomainmap);
-  matsm_trans_->complete(shiftedmastermap, *perm_source_dof_map());
+  matmm_->complete(target_domain_map, shifted_target_map);
+  matsm_->complete(source_domain_map, shifted_target_map);
+  matmm_trans_->complete(shifted_target_map, target_domain_map);
+  matsm_trans_->complete(shifted_target_map, *permuted_source_dof_map());
 
-  // communicate slave to master matrix
-  auto tmp = std::make_shared<Core::LinAlg::SparseMatrix>(slavedomainmap, 1);
+  // communicate source to target matrix
+  auto tmp = std::make_shared<Core::LinAlg::SparseMatrix>(source_domain_map, 1);
 
-  Core::LinAlg::Import exporter(slavedomainmap, *perm_source_dof_map());
+  Core::LinAlg::Import exporter(source_domain_map, *permuted_source_dof_map());
   tmp->import(*matsm_trans_, exporter, Core::LinAlg::CombineMode::insert);
-  tmp->complete(shiftedmastermap, slavedomainmap);
+  tmp->complete(shifted_target_map, source_domain_map);
   matsm_trans_ = tmp;
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-std::shared_ptr<const Core::LinAlg::Map>& Coupling::Adapter::Coupling::ma_dof_map_ptr()
+std::shared_ptr<const Core::LinAlg::Map>& Coupling::Adapter::Coupling::target_dof_map_ptr()
 {
-  return masterdofmap_;
+  return target_dof_map_;
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-const Core::LinAlg::Map& Coupling::Adapter::Coupling::ma_dof_map() const
+std::shared_ptr<const Core::LinAlg::Map>& Coupling::Adapter::Coupling::permuted_target_dof_map_ptr()
 {
-  if (!masterdofmap_) FOUR_C_THROW("The masterdofmap_ has not been initialized correctly!");
-  return *masterdofmap_;
+  return permuted_target_dof_map_;
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-std::shared_ptr<const Core::LinAlg::Map>& Coupling::Adapter::Coupling::permuted_ma_dof_map_ptr()
+std::shared_ptr<const Core::LinAlg::Map>& Coupling::Adapter::Coupling::source_dof_map_ptr()
 {
-  return permmasterdofmap_;
+  return source_dof_map_;
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-const Core::LinAlg::Map& Coupling::Adapter::Coupling::permuted_ma_dof_map() const
+std::shared_ptr<const Core::LinAlg::Map>& Coupling::Adapter::Coupling::permuted_source_dof_map_ptr()
 {
-  if (!permmasterdofmap_) FOUR_C_THROW("The permmasterdofmap_ has not been initialized correctly!");
-  return *permmasterdofmap_;
+  return permuted_source_dof_map_;
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-std::shared_ptr<const Core::LinAlg::Map>& Coupling::Adapter::Coupling::sl_dof_map_ptr()
+std::shared_ptr<Core::LinAlg::Export>& Coupling::Adapter::Coupling::target_exporter_ptr()
 {
-  return slavedofmap_;
+  return target_export_;
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-const Core::LinAlg::Map& Coupling::Adapter::Coupling::sl_dof_map() const
+std::shared_ptr<Core::LinAlg::Export>& Coupling::Adapter::Coupling::source_exporter_ptr()
 {
-  if (!slavedofmap_) FOUR_C_THROW("The slavedofmap_ has not been initialized correctly!");
-  return *slavedofmap_;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-std::shared_ptr<const Core::LinAlg::Map>& Coupling::Adapter::Coupling::permuted_sl_dof_map_ptr()
-{
-  return permslavedofmap_;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-const Core::LinAlg::Map& Coupling::Adapter::Coupling::permuted_sl_dof_map() const
-{
-  if (!permslavedofmap_) FOUR_C_THROW("The permslavedofmap_ has not been initialized correctly!");
-  return *permslavedofmap_;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-std::shared_ptr<Core::LinAlg::Export>& Coupling::Adapter::Coupling::ma_exporter_ptr()
-{
-  return masterexport_;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-const Core::LinAlg::Export& Coupling::Adapter::Coupling::ma_exporter() const
-{
-  if (!masterexport_) FOUR_C_THROW("The masterexport_ has not been initialized correctly!");
-  return *masterexport_;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-std::shared_ptr<Core::LinAlg::Export>& Coupling::Adapter::Coupling::sl_exporter_ptr()
-{
-  return slaveexport_;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-const Core::LinAlg::Export& Coupling::Adapter::Coupling::sl_exporter() const
-{
-  if (!slaveexport_) FOUR_C_THROW("The slaveexport_ has not been initialized correctly!");
-  return *slaveexport_;
+  return source_export_;
 }
 
 FOUR_C_NAMESPACE_CLOSE

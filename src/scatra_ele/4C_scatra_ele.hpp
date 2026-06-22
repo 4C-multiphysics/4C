@@ -528,7 +528,7 @@ namespace Discret
       }
 
       //! get number of element face
-      int surface_number() { return face_master_number(); }
+      int surface_number() { return face_target_number(); }
 
       /*!
       \brief Get number of degrees of freedom per element

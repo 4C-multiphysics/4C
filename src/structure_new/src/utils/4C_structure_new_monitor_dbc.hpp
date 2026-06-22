@@ -88,8 +88,8 @@ namespace Solid
      */
     void read_restart_yaml_file(const Core::Conditions::Condition& rcond);
 
-    void create_reaction_force_condition(
-        const Core::Conditions::Condition& tagged_cond, Core::FE::Discretization& discret) const;
+    std::shared_ptr<Core::Conditions::Condition> create_reaction_force_condition(
+        const Core::Conditions::Condition& tagged_cond) const;
 
     void get_tagged_condition(std::vector<const Core::Conditions::Condition*>& tagged_conds,
         const std::string& cond_name, const std::string& tag_name,
@@ -136,6 +136,8 @@ namespace Solid
 
     /// extract the dofs of the reaction forces which shall be monitored
     std::map<std::string, std::vector<std::shared_ptr<Core::LinAlg::Map>>> react_maps_;
+    // dofset index for the structural dofs (assumed to be 0)
+    constexpr static unsigned int structural_dof_set_ = 0;
     int os_precision_ = -1;
     std::vector<std::unique_ptr<Core::IO::RuntimeCsvWriter>> dbc_monitor_csvwriter_;
     std::vector<ryml::Tree> dbc_monitor_yaml_file_trees_;

@@ -36,14 +36,14 @@ Core::Conditions::PeriodicBoundaryConditions::PeriodicBoundaryConditions(
   // set number of pairs of periodic boundary conditions
   numpbcpairs_ = mysurfpbcs_.size() / 2;
 
-  // create map that will be connecting master to slave nodes owned by
+  // create map that will be connecting target to source nodes owned by
   // this proc
-  //       master node -> list of its slave node(s)
+  //       target node -> list of its source node(s)
   allcoupledrownodes_ = std::make_shared<std::map<int, std::vector<int>>>();
 
-  // create map that will be connecting master to slave nodes owned or
+  // create map that will be connecting target to source nodes owned or
   // ghosted by this proc
-  //       master node -> list of its slave node(s)
+  //       target node -> list of its source node(s)
   allcoupledcolnodes_ = std::make_shared<std::map<int, std::vector<int>>>();
 }
 
@@ -60,8 +60,8 @@ void Core::Conditions::PeriodicBoundaryConditions::update_dofs_for_periodic_boun
       std::cout << std::endl << std::endl;
     }
 
-    // fetch all slaves to the proc of the master
-    put_all_slaves_to_masters_proc();
+    // fetch all sources to the proc of the target
+    put_all_sources_to_targets_proc();
 
     // eventually  optimally distribute the nodes --- up to
     // now, a periodic boundary condition might remove all nodes from a proc ...
@@ -70,13 +70,13 @@ void Core::Conditions::PeriodicBoundaryConditions::update_dofs_for_periodic_boun
     if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_)
     {
       std::cout << "---------------------------------------------\n";
-      std::cout << "Repair Master->Slave connection, generate final dofset";
+      std::cout << "Repair Target->Source connection, generate final dofset";
       std::cout << std::endl << std::endl;
     }
 
-    // assign the new dofs, make absolutely sure that we always have all slaves to a master
+    // assign the new dofs, make absolutely sure that we always have all sources to a target
     // the finite edge weights are not a 100% warranty for that...
-    put_all_slaves_to_masters_proc();
+    put_all_sources_to_targets_proc();
 
     if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_)
     {
@@ -103,23 +103,23 @@ void Core::Conditions::PeriodicBoundaryConditions::update_dofs_for_periodic_boun
       int mypid = Core::Communication::my_mpi_rank(discret_->get_comm());
       int numprocs = Core::Communication::num_mpi_ranks(discret_->get_comm());
 
-      int countslave = 0;
+      int countsource = 0;
       for (std::map<int, std::vector<int>>::iterator iter = allcoupledcolnodes_->begin();
           iter != allcoupledcolnodes_->end(); ++iter)
       {
         for (std::vector<int>::iterator viter = iter->second.begin(); viter != iter->second.end();
             ++viter)
         {
-          ++countslave;
+          ++countsource;
         }
       }
 
       std::vector<int> my_n_nodes(numprocs, 0);
       std::vector<int> n_nodes(numprocs, 0);
-      std::vector<int> my_n_master(numprocs, 0);
-      std::vector<int> n_master(numprocs, 0);
-      std::vector<int> my_n_slave(numprocs, 0);
-      std::vector<int> n_slave(numprocs, 0);
+      std::vector<int> my_n_target(numprocs, 0);
+      std::vector<int> n_target(numprocs, 0);
+      std::vector<int> my_n_source(numprocs, 0);
+      std::vector<int> n_source(numprocs, 0);
       std::vector<int> my_n_elements(numprocs, 0);
       std::vector<int> n_elements(numprocs, 0);
       std::vector<int> my_n_ghostele(numprocs, 0);
@@ -128,15 +128,15 @@ void Core::Conditions::PeriodicBoundaryConditions::update_dofs_for_periodic_boun
       std::vector<int> n_dof(numprocs, 0);
 
       my_n_nodes[mypid] = noderowmap->num_my_elements();
-      my_n_master[mypid] = allcoupledcolnodes_->size();
-      my_n_slave[mypid] = countslave;
+      my_n_target[mypid] = allcoupledcolnodes_->size();
+      my_n_source[mypid] = countsource;
       my_n_elements[mypid] = discret_->num_my_col_elements();
       my_n_ghostele[mypid] = discret_->num_my_col_elements() - discret_->num_my_row_elements();
       my_n_dof[mypid] = dofrowmap->num_my_elements();
 
       n_nodes = Core::Communication::sum_all(my_n_nodes, discret_->get_comm());
-      n_master = Core::Communication::sum_all(my_n_master, discret_->get_comm());
-      n_slave = Core::Communication::sum_all(my_n_slave, discret_->get_comm());
+      n_target = Core::Communication::sum_all(my_n_target, discret_->get_comm());
+      n_source = Core::Communication::sum_all(my_n_source, discret_->get_comm());
       n_elements = Core::Communication::sum_all(my_n_elements, discret_->get_comm());
       n_ghostele = Core::Communication::sum_all(my_n_ghostele, discret_->get_comm());
       n_dof = Core::Communication::sum_all(my_n_dof, discret_->get_comm());
@@ -148,7 +148,7 @@ void Core::Conditions::PeriodicBoundaryConditions::update_dofs_for_periodic_boun
             "+-----+---------------+--------------+-------------+-----------------+----------------"
             "+-----------------+\n");
         printf(
-            "   | PID |    n_nodes    |   n_master   |   n_slave   |    n_elements   |   "
+            "   | PID |    n_nodes    |   n_target   |   n_source   |    n_elements   |   "
             "n_ghostele   |      n_dof      |\n");
         printf(
             "   "
@@ -157,7 +157,7 @@ void Core::Conditions::PeriodicBoundaryConditions::update_dofs_for_periodic_boun
         for (int npid = 0; npid < numprocs; ++npid)
         {
           printf("   | %3d | %13d | %12d | %11d | %15d | %14d | %15d |\n", npid, n_nodes[npid],
-              n_master[npid], n_slave[npid], n_elements[npid], n_ghostele[npid], n_dof[npid]);
+              n_target[npid], n_source[npid], n_elements[npid], n_ghostele[npid], n_dof[npid]);
           printf(
               "   "
               "+-----+---------------+--------------+-------------+-----------------+--------------"
@@ -172,7 +172,7 @@ void Core::Conditions::PeriodicBoundaryConditions::update_dofs_for_periodic_boun
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_proc()
+void Core::Conditions::PeriodicBoundaryConditions::put_all_sources_to_targets_proc()
 {
   if (numpbcpairs_ > 0)
   {
@@ -180,17 +180,17 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
     allcoupledrownodes_ = std::make_shared<std::map<int, std::vector<int>>>();
     allcoupledcolnodes_ = std::make_shared<std::map<int, std::vector<int>>>();
 
-    // map from global masternodeids (on this proc) to global slavenodeids
+    // map from global targetnodeids (on this proc) to global sourcenodeids
     // for a single condition
     std::map<int, std::vector<int>> midtosid;
 
-    // pointers to master and slave condition
-    const Core::Conditions::Condition* mastercond = nullptr;
-    const Core::Conditions::Condition* slavecond = nullptr;
+    // pointers to target and source condition
+    const Core::Conditions::Condition* targetcond = nullptr;
+    const Core::Conditions::Condition* sourcecond = nullptr;
 
-    // global master node Ids and global slave node Ids
-    std::vector<int> masternodeids;
-    std::vector<int> slavenodeids;
+    // global target node Ids and global source node Ids
+    std::vector<int> targetnodeids;
+    std::vector<int> sourcenodeids;
 
     //----------------------------------------------------------------------
     //                     LOOP PERIODIC DIRECTIONS
@@ -217,17 +217,17 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
         // in the following, we loop all periodic boundary
         // conditions which have the prescribed periodic
         // direction.
-        // For every Master condition, we add the nodes into
-        // the set of all masternodeids for periodic boundary
+        // For every Target condition, we add the nodes into
+        // the set of all targetnodeids for periodic boundary
         // conditions with this homogeneous direction.
-        // The same is done for the slave conditions.
+        // The same is done for the source conditions.
         // loop pairs of periodic boundary conditions
         for (int pbcid = 0; pbcid < numpbcpairs_; ++pbcid)
         {
-          // master and slave sets for this periodic direction
-          std::set<int> masterset;
-          std::set<int> slaveset;
-          // possible angles of rotation for slave plane for each pbc pair
+          // target and source sets for this periodic direction
+          std::set<int> targetset;
+          std::set<int> sourceset;
+          // possible angles of rotation for source plane for each pbc pair
           std::vector<double> rotangles(numpbcpairs_);
 
           // absolute node matching tolerance for octree
@@ -238,7 +238,7 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
           bool tol_set = false;
 
           //--------------------------------------------------
-          // get master and slave condition pair with id pbcid
+          // get target and source condition pair with id pbcid
 
           for (auto& mysurfpbc : mysurfpbcs_)
           {
@@ -248,79 +248,81 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
 
             if (id_zero_based == pbcid && layer == nlayer)
             {
-              const auto& mymasterslavetoggle =
+              const auto& mytargetsourcetoggle =
                   mysurfpbc->parameters().get<std::string>("MASTER_OR_SLAVE");
 
-              if (mymasterslavetoggle == "Master")
+              if (mytargetsourcetoggle == "Master")
               {
-                mastercond = mysurfpbc;
+                targetcond = mysurfpbc;
 
                 //--------------------------------------------------
                 // check whether this periodic boundary condition belongs
                 // to thisplane
 
                 const auto& dofsforpbcplanename =
-                    mastercond->parameters().get<std::string>("PLANE");
+                    targetcond->parameters().get<std::string>("PLANE");
 
                 if (dofsforpbcplanename == plane)
                 {
-                  // add all master nodes to masterset
+                  // add all target nodes to targetset
 
                   //--------------------------------------------------
-                  // get global master node Ids
-                  const std::vector<int>* masteridstoadd;
+                  // get global target node Ids
+                  const std::vector<int>* targetidstoadd;
 
-                  masteridstoadd = mastercond->get_nodes();
+                  targetidstoadd = targetcond->get_nodes();
 
-                  for (int idtoadd : *masteridstoadd)
+                  for (int idtoadd : *targetidstoadd)
                   {
                     // we only add row nodes to the set
                     if (discret_->have_global_node(idtoadd))
                       if (discret_->g_node(idtoadd)->owner() ==
                           Core::Communication::my_mpi_rank(discret_->get_comm()))
-                        masterset.insert(idtoadd);
+                        targetset.insert(idtoadd);
                   }
 
-                  // check for angle of rotation (has to be zero for master plane)
-                  const double angle = mastercond->parameters().get<double>("ANGLE");
+                  // check for angle of rotation (has to be zero for target plane)
+                  const double angle = targetcond->parameters().get<double>("ANGLE");
                   if (abs(angle) > 1e-13)
-                    FOUR_C_THROW("Angle is not zero for master plane: {}", angle);
+                    FOUR_C_THROW("Angle is not zero for target plane: {}", angle);
                 }
               }
-              else if (mymasterslavetoggle == "Slave")
+              else if (mytargetsourcetoggle == "Slave")
               {
-                slavecond = mysurfpbc;
+                sourcecond = mysurfpbc;
 
                 //--------------------------------------------------
                 // check whether this periodic boundary condition belongs
                 // to thisplane
-                const auto& dofsforpbcplanename = slavecond->parameters().get<std::string>("PLANE");
+                const auto& dofsforpbcplanename =
+                    sourcecond->parameters().get<std::string>("PLANE");
 
                 if (dofsforpbcplanename == plane)
                 {
-                  // add all slave nodes to slaveset
+                  // add all source nodes to sourceset
 
                   //--------------------------------------------------
-                  // get global slave node Ids
-                  const std::vector<int>* slaveidstoadd;
+                  // get global source node Ids
+                  const std::vector<int>* sourceidstoadd;
 
-                  slaveidstoadd = slavecond->get_nodes();
+                  sourceidstoadd = sourcecond->get_nodes();
 
-                  for (int idtoadd : *slaveidstoadd)
+                  for (int idtoadd : *sourceidstoadd)
                   {
                     // we only add row nodes to the set
                     if (discret_->have_global_node(idtoadd))
                       if (discret_->g_node(idtoadd)->owner() ==
                           Core::Communication::my_mpi_rank(discret_->get_comm()))
-                        slaveset.insert(idtoadd);
+                        sourceset.insert(idtoadd);
                   }
 
-                  // check for angle of rotation of slave plane and store it
-                  const double angle = slavecond->parameters().get<double>("ANGLE");
+                  // check for angle of rotation of source plane and store it
+                  const double angle = sourcecond->parameters().get<double>("ANGLE");
                   if (abs(angle) > 1e-13)
                   {
                     if ((plane != "xz") && (plane != "yz"))
-                      FOUR_C_THROW("Rotation of slave plane only implemented for xz and yz planes");
+                      FOUR_C_THROW(
+                          "Rotation of source plane only implemented for xz and yz planes");
                     else
                     {
                       rotangles[pbcid] =
@@ -336,7 +338,7 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
               }
               else
               {
-                FOUR_C_THROW("pbc is neither master nor slave");
+                FOUR_C_THROW("pbc is neither target nor source");
               }
 
 
@@ -374,7 +376,7 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
           //     |                           |
           //     |                           |
           //     |                           |
-          //   slave                      master
+          //   source                      target
           //
           //
 
@@ -404,19 +406,19 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
           }
           //--------------------------------------------------
           // we just write the sets into vectors
-          (masternodeids).clear();
-          (slavenodeids).clear();
+          (targetnodeids).clear();
+          (sourcenodeids).clear();
 
-          for (std::set<int>::iterator appendednode = masterset.begin();
-              appendednode != masterset.end(); ++appendednode)
+          for (std::set<int>::iterator appendednode = targetset.begin();
+              appendednode != targetset.end(); ++appendednode)
           {
-            masternodeids.push_back(*appendednode);
+            targetnodeids.push_back(*appendednode);
           }
 
-          for (std::set<int>::iterator appendednode = slaveset.begin();
-              appendednode != slaveset.end(); ++appendednode)
+          for (std::set<int>::iterator appendednode = sourceset.begin();
+              appendednode != sourceset.end(); ++appendednode)
           {
-            slavenodeids.push_back(*appendednode);
+            sourcenodeids.push_back(*appendednode);
           }
 
           //----------------------------------------------------------------------
@@ -424,8 +426,8 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
           //                        FOR THIS DIRECTION
           //----------------------------------------------------------------------
 
-          // clear map from global masternodeids (on this proc) to global
-          // slavenodeids --- it belongs to this master slave pair!!!
+          // clear map from global targetnodeids (on this proc) to global
+          // sourcenodeids --- it belongs to this target source pair!!!
           midtosid.clear();
 
           if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_ &&
@@ -436,18 +438,18 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
             fflush(stdout);
           }
 
-          // get map master on this proc -> slave on some proc
+          // get map target on this proc -> source on some proc
           create_node_coupling_for_single_pbc(
-              midtosid, masternodeids, slavenodeids, dofsforpbcplane, rotangles[0], abs_tol);
+              midtosid, targetnodeids, sourcenodeids, dofsforpbcplane, rotangles[0], abs_tol);
 
           if (Core::Communication::num_mpi_ranks(discret_->get_comm()) == 1)
           {
-            if (masternodeids.size() != midtosid.size())
+            if (targetnodeids.size() != midtosid.size())
             {
               // before throwing FOUR_C_THROW, print helpful information to screen
-              for (size_t i = 0; i < masternodeids.size(); i++)
+              for (size_t i = 0; i < targetnodeids.size(); i++)
               {
-                int mid = masternodeids[i];
+                int mid = targetnodeids[i];
                 bool found = false;
                 std::map<int, std::vector<int>>::iterator curr;
                 for (curr = midtosid.begin(); curr != midtosid.end(); ++curr)
@@ -461,13 +463,13 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
                 if (not found)
                 {
                   const auto& x = discret_->g_node(mid)->x();
-                  std::cout << "\nmaster node not found in midtosid list: " << mid
+                  std::cout << "\ntarget node not found in midtosid list: " << mid
                             << "  coord: x=" << x[0] << " y=" << x[1] << " z=" << x[2];
                 }
               }
               // now it is time for the   FOUR_C_THROW
-              FOUR_C_THROW("have {} masters in midtosid list, {} expected\n", midtosid.size(),
-                  masternodeids.size());
+              FOUR_C_THROW("have {} targets in midtosid list, {} expected\n", midtosid.size(),
+                  targetnodeids.size());
             }
           }
 
@@ -522,8 +524,8 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::Conditions::PeriodicBoundaryConditions::create_node_coupling_for_single_pbc(
-    std::map<int, std::vector<int>>& midtosid, const std::vector<int> masternodeids,
-    const std::vector<int> slavenodeids, const std::vector<int> dofsforpbcplane,
+    std::map<int, std::vector<int>>& midtosid, const std::vector<int> targetnodeids,
+    const std::vector<int> sourcenodeids, const std::vector<int> dofsforpbcplane,
     const double rotangle, const double abstol)
 {
   // these are just parameter definitions for the octree search algorithm
@@ -537,7 +539,7 @@ void Core::Conditions::PeriodicBoundaryConditions::create_node_coupling_for_sing
   // build processor local octree
   auto nodematchingoctree = Core::GeometricSearch::NodeMatchingOctree();
 
-  nodematchingoctree.init(*discret_, masternodeids, maxnodeperleaf, tol);
+  nodematchingoctree.init(*discret_, targetnodeids, maxnodeperleaf, tol);
   nodematchingoctree.setup();
 
   //----------------------------------------------------------------------
@@ -546,9 +548,9 @@ void Core::Conditions::PeriodicBoundaryConditions::create_node_coupling_for_sing
 
   // create connectivity for this condition in this direction
   {
-    // create map from gid masternode -> gid corresponding slavenode
+    // create map from gid targetnode -> gid corresponding sourcenode
     nodematchingoctree.create_global_entity_matching(
-        slavenodeids, dofsforpbcplane, rotangle, midtosid);
+        sourcenodeids, dofsforpbcplane, rotangle, midtosid);
   }
 }
 
@@ -561,7 +563,7 @@ void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
   TEUCHOS_FUNC_TIME_MONITOR("Conditions::PeriodicBoundaryConditions::add_connectivity");
 
   // the "inverse" mapping of allcoupled(row/col)nodes
-  //       slave node -> its master node (list of size 1)
+  //       source node -> its target node (list of size 1)
   std::shared_ptr<std::map<int, std::vector<int>>> inversenodecoupling;
   inversenodecoupling = std::make_shared<std::map<int, std::vector<int>>>();
 
@@ -574,40 +576,41 @@ void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
   //----------------------------------------------------------------------
   {
     std::map<int, std::vector<int>>::iterator iter;
-    int masterid;
-    int slaveid;
+    int targetid;
+    int sourceid;
     bool alreadyinlist;
 
     for (iter = midtosid.begin(); iter != midtosid.end(); ++iter)
     {
-      // get id of masternode and slavenode
-      masterid = iter->first;
+      // get id of targetnode and sourcenode
+      targetid = iter->first;
 
       std::vector<int>::iterator i;
       for (i = (iter->second).begin(); i != (iter->second).end(); ++i)
       {
-        slaveid = *i;
-        if (slaveid == masterid)
-          FOUR_C_THROW("Node {} is master AND slave node of periodic boundary condition", masterid);
+        sourceid = *i;
+        if (sourceid == targetid)
+          FOUR_C_THROW(
+              "Node {} is target AND source node of periodic boundary condition", targetid);
 
-        // is masterid already in allcoupledrownodes?
+        // is targetid already in allcoupledrownodes?
         {
           alreadyinlist = false;
 
           std::map<int, std::vector<int>>::iterator found;
 
-          found = allcoupledrownodes_->find(masterid);
+          found = allcoupledrownodes_->find(targetid);
           if (found != allcoupledrownodes_->end())
           {
-            // masterid is already in the list --- i.e., the master is the
-            // master of a previous condition. Simply append the slave id here
+            // targetid is already in the list --- i.e., the target is the
+            // target of a previous condition. Simply append the source id here
             alreadyinlist = true;
-            found->second.push_back(slaveid);
+            found->second.push_back(sourceid);
           }
-          // masterid is not in the list yet. -> new entry
+          // targetid is not in the list yet. -> new entry
           if (alreadyinlist == false)
           {
-            (*allcoupledrownodes_)[masterid].push_back(slaveid);
+            (*allcoupledrownodes_)[targetid].push_back(sourceid);
           }  // end if not in map
         }
       }
@@ -622,7 +625,7 @@ void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
     {
       if (pbcid > 0)
       {
-        // 1) each proc generates a list of its multiple coupled masters
+        // 1) each proc generates a list of its multiple coupled targets
         // 2) the list is communicated in a round robin pattern to all the
         //    other procs.
         // 3) the proc checks the package from each proc and inserts missing
@@ -630,14 +633,14 @@ void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
 
 
         //--------------------------------------------------------------------
-        // -> 1) create a list of multiple master
+        // -> 1) create a list of multiple target
         // Communicate multiple couplings for completion...
         std::map<int, std::vector<int>> multiplecouplings;
         for (iter = midtosid.begin(); iter != midtosid.end(); ++iter)
         {
-          // get id of masternode and the node itself
-          masterid = iter->first;
-          Core::Nodes::Node* actnode = discret_->g_node(masterid);
+          // get id of targetnode and the node itself
+          targetid = iter->first;
+          Core::Nodes::Node* actnode = discret_->g_node(targetid);
 
           // get all periodic boundary conditions on this node
 
@@ -649,32 +652,32 @@ void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
             thiscond = discret_->get_conditions_on_node("LinePeriodic", actnode);
           }
 
-          // loop them and check, whether this is a pbc pure master node
+          // loop them and check, whether this is a pbc pure target node
           // for all previous conditions
-          unsigned ntimesmaster = 0;
+          unsigned ntimestarget = 0;
           for (unsigned numcond = 0; numcond < thiscond.size(); ++numcond)
           {
-            const std::string& mymasterslavetoggle =
+            const std::string& mytargetsourcetoggle =
                 thiscond[numcond]->parameters().get<std::string>("MASTER_OR_SLAVE");
 
-            if (mymasterslavetoggle == "Master")
+            if (mytargetsourcetoggle == "Master")
             {
-              ++ntimesmaster;
-            }  // end is slave?
+              ++ntimestarget;
+            }  // end is source?
           }  // end loop this conditions
 
-          if (ntimesmaster == thiscond.size())
+          if (ntimestarget == thiscond.size())
           {
-            // yes, we have such a pure master node
+            // yes, we have such a pure target node
             std::vector<int> thiscoupling;
-            for (std::vector<int>::iterator rr = (*allcoupledrownodes_)[masterid].begin();
-                rr != (*allcoupledrownodes_)[masterid].end(); ++rr)
+            for (std::vector<int>::iterator rr = (*allcoupledrownodes_)[targetid].begin();
+                rr != (*allcoupledrownodes_)[targetid].end(); ++rr)
             {
               thiscoupling.push_back(*rr);
             }
 
-            // add it to the list of multiple coupled masters on this proc
-            multiplecouplings[masterid] = thiscoupling;
+            // add it to the list of multiple coupled targets on this proc
+            multiplecouplings[targetid] = thiscoupling;
           }
         }
 
@@ -753,15 +756,15 @@ void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
             for (size_t mm = 0; mm < len; ++mm)  // this cannot be done through an iterator since we
                                                  // append to the vector while looping over it.
             {
-              int possiblemaster = (mciter->second)[mm];
+              int possibletarget = (mciter->second)[mm];
 
               std::map<int, std::vector<int>>::iterator found =
-                  allcoupledrownodes_->find(possiblemaster);
+                  allcoupledrownodes_->find(possibletarget);
 
               if (found != allcoupledrownodes_->end())
               {
-                // close the connectivity using the slave node which was the
-                // masternode of the previous condition
+                // close the connectivity using the source node which was the
+                // targetnode of the previous condition
                 for (std::vector<int>::iterator fsiter = found->second.begin();
                     fsiter != found->second.end(); ++fsiter)
                 {
@@ -805,7 +808,7 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
       "Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_coupling");
 
   // the "inverse" mapping of allcoupled(row/col)nodes
-  //       slave node -> its master node (list of size 1)
+  //       source node -> its target node (list of size 1)
   std::shared_ptr<std::map<int, std::vector<int>>> inversenodecoupling;
   inversenodecoupling = std::make_shared<std::map<int, std::vector<int>>>();
 
@@ -836,7 +839,7 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
     }
 
     // -----------------------------------------------
-    // remove all node gids of slave nodes on this proc
+    // remove all node gids of source nodes on this proc
 
     // get all periodic boundary conditions on this node
     std::vector<const Core::Conditions::Condition*> thiscond;
@@ -858,17 +861,17 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
 
     for (unsigned numcond = 0; numcond < thiscond.size(); ++numcond)
     {
-      const std::string& mymasterslavetoggle =
+      const std::string& mytargetsourcetoggle =
           thiscond[numcond]->parameters().get<std::string>("MASTER_OR_SLAVE");
 
-      if (mymasterslavetoggle == "Slave")
+      if (mytargetsourcetoggle == "Slave")
       {
-        const std::vector<int>* slaveidstodel;
+        const std::vector<int>* sourceidstodel;
 
-        slaveidstodel = thiscond[numcond]->get_nodes();
+        sourceidstodel = thiscond[numcond]->get_nodes();
 
-        for (std::vector<int>::const_iterator idtodel = (*slaveidstodel).begin();
-            idtodel != (*slaveidstodel).end(); ++idtodel)
+        for (std::vector<int>::const_iterator idtodel = (*sourceidstodel).begin();
+            idtodel != (*sourceidstodel).end(); ++idtodel)
         {
           if (discret_->have_global_node(*idtodel))
           {
@@ -902,11 +905,11 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
     numcerase = Core::Communication::sum_all(mycerase, discret_->get_comm());
     if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_)
     {
-      std::cout << " Erased " << numerase << " slaves from nodeset.\n";
+      std::cout << " Erased " << numerase << " sources from nodeset.\n";
       std::cout << " Erased " << numcerase << " from the map of all ";
       std::cout << "coupled rownodes.\n";
-      std::cout << "        (we want a master->slaves map, so all entries ";
-      std::cout << "slave->... are deleted)\n";
+      std::cout << "        (we want a target->sources map, so all entries ";
+      std::cout << "source->... are deleted)\n";
     }
 
     nodesonthisproc.clear();
@@ -919,7 +922,7 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
     int mynumappend = 0;
     int numappend = 0;
 
-    // append slavenodes to this list of nodes on this proc
+    // append sourcenodes to this list of nodes on this proc
     {
       for (std::map<int, std::vector<int>>::iterator curr = allcoupledrownodes_->begin();
           curr != allcoupledrownodes_->end(); ++curr)
@@ -927,9 +930,9 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
         for (std::vector<int>::iterator iter = curr->second.begin(); iter != curr->second.end();
             ++iter)
         {
-          int slaveid = *iter;
+          int sourceid = *iter;
 
-          nodesonthisproc.push_back(slaveid);
+          nodesonthisproc.push_back(sourceid);
           ++mynumappend;
         }
       }
@@ -938,11 +941,11 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
     numappend = Core::Communication::sum_all(mynumappend, discret_->get_comm());
     if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_)
     {
-      std::cout << " Appended " << numappend << " ids which belong to slave ";
-      std::cout << "nodes that are coupled to a master\n";
-      std::cout << "        node. They will be fetched to the master's ";
+      std::cout << " Appended " << numappend << " ids which belong to source ";
+      std::cout << "nodes that are coupled to a target\n";
+      std::cout << "        node. They will be fetched to the target's ";
       std::cout << "procs, an their total \n";
-      std::cout << "        number has to equal the number of slaves ";
+      std::cout << "        number has to equal the number of sources ";
       std::cout << "erased from the nodeset.\n";
     }
 
@@ -976,9 +979,9 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
       if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_)
       {
         std::cout << " The layout is generated: " << allcouplednodes
-                  << " masters are coupled to at least " << min << " and up to " << max
-                  << " slaves,\n";
-        std::cout << "        all master/slave couples are sent to the same proc.\n";
+                  << " targets are coupled to at least " << min << " and up to " << max
+                  << " sources,\n";
+        std::cout << "        all target/source couples are sent to the same proc.\n";
       }
     }
 
@@ -1026,7 +1029,7 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
     //       GHOSTED NODES NEED INFORMATION ON THEIR COUPLED NODES
     //----------------------------------------------------------------------
 
-    // create the inverse map --- slavenode -> masternode
+    // create the inverse map --- sourcenode -> targetnode
     inversenodecoupling->clear();
 
     for (std::map<int, std::vector<int>>::iterator curr = allcoupledrownodes_->begin();
@@ -1044,11 +1047,11 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
       Core::Communication::Exporter exportconnectivity(
           *newrownodemap, *newcolnodemap, discret_->get_comm());
 
-      // export information on all master->slave couplings (with multiple
+      // export information on all target->source couplings (with multiple
       // couplings)
       exportconnectivity.do_export(*allcoupledcolnodes_);
 
-      // export the inverse slave->master matching without multiple couplings
+      // export the inverse source->target matching without multiple couplings
       exportconnectivity.do_export(*inversenodecoupling);
     }
 
@@ -1060,31 +1063,31 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
       std::vector<int> mycolnodes(newcolnodemap->num_my_elements());
       newcolnodemap->my_global_elements(std::span<int>(mycolnodes));
 
-      // determine all ghosted slave nodes in this vector which do not have
-      // a ghosted master on this proc --- we have to fetch it to be able
+      // determine all ghosted source nodes in this vector which do not have
+      // a ghosted target on this proc --- we have to fetch it to be able
       // to assign the dofs
       for (std::map<int, std::vector<int>>::iterator curr = inversenodecoupling->begin();
           curr != inversenodecoupling->end(); ++curr)
       {
         if (curr->second.empty())
         {
-          FOUR_C_THROW("inverse slave-master matching incomplete");
+          FOUR_C_THROW("inverse source-target matching incomplete");
         }
-        int mymaster = curr->second[0];
-        if (newcolnodemap->lid(mymaster) < 0)
+        int mytarget = curr->second[0];
+        if (newcolnodemap->lid(mytarget) < 0)
         {
-          // was master already added to the list of (ghosted) nodes?
+          // was target already added to the list of (ghosted) nodes?
           std::vector<int>::iterator found;
-          found = find(mycolnodes.begin(), mycolnodes.end(), mymaster);
+          found = find(mycolnodes.begin(), mycolnodes.end(), mytarget);
           // no, it's not inside
           if (found == mycolnodes.end())
           {
-            mycolnodes.push_back(mymaster);
+            mycolnodes.push_back(mytarget);
           }
         }
       }
 
-      // We need to do this again in order to get the new master-slave pairs
+      // We need to do this again in order to get the new target-source pairs
       // that might have been added in the previous loop over the inversenodecoupling
       {
         // now reconstruct the extended colmap
@@ -1097,26 +1100,26 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
         Core::Communication::Exporter exportconnectivity(
             *newrownodemap, *newcolnodemap, discret_->get_comm());
 
-        // export information on all master->slave couplings (with multiple
+        // export information on all target->source couplings (with multiple
         // couplings)
         exportconnectivity.do_export(*allcoupledcolnodes_);
       }
 
-      // determine all ghosted master nodes in this vector which do not have
-      // all their slaves ghosted on this proc --- we have to fetch them to be able
+      // determine all ghosted target nodes in this vector which do not have
+      // all their sources ghosted on this proc --- we have to fetch them to be able
       // to assign the dofs
       for (std::map<int, std::vector<int>>::iterator curr = allcoupledcolnodes_->begin();
           curr != allcoupledcolnodes_->end(); ++curr)
       {
         if (curr->second.empty())
         {
-          FOUR_C_THROW("master-slave matching incomplete");
+          FOUR_C_THROW("target-source matching incomplete");
         }
         for (size_t i = 0; i < curr->second.size(); ++i)
         {
           if (newcolnodemap->lid(curr->second[i]) < 0)
           {
-            // was slave already added to the list of (ghosted) nodes?
+            // was source already added to the list of (ghosted) nodes?
             std::vector<int>::iterator found;
             found = find(mycolnodes.begin(), mycolnodes.end(), curr->second[i]);
             // no, it's not inside
@@ -1134,13 +1137,13 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
 
       *allcoupledcolnodes_ = (*allcoupledrownodes_);
 
-      // the new master-ghost nodes need their information about
+      // the new target-ghost nodes need their information about
       // connectivity
       {
         // create an exporter
         Core::Communication::Exporter exportconnectivity(
             *newrownodemap, *newcolnodemap, discret_->get_comm());
-        // export information on all slave->master couplings (with multiple
+        // export information on all source->target couplings (with multiple
         // couplings)
         exportconnectivity.do_export(*allcoupledcolnodes_);
       }
@@ -1204,20 +1207,20 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       node_weights->replace_local_value(node_lid, weight);
     }
 
-    // loop masternodes to adjust weights of slavenodes
+    // loop targetnodes to adjust weights of sourcenodes
     // they need a small weight since they do not contribute any dofs to the linear system
-    for (const auto& masterslavepair : *allcoupledcolnodes_)
+    for (const auto& targetsourcepair : *allcoupledcolnodes_)
     {
-      const int master_gid = masterslavepair.first;
-      Core::Nodes::Node* master = discret_->g_node(master_gid);
+      const int target_gid = targetsourcepair.first;
+      Core::Nodes::Node* target = discret_->g_node(target_gid);
 
-      if (master->owner() != Core::Communication::my_mpi_rank(discret_->get_comm())) continue;
+      if (target->owner() != Core::Communication::my_mpi_rank(discret_->get_comm())) continue;
 
-      std::vector<int> slave_gids = masterslavepair.second;
-      for (const auto slave_gid : slave_gids)
+      std::vector<int> source_gids = targetsourcepair.second;
+      for (const auto source_gid : source_gids)
       {
         const double weight = 1.0;
-        node_weights->replace_global_values(1, &weight, &slave_gid);
+        node_weights->replace_global_values(1, &weight, &source_gid);
       }
     }
   }
@@ -1226,7 +1229,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   Core::LinAlg::Graph node_graph(*node_row_map, 108);
   {
     // iterate all elements on this proc including ghosted ones and compute connectivity
-    // standard part without master<->slave coupling
+    // standard part without target<->source coupling
     // Note:
     // if a proc stores the appropriate ghosted elements, the resulting graph will be the correct
     // and complete graph of the distributed discretization even if nodes are not ghosted.
@@ -1251,9 +1254,9 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       }
     }
 
-    // additional coupling between master and slave
-    // we do not only connect master and slave nodes but if a master/slave
-    // is connected to a master/slave, we connect the corresponding slaves/master as well
+    // additional coupling between target and source
+    // we do not only connect target and source nodes but if a target/source
+    // is connected to a target/source, we connect the corresponding sources/target as well
     for (int ele_lid = 0; ele_lid < discret_->num_my_col_elements(); ++ele_lid)
     {
       Core::Elements::Element* ele = discret_->l_col_element(ele_lid);
@@ -1269,25 +1272,25 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
         // only, if this node is a coupled node
         if (allcoupledcolnodes_->find(node_gid) != allcoupledcolnodes_->end())
         {
-          // get all masternodes of this element
+          // get all targetnodes of this element
           for (int col = 0; col < num_nodes_per_ele; ++col)
           {
             int neighbor_node = node_gids_per_ele[col];
 
-            const auto othermasterslavepair = allcoupledcolnodes_->find(neighbor_node);
-            if (othermasterslavepair != allcoupledcolnodes_->end())
+            const auto othertargetsourcepair = allcoupledcolnodes_->find(neighbor_node);
+            if (othertargetsourcepair != allcoupledcolnodes_->end())
             {
-              const auto other_slave_gids = othermasterslavepair->second;
-              // add connection to all slaves
-              for (auto other_slave_gid : other_slave_gids)
+              const auto other_source_gids = othertargetsourcepair->second;
+              // add connection to all sources
+              for (auto other_source_gid : other_source_gids)
               {
-                auto slave_gid_index = std::span(&other_slave_gid, 1);
-                node_graph.insert_global_indices(node_gid, slave_gid_index);
+                auto source_gid_index = std::span(&other_source_gid, 1);
+                node_graph.insert_global_indices(node_gid, source_gid_index);
 
-                if (node_row_map->my_gid(other_slave_gid))
+                if (node_row_map->my_gid(other_source_gid))
                 {
-                  auto masterindex = std::span(&node_gid, 1);
-                  node_graph.insert_global_indices(other_slave_gid, masterindex);
+                  auto targetindex = std::span(&node_gid, 1);
+                  node_graph.insert_global_indices(other_source_gid, targetindex);
                 }
               }
             }
@@ -1320,27 +1323,27 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       edge_weights->insert_global_values(grow, indices.size(), values.data(), indices.data());
     }
 
-    // loop all master nodes on this proc
-    for (const auto& masterslavepair : *allcoupledcolnodes_)
+    // loop all target nodes on this proc
+    for (const auto& targetsourcepair : *allcoupledcolnodes_)
     {
-      Core::Nodes::Node* master = discret_->g_node(masterslavepair.first);
+      Core::Nodes::Node* target = discret_->g_node(targetsourcepair.first);
 
-      if (master->owner() != myrank) continue;
+      if (target->owner() != myrank) continue;
 
-      // loop slavenodes
-      for (int slave_gids : masterslavepair.second)
+      // loop sourcenodes
+      for (int source_gids : targetsourcepair.second)
       {
-        Core::Nodes::Node* slave = discret_->g_node(slave_gids);
+        Core::Nodes::Node* source = discret_->g_node(source_gids);
 
-        // connections between master and slavenodes are very strong
-        // we do not want to partition between master and slave nodes
-        std::vector<int> master_gid(1, master->id());
-        std::vector<int> slave_gid(1, slave->id());
+        // connections between target and sourcenodes are very strong
+        // we do not want to partition between target and source nodes
+        std::vector<int> target_gid(1, target->id());
+        std::vector<int> source_gid(1, source->id());
         // set cost of strong edges to 100.0
         std::vector<double> value(1, 100.0);
 
-        edge_weights->insert_global_values(master->id(), 1, value.data(), slave_gid.data());
-        edge_weights->insert_global_values(slave->id(), 1, value.data(), master_gid.data());
+        edge_weights->insert_global_values(target->id(), 1, value.data(), source_gid.data());
+        edge_weights->insert_global_values(source->id(), 1, value.data(), target_gid.data());
       }
     }
   }

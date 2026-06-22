@@ -355,7 +355,7 @@ namespace Adapter
       return fluid_->pressure_row_map();
     }
     void set_mesh_map(
-        std::shared_ptr<const Core::LinAlg::Map> mm, const int nds_master = 0) override
+        std::shared_ptr<const Core::LinAlg::Map> mm, const int target_dofset_number = 0) override
     {
       FOUR_C_THROW("Not implemented in the base class, may be overridden by a subclass.");
     }

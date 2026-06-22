@@ -21,26 +21,27 @@ namespace ReducedLung1DPipe
   {
 
     double evaluate_linear_elastic_pressure(LinearElasticity& linear_elastic_model,
-        const TerminalUnitData& data, const double Q, const double dt)
+        const RheologicalElasticityModel& terminal_unit_model, const double Q, const double dt)
     {
       linear_elastic_model.elastic_pressure_p_el =
           linear_elastic_model.elasticity_E *
-          ((data.volume_v + dt * Q) / data.reference_volume_v0 - 1);
+          ((terminal_unit_model.volume_v + dt * Q) / terminal_unit_model.reference_volume_v0 - 1);
       return linear_elastic_model.elastic_pressure_p_el;
     }
 
     double evaluate_linear_elastic_pressure_gradient(LinearElasticity& linear_elastic_model,
-        const TerminalUnitData& data, const double dQdA, const double dt)
+        const RheologicalElasticityModel& terminal_unit_model, const double dQdA, const double dt)
     {
       linear_elastic_model.elastic_pressure_grad_dp_el =
-          linear_elastic_model.elasticity_E * dt / data.reference_volume_v0 * (dQdA);
+          linear_elastic_model.elasticity_E * dt / terminal_unit_model.reference_volume_v0 * (dQdA);
       return linear_elastic_model.elastic_pressure_grad_dp_el;
     }
 
     double evaluate_ogden_hyperelastic_pressure(OgdenHyperelasticity& ogden_hyperelastic_model,
-        const double Q, const TerminalUnitData& data, const double dt)
+        const double Q, const RheologicalElasticityModel& terminal_unit_model, const double dt)
     {
-      const double v0_over_v = data.reference_volume_v0 / (data.volume_v + dt * Q);
+      const double v0_over_v =
+          terminal_unit_model.reference_volume_v0 / (terminal_unit_model.volume_v + dt * Q);
       ogden_hyperelastic_model.elastic_pressure_p_el =
           ogden_hyperelastic_model.bulk_modulus_kappa /
           ogden_hyperelastic_model.nonlinear_stiffening_beta * v0_over_v *
@@ -49,48 +50,51 @@ namespace ReducedLung1DPipe
     }
 
     double evaluate_ogden_hyperelastic_pressure_gradient(
-        OgdenHyperelasticity& ogden_hyperelastic_model, const TerminalUnitData& data,
-        const double Q, const double dQdA, const double dt)
+        OgdenHyperelasticity& ogden_hyperelastic_model,
+        const RheologicalElasticityModel& terminal_unit_model, const double Q, const double dQdA,
+        const double dt)
     {
-      const double v0_over_v = data.reference_volume_v0 / (data.volume_v + dt * Q);
+      const double v0_over_v =
+          terminal_unit_model.reference_volume_v0 / (terminal_unit_model.volume_v + dt * Q);
       ogden_hyperelastic_model.elastic_pressure_grad_dp_el =
           ogden_hyperelastic_model.bulk_modulus_kappa * dt /
           ogden_hyperelastic_model.nonlinear_stiffening_beta *
           (1 - std::pow(v0_over_v, ogden_hyperelastic_model.nonlinear_stiffening_beta) *
                    (1 + ogden_hyperelastic_model.nonlinear_stiffening_beta)) *
-          (-v0_over_v / (data.volume_v + dt * Q)) * dQdA;
+          (-v0_over_v / (terminal_unit_model.volume_v + dt * Q)) * dQdA;
       return ogden_hyperelastic_model.elastic_pressure_grad_dp_el;
     }
 
     double evaluate_kelvin_voigt_residual(double area_A, double velocity_u,
         const double reference_area_A0, const double beta, const double Pext,
         const KelvinVoigt& kelvin_voigt_model, const double elastic_pressure_p_el,
-        const TerminalUnitData& data)
+        const RheologicalElasticityModel& terminal_unit_model)
     {
       // p_1D == p_0D && Q_1D == Q_0D
       const double p_1D = beta * (std::sqrt(area_A) - std::sqrt(reference_area_A0)) + Pext;
       const double flow_Q = area_A * velocity_u;
 
-      const double p_0D = elastic_pressure_p_el +
-                          kelvin_voigt_model.viscosity_eta * flow_Q / data.reference_volume_v0;
+      const double p_0D = elastic_pressure_p_el + kelvin_voigt_model.viscosity_eta * flow_Q /
+                                                      terminal_unit_model.reference_volume_v0;
       return (p_1D - p_0D);
     }
 
     double evaluate_kelvin_voigt_jacobian(const double area_A, const double dQdA, const double beta,
-        const KelvinVoigt& kelvin_voigt_model, const double dp_el_dA, const TerminalUnitData& data)
+        const KelvinVoigt& kelvin_voigt_model, const double dp_el_dA,
+        const RheologicalElasticityModel& terminal_unit_model)
     {
       // compute (par f) / (par A)
       const double dpdA_1D = 0.5 * beta / std::sqrt(area_A);
 
-      const double dpdA_0D =
-          dp_el_dA + kelvin_voigt_model.viscosity_eta / data.reference_volume_v0 * dQdA;
+      const double dpdA_0D = dp_el_dA + kelvin_voigt_model.viscosity_eta /
+                                            terminal_unit_model.reference_volume_v0 * dQdA;
       return dpdA_1D - dpdA_0D;
     }
 
     double evaluate_four_element_maxwell_residual(const double area_A, const double velocity_u,
         const double reference_area_A0, const double beta, const double Pext,
         const FourElementMaxwell& four_element_maxwell_model, const double elastic_pressure_p_el,
-        const double dt, const TerminalUnitData& data)
+        const double dt, const RheologicalElasticityModel& terminal_unit_model)
     {
       // p_1D == p_0D && Q_1D == Q_0D
       const double p_1D = beta * (std::sqrt(area_A) - std::sqrt(reference_area_A0)) + Pext;
@@ -102,7 +106,7 @@ namespace ReducedLung1DPipe
                                   four_element_maxwell_model.viscosity_eta_m) /
                                   (four_element_maxwell_model.elasticity_E_m * dt +
                                       four_element_maxwell_model.viscosity_eta_m)) *
-                              flow_Q / data.reference_volume_v0 +
+                              flow_Q / terminal_unit_model.reference_volume_v0 +
                           four_element_maxwell_model.viscosity_eta_m /
                               (four_element_maxwell_model.elasticity_E_m * dt +
                                   four_element_maxwell_model.viscosity_eta_m) *
@@ -112,7 +116,8 @@ namespace ReducedLung1DPipe
 
     double evaluate_four_element_maxwell_jacobian(const double area_A, const double dQdA,
         const double beta, const FourElementMaxwell& four_element_maxwell_model,
-        const double dp_el_dA, const double dt, const TerminalUnitData& data)
+        const double dp_el_dA, const double dt,
+        const RheologicalElasticityModel& terminal_unit_model)
     {
       // compute (par f) / (par A)
       const double dpdA_1D = 0.5 * beta / std::sqrt(area_A);
@@ -122,7 +127,7 @@ namespace ReducedLung1DPipe
                                                 four_element_maxwell_model.viscosity_eta_m) /
                                                 (four_element_maxwell_model.elasticity_E_m * dt +
                                                     four_element_maxwell_model.viscosity_eta_m)) *
-                                            dQdA / data.reference_volume_v0;
+                                            dQdA / terminal_unit_model.reference_volume_v0;
       return dpdA_1D - dpdA_0D;
     }
 
@@ -180,9 +185,70 @@ namespace ReducedLung1DPipe
           "Unsupported terminal unit rheological model type for global_id = %d.", global_id);
     }
 
+    /**
+     * Creates a Windkessel model from input parameters.
+     */
+    WindkesselModel create_windkessel_model(
+        const ReducedLung1dPipeFlow::Parameters::TerminalUnits::WindkesselModel& windkessel_model,
+        const int global_id)
+    {
+      return WindkesselModel{
+          .proximal_resistance_R_p = windkessel_model.proximal_resistance_R_p.at(global_id),
+          .compliance_C = windkessel_model.compliance_C.at(global_id),
+          .distal_resistance_R_d = windkessel_model.distal_resistance_R_d.at(global_id),
+          .pressure_peripheral = windkessel_model.pressure_peripheral.at(global_id),
+          .windkessel_pressure_wk = windkessel_model.pressure_peripheral.at(global_id),
+      };
+    }
+
+    /**
+     * Evaluates the Windkessel model residual.
+     * Residual: F = Q - (p_1D - PC^n) / R1 = 0
+     */
+    double evaluate_windkessel_residual(const double area_A, const double velocity_u,
+        const double reference_area_A0, const double beta, const double Pext,
+        const WindkesselModel& wk_model)
+    {
+      // Use windkessel element pressure from previous time step
+      const double p_c_n = wk_model.windkessel_pressure_wk;
+
+      // Flow Q = A*u extrapolated from 1D domain
+      const double flow_Q = area_A * velocity_u;
+
+      // p_1D from 1D domain
+      const double p_1D = beta * (std::sqrt(area_A) - std::sqrt(reference_area_A0)) + Pext;
+
+      // Residual: Q - (p_1D - PC^n) / R1 = 0
+      return flow_Q - (p_1D - p_c_n) / wk_model.proximal_resistance_R_p;
+    }
+
+    /**
+     * Evaluates the Windkessel model jacobian df/dA.
+     *
+     * Residual: F = Q - (p_1D - PC^n) / R1
+     * Since PC^n = const during solve, dPC/dA = 0
+     * dF/dA = dQ/dA - (1/R1) * dp_1D/dA
+     */
+    double evaluate_windkessel_jacobian(
+        const double area_A, const double dQdA, const double beta, const WindkesselModel& wk_model)
+    {
+      // dp_1D/dA
+      const double dpdA_1D = 0.5 * beta / std::sqrt(area_A);
+
+      // dF/dA = dQ/dA - (1/R1) * dp_1D/dA (PC^n is frozen, so dPC/dA = 0)
+      return dQdA - dpdA_1D / wk_model.proximal_resistance_R_p;
+    }
+
     double TerminalUnitModel::evaluate_elastic_pressure(const double area_A, const double beta,
         const double density_rho, const double characteristic_W_outgoing, double dt)
     {
+      // Only applicable for RheologicalElasticityModels
+      auto* rheol_elastic = std::get_if<RheologicalElasticityModel>(&model);
+      if (!rheol_elastic)
+      {
+        FOUR_C_ASSERT(false, "Model is not RheologicalElasticityModel");
+      }
+
       const double velocity_u =
           characteristic_W_outgoing - 4 * std::pow(area_A, 0.25) * sqrt(0.5 * beta / density_rho);
       double flow_Q = velocity_u * area_A;
@@ -194,14 +260,14 @@ namespace ReducedLung1DPipe
 
             if constexpr (std::is_same_v<T, LinearElasticity>)
             {
-              return evaluate_linear_elastic_pressure(elasticity, data, flow_Q, dt);
+              return evaluate_linear_elastic_pressure(elasticity, *rheol_elastic, flow_Q, dt);
             }
             else if constexpr (std::is_same_v<T, OgdenHyperelasticity>)
             {
-              return evaluate_ogden_hyperelastic_pressure(elasticity, flow_Q, data, dt);
+              return evaluate_ogden_hyperelastic_pressure(elasticity, flow_Q, *rheol_elastic, dt);
             }
           },
-          elasticity_model);
+          rheol_elastic->elasticity_model);
     }
 
     std::pair<double, double> TerminalUnitModel::evaluate_residual_jacobian(double area_A,
@@ -211,7 +277,24 @@ namespace ReducedLung1DPipe
       const double velocity_u =
           characteristic_W_outgoing - 4 * std::pow(area_A, 0.25) * sqrt(0.5 * beta / density_rho);
       double flow_Q = velocity_u * area_A;
-      double dQdA = velocity_u - std::pow(area_A, -0.75) * sqrt(0.5 * beta / density_rho) * area_A;
+      double dQdA = velocity_u - std::pow(area_A, 0.25) * sqrt(0.5 * beta / density_rho);
+
+      // Handle Windkessel model
+      auto* windkessel = std::get_if<WindkesselModel>(&model);
+      if (windkessel)
+      {
+        double residual = evaluate_windkessel_residual(
+            area_A, velocity_u, reference_area_A0, beta, Pext, *windkessel);
+        double jacobian = evaluate_windkessel_jacobian(area_A, dQdA, beta, *windkessel);
+        return std::make_pair(residual, jacobian);
+      }
+
+      // Handle RheologicalElasticityModels
+      auto* rheol_elastic = std::get_if<RheologicalElasticityModel>(&model);
+      if (!rheol_elastic)
+      {
+        FOUR_C_THROW("Unknown terminal unit model type.");
+      }
 
       double p_el = 0.0;
       double dp_eldA = 0.0;
@@ -223,17 +306,18 @@ namespace ReducedLung1DPipe
 
             if constexpr (std::is_same_v<T, LinearElasticity>)
             {
-              p_el = evaluate_linear_elastic_pressure(elasticity, data, flow_Q, dt);
-              dp_eldA = evaluate_linear_elastic_pressure_gradient(elasticity, data, dQdA, dt);
+              p_el = evaluate_linear_elastic_pressure(elasticity, *rheol_elastic, flow_Q, dt);
+              dp_eldA =
+                  evaluate_linear_elastic_pressure_gradient(elasticity, *rheol_elastic, dQdA, dt);
             }
             else if constexpr (std::is_same_v<T, OgdenHyperelasticity>)
             {
-              p_el = evaluate_ogden_hyperelastic_pressure(elasticity, flow_Q, data, dt);
-              dp_eldA =
-                  evaluate_ogden_hyperelastic_pressure_gradient(elasticity, data, flow_Q, dQdA, dt);
+              p_el = evaluate_ogden_hyperelastic_pressure(elasticity, flow_Q, *rheol_elastic, dt);
+              dp_eldA = evaluate_ogden_hyperelastic_pressure_gradient(
+                  elasticity, *rheol_elastic, flow_Q, dQdA, dt);
             }
           },
-          elasticity_model);
+          rheol_elastic->elasticity_model);
 
       // compute residual and jacobian depending on rheological model
       return std::visit(
@@ -243,18 +327,18 @@ namespace ReducedLung1DPipe
 
             if constexpr (std::is_same_v<T, KelvinVoigt>)
             {
-              double residual = evaluate_kelvin_voigt_residual(
-                  area_A, velocity_u, reference_area_A0, beta, Pext, rheology, p_el, data);
-              double jacobian =
-                  evaluate_kelvin_voigt_jacobian(area_A, dQdA, beta, rheology, dp_eldA, data);
+              double residual = evaluate_kelvin_voigt_residual(area_A, velocity_u,
+                  reference_area_A0, beta, Pext, rheology, p_el, *rheol_elastic);
+              double jacobian = evaluate_kelvin_voigt_jacobian(
+                  area_A, dQdA, beta, rheology, dp_eldA, *rheol_elastic);
               return std::make_pair(residual, jacobian);
             }
             else if constexpr (std::is_same_v<T, FourElementMaxwell>)
             {
-              double residual = evaluate_four_element_maxwell_residual(
-                  area_A, velocity_u, reference_area_A0, beta, Pext, rheology, p_el, dt, data);
+              double residual = evaluate_four_element_maxwell_residual(area_A, velocity_u,
+                  reference_area_A0, beta, Pext, rheology, p_el, dt, *rheol_elastic);
               double jacobian = evaluate_four_element_maxwell_jacobian(
-                  area_A, dQdA, beta, rheology, dp_eldA, dt, data);
+                  area_A, dQdA, beta, rheology, dp_eldA, dt, *rheol_elastic);
               return std::make_pair(residual, jacobian);
             }
             else
@@ -262,32 +346,93 @@ namespace ReducedLung1DPipe
               FOUR_C_ASSERT(false, "Wrongly defined rheological model.");
             }
           },
-          rheological_model);
+          rheol_elastic->rheological_model);
     }
 
     void TerminalUnitModel::update_terminal_unit_data(const double flow_Q, const double dt,
         const double area_A, const double beta, const double density_rho,
         const double characteristic_W_outgoing)
     {
-      data.volume_v += dt * flow_Q;
-
-      // update p_m in FourElementMaxwellElement
-      auto* four_element_maxwell = std::get_if<FourElementMaxwell>(&rheological_model);
-      if (four_element_maxwell)
+      // Handle Windkessel model
+      auto* windkessel = std::get_if<WindkesselModel>(&model);
+      if (windkessel)
       {
-        double p_m = four_element_maxwell->maxwell_pressure_p_m;
-        double p_el =
-            evaluate_elastic_pressure(area_A, beta, density_rho, characteristic_W_outgoing, dt);
-        four_element_maxwell->maxwell_pressure_p_m =
-            four_element_maxwell->viscosity_eta_m /
-                (four_element_maxwell->elasticity_E_m * dt +
-                    four_element_maxwell->viscosity_eta_m) *
-                p_m +
-            four_element_maxwell->elasticity_E_m * dt /
-                (four_element_maxwell->elasticity_E_m * dt +
-                    four_element_maxwell->viscosity_eta_m) *
-                p_el;
+        // Update PC after convergence using explicit Euler
+        const double old_pc = windkessel->windkessel_pressure_wk;  // PC^n (frozen value)
+        const double dt_over_C = dt / windkessel->compliance_C;
+        windkessel->windkessel_pressure_wk =
+            old_pc + dt_over_C * (flow_Q - (old_pc - windkessel->pressure_peripheral) /
+                                               windkessel->distal_resistance_R_d);
+
+        return;
       }
+
+      // Handle RheologicalElasticityModels
+      auto* rheol_elastic = std::get_if<RheologicalElasticityModel>(&model);
+      if (rheol_elastic)
+      {
+        rheol_elastic->volume_v += dt * flow_Q;
+        // update p_m in FourElementMaxwellElement
+        auto* four_element_maxwell =
+            std::get_if<FourElementMaxwell>(&rheol_elastic->rheological_model);
+        if (four_element_maxwell)
+        {
+          double p_m = four_element_maxwell->maxwell_pressure_p_m;
+          double p_el =
+              evaluate_elastic_pressure(area_A, beta, density_rho, characteristic_W_outgoing, dt);
+          four_element_maxwell->maxwell_pressure_p_m =
+              four_element_maxwell->viscosity_eta_m /
+                  (four_element_maxwell->elasticity_E_m * dt +
+                      four_element_maxwell->viscosity_eta_m) *
+                  p_m +
+              four_element_maxwell->elasticity_E_m * dt /
+                  (four_element_maxwell->elasticity_E_m * dt +
+                      four_element_maxwell->viscosity_eta_m) *
+                  p_el;
+        }
+      }
+    }
+
+    TerminalUnitModel create_terminal_unit_model(
+        const ReducedLung1dPipeFlow::Parameters& params, int global_id, int node_owner)
+    {
+      TerminalUnitModel terminal_unit_model;
+      // TerminalUnitData
+      terminal_unit_model.data.global_node_id = global_id;
+      terminal_unit_model.data.node_owner = node_owner;
+
+      // Check terminal unit type
+      const auto& tu_params = params.terminal_units;
+      auto tu_type = tu_params.terminal_unit_type.at(global_id);
+
+      if (tu_type == ReducedLung1dPipeFlow::Parameters::TerminalUnits::TerminalUnitType::Windkessel)
+      {
+        // Create Windkessel model
+        WindkesselModel wk = create_windkessel_model(tu_params.windkessel_model, global_id);
+        terminal_unit_model.model = wk;
+      }
+      else if (tu_type == ReducedLung1dPipeFlow::Parameters::TerminalUnits::TerminalUnitType::
+                              RheologicalElasticity)
+      {
+        // Create rheological-elasticity model
+        RheologicalElasticityModel rheol_elastic;
+        rheol_elastic.volume_v =
+            params.terminal_units.elasticity_model.acinar_volume_v.at(global_id);
+        rheol_elastic.reference_volume_v0 = rheol_elastic.volume_v;
+
+        rheol_elastic.rheological_model =
+            create_rheological_model(tu_params.rheological_model, global_id);
+        rheol_elastic.elasticity_model =
+            create_elasticity_model(tu_params.elasticity_model, global_id);
+        terminal_unit_model.model = rheol_elastic;
+      }
+      else
+      {
+        FOUR_C_THROW("Unknown terminal unit for global_id %d: parsed terminal_unit_type=%d",
+            global_id, static_cast<int>(tu_type));
+      }
+
+      return terminal_unit_model;
     }
 
   }  // namespace TerminalUnit

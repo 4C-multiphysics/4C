@@ -40,9 +40,31 @@ bool Discret::Elements::Beam3k::read_element(const std::string& eletype,
 
   // extract triads at element nodes in reference configuration as rotation vectors and save them as
   // quaternions at each node, respectively
-  auto nodal_thetas = container.get<std::vector<double>>("TRIADS");
-
-  this->set_up_initial_rotations(nodal_thetas);
+  const std::vector<double> nodal_rotation_vectors = std::invoke(
+      [&]() -> std::vector<double>
+      {
+        if (container.get_if<std::vector<double>>("TRIADS"))
+        {
+          return container.get<std::vector<double>>("TRIADS");
+        }
+        else if (container.get_if<std::string>("NODAL_ROTATION_VECTORS"))
+        {
+          const auto& triad_field_name = container.get<std::string>("NODAL_ROTATION_VECTORS");
+          const auto rotation_vectors = element_data.get<std::vector<double>>(triad_field_name);
+          FOUR_C_ASSERT_ALWAYS(std::cmp_equal(rotation_vectors.size(), 9),
+              "The size of the nodal rotation vector array must be 3 times the number of nodes per "
+              "element (3), but {} values are given in the array {}.",
+              rotation_vectors.size(), triad_field_name);
+          return rotation_vectors;
+        }
+        else
+        {
+          FOUR_C_THROW(
+              "No definition for nodal triads provided! Please set either TRIADS or "
+              "NODAL_ROTATION_VECTORS for beam3k elements!");
+        }
+      });
+  this->set_up_initial_rotations(nodal_rotation_vectors);
 
   // read whether automatic differentiation via Sacado::Fad package shall be used
   use_fad_ = container.get<bool>("USE_FAD");

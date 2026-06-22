@@ -452,6 +452,24 @@ namespace Core::IO
         resultname, gid_of_row_elements, 1);
   }
 
+  /*-----------------------------------------------------------------------------------------------*
+   *-----------------------------------------------------------------------------------------------*/
+  void DiscretizationVisualizationWriterMesh::append_element_eval_time(
+      const std::string& resultname)
+  {
+    // Vector with element evaluation times for elements in the row map.
+    std::vector<double> eval_time_of_row_elements;
+    eval_time_of_row_elements.reserve(discretization_->num_my_row_elements());
+
+    for (auto ele : discretization_->my_row_element_range())
+    {
+      if (element_filter_(ele.user_element())) eval_time_of_row_elements.push_back(ele.eval_time());
+    }
+
+    // Pass data to the output writer.
+    visualization_manager_->get_visualization_data().set_cell_data_vector(
+        resultname, eval_time_of_row_elements, 1);
+  }
 
   /*-----------------------------------------------------------------------------------------------*
    *-----------------------------------------------------------------------------------------------*/

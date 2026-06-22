@@ -1357,7 +1357,7 @@ SSI::Utils::SSIMeshTyingHandler::SSIMeshTyingHandler(
       slave_slave_transformation_(std::move(slave_slave_transformation))
 {
   slave_side_converter_ =
-      std::make_shared<Coupling::Adapter::CouplingSlaveConverter>(*slave_master_coupling_);
+      std::make_shared<Coupling::Adapter::CouplingSourceConverter>(*slave_master_coupling_);
 }
 
 FOUR_C_NAMESPACE_CLOSE

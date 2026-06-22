@@ -152,16 +152,7 @@ namespace Mat
     //@}
 
     /// material mass density
-    // virtual double Density() const { return params_->GetDensity(); }
     double density() const override { return params_->get_parameter(params_->density, -1); }
-
-    /// shear modulus
-    // double shear_mod() const { return 0.5*params_->GetYoungs(-1)/(1.0+params_->GetNue()); }
-    double shear_mod() const
-    {
-      return 0.5 * params_->get_parameter(params_->young, -1) /
-             (1.0 + params_->get_parameter(params_->nue, -1));
-    }
 
     // material type
     Core::Materials::MaterialType material_type() const override

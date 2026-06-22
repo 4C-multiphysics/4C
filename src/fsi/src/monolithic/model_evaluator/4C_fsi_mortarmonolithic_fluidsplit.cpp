@@ -858,7 +858,7 @@ void FSI::MortarMonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSpa
   std::shared_ptr<Core::LinAlg::SparseMatrix> laig =
       std::make_shared<Core::LinAlg::SparseMatrix>(aii.row_map(), 81, false);
   (*aigtransform_)(a->full_row_map(), a->full_col_map(), aig, 1.,
-      Coupling::Adapter::CouplingSlaveConverter(interface_fluid_ale_coupling()), *laig);
+      Coupling::Adapter::CouplingSourceConverter(interface_fluid_ale_coupling()), *laig);
 
   laig->complete(f->matrix(1, 1).domain_map(), aii.range_map(), {.enforce_complete = true});
   std::shared_ptr<Core::LinAlg::SparseMatrix> llaig =

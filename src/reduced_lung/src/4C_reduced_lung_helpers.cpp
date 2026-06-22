@@ -661,12 +661,19 @@ namespace ReducedLung
       Core::IO::DiscretizationVisualizationWriterMesh& visualization_writer,
       const AirwayContainer& airways, const TerminalUnitContainer& terminal_units,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs,
-      const Core::LinAlg::Map* element_row_map)
+      const Core::LinAlg::Map* element_row_map, ReducedLungParameters::OutputVerbosity verbosity)
   {
     Core::LinAlg::Vector<double> pressure_in(*element_row_map, true);
     Core::LinAlg::Vector<double> pressure_out(*element_row_map, true);
     Core::LinAlg::Vector<double> flow_in(*element_row_map, true);
     Core::LinAlg::Vector<double> flow_out(*element_row_map, true);
+
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    pressure_in.put_scalar(nan);
+    pressure_out.put_scalar(nan);
+    flow_in.put_scalar(nan);
+    flow_out.put_scalar(nan);
+
     for (const auto& model : airways.models)
     {
       const bool has_q_out = model.data.n_state_equations == 2;
@@ -693,8 +700,6 @@ namespace ReducedLung
             locally_relevant_dofs.local_values_as_span()[model.data.lid_p2[i]]);
         flow_in.replace_local_value(model.data.local_element_id[i],
             locally_relevant_dofs.local_values_as_span()[model.data.lid_q[i]]);
-        flow_out.replace_local_value(model.data.local_element_id[i],
-            locally_relevant_dofs.local_values_as_span()[model.data.lid_q[i]]);
       }
     }
     visualization_writer.append_result_data_vector_with_context(
@@ -705,6 +710,33 @@ namespace ReducedLung
         flow_in, Core::IO::OutputEntity::element, {"q_in"});
     visualization_writer.append_result_data_vector_with_context(
         flow_out, Core::IO::OutputEntity::element, {"q_out"});
+
+    if (verbosity > ReducedLungParameters::OutputVerbosity::minimal)
+    {
+      RuntimeOutputCollector collector(*element_row_map);
+
+      for (const auto& model : airways.models)
+      {
+        if (model.output_evaluator)
+        {
+          model.output_evaluator(model.data, collector, verbosity);
+        }
+      }
+
+      for (const auto& model : terminal_units.models)
+      {
+        if (model.output_evaluator)
+        {
+          model.output_evaluator(model.data, collector, verbosity);
+        }
+      }
+
+      for (const auto& [name, vector] : collector.vectors)
+      {
+        visualization_writer.append_result_data_vector_with_context(
+            vector, Core::IO::OutputEntity::element, {name});
+      }
+    }
   }
 }  // namespace ReducedLung
 

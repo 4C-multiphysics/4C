@@ -151,9 +151,10 @@ void Discret::Elements::PoroFluidMultiPhaseEleParameter::set_general_parameters(
   nds_scalar_ = parameters.get<int>("nds_scalar", false);
 
   // set body force contribution
-  has_bodyforce_contribution_ = parameters.get<bool>("has_bodyforce_contribution", false);
-  bodyforce_contribution_values_ =
-      parameters.get<std::vector<double>>("bodyforce_contribution_values", {});
+  bodyforce_contribution_function_ =
+      parameters.get<std::optional<const Core::Utils::FunctionOfSpaceTime*>>(
+          "bodyforce_contribution_function", std::nullopt);
+
 
   // get number of domain integral functions and resize vector
   const int num_domainint_funct = parameters.get<int>("num_domainint_funct", false);

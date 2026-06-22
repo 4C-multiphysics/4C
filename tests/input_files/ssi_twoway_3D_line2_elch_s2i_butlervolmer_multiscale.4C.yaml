@@ -60,21 +60,13 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [1]
-      COND_PARA_NUM: 1
-      COND_PARA: [1.17e+10]
+      DIFF_COEF: 1.0
+      COND: 1.17e+10
       C_MAX: 1e+06
       CHI_MAX: 1
       OCP_MODEL:
         Function:
           OCP_FUNCT_NUM: 6
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 2
     MAT_elchmat:
       LOCAL: true
@@ -106,38 +98,22 @@ MATERIALS:
   - MAT: 8
     MAT_newman:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      THERMFAC: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [0.00026]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [0.363]
-      COND_PARA_NUM: 1
-      COND_PARA: [1.58e+07]
+      TRANSFERENCE_NR: 0.363
+      THERM_FAC: 1.0
+      DIFF_COEF: 0.00026
+      COND: 1.58e+07
   - MAT: 9
     MAT_newman_multiscale:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      THERMFAC: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
+      TRANSFERENCE_NR: 0.363
+      THERM_FAC: 1.0
       ELECTRONIC_COND: 1e+10
       ELECTRONIC_COND_CONC_SCALE_FUNC_NUM: -1
       A_s: 1564.794278374707
       MICROFILE: "ssi_twoway_3D_line2_elch_s2i_butlervolmer_multiscale_cathode.mat.4C.yaml"
       MICRODIS_NUM: 2
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [0.00026]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [0.363]
-      COND_PARA_NUM: 1
-      COND_PARA: [1.58e+07]
+      DIFF_COEF: 0.00026
+      COND: 1.58e+07
   - MAT: 10
     MAT_LinElast1DGrowth:
       YOUNG: 2e+10

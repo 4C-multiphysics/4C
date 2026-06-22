@@ -46,11 +46,11 @@ void setup_parallel_output(
 
   // configure the parallel output environment
   const Teuchos::ParameterList& io = Global::Problem::instance()->io_params();
-  bool screen = io.get<bool>("WRITE_TO_SCREEN");
-  bool file = io.get<bool>("WRITE_TO_FILE");
-  bool preGrpID = io.get<bool>("PREFIX_GROUP_ID");
-  int oproc = io.get<int>("LIMIT_OUTP_TO_PROC");
-  auto level = Teuchos::getIntegralValue<Core::IO::Verbositylevel>(io, "VERBOSITY");
+  const bool screen = io.get<bool>("WRITE_TO_SCREEN");
+  const bool file = io.get<bool>("WRITE_TO_FILE");
+  const bool preGrpID = io.get<bool>("PREFIX_GROUP_ID");
+  const int oproc = io.get<int>("LIMIT_OUTP_TO_PROC");
+  const auto level = Teuchos::getIntegralValue<Core::IO::Verbositylevel>(io, "VERBOSITY");
 
   Core::IO::cout.setup(screen, file, preGrpID, level, communicators.local_comm(), oproc,
       communicators.group_id(), arguments.output_file_identifier);
@@ -91,7 +91,7 @@ void setup_global_problem(Core::IO::InputFile& input_file, const CommandlineArgu
 
 
   // input of fields
-  auto mesh_reader = Global::read_discretization(*problem, input_file);
+  const auto mesh_reader = Global::read_discretization(*problem, input_file);
   FOUR_C_ASSERT(mesh_reader, "Internal error: nullptr.");
 
   // read result tests
@@ -108,7 +108,7 @@ void setup_global_problem(Core::IO::InputFile& input_file, const CommandlineArgu
   Global::read_fields(*problem, input_file, *mesh_reader);
 }
 
-void write_timemonitor(MPI_Comm comm)
+void write_timemonitor(const MPI_Comm comm)
 {
   std::shared_ptr<const Teuchos::Comm<int>> TeuchosComm =
       Core::Communication::to_teuchos_comm<int>(comm);
@@ -225,7 +225,7 @@ void update_io_identifiers(CommandlineArguments& arguments, int group)
   std::filesystem::path input_filename;
   std::string output_file_identifier;
 
-  int restart_input_index = (arguments.nptype == NPT::separate_input_files) ? group : 0;
+  const int restart_input_index = (arguments.nptype == NPT::separate_input_files) ? group : 0;
 
   arguments.restart =
       arguments.restart_per_group.empty() ? 0 : arguments.restart_per_group[restart_input_index];
@@ -308,7 +308,6 @@ void update_io_identifiers(CommandlineArguments& arguments, int group)
       break;
     default:
       FOUR_C_THROW("-nptype value {} is not valid.", static_cast<int>(arguments.nptype));
-      break;
   }
   arguments.input_file_name = input_filename;
   arguments.output_file_identifier = output_file_identifier;

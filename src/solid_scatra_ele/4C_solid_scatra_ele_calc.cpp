@@ -50,8 +50,9 @@ namespace
   }
 
   template <Core::FE::CellType celltype>
-  Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
-  evaluate_d_material_stress_d_scalar(Mat::So3Material& solid_material,
+  std::vector<
+      Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>>
+  evaluate_d_material_stress_d_scalars(Mat::So3Material& solid_material,
       const Discret::Elements::ElementProperties<celltype>& element_properties,
       const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>&
           deformation_gradient,
@@ -59,7 +60,7 @@ namespace
           gl_strain,
       Teuchos::ParameterList& params,
       const Mat::EvaluationContext<Core::FE::dim<celltype>>& context, const int gp,
-      const int eleGID)
+      const int eleGID, const int num_scalars)
   {
     auto* monolithic_material = dynamic_cast<Mat::MonolithicSolidScalarMaterial*>(&solid_material);
 
@@ -70,27 +71,33 @@ namespace
     {
       // The derivative of the solid stress w.r.t. the scalar is implemented in the normal
       // material Evaluate call by not passing the linearization matrix.
-      return monolithic_material->evaluate_d_stress_d_scalar(
-          deformation_gradient, gl_strain, params, context, gp, eleGID);
+      return monolithic_material->evaluate_d_stress_d_scalars(
+          deformation_gradient, gl_strain, params, context, num_scalars, gp, eleGID);
     }
     else
     {
-      Core::LinAlg::SymmetricTensor<double, 3, 3> d_stress_d_scalar_3d{};
+      std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> d_stress_d_scalars_3d;
       Discret::Elements::transform_to_3d(solid_material, element_properties, deformation_gradient,
           gl_strain, params, context, gp, eleGID,
           [&](const Core::LinAlg::Tensor<double, 3, 3>& defgrd_3d,
               const Core::LinAlg::SymmetricTensor<double, 3, 3>& gl_strain_3d,
               const Mat::EvaluationContext<3>& context_3d)
           {
-            d_stress_d_scalar_3d = monolithic_material->evaluate_d_stress_d_scalar(
-                defgrd_3d, gl_strain_3d, params, context_3d, gp, eleGID);
+            d_stress_d_scalars_3d = monolithic_material->evaluate_d_stress_d_scalars(
+                defgrd_3d, gl_strain_3d, params, context_3d, num_scalars, gp, eleGID);
           });
 
       // only return the 2D part of the tensor
-      return Core::LinAlg::assume_symmetry(Core::LinAlg::Tensor<double, 2, 2>{{
-          {d_stress_d_scalar_3d(0, 0), d_stress_d_scalar_3d(0, 1)},
-          {d_stress_d_scalar_3d(1, 0), d_stress_d_scalar_3d(1, 1)},
-      }});
+      std::vector<
+          Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>>
+          d_stress_d_scalars_2d(num_scalars);
+      for (int k = 0; k < num_scalars; ++k)
+      {
+        d_stress_d_scalars_2d[k] = Core::LinAlg::assume_symmetry(Core::LinAlg::Tensor<double, 2, 2>{
+            {{d_stress_d_scalars_3d[k](0, 0), d_stress_d_scalars_3d[k](0, 1)},
+                {d_stress_d_scalars_3d[k](1, 0), d_stress_d_scalars_3d[k](1, 1)}}});
+      }
+      return d_stress_d_scalars_2d;
     }
   }
 
@@ -521,11 +528,9 @@ void Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::evaluate
                   .xi = &xi,
                   .ref_coords = &gp_ref_coord};
 
-              Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>,
-                  Core::FE::dim<celltype>>
-                  dSdc = evaluate_d_material_stress_d_scalar<celltype>(solid_material,
-                      element_properties_, deformation_gradient, gl_strain, params, context, gp,
-                      ele.id());
+              const auto dSdc = evaluate_d_material_stress_d_scalars<celltype>(solid_material,
+                  element_properties_, deformation_gradient, gl_strain, params, context, gp,
+                  ele.id(), scatra_column_stride);
 
               constexpr int num_dof_per_ele =
                   Core::FE::dim<celltype> * Core::FE::num_nodes(celltype);
@@ -533,18 +538,20 @@ void Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::evaluate
               // Assemble matrix
               // k_dS = dNdxi . F . dS/dc * detJ * N * w(gp) (analogous to force vector)
               Core::LinAlg::Matrix<num_dof_per_ele, 1> BdSdc(Core::LinAlg::Initialization::zero);
-              Discret::Elements::add_internal_force_vector(
-                  jacobian_mapping, deformation_gradient, dSdc, integration_factor, BdSdc);
-
-              // loop over rows
-              for (int rowi = 0; rowi < num_dof_per_ele; ++rowi)
+              for (int k = 0; k < scatra_column_stride; ++k)
               {
-                const double BdSdc_rowi = BdSdc(rowi, 0);
-                // loop over columns
-                for (int coli = 0; coli < Core::FE::num_nodes(celltype); ++coli)
+                BdSdc.put_scalar(0.0);
+                Discret::Elements::add_internal_force_vector(
+                    jacobian_mapping, deformation_gradient, dSdc[k], integration_factor, BdSdc);
+
+                for (int row = 0; row < num_dof_per_ele; ++row)
                 {
-                  stiffness_matrix_dScalar(rowi, coli * scatra_column_stride) +=
-                      BdSdc_rowi * shape_functions.shapefunctions_(coli, 0);
+                  const double BdSdc_row = BdSdc(row, 0);
+                  for (int col = 0; col < Core::FE::num_nodes(celltype); ++col)
+                  {
+                    stiffness_matrix_dScalar(row, col * scatra_column_stride + k) +=
+                        BdSdc_row * shape_functions.shapefunctions_(col, 0);
+                  }
                 }
               }
             });
@@ -773,7 +780,7 @@ void Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::calculat
                   evaluate_material_stress<celltype>(solid_material, element_properties_,
                       deformation_gradient, gl_strain, params, context, gp, ele.id());
 
-              assemble_strain_type_to_matrix_row<celltype>(element_properties_, gl_strain,
+              assemble_strain_type_to_matrix_row<celltype>(element_properties_, gl_strain, stress,
                   deformation_gradient, strainIO.type, strain_data, gp);
               assemble_stress_type_to_matrix_row(element_properties_, deformation_gradient, stress,
                   stressIO.type, stress_data, gp);

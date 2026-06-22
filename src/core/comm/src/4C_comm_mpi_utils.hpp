@@ -200,6 +200,14 @@ namespace Core::Communication
   template <IsNativeMpiType T>
   void gather_all(T* my_values, T* all_values, int count, MPI_Comm comm);
 
+  /**
+   * Gather values @p my_values from all procs to rank 0. The array @p my_values must have
+   * @p count elements. On rank 0, the array @p gathered_values must have
+   * @p count * num_mpi_ranks(comm) elements. On all other ranks, @p gathered_values is ignored.
+   */
+  template <IsNativeMpiType T>
+  void gather_to_root(T* my_values, T* gathered_values, int count, MPI_Comm comm);
+
   //! Merge map @p map_in (key of type @p T and value of type @p U) from all procs to a merged
   //! map (key of type @p T and value of type @p U). It is distributed to all procs.
   template <IsCommunicatable T, IsCommunicatable U>
@@ -462,6 +470,13 @@ void Core::Communication::gather_all(T* my_values, T* all_values, int count, MPI
 {
   MPI_Allgather(my_values, count, Internal::to_mpi_type<T>(), all_values, count,
       Internal::to_mpi_type<T>(), comm);
+}
+
+template <Core::Communication::IsNativeMpiType T>
+void Core::Communication::gather_to_root(T* my_values, T* gathered_values, int count, MPI_Comm comm)
+{
+  MPI_Gather(my_values, count, Internal::to_mpi_type<T>(), gathered_values, count,
+      Internal::to_mpi_type<T>(), 0, comm);
 }
 
 /*----------------------------------------------------------------------*/

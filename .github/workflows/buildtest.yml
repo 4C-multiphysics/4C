@@ -145,6 +145,12 @@ jobs:
           name: ${{ github.job }}-schema
           path: |
             ${{ github.workspace }}/build/4C_schema.json
+      - name: Upload 4C completion schema
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ github.job }}-completion-schema
+          path: |
+            ${{ github.workspace }}/build/4C_schema_completion.json
           retention-days: 1
       - name: Upload 4C metadata
         uses: actions/upload-artifact@v7
@@ -232,13 +238,18 @@ jobs:
         with:
           name: clang18_build-schema
           path: ${{ github.workspace }}
-      - name: Validate all input files against schema
+      - uses: actions/download-artifact@v8
+        with:
+          name: clang18_build-completion-schema
+          path: ${{ github.workspace }}
+      - name: Validate all input files against schemas
         run: |
           cd $GITHUB_WORKSPACE
           ${{ github.workspace }}/utilities/set_up_dev_env.sh
           source ${{ github.workspace }}/utilities/python-venv/bin/activate
           shopt -s globstar nullglob
           validate-test-files --schema ${{ github.workspace }}/4C_schema.json  **/*.4C.yaml **/*.4C.yml **/*.4C.json
+          validate-test-files --schema ${{ github.workspace }}/4C_schema_completion.json  **/*.4C.yaml **/*.4C.yml **/*.4C.json
 
   gcc13_no_optional_dependencies_build:
     runs-on: ubuntu-latest

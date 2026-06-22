@@ -32,7 +32,7 @@ CONTACT::ConstitutivelawInterface::ConstitutivelawInterface(
 void CONTACT::ConstitutivelawInterface::assemble_reg_normal_forces(
     bool& localisincontact, bool& localactivesetchange)
 {
-  // loop over all slave row nodes on the current interface
+  // loop over all source row nodes on the current interface
   for (int i = 0; i < source_row_nodes()->num_my_elements(); ++i)
   {
     const int gid = source_row_nodes()->gid(i);
@@ -126,7 +126,7 @@ void CONTACT::ConstitutivelawInterface::assemble_reg_normal_forces(
       cnode->data().get_deriv_z().clear();
 
     }  // Macauley-Bracket
-  }  // loop over slave nodes
+  }  // loop over source nodes
 }
 
 /*----------------------------------------------------------------------*

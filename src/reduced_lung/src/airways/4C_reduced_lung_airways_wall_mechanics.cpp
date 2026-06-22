@@ -7,6 +7,8 @@
 
 #include "4C_reduced_lung_airways_wall_mechanics.hpp"
 
+#include "4C_reduced_lung_helpers.hpp"
+
 #include <array>
 #include <cmath>
 #include <type_traits>
@@ -310,6 +312,36 @@ namespace ReducedLung::Airways::WallMechanics
           {
             FOUR_C_THROW("Unknown airway wall model.");
           }
+        },
+        wall_model);
+  }
+
+  void append_wall_output(const RigidWall& /*wall_model_data*/, const AirwayData& /*data*/,
+      RuntimeOutputCollector& /*collector*/, ReducedLungParameters::OutputVerbosity /*verbosity*/)
+  {
+  }
+
+  void append_wall_output(const KelvinVoigtWall& wall_model_data, const AirwayData& data,
+      RuntimeOutputCollector& collector, ReducedLungParameters::OutputVerbosity verbosity)
+  {
+    if (verbosity >= ReducedLungParameters::OutputVerbosity::medium)
+    {
+      auto& area = collector.get_or_create_vector("area");
+      for (size_t i = 0; i < data.number_of_elements(); i++)
+      {
+        area.replace_local_value(data.local_element_id[i], wall_model_data.area[i]);
+      }
+    }
+  }
+
+  OutputEvaluator make_output_evaluator(WallModel& wall_model)
+  {
+    return std::visit(
+        [](auto& wall_model_data) -> OutputEvaluator
+        {
+          return [&wall_model_data](const AirwayData& data, RuntimeOutputCollector& collector,
+                     ReducedLungParameters::OutputVerbosity verbosity)
+          { append_wall_output(wall_model_data, data, collector, verbosity); };
         },
         wall_model);
   }

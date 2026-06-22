@@ -16,9 +16,7 @@
   ],
   "IO": {
     "STRUCT_STRESS": "2PK",
-    "STRUCT_STRAIN": "GL",
-    "THERM_HEATFLUX": "Current",
-    "THERM_TEMPGRAD": "Current"
+    "STRUCT_STRAIN": "GL"
   },
   "PROBLEM TYPE": {
     "PROBLEMTYPE": "Thermo_Structure_Interaction"

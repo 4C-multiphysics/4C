@@ -431,7 +431,7 @@ namespace Mortar
 
     inline Mortar::Problemtype poro_type() const { return porotype_; }
 
-    inline std::shared_ptr<Core::Communication::Exporter>& sl_exporter_ptr()
+    inline std::shared_ptr<Core::Communication::Exporter>& source_exporter_ptr()
     {
       return sl_exporter_;
     }

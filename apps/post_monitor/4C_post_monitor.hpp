@@ -48,14 +48,6 @@ class MonWriter
   void write_mon_pl_strain_file(
       PostProblem& problem, std::string& infieldtype, std::string straintype, int node);
 
-  //! write something : heatflux a point
-  void write_mon_heatflux_file(
-      PostProblem& problem, std::string& infieldtype, std::string heatfluxtype, int node);
-
-  //! write something : temperature gradient a point
-  void write_mon_tempgrad_file(
-      PostProblem& problem, std::string& infieldtype, std::string tempgradtype, int node);
-
  protected:
   virtual PostField* get_field_ptr(PostProblem& problem) = 0;
 
@@ -82,23 +74,6 @@ class MonWriter
 
   virtual void write_str_results(std::ofstream& outfile, PostProblem& problem, PostResult& result,
       std::vector<int>& gdof, int dim, std::string strtype, std::string groupname, const int node)
-  {
-    FOUR_C_THROW("Not impl.");
-  }
-
-  void write_mon_thermo_file(const std::string& filename, PostProblem& problem,
-      std::string& infieldtype, const std::string thrname, const std::string thrtype,
-      std::vector<std::string> groupnames, int node);
-
-  virtual void write_thermo_table_head(
-      std::ofstream& outfile, const std::string thrname, const std::string thrtype, const int dim)
-  {
-    FOUR_C_THROW("Not impl.");
-  }
-
-  virtual void write_thermo_results(std::ofstream& outfile, PostProblem& problem,
-      PostResult& result, std::vector<int>& gdof, int dim, std::string thrtype,
-      std::string groupname, const int node)
   {
     FOUR_C_THROW("Not impl.");
   }
@@ -286,45 +261,6 @@ class ScatraMonWriter : public FieldMonWriter
 
  private:
 };  // end of class ScatraMonWriter
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-class ThermoMonWriter : public FieldMonWriter
-{
- public:
-  //! constructor
-  ThermoMonWriter(PostProblem& problem, std::string& infieldtype, int node)
-      : FieldMonWriter(problem, infieldtype, node)
-  {
-  }
-
- protected:
-  void check_infield_type(std::string& infieldtype) override;
-
-  void field_error(int node) override;
-
-  void write_header(std::ofstream& outfile) override;
-
-  void write_table_head(std::ofstream& outfile, int dim) override;
-
-  void write_result(
-      std::ofstream& outfile, PostResult& result, std::vector<int>& gdof, int dim) override;
-
-  void write_thermo_table_head(std::ofstream& outfile, const std::string thrname,
-      const std::string thrtype, const int dim) override;
-
-  void write_thermo_results(std::ofstream& outfile, PostProblem& problem, PostResult& result,
-      std::vector<int>& gdof, int dim, std::string thrtype, std::string groupname,
-      const int node) override;
-
-  void write_thermo_result(std::ofstream& file, PostField*& field, PostResult& result,
-      const std::string groupname, const std::string name, const int dim, const int node) const;
-
- private:
-};  // end of class ThermoMonWriter
-
 
 
 /*----------------------------------------------------------------------*/

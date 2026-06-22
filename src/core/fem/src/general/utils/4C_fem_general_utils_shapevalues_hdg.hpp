@@ -261,7 +261,7 @@ namespace Core::FE
     Core::LinAlg::SerialDenseVector face_values_;  /// Evaluated basis functions on face
 
     /*!
-    \brief Computes the face reference system considering the ordering of the master element
+    \brief Computes the face reference system considering the ordering of the target element
 
     The face reference system created is orthonormal and therefore the inverse of the
     transformationm matrix is just the transpose of the matrix (T)^{-1} = (T)'.

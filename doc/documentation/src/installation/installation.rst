@@ -318,7 +318,7 @@ add a JSON schema file, which is automatically created during the build process,
 1. In File :math:`\to` Settings, search for "JSON schema", which will bring you to **JSON Schema Mappings**.
 2. Add a new entry by clicking on the "+" sign.
 3. Give it a descriptive name.
-4. Select the Schema file ``4C_schema.json`` from your local build directory.
+4. Select the Schema file ``4C_schema_completion.json`` from your local build directory.
 5. Select Schema version *JSON Schema v4*.
 6. Add the file name pattern ``*.4C.yaml``, to which this schema is applied.
 
@@ -537,7 +537,7 @@ In order to use the Yaml schema in VS Code, which simplifies editing |FOURC|  in
    ::
 
        "yaml.schemas": {
-         "<path_to>/4C_schema.json": "*.4C.yaml",
+         "<path_to>/4C_schema_completion.json": "*.4C.yaml",
        },
 
 The schema is now automatically applied on Yaml files that end with ``.4C.yaml``.

@@ -17,6 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 std::vector<Core::IO::InputSpec> ElCh::valid_parameters()
 {
   using namespace Core::IO::InputSpecBuilders;
+  using namespace Core::IO::InputSpecBuilders::Validators;
 
   std::vector<Core::IO::InputSpec> specs;
   specs.push_back(group("ELCH CONTROL",
@@ -30,8 +31,9 @@ std::vector<Core::IO::InputSpec> ElCh::valid_parameters()
               "MOVBOUNDARYCONVTOL", {.description = "Convergence check tolerance for outer loop in "
                                                     "electrode shape change computations",
                                         .default_value = 1e-6}),
-          parameter<double>("TEMPERATURE",
-              {.description = "Constant temperature (Kelvin)", .default_value = 298.0}),
+          parameter<double>("TEMPERATURE", {.description = "Constant temperature (Kelvin)",
+                                               .default_value = 298.0,
+                                               .validator = positive_or_zero<double>()}),
           parameter<int>("TEMPERATURE_FROM_FUNCT",
               {.description =
                       "Homogeneous temperature within electrochemistry field that can be time "
@@ -39,10 +41,12 @@ std::vector<Core::IO::InputSpec> ElCh::valid_parameters()
                   .default_value = -1}),
           parameter<double>("FARADAY_CONSTANT",
               {.description = "Faraday constant (in unit system as chosen in input file)",
-                  .default_value = 9.64853399e4}),
+                  .default_value = 9.64853399e4,
+                  .validator = positive<double>()}),
           parameter<double>("GAS_CONSTANT",
               {.description = "(universal) gas constant (in unit system as chosen in input file)",
-                  .default_value = 8.314472}),
+                  .default_value = 8.314472,
+                  .validator = positive<double>()}),
           // parameter for possible types of ELCH algorithms for deforming meshes
           deprecated_selection<ElCh::ElchMovingBoundary>("MOVINGBOUNDARY",
               {

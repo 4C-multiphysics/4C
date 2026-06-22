@@ -62,20 +62,20 @@ namespace Adapter
     \brief Read Mortar Condition
 
     */
-    void read_mortar_condition(std::shared_ptr<Core::FE::Discretization> masterdis,
-        std::shared_ptr<Core::FE::Discretization> slavedis, std::vector<int> coupleddof,
+    void read_mortar_condition(std::shared_ptr<Core::FE::Discretization> target_dis,
+        std::shared_ptr<Core::FE::Discretization> source_dis, std::vector<int> coupleddof,
         const std::string& couplingcond, Teuchos::ParameterList& input,
-        std::map<int, Core::Nodes::Node*>& mastergnodes,
-        std::map<int, Core::Nodes::Node*>& slavegnodes,
-        std::map<int, std::shared_ptr<Core::Elements::Element>>& masterelements,
-        std::map<int, std::shared_ptr<Core::Elements::Element>>& slaveelements) override;
+        std::map<int, Core::Nodes::Node*>& target_global_nodes,
+        std::map<int, Core::Nodes::Node*>& source_global_nodes,
+        std::map<int, std::shared_ptr<Core::Elements::Element>>& target_elements,
+        std::map<int, std::shared_ptr<Core::Elements::Element>>& source_elements) override;
 
     /*!
     \brief initialize routine
 
     */
-    void setup(std::shared_ptr<Core::FE::Discretization> masterdis,
-        std::shared_ptr<Core::FE::Discretization> slavedis, std::vector<int> coupleddof,
+    void setup(std::shared_ptr<Core::FE::Discretization> target_dis,
+        std::shared_ptr<Core::FE::Discretization> source_dis, std::vector<int> coupleddof,
         const std::string& couplingcond) override;
 
     /// perform interface integration
@@ -151,8 +151,11 @@ namespace Adapter
     virtual std::shared_ptr<Core::LinAlg::SparseMatrix> nderiv_matrix() { return Nderiv_; }
     /// surfrace gradient operator
     virtual std::shared_ptr<Core::LinAlg::SparseMatrix> surf_grad_matrix() { return SurfGrad_; }
-    /// slave+master dof map
-    virtual std::shared_ptr<const Core::LinAlg::Map> s_mdof_map() { return smdofrowmap_; }
+    /// source+target dof map
+    virtual std::shared_ptr<const Core::LinAlg::Map> source_target_dof_map()
+    {
+      return source_target_dof_row_map_;
+    }
     //@}
 
    private:
@@ -174,11 +177,11 @@ namespace Adapter
       FOUR_C_THROW("stop");
     }
     void evaluate_with_mesh_relocation(
-        std::shared_ptr<Core::FE::Discretization> slavedis,    ///< slave discretization
+        std::shared_ptr<Core::FE::Discretization> source_dis,  ///< source discretization
         std::shared_ptr<Core::FE::Discretization> aledis,      ///< ALE discretization
         std::shared_ptr<Core::LinAlg::Vector<double>>& idisp,  ///< ALE displacements
         MPI_Comm comm,                                         ///< communicator
-        bool slavewithale                                      ///< flag defining if slave is ALE
+        bool source_is_ale                                     ///< flag defining if source is ALE
         ) override
     {
       FOUR_C_THROW("stop");
@@ -200,11 +203,11 @@ namespace Adapter
     void assemble_real_gap();
     /// real (not weighted) gap derivative wrt displacements
     void assemble_real_gap_deriv();
-    /// slave sided nodal normals
+    /// source sided nodal normals
     void assemble_normals();
-    /// slave sided nodal normals, derivative wrt displacements
+    /// source sided nodal normals, derivative wrt displacements
     void assemble_normals_deriv();
-    /// slave sided tangential gradient operator
+    /// source sided tangential gradient operator
     void assemble_surf_grad();
     /// relative and average tangential velocities and their derivatives
     void assemble_interface_velocities(const double dt);
@@ -222,9 +225,9 @@ namespace Adapter
         nodal_gap_;  ///< NOT the weighted gap but the real distance
     std::shared_ptr<Core::LinAlg::SparseMatrix>
         deriv_nodal_gap_;  ///< derivative of nodal_gap_ w.r.t. displacements
-    std::shared_ptr<Core::LinAlg::Vector<double>> normals_;  ///< nodal normals (slave side)
+    std::shared_ptr<Core::LinAlg::Vector<double>> normals_;  ///< nodal normals (source side)
     std::shared_ptr<Core::LinAlg::SparseMatrix>
-        Nderiv_;  ///< derivtative of nodal slave-sided normals
+        Nderiv_;  ///< derivtative of nodal source-sided normals
 
     std::shared_ptr<Core::LinAlg::Vector<double>>
         evaluated_state_;  ///< displacement state that has last been evaluated
@@ -240,13 +243,13 @@ namespace Adapter
     std::shared_ptr<Core::LinAlg::SparseMatrix>
         dinvA_;  // dinv on active displacement dofs (for recovery)
     std::shared_ptr<Core::LinAlg::SparseMatrix>
-        kss_a_;  // Part of structure-stiffness (kss) that corresponds to active slave rows
+        kss_a_;  // Part of structure-stiffness (kss) that corresponds to active source rows
     std::shared_ptr<Core::LinAlg::SparseMatrix>
-        kst_a_;  // Part of coupling-stiffness  (kst) that corresponds to active slave rows
+        kst_a_;  // Part of coupling-stiffness  (kst) that corresponds to active source rows
     std::shared_ptr<Core::LinAlg::Vector<double>>
-        rs_a_;  // Part of structural residual that corresponds to active slave rows
+        rs_a_;  // Part of structural residual that corresponds to active source rows
     std::shared_ptr<Core::LinAlg::Vector<double>>
-        sdirichtoggle_;  // global dirichlet toggle of all slave dofs
+        sdirichtoggle_;  // global dirichlet toggle of all source dofs
 
     bool contact_regularization_;
     double regularization_thickness_;

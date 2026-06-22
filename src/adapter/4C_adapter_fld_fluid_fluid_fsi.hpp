@@ -148,7 +148,7 @@ namespace Adapter
    private:
     /// setup of map extractor to distinguish between FSI DOF-map and
     /// merged inner embedded fluid and background fluid DOF-map
-    void setup_interface(const int nds_master = 0) override;
+    void setup_interface(const int target_dofset_number = 0) override;
 
     /// prepare underlying extended shape derivatives matrix, that is based
     /// on the merged fluid dof-map (with background fluid dof set to zero),

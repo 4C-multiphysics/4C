@@ -13,6 +13,7 @@
 #include "4C_io_input_field.hpp"
 #include "4C_io_input_spec.hpp"
 
+#include <cstdint>
 #include <vector>
 
 
@@ -22,6 +23,17 @@ namespace ReducedLung
 {
   struct ReducedLungParameters
   {
+    enum class OutputVerbosity : std::uint8_t
+    {
+      //  write only core fields (p_1, p_2, q_in, q_out)
+      minimal,
+      //  include minimal + advanced model outputs (currently e.g. area, volume where available).
+      medium,
+      // include medium + model-internal diagnostic quantities (e.g. flow_k_turb, elastic_pressure,
+      // maxwell_pressure).
+      high
+    };
+
     struct Dynamics
     {
       double time_increment;
@@ -32,6 +44,7 @@ namespace ReducedLung
       int max_nonlinear_iterations;
       double nonlinear_residual_tolerance;
       double nonlinear_increment_tolerance;
+      OutputVerbosity output_verbosity = OutputVerbosity::minimal;
     } dynamics;
     struct LungTree
     {

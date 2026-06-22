@@ -9,6 +9,8 @@
 
 #include "4C_reduced_lung_terminal_unit_elasticity.hpp"
 
+#include "4C_reduced_lung_helpers.hpp"
+
 #include <cmath>
 
 FOUR_C_NAMESPACE_OPEN
@@ -91,6 +93,21 @@ namespace ReducedLung::TerminalUnits::Elasticity
       }
       return ogden_hyperelastic_model.elastic_pressure_grad_dp_el;
     }
+
+    template <typename Model>
+    void append_elastic_pressure_output(const Model& model, const TerminalUnitData& data,
+        RuntimeOutputCollector& collector, ReducedLungParameters::OutputVerbosity verbosity)
+    {
+      if (verbosity >= ReducedLungParameters::OutputVerbosity::high)
+      {
+        auto& elastic_pressure_vec = collector.get_or_create_vector("elastic_pressure");
+        for (size_t i = 0; i < data.number_of_elements(); i++)
+        {
+          elastic_pressure_vec.replace_local_value(
+              data.local_element_id[i], model.elastic_pressure_p_el[i]);
+        }
+      }
+    }
   }  // namespace
 
   /**
@@ -156,6 +173,21 @@ namespace ReducedLung::TerminalUnits::Elasticity
           {
             FOUR_C_THROW("Unknown terminal-unit elasticity model.");
           }
+        },
+        elasticity_model);
+  }
+
+  /**
+   * Resolve variant-based output evaluator.
+   */
+  OutputEvaluator make_output_evaluator(ElasticityModel& elasticity_model)
+  {
+    return std::visit(
+        [&](auto& model) -> OutputEvaluator
+        {
+          return [&model](const TerminalUnitData& data, RuntimeOutputCollector& collector,
+                     ReducedLungParameters::OutputVerbosity verbosity)
+          { append_elastic_pressure_output(model, data, collector, verbosity); };
         },
         elasticity_model);
   }

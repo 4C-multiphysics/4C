@@ -51,6 +51,7 @@ namespace Mixture
 
       const double deposition_stretch_;
       const int deposition_stretch_timefunc_num_;
+      const bool inelastic_external_deformation_;
     };
   }  // namespace PAR
 
@@ -90,6 +91,10 @@ namespace Mixture
         Core::LinAlg::SymmetricTensor<double, 3, 3>& S_stress,
         Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, int gp, int eleGID) override;
 
+    void prepare_inelastic_growth_tangent(const Core::LinAlg::Tensor<double, 3, 3>& iFg,
+        const Core::LinAlg::Tensor<double, 3, 3>& d_iFg_d_growth_scalar,
+        const Mat::EvaluationContext<3>& context, int gp, int eleGID) override;
+
     [[nodiscard]] double get_growth_scalar(int gp) const override;
     [[nodiscard]] Core::LinAlg::SymmetricTensor<double, 3, 3> get_d_growth_scalar_d_cg(
         int gp, int eleGID) const override;
@@ -104,6 +109,8 @@ namespace Mixture
     void integrate_local_evolution_equations(double dt, int gp, int eleGID);
     [[nodiscard]] double evaluate_lambdaf(
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& C, int gp, int eleGID) const;
+    [[nodiscard]] double evaluate_lambda_ext(
+        const Core::LinAlg::Tensor<double, 3, 3>& iFext, int gp, int eleGID) const;
     [[nodiscard]] Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_d_lambdafsq_dc(
         int gp, int eleGID) const;
 

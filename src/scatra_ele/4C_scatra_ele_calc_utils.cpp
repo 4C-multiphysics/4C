@@ -135,6 +135,11 @@ namespace ScaTra
         impltypestring = "Growth and remodeling";
         break;
       }
+      case ScaTra::impltype_nl_stimulus:
+      {
+        impltypestring = "Non-local stimulus";
+        break;
+      }
       case ScaTra::impltype_elch_diffcond:
       {
         impltypestring = "Electrochemistry for diffusion-conduction formulation";

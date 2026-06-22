@@ -115,6 +115,12 @@ namespace Mixture
     [[nodiscard]] double get_constituent_initial_reference_mass_density(
         const Mixture::MixtureConstituent& constituent) const;
 
+    [[nodiscard]] std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>
+    evaluate_d_stress_d_scalars(const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
+        const Teuchos::ParameterList& params, const Mat::EvaluationContext<3>& context,
+        int num_scalars, int gp, int eleGID) const override;
+
     void register_output_data_names(
         std::unordered_map<std::string, int>& names_and_size) const override;
 

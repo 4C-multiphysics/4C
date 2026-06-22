@@ -82,13 +82,17 @@ namespace Mat
       Core::Materials::MaterialType material_type() const override
       {
         return Core::Materials::mes_isoneohooke;
-      }
+      };
 
       /// add shear modulus equivalent
       void add_shear_mod(bool& haveshearmod,  ///< non-zero shear modulus was added
           double& shearmod,                   ///< variable to add upon
           int ele_gid                         ///< element GID
-      ) const override;
+      ) const override
+      {
+        haveshearmod = true;
+        shearmod += params_->mue_.at(ele_gid);
+      };
 
       //@}
 

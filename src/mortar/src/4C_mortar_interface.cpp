@@ -911,12 +911,12 @@ void Mortar::Interface::initialize_data_container()
   if (interface_data_
           ->is_poro())  // as velocities of structure and fluid exist also on master nodes!!!
   {
-    const std::shared_ptr<Core::LinAlg::Map> masternodes =
+    const std::shared_ptr<Core::LinAlg::Map> target_nodes =
         Core::LinAlg::allreduce_e_map(*(target_row_nodes()));
     // initialize poro node data container for master nodes!!!
-    for (int i = 0; i < masternodes->num_my_elements(); ++i)
+    for (int i = 0; i < target_nodes->num_my_elements(); ++i)
     {
-      int gid = masternodes->gid(i);
+      int gid = target_nodes->gid(i);
       Core::Nodes::Node* node = discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid {}", gid);
       auto* mnode = dynamic_cast<Node*>(node);
@@ -1758,7 +1758,7 @@ void Mortar::Interface::update_master_slave_node_maps(
       std::make_shared<Core::LinAlg::Map>(-1, (int)mcb.size(), mcb.data(), 0, get_comm());
 
   // build exporter
-  interface_data_->sl_exporter_ptr() = std::make_shared<Core::Communication::Exporter>(
+  interface_data_->source_exporter_ptr() = std::make_shared<Core::Communication::Exporter>(
       *snoderowmapbound_, *snodecolmapbound_, get_comm());
 }
 

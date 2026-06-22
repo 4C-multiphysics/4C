@@ -85,6 +85,13 @@ Core::IO::InputSpec BeamInteraction::Potential::valid_parameters()
                   .validator = null_or(positive<double>()),
                   .store = in_struct(&BeamPotentialParameters::potential_reduction_length)}),
 
+          parameter<ReductionFunction>("potential_reduction_function",
+              {.description =
+                      "Function which describes the reduction of the potential at target beam end "
+                      "points (only applicable in combination with potential reduction strategy).",
+                  .default_value = ReductionFunction::cosine,
+                  .store = in_struct(&BeamPotentialParameters::potential_reduction_function)}),
+
           group<BeamPotentialRegularizationParameters>("regularization",
               {
                   parameter<Potential::RegularizationType>("type",

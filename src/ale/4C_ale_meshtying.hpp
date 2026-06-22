@@ -130,7 +130,7 @@ namespace ALE
         std::shared_ptr<Core::LinAlg::Vector<double>>& dispnp);  ///> current displacement vector
 
     //! Compute and update the increments of the slave node
-    virtual void update_slave_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& inc,
+    virtual void update_source_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& inc,
         std::shared_ptr<Core::LinAlg::Vector<double>>& dispnp);
 
     //! Recover method for Lagrange multipliers (do nothing in mesh tying case)
@@ -191,7 +191,7 @@ namespace ALE
     std::shared_ptr<Core::LinAlg::Map> gndofrowmap_;
 
     //! slave & master dof rowmap
-    std::shared_ptr<Core::LinAlg::Map> gsmdofrowmap_;
+    std::shared_ptr<Core::LinAlg::Map> gsource_target_dof_row_map_;
 
     //! vector containing time-depending values of the dirichlet condition
     /// valuesdc_ = (dispnp after applying DC) - (dispn)

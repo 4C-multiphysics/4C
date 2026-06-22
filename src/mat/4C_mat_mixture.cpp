@@ -11,7 +11,6 @@
 #include "4C_global_data.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_service.hpp"
-#include "4C_mixture_constituent_remodelfiber_ssi.hpp"
 #include "4C_utils_enum.hpp"
 
 #include <memory>
@@ -342,4 +341,14 @@ const Mixture::MixtureConstituentRemodelFiberSsi* Mat::Mixture::ssi_constituent_
   }
   return nullptr;
 }
+std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> Mat::Mixture::evaluate_d_stress_d_scalars(
+    const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
+    const Teuchos::ParameterList& params, const EvaluationContext<3>& context, int num_scalars,
+    int gp, int eleGID)
+{
+  return mixture_rule_->evaluate_d_stress_d_scalars(
+      defgrad, glstrain, params, context, num_scalars, gp, eleGID);
+}
+
 FOUR_C_NAMESPACE_CLOSE

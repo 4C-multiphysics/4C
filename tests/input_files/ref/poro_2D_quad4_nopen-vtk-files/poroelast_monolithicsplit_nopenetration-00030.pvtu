@@ -1,0 +1,16 @@
+<?xml version="1.0" ?> 
+<!-- 
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="PUnstructuredGrid" version="0.1" byte_order="LittleEndian">
+  <PUnstructuredGrid GhostLevel="0">
+    <PPoints>
+      <PDataArray type="Float64" NumberOfComponents="3"/>
+    </PPoints>
+    <PPointData>
+      <PDataArray type="Float64" Name="poronopencond_lambda" NumberOfComponents="2" format="ascii"/>
+    </PPointData>
+    <Piece Source="poroelast_monolithicsplit_nopenetration-00030-0.vtu"/>
+    <Piece Source="poroelast_monolithicsplit_nopenetration-00030-1.vtu"/>
+  </PUnstructuredGrid>
+</VTKFile>

@@ -111,31 +111,29 @@ RESULT DESCRIPTION:
 MATERIALS:
   - MAT: 1
     MAT_Muscle_Combo:
-      ALPHA: 15
-      BETA: 1
-      GAMMA: 5
-      KAPPA: 100
-      OMEGA0: 0.8
-      POPT: 0
-      LAMBDAMIN: 0.682
-      LAMBDAOPT: 1.192
-      ACTIVATION_VALUES:
-        from_file: "mat_muscle_combo_hex_act_map_every_timestep.json"
+      PASSIVE:
+        ALPHA: 15
+        BETA: 1
+        GAMMA: 5
+        KAPPA: 100
+        OMEGA0: 0.8
       DENS: 1
       FIBER_ORIENTATION:
         constant: [0, 0, 1]
   - MAT: 2
     MAT_Muscle_Combo:
-      ALPHA: 19.69
-      BETA: 1.19
-      GAMMA: 0.1599
-      KAPPA: 100
-      OMEGA0: 0.7388
-      POPT: 73.52
-      LAMBDAMIN: 0.682
-      LAMBDAOPT: 1.192
-      ACTIVATION_VALUES:
-        from_file: "mat_muscle_combo_hex_act_map_every_timestep.json"
+      PASSIVE:
+        ALPHA: 19.69
+        BETA: 1.19
+        GAMMA: 0.1599
+        KAPPA: 100
+        OMEGA0: 0.7388
+      ACTIVE:
+        POPT: 73.52
+        LAMBDAMIN: 0.682
+        LAMBDAOPT: 1.192
+        ACTIVATION_VALUES:
+          from_file: "mat_muscle_combo_hex_act_map_every_timestep.json"
       DENS: 1
       FIBER_ORIENTATION:
         constant: [0, 0, 1]

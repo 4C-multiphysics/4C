@@ -91,6 +91,7 @@ void Solid::TimeInt::BaseDataIO::init(const Teuchos::ParameterList& ioparams,
         Teuchos::getIntegralValue<Inpar::Solid::StrainType>(ioparams, "STRUCT_PLASTIC_STRAIN");
     writeenergyevery_ = sdynparams.get<int>("RESEVERYERGY");
     writesurfactant_ = ioparams.get<bool>("STRUCT_SURFACTANT");
+    output_per_rank_eval_time_ = ioparams.get<bool>("PER_RANK_EVAL_TIME");
 
     // build params container for monitoring reaction forces
     params_monitor_dbc_ =

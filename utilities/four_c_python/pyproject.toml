@@ -28,14 +28,21 @@ check-workflow-dependencies-hash = "four_c_development.check_workflow_dependenci
 chunk-test-suite = "four_c_ci.chunk_test_suite:main"
 clang-tidy-filter-config = "four_c_ci.clang_tidy_filter_config:main"
 clang-tidy-filter-output = "four_c_ci.clang_tidy_filter_output:main"
+collect-performance-data = "four_c_ci.collect_performance_data:main"
+generate-performance-report = "four_c_ci.generate_performance_report:main"
 create-schema-files = "four_c_metadata.json_schema:cli"
 validate-test-files = "four_c_metadata.validate_test_input_files:cli"
 diff-with-tolerance = "four_c_building_testing.diff_with_tolerance:cli"
 check-timings = "four_c_building_testing.check_timings:main"
 collect-performance-test-results = "four_c_building_testing.collect_performance_test_results:main"
+collect-benchmark-test-results = "four_c_building_testing.collect_benchmark_test_results:main"
+check-csv-headers = "four_c_building_testing.check_csv_headers:cli"
 vtk-compare = "four_c_building_testing.vtk_compare:cli"
 post-processing-comparison = "four_c_building_testing.post_processing_comparison:main"
 check-restart-step = "four_c_building_testing.check_restart_step:cli"
+
+[tool.setuptools.package-data]
+"four_c_ci.resources" = ["*.html.j2"]
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }

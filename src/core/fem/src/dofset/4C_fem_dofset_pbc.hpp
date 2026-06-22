@@ -75,25 +75,25 @@ namespace Core::DOFSets
       return perbndcouples_.get();
     }
 
-    /// Get connectivity map between slave node and its master node
+    /// Get connectivity map between source node and its target node
     [[nodiscard]] virtual std::shared_ptr<const std::map<int, int>>
-    get_slave_to_master_node_connectivity() const
+    get_source_to_target_node_connectivity() const
     {
-      return perbnd_slavetomaster_;
+      return perbnd_source_to_target_;
     };
 
    protected:
     /// get number of nodal dofs for this element at this node
     int num_dof_per_node(const Core::Nodes::Node& node) const override
     {
-      if (slavenodeids_->count(node.id()) == 0)
+      if (source_node_ids_->count(node.id()) == 0)
       {
         return DofSet::num_dof_per_node(node);
       }
       return 0;
     }
 
-    //!\brief master and slave node connectivity for periodic boundary conditions
+    //!\brief target and source node connectivity for periodic boundary conditions
     std::shared_ptr<std::map<int, std::vector<int>>> perbndcouples_;
 
     //!\brief the largest original GID, to stop the dofset from 'shrinking'
@@ -103,14 +103,14 @@ namespace Core::DOFSets
     int myMinGID_;
 
    private:
-    /// Build the connectivity between slave node and its master node
-    void build_slave_to_master_node_connectivity();
+    /// Build the connectivity between source node and its target node
+    void build_source_to_target_node_connectivity();
 
-    std::shared_ptr<std::set<int>> slavenodeids_;
+    std::shared_ptr<std::set<int>> source_node_ids_;
 
-    //!\brief slave node to master node connectivity for periodic boundary conditions (key=slave
-    //! nid, value=master nid)
-    std::shared_ptr<std::map<int, int>> perbnd_slavetomaster_;
+    //!\brief source node to target node connectivity for periodic boundary conditions (key=source
+    //! nid, value=target nid)
+    std::shared_ptr<std::map<int, int>> perbnd_source_to_target_;
 
   };  // class PBCDofSet
 

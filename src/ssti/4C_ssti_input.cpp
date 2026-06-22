@@ -151,7 +151,7 @@ void SSTI::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinitio
     cond.add_component(parameter<int>("ConditionID"));
     cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
         {{"Undefined", S2I::side_undefined}, {"Slave", S2I::side_source},
-            {"Master", S2I::side_master}},
+            {"Master", S2I::side_target}},
         {.description = "interface side"}));
     cond.add_component(parameter<int>("S2I_KINETICS_ID"));
     condlist.push_back(cond);

@@ -363,9 +363,9 @@ double Mat::Utils::Muscle::evaluate_time_dependent_active_stress_tanh(const doub
   return sigma_max_ft;
 }
 
-double Mat::Utils::Muscle::evaluate_time_space_dependent_active_stress_by_funct(
-    const double sigma_max, const Core::Utils::FunctionOfSpaceTime& activation_function,
-    const double t_current, const Core::LinAlg::Tensor<double, 3>& x)
+double Mat::Utils::Muscle::evaluate_time_space_dependent_activation_by_funct(
+    const Core::Utils::FunctionOfSpaceTime& activation_function, const double t_current,
+    const Core::LinAlg::Tensor<double, 3>& x)
 {
   const std::vector<double> x_vec{x(0), x(1), x(2)};
 
@@ -377,13 +377,10 @@ double Mat::Utils::Muscle::evaluate_time_space_dependent_active_stress_by_funct(
     FOUR_C_THROW(
         "Function value not physical, please prescribe a function with values in interval [0,1].");
 
-  const double sigma_max_ft = sigma_max * ft;
-
-  return sigma_max_ft;
+  return ft;
 }
 
-double Mat::Utils::Muscle::evaluate_time_space_dependent_active_stress_by_map(
-    const double sigma_max,
+double Mat::Utils::Muscle::evaluate_time_space_dependent_activation_by_field(
     const Core::IO::InputField<std::vector<std::pair<double, double>>>& activation_field,
     const double t_current, const int element_id)
 {
@@ -397,9 +394,7 @@ double Mat::Utils::Muscle::evaluate_time_space_dependent_active_stress_by_map(
     FOUR_C_THROW(
         "Function value not physical, please prescribe activation values in interval [0,1].");
 
-  const double sigma_max_ft = sigma_max * ft;
-
-  return sigma_max_ft;
+  return ft;
 }
 
 double Mat::Utils::Muscle::fiber_stretch(const Core::LinAlg::SymmetricTensor<double, 3, 3>& C,

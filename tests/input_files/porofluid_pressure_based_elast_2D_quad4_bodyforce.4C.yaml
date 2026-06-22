@@ -36,7 +36,7 @@ porofluid_elasticity_dynamic/monolithic:
 porofluid_dynamic:
   initial_condition:
     type: by_condition
-  body_force: [0.0, -9810.0]
+  body_force_function: 2
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "solver"
@@ -111,6 +111,11 @@ FUNCT1:
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.1"
   - COMPONENT: 2
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.5"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-9810.0"
 
 RESULT DESCRIPTION:
   - POROFLUIDMULTIPHASE:

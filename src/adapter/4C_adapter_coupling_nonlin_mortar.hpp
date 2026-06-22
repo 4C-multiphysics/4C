@@ -76,12 +76,12 @@ namespace Adapter
     \brief initialize routine
 
     */
-    virtual void setup(std::shared_ptr<Core::FE::Discretization> masterdis,
-        std::shared_ptr<Core::FE::Discretization> slavedis, std::vector<int> coupleddof,
+    virtual void setup(std::shared_ptr<Core::FE::Discretization> target_dis,
+        std::shared_ptr<Core::FE::Discretization> source_dis, std::vector<int> coupleddof,
         const std::string& couplingcond);
 
-    virtual void setup_spring_dashpot(std::shared_ptr<Core::FE::Discretization> masterdis,
-        std::shared_ptr<Core::FE::Discretization> slavedis,
+    virtual void setup_spring_dashpot(std::shared_ptr<Core::FE::Discretization> target_dis,
+        std::shared_ptr<Core::FE::Discretization> source_dis,
         const Core::Conditions::Condition& spring, const int coupling_id, MPI_Comm comm);
 
     virtual void integrate_lin_d(const std::string& statename,
@@ -149,34 +149,34 @@ namespace Adapter
     \brief Read Mortar Condition
 
     */
-    virtual void read_mortar_condition(std::shared_ptr<Core::FE::Discretization> masterdis,
-        std::shared_ptr<Core::FE::Discretization> slavedis, std::vector<int> coupleddof,
+    virtual void read_mortar_condition(std::shared_ptr<Core::FE::Discretization> target_dis,
+        std::shared_ptr<Core::FE::Discretization> source_dis, std::vector<int> coupleddof,
         const std::string& couplingcond, Teuchos::ParameterList& input,
-        std::map<int, Core::Nodes::Node*>& mastergnodes,
-        std::map<int, Core::Nodes::Node*>& slavegnodes,
-        std::map<int, std::shared_ptr<Core::Elements::Element>>& masterelements,
-        std::map<int, std::shared_ptr<Core::Elements::Element>>& slaveelements);
+        std::map<int, Core::Nodes::Node*>& target_global_nodes,
+        std::map<int, Core::Nodes::Node*>& source_global_nodes,
+        std::map<int, std::shared_ptr<Core::Elements::Element>>& target_elements,
+        std::map<int, std::shared_ptr<Core::Elements::Element>>& source_elements);
 
     /*!
     \brief Add Mortar Nodes
 
     */
-    virtual void add_mortar_nodes(std::shared_ptr<Core::FE::Discretization> masterdis,
-        std::shared_ptr<Core::FE::Discretization> slavedis, std::vector<int> coupleddof,
-        Teuchos::ParameterList& input, std::map<int, Core::Nodes::Node*>& mastergnodes,
-        std::map<int, Core::Nodes::Node*>& slavegnodes,
-        std::map<int, std::shared_ptr<Core::Elements::Element>>& masterelements,
-        std::map<int, std::shared_ptr<Core::Elements::Element>>& slaveelements,
+    virtual void add_mortar_nodes(std::shared_ptr<Core::FE::Discretization> target_dis,
+        std::shared_ptr<Core::FE::Discretization> source_dis, std::vector<int> coupleddof,
+        Teuchos::ParameterList& input, std::map<int, Core::Nodes::Node*>& target_global_nodes,
+        std::map<int, Core::Nodes::Node*>& source_global_nodes,
+        std::map<int, std::shared_ptr<Core::Elements::Element>>& target_elements,
+        std::map<int, std::shared_ptr<Core::Elements::Element>>& source_elements,
         std::shared_ptr<CONTACT::Interface>& interface, int numcoupleddof);
 
     /*!
     \brief Add Mortar Elements
 
     */
-    virtual void add_mortar_elements(std::shared_ptr<Core::FE::Discretization> masterdis,
-        std::shared_ptr<Core::FE::Discretization> slavedis, Teuchos::ParameterList& input,
-        std::map<int, std::shared_ptr<Core::Elements::Element>>& masterelements,
-        std::map<int, std::shared_ptr<Core::Elements::Element>>& slaveelements,
+    virtual void add_mortar_elements(std::shared_ptr<Core::FE::Discretization> target_dis,
+        std::shared_ptr<Core::FE::Discretization> source_dis, Teuchos::ParameterList& input,
+        std::map<int, std::shared_ptr<Core::Elements::Element>>& target_elements,
+        std::map<int, std::shared_ptr<Core::Elements::Element>>& source_elements,
         std::shared_ptr<CONTACT::Interface>& interface, int numcoupleddof);
 
     /*!
@@ -184,7 +184,7 @@ namespace Adapter
            store maps as internal variable and do parallel redist.
 
     */
-    virtual void complete_interface(std::shared_ptr<Core::FE::Discretization> masterdis,
+    virtual void complete_interface(std::shared_ptr<Core::FE::Discretization> target_dis,
         std::shared_ptr<CONTACT::Interface>& interface);
 
     /*!
@@ -197,8 +197,8 @@ namespace Adapter
     \brief create strategy object if required
 
     */
-    virtual void create_strategy(std::shared_ptr<Core::FE::Discretization> masterdis,
-        std::shared_ptr<Core::FE::Discretization> slavedis, Teuchos::ParameterList& input,
+    virtual void create_strategy(std::shared_ptr<Core::FE::Discretization> target_dis,
+        std::shared_ptr<Core::FE::Discretization> source_dis, Teuchos::ParameterList& input,
         int numcoupleddof);
 
     /*!
@@ -227,24 +227,24 @@ namespace Adapter
     int myrank_;     ///< my proc id
 
     std::shared_ptr<Core::LinAlg::Map>
-        slavenoderowmap_;  ///< map of slave row nodes (after parallel redist.)
+        source_node_row_map_;  ///< map of source row nodes (after parallel redist.)
     std::shared_ptr<Core::LinAlg::Map>
-        pslavenoderowmap_;  ///< map of slave row nodes (before parallel redist.)
+        p_source_node_row_map_;  ///< map of source row nodes (before parallel redist.)
     std::shared_ptr<Core::LinAlg::Map>
-        smdofrowmap_;  ///< map of sm merged row dofs (after parallel redist.)
+        source_target_dof_row_map_;  ///< map of sm merged row dofs (after parallel redist.)
     std::shared_ptr<Core::LinAlg::Map>
-        psmdofrowmap_;  ///< map of sm merged row dofs (before parallel redist.)
+        p_source_target_dof_row_map_;  ///< map of sm merged row dofs (before parallel redist.)
 
     std::shared_ptr<Core::LinAlg::SparseMatrix> DLin_;  ///< linearization of D matrix
     std::shared_ptr<Core::LinAlg::SparseMatrix> MLin_;  ///< linearization of M matrix
 
     std::shared_ptr<Core::LinAlg::SparseMatrix>
-        H_;  ///< Matrix containing the tangent derivatives with respect to slave dofs
+        H_;  ///< Matrix containing the tangent derivatives with respect to source dofs
     std::shared_ptr<Core::LinAlg::SparseMatrix>
-        T_;  ///< Matrix containing the tangent vectors of the slave nodes
+        T_;  ///< Matrix containing the tangent vectors of the source nodes
     std::shared_ptr<Core::LinAlg::SparseMatrix>
         N_;  ///< Matrix containing the (weighted) gap derivatives
-             ///< with respect to master and slave dofs
+             ///< with respect to target and source dofs
     std::shared_ptr<Core::LinAlg::Vector<double>> gap_;  ///< gap vector
 
     std::shared_ptr<CONTACT::Interface> interface_;  ///< interface

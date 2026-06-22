@@ -113,6 +113,16 @@ namespace ReducedLung::Airways
       model.internal_state_updater = WallMechanics::make_internal_state_updater(
           model.wall_model, FlowResistance::make_internal_state_updater(model.flow_model));
       model.end_of_timestep_routine = WallMechanics::make_end_of_timestep_routine(model.wall_model);
+      auto flow_output_evaluator = FlowResistance::make_output_evaluator(model.flow_model);
+      auto wall_output_evaluator = WallMechanics::make_output_evaluator(model.wall_model);
+      model.output_evaluator = [flow_output_evaluator, wall_output_evaluator](
+                                   const AirwayData& data,
+                                   ReducedLung::RuntimeOutputCollector& collector,
+                                   ReducedLungParameters::OutputVerbosity verbosity)
+      {
+        flow_output_evaluator(data, collector, verbosity);
+        wall_output_evaluator(data, collector, verbosity);
+      };
     }
   }
 }  // namespace ReducedLung::Airways

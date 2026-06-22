@@ -830,6 +830,19 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
         break;
     }
 
+    const bool time_ele_evaluations =
+        problem.io_params().sublist("RUNTIME VTK OUTPUT").get<bool>("ELEMENT_EVAL_TIME") or
+        problem.io_params().get<bool>("PER_RANK_EVAL_TIME");
+    if (time_ele_evaluations and problem.get_problem_type() != Core::ProblemType::structure)
+    {
+      FOUR_C_THROW(
+          "Element evaluation timing via 'RUNTIME VTK OUTPUT/ELEMENT_EVAL_TIME' or "
+          "'PER_RANK_EVAL_TIME' is currently supported only for structure problems. For other "
+          "problem types, disable these options or implement element timing support for the "
+          "corresponding problem type before enabling them.");
+    }
+    dis->set_time_ele_evaluations(time_ele_evaluations);
+
     problem.add_dis(name, dis);
 
     if (!input_file_keyword.empty()) meshreader.attach_discretization(dis, input_file_keyword);

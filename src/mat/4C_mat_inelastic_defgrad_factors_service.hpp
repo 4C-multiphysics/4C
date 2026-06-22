@@ -11,19 +11,13 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_utils.hpp"
-#include "4C_fem_discretization.hpp"
-#include "4C_global_data.hpp"
-#include "4C_io_runtime_csv_writer.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
-#include "4C_linalg_fixedsizematrix_tensor_products.hpp"
-#include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
-#include "4C_linalg_four_tensor_generators.hpp"
-#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <format>
-#include <map>
 #include <string>
+#include <tuple>
+#include <vector>
 
 
 FOUR_C_NAMESPACE_OPEN
@@ -34,9 +28,99 @@ namespace Mat
   /// InelasticDefgradTransvIsotropElastViscoplast
   namespace InelasticDefgradTransvIsotropElastViscoplastUtils
   {
+    /**
+     * @brief Caches values evaluated at Gauss points.
+     *
+     * This utility stores values of type `T` together with a flag indicating
+     * whether the value for a given Gauss point has already been evaluated.
+     * It is intended to avoid repeated computations across material evaluations.
+     *
+     * @tparam T Type of the cached quantity.
+     */
+    template <typename T>
+    class CachedQuantity
+    {
+     public:
+      /**
+       * @brief Returns the cached value for a given Gauss point.
+       *
+       * @param gp Gauss point index.
+       * @return const reference to the cached value for the specified Gauss point.
+       * @throws If the gauss point index is out of bounds or if the values is not evaluated yet.
+       */
+      [[nodiscard]] const T& value(std::size_t gp) const
+      {
+        FOUR_C_ASSERT_ALWAYS(gp < value_.size(), "Invalid gp {}!", gp);
+        FOUR_C_ASSERT_ALWAYS(is_evaluated_[gp], "Value is not evaluated for gp {}!", gp);
+        return value_[gp];
+      }
+
+      /**
+       * @brief Checks if the value for a given Gauss point has been evaluated.
+       *
+       * @param gp Gauss point index.
+       * @return true if the value is evaluated, false otherwise.
+       * @throws If the gauss point index is out of bounds.
+       */
+      [[nodiscard]] bool is_evaluated(std::size_t gp) const
+      {
+        FOUR_C_ASSERT_ALWAYS(gp < is_evaluated_.size(), "Invalid gp {}!", gp);
+        return is_evaluated_[gp];
+      }
+
+      /**
+       * @brief Resizes the cached quantity to the given number of Gauss points.
+       *
+       * This method initializes the cache for the specified number of Gauss points and resets all
+       * evaluation flags to false.
+       *
+       * @param numgp Number of Gauss points to resize the cache for.
+       */
+      void resize(std::size_t numgp)
+      {
+        value_.resize(numgp);
+        is_evaluated_.assign(numgp, false);
+      }
+
+      /**
+       * @brief Sets the value for a given Gauss point and marks it as evaluated.
+       *
+       * @param gp Gauss point index.
+       * @param value The value to be cached for the specified Gauss point.
+       * @throws If the gauss point index is out of bounds.
+       */
+      void set(std::size_t gp, T value)
+      {
+        FOUR_C_ASSERT_ALWAYS(gp < value_.size(), "Invalid gp {}!", gp);
+        value_[gp] = std::move(value);
+        is_evaluated_[gp] = true;
+      }
+
+      /**
+       * @brief Marks the value for a given Gauss point as not evaluated.
+       *
+       * @param gp Gauss point index.
+       * @throws If the gauss point index is out of bounds.
+       */
+      void reset(std::size_t gp)
+      {
+        FOUR_C_ASSERT_ALWAYS(gp < is_evaluated_.size(), "Invalid gp {}!", gp);
+        is_evaluated_[gp] = false;
+      }
+
+     private:
+      std::vector<T> value_;            ///< vector storing the cached values for each Gauss point
+      std::vector<bool> is_evaluated_;  ///< vector of flags indicating whether the value for each
+                                        ///< Gauss point has been evaluated
+    };
+
     /// declare numerical tolerance to be used in the verification of (numerically) zero plastic
     /// strain increments
     constexpr double zero_plastic_strain_increment{1.0e-14};
+
+    /// tolerance to determine if the incoming defgrad-temperature pair matches the last evaluated
+    /// one
+    constexpr double thermo_mechanical_state_equality_tolerance = 1.0e-12;
 
     /// enum class for error types in InelasticDefgradTransvIsotropElastViscoplast, used for
     /// triggering different procedures (e.g. Reinterpolation,
@@ -153,6 +237,9 @@ namespace Mat
       //! last (reduced) deformation gradient (for all Gauss points)
       std::vector<Core::LinAlg::Matrix<3, 3>> last_defgrad;
 
+      //! absolute temperature at the last time instant (for all Gauss points)
+      std::vector<double> last_temperature;
+
       //! temporary variable, for which we store the right Cauchy-Green deformation tensor at each
       //! evaluation (used in order to update last_rightCG_ once outer NR converges) (for all Gauss
       //! points)
@@ -172,18 +259,24 @@ namespace Mat
       std::vector<double> current_equiv_stress;
 
 
+      //! absolute temperature at the current time instant (for all Gauss points)
+      std::vector<double> current_temperature;
+
+
       //! inverse plastic deformation gradient at the last computed time instant (after the last
       //! converged substep)
       std::vector<Core::LinAlg::Matrix<3, 3>> last_substep_plastic_defgrad_inverse;
       //! plastic strain at the last computed time instant (after the last converged substep)
       std::vector<double> last_substep_plastic_strain;
 
-      /*!
+      /**
        * @brief Set meaningful initial values. Done first for one single Gauss point (extended later
        * on using the resizing function).
        *
+       * @param ref_temperature Reference temperature used to set initial values of last/current
+       * temperature.
        */
-      void init();
+      void init(const double ref_temperature);
 
       /*!
        * @brief Resizing based on a given number of Gauss points
@@ -380,8 +473,8 @@ namespace Mat
       //! elastic stiffness tensor (specifically only transversely-isotropic components)
       Core::LinAlg::Matrix<6, 6> curr_dSedCe{Core::LinAlg::Initialization::zero};
 
-      //! deviatoric, symmetric part of the Mandel stress tensor
-      Core::LinAlg::Matrix<3, 3> curr_Me_dev_sym_M{Core::LinAlg::Initialization::zero};
+      //! deviatoric, symmetric part of the thermo-elastic Mandel stress tensor
+      Core::LinAlg::Matrix<3, 3> curr_Mtheta_dev_sym_M{Core::LinAlg::Initialization::zero};
 
       //! equivalent tensile stress
       double curr_equiv_stress{0.0};
@@ -442,18 +535,25 @@ namespace Mat
       //! derivatives of the equivalent tensile stress w.r.t. the right Cauchy-Green deformation
       //! tensor (Voigt stress form)
       Core::LinAlg::Matrix<1, 6> curr_dequiv_stress_dC{Core::LinAlg::Initialization::zero};
+      //! derivatives of the equivalent tensile stress w.r.t. the temperature
+      double curr_dequiv_stress_dT{0.0};
 
-      //! derivative of the deviatoric, symmetric part of the Mandel stress tensor w.r.t. the
-      //! inverse inelastic deformation gradient (Voigt stress form)
-      Core::LinAlg::Matrix<6, 9> curr_dMe_dev_sym_diFin{Core::LinAlg::Initialization::zero};
-      //! derivative of the deviatoric, symmetric part of the Mandel stress tensor w.r.t. the
-      //! right Cauchy-Green deformation tensor (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> curr_dMe_dev_sym_dC{Core::LinAlg::Initialization::zero};
+      //! derivative of the deviatoric, symmetric part of the thermo-elastic Mandel stress tensor
+      //! w.r.t. the inverse inelastic deformation gradient (Voigt stress form)
+      Core::LinAlg::Matrix<6, 9> curr_dMtheta_dev_sym_diFin{Core::LinAlg::Initialization::zero};
+      //! derivative of the deviatoric, symmetric part of the thermo-elastic Mandel stress tensor
+      //! w.r.t. the right Cauchy-Green deformation tensor (Voigt stress-stress form)
+      Core::LinAlg::Matrix<6, 6> curr_dMtheta_dev_sym_dC{Core::LinAlg::Initialization::zero};
+      //! derivative of the deviatoric, symmetric part of the thermo-elastic Mandel stress tensor
+      //! w.r.t. the temperature (Voigt stress form)
+      Core::LinAlg::Matrix<6, 1> curr_dMtheta_dev_sym_dT{Core::LinAlg::Initialization::zero};
 
       //! derivative of the plastic strain rate w.r.t. the equivalent stress
       double curr_dpsr_dequiv_stress{0.0};
       //! derivative of the plastic strain rate w.r.t. the equivalent plastic strain
       double curr_dpsr_depsp{0.0};
+      //! derivative of the plastic strain rate w.r.t. the temperature
+      double curr_dpsr_dT{0.0};
 
       //! derivative of the plastic stretching tensor w.r.t. the inverse inelastic deformation
       //! gradient (Voigt stress form)
@@ -464,6 +564,8 @@ namespace Mat
       //! derivative of the plastic stretching tensor w.r.t. the right Cauchy-Green deformation
       //! tensor (Voigt stress-stress form)
       Core::LinAlg::Matrix<6, 6> curr_ddpdC{Core::LinAlg::Initialization::zero};
+      //! derivative of the plastic stretching tensor w.r.t. the temperature (Voigt stress form)
+      Core::LinAlg::Matrix<6, 1> curr_ddpdT{Core::LinAlg::Initialization::zero};
 
       //! derivative of the plastic velocity gradient tensor w.r.t. the inverse inelastic
       //! deformation gradient (Voigt notation)
@@ -474,6 +576,9 @@ namespace Mat
       //! derivative of the plastic velocity gradient tensor w.r.t. the right Cauchy-Green
       //! deformation tensor (Voigt stress form)
       Core::LinAlg::Matrix<9, 6> curr_dlpdC{Core::LinAlg::Initialization::zero};
+      //! derivative of the plastic velocity gradient tensor w.r.t. the temperature
+      //! (Voigt notation)
+      Core::LinAlg::Matrix<9, 1> curr_dlpdT{Core::LinAlg::Initialization::zero};
 
       //! derivative of the plastic update tensor w.r.t. the inverse inelastic deformation
       //! gradient (Voigt notation)
@@ -484,6 +589,9 @@ namespace Mat
       //! derivative of the plastic update tensor w.r.t. the right Cauchy-Green deformation tensor
       //! (Voigt stress form)
       Core::LinAlg::Matrix<9, 6> curr_dEpdC{Core::LinAlg::Initialization::zero};
+      //! derivative of the plastic update tensor w.r.t. the temperature (Voigt
+      //! notation)
+      Core::LinAlg::Matrix<9, 1> curr_dEpdT{Core::LinAlg::Initialization::zero};
 
       //! evaluation type
       StateQuantityDerivEvalType eval_type;
@@ -494,12 +602,191 @@ namespace Mat
     struct PlasticStrainRateDerivs
     {
       //! derivative with respect to the equivalent stress
-      double deriv_equiv_stress;
-
+      double deriv_equiv_stress = 0.0;
 
       //! derivative with respect to the plastic strain
-      double deriv_plastic_strain;
+      double deriv_plastic_strain = 0.0;
+
+      //! derivative with respect to the temperature
+      double deriv_temperature = 0.0;
     };
+
+    /// Derivatives of the history variables wrt. the right Cauchy-Green deformation tensor
+    struct HistoryVariablesDerivativesWrtCauchyGreen
+    {
+      //! derivative of the inverse plastic deformation gradient w.r.t. the right Cauchy-Green
+      //! tensor \f$
+      //! \frac{\mathrm{d}\boldsymbol{F}_{\mathrm{p},\,n+1}^{-1}}{\mathrm{d}\boldsymbol{C}_{n+1}}
+      //! \f$ in Voigt notation (second dimension in stress-form)
+      Core::LinAlg::Matrix<9, 6> inv_plastic_defgrad_wrt_cauchy_green{
+          Core::LinAlg::Initialization::zero};
+      //! derivative of the equivalent plastic strain w.r.t. the right Cauchy-Green tensor
+      //! \f$ \frac{\mathrm{d}\varepsilon_{\mathrm{p},\,n+1}}{\mathrm{d}\boldsymbol{C}_{n+1}} \f$ in
+      //! stress-form
+      Core::LinAlg::Matrix<1, 6> plastic_strain_wrt_cauchy_green{
+          Core::LinAlg::Initialization::zero};
+    };
+
+    /// Derivatives of the history variables wrt. temperature
+    struct HistoryVariablesDerivativesWrtTemperature
+    {
+      //! derivative of the inverse plastic deformation gradient w.r.t. temperature
+      //! \f$ \frac{\mathrm{d}\boldsymbol{F}_{\mathrm{p},\,n+1}^{-1}}{\mathrm{d}T_{n+1}} \f$ in
+      //! Voigt notation
+      Core::LinAlg::Matrix<9, 1> inv_plastic_defgrad_wrt_temperature{
+          Core::LinAlg::Initialization::zero};
+      //! derivative of the equivalent plastic strain w.r.t. temperature
+      //! \f$ \frac{\mathrm{d}\varepsilon_{\mathrm{p},\,n+1}}{\mathrm{d}T_{n+1}} \f$
+      double plastic_strain_wrt_temperature{0.0};
+    };
+
+    /**
+     * @brief Subset of the `StateQuantities` struct relevant for thermo-mechanical coupling
+     *
+     * Can be default constructed with all values set to zero, or from a `StateQuantities` struct.
+     */
+    struct ThermoMechanicalCouplingState
+    {
+      /// equivalent stress \f$ \bar{\sigma} \f$
+      double equiv_stress = 0.0;
+      /// equivalent plastic strain rate \f$ \dot{\varepsilon}_\mathrm{p} \f$
+      double plastic_strain_rate = 0.0;
+
+      //! default constructor: Set all values to zero
+      ThermoMechanicalCouplingState() = default;
+
+      //! construct from state_quantities
+      ThermoMechanicalCouplingState(const StateQuantities& state_quantities)
+      {
+        equiv_stress = state_quantities.curr_equiv_stress;
+        plastic_strain_rate = state_quantities.curr_equiv_plastic_strain_rate;
+      }
+    };
+
+    /**
+     * @brief Subset of the `StateQuantityDerivatives` struct relevant for thermo-mechanical
+     * coupling
+     *
+     * Can be default constructed with all values set to zero, or from a `StateQuantityDerivatives`
+     * struct.
+     */
+    struct ThermoMechanicalCouplingStateDerivatives
+    {
+      /// partial derivative of the equivalent stress w.r.t. the inverse plastic deformation
+      /// gradient \f$ \frac{\partial\bar{\sigma}}{\partial\mathbf{F}_\mathrm{p}^{-1}} \f$ in Voigt
+      /// notation
+      Core::LinAlg::Matrix<1, 9> equiv_stress_wrt_inverse_plastic_defgrad{
+          Core::LinAlg::Initialization::zero};
+      /// partial derivative of the equivalent stress w.r.t. the right Cauchy-Green deformation
+      /// tensor \f$ \frac{\partial\bar{\sigma}}{\partial\mathbf{C}} \f$ in Voigt stress form
+      Core::LinAlg::Matrix<1, 6> equiv_stress_wrt_cauchy_green{Core::LinAlg::Initialization::zero};
+      /// partial derivative of the equivalent stress w.r.t. the temperature \f$
+      /// \frac{\partial\bar{\sigma}}{\partial T} \f$
+      double equiv_stress_wrt_temperature = 0.0;
+      /// partial derivatives of the plastic strain rate w.r.t. the equivalent stress, plastic
+      /// strain and temperature
+      PlasticStrainRateDerivs plastic_strain_rate_derivs;
+
+      //! default constructor: Set all values to zero
+      ThermoMechanicalCouplingStateDerivatives() = default;
+
+      //! construct from state_quantity_derivatives
+      ThermoMechanicalCouplingStateDerivatives(
+          const StateQuantityDerivatives& state_quantity_derivatives)
+      {
+        equiv_stress_wrt_inverse_plastic_defgrad =
+            state_quantity_derivatives.curr_dequiv_stress_diFin;
+        equiv_stress_wrt_cauchy_green = state_quantity_derivatives.curr_dequiv_stress_dC;
+        equiv_stress_wrt_temperature = state_quantity_derivatives.curr_dequiv_stress_dT;
+        plastic_strain_rate_derivs = {
+            .deriv_equiv_stress = state_quantity_derivatives.curr_dpsr_dequiv_stress,
+            .deriv_plastic_strain = state_quantity_derivatives.curr_dpsr_depsp,
+            .deriv_temperature = state_quantity_derivatives.curr_dpsr_dT};
+      }
+    };
+
+
+    /**
+     * @brief This struct holds quantities to be cached across public evaluation calls in
+     * thermo-mechanical coupling.
+     *
+     */
+    struct ThermoMechanicalCouplingCache
+    {
+      CachedQuantity<ThermoMechanicalCouplingState> state;
+      CachedQuantity<ThermoMechanicalCouplingStateDerivatives> state_derivatives;
+      CachedQuantity<HistoryVariablesDerivativesWrtCauchyGreen> history_variables_wrt_cauchy_green;
+      CachedQuantity<HistoryVariablesDerivativesWrtTemperature> history_variables_wrt_temperature;
+
+      /// mark the whole cache as not evaluated at the specified gauss points. This should be done
+      /// if the incoming state has changed.
+      void reset(const int gp);
+
+      /// resize all cached quantities to the given number of Gauss points
+      void resize(const unsigned int numgp);
+
+     private:
+      auto quantities()
+      {
+        return std::tie(state, state_derivatives, history_variables_wrt_cauchy_green,
+            history_variables_wrt_temperature);
+      }
+    };
+
+
+    /**
+     * Returns the derivative of the Taylor-Quinney term wrt. the right Cauchy-Green tensor at time
+     * \f[\frac{\mathrm{d}}{\mathrm{d}\mathbf{C}}\left(
+     * \xi_\mathrm{TQ}\,\bar{\sigma}\,\dot{\varepsilon}_\mathrm{p}\right)
+     * =\xi_\mathrm{TQ}\left(
+     * \frac{\mathrm{d}\bar{\sigma}}{\mathrm{d}\mathbf{C}}\,\dot{\varepsilon}_\mathrm{p}
+     * +\bar{\sigma}\,\frac{\mathrm{d}\dot{\varepsilon}_\mathrm{p}}
+     * {\mathrm{d}\mathbf{C}}\right)\f]
+     *
+     * with
+     * \f[\frac{\mathrm{d}\bar{\sigma}}{\mathrm{d}\mathbf{C}}
+     * =\frac{\partial \bar{\sigma}}{\partial \mathbf{C}}
+     * +\frac{\partial \bar{\sigma}}{\partial \mathbf{F}_\mathrm{p}^{-1}}
+     * :\frac{\mathrm{d} \mathbf{F}_{\mathrm{p},\,n+1}^{-1}}{\mathrm{d} \mathbf{C}_{n+1}}\f]
+     *
+     * and
+     * \f[\frac{\mathrm{d}\dot{\varepsilon}_\mathrm{p}}{\mathrm{d}\mathbf{C}}
+     * =\frac{\partial \dot{\varepsilon}_\mathrm{p}}{\partial \varepsilon_\mathrm{p}}
+     * \frac{\mathrm{d} \varepsilon_{\mathrm{p},\,n+1}}{\mathrm{d} \mathbf{C}_{n+1}}
+     * +\frac{\partial \dot{\varepsilon}_\mathrm{p}}{\partial \bar{\sigma}}
+     * \frac{\mathrm{d}\bar{\sigma}}{\mathrm{d}\mathbf{C}}\f]
+     */
+    Core::LinAlg::Matrix<1, 6> compute_taylor_quinney_wrt_cauchygreen(
+        const double taylor_quinney_coefficient, const ThermoMechanicalCouplingState& state,
+        const ThermoMechanicalCouplingStateDerivatives& state_derivatives,
+        const HistoryVariablesDerivativesWrtCauchyGreen& history_variables_derivatives);
+
+    /**
+     * Returns the derivative of the taylor-quinney term wrt. the temperature
+     * \f[\frac{\mathrm{d}}{\mathrm{d}T}\left(
+     * \xi_\mathrm{TQ}\,\bar{\sigma}\,\dot{\varepsilon}_\mathrm{p}\right)
+     * =\xi_\mathrm{TQ}\left(
+     * \frac{\mathrm{d}\bar{\sigma}}{\mathrm{d}T}\,\dot{\varepsilon}_\mathrm{p}
+     * +\bar{\sigma}\,\frac{\mathrm{d}\dot{\varepsilon}_\mathrm{p}}{\mathrm{d}T}\right)\f]
+     *
+     * with
+     * \f[\frac{\mathrm{d}\bar{\sigma}}{\mathrm{d}T}
+     * =\frac{\partial \bar{\sigma}}{\partial T}
+     * +\frac{\partial \bar{\sigma}}{\partial \mathbf{F}_\mathrm{p}^{-1}}
+     * :\frac{\mathrm{d} \mathbf{F}_{\mathrm{p},\,n+1}^{-1}}{\mathrm{d} T_{n+1}}\f]
+     *
+     * and
+     * \f[\frac{\mathrm{d}\dot{\varepsilon}_\mathrm{p}}{\mathrm{d}T}
+     * =\frac{\partial \dot{\varepsilon}_\mathrm{p}}{\partial T}
+     * +\frac{\partial \dot{\varepsilon}_\mathrm{p}}{\partial \varepsilon_\mathrm{p}}
+     * \frac{\mathrm{d} \varepsilon_{\mathrm{p},\,n+1}}{\mathrm{d} T_{n+1}}
+     * +\frac{\partial \dot{\varepsilon}_\mathrm{p}}{\partial \bar{\sigma}}
+     * \frac{\mathrm{d}\bar{\sigma}}{\mathrm{d}T}\f]
+     */
+    double compute_taylor_quinney_wrt_temperature(const double taylor_quinney_coefficient,
+        const ThermoMechanicalCouplingState& state,
+        const ThermoMechanicalCouplingStateDerivatives& state_derivatives,
+        const HistoryVariablesDerivativesWrtTemperature& history_variables_derivatives);
 
 
     /// enum: strategy in dealing with divergence of the Local Newton Loop

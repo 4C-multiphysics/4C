@@ -499,7 +499,7 @@ namespace ScaTra
 
     //! evaluate and assemble all contributions due to capacitive fluxes at the scatra-scatra
     //! interface
-    void evaluate_and_assemble_capacitive_contributions();
+    void evaluate_and_assemble_capacitive_contributions() const;
 
     /*!
      * @brief  evaluate single mortar integration cell
@@ -939,7 +939,7 @@ namespace ScaTra
     //! evaluate and assemble lumped interface area fractions associated with slave-side element
     //! nodes
     void evaluate_nodal_area_fractions(
-        Mortar::Element& slaveelement,  //!< slave-side mortar element
+        const Mortar::Element& slaveelement,  //!< slave-side mortar element
         Core::LinAlg::SerialDenseVector&
             areafractions  //!< lumped interface area fractions associated
                            //!< with slave-side element nodes
@@ -995,7 +995,7 @@ namespace ScaTra
     //! evaluate slave-side shape functions and domain integration factor at element integration
     //! point
     double eval_shape_func_and_dom_int_fac_at_int_point(
-        Mortar::Element& element,                                    //!< mortar element
+        const Mortar::Element& element,                              //!< mortar element
         const Core::FE::IntPointsAndWeights<nsd_slave_>& intpoints,  //!< quadrature rule
         const int iquad                                              //!< ID of integration point
     );

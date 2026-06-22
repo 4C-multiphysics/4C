@@ -649,13 +649,13 @@ void FSI::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSparseMat
   s->un_complete();
 
   (*fggtransform_)(fgg, (1.0 - stiparam) / (1.0 - ftiparam) * scale * timescale,
-      Coupling::Adapter::CouplingSlaveConverter(coupsf),
-      Coupling::Adapter::CouplingSlaveConverter(coupsf), *s, true, true);
+      Coupling::Adapter::CouplingSourceConverter(coupsf),
+      Coupling::Adapter::CouplingSourceConverter(coupsf), *s, true, true);
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> lfgi =
       std::make_shared<Core::LinAlg::SparseMatrix>(s->row_map(), 81, false);
   (*fgitransform_)(fgi, (1.0 - stiparam) / (1.0 - ftiparam) * scale,
-      Coupling::Adapter::CouplingSlaveConverter(coupsf), *lfgi);
+      Coupling::Adapter::CouplingSourceConverter(coupsf), *lfgi);
 
   lfgi->complete(fgi.domain_map(), s->range_map());
 
@@ -669,14 +669,14 @@ void FSI::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSparseMat
   {
     Core::LinAlg::SparseMatrix lfig(fig.row_map(), 81, false);
     (*figtransform_)(f->full_row_map(), f->full_col_map(), fig, timescale,
-        Coupling::Adapter::CouplingSlaveConverter(coupsf), mat.matrix(1, 0));
+        Coupling::Adapter::CouplingSourceConverter(coupsf), mat.matrix(1, 0));
   }
   else
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> lfig =
         std::make_shared<Core::LinAlg::SparseMatrix>(fig.row_map(), 81, false);
     (*figtransform_)(f->full_row_map(), f->full_col_map(), fig, timescale,
-        Coupling::Adapter::CouplingSlaveConverter(coupsf), *lfig);
+        Coupling::Adapter::CouplingSourceConverter(coupsf), *lfig);
 
     lfig->complete(s->domain_map(), fig.range_map());
 
@@ -694,14 +694,14 @@ void FSI::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSparseMat
   if (stcalgo == Inpar::Solid::stc_inactive)
   {
     (*aigtransform_)(a->full_row_map(), a->full_col_map(), aig, 1.,
-        Coupling::Adapter::CouplingSlaveConverter(coupsa), mat.matrix(2, 0));
+        Coupling::Adapter::CouplingSourceConverter(coupsa), mat.matrix(2, 0));
   }
   else
   {
     std::shared_ptr<Core::LinAlg::SparseMatrix> laig =
         std::make_shared<Core::LinAlg::SparseMatrix>(aii.row_map(), 81, false);
     (*aigtransform_)(a->full_row_map(), a->full_col_map(), aig, 1.,
-        Coupling::Adapter::CouplingSlaveConverter(coupsa), *laig);
+        Coupling::Adapter::CouplingSourceConverter(coupsa), *laig);
 
     laig->complete(s->domain_map(), laig->range_map());
 
@@ -732,14 +732,14 @@ void FSI::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSparseMat
     if (stcalgo == Inpar::Solid::stc_inactive)
     {
       (*figtransform_)(f->full_row_map(), f->full_col_map(), fmig, 1.,
-          Coupling::Adapter::CouplingSlaveConverter(coupsf), mat.matrix(1, 0), false, true);
+          Coupling::Adapter::CouplingSourceConverter(coupsf), mat.matrix(1, 0), false, true);
     }
     else
     {
       std::shared_ptr<Core::LinAlg::SparseMatrix> lfmig =
           std::make_shared<Core::LinAlg::SparseMatrix>(fmig.row_map(), 81, false);
       (*figtransform_)(f->full_row_map(), f->full_col_map(), fmig, 1.,
-          Coupling::Adapter::CouplingSlaveConverter(coupsf), *lfmig, false, true);
+          Coupling::Adapter::CouplingSourceConverter(coupsf), *lfmig, false, true);
 
 
       lfmig->complete(s->domain_map(), fmig.range_map());
@@ -753,8 +753,8 @@ void FSI::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSparseMat
     }
 
     (*fmggtransform_)(fmgg, (1.0 - stiparam) / (1.0 - ftiparam) * scale,
-        Coupling::Adapter::CouplingSlaveConverter(coupsf),
-        Coupling::Adapter::CouplingSlaveConverter(coupsf), *s, false, true);
+        Coupling::Adapter::CouplingSourceConverter(coupsf),
+        Coupling::Adapter::CouplingSourceConverter(coupsf), *s, false, true);
 
     // We cannot copy the pressure value. It is not used anyway. So no exact
     // match here.
@@ -765,7 +765,7 @@ void FSI::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSparseMat
       std::shared_ptr<Core::LinAlg::SparseMatrix> lfmgi =
           std::make_shared<Core::LinAlg::SparseMatrix>(s->row_map(), 81, false);
       (*fmgitransform_)(fmgi, (1.0 - stiparam) / (1.0 - ftiparam) * scale,
-          Coupling::Adapter::CouplingSlaveConverter(coupsf),
+          Coupling::Adapter::CouplingSourceConverter(coupsf),
           Coupling::Adapter::CouplingTargetConverter(coupfa), *lfmgi, false, false);
 
       lfmgi->complete(aii.domain_map(), s->range_map());

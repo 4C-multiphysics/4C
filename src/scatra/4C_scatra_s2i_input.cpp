@@ -40,7 +40,7 @@ std::vector<Core::IO::InputSpec> S2I::valid_parameters()
           deprecated_selection<InterfaceSides>("LMSIDE",
               {
                   {"slave", side_source},
-                  {"master", side_master},
+                  {"master", side_target},
               },
               {.description = "flag for interface side underlying Lagrange multiplier definition",
                   .default_value = side_source}),
@@ -137,7 +137,7 @@ void S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition
       cond.add_component(parameter<int>("ConditionID"));
       cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
           {{"Undefined", S2I::side_undefined}, {"Slave", S2I::side_source},
-              {"Master", S2I::side_master}},
+              {"Master", S2I::side_target}},
           {.description = "interface side"}));
       cond.add_component(parameter<int>("S2I_KINETICS_ID"));
 
@@ -349,7 +349,7 @@ void S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition
 
     auto interface_side_options = one_of({
         deprecated_selection<InterfaceSides>(
-            "INTERFACE_SIDE", {{"Master", side_master}, {"Undefined", side_undefined}}),
+            "INTERFACE_SIDE", {{"Master", side_target}, {"Undefined", side_undefined}}),
         all_of({
             deprecated_selection<InterfaceSides>("INTERFACE_SIDE", {{"Slave", side_source}}),
             one_of(kinetic_model_choices),
@@ -437,7 +437,7 @@ void S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition
 
     s2isclcond.add_component(deprecated_selection<InterfaceSides>("INTERFACE_SIDE",
         {{"Undefined", S2I::side_undefined}, {"Slave", S2I::side_source},
-            {"Master", S2I::side_master}},
+            {"Master", S2I::side_target}},
         {.description = "interface side"}));
 
     condlist.emplace_back(s2isclcond);

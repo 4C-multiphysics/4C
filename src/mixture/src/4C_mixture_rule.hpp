@@ -231,6 +231,31 @@ namespace Mixture
     }
 
     /*!
+     * @brief Evaluates the derivative of the stress w.r.t. the scalar DOFs of the mixture
+     * constituents
+     *
+     * @param defgrad (in) : Deformation gradient
+     * @param glstrain (in) : Green-Lagrange strain
+     * @param params (in) : ParameterList for additional parameters
+     * @param context (in) : Evaluation context
+     * @param num_scalars (in) : Number of scalar DOFs
+     * @param gp (in) : Gauss point id
+     * @param eleGID (in) : global element id
+     * @return vector of length num_scalars containing the derivatives of the stress w.r.t. the
+     * scalar DOFs
+     */
+    [[nodiscard]] virtual std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>
+    evaluate_d_stress_d_scalars(const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
+        const Teuchos::ParameterList& params, const Mat::EvaluationContext<3>& context,
+        int num_scalars, int gp, int eleGID) const
+    {
+      std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> result(num_scalars);
+      for (auto& t : result) t.fill(0.0);
+      return result;
+    }
+
+    /*!
      * \brief Register names of the internal data that should be saved during runtime output
      *
      * \param name_and_size [out] : unordered map of names of the data with the respective vector

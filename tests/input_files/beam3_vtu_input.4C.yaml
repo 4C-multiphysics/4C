@@ -1,0 +1,323 @@
+TITLE: "Test that different beam types work with vtu mesh input."
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO:
+  OUTPUT_BIN: false
+  STRUCT_DISP: false
+  STRUCT_STRESS: "no"
+  STRUCT_STRAIN: "no"
+  VERBOSITY: "Standard"
+IO/RUNTIME VTK OUTPUT:
+  OUTPUT_DATA_FORMAT: "binary"
+  INTERVAL_STEPS: 1
+  EVERY_ITERATION: false
+IO/RUNTIME VTK OUTPUT/BEAMS:
+  OUTPUT_BEAMS: true
+  DISPLACEMENT: true
+  USE_ABSOLUTE_POSITIONS: true
+  TRIAD_VISUALIZATIONPOINT: false
+  STRAINS_GAUSSPOINT: false
+  ELEMENT_GID: true
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispx"
+      VALUE: -0.11557092793899269
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispy"
+      VALUE: 0.19536153784144644
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispz"
+      VALUE: -1.474762768445918
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 11
+      QUANTITY: "dispx"
+      VALUE: -0.09901839816962756
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 11
+      QUANTITY: "dispy"
+      VALUE: 0.2674265712099095
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 11
+      QUANTITY: "dispz"
+      VALUE: -1.4283535067146673
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 18
+      QUANTITY: "dispx"
+      VALUE: -0.1173657044228682
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 18
+      QUANTITY: "dispy"
+      VALUE: 0.19560342365413627
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 18
+      QUANTITY: "dispz"
+      VALUE: -1.4682570053057118
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 28
+      QUANTITY: "dispx"
+      VALUE: -0.11707260439480745
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 28
+      QUANTITY: "dispy"
+      VALUE: 0.19495095734872628
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 28
+      QUANTITY: "dispz"
+      VALUE: -1.47084336931871
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 41
+      QUANTITY: "dispx"
+      VALUE: -0.11711603295159455
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 41
+      QUANTITY: "dispy"
+      VALUE: 0.19494070357674384
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 41
+      QUANTITY: "dispz"
+      VALUE: -1.470850429491776
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 48
+      QUANTITY: "dispx"
+      VALUE: -0.11609937718048224
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 48
+      QUANTITY: "dispy"
+      VALUE: 0.1952141785392104
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 48
+      QUANTITY: "dispz"
+      VALUE: -1.4721374934860212
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 52
+      QUANTITY: "dispx"
+      VALUE: 0.0
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 52
+      QUANTITY: "dispy"
+      VALUE: -0.8187953040410323
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 52
+      QUANTITY: "dispz"
+      VALUE: -1.4584860574662644
+      TOLERANCE: 1e-10
+SOLVER 1:
+  NAME: "Structure_Solver"
+  SOLVER: "Superlu"
+STRUCTURAL DYNAMIC:
+  LINEAR_SOLVER: 1
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  PREDICT: "TangDis"
+  PRESTRESSTIME: 0
+  TIMESTEP: 0.1
+  NUMSTEP: 10
+  MAXTIME: 1
+  LOADLIN: false
+  TOLDISP: 1e-12
+  TOLRES: 1e-12
+STRUCTURE GEOMETRY:
+  FILE: "beam3_vtu_input.vtu"
+  SHOW_INFO: "detailed_summary"
+  ELEMENT_BLOCKS:
+    - ID: 0
+      BEAM3R:
+        LINE3:
+          MAT: 1
+          HERMITE_CENTERLINE: true
+          NODAL_ROTATION_VECTORS: "element_rotation_vector_3"
+    - ID: 1
+      BEAM3R:
+        LINE2:
+          MAT: 1
+          HERMITE_CENTERLINE: false
+          NODAL_ROTATION_VECTORS: "element_rotation_vector_2"
+    - ID: 2
+      BEAM3R:
+        LINE3:
+          MAT: 1
+          HERMITE_CENTERLINE: false
+          NODAL_ROTATION_VECTORS: "element_rotation_vector_3"
+    - ID: 3
+      BEAM3R:
+        LINE4:
+          MAT: 1
+          HERMITE_CENTERLINE: false
+          NODAL_ROTATION_VECTORS: "element_rotation_vector_4"
+    - ID: 4
+      BEAM3R:
+        LINE5:
+          MAT: 1
+          HERMITE_CENTERLINE: false
+          NODAL_ROTATION_VECTORS: "element_rotation_vector_5"
+    - ID: 5
+      BEAM3K:
+        LINE3:
+          MAT: 2
+          CONSTRAINT: "weak"
+          PARAMETRIZATION: "rot"
+          USE_FAD: true
+          NODAL_ROTATION_VECTORS: "element_rotation_vector_3"
+    - ID: 6
+      BEAM3EB:
+        LINE2:
+          MAT: 3
+MATERIALS:
+  - MAT: 1
+    MAT_BeamReissnerElastHyper:
+      YOUNG: 1.5
+      POISSONRATIO: 0.0
+      DENS: 0.0
+      CROSSAREA: 0.007853981633974483
+      SHEARCORR: 1.0
+      MOMINPOL: 9.817477042468105e-06
+      MOMIN2: 4.9087385212340526e-06
+      MOMIN3: 4.9087385212340526e-06
+  - MAT: 2
+    MAT_BeamKirchhoffElastHyper:
+      YOUNG: 1.5
+      SHEARMOD: 0.75
+      DENS: 0.0
+      CROSSAREA: 0.007853981633974483
+      MOMINPOL: 9.817477042468105e-06
+      MOMIN2: 4.9087385212340526e-06
+      MOMIN3: 4.9087385212340526e-06
+      FAD: true
+  - MAT: 3
+    MAT_BeamKirchhoffTorsionFreeElastHyper:
+      YOUNG: 1.5
+      DENS: 0.0
+      CROSSAREA: 0.007853981633974483
+      MOMIN: 4.9087385212340526e-06
+DESIGN POINT DIRICH CONDITIONS:
+  - NUMDOF: 9
+    ONOFF: [1, 1, 1, 1, 1, 1, 0, 0, 0]
+    VAL: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    E: 1
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 9
+    ONOFF: [1, 1, 1, 1, 1, 1, 0, 0, 0]
+    VAL: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    E: 2
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 9
+    ONOFF: [1, 1, 1, 1, 1, 1, 0, 0, 0]
+    VAL: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    E: 3
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 9
+    ONOFF: [1, 1, 1, 1, 1, 1, 0, 0, 0]
+    VAL: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    E: 4
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 9
+    ONOFF: [1, 1, 1, 1, 1, 1, 0, 0, 0]
+    VAL: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    E: 5
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 7
+    ONOFF: [1, 1, 1, 1, 1, 1, 0]
+    VAL: [0, 0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0, 0]
+    E: 6
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 6
+    ONOFF: [1, 1, 1, 1, 0, 1]
+    VAL: [0, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0]
+    E: 7
+    ENTITY_TYPE: "node_set_id"
+DESIGN POINT NEUMANN CONDITIONS:
+  - NUMDOF: 9
+    ONOFF: [0, 0, 1, 0, 1, 0, 0, 0, 0]
+    VAL: [0, 0, -1e-05, 0, 1e-05, 0, 0, 0, 0]
+    FUNCT: [0, 0, 1, 0, 1, 0, 0, 0, 0]
+    E: 8
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 9
+    ONOFF: [0, 0, 1, 0, 1, 0, 0, 0, 0]
+    VAL: [0, 0, -1e-05, 0, 1e-05, 0, 0, 0, 0]
+    FUNCT: [0, 0, 1, 0, 1, 0, 0, 0, 0]
+    E: 9
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 9
+    ONOFF: [0, 0, 1, 0, 1, 0, 0, 0, 0]
+    VAL: [0, 0, -1e-05, 0, 1e-05, 0, 0, 0, 0]
+    FUNCT: [0, 0, 1, 0, 1, 0, 0, 0, 0]
+    E: 10
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 9
+    ONOFF: [0, 0, 1, 0, 1, 0, 0, 0, 0]
+    VAL: [0, 0, -1e-05, 0, 1e-05, 0, 0, 0, 0]
+    FUNCT: [0, 0, 1, 0, 1, 0, 0, 0, 0]
+    E: 11
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 9
+    ONOFF: [0, 0, 1, 0, 1, 0, 0, 0, 0]
+    VAL: [0, 0, -1e-05, 0, 1e-05, 0, 0, 0, 0]
+    FUNCT: [0, 0, 1, 0, 1, 0, 0, 0, 0]
+    E: 12
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 7
+    ONOFF: [0, 0, 1, 0, 1, 0, 0]
+    VAL: [0, 0, -1e-05, 0, 1e-05, 0, 0]
+    FUNCT: [0, 0, 1, 0, 1, 0, 0]
+    E: 13
+    ENTITY_TYPE: "node_set_id"
+  - NUMDOF: 6
+    ONOFF: [0, 0, 1, 0, 0, 0]
+    VAL: [0, 0, -1e-05, 0, 0, 0]
+    FUNCT: [0, 0, 1, 0, 0, 0]
+    E: 14
+    ENTITY_TYPE: "node_set_id"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "t"

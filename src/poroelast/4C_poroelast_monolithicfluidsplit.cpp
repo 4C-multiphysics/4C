@@ -213,13 +213,13 @@ void PoroElast::MonolithicFluidSplit::setup_system_matrix(Core::LinAlg::BlockSpa
     double timescale = fluid_field()->time_scaling();
 
     (*figtransform_)(f->full_row_map(), f->full_col_map(), f->matrix(0, 1), timescale,
-        Coupling::Adapter::CouplingSlaveConverter(*icoupfs_), k_fs->matrix(0, 1), true, true);
+        Coupling::Adapter::CouplingSourceConverter(*icoupfs_), k_fs->matrix(0, 1), true, true);
 
     (*csggtransform_)(f->full_row_map(), f->full_col_map(), k_sf->matrix(1, 1), timescale,
-        Coupling::Adapter::CouplingSlaveConverter(*icoupfs_), *s, true, true);
+        Coupling::Adapter::CouplingSourceConverter(*icoupfs_), *s, true, true);
 
     (*csigtransform_)(f->full_row_map(), f->full_col_map(), k_sf->matrix(0, 1), timescale,
-        Coupling::Adapter::CouplingSlaveConverter(*icoupfs_), *s, true, true);
+        Coupling::Adapter::CouplingSourceConverter(*icoupfs_), *s, true, true);
   }
 
   /*----------------------------------------------------------------------*/

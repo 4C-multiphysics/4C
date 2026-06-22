@@ -14,6 +14,7 @@
 #include "4C_comm_parobjectfactory.hpp"
 #include "4C_mat_anisotropy.hpp"
 #include "4C_mat_elast_summand.hpp"
+#include "4C_mat_monolithic_solid_scalar_material.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_material_parameter_base.hpp"
 #include "4C_mixture_constituent.hpp"
@@ -77,7 +78,7 @@ namespace Mat
    * the mixture rule and the constituents defining an clear interface if an extension of the
    * mixture framework is needed.
    */
-  class Mixture : public So3Material
+  class Mixture : public So3Material, public MonolithicSolidScalarMaterial
   {
    public:
     /// Constructor for an empty material object
@@ -230,6 +231,21 @@ namespace Mat
     {
       return *constituents_;
     }
+
+    Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_d_stress_d_scalar(
+        const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
+        const Teuchos::ParameterList& params, const EvaluationContext<3>& context, int gp,
+        int eleGID) override
+    {
+      return evaluate_d_stress_d_scalars(defgrad, glstrain, params, context, 1, gp, eleGID).front();
+    }
+
+    std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> evaluate_d_stress_d_scalars(
+        const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
+        const Teuchos::ParameterList& params, const EvaluationContext<3>& context, int num_scalars,
+        int gp, int eleGID) override;
 
    private:
     /// Material parameters

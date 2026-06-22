@@ -171,16 +171,16 @@ namespace Core::Communication
       int nnode,                  ///< number of nodes
       const int* nodeids,         ///< node ids
       Core::Nodes::Node** nodes,  ///< nodes of surface
-      ParentEle* master_ele,      ///< pointer on the master parent element
-      ParentEle* slave_ele,       ///< pointer on the slave parent element
-      const int lsurface_master,  ///< local surface index with respect to master parent element
-      const int lsurface_slave,   ///< local surface index with respect to slave parent element
+      ParentEle* target_ele,      ///< pointer on the target parent element
+      ParentEle* source_ele,      ///< pointer on the source parent element
+      const int lsurface_target,  ///< local surface index with respect to target parent element
+      const int lsurface_source,  ///< local surface index with respect to source parent element
       const std::vector<int> localtrafomap  ///< local trafo map
   )
   {
     // create a new internal face element
-    return std::make_shared<IntFaceEle>(id, owner, nnode, nodeids, nodes, master_ele, slave_ele,
-        lsurface_master, lsurface_slave, localtrafomap);
+    return std::make_shared<IntFaceEle>(id, owner, nnode, nodeids, nodes, target_ele, source_ele,
+        lsurface_target, lsurface_source, localtrafomap);
   }
 
   template <class BoundaryEle, class ParentEle>

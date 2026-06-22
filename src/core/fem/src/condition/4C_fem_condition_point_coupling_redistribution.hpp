@@ -23,7 +23,7 @@ namespace Core::Conditions
 {
   /*!
    * The procedure to assign degrees of freedom relies for point coupling conditions on a
-   * layout in which the master and connected slave nodes must be owned by the same processor. This
+   * layout in which the target and connected source nodes must be owned by the same processor. This
    * function redistributes the row nodes accordingly.
    */
   void redistribute_for_point_coupling_conditions(Core::FE::Discretization& discret);

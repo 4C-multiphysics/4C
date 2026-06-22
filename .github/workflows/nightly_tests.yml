@@ -2,7 +2,9 @@ name: nightly_tests
 
 on:
   schedule:
-    - cron: '0 22 * * *'
+    # GitHub recommends avoiding scheduling at the start of the hour to avoid delays; thus, a random minute is set.
+    - cron: "11 20 * * *"
+      timezone: "Europe/Berlin"
 
 jobs:
   gcc13_assertions_build:
@@ -131,6 +133,13 @@ jobs:
           name: ${{ github.job }}-schema
           path: |
             ${{ github.workspace }}/build/4C_schema.json
+          retention-days: 30
+      - name: Upload 4C completion schema
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ github.job }}-completion-schema
+          path: |
+            ${{ github.workspace }}/build/4C_schema_completion.json
           retention-days: 30
       - name: Upload 4C metadata
         uses: actions/upload-artifact@v7
@@ -510,7 +519,9 @@ jobs:
           build-targets: full
           build-directory: ${{ github.workspace }}/build
           use-ccache: "false"
-          additional-cmake-flags: "-DFOUR_C_ENABLE_FULL_PERFORMANCE_TESTS=ON -DFOUR_C_PERFORMANCE_TESTS_COLLECTION_FILE=clang18_performance_tests_data.json"
+          additional-cmake-flags: >-
+            -DFOUR_C_ENABLE_FULL_PERFORMANCE_TESTS=ON -DFOUR_C_PERFORMANCE_TESTS_COLLECTION_FILE=clang18_performance_tests_data.json
+            -DFOUR_C_ENABLE_FULL_BENCHMARK_TESTS=ON  -DFOUR_C_BENCHMARK_TESTS_COLLECTION_FILE=clang18_benchmark_tests_data.json
       - uses: ./.github/actions/upload_directory
         name: Upload 4C build
         with:
@@ -550,7 +561,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/build
           # Note: Do not run performance tests in parallel
-          time ctest -L performance_tests --output-on-failure --output-junit $GITHUB_WORKSPACE/clang18_performance_tests_test_report.xml
+          time ctest -L "performance_tests|benchmark_tests" --output-on-failure --output-junit $GITHUB_WORKSPACE/clang18_performance_tests_test_report.xml
       - name: Upload test report
         uses: actions/upload-artifact@v7
         if: success() || failure()
@@ -566,4 +577,12 @@ jobs:
           name: clang18_performance_tests_data.json
           path: |
             ${{ github.workspace }}/build/clang18_performance_tests_data.json
+          retention-days: 30
+      - name: Upload benchmark test data
+        uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: clang18_benchmark_tests_data.json
+          path: |
+            ${{ github.workspace }}/build/clang18_benchmark_tests_data.json
           retention-days: 30

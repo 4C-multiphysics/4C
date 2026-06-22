@@ -286,7 +286,8 @@ namespace ReducedLung
 
         visualization_writer_->reset();
         collect_runtime_output_data(*visualization_writer_, airways_, terminal_units_,
-            *locally_relevant_dofs_, actdis_->element_row_map());
+            *locally_relevant_dofs_, actdis_->element_row_map(),
+            context_.parameters.dynamics.output_verbosity);
         visualization_writer_->write_to_disk(current_time_, step);
       }
 

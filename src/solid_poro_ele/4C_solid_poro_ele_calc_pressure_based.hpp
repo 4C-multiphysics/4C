@@ -16,7 +16,7 @@
 #include "4C_inpar_structure.hpp"
 #include "4C_linalg_tensor.hpp"
 #include "4C_solid_ele_calc_lib.hpp"
-
+#include "4C_utils_function.hpp"
 FOUR_C_NAMESPACE_OPEN
 
 namespace Mat
@@ -62,9 +62,10 @@ namespace Discret
       void add_bodyforce_contribution_to_nonlinear_force_stiffness(
           const Core::Elements::Element& ele, Mat::StructPoro& porostructmat,
           Mat::FluidPoroMultiPhase& porofluidmat, const Inpar::Solid::KinemType& kinematictype,
-          const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& bodyforce_contribution,
-          const Core::FE::Discretization& discretization, Core::Elements::LocationArray& la,
-          Teuchos::ParameterList& params, Core::LinAlg::SerialDenseVector* force_vector,
+          const Core::Utils::FunctionOfSpaceTime* bodyforce_contribution_function,
+          const double time, const Core::FE::Discretization& discretization,
+          Core::Elements::LocationArray& la, Teuchos::ParameterList& params,
+          Core::LinAlg::SerialDenseVector* force_vector,
           Core::LinAlg::SerialDenseMatrix* stiffness_matrix);
 
       void evaluate_nonlinear_force_stiffness_od(const Core::Elements::Element& ele,

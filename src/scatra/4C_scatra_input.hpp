@@ -201,6 +201,7 @@ namespace ScaTra
     impltype_aniso,
     impltype_cardiac_monodomain,
     impltype_gr,
+    impltype_nl_stimulus,
     impltype_chemo,
     impltype_chemoreac,
     impltype_std_hdg,

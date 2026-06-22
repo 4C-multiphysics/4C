@@ -132,12 +132,6 @@ class PostProblem
   //! returns strain type
   std::string straintype() { return straintype_; }
 
-  //! returns heatflux type
-  std::string heatfluxtype() { return heatfluxtype_; }
-
-  //! returns tempgrad type
-  std::string tempgradtype() { return tempgradtype_; }
-
   //! returns struct_mat_disp_
   std::string struct_mat_disp() { return struct_mat_disp_; }
 
@@ -220,12 +214,6 @@ class PostProblem
 
   //! strain output type optionally set by command line argument
   std::string straintype_;
-
-  //! heatflux output type optionally set by command line argument
-  std::string heatfluxtype_;
-
-  //! spatial temperature gradient output type optionally set by command line argument
-  std::string tempgradtype_;
 
   //! material displacement output optionally set by command line argument
   std::string struct_mat_disp_;

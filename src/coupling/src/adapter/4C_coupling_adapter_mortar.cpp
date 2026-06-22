@@ -42,69 +42,69 @@ Coupling::Adapter::CouplingMortar::CouplingMortar(int spatial_dimension,
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Coupling::Adapter::CouplingMortar::setup(
-    const std::shared_ptr<Core::FE::Discretization>& masterdis,
-    const std::shared_ptr<Core::FE::Discretization>& slavedis,
+    const std::shared_ptr<Core::FE::Discretization>& target_dis,
+    const std::shared_ptr<Core::FE::Discretization>& source_dis,
     const std::shared_ptr<Core::FE::Discretization>& aledis, const std::vector<int>& coupleddof,
     const std::string& couplingcond, MPI_Comm comm,
     const Core::Utils::FunctionManager& function_manager,
     const Teuchos::ParameterList& binning_params,
     const std::map<std::string, std::shared_ptr<Core::FE::Discretization>>& discretization_map,
     std::shared_ptr<Core::IO::OutputControl> output_control,
-    const Core::FE::ShapeFunctionType spatial_approximation_type, const bool slavewithale,
-    const bool slidingale, const int nds_master, const int nds_slave)
+    const Core::FE::ShapeFunctionType spatial_approximation_type, const bool source_is_ale,
+    const bool slidingale, const int target_dofset_number, const int source_dofset_number)
 {
   // initialize maps for row nodes
-  std::map<int, Core::Nodes::Node*> masternodes;
-  std::map<int, Core::Nodes::Node*> slavenodes;
+  std::map<int, Core::Nodes::Node*> target_nodes;
+  std::map<int, Core::Nodes::Node*> source_nodes;
 
   // initialize maps for column nodes
-  std::map<int, Core::Nodes::Node*> mastergnodes;
-  std::map<int, Core::Nodes::Node*> slavegnodes;
+  std::map<int, Core::Nodes::Node*> target_global_nodes;
+  std::map<int, Core::Nodes::Node*> source_global_nodes;
 
   // initialize maps for elements
-  std::map<int, std::shared_ptr<Core::Elements::Element>> masterelements;
-  std::map<int, std::shared_ptr<Core::Elements::Element>> slaveelements;
+  std::map<int, std::shared_ptr<Core::Elements::Element>> target_elements;
+  std::map<int, std::shared_ptr<Core::Elements::Element>> source_elements;
 
   // Coupling condition is defined by "MORTAR COUPLING CONDITIONS"
-  // There is only one discretization (masterdis == slavedis). Therefore, the node set have to be
+  // There is only one discretization (target_dis == source_dis). Therefore, the node set have to be
   // separated beforehand.
   if (couplingcond == "Mortar" || couplingcond == "MortarMulti")
   {
     std::vector<const Core::Conditions::Condition*> conds;
-    std::vector<const Core::Conditions::Condition*> conds_master;
-    std::vector<const Core::Conditions::Condition*> conds_slave;
-    masterdis->get_condition(couplingcond, conds);
+    std::vector<const Core::Conditions::Condition*> conds_target;
+    std::vector<const Core::Conditions::Condition*> conds_source;
+    target_dis->get_condition(couplingcond, conds);
 
     for (unsigned i = 0; i < conds.size(); i++)
     {
       const std::string& side = conds[i]->parameters().get<std::string>("Side");
 
       if (side == "Master")
-        conds_master.push_back(conds[i]);
+        conds_target.push_back(conds[i]);
       else if (side == "Slave")
-        conds_slave.push_back(conds[i]);
+        conds_source.push_back(conds[i]);
     }
 
-    // Fill maps based on condition for master side (masterdis == slavedis)
+    // Fill maps based on condition for target side (target_dis == source_dis)
     Core::Conditions::find_condition_objects(
-        *masterdis, masternodes, mastergnodes, masterelements, conds_master);
+        *target_dis, target_nodes, target_global_nodes, target_elements, conds_target);
 
-    // Fill maps based on condition for slave side (masterdis == slavedis)
+    // Fill maps based on condition for source side (target_dis == source_dis)
     Core::Conditions::find_condition_objects(
-        *slavedis, slavenodes, slavegnodes, slaveelements, conds_slave);
+        *source_dis, source_nodes, source_global_nodes, source_elements, conds_source);
   }
   // Coupling condition is defined by "FSI COUPLING CONDITIONS"
-  // There are two discretizations for the master and slave side. Therefore, the master/slave nodes
-  // are chosen based on the discretization.
+  // There are two discretizations for the target and source side. Therefore, the target/source
+  // nodes are chosen based on the discretization.
   else
   {
-    // Fill maps based on condition for master side (masterdis != slavedis)
+    // Fill maps based on condition for target side (target_dis != source_dis)
     Core::Conditions::find_condition_objects(
-        *masterdis, masternodes, mastergnodes, masterelements, couplingcond);
+        *target_dis, target_nodes, target_global_nodes, target_elements, couplingcond);
 
-    // Fill maps based on condition for slave side (masterdis != slavedis)
+    // Fill maps based on condition for source side (target_dis != source_dis)
     Core::Conditions::find_condition_objects(
-        *slavedis, slavenodes, slavegnodes, slaveelements, couplingcond);
+        *source_dis, source_nodes, source_global_nodes, source_elements, couplingcond);
   }
 
   // number of coupled dofs (defined in coupleddof by a 1)
@@ -113,24 +113,25 @@ void Coupling::Adapter::CouplingMortar::setup(
     if (coupleddof[ii] == 1) ++numcoupleddof;
 
   // setup mortar interface
-  setup_interface(masterdis, slavedis, coupleddof, mastergnodes, slavegnodes, masterelements,
-      slaveelements, comm, binning_params, discretization_map, output_control,
-      spatial_approximation_type, slavewithale, slidingale, nds_master, nds_slave);
+  setup_interface(target_dis, source_dis, coupleddof, target_global_nodes, source_global_nodes,
+      target_elements, source_elements, comm, binning_params, discretization_map, output_control,
+      spatial_approximation_type, source_is_ale, slidingale, target_dofset_number,
+      source_dofset_number);
 
   // all the following stuff has to be done once in setup
   // in order to get initial D_ and M_
 
   // processor ID
-  const int myrank = Core::Communication::my_mpi_rank(masterdis->get_comm());
+  const int myrank = Core::Communication::my_mpi_rank(target_dis->get_comm());
 
   // get mortar coupling parameters
   Teuchos::ParameterList inputmortar;
   inputmortar.setParameters(contact_dynamic_params_);
   inputmortar.setParameters(mortar_coupling_params_);
 
-  // interface displacement (=0) has to be merged from slave and master discretization
+  // interface displacement (=0) has to be merged from source and target discretization
   std::shared_ptr<Core::LinAlg::Map> dofrowmap =
-      Core::LinAlg::merge_map(masterdofrowmap_, slavedofrowmap_, false);
+      Core::LinAlg::merge_map(target_dof_row_map_, source_dof_row_map_, false);
   std::shared_ptr<Core::LinAlg::Vector<double>> dispn =
       std::make_shared<Core::LinAlg::Vector<double>>(*dofrowmap, true);
 
@@ -174,38 +175,35 @@ void Coupling::Adapter::CouplingMortar::setup(
     }
 
     // Originally, this method was written for structural problems coupling the
-    // spatial displacements. Therefore, the slave and master map could be also used
+    // spatial displacements. Therefore, the source and target map could be also used
     // to store the coordinates of the interface nodes, which is necessary to perform
     // the mesh relocation. Hence, this method cannot be used for problem types such
     // as elch, scatra, etc., having less coupling degrees of freedom than spatial
     // dimensions.
     std::shared_ptr<Core::LinAlg::Vector<double>> idisp(nullptr);
     mesh_relocation(
-        *slavedis, aledis, masterdofrowmap_, slavedofrowmap_, idisp, comm, slavewithale);
+        *source_dis, aledis, target_dof_row_map_, source_dof_row_map_, idisp, comm, source_is_ale);
   }
 
   // matrix transformation to initial parallel distribution
   matrix_row_col_transform();
 
-  // check if slave dofs have dirichlet constraints
-  check_slave_dirichlet_overlap(slavedis, comm, function_manager);
-
-  // bye
-  return;
+  // check if source dofs have dirichlet constraints
+  check_source_dirichlet_overlap(source_dis, comm, function_manager);
 }
 
 
 /*----------------------------------------------------------------------*
- | check for overlap of slave and Dirichlet boundaries      farah 02/16 |
+ | check for overlap of source and Dirichlet boundaries      farah 02/16 |
  *----------------------------------------------------------------------*/
-void Coupling::Adapter::CouplingMortar::check_slave_dirichlet_overlap(
-    const std::shared_ptr<Core::FE::Discretization>& slavedis, MPI_Comm comm,
+void Coupling::Adapter::CouplingMortar::check_source_dirichlet_overlap(
+    const std::shared_ptr<Core::FE::Discretization>& source_dis, MPI_Comm comm,
     const Core::Utils::FunctionManager& function_manager)
 {
   // safety check
   check_setup();
 
-  // check for overlap of slave and Dirichlet boundaries
+  // check for overlap of source and Dirichlet boundaries
   // (this is not allowed in order to avoid over-constraint)
   bool overlap = false;
   Teuchos::ParameterList p;
@@ -214,10 +212,10 @@ void Coupling::Adapter::CouplingMortar::check_slave_dirichlet_overlap(
   std::shared_ptr<Core::LinAlg::MapExtractor> dbcmaps =
       std::make_shared<Core::LinAlg::MapExtractor>();
   std::shared_ptr<Core::LinAlg::Vector<double>> temp =
-      std::make_shared<Core::LinAlg::Vector<double>>(*(slavedis->dof_row_map()), true);
-  slavedis->evaluate_dirichlet(p, temp, nullptr, nullptr, nullptr, dbcmaps);
+      std::make_shared<Core::LinAlg::Vector<double>>(*(source_dis->dof_row_map()), true);
+  source_dis->evaluate_dirichlet(p, temp, nullptr, nullptr, nullptr, dbcmaps);
 
-  // loop over all slave row nodes of the interface
+  // loop over all source row nodes of the interface
   for (int j = 0; j < interface_->source_row_nodes()->num_my_elements(); ++j)
   {
     int gid = interface_->source_row_nodes()->gid(j);
@@ -231,7 +229,7 @@ void Coupling::Adapter::CouplingMortar::check_slave_dirichlet_overlap(
       int currdof = mtnode->dofs()[k];
       int lid = (dbcmaps->cond_map())->lid(currdof);
 
-      // found slave node with dbc
+      // found source node with dbc
       if (lid >= 0)
       {
         overlap = true;
@@ -245,7 +243,7 @@ void Coupling::Adapter::CouplingMortar::check_slave_dirichlet_overlap(
   {
     if (Core::Communication::my_mpi_rank(comm) == 0)
       FOUR_C_THROW(
-          "Slave boundary and Dirichlet boundary conditions overlap!\n"
+          "Source boundary and Dirichlet boundary conditions overlap!\n"
           "This leads to an over-constraint problem setup");
   }
 
@@ -257,17 +255,17 @@ void Coupling::Adapter::CouplingMortar::check_slave_dirichlet_overlap(
  | setup routine for mortar framework                        ehrl 08/13 |
  *----------------------------------------------------------------------*/
 void Coupling::Adapter::CouplingMortar::setup_interface(
-    const std::shared_ptr<Core::FE::Discretization>& masterdis,
-    const std::shared_ptr<Core::FE::Discretization>& slavedis, const std::vector<int>& coupleddof,
-    const std::map<int, Core::Nodes::Node*>& mastergnodes,
-    const std::map<int, Core::Nodes::Node*>& slavegnodes,
-    const std::map<int, std::shared_ptr<Core::Elements::Element>>& masterelements,
-    const std::map<int, std::shared_ptr<Core::Elements::Element>>& slaveelements, MPI_Comm comm,
+    const std::shared_ptr<Core::FE::Discretization>& target_dis,
+    const std::shared_ptr<Core::FE::Discretization>& source_dis, const std::vector<int>& coupleddof,
+    const std::map<int, Core::Nodes::Node*>& target_global_nodes,
+    const std::map<int, Core::Nodes::Node*>& source_global_nodes,
+    const std::map<int, std::shared_ptr<Core::Elements::Element>>& target_elements,
+    const std::map<int, std::shared_ptr<Core::Elements::Element>>& source_elements, MPI_Comm comm,
     const Teuchos::ParameterList& binning_params,
     const std::map<std::string, std::shared_ptr<Core::FE::Discretization>>& discretization_map,
     std::shared_ptr<Core::IO::OutputControl> output_control,
-    const Core::FE::ShapeFunctionType spatial_approximation_type, const bool slavewithale,
-    const bool slidingale, const int nds_master, const int nds_slave)
+    const Core::FE::ShapeFunctionType spatial_approximation_type, const bool source_is_ale,
+    const bool slidingale, const int target_dofset_number, const int source_dofset_number)
 {
   // vector coupleddof defines degree of freedom which are coupled (1: coupled; 0: not coupled),
   // e.g.:
@@ -300,31 +298,31 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
 
   // number of dofs per node based on the coupling vector coupleddof
   const int dof = coupleddof.size();
-  if ((masterdis->num_my_row_nodes() > 0 and
-          (masterdis->num_dof(nds_master, masterdis->l_row_node(0)) != dof and
-              slavewithale == true and slidingale == false)) or
-      (slavedis->num_my_row_nodes() > 0 and
-          (slavedis->num_dof(nds_slave, slavedis->l_row_node(0)) != dof and
-              slavewithale == false and slidingale == false)))
+  if ((target_dis->num_my_row_nodes() > 0 and
+          (target_dis->num_dof(target_dofset_number, target_dis->l_row_node(0)) != dof and
+              source_is_ale == true and slidingale == false)) or
+      (source_dis->num_my_row_nodes() > 0 and
+          (source_dis->num_dof(source_dofset_number, source_dis->l_row_node(0)) != dof and
+              source_is_ale == false and slidingale == false)))
   {
     FOUR_C_THROW(
         "The size of the coupling vector coupleddof and dof defined in the discretization does not "
         "fit!! \n"
         "dof defined in the discretization: {} \n"
         "length of coupleddof: {}",
-        masterdis->num_dof(nds_master, masterdis->l_row_node(0)), dof);
+        target_dis->num_dof(target_dofset_number, target_dis->l_row_node(0)), dof);
   }
 
   // special case: sliding ale
   // In the sliding ale framework two mortar discretizations are generated from identical
-  // masterelement and slaveelement sets. Since node-, dof- and element ids of the original elements
-  // are the same, an offset have to be defined
+  // target element and source element sets. Since node-, dof- and element ids of the original
+  // elements are the same, an offset have to be defined
   int nodeoffset = 0;
   int dofoffset = 0;
   if (slidingale == true)
   {
-    nodeoffset = masterdis->node_row_map()->max_all_gid() + 1;
-    dofoffset = masterdis->dof_row_map(nds_master)->max_all_gid() + 1;
+    nodeoffset = target_dis->node_row_map()->max_all_gid() + 1;
+    dofoffset = target_dis->dof_row_map(target_dofset_number)->max_all_gid() + 1;
   }
 
   // number of coupled dofs (defined in coupleddof by a 1)
@@ -332,9 +330,9 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
   for (int ii = 0; ii < dof; ++ii)
     if (coupleddof[ii] == 1) ++numcoupleddof;
 
-  // feeding master nodes to the interface including ghosted nodes
+  // feeding target nodes to the interface including ghosted nodes
   std::map<int, Core::Nodes::Node*>::const_iterator nodeiter;
-  for (nodeiter = mastergnodes.begin(); nodeiter != mastergnodes.end(); ++nodeiter)
+  for (nodeiter = target_global_nodes.begin(); nodeiter != target_global_nodes.end(); ++nodeiter)
   {
     Core::Nodes::Node* node = nodeiter->second;
     // vector containing only the gids of the coupled dofs (size numcoupleddof)
@@ -347,7 +345,7 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
       {
         // get the gid of the coupled dof (size dof)
         // and store it in the vector dofids containing only coupled dofs (size numcoupleddof)
-        dofids[ii] = masterdis->dof(nds_master, node)[k];
+        dofids[ii] = target_dis->dof(target_dofset_number, node)[k];
         ii += 1;
       }
     }
@@ -358,8 +356,8 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
     interface_->add_mortar_node(mrtrnode);
   }
 
-  // feeding slave nodes to the interface including ghosted nodes
-  for (nodeiter = slavegnodes.begin(); nodeiter != slavegnodes.end(); ++nodeiter)
+  // feeding source nodes to the interface including ghosted nodes
+  for (nodeiter = source_global_nodes.begin(); nodeiter != source_global_nodes.end(); ++nodeiter)
   {
     Core::Nodes::Node* node = nodeiter->second;
     // vector containing only the gids of the coupled dofs (size numcoupleddof)
@@ -372,7 +370,7 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
       {
         // get the gid of the coupled dof (size dof)
         // and store it in the vector dofids containing only coupled dofs (size numcoupleddof)
-        dofids[ii] = slavedis->dof(nds_slave, node)[k] + dofoffset;
+        dofids[ii] = source_dis->dof(source_dofset_number, node)[k] + dofoffset;
         ii += 1;
       }
     }
@@ -383,49 +381,50 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
     interface_->add_mortar_node(mrtrnode);
   }
 
-  // We need to determine an element offset to start the numbering of the slave
-  // mortar elements AFTER the master mortar elements in order to ensure unique
+  // We need to determine an element offset to start the numbering of the source
+  // mortar elements AFTER the target mortar elements in order to ensure unique
   // eleIDs in the interface discretization. The element offset equals the
-  // overall number of master mortar elements (which is not equal to the number
-  // of elements in the field that is chosen as master side).
+  // overall number of target mortar elements (which is not equal to the number
+  // of elements in the field that is chosen as target side).
   //
-  // If masterdis==slavedis, the element numbering is right without offset
+  // If target_dis==source_dis, the element numbering is right without offset
   int eleoffset = 0;
-  if (masterdis.get() != slavedis.get())
+  if (target_dis.get() != source_dis.get())
   {
-    int nummastermtreles = masterelements.size();
-    eleoffset = Core::Communication::sum_all(nummastermtreles, comm);
+    int num_target_mortar_elements = target_elements.size();
+    eleoffset = Core::Communication::sum_all(num_target_mortar_elements, comm);
   }
 
-  if (slidingale == true) eleoffset = masterdis->element_row_map()->max_all_gid() + 1;
+  if (slidingale == true) eleoffset = target_dis->element_row_map()->max_all_gid() + 1;
 
-  // feeding master elements to the interface
+  // feeding target elements to the interface
   std::map<int, std::shared_ptr<Core::Elements::Element>>::const_iterator elemiter;
-  for (elemiter = masterelements.begin(); elemiter != masterelements.end(); ++elemiter)
+  for (elemiter = target_elements.begin(); elemiter != target_elements.end(); ++elemiter)
   {
     std::shared_ptr<Core::Elements::Element> ele = elemiter->second;
     std::shared_ptr<Mortar::Element> mrtrele = std::make_shared<Mortar::Element>(
         ele->id(), ele->owner(), ele->shape(), ele->num_node(), ele->node_ids(), false, nurbs);
 
-    if (nurbs) Mortar::Utils::prepare_nurbs_element(*masterdis, ele, *mrtrele, spatial_dimension_);
+    if (nurbs) Mortar::Utils::prepare_nurbs_element(*target_dis, ele, *mrtrele, spatial_dimension_);
     interface_->add_mortar_element(mrtrele);
   }
 
-  // feeding slave elements to the interface
-  for (elemiter = slaveelements.begin(); elemiter != slaveelements.end(); ++elemiter)
+  // feeding source elements to the interface
+  for (elemiter = source_elements.begin(); elemiter != source_elements.end(); ++elemiter)
   {
     std::shared_ptr<Core::Elements::Element> ele = elemiter->second;
 
     // Here, we have to distinguish between standard and sliding ale since mortar elements are
     // generated from the identical element sets in the case of sliding ale Therefore, we introduce
-    // an element offset AND a node offset for the the slave mortar elements
+    // an element offset AND a node offset for the the source mortar elements
     if (slidingale == false)
     {
       std::shared_ptr<Mortar::Element> mrtrele =
           std::make_shared<Mortar::Element>(ele->id() + eleoffset, ele->owner(), ele->shape(),
               ele->num_node(), ele->node_ids(), true, nurbs);
 
-      if (nurbs) Mortar::Utils::prepare_nurbs_element(*slavedis, ele, *mrtrele, spatial_dimension_);
+      if (nurbs)
+        Mortar::Utils::prepare_nurbs_element(*source_dis, ele, *mrtrele, spatial_dimension_);
       interface_->add_mortar_element(mrtrele);
     }
     else
@@ -467,8 +466,8 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
   issetup_ = true;
 
   // store old row maps (before parallel redistribution)
-  pslavedofrowmap_ = std::make_shared<Core::LinAlg::Map>(*interface_->source_row_dofs());
-  pmasterdofrowmap_ = std::make_shared<Core::LinAlg::Map>(*interface_->target_row_dofs());
+  psource_dof_row_map_ = std::make_shared<Core::LinAlg::Map>(*interface_->source_row_dofs());
+  ptarget_dof_row_map_ = std::make_shared<Core::LinAlg::Map>(*interface_->target_row_dofs());
 
   // print parallel distribution
   interface_->print_parallel_distribution();
@@ -492,8 +491,8 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
   //**********************************************************************
 
   // store row maps (after parallel redistribution)
-  slavedofrowmap_ = std::make_shared<Core::LinAlg::Map>(*interface_->source_row_dofs());
-  masterdofrowmap_ = std::make_shared<Core::LinAlg::Map>(*interface_->target_row_dofs());
+  source_dof_row_map_ = std::make_shared<Core::LinAlg::Map>(*interface_->source_row_dofs());
+  target_dof_row_map_ = std::make_shared<Core::LinAlg::Map>(*interface_->target_row_dofs());
 
   // create binary search tree
   interface_->create_search_tree();
@@ -504,11 +503,11 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization& slavedis,
+void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization& source_dis,
     std::shared_ptr<Core::FE::Discretization> aledis,
-    std::shared_ptr<const Core::LinAlg::Map> masterdofrowmap,
-    std::shared_ptr<const Core::LinAlg::Map> slavedofrowmap,
-    std::shared_ptr<Core::LinAlg::Vector<double>>& idisp, MPI_Comm comm, bool slavewithale)
+    std::shared_ptr<const Core::LinAlg::Map> target_dof_row_map,
+    std::shared_ptr<const Core::LinAlg::Map> source_dof_row_map,
+    std::shared_ptr<Core::LinAlg::Vector<double>>& idisp, MPI_Comm comm, bool source_is_ale)
 {
   // safety check
   check_setup();
@@ -519,13 +518,13 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
   //**********************************************************************
   // (0) check constraints in reference configuration
   //**********************************************************************
-  // build global vectors of slave and master coordinates
+  // build global vectors of source and target coordinates
   std::shared_ptr<Core::LinAlg::Vector<double>> xs =
-      std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap, true);
+      std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map, true);
   std::shared_ptr<Core::LinAlg::Vector<double>> xm =
-      std::make_shared<Core::LinAlg::Vector<double>>(*masterdofrowmap, true);
+      std::make_shared<Core::LinAlg::Vector<double>>(*target_dof_row_map, true);
 
-  // loop over all slave row nodes
+  // loop over all source row nodes
   for (int j = 0; j < interface_->source_row_nodes()->num_my_elements(); ++j)
   {
     int gid = interface_->source_row_nodes()->gid(j);
@@ -535,7 +534,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
 
     // prepare assembly
     // minimum three coupling dof's otherwise this method is not working
-    // since the slave map is based on dof<dim
+    // since the source map is based on dof<dim
     // -> spacial coordinates cannot be assembled in vector based on this map
     Core::LinAlg::SerialDenseVector val(dim);
     std::vector<int> lm(dim, 0.0);
@@ -565,7 +564,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
     Core::LinAlg::assemble(*xs, val, lm, lmowner);
   }
 
-  // loop over all master row nodes
+  // loop over all target row nodes
   for (int j = 0; j < interface_->target_row_nodes()->num_my_elements(); ++j)
   {
     int gid = interface_->target_row_nodes()->gid(j);
@@ -575,7 +574,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
 
     // prepare assembly
     // minimum three coupling dof's otherwise this method is not working
-    // since the slave map is based on dof<dim
+    // since the source map is based on dof<dim
     // -> spacial coordinates cannot be assembled in vector based on this map
     Core::LinAlg::SerialDenseVector val(dim);
     std::vector<int> lm(dim, 0.0);
@@ -606,13 +605,13 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
 
   // compute g-vector at global level
   std::shared_ptr<Core::LinAlg::Vector<double>> Dxs =
-      std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap);
+      std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map);
   D_->multiply(false, *xs, *Dxs);
   std::shared_ptr<Core::LinAlg::Vector<double>> Mxm =
-      std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap);
+      std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map);
   M_->multiply(false, *xm, *Mxm);
   std::shared_ptr<Core::LinAlg::Vector<double>> gold =
-      std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap, true);
+      std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map, true);
   gold->update(1.0, *Dxs, 1.0);
   gold->update(-1.0, *Mxm, 1.0);
   double gnorm = 0.0;
@@ -647,7 +646,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
   // relocate! Basically, every processor needs to know about relocation
   // of all its column nodes in the standard column map with overlap=1,
   // because all these nodes participate in the processor's element
-  // evaluation! Thus, the modified slave positions are first exported
+  // evaluation! Thus, the modified source positions are first exported
   // to the column map of the respective interface and the modification
   // loop is then also done with respect to this node column map!
   // A second concern is that we are dealing with a special interface
@@ -659,24 +658,24 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
   // Mortar::Node(s) in the meshtying interface discretization AND to the
   // Nodes in the underlying problem discretization.
   // Finally, we have to ask ourselves whether the node column distribution
-  // of the slave nodes in the interface discretization is IDENTICAL
+  // of the source nodes in the interface discretization is IDENTICAL
   // to the distribution in the underlying problem discretization. This
   // is NOT necessarily the case, as we might have redistributed the
   // interface among all processors. Thus, we loop over the fully over-
-  // lapping slave column map here to keep all processors around. Then,
+  // lapping source column map here to keep all processors around. Then,
   // the first modification (Mortar::Node) is always performed, but the
   // second modification (Core::Nodes::Node) is only performed if the respective
   // node in contained in the problem node column map.
   //**********************************************************************
 
   //**********************************************************************
-  // (1) get master positions on global level
+  // (1) get target positions on global level
   //**********************************************************************
-  // fill Xmaster first
-  std::shared_ptr<Core::LinAlg::Vector<double>> Xmaster =
-      std::make_shared<Core::LinAlg::Vector<double>>(*masterdofrowmap, true);
+  // fill X_target first
+  std::shared_ptr<Core::LinAlg::Vector<double>> X_target =
+      std::make_shared<Core::LinAlg::Vector<double>>(*target_dof_row_map, true);
 
-  // loop over all master row nodes on the current interface
+  // loop over all target row nodes on the current interface
   for (int j = 0; j < interface_->target_row_nodes()->num_my_elements(); ++j)
   {
     int gid = interface_->target_row_nodes()->gid(j);
@@ -686,43 +685,43 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
 
     // do assembly (overwrite duplicate nodes)
     // minimum three coupling dof's otherwise this method is not working
-    // since the slave map is based on dof<dim
+    // since the source map is based on dof<dim
     // -> spacial coordinates cannot be assembled in vector based on this map
     for (int k = 0; k < dim; ++k)
     {
       int dof = mtnode->dofs()[k];
-      (*Xmaster).get_values()[(Xmaster->get_map()).lid(dof)] = mtnode->x()[k];
+      (*X_target).get_values()[(X_target->get_map()).lid(dof)] = mtnode->x()[k];
 
       // add ALE displacements, if required
       if (idisp != nullptr)
-        (*Xmaster).get_values()[(Xmaster->get_map()).lid(dof)] +=
+        (*X_target).get_values()[(X_target->get_map()).lid(dof)] +=
             idisp->local_values_as_span()[(idisp->get_map()).lid(dof)];
     }
   }
 
   //**********************************************************************
-  // (2) solve for modified slave positions on global level
+  // (2) solve for modified source positions on global level
   //**********************************************************************
-  // relocate modified slave positions
-  std::shared_ptr<Core::LinAlg::Vector<double>> Xslavemod =
-      std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap, true);
+  // relocate modified source positions
+  std::shared_ptr<Core::LinAlg::Vector<double>> X_source_mod =
+      std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map, true);
 
   // this is trivial for dual Lagrange multipliers
-  P_->multiply(false, *Xmaster, *Xslavemod);
+  P_->multiply(false, *X_target, *X_source_mod);
 
 
   //**********************************************************************
   // (3) perform mesh relocation node by node
   //**********************************************************************
-  // export Xslavemod to fully overlapping column map for current interface
+  // export X_source_mod to fully overlapping column map for current interface
   std::shared_ptr<Core::LinAlg::Map> fullsdofs =
       Core::LinAlg::allreduce_e_map(*(interface_->source_row_dofs()));
   std::shared_ptr<Core::LinAlg::Map> fullsnodes =
       Core::LinAlg::allreduce_e_map(*(interface_->source_row_nodes()));
-  Core::LinAlg::Vector<double> Xslavemodcol(*fullsdofs, false);
-  Core::LinAlg::export_to(*Xslavemod, Xslavemodcol);
+  Core::LinAlg::Vector<double> X_source_mod_col(*fullsdofs, false);
+  Core::LinAlg::export_to(*X_source_mod, X_source_mod_col);
 
-  // loop over all slave nodes on the current interface
+  // loop over all source nodes on the current interface
   for (int j = 0; j < fullsnodes->num_my_elements(); ++j)
   {
     // get global ID of current node
@@ -742,19 +741,19 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
       mtnode = static_cast<Mortar::Node*>(node);
     }
 
-    // ... AND standard node in underlying slave discret
+    // ... AND standard node in underlying source discret
     // (check if the node is available on this processor)
     bool isinproblemcolmap = false;
-    int lid = slavedis.node_col_map()->lid(gid);
+    int lid = source_dis.node_col_map()->lid(gid);
     if (lid >= 0) isinproblemcolmap = true;
     Core::Nodes::Node* pnode = nullptr;
     if (isinproblemcolmap)
     {
-      pnode = slavedis.g_node(gid);
+      pnode = source_dis.g_node(gid);
       if (!pnode) FOUR_C_THROW("Cannot find node with gid %", gid);
     }
 
-    // ... AND standard node in ALE discret if fluid=slave
+    // ... AND standard node in ALE discret if fluid=source
     // (check if the node is available on this processor)
     bool isinproblemcolmap2 = false;
     Core::Nodes::Node* alenode = nullptr;
@@ -765,7 +764,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
       if (isinproblemcolmap2)
       {
         alenode = aledis->g_node(gid);
-        if (slavewithale and not alenode) FOUR_C_THROW("Cannot find node with gid %", gid);
+        if (source_is_ale and not alenode) FOUR_C_THROW("Cannot find node with gid %", gid);
       }
     }
 
@@ -783,17 +782,17 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
       // owner processor of this node will do computation
       if (Core::Communication::my_mpi_rank(comm) == mtnode->owner())
       {
-        // get corresponding entries from Xslavemod
+        // get corresponding entries from X_source_mod
         int numdim = mtnode->n_dim();
 
-        // find DOFs of current node in Xslavemod and extract this node's position
+        // find DOFs of current node in X_source_mod and extract this node's position
         std::vector<int> locindex(numdim);
 
         for (int k = 0; k < numdim; ++k)
         {
-          locindex[k] = (Xslavemodcol.get_map()).lid(mtnode->dofs()[k]);
+          locindex[k] = (X_source_mod_col.get_map()).lid(mtnode->dofs()[k]);
           if (locindex[k] < 0) FOUR_C_THROW("Did not find dof in map");
-          Xnew[k] = Xslavemodcol.local_values_as_span()[locindex[k]];
+          Xnew[k] = X_source_mod_col.local_values_as_span()[locindex[k]];
           Xold[k] = mtnode->x()[k];
           if (idisp != nullptr)
             Xold[k] += idisp->local_values_as_span()[(idisp->get_map())
@@ -831,7 +830,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
     // const_cast to force modified X() into mtnode
     // const_cast to force modified xspatial() into mtnode
     // const_cast to force modified X() into pnode
-    // const_cast to force modified X() into alenode if fluid=slave
+    // const_cast to force modified X() into alenode if fluid=source
     // (remark: this is REALLY BAD coding)
     if (Teuchos::getIntegralValue<Mortar::MeshRelocation>(
             mortar_coupling_params_, "MESH_RELOCATION") == Mortar::relocation_initial)
@@ -849,7 +848,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
         if (isinproblemcolmap) const_cast<double&>(pnode->x()[k]) = Xnewglobal[k];
 
         // modification in ALE discretization
-        if (isinproblemcolmap2 and slavewithale)
+        if (isinproblemcolmap2 and source_is_ale)
           const_cast<double&>(alenode->x()[k]) = Xnewglobal[k];
       }
     }
@@ -860,11 +859,11 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
   //**********************************************************************
   // (4) re-evaluate constraints in reference configuration
   //**********************************************************************
-  // build global vectors of slave and master coordinates
-  xs = std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap, true);
-  xm = std::make_shared<Core::LinAlg::Vector<double>>(*masterdofrowmap, true);
+  // build global vectors of source and target coordinates
+  xs = std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map, true);
+  xm = std::make_shared<Core::LinAlg::Vector<double>>(*target_dof_row_map, true);
 
-  // loop over all slave row nodes
+  // loop over all source row nodes
   for (int j = 0; j < interface_->source_row_nodes()->num_my_elements(); ++j)
   {
     int gid = interface_->source_row_nodes()->gid(j);
@@ -900,7 +899,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
     Core::LinAlg::assemble(*xs, val, lm, lmowner);
   }
 
-  // loop over all master row nodes
+  // loop over all target row nodes
   for (int j = 0; j < interface_->target_row_nodes()->num_my_elements(); ++j)
   {
     int gid = interface_->target_row_nodes()->gid(j);
@@ -937,12 +936,12 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
   }
 
   // compute g-vector at global level
-  Dxs = std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap);
+  Dxs = std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map);
   D_->multiply(false, *xs, *Dxs);
-  Mxm = std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap);
+  Mxm = std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map);
   M_->multiply(false, *xm, *Mxm);
   std::shared_ptr<Core::LinAlg::Vector<double>> gnew =
-      std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap, true);
+      std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map, true);
   gnew->update(1.0, *Dxs, 1.0);
   gnew->update(-1.0, *Mxm, 1.0);
   gnew->norm_2(&gnorm);
@@ -955,12 +954,12 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
         gnorm, tol);
 
   //**********************************************************************
-  // (5) re-relocate finite elements (if slave=structure)
+  // (5) re-relocate finite elements (if source=structure)
   //**********************************************************************
-  // if slave=fluid, we are lucky because fluid elements do not
+  // if source=fluid, we are lucky because fluid elements do not
   // need any re-relocation (unlike structural elements)
   // fluid elements: empty implementation (return 0)
-  Core::Communication::ParObjectFactory::instance().initialize_elements(slavedis);
+  Core::Communication::ParObjectFactory::instance().initialize_elements(source_dis);
 
   // print message
   if (Core::Communication::my_mpi_rank(comm) == 0)
@@ -996,7 +995,7 @@ void Coupling::Adapter::CouplingMortar::create_p()
   D_->complete();
   Dinv_ = std::make_shared<Core::LinAlg::SparseMatrix>(*D_);
   std::shared_ptr<Core::LinAlg::Vector<double>> diag =
-      std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap_, true);
+      std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map_, true);
   int err = 0;
 
   // extract diagonal of invd into diag
@@ -1028,10 +1027,7 @@ void Coupling::Adapter::CouplingMortar::create_p()
   P_ = Core::LinAlg::matrix_multiply(*Dinv_, false, *M_, false, false, false, true);
 
   // complete the matrix
-  P_->complete(*masterdofrowmap_, *slavedofrowmap_);
-
-  // bye
-  return;
+  P_->complete(*target_dof_row_map_, *source_dof_row_map_);
 }
 
 
@@ -1047,8 +1043,6 @@ void Coupling::Adapter::CouplingMortar::evaluate(
   interface_->set_state(Mortar::state_new_displacement, *idisp);
   evaluate();
   matrix_row_col_transform();
-
-  return;
 }
 
 
@@ -1060,34 +1054,32 @@ void Coupling::Adapter::CouplingMortar::evaluate(
 {
   // safety checks
   check_setup();
-  FOUR_C_ASSERT(idispma->get_map().point_same_as(*pmasterdofrowmap_),
-      "Map of incoming master vector does not match the stored master dof row map.");
-  FOUR_C_ASSERT(idispsl->get_map().point_same_as(*pslavedofrowmap_),
-      "Map of incoming slave vector does not match the stored slave dof row map.");
+  FOUR_C_ASSERT(idispma->get_map().point_same_as(*ptarget_dof_row_map_),
+      "Map of incoming target vector does not match the stored target dof row map.");
+  FOUR_C_ASSERT(idispsl->get_map().point_same_as(*psource_dof_row_map_),
+      "Map of incoming source vector does not match the stored source dof row map.");
 
   const Core::LinAlg::Map stdmap = idispsl->get_map();
-  idispsl->replace_map(*slavedofrowmap_);
+  idispsl->replace_map(*source_dof_row_map_);
 
   std::shared_ptr<Core::LinAlg::Map> dofrowmap =
-      Core::LinAlg::merge_map(*pmasterdofrowmap_, *pslavedofrowmap_, false);
-  Core::LinAlg::Import master_importer(*dofrowmap, *pmasterdofrowmap_);
-  Core::LinAlg::Import slaveImporter(*dofrowmap, *pslavedofrowmap_);
+      Core::LinAlg::merge_map(*ptarget_dof_row_map_, *psource_dof_row_map_, false);
+  Core::LinAlg::Import target_importer(*dofrowmap, *ptarget_dof_row_map_);
+  Core::LinAlg::Import source_importer(*dofrowmap, *psource_dof_row_map_);
 
-  // Import master and slave displacements into a single vector
-  std::shared_ptr<Core::LinAlg::Vector<double>> idisp_master_slave =
+  // Import target and source displacements into a single vector
+  std::shared_ptr<Core::LinAlg::Vector<double>> idisp_target_source =
       std::make_shared<Core::LinAlg::Vector<double>>(*dofrowmap, true);
-  idisp_master_slave->import(*idispma, master_importer, Core::LinAlg::CombineMode::add);
-  idisp_master_slave->import(*idispsl, slaveImporter, Core::LinAlg::CombineMode::add);
+  idisp_target_source->import(*idispma, target_importer, Core::LinAlg::CombineMode::add);
+  idisp_target_source->import(*idispsl, source_importer, Core::LinAlg::CombineMode::add);
 
   // set new displacement state in mortar interface
-  interface_->set_state(Mortar::state_new_displacement, *idisp_master_slave);
+  interface_->set_state(Mortar::state_new_displacement, *idisp_target_source);
 
   evaluate();
   matrix_row_col_transform();
 
   idispsl->replace_map(stdmap);
-
-  return;
 }
 
 
@@ -1120,25 +1112,23 @@ void Coupling::Adapter::CouplingMortar::evaluate()
   interface_->evaluate();
 
   // preparation for AssembleDM
-  // (Note that redistslave and redistmaster are the slave and master row maps
+  // (Note that redistsource and redisttarget are the source and target row maps
   // after parallel redistribution. If no redistribution was performed, they
-  // are of course identical to slavedofrowmap_/masterdofrowmap_!)
+  // are of course identical to source_dof_row_map_/target_dof_row_map_!)
   std::shared_ptr<Core::LinAlg::SparseMatrix> dmatrix =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*slavedofrowmap_, 10);
+      std::make_shared<Core::LinAlg::SparseMatrix>(*source_dof_row_map_, 10);
   std::shared_ptr<Core::LinAlg::SparseMatrix> mmatrix =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*slavedofrowmap_, 100);
+      std::make_shared<Core::LinAlg::SparseMatrix>(*source_dof_row_map_, 100);
   interface_->assemble_dm(*dmatrix, *mmatrix);
 
   // Complete() global Mortar matrices
   dmatrix->complete();
-  mmatrix->complete(*masterdofrowmap_, *slavedofrowmap_);
+  mmatrix->complete(*target_dof_row_map_, *source_dof_row_map_);
   D_ = dmatrix;
   M_ = mmatrix;
 
   // create projection operator and Dinv
   create_p();
-
-  return;
 }
 
 
@@ -1159,14 +1149,15 @@ void Coupling::Adapter::CouplingMortar::matrix_row_col_transform()
   // only for parallel redistribution case
   if (parredist)
   {
-    if (pslavedofrowmap_ == nullptr or pmasterdofrowmap_ == nullptr)
+    if (psource_dof_row_map_ == nullptr or ptarget_dof_row_map_ == nullptr)
       FOUR_C_THROW("Dof maps based on initial parallel distribution are wrong!");
 
     // transform everything back to old distribution
-    D_ = Core::LinAlg::matrix_row_col_transform(*D_, *pslavedofrowmap_, *pslavedofrowmap_);
-    M_ = Core::LinAlg::matrix_row_col_transform(*M_, *pslavedofrowmap_, *pmasterdofrowmap_);
-    Dinv_ = Core::LinAlg::matrix_row_col_transform(*Dinv_, *pslavedofrowmap_, *pslavedofrowmap_);
-    P_ = Core::LinAlg::matrix_row_col_transform(*P_, *pslavedofrowmap_, *pmasterdofrowmap_);
+    D_ = Core::LinAlg::matrix_row_col_transform(*D_, *psource_dof_row_map_, *psource_dof_row_map_);
+    M_ = Core::LinAlg::matrix_row_col_transform(*M_, *psource_dof_row_map_, *ptarget_dof_row_map_);
+    Dinv_ = Core::LinAlg::matrix_row_col_transform(
+        *Dinv_, *psource_dof_row_map_, *psource_dof_row_map_);
+    P_ = Core::LinAlg::matrix_row_col_transform(*P_, *psource_dof_row_map_, *ptarget_dof_row_map_);
   }
 }
 
@@ -1174,9 +1165,9 @@ void Coupling::Adapter::CouplingMortar::matrix_row_col_transform()
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Coupling::Adapter::CouplingMortar::evaluate_with_mesh_relocation(
-    std::shared_ptr<Core::FE::Discretization> slavedis,
+    std::shared_ptr<Core::FE::Discretization> source_dis,
     std::shared_ptr<Core::FE::Discretization> aledis,
-    std::shared_ptr<Core::LinAlg::Vector<double>>& idisp, MPI_Comm comm, bool slavewithale)
+    std::shared_ptr<Core::LinAlg::Vector<double>>& idisp, MPI_Comm comm, bool source_is_ale)
 {
   // safety check
   check_setup();
@@ -1189,18 +1180,18 @@ void Coupling::Adapter::CouplingMortar::evaluate_with_mesh_relocation(
   interface_->evaluate();
 
   // preparation for AssembleDM
-  // (Note that redistslave and redistmaster are the slave and master row maps
+  // (Note that redistsource and redisttarget are the source and target row maps
   // after parallel redistribution. If no redistribution was performed, they
-  // are of course identical to slavedofrowmap_/masterdofrowmap_!)
+  // are of course identical to source_dof_row_map_/target_dof_row_map_!)
   std::shared_ptr<Core::LinAlg::SparseMatrix> dmatrix =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*slavedofrowmap_, 10);
+      std::make_shared<Core::LinAlg::SparseMatrix>(*source_dof_row_map_, 10);
   std::shared_ptr<Core::LinAlg::SparseMatrix> mmatrix =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*slavedofrowmap_, 100);
+      std::make_shared<Core::LinAlg::SparseMatrix>(*source_dof_row_map_, 100);
   interface_->assemble_dm(*dmatrix, *mmatrix);
 
   // Complete() global Mortar matrices
   dmatrix->complete();
-  mmatrix->complete(*masterdofrowmap_, *slavedofrowmap_);
+  mmatrix->complete(*target_dof_row_map_, *source_dof_row_map_);
   D_ = dmatrix;
   M_ = mmatrix;
 
@@ -1209,7 +1200,7 @@ void Coupling::Adapter::CouplingMortar::evaluate_with_mesh_relocation(
 
   // extract diagonal of invd into diag
   std::shared_ptr<Core::LinAlg::Vector<double>> diag =
-      std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap_, true);
+      std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map_, true);
   Dinv_->extract_diagonal_copy(*diag);
 
   // set zero diagonal values to dummy 1.0
@@ -1238,7 +1229,7 @@ Coupling::Adapter::CouplingMortar::target_to_source(
   // safety check
   check_setup();
 
-  FOUR_C_ASSERT(masterdofrowmap_->same_as(mv.get_map()), "Vector with master dof map expected");
+  FOUR_C_ASSERT(target_dof_row_map_->same_as(mv.get_map()), "Vector with target dof map expected");
 
   Core::LinAlg::MultiVector<double> tmp =
       Core::LinAlg::MultiVector<double>(M_->row_map(), mv.num_vectors());
@@ -1246,7 +1237,7 @@ Coupling::Adapter::CouplingMortar::target_to_source(
   M_->multiply(false, mv, tmp);
 
   std::shared_ptr<Core::LinAlg::MultiVector<double>> sv =
-      std::make_shared<Core::LinAlg::MultiVector<double>>(*pslavedofrowmap_, mv.num_vectors());
+      std::make_shared<Core::LinAlg::MultiVector<double>>(*psource_dof_row_map_, mv.num_vectors());
 
   Dinv_->multiply(false, tmp, *sv);
 
@@ -1261,14 +1252,14 @@ std::shared_ptr<Core::LinAlg::Vector<double>> Coupling::Adapter::CouplingMortar:
   // safety check
   check_setup();
 
-  FOUR_C_ASSERT(masterdofrowmap_->same_as(mv.get_map()), "Vector with master dof map expected");
+  FOUR_C_ASSERT(target_dof_row_map_->same_as(mv.get_map()), "Vector with target dof map expected");
 
   Core::LinAlg::Vector<double> tmp = Core::LinAlg::Vector<double>(M_->row_map());
 
   M_->multiply(false, mv, tmp);
 
   std::shared_ptr<Core::LinAlg::Vector<double>> sv =
-      std::make_shared<Core::LinAlg::Vector<double>>(*pslavedofrowmap_);
+      std::make_shared<Core::LinAlg::Vector<double>>(*psource_dof_row_map_);
 
   Dinv_->multiply(false, tmp, *sv);
 
@@ -1282,14 +1273,14 @@ void Coupling::Adapter::CouplingMortar::target_to_source(
     const Core::LinAlg::MultiVector<double>& mv, Core::LinAlg::MultiVector<double>& sv) const
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-  if (not mv.get_map().point_same_as(P_->col_map())) FOUR_C_THROW("master dof map vector expected");
-  if (not sv.get_map().point_same_as(D_->col_map())) FOUR_C_THROW("slave dof map vector expected");
+  if (not mv.get_map().point_same_as(P_->col_map())) FOUR_C_THROW("target dof map vector expected");
+  if (not sv.get_map().point_same_as(D_->col_map())) FOUR_C_THROW("source dof map vector expected");
 #endif
 
   // safety check
   check_setup();
 
-  // slave vector with auxiliary dofmap
+  // source vector with auxiliary dofmap
   Core::LinAlg::MultiVector<double> sv_aux(P_->row_map(), sv.num_vectors());
 
   // project
@@ -1300,8 +1291,8 @@ void Coupling::Adapter::CouplingMortar::target_to_source(
       sv_aux.get_values() + (sv_aux.local_length() * sv_aux.num_vectors()), sv.get_values());
 
   // in contrast to the Adapter::Coupling class we do not need to export here, as
-  // the mortar interface itself has (or should have) guaranteed the same distribution of master and
-  // slave dis on all procs
+  // the mortar interface itself has (or should have) guaranteed the same distribution of target and
+  // source dis on all procs
 }
 
 
@@ -1311,8 +1302,8 @@ void Coupling::Adapter::CouplingMortar::source_to_target(
     const Core::LinAlg::MultiVector<double>& sv, Core::LinAlg::MultiVector<double>& mv) const
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-  if (not mv.get_map().point_same_as(P_->col_map())) FOUR_C_THROW("master dof map vector expected");
-  if (not sv.get_map().point_same_as(D_->col_map())) FOUR_C_THROW("slave dof map vector expected");
+  if (not mv.get_map().point_same_as(P_->col_map())) FOUR_C_THROW("target dof map vector expected");
+  if (not sv.get_map().point_same_as(D_->col_map())) FOUR_C_THROW("source dof map vector expected");
 #endif
 
   // safety check
@@ -1321,7 +1312,7 @@ void Coupling::Adapter::CouplingMortar::source_to_target(
   Core::LinAlg::Vector<double> tmp = Core::LinAlg::Vector<double>(M_->range_map());
   std::copy(sv.get_values(), sv.get_values() + sv.local_length(), tmp.get_values());
 
-  Core::LinAlg::Vector<double> tempm(*pmasterdofrowmap_);
+  Core::LinAlg::Vector<double> tempm(*ptarget_dof_row_map_);
   M_->multiply(true, tmp, tempm);
 
   // copy from auxiliary to physical map (needed for coupling in fluid ale algorithm)
@@ -1329,8 +1320,8 @@ void Coupling::Adapter::CouplingMortar::source_to_target(
       mv.get_values());
 
   // in contrast to the Adapter::Coupling class we do not need to export here, as
-  // the mortar interface itself has (or should have) guaranteed the same distribution of master and
-  // slave dis on all procs
+  // the mortar interface itself has (or should have) guaranteed the same distribution of target and
+  // source dis on all procs
 }
 
 
@@ -1346,7 +1337,7 @@ std::shared_ptr<Core::LinAlg::Vector<double>> Coupling::Adapter::CouplingMortar:
   std::copy(sv.get_values(), sv.get_values() + sv.local_length(), tmp.get_values());
 
   std::shared_ptr<Core::LinAlg::Vector<double>> mv =
-      std::make_shared<Core::LinAlg::Vector<double>>(*pmasterdofrowmap_);
+      std::make_shared<Core::LinAlg::Vector<double>>(*ptarget_dof_row_map_);
   M_->multiply(true, tmp, *mv);
 
   return mv;
@@ -1367,7 +1358,7 @@ Coupling::Adapter::CouplingMortar::source_to_target(
   std::copy(sv.get_values(), sv.get_values() + sv.local_length(), tmp.get_values());
 
   std::shared_ptr<Core::LinAlg::MultiVector<double>> mv =
-      std::make_shared<Core::LinAlg::MultiVector<double>>(*pmasterdofrowmap_, sv.num_vectors());
+      std::make_shared<Core::LinAlg::MultiVector<double>>(*ptarget_dof_row_map_, sv.num_vectors());
   M_->multiply(true, tmp, *mv);
 
   return mv;

@@ -78,14 +78,12 @@ Mat::ElastHyper::ElastHyper(Mat::PAR::ElastHyper* params)
     : summandProperties_(), params_(params), potsum_(0), anisotropy_()
 {
   // make sure the referenced materials in material list have quick access parameters
-  std::vector<int>::const_iterator m;
-  for (m = params_->matids_.begin(); m != params_->matids_.end(); ++m)
+  for (const int matid : params_->matids_)
   {
-    const int matid = *m;
-    std::shared_ptr<Mat::Elastic::Summand> sum = Mat::Elastic::Summand::factory(matid);
-    if (sum == nullptr) FOUR_C_THROW("Failed to allocate");
-    potsum_.push_back(sum);
+    auto sum = Mat::Elastic::Summand::factory(matid);
+    if (!sum) FOUR_C_THROW("Failed to allocate material summand for matid {}", matid);
     sum->register_anisotropy_extensions(anisotropy_);
+    potsum_.push_back(std::move(sum));
   }
 }
 
@@ -150,7 +148,6 @@ void Mat::ElastHyper::unpack(Core::Communication::UnpackBuffer& buffer)
 
   summandProperties_.unpack(buffer);
 
-  // Pack anisotropy
   anisotropy_.unpack_anisotropy(buffer);
 
   Core::Communication::PotentiallyUnusedBufferScope potsum_scope(buffer);
@@ -158,13 +155,13 @@ void Mat::ElastHyper::unpack(Core::Communication::UnpackBuffer& buffer)
   if (params_ != nullptr)  // summands are not accessible in postprocessing mode
   {
     // make sure the referenced materials in material list have quick access parameters
-    std::vector<int>::const_iterator m;
-    for (m = params_->matids_.begin(); m != params_->matids_.end(); ++m)
+    for (const int matid : params_->matids_)
     {
-      const int summand_matid = *m;
-      std::shared_ptr<Mat::Elastic::Summand> sum = Mat::Elastic::Summand::factory(summand_matid);
-      if (sum == nullptr) FOUR_C_THROW("Failed to allocate");
-      potsum_.push_back(sum);
+      auto sum = Mat::Elastic::Summand::factory(matid);
+
+      if (!sum) FOUR_C_THROW("Failed to allocate Elastic::Summand for matid {}", matid);
+
+      potsum_.push_back(std::move(sum));
     }
 
     // loop map of associated potential summands
@@ -207,32 +204,6 @@ double Mat::ElastHyper::shear_mod(int ele_gid) const
     FOUR_C_THROW("Cannot provide shear modulus equivalent");
   }
   return shearmod;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-double Mat::ElastHyper::get_young()
-{
-  double young;
-  double shear;
-  double bulk;
-  young = shear = bulk = 0.;
-  for (auto& p : potsum_) p->add_youngs_mod(young, shear, bulk);
-
-  if (bulk != 0. || shear != 0.) young += 9. * bulk * shear / (3. * bulk + shear);
-
-  return young;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-void Mat::ElastHyper::setup_aaa(const Teuchos::ParameterList& params, const int eleGID)
-{
-  // loop map of associated potential summands
-  for (auto& p : potsum_)
-  {
-    p->setup_aaa(params, eleGID);
-  }
 }
 
 /*----------------------------------------------------------------------*/

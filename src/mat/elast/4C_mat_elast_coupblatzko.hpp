@@ -125,12 +125,6 @@ namespace Mat
       void add_coup_deriv_vol(
           const double j, double* dPj1, double* dPj2, double* dPj3, double* dPj4) override;
 
-      /// add young's modulus equivalent
-      void add_youngs_mod(double& young, double& shear, double& bulk) override
-      {
-        young += 2. * mue() * (1. + nue());
-      };
-
       /// @name Access methods
       //@{
       double mue() const { return params_->mue_; }

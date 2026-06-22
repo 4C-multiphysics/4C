@@ -533,28 +533,18 @@ namespace ReducedLung1dPipeFlow
       // treat terminal units and create TU model per boundary node if node has information on
       // terminal unit
       else if (junction_info.node_ids.size() == 1 &&
-               junction_info.node_owners.front() == mpi_rank &&
                input.boundary_conditions.output == "terminal_unit" &&
-               normals.get_values()[discretization->node_row_map()->lid(
+               normals_evaluation.get_map().lid(junction_info.node_ids.front()) != -1 &&
+               normals_evaluation.get_values()[normals_evaluation.get_map().lid(
                    junction_info.node_ids.front())] == 1)
       {
-        // fill data
-        ReducedLung1DPipe::TerminalUnit::TerminalUnitData terminal_unit_data;
-        terminal_unit_data.global_node_id = junction_info.node_ids.front();
-        terminal_unit_data.node_owner = junction_info.node_owners.front();
-        terminal_unit_data.volume_v =
-            input.terminal_units.acinar_volume_v.at(terminal_unit_data.global_node_id);
-        terminal_unit_data.reference_volume_v0 = terminal_unit_data.volume_v;
+        // Create terminal units
+        ReducedLung1DPipe::TerminalUnit::TerminalUnitModel tu_model =
+            ReducedLung1DPipe::TerminalUnit::create_terminal_unit_model(
+                input, junction_info.node_ids.front(), junction_info.node_owners.front());
 
-        // create Terminal unit model
-        ReducedLung1DPipe::TerminalUnit::TerminalUnitModel tu_model;
-        tu_model.data = terminal_unit_data;
-        tu_model.elasticity_model = ReducedLung1DPipe::TerminalUnit::create_elasticity_model(
-            input.terminal_units.elasticity_model, terminal_unit_data.global_node_id);
-        tu_model.rheological_model = ReducedLung1DPipe::TerminalUnit::create_rheological_model(
-            input.terminal_units.rheological_model, terminal_unit_data.global_node_id);
         // create map to access terminal units
-        global_tu_id_to_index[terminal_unit_data.global_node_id] = all_terminal_units.size();
+        global_tu_id_to_index[tu_model.data.global_node_id] = all_terminal_units.size();
         // add to vector
         all_terminal_units.push_back(tu_model);
       }
@@ -673,7 +663,7 @@ namespace ReducedLung1dPipeFlow
         {
           is_junction[inode] = true;
         }
-        else
+        else if (normal_in_out[inode] == -1 || normal_in_out[inode] == 1)
         {
           is_boundary[inode] = true;
         }
@@ -1035,10 +1025,9 @@ namespace ReducedLung1dPipeFlow
               else if (input.boundary_conditions.output == "pressure")
               {
                 // prescribed p at outlet
-                A_condition = pow((input.boundary_conditions.condition_outflow * 1333.22 -
-                                      boundary_Pext) /  // Conversion mmHg -> dyn/cm2
-                                          beta_element +
-                                      sqrt(reference_area_element),
+                A_condition = pow(
+                    (input.boundary_conditions.condition_outflow - boundary_Pext) / beta_element +
+                        sqrt(reference_area_element),
                     2);
                 u_condition = characteristic_W_outgoing -
                               4 * std::pow(A_condition, 0.25) *
@@ -1050,7 +1039,7 @@ namespace ReducedLung1dPipeFlow
                 auto it = global_tu_id_to_index.find(element.node_ids()[boundary_local_index]);
                 if (it == global_tu_id_to_index.end())
                 {
-                  // FOUR_C_ASSERT(false, "Wrong TU mapping.");
+                  FOUR_C_ASSERT(false, "Wrong Terminal Unit mapping.");
                   return;
                 }
                 ReducedLung1DPipe::TerminalUnit::TerminalUnitModel& terminal_unit =
@@ -1177,9 +1166,9 @@ namespace ReducedLung1dPipeFlow
         FOUR_C_ASSERT(solution.get_values()[A_id] > 0,
             "area in solution_np < 0 at node {}, time {}", node.global_id(), time_n);
         double pressure_p =
-            (1 / 1333.22) * beta.get_values()[local_id] *
+            beta.get_values()[local_id] *
             (sqrt(solution.get_values()[A_id]) - sqrt(reference_area_0.get_values()[local_id]));
-        pressure_solution.replace_local_value(local_id, pressure_p);  // p in mmHg
+        pressure_solution.replace_local_value(local_id, pressure_p);
 
         flow_solution.replace_local_value(
             local_id, solution.get_values()[A_id] * solution.get_values()[A_id + 1]);

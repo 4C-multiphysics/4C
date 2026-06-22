@@ -153,10 +153,10 @@ namespace Mat
        * numerically evaluable increment of the
        * plastic strain derivatives (before throwing an overflow error),
        * i.e. \f$ \Delta t \frac{\partial \dot{\varepsilon}^{\text{p}}}{\partial s},~ s \in
-       * \{\varepsilon^{\text{p}}, \overline{\sigma}\} \f$
+       * \{\varepsilon^{\text{p}}, \overline{\sigma}, T\} \f$
        * @param[out] err_status output variable: error of the terms considered in @note?
-       * @return Derivatives of the equivalent plastic strain rate w.r.t. the equivalent stress
-       *         (element 0 of matrix) and the plastic strain (element 1 of matrix)
+       * @return Derivatives of the equivalent plastic strain rate w.r.t. the equivalent stress,
+       *         plastic strain, and temperature.
        */
       virtual InelasticDefgradTransvIsotropElastViscoplastUtils::PlasticStrainRateDerivs
       evaluate_derivatives_of_plastic_strain_rate(const double equiv_stress,
@@ -181,7 +181,7 @@ namespace Mat
        * @brief Pre-evaluation, intended to be used for stuff that has to be done only once per
        *        evaluate()
        *
-       * @param[in] params  parameter list
+       * @param[in] params  Various parameters, such as e.g. the temperature in TSI simulations
        * @param[in] gp      Current Gauss point
        */
       virtual void pre_evaluate(const Teuchos::ParameterList& params, int gp) { gp_ = gp; };

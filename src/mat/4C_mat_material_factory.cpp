@@ -52,11 +52,6 @@
 #include "4C_mat_elast_isovarga.hpp"
 #include "4C_mat_elast_isoyeoh.hpp"
 #include "4C_mat_elast_remodelfiber.hpp"
-#include "4C_mat_elast_visco_coupmyocard.hpp"
-#include "4C_mat_elast_visco_fract.hpp"
-#include "4C_mat_elast_visco_generalizedgenmax.hpp"
-#include "4C_mat_elast_visco_genmax.hpp"
-#include "4C_mat_elast_visco_isoratedep.hpp"
 #include "4C_mat_elast_vologden.hpp"
 #include "4C_mat_elast_volpenalty.hpp"
 #include "4C_mat_elast_volpow.hpp"
@@ -129,6 +124,7 @@
 #include "4C_mat_scatra_growth_remodel.hpp"
 #include "4C_mat_scatra_multiporo.hpp"
 #include "4C_mat_scatra_multiscale.hpp"
+#include "4C_mat_scatra_nonlocal_stimulus.hpp"
 #include "4C_mat_scatra_poro_ecm.hpp"
 #include "4C_mat_scatra_reaction.hpp"
 #include "4C_mat_scl.hpp"
@@ -146,6 +142,11 @@
 #include "4C_mat_thermoplasticlinelast.hpp"
 #include "4C_mat_thermostvenantkirchhoff.hpp"
 #include "4C_mat_viscoanisotropic.hpp"
+#include "4C_mat_viscoelast_coupmyocard.hpp"
+#include "4C_mat_viscoelast_fsls.hpp"
+#include "4C_mat_viscoelast_generalizedmaxwell.hpp"
+#include "4C_mat_viscoelast_isoratedep.hpp"
+#include "4C_mat_viscoelast_quasilineargeneralizedmaxwell.hpp"
 #include "4C_mat_viscoelasthyper.hpp"
 #include "4C_mat_visconeohooke.hpp"
 #include "4C_mat_viscoplastic_no_yield_surface.hpp"
@@ -346,6 +347,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     case Core::Materials::m_scatra_gr:
     {
       return make_parameter_impl<Mat::PAR::ScatraGrowthRemodelMat>(id, type, input_data);
+    }
+    case Core::Materials::m_scatra_nl_stimulus:
+    {
+      return make_parameter_impl<Mat::PAR::ScatraNonlocalStimulusMat>(id, type, input_data);
     }
     case Core::Materials::m_muscle_combo:
     {
@@ -763,7 +768,7 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     }
     case Core::Materials::mes_coupmyocard:
     {
-      return make_parameter_impl<Mat::Elastic::PAR::CoupMyocard>(id, type, input_data);
+      return make_parameter_impl<Mat::ViscoElast::PAR::CoupMyocard>(id, type, input_data);
     }
     case Core::Materials::mes_coupneohooke:
     {
@@ -802,17 +807,18 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     {
       return make_parameter_impl<Mat::Elastic::PAR::CoupVarga>(id, type, input_data);
     }
-    case Core::Materials::mes_fract:
+    case Core::Materials::mes_fsls:
     {
-      return make_parameter_impl<Mat::Elastic::PAR::Fract>(id, type, input_data);
+      return make_parameter_impl<Mat::ViscoElast::PAR::Fsls>(id, type, input_data);
     }
-    case Core::Materials::mes_genmax:
+    case Core::Materials::mes_generalizedmaxwell:
     {
-      return make_parameter_impl<Mat::Elastic::PAR::GenMax>(id, type, input_data);
+      return make_parameter_impl<Mat::ViscoElast::PAR::GeneralizedMaxwell>(id, type, input_data);
     }
-    case Core::Materials::mes_generalizedgenmax:
+    case Core::Materials::mes_quasilineargeneralizedmaxwell:
     {
-      return make_parameter_impl<Mat::Elastic::PAR::GeneralizedGenMax>(id, type, input_data);
+      return make_parameter_impl<Mat::ViscoElast::PAR::QuasiLinearGeneralizedMaxwell>(
+          id, type, input_data);
     }
     case Core::Materials::mes_isoanisoexpo:
     {
@@ -848,7 +854,7 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     }
     case Core::Materials::mes_isoratedep:
     {
-      return make_parameter_impl<Mat::Elastic::PAR::IsoRateDep>(id, type, input_data);
+      return make_parameter_impl<Mat::ViscoElast::PAR::IsoRateDep>(id, type, input_data);
     }
     case Core::Materials::mes_isotestmaterial:
     {
@@ -884,11 +890,7 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     }
     case Core::Materials::mes_viscobranch:
     {
-      return make_parameter_impl<Mat::Elastic::PAR::ViscoBranch>(id, type, input_data);
-    }
-    case Core::Materials::mes_viscopart:
-    {
-      return make_parameter_impl<Mat::Elastic::PAR::ViscoPart>(id, type, input_data);
+      return make_parameter_impl<Mat::ViscoElast::PAR::ViscoBranch>(id, type, input_data);
     }
     case Core::Materials::mes_structuraltensorstratgy:
     {

@@ -232,7 +232,7 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
     std::vector<std::vector<int>> onoffcond;  // vector of onoff status for each condition
     std::vector<int> numdofcond;              // vector of NUMDOF for each condition
     std::vector<std::vector<int>> nodeids;    // vector of node IDs for each condition
-    std::vector<int> masterIds;               // vector of master node IDs for each condition
+    std::vector<int> target_ids;              // vector of target node IDs for each condition
 
     for (const auto* condition : couplingconditions)
     {
@@ -240,8 +240,8 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       numdofcond.push_back(condition->parameters().get<int>("NUMDOF"));
       const auto conditioned_node_ids = condition->get_nodes();
       nodeids.push_back(*conditioned_node_ids);
-      // The first node ID of each condition serves as the master node:
-      masterIds.push_back(*conditioned_node_ids->begin());
+      // The first node ID of each condition serves as the target node:
+      target_ids.push_back(*conditioned_node_ids->begin());
     }
 
     int allononeproc = 1;
@@ -293,11 +293,11 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       // leave loop here in case of corrupt node distribution and inform remaining procs
       if (allononeproc == 0) break;
 
-      // check for node coupling condition and slave/master status
+      // check for node coupling condition and source/target status
 
-      // do nothing if the node is the master in all of the applied conditions
-      // do something for second, third, ... (slave) node
-      // also if the node is a master in one condition, but a slave in another
+      // do nothing if the node is the target in all of the applied conditions
+      // do something for second, third, ... (source) node
+      // also if the node is a target in one condition, but a source in another
       bool is_source = false;
       for (auto condition_id : applied_condition)
       {
@@ -306,11 +306,11 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
         if (numdofcond[condition_id] != num_dof_rownodes.get_local_values()[i])
           FOUR_C_THROW("ERROR: Number of DoFs in coupling condition {} does not match node {}",
               numdofcond[condition_id], num_dof_rownodes.get_local_values()[i]);
-        if (masterIds[condition_id] != gid) is_source = true;
+        if (target_ids[condition_id] != gid) is_source = true;
       }
 
       if (is_source)
-      {  // in case it is a slave node (in some dof): the dof is cancelled, replaced by the master
+      {  // in case it is a source node (in some dof): the dof is cancelled, replaced by the target
          // dof
         int numdf = num_dof_rownodes.get_local_values()[i];
         int dof = count + (gid - minnodegid) * maxnodenumdf;
@@ -319,11 +319,11 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
         dofs.reserve(numdf);
         for (int j = 0; j < numdf; ++j)
         {
-          // push back master node DoF ID if the id is coupled
-          // it might be that the node is the master in one direction and a slave in another
-          if (applied_condition[j] >= 0 && masterIds[applied_condition[j]] != gid)
+          // push back target node DoF ID if the id is coupled
+          // it might be that the node is the target in one direction and a source in another
+          if (applied_condition[j] >= 0 && target_ids[applied_condition[j]] != gid)
           {
-            std::vector<int>& mdofs = nodedofset[masterIds[applied_condition[j]]];
+            std::vector<int>& mdofs = nodedofset[target_ids[applied_condition[j]]];
             dofs.push_back(mdofs[j]);
           }
           // push back new DoF ID if not coupled
@@ -335,9 +335,9 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
         }
       }
       else
-      // standard treatment for non-coupling nodes and master coupling nodes
+      // standard treatment for non-coupling nodes and target coupling nodes
       {
-        // now treat only the nodes, which are master and thus did not get the special treatment
+        // now treat only the nodes, which are target and thus did not get the special treatment
         int numdf = num_dof_rownodes.get_local_values()[i];
         int dof = count + (gid - minnodegid) * maxnodenumdf;
         idxrownodes.get_local_values()[i] = dof;

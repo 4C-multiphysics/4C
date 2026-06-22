@@ -266,10 +266,10 @@ template <Core::FE::CellType distype>
 void Core::FE::ShapeValuesFace<distype>::adjust_face_orientation(
     const Core::Elements::Element& ele, const unsigned int face)
 {
-  // For the shape values on faces, we need to figure out how the master element of
+  // For the shape values on faces, we need to figure out how the target element of
   // a face walks over the face and how the current face element wants to walk over
-  // it. The local trafo map of the face element holds that information for the slave
-  // side, whereas the master side always uses the correct mapping. Thus, we need not
+  // it. The local trafo map of the face element holds that information for the source
+  // side, whereas the target side always uses the correct mapping. Thus, we need not
   // do anything in that case.
   if (ele.faces()[face]->parent_target_element() == &ele)
   {
@@ -278,12 +278,12 @@ void Core::FE::ShapeValuesFace<distype>::adjust_face_orientation(
     return;
   }
 
-  // For the adjusted slave slide, we need to change the order of quadrature
+  // For the adjusted source slide, we need to change the order of quadrature
   // points in the shape functions of the trace to match the orientation in the
   // transformation.
   const std::vector<int>& trafomap = ele.faces()[face]->get_local_trafo_map();
   FOUR_C_ASSERT(trafomap.size() == nfn_,
-      "Transformation map from slave face coordinate system to master coordinates has not been "
+      "Transformation map from source face coordinate system to target coordinates has not been "
       "filled.");
 
   const int nqpoints1d = std::pow(nqpoints_ + 0.001, 1. / (nsd_ - 1));
@@ -482,30 +482,29 @@ template <Core::FE::CellType distype>
 void Core::FE::ShapeValuesFace<distype>::compute_face_reference_system(
     const Core::Elements::Element& ele, const unsigned int face)
 {
-  // In the case in which the element is not the master element for the face there is the need to
-  // find the master element and build the face reference system from the master side.
+  // In the case in which the element is not the target element for the face there is the need to
+  // find the target element and build the face reference system from the target side.
 
   Core::LinAlg::SerialDenseVector norm(nsd_ - 1);
 
   if (ele.faces()[face]->parent_target_element() != &ele)
   {
-    // This is the same that is done before for the face element but we do it from the master side
+    // This is the same that is done before for the face element but we do it from the target side
     // get face position array from element position array
     FOUR_C_ASSERT(faceNodeOrder[face].size() == nfn_, "Internal error");
     const std::vector<int>& trafomap = ele.faces()[face]->get_local_trafo_map();
 
-    // Core::LinAlg::SerialDenseMatrix nodexyzreal_master(nsd_, nfdofs_);
-    Core::LinAlg::Matrix<nsd_, nen_> xyzeMasterElement;
+    Core::LinAlg::Matrix<nsd_, nen_> xyze_target_element;
     Core::Geo::fill_initial_position_array<distype, nsd_, Core::LinAlg::Matrix<nsd_, nen_>>(
-        &ele, xyzeMasterElement);
+        &ele, xyze_target_element);
 
-    // Compute the reference system from the master side
+    // Compute the reference system from the target side
     for (unsigned int d = 0; d < nsd_; ++d)
       for (unsigned int i = 0; i < nsd_ - 1; ++i)
-        tangent(d, i) = xyzeMasterElement(d, faceNodeOrder[face][trafomap[i + 1]]) -
-                        xyzeMasterElement(d, faceNodeOrder[face][trafomap[0]]);
+        tangent(d, i) = xyze_target_element(d, faceNodeOrder[face][trafomap[i + 1]]) -
+                        xyze_target_element(d, faceNodeOrder[face][trafomap[0]]);
   }
-  else  // We already are on the master side
+  else  // We already are on the target side
     for (unsigned int d = 0; d < nsd_; ++d)
       for (unsigned int i = 0; i < nsd_ - 1; ++i) tangent(d, i) = xyze(d, i + 1) - xyze(d, 0);
 

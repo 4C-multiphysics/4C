@@ -60,11 +60,9 @@ MATERIALS:
         constant: [0.4, 0.6]
   - MAT: 11
     MIX_Constituent_ElastHyper:
-      NUMMAT: 1
       MATIDS: [101]
   - MAT: 12
     MIX_Constituent_ElastHyper:
-      NUMMAT: 1
       MATIDS: [102]
   - MAT: 101
     ELAST_CoupLogNeoHooke:

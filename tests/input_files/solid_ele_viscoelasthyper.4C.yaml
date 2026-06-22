@@ -1,6 +1,6 @@
 TITLE:
   - "Testcase for testing viscoelasthyper-toolbox with new solid elements."
-  - "And summands: genmax, iso1pow, fract"
+  - "And summands: generalized maxwell, iso1pow, fsls"
 PROBLEM TYPE:
   PROBLEMTYPE: "Structure"
 DISCRETISATION:
@@ -96,10 +96,22 @@ MATERIALS:
       C: 6
       D: 6
   - MAT: 5
-    VISCO_GenMax:
+    VISCO_GeneralizedMaxwell:
+      NUMBRANCH: 3
+      MATIDS: [6, 7, 8]
+      SOLVE: "OneStepTheta"
+  - MAT: 6
+    VISCO_GeneralizedMaxwellBranch:
       TAU: 0.1
-      BETA: 1
-      SOLVE: "OST"
+      MATID: 2
+  - MAT: 7
+    VISCO_GeneralizedMaxwellBranch:
+      TAU: 0.1
+      MATID: 3
+  - MAT: 8
+    VISCO_GeneralizedMaxwellBranch:
+      TAU: 0.1
+      MATID: 4
   - MAT: 10
     MAT_ViscoElastHyper:
       NUMMAT: 4
@@ -138,7 +150,7 @@ MATERIALS:
       C: 6
       D: 6
   - MAT: 25
-    VISCO_Fract:
+    VISCO_FSLS:
       TAU: 0.1
       ALPHA: 0.5
       BETA: 1

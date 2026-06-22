@@ -319,6 +319,7 @@ void Discret::Elements::Transport::set_material(
       mat->material_type() == Core::Materials::m_scatra_in_solid_porofluid_pressure_based or
       mat->material_type() == Core::Materials::m_scatra_as_temperature_porofluid_pressure_based or
       mat->material_type() == Core::Materials::m_scatra_gr or
+      mat->material_type() == Core::Materials::m_scatra_nl_stimulus or
       (mat->material_type() == Core::Materials::m_electrode and impltype_ == ScaTra::impltype_std))
     numdofpernode_ = 1;  // we only have a single scalar
   else if (mat->material_type() == Core::Materials::m_electrode)

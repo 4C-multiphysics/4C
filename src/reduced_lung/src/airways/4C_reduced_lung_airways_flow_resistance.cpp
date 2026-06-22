@@ -8,6 +8,7 @@
 #include "4C_reduced_lung_airways_flow_resistance.hpp"
 
 #include "4C_reduced_lung_airways_wall_mechanics.hpp"
+#include "4C_reduced_lung_helpers.hpp"
 
 #include <cmath>
 #include <numbers>
@@ -430,6 +431,36 @@ namespace ReducedLung::Airways::FlowResistance
           {
             FOUR_C_THROW("Unknown airway flow model.");
           }
+        },
+        flow_model);
+  }
+
+  void append_flow_output(const LinearResistive& /*model*/, const AirwayData& /*data*/,
+      RuntimeOutputCollector& /*collector*/, ReducedLungParameters::OutputVerbosity /*verbosity*/)
+  {
+  }
+
+  void append_flow_output(const NonLinearResistive& model, const AirwayData& data,
+      RuntimeOutputCollector& collector, ReducedLungParameters::OutputVerbosity verbosity)
+  {
+    if (verbosity >= ReducedLungParameters::OutputVerbosity::high)
+    {
+      auto& k_turb = collector.get_or_create_vector("flow_k_turb");
+      for (size_t i = 0; i < data.number_of_elements(); ++i)
+      {
+        k_turb.replace_local_value(data.local_element_id[i], model.k_turb[i]);
+      }
+    }
+  }
+
+  OutputEvaluator make_output_evaluator(FlowModel& flow_model)
+  {
+    return std::visit(
+        [](auto& model) -> OutputEvaluator
+        {
+          return [&model](const AirwayData& data, RuntimeOutputCollector& collector,
+                     ReducedLungParameters::OutputVerbosity verbosity)
+          { append_flow_output(model, data, collector, verbosity); };
         },
         flow_model);
   }

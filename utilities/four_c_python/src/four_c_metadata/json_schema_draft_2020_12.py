@@ -73,25 +73,32 @@ class Schema:
 class NullType:
     applicators: Sequence[OneOf] = field(default_factory=list)
     validators: Sequence[Enum | Const] = field(default_factory=list)
-    core: Sequence[IdCore | SchemaCore] = field(default_factory=list)
+    core: Sequence[IdCore | SchemaCore | RefCore] = field(default_factory=list)
 
 
 @dataclass
 class BooleanType:
     applicators: Sequence[OneOf] = field(default_factory=list)
     validators: Sequence[Enum | Const] = field(default_factory=list)
-    core: Sequence[IdCore | SchemaCore] = field(default_factory=list)
+    core: Sequence[IdCore | SchemaCore | RefCore] = field(default_factory=list)
 
 
 @dataclass
 class ObjectType:
     applicators: Sequence[
-        OneOf | Properties | AdditionalProperties | PatternProperties
+        OneOf
+        | AllOf
+        | AnyOf
+        | Properties
+        | AdditionalProperties
+        | PatternProperties
+        | PropertyNames
+        | DefaultSnippets
     ] = field(default_factory=list)
     validators: Sequence[Enum | Const | Required | MinProperties | MaxProperties] = (
         field(default_factory=list)
     )
-    core: Sequence[IdCore | SchemaCore] = field(default_factory=list)
+    core: Sequence[IdCore | SchemaCore | RefCore] = field(default_factory=list)
 
 
 @dataclass
@@ -100,7 +107,7 @@ class ArrayType:
     validators: Sequence[Enum | Const | MinItems | MaxItems] = field(
         default_factory=list
     )
-    core: Sequence[IdCore | SchemaCore] = field(default_factory=list)
+    core: Sequence[IdCore | SchemaCore | RefCore] = field(default_factory=list)
 
 
 @dataclass
@@ -109,7 +116,7 @@ class NumberType:
     validators: Sequence[
         Enum | Const | ExclusiveMinimum | ExclusiveMaximum | Minimum | Maximum
     ] = field(default_factory=list)
-    core: Sequence[IdCore | SchemaCore] = field(default_factory=list)
+    core: Sequence[IdCore | SchemaCore | RefCore] = field(default_factory=list)
 
 
 @dataclass
@@ -118,14 +125,14 @@ class IntegerType:
     validators: Sequence[
         Enum | Const | ExclusiveMinimum | ExclusiveMaximum | Minimum | Maximum
     ] = field(default_factory=list)
-    core: Sequence[IdCore | SchemaCore] = field(default_factory=list)
+    core: Sequence[IdCore | SchemaCore | RefCore] = field(default_factory=list)
 
 
 @dataclass
 class StringType:
-    applicators: Sequence[OneOf] = field(default_factory=list)
+    applicators: Sequence[OneOf | AllOf | AnyOf] = field(default_factory=list)
     validators: Sequence[Enum | Const | Pattern] = field(default_factory=list)
-    core: Sequence[IdCore | SchemaCore] = field(default_factory=list)
+    core: Sequence[IdCore | SchemaCore | RefCore] = field(default_factory=list)
 
 
 SchemaTypesAlias: TypeAlias = (
@@ -245,11 +252,43 @@ class OneOf:
 
 
 @dataclass
+class AnyOf:
+    schemas: Sequence[Schema]
+
+    def serialize(self) -> Sequence[dict]:
+        return [s.to_dict() for s in self.schemas]
+
+
+@dataclass
+class AllOf:
+    schemas: Sequence[Schema]
+
+    def serialize(self) -> Sequence[dict]:
+        return [s.to_dict() for s in self.schemas]
+
+
+@dataclass
 class Properties:
     schemas: dict[str, Schema]
 
     def serialize(self) -> dict[str, dict]:
         return {name: schema.to_dict() for name, schema in self.schemas.items()}
+
+
+@dataclass
+class PropertyNames:
+    schema: Schema
+
+    def serialize(self) -> dict:
+        return self.schema.to_dict()
+
+
+@dataclass
+class DefaultSnippets:
+    data: Sequence[dict]
+
+    def serialize(self) -> Sequence[dict]:
+        return self.data
 
 
 @dataclass
@@ -289,7 +328,11 @@ class PrefixItems:
 
 class Applicators:
     oneOf = OneOf
+    anyOf = AnyOf
+    allOf = AllOf
     properties = Properties
+    propertyNames = PropertyNames
+    defaultSnippets = DefaultSnippets
     additionalProperties = AdditionalProperties
     patternProperties = PatternProperties
     items = Items
@@ -307,6 +350,12 @@ class SchemaCore:
     data: str
 
 
+@dataclass
+class RefCore:
+    data: str
+
+
 class Core:
     id_core = IdCore
     schema = SchemaCore
+    ref = RefCore

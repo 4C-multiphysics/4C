@@ -55,18 +55,11 @@ MATERIALS:
   - MAT: 4
     MAT_newman:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      THERMFAC: 0
-      COND_CONC_DEP_FUNCT: -11
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [0.00026]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [0.363]
-      COND_PARA_NUM: 3
-      COND_PARA: [1580, 0.85, 1.4]
+      TRANSFERENCE_NR: 0.363
+      THERM_FAC: 1.0
+      COND: 1.0
+      COND_CONC_SCALE_FUNCT: 3
+      DIFF_COEF: 0.00026
 CLONING MATERIAL MAP:
   - SRC_FIELD: "structure"
     SRC_MAT: 1
@@ -79,6 +72,9 @@ FUNCT1:
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
 FUNCT2:
   - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "(0.5-0.5*cos(t*pi/5.0))+1"
+FUNCT3:
+  # conductivity as a function of concentration according to Goldin et al. 2012; 10.1016/j.electacta.2011.12.119
+  - SYMBOLIC_FUNCTION_OF_TIME: "1580.0*t*exp(0.85*t^1.4)"
 RESULT DESCRIPTION:
   - STRUCTURE:
       DIS: "structure"

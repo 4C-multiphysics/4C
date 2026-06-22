@@ -37,7 +37,7 @@ porofluid_dynamic:
 porofluid_elasticity_dynamic:
   solve_structure: true
   coupling_scheme: twoway_monolithic
-  body_force: [0.0, 9.81e-1, 0.0]
+  body_force_function: 5
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
   MAXTIME: 2.5
@@ -155,6 +155,13 @@ FUNCT3:
   - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
 FUNCT4:
   - VARFUNCTION: "0.0"
+FUNCT5:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "9.81e-1"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
 RESULT DESCRIPTION:
   - STRUCTURE:
       DIS: "structure"

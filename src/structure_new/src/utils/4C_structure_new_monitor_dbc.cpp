@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <ranges>
+#include <string>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -51,10 +52,16 @@ void Solid::MonitorDbc::init(const std::shared_ptr<Solid::TimeInt::BaseDataIO>& 
     return;
   }
 
+  std::vector<std::shared_ptr<Core::Conditions::Condition>> rconds;
+  rconds.reserve(tagged_conds.size());
+
   // copy the information of the tagged Dirichlet condition into a new
   // auxiliary "ReactionForce" condition and build the related geometry
   for (const Core::Conditions::Condition* tagged_cond : tagged_conds)
-    create_reaction_force_condition(*tagged_cond, discret);
+    rconds.push_back(create_reaction_force_condition(*tagged_cond));
+
+  // Set the conditions in the discretization
+  discret.replace_conditions("ReactionForce", rconds);
 
   // build geometry
   discret.fill_complete({
@@ -109,8 +116,8 @@ int Solid::MonitorDbc::get_unique_id(int tagged_id, Core::Conditions::GeometryTy
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::MonitorDbc::create_reaction_force_condition(
-    const Core::Conditions::Condition& tagged_cond, Core::FE::Discretization& discret) const
+std::shared_ptr<Core::Conditions::Condition> Solid::MonitorDbc::create_reaction_force_condition(
+    const Core::Conditions::Condition& tagged_cond) const
 {
   const std::string rcond_name =
       (tagged_cond.entity_type() == Core::Conditions::EntityType::node_set_name)
@@ -122,8 +129,7 @@ void Solid::MonitorDbc::create_reaction_force_condition(
       std::make_shared<Core::Conditions::Condition>(tagged_cond.id(), Core::Conditions::ElementTag,
           true, tagged_cond.g_type(), Core::Conditions::EntityType::node_set_name,
           *tagged_cond.get_nodes(), rcond_parameters, rcond_name);
-
-  discret.set_condition("ReactionForce", rcond_ptr);
+  return rcond_ptr;
 }
 
 void Solid::MonitorDbc::read_restart_yaml_file(const Core::Conditions::Condition& rcond)
@@ -291,7 +297,7 @@ void Solid::MonitorDbc::create_reaction_maps(const Core::FE::Discretization& dis
     const Core::Nodes::Node* node = discret.l_row_node(rlid);
 
     for (unsigned i = 0; i < DIM; ++i)
-      if (onoff[i] == 1) my_dofs[i].push_back(discret.dof(node, i));
+      if (onoff[i] == 1) my_dofs[i].push_back(discret.dof(structural_dof_set_, node, i));
   }
 
   for (unsigned i = 0; i < DIM; ++i)
@@ -470,7 +476,7 @@ void Solid::MonitorDbc::get_area(double area[], const Core::Conditions::Conditio
 
   const std::map<int, std::shared_ptr<Core::Elements::Element>>& celes = rcond->geometry();
   std::shared_ptr<const Core::LinAlg::Vector<double>> dispn = gstate_ptr_->get_dis_np();
-  Core::LinAlg::Vector<double> dispn_col(*discret.dof_col_map(), true);
+  Core::LinAlg::Vector<double> dispn_col(*discret.dof_col_map(structural_dof_set_), true);
   Core::LinAlg::export_to(*dispn, dispn_col);
 
   for (auto& cele_pair : celes)
@@ -489,7 +495,8 @@ void Solid::MonitorDbc::get_area(double area[], const Core::Conditions::Conditio
     std::vector<int> fele_dofs;
     fele_dofs.reserve(num_fnodes * DIM);
 
-    for (unsigned i = 0; i < num_fnodes; ++i) discret.dof(fele, fnodes[i], fele_dofs);
+    for (unsigned i = 0; i < num_fnodes; ++i)
+      discret.dof(structural_dof_set_, fele, fnodes[i], fele_dofs);
 
     std::vector<double> mydispn = Core::FE::extract_values(dispn_col, fele_dofs);
 
@@ -503,7 +510,7 @@ void Solid::MonitorDbc::get_area(double area[], const Core::Conditions::Conditio
       std::copy(fnode.x().data(), fnode.x().data() + DIM, &xyze_curr(0, i));
 
       std::vector<int> ndofs;
-      discret.dof(&fnode, ndofs);
+      discret.dof(structural_dof_set_, &fnode, ndofs);
 
       for (unsigned d = 0; d < ndofs.size(); ++d)
       {
@@ -588,7 +595,8 @@ double Solid::MonitorDbc::get_reaction_moment(Core::LinAlg::Matrix<DIM, 1>& rmom
 
     const Core::Nodes::Node* node = discret_ptr_->l_row_node(rlid);
 
-    for (unsigned i = 0; i < DIM; ++i) node_gid[i] = discret_ptr_->dof(node, i);
+    for (unsigned i = 0; i < DIM; ++i)
+      node_gid[i] = discret_ptr_->dof(structural_dof_set_, node, i);
 
     std::vector<double> mydisp = Core::FE::extract_values(*dispn, node_gid);
     for (unsigned i = 0; i < DIM; ++i) node_position(i) = node->x()[i] + mydisp[i];

@@ -205,7 +205,7 @@ void Core::DOFSets::TransparentDofSet::parallel_transfer_degrees_of_freedom(
     }
   }
 
-  std::set<int> slaveset;
+  std::set<int> source_set;
   std::vector<const Core::Conditions::Condition*> mypbcs;
 
   // get periodic surface boundary conditions
@@ -220,18 +220,18 @@ void Core::DOFSets::TransparentDofSet::parallel_transfer_degrees_of_freedom(
   {
     const Core::Conditions::Condition* thiscond = mypbcs[numcond];
 
-    // see whether we have a slave condition
-    const std::string& mymasterslavetoggle =
+    // see whether we have a source condition
+    const std::string& my_target_source_toggle =
         thiscond->parameters().get<std::string>("MASTER_OR_SLAVE");
 
-    if (!(mymasterslavetoggle == "Master"))
+    if (!(my_target_source_toggle == "Master"))
     {
       const std::vector<int>* pbcids;
       pbcids = (*thiscond).get_nodes();
 
       for (std::vector<int>::const_iterator iter = pbcids->begin(); iter != pbcids->end(); ++iter)
       {
-        slaveset.insert(*iter);
+        source_set.insert(*iter);
       }
     }
   }
@@ -262,10 +262,10 @@ void Core::DOFSets::TransparentDofSet::parallel_transfer_degrees_of_freedom(
     {
       idxcolnodes_->get_local_values()[newlid] = dofs[0];
 
-      // slave-dofs must not enter the dofrowset (if master&slave are on different procs)
-      std::set<int>::iterator curr = slaveset.find(newnode->id());
+      // source-dofs must not enter the dofrowset (if target&source are on different procs)
+      std::set<int>::iterator curr = source_set.find(newnode->id());
 
-      if (curr == slaveset.end())
+      if (curr == source_set.end())
       {
         for (int idof = 0; idof < numdofs; ++idof)
         {

@@ -20,15 +20,6 @@ Mat::Elastic::PAR::IsoVarga::IsoVarga(const Core::Mat::PAR::Parameter::Data& mat
 
 Mat::Elastic::IsoVarga::IsoVarga(Mat::Elastic::PAR::IsoVarga* params) : params_(params) {}
 
-void Mat::Elastic::IsoVarga::add_shear_mod(bool& haveshearmod, double& shearmod, int ele_gid) const
-{
-  // indeed, a shear modulus is provided
-  haveshearmod = haveshearmod or true;
-
-  // material parameters for isochoric part
-  shearmod += params_->mue_;
-}
-
 void Mat::Elastic::IsoVarga::add_coefficients_stretches_modified(
     Core::LinAlg::Matrix<3, 1>& modgamma, Core::LinAlg::Matrix<6, 1>& moddelta,
     const Core::LinAlg::Matrix<3, 1>& modstr)

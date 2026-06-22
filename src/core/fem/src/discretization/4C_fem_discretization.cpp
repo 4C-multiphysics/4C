@@ -586,7 +586,7 @@ const std::map<int, std::vector<int>>* Core::FE::Discretization::get_all_pbc_cou
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::shared_ptr<const std::map<int, int>>
-Core::FE::Discretization::get_pbc_slave_to_master_node_connectivity() const
+Core::FE::Discretization::get_pbc_source_to_target_node_connectivity() const
 {
   // check for pbcs
   for (int nds = 0; nds < num_dof_sets(); nds++)
@@ -598,7 +598,7 @@ Core::FE::Discretization::get_pbc_slave_to_master_node_connectivity() const
     {
       // it is assumed that, if one pbc set is available, all other potential dofsets hold the same
       // layout
-      return pbcdofset->get_slave_to_master_node_connectivity();
+      return pbcdofset->get_source_to_target_node_connectivity();
     }
   }
 
@@ -662,6 +662,46 @@ void Core::FE::Discretization::set_state(
     // save state
     state_[nds][name] = tmp;
   }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Core::FE::Discretization::reset_element_eval_timers()
+{
+  for (auto* ele : elecolptr_)
+  {
+    FOUR_C_ASSERT(ele != nullptr,
+        "Encountered null local column element while resetting evaluation timers in "
+        "discretization "
+        "{}!",
+        name_);
+    ele->set_eval_time(0.0);
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+std::vector<double> Core::FE::Discretization::get_rank_eval_times_on_root() const
+{
+  double my_eval_time_sum = 0.0;
+  for (auto* ele : elecolptr_)
+  {
+    FOUR_C_ASSERT(ele != nullptr,
+        "Encountered null local column element while getting evaluation timers in "
+        "discretization {}!",
+        name_);
+    my_eval_time_sum += ele->eval_time();
+  }
+
+  std::vector<double> eval_times;
+  double* gathered_eval_times = nullptr;
+  if (Core::Communication::my_mpi_rank(get_comm()) == 0)
+  {
+    eval_times.resize(Core::Communication::num_mpi_ranks(get_comm()));
+    gathered_eval_times = eval_times.data();
+  }
+  Core::Communication::gather_to_root(&my_eval_time_sum, gathered_eval_times, 1, get_comm());
+  return eval_times;
 }
 
 /*----------------------------------------------------------------------*

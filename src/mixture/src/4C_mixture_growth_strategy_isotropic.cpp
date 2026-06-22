@@ -33,6 +33,15 @@ void Mixture::IsotropicGrowthStrategy::evaluate_inverse_growth_deformation_gradi
          Core::LinAlg::get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
 }
 
+Core::LinAlg::Tensor<double, 3, 3>
+Mixture::IsotropicGrowthStrategy::evaluate_d_inverse_growth_deformation_gradient_d_growth_scalar(
+    const double currentReferenceGrowthScalar, const Mat::EvaluationContext<3>& context,
+    const int gp, const int eleGID) const
+{
+  return (-1.0 / 3.0) * std::pow(currentReferenceGrowthScalar, -4.0 / 3.0) *
+         Core::LinAlg::get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
+}
+
 void Mixture::IsotropicGrowthStrategy::evaluate_growth_stress_cmat(
     const Mixture::MixtureRule& mixtureRule, double currentReferenceGrowthScalar,
     const Core::LinAlg::SymmetricTensor<double, 3, 3>& dCurrentReferenceGrowthScalarDC,

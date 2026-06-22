@@ -124,8 +124,6 @@ void StructureFilter::write_all_results(PostField* field)
 
   // additional output for poro problems
   writer_->write_result("porosity_p1", "porosity_p1", dofbased, 1);
-  writer_->write_result(
-      "poronopencond_lambda", "poronopencond_lambda", dofbased, field->problem()->num_dim());
 
   // monolithic scalar-structure interaction involving scatra-scatra interface coupling outputs
   // nodal Cauchy stresses instead of Gauss-point ones
@@ -348,50 +346,6 @@ void LubricationFilter::write_all_results(PostField* field)
   write_element_results(field);
 }
 
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-void ThermoFilter::write_all_results(PostField* field)
-{
-  // number of dofs per node in thermal problems is always 1
-  const int numdofpernode = 1;
-
-  // write temperature
-  writer_->write_result("temperature", "temperature", dofbased, numdofpernode);
-
-  // write temperature rate
-  // writer_->WriteResult("rate", "rate", dofbased, numdofpernode);
-
-  if (heatfluxtype_ != "none")
-  {
-    // although appearing here twice, only one function call to post_heatflux
-    // is really postprocessing Gauss point heatfluxes, since only _either_
-    // Current _or_ Initial heatfluxes are written during simulation!
-    post_heatflux("gauss_current_heatfluxes_xyz", heatfluxtype_);
-    post_heatflux("gauss_initial_heatfluxes_xyz", heatfluxtype_);
-    writer_->write_result("heatflux", "heatflux", nodebased, field->problem()->num_dim());
-  }
-  if (tempgradtype_ != "none")
-  {
-    // although appearing here twice, only one function call to post_heatflux
-    // is really postprocessing Gauss point temperature gradients, since only _either_
-    // Initial _or_ Current temperature gradients are written during simulation!
-    post_heatflux("gauss_current_tempgrad_xyz", tempgradtype_);
-    post_heatflux("gauss_initial_tempgrad_xyz", tempgradtype_);
-    writer_->write_result("tempgrad", "tempgrad", nodebased, field->problem()->num_dim());
-  }
-
-  // write displacement field
-  writer_->write_result("displacement", "displacement", nodebased, field->problem()->num_dim());
-
-  // special information for SLM
-  writer_->write_result("phase", "phase", dofbased, numdofpernode);
-  writer_->write_result("conductivity", "conductivity", dofbased, numdofpernode);
-  writer_->write_result("capacity", "capacity", dofbased, numdofpernode);
-
-  // write element results (e.g. element owner)
-  write_element_results(field);
-
-}  // ThermoFilter::WriteAllResults
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/

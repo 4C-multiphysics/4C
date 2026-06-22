@@ -77,13 +77,13 @@ namespace EHL
 
    protected:
     void add_pressure_force(
-        Core::LinAlg::Vector<double>& slaveiforce, Core::LinAlg::Vector<double>& masteriforce);
+        Core::LinAlg::Vector<double>& sourceiforce, Core::LinAlg::Vector<double>& targetiforce);
 
     void add_poiseuille_force(
-        Core::LinAlg::Vector<double>& slaveiforce, Core::LinAlg::Vector<double>& masteriforce);
+        Core::LinAlg::Vector<double>& sourceiforce, Core::LinAlg::Vector<double>& targetiforce);
 
     void add_couette_force(
-        Core::LinAlg::Vector<double>& slaveiforce, Core::LinAlg::Vector<double>& masteriforce);
+        Core::LinAlg::Vector<double>& sourceiforce, Core::LinAlg::Vector<double>& targetiforce);
 
     /// underlying structure of the EHL problem
     std::shared_ptr<Adapter::Structure> structure_;
@@ -94,11 +94,11 @@ namespace EHL
     //! Type of coupling strategy between the two fields of the EHL problems
     const EHL::FieldCoupling fieldcoupling_;
 
-    //! adapter for coupling the nodes of the lubrication field with the nodes from the master side
+    //! adapter for coupling the nodes of the lubrication field with the nodes from the target side
     //! of the structure
     std::shared_ptr<Adapter::CouplingEhlMortar> mortaradapter_;
 
-    //! Interface traction vector in the slave str dof map
+    //! Interface traction vector in the source str dof map
     std::shared_ptr<Core::LinAlg::Vector<double>> stritraction_D_;
     std::shared_ptr<Core::LinAlg::Vector<double>> stritraction_M_;
 
@@ -106,12 +106,12 @@ namespace EHL
     std::shared_ptr<Core::LinAlg::SparseMatrix> lubrimaptransform_;
 
     //! Mapextractors for dealing with interface vectors of the structure field
-    std::shared_ptr<Core::LinAlg::MapExtractor> slaverowmapextr_;
-    std::shared_ptr<Core::LinAlg::MapExtractor> masterrowmapextr_;
+    std::shared_ptr<Core::LinAlg::MapExtractor> sourcerowmapextr_;
+    std::shared_ptr<Core::LinAlg::MapExtractor> targetrowmapextr_;
     std::shared_ptr<Core::LinAlg::MapExtractor> mergedrowmapextr_;
 
-    //! Transformation matrix for slave side node map <-> slave side disp dof map
-    std::shared_ptr<Core::LinAlg::SparseMatrix> slavemaptransform_;
+    //! Transformation matrix for source side node map <-> source side disp dof map
+    std::shared_ptr<Core::LinAlg::SparseMatrix> sourcemaptransform_;
 
     //! several adapters to transform maps
     std::shared_ptr<Coupling::Adapter::Coupling> ada_strDisp_to_lubDisp_;

@@ -51,7 +51,7 @@ Discret::Elements::FluidIntFace::FluidIntFace(int id,  ///< element id
     : Core::Elements::FaceElement(id, owner)
 {
   set_parent_target_element(parent_master, lsurface_master);
-  set_parent_slave_element(parent_slave, lsurface_slave);
+  set_parent_source_element(parent_slave, lsurface_slave);
   set_local_trafo_map(localtrafomap);
   set_node_ids(nnode, nodeids);
   build_nodal_pointers(nodes);

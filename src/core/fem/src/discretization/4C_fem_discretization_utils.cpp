@@ -53,12 +53,12 @@ std::unique_ptr<Core::LinAlg::MultiVector<double>> Core::FE::extract_retained_no
     const Discretization& discretization, const Core::LinAlg::Map& node_row_map)
 {
   std::set<int> skipped_nodes = {};
-  if (discretization.get_pbc_slave_to_master_node_connectivity())
+  if (discretization.get_pbc_source_to_target_node_connectivity())
   {
-    const auto& pbcconnectivity = *(discretization.get_pbc_slave_to_master_node_connectivity());
-    for (const auto& [slave, _] : pbcconnectivity)
+    const auto& pbcconnectivity = *(discretization.get_pbc_source_to_target_node_connectivity());
+    for (const auto& [source, _] : pbcconnectivity)
     {
-      skipped_nodes.insert(slave);
+      skipped_nodes.insert(source);
     }
   }
   std::set<int> fully_redundant_skipped_nodes =
@@ -70,7 +70,7 @@ std::unique_ptr<Core::LinAlg::MultiVector<double>> Core::FE::extract_retained_no
   {
     const int gid = node_row_map.gid(lid);
 
-    // filter pbc slave nodes
+    // filter pbc source nodes
     if (fully_redundant_skipped_nodes.contains(gid)) continue;
     my_filtered_global_node_ids.emplace_back(gid);
   }

@@ -23,9 +23,9 @@ FOUR_C_NAMESPACE_OPEN
 Mat::PAR::Scl::Scl(const Core::Mat::PAR::Parameter::Data& matdata)
     : ElchSingleMat(matdata),
       valence_(matdata.parameters.get<double>("VALENCE")),
-      transnrcurve_(matdata.parameters.get<int>("TRANSNR")),
-      transnrparanum_(matdata.parameters.get<int>("TRANS_PARA_NUM")),
-      transnr_(matdata.parameters.get<std::vector<double>>("TRANS_PARA")),
+      transference_number_(matdata.parameters.get<double>("TRANSFERENCE_NR")),
+      transference_number_concentration_scaling_funct_num_(
+          matdata.parameters.get<std::optional<int>>("TRANSFERENCE_NR_CONC_SCALE_FUNCT")),
       cmax_(matdata.parameters.get<double>("MAX_CONC")),
       extrapolation_diffusion_coeff_strategy_(matdata.parameters.get<int>("EXTRAPOL_DIFF")),
       clim_(matdata.parameters.get<double>("LIM_CONC")),
@@ -33,17 +33,32 @@ Mat::PAR::Scl::Scl(const Core::Mat::PAR::Parameter::Data& matdata)
       susceptibility_(matdata.parameters.get<double>("SUSCEPT")),
       delta_nu_(matdata.parameters.get<double>("DELTA_NU")),
       faraday_(Global::Problem::instance()->elch_control_params().get<double>("FARADAY_CONSTANT")),
+      R_(Global::Problem::instance()->elch_control_params().get<double>("GAS_CONSTANT")),
       epsilon_0_(Global::Problem::instance()
               ->elch_control_params()
               .sublist("DIFFCOND")
               .get<double>("PERMITTIVITY_VACUUM"))
 {
-  if (transnrparanum_ != static_cast<int>(transnr_.size()))
-    FOUR_C_THROW("number of materials {} does not fit to size of material vector {}",
-        transnrparanum_, transnr_.size());
+}
 
-  // check if number of provided parameter is valid for a the chosen predefined function
-  check_provided_params(transnrcurve_, transnr_);
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+const Core::Utils::FunctionOfScalar&
+Mat::PAR::Scl::transference_number_concentration_scaling_funct()
+{
+  FOUR_C_ASSERT(has_transference_number_concentration_scaling(),
+      "You try to access the function defining the optional concentration scaling of the "
+      "transference number, but no function number has been set! Check your implementation that "
+      "the input file parameter 'TRANSFERENCE_NR_CONC_SCALE_FUNCT' is properly set and that you "
+      "only call this function if this optional quantity is set.");
+
+  if (!transference_number_concentration_scaling_funct_.has_value())
+  {
+    transference_number_concentration_scaling_funct_.emplace(
+        Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfScalar>(
+            transference_number_concentration_scaling_funct_num_.value()));
+  }
+  return transference_number_concentration_scaling_funct_->get();
 }
 
 /*----------------------------------------------------------------------*/
@@ -66,18 +81,14 @@ Core::Communication::ParObject* Mat::SclType::create(Core::Communication::Unpack
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-Mat::Scl::Scl() : params_(nullptr) {}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-Mat::Scl::Scl(Mat::PAR::Scl* params) : params_(params) {}
+Mat::Scl::Scl(Mat::PAR::Scl* params) : ElchSingleMat(params), params_(params) {}
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Mat::Scl::pack(Core::Communication::PackBuffer& data) const
 {
   // pack type of this instance of ParObject
-  int type = unique_par_object_id();
+  const int type = unique_par_object_id();
   add_to_pack(data, type);
 
   // matid
@@ -104,44 +115,50 @@ void Mat::Scl::unpack(Core::Communication::UnpackBuffer& buffer)
       Core::Mat::PAR::Parameter* mat =
           Global::Problem::instance(probinst)->materials()->parameter_by_id(matid);
       if (mat->type() == material_type())
+      {
         params_ = static_cast<Mat::PAR::Scl*>(mat);
+        set_elch_single_mat_params(params_);
+      }
       else
+      {
         FOUR_C_THROW("Type of parameter material {} does not fit to calling type {}", mat->type(),
             material_type());
+      }
     }
   }
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-double Mat::Scl::compute_transference_number(const double cint) const
+double Mat::Scl::compute_transference_number(const double concentration) const
 {
-  if (trans_nr_curve() < 0)
-    return eval_pre_defined_funct(trans_nr_curve(), cint, trans_nr_params());
-  else if (trans_nr_curve() == 0)
-    return eval_pre_defined_funct(-1, cint, trans_nr_params());
-  else
+  // transference number
+  double transference_number = params_->transference_number_;
+
+  // transference_number = transference_number*transference_number(c)
+  if (params_->has_transference_number_concentration_scaling())
   {
-    return Global::Problem::instance()
-        ->function_by_id<Core::Utils::FunctionOfScalar>(trans_nr_curve())
-        .evaluate(cint);
+    transference_number *=
+        params_->transference_number_concentration_scaling_funct().evaluate(concentration);
   }
+
+  return transference_number;
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-double Mat::Scl::compute_first_deriv_trans(const double cint) const
+double Mat::Scl::compute_concentration_derivative_of_transference_number(
+    const double concentration) const
 {
-  if (trans_nr_curve() < 0)
-    return eval_first_deriv_pre_defined_funct(trans_nr_curve(), cint, trans_nr_params());
-  else if (trans_nr_curve() == 0)
-    return eval_first_deriv_pre_defined_funct(-1, cint, trans_nr_params());
-  else
+  if (not params_->has_transference_number_concentration_scaling())
   {
-    return Global::Problem::instance()
-        ->function_by_id<Core::Utils::FunctionOfScalar>(trans_nr_curve())
-        .evaluate_derivative(cint, 1);
+    return 0.0;
   }
+
+  // Computation of transference_number*transference_number'(c)
+  return params_->transference_number_ *
+         params_->transference_number_concentration_scaling_funct().evaluate_derivative(
+             concentration, 1);
 }
 
 /*----------------------------------------------------------------------*/

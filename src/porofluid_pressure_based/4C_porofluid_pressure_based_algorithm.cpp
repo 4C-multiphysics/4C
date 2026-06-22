@@ -68,8 +68,6 @@ PoroPressureBased::PorofluidAlgorithm::PorofluidAlgorithm(
       fdcheck_(poroparams_.sublist("fd_check").get<bool>("active")),
       fdcheckeps_(poroparams_.sublist("fd_check").get<double>("epsilon")),
       fdchecktol_(poroparams_.sublist("fd_check").get<double>("tolerance")),
-      has_bodyforce_contribution_(
-          poroparams_.get<std::optional<std::vector<double>>>("body_force").has_value()),
       stab_biot_scaling_(poroparams_.sublist("biot_stabilization").get<double>("scaling_factor")),
       time_(0.0),
       maxtime_(params_.get<double>("total_simulation_time")),
@@ -133,16 +131,28 @@ PoroPressureBased::PorofluidAlgorithm::PorofluidAlgorithm(
   FOUR_C_ASSERT_ALWAYS(algorithm_deps_.solver_params_by_id,
       "Solver parameter callback is required for porofluid algorithm.");
 
-  // safety check
-  if (has_bodyforce_contribution_)
-  {
-    // set bodyforce values
-    bodyforce_contribution_values_ =
-        (poroparams_.get<std::optional<std::vector<double>>>("body_force")).value();
-    // safety check
-    FOUR_C_ASSERT_ALWAYS(static_cast<int>(bodyforce_contribution_values_.size()) == nsd_,
-        "The dimension of your bodyforce vector and the dimension of the problem must be equal!");
-  }
+  // get body force function
+  bodyforce_function_ = std::invoke(
+      [&]() -> std::optional<const Core::Utils::FunctionOfSpaceTime*>
+      {
+        if (poroparams_.get<std::optional<int>>("body_force_function").has_value())
+        {
+          const auto& funct =
+              algorithm_deps_.function_manager->function_by_id<Core::Utils::FunctionOfSpaceTime>(
+                  poroparams_.get<std::optional<int>>("body_force_function").value());
+
+          // safety check
+          FOUR_C_ASSERT_ALWAYS(static_cast<int>(funct.number_components()) == nsd_,
+              "The dimension of your bodyforce vector and the dimension of the problem must be "
+              "equal!");
+
+          return &funct;
+        }
+        else
+        {
+          return std::nullopt;
+        }
+      });
 
   const int restart_step = algorithm_deps_.restart_step;
   if (restart_step > 0)
@@ -375,9 +385,8 @@ void PoroPressureBased::PorofluidAlgorithm::set_element_general_parameters() con
   eleparams.set<const Core::Utils::FunctionManager*>(
       "function_manager", algorithm_deps_.function_manager);
 
-  eleparams.set<bool>("has_bodyforce_contribution", has_bodyforce_contribution_);
-  eleparams.set<std::vector<double>>(
-      "bodyforce_contribution_values", bodyforce_contribution_values_);
+  eleparams.set<std::optional<const Core::Utils::FunctionOfSpaceTime*>>(
+      "bodyforce_contribution_function", bodyforce_function_);
 
   eleparams.set<int>("num_domainint_funct", num_domainint_funct_);
   for (int ifunct = 0; ifunct < num_domainint_funct_; ifunct++)

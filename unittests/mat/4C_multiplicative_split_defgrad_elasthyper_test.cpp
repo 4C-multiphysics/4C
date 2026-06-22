@@ -543,7 +543,7 @@ namespace
     kinemat_quant.iFinCeM = iFinCeM_ref_;
     kinemat_quant.detFin = detFin_;
 
-    Mat::MultiplicativeSplitDefgradElastHyper::StressFactors stress_fact;
+    Mat::StressFactors stress_fact;
     stress_fact.gamma = gamma_ref_;
     stress_fact.delta = delta_ref_;
 
@@ -696,7 +696,7 @@ namespace
     kinemat_quant.iCinV = iCinV_ref_;
     kinemat_quant.iCinCiCinV = iCinCiCinV_ref_;
     kinemat_quant.detFin = detFin_;
-    Mat::MultiplicativeSplitDefgradElastHyper::StressFactors stress_fact;
+    Mat::StressFactors stress_fact;
     stress_fact.gamma = gamma_ref_;
     stress_fact.delta = delta_ref_;
 

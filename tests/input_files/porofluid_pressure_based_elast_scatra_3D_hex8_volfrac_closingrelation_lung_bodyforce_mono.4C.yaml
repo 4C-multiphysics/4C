@@ -5,10 +5,10 @@ TITLE:
 PROBLEM TYPE:
   PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
 porofluid_elasticity_scatra_dynamic:
-  total_simulation_time: 0.2
+  total_simulation_time: 1.0
   time_integration:
     time_step_size: 0.1
-    number_of_time_steps: 2
+    number_of_time_steps: 10
     theta: 1
   nonlinear_solver:
     maximum_number_of_iterations: 15
@@ -32,7 +32,7 @@ STRUCTURAL DYNAMIC/ONESTEPTHETA:
 porofluid_dynamic:
   initial_condition:
     type: by_condition
-  body_force: [0.0, -9810.0, 0.0]
+  body_force_function: 11
 porofluid_elasticity_dynamic:
   solve_structure: true
   coupling_scheme: twoway_monolithic
@@ -190,48 +190,61 @@ FUNCT10:
       NC_Hb: 0.25
       P_atmospheric: 101.3
       volfrac_blood_ref: 0.4
+FUNCT11:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 3
+    TIMES: [0, 0.5, 100]
+    DESCRIPTION: ["(-9810.0/0.5) * t", "-9810.0"]
 RESULT DESCRIPTION:
   - POROFLUIDMULTIPHASE:
       DIS: "porofluid"
       NODE: 7
       QUANTITY: "phi2"
-      VALUE: 1.80602257817901346e-01
+      VALUE: 1.81038883237223558e-01
       TOLERANCE: 1e-08
   - POROFLUIDMULTIPHASE:
       DIS: "porofluid"
       NODE: 39
       QUANTITY: "phi2"
-      VALUE: 1.80612076939942745e-01
+      VALUE: 1.81048653078585836e-01
       TOLERANCE: 1e-08
   - POROFLUIDMULTIPHASE:
       DIS: "porofluid"
       NODE: 17
       QUANTITY: "phi1"
-      VALUE: 1.89717344723977079e-05
+      VALUE: 1.96473536717695746e-05
       TOLERANCE: 1e-08
   - POROFLUIDMULTIPHASE:
       DIS: "porofluid"
       NODE: 9
       QUANTITY: "phi1"
-      VALUE: 5.72203597433925705e-05
+      VALUE: 5.89840134495216373e-05
       TOLERANCE: 1e-08
   - STRUCTURE:
       DIS: "structure"
       NODE: 51
       QUANTITY: "dispx"
-      VALUE: 9.15688289443197106e-03
+      VALUE: 9.17858415137095228e-03
       TOLERANCE: 1e-08
   - STRUCTURE:
       DIS: "structure"
       NODE: 19
       QUANTITY: "dispy"
-      VALUE: -5.42887999834081383e-03
+      VALUE: -5.43083696474076262e-03
       TOLERANCE: 1e-08
   - STRUCTURE:
       DIS: "structure"
       NODE: 11
       QUANTITY: "dispz"
-      VALUE: -1.35140779571846681e-03
+      VALUE: -1.35476294113692731e-03
       TOLERANCE: 1e-08
 DESIGN SURF PORO DIRICH CONDITIONS:
   - E: 5

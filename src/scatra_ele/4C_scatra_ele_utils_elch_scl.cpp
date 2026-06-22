@@ -114,7 +114,8 @@ void Discret::Elements::ScaTraEleUtilsElchScl<distype>::mat_scl(
   diffmanager->set_trans_num(matscl->compute_transference_number(concentration), 0);
 
   // derivation of concentration dependent transference number wrt all ionic species
-  diffmanager->set_deriv_trans_num(matscl->compute_first_deriv_trans(concentration), 0, 0);
+  diffmanager->set_deriv_trans_num(
+      matscl->compute_concentration_derivative_of_transference_number(concentration), 0, 0);
 
   // derivative of electronic conductivity w.r.t. temperature
   diffmanager->set_temp_deriv_cond(

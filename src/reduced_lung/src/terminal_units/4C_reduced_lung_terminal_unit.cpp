@@ -9,6 +9,7 @@
 
 #include "4C_reduced_lung_terminal_unit.hpp"
 
+#include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_terminal_unit_elasticity.hpp"
 #include "4C_reduced_lung_terminal_unit_rheology.hpp"
 
@@ -114,6 +115,23 @@ namespace ReducedLung
     }
 
     /**
+     * Emit terminal-unit volume output.
+     */
+    void append_volume_output(const TerminalUnitData& data,
+        ReducedLung::RuntimeOutputCollector& collector,
+        ReducedLungParameters::OutputVerbosity verbosity)
+    {
+      if (verbosity >= ReducedLungParameters::OutputVerbosity::medium)
+      {
+        auto& volume_vec = collector.get_or_create_vector("volume");
+        for (size_t i = 0; i < data.number_of_elements(); ++i)
+        {
+          volume_vec.replace_local_value(data.local_element_id[i], data.volume_v[i]);
+        }
+      }
+    }
+
+    /**
      * Compose elasticity and rheology callbacks into final model evaluators.
      */
     void create_evaluators(TerminalUnitContainer& terminal_units)
@@ -133,8 +151,22 @@ namespace ReducedLung
             Rheology::make_internal_state_updater(model.rheological_model);
         model.end_of_timestep_routine =
             Rheology::make_end_of_timestep_routine(model.rheological_model);
+        auto elasticity_output_evaluator =
+            Elasticity::make_output_evaluator(model.elasticity_model);
+        auto rheology_output_evaluator = Rheology::make_output_evaluator(model.rheological_model);
+        const OutputEvaluator volume_output_evaluator = append_volume_output;
+        model.output_evaluator = [elasticity_output_evaluator, rheology_output_evaluator,
+                                     volume_output_evaluator](const TerminalUnitData& data,
+                                     ReducedLung::RuntimeOutputCollector& collector,
+                                     ReducedLungParameters::OutputVerbosity verbosity)
+        {
+          elasticity_output_evaluator(data, collector, verbosity);
+          rheology_output_evaluator(data, collector, verbosity);
+          volume_output_evaluator(data, collector, verbosity);
+        };
       }
     }
+
   }  // namespace TerminalUnits
 }  // namespace ReducedLung
 

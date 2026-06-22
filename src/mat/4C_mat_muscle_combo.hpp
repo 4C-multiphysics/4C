@@ -44,45 +44,64 @@ namespace Mat
 
       /// @name material parameters
       //@{
-      //! @name passive material parameters
-      const double alpha_;   ///< material parameter, >0
-      const double beta_;    ///< material parameter, >0
-      const double gamma_;   ///< material parameter, >0
-      const double kappa_;   ///< material parameter for coupled volumetric contribution
-      const double omega0_;  ///< weighting factor for isotropic tissue constituents, governs ratio
-                             ///< between muscle matrix material (omega0) and muscle fibers (omegap)
-                             ///< with omega0 + omegap = 1
-                             //! @}
+      /// Passive material parameters
+      struct PassiveParams
+      {
+        double alpha;   ///< material parameter, >0
+        double beta;    ///< material parameter, >0
+        double gamma;   ///< material parameter, >0
+        double kappa;   ///< material parameter for coupled volumetric contribution
+        double omega0;  ///< weighting factor for isotropic tissue constituents, governs ratio
+                        ///< between muscle matrix material (omega0) and muscle fibers (omegap)
+                        ///< with omega0 + omegap = 1
+      };
 
-      //! @name active microstructural parameters
-      //! @name stimulation frequency dependent activation contribution
-      const double Popt_;  ///< optimal (maximal) active tetanised stress
-      //! @}
+      /// passive material parameters
+      const PassiveParams passive_;
 
-      //! @name stretch dependent activation contribution
-      const double lambdaMin_;  ///< minimal active fiber stretch
-      const double
-          lambdaOpt_;  ///< optimal active fiber stretch related active nominal stress maximum
-      //! @}
+      /// Function-based activation prescription
+      struct FunctionActivation
+      {
+        int function_id;
+      };
 
-      //! @name time-/space-dependent activation
+      /// Field-based activation prescription
+      struct FieldActivation
+      {
+        Core::IO::InputField<std::vector<std::pair<double, double>>> field;
+      };
 
-      /*!
-       * @brief type-dependent parameters for activation
+      /**
+       * @brief Type-dependent activation source
        *
        * Depending on the type of activation prescription this is one of the options below:
-       * - Id of the function in the input file specifying an analytical function
+       * - Analytical function in the input file prescribing the activation as a function of space
+       * and time.
        * - Map retrieved from the json input file path in the input file specifying a discrete
        * values. The integer key refers to the element ids, the vector bundles time-activation
        * pairs.
        */
-      using ActivationParameterVariant = std::variant<std::monostate, const int,
-          const Core::IO::InputField<std::vector<std::pair<double, double>>>>;
-      ActivationParameterVariant activationParams_;
-      //! @}
+      using ActivationSource = std::variant<std::monostate, FunctionActivation, FieldActivation>;
+
+      /**
+       * @brief Active microstructural parameters
+       */
+      struct ActiveParams
+      {
+        double Popt;       ///< optimal (maximal) active tetanised stress
+        double lambdaMin;  ///< minimal active fiber stretch
+        double
+            lambdaOpt;  ///< optimal active fiber stretch related to active nominal stress maximum
+
+        /// activation prescription
+        ActivationSource source = std::monostate{};
+      };
+
+      /// optional active parameters
+      std::optional<ActiveParams> active_;
 
       const double density_;  ///< density
-                              //@}
+      //@}
 
       const Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
           Mat::FiberInterpolation>
@@ -184,48 +203,32 @@ namespace Mat
         Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,
         Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, int gp, int eleGID) override;
 
-    using ActivationEvaluatorVariant =
+    using ActivationEvaluator =
         std::variant<std::monostate, const Core::Utils::FunctionOfSpaceTime*,
             const Core::IO::InputField<std::vector<std::pair<double, double>>>*>;
 
    private:
-    /*!
-     * \brief Evaluate active nominal stress Pa, its integral and its derivative w.r.t. the fiber
-     * stretch
-     *
-     * \param[in] params Container for additional information
-     * \param[in] eleGID Global element id used for discretely prescribed activation
-     * \param[in] lambdaM Fiber stretch
-     * \param[in] intPa Integral of the active nominal stress from lambdaMin to lambdaM
-     * \param[out] Pa Active nominal stress
-     * \param[out] derivPa Derivative of active nominal stress w.r.t. the fiber stretch
-     */
-    void evaluate_active_nominal_stress(const Teuchos::ParameterList& params,
-        const EvaluationContext<3>& context, const int eleGID, const double lambdaM, double& intPa,
-        double& Pa, double& derivPa);
-
-    /*!
-     * \brief Evaluate activation level omegaa and its first and second derivatives w.r.t. the
-     * fiber stretch
-     *
-     * \param[in] lambdaM Fiber stretch
-     * \param[in] intPa Integral of the active nominal stress from lambdaMin to lambdaM
-     * \param[in] Pa Active nominal stress
-     * \param[in] derivPa Derivative of active nominal stress w.r.t. the fiber stretch
-     * \param[out] omegaa Activation level
-     * \param[out] derivOmegaa Derivative of the activation level w.r.t. the fiber stretch
-     * \param[out] derivDerivOmegaa Second derivative of the activation level w.r.t. the fiber
-     * stretch
-     */
-    void evaluate_activation_level(const double lambdaM, const double intPa, const double Pa,
-        const double derivPa, double& omegaa, double& derivOmegaa, double& derivDerivOmegaa);
-
     /// Combo material parameters
     Mat::PAR::MuscleCombo* params_{};
 
     /// Activation evaluator, either analytical symbolic function of space and time or discrete
     /// activation map
-    ActivationEvaluatorVariant activation_evaluator_;
+    ActivationEvaluator activation_evaluator_;
+
+    /// Struct to bundle activation level and its derivatives for stress and material tangent
+    /// computation
+    struct ActivationTerms
+    {
+      double omegaa;
+      double derivOmegaa;
+      double derivDerivOmegaa;
+      double eta;
+      double dEta;
+    };
+
+    /// Evaluate activation level and its derivatives for stress and material tangent computation
+    ActivationTerms evaluate_activation_level(const Teuchos::ParameterList& params,
+        const EvaluationContext<3>& context, const int eleGID, const double lambdaM);
   };  // end class Muscle_Combo
 
 }  // end namespace Mat

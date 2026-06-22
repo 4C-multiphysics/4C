@@ -235,6 +235,11 @@ namespace Core::Elements
     int id() const { return id_; }
 
     /*!
+    \brief Return evaluation time of this element
+    */
+    double eval_time() const { return eval_time_; }
+
+    /*!
     \brief Return processor local col map id
     */
     virtual int lid() const { return lid_; }
@@ -415,24 +420,24 @@ might become invalid after a redistribution of the discretization.
     }
 
     /*!
-    \brief Construct a face element between this element and the given slave element
+    \brief Construct a face element between this element and the given source element
 
     This is a base class routine that constructs a plain element without association to physics,
     containing only the geometry and topology information. A surface/line element is created
-    that represents the face between this element (master element) and parent_slave element (in case
-    it exists). The derived element class is expected to provide physics information when allocate
-    and store an surface/line element that represents the face between this element (master element)
-    and parent_slave element.
+    that represents the face between this element (target element) and parent_source element (in
+    case it exists). The derived element class is expected to provide physics information when
+    allocate and store an surface/line element that represents the face between this element (target
+    element) and parent_source element.
 
     This element is e.g. used to create and evaluate edge stabilizations or for HDG discretizations
     */
     virtual std::shared_ptr<Element> create_face_element(
-        Element* parent_slave,                 //!< parent slave element
+        Element* parent_source,                //!< parent source element
         int nnode,                             //!< number of nodes
         const int* nodeids,                    //!< node ids
         Core::Nodes::Node** nodes,             //!< nodeids
-        const int lsurface_master,             //!< local index of surface w.r.t master element
-        const int lsurface_slave,              //!< local index of surface w.r.t slave element
+        const int lsurface_target,             //!< local index of surface w.r.t target element
+        const int lsurface_source,             //!< local index of surface w.r.t source element
         const std::vector<int>& localtrafomap  //!< local trafo map
     )
     {
@@ -608,8 +613,6 @@ might become invalid after a redistribution of the discretization.
     virtual void vis_owner(std::map<std::string, int>& names)
     {
       names.insert(std::pair<std::string, int>("Owner", 1));
-      // names.insert(std::pair<string,int>("EleGId",1));
-      return;
     }
 
     /*!
@@ -652,6 +655,16 @@ might become invalid after a redistribution of the discretization.
     \brief Set global id of this element
     */
     void set_id(const int id) { id_ = id; }
+
+    /*!
+    \brief Set evaluation time of this element
+    */
+    void set_eval_time(const double eval_time) { eval_time_ = eval_time; }
+
+    /*!
+    \brief Add evaluation time to this element
+    */
+    void add_eval_time(const double eval_time) { eval_time_ += eval_time; }
 
     /*!
     \brief Read input for this element
@@ -867,6 +880,62 @@ might become invalid after a redistribution of the discretization.
     */
     virtual void location_vector(const Core::FE::Discretization& dis, std::vector<int>& lm,
         std::vector<int>& lmowner, std::vector<int>& lmstride) const;
+
+    /*!
+    \brief Evaluate an element and if element timing is enabled, time it.
+
+    It uses the overwritten evaluate method to evaluate the element and
+    adds timing if element timing is enabled in the discretization.
+
+    \param params (in/out)    : ParameterList for communication between control routine
+                                and elements
+    \param discretization (in): A reference to the underlying discretization
+    \param la (in)            : location data for all dofsets of the discretization
+    \param elemat1 (out)      : matrix to be filled by element depending on commands
+                                given in params
+    \param elemat2 (out)      : matrix to be filled by element depending on commands
+                                given in params
+    \param elevec1 (out)      : vector to be filled by element depending on commands
+                                given in params
+    \param elevec2 (out)      : vector to be filled by element depending on commands
+                                given in params
+    \param elevec3 (out)      : vector to be filled by element depending on commands
+                                given in params
+    \return 0 if successful, negative otherwise
+    */
+    int evaluate_with_timing(Teuchos::ParameterList& params,
+        Core::FE::Discretization& discretization, LocationArray& la,
+        Core::LinAlg::SerialDenseMatrix& elemat1, Core::LinAlg::SerialDenseMatrix& elemat2,
+        Core::LinAlg::SerialDenseVector& elevec1, Core::LinAlg::SerialDenseVector& elevec2,
+        Core::LinAlg::SerialDenseVector& elevec3);
+
+    /*!
+    \brief Evaluate an element and if element timing is enabled, time it.
+
+    It uses the overwritten evaluate method to evaluate the element and
+    adds timing if element timing is enabled in the discretization.
+
+    \param params (in/out)    : ParameterList for communication between control routine
+                                and elements
+    \param discretization (in): A reference to the underlying discretization
+    \param lm (in)            : location vector of this element
+    \param elemat1 (out)      : matrix to be filled by element depending on commands
+                                given in params
+    \param elemat2 (out)      : matrix to be filled by element depending on commands
+                                given in params
+    \param elevec1 (out)      : vector to be filled by element depending on commands
+                                given in params
+    \param elevec2 (out)      : vector to be filled by element depending on commands
+                                given in params
+    \param elevec3 (out)      : vector to be filled by element depending on commands
+                                given in params
+    \return 0 if successful, negative otherwise
+    */
+    int evaluate_with_timing(Teuchos::ParameterList& params,
+        Core::FE::Discretization& discretization, std::vector<int>& lm,
+        Core::LinAlg::SerialDenseMatrix& elemat1, Core::LinAlg::SerialDenseMatrix& elemat2,
+        Core::LinAlg::SerialDenseVector& elevec1, Core::LinAlg::SerialDenseVector& elevec2,
+        Core::LinAlg::SerialDenseVector& elevec3);
 
     /*!
     \brief Evaluate an element
@@ -1091,6 +1160,9 @@ might become invalid after a redistribution of the discretization.
     //! \brief A unique global element id
     int id_;
 
+    //! \brief Accumulated time the evaluation function of this element took since the last reset
+    double eval_time_;
+
     //! local col map id
     int lid_;
 
@@ -1125,10 +1197,10 @@ might become invalid after a redistribution of the discretization.
 
   A face element can be attached to one (for boundary faces) or two
   elements (for interior faces). In the latter case, we distinguish between the so-called
-  parent master element and the parent slave element. The parent master element is
+  parent target element and the parent source element. The parent target element is
   the element that shares the node numbering with the face element. Boundary elements
   have only one parent and the methods parent_element() and parent_target_element()
-  return the same element. The parent slave element is the element on the other
+  return the same element. The parent source element is the element on the other
   side that usually has a different orientation of nodes.
 
   */
@@ -1173,9 +1245,9 @@ might become invalid after a redistribution of the discretization.
 
     /*!
     \brief Return the parent element id the face element is connected to (for interior faces, the
-    parent master element).
+    parent target element).
 
-    If no parent master has been assigned, -1 is returned (e.g. on non-face discretizations)
+    If no parent target has been assigned, -1 is returned (e.g. on non-face discretizations)
 
     This Id is also available, if the calling processor is not owner of the parent_element()!
     */
@@ -1183,60 +1255,60 @@ might become invalid after a redistribution of the discretization.
 
     /*!
     \brief Return the parent element the face element is connected to (for interior faces, the
-    parent master element).
+    parent target element).
 
-    If no parent master has been assigned, nullptr is returned (e.g. on non-face discretizations)
+    If no parent target has been assigned, nullptr is returned (e.g. on non-face discretizations)
     */
-    virtual Element* parent_element() const { return parent_master_; }
+    virtual Element* parent_element() const { return parent_target_; }
 
     /*!
-    \brief Return the master element the face element is connected to
+    \brief Return the target element the face element is connected to
 
-    If no parent master has been assigned, nullptr is returned (e.g. on non-face discretizations)
+    If no parent target has been assigned, nullptr is returned (e.g. on non-face discretizations)
     */
-    Element* parent_target_element() const { return parent_master_; }
+    Element* parent_target_element() const { return parent_target_; }
 
     /*!
-    \brief Return the slave element the face element is connected to
+    \brief Return the source element the face element is connected to
 
-    If no parent slave has been assigned, nullptr is returned (non-face discretizations, boundary
+    If no parent source has been assigned, nullptr is returned (non-face discretizations, boundary
     faces)
     */
-    Element* parent_source_element() const { return parent_slave_; }
+    Element* parent_source_element() const { return parent_source_; }
 
     /*!
      \brief Get the index of a face element within the parent element
      */
     int face_parent_number() const
     {
-      FOUR_C_ASSERT(lface_master_ != -1,
+      FOUR_C_ASSERT(lface_target_ != -1,
           "Face information has not been filled or this is not a face element");
-      return lface_master_;
+      return lface_target_;
     }
 
     /*!
-     \brief Get the index of a face element within the parent master element
+     \brief Get the index of a face element within the parent target element
      */
-    int face_master_number() const
+    int face_target_number() const
     {
-      FOUR_C_ASSERT(lface_master_ != -1,
+      FOUR_C_ASSERT(lface_target_ != -1,
           "Face information has not been filled or this is not a face element");
-      return lface_master_;
+      return lface_target_;
     }
 
     /*!
-     \brief Get the index of a face element within the parent slave element
+     \brief Get the index of a face element within the parent source element
      */
-    int face_slave_number() const
+    int face_source_number() const
     {
-      FOUR_C_ASSERT(lface_slave_ != -1,
-          "Face information has not been filled or this is not a face element with slave parent");
-      return lface_slave_;
+      FOUR_C_ASSERT(lface_source_ != -1,
+          "Face information has not been filled or this is not a face element with source parent");
+      return lface_source_;
     }
 
     /*!
     \brief return a transformation for the face's nodes between the local coordinate systems of the
-           face w.r.t the master parent element's face's coordinate system and the slave element's
+           face w.r.t the target parent element's face's coordinate system and the source element's
            face's coordinate system
 
     Only filled for interior faces, otherwise zero length-vector (empty).
@@ -1244,44 +1316,44 @@ might become invalid after a redistribution of the discretization.
     const std::vector<int>& get_local_trafo_map() const { return localtrafomap_; }
 
     /*!
-    \brief Set the master element this face element is connected to
+    \brief Set the target element this face element is connected to
 
     Sets the pointers of the main parent element adjacent to the current face.
     This method is used in the construction phase of a discretization.
     It allows that elements and faces are created separately and be combined later
     on the way.
 
-    \param master: parent element which shares the orientation of faces
-    \param lface_master: local number of face within master element
+    \param target: parent element which shares the orientation of faces
+    \param lface_target: local number of face within target element
     */
-    void set_parent_target_element(Element* master, const int lface_master)
+    void set_parent_target_element(Element* target, const int lface_target)
     {
-      parent_master_ = master;
-      lface_master_ = lface_master;
-      if (master != nullptr) parent_id_ = master->id();
+      parent_target_ = target;
+      lface_target_ = lface_target;
+      if (target != nullptr) parent_id_ = target->id();
     }
 
     /*!
-    \brief Set the slave element this face element is connected to
+    \brief Set the source element this face element is connected to
 
     Sets the pointers of the second parent element adjacent to the current face.
     This method is used in the construction phase of a discretization.
     It allows that elements and faces are created separately and be combined later
     on the way.
 
-    \param slave: second parent element when there already is a master element
-    \param lface_slave: local number of face within slave element
+    \param source: second parent element when there already is a target element
+    \param lface_source: local number of face within source element
     */
-    void set_parent_slave_element(Element* slave, const int lface_slave)
+    void set_parent_source_element(Element* source, const int lface_source)
     {
-      parent_slave_ = slave;
-      lface_slave_ = lface_slave;
+      parent_source_ = source;
+      lface_source_ = lface_source;
     }
 
 
    protected:
     /*!
-    \brief Set the slave element this face element is connected to
+    \brief Set the source element this face element is connected to
 
     Sets the pointers of the second parent element adjacent to the current face.
     This method is used in the construction phase of a discretization.
@@ -1293,21 +1365,21 @@ might become invalid after a redistribution of the discretization.
     void set_local_trafo_map(const std::vector<int>& trafo);
 
    private:
-    //! \brief The master parent element of face element. nullptr for usual elements
-    Element* parent_master_;
+    //! \brief The target parent element of face element. nullptr for usual elements
+    Element* parent_target_;
 
-    //! \brief The master parent element of face element. nullptr for usual elements
-    Element* parent_slave_;
+    //! \brief The source parent element of face element. nullptr for usual elements
+    Element* parent_source_;
 
-    //! The local surface number of this surface w.r.t to the parent_master_ element
-    int lface_master_;
+    //! The local surface number of this surface w.r.t to the parent_target_ element
+    int lface_target_;
 
-    //! The local surface number of this surface w.r.t to the parent_slave_ element
-    int lface_slave_;
+    //! The local surface number of this surface w.r.t to the parent_source_ element
+    int lface_source_;
 
     /*!
      \brief map for the face's nodes between the local coordinate systems of the face w.r.t the
-     master parent element's face's coordinate system and the slave element's face's coordinate
+     target parent element's face's coordinate system and the source element's face's coordinate
      system
      */
     std::vector<int> localtrafomap_;

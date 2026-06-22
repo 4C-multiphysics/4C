@@ -200,6 +200,19 @@ namespace Mixture
     }
 
     /*!
+     * @brief Provides the d_iFg_d_growth_scalar for the inelastic growth tangent.
+     *
+     * Called by the mixture rule before evaluate_elastic_part to allow constituents that depend on
+     * lambda_ext (through Fg(growth_scalar)) to pre-compute and store
+     * d_lambda_ext_d_growth_scalar per GP.
+     */
+    virtual void prepare_inelastic_growth_tangent(const Core::LinAlg::Tensor<double, 3, 3>& iFg,
+        const Core::LinAlg::Tensor<double, 3, 3>& d_iFg_d_growth_scalar,
+        const Mat::EvaluationContext<3>& context, int gp, int eleGID)
+    {
+    }
+
+    /*!
      * \brief Returns the scalar indicating the growth scale from the reference configuration
      *
      * \return double

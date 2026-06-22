@@ -708,7 +708,7 @@ Discret::Elements::ScaTraHDGIntFace::ScaTraHDGIntFace(int id,  ///< element id
     : Core::Elements::FaceElement(id, owner), degree_(0), degree_old_(0)
 {
   set_parent_target_element(parent_master, lsurface_master);
-  set_parent_slave_element(parent_slave, lsurface_slave);
+  set_parent_source_element(parent_slave, lsurface_slave);
 
   if (parent_slave != nullptr)
   {

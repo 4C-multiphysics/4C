@@ -67,8 +67,8 @@ namespace Core::GeometricSearch
 
     Initialize processor local octree                               rauch 09/16
 
-    On input a list of so called "master"-entities and a discretisation which
-    contains these "master"-entities. Make sure, that you provide the octree
+    On input a list of so called "target"-entities and a discretisation which
+    contains these "target"-entities. Make sure, that you provide the octree
     only with those entity gids, you want in the processor local octree.
     You may want to match only entities, which are owned, ghosted, or both.
 
@@ -87,13 +87,14 @@ namespace Core::GeometricSearch
 
 
     \param   actdis         (i) discretisation
-    \param   mastereleids   (i) list of master entity ids
-    \param   maxeleperleaf  (i) parameter for octree
+    \param   target_node_ids   (i) list of target entity ids
+    \param   maxnodeperleaf  (i) parameter for octree
     \param   tol            (i) tolerance for octree
 
     \return void  */
-    virtual int init(const Core::FE::Discretization& actdis, const std::vector<int>& masternodeids,
-        const int maxnodeperleaf = 150, const double tol = 1e-08);
+    virtual int init(const Core::FE::Discretization& actdis,
+        const std::vector<int>& target_node_ids, const int maxnodeperleaf = 150,
+        const double tol = 1e-08);
 
     //! setup this class
     virtual int setup();
@@ -111,7 +112,7 @@ namespace Core::GeometricSearch
     gammi 05/07
 
 
-    \param  x                  (i) coordinate of slavenode
+    \param  x                  (i) coordinate of source_node
     \param  idofclosestpoint   (o) the node id of the closest point
     \param  distofclosestpoint (o) the distance to the closest point
 
@@ -154,13 +155,13 @@ namespace Core::GeometricSearch
    public:
     //! @name Methods to create global node matching
 
-    /*! \brief Search for closest (slave) nodes on all procs
+    /*! \brief Search for closest (source) nodes on all procs
 
 
-    Search for closest (slave) entities on all processors to given (master)
-    entity set (only in bounding box of master entities)        gammi 05/07
+    Search for closest (source) entities on all processors to given (target)
+    entity set (only in bounding box of target entities)        gammi 05/07
 
-     1) each proc gets a list of its slave entities (slavenodeids)
+     1) each proc gets a list of its source entities (source_node_ids)
 
      2) the list is communicated in a round robin pattern to all the
         other procs.
@@ -170,61 +171,61 @@ namespace Core::GeometricSearch
         than on the preceding processors
 
     Again, dofsforpbcplane is used to overwrite the coordinate of the
-    slave perpendicular to the plane of the periodic boundary condition
-    by the coordinate of the masterplane (so to speak, the closest node
+    source perpendicular to the plane of the periodic boundary condition
+    by the coordinate of the target_plane (so to speak, the closest node
     matching is "exact")
 
-    On output, we get a map from masterids on this proc to slavenodeids
+    On output, we get a map from target_ids on this proc to source_node_ids
     (on arbitrary procs).
 
 
-    \param  slavenodeids     (i) list of slavenodeids
+    \param  source_node_ids     (i) list of source_node_ids
     \param  dofsforpbcplane  (i) specification of the plane containing
                                  parallel to the boundary condition
                                  (used to "shift" nodes in the normal
                                   direction)
-    \param  rotangle         (i) angle (RAD) for rotation of slave plane
-    \param  midtosid         (o) map from master to slavenodes
+    \param  rotangle         (i) angle (RAD) for rotation of source plane
+    \param  midtosid         (o) map from target to source_nodes
 
     \return void  */
-    virtual void create_global_entity_matching(const std::vector<int>& slavenodeids,
+    virtual void create_global_entity_matching(const std::vector<int>& source_node_ids,
         const std::vector<int>& dofsforpbcplane, const double rotangle,
         std::map<int, std::vector<int>>& midtosid);
 
     /*! \brief find pairs of nearest nodes
 
-      Find the pairs of master node and slave node with the smallest
+      Find the pairs of target node and source node with the smallest
       distance. The sets of nodes might come from different
       discretisations, however the communicators of both discretisations
-      need to span the same processors. For communication the master
+      need to span the same processors. For communication the target
       discretisation communicator is used.
 
       Internally the search is based on the octtree spanned by the
-      master nodes. The slave nodes are gathered on their owning
+      target nodes. The source nodes are gathered on their owning
       processors and send in a round robin fashion to each processor
       once.
 
-      \param slavedis     (i) discretization the slave nodes belong to
-      \param slavenodeids (i) gids of nodes to match
-      \param coupling     (o) master node gid to (slave node gid, distance) */
-    virtual void find_match(const Core::FE::Discretization& slavedis,
-        const std::vector<int>& slavenodeids, std::map<int, std::pair<int, double>>& coupling);
+      \param source_dis     (i) discretization the source nodes belong to
+      \param source_node_ids (i) gids of nodes to match
+      \param coupling     (o) target node gid to (source node gid, distance) */
+    virtual void find_match(const Core::FE::Discretization& source_dis,
+        const std::vector<int>& source_node_ids, std::map<int, std::pair<int, double>>& coupling);
 
     /*! \brief find pairs of nearest nodes
 
       Basically, the algorithm performed in this method is equal to the one
       described in the documentation to \ref FindMatch .
 
-      \note On exit, the map 'coupling' maps the slave entity gids (key) to
-            the matching master entity gids, distance, and the information,
-            whether the current proc owns the matching master entity or not.
+      \note On exit, the map 'coupling' maps the source entity gids (key) to
+            the matching target entity gids, distance, and the information,
+            whether the current proc owns the matching target entity or not.
             This is different from the method \ref FindMatch.
 
-      \param slavedis     (i) discretization the slave entity belongs to
-      \param slavenodeids (i) gids of entity to match
-      \param coupling     (o) slave entity gid to (slave entity gid, distance, owned) */
-    virtual void fill_slave_to_master_gid_mapping(const Core::FE::Discretization& slavedis,
-        const std::vector<int>& slavenodeids, std::map<int, std::vector<double>>& coupling);
+      \param source_dis     (i) discretization the source entity belongs to
+      \param source_node_ids (i) gids of entity to match
+      \param coupling     (o) maps source entity gid to (target entity gid, distance, owned) */
+    virtual void fill_source_to_target_gid_mapping(const Core::FE::Discretization& source_dis,
+        const std::vector<int>& source_node_ids, std::map<int, std::vector<double>>& coupling);
 
     //@}
 
@@ -235,10 +236,10 @@ namespace Core::GeometricSearch
     double tol_;
     //! \brief root of the local search tree
     std::shared_ptr<OctreeElement> octreeroot_;
-    //! \brief coordinate of one point in the master plane
-    std::vector<double> masterplanecoords_;
+    //! \brief coordinate of one point in the target plane
+    std::vector<double> target_plane_coords_;
     //! \brief ids of entities to be coupled (e.g. nodes in \ref NodeMatchingOctree )
-    const std::vector<int>* masterentityids_;
+    const std::vector<int>* target_entity_ids_;
     //! maximum number of tree nodes per leaf
     int maxtreenodesperleaf_;
 

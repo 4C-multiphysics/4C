@@ -35,7 +35,9 @@ namespace Inpar
                   {.description =
                           "An offset added to the current step to shift the steps to be written.",
                       .default_value = 0}),
-
+              parameter<bool>(
+                  "ELEMENT_EVAL_TIME", {.description = "Output element evaluation wall time [s]",
+                                           .default_value = false}),
 
               // data format for written numeric data
               parameter<Core::IO::OutputDataFormat>(

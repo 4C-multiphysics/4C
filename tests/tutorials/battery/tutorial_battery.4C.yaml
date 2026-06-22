@@ -66,21 +66,13 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [1.69e-12]
-      COND_PARA_NUM: 1
-      COND_PARA: [177.8]
+      DIFF_COEF: 1.69e-12
+      COND: 177.8
       C_MAX: 49137.5
       CHI_MAX: 1
       OCP_MODEL:
         Function:
           OCP_FUNCT_NUM: 6
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
       NUMMATEL: 1
@@ -117,18 +109,10 @@ MATERIALS:
   - MAT: 7
     MAT_newman:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      THERMFAC: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [1]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [1]
-      COND_PARA_NUM: 1
-      COND_PARA: [16.11]
+      DIFF_COEF: 1.0
+      COND: 16.11
+      TRANSFERENCE_NR: 1.0
+      THERM_FAC: 1.0
   - MAT: 8
     MAT_MultiplicativeSplitDefgradElastHyper:
       NUMMATEL: 1
@@ -144,21 +128,13 @@ MATERIALS:
     MAT_InelasticDefgradNoGrowth: {}
   - MAT: 11
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [1]
-      COND_PARA_NUM: 1
-      COND_PARA: [1.169e+10]
+      DIFF_COEF: 1.0
+      COND: 1.169e+10
       C_MAX: 1e+08
       CHI_MAX: 1
       OCP_MODEL:
         Function:
           OCP_FUNCT_NUM: 7
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 12
     MAT_MultiplicativeSplitDefgradElastHyper:
       NUMMATEL: 1
@@ -178,21 +154,13 @@ MATERIALS:
       GrowthDirection: [1, 0, 0]
   - MAT: 15
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [1]
-      COND_PARA_NUM: 1
-      COND_PARA: [5.81e+10]
+      DIFF_COEF: 1.0
+      COND: 5.81e+10
       C_MAX: 1e+06
       CHI_MAX: 1
       OCP_MODEL:
         Function:
           OCP_FUNCT_NUM: 7
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 16
     MAT_MultiplicativeSplitDefgradElastHyper:
       NUMMATEL: 1
@@ -206,21 +174,13 @@ MATERIALS:
       NUE: 0.34
   - MAT: 19
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [1]
-      COND_PARA_NUM: 1
-      COND_PARA: [3.77e+10]
+      DIFF_COEF: 1.0
+      COND: 3.77e+10
       C_MAX: 1e+06
       CHI_MAX: 1
       OCP_MODEL:
         Function:
           OCP_FUNCT_NUM: 7
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 20
     MAT_MultiplicativeSplitDefgradElastHyper:
       NUMMATEL: 1

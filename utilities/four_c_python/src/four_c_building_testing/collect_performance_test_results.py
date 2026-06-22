@@ -6,9 +6,48 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
 import argparse
+import os
 import pathlib
 import yaml
 import json
+from datetime import datetime, timezone
+import platform
+import multiprocessing
+
+
+def extract_performance_test_result(timings: dict, file_path: pathlib.Path) -> dict:
+    """
+    Extracts all relevant performance data into the format that 4C expects for storing and visualization.
+    """
+
+    context = {
+        "date": datetime.fromtimestamp(
+            file_path.stat().st_mtime, tz=timezone.utc
+        ).isoformat(),
+        "machine": platform.node(),
+        "num_procs": timings["Number of processes"],
+        "num_cpu": multiprocessing.cpu_count(),
+        "processor": platform.processor(),
+    }
+
+    data = []
+    for name, timing_data in timings["Total times"].items():
+        data.append(
+            {
+                "name": name,
+                "unit": timings["Time unit"],
+                "measurements": {
+                    "min": timing_data["MinOverProcs"],
+                    "max": timing_data["MaxOverProcs"],
+                    "mean": timing_data["MeanOverProcs"],
+                },
+            }
+        )
+
+    return {
+        "context": context,
+        "data": data,
+    }
 
 
 def main():
@@ -46,7 +85,9 @@ def main():
                 f"Duplicate test name {test_name} found. Test names are derived from the parent directory of the performance test result files, so make sure that there are no two performance test result files with the same parent directory name."
             )
 
-        performance_test_results[test_name] = timings
+        performance_test_results[test_name] = extract_performance_test_result(
+            timings, file
+        )
 
     if len(performance_test_results) == 0 and not args.allow_empty:
         raise RuntimeError(

@@ -77,6 +77,14 @@ namespace BeamInteraction::Potential
     bool write_uids{};
   };
 
+  /// function for potential reduction factor
+  enum class ReductionFunction
+  {
+    cosine,
+    polynomial_5,
+    polynomial_7
+  };
+
   /// Beam potential parameters
   struct BeamPotentialParameters
   {
@@ -92,6 +100,7 @@ namespace BeamInteraction::Potential
     bool automatic_differentiation = false;
     SourceTargetChoice choice_source_target{};
     std::optional<double> potential_reduction_length{};
+    ReductionFunction potential_reduction_function{};
     BeamPotentialVisualizationParameters runtime_output_params{};
 
     // data container for prior element lengths for potential reduction strategy

@@ -132,6 +132,11 @@ namespace ReducedLung::Airways::WallMechanics
       WallModel& wall_model, FlowModelInternalStateUpdater flow_state_updater);
 
   /**
+   * @brief Build output evaluator callback for the concrete wall-model variant.
+   */
+  OutputEvaluator make_output_evaluator(WallModel& wall_model);
+
+  /**
    * @brief Build end-of-timestep callback for the concrete wall-model variant.
    */
   EndOfTimestepRoutine make_end_of_timestep_routine(WallModel& wall_model);

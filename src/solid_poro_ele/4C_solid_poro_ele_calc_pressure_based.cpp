@@ -230,7 +230,7 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::
     add_bodyforce_contribution_to_nonlinear_force_stiffness(const Core::Elements::Element& ele,
         Mat::StructPoro& porostructmat, Mat::FluidPoroMultiPhase& porofluidmat,
         const Inpar::Solid::KinemType& kinematictype,
-        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& bodyforce_contribution,
+        const Core::Utils::FunctionOfSpaceTime* bodyforce_contribution_function, const double time,
         const Core::FE::Discretization& discretization, Core::Elements::LocationArray& la,
         Teuchos::ParameterList& params, Core::LinAlg::SerialDenseVector* force_vector,
         Core::LinAlg::SerialDenseMatrix* stiffness_matrix)
@@ -356,6 +356,23 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::
           }
         }
 
+        // calculate the coordinates of the gauss point
+        std::array<double, num_dim_> gp_coordinate{};
+        for (int idim = 0; idim < num_dim_; idim++)
+        {
+          for (int inode = 0; inode < num_nodes_; inode++)
+          {
+            gp_coordinate.at(idim) += shape_functions.shapefunctions_(inode) *
+                                      nodal_coordinates.current_coordinates(idim, inode);
+          }
+        }
+
+        // evaluate bodyforce function
+        Core::LinAlg::Tensor<double, num_dim_> bodyforce_contribution{};
+        for (int idim = 0; idim < num_dim_; idim++)
+          bodyforce_contribution(idim) =
+              bodyforce_contribution_function->evaluate(gp_coordinate, time, idim);
+
         Core::LinAlg::Matrix<num_dof_per_ele_, 1> bodyforce(Core::LinAlg::Initialization::zero);
         for (int j = 0; j < num_dim_; ++j)
         {
@@ -375,7 +392,6 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::
 
           force->update(-1.0 * pre_factor * integration_factor, bodyforce, 1.0);
         }
-
 
         // update stiffness matrix dvolfrac/dJ dJ/du
         if (stiff.has_value())

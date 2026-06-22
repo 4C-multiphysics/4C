@@ -57,14 +57,15 @@ namespace Core::FE
       const std::string& statename, const int& numvec, Teuchos::ParameterList& params,
       const Teuchos::ParameterList& solverparams,
       const std::function<const Teuchos::ParameterList&(int)> get_solver_params,
-      const Core::LinAlg::Map& fullnoderowmap, const std::map<int, int>& slavetomastercolnodesmap);
+      const Core::LinAlg::Map& fullnoderowmap,
+      const std::map<int, int>& source_to_target_colnodesmap);
 
   std::shared_ptr<Core::LinAlg::MultiVector<double>> solve_nodal_l2_projection(
       Core::LinAlg::SparseMatrix& massmatrix, Core::LinAlg::MultiVector<double>& rhs, MPI_Comm comm,
       const int& numvec, const Teuchos::ParameterList& solverparams,
       const std::function<const Teuchos::ParameterList&(int)> get_solver_params,
       const Core::LinAlg::Map& noderowmap, const Core::LinAlg::Map& fullnoderowmap,
-      const std::map<int, int>& slavetomastercolnodesmap);
+      const std::map<int, int>& source_to_target_colnodesmap);
 
 }  // namespace Core::FE
 

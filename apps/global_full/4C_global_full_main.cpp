@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 
 /*----------------------------------------------- everything is in here */
 #ifdef FOUR_C_ENABLE_CORE_DUMP
-    run(arguments);
+    run(arguments, communicators);
 #else
     try
     {
@@ -229,6 +229,10 @@ void run(CommandlineArguments& cli_args, Core::Communication::Communicators& com
 
     // and now the actual reading
     Core::IO::InputFile input_file = setup_input_file(communicators.local_comm());
+    if (Core::Communication::my_mpi_rank(communicators.local_comm()) == 0)
+    {
+      std::cout << "Read input from file: " << cli_args.input_file_name.string() << "\n";
+    }
     input_file.read(cli_args.input_file_name);
     setup_global_problem(input_file, cli_args, communicators);
   }
@@ -459,7 +463,7 @@ CommandlineArguments parse_command_line(int argc, char** argv)
   std::vector<std::string> sanitized_args = adapt_legacy_cli_arguments(raw_args, legacy_options);
 
   // Reversed order required when parsing std::vector<string> with CLI11
-  std::reverse(sanitized_args.begin(), sanitized_args.end());
+  std::ranges::reverse(sanitized_args);
   try
   {
     cli_app.parse(sanitized_args);

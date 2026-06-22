@@ -32,10 +32,10 @@ namespace Coupling::Adapter
 namespace Coupling::Adapter
 {
   /*! \class CouplingConverter
-   *  \brief Abstract converter base for master/slave conversion of data
+   *  \brief Abstract converter base for target/source conversion of data
    *
    *  The point is that many generic coupling algorithms that transfer data
-   *  between master and slave might be used in both directions. These
+   *  between target and source might be used in both directions. These
    *  algorithms can utilize a Converter to enable use in both directions.
    */
   class CouplingConverter
@@ -59,7 +59,7 @@ namespace Coupling::Adapter
     virtual void fill_src_to_dst_map(std::map<int, int>& rowmap) const = 0;
   };
 
-  /// master to slave converter
+  /// target to source converter
   class CouplingTargetConverter : public CouplingConverter
   {
    public:
@@ -85,11 +85,11 @@ namespace Coupling::Adapter
     const Coupling& coup_;
   };
 
-  /// slave to master converter
-  class CouplingSlaveConverter : public CouplingConverter
+  /// source to target converter
+  class CouplingSourceConverter : public CouplingConverter
   {
    public:
-    explicit CouplingSlaveConverter(const Coupling& coup) : coup_(coup) {}
+    explicit CouplingSourceConverter(const Coupling& coup) : coup_(coup) {}
 
     std::shared_ptr<Core::LinAlg::Vector<double>> src_to_dst(
         std::shared_ptr<const Core::LinAlg::Vector<double>> s) const override;
@@ -116,9 +116,9 @@ namespace Coupling::Adapter
   Monolithic multiphysics add matrices from different fields at the interface. These matrices
       belong to different row maps. Thus adding them requires moving one of them to a new row map.
   The relations between these maps are managed by Adapter::Coupling objects. In a parallel setting
-              there is a master and a slave side (in case of matrix transformations we use source
+              there is a target and a source side (in case of matrix transformations we use source
   and destination abstraction via Adapter::CouplingConverter). The parallel distribution of both is
-  arbitrary. And in addition there are permuted master and slave maps, that match the respective
+  arbitrary. And in addition there are permuted target and source maps, that match the respective
       other side. So the row map transformation requires a parallel redistribution followed by a row
   map exchange.
 
@@ -229,9 +229,9 @@ namespace Coupling::Adapter
     Monolithic multiphysics add matrices from different fields at the interface. These matrices
   belong to different row maps. Thus adding them requires moving one of them to a new row map. The
   relations between these maps are managed by Adapter::Coupling objects. In a parallel setting
-  there is a master and a slave side (in case of matrix transformations we use source and
+  there is a target and a source side (in case of matrix transformations we use source and
   destination abstraction via Adapter::CouplingConverter). The parallel distribution of both
-  is arbitrary. And in addition there are permuted master and slave maps, that match the respective
+  is arbitrary. And in addition there are permuted target and source maps, that match the respective
   other side. So the row map transformation requires a parallel redistribution followed by a row map
   exchange.
 

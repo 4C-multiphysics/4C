@@ -72,9 +72,9 @@ namespace Coupling::Adapter
 
   The actual coupling methods target_to_source() and source_to_target()
   just evaluate one simple equation each, i.e. primal variables
-  are projected from master to slave side via \f$D^{-1} M\f$ when
+  are projected from target to source side via \f$D^{-1} M\f$ when
   calling target_to_source(), and dual variables are projected from
-  slave to master side via \f$M^T D^{-T}\f$ when calling source_to_target().
+  source to target side via \f$M^T D^{-T}\f$ when calling source_to_target().
 
   Whenever you want to add a new problem class, check whether you
   can re-use one of the already existing setup() methods. If not,
@@ -91,14 +91,14 @@ namespace Coupling::Adapter
     /*! setup the machinery (generalized version)
      *
      *  \note
-     *  - Master and slave discretizations are identical in case of sliding ALE or fluid/scatra
+     *  - Target and source discretizations are identical in case of sliding ALE or fluid/scatra
      * meshtying
      *  - ALE discretization is nullptr in case of sliding ALE or fluid/scatra meshtying
      */
     void setup(
-        const std::shared_ptr<Core::FE::Discretization>& masterdis,  ///< master discretization
-        const std::shared_ptr<Core::FE::Discretization>& slavedis,   ///< slave discretization
-        const std::shared_ptr<Core::FE::Discretization>& aledis,     ///< ALE discretization
+        const std::shared_ptr<Core::FE::Discretization>& target_dis,  ///< target discretization
+        const std::shared_ptr<Core::FE::Discretization>& source_dis,  ///< source discretization
+        const std::shared_ptr<Core::FE::Discretization>& aledis,      ///< ALE discretization
         const std::vector<int>& coupleddof,  ///< vector defining coupled degrees of freedom
         const std::string& couplingcond,     ///< string for coupling condition
         MPI_Comm comm,                       ///< communicator
@@ -107,40 +107,40 @@ namespace Coupling::Adapter
         const std::map<std::string, std::shared_ptr<Core::FE::Discretization>>& discretization_map,
         std::shared_ptr<Core::IO::OutputControl> output_control,
         Core::FE::ShapeFunctionType spatial_approximation_type,
-        const bool slavewithale = false,  ///< flag defining if slave is ALE
-        const bool slidingale = false,    ///< flag indicating sliding ALE case
-        const int nds_master = 0,         ///< master dofset number
-        const int nds_slave = 0           ///< slave dofset number
+        const bool source_is_ale = false,    ///< flag defining if source is ALE
+        const bool slidingale = false,       ///< flag indicating sliding ALE case
+        const int target_dofset_number = 0,  ///< target dofset number
+        const int source_dofset_number = 0   ///< source dofset number
     );
 
     /*! setup the machinery (generalized version)
      *
      *  \note
-     *  - Master and slave discretizations are identical in case of sliding ALE or fluid/scatra
+     *  - Target and source discretizations are identical in case of sliding ALE or fluid/scatra
      * meshtying
      *  - ALE discretization is nullptr in case of sliding ALE or fluid/scatra meshtying
      */
     void setup_interface(
-        const std::shared_ptr<Core::FE::Discretization>& masterdis,  ///< master discretization
-        const std::shared_ptr<Core::FE::Discretization>& slavedis,   ///< slave discretization
+        const std::shared_ptr<Core::FE::Discretization>& target_dis,  ///< target discretization
+        const std::shared_ptr<Core::FE::Discretization>& source_dis,  ///< source discretization
         const std::vector<int>& coupleddof,  ///< vector defining coupled degrees of freedom
         const std::map<int, Core::Nodes::Node*>&
-            mastergnodes,  ///< master nodes, including ghosted nodes
+            target_global_nodes,  ///< target nodes, including ghosted nodes
         const std::map<int, Core::Nodes::Node*>&
-            slavegnodes,  ///< slave nodes, including ghosted nodes
+            source_global_nodes,  ///< source nodes, including ghosted nodes
         const std::map<int, std::shared_ptr<Core::Elements::Element>>&
-            masterelements,  ///< master elements
+            target_elements,  ///< target elements
         const std::map<int, std::shared_ptr<Core::Elements::Element>>&
-            slaveelements,                             ///< slave elements
+            source_elements,                           ///< source elements
         MPI_Comm comm,                                 ///< communicator
         const Teuchos::ParameterList& binning_params,  ///< parameters for binning strategy
         const std::map<std::string, std::shared_ptr<Core::FE::Discretization>>& discretization_map,
         std::shared_ptr<Core::IO::OutputControl> output_control,
         Core::FE::ShapeFunctionType spatial_approximation_type,
-        const bool slavewithale = false,  ///< flag defining if slave is ALE
-        const bool slidingale = false,    ///< flag indicating sliding ALE case
-        const int nds_master = 0,         ///< master dofset number
-        const int nds_slave = 0           ///< slave dofset number
+        const bool source_is_ale = false,    ///< flag defining if source is ALE
+        const bool slidingale = false,       ///< flag indicating sliding ALE case
+        const int target_dofset_number = 0,  ///< target dofset number
+        const int source_dofset_number = 0   ///< source dofset number
     );
 
     /// create integration cells
@@ -162,31 +162,31 @@ namespace Coupling::Adapter
 
     //! Compute mortar matrices after performing a mesh correction step
     virtual void evaluate_with_mesh_relocation(
-        std::shared_ptr<Core::FE::Discretization> slavedis,    ///< slave discretization
+        std::shared_ptr<Core::FE::Discretization> source_dis,  ///< source discretization
         std::shared_ptr<Core::FE::Discretization> aledis,      ///< ALE discretization
         std::shared_ptr<Core::LinAlg::Vector<double>>& idisp,  ///< ALE displacements
         MPI_Comm comm,                                         ///< communicator
-        bool slavewithale                                      ///< flag defining if slave is ALE
+        bool source_is_ale                                     ///< flag defining if source is ALE
     );
 
     //! Get the mortar interface itself
     std::shared_ptr<Mortar::Interface> interface() const { return interface_; }
 
-    //! Access to slave side mortar matrix \f$D\f$
+    //! Access to source side mortar matrix \f$D\f$
     virtual std::shared_ptr<Core::LinAlg::SparseMatrix> get_mortar_matrix_d() const
     {
       if (D_ == nullptr) FOUR_C_THROW("D Matrix is null pointer!");
       return D_;
     };
 
-    //! Access to inverse of slave side mortar matrix \f$D^{-1}\f$
+    //! Access to inverse of source side mortar matrix \f$D^{-1}\f$
     virtual std::shared_ptr<Core::LinAlg::SparseMatrix> get_mortar_matrix_dinv() const
     {
       if (Dinv_ == nullptr) FOUR_C_THROW("DInv Matrix is null pointer!");
       return Dinv_;
     };
 
-    //! Access to master side mortar matrix \f$M\f$
+    //! Access to target side mortar matrix \f$M\f$
     virtual std::shared_ptr<Core::LinAlg::SparseMatrix> get_mortar_matrix_m() const
     {
       if (M_ == nullptr) FOUR_C_THROW("M Matrix is null pointer!");
@@ -200,53 +200,53 @@ namespace Coupling::Adapter
       return P_;
     };
 
-    /// @name Conversion between master and slave
+    /// @name Conversion between target and source
     //@{
 
 
-    /*! \brief Transfer a dof vector from master to slave (const version)
+    /*! \brief Transfer a dof vector from target to source (const version)
      *
-     *  \return Slave vector
+     *  \return Source vector
      */
     std::shared_ptr<Core::LinAlg::Vector<double>> target_to_source(
-        const Core::LinAlg::Vector<double>& mv  ///< [in] master vector (to be transferred)
+        const Core::LinAlg::Vector<double>& mv  ///< [in] target vector (to be transferred)
     ) const override;
 
-    /*! \brief Transfer a dof vector from master to slave (const version)
+    /*! \brief Transfer a dof vector from target to source (const version)
      *
-     *  \return Slave vector
+     *  \return Source vector
      */
     std::shared_ptr<Core::LinAlg::MultiVector<double>> target_to_source(
-        const Core::LinAlg::MultiVector<double>& mv  ///< [in] master vector (to be transferred)
+        const Core::LinAlg::MultiVector<double>& mv  ///< [in] target vector (to be transferred)
     ) const override;
 
 
-    /*! \brief Transfer a dof vector from slave to master (const version)
+    /*! \brief Transfer a dof vector from source to target (const version)
      *
-     *  \return Master vector
+     *  \return Target vector
      */
     std::shared_ptr<Core::LinAlg::Vector<double>> source_to_target(
-        const Core::LinAlg::Vector<double>& sv  ///< [in] slave vector (to be transferred)
+        const Core::LinAlg::Vector<double>& sv  ///< [in] source vector (to be transferred)
     ) const override;
 
-    /*! \brief Transfer a dof vector from slave to master (const version)
+    /*! \brief Transfer a dof vector from source to target (const version)
      *
-     *  \return Master vector
+     *  \return Target vector
      */
     std::shared_ptr<Core::LinAlg::MultiVector<double>> source_to_target(
-        const Core::LinAlg::MultiVector<double>& sv  ///< [in] slave vector (to be transferred)
+        const Core::LinAlg::MultiVector<double>& sv  ///< [in] source vector (to be transferred)
     ) const override;
 
-    /// transfer a dof vector from master to slave
+    /// transfer a dof vector from target to source
     void target_to_source(
-        const Core::LinAlg::MultiVector<double>& mv,  ///< [in] master vector (to be transferred)
-        Core::LinAlg::MultiVector<double>& sv         ///< [out] slave vector (containing result)
+        const Core::LinAlg::MultiVector<double>& mv,  ///< [in] target vector (to be transferred)
+        Core::LinAlg::MultiVector<double>& sv         ///< [out] source vector (containing result)
     ) const override;
 
-    /// transfer a dof vector from slave to master
+    /// transfer a dof vector from source to target
     void source_to_target(
-        const Core::LinAlg::MultiVector<double>& sv,  ///< [in] slave vector (to be transferred)
-        Core::LinAlg::MultiVector<double>& mv         ///< [out] master vector (containing result)
+        const Core::LinAlg::MultiVector<double>& sv,  ///< [in] source vector (to be transferred)
+        Core::LinAlg::MultiVector<double>& mv         ///< [out] target vector (containing result)
     ) const override;
 
     //@}
@@ -254,16 +254,16 @@ namespace Coupling::Adapter
     /** \name Coupled maps */
     //@{
 
-    /// Get the interface dof row map of the master side
+    /// Get the interface dof row map of the target side
     std::shared_ptr<const Core::LinAlg::Map> target_dof_map() const override
     {
-      return pmasterdofrowmap_;
+      return ptarget_dof_row_map_;
     }
 
-    /// Get the interface dof row map of the slave side
+    /// Get the interface dof row map of the source side
     std::shared_ptr<const Core::LinAlg::Map> source_dof_map() const override
     {
-      return pslavedofrowmap_;
+      return psource_dof_row_map_;
     }
 
     //@}
@@ -271,7 +271,7 @@ namespace Coupling::Adapter
     /** \name Condensation methods */
     //@{
 
-    /// do condensation of Lagrange multiplier and slave-sided dofs
+    /// do condensation of Lagrange multiplier and source-sided dofs
     void mortar_condensation(
         std::shared_ptr<Core::LinAlg::SparseMatrix>& k,  ///< in:  tangent matrix w/o condensation
                                                          ///< out: tangent matrix w/  condensation
@@ -279,7 +279,7 @@ namespace Coupling::Adapter
                                                          ///< out: rhs vector     w/  condensation
     ) const;
 
-    /// recover slave-sided dofs
+    /// recover source-sided dofs
     void mortar_recover(Core::LinAlg::SparseMatrix& k,  ///< in: tangent matrix
         Core::LinAlg::Vector<double>& inc  ///< in:  solution vector     w/o condensation
                                            ///< out: solution vector     w/  condensation
@@ -291,16 +291,16 @@ namespace Coupling::Adapter
     /// Create mortar projection operator \f$P=D{^1}M\f$
     virtual void create_p();
 
-    /*! \brief Check if slave dofs have Dirichlet constraints
+    /*! \brief Check if source dofs have Dirichlet constraints
      *
-     *  Slave DOFs are not allowed to carry Dirichlet boundary conditions to
+     *  Source DOFs are not allowed to carry Dirichlet boundary conditions to
      *  avoid over-constraining the problem, cf. [1]
      *
      *  <h3> References </h3>
      *  [1] Puso, M and Laursen, TA: Mesh tying on curved interfaces in 3D,
      *      Engineering Computation, 20:305-319 (2003)
      */
-    void check_slave_dirichlet_overlap(const std::shared_ptr<Core::FE::Discretization>& slavedis,
+    void check_source_dirichlet_overlap(const std::shared_ptr<Core::FE::Discretization>& source_dis,
         MPI_Comm comm, const Core::Utils::FunctionManager& function_manager);
 
     /// back transformation to initial parallel distribution
@@ -317,15 +317,15 @@ namespace Coupling::Adapter
 
    private:
     /// perform mesh relocation
-    void mesh_relocation(Core::FE::Discretization& slavedis,  ///< [in] Slave discretization
-        std::shared_ptr<Core::FE::Discretization> aledis,     ///< [in] ALE discretization
+    void mesh_relocation(Core::FE::Discretization& source_dis,  ///< [in] Source discretization
+        std::shared_ptr<Core::FE::Discretization> aledis,       ///< [in] ALE discretization
         std::shared_ptr<const Core::LinAlg::Map>
-            masterdofrowmap,  ///< [in] DOF row map of master discretization
+            target_dof_row_map,  ///< [in] DOF row map of target discretization
         std::shared_ptr<const Core::LinAlg::Map>
-            slavedofrowmap,  ///< [in] DOF row map of slave discretization
+            source_dof_row_map,  ///< [in] DOF row map of source discretization
         std::shared_ptr<Core::LinAlg::Vector<double>>& idisp,  ///< [in] ALE displacements
         MPI_Comm comm,                                         ///< [in] Communicator
-        bool slavewithale  ///< [in] Flag defining if slave is ALE
+        bool source_is_ale  ///< [in] Flag defining if source is ALE
     );
 
    protected:
@@ -346,25 +346,25 @@ namespace Coupling::Adapter
     /// Interface
     std::shared_ptr<Mortar::Interface> interface_;
 
-    /// Map of master row dofs (after parallel redist.)
-    std::shared_ptr<const Core::LinAlg::Map> masterdofrowmap_;
+    /// Map of target row dofs (after parallel redist.)
+    std::shared_ptr<const Core::LinAlg::Map> target_dof_row_map_;
 
-    /// Map of slave row dofs  (after parallel redist.)
-    std::shared_ptr<const Core::LinAlg::Map> slavedofrowmap_;
+    /// Map of source row dofs  (after parallel redist.)
+    std::shared_ptr<const Core::LinAlg::Map> source_dof_row_map_;
 
-    /// Map of master row dofs (before parallel redist.)
-    std::shared_ptr<const Core::LinAlg::Map> pmasterdofrowmap_;
+    /// Map of target row dofs (before parallel redist.)
+    std::shared_ptr<const Core::LinAlg::Map> ptarget_dof_row_map_;
 
-    /// Map of slave row dofs  (before parallel redist.)
-    std::shared_ptr<const Core::LinAlg::Map> pslavedofrowmap_;
+    /// Map of source row dofs  (before parallel redist.)
+    std::shared_ptr<const Core::LinAlg::Map> psource_dof_row_map_;
 
-    /// Slave side mortar matrix \f$D\f$
+    /// Source side mortar matrix \f$D\f$
     std::shared_ptr<Core::LinAlg::SparseMatrix> D_;
 
-    /// Inverse \f$D^{-1}\f$ of slave side mortar matrix \f$D\f$
+    /// Inverse \f$D^{-1}\f$ of source side mortar matrix \f$D\f$
     std::shared_ptr<Core::LinAlg::SparseMatrix> Dinv_;
 
-    /// Master side mortar matrix \f$M\f$
+    /// Target side mortar matrix \f$M\f$
     std::shared_ptr<Core::LinAlg::SparseMatrix> M_;
 
     /// Mortar projection operator \f$P=D^{-1}M\f$

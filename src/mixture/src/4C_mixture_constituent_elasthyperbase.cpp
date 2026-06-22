@@ -24,17 +24,8 @@ Mixture::PAR::MixtureConstituentElastHyperBase::MixtureConstituentElastHyperBase
     const Core::Mat::PAR::Parameter::Data& matdata)
     : MixtureConstituent(matdata),
       matid_prestress_strategy_(matdata.parameters.get<int>("PRESTRESS_STRATEGY")),
-      nummat_(matdata.parameters.get<int>("NUMMAT")),
       matids_(matdata.parameters.get<std::vector<int>>("MATIDS"))
 {
-  // check, if size of summands fits to the number of summands
-  if (nummat_ != (int)matids_.size())
-  {
-    FOUR_C_THROW(
-        "number of summands {} does not fit to the size of the summands vector"
-        " {}",
-        nummat_, matids_.size());
-  }
 }
 
 // Constructor of the constituent holding the material parameters

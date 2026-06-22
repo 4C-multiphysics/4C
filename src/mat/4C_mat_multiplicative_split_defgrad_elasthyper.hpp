@@ -14,6 +14,7 @@
 #include "4C_mat_anisotropy.hpp"
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
 #include "4C_mat_monolithic_solid_scalar_material.hpp"
+#include "4C_mat_multiplicative_split_defgrad_elasthyper_service.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_material_parameter_base.hpp"
 
@@ -234,19 +235,6 @@ namespace Mat
       Core::LinAlg::Matrix<6, 1> ddPIIe{Core::LinAlg::Initialization::zero};
     };
 
-    /// struct containing free-energy related stress factors, as presented in Holzapfel-Nonlinear
-    /// Solid Mechanics
-    struct StressFactors
-    {
-      // ----- gamma and delta factors ----- //
-
-      // 2nd Piola Kirchhoff stresses factors (according to Holzapfel-Nonlinear Solid Mechanics p.
-      // 216)
-      Core::LinAlg::Matrix<3, 1> gamma{Core::LinAlg::Initialization::zero};
-      // constitutive tensor factors (according to Holzapfel-Nonlinear Solid Mechanics p. 261)
-      Core::LinAlg::Matrix<8, 1> delta{Core::LinAlg::Initialization::zero};
-    };
-
     int unique_par_object_id() const override
     {
       return MultiplicativeSplitDefgradElastHyperType::instance().unique_par_object_id();
@@ -353,7 +341,7 @@ namespace Mat
      * \mathsymbol{F}^{-1}_{\text{in}}} \f$
      */
     Core::LinAlg::Matrix<6, 9> evaluated_sdi_fin(
-        const KinematicQuantities& kinemat_quant, const StressFactors& stress_factors) const;
+        const KinematicQuantities& kinemat_quant, const Mat::StressFactors& stress_factors) const;
 
     /*!
      * @brief  Evaluate the stress and stiffness components of the transversely isotropic components
@@ -427,7 +415,7 @@ namespace Mat
      * @param[out] cmatiso  part of the elasticity tensor as shown above
      */
     void evaluate_stress_cmat_iso(const KinematicQuantities& kinemat_quant,
-        const StressFactors& stress_fact, Core::LinAlg::Matrix<6, 1>& stress,
+        const Mat::StressFactors& stress_fact, Core::LinAlg::Matrix<6, 1>& stress,
         Core::LinAlg::Matrix<6, 6>& cmatiso) const;
 
     /*!

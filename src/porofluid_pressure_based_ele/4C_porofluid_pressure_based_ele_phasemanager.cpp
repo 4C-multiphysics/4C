@@ -1429,7 +1429,8 @@ Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<nsd>::PhaseManagerDif
     std::shared_ptr<PoroFluidManager::PhaseManagerInterface> phasemanager,
     const Discret::Elements::PoroFluidMultiPhaseEleParameter& para)
     : PhaseManagerDecorator(phasemanager),
-      bodyforce_contribution_values_(para.bodyforce_contribution_values())
+      bodyforce_contribution_function_(para.bodyforce_contribution_function()),
+      time_(para.time())
 {
 }
 
@@ -1839,10 +1840,17 @@ void Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<
 }
 
 template <int nsd>
-const std::vector<double>& Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<
-    nsd>::bodyforce_contribution_values() const
+std::optional<const Core::Utils::FunctionOfSpaceTime*>
+Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<nsd>::bodyforce_contribution_function()
+    const
 {
-  return bodyforce_contribution_values_;
+  return bodyforce_contribution_function_;
+}
+
+template <int nsd>
+double Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<nsd>::get_time() const
+{
+  return time_;
 }
 
 /*----------------------------------------------------------------------*

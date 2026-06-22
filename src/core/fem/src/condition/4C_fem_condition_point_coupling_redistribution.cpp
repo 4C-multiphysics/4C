@@ -16,7 +16,7 @@
 FOUR_C_NAMESPACE_OPEN
 
 // forward declarations
-void put_all_slaves_to_masters_proc(
+void put_all_sources_to_targets_proc(
     const std::vector<const Core::Conditions::Condition*>& all_point_coupling_conditions,
     Core::FE::Discretization& discret);
 void redistribute(const std::vector<int>& rank_to_hold_condition,
@@ -47,8 +47,8 @@ void Core::Conditions::redistribute_for_point_coupling_conditions(Core::FE::Disc
               << discret.name() << std::endl;
   }
 
-  // fetch all slaves to the proc of the master
-  put_all_slaves_to_masters_proc(all_point_coupling_conditions, discret);
+  // fetch all sources to the proc of the target
+  put_all_sources_to_targets_proc(all_point_coupling_conditions, discret);
 
   if (myrank == 0)
   {
@@ -58,7 +58,7 @@ void Core::Conditions::redistribute_for_point_coupling_conditions(Core::FE::Disc
   }
 }
 
-void put_all_slaves_to_masters_proc(
+void put_all_sources_to_targets_proc(
     const std::vector<const Core::Conditions::Condition*>& all_point_coupling_conditions,
     Core::FE::Discretization& discret)
 {
@@ -106,33 +106,34 @@ void put_all_slaves_to_masters_proc(
     }
   }
 
-  // find out which processor holds master node of overlapping conditions;
+  // find out which processor holds target node of overlapping conditions;
   // arbitrarily, the smallest MPI rank is chosen to hold finally all row nodes of the (overlapping)
   // conditions
   std::vector<int> rank_to_hold_condition;
   for (size_t inner = 0; inner < all_point_coupling_conditions.size(); ++inner)
   {
-    // first node in condition is selected to be master node (needs to be consistent with assumption
+    // first node in condition is selected to be target node (needs to be consistent with assumption
     // in dof set assignment procedure)
-    int master_id = *(conditioned_node_sets[inner].begin());
-    int rank_with_master_id = -1;
-    if (discret.have_global_node(master_id))
+    int target_id = *(conditioned_node_sets[inner].begin());
+    int rank_with_target_id = -1;
+    if (discret.have_global_node(target_id))
     {
-      // find rank which owns the master node
-      Core::Nodes::Node* actnode = discret.g_node(master_id);
+      // find rank which owns the target node
+      Core::Nodes::Node* actnode = discret.g_node(target_id);
       if (actnode->owner() == myrank)
       {
-        rank_with_master_id = myrank;
+        rank_with_target_id = myrank;
       }
     }
-    // communicate such that all processor know which one owns the master node
-    int rank_with_master_id_global;
-    rank_with_master_id_global =
-        Core::Communication::max_all(rank_with_master_id, discret.get_comm());
-    rank_to_hold_condition.push_back(rank_with_master_id_global);
+    // communicate such that all processor know which one owns the target node
+    int rank_with_target_id_global;
+    rank_with_target_id_global =
+        Core::Communication::max_all(rank_with_target_id, discret.get_comm());
+    rank_to_hold_condition.push_back(rank_with_target_id_global);
   }
 
-  // redistribute such that all master and corresponding slave nodes are owned by the same processor
+  // redistribute such that all target and corresponding source nodes are owned by the same
+  // processor
   redistribute(rank_to_hold_condition, all_point_coupling_conditions, discret);
 }
 

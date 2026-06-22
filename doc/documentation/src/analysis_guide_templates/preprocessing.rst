@@ -14,7 +14,7 @@ Working with |FOURC| input files
 you may also use JSON syntax although we tend to prefer YAML for human-readability.
 By convention, |FOURC| input files have the extension ``.4C.yaml`` or ``.4C.json``.
 
-We build a schema called ``4C_schema.json`` which is located in the root build directory. This
+We build a json schema which is located in the root build directory. This
 schema describes the structure of a valid |FOURC| input file.
 If you want to write and edit |FOURC| input files, we recommend to set up schema validation in your editor
 (see :ref:`installation` for details). Doing so provides documentation and autocompletion

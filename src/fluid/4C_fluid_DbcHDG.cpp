@@ -61,9 +61,9 @@ void FLD::Utils::DbcHdgFluid::read_dirichlet_condition(const Teuchos::ParameterL
       const Core::Elements::FaceElement* faceele =
           dynamic_cast<const Core::Elements::FaceElement*>(discret.l_row_face(i));
       const unsigned int dofperface =
-          faceele->parent_target_element()->num_dof_per_face(faceele->face_master_number());
+          faceele->parent_target_element()->num_dof_per_face(faceele->face_target_number());
       const unsigned int dofpercomponent =
-          faceele->parent_target_element()->num_dof_per_component(faceele->face_master_number());
+          faceele->parent_target_element()->num_dof_per_component(faceele->face_target_number());
       const unsigned int component = dofperface / dofpercomponent;
 
       if (onoff.size() <= component || onoff[component] == 0 ||
@@ -236,9 +236,9 @@ void FLD::Utils::DbcHdgFluid::do_dirichlet_condition(const Teuchos::ParameterLis
       const Core::Elements::FaceElement* faceele =
           dynamic_cast<const Core::Elements::FaceElement*>(discret.l_row_face(i));
       const unsigned int dofperface =
-          faceele->parent_target_element()->num_dof_per_face(faceele->face_master_number());
+          faceele->parent_target_element()->num_dof_per_face(faceele->face_target_number());
       const unsigned int dofpercomponent =
-          faceele->parent_target_element()->num_dof_per_component(faceele->face_master_number());
+          faceele->parent_target_element()->num_dof_per_component(faceele->face_target_number());
       const unsigned int component = dofperface / dofpercomponent;
 
       if (onoff.size() <= component || onoff[component] == 0 ||
@@ -330,7 +330,7 @@ void FLD::Utils::DbcHdgFluid::do_dirichlet_condition(const Teuchos::ParameterLis
       if (!faceRelevant) continue;
 
       initParams.set<unsigned int>(
-          "faceconsider", static_cast<unsigned int>(faceele->face_master_number()));
+          "faceconsider", static_cast<unsigned int>(faceele->face_target_number()));
       if (static_cast<unsigned int>(elevec1.numRows()) != dofperface) elevec1.resize(dofperface);
       std::vector<int> dofs = discret.dof(0, discret.l_row_face(i));
 

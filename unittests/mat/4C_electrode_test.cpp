@@ -52,8 +52,6 @@ namespace
       // create the chosen ocp model 'Function'
       auto& ocp_function = ocp_model.group("Function");
       ocp_function.add("OCP_FUNCT_NUM", 2);
-      ocp_model.add("X_MIN", -1.0);
-      ocp_model.add("X_MAX", -1.0);
       // add the ocp model
       container.add("OCP_MODEL", ocp_model);
 
@@ -87,7 +85,6 @@ namespace
       ocp_model.add("OCP_MODEL", Mat::PAR::OCPModels::redlichkister);
       // create the chosen ocp model 'Redlich-Kister'
       auto& ocp_redlich_kister = ocp_model.group("Redlich-Kister");
-      ocp_redlich_kister.add("OCP_PARA_NUM", 16);
       std::vector<double> ocp_para(16, 0.0);
       ocp_para[0] = 1.1652e4;
       ocp_para[1] = -3.268e3;
@@ -106,8 +103,6 @@ namespace
       ocp_para[14] = 9.302e4;
       ocp_para[15] = -3.280e4;
       ocp_redlich_kister.add("OCP_PARA", ocp_para);
-      ocp_model.add("X_MIN", -1.0);
-      ocp_model.add("X_MAX", -1.0);
       // add the ocp model
       container.add("OCP_MODEL", ocp_model);
       container.add("C_MAX", 16.1);
@@ -149,8 +144,6 @@ namespace
       ocp_para[10] = 1.41;
       ocp_para[11] = -3.52;
       ocp_taralov.add("OCP_PARA", ocp_para);
-      ocp_model.add("X_MIN", -1.0);
-      ocp_model.add("X_MAX", -1.0);
       // add the ocp model
       container.add("OCP_MODEL", ocp_model);
       container.add("C_MAX", 24.681);
@@ -185,8 +178,6 @@ namespace
       auto& ocp_function = ocp_model.group("Function");
       // add cathode parameters to container according to master thesis by Alexander Rupp (2017)
       ocp_function.add("OCP_FUNCT_NUM", 1);
-      ocp_model.add("X_MIN", -1.0);
-      ocp_model.add("X_MAX", -1.0);
       // add the ocp model
       container.add("OCP_MODEL", ocp_model);
       container.add("C_MAX", 4793.3);
@@ -221,8 +212,6 @@ namespace
       // create the chosen ocp model 'Function'
       auto& ocp_function = ocp_model.group("Function");
       ocp_function.add("OCP_FUNCT_NUM", 3);
-      ocp_model.add("X_MIN", -1.0);
-      ocp_model.add("X_MAX", -1.0);
       // add the ocp model
       container.add("OCP_MODEL", ocp_model);
       container.add("C_MAX", 4793.3);
@@ -259,7 +248,6 @@ namespace
       ocp_model.add("OCP_MODEL", Mat::PAR::OCPModels::redlichkister);
       // create the chosen ocp model 'Redlich-Kister'
       auto& ocp_redlich_kister = ocp_model.group("Redlich-Kister");
-      ocp_redlich_kister.add("OCP_PARA_NUM", 21);
       std::vector<double> ocp_para(21, 0.0);
       ocp_para[0] = 3.954616e5;
       ocp_para[1] = -7.676e4;
@@ -283,8 +271,6 @@ namespace
       ocp_para[19] = 6.658e5;
       ocp_para[20] = -1.084e6;
       ocp_redlich_kister.add("OCP_PARA", ocp_para);
-      ocp_model.add("X_MIN", -1.0);
-      ocp_model.add("X_MAX", -1.0);
       // add the ocp model
       container.add("OCP_MODEL", ocp_model);
       container.add("C_MAX", 23.9);
@@ -337,8 +323,6 @@ namespace
       ocp_para[11] = -200.0;
       ocp_para[12] = -0.19;
       ocp_taralov.add("OCP_PARA", ocp_para);
-      ocp_model.add("X_MIN", -1.0);
-      ocp_model.add("X_MAX", -1.0);
       // add the ocp model
       container.add("OCP_MODEL", ocp_model);
       container.add("C_MAX", 23.671);
@@ -362,18 +346,12 @@ namespace
     {
       // add dummy parameters to container
       container.add("CHI_MAX", 1.0);
-      container.add("COND_CONC_DEP_FUNCT", 0);
-      container.add("COND_PARA_NUM", 0);
-      container.add("COND_PARA", std::vector<double>(0, 0.0));
-      container.add("COND_TEMP_SCALE_FUNCT", 0);
-      container.add("COND_TEMP_SCALE_FUNCT_PARA_NUM", 0);
-      container.add("COND_TEMP_SCALE_FUNCT_PARA", std::vector<double>(0, 0.0));
-      container.add("DIFF_COEF_CONC_DEP_FUNCT", 0);
-      container.add("DIFF_COEF_TEMP_SCALE_FUNCT", 0);
-      container.add("DIFF_PARA_NUM", 0);
-      container.add("DIFF_PARA", std::vector<double>(0, 0.0));
-      container.add("DIFF_COEF_TEMP_SCALE_FUNCT_PARA_NUM", 0);
-      container.add("DIFF_COEF_TEMP_SCALE_FUNCT_PARA", std::vector<double>(0, 0.0));
+      container.add("COND", 1.0);
+      container.add("COND_CONC_SCALE_FUNCT", std::optional<int>(std::nullopt));
+      container.add("COND_TEMP_SCALE_FUNCT", std::optional<int>(std::nullopt));
+      container.add("DIFF_COEF", 1.0);
+      container.add("DIFF_COEF_CONC_SCALE_FUNCT", std::optional<int>(std::nullopt));
+      container.add("DIFF_COEF_TEMP_SCALE_FUNCT", std::optional<int>(std::nullopt));
     }
 
     void setup_global_problem() const

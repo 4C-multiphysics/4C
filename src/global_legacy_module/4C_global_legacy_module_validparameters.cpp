@@ -37,7 +37,6 @@
 #include "4C_inpar_IO_runtime_output_fluid.hpp"
 #include "4C_inpar_IO_runtime_vtk_output_structure.hpp"
 #include "4C_inpar_IO_runtime_vtp_output_structure.hpp"
-#include "4C_inpar_plasticity.hpp"
 #include "4C_inpar_structure.hpp"
 #include "4C_io_gridgenerator.hpp"
 #include "4C_io_input_field.hpp"
@@ -318,8 +317,6 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
   push_specs(specs, Beam::IORuntimeOutput::valid_parameters());
   push_specs(specs, BeamInteraction::valid_parameters());
   push_specs(specs, BrownianDynamics::valid_parameters());
-
-  push_specs(specs, Inpar::Plasticity::valid_parameters());
 
   push_specs(specs, Thermo::valid_parameters());
   push_specs(specs, TSI::valid_parameters());

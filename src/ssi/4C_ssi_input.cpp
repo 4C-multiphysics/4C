@@ -340,7 +340,7 @@ void SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition
     cond.add_component(parameter<int>("ConditionID"));
     cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
         {{"Undefined", S2I::side_undefined}, {"Slave", S2I::side_source},
-            {"Master", S2I::side_master}},
+            {"Master", S2I::side_target}},
         {.description = "interface_side"}));
     cond.add_component(parameter<int>("S2I_KINETICS_ID"));
 
@@ -475,7 +475,7 @@ void SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition
     cond.add_component(parameter<int>("ConditionID"));
     cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
         {{"Undefined", S2I::side_undefined}, {"Slave", S2I::side_source},
-            {"Master", S2I::side_master}},
+            {"Master", S2I::side_target}},
         {.description = "interface_side"}));
     cond.add_component(parameter<int>("S2I_KINETICS_ID"));
     cond.add_component(parameter<int>("CONTACT_CONDITION_ID"));

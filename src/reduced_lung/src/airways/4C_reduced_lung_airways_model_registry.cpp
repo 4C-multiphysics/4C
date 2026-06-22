@@ -103,8 +103,10 @@ namespace ReducedLung
       {
         AirwayFactoryMap factories;
 
-        for (const auto& [flow_model_type, wall_model_type] : compatible_airway_model_pairs())
+        for (const auto& compatible_pair : compatible_airway_model_pairs())
         {
+          const FlowModelType flow_model_type = compatible_pair.first;
+          const WallModelType wall_model_type = compatible_pair.second;
           const auto [it, inserted] = factories.emplace(
               AirwayModelKey{flow_model_type, wall_model_type},
               [flow_model_type, wall_model_type](Airways::AirwayContainer& airways,

@@ -20,12 +20,20 @@ namespace Mat
 {
   namespace PAR
   {
-    //! models for half cell open circuit potential of electrode
+    //! models for open circuit potential of electrode
     enum class OCPModels
     {
       function,
       redlichkister,
       taralov
+    };
+
+    //! struct storing the minimum and maximum lithiation values for which the prescribed open
+    //! circuit potential calculation model is valid
+    struct LithiationBounds
+    {
+      double x_min;
+      double x_max;
     };
 
     //! parameters for electrode material
@@ -35,8 +43,20 @@ namespace Mat
       //! constructor
       explicit Electrode(const Core::Mat::PAR::Parameter::Data& matdata);
 
-      //! create instance of electrode material
+      //! create an instance of electrode material
       std::shared_ptr<Core::Mat::Material> create_material() override;
+
+      //! gets the ocp function from the global problem for the first call and returns it for all
+      //! later calls
+      [[nodiscard]] const Core::Utils::FunctionOfScalar& ocp_function();
+
+      //! returns the lower bound of the range of validity for the ocp calculation model
+      //! throws if no lithiation bounds have been set in the input
+      [[nodiscard]] double x_min() const;
+
+      //! returns the upper bound of the range of validity for the ocp calculation model
+      //! throws if no lithiation bounds have been set in the input
+      [[nodiscard]] double x_max() const;
 
       //! @name parameters for electrode material
       //! @{
@@ -50,19 +70,19 @@ namespace Mat
       //! model for half cell open circuit potential
       const OCPModels ocpmodel_;
 
-      //! number of function defining the open circuit potential
-      int ocpfunctnum_;
+      //! number of the function defining the open circuit potential
+      int ocp_function_num_;
+
+      //! function defining the open circuit potential
+      std::optional<std::reference_wrapper<const Core::Utils::FunctionOfScalar>> ocp_function_{
+          std::nullopt};
 
       //! parameters underlying half cell open circuit potential model
       std::vector<double> ocppara_;
 
-      //! lower bound of validity (as a fraction of c_max) for prescribed open circuit potential
-      //! calculation model
-      const double xmin_;
-
-      //! upper bound of validity (as a fraction of c_max) for prescribed open circuit potential
-      //! calculation model
-      const double xmax_;
+      //! lithiation bounds for which the prescribed open circuit potential calculation model is
+      //! valid
+      std::optional<LithiationBounds> lithiation_bounds_;
       //! @}
     };  // class Mat::PAR::Electrode
   }  // namespace PAR
@@ -72,9 +92,9 @@ namespace Mat
   class ElectrodeType : public Core::Communication::ParObjectType
   {
    public:
-    [[nodiscard]] std::string name() const override { return "ElectrodeType"; };
+    [[nodiscard]] std::string name() const override { return "ElectrodeType"; }
 
-    static ElectrodeType& instance() { return instance_; };
+    static ElectrodeType& instance() { return instance_; }
 
     Core::Communication::ParObject* create(Core::Communication::UnpackBuffer& buffer) override;
 
@@ -95,56 +115,28 @@ namespace Mat
     explicit Electrode(Mat::PAR::Electrode* params);
 
     //! @name packing and unpacking
-    /*!
-      \brief Return unique ParObject id
-
-      Every class implementing ParObject needs a unique id defined at the
-      top of parobject.H (this file) and should return it in this method.
-    */
+    ///@{
     [[nodiscard]] int unique_par_object_id() const override
     {
       return ElectrodeType::instance().unique_par_object_id();
-    };
+    }
 
-    /*!
-      \brief Pack this class so it can be communicated
-
-      Resizes the vector data and stores all information of a class in it.
-      The first information to be stored in data has to be the
-      unique ParObject ID delivered by unique_par_object_id() which will then
-      identify the exact class on the receiving processor.
-
-      \param data (in/out): char vector to store class information
-    */
     void pack(Core::Communication::PackBuffer& data) const override;
 
-    /*!
-      \brief Unpack data from a char vector into this class
-
-      The vector data contains all information to rebuild the
-      exact copy of an instance of a class on a different processor.
-      The first entry in data has to be an integer which is the unique
-      parobject id defined at the top of this file and delivered by
-      unique_par_object_id().
-
-      \param data (in) : vector storing all data to be unpacked into this instance.
-    */
     void unpack(Core::Communication::UnpackBuffer& buffer) override;
-    //@}
+    ///@}
 
-    //! return material type
     [[nodiscard]] Core::Materials::MaterialType material_type() const override
     {
       return Core::Materials::m_electrode;
-    };
+    }
 
-    //! clone electrode material
     [[nodiscard]] std::shared_ptr<Core::Mat::Material> clone() const override
     {
       return std::make_shared<Electrode>(*this);
-    };
+    }
 
-    //! return lithiation value corresponding to saturation value of intercalated Lithium
+    //! return lithiation value corresponding to the saturation value of intercalated Lithium
     //! concentration
     [[nodiscard]] double chi_max() const { return params_->chimax_; }
 
@@ -199,7 +191,7 @@ namespace Mat
     }
 
     /*!
-     * @brief compute first derivative of half cell open circuit potential w.r.t. concentration
+     * @brief compute the first derivative of the open circuit potential w.r.t. concentration
      *
      * @param[in] concentration  concentration
      * @param[in] faraday        Faraday constant
@@ -237,7 +229,7 @@ namespace Mat
         double X, double faraday, double frt) const;
 
     /*!
-     * @brief compute first derivative of half cell open circuit potential w.r.t. temperature
+     * @brief compute the first derivative of the open circuit potential w.r.t. temperature
      *
      * @param[in] concentration  concentration
      * @param[in] faraday        Faraday constant
@@ -248,7 +240,7 @@ namespace Mat
         const double concentration, const double faraday, const double gasconstant) const;
 
     /*!
-     * @brief compute half cell open circuit potential
+     * @brief compute the open circuit potential
      *
      * @param[in] concentration  concentration
      * @param[in] faraday        Faraday constant
@@ -260,7 +252,7 @@ namespace Mat
         double concentration, double faraday, double frt, double detF) const;
 
     /*!
-     * @brief compute second derivative of half cell open circuit potential w.r.t. concentration
+     * @brief compute the second derivative of the open circuit potential w.r.t. concentration
      *
      * @param[in] concentration  concentration
      * @param[in] faraday        Faraday constant
@@ -271,7 +263,6 @@ namespace Mat
     [[nodiscard]] double compute_d2_open_circuit_potential_d_concentration_d_concentration(
         double concentration, double faraday, double frt, double detF) const;
 
-   protected:
     //! return material parameters
     [[nodiscard]] Core::Mat::PAR::Parameter* parameter() const override { return params_; }
 

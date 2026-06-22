@@ -12,6 +12,8 @@
       <PDataArray type="Float64" Name="temperature" format="ascii"/>
     </PPointData>
     <PCellData>
+      <PDataArray type="Float64" Name="element_current_heatfluxes_xyz" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="element_current_tempgrad_xyz" NumberOfComponents="3" format="ascii"/>
       <PDataArray type="Float64" Name="element_gid" format="ascii"/>
       <PDataArray type="Float64" Name="element_owner" format="ascii"/>
     </PCellData>

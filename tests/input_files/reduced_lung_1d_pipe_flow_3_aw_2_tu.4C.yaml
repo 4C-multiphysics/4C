@@ -23,8 +23,8 @@ reduced_lung:
       output: terminal_unit
       condition_outflow: 0
     terminal_units:
-      acinar_reference_volume_v0:
-        constant: 4.2
+      terminal_unit_type:
+        constant: RheologicalElasticity
       rheological_model:
         rheological_model_type:
           constant: KelvinVoigt
@@ -32,6 +32,8 @@ reduced_lung:
           viscosity_kelvin_voigt_eta:
             constant: 0
       elasticity_model:
+        acinar_reference_volume_v0:
+          constant: 4.2
         elasticity_model_type:
           constant: Linear
         linear:

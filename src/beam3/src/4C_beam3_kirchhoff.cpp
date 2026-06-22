@@ -108,9 +108,11 @@ void Discret::Elements::Beam3kType::setup_element_definition(
         parameter<Beam3KirchhoffParametrizationType>("PARAMETRIZATION",
             {.description = "Which type of beam parametrization should be used."}),
         parameter<int>("MAT"),
-        parameter<std::vector<double>>(
-            "TRIADS", {.description = "Nodal triad rotation vectors in reference configuration",
-                          .size = triad_size}),
+        one_of({
+            parameter<std::vector<double>>("TRIADS", {.size = 9}),
+            parameter<std::string>("NODAL_ROTATION_VECTORS",
+                {.description = "Nodal triad rotation vectors in reference configuration."}),
+        }),
         parameter<bool>(
             "USE_FAD", {.description = "Flag, if automatic differentiation should be used.",
                            .default_value = false}),

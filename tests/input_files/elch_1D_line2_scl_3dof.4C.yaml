@@ -50,17 +50,9 @@ MATERIALS:
   - MAT: 3
     MAT_scl:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [1]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [1]
-      COND_PARA_NUM: 1
-      COND_PARA: [0.2]
+      TRANSFERENCE_NR: 1.0
+      DIFF_COEF: 1.0
+      COND: 0.2
       MAX_CONC: 14214
       EXTRAPOL_DIFF: -1
       LIM_CONC: 0.0001

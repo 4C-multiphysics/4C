@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <vector>
 
@@ -153,6 +154,22 @@ namespace Core::IO
     struct VTKConnectivityMapping<Core::FE::CellType::point1>
     {
       static constexpr std::array value = {0};
+    };
+
+    /*!
+     * @brief Special mapping for VTK cell types for input which can have variable number of points,
+     * e.g., polylines for beams.
+     *
+     * This maps the vtk cell type and the number of points to the corresponding 4C cell type and
+     * the connectivity mapping.
+     */
+    static std::map<std::pair<VtkCellType, long long>,
+        std::pair<Core::FE::CellType, std::vector<std::size_t>>>
+        vtk_celltype_special_mapping_for_input = {
+            {{4, 2}, {Core::FE::CellType::line2, {0, 1}}},
+            {{4, 3}, {Core::FE::CellType::line3, {0, 2, 1}}},
+            {{4, 4}, {Core::FE::CellType::line4, {0, 3, 1, 2}}},
+            {{4, 5}, {Core::FE::CellType::line5, {0, 4, 1, 2, 3}}},
     };
 
     /*!
@@ -299,12 +316,15 @@ namespace Core::IO
   }
 
   /*!
-   * @brief Get the 4C celltype from vtk cell-type
+   * @brief Get the 4C celltype from vtk cell-type and the 4C connectivity
    *
    * @param vtk_cell_type
-   * @return constexpr Core::FE::CellType
+   * @param vtk_connectivity
+   * @return Core::FE::CellType
    */
-  constexpr Core::FE::CellType get_celltype_from_vtk(VtkCellType vtk_cell_type)
+  inline std::pair<Core::FE::CellType, std::vector<int>>
+  get_celltype_from_vtk_and_translate_connectivity(
+      const VtkCellType vtk_cell_type, const std::span<const long long> vtk_connectivity)
   {
     constexpr VtkCellType max_id = []() consteval
     {
@@ -330,9 +350,44 @@ namespace Core::IO
     std::optional<Core::FE::CellType> cell_type =
         (vtk_cell_type <= max_id) ? celltype_mapping[vtk_cell_type] : std::nullopt;
 
-    FOUR_C_ASSERT_ALWAYS(cell_type.has_value(), "VTK cell type {} not found in 4C.", vtk_cell_type);
+    if (cell_type.has_value())
+    {
+      // A cell type could be found in the bijective mapping, now we can transform the connectivity.
+      return {*cell_type,
+          Core::FE::cell_type_switch<Core::IO::VTKSupportedCellTypes>(*cell_type,
+              [&](auto celltype_t)
+              {
+                std::vector<int> four_c_connectivity(vtk_connectivity.size(), 0);
 
-    return *cell_type;
+                for (std::size_t i = 0; i < vtk_connectivity.size(); ++i)
+                {
+                  four_c_connectivity[i] =
+                      vtk_connectivity[Core::IO::vtk_connectivity_reverse_mapping<celltype_t()>[i]];
+                }
+
+                return four_c_connectivity;
+              })};
+    }
+    else
+    {
+      // Could not find the element type in the bijective mapping, look if the element is given in
+      // the special input mapping.
+      auto map_item = Internal::vtk_celltype_special_mapping_for_input.find(
+          {vtk_cell_type, vtk_connectivity.size()});
+      if (map_item != Internal::vtk_celltype_special_mapping_for_input.end())
+      {
+        cell_type = map_item->second.first;
+        std::vector<int> four_c_connectivity(vtk_connectivity.size(), 0);
+        for (std::size_t i = 0; i < vtk_connectivity.size(); ++i)
+        {
+          four_c_connectivity[i] = vtk_connectivity[map_item->second.second[i]];
+        }
+        return {*cell_type, four_c_connectivity};
+      }
+    }
+
+    FOUR_C_THROW(
+        "VTK cell type {} with {} points not found in 4C.", vtk_cell_type, vtk_connectivity.size());
   }
 
 }  // namespace Core::IO

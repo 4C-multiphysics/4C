@@ -6,7 +6,9 @@ on:
     branches:
       - 'main'
   schedule:
-    - cron: '0 22 * * *'
+    # GitHub recommends avoiding scheduling at the start of the hour to avoid delays; thus, a random minute is set.
+    - cron: '44 20 * * *'
+      timezone: "Europe/Berlin"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

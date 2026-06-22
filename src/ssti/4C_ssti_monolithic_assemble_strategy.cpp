@@ -540,7 +540,7 @@ void SSTI::AssembleStrategyBlockBlock::assemble_scatra_thermo_interface(
 
       // assemble linearizations of slave- and master side scatra fluxes w.r.t. master temperatures
       // into system matrix
-      Coupling::Adapter::CouplingSlaveConverter thermo_converter(
+      Coupling::Adapter::CouplingSourceConverter thermo_converter(
           *meshtying_thermo()->coupling_adapter());
 
       Coupling::Adapter::MatrixLogicalSplitAndTransform()(scatrathermointerface_subblock,
@@ -593,7 +593,7 @@ void SSTI::AssembleStrategyBlockSparse::assemble_scatra_thermo_interface(
 
   // assemble linearizations of slave- and master side scatra fluxes w.r.t. master temperatures into
   // system matrix
-  Coupling::Adapter::CouplingSlaveConverter thermo_converter(
+  Coupling::Adapter::CouplingSourceConverter thermo_converter(
       *meshtying_thermo()->coupling_adapter());
 
   Coupling::Adapter::MatrixLogicalSplitAndTransform()(*scatrathermointerface_sparse,
@@ -619,7 +619,7 @@ void SSTI::AssembleStrategySparse::assemble_scatra_thermo_interface(
 
   // assemble linearizations of slave- and master side scatra fluxes w.r.t. master temperatures into
   // system matrix
-  Coupling::Adapter::CouplingSlaveConverter thermo_converter(
+  Coupling::Adapter::CouplingSourceConverter thermo_converter(
       *meshtying_thermo()->coupling_adapter());
 
   Coupling::Adapter::MatrixLogicalSplitAndTransform()(*scatrathermointerface_sparse,
@@ -834,7 +834,7 @@ void SSTI::AssembleStrategyBlockBlock::assemble_thermo_scatra_interface(
 
       // assemble linearizations of master side thermo fluxes w.r.t. slave and master side elch
       // into system matrix
-      Coupling::Adapter::CouplingSlaveConverter thermo_converter(
+      Coupling::Adapter::CouplingSourceConverter thermo_converter(
           *meshtying_thermo()->coupling_adapter());
 
       Core::LinAlg::SparseMatrix slaveflux(
@@ -897,7 +897,7 @@ void SSTI::AssembleStrategyBlockSparse::assemble_thermo_scatra_interface(
 
   // assemble linearizations of master side thermo fluxes w.r.t. slave and master side elch
   // into system matrix
-  Coupling::Adapter::CouplingSlaveConverter thermo_converter(
+  Coupling::Adapter::CouplingSourceConverter thermo_converter(
       *meshtying_thermo()->coupling_adapter());
 
   Coupling::Adapter::MatrixLogicalSplitAndTransform()(*thermoscatrainterface_sparse,
@@ -924,7 +924,7 @@ void SSTI::AssembleStrategySparse::assemble_thermo_scatra_interface(
 
   // assemble linearizations of master side scatra fluxes w.r.t. slave and master side elch
   // into system matrix
-  Coupling::Adapter::CouplingSlaveConverter thermo_converter(
+  Coupling::Adapter::CouplingSourceConverter thermo_converter(
       *meshtying_thermo()->coupling_adapter());
 
   Coupling::Adapter::MatrixLogicalSplitAndTransform()(*thermoscatrainterface_sparse,

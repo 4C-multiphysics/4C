@@ -72,58 +72,37 @@ MATERIALS:
   - MAT: 7
     MAT_newman_multiscale:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      THERMFAC: 0
-      COND_CONC_DEP_FUNCT: -11
-      COND_TEMP_SCALE_FUNCT: 0
+      TRANSFERENCE_NR: 0.363
+      THERM_FAC: 1.0
+      COND: 1.0
+      COND_CONC_SCALE_FUNCT: 4
       ELECTRONIC_COND: 100000
       ELECTRONIC_COND_CONC_SCALE_FUNC_NUM: -1
       A_s: 1564.794278374707
       MICROFILE: "elch_1D_line2_multiscale_butlervolmer_anode.mat.4C.yaml"
       MICRODIS_NUM: 1
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [0.00026]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [0.363]
-      COND_PARA_NUM: 3
-      COND_PARA: [1580, 0.85, 1.4]
+      DIFF_COEF: 0.00026
   - MAT: 8
     MAT_newman:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      THERMFAC: 0
-      COND_CONC_DEP_FUNCT: -11
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [0.00026]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [0.363]
-      COND_PARA_NUM: 3
-      COND_PARA: [1580, 0.85, 1.4]
+      TRANSFERENCE_NR: 0.363
+      THERM_FAC: 1.0
+      COND: 1.0
+      COND_CONC_SCALE_FUNCT: 4
+      DIFF_COEF: 0.00026
   - MAT: 9
     MAT_newman_multiscale:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      THERMFAC: 0
-      COND_CONC_DEP_FUNCT: -11
-      COND_TEMP_SCALE_FUNCT: 0
+      TRANSFERENCE_NR: 0.363
+      THERM_FAC: 1.0
+      COND: 1.0
+      COND_CONC_SCALE_FUNCT: 4
       ELECTRONIC_COND: 10000
       ELECTRONIC_COND_CONC_SCALE_FUNC_NUM: -1
       A_s: 1564.794278374707
       MICROFILE: "elch_1D_line2_multiscale_butlervolmer_cathode.mat.4C.yaml"
       MICRODIS_NUM: 2
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [0.00026]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [0.363]
-      COND_PARA_NUM: 3
-      COND_PARA: [1580, 0.85, 1.4]
+      DIFF_COEF: 0.00026
 FUNCT1:
   - COMPONENT: 0
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.2"
@@ -143,6 +122,9 @@ FUNCT3:
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-0.080830788307857"
   - COMPONENT: 2
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "3.892392107528559"
+FUNCT4:
+  # conductivity as a function of concentration according to Goldin et al. 2012; 10.1016/j.electacta.2011.12.119
+  - SYMBOLIC_FUNCTION_OF_TIME: "1580.0*t*exp(0.85*t^1.4)"
 RESULT DESCRIPTION:
   - SCATRA:
       DIS: "scatra"

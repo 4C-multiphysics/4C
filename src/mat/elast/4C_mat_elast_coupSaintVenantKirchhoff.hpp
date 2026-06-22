@@ -123,14 +123,6 @@ namespace Mat
         return;
       };
 
-
-      /// a young's modulus equivalent
-      void add_youngs_mod(double& young, double& shear, double& bulk) override
-      {
-        young += 9. * params_->mue_ * (3. * params_->lambda_ + 2. * params_->mue_) /
-                 (params_->lambda_ + params_->mue_);
-      };
-
      private:
       /// my material parameters
       Mat::Elastic::PAR::CoupSVK* params_;

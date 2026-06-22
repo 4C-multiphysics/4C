@@ -43,21 +43,13 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [4.3e-08]
-      COND_PARA_NUM: 1
-      COND_PARA: [1e+06]
+      DIFF_COEF: 4.3e-08
+      COND: 1e+06
       C_MAX: 26.39
       CHI_MAX: 1
       OCP_MODEL:
         Taralov:
           OCP_PARA: [-0.132, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.41, -3.52, 0]
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 2
     MAT_elchmat:
       NUMDOF: 2
@@ -66,22 +58,14 @@ MATERIALS:
       PHASEIDS: [4]
   - MAT: 3
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [1.1e-07]
-      COND_PARA_NUM: 1
-      COND_PARA: [38000]
+      DIFF_COEF: 1.1e-07
+      COND: 38000.0
       C_MAX: 23.671
       CHI_MAX: 1
       OCP_MODEL:
         Taralov:
           OCP_PARA: [4.06279, 0.0677504, -21.8502, 12.8268, -0.045, -71.69, -0.105734, 1.00167, 0.379571,
             -1.576, 0.01, -200, -0.19]
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 4
     MAT_elchphase:
       EPSILON: 1
@@ -91,18 +75,10 @@ MATERIALS:
   - MAT: 5
     MAT_newman:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      THERMFAC: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [3.9e-05]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [0.399]
-      COND_PARA_NUM: 1
-      COND_PARA: [500]
+      TRANSFERENCE_NR: 0.399
+      THERM_FAC: 1.0
+      DIFF_COEF: 3.9e-05
+      COND: 500.0
 FUNCT1:
   - COMPONENT: 0
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "9.00172"

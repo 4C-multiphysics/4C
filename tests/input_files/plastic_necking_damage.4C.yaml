@@ -26,8 +26,6 @@ STRUCTURAL DYNAMIC:
   NLNSOL: "ptc"
   PREDICT: "ConstVel"
   LINEAR_SOLVER: 1
-SEMI-SMOOTH PLASTICITY:
-  SEMI_SMOOTH_CPL: 175
 STRUCT NOX/Printing:
   Outer Iteration: false
   Inner Iteration: false

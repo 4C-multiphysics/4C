@@ -183,9 +183,6 @@ namespace Mat
           std::vector<Core::LinAlg::Tensor<double, 3>>& fibervecs  ///< vector of all fiber vectors
       ) const override;
 
-      /// Setup of patient-specific materials
-      void setup_aaa(const Teuchos::ParameterList& params, const int eleGID) override {}
-
       // update internal stress variables
       void update() override;
 

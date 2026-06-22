@@ -623,7 +623,7 @@ namespace Discret
         return static_cast<Discret::Elements::Fluid*>(parent);
       }
 
-      int surface_number() { return face_master_number(); }
+      int surface_number() { return face_target_number(); }
 
       //@}
 

@@ -31,8 +31,8 @@ Coupling::Adapter::MortarVolCoupl::MortarVolCoupl()
       isinit_(false),
       p12_(nullptr),
       p21_(nullptr),
-      masterdis_(nullptr),
-      slavedis_(nullptr),
+      target_dis_(nullptr),
+      source_dis_(nullptr),
       coupleddof12_(nullptr),
       coupleddof21_(nullptr),
       dofsets12_(nullptr),
@@ -47,8 +47,8 @@ Coupling::Adapter::MortarVolCoupl::MortarVolCoupl()
  |  init                                                     farah 10/13|
  *----------------------------------------------------------------------*/
 void Coupling::Adapter::MortarVolCoupl::init(int spatial_dimension,
-    std::shared_ptr<Core::FE::Discretization> dis1,  // masterdis - on Omega_1
-    std::shared_ptr<Core::FE::Discretization> dis2,  // slavedis  - on Omega_2
+    std::shared_ptr<Core::FE::Discretization> dis1,  // target_dis - on Omega_1
+    std::shared_ptr<Core::FE::Discretization> dis2,  // source_dis  - on Omega_2
     std::vector<int>* coupleddof12, std::vector<int>* coupleddof21, std::pair<int, int>* dofsets12,
     std::pair<int, int>* dofsets21,
     std::shared_ptr<FourC::Coupling::VolMortar::Utils::DefaultMaterialStrategy> materialstrategy,
@@ -64,8 +64,8 @@ void Coupling::Adapter::MortarVolCoupl::init(int spatial_dimension,
   spatial_dimension_ = spatial_dimension;
 
   // set pointers to discretizations
-  masterdis_ = dis1;
-  slavedis_ = dis2;
+  target_dis_ = dis1;
+  source_dis_ = dis2;
 
   // set various pointers
   coupleddof12_ = coupleddof12;
@@ -102,8 +102,8 @@ void Coupling::Adapter::MortarVolCoupl::setup(
 
   // create coupling instance
   std::shared_ptr<FourC::Coupling::VolMortar::VolMortarCoupl> coupdis =
-      std::make_shared<FourC::Coupling::VolMortar::VolMortarCoupl>(spatial_dimension_, masterdis_,
-          slavedis_, params, cut_params, coupleddof12_, coupleddof21_, dofsets12_, dofsets21_,
+      std::make_shared<FourC::Coupling::VolMortar::VolMortarCoupl>(spatial_dimension_, target_dis_,
+          source_dis_, params, cut_params, coupleddof12_, coupleddof21_, dofsets12_, dofsets21_,
           materialstrategy_);
 
   //-----------------------
@@ -149,8 +149,8 @@ void Coupling::Adapter::MortarVolCoupl::redistribute(const Teuchos::ParameterLis
 
   // create vector of discr.
   std::vector<std::shared_ptr<Core::FE::Discretization>> dis;
-  dis.push_back(masterdis_);
-  dis.push_back(slavedis_);
+  dis.push_back(target_dis_);
+  dis.push_back(source_dis_);
 
   Core::Rebalance::rebalance_discretizations_by_binning(binning_params, output_control, dis,
       std::move(correct_node), std::move(determine_relevant_points), false);
@@ -303,8 +303,8 @@ void Coupling::Adapter::MortarVolCoupl::target_to_source(
     const Core::LinAlg::MultiVector<double>& mv, Core::LinAlg::MultiVector<double>& sv) const
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-  FOUR_C_ASSERT(mv.get_map().point_same_as(p21_->domain_map()), "master dof map vector expected");
-  FOUR_C_ASSERT(sv.get_map().point_same_as(p21_->row_map()), "slave dof map vector expected");
+  FOUR_C_ASSERT(mv.get_map().point_same_as(p21_->domain_map()), "target dof map vector expected");
+  FOUR_C_ASSERT(sv.get_map().point_same_as(p21_->row_map()), "source dof map vector expected");
   FOUR_C_ASSERT(sv.num_vectors() == mv.num_vectors(), "column number mismatch {}!={}",
       sv.num_vectors(), mv.num_vectors());
 #endif
@@ -313,7 +313,7 @@ void Coupling::Adapter::MortarVolCoupl::target_to_source(
   check_setup();
   check_init();
 
-  // slave vector with auxiliary dofmap
+  // source vector with auxiliary dofmap
   Core::LinAlg::MultiVector<double> sv_aux(p21_->row_map(), sv.num_vectors());
 
   // project
@@ -324,7 +324,7 @@ void Coupling::Adapter::MortarVolCoupl::target_to_source(
       sv_aux.get_values() + (sv_aux.local_length() * sv_aux.num_vectors()), sv.get_values());
 
   // in contrast to the Adapter::Coupling class we do not need to export here, as
-  // the binning has (or should have) guaranteed the same distribution of master and slave dis
+  // the binning has (or should have) guaranteed the same distribution of target and source dis
   // on all procs
 }
 
@@ -393,8 +393,8 @@ void Coupling::Adapter::MortarVolCoupl::source_to_target(
     const Core::LinAlg::MultiVector<double>& sv, Core::LinAlg::MultiVector<double>& mv) const
 {
   // #ifdef FOUR_C_ENABLE_ASSERTIONS
-  FOUR_C_ASSERT(mv.get_map().point_same_as(p12_->row_map()), "master dof map vector expected");
-  FOUR_C_ASSERT(sv.get_map().point_same_as(p21_->row_map()), "slave dof map vector expected");
+  FOUR_C_ASSERT(mv.get_map().point_same_as(p12_->row_map()), "target dof map vector expected");
+  FOUR_C_ASSERT(sv.get_map().point_same_as(p21_->row_map()), "source dof map vector expected");
   FOUR_C_ASSERT(sv.num_vectors() == mv.num_vectors(), "column number mismatch {}!={}",
       sv.num_vectors(), mv.num_vectors());
   // #endif
@@ -403,7 +403,7 @@ void Coupling::Adapter::MortarVolCoupl::source_to_target(
   check_setup();
   check_init();
 
-  // master vector with auxiliary dofmap
+  // target vector with auxiliary dofmap
   Core::LinAlg::MultiVector<double> mv_aux(p12_->row_map(), mv.num_vectors());
 
   // project
@@ -414,7 +414,7 @@ void Coupling::Adapter::MortarVolCoupl::source_to_target(
       mv_aux.get_values() + (mv_aux.local_length() * mv_aux.num_vectors()), mv.get_values());
 
   // in contrast to the Adapter::Coupling class we do not need to export here, as
-  // the binning has (or should have) guaranteed the same distribution of master and slave dis
+  // the binning has (or should have) guaranteed the same distribution of target and source dis
   // on all procs
 }
 

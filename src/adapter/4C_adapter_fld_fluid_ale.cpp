@@ -41,14 +41,14 @@ Adapter::FluidAle::FluidAle(
 
   // default parameters for coupling
   double tolerance = 1.e-3;
-  int nds_master = 0;
-  int nds_slave = 0;
+  int target_dofset_number = 0;
+  int source_dofset_number = 0;
 
-  // set nds_master = 2 in case of HDG discretization
+  // set target_dofset_number = 2 in case of HDG discretization
   // (nds = 0 used for trace values, nds = 1 used for interior values)
   if (problem_.spatial_approximation_type() == Core::FE::ShapeFunctionType::hdg)
   {
-    nds_master = 2;
+    target_dofset_number = 2;
   }
 
   // check for matching fluid and ale meshes (==true in default case)
@@ -68,7 +68,8 @@ Adapter::FluidAle::FluidAle(
         std::make_shared<Coupling::Adapter::Coupling>();
     coupfa_matching->setup_coupling(*fluid_field()->discretization(),
         *ale_field()->discretization(), *fluidnodemap, *alenodemap, ndim,
-        problem_.fsi_dynamic_params().get<bool>("MATCHALL"), tolerance, nds_master, nds_slave);
+        problem_.fsi_dynamic_params().get<bool>("MATCHALL"), tolerance, target_dofset_number,
+        source_dofset_number);
     coupfa_ = coupfa_matching;
   }
   else
@@ -107,7 +108,7 @@ Adapter::FluidAle::FluidAle(
   if (Teuchos::getIntegralValue<ALE::InitialDisp>(problem_.ale_dynamic_params(), "INITIALDISP") !=
       ALE::initdisp_zero_disp)
   {
-    fluid_field()->set_mesh_map(coupfa_->target_dof_map(), nds_master);
+    fluid_field()->set_mesh_map(coupfa_->target_dof_map(), target_dofset_number);
     std::shared_ptr<Core::LinAlg::Vector<double>> initfluiddisp =
         ale_to_fluid_field(ale_field()->dispn());
     fluid_field()->apply_initial_mesh_displacement(initfluiddisp);
@@ -125,7 +126,8 @@ Adapter::FluidAle::FluidAle(
         std::make_shared<Coupling::Adapter::Coupling>();
     icoupfa->setup_condition_coupling(*fluid_field()->discretization(),
         fluid_field()->interface()->fsi_cond_map(), *ale_field()->discretization(),
-        ale_field()->interface()->fsi_cond_map(), condname, ndim, true, nds_master, nds_slave);
+        ale_field()->interface()->fsi_cond_map(), condname, ndim, true, target_dofset_number,
+        source_dofset_number);
     icoupfa_ = icoupfa;
   }
   else
@@ -158,10 +160,10 @@ Adapter::FluidAle::FluidAle(
   aucoupfa_ = std::make_shared<Coupling::Adapter::Coupling>();
   aucoupfa_->setup_condition_coupling(*fluid_field()->discretization(),
       fluid_field()->interface()->au_cond_map(), *ale_field()->discretization(),
-      ale_field()->interface()->au_cond_map(), "ALEUPDATECoupling", ndim, true, nds_master,
-      nds_slave);
+      ale_field()->interface()->au_cond_map(), "ALEUPDATECoupling", ndim, true,
+      target_dofset_number, source_dofset_number);
 
-  fluid_field()->set_mesh_map(coupfa_->target_dof_map(), nds_master);
+  fluid_field()->set_mesh_map(coupfa_->target_dof_map(), target_dofset_number);
 
   // the ale matrix might be build just once
   ale_field()->create_system_matrix();

@@ -27,8 +27,8 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  |  ctor (public)                                            farah 02/15|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s>
-Coupling::VolMortar::VolMortarIntegratorEleBased<distype_s>::VolMortarIntegratorEleBased(
+template <Core::FE::CellType distype_source>
+Coupling::VolMortar::VolMortarIntegratorEleBased<distype_source>::VolMortarIntegratorEleBased(
     Teuchos::ParameterList& params)
 {
   // get type of quadratic modification
@@ -41,11 +41,11 @@ Coupling::VolMortar::VolMortarIntegratorEleBased<distype_s>::VolMortarIntegrator
 /*----------------------------------------------------------------------*
  |  Initialize gauss points for ele-based integration        farah 02/15|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s>
-void Coupling::VolMortar::VolMortarIntegratorEleBased<distype_s>::initialize_gp()
+template <Core::FE::CellType distype_source>
+void Coupling::VolMortar::VolMortarIntegratorEleBased<distype_source>::initialize_gp()
 {
   // init shape of integration domain
-  Core::FE::CellType intshape = distype_s;
+  Core::FE::CellType intshape = distype_source;
 
   //*******************************
   // choose Gauss rule accordingly
@@ -256,9 +256,9 @@ void Coupling::VolMortar::VolMortarIntegratorEleBased<distype_s>::initialize_gp(
 /*----------------------------------------------------------------------*
  |  Initialize gauss points for ele-based integration        farah 02/15|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s>
-void Coupling::VolMortar::VolMortarIntegratorEleBased<distype_s>::integrate_ele_based_3d(
-    Core::Elements::Element& sele, std::vector<int>& foundeles, Core::LinAlg::SparseMatrix& D,
+template <Core::FE::CellType distype_source>
+void Coupling::VolMortar::VolMortarIntegratorEleBased<distype_source>::integrate_ele_based_3d(
+    Core::Elements::Element& source_ele, std::vector<int>& foundeles, Core::LinAlg::SparseMatrix& D,
     Core::LinAlg::SparseMatrix& M, const Core::FE::Discretization& Adis,
     const Core::FE::Discretization& Bdis, int dofseta, int dofsetb,
     const Core::LinAlg::Map& PAB_dofrowmap, const Core::LinAlg::Map& PAB_dofcolmap)
@@ -283,19 +283,19 @@ void Coupling::VolMortar::VolMortarIntegratorEleBased<distype_s>::integrate_ele_
     double AuxXi[3] = {0.0, 0.0, 0.0};
 
     // evaluate the integration cell Jacobian
-    jac = Utils::jacobian<distype_s>(eta, sele);
+    jac = Utils::jacobian<distype_source>(eta, source_ele);
 
     // get global Gauss point coordinates
-    Utils::local_to_global<distype_s>(sele, eta, globgp);
+    Utils::local_to_global<distype_source>(source_ele, eta, globgp);
 
     // map gp into A and B para space
     double Axi[3] = {0.0, 0.0, 0.0};
-    Mortar::Utils::global_to_local<distype_s>(sele, globgp, Axi);
+    Mortar::Utils::global_to_local<distype_source>(source_ele, globgp, Axi);
 
     // loop over beles
     for (int found = 0; found < (int)foundeles.size(); ++found)
     {
-      // get master element
+      // get target element
       Core::Elements::Element* Bele = Bdis.g_element(foundeles[found]);
       Core::FE::CellType shape = Bele->shape();
 
@@ -308,41 +308,41 @@ void Coupling::VolMortar::VolMortarIntegratorEleBased<distype_s>::integrate_ele_
         //************************************************
         case Core::FE::CellType::tri3:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::tri3>(sele, Bele, foundeles,
-              found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M, Adis,
-              Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::tri3>(source_ele, Bele,
+              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
+              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
 
           break;
         }
         case Core::FE::CellType::tri6:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::tri6>(sele, Bele, foundeles,
-              found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M, Adis,
-              Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::tri6>(source_ele, Bele,
+              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
+              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
 
           break;
         }
         case Core::FE::CellType::quad4:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::quad4>(sele, Bele,
-              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
-              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::quad4>(source_ele,
+              Bele, foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_,
+              D, M, Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
 
           break;
         }
         case Core::FE::CellType::quad8:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::quad8>(sele, Bele,
-              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
-              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::quad8>(source_ele,
+              Bele, foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_,
+              D, M, Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
 
           break;
         }
         case Core::FE::CellType::quad9:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::quad9>(sele, Bele,
-              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
-              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::quad9>(source_ele,
+              Bele, foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_,
+              D, M, Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
           break;
         }
         //************************************************
@@ -350,49 +350,49 @@ void Coupling::VolMortar::VolMortarIntegratorEleBased<distype_s>::integrate_ele_
         //************************************************
         case Core::FE::CellType::hex8:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::hex8>(sele, Bele, foundeles,
-              found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M, Adis,
-              Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::hex8>(source_ele, Bele,
+              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
+              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
 
           break;
         }
         case Core::FE::CellType::hex20:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::hex20>(sele, Bele,
-              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
-              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::hex20>(source_ele,
+              Bele, foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_,
+              D, M, Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
 
           break;
         }
         case Core::FE::CellType::hex27:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::hex27>(sele, Bele,
-              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
-              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::hex27>(source_ele,
+              Bele, foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_,
+              D, M, Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
 
           break;
         }
         case Core::FE::CellType::tet4:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::tet4>(sele, Bele, foundeles,
-              found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M, Adis,
-              Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::tet4>(source_ele, Bele,
+              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
+              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
 
           break;
         }
         case Core::FE::CellType::tet10:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::tet10>(sele, Bele,
-              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
-              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::tet10>(source_ele,
+              Bele, foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_,
+              D, M, Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
 
           break;
         }
         case Core::FE::CellType::pyramid5:
         {
-          proj = vol_mortar_ele_based_gp<distype_s, Core::FE::CellType::pyramid5>(sele, Bele,
-              foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_, D, M,
-              Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
+          proj = vol_mortar_ele_based_gp<distype_source, Core::FE::CellType::pyramid5>(source_ele,
+              Bele, foundeles, found, gpid, jac, wgt, gpdist, Axi, AuxXi, globgp, dualquad_, shape_,
+              D, M, Adis, Bdis, dofseta, dofsetb, PAB_dofrowmap, PAB_dofcolmap);
 
           break;
         }
@@ -410,7 +410,6 @@ void Coupling::VolMortar::VolMortarIntegratorEleBased<distype_s>::integrate_ele_
         continue;
     }  // beles
   }  // end gp loop
-  return;
 }
 
 
@@ -437,29 +436,29 @@ template class Coupling::VolMortar::VolMortarIntegratorEleBased<Core::FE::CellTy
 /*----------------------------------------------------------------------*
  |  gp evaluation                                            farah 02/15|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-bool Coupling::VolMortar::vol_mortar_ele_based_gp(Core::Elements::Element& sele,
-    Core::Elements::Element* mele, std::vector<int>& foundeles, int& found, int& gpid, double& jac,
-    double& wgt, double& gpdist, double* Axi, double* AuxXi, double* globgp, DualQuad& dq,
-    Shapefcn& shape, Core::LinAlg::SparseMatrix& D, Core::LinAlg::SparseMatrix& M,
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+bool Coupling::VolMortar::vol_mortar_ele_based_gp(Core::Elements::Element& source_ele,
+    Core::Elements::Element* target_ele, std::vector<int>& foundeles, int& found, int& gpid,
+    double& jac, double& wgt, double& gpdist, double* Axi, double* AuxXi, double* globgp,
+    DualQuad& dq, Shapefcn& shape, Core::LinAlg::SparseMatrix& D, Core::LinAlg::SparseMatrix& M,
     const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int dofseta,
     int dofsetb, const Core::LinAlg::Map& PAB_dofrowmap, const Core::LinAlg::Map& PAB_dofcolmap)
 {
-  //! ns_: number of slave element nodes
-  static const int ns_ = Core::FE::num_nodes(distype_s);
+  //! nsource_: number of source element nodes
+  static const int nsource_ = Core::FE::num_nodes(distype_source);
 
-  //! nm_: number of master element nodes
-  static const int nm_ = Core::FE::num_nodes(distype_m);
+  //! ntarget_: number of target element nodes
+  static const int ntarget_ = Core::FE::num_nodes(distype_target);
 
   // create empty vectors for shape fct. evaluation
-  Core::LinAlg::Matrix<ns_, 1> sval_A;
-  Core::LinAlg::Matrix<nm_, 1> mval_A;
-  Core::LinAlg::Matrix<ns_, 1> lmval_A;
+  Core::LinAlg::Matrix<nsource_, 1> source_val_A;
+  Core::LinAlg::Matrix<ntarget_, 1> target_val_A;
+  Core::LinAlg::Matrix<nsource_, 1> lmval_A;
 
   double Bxi[3] = {0.0, 0.0, 0.0};
 
   bool converged = true;
-  Mortar::Utils::global_to_local<distype_m>(*mele, globgp, Bxi, converged);
+  Mortar::Utils::global_to_local<distype_target>(*target_ele, globgp, Bxi, converged);
   if (!converged and found != ((int)foundeles.size() - 1)) return false;
 
   // save distance of gp
@@ -474,7 +473,7 @@ bool Coupling::VolMortar::vol_mortar_ele_based_gp(Core::Elements::Element& sele,
   }
 
   // Check parameter space mapping
-  bool proj = check_mapping<distype_s, distype_m>(sele, *mele, Axi, Bxi);
+  bool proj = check_mapping<distype_source, distype_target>(source_ele, *target_ele, Axi, Bxi);
 
   // if gp outside continue or eval nearest gp
   if (!proj and (found != ((int)foundeles.size() - 1)))
@@ -484,49 +483,49 @@ bool Coupling::VolMortar::vol_mortar_ele_based_gp(Core::Elements::Element& sele,
     Bxi[0] = AuxXi[0];
     Bxi[1] = AuxXi[1];
     Bxi[2] = AuxXi[2];
-    mele = Bdis.g_element(gpid);
+    target_ele = Bdis.g_element(gpid);
   }
 
-  // for "master" side
-  Utils::shape_function<distype_s>(sval_A, Axi, dq);
-  Utils::shape_function<distype_m>(mval_A, Bxi);
+  // for "target" side
+  Utils::shape_function<distype_source>(source_val_A, Axi, dq);
+  Utils::shape_function<distype_target>(target_val_A, Bxi);
 
-  // evaluate Lagrange multiplier shape functions (on slave element)
-  Utils::dual_shape_function<distype_s>(lmval_A, Axi, sele, dq);
+  // evaluate Lagrange multiplier shape functions (on source element)
+  Utils::dual_shape_function<distype_source>(lmval_A, Axi, source_ele, dq);
 
   // compute cell D/M matrix ****************************************
   // dual shape functions
-  for (int j = 0; j < ns_; ++j)
+  for (int j = 0; j < nsource_; ++j)
   {
-    Core::Nodes::Node* cnode = sele.nodes()[j];
+    Core::Nodes::Node* cnode = source_ele.nodes()[j];
     if (cnode->owner() != Core::Communication::my_mpi_rank(Adis.get_comm())) continue;
 
-    const int nsdof = Adis.num_dof(dofseta, cnode);
+    const int nsource_dof = Adis.num_dof(dofseta, cnode);
 
     if (shape == shape_std)
     {
-      for (int j = 0; j < ns_; ++j)
+      for (int j = 0; j < nsource_; ++j)
       {
-        Core::Nodes::Node* cnode = sele.nodes()[j];
-        int nsdof = Adis.num_dof(dofseta, cnode);
+        Core::Nodes::Node* cnode = source_ele.nodes()[j];
+        int nsource_dof = Adis.num_dof(dofseta, cnode);
 
-        // loop over slave dofs
-        for (int jdof = 0; jdof < nsdof; ++jdof)
+        // loop over source dofs
+        for (int jdof = 0; jdof < nsource_dof; ++jdof)
         {
           int row = Adis.dof(dofseta, cnode, jdof);
 
           // integrate M
-          for (int k = 0; k < nm_; ++k)
+          for (int k = 0; k < ntarget_; ++k)
           {
-            Core::Nodes::Node* mnode = mele->nodes()[k];
-            int nmdof = Bdis.num_dof(dofsetb, mnode);
+            Core::Nodes::Node* target_node = target_ele->nodes()[k];
+            int ntarget_dof = Bdis.num_dof(dofsetb, target_node);
 
-            for (int kdof = 0; kdof < nmdof; ++kdof)
+            for (int kdof = 0; kdof < ntarget_dof; ++kdof)
             {
-              int col = Bdis.dof(dofsetb, mnode, kdof);
+              int col = Bdis.dof(dofsetb, target_node, kdof);
 
               // multiply the two shape functions
-              double prod = sval_A(j) * mval_A(k) * jac * wgt;
+              double prod = source_val_A(j) * target_val_A(k) * jac * wgt;
 
               // dof to dof
               if (jdof == kdof)
@@ -537,15 +536,15 @@ bool Coupling::VolMortar::vol_mortar_ele_based_gp(Core::Elements::Element& sele,
           }
 
           // integrate D
-          for (int k = 0; k < ns_; ++k)
+          for (int k = 0; k < nsource_; ++k)
           {
-            Core::Nodes::Node* snode = sele.nodes()[k];
-            int nddof = Adis.num_dof(dofseta, snode);
+            Core::Nodes::Node* source_node = source_ele.nodes()[k];
+            int nddof = Adis.num_dof(dofseta, source_node);
 
             for (int kdof = 0; kdof < nddof; ++kdof)
             {
               // multiply the two shape functions
-              double prod = sval_A(j) * sval_A(k) * jac * wgt;
+              double prod = source_val_A(j) * source_val_A(k) * jac * wgt;
 
               // dof to dof
               if (jdof == kdof)
@@ -559,27 +558,27 @@ bool Coupling::VolMortar::vol_mortar_ele_based_gp(Core::Elements::Element& sele,
     }
     else if (shape == shape_dual)
     {
-      // loop over slave dofs
-      for (int jdof = 0; jdof < nsdof; ++jdof)
+      // loop over source dofs
+      for (int jdof = 0; jdof < nsource_dof; ++jdof)
       {
         const int row = Adis.dof(dofseta, cnode, jdof);
 
         if (not PAB_dofrowmap.my_gid(row)) continue;
 
         // integrate D
-        const double prod2 = lmval_A(j) * sval_A(j) * jac * wgt;
+        const double prod2 = lmval_A(j) * source_val_A(j) * jac * wgt;
         if (abs(prod2) > VOLMORTARINTTOL) D.assemble(prod2, row, row);
 
         // integrate M
-        for (int k = 0; k < nm_; ++k)
+        for (int k = 0; k < ntarget_; ++k)
         {
-          Core::Nodes::Node* mnode = mele->nodes()[k];
-          const int col = Bdis.dof(dofsetb, mnode, jdof);
+          Core::Nodes::Node* target_node = target_ele->nodes()[k];
+          const int col = Bdis.dof(dofsetb, target_node, jdof);
 
           if (not PAB_dofcolmap.my_gid(col)) continue;
 
           // multiply the two shape functions
-          const double prod = lmval_A(j) * mval_A(k) * jac * wgt;
+          const double prod = lmval_A(j) * target_val_A(k) * jac * wgt;
 
           if (abs(prod) > VOLMORTARINTTOL) M.assemble(prod, row, col);
         }
@@ -598,8 +597,8 @@ bool Coupling::VolMortar::vol_mortar_ele_based_gp(Core::Elements::Element& sele,
 /*----------------------------------------------------------------------*
  |  ctor (public)                                            farah 01/14|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::VolMortarIntegrator(
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+Coupling::VolMortar::VolMortarIntegrator<distype_source, distype_target>::VolMortarIntegrator(
     Teuchos::ParameterList& params)
 {
   // get type of quadratic modification
@@ -616,8 +615,8 @@ Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::VolMortarIntegra
 /*----------------------------------------------------------------------*
  |  Initialize gauss points                                  farah 01/14|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::initialize_gp(
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+void Coupling::VolMortar::VolMortarIntegrator<distype_source, distype_target>::initialize_gp(
     bool integrateele, int domain, Core::FE::CellType shape)
 {
   // init shape of integration domain
@@ -626,9 +625,9 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::initialize_
   if (integrateele)
   {
     if (domain == 0)
-      intshape = distype_s;
+      intshape = distype_source;
     else if (domain == 1)
-      intshape = distype_m;
+      intshape = distype_target;
     else
       FOUR_C_THROW("integration domain not specified!");
   }
@@ -779,17 +778,17 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::initialize_
 /*----------------------------------------------------------------------*
  |  Compute D/M entries for Volumetric Mortar                farah 01/14|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_cells_2d(
-    Core::Elements::Element& sele, Core::Elements::Element& mele, Mortar::IntCell& cell,
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+void Coupling::VolMortar::VolMortarIntegrator<distype_source, distype_target>::integrate_cells_2d(
+    Core::Elements::Element& source_ele, Core::Elements::Element& target_ele, Mortar::IntCell& cell,
     Core::LinAlg::SparseMatrix& dmatrix, Core::LinAlg::SparseMatrix& mmatrix,
-    const Core::FE::Discretization& slavedis, const Core::FE::Discretization& masterdis,
-    int sdofset, int mdofset)
+    const Core::FE::Discretization& source_dis, const Core::FE::Discretization& target_dis,
+    int source_dofset, int target_dofset)
 {
   // create empty vectors for shape fct. evaluation
-  Core::LinAlg::Matrix<ns_, 1> sval;
-  Core::LinAlg::Matrix<nm_, 1> mval;
-  Core::LinAlg::Matrix<ns_, 1> lmval;
+  Core::LinAlg::Matrix<nsource_, 1> source_val;
+  Core::LinAlg::Matrix<ntarget_, 1> target_val;
+  Core::LinAlg::Matrix<nsource_, 1> lmval;
 
   //**********************************************************************
   // loop over all Gauss points for integration
@@ -804,22 +803,22 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_c
     double globgp[3] = {0.0, 0.0, 0.0};
     cell.local_to_global(eta, globgp, 0);
 
-    // map gp into slave and master para space
-    double sxi[3] = {0.0, 0.0, 0.0};
-    double mxi[3] = {0.0, 0.0, 0.0};
-    Mortar::Utils::global_to_local<distype_s>(sele, globgp, sxi);
-    Mortar::Utils::global_to_local<distype_m>(mele, globgp, mxi);
+    // map gp into source and target para space
+    double source_xi[3] = {0.0, 0.0, 0.0};
+    double target_xi[3] = {0.0, 0.0, 0.0};
+    Mortar::Utils::global_to_local<distype_source>(source_ele, globgp, source_xi);
+    Mortar::Utils::global_to_local<distype_target>(target_ele, globgp, target_xi);
 
     // Check parameter space mapping
-    bool proj = check_mapping_2d(sele, mele, sxi, mxi);
+    bool proj = check_mapping_2d(source_ele, target_ele, source_xi, target_xi);
     if (proj == false) FOUR_C_THROW("ERROR: Mapping failed!");
 
     // evaluate trace space shape functions (on both elements)
-    Utils::shape_function<distype_s>(sval, sxi);
-    Utils::shape_function<distype_m>(mval, mxi);
+    Utils::shape_function<distype_source>(source_val, source_xi);
+    Utils::shape_function<distype_target>(target_val, target_xi);
 
-    // evaluate Lagrange multiplier shape functions (on slave element)
-    Utils::dual_shape_function<distype_s>(lmval, sxi, sele);
+    // evaluate Lagrange multiplier shape functions (on source element)
+    Utils::dual_shape_function<distype_source>(lmval, source_xi, source_ele);
 
     // evaluate the integration cell Jacobian
     double jac = cell.jacobian();
@@ -828,31 +827,31 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_c
     // standard shape functions
     if (shape_ == shape_std)
     {
-      for (int j = 0; j < ns_; ++j)
+      for (int j = 0; j < nsource_; ++j)
       {
-        Core::Nodes::Node* cnode = sele.nodes()[j];
-        int nsdof = slavedis.num_dof(sdofset, cnode);
+        Core::Nodes::Node* cnode = source_ele.nodes()[j];
+        int nsource_dof = source_dis.num_dof(source_dofset, cnode);
 
-        if (cnode->owner() != Core::Communication::my_mpi_rank(slavedis.get_comm())) continue;
+        if (cnode->owner() != Core::Communication::my_mpi_rank(source_dis.get_comm())) continue;
 
-        // loop over slave dofs
-        for (int jdof = 0; jdof < nsdof; ++jdof)
+        // loop over source dofs
+        for (int jdof = 0; jdof < nsource_dof; ++jdof)
         {
-          int row = slavedis.dof(sdofset, cnode, jdof);
+          int row = source_dis.dof(source_dofset, cnode, jdof);
 
           ////////////////////////////////////////
           // integrate M
-          for (int k = 0; k < nm_; ++k)
+          for (int k = 0; k < ntarget_; ++k)
           {
-            Core::Nodes::Node* mnode = mele.nodes()[k];
-            int nmdof = masterdis.num_dof(mdofset, mnode);
+            Core::Nodes::Node* target_node = target_ele.nodes()[k];
+            int ntarget_dof = target_dis.num_dof(target_dofset, target_node);
 
-            for (int kdof = 0; kdof < nmdof; ++kdof)
+            for (int kdof = 0; kdof < ntarget_dof; ++kdof)
             {
-              int col = masterdis.dof(mdofset, mnode, kdof);
+              int col = target_dis.dof(target_dofset, target_node, kdof);
 
               // multiply the two shape functions
-              double prod = sval(j) * mval(k) * jac * wgt;
+              double prod = source_val(j) * target_val(k) * jac * wgt;
 
               // dof to dof
               if (jdof == kdof)
@@ -864,17 +863,17 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_c
 
           ////////////////////////////////////////
           // integrate D
-          for (int k = 0; k < ns_; ++k)
+          for (int k = 0; k < nsource_; ++k)
           {
-            Core::Nodes::Node* snode = sele.nodes()[k];
-            int nddof = slavedis.num_dof(sdofset, snode);
+            Core::Nodes::Node* source_node = source_ele.nodes()[k];
+            int nddof = source_dis.num_dof(source_dofset, source_node);
 
             for (int kdof = 0; kdof < nddof; ++kdof)
             {
-              // int col = slavedis->Dof(sdofset,snode,kdof);
+              // int col = source_dis->Dof(source_dofset,source_node,kdof);
 
               // multiply the two shape functions
-              double prod = sval(j) * sval(k) * jac * wgt;
+              double prod = source_val(j) * source_val(k) * jac * wgt;
 
               // dof to dof
               if (jdof == kdof)
@@ -888,32 +887,32 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_c
     }
     else if (shape_ == shape_dual)
     {
-      for (int j = 0; j < ns_; ++j)
+      for (int j = 0; j < nsource_; ++j)
       {
-        Core::Nodes::Node* cnode = sele.nodes()[j];
+        Core::Nodes::Node* cnode = source_ele.nodes()[j];
 
-        if (cnode->owner() != Core::Communication::my_mpi_rank(slavedis.get_comm())) continue;
+        if (cnode->owner() != Core::Communication::my_mpi_rank(source_dis.get_comm())) continue;
 
-        int nsdof = slavedis.num_dof(sdofset, cnode);
+        int nsource_dof = source_dis.num_dof(source_dofset, cnode);
 
-        // loop over slave dofs
-        for (int jdof = 0; jdof < nsdof; ++jdof)
+        // loop over source dofs
+        for (int jdof = 0; jdof < nsource_dof; ++jdof)
         {
-          int row = slavedis.dof(sdofset, cnode, jdof);
+          int row = source_dis.dof(source_dofset, cnode, jdof);
 
           ////////////////////////////////////////////////////////////////
           // integrate M and D
-          for (int k = 0; k < nm_; ++k)
+          for (int k = 0; k < ntarget_; ++k)
           {
-            Core::Nodes::Node* mnode = mele.nodes()[k];
-            int nmdof = masterdis.num_dof(mdofset, mnode);
+            Core::Nodes::Node* target_node = target_ele.nodes()[k];
+            int ntarget_dof = target_dis.num_dof(target_dofset, target_node);
 
-            for (int kdof = 0; kdof < nmdof; ++kdof)
+            for (int kdof = 0; kdof < ntarget_dof; ++kdof)
             {
-              int col = masterdis.dof(mdofset, mnode, kdof);
+              int col = target_dis.dof(target_dofset, target_node, kdof);
 
               // multiply the two shape functions
-              double prod = lmval(j) * mval(k) * jac * wgt;
+              double prod = lmval(j) * target_val(k) * jac * wgt;
 
               // dof to dof
               if (jdof == kdof)
@@ -932,29 +931,27 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_c
       FOUR_C_THROW("ERROR: Unknown shape function!");
     }
   }  // end gp loop
-
-  return;
 }
 
 
 /*----------------------------------------------------------------------*
  |  Compute D/M entries for Volumetric Mortar                farah 01/14|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_cells_3d(
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+void Coupling::VolMortar::VolMortarIntegrator<distype_source, distype_target>::integrate_cells_3d(
     Core::Elements::Element& Aele, Core::Elements::Element& Bele, Coupling::VolMortar::Cell& cell,
     Core::LinAlg::SparseMatrix& dmatrix_A, Core::LinAlg::SparseMatrix& mmatrix_A,
     Core::LinAlg::SparseMatrix& dmatrix_B, Core::LinAlg::SparseMatrix& mmatrix_B,
-    const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int sdofset_A,
-    int mdofset_A, int sdofset_B, int mdofset_B)
+    const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int source_dofset_A,
+    int target_dofset_A, int source_dofset_B, int target_dofset_B)
 {
   if (shape_ == shape_std) FOUR_C_THROW("ERROR: std. shape functions not supported");
 
   // create empty vectors for shape fct. evaluation
-  Core::LinAlg::Matrix<ns_, 1> sval_A;
-  Core::LinAlg::Matrix<nm_, 1> mval_A;
-  Core::LinAlg::Matrix<ns_, 1> lmval_A;
-  Core::LinAlg::Matrix<nm_, 1> lmval_B;
+  Core::LinAlg::Matrix<nsource_, 1> source_val_A;
+  Core::LinAlg::Matrix<ntarget_, 1> target_val_A;
+  Core::LinAlg::Matrix<nsource_, 1> lmval_A;
+  Core::LinAlg::Matrix<ntarget_, 1> lmval_B;
 
   //**********************************************************************
   // loop over all Gauss points for integration
@@ -972,8 +969,8 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_c
     // map gp into A and B para space
     double Axi[3] = {0.0, 0.0, 0.0};
     double Bxi[3] = {0.0, 0.0, 0.0};
-    Mortar::Utils::global_to_local<distype_s>(Aele, globgp, Axi);
-    Mortar::Utils::global_to_local<distype_m>(Bele, globgp, Bxi);
+    Mortar::Utils::global_to_local<distype_source>(Aele, globgp, Axi);
+    Mortar::Utils::global_to_local<distype_target>(Bele, globgp, Bxi);
 
     // evaluate the integration cell Jacobian
     double jac = 0.0;
@@ -991,37 +988,37 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_c
     if (!check) continue;
 
     // evaluate trace space shape functions (on both elements)
-    Utils::shape_function<distype_s>(sval_A, Axi);
-    Utils::shape_function<distype_m>(mval_A, Bxi);
+    Utils::shape_function<distype_source>(source_val_A, Axi);
+    Utils::shape_function<distype_target>(target_val_A, Bxi);
 
-    // evaluate Lagrange multiplier shape functions (on slave element)
-    Utils::dual_shape_function<distype_s>(lmval_A, Axi, Aele, dualquad_);
-    Utils::dual_shape_function<distype_m>(lmval_B, Bxi, Bele, dualquad_);
+    // evaluate Lagrange multiplier shape functions (on source element)
+    Utils::dual_shape_function<distype_source>(lmval_A, Axi, Aele, dualquad_);
+    Utils::dual_shape_function<distype_target>(lmval_B, Bxi, Bele, dualquad_);
 
     // compute cell D/M matrix ****************************************
     // dual shape functions
-    for (int j = 0; j < ns_; ++j)
+    for (int j = 0; j < nsource_; ++j)
     {
       Core::Nodes::Node* cnode = Aele.nodes()[j];
-      int nsdof = Adis.num_dof(sdofset_A, cnode);
+      int nsource_dof = Adis.num_dof(source_dofset_A, cnode);
 
-      // loop over slave dofs
-      for (int jdof = 0; jdof < nsdof; ++jdof)
+      // loop over source dofs
+      for (int jdof = 0; jdof < nsource_dof; ++jdof)
       {
-        int row = Adis.dof(sdofset_A, cnode, jdof);
+        int row = Adis.dof(source_dofset_A, cnode, jdof);
 
         // integrate M and D
-        for (int k = 0; k < nm_; ++k)
+        for (int k = 0; k < ntarget_; ++k)
         {
-          Core::Nodes::Node* mnode = Bele.nodes()[k];
-          int nmdof = Bdis.num_dof(mdofset_A, mnode);
+          Core::Nodes::Node* target_node = Bele.nodes()[k];
+          int ntarget_dof = Bdis.num_dof(target_dofset_A, target_node);
 
-          for (int kdof = 0; kdof < nmdof; ++kdof)
+          for (int kdof = 0; kdof < ntarget_dof; ++kdof)
           {
-            int col = Bdis.dof(mdofset_A, mnode, kdof);
+            int col = Bdis.dof(target_dofset_A, target_node, kdof);
 
             // multiply the two shape functions
-            double prod = lmval_A(j) * mval_A(k) * jac * wgt;
+            double prod = lmval_A(j) * target_val_A(k) * jac * wgt;
 
             // dof to dof
             if (jdof == kdof)
@@ -1036,28 +1033,28 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_c
 
     // compute cell D/M matrix ****************************************
     // dual shape functions
-    for (int j = 0; j < nm_; ++j)
+    for (int j = 0; j < ntarget_; ++j)
     {
       Core::Nodes::Node* cnode = Bele.nodes()[j];
-      int nsdof = Bdis.num_dof(sdofset_B, cnode);
+      int nsource_dof = Bdis.num_dof(source_dofset_B, cnode);
 
-      // loop over slave dofs
-      for (int jdof = 0; jdof < nsdof; ++jdof)
+      // loop over source dofs
+      for (int jdof = 0; jdof < nsource_dof; ++jdof)
       {
-        int row = Bdis.dof(sdofset_B, cnode, jdof);
+        int row = Bdis.dof(source_dofset_B, cnode, jdof);
 
         // integrate M and D
-        for (int k = 0; k < ns_; ++k)
+        for (int k = 0; k < nsource_; ++k)
         {
-          Core::Nodes::Node* mnode = Aele.nodes()[k];
-          int nmdof = Adis.num_dof(mdofset_B, mnode);
+          Core::Nodes::Node* target_node = Aele.nodes()[k];
+          int ntarget_dof = Adis.num_dof(target_dofset_B, target_node);
 
-          for (int kdof = 0; kdof < nmdof; ++kdof)
+          for (int kdof = 0; kdof < ntarget_dof; ++kdof)
           {
-            int col = Adis.dof(mdofset_B, mnode, kdof);
+            int col = Adis.dof(target_dofset_B, target_node, kdof);
 
             // multiply the two shape functions
-            double prod = lmval_B(j) * sval_A(k) * jac * wgt;
+            double prod = lmval_B(j) * source_val_A(k) * jac * wgt;
 
             // dof to dof
             if (jdof == kdof)
@@ -1078,23 +1075,23 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_c
 /*----------------------------------------------------------------------*
  |  Compute D/M entries for Volumetric Mortar                farah 04/14|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-void Coupling::VolMortar::VolMortarIntegrator<distype_s,
-    distype_m>::integrate_cells_3d_direct_diveregence(Core::Elements::Element& Aele,
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+void Coupling::VolMortar::VolMortarIntegrator<distype_source,
+    distype_target>::integrate_cells_3d_direct_diveregence(Core::Elements::Element& Aele,
     Core::Elements::Element& Bele, Cut::VolumeCell& vc,
     std::shared_ptr<Core::FE::GaussPoints> intpoints, bool switched_conf,
     Core::LinAlg::SparseMatrix& dmatrix_A, Core::LinAlg::SparseMatrix& mmatrix_A,
     Core::LinAlg::SparseMatrix& dmatrix_B, Core::LinAlg::SparseMatrix& mmatrix_B,
-    const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int sdofset_A,
-    int mdofset_A, int sdofset_B, int mdofset_B)
+    const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int source_dofset_A,
+    int target_dofset_A, int source_dofset_B, int target_dofset_B)
 {
   if (shape_ == shape_std) FOUR_C_THROW("ERROR: std. shape functions not supported");
 
   // create empty vectors for shape fct. evaluation
-  Core::LinAlg::Matrix<ns_, 1> sval_A;
-  Core::LinAlg::Matrix<nm_, 1> mval_A;
-  Core::LinAlg::Matrix<ns_, 1> lmval_A;
-  Core::LinAlg::Matrix<nm_, 1> lmval_B;
+  Core::LinAlg::Matrix<nsource_, 1> source_val_A;
+  Core::LinAlg::Matrix<ntarget_, 1> target_val_A;
+  Core::LinAlg::Matrix<nsource_, 1> lmval_A;
+  Core::LinAlg::Matrix<ntarget_, 1> lmval_B;
 
   //**********************************************************************
   // loop over all Gauss points for integration
@@ -1108,68 +1105,62 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s,
     double globgp[3] = {0.0, 0.0, 0.0};
 
     if (switched_conf)
-      Utils::local_to_global<distype_s>(Aele, eta, globgp);
+      Utils::local_to_global<distype_source>(Aele, eta, globgp);
     else
-      Utils::local_to_global<distype_m>(Bele, eta, globgp);
+      Utils::local_to_global<distype_target>(Bele, eta, globgp);
 
     // map gp into A and B para space
     double Axi[3] = {0.0, 0.0, 0.0};
     double Bxi[3] = {0.0, 0.0, 0.0};
-    Mortar::Utils::global_to_local<distype_s>(Aele, globgp, Axi);
-    Mortar::Utils::global_to_local<distype_m>(Bele, globgp, Bxi);
-
-    //      std::cout << "-------------------------------------" << std::endl;
-    //      std::cout << "globgp= " << globgp[0] << "  " << globgp[1] << "  " << globgp[2] <<
-    //      std::endl; std::cout << "eta= " << eta[0] << "  " << eta[1] << "  " << eta[2] <<
-    //      std::endl; std::cout << "Axi= " << Axi[0] << "  " << Axi[1] << "  " << Axi[2] <<
-    //      std::endl; std::cout << "Bxi= " << Bxi[0] << "  " << Bxi[1] << "  " << Bxi[2] <<
-    //      std::endl;
+    Mortar::Utils::global_to_local<distype_source>(Aele, globgp, Axi);
+    Mortar::Utils::global_to_local<distype_target>(Bele, globgp, Bxi);
 
     // evaluate the integration cell Jacobian
     double jac = 0.0;
 
     if (switched_conf)
-      jac = Utils::jacobian<distype_s>(Axi, Aele);
+      jac = Utils::jacobian<distype_source>(Axi, Aele);
     else
-      jac = Utils::jacobian<distype_m>(Bxi, Bele);
+      jac = Utils::jacobian<distype_target>(Bxi, Bele);
 
     // Check parameter space mapping
     // check_mapping_3d(Aele,Bele,Axi,Bxi);
 
     // evaluate trace space shape functions (on both elements)
-    Utils::shape_function<distype_s>(sval_A, Axi);
-    Utils::shape_function<distype_m>(mval_A, Bxi);
+    Utils::shape_function<distype_source>(source_val_A, Axi);
+    Utils::shape_function<distype_target>(target_val_A, Bxi);
 
-    // evaluate Lagrange multiplier shape functions (on slave element)
-    Utils::dual_shape_function<distype_s>(lmval_A, Axi, Aele, dualquad_);
-    Utils::dual_shape_function<distype_m>(lmval_B, Bxi, Bele, dualquad_);
+    // evaluate Lagrange multiplier shape functions (on source element)
+    Utils::dual_shape_function<distype_source>(lmval_A, Axi, Aele, dualquad_);
+    Utils::dual_shape_function<distype_target>(lmval_B, Bxi, Bele, dualquad_);
 
     // compute cell D/M matrix ****************************************
     // dual shape functions
-    for (int j = 0; j < ns_; ++j)
+    for (int j = 0; j < nsource_; ++j)
     {
       Core::Nodes::Node* cnode = Aele.nodes()[j];
-      int nsdof = Adis.num_dof(sdofset_A, cnode);
+      int nsource_dof = Adis.num_dof(source_dofset_A, cnode);
 
-      // loop over slave dofs
-      for (int jdof = 0; jdof < nsdof; ++jdof)
+      // loop over source dofs
+      for (int jdof = 0; jdof < nsource_dof; ++jdof)
       {
-        int row = Adis.dof(sdofset_A, cnode, jdof);
+        int row = Adis.dof(source_dofset_A, cnode, jdof);
 
         // integrate M and D
-        for (int k = 0; k < nm_; ++k)
+        for (int k = 0; k < ntarget_; ++k)
         {
-          Core::Nodes::Node* mnode = Bele.nodes()[k];
-          int nmdof = Bdis.num_dof(mdofset_A, mnode);
+          Core::Nodes::Node* target_node = Bele.nodes()[k];
+          int ntarget_dof = Bdis.num_dof(target_dofset_A, target_node);
 
-          for (int kdof = 0; kdof < nmdof; ++kdof)
+          for (int kdof = 0; kdof < ntarget_dof; ++kdof)
           {
-            int col = Bdis.dof(mdofset_A, mnode, kdof);
+            int col = Bdis.dof(target_dofset_A, target_node, kdof);
 
             // multiply the two shape functions
-            double prod = lmval_A(j) * mval_A(k) * jac * weight_out;
+            double prod = lmval_A(j) * target_val_A(k) * jac * weight_out;
             //              std::cout << "PROD1 = " << prod  << " row= " << row << "  col= " << col
-            //              << "  j= " << j<<  "  nsdof= " << nsdof<< std::endl; cnode->print(cout);
+            //              << "  j= " << j<<  "  nsource_dof= " << nsource_dof<< std::endl;
+            //              cnode->print(cout);
             // dof to dof
             if (jdof == kdof)
             {
@@ -1183,28 +1174,28 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s,
 
     // compute cell D/M matrix ****************************************
     // dual shape functions
-    for (int j = 0; j < nm_; ++j)
+    for (int j = 0; j < ntarget_; ++j)
     {
       Core::Nodes::Node* cnode = Bele.nodes()[j];
-      int nsdof = Bdis.num_dof(sdofset_B, cnode);
+      int nsource_dof = Bdis.num_dof(source_dofset_B, cnode);
 
-      // loop over slave dofs
-      for (int jdof = 0; jdof < nsdof; ++jdof)
+      // loop over source dofs
+      for (int jdof = 0; jdof < nsource_dof; ++jdof)
       {
-        int row = Bdis.dof(sdofset_B, cnode, jdof);
+        int row = Bdis.dof(source_dofset_B, cnode, jdof);
 
         // integrate M and D
-        for (int k = 0; k < ns_; ++k)
+        for (int k = 0; k < nsource_; ++k)
         {
-          Core::Nodes::Node* mnode = Aele.nodes()[k];
-          int nmdof = Adis.num_dof(mdofset_B, mnode);
+          Core::Nodes::Node* target_node = Aele.nodes()[k];
+          int ntarget_dof = Adis.num_dof(target_dofset_B, target_node);
 
-          for (int kdof = 0; kdof < nmdof; ++kdof)
+          for (int kdof = 0; kdof < ntarget_dof; ++kdof)
           {
-            int col = Adis.dof(sdofset_B, mnode, kdof);
+            int col = Adis.dof(target_dofset_B, target_node, kdof);
 
             // multiply the two shape functions
-            double prod = lmval_B(j) * sval_A(k) * jac * weight_out;
+            double prod = lmval_B(j) * source_val_A(k) * jac * weight_out;
             //              std::cout << "PROD2 = " << prod  << " row= " << row << "  col= " <<
             //              col<< std::endl; cnode->print(cout);
 
@@ -1219,27 +1210,25 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s,
       }
     }
   }  // end gp loop
-
-  return;
 }
 
 
 /*----------------------------------------------------------------------*
  |  Compute D/M entries for Volumetric Mortar                farah 04/14|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_ele_based_3d_a_dis(
-    Core::Elements::Element& Aele, std::vector<int>& foundeles,
-    Core::LinAlg::SparseMatrix& dmatrix_A, Core::LinAlg::SparseMatrix& mmatrix_A,
-    const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int dofsetA,
-    int dofsetB)
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+void Coupling::VolMortar::VolMortarIntegrator<distype_source,
+    distype_target>::integrate_ele_based_3d_a_dis(Core::Elements::Element& Aele,
+    std::vector<int>& foundeles, Core::LinAlg::SparseMatrix& dmatrix_A,
+    Core::LinAlg::SparseMatrix& mmatrix_A, const Core::FE::Discretization& Adis,
+    const Core::FE::Discretization& Bdis, int dofsetA, int dofsetB)
 {
   if (shape_ == shape_std) FOUR_C_THROW("ERROR: std. shape functions not supported");
 
   // create empty vectors for shape fct. evaluation
-  Core::LinAlg::Matrix<ns_, 1> sval_A;
-  Core::LinAlg::Matrix<nm_, 1> mval_A;
-  Core::LinAlg::Matrix<ns_, 1> lmval_A;
+  Core::LinAlg::Matrix<nsource_, 1> source_val_A;
+  Core::LinAlg::Matrix<ntarget_, 1> target_val_A;
+  Core::LinAlg::Matrix<nsource_, 1> lmval_A;
 
   //**********************************************************************
   // loop over all Gauss points for integration
@@ -1258,24 +1247,24 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
     std::array<double, 3> AuxXi = {0.0, 0.0, 0.0};
 
     // evaluate the integration cell Jacobian
-    jac = Utils::jacobian<distype_s>(eta, Aele);
+    jac = Utils::jacobian<distype_source>(eta, Aele);
 
     // get global Gauss point coordinates
-    Utils::local_to_global<distype_s>(Aele, eta, globgp);
+    Utils::local_to_global<distype_source>(Aele, eta, globgp);
 
     // map gp into A and B para space
     double Axi[3] = {0.0, 0.0, 0.0};
-    Mortar::Utils::global_to_local<distype_s>(Aele, globgp, Axi);
+    Mortar::Utils::global_to_local<distype_source>(Aele, globgp, Axi);
 
     // loop over beles
     for (int found = 0; found < (int)foundeles.size(); ++found)
     {
-      // get master element
+      // get target element
       Core::Elements::Element* Bele = Bdis.g_element(foundeles[found]);
       double Bxi[3] = {0.0, 0.0, 0.0};
 
       bool converged = true;
-      Mortar::Utils::global_to_local<distype_m>(*Bele, globgp, Bxi, converged);
+      Mortar::Utils::global_to_local<distype_target>(*Bele, globgp, Bxi, converged);
       if (!converged and found != ((int)foundeles.size() - 1)) continue;
 
       // save distance of gp
@@ -1303,39 +1292,39 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
         Bele = Bdis.g_element(gpid);
       }
 
-      // for "master" side
-      Utils::shape_function<distype_s>(sval_A, Axi, dualquad_);
-      Utils::shape_function<distype_m>(mval_A, Bxi);
+      // for "target" side
+      Utils::shape_function<distype_source>(source_val_A, Axi, dualquad_);
+      Utils::shape_function<distype_target>(target_val_A, Bxi);
 
-      // evaluate Lagrange multiplier shape functions (on slave element)
-      Utils::dual_shape_function<distype_s>(lmval_A, Axi, Aele, dualquad_);
+      // evaluate Lagrange multiplier shape functions (on source element)
+      Utils::dual_shape_function<distype_source>(lmval_A, Axi, Aele, dualquad_);
 
       // compute cell D/M matrix ****************************************
       // dual shape functions
-      for (int j = 0; j < ns_; ++j)
+      for (int j = 0; j < nsource_; ++j)
       {
         Core::Nodes::Node* cnode = Aele.nodes()[j];
         if (cnode->owner() != Core::Communication::my_mpi_rank(Adis.get_comm())) continue;
 
-        int nsdof = Adis.num_dof(dofsetA, cnode);
+        int nsource_dof = Adis.num_dof(dofsetA, cnode);
 
-        // loop over slave dofs
-        for (int jdof = 0; jdof < nsdof; ++jdof)
+        // loop over source dofs
+        for (int jdof = 0; jdof < nsource_dof; ++jdof)
         {
           int row = Adis.dof(dofsetA, cnode, jdof);
 
           // integrate D
-          double prod2 = lmval_A(j) * sval_A(j) * jac * wgt;
+          double prod2 = lmval_A(j) * source_val_A(j) * jac * wgt;
           if (abs(prod2) > VOLMORTARINTTOL) dmatrix_A.assemble(prod2, row, row);
 
           // integrate M
-          for (int k = 0; k < nm_; ++k)
+          for (int k = 0; k < ntarget_; ++k)
           {
-            Core::Nodes::Node* mnode = Bele->nodes()[k];
-            int col = Bdis.dof(dofsetB, mnode, jdof);
+            Core::Nodes::Node* target_node = Bele->nodes()[k];
+            int col = Bdis.dof(dofsetB, target_node, jdof);
 
             // multiply the two shape functions
-            double prod = lmval_A(j) * mval_A(k) * jac * wgt;
+            double prod = lmval_A(j) * target_val_A(k) * jac * wgt;
 
             if (abs(prod) > VOLMORTARINTTOL) mmatrix_A.assemble(prod, row, col);
           }
@@ -1345,27 +1334,25 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
       break;
     }  // beles
   }  // end gp loop
-
-  return;
 }
 
 
 /*----------------------------------------------------------------------*
  |  Compute D/M entries for Volumetric Mortar                farah 04/14|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_ele_based_3d_b_dis(
-    Core::Elements::Element& Bele, std::vector<int>& foundeles,
-    Core::LinAlg::SparseMatrix& dmatrix_B, Core::LinAlg::SparseMatrix& mmatrix_B,
-    const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int dofsetA,
-    int dofsetB)
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+void Coupling::VolMortar::VolMortarIntegrator<distype_source,
+    distype_target>::integrate_ele_based_3d_b_dis(Core::Elements::Element& Bele,
+    std::vector<int>& foundeles, Core::LinAlg::SparseMatrix& dmatrix_B,
+    Core::LinAlg::SparseMatrix& mmatrix_B, const Core::FE::Discretization& Adis,
+    const Core::FE::Discretization& Bdis, int dofsetA, int dofsetB)
 {
   if (shape_ == shape_std) FOUR_C_THROW("ERROR: std. shape functions not supported");
 
   // create empty vectors for shape fct. evaluation
-  Core::LinAlg::Matrix<ns_, 1> mval_A;
-  Core::LinAlg::Matrix<nm_, 1> sval_B;
-  Core::LinAlg::Matrix<nm_, 1> lmval_B;
+  Core::LinAlg::Matrix<nsource_, 1> target_val_A;
+  Core::LinAlg::Matrix<ntarget_, 1> source_val_B;
+  Core::LinAlg::Matrix<ntarget_, 1> lmval_B;
 
   //**********************************************************************
   // loop over all Gauss points for integration
@@ -1384,24 +1371,24 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
     double AuxXi[3] = {0.0, 0.0, 0.0};
 
     // evaluate the integration cell Jacobian
-    jac = Utils::jacobian<distype_m>(eta, Bele);
+    jac = Utils::jacobian<distype_target>(eta, Bele);
 
     // get global Gauss point coordinates
-    Utils::local_to_global<distype_m>(Bele, eta, globgp);
+    Utils::local_to_global<distype_target>(Bele, eta, globgp);
 
     // map gp into A and B para space
     double Bxi[3] = {0.0, 0.0, 0.0};
-    Mortar::Utils::global_to_local<distype_m>(Bele, globgp, Bxi);
+    Mortar::Utils::global_to_local<distype_target>(Bele, globgp, Bxi);
 
     // loop over beles
     for (int found = 0; found < (int)foundeles.size(); ++found)
     {
-      // get master element
+      // get target element
       Core::Elements::Element* Aele = Adis.g_element(foundeles[found]);
       double Axi[3] = {0.0, 0.0, 0.0};
 
       bool converged = true;
-      Mortar::Utils::global_to_local<distype_s>(*Aele, globgp, Axi, converged);
+      Mortar::Utils::global_to_local<distype_source>(*Aele, globgp, Axi, converged);
       if (!converged and found != ((int)foundeles.size() - 1)) continue;
 
       // save distance of gp
@@ -1430,37 +1417,37 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
       }
 
       // evaluate trace space shape functions (on both elements)
-      Utils::shape_function<distype_m>(sval_B, Bxi, dualquad_);
-      Utils::shape_function<distype_s>(mval_A, Axi);
+      Utils::shape_function<distype_target>(source_val_B, Bxi, dualquad_);
+      Utils::shape_function<distype_source>(target_val_A, Axi);
 
-      // evaluate Lagrange multiplier shape functions (on slave element)
-      Utils::dual_shape_function<distype_m>(lmval_B, Bxi, Bele, dualquad_);
+      // evaluate Lagrange multiplier shape functions (on source element)
+      Utils::dual_shape_function<distype_target>(lmval_B, Bxi, Bele, dualquad_);
       // compute cell D/M matrix ****************************************
       // dual shape functions
-      for (int j = 0; j < nm_; ++j)
+      for (int j = 0; j < ntarget_; ++j)
       {
         Core::Nodes::Node* cnode = Bele.nodes()[j];
         if (cnode->owner() != Core::Communication::my_mpi_rank(Bdis.get_comm())) continue;
 
-        int nsdof = Bdis.num_dof(dofsetB, cnode);
+        int nsource_dof = Bdis.num_dof(dofsetB, cnode);
 
-        // loop over slave dofs
-        for (int jdof = 0; jdof < nsdof; ++jdof)
+        // loop over source dofs
+        for (int jdof = 0; jdof < nsource_dof; ++jdof)
         {
           int row = Bdis.dof(dofsetB, cnode, jdof);
 
           // integrate D
-          double prod2 = lmval_B(j) * sval_B(j) * jac * wgt;
+          double prod2 = lmval_B(j) * source_val_B(j) * jac * wgt;
           if (abs(prod2) > VOLMORTARINTTOL) dmatrix_B.assemble(prod2, row, row);
 
           // integrate M
-          for (int k = 0; k < ns_; ++k)
+          for (int k = 0; k < nsource_; ++k)
           {
-            Core::Nodes::Node* mnode = Aele->nodes()[k];
-            int col = Adis.dof(dofsetA, mnode, jdof);
+            Core::Nodes::Node* target_node = Aele->nodes()[k];
+            int col = Adis.dof(dofsetA, target_node, jdof);
 
             // multiply the two shape functions
-            double prod = lmval_B(j) * mval_A(k) * jac * wgt;
+            double prod = lmval_B(j) * target_val_A(k) * jac * wgt;
 
             if (abs(prod) > VOLMORTARINTTOL) mmatrix_B.assemble(prod, row, col);
           }
@@ -1470,8 +1457,6 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
       break;
     }  // beles
   }  // end gp loop
-
-  return;
 }
 
 
@@ -1480,21 +1465,21 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
  |  This function is for element-wise integration when an               |
  |  element is completely located within an other element               |
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_ele_3d(int domain,
-    Core::Elements::Element& Aele, Core::Elements::Element& Bele,
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+void Coupling::VolMortar::VolMortarIntegrator<distype_source, distype_target>::integrate_ele_3d(
+    int domain, Core::Elements::Element& Aele, Core::Elements::Element& Bele,
     Core::LinAlg::SparseMatrix& dmatrix_A, Core::LinAlg::SparseMatrix& mmatrix_A,
     Core::LinAlg::SparseMatrix& dmatrix_B, Core::LinAlg::SparseMatrix& mmatrix_B,
-    const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int sdofset_A,
-    int mdofset_A, int sdofset_B, int mdofset_B)
+    const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int source_dofset_A,
+    int target_dofset_A, int source_dofset_B, int target_dofset_B)
 {
   if (shape_ == shape_std) FOUR_C_THROW("ERROR: std. shape functions not supported");
 
   // create empty vectors for shape fct. evaluation
-  Core::LinAlg::Matrix<ns_, 1> sval_A;
-  Core::LinAlg::Matrix<nm_, 1> mval_A;
-  Core::LinAlg::Matrix<ns_, 1> lmval_A;
-  Core::LinAlg::Matrix<nm_, 1> lmval_B;
+  Core::LinAlg::Matrix<nsource_, 1> source_val_A;
+  Core::LinAlg::Matrix<ntarget_, 1> target_val_A;
+  Core::LinAlg::Matrix<nsource_, 1> lmval_A;
+  Core::LinAlg::Matrix<ntarget_, 1> lmval_B;
 
   //**********************************************************************
   // loop over all Gauss points for integration
@@ -1511,18 +1496,18 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
     if (domain == 0)
     {
       // evaluate the integration cell Jacobian
-      jac = Utils::jacobian<distype_s>(eta, Aele);
+      jac = Utils::jacobian<distype_source>(eta, Aele);
 
       // get global Gauss point coordinates
-      Utils::local_to_global<distype_s>(Aele, eta, globgp);
+      Utils::local_to_global<distype_source>(Aele, eta, globgp);
     }
     else if (domain == 1)
     {
       // evaluate the integration cell Jacobian
-      jac = Utils::jacobian<distype_m>(eta, Bele);
+      jac = Utils::jacobian<distype_target>(eta, Bele);
 
       // get global Gauss point coordinates
-      Utils::local_to_global<distype_m>(Bele, eta, globgp);
+      Utils::local_to_global<distype_target>(Bele, eta, globgp);
     }
     else
       FOUR_C_THROW("wrong domain for integration!");
@@ -1531,44 +1516,44 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
     // map gp into A and B para space
     double Axi[3] = {0.0, 0.0, 0.0};
     double Bxi[3] = {0.0, 0.0, 0.0};
-    Mortar::Utils::global_to_local<distype_s>(Aele, globgp, Axi);
-    Mortar::Utils::global_to_local<distype_m>(Bele, globgp, Bxi);
+    Mortar::Utils::global_to_local<distype_source>(Aele, globgp, Axi);
+    Mortar::Utils::global_to_local<distype_target>(Bele, globgp, Bxi);
 
     // Check parameter space mapping
     check_mapping_3d(Aele, Bele, Axi, Bxi);
 
     // evaluate trace space shape functions (on both elements)
-    Utils::shape_function<distype_s>(sval_A, Axi);
-    Utils::shape_function<distype_m>(mval_A, Bxi);
+    Utils::shape_function<distype_source>(source_val_A, Axi);
+    Utils::shape_function<distype_target>(target_val_A, Bxi);
 
-    // evaluate Lagrange multiplier shape functions (on slave element)
-    Utils::dual_shape_function<distype_s>(lmval_A, Axi, Aele, dualquad_);
-    Utils::dual_shape_function<distype_m>(lmval_B, Bxi, Bele, dualquad_);
+    // evaluate Lagrange multiplier shape functions (on source element)
+    Utils::dual_shape_function<distype_source>(lmval_A, Axi, Aele, dualquad_);
+    Utils::dual_shape_function<distype_target>(lmval_B, Bxi, Bele, dualquad_);
 
     // compute cell D/M matrix ****************************************
     // dual shape functions
-    for (int j = 0; j < ns_; ++j)
+    for (int j = 0; j < nsource_; ++j)
     {
       Core::Nodes::Node* cnode = Aele.nodes()[j];
-      int nsdof = Adis.num_dof(sdofset_A, cnode);
+      int nsource_dof = Adis.num_dof(source_dofset_A, cnode);
 
-      // loop over slave dofs
-      for (int jdof = 0; jdof < nsdof; ++jdof)
+      // loop over source dofs
+      for (int jdof = 0; jdof < nsource_dof; ++jdof)
       {
-        int row = Adis.dof(sdofset_A, cnode, jdof);
+        int row = Adis.dof(source_dofset_A, cnode, jdof);
 
         // integrate M and D
-        for (int k = 0; k < nm_; ++k)
+        for (int k = 0; k < ntarget_; ++k)
         {
-          Core::Nodes::Node* mnode = Bele.nodes()[k];
-          int nmdof = Bdis.num_dof(mdofset_A, mnode);
+          Core::Nodes::Node* target_node = Bele.nodes()[k];
+          int ntarget_dof = Bdis.num_dof(target_dofset_A, target_node);
 
-          for (int kdof = 0; kdof < nmdof; ++kdof)
+          for (int kdof = 0; kdof < ntarget_dof; ++kdof)
           {
-            int col = Bdis.dof(mdofset_A, mnode, kdof);
+            int col = Bdis.dof(target_dofset_A, target_node, kdof);
 
             // multiply the two shape functions
-            double prod = lmval_A(j) * mval_A(k) * jac * wgt;
+            double prod = lmval_A(j) * target_val_A(k) * jac * wgt;
 
             // dof to dof
             if (jdof == kdof)
@@ -1583,28 +1568,28 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
 
     // compute cell D/M matrix ****************************************
     // dual shape functions
-    for (int j = 0; j < nm_; ++j)
+    for (int j = 0; j < ntarget_; ++j)
     {
       Core::Nodes::Node* cnode = Bele.nodes()[j];
-      int nsdof = Bdis.num_dof(sdofset_B, cnode);
+      int nsource_dof = Bdis.num_dof(source_dofset_B, cnode);
 
-      // loop over slave dofs
-      for (int jdof = 0; jdof < nsdof; ++jdof)
+      // loop over source dofs
+      for (int jdof = 0; jdof < nsource_dof; ++jdof)
       {
-        int row = Bdis.dof(sdofset_B, cnode, jdof);
+        int row = Bdis.dof(source_dofset_B, cnode, jdof);
 
         // integrate M and D
-        for (int k = 0; k < ns_; ++k)
+        for (int k = 0; k < nsource_; ++k)
         {
-          Core::Nodes::Node* mnode = Aele.nodes()[k];
-          int nmdof = Adis.num_dof(mdofset_B, mnode);
+          Core::Nodes::Node* target_node = Aele.nodes()[k];
+          int ntarget_dof = Adis.num_dof(target_dofset_B, target_node);
 
-          for (int kdof = 0; kdof < nmdof; ++kdof)
+          for (int kdof = 0; kdof < ntarget_dof; ++kdof)
           {
-            int col = Adis.dof(mdofset_B, mnode, kdof);
+            int col = Adis.dof(target_dofset_B, target_node, kdof);
 
             // multiply the two shape functions
-            double prod = lmval_B(j) * sval_A(k) * jac * wgt;
+            double prod = lmval_B(j) * source_val_A(k) * jac * wgt;
 
             // dof to dof
             if (jdof == kdof)
@@ -1618,65 +1603,70 @@ void Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::integrate_e
     }
 
   }  // end gp loop
-
-  return;
 }
 
 
 /*----------------------------------------------------------------------*
  |  Compute D/M entries for Volumetric Mortar                farah 01/14|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-bool Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::check_mapping_2d(
-    Core::Elements::Element& sele, Core::Elements::Element& mele, double* sxi, double* mxi)
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+bool Coupling::VolMortar::VolMortarIntegrator<distype_source, distype_target>::check_mapping_2d(
+    Core::Elements::Element& source_ele, Core::Elements::Element& target_ele, double* source_xi,
+    double* target_xi)
 {
-  // check GP projection (SLAVE)
+  // check GP projection (SOURCE)
   const double tol = 1e-10;
-  if (distype_s == Core::FE::CellType::quad4 || distype_s == Core::FE::CellType::quad8 ||
-      distype_s == Core::FE::CellType::quad9)
+  if (distype_source == Core::FE::CellType::quad4 || distype_source == Core::FE::CellType::quad8 ||
+      distype_source == Core::FE::CellType::quad9)
   {
-    if (sxi[0] < -1.0 - tol || sxi[1] < -1.0 - tol || sxi[0] > 1.0 + tol || sxi[1] > 1.0 + tol)
+    if (source_xi[0] < -1.0 - tol || source_xi[1] < -1.0 - tol || source_xi[0] > 1.0 + tol ||
+        source_xi[1] > 1.0 + tol)
     {
       std::cout << "\n***Warning: Gauss point projection outside!";
-      std::cout << "Slave ID: " << sele.id() << " Master ID: " << mele.id() << std::endl;
-      std::cout << "Slave GP projection: " << sxi[0] << " " << sxi[1] << std::endl;
+      std::cout << "Source ID: " << source_ele.id() << " Target ID: " << target_ele.id()
+                << std::endl;
+      std::cout << "Source GP projection: " << source_xi[0] << " " << source_xi[1] << std::endl;
       return false;
     }
   }
-  else if (distype_s == Core::FE::CellType::tri3 || distype_s == Core::FE::CellType::tri6)
+  else if (distype_source == Core::FE::CellType::tri3 || distype_source == Core::FE::CellType::tri6)
   {
-    if (sxi[0] < -tol || sxi[1] < -tol || sxi[0] > 1.0 + tol || sxi[1] > 1.0 + tol ||
-        sxi[0] + sxi[1] > 1.0 + 2 * tol)
+    if (source_xi[0] < -tol || source_xi[1] < -tol || source_xi[0] > 1.0 + tol ||
+        source_xi[1] > 1.0 + tol || source_xi[0] + source_xi[1] > 1.0 + 2 * tol)
     {
       std::cout << "\n***Warning: Gauss point projection outside!";
-      std::cout << "Slave ID: " << sele.id() << " Master ID: " << mele.id() << std::endl;
-      std::cout << "Slave GP projection: " << sxi[0] << " " << sxi[1] << std::endl;
+      std::cout << "Source ID: " << source_ele.id() << " Target ID: " << target_ele.id()
+                << std::endl;
+      std::cout << "Source GP projection: " << source_xi[0] << " " << source_xi[1] << std::endl;
       return false;
     }
   }
   else
     FOUR_C_THROW("Wrong element type!");
 
-  // check GP projection (MASTER)
-  if (distype_m == Core::FE::CellType::quad4 || distype_m == Core::FE::CellType::quad8 ||
-      distype_m == Core::FE::CellType::quad9)
+  // check GP projection (TARGET)
+  if (distype_target == Core::FE::CellType::quad4 || distype_target == Core::FE::CellType::quad8 ||
+      distype_target == Core::FE::CellType::quad9)
   {
-    if (mxi[0] < -1.0 - tol || mxi[1] < -1.0 - tol || mxi[0] > 1.0 + tol || mxi[1] > 1.0 + tol)
+    if (target_xi[0] < -1.0 - tol || target_xi[1] < -1.0 - tol || target_xi[0] > 1.0 + tol ||
+        target_xi[1] > 1.0 + tol)
     {
       std::cout << "\n***Warning: Gauss point projection outside!";
-      std::cout << "Slave ID: " << sele.id() << " Master ID: " << mele.id() << std::endl;
-      std::cout << "Master GP projection: " << mxi[0] << " " << mxi[1] << std::endl;
+      std::cout << "Source ID: " << source_ele.id() << " Target ID: " << target_ele.id()
+                << std::endl;
+      std::cout << "Target GP projection: " << target_xi[0] << " " << target_xi[1] << std::endl;
       return false;
     }
   }
-  else if (distype_s == Core::FE::CellType::tri3 || distype_s == Core::FE::CellType::tri6)
+  else if (distype_target == Core::FE::CellType::tri3 || distype_target == Core::FE::CellType::tri6)
   {
-    if (mxi[0] < -tol || mxi[1] < -tol || mxi[0] > 1.0 + tol || mxi[1] > 1.0 + tol ||
-        mxi[0] + mxi[1] > 1.0 + 2 * tol)
+    if (target_xi[0] < -tol || target_xi[1] < -tol || target_xi[0] > 1.0 + tol ||
+        target_xi[1] > 1.0 + tol || target_xi[0] + target_xi[1] > 1.0 + 2 * tol)
     {
       std::cout << "\n***Warning: Gauss point projection outside!";
-      std::cout << "Slave ID: " << sele.id() << " Master ID: " << mele.id() << std::endl;
-      std::cout << "Master GP projection: " << mxi[0] << " " << mxi[1] << std::endl;
+      std::cout << "Source ID: " << source_ele.id() << " Target ID: " << target_ele.id()
+                << std::endl;
+      std::cout << "Target GP projection: " << target_xi[0] << " " << target_xi[1] << std::endl;
       return false;
     }
   }
@@ -1690,150 +1680,68 @@ bool Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::check_mappi
 /*----------------------------------------------------------------------*
  |  Compute D/M entries for Volumetric Mortar                farah 01/14|
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-bool Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::check_mapping_3d(
-    Core::Elements::Element& sele, Core::Elements::Element& mele, double* sxi, double* mxi)
+template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+bool Coupling::VolMortar::VolMortarIntegrator<distype_source, distype_target>::check_mapping_3d(
+    Core::Elements::Element& source_ele, Core::Elements::Element& target_ele, double* source_xi,
+    double* target_xi)
 {
-  // check GP projection (SLAVE)
+  // check GP projection (SOURCE)
   double tol = 1e-5;
-  if (distype_s == Core::FE::CellType::hex8 || distype_s == Core::FE::CellType::hex20 ||
-      distype_s == Core::FE::CellType::hex27)
+  if (distype_source == Core::FE::CellType::hex8 || distype_source == Core::FE::CellType::hex20 ||
+      distype_source == Core::FE::CellType::hex27)
   {
-    if (sxi[0] < -1.0 - tol || sxi[1] < -1.0 - tol || sxi[2] < -1.0 - tol || sxi[0] > 1.0 + tol ||
-        sxi[1] > 1.0 + tol || sxi[2] > 1.0 + tol)
+    if (source_xi[0] < -1.0 - tol || source_xi[1] < -1.0 - tol || source_xi[2] < -1.0 - tol ||
+        source_xi[0] > 1.0 + tol || source_xi[1] > 1.0 + tol || source_xi[2] > 1.0 + tol)
     {
-      //      std::cout << "\n***Warning: Gauss point projection outside!";
-      //      std::cout << "Slave ID: " << sele.Id() << " Master ID: " << mele.Id() << std::endl;
-      //      std::cout << "Slave GP projection: " << sxi[0] << " " << sxi[1] << " " << sxi[2] <<
-      //      std::endl;
-      //
-      //      for(int i=0;i<sele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << sele.Nodes()[i]->X()[0] <<"  "<<
-      //        sele.Nodes()[i]->X()[1] <<"  "<< sele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
-      //      std::cout << "------------" << std::endl;
-      //      for(int i=0;i<mele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << mele.Nodes()[i]->X()[0] <<"  "<<
-      //        mele.Nodes()[i]->X()[1] <<"  "<< mele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
-
       return false;
     }
   }
-  else if (distype_s == Core::FE::CellType::tet4 || distype_s == Core::FE::CellType::tet10)
+  else if (distype_source == Core::FE::CellType::tet4 ||
+           distype_source == Core::FE::CellType::tet10)
   {
-    if (sxi[0] < 0.0 - tol || sxi[1] < 0.0 - tol || sxi[2] < 0.0 - tol ||
-        (sxi[0] + sxi[1] + sxi[2]) > 1.0 + tol)
+    if (source_xi[0] < 0.0 - tol || source_xi[1] < 0.0 - tol || source_xi[2] < 0.0 - tol ||
+        (source_xi[0] + source_xi[1] + source_xi[2]) > 1.0 + tol)
     {
-      //      std::cout << "\n***Warning: Gauss point projection outside!";
-      //      std::cout << "Slave ID: " << sele.Id() << " Master ID: " << mele.Id() << std::endl;
-      //      std::cout << "Slave GP projection: " << sxi[0] << " " << sxi[1] << " " << sxi[2] <<
-      //      std::endl; for(int i=0;i<sele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << sele.Nodes()[i]->X()[0] <<"  "<<
-      //        sele.Nodes()[i]->X()[1] <<"  "<< sele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
-      //      std::cout << "------------" << std::endl;
-      //      for(int i=0;i<mele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << mele.Nodes()[i]->X()[0] <<"  "<<
-      //        mele.Nodes()[i]->X()[1] <<"  "<< mele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
       return false;
     }
   }
-  else if (distype_s == Core::FE::CellType::pyramid5)
+  else if (distype_source == Core::FE::CellType::pyramid5)
   {
-    if (sxi[2] < 0.0 - tol || -sxi[0] + sxi[2] > 1.0 + tol || sxi[0] + sxi[2] > 1.0 + tol ||
-        -sxi[1] + sxi[2] > 1.0 + tol || sxi[1] + sxi[2] > 1.0 + tol)
+    if (source_xi[2] < 0.0 - tol || -source_xi[0] + source_xi[2] > 1.0 + tol ||
+        source_xi[0] + source_xi[2] > 1.0 + tol || -source_xi[1] + source_xi[2] > 1.0 + tol ||
+        source_xi[1] + source_xi[2] > 1.0 + tol)
     {
-      //      std::cout << "\n***Warning: Gauss point projection outside!";
-      //      std::cout << "Slave ID: " << sele.Id() << " Master ID: " << mele.Id() << std::endl;
-      //      std::cout << "Slave GP projection: " << sxi[0] << " " << sxi[1] << " " << sxi[2] <<
-      //      std::endl; for(int i=0;i<sele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << sele.Nodes()[i]->X()[0] <<"  "<<
-      //        sele.Nodes()[i]->X()[1] <<"  "<< sele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
-      //      std::cout << "------------" << std::endl;
-      //      for(int i=0;i<mele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << mele.Nodes()[i]->X()[0] <<"  "<<
-      //        mele.Nodes()[i]->X()[1] <<"  "<< mele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
       return false;
     }
   }
   else
     FOUR_C_THROW("Wrong element type!");
 
-  // check GP projection (MASTER)
-  if (distype_m == Core::FE::CellType::hex8 || distype_m == Core::FE::CellType::hex20 ||
-      distype_m == Core::FE::CellType::hex27)
+  // check GP projection (TARGET)
+  if (distype_target == Core::FE::CellType::hex8 || distype_target == Core::FE::CellType::hex20 ||
+      distype_target == Core::FE::CellType::hex27)
   {
-    if (mxi[0] < -1.0 - tol || mxi[1] < -1.0 - tol || mxi[2] < -1.0 - tol || mxi[0] > 1.0 + tol ||
-        mxi[1] > 1.0 + tol || mxi[2] > 1.0 + tol)
+    if (target_xi[0] < -1.0 - tol || target_xi[1] < -1.0 - tol || target_xi[2] < -1.0 - tol ||
+        target_xi[0] > 1.0 + tol || target_xi[1] > 1.0 + tol || target_xi[2] > 1.0 + tol)
     {
-      //      std::cout << "\n***Warning: Gauss point projection outside!";
-      //      std::cout << "Slave ID: " << sele.Id() << " Master ID: " << mele.Id() << std::endl;
-      //      std::cout << "Master GP projection: " << mxi[0] << " " << mxi[1] << " " << mxi[2] <<
-      //      std::endl; for(int i=0;i<sele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << sele.Nodes()[i]->X()[0] <<"  "<<
-      //        sele.Nodes()[i]->X()[1] <<"  "<< sele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
-      //      std::cout << "------------" << std::endl;
-      //      for(int i=0;i<mele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << mele.Nodes()[i]->X()[0] <<"  "<<
-      //        mele.Nodes()[i]->X()[1] <<"  "<< mele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
       return false;
     }
   }
-  else if (distype_m == Core::FE::CellType::tet4 || distype_m == Core::FE::CellType::tet10)
+  else if (distype_target == Core::FE::CellType::tet4 ||
+           distype_target == Core::FE::CellType::tet10)
   {
-    if (mxi[0] < 0.0 - tol || mxi[1] < 0.0 - tol || mxi[2] < 0.0 - tol ||
-        (mxi[0] + mxi[1] + mxi[2]) > 1.0 + tol)
+    if (target_xi[0] < 0.0 - tol || target_xi[1] < 0.0 - tol || target_xi[2] < 0.0 - tol ||
+        (target_xi[0] + target_xi[1] + target_xi[2]) > 1.0 + tol)
     {
-      //      std::cout << "\n***Warning: Gauss point projection outside!";
-      //      std::cout << "Slave ID: " << sele.Id() << " Master ID: " << mele.Id() << std::endl;
-      //      std::cout << "Master GP projection: " << mxi[0] << " " << mxi[1] << " " << mxi[2] <<
-      //      std::endl; for(int i=0;i<sele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << sele.Nodes()[i]->X()[0] <<"  "<<
-      //        sele.Nodes()[i]->X()[1] <<"  "<< sele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
-      //      std::cout << "------------" << std::endl;
-      //      for(int i=0;i<mele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << mele.Nodes()[i]->X()[0] <<"  "<<
-      //        mele.Nodes()[i]->X()[1] <<"  "<< mele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
       return false;
     }
   }
-  else if (distype_m == Core::FE::CellType::pyramid5)
+  else if (distype_target == Core::FE::CellType::pyramid5)
   {
-    if (mxi[2] < 0.0 - tol || -mxi[0] + mxi[2] > 1.0 + tol || mxi[0] + mxi[2] > 1.0 + tol ||
-        -mxi[1] + mxi[2] > 1.0 + tol || mxi[1] + mxi[2] > 1.0 + tol)
+    if (target_xi[2] < 0.0 - tol || -target_xi[0] + target_xi[2] > 1.0 + tol ||
+        target_xi[0] + target_xi[2] > 1.0 + tol || -target_xi[1] + target_xi[2] > 1.0 + tol ||
+        target_xi[1] + target_xi[2] > 1.0 + tol)
     {
-      //      std::cout << "\n***Warning: Gauss point projection outside!";
-      //      std::cout << "Slave ID: " << sele.Id() << " Master ID: " << mele.Id() << std::endl;
-      //      std::cout << "Master GP projection: " << mxi[0] << " " << mxi[1] << " " << mxi[2] <<
-      //      std::endl; for(int i=0;i<sele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << sele.Nodes()[i]->X()[0] <<"  "<<
-      //        sele.Nodes()[i]->X()[1] <<"  "<< sele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
-      //      std::cout << "------------" << std::endl;
-      //      for(int i=0;i<mele.num_node();++i)
-      //      {
-      //        std::cout << "create vertex " << mele.Nodes()[i]->X()[0] <<"  "<<
-      //        mele.Nodes()[i]->X()[1] <<"  "<< mele.Nodes()[i]->X()[2] <<std::endl;
-      //      }
       return false;
     }
   }
@@ -1845,21 +1753,21 @@ bool Coupling::VolMortar::VolMortarIntegrator<distype_s, distype_m>::check_mappi
 
 
 /*----------------------------------------------------------------------*
- |  possible slave/master element pairs                       farah 01/14|
+ |  possible source/target element pairs                       farah 01/14|
  *----------------------------------------------------------------------*/
-// slave quad4
+// source quad4
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::quad4,
     Core::FE::CellType::quad4>;
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::quad4,
     Core::FE::CellType::tri3>;
 
-// slave tri3
+// source tri3
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::tri3,
     Core::FE::CellType::quad4>;
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::tri3,
     Core::FE::CellType::tri3>;
 
-// slave hex8
+// source hex8
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex8,
     Core::FE::CellType::tet4>;
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex8,
@@ -1873,7 +1781,7 @@ template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex8
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex8,
     Core::FE::CellType::pyramid5>;
 
-// slave hex20
+// source hex20
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex20,
     Core::FE::CellType::tet4>;
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex20,
@@ -1887,7 +1795,7 @@ template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex2
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex20,
     Core::FE::CellType::pyramid5>;
 
-// slave hex27
+// source hex27
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex27,
     Core::FE::CellType::tet4>;
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex27,
@@ -1901,7 +1809,7 @@ template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex2
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::hex27,
     Core::FE::CellType::pyramid5>;
 
-// slave tet4
+// source tet4
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::tet4,
     Core::FE::CellType::tet4>;
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::tet4,
@@ -1915,7 +1823,7 @@ template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::tet4
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::tet4,
     Core::FE::CellType::pyramid5>;
 
-// slave tet10
+// source tet10
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::tet10,
     Core::FE::CellType::tet4>;
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::tet10,
@@ -1929,7 +1837,7 @@ template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::tet1
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::tet10,
     Core::FE::CellType::pyramid5>;
 
-// slave pyramid 5
+// source pyramid 5
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::pyramid5,
     Core::FE::CellType::tet4>;
 template class Coupling::VolMortar::VolMortarIntegrator<Core::FE::CellType::pyramid5,
@@ -1984,7 +1892,7 @@ void Coupling::VolMortar::ConsInterpolator::interpolate(Core::Nodes::Node* node,
   {
     bool proj = false;
 
-    // get master element
+    // get target element
     Core::Elements::Element* ele = elediscret.g_element(foundeles[found]);
 
     switch (ele->shape())
@@ -2099,7 +2007,7 @@ bool Coupling::VolMortar::cons_interpolator_eval(Core::Nodes::Node* node,
     double* nodepos, std::pair<int, int>& dofset, const Core::LinAlg::Map& P_dofrowmap,
     const Core::LinAlg::Map& P_dofcolmap)
 {
-  //! ns_: number of slave element nodes
+  //! nsource_: number of source element nodes
   static const int n_ = Core::FE::num_nodes(distype);
 
   double xi[3] = {0.0, 0.0, 0.0};
@@ -2141,10 +2049,10 @@ bool Coupling::VolMortar::cons_interpolator_eval(Core::Nodes::Node* node,
   Core::LinAlg::Matrix<n_, 1> val;
   Utils::shape_function<distype>(val, xi);
 
-  int nsdof = nodediscret.num_dof(dofset.first, node);
+  int nsource_dof = nodediscret.num_dof(dofset.first, node);
 
-  // loop over slave dofs
-  for (int jdof = 0; jdof < nsdof; ++jdof)
+  // loop over source dofs
+  for (int jdof = 0; jdof < nsource_dof; ++jdof)
   {
     const int row = nodediscret.dof(dofset.first, node, jdof);
 
@@ -2166,22 +2074,5 @@ bool Coupling::VolMortar::cons_interpolator_eval(Core::Nodes::Node* node,
   return true;
 }
 
-
-/*----------------------------------------------------------------------*
- |  possible elements for interpolation                      farah 06/14|
- *----------------------------------------------------------------------*/
-// template class Coupling::VolMortar::ConsInterpolator<Core::FE::CellType::quad4>;
-// template class Coupling::VolMortar::ConsInterpolator<Core::FE::CellType::quad8>;
-// template class Coupling::VolMortar::ConsInterpolator<Core::FE::CellType::quad9>;
-//
-// template class Coupling::VolMortar::ConsInterpolator<Core::FE::CellType::tri3>;
-// template class Coupling::VolMortar::ConsInterpolator<Core::FE::CellType::tri6>;
-//
-// template class Coupling::VolMortar::ConsInterpolator<Core::FE::CellType::hex8>;
-// template class Coupling::VolMortar::ConsInterpolator<Core::FE::CellType::hex20>;
-// template class Coupling::VolMortar::ConsInterpolator<Core::FE::CellType::hex27>;
-//
-// template class Coupling::VolMortar::ConsInterpolator<Core::FE::CellType::tet4>;
-// template class Coupling::VolMortar::ConsInterpolator<Core::FE::CellType::tet10>;
 
 FOUR_C_NAMESPACE_CLOSE

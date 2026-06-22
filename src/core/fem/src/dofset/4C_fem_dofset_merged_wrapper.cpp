@@ -20,26 +20,26 @@ FOUR_C_NAMESPACE_OPEN
 Core::DOFSets::DofSetMergedWrapper::DofSetMergedWrapper(
     std::shared_ptr<DofSetInterface> sourcedofset,
     std::shared_ptr<const Core::FE::Discretization> sourcedis,
-    const std::string& couplingcond_master, const std::string& couplingcond_slave)
+    const std::string& coupling_cond_target, const std::string& coupling_cond_source)
     : DofSetBase(),
-      master_nodegids_col_layout_(nullptr),
-      sourcedofset_(sourcedofset),
-      sourcedis_(sourcedis),
-      couplingcond_master_(couplingcond_master),
-      couplingcond_slave_(couplingcond_slave),
+      target_nodegids_col_layout_(nullptr),
+      source_dofset_(sourcedofset),
+      source_dis_(sourcedis),
+      coupling_cond_target_(coupling_cond_target),
+      coupling_cond_source_(coupling_cond_source),
       filled_(false)
 {
-  if (sourcedofset_ == nullptr) FOUR_C_THROW("Source dof set is null pointer.");
-  if (sourcedis_ == nullptr) FOUR_C_THROW("Source discretization is null pointer.");
+  if (source_dofset_ == nullptr) FOUR_C_THROW("Source dof set is null pointer.");
+  if (source_dis_ == nullptr) FOUR_C_THROW("Source discretization is null pointer.");
 
-  sourcedofset_->register_proxy(this);
+  source_dofset_->register_proxy(this);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 Core::DOFSets::DofSetMergedWrapper::~DofSetMergedWrapper()
 {
-  if (sourcedofset_ != nullptr) sourcedofset_->unregister(this);
+  if (source_dofset_ != nullptr) source_dofset_->unregister(this);
 }
 
 /*----------------------------------------------------------------------*
@@ -48,7 +48,7 @@ const Core::LinAlg::Map* Core::DOFSets::DofSetMergedWrapper::dof_row_map() const
 {
   // the merged dofset does not add new dofs. So we can just return the
   // original dof map here.
-  return sourcedofset_->dof_row_map();
+  return source_dofset_->dof_row_map();
 }
 
 /*----------------------------------------------------------------------*
@@ -57,7 +57,7 @@ const Core::LinAlg::Map* Core::DOFSets::DofSetMergedWrapper::dof_col_map() const
 {
   // the merged dofset does not add new dofs. So we can just return the
   // original dof map here.
-  return sourcedofset_->dof_col_map();
+  return source_dofset_->dof_col_map();
 }
 
 /*----------------------------------------------------------------------*
@@ -65,124 +65,124 @@ const Core::LinAlg::Map* Core::DOFSets::DofSetMergedWrapper::dof_col_map() const
 int Core::DOFSets::DofSetMergedWrapper::assign_degrees_of_freedom(
     const Core::FE::Discretization& dis, const unsigned dspos, const int start)
 {
-  if (sourcedofset_ == nullptr) FOUR_C_THROW("No source dof set assigned to merged dof set!");
-  if (sourcedis_ == nullptr) FOUR_C_THROW("No source discretization assigned to mapping dof set!");
+  if (source_dofset_ == nullptr) FOUR_C_THROW("No source dof set assigned to merged dof set!");
+  if (source_dis_ == nullptr) FOUR_C_THROW("No source discretization assigned to mapping dof set!");
 
   // get nodes to be coupled
-  auto masternodes_set = Core::Conditions::find_conditioned_node_ids(
-      *sourcedis_, couplingcond_master_, Core::Conditions::LookFor::locally_owned);
-  std::vector<int> masternodes(masternodes_set.begin(), masternodes_set.end());
-  std::set<int> slavenodes_set = Core::Conditions::find_conditioned_node_ids(
-      dis, couplingcond_slave_, Core::Conditions::LookFor::locally_owned);
-  std::vector<int> slavenodes(slavenodes_set.begin(), slavenodes_set.end());
+  auto target_nodes_set = Core::Conditions::find_conditioned_node_ids(
+      *source_dis_, coupling_cond_target_, Core::Conditions::LookFor::locally_owned);
+  std::vector<int> target_nodes(target_nodes_set.begin(), target_nodes_set.end());
+  std::set<int> source_nodes_set = Core::Conditions::find_conditioned_node_ids(
+      dis, coupling_cond_source_, Core::Conditions::LookFor::locally_owned);
+  std::vector<int> source_nodes(source_nodes_set.begin(), source_nodes_set.end());
 
 
   // initialize search tree
   auto tree = Core::GeometricSearch::NodeMatchingOctree();
-  tree.init(*sourcedis_, masternodes, 150);
+  tree.init(*source_dis_, target_nodes, 150);
   tree.setup();
 
-  // match master and slave nodes using octtree
-  // master id -> slave id, distance
+  // match target and source nodes using octtree
+  // target id -> source id, distance
   std::map<int, std::pair<int, double>> coupling;
-  tree.find_match(dis, slavenodes, coupling);
+  tree.find_match(dis, source_nodes, coupling);
 
   // all nodes should be coupled
-  if (masternodes.size() != coupling.size())
+  if (target_nodes.size() != coupling.size())
     FOUR_C_THROW(
-        "Did not get 1:1 correspondence. \nmasternodes.size()={}, coupling.size()={}."
-        "DofSetMergedWrapper requires matching slave and master meshes!",
-        masternodes.size(), coupling.size());
+        "Did not get 1:1 correspondence. \ntarget_nodes.size()={}, coupling.size()={}."
+        "DofSetMergedWrapper requires matching source and target meshes!",
+        target_nodes.size(), coupling.size());
 
   // initialize final mapping
-  Core::LinAlg::Vector<int> my_master_nodegids_row_layout(*dis.node_row_map());
+  Core::LinAlg::Vector<int> my_target_nodegids_row_layout(*dis.node_row_map());
 
   // loop over all coupled nodes
-  for (unsigned i = 0; i < masternodes.size(); ++i)
+  for (unsigned i = 0; i < target_nodes.size(); ++i)
   {
-    // get master gid
-    int gid = masternodes[i];
+    // get target gid
+    int gid = target_nodes[i];
 
-    // We allow to hand in master nodes that do not take part in the
+    // We allow to hand in target nodes that do not take part in the
     // coupling. If this is undesired behaviour the user has to make
     // sure all nodes were used.
     if (coupling.find(gid) != coupling.end())
     {
       std::pair<int, double>& coupled = coupling[gid];
-      int slavegid = coupled.first;
-      int slavelid = dis.node_row_map()->lid(slavegid);
-      if (slavelid == -1) FOUR_C_THROW("slave gid {} was not found on this proc", slavegid);
+      int source_gid = coupled.first;
+      int source_lid = dis.node_row_map()->lid(source_gid);
+      if (source_lid == -1) FOUR_C_THROW("source gid {} was not found on this proc", source_gid);
 
-      // save master gid at col lid of corresponding slave node
-      (my_master_nodegids_row_layout.get_local_values())[slavelid] = gid;
+      // save target gid at col lid of corresponding source node
+      (my_target_nodegids_row_layout.get_local_values())[source_lid] = gid;
     }
   }
 
   // initialize final mapping
-  master_nodegids_col_layout_ = std::make_shared<Core::LinAlg::Vector<int>>(*dis.node_col_map());
+  target_nodegids_col_layout_ = std::make_shared<Core::LinAlg::Vector<int>>(*dis.node_col_map());
 
   // export to column map
-  Core::LinAlg::export_to(my_master_nodegids_row_layout, *master_nodegids_col_layout_);
+  Core::LinAlg::export_to(my_target_nodegids_row_layout, *target_nodegids_col_layout_);
 
 
   ////////////////////////////////////////////////////
-  // now we match source slave and aux dis
+  // now we match source and aux dis
   ////////////////////////////////////////////////////
 
   // get nodes to be coupled
-  masternodes_set = Core::Conditions::find_conditioned_node_ids(
-      dis, couplingcond_slave_, Core::Conditions::LookFor::locally_owned);
-  masternodes = std::vector<int>(masternodes_set.begin(), masternodes_set.end());
-  slavenodes_set = Core::Conditions::find_conditioned_node_ids(
-      *sourcedis_, couplingcond_slave_, Core::Conditions::LookFor::locally_owned);
-  slavenodes = std::vector<int>(slavenodes_set.begin(), slavenodes_set.end());
+  target_nodes_set = Core::Conditions::find_conditioned_node_ids(
+      dis, coupling_cond_source_, Core::Conditions::LookFor::locally_owned);
+  target_nodes = std::vector<int>(target_nodes_set.begin(), target_nodes_set.end());
+  source_nodes_set = Core::Conditions::find_conditioned_node_ids(
+      *source_dis_, coupling_cond_source_, Core::Conditions::LookFor::locally_owned);
+  source_nodes = std::vector<int>(source_nodes_set.begin(), source_nodes_set.end());
 
 
   // initialize search tree
-  tree.init(*sourcedis_, masternodes, 150);
+  tree.init(*source_dis_, target_nodes, 150);
   tree.setup();
 
-  // match master and slave nodes using octtree
-  // master id -> slave id, distance
+  // match target and source nodes using octtree
+  // target id -> source id, distance
   coupling.clear();
-  tree.find_match(dis, slavenodes, coupling);
+  tree.find_match(dis, source_nodes, coupling);
 
   // all nodes should be coupled
-  if (masternodes.size() != coupling.size())
+  if (target_nodes.size() != coupling.size())
     FOUR_C_THROW(
-        "Did not get 1:1 correspondence. \nmasternodes.size()={}, coupling.size()={}."
-        "DofSetMergedWrapper requires matching slave and master meshes!",
-        masternodes.size(), coupling.size());
+        "Did not get 1:1 correspondence. \ntarget_nodes.size()={}, coupling.size()={}."
+        "DofSetMergedWrapper requires matching source and target meshes!",
+        target_nodes.size(), coupling.size());
 
   // initialize final mapping
-  Core::LinAlg::Vector<int> my_slave_nodegids_row_layout(*dis.node_row_map());
+  Core::LinAlg::Vector<int> my_source_nodegids_row_layout(*dis.node_row_map());
 
   // loop over all coupled nodes
-  for (unsigned i = 0; i < masternodes.size(); ++i)
+  for (unsigned i = 0; i < target_nodes.size(); ++i)
   {
-    // get master gid
-    int gid = masternodes[i];
+    // get target gid
+    int gid = target_nodes[i];
 
-    // We allow to hand in master nodes that do not take part in the
+    // We allow to hand in target nodes that do not take part in the
     // coupling. If this is undesired behaviour the user has to make
     // sure all nodes were used.
     if (coupling.find(gid) != coupling.end())
     {
       std::pair<int, double>& coupled = coupling[gid];
-      int slavegid = coupled.first;
-      int slavelid = dis.node_row_map()->lid(slavegid);
-      if (slavelid == -1) FOUR_C_THROW("slave gid {} was not found on this proc", slavegid);
+      int source_gid = coupled.first;
+      int source_lid = dis.node_row_map()->lid(source_gid);
+      if (source_lid == -1) FOUR_C_THROW("source gid {} was not found on this proc", source_gid);
 
-      // save master gid at col lid of corresponding slave node
-      (my_slave_nodegids_row_layout.get_local_values())[slavelid] = gid;
+      // save target gid at col lid of corresponding source node
+      (my_source_nodegids_row_layout.get_local_values())[source_lid] = gid;
     }
   }
 
   // initialize final mapping
-  slave_nodegids_col_layout_ = std::make_shared<Core::LinAlg::Vector<int>>(*dis.node_col_map());
+  source_nodegids_col_layout_ = std::make_shared<Core::LinAlg::Vector<int>>(*dis.node_col_map());
 
   // export to column map
-  Core::LinAlg::export_to(my_slave_nodegids_row_layout, *slave_nodegids_col_layout_);
+  Core::LinAlg::export_to(my_source_nodegids_row_layout, *source_nodegids_col_layout_);
 
   // set filled flag true
   filled_ = true;
@@ -197,8 +197,8 @@ int Core::DOFSets::DofSetMergedWrapper::assign_degrees_of_freedom(
  *----------------------------------------------------------------------*/
 void Core::DOFSets::DofSetMergedWrapper::reset()
 {
-  master_nodegids_col_layout_ = nullptr;
-  slave_nodegids_col_layout_ = nullptr;
+  target_nodegids_col_layout_ = nullptr;
+  source_nodegids_col_layout_ = nullptr;
 
   // set filled flag
   filled_ = false;
@@ -210,10 +210,10 @@ void Core::DOFSets::DofSetMergedWrapper::reset()
  *----------------------------------------------------------------------*/
 void Core::DOFSets::DofSetMergedWrapper::disconnect(DofSetInterface* dofset)
 {
-  if (dofset == sourcedofset_.get())
+  if (dofset == source_dofset_.get())
   {
-    sourcedofset_ = nullptr;
-    sourcedis_ = nullptr;
+    source_dofset_ = nullptr;
+    source_dis_ = nullptr;
   }
   else
     FOUR_C_THROW("cannot disconnect from non-connected DofSet");

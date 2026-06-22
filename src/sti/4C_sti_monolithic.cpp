@@ -811,7 +811,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
               {
                 case S2I::coupling_matching_nodes:
                 {
-                  Coupling::Adapter::CouplingSlaveConverter converter(*icoupthermo_);
+                  Coupling::Adapter::CouplingSourceConverter converter(*icoupthermo_);
                   Coupling::Adapter::MatrixLogicalSplitAndTransform()(scatrathermoblock,
                       scatrathermoblock.range_map(), *strategythermo_->interface_maps()->map(1),
                       1.0, nullptr, &converter, blocksystemmatrix->matrix(iblock, nblockmapsscatra),
@@ -882,7 +882,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
             {
               case S2I::coupling_matching_nodes:
               {
-                Coupling::Adapter::CouplingSlaveConverter converter(*icoupthermo_);
+                Coupling::Adapter::CouplingSourceConverter converter(*icoupthermo_);
                 Coupling::Adapter::MatrixLogicalSplitAndTransform()(
                     *thermo_field()->system_matrix(), *maps_->map(1),
                     *strategythermo_->interface_maps()->map(1), 1.0, nullptr, &converter,
@@ -959,7 +959,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
             {
               case S2I::coupling_matching_nodes:
               {
-                Coupling::Adapter::CouplingSlaveConverter converter(*icoupthermo_);
+                Coupling::Adapter::CouplingSourceConverter converter(*icoupthermo_);
                 Coupling::Adapter::MatrixLogicalSplitAndTransform()(scatrathermoblock,
                     scatrathermoblock.range_map(), *strategythermo_->interface_maps()->map(1), 1.0,
                     nullptr, &converter, blocksystemmatrix->matrix(0, 1), true, true);
@@ -1083,7 +1083,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
         {
           case S2I::coupling_matching_nodes:
           {
-            Coupling::Adapter::CouplingSlaveConverter converter(*icoupthermo_);
+            Coupling::Adapter::CouplingSourceConverter converter(*icoupthermo_);
             Coupling::Adapter::MatrixLogicalSplitAndTransform()(scatrathermoblock,
                 scatrathermoblock.range_map(), *strategythermo_->interface_maps()->map(1), 1.0,
                 nullptr, &converter, *systemmatrix, true, true);
@@ -1689,7 +1689,7 @@ void STI::Monolithic::assemble_domain_interface_off_diag(
                     ? std::make_shared<Coupling::Adapter::MatrixRowTransform>()
                     : islavetomasterrowtransformthermood_;
         (*islavetomasterrowtransformthermood)(thermoscatrarowsslave, 1.,
-            Coupling::Adapter::CouplingSlaveConverter(*icoupthermo_), thermoscatrablock, true);
+            Coupling::Adapter::CouplingSourceConverter(*icoupthermo_), thermoscatrablock, true);
       }
     }
   }

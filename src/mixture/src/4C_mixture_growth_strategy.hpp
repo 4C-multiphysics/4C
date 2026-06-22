@@ -96,6 +96,22 @@ namespace Mixture
         int eleGID) const = 0;
 
     /*!
+     * @brief Returns d_iFg_/d_growth_scalar - derivative of the inverse inelastic deformation
+     * gradient with respect to the growth scalar. Used to assemble the consistent tangent
+     * when lambda_ext depends on growth_scalar (inelastic growth strategies).
+     *
+     * Default implementation returns the zero tensor (no inelastic deformation, e.g. stiffness
+     * strategy).
+     */
+    [[nodiscard]] virtual Core::LinAlg::Tensor<double, 3, 3>
+    evaluate_d_inverse_growth_deformation_gradient_d_growth_scalar(
+        double currentReferenceGrowthScalar, const Mat::EvaluationContext<3>& context, int gp,
+        int eleGID) const
+    {
+      return {};
+    }
+
+    /*!
      * @brief Evaluates the contribution of the growth strategy to the stress tensor and the
      * linearization.
      *

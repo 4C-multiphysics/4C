@@ -1,0 +1,85 @@
+name: performance_report
+
+on:
+  workflow_run:
+    workflows: [nightly_tests]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  performance_report:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup python environment
+        run: |
+          python -m venv $GITHUB_WORKSPACE/venv
+          . $GITHUB_WORKSPACE/venv/bin/activate
+          pip install -e $GITHUB_WORKSPACE/utilities/four_c_python\[ci\]
+      - name: Collect performance test results
+        run: |
+          . $GITHUB_WORKSPACE/venv/bin/activate
+          mkdir $GITHUB_WORKSPACE/performance_report
+          # download previous results
+          STATUS=$(curl -s -o $GITHUB_WORKSPACE/performance_report/collected_performance_test_data.json -w "%{http_code}" "https://${{ github.repository_owner }}.github.io/4C/performance_report/collected_performance_test_data.json")
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            echo "Found previous performance test data."
+          elif [ "$STATUS" -eq 404 ]; then
+            echo "No previous performance test data found, starting fresh."
+            echo "[]" > $GITHUB_WORKSPACE/performance_report/collected_performance_test_data.json
+          else
+            echo "Failed to download previous performance test data, HTTP status code: $STATUS"
+            exit 1
+          fi
+
+          # collect performance test results (append all new results)
+          collect-performance-data ${{ github.repository }} "nightly_tests.yml" --artifact-name clang18_performance_tests_data.json --previous-data $GITHUB_WORKSPACE/performance_report/collected_performance_test_data.json --expire-days 365 --export-to $GITHUB_WORKSPACE/performance_report/collected_performance_test_data.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+      - name: Collect benchmark test results
+        run: |
+          . $GITHUB_WORKSPACE/venv/bin/activate
+          mkdir $GITHUB_WORKSPACE/benchmark_test_report
+          # download previous results
+          STATUS=$(curl -s -o $GITHUB_WORKSPACE/benchmark_test_report/collected_benchmark_test_data.json -w "%{http_code}" "https://${{ github.repository_owner }}.github.io/4C/benchmark_test_report/collected_benchmark_test_data.json")
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            echo "Found previous benchmark test data."
+          elif [ "$STATUS" -eq 404 ]; then
+            echo "No previous benchmark test data found, starting fresh."
+            echo "[]" > $GITHUB_WORKSPACE/benchmark_test_report/collected_benchmark_test_data.json
+          else
+            echo "Failed to download previous benchmark test data, HTTP status code: $STATUS"
+            exit 1
+          fi
+
+          # collect benchmark test results (append all new results)
+          collect-performance-data ${{ github.repository }} "nightly_tests.yml" --artifact-name clang18_benchmark_tests_data.json --previous-data $GITHUB_WORKSPACE/benchmark_test_report/collected_benchmark_test_data.json --expire-days 365 --export-to $GITHUB_WORKSPACE/benchmark_test_report/collected_benchmark_test_data.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+      - name: Generate performance report
+        run: |
+          . $GITHUB_WORKSPACE/venv/bin/activate
+          generate-performance-report $GITHUB_WORKSPACE/performance_report/collected_performance_test_data.json $GITHUB_WORKSPACE/performance_report --visible-timers Input Calculation --title "4C Performance Test Report"
+      - name: Generate benchmark report
+        run: |
+          . $GITHUB_WORKSPACE/venv/bin/activate
+          generate-performance-report $GITHUB_WORKSPACE/benchmark_test_report/collected_benchmark_test_data.json $GITHUB_WORKSPACE/benchmark_test_report --title "4C Benchmark Test Report"
+      - name: Upload performance test report
+        uses: actions/upload-artifact@v7
+        with:
+          name: 4C_performance_test_report
+          path: ${{ github.workspace }}/performance_report
+          retention-days: 2
+      - name: Upload benchmark test report
+        uses: actions/upload-artifact@v7
+        with:
+          name: 4C_benchmark_test_report
+          path: ${{ github.workspace }}/benchmark_test_report
+          retention-days: 2

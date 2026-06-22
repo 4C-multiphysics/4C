@@ -3754,7 +3754,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::estimate_nitsche_trace_max
   // get boundary element data
   //---------------------------------------------------------------------
   // local surface id
-  int bid = surfele->face_master_number();
+  int bid = surfele->face_target_number();
 
   // number of boundary spatial dimensions
   static const int bnsd = Core::FE::dim<bdistype>;

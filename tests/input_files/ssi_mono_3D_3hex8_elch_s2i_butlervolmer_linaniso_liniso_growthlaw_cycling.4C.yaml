@@ -2,14 +2,14 @@ TITLE:
   - "simple, academic test case for monolithic scalar-structure interaction:"
   - "- three-dimensional problem involving standard scalar transport"
   - "- cubic domain discretized by 3 hex8 elements (anode,electrolyte,cathode)"
-  - "- material properties as in \"Masterarbeit Alexander Rupp 2016\""
+  - '- material properties as in "Masterarbeit Alexander Rupp 2016"'
   - "- battery undergoes three half-cycles between 0 and 1/3 SOC at a C-rate of 2,"
   - "prescribed by cell cycling boundary conditions on cathode side current collector"
   - "- homogeneous neumann boundary conditions are applied to all other surfaces"
   - "- potential is set zero by a dirichlet condition at the anode side current collector"
   - "- open circuit potential calculation using a polynomial representation tested"
-  - "- anode uses growth law \"MAT_InelasticDefgradLinScalarAniso\" (strains in axial direction develop)"
-  - "- cathode uses growth law \"MAT_InelasticDefgradLinScalarIso\" (isotropic strains develop)"
+  - '- anode uses growth law "MAT_InelasticDefgradLinScalarAniso" (strains in axial direction develop)'
+  - '- cathode uses growth law "MAT_InelasticDefgradLinScalarIso" (isotropic strains develop)'
   - "- volume change due to both growth laws is a linear function of the difference of current and initial
     concentration evaluated in the reference configuration"
   - "- dirichlet boundary conditions are applied to the whole structural surface"
@@ -60,21 +60,16 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [5e-10]
-      COND_PARA_NUM: 1
-      COND_PARA: [100000]
+      DIFF_COEF: 5.0e-10
+      COND: 100000.0
       C_MAX: 47933
       CHI_MAX: 1
       OCP_MODEL:
         Function:
           OCP_FUNCT_NUM: 4
-        X_MIN: 0.3
-        X_MAX: 0.96
+        LITHIATION_BOUNDS:
+          X_MIN: 0.3
+          X_MAX: 0.96
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
       NUMMATEL: 1
@@ -106,18 +101,10 @@ MATERIALS:
   - MAT: 7
     MAT_newman:
       VALENCE: 1
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      TRANSNR: -1
-      THERMFAC: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [1]
-      TRANS_PARA_NUM: 1
-      TRANS_PARA: [1]
-      COND_PARA_NUM: 1
-      COND_PARA: [0.23]
+      TRANSFERENCE_NR: 1.0
+      THERM_FAC: 1.0
+      DIFF_COEF: 1.0
+      COND: 0.23
   - MAT: 8
     MAT_MultiplicativeSplitDefgradElastHyper:
       NUMMATEL: 1
@@ -133,21 +120,13 @@ MATERIALS:
     MAT_InelasticDefgradNoGrowth: {}
   - MAT: 11
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [1]
-      COND_PARA_NUM: 1
-      COND_PARA: [1.17e+10]
+      DIFF_COEF: 1.0
+      COND: 1.17e+10
       C_MAX: 1e+06
       CHI_MAX: 1
       OCP_MODEL:
         Function:
           OCP_FUNCT_NUM: 5
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 12
     MAT_MultiplicativeSplitDefgradElastHyper:
       NUMMATEL: 1

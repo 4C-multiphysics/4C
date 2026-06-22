@@ -207,18 +207,18 @@ void XFEM::XFieldField::Coupling::build_dof_maps(const Core::FE::Discretization&
   {
     case min_dof_slave:
     {
-      build_min_dof_maps(slavedis, *slavenodemap, *permslavenodemap, sl_dof_map_ptr(),
-          permuted_sl_dof_map_ptr(), sl_exporter_ptr(), *masternodemap, my_mindofpernode);
-      build_max_dof_maps(masterdis, *masternodemap, *permmasternodemap, ma_dof_map_ptr(),
-          permuted_ma_dof_map_ptr(), ma_exporter_ptr(), my_mindofpernode);
+      build_min_dof_maps(slavedis, *slavenodemap, *permslavenodemap, source_dof_map_ptr(),
+          permuted_source_dof_map_ptr(), source_exporter_ptr(), *masternodemap, my_mindofpernode);
+      build_max_dof_maps(masterdis, *masternodemap, *permmasternodemap, target_dof_map_ptr(),
+          permuted_target_dof_map_ptr(), target_exporter_ptr(), my_mindofpernode);
       break;
     }
     case min_dof_master:
     {
-      build_min_dof_maps(masterdis, *masternodemap, *permmasternodemap, ma_dof_map_ptr(),
-          permuted_ma_dof_map_ptr(), ma_exporter_ptr(), *slavenodemap, my_mindofpernode);
-      build_max_dof_maps(slavedis, *slavenodemap, *permslavenodemap, sl_dof_map_ptr(),
-          permuted_sl_dof_map_ptr(), sl_exporter_ptr(), my_mindofpernode);
+      build_min_dof_maps(masterdis, *masternodemap, *permmasternodemap, target_dof_map_ptr(),
+          permuted_target_dof_map_ptr(), target_exporter_ptr(), *slavenodemap, my_mindofpernode);
+      build_max_dof_maps(slavedis, *slavenodemap, *permslavenodemap, source_dof_map_ptr(),
+          permuted_source_dof_map_ptr(), source_exporter_ptr(), my_mindofpernode);
       break;
     }
     case min_dof_unknown:

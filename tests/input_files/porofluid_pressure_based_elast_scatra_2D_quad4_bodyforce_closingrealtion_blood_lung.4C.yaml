@@ -35,7 +35,7 @@ porofluid_elasticity_scatra_dynamic/monolithic:
 porofluid_dynamic:
   initial_condition:
     type: by_condition
-  body_force: [0.0, -9810.0]
+  body_force_function: 4
 porofluid_elasticity_dynamic:
   solve_structure: true
   coupling_scheme: twoway_monolithic
@@ -176,6 +176,11 @@ FUNCT3:
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
   - COMPONENT: 1
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+FUNCT4:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-9810.0"
 
 RESULT DESCRIPTION:
   - POROFLUIDMULTIPHASE:

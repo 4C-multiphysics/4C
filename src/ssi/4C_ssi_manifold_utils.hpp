@@ -23,7 +23,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Coupling::Adapter
 {
   class Coupling;
-  class CouplingSlaveConverter;
+  class CouplingSourceConverter;
   class CouplingTargetConverter;
 }  // namespace Coupling::Adapter
 

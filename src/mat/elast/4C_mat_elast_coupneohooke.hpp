@@ -106,12 +106,10 @@ namespace Mat
       void add_shear_mod(bool& haveshearmod,  ///< non-zero shear modulus was added
           double& shearmod,                   ///< variable to add upon
           int ele_gid                         ///< element GID
-      ) const override;
-
-      /// add young's modulus equivalent
-      void add_youngs_mod(double& young, double& shear, double& bulk) override
+      ) const override
       {
-        young += youngs();
+        haveshearmod = true;
+        shearmod += 2 * params_->c_;
       };
 
       //@}

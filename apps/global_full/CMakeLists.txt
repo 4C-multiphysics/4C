@@ -36,6 +36,7 @@ if(FOUR_C_ENABLE_METADATA_GENERATION)
       COMMAND
         ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/4C_metadata.yaml
         ${PROJECT_BINARY_DIR}/4C_schema.json ${PROJECT_BINARY_DIR}/4C_schema_partial.json
+        ${PROJECT_BINARY_DIR}/4C_schema_completion.json
       COMMAND
         ${FOUR_C_ENABLE_ADDRESS_SANITIZER_TEST_OPTIONS} "$<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}>"
         -p > ${PROJECT_BINARY_DIR}/4C_metadata.yaml

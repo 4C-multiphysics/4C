@@ -113,9 +113,6 @@ namespace Mat
       virtual void setup(int numgp, const Discret::Elements::Fibers& fibers,
           const std::optional<Discret::Elements::CoordinateSystem>& coord_system) {};
 
-      //! Dummy routine for setup of patient-specific materials
-      virtual void setup_aaa(const Teuchos::ParameterList& params, const int eleGID) {};
-
       /*!
        * @brief Post setup routine for summands. It will be called once after everything is set up.
        *
@@ -145,12 +142,11 @@ namespace Mat
       virtual void add_shear_mod(bool& haveshearmod,  ///< non-zero shear modulus was added
           double& shearmod,                           ///< variable to add upon
           int ele_gid                                 ///< element GID
-      ) const;
-
-      //! add young's modulus equivalent
-      virtual void add_youngs_mod(double& young, double& shear, double& bulk)
+      ) const
       {
-        FOUR_C_THROW("Summand does not support calculation of youngs modulus");
+        FOUR_C_THROW(
+            "Mat::Elastic::Summand does not implement the calculation of shear modulus. Needs to "
+            "be implemented in derived class.");
       };
 
       /*!
@@ -552,6 +548,7 @@ namespace Mat
           Core::LinAlg::Matrix<33, 1>& xi,        ///< see above
           Core::LinAlg::Matrix<7, 1>& rateinv,
           const Teuchos::ParameterList& params,  ///< Container for additional information
+          double dt,                             ///< time step size from evaluation context
           int gp,                                ///< Gauss point
           int eleGID) {};
 
@@ -560,27 +557,26 @@ namespace Mat
               modinv,                          ///< modified invariants of right Cauchy-Green tensor
           Core::LinAlg::Matrix<8, 1>& modmu,   ///< see above
           Core::LinAlg::Matrix<33, 1>& modxi,  ///< see above
-          Core::LinAlg::Matrix<7, 1>& modrateinv, const Teuchos::ParameterList& params,
+          Core::LinAlg::Matrix<7, 1>& modrateinv, const Teuchos::ParameterList& params, double dt,
           int gp,  ///< Gauss point
           int eleGID) {};
 
-      //! Read material parameters of viscogenmax or viscofract
+      //! Read material parameters of viscoelastic scalar models
       virtual void read_material_parameters_visco(double& tau,  ///< relaxation parameter tau
-          double& beta,   ///< emphasis of viscous to elastic part
-          double& alpha,  ///< fractional order derivative (just for visoc_fract)
-          std::string&
-              solve  //!< solution variant for time evolution of viscous stress (just for genmax)
+          double& beta,       ///< emphasis of viscous to elastic part
+          double& alpha,      ///< fractional order derivative (for FSLS)
+          std::string& solve  //!< time integration label (used by legacy/removed SLS material)
       ) {};
 
-      //! GeneralizedGenMax
+      //! GeneralizedMaxwell
       virtual void read_material_parameters(int& numbranch,  //!< number of visco branches
           const std::vector<int>*& matids,                   //!< material ids of visco branches
           std::string& solve  //!< solution variant for time evolution of viscous stress
       ) {};
 
-      //! GeneralizedGenMax
-      virtual void read_material_parameters(double& nummat,  //!< number of visco branches
-          const std::vector<int>*& matids                    //!< material ids of visco branches
+      //! GeneralizedMaxwellBranch
+      virtual void read_material_parameters(double& tau,  //!< branch relaxation time
+          int& matid                                      //!< material id of branch elasticity
       ) {};
 
       /// Retrieve stress and cmat of summand for fiber directions with respect to modified strains
@@ -693,12 +689,9 @@ namespace Mat
 
       //! Indicator for the chosen viscoelastic formulations
       virtual void specify_visco_formulation(
-          bool& isovisco,     ///< global indicator for isotropic, split and viscous formulation
-          bool& viscogenmax,  ///< global indicator for viscous contribution according to the
-                              ///< SLS-Model
-          bool& viscogeneralizedgenmax,  ///< global indicator for viscoelastic contribution
-                                         ///< according to the generalized Maxwell Model
-          bool& viscofract  ///< global indicator for viscous contribution according the FSLS-Model
+          bool& visco_iso_rate,  ///< global indicator for isotropic rate-dependent visco response
+          bool& visco_generalized_maxwell,  ///< global indicator for generalized Maxwell model
+          bool& visco_fsls                  ///< global indicator for FSLS model
       ) { /* do nothing for non viscoelastic material models */ };
 
       //@}

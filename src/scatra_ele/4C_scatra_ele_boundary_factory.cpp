@@ -21,6 +21,7 @@
 #include "4C_scatra_ele_boundary_calc_sti_electrode.hpp"
 #include "4C_scatra_ele_boundary_interface.hpp"
 #include "4C_scatra_ele_calc.hpp"
+#include "4C_scatra_input.hpp"
 #include "4C_utils_enum.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -133,6 +134,7 @@ Discret::Elements::ScaTraBoundaryFactory::define_problem_type(const ScaTra::Impl
     case ScaTra::impltype_aniso:
     case ScaTra::impltype_cardiac_monodomain:
     case ScaTra::impltype_gr:
+    case ScaTra::impltype_nl_stimulus:
     case ScaTra::impltype_chemo:
     case ScaTra::impltype_chemoreac:
     case ScaTra::impltype_levelset:

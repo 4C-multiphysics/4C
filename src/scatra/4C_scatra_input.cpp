@@ -726,6 +726,8 @@ std::string ScaTra::impltype_to_string(ImplType impltype)
       return "CardMono";
     case ScaTra::impltype_gr:
       return "GR";
+    case ScaTra::impltype_nl_stimulus:
+      return "NLS";
     case ScaTra::impltype_chemo:
       return "Chemotaxis";
     case ScaTra::impltype_chemoreac:

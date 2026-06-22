@@ -4237,10 +4237,10 @@ void FLD::FluidImplicitTimeInt::set_initial_flow_field(
         {
           // yes, we have one
 
-          // get the list of all its slavenodes
+          // get the list of all its source_nodes
           auto master = (discret_->get_all_pbc_coupled_col_nodes())->find(lnode->id());
 
-          // slavenodes are ignored
+          // source_nodes are ignored
           if (master == (discret_->get_all_pbc_coupled_col_nodes())->end()) continue;
         }
 
@@ -4261,8 +4261,8 @@ void FLD::FluidImplicitTimeInt::set_initial_flow_field(
       // otherwise due to the non-linear terms in the matrix.
       if (msht_ != Inpar::FLUID::no_meshtying)
       {
-        meshtying_->update_slave_dof(*velnp_, *velnp_);
-        meshtying_->update_slave_dof(*veln_, *veln_);
+        meshtying_->update_source_dof(*velnp_, *velnp_);
+        meshtying_->update_source_dof(*veln_, *veln_);
       }
     }
   }
@@ -6703,11 +6703,11 @@ void FLD::FluidImplicitTimeInt::init_forcing()
  * Update slave dofs for multifield simulations with fluid mesh tying   |
  *                                                          wirtz 01/16 |
  *----------------------------------------------------------------------*/
-void FLD::FluidImplicitTimeInt::update_slave_dof(Core::LinAlg::Vector<double>& f)
+void FLD::FluidImplicitTimeInt::update_source_dof(Core::LinAlg::Vector<double>& f)
 {
   if (msht_ != Inpar::FLUID::no_meshtying)
   {
-    meshtying_->update_slave_dof(f, *velnp_);
+    meshtying_->update_source_dof(f, *velnp_);
   }
 }
 /*----------------------------------------------------------------------*|

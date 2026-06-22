@@ -2,7 +2,9 @@ name: coverage
 
 on:
   schedule:
-    - cron: '0 1 * * *'
+    # GitHub recommends avoiding scheduling at the start of the hour to avoid delays; thus, a random minute is set.
+    - cron: '29 0 * * *'
+      timezone: "Europe/Berlin"
 
 jobs:
   clang18_coverage_build:

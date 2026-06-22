@@ -138,9 +138,6 @@ namespace Mat
           std::vector<Core::LinAlg::Tensor<double, 3>>& fibervecs  ///< vector of all fiber vectors
       ) const override;
 
-      /// Setup of patient-specific materials
-      void setup_aaa(const Teuchos::ParameterList& params, const int eleGID) override { return; }
-
       /// Indicator for formulation
       void specify_formulation(
           bool& isoprinc,     ///< global indicator for isotropic principal formulation

@@ -54,26 +54,28 @@ Adapter::CouplingEhlMortar::CouplingEhlMortar(Global::Problem& problem, int spat
  |  read mortar condition                                               |
  *----------------------------------------------------------------------*/
 void Adapter::CouplingEhlMortar::read_mortar_condition(
-    std::shared_ptr<Core::FE::Discretization> masterdis,
-    std::shared_ptr<Core::FE::Discretization> slavedis, std::vector<int> coupleddof,
+    std::shared_ptr<Core::FE::Discretization> target_dis,
+    std::shared_ptr<Core::FE::Discretization> source_dis, std::vector<int> coupleddof,
     const std::string& couplingcond, Teuchos::ParameterList& input,
-    std::map<int, Core::Nodes::Node*>& mastergnodes, std::map<int, Core::Nodes::Node*>& slavegnodes,
-    std::map<int, std::shared_ptr<Core::Elements::Element>>& masterelements,
-    std::map<int, std::shared_ptr<Core::Elements::Element>>& slaveelements)
+    std::map<int, Core::Nodes::Node*>& target_global_nodes,
+    std::map<int, Core::Nodes::Node*>& source_global_nodes,
+    std::map<int, std::shared_ptr<Core::Elements::Element>>& target_elements,
+    std::map<int, std::shared_ptr<Core::Elements::Element>>& source_elements)
 {
-  Adapter::CouplingNonLinMortar::read_mortar_condition(masterdis, slavedis, coupleddof,
-      couplingcond, input, mastergnodes, slavegnodes, masterelements, slaveelements);
+  Adapter::CouplingNonLinMortar::read_mortar_condition(target_dis, source_dis, coupleddof,
+      couplingcond, input, target_global_nodes, source_global_nodes, target_elements,
+      source_elements);
 
   input.set<CONTACT::Problemtype>("PROBTYPE", CONTACT::Problemtype::ehl);
 }
 
-void Adapter::CouplingEhlMortar::setup(std::shared_ptr<Core::FE::Discretization> masterdis,
-    std::shared_ptr<Core::FE::Discretization> slavedis, std::vector<int> coupleddof,
+void Adapter::CouplingEhlMortar::setup(std::shared_ptr<Core::FE::Discretization> target_dis,
+    std::shared_ptr<Core::FE::Discretization> source_dis, std::vector<int> coupleddof,
     const std::string& couplingcond)
 {
   auto* problem = &CouplingNonLinMortar::problem();
 
-  Adapter::CouplingNonLinMortar::setup(masterdis, slavedis, coupleddof, couplingcond);
+  Adapter::CouplingNonLinMortar::setup(target_dis, source_dis, coupleddof, couplingcond);
   z_ = std::make_shared<Core::LinAlg::Vector<double>>(*interface_->source_row_dofs(), true);
   fscn_ = std::make_shared<Core::LinAlg::Vector<double>>(*interface_->source_row_dofs(), true);
 
@@ -81,7 +83,7 @@ void Adapter::CouplingEhlMortar::setup(std::shared_ptr<Core::FE::Discretization>
       problem->contact_dynamic_params(), "FRICTION");
 
   std::vector<const Core::Conditions::Condition*> ehl_conditions;
-  masterdis->get_condition(couplingcond, ehl_conditions);
+  target_dis->get_condition(couplingcond, ehl_conditions);
   std::vector<const std::string*> sides((int)ehl_conditions.size());
   double fr_coeff = -1.;
   for (int i = 0; i < (int)ehl_conditions.size(); ++i)
@@ -133,12 +135,12 @@ void Adapter::CouplingEhlMortar::integrate(
   interface_->evaluate();
 
   // some first assemblies, that don't require any additional states
-  D_ = std::make_shared<Core::LinAlg::SparseMatrix>(*slavedofrowmap_, 81, false, false);
-  M_ = std::make_shared<Core::LinAlg::SparseMatrix>(*slavedofrowmap_, 81, false, false);
+  D_ = std::make_shared<Core::LinAlg::SparseMatrix>(*source_dof_row_map_, 81, false, false);
+  M_ = std::make_shared<Core::LinAlg::SparseMatrix>(*source_dof_row_map_, 81, false, false);
   interface_->assemble_dm(*D_, *M_);
   D_->complete();
-  M_->complete(*masterdofrowmap_, *slavedofrowmap_);
-  N_->complete(*smdofrowmap_, *slavedofrowmap_);
+  M_->complete(*target_dof_row_map_, *source_dof_row_map_);
+  N_->complete(*source_target_dof_row_map_, *source_dof_row_map_);
   assemble_real_gap();
   assemble_real_gap_deriv();
   assemble_normals();
@@ -196,7 +198,7 @@ void Adapter::CouplingEhlMortar::condense_contact(
       std::make_shared<Core::LinAlg::SparseMatrix>(*interface_->source_row_dofs(), 100);
   interface_->assemble_dm(*dmatrix, *mmatrix);
   dmatrix->complete();
-  mmatrix->complete(*masterdofrowmap_, *slavedofrowmap_);
+  mmatrix->complete(*target_dof_row_map_, *source_dof_row_map_);
 
   // setup some linearizations
   Core::LinAlg::SparseMatrix linDcontactLM(
@@ -242,8 +244,8 @@ void Adapter::CouplingEhlMortar::condense_contact(
 
   // complete all those linearizations
   //                             colmap        rowmap
-  linDcontactLM.complete(*s_mdof_map(), *interface_->source_row_dofs());
-  linMcontactLM.complete(*s_mdof_map(), *interface_->target_row_dofs());
+  linDcontactLM.complete(*source_target_dof_map(), *interface_->source_row_dofs());
+  linMcontactLM.complete(*source_target_dof_map(), *interface_->target_row_dofs());
 
   // normal contact
   std::shared_ptr<Core::LinAlg::Vector<double>> gact;
@@ -267,7 +269,7 @@ void Adapter::CouplingEhlMortar::condense_contact(
   // complete all the new matrix blocks
   // Note: since the contact interface assemled them, they are all based
   //       on displacement row and col maps. Hence, some still need to be transformed
-  dcsdd->complete(*s_mdof_map(), *interface_->active_dofs());
+  dcsdd->complete(*source_target_dof_map(), *interface_->active_dofs());
   dcsdLMc->complete(*interface_->active_dofs(), *interface_->active_dofs());
 
   // get the separate blocks of the 2x2 TSI block system
@@ -335,7 +337,7 @@ void Adapter::CouplingEhlMortar::condense_contact(
     return;
   }
 
-  // split matrix blocks in 3 rows: Active, Master and (Inactive+others)
+  // split matrix blocks in 3 rows: Active, Target and (Inactive+others)
   std::shared_ptr<Core::LinAlg::SparseMatrix> kss_ni, kss_m, kss_a, kst_ni, kst_m, kst_a, kts_ni,
       kts_m, kts_a, ktt_ni, ktt_m, ktt_a, dummy1, dummy2, dummy3;
 
@@ -537,12 +539,12 @@ void Adapter::CouplingEhlMortar::condense_contact(
   CONTACT::Utils::add_vector(rsni, *combined_RHS);
 
   // (2) add the 'uncondensed' blocks (i.e. everything w/o a D^-1
-  // (2)a actual stiffness blocks of the master-rows
+  // (2)a actual stiffness blocks of the target-rows
   Core::LinAlg::matrix_add(*kss_m, false, 1., kss_new, 1.);
   Core::LinAlg::matrix_add(*kst_m, false, 1., kst_new, 1.);
   CONTACT::Utils::add_vector(rsm, *combined_RHS);
 
-  // (2)b active constraints in the active slave rows
+  // (2)b active constraints in the active source rows
   Core::LinAlg::matrix_add(*dcsdd, false, 1., kss_new, 1.);
   CONTACT::Utils::add_vector(*fcsa, *combined_RHS);
 
@@ -663,7 +665,7 @@ void Adapter::CouplingEhlMortar::recover_coupled(std::shared_ptr<Core::LinAlg::V
  *----------------------------------------------------------------------*/
 void Adapter::CouplingEhlMortar::store_dirichlet_status(const Core::LinAlg::MapExtractor& dbcmaps)
 {
-  // loop over all slave row nodes on the current interface
+  // loop over all source row nodes on the current interface
   for (int j = 0; j < interface_->source_row_nodes()->num_my_elements(); ++j)
   {
     int gid = interface_->source_row_nodes()->gid(j);
@@ -718,35 +720,35 @@ bool Adapter::CouplingEhlMortar::already_evaluated(
 }
 
 std::shared_ptr<Core::LinAlg::SparseMatrix> Adapter::CouplingEhlMortar::assemble_ehl_lin_d(
-    const std::shared_ptr<Core::LinAlg::Vector<double>> x  // slave dof vector
+    const std::shared_ptr<Core::LinAlg::Vector<double>> x  // source dof vector
 )
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> DLinEHL =
       std::make_shared<Core::LinAlg::SparseMatrix>(
-          *slavedofrowmap_, 81, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
+          *source_dof_row_map_, 81, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
   DLinEHL->zero();
   DLinEHL->un_complete();
 
   interface_->assemble_coup_lin_d(*DLinEHL, x);
 
-  DLinEHL->complete(*smdofrowmap_, *slavedofrowmap_);
+  DLinEHL->complete(*source_target_dof_row_map_, *source_dof_row_map_);
 
   return DLinEHL;
 }
 
 std::shared_ptr<Core::LinAlg::SparseMatrix> Adapter::CouplingEhlMortar::assemble_ehl_lin_m(
-    const std::shared_ptr<Core::LinAlg::Vector<double>> x  // slave dof vector
+    const std::shared_ptr<Core::LinAlg::Vector<double>> x  // source dof vector
 )
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> MLinEHL =
       std::make_shared<Core::LinAlg::SparseMatrix>(
-          *masterdofrowmap_, 81, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
+          *target_dof_row_map_, 81, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
   MLinEHL->zero();
   MLinEHL->un_complete();
 
   interface_->assemble_coup_lin_m(*MLinEHL, x);
 
-  MLinEHL->complete(*smdofrowmap_, *masterdofrowmap_);
+  MLinEHL->complete(*source_target_dof_row_map_, *target_dof_row_map_);
 
   return MLinEHL;
 }
@@ -770,7 +772,7 @@ void Adapter::CouplingEhlMortar::assemble_normals()
 
 void Adapter::CouplingEhlMortar::assemble_normals_deriv()
 {
-  Nderiv_ = std::make_shared<Core::LinAlg::SparseMatrix>(*slavedofrowmap_, 81, false, false);
+  Nderiv_ = std::make_shared<Core::LinAlg::SparseMatrix>(*source_dof_row_map_, 81, false, false);
   for (int i = 0; i < interface_->source_row_nodes()->num_my_elements(); ++i)
   {
     Core::Nodes::Node* node = interface()->discret().g_node(interface_->source_row_nodes()->gid(i));
@@ -790,7 +792,7 @@ void Adapter::CouplingEhlMortar::assemble_real_gap()
 {
   auto* problem = &CouplingNonLinMortar::problem();
 
-  nodal_gap_ = std::make_shared<Core::LinAlg::Vector<double>>(*slavenoderowmap_, true);
+  nodal_gap_ = std::make_shared<Core::LinAlg::Vector<double>>(*source_node_row_map_, true);
 
   for (int i = 0; i < interface_->source_row_nodes()->num_my_elements(); ++i)
   {
@@ -824,7 +826,7 @@ void Adapter::CouplingEhlMortar::assemble_real_gap()
 void Adapter::CouplingEhlMortar::assemble_real_gap_deriv()
 {
   deriv_nodal_gap_ =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*slavedofrowmap_, 81, false, false);
+      std::make_shared<Core::LinAlg::SparseMatrix>(*source_dof_row_map_, 81, false, false);
 
   for (int i = 0; i < interface_->source_row_nodes()->num_my_elements(); ++i)
   {
@@ -873,17 +875,17 @@ void Adapter::CouplingEhlMortar::assemble_real_gap_deriv()
           deriv_nodal_gap_->assemble(val, cnode->dofs()[d], p->first);
       }
   }
-  deriv_nodal_gap_->complete(*smdofrowmap_, *slavedofrowmap_);
+  deriv_nodal_gap_->complete(*source_target_dof_row_map_, *source_dof_row_map_);
 }
 
 void Adapter::CouplingEhlMortar::assemble_interface_velocities(const double dt)
 {
-  relTangVel_ = std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap_);
-  avTangVel_ = std::make_shared<Core::LinAlg::Vector<double>>(*slavedofrowmap_);
+  relTangVel_ = std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map_);
+  avTangVel_ = std::make_shared<Core::LinAlg::Vector<double>>(*source_dof_row_map_);
   relTangVel_deriv_ =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*slavedofrowmap_, 81, false, false);
+      std::make_shared<Core::LinAlg::SparseMatrix>(*source_dof_row_map_, 81, false, false);
   avTangVel_deriv_ =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*slavedofrowmap_, 81, false, false);
+      std::make_shared<Core::LinAlg::SparseMatrix>(*source_dof_row_map_, 81, false, false);
 
   for (int i = 0; i < interface_->source_row_nodes()->num_my_elements(); ++i)
   {
@@ -960,8 +962,8 @@ void Adapter::CouplingEhlMortar::assemble_interface_velocities(const double dt)
 
   relTangVel_->scale(1. / dt);
   avTangVel_->scale(1. / dt);
-  relTangVel_deriv_->complete(*smdofrowmap_, *slavedofrowmap_);
-  avTangVel_deriv_->complete(*smdofrowmap_, *slavedofrowmap_);
+  relTangVel_deriv_->complete(*source_target_dof_row_map_, *source_dof_row_map_);
+  avTangVel_deriv_->complete(*source_target_dof_row_map_, *source_dof_row_map_);
   relTangVel_deriv_->scale(1. / dt);
   avTangVel_deriv_->scale(1. / dt);
 }
@@ -969,7 +971,7 @@ void Adapter::CouplingEhlMortar::assemble_interface_velocities(const double dt)
 void Adapter::CouplingEhlMortar::assemble_surf_grad()
 {
   SurfGrad_ = std::make_shared<Core::LinAlg::SparseMatrix>(
-      *slavedofrowmap_, 81, false, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
+      *source_dof_row_map_, 81, false, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   for (int i = 0; i < interface_->source_row_nodes()->num_my_elements(); ++i)
   {
@@ -1009,7 +1011,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Adapter::CouplingEhlMortar::assemble
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> SurfGradDeriv =
       std::make_shared<Core::LinAlg::SparseMatrix>(
-          *slavedofrowmap_, 81, false, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
+          *source_dof_row_map_, 81, false, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   for (int i = 0; i < interface_->source_row_nodes()->num_my_elements(); ++i)
   {
@@ -1072,7 +1074,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Adapter::CouplingEhlMortar::assemble
           }
       }
   }
-  SurfGradDeriv->complete(*smdofrowmap_, *slavedofrowmap_);
+  SurfGradDeriv->complete(*source_target_dof_row_map_, *source_dof_row_map_);
   return SurfGradDeriv;
 }
 

@@ -48,7 +48,7 @@ namespace Mat::Utils::Muscle
    * @param[in]     lambdaM Fiber stretch
    * @param[in]     lambdaMin Minimal fiber stretch
    * @param[in]     lambdaOpt Optimal fiber stretch
-   * @param[out]    fxi Force-stretch function result between zero and one
+   * @returns       fxi Force-stretch function result between zero and one
    */
   double evaluate_force_stretch_dependency_ehret(
       const double lambdaM, const double lambdaMin, const double lambdaOpt);
@@ -64,8 +64,8 @@ namespace Mat::Utils::Muscle
    * @param[in]     lambdaM Fiber stretch
    * @param[in]     lambdaMin Minimal fiber stretch
    * @param[in]     lambdaOpt Optimal fiber stretch
-   * @param[out]    dFxidLambdaM Derivative of the force-stretch function w.r.t. the fiber
-   *                            stretch
+   * @returns       dFxidLambdaM Derivative of the force-stretch function w.r.t. the fiber
+   *                             stretch
    */
   double evaluate_derivative_force_stretch_dependency_ehret(
       const double lambdaM, const double lambdaMin, const double lambdaOpt);
@@ -81,7 +81,7 @@ namespace Mat::Utils::Muscle
    * @param[in]     lambdaM Fiber stretch
    * @param[in]     lambdaMin Minimal fiber stretch
    * @param[in]     lambdaOpt Optimal fiber stretch
-   * @param[out]    intFxi Integral of the force-stretch function w.r.t. the fiber stretch
+   * @returns       intFxi Integral of the force-stretch function w.r.t. the fiber stretch
    */
   double evaluate_integral_force_stretch_dependency_ehret(
       const double lambdaM, const double lambdaMin, const double lambdaOpt);
@@ -105,7 +105,7 @@ namespace Mat::Utils::Muscle
    * @param[in]     dc Amplitude of the concentric velocity dependency function
    * @param[in]     ke Curvature of the eccentric velocity dependency function
    * @param[in]     kc Curvature of the concentric velocity dependency function
-   * @param[out]    fv Force-velocity function result between zero and one
+   * @returns       fv Force-velocity function result between zero and one
    */
   double evaluate_force_velocity_dependency_boel(const double dotLambdaM,
       const double dotLambdaMMin, const double de, const double dc, const double ke,
@@ -133,8 +133,8 @@ namespace Mat::Utils::Muscle
    * @param[in]     dc Amplitude of the concentric velocity dependency function
    * @param[in]     ke Curvature of the eccentric velocity dependency function
    * @param[in]     kc Curvature of the concentric velocity dependency function
-   * @param[out]    dFvdLambdaM Derivative of the force-velocity function w.r.t. the fiber
-   *                           stretch
+   * @returns       dFvdLambdaM Derivative of the force-velocity function w.r.t. the fiber
+   *                            stretch
    */
   double evaluate_derivative_force_velocity_dependency_boel(const double dotLambdaM,
       const double dDotLambdaMdLambdaM, const double dotLambdaMMin, const double de,
@@ -159,7 +159,7 @@ namespace Mat::Utils::Muscle
    * @param[in]     actTimes Time boundaries between intervals
    * @param[in]     actValues Scaling factor in intervals (1=full activation, 0=no activation)
    * @param[in]     currentTime Current time
-   * @param[out]    Poptft Time-dependent optimal active stress at currentTime
+   * @returns       Poptft Time-dependent optimal active stress at currentTime
    */
   double evaluate_time_dependent_active_stress_ehret(const double Na, const int muTypesNum,
       const std::vector<double>& rho, const std::vector<double>& I, const std::vector<double>& F,
@@ -175,7 +175,7 @@ namespace Mat::Utils::Muscle
    *
    * @param[in]     lambdaM Fiber stretch
    * @param[in]     lambdaOpt Optimal fiber stretch
-   * @param[out]    fxi Force-stretch function result between zero and one
+   * @returns       fxi Force-stretch function result between zero and one
    */
   double evaluate_active_force_stretch_dependency_blemker(
       const double lambdaM, const double lambdaOpt);
@@ -190,8 +190,8 @@ namespace Mat::Utils::Muscle
    *
    * @param[in]     lambdaM Fiber stretch
    * @param[in]     lambdaOpt Optimal fiber stretch
-   * @param[out]    dFxidLambdaM Derivative of the force-stretch function w.r.t. the fiber
-   *                            stretch
+   * @returns       dFxidLambdaM Derivative of the force-stretch function w.r.t. the fiber
+   *                             stretch
    */
   double evaluate_derivative_active_force_stretch_dependency_blemker(
       const double lambdaM, const double lambdaOpt);
@@ -208,7 +208,7 @@ namespace Mat::Utils::Muscle
    * @param[in]     lambdaStar Fiber stretch where normalized passive fiber force becomes linear
    * @param[in]     P1 Linear material parameter for along-fiber response
    * @param[in]     P2 Exponential material parameter for along-fiber response
-   * @param[out]    fxi Force-stretch function result between zero and one
+   * @returns       fxi Force-stretch function result between zero and one
    */
   double evaluate_passive_force_stretch_dependency_blemker(const double lambdaM,
       const double lambdaOpt, const double lambdaStar, const double P1, const double P2);
@@ -226,8 +226,8 @@ namespace Mat::Utils::Muscle
    * @param[in]     lambdaStar Fiber stretch where normalized passive fiber force becomes linear
    * @param[in]     P1 Linear material parameter for along-fiber response
    * @param[in]     P2 Exponential material parameter for along-fiber response
-   * @param[out]    dFxidLambdaM Derivative of the force-stretch function w.r.t. the fiber
-   *                            stretch
+   * @returns       dFxidLambdaM Derivative of the force-stretch function w.r.t. the fiber
+   *                stretch
    */
   double evaluate_derivative_passive_force_stretch_dependency_blemker(const double lambdaM,
       const double lambdaOpt, const double lambdaStar, const double P1, const double P2);
@@ -246,37 +246,33 @@ namespace Mat::Utils::Muscle
    * @param[in]     beta Scaling factor
    * @param[in]     t_act_start Time of start of activation
    * @param[in]     t_current Current time
-   * @param[out]    sigma_max_ft Time-dependent optimal active stress at t_current
+   * @returns       sigma_max_ft Time-dependent optimal active stress at t_current
    */
   double evaluate_time_dependent_active_stress_tanh(const double sigma_max, const double alpha,
       const double beta, const double t_act_start, const double t_current);
 
   /*!
-   * @brief Evaluate the time- and space-dependent optimal (i.e. maximal) active stress through
-   * any arbitrary analytical function ft defined in the input file (e.g.,
-   * SYMBOLIC_FUNCTION_OF_SPACE_TIME x*tanh(10*t)).
+   * @brief Evaluate the time- and space-dependent activation through any arbitrary analytical
+   * function ft defined in the input file (e.g., SYMBOLIC_FUNCTION_OF_SPACE_TIME x*tanh(10*t)).
    *
    * The time- and space-dependent activation function ft is computed by evaluating the given
    * activation_function in x and t_current.
    *
-   * The time-dependent optimal active stress is obtained by sigma_opt = sigma_max * ft
-   *
-   * @param[in]     sigma_max Optimal (i.e. maximal) active stress
    * @param[in]     activation_function Time-/space-dependent function to be evaluated
    * @param[in]     t_current Current time
    * @param[in]     x Point in 3D space (e.g., element centroid)
-   * @param[out]    sigma_max_ft Time-/space-dependent optimal active stress at x, t_current
+   * @returns       ft Time-/space-dependent activation at x, t_current
    */
-  double evaluate_time_space_dependent_active_stress_by_funct(const double sigma_max,
+  double evaluate_time_space_dependent_activation_by_funct(
       const Core::Utils::FunctionOfSpaceTime& activation_function, const double t_current,
       const Core::LinAlg::Tensor<double, 3>& x);
 
   /*!
-   * @brief Evaluate the time- and space-dependent optimal (i.e. maximal) active stress through
-   * a map with element-wise defined activation values. The path to the file defining the map is
-   * given as the parameter MAP_FILE. The file specifies activation values at corresponding times
-   * for each element id. Those values need to be definited according to the following line string
-   * pattern: global element id: time_0, activation_0; time_1, activation_1; ....
+   * @brief Evaluate the time- and space-dependent activation through a map with element-wise
+   * defined activation values. The path to the file defining the map is given as the parameter
+   * MAP_FILE. The file specifies activation values at corresponding times for each element id.
+   * Those values need to be defined according to the following line string pattern: global
+   * element id: time_0, activation_0; time_1, activation_1; ....
    *
    * The time- and space-dependent activation function ft is computed by accessing the
    * activation_field for a given element id and time. Evaluating the activation_field at the
@@ -284,15 +280,13 @@ namespace Mat::Utils::Muscle
    * time-"activation value"-pair. The activation at the current time t_current is found via linear
    * interpolation between the prescribed time-"activation value"-pairs.
    *
-   * The time-dependent optimal active stress is obtained by sigma_opt = sigma_max * ft
-   *
-   * @param[in]     sigma_max Optimal (i.e. maximal) active stress
    * @param[in]     activation_field field containing a vector of time-activation pairs for each
    *                                 element id
    * @param[in]     t_current Current time
    * @param[in]     element_id Global element id serving as key for the defined mapping
+   * @returns       ft Time-/space-dependent activation at the given element_id and t_current
    */
-  double evaluate_time_space_dependent_active_stress_by_map(const double sigma_max,
+  double evaluate_time_space_dependent_activation_by_field(
       const Core::IO::InputField<std::vector<std::pair<double, double>>>& activation_field,
       const double t_current, const int element_id);
 
@@ -301,7 +295,7 @@ namespace Mat::Utils::Muscle
    *
    *  @param[in] C Cauchy-Green strain tensor
    *  @param[in] M Structural tensor of fiber directions
-   *  @param[out] lambdaM Fiber stretch
+   *  @returns lambdaM Fiber stretch
    */
   double fiber_stretch(const Core::LinAlg::SymmetricTensor<double, 3, 3>& C,
       const Core::LinAlg::SymmetricTensor<double, 3, 3>& M);
@@ -312,7 +306,7 @@ namespace Mat::Utils::Muscle
    *  @param[in] lambdaM Fiber stretch
    *  @param[in] C Cauchy-Green strain tensor
    *  @param[in] M Structural tensor of fiber directions
-   *  @param[out] dlambdaMdC Derivative of the fiber stretch w.r.t. the Cauchy-Green strains
+   *  @returns dlambdaMdC Derivative of the fiber stretch w.r.t. the Cauchy-Green strains
    */
   Core::LinAlg::SymmetricTensor<double, 3, 3> d_fiber_stretch_dc(const double lambdaM,
       const Core::LinAlg::SymmetricTensor<double, 3, 3>& C,

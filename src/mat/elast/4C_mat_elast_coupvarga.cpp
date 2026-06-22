@@ -21,19 +21,6 @@ Mat::Elastic::PAR::CoupVarga::CoupVarga(const Core::Mat::PAR::Parameter::Data& m
 
 Mat::Elastic::CoupVarga::CoupVarga(Mat::Elastic::PAR::CoupVarga* params) : params_(params) {}
 
-void Mat::Elastic::CoupVarga::add_shear_mod(
-    bool& haveshearmod,  ///< non-zero shear modulus was added
-    double& shearmod,    ///< variable to add upon
-    int ele_gid          ///< element GID
-) const
-{
-  // indeed, a shear modulus is provided
-  haveshearmod = haveshearmod or true;
-
-  // material parameters for isochoric part
-  shearmod += params_->mue_;
-}
-
 void Mat::Elastic::CoupVarga::add_coefficients_stretches_principal(
     Core::LinAlg::Matrix<3, 1>& gamma,  ///< see above, [gamma_1, gamma_2, gamma_3]
     Core::LinAlg::Matrix<6, 1>&

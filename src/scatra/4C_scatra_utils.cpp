@@ -138,7 +138,7 @@ void ScaTra::ScaTraUtils::check_consistency_with_s2_i_kinetics_condition(
         isslave = true;
         break;
       }
-      case S2I::side_master:
+      case S2I::side_target:
       {
         isslave = false;
         break;
@@ -167,7 +167,7 @@ void ScaTra::ScaTraUtils::check_consistency_with_s2_i_kinetics_condition(
 
           break;
         }
-        case S2I::side_master:
+        case S2I::side_target:
         {
           if (!isslave) assert_same_nodes(conditionToBeTested, s2ikinetics_cond);
 

@@ -9,6 +9,8 @@
 
 #include "4C_reduced_lung_terminal_unit_rheology.hpp"
 
+#include "4C_reduced_lung_helpers.hpp"
+
 #include <array>
 
 FOUR_C_NAMESPACE_OPEN
@@ -58,7 +60,7 @@ namespace ReducedLung::TerminalUnits::Rheology
                         (four_element_maxwell_model.elasticity_E_m[i] * dt +
                             four_element_maxwell_model.viscosity_eta_m[i])) /
                     data.reference_volume_v0[i] *
-                    locally_relevant_dofs.local_values_as_span()[data.lid_q[i]] +
+                    locally_relevant_dofs.local_values_as_span()[data.lid_q[i]] -
                 four_element_maxwell_model.viscosity_eta_m[i] /
                     (four_element_maxwell_model.elasticity_E_m[i] * dt +
                         four_element_maxwell_model.viscosity_eta_m[i]) *
@@ -131,6 +133,25 @@ namespace ReducedLung::TerminalUnits::Rheology
                                             four_element_maxwell_model.viscosity_eta_m[i])) /
                                     data.reference_volume_v0[i];
           target.replace_my_values(data.local_row_id[i], 1, &grad_q, &data.lid_q[i]);
+        }
+      }
+    }
+
+    void append_rheology_output(const KelvinVoigt& /*model*/, const TerminalUnitData& /*data*/,
+        RuntimeOutputCollector& /*collector*/, ReducedLungParameters::OutputVerbosity /*verbosity*/)
+    {
+    }
+
+    void append_rheology_output(const FourElementMaxwell& model, const TerminalUnitData& data,
+        RuntimeOutputCollector& collector, ReducedLungParameters::OutputVerbosity verbosity)
+    {
+      if (verbosity >= ReducedLungParameters::OutputVerbosity::high)
+      {
+        auto& maxwell_pressure_vec = collector.get_or_create_vector("maxwell_pressure");
+        for (size_t i = 0; i < data.number_of_elements(); i++)
+        {
+          maxwell_pressure_vec.replace_local_value(
+              data.local_element_id[i], model.maxwell_pressure_p_m[i]);
         }
       }
     }
@@ -281,6 +302,21 @@ namespace ReducedLung::TerminalUnits::Rheology
           {
             FOUR_C_THROW("Unknown terminal-unit rheological model.");
           }
+        },
+        rheological_model);
+  }
+
+  /**
+   * Resolve variant-based output evaluator.
+   */
+  OutputEvaluator make_output_evaluator(RheologicalModel& rheological_model)
+  {
+    return std::visit(
+        [&](auto& model) -> OutputEvaluator
+        {
+          return [&model](const TerminalUnitData& data, RuntimeOutputCollector& collector,
+                     ReducedLungParameters::OutputVerbosity verbosity)
+          { append_rheology_output(model, data, collector, verbosity); };
         },
         rheological_model);
   }

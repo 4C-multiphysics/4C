@@ -298,25 +298,6 @@ namespace
     return numbered;
   }
 
-  // Translates from vtk cell connectivity ordering to 4C connectivity ordering
-  std::vector<int> translate_vtk_connectivity(
-      Core::FE::CellType cell_type, std::span<const vtkIdType> vtk_connectivity)
-  {
-    return Core::FE::cell_type_switch<Core::IO::VTKSupportedCellTypes>(cell_type,
-        [&](auto celltype_t)
-        {
-          std::vector<int> four_c_connectivity(vtk_connectivity.size(), 0);
-
-          for (std::size_t i = 0; i < vtk_connectivity.size(); ++i)
-          {
-            four_c_connectivity[i] =
-                vtk_connectivity[Core::IO::vtk_connectivity_reverse_mapping<celltype_t()>[i]];
-          }
-
-          return four_c_connectivity;
-        });
-  }
-
   template <typename SourceType, typename TargetTensor>
   std::pair<std::type_index, std::function<std::any(std::any)>> make_tensor_conversion_item()
   {
@@ -445,7 +426,15 @@ Core::IO::MeshInput::RawMesh<3> Core::IO::VTU::read_vtu_file(const std::filesyst
   {
     const int block_id = extract_component_from_integral_array<int>(cell_block_info, i, 0);
 
-    const auto cell_type = get_celltype_from_vtk(vtk_mesh->GetCellType(i));
+    // extract connectivity
+    vtkIdType number_of_points;
+    const vtkIdType* connectivity = nullptr;
+    vtk_mesh->GetCellPoints(i, number_of_points, connectivity);
+
+    // Get 4C connectivity and cell type.
+    const auto vtk_cell_type = vtk_mesh->GetCellType(i);
+    const auto [cell_type, four_c_connectivity] = get_celltype_from_vtk_and_translate_connectivity(
+        vtk_cell_type, std::span{connectivity, static_cast<std::size_t>(number_of_points)});
 
     const auto [emplaced_item, inserted] =
         mesh.cell_blocks.try_emplace(block_id, MeshInput::CellBlock<3>{cell_type});
@@ -457,15 +446,8 @@ Core::IO::MeshInput::RawMesh<3> Core::IO::VTU::read_vtu_file(const std::filesyst
         Core::FE::cell_type_to_string(emplaced_item->second.cell_type),
         Core::FE::cell_type_to_string(cell_type));
 
-    // extract connectivity (note that we need to adapt the node-ordering according to our
-    // convention)
-    vtkIdType number_of_points;
-    const vtkIdType* connectivity = nullptr;
-    vtk_mesh->GetCellPoints(i, number_of_points, connectivity);
-
     // add to cell_block
-    cell_block.add_cell(translate_vtk_connectivity(
-        cell_type, std::span{connectivity, static_cast<std::size_t>(number_of_points)}));
+    cell_block.add_cell(four_c_connectivity);
 
     // process all cell data
     for (const auto& [name, array_ref] : cell_data)

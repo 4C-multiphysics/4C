@@ -224,6 +224,13 @@ std::vector<Core::IO::InputSpec> Thermo::valid_parameters()
             // whether to write conductivity state
             parameter<bool>("CONDUCTIVITY",
                 {.description = "write conductivity output", .default_value = false}),
+            // whether to write heatflux state
+            parameter<Thermo::HeatFluxType>("HEATFLUX",
+                {.description = "write heatflux output", .default_value = HeatFluxType::None}),
+
+            // whether to write tempgrad state
+            parameter<Thermo::TempGradType>("TEMPGRAD",
+                {.description = "write tempgrad output", .default_value = TempGradType::None}),
 
             // whether to write element owner
             parameter<bool>(

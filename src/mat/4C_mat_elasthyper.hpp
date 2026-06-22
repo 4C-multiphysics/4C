@@ -53,12 +53,6 @@ namespace Mat
 
       /// @name material parameters
       //@{
-
-      //       /// provide access to material/summand by its ID
-      //       std::shared_ptr<const Mat::Elastic::Summand> MaterialById(
-      //         const int id  ///< ID to look for in collection of summands
-      //         ) const;
-
       /// length of material list
       const int nummat_;
 
@@ -192,7 +186,7 @@ namespace Mat
     }
 
     /// number of materials
-    virtual int num_mat() const { return params_->nummat_; }
+    [[nodiscard]] virtual int num_mat() const { return params_->nummat_; }
 
     /*!
      * @brief deliver material ID of index i'th potential summand in collection
@@ -200,16 +194,13 @@ namespace Mat
      * @param(in) index index
      * @return material id
      */
-    virtual int mat_id(unsigned index) const;
+    [[nodiscard]] virtual int mat_id(unsigned index) const;
 
     /// material mass density
-    double density() const override { return params_->density_; }
+    [[nodiscard]] double density() const override { return params_->density_; }
 
     /// a shear modulus equivalent
-    virtual double shear_mod(int ele_gid) const;
-
-    /// a young's modulus equivalent
-    virtual double get_young();
+    [[nodiscard]] virtual double shear_mod(int ele_gid) const;
 
     /// evaluate strain energy function
     [[nodiscard]] double strain_energy(const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
@@ -310,9 +301,6 @@ namespace Mat
 
     /// update
     void update() override;
-
-    /// setup patient-specific AAA stuff
-    virtual void setup_aaa(const Teuchos::ParameterList& params, int eleGID);
 
     /// return if anisotropic not split formulation
     virtual bool anisotropic_principal() const { return summandProperties_.anisoprinc; }

@@ -152,7 +152,7 @@ namespace FLD
         std::shared_ptr<Core::LinAlg::SparseMatrix> sparsematrix);  ///> sparse matrix to analyze
 
     //! Compute and update the increments of the slave node (including ALE case)
-    void update_slave_dof(Core::LinAlg::Vector<double>& inc, Core::LinAlg::Vector<double>& velnp);
+    void update_source_dof(Core::LinAlg::Vector<double>& inc, Core::LinAlg::Vector<double>& velnp);
 
     //! Set the flag for multifield problems
     void is_multifield(
@@ -277,7 +277,7 @@ namespace FLD
     std::shared_ptr<Core::LinAlg::Map> gndofrowmap_;
 
     //! slave & master dof rowmap
-    std::shared_ptr<Core::LinAlg::Map> gsmdofrowmap_;
+    std::shared_ptr<Core::LinAlg::Map> gsource_target_dof_row_map_;
 
     //! slave dof rowmap
     std::shared_ptr<const Core::LinAlg::Map> gsdofrowmap_;

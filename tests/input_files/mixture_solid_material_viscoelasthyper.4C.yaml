@@ -53,10 +53,14 @@ MATERIALS:
       K2COMP: 1
       STR_TENS_ID: 1000
   - MAT: 1102
-    VISCO_GenMax:
+    VISCO_GeneralizedMaxwell:
+      NUMBRANCH: 1
+      MATIDS: [1103]
+      SOLVE: OneStepTheta
+  - MAT: 1103
+    VISCO_GeneralizedMaxwellBranch:
       TAU: 0.1
-      BETA: 1
-      SOLVE: OST
+      MATID: 1100
   - MAT: 1000
     ELAST_StructuralTensor:
       STRATEGY: Standard

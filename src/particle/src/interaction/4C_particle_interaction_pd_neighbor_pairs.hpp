@@ -19,6 +19,12 @@
 #include "4C_particle_interaction_pd_neighbor_pair_struct.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
+#include <memory>
+#include <set>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*---------------------------------------------------------------------------*
@@ -100,7 +106,8 @@ namespace Particle
     void pack_bond_list_pairs(Core::Communication::PackBuffer& buffer) const;
 
     //! unpack peridynamic bond list data
-    void unpack_peridynamic_bond_list_data(const std::vector<char>& buffer);
+    void unpack_peridynamic_bond_list_data(
+        const std::vector<char>& buffer, std::set<long>& known_bond_hashes);
 
     //! reference to bond list
     std::shared_ptr<

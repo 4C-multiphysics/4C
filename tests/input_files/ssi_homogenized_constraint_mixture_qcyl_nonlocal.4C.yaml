@@ -1,0 +1,339 @@
+TITLE:
+  - "Test case for non-local stimulus driven growth and remodeling:"
+  - "- non-local stimulus psi computed in scalar transport dynamics based on Helmholtz-type equation"
+  - "- structure integrates growth/remodeling ODEs locally at GP"
+  - "- growth is driven by non-local stimulus psi instead of local (sigma - sigma_h)"
+  - "- quarter cylinder with four fiber directions, geometry/BCs identical to"
+  - "- quarter cylinder with four fiber directions and material adapted from Braeu et al. 2017"
+  - "- each fiber equipped with its own corresponding non-local stimulus scalar"
+  - "- quasi-static structural dynamics"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure_Scalar_Interaction"
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 1
+    TAR_FIELD: "scatra"
+    TAR_MAT: 101
+fields:
+  - name: "fiber5"
+    discretization: "structure"
+    source:
+      from_mesh:
+        basis: "points"
+  - name: "fiber4"
+    discretization: "structure"
+    source:
+      from_mesh:
+        basis: "points"
+  - name: "fiber3"
+    discretization: "structure"
+    source:
+      from_mesh:
+        basis: "points"
+  - name: "fiber2"
+    discretization: "structure"
+    source:
+      from_mesh:
+        basis: "points"
+  - name: "fiber1"
+    discretization: "structure"
+    source:
+      from_mesh:
+        basis: "points"
+IO:
+  VERBOSITY: "Standard"
+  STRUCT_STRAIN: "gl"
+  STRUCT_STRESS: "cauchy"
+  WRITE_FINAL_STATE: true
+  WRITE_INITIAL_STATE: false
+IO/RUNTIME VTK OUTPUT:
+  OUTPUT_DATA_FORMAT: "ascii"
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+SCALAR TRANSPORT DYNAMIC:
+  SOLVERTYPE: "linear_full"
+  TIMEINTEGR: "Stationary"
+  THETA: 1.0
+  SKIPINITDER: true
+  RESULTSEVERY: 1
+  MATID: 101
+  VELOCITYFIELD: "Navier_Stokes"
+  INITIALFIELD: "zero_field"
+  CONVFORM: "convective"
+  IS_INTENSIVE_SCALAR: true
+  LINEAR_SOLVER: 1
+SCALAR TRANSPORT DYNAMIC/NONLINEAR:
+  ITEMAX: 20
+  CONVTOL: 1e-09
+SCALAR TRANSPORT DYNAMIC/STABILIZATION:
+  STABTYPE: "no_stabilization"
+  DEFINITION_TAU: "Zero"
+  EVALUATION_TAU: "integration_point"
+  EVALUATION_MAT: "integration_point"
+SOLVER 1:
+  NAME: "Structure_Solver"
+  SOLVER: "MUMPS"
+SSI CONTROL:
+  NUMSTEP: 40
+  MAXTIME: 1000.0000000001
+  TIMESTEP: 10.0
+  RESULTSEVERY: 1
+  ITEMAX: 20
+SSI CONTROL/PARTITIONED:
+  CONVTOL: 1e-10
+STRUCT NOX/Direction:
+  Method: "Newton"
+STRUCT NOX/Printing:
+  Outer Iteration: true
+  Inner Iteration: false
+  Outer Iteration StatusTest: false
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "OneStepTheta"
+  NEGLECTINERTIA: true
+  TOLDISP: 1e-12
+  TOLRES: 1e-12
+  LINEAR_SOLVER: 1
+  NLNSOL: "noxnln"
+  LOADLIN: true
+STRUCTURAL DYNAMIC/ONESTEPTHETA:
+  THETA: 1.0
+STRUCTURE GEOMETRY:
+  FILE: "vtu/homogenized-constrained-mixture-qcyl.vtu"
+  ELEMENT_BLOCKS:
+    - ID: 1
+      SOLIDSCATRA:
+        HEX8:
+          MAT: 1
+          KINEM: "nonlinear"
+          TYPE: "NLS"
+MATERIALS:
+  - MAT: 1
+    MAT_Mixture:
+      MATIDSCONST: [11, 12, 13, 14, 15]
+      MATIDMIXTURERULE: 10
+  - MAT: 10
+    MIX_GrowthRemodelMixtureRule:
+      GROWTH_STRATEGY: 100
+      MASSFRAC: [0.8, 0.05, 0.05, 0.05, 0.05]
+      DENS: 10.500000000000002
+  - MAT: 100
+    MIX_GrowthStrategy_Anisotropic:
+      GROWTH_DIRECTION:
+        from_mesh: "fiber5"
+  - MAT: 11
+    MIX_Constituent_ElastHyper:
+      MATIDS: [111, 112]
+      PRESTRESS_STRATEGY: 119
+  - MAT: 111
+    ELAST_IsoNeoHooke:
+      MUE:
+        constant: 0.09769999999999998
+  - MAT: 112
+    ELAST_VolSussmanBathe:
+      KAPPA: 0.09999999999999999
+  - MAT: 119
+    MIX_Prestress_Strategy_Prescribed:
+      PRESTRETCH:
+        constant: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+  - MAT: 12
+    MIX_Constituent_SsiRemodelFiber:
+      FIBER_MATERIAL_ID: 120
+      DECAY_TIME: 101.0
+      GROWTH_CONSTANT: 0.0009900990099009901
+      DEPOSITION_STRETCH: 0.0
+      DEPOSITION_STRETCH_TIMEFUNCT: 2
+      ORIENTATION:
+        from_mesh: "fiber1"
+      INELASTIC_GROWTH: true
+      ENABLE_GROWTH: true
+      NONLOCAL_STIMULUS_SCALAR_ID: 0
+  - MAT: 120
+    MIX_Constituent_RemodelFiber_Material_Exponential:
+      K1: 0.22009519999999996
+      K2: 1.23
+      COMPRESSION: false
+  - MAT: 13
+    MIX_Constituent_SsiRemodelFiber:
+      FIBER_MATERIAL_ID: 130
+      DECAY_TIME: 101.0
+      GROWTH_CONSTANT: 0.0009900990099009901
+      DEPOSITION_STRETCH: 0.0
+      DEPOSITION_STRETCH_TIMEFUNCT: 3
+      ORIENTATION:
+        from_mesh: "fiber2"
+      INELASTIC_GROWTH: true
+      ENABLE_GROWTH: true
+      NONLOCAL_STIMULUS_SCALAR_ID: 1
+  - MAT: 130
+    MIX_Constituent_RemodelFiber_Material_Exponential:
+      K1: 0.22009519999999996
+      K2: 1.23
+      COMPRESSION: false
+  - MAT: 14
+    MIX_Constituent_SsiRemodelFiber:
+      FIBER_MATERIAL_ID: 140
+      DECAY_TIME: 101.0
+      GROWTH_CONSTANT: 0.0009900990099009901
+      DEPOSITION_STRETCH: 0.0
+      DEPOSITION_STRETCH_TIMEFUNCT: 4
+      ORIENTATION:
+        from_mesh: "fiber3"
+      INELASTIC_GROWTH: true
+      ENABLE_GROWTH: true
+      NONLOCAL_STIMULUS_SCALAR_ID: 2
+  - MAT: 140
+    MIX_Constituent_RemodelFiber_Material_Exponential:
+      K1: 0.22009519999999996
+      K2: 1.23
+      COMPRESSION: false
+  - MAT: 15
+    MIX_Constituent_SsiRemodelFiber:
+      FIBER_MATERIAL_ID: 150
+      DECAY_TIME: 101.0
+      GROWTH_CONSTANT: 0.0009900990099009901
+      DEPOSITION_STRETCH: 0.0
+      DEPOSITION_STRETCH_TIMEFUNCT: 5
+      ORIENTATION:
+        from_mesh: "fiber4"
+      INELASTIC_GROWTH: true
+      ENABLE_GROWTH: true
+      NONLOCAL_STIMULUS_SCALAR_ID: 3
+  - MAT: 150
+    MIX_Constituent_RemodelFiber_Material_Exponential:
+      K1: 0.22009519999999996
+      K2: 1.23
+      COMPRESSION: false
+  - MAT: 1000
+    MAT_scatra_nl_stimulus:
+      CHAR_LENGTH_SQ: 1.0e-6
+      STRUCTURE_MAT_ID: 12
+  - MAT: 1001
+    MAT_scatra_nl_stimulus:
+      CHAR_LENGTH_SQ: 1.0e-6
+      STRUCTURE_MAT_ID: 13
+  - MAT: 1002
+    MAT_scatra_nl_stimulus:
+      CHAR_LENGTH_SQ: 1.0e-6
+      STRUCTURE_MAT_ID: 14
+  - MAT: 1003
+    MAT_scatra_nl_stimulus:
+      CHAR_LENGTH_SQ: 1.0e-6
+      STRUCTURE_MAT_ID: 15
+  - MAT: 101
+    MAT_matlist:
+      LOCAL: false
+      NUMMAT: 4
+      MATIDS: [1000, 1001, 1002, 1003]
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 4
+    ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [0, 1, 0]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [0, 0, 0]
+  - E: 6
+    ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [0, 0, 0]
+  - E: 5
+    ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [0, 0, 0]
+  - E: 3
+    ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 1
+    ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [-1.0, 0.0, 0.0]
+    FUNCT: [1, 0, 0]
+    TYPE: "orthopressure"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "v"
+  - VARIABLE: 0
+    NAME: "v"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 3
+    TIMES: [0, 1, 1010.0000000001]
+    VALUES: [0.0, 0.11999779932000001, 0.11999779932000001]
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_TIME: "v"
+  - VARIABLE: 0
+    NAME: "v"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 3
+    TIMES: [0.0, 1.0, 1010.0000000001]
+    VALUES: [1.1, 1.1, 1.1]
+FUNCT3:
+  - SYMBOLIC_FUNCTION_OF_TIME: "v"
+  - VARIABLE: 0
+    NAME: "v"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 3
+    TIMES: [0.0, 1.0, 1010.0000000001]
+    VALUES: [1.1, 1.1, 1.1]
+FUNCT4:
+  - SYMBOLIC_FUNCTION_OF_TIME: "v"
+  - VARIABLE: 0
+    NAME: "v"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 3
+    TIMES: [0.0, 1.0, 1010.0000000001]
+    VALUES: [1.1, 1.1, 1.1]
+FUNCT5:
+  - SYMBOLIC_FUNCTION_OF_TIME: "v"
+  - VARIABLE: 0
+    NAME: "v"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 3
+    TIMES: [0.0, 1.0, 1010.0000000001]
+    VALUES: [1.1, 1.1, 1.1]
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 24
+      QUANTITY: "dispx"
+      VALUE: 8.11245006493310251e-03
+      TOLERANCE: 8.2e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 24
+      QUANTITY: "dispy"
+      VALUE: 1.85161378863692920e-03
+      TOLERANCE: 1.9e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 24
+      QUANTITY: "dispz"
+      VALUE: 0.0
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 40
+      QUANTITY: "dispx"
+      VALUE: 7.95796479401767939e-03
+      TOLERANCE: 8.0e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 40
+      QUANTITY: "dispy"
+      VALUE: 3.83235386216280180e-03
+      TOLERANCE: 3.9e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 40
+      QUANTITY: "dispz"
+      VALUE: 0.0
+      TOLERANCE: 1e-12

@@ -328,7 +328,7 @@ void Core::FE::DbcNurbs::do_dirichlet_condition(const Teuchos::ParameterList& pa
         double normalfac = 0.0;
         std::vector<Core::LinAlg::SerialDenseVector> pknots(probdim);
         zero_size = Core::FE::Nurbs::get_knot_vector_and_weights_for_nurbs_boundary(actele.get(),
-            faceele->face_master_number(), faceele->parent_element()->id(), discret, pknots,
+            faceele->face_target_number(), faceele->parent_element()->id(), discret, pknots,
             eleknots, weights, normalfac);
       }
       else

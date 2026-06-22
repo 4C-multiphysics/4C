@@ -47,32 +47,32 @@ namespace Core::FE
       /*!
       \brief Standard Constructor
 
-      \param master_peid (in): element id of master parent element
-      \param slave_peid (in): element id of slave parent element
-      \param lsurface_master (in): local index of surface w.r.t master parent element
+      \param target_peid (in): element id of target parent element
+      \param source_peid (in): element id of source parent element
+      \param lsurface_target (in): local index of surface w.r.t target parent element
       \param nodes (in): vector of nodes building the surface element
       */
-      InternalFacesData(int master_peid, std::vector<Core::Nodes::Node*> nodes, int lsurface_master)
+      InternalFacesData(int target_peid, std::vector<Core::Nodes::Node*> nodes, int lsurface_target)
       {
-        master_peid_ = master_peid;
-        slave_peid_ = -1;
-        lsurface_master_ = lsurface_master;
-        lsurface_slave_ = -1;
+        target_peid_ = target_peid;
+        source_peid_ = -1;
+        lsurface_target_ = lsurface_target;
+        lsurface_source_ = -1;
         nodes_ = nodes;
       }
 
       /*--- set ------------------------------------------*/
 
-      //! set the parent element id for slave parent element
-      void set_slave_peid(int eid) { slave_peid_ = eid; }
+      //! set the parent element id for source parent element
+      void set_source_peid(int eid) { source_peid_ = eid; }
 
-      //! set the local surface number w.r.t slave parent element
-      void set_l_surface_slave(int lsurface_slave) { lsurface_slave_ = lsurface_slave; }
+      //! set the local surface number w.r.t source parent element
+      void set_l_surface_source(int lsurface_source) { lsurface_source_ = lsurface_source; }
 
       /*!
       \brief set the map for the face's nodes between the local coordinate systems of the face w.r.t
-      the master parent element's face's coordinate system and the slave element's face's coordinate
-      system
+      the target parent element's face's coordinate system and the source element's face's
+      coordinate system
       */
       void set_local_numbering_map(std::vector<int> localtrafomap)
       {
@@ -82,39 +82,39 @@ namespace Core::FE
 
       /*--- get ------------------------------------------*/
 
-      //! get the master parent element id
-      int get_master_peid() const { return master_peid_; }
+      //! get the target parent element id
+      int get_target_peid() const { return target_peid_; }
 
-      //! get the slave parent element id
-      int get_slave_peid() const { return slave_peid_; }
+      //! get the source parent element id
+      int get_source_peid() const { return source_peid_; }
 
-      //! get the local surface number w.r.t master parent element
-      int get_l_surface_master() const { return lsurface_master_; }
+      //! get the local surface number w.r.t target parent element
+      int get_l_surface_target() const { return lsurface_target_; }
 
-      //! get the local surface number w.r.t slave parent element
-      int get_l_surface_slave() const { return lsurface_slave_; }
+      //! get the local surface number w.r.t source parent element
+      int get_l_surface_source() const { return lsurface_source_; }
 
       //! get the transformation map between the local coordinate systems of the face w.r.t the
-      //! master parent element's face's coordinate system and the slave element's face's coordinate
-      //! system
+      //! target parent element's face's coordinate system and the source element's face's
+      //! coordinate system
       const std::vector<int>& get_local_numbering_map() const { return localtrafomap_; }
 
       //! get surface's nodes (unsorted, original)
       const std::vector<Core::Nodes::Node*>& get_nodes() const { return nodes_; }
 
      private:
-      int master_peid_;  //!< master parent element id
-      int slave_peid_;   //!< slave parent element id
+      int target_peid_;  //!< target parent element id
+      int source_peid_;  //!< source parent element id
 
-      int lsurface_master_;  //!< local surface number w.r.t master parent element
-      int lsurface_slave_;   //!< local surface number w.r.t slave parent element
+      int lsurface_target_;  //!< local surface number w.r.t target parent element
+      int lsurface_source_;  //!< local surface number w.r.t source parent element
 
       std::vector<Core::Nodes::Node*>
-          nodes_;  //!< vector of surface nodes, order w.r.t master parent element
+          nodes_;  //!< vector of surface nodes, order w.r.t target parent element
 
       /*!
        \brief map for the face's nodes between the local coordinate systems of the face w.r.t the
-       master parent element's face's coordinate system and the slave element's face's coordinate
+       target parent element's face's coordinate system and the source element's face's coordinate
        system
        */
       std::vector<int> localtrafomap_;

@@ -73,7 +73,7 @@ namespace Core::Geo
   /*!
    \brief Returns the eXtendedAxisAlignedBoundingBox of given elements
    \param elements           elements the box is around, enlarged a little bit for enclosing all
-   slave nodes \param currentpositions     current nodal positions of elements \return
+   source nodes \param currentpositions     current nodal positions of elements \return
    XAxisAlignedBoundingBox
    */
   Core::LinAlg::Matrix<3, 2> get_xaab_bof_eles(

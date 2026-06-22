@@ -11,7 +11,9 @@
 #include "4C_config.hpp"
 
 #include "4C_utils_function.hpp"
+#include "4C_utils_function_of_time.hpp"
 
+#include <cstdint>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -26,13 +28,13 @@ namespace ScaTra
   /**
    * Type of the Scatra function
    */
-  enum class ScatraFunctionType
+  enum class ScatraFunctionType : std::uint8_t
   {
     cylinder_magnet,
   };
 
 
-  enum class ParticleMagnetizationModelType
+  enum class ParticleMagnetizationModelType : std::uint8_t
   {
     linear,
     linear_with_saturation,
@@ -95,7 +97,7 @@ namespace ScaTra
   class CylinderMagnetFunction : public Core::Utils::FunctionOfSpaceTime
   {
    public:
-    CylinderMagnetFunction(const CylinderMagnetParameters& parameters);
+    explicit CylinderMagnetFunction(const CylinderMagnetParameters& parameters);
 
     /**
      * Evaluate the function at a given position x and time t for a given component
@@ -105,7 +107,8 @@ namespace ScaTra
      * @param component index of the function-component which should be evaluated
      * @return function value
      */
-    double evaluate(std::span<const double> x, double t, std::size_t component) const override;
+    [[nodiscard]] double evaluate(
+        std::span<const double> x, double t, std::size_t component) const override;
 
     /**
      * Evaluate the function at a given position x and time t and return the vector of all
@@ -123,7 +126,7 @@ namespace ScaTra
      *
      * @return 3
      */
-    [[nodiscard]] std::size_t number_components() const override { return (3); };
+    [[nodiscard]] std::size_t number_components() const override { return 3; }
 
    private:
     /*!
@@ -193,6 +196,35 @@ namespace ScaTra
     /// parameters of the cylinder magnet
     const CylinderMagnetParameters parameters_;
   };
+
+  /**
+   * Parameters of the Arrhenius function
+   */
+  struct ArrheniusParameters
+  {
+    double activation_energy{};
+    double universal_gas_constant{};
+  };
+
+  /*!
+   * @brief Arrhenius function exp(-Q/(R*T)) for temperature-dependent reaction rates using the
+   * activation energy 'Q' and universal gas constant 'R'.
+   *
+   * @note the 'time' is misused to communicate the temperature value
+   */
+  class ArrheniusFunction : public Core::Utils::FunctionOfTime
+  {
+   public:
+    explicit ArrheniusFunction(const ArrheniusParameters& parameters);
+
+    [[nodiscard]] double evaluate(double time, std::size_t component = 0) const override;
+
+    [[nodiscard]] double evaluate_derivative(double time, std::size_t component = 0) const override;
+
+   private:
+    const ArrheniusParameters parameters_;
+  };
+
 
   /*!
    * Evaluate the complete elliptic integral of the third kind

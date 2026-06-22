@@ -22,6 +22,7 @@
 #include "4C_particle_engine.hpp"
 #include "4C_particle_engine_communication_utils.hpp"
 #include "4C_particle_engine_container.hpp"
+#include "4C_particle_engine_enums.hpp"
 #include "4C_particle_engine_object.hpp"
 #include "4C_particle_input.hpp"
 #include "4C_particle_interaction_base.hpp"
@@ -37,7 +38,10 @@
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 
+#include <cstddef>
+#include <map>
 #include <memory>
+#include <sstream>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -719,8 +723,7 @@ bool Particle::ParticleAlgorithm::check_max_position_increment()
   }
 
   // get max particle position increment since last transfer
-  double maxparticlepositionincrement = 0.0;
-  get_max_particle_position_increment(maxparticlepositionincrement);
+  double maxparticlepositionincrement = get_max_particle_position_increment();
 
   // get max wall position increment since last transfer
   double maxwallpositionincrement = 0.0;
@@ -739,63 +742,153 @@ bool Particle::ParticleAlgorithm::check_max_position_increment()
   return (maxpositionincrement > allowedpositionincrement);
 }
 
-void Particle::ParticleAlgorithm::get_max_particle_position_increment(
-    double& allprocmaxpositionincrement)
+double Particle::ParticleAlgorithm::get_max_particle_position_increment()
 {
-  // maximum position increment since last particle transfer
-  double maxpositionincrement = 0.0;
-
-  // get particle container bundle
-  Particle::ParticleContainerBundleShrdPtr particlecontainerbundle =
-      particleengine_->get_particle_container_bundle();
-
-  // iterate over particle types
-  ParticleType type_of_particle_with_max_travel_distance = UninitializedType;
-  for (auto& typeEnum : particlecontainerbundle->get_particle_types())
+  // Struct to collect additional debug information to throw a more informative error message
+  struct DebugOutput
   {
-    // get container of owned particles of current particle type
-    Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(typeEnum, Particle::Owned);
+    std::map<ParticleType, std::size_t>
+        violating_particles_per_type;  //! Map of particle type to number of particles violating the
+                                       //! condition (maxpositionincrement < minimum_bin_size)
+    int lid_of_max_position_increment;  //! local id of the particle with the maximum position
+                                        //! increment
+    ParticleType particle_type_of_max_position_increment;  //! the particle type of the particle
+                                                           //! with the maximum position increment
+  };
 
-    // get number of particles stored in container
-    const int particlestored = container->particles_stored();
+  const double minimum_bin_size = particleengine_->min_bin_size();
 
-    // no owned particles of current particle type
-    if (particlestored == 0) continue;
+  // Lambda function to find the maximum position increment. In case the maximum position increment
+  // is larger than the minimum bin size, the function is reused to output additional debug
+  // information. The performance does not matter because we exit the simulation anyway. For the
+  // normal calculation DebugOutput is not set such that the compiler can optimize away the
+  // additional if branches so that we do not have a performance overhead.
+  // The lambda function is chosen over a separate private function in order to have everything in
+  // one place
+  auto find_max_position_increment = [&](DebugOutput* debug_output = nullptr) -> double
+  {
+    // maximum position increment since last particle transfer
+    double maxpositionincrement = 0.0;
 
-    // get particle state dimension
-    int statedim = container->get_state_dim(Particle::Position);
+    // get particle container bundle
+    Particle::ParticleContainerBundleShrdPtr particlecontainerbundle =
+        particleengine_->get_particle_container_bundle();
 
-    // position increment of particle
-    double positionincrement[3];
-
-    // iterate over owned particles of current type
-    for (int i = 0; i < particlestored; ++i)
+    // iterate over particle types
+    for (const auto& typeEnum : particlecontainerbundle->get_particle_types())
     {
-      // get pointer to particle states
-      const double* pos = container->get_ptr_to_state(Particle::Position, i);
-      const double* lasttransferpos =
-          container->get_ptr_to_state(Particle::LastTransferPosition, i);
-
-      // position increment of particle considering periodic boundaries
-      particleengine_->distance_between_particles(pos, lasttransferpos, positionincrement);
-
-      // iterate over spatial dimension
-      for (int dim = 0; dim < statedim; ++dim)
+      if (debug_output)
       {
-        maxpositionincrement = std::max(maxpositionincrement, std::abs(positionincrement[dim]));
-        type_of_particle_with_max_travel_distance = typeEnum;
+        debug_output->violating_particles_per_type[typeEnum] = 0;
+      }
+      // get container of owned particles of current particle type
+      Particle::ParticleContainer* container =
+          particlecontainerbundle->get_specific_container(typeEnum, Particle::Owned);
+
+      // get number of particles stored in container
+      const int particlestored = container->particles_stored();
+
+      // no owned particles of current particle type
+      if (particlestored == 0) continue;
+
+      // get particle state dimension
+      int statedim = container->get_state_dim(Particle::Position);
+
+      // position increment of particle
+      double positionincrement[3];
+
+      // iterate over owned particles of current type
+      for (int i = 0; i < particlestored; ++i)
+      {
+        // get pointer to particle states
+        const double* pos = container->get_ptr_to_state(Particle::Position, i);
+        const double* lasttransferpos =
+            container->get_ptr_to_state(Particle::LastTransferPosition, i);
+
+        // position increment of particle considering periodic boundaries
+        particleengine_->distance_between_particles(pos, lasttransferpos, positionincrement);
+
+
+        if (debug_output)
+        {
+          double max_position_increment_of_particle = 0.0;
+          for (int dim = 0; dim < statedim; ++dim)
+          {
+            max_position_increment_of_particle =
+                std::max(max_position_increment_of_particle, std::abs(positionincrement[dim]));
+          }
+          if (max_position_increment_of_particle > minimum_bin_size)
+          {
+            debug_output->violating_particles_per_type[typeEnum]++;
+            // Save gid and type of particle with maximum position increment
+            if (max_position_increment_of_particle > maxpositionincrement)
+            {
+              debug_output->lid_of_max_position_increment = i;
+              debug_output->particle_type_of_max_position_increment = typeEnum;
+            }
+          }
+        }
+
+        // iterate over spatial dimension to update maximum position increment
+        for (int dim = 0; dim < statedim; ++dim)
+        {
+          maxpositionincrement = std::max(maxpositionincrement, std::abs(positionincrement[dim]));
+        }
       }
     }
-  }
+    return maxpositionincrement;
+  };
+
+  double maxpositionincrement = find_max_position_increment();
 
   // bin size safety check
-  if (maxpositionincrement > particleengine_->min_bin_size())
-    FOUR_C_THROW("a particle of phase '{}' traveled more than one bin on this processor!",
-        enum_to_type_name(type_of_particle_with_max_travel_distance));
+  if (maxpositionincrement > minimum_bin_size)
+  {
+    // If we end up here we get additional information and throw an error
+    auto debug_output = std::make_unique<DebugOutput>();
+    maxpositionincrement = find_max_position_increment(debug_output.get());
+
+    std::stringstream ss;
+    std::size_t total_number_of_violating_particles = 0;
+    for (const auto& [key, value] : debug_output->violating_particles_per_type)
+    {
+      if (value == 0) continue;
+
+      total_number_of_violating_particles += value;
+      ss << "    " << enum_to_type_name(key) << ": " << value << "\n";
+    }
+
+    // Get position and velocity of particle with maximum position increment
+    Particle::ParticleContainerBundleShrdPtr particlecontainerbundle =
+        particleengine_->get_particle_container_bundle();
+    ParticleContainer* container = particlecontainerbundle->get_specific_container(
+        debug_output->particle_type_of_max_position_increment, Owned);
+    const double* position =
+        container->get_ptr_to_state(Position, debug_output->lid_of_max_position_increment);
+    const double* velocity =
+        container->get_ptr_to_state(Velocity, debug_output->lid_of_max_position_increment);
+    const int gid = *container->get_ptr_to_global_id(debug_output->lid_of_max_position_increment);
+    FOUR_C_THROW(
+        "{} particle(s) traveled more than one bin on this processor.\n"
+        "  Minimum bin size: {}\n"
+        "  Maximum position increment: {} for particle with\n"
+        "    gid: {} of type {}\n"
+        "    Position: ({}, {}, {})\n"
+        "    Velocity: ({}, {}, {})\n"
+        "  Particle type: number of violating particles\n"
+        "{}"
+        "This can have numerous causes and can hint at an unstable simulation. "
+        "Carefully check the time step size and other interaction related parameters.",
+        total_number_of_violating_particles, minimum_bin_size, maxpositionincrement, gid,
+        enum_to_type_name(debug_output->particle_type_of_max_position_increment), position[0],
+        position[1], position[2], velocity[0], velocity[1], velocity[2], ss.str());
+  }
 
   // get maximum particle position increment on all processors
-  allprocmaxpositionincrement = Core::Communication::max_all(maxpositionincrement, get_comm());
+  double allprocmaxpositionincrement =
+      Core::Communication::max_all(maxpositionincrement, get_comm());
+
+  return allprocmaxpositionincrement;
 }
 
 void Particle::ParticleAlgorithm::transfer_load_between_procs()

@@ -37,39 +37,39 @@ namespace Coupling::Adapter
     /// virtual destructor
     virtual ~CouplingBase() = default;
 
-    /// @name Conversion between master and slave
+    /// @name Conversion between target and source
     //!@{
 
-    /// transfer a dof vector from master to slave
+    /// transfer a dof vector from target to source
     virtual std::shared_ptr<Core::LinAlg::Vector<double>> target_to_source(
-        const Core::LinAlg::Vector<double>& mv  ///< master vector (to be transferred)
+        const Core::LinAlg::Vector<double>& mv  ///< target vector (to be transferred)
     ) const = 0;
 
-    /// transfer a dof vector from slave to master
+    /// transfer a dof vector from source to target
     virtual std::shared_ptr<Core::LinAlg::Vector<double>> source_to_target(
-        const Core::LinAlg::Vector<double>& sv  ///< slave vector (to be transferred)
+        const Core::LinAlg::Vector<double>& sv  ///< source vector (to be transferred)
     ) const = 0;
 
-    /// transfer a dof vector from master to slave
+    /// transfer a dof vector from target to source
     virtual std::shared_ptr<Core::LinAlg::MultiVector<double>> target_to_source(
-        const Core::LinAlg::MultiVector<double>& mv  ///< master vector (to be transferred)
+        const Core::LinAlg::MultiVector<double>& mv  ///< target vector (to be transferred)
     ) const = 0;
 
-    /// transfer a dof vector from slave to master
+    /// transfer a dof vector from source to target
     virtual std::shared_ptr<Core::LinAlg::MultiVector<double>> source_to_target(
-        const Core::LinAlg::MultiVector<double>& sv  ///< slave vector (to be transferred)
+        const Core::LinAlg::MultiVector<double>& sv  ///< source vector (to be transferred)
     ) const = 0;
 
-    /// transfer a dof vector from master to slave
+    /// transfer a dof vector from target to source
     virtual void target_to_source(
-        const Core::LinAlg::MultiVector<double>& mv,  ///< master vector (to be transferred)
-        Core::LinAlg::MultiVector<double>& sv         ///< slave vector (containing result)
+        const Core::LinAlg::MultiVector<double>& mv,  ///< target vector (to be transferred)
+        Core::LinAlg::MultiVector<double>& sv         ///< source vector (containing result)
     ) const = 0;
 
-    /// transfer a dof vector from slave to master
+    /// transfer a dof vector from source to target
     virtual void source_to_target(
-        const Core::LinAlg::MultiVector<double>& sv,  ///< slave vector (to be transferred)
-        Core::LinAlg::MultiVector<double>& mv         ///< master vector (containing result)
+        const Core::LinAlg::MultiVector<double>& sv,  ///< source vector (to be transferred)
+        Core::LinAlg::MultiVector<double>& mv         ///< target vector (containing result)
     ) const = 0;
 
     //!@}
@@ -77,10 +77,10 @@ namespace Coupling::Adapter
     //! @name Coupled maps
     //!@{
 
-    /// the interface dof map of the master side
+    /// the interface dof map of the target side
     virtual std::shared_ptr<const Core::LinAlg::Map> target_dof_map() const = 0;
 
-    /// the interface dof map of the slave side
+    /// the interface dof map of the source side
     virtual std::shared_ptr<const Core::LinAlg::Map> source_dof_map() const = 0;
 
     //!@}

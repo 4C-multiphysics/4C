@@ -9,6 +9,7 @@
 
 #include "4C_global_data.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_utils_function_manager.hpp"
 
 #include <cmath>
 
@@ -70,6 +71,32 @@ FOUR_C_NAMESPACE_OPEN namespace
     }
     return std::shared_ptr<Core::Utils::FunctionOfSpaceTime>(nullptr);
   }
+
+  std::shared_ptr<Core::Utils::FunctionOfTime> create_arrhenius_function(
+      const Core::IO::InputParameterContainer& container)
+  {
+    const auto input_container = container.group("ARRHENIUS_FUNCTION");
+    const auto arrhenius_parameters = ScaTra::ArrheniusParameters{
+        .activation_energy = input_container.get<double>("activation_energy"),
+        .universal_gas_constant =
+            Global::Problem::instance()->elch_control_params().get<double>("GAS_CONSTANT")};
+
+    return std::make_shared<ScaTra::ArrheniusFunction>(arrhenius_parameters);
+  }
+
+
+  std::shared_ptr<Core::Utils::FunctionOfTime> try_create_arrhenius_function(
+      const std::vector<Core::IO::InputParameterContainer>& parameters)
+  {
+    if (parameters.size() != 1) return nullptr;
+
+    if (const auto& container = parameters.front(); container.has_group("ARRHENIUS_FUNCTION"))
+    {
+      return create_arrhenius_function(container);
+    }
+    return std::shared_ptr<Core::Utils::FunctionOfTime>(nullptr);
+  }
+
 
 }  // namespace
 
@@ -183,6 +210,38 @@ void ScaTra::add_valid_scatra_functions(Core::Utils::FunctionManager& function_m
       });
 
   function_manager.add_function_definition(std::move(spec), try_create_scatra_function);
+
+  auto arrhenius_spec = group("ARRHENIUS_FUNCTION",
+      {
+          parameter<double>("activation_energy",
+              {.description = "Activation energy 'Q'", .validator = positive<double>()}),
+      },
+      {.description = "Arrhenius function exp(-Q/(R*T)) for temperature-dependent reaction rates "
+                      "using the universal gas constant 'R' from the ELCH_CONTROL section and the "
+                      "activation energy 'Q'."});
+
+  function_manager.add_function_definition(
+      std::move(arrhenius_spec), try_create_arrhenius_function);
+}
+
+
+ScaTra::ArrheniusFunction::ArrheniusFunction(const ArrheniusParameters& parameters)
+    : parameters_(parameters)
+{
+}
+
+double ScaTra::ArrheniusFunction::evaluate(const double time, const std::size_t component) const
+{
+  // note that the time is the temperature
+  return std::exp(-parameters_.activation_energy / (parameters_.universal_gas_constant * time));
+}
+
+double ScaTra::ArrheniusFunction::evaluate_derivative(
+    const double time, const std::size_t component) const
+{
+  // derivative with respect to time (temperature)
+  const double value = evaluate(time, component);
+  return value * parameters_.activation_energy / (parameters_.universal_gas_constant * time * time);
 }
 
 
@@ -193,7 +252,7 @@ ScaTra::CylinderMagnetFunction::CylinderMagnetFunction(const CylinderMagnetParam
 
 
 double ScaTra::CylinderMagnetFunction::evaluate(
-    std::span<const double> x, double t, std::size_t component) const
+    const std::span<const double> x, const double t, const std::size_t component) const
 {
   FOUR_C_ASSERT(x.size() == 3, "Input position must be a 3D point");
   const auto force_vector = evaluate_magnetic_force(x);
@@ -202,7 +261,7 @@ double ScaTra::CylinderMagnetFunction::evaluate(
 
 
 void ScaTra::CylinderMagnetFunction::evaluate_vector(
-    const std::span<const double> x, double t, std::span<double> values) const
+    const std::span<const double> x, const double t, std::span<double> values) const
 {
   auto force = evaluate_magnetic_force(x);
   FOUR_C_ASSERT(force.size() == 3, "Internal error: force vector has wrong size");

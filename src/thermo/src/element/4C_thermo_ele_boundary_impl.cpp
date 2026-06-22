@@ -1092,7 +1092,7 @@ void Thermo::TemperBoundaryImpl<distype>::prepare_nurbs_eval(
 
   const auto* faceele = dynamic_cast<const Core::Elements::FaceElement*>(ele);
   (*nurbsdis).get_knot_vector()->get_boundary_ele_and_parent_knots(parentknots, myknots_,
-      normalfac_, faceele->parent_target_element()->id(), faceele->face_master_number());
+      normalfac_, faceele->parent_target_element()->id(), faceele->face_target_number());
 
   // get weights from cp's
   for (int inode = 0; inode < nen_; inode++)

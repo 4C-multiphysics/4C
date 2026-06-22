@@ -72,7 +72,7 @@ namespace ALE
         std::shared_ptr<const Core::LinAlg::Map>& dofrowmap);
 
     //! Compute and update the increments of the slave node (do nothing in the mesh sliding case)
-    void update_slave_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& inc,
+    void update_source_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& inc,
         std::shared_ptr<Core::LinAlg::Vector<double>>& dispnp) override {};
 
     //! Recover method for Lagrange multipliers

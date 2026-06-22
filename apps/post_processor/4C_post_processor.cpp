@@ -432,14 +432,6 @@ namespace
 
         break;
       }
-      case Core::ProblemType::thermo:
-      {
-        PostField* field = problem.get_discretization(0);
-        ThermoFilter writer(
-            field, problem.outname(), problem.heatfluxtype(), problem.tempgradtype());
-        writer.write_files();
-        break;
-      }
       case Core::ProblemType::red_airways:
       {
         std::string basename = problem.outname();

@@ -25,6 +25,8 @@ ScaTra::ImplType Discret::Elements::read_scatra_impl_type(
     return ScaTra::impltype_cardiac_monodomain;
   else if (impltype == "GR")
     return ScaTra::impltype_gr;
+  else if (impltype == "NLS")
+    return ScaTra::impltype_nl_stimulus;
   else if (impltype == "Chemo")
     return ScaTra::impltype_chemo;
   else if (impltype == "ChemoReac")

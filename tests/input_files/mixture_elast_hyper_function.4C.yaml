@@ -62,11 +62,9 @@ MATERIALS:
       MASSFRACFUNCT: [4, 5]
   - MAT: 11
     MIX_Constituent_ElastHyper:
-      NUMMAT: 1
       MATIDS: [101]
   - MAT: 12
     MIX_Constituent_ElastHyper:
-      NUMMAT: 1
       MATIDS: [102]
   - MAT: 101
     ELAST_CoupLogNeoHooke:

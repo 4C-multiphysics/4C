@@ -234,6 +234,42 @@ namespace
     EXPECT_FLOAT_EQ(cauchy_stress.dx(0), d_cauchy_stress_d_lambda_f_sq.val() * 2 * lambda_f.val());
   }
 
+  TEST_F(RemodelFiberTest, TestEvaluateDGrowthEvolutionEquationDtDLambdaExt)
+  {
+    Mixture::Implementation::RemodelFiberImplementation<2, FADdouble> fiber =
+        generate_fiber<FADdouble>();
+
+    const double lambda_f = 1.02;
+    const FADdouble lambda_ext = FADdouble(1, 0, 1.014);
+    const FADdouble growth_scalar = 1.12;
+    const FADdouble lambda_r = 1.05;
+
+    const FADdouble y =
+        fiber.evaluate_growth_evolution_equation_dt(lambda_f, lambda_r, lambda_ext, growth_scalar);
+    const FADdouble d_growth_d_lambda_ext =
+        fiber.evaluate_d_growth_evolution_equation_dt_d_lambda_ext(
+            lambda_f, lambda_r, lambda_ext, growth_scalar);
+
+    EXPECT_FLOAT_EQ(y.dx(0), d_growth_d_lambda_ext.val());
+  }
+
+  TEST_F(RemodelFiberTest, TestEvaluateDRemodelEvolutionEquationDtDLambdaExt)
+  {
+    Mixture::Implementation::RemodelFiberImplementation<2, FADdouble> fiber =
+        generate_fiber<FADdouble>();
+
+    const double lambda_f = 1.02;
+    const FADdouble lambda_ext = FADdouble(1, 0, 1.014);
+    const FADdouble lambda_r = 1.05;
+
+    const FADdouble y =
+        fiber.evaluate_remodel_evolution_equation_dt(lambda_f, lambda_r, lambda_ext);
+    const FADdouble d_remodel_d_lambda_ext =
+        fiber.evaluate_d_remodel_evolution_equation_dt_d_lambda_ext(lambda_f, lambda_r, lambda_ext);
+
+    EXPECT_FLOAT_EQ(y.dx(0), d_remodel_d_lambda_ext.val());
+  }
+
   TEST_F(RemodelFiberTest, test_evaluate_d_current_growth_scalar_d_lambda_f_sq)
   {
     Mixture::Implementation::RemodelFiberImplementation<2, FADdouble> fiber =

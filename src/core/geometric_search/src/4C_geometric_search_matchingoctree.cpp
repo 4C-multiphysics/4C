@@ -20,7 +20,7 @@ FOUR_C_NAMESPACE_OPEN
 Core::GeometricSearch::MatchingOctree::MatchingOctree()
     : discret_(nullptr),
       tol_(-1.0),
-      masterentityids_(nullptr),
+      target_entity_ids_(nullptr),
       maxtreenodesperleaf_(-1),
       issetup_(false),
       isinit_(false)
@@ -30,12 +30,12 @@ Core::GeometricSearch::MatchingOctree::MatchingOctree()
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 int Core::GeometricSearch::MatchingOctree::init(const Core::FE::Discretization& actdis,
-    const std::vector<int>& masternodeids, const int maxnodeperleaf, const double tol)
+    const std::vector<int>& target_node_ids, const int maxnodeperleaf, const double tol)
 {
   set_is_setup(false);
 
   discret_ = &actdis;
-  masterentityids_ = &masternodeids;
+  target_entity_ids_ = &target_node_ids;
   maxtreenodesperleaf_ = maxnodeperleaf;
   tol_ = tol;
 
@@ -49,12 +49,12 @@ int Core::GeometricSearch::MatchingOctree::setup()
 {
   check_is_init();
 
-  const unsigned int nummygids = masterentityids_->size();
+  const unsigned int nummygids = target_entity_ids_->size();
 
-  // extract all masternodes on this proc from the list masternodeids
-  std::vector<int> masternodesonthisproc;
+  // extract all target_nodes on this proc from the list target_node_ids
+  std::vector<int> target_nodesonthisproc;
 
-  // construct octree if proc has masternodes
+  // construct octree if proc has target_nodes
   if (nummygids > 0)
   {
     // create initial bounding box for all nodes
@@ -67,31 +67,31 @@ int Core::GeometricSearch::MatchingOctree::setup()
     //
     Core::LinAlg::SerialDenseMatrix initialboundingbox(3, 2);
     std::array<double, 3> pointcoord;
-    calc_point_coordinate(discret_, masterentityids_->at(0), pointcoord.data());
+    calc_point_coordinate(discret_, target_entity_ids_->at(0), pointcoord.data());
     for (int dim = 0; dim < 3; dim++)
     {
       initialboundingbox(dim, 0) = pointcoord[dim] - tol_;
       initialboundingbox(dim, 1) = pointcoord[dim] + tol_;
 
-      // store coordinates of one point in master plane (later on, one
-      // coordinate of the masternode will be substituted by the coordinate
-      // of the master plane)
-      masterplanecoords_.push_back(pointcoord[dim]);
+      // store coordinates of one point in target plane (later on, one
+      // coordinate of the target_node will be substituted by the coordinate
+      // of the target plane)
+      target_plane_coords_.push_back(pointcoord[dim]);
     }
 
     for (unsigned locn = 0; locn < nummygids; locn++)
     {
       // check if entity is on this proc
-      if (not check_have_entity(discret_, masterentityids_->at(locn)))
+      if (not check_have_entity(discret_, target_entity_ids_->at(locn)))
       {
         FOUR_C_THROW(
             "MatchingOctree can only be constructed with entities,\n"
             "which are either owned, or ghosted by calling proc.");
       }
 
-      masternodesonthisproc.push_back(masterentityids_->at(locn));
+      target_nodesonthisproc.push_back(target_entity_ids_->at(locn));
 
-      calc_point_coordinate(discret_, masternodesonthisproc[locn], pointcoord.data());
+      calc_point_coordinate(discret_, target_nodesonthisproc[locn], pointcoord.data());
 
       for (int dim = 0; dim < 3; dim++)
       {
@@ -104,7 +104,7 @@ int Core::GeometricSearch::MatchingOctree::setup()
     // all other layers are generated down here by recursive calls
     int initlayer = 0;
 
-    octreeroot_ = create_octree_element(masternodesonthisproc, initialboundingbox, initlayer);
+    octreeroot_ = create_octree_element(target_nodesonthisproc, initialboundingbox, initlayer);
   }
 
   set_is_setup(true);
@@ -155,7 +155,7 @@ bool Core::GeometricSearch::MatchingOctree::search_closest_entity_on_this_proc(
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Core::GeometricSearch::MatchingOctree::create_global_entity_matching(
-    const std::vector<int>& slavenodeids, const std::vector<int>& dofsforpbcplane,
+    const std::vector<int>& source_node_ids, const std::vector<int>& dofsforpbcplane,
     const double rotangle, std::map<int, std::vector<int>>& midtosid)
 {
   check_is_init();
@@ -164,11 +164,11 @@ void Core::GeometricSearch::MatchingOctree::create_global_entity_matching(
   int myrank = Core::Communication::my_mpi_rank(discret_->get_comm());
   int numprocs = Core::Communication::num_mpi_ranks(discret_->get_comm());
 
-  // map from global masternodeids to distances to their global slave
+  // map from global target_node_ids to distances to their global source
   // counterpart
   std::map<int, double> diststom;
 
-  // 1) each proc generates a list of its slavenodes
+  // 1) each proc generates a list of its source_nodes
   // 2) the list is communicated in a round robin pattern to all the
   //    other procs.
   //
@@ -177,7 +177,7 @@ void Core::GeometricSearch::MatchingOctree::create_global_entity_matching(
   //    than on the preceding processors
 
   //--------------------------------------------------------------------
-  // -> 1) create a list of slave nodes on this proc. Pack it.
+  // -> 1) create a list of source nodes on this proc. Pack it.
   std::vector<char> sblockofnodes;
   std::vector<char> rblockofnodes;
 
@@ -186,11 +186,11 @@ void Core::GeometricSearch::MatchingOctree::create_global_entity_matching(
 
   Core::Communication::PackBuffer pack_data;
 
-  for (int slavenodeid : slavenodeids)
+  for (int source_node_id : source_node_ids)
   {
-    if (check_have_entity(discret_, slavenodeid))
+    if (check_have_entity(discret_, source_node_id))
     {
-      pack_entity(pack_data, discret_, slavenodeid);
+      pack_entity(pack_data, discret_, source_node_id);
     }
   }
 
@@ -257,9 +257,9 @@ void Core::GeometricSearch::MatchingOctree::create_global_entity_matching(
       extract_from_pack(buffer, entity);
 
       //----------------------------------------------------------------
-      // there is nothing to do if there are no master nodes on this
+      // there is nothing to do if there are no target nodes on this
       // proc
-      if (!masterplanecoords_.empty())
+      if (!target_plane_coords_.empty())
       {
         const auto& [id, pointcoord] = entity;
         // get its coordinates
@@ -275,14 +275,14 @@ void Core::GeometricSearch::MatchingOctree::create_global_entity_matching(
         else
         {
           // if there is a rotationally symmetric periodic boundary condition:
-          // rotate slave plane for making it parallel to the master plane
+          // rotate source plane for making it parallel to the target plane
           x[0] = pointcoord[0] * cos(rotangle) + pointcoord[1] * sin(rotangle);
           x[1] = pointcoord[0] * (-sin(rotangle)) + pointcoord[1] * cos(rotangle);
           x[2] = pointcoord[2];
         }
 
-        // Substitute the coordinate normal to the master plane by the
-        // coordinate of the masterplane
+        // Substitute the coordinate normal to the target plane by the
+        // coordinate of the target_plane
         //
         //     |                           |
         //     |                           |
@@ -291,7 +291,7 @@ void Core::GeometricSearch::MatchingOctree::create_global_entity_matching(
         //     |                           |
         //     |                           |
         //     |                           |
-        //   slave                      master
+        //   source                      target
         //
         //
 
@@ -319,10 +319,10 @@ void Core::GeometricSearch::MatchingOctree::create_global_entity_matching(
           }
 
           // substitute x value
-          x[dir] = masterplanecoords_[dir];
+          x[dir] = target_plane_coords_[dir];
         }
         //--------------------------------------------------------
-        // 3) now search for closest master point on this proc
+        // 3) now search for closest target point on this proc
         int idofclosestpoint;
         double distofclosestpoint;
 
@@ -362,7 +362,7 @@ void Core::GeometricSearch::MatchingOctree::create_global_entity_matching(
           }
         }  // end nodeisinbox==true
 
-      }  // end if (masterplanecoords_.empty()!=true)
+      }  // end if (target_plane_coords_.empty()!=true)
     }
 
 
@@ -385,18 +385,18 @@ void Core::GeometricSearch::MatchingOctree::create_global_entity_matching(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::GeometricSearch::MatchingOctree::find_match(const Core::FE::Discretization& slavedis,
-    const std::vector<int>& slavenodeids, std::map<int, std::pair<int, double>>& coupling)
+void Core::GeometricSearch::MatchingOctree::find_match(const Core::FE::Discretization& source_dis,
+    const std::vector<int>& source_node_ids, std::map<int, std::pair<int, double>>& coupling)
 {
   check_is_init();
   check_is_setup();
 
   int numprocs = Core::Communication::num_mpi_ranks(discret_->get_comm());
 
-  if (Core::Communication::num_mpi_ranks(slavedis.get_comm()) != numprocs)
+  if (Core::Communication::num_mpi_ranks(source_dis.get_comm()) != numprocs)
     FOUR_C_THROW("compared discretizations must live on same procs");
 
-  // 1) each proc generates a list of its slavenodes
+  // 1) each proc generates a list of its source_nodes
   //
   // 2) the list is communicated in a round robin pattern to all the
   //    other procs.
@@ -406,17 +406,17 @@ void Core::GeometricSearch::MatchingOctree::find_match(const Core::FE::Discretiz
   //    than on the preceding processors
 
   //--------------------------------------------------------------------
-  // -> 1) create a list of slave nodes on this proc. Pack it.
+  // -> 1) create a list of source nodes on this proc. Pack it.
   std::vector<char> sblockofnodes;
   std::vector<char> rblockofnodes;
 
   Core::Communication::PackBuffer pack_data;
 
-  for (int slavenodeid : slavenodeids)
+  for (int source_node_id : source_node_ids)
   {
-    if (check_have_entity(&slavedis, slavenodeid))
+    if (check_have_entity(&source_dis, source_node_id))
     {
-      pack_entity(pack_data, &slavedis, slavenodeid);
+      pack_entity(pack_data, &source_dis, source_node_id);
     }
   }
 
@@ -482,9 +482,9 @@ void Core::GeometricSearch::MatchingOctree::find_match(const Core::FE::Discretiz
       extract_from_pack(buffer, entity);
 
       //----------------------------------------------------------------
-      // there is nothing to do if there are no master nodes on this
+      // there is nothing to do if there are no target nodes on this
       // proc
-      if (not masterplanecoords_.empty())
+      if (not target_plane_coords_.empty())
       {
         const auto& [id, pointcoord] = entity;
 
@@ -492,7 +492,7 @@ void Core::GeometricSearch::MatchingOctree::find_match(const Core::FE::Discretiz
         std::vector<double> x(pointcoord.begin(), pointcoord.end());
 
         //--------------------------------------------------------
-        // 3) now search for closest master point on this proc
+        // 3) now search for closest target point on this proc
         int gid;
         double dist;
 
@@ -533,8 +533,8 @@ void Core::GeometricSearch::MatchingOctree::find_match(const Core::FE::Discretiz
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::GeometricSearch::MatchingOctree::fill_slave_to_master_gid_mapping(
-    const Core::FE::Discretization& slavedis, const std::vector<int>& slavenodeids,
+void Core::GeometricSearch::MatchingOctree::fill_source_to_target_gid_mapping(
+    const Core::FE::Discretization& source_dis, const std::vector<int>& source_node_ids,
     std::map<int, std::vector<double>>& coupling)
 {
   check_is_init();
@@ -542,10 +542,10 @@ void Core::GeometricSearch::MatchingOctree::fill_slave_to_master_gid_mapping(
 
   int numprocs = Core::Communication::num_mpi_ranks(discret_->get_comm());
 
-  if (Core::Communication::num_mpi_ranks(slavedis.get_comm()) != numprocs)
+  if (Core::Communication::num_mpi_ranks(source_dis.get_comm()) != numprocs)
     FOUR_C_THROW("compared discretizations must live on same procs");
 
-  // 1) each proc generates a list of its slavenodes
+  // 1) each proc generates a list of its source_nodes
   //
   // 2) the list is communicated in a round robin pattern to all the
   //    other procs.
@@ -555,13 +555,13 @@ void Core::GeometricSearch::MatchingOctree::fill_slave_to_master_gid_mapping(
   //    than on the preceding processors
 
   //--------------------------------------------------------------------
-  // -> 1) create a list of slave nodes on this proc. Pack it.
+  // -> 1) create a list of source nodes on this proc. Pack it.
   std::vector<char> sblockofnodes;
   std::vector<char> rblockofnodes;
 
   Core::Communication::PackBuffer pack_data;
 
-  for (int slavenodeid : slavenodeids) pack_entity(pack_data, &slavedis, slavenodeid);
+  for (int source_node_id : source_node_ids) pack_entity(pack_data, &source_dis, source_node_id);
 
   swap(sblockofnodes, pack_data());
 
@@ -625,15 +625,15 @@ void Core::GeometricSearch::MatchingOctree::fill_slave_to_master_gid_mapping(
       extract_from_pack(buffer, entity);
 
       //----------------------------------------------------------------
-      // there is nothing to do if there are no master nodes on this
+      // there is nothing to do if there are no target nodes on this
       // proc
-      if (not masterplanecoords_.empty())
+      if (not target_plane_coords_.empty())
       {
         const auto& [id, pointcoord] = entity;
         std::vector<double> x(pointcoord.begin(), pointcoord.end());
 
         //--------------------------------------------------------
-        // 3) now search for closest master point on this proc
+        // 3) now search for closest target point on this proc
         int gid;
         double dist;
 
@@ -660,9 +660,9 @@ void Core::GeometricSearch::MatchingOctree::fill_slave_to_master_gid_mapping(
             {
               bool isrownode = check_entity_owner(discret_, gid);
               std::vector<double> myvec(3);  // initialize vector
-              myvec[0] = (double)gid;        // save master gid in vector
+              myvec[0] = (double)gid;        // save target gid in vector
               myvec[1] = dist;               // save distance in vector
-              myvec[2] = (double)isrownode;  // save master row col info in vector
+              myvec[2] = (double)isrownode;  // save target row col info in vector
               coupling[id] = myvec;          // copy vector to map
             }
           }
@@ -679,7 +679,7 @@ void Core::GeometricSearch::MatchingOctree::fill_slave_to_master_gid_mapping(
     // we need a new receive buffer
     rblockofnodes.clear();
   }
-}  // MatchingOctree::fill_slave_to_master_gid_mapping
+}  // MatchingOctree::fill_source_to_target_gid_mapping
 
 
 /*----------------------------------------------------------------------*/
@@ -1009,7 +1009,7 @@ int Core::GeometricSearch::OctreeElement::setup()
   }
 
   const int numnodestoadd = static_cast<int>(nodeids_.size());
-  // if number of slavenodes on this proc is too large split the element
+  // if number of source_nodes on this proc is too large split the element
   if (numnodestoadd > maxtreenodesperleaf_)
   {
     // mean coordinate value in direction of the longest edge
@@ -1158,7 +1158,7 @@ int Core::GeometricSearch::OctreeElement::setup()
 
     octreechild2_ = create_octree_element(childnodeids2, childboundingbox2, layer_ + 1);
 
-  }  // end number of slavenodes on this proc is too large split the element
+  }  // end number of source_nodes on this proc is too large split the element
   else
   {
     if ((int)nodeids_.size() == 0)

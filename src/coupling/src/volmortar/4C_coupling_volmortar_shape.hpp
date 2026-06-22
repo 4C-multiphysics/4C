@@ -315,7 +315,7 @@ namespace Coupling::VolMortar
     template <Core::FE::CellType distype>
     double jacobian(const double* xi, const Core::Elements::Element& ele)
     {
-      //! nn_: number of master element nodes
+      //! nn_: number of target element nodes
       static constexpr int nn = Core::FE::num_nodes(distype);
 
       //! number of space dimensions ("+1" due to considering only interface elements)
@@ -458,7 +458,7 @@ namespace Coupling::VolMortar
         const Core::Elements::Element& ele                    ///< element which is considered
     )
     {
-      //! nn_: number of master element nodes
+      //! nn_: number of target element nodes
       static constexpr int nn = Core::FE::num_nodes(distype);
 
       //! number of space dimensions ("+1" due to considering only interface elements)

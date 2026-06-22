@@ -439,7 +439,7 @@ namespace GeometryPair
         std::vector<Core::LinAlg::SerialDenseVector> my_parent_knots(3);
         shape_function_data.myknots_.resize(2);
         const bool zero_size = Core::FE::Nurbs::get_knot_vector_and_weights_for_nurbs_boundary(
-            face_element, face_element->face_master_number(), face_element->parent_element_id(),
+            face_element, face_element->face_target_number(), face_element->parent_element_id(),
             *(discretization), my_parent_knots, shape_function_data.myknots_,
             shape_function_data.weights_, shape_function_data.surface_normal_factor_);
         if (zero_size)

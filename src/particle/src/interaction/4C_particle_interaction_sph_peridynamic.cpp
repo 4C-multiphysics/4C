@@ -53,6 +53,12 @@ Particle::SPHPeridynamic::SPHPeridynamic(const Teuchos::ParameterList& particle_
   FOUR_C_ASSERT_ALWAYS(not particle_params.get<bool>("RIGID_BODY_MOTION"),
       "Peridynamic interaction is not available in combination with rigid body motion!");
 
+  // A mismatch produces physically inconsistent forces
+  const double dx_sph = particle_params.sublist("SPH").get<double>("INITIALPARTICLESPACING");
+  FOUR_C_ASSERT_ALWAYS(abs(dx_pd_ - dx_sph) <= 1.0e-10 * dx_pd_,
+      "PERIDYNAMIC_GRID_SPACING ({:.10f}) must equal INITIALPARTICLESPACING ({:.10f}). ", dx_pd_,
+      dx_sph);
+
   auto normalcontacttype = Teuchos::getIntegralValue<Particle::NormalContact>(
       particle_params.sublist("PD"), "NORMALCONTACTLAW");
 
@@ -64,10 +70,14 @@ Particle::SPHPeridynamic::SPHPeridynamic(const Teuchos::ParameterList& particle_
   FOUR_C_ASSERT_ALWAYS(
       horizon_pd_ > 0.0, "Peridynamic INTERACTION_HORIZON must be greater than zero!");
 
+  // to ensure that slightly stretched bonds are still found properly in the neighbor search, the
+  // interaction horizon needs to be smaller than the minimum bin size of the binning strategy
+  // The factor 1.1 is physics motivated as usual critical stretch values are (way) smaller
   Teuchos::ParameterList binning_params = Global::Problem::instance()->binning_strategy_params();
   const double minimum_bin_size = binning_params.get<double>("BIN_SIZE_LOWER_BOUND");
-  FOUR_C_ASSERT_ALWAYS(horizon_pd_ <= minimum_bin_size,
-      "Peridynamic INTERACTION_HORIZON must be smaller than BIN_SIZE_LOWER_BOUND!");
+  FOUR_C_ASSERT_ALWAYS(horizon_pd_ * 1.1 < minimum_bin_size,
+      "Peridynamic INTERACTION_HORIZON * 1.1(safety factor to account for stretch) must be smaller "
+      "than BIN_SIZE_LOWER_BOUND!");
 
   // parse pre-crack line segments (3D): each entry has START and END (3 doubles each)
   {

@@ -394,6 +394,30 @@ void SSI::SsiMono::evaluate_off_diag_contributions() const
  *-------------------------------------------------------------------------------*/
 void SSI::SsiMono::build_null_spaces(Core::LinAlg::Solver& solver) const
 {
+  // structure-related block
+  {
+    std::stringstream iblockstr;
+    iblockstr << ssi_maps_->get_block_positions(Subproblem::structure).at(0) + 1;
+
+    Teuchos::ParameterList& blocksmootherparams =
+        solver.params().sublist("Inverse" + iblockstr.str());
+
+    if (solver.params().isSublist("AMGnxn Parameters"))
+    {
+      blocksmootherparams.sublist("Belos Parameters");
+      blocksmootherparams.sublist("MueLu Parameters");
+
+      Core::FE::compute_null_space_if_necessary(
+          *structure_field()->discretization(), blocksmootherparams);
+    }
+    else
+    {
+      Core::LinearSolver::Parameters::compute_solver_parameters(
+          *structure_field()->discretization(), blocksmootherparams);
+    }
+  }
+
+  // all scalar transport-related blocks
   switch (scatra_field()->matrix_type())
   {
     case Core::LinAlg::MatrixType::block_condition:
@@ -438,27 +462,6 @@ void SSI::SsiMono::build_null_spaces(Core::LinAlg::Solver& solver) const
     {
       FOUR_C_THROW("Invalid matrix type associated with scalar transport field!");
     }
-  }
-
-  // store number of matrix block associated with structural field as string
-  std::stringstream iblockstr;
-  iblockstr << ssi_maps_->get_block_positions(Subproblem::structure).at(0) + 1;
-
-  Teuchos::ParameterList& blocksmootherparams =
-      solver.params().sublist("Inverse" + iblockstr.str());
-
-  if (solver.params().isSublist("AMGnxn Parameters"))
-  {
-    blocksmootherparams.sublist("Belos Parameters");
-    blocksmootherparams.sublist("MueLu Parameters");
-
-    Core::FE::compute_null_space_if_necessary(
-        *structure_field()->discretization(), blocksmootherparams);
-  }
-  else
-  {
-    Core::LinearSolver::Parameters::compute_solver_parameters(
-        *structure_field()->discretization(), blocksmootherparams);
   }
 }
 
@@ -661,16 +664,6 @@ void SSI::SsiMono::setup()
   // call base class routine
   SSIBase::setup();
 
-  // safety checks
-  if (scatra_field()->num_scal() != 1)
-  {
-    FOUR_C_THROW(
-        "Since the ssi_monolithic framework is only implemented for usage in combination with "
-        "volume change laws 'MAT_InelasticDefgradLinScalarIso' or "
-        "'MAT_InelasticDefgradLinScalarAniso' so far and these laws are implemented for only "
-        "one transported scalar at the moment it is not reasonable to use them with more than one "
-        "transported scalar. So you need to cope with it or change implementation! ;-)");
-  }
   const auto ssi_params = SSI::Utils::problem_from_instance()->ssi_control_params();
 
   const bool calc_initial_pot_elch =
@@ -740,7 +733,9 @@ void SSI::SsiMono::setup_system()
       // feed block preconditioner with null space information for each block of global block system
       // matrix
       build_null_spaces(*solver_);
-      if (init_pot_calc_solver_ != nullptr) build_null_spaces(*init_pot_calc_solver_);
+      // in case no initial potential calculation solver is set, the main solver is reused and we do
+      // not need to additionally call build_null_spaces
+      if (init_pot_calc_solver_ != solver_) build_null_spaces(*init_pot_calc_solver_);
 
       break;
     }

@@ -547,16 +547,17 @@ void Core::FE::Discretization::extended_ghosting(const Core::LinAlg::Map& elecol
   // first export the elements according to the processor local element column maps
   export_column_elements(elecolmap);
 
-  // periodic boundary conditions require ghosting of all master and slave nodes,
+  // periodic boundary conditions require ghosting of all target and source nodes,
   // if node of pbc set is contained in list of owned and ghosted elements
   // in case of pbcs, this has to be restored
   bool have_pbc = false;
   std::shared_ptr<Core::DOFSets::PBCDofSet> pbcdofset = nullptr;
-  // map of master nodes and corresponding slave nodes
+  // map of target nodes and corresponding source nodes
   std::map<int, std::set<int>> pbcmap;
-  // create the inverse map --- slavenode -> masternode
+  // create the inverse map --- source_node -> target_node
   std::map<int, int> inversenodecoupling;
-  // map to be filled with new (extended) master nodes and corresponding slave nodes (in col layout)
+  // map to be filled with new (extended) target nodes and corresponding source nodes (in col
+  // layout)
   std::map<int, std::set<int>> pbcmapnew;
 
   // check for pbcs
@@ -577,14 +578,14 @@ void Core::FE::Discretization::extended_ghosting(const Core::LinAlg::Map& elecol
     }
   }
 
-  // if pbcs are available, get master and slave information
+  // if pbcs are available, get target and source information
   if (have_pbc)
   {
-    // communicate all master and slave pairs
-    // caution: we build redundant maps here, containing all master nodes
+    // communicate all target and source pairs
+    // caution: we build redundant maps here, containing all target nodes
     Core::LinAlg::gather_all(pbcmap, comm_);
 
-    // and build slave master pairs
+    // and build source target pairs
     for (std::map<int, std::set<int>>::iterator curr = pbcmap.begin(); curr != pbcmap.end(); ++curr)
       for (std::set<int>::const_iterator it = curr->second.begin(); it != curr->second.end(); ++it)
         inversenodecoupling[*it] = curr->first;
@@ -601,35 +602,35 @@ void Core::FE::Discretization::extended_ghosting(const Core::LinAlg::Map& elecol
     {
       nodes.insert(nodeids[inode]);
 
-      // for pbcs, take into account all master and slave pairs
+      // for pbcs, take into account all target and source pairs
       if (have_pbc)
       {
-        // is present node a master node?
-        std::map<int, std::set<int>>::iterator foundmaster = pbcmap.find(nodeids[inode]);
+        // is present node a target node?
+        std::map<int, std::set<int>>::iterator found_target = pbcmap.find(nodeids[inode]);
 
-        if (foundmaster != pbcmap.end())
+        if (found_target != pbcmap.end())
         {
-          // also store all corresponding slave nodes in set of col nodes
-          nodes.insert(foundmaster->second.begin(), foundmaster->second.end());
+          // also store all corresponding source nodes in set of col nodes
+          nodes.insert(found_target->second.begin(), found_target->second.end());
 
-          // add master and corresponding slaves to new col list of master and slave pairs
-          pbcmapnew[foundmaster->first] = foundmaster->second;
+          // add target and corresponding sources to new col list of target and source pairs
+          pbcmapnew[found_target->first] = found_target->second;
         }
         else
         {
-          // is present node a slave node?
-          std::map<int, int>::iterator foundslave = inversenodecoupling.find(nodeids[inode]);
+          // is present node a source node?
+          std::map<int, int>::iterator found_source = inversenodecoupling.find(nodeids[inode]);
 
-          if (foundslave != inversenodecoupling.end())
+          if (found_source != inversenodecoupling.end())
           {
-            // add corresponding master to set of col nodes
-            nodes.insert(foundslave->second);
+            // add corresponding target to set of col nodes
+            nodes.insert(found_source->second);
 
-            // store also all further slave nodes of this master (if multiple pbcs are used)
-            nodes.insert(pbcmap[foundslave->second].begin(), pbcmap[foundslave->second].end());
+            // store also all further source nodes of this target (if multiple pbcs are used)
+            nodes.insert(pbcmap[found_source->second].begin(), pbcmap[found_source->second].end());
 
-            // add master and corresponding slaves to new col list of master and slave pairs
-            pbcmapnew[foundslave->second] = pbcmap[foundslave->second];
+            // add target and corresponding sources to new col list of target and source pairs
+            pbcmapnew[found_source->second] = pbcmap[found_source->second];
           }
         }
       }
@@ -643,7 +644,7 @@ void Core::FE::Discretization::extended_ghosting(const Core::LinAlg::Map& elecol
       ++it)
     std::copy(it->second.begin(), it->second.end(), std::back_inserter((*pbcmapvec)[it->first]));
 
-  // transfer master and slave information to pbc dofset
+  // transfer target and source information to pbc dofset
   if (have_pbc) pbcdofset->set_coupled_nodes(pbcmapvec);
 
   std::vector<int> colnodes(nodes.begin(), nodes.end());

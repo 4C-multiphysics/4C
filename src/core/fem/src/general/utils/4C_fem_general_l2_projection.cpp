@@ -27,7 +27,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::evaluate_and_solve_
     const std::string& statename, const int& numvec, Teuchos::ParameterList& params,
     const Teuchos::ParameterList& solverparams,
     const std::function<const Teuchos::ParameterList&(int)> get_solver_params,
-    const Core::LinAlg::Map& fullnoderowmap, const std::map<int, int>& slavetomastercolnodesmap)
+    const Core::LinAlg::Map& fullnoderowmap, const std::map<int, int>& source_to_target_colnodesmap)
 {
   // create empty matrix
   Core::LinAlg::SparseMatrix massmatrix(noderowmap, 108, false, true);
@@ -76,18 +76,18 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::evaluate_and_solve_
     for (auto node : actele.nodes())
     {
       const int nodeid = node.global_id();
-      if (!slavetomastercolnodesmap.empty())
+      if (!source_to_target_colnodesmap.empty())
       {
-        auto slavemasterpair = slavetomastercolnodesmap.find(nodeid);
-        if (slavemasterpair != slavetomastercolnodesmap.end())
-          lm[n] = slavemasterpair->second;
+        auto source_target_pair = source_to_target_colnodesmap.find(nodeid);
+        if (source_target_pair != source_to_target_colnodesmap.end())
+          lm[n] = source_target_pair->second;
         else
           lm[n] = nodeid;
       }
       else
         lm[n] = nodeid;
 
-      // owner of pbc master and slave nodes are identical
+      // owner of pbc target and source nodes are identical
       lmowner[n] = node.owner();
       ++n;
     }
@@ -109,7 +109,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::evaluate_and_solve_
   massmatrix.complete();
 
   return solve_nodal_l2_projection(massmatrix, rhs, dis.get_comm(), numvec, solverparams,
-      get_solver_params, noderowmap, fullnoderowmap, slavetomastercolnodesmap);
+      get_solver_params, noderowmap, fullnoderowmap, source_to_target_colnodesmap);
 }
 
 /*----------------------------------------------------------------------*
@@ -132,63 +132,64 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_nodal_l2_pr
     FOUR_C_THROW("action type for element is missing");
 
   // handle pbcs if existing
-  // build inverse map from slave to master nodes
-  std::map<int, int> slavetomastercolnodesmap;
+  // build inverse map from source to target nodes
+  std::map<int, int> source_to_target_colnodesmap;
 
   const std::map<int, std::vector<int>>* allcoupledcolnodes = dis.get_all_pbc_coupled_col_nodes();
   if (allcoupledcolnodes)
   {
-    for (auto [master_gid, slave_gids] : *allcoupledcolnodes)
+    for (auto [target_gid, source_gids] : *allcoupledcolnodes)
     {
-      for (const auto slave_gid : slave_gids)
+      for (const auto source_gid : source_gids)
       {
-        slavetomastercolnodesmap[slave_gid] = master_gid;
+        source_to_target_colnodesmap[source_gid] = target_gid;
       }
     }
   }
 
   // get reduced node row map of fluid field --> will be used for setting up linear system
   const auto* fullnoderowmap = dis.node_row_map();
-  // remove pbc slave nodes from full noderowmap
+  // remove pbc source nodes from full noderowmap
   std::vector<int> reducednoderowmap;
   // a little more memory than necessary is possibly reserved here
   reducednoderowmap.reserve(fullnoderowmap->num_my_elements());
   for (int i = 0; i < fullnoderowmap->num_my_elements(); ++i)
   {
     const int nodeid = fullnoderowmap->gid(i);
-    // do not add slave pbc nodes here
-    if (slavetomastercolnodesmap.empty() or slavetomastercolnodesmap.count(nodeid) == 0)
+    // do not add source pbc nodes here
+    if (source_to_target_colnodesmap.empty() or source_to_target_colnodesmap.count(nodeid) == 0)
     {
       reducednoderowmap.push_back(nodeid);
     }
   }
 
-  // build node row map which does not include slave pbc nodes
+  // build node row map which does not include source pbc nodes
   Core::LinAlg::Map noderowmap(-1, static_cast<int>(reducednoderowmap.size()),
       reducednoderowmap.data(), 0, fullnoderowmap->get_comm());
 
   auto nodevec = evaluate_and_solve_nodal_l2_projection(dis, noderowmap, statename, numvec, params,
-      solverparams, get_solver_params, *fullnoderowmap, slavetomastercolnodesmap);
+      solverparams, get_solver_params, *fullnoderowmap, source_to_target_colnodesmap);
 
   // if no pbc are involved leave here
-  if (slavetomastercolnodesmap.empty() or noderowmap.point_same_as(*fullnoderowmap)) return nodevec;
+  if (source_to_target_colnodesmap.empty() or noderowmap.point_same_as(*fullnoderowmap))
+    return nodevec;
 
-  // solution vector based on full row map in which the solution of the master node is inserted into
-  // slave nodes
+  // solution vector based on full row map in which the solution of the target node is inserted into
+  // source nodes
   auto fullnodevec = std::make_shared<Core::LinAlg::MultiVector<double>>(*fullnoderowmap, numvec);
 
   for (int i = 0; i < fullnoderowmap->num_my_elements(); ++i)
   {
     const int nodeid = fullnoderowmap->gid(i);
 
-    auto slavemasterpair = slavetomastercolnodesmap.find(nodeid);
-    if (slavemasterpair != slavetomastercolnodesmap.end())
+    auto source_target_pair = source_to_target_colnodesmap.find(nodeid);
+    if (source_target_pair != source_to_target_colnodesmap.end())
     {
-      const int mastergid = slavemasterpair->second;
-      const int masterlid = noderowmap.lid(mastergid);
+      const int target_gid = source_target_pair->second;
+      const int target_lid = noderowmap.lid(target_gid);
       for (int j = 0; j < numvec; ++j)
         fullnodevec->replace_local_value(
-            i, j, nodevec->get_vector(j).local_values_as_span()[masterlid]);
+            i, j, nodevec->get_vector(j).local_values_as_span()[target_lid]);
     }
     else
     {
@@ -208,7 +209,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::solve_nodal_l2_proj
     const int& numvec, const Teuchos::ParameterList& solverparams,
     const std::function<const Teuchos::ParameterList&(int)> get_solver_params,
     const Core::LinAlg::Map& noderowmap, const Core::LinAlg::Map& fullnoderowmap,
-    const std::map<int, int>& slavetomastercolnodesmap)
+    const std::map<int, int>& source_to_target_colnodesmap)
 {
   // get solver parameter list of linear solver
   const auto solvertype =

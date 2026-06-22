@@ -385,7 +385,7 @@ void FSI::FluidFluidMonolithicStructureSplitNoNOX::setup_system_matrix()
   systemmatrix_->assign(1, 0, Core::LinAlg::DataAccess::Share, *lsgi);
 
   (*aigtransform_)(a->full_row_map(), a->full_col_map(), aig, 1. / timescale,
-      Coupling::Adapter::CouplingSlaveConverter(icoupfa), systemmatrix_->matrix(2, 1));
+      Coupling::Adapter::CouplingSourceConverter(icoupfa), systemmatrix_->matrix(2, 1));
 
   systemmatrix_->assign(2, 2, Core::LinAlg::DataAccess::Share, aii);
 

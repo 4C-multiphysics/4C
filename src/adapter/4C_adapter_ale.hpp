@@ -239,8 +239,8 @@ namespace Adapter
     virtual void create_system_matrix(
         std::shared_ptr<const ALE::Utils::MapExtractor> interface = nullptr) = 0;
 
-    //! update slave dofs for multifield simulations with ale mesh tying
-    virtual void update_slave_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& a) = 0;
+    //! update source dofs for multifield simulations with ale mesh tying
+    virtual void update_source_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& a) = 0;
 
   };  // class Ale
 

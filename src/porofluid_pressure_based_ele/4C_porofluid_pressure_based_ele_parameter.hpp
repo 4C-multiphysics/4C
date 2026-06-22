@@ -11,8 +11,11 @@
 
 #include "4C_config.hpp"
 
+#include "4C_utils_function.hpp"
+
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
+#include <optional>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -59,11 +62,15 @@ namespace Discret
       int nds_solid_pressure() const { return nds_solidpressure_; };
       int nds_scalar() const { return nds_scalar_; };
       bool has_scalar() const { return nds_scalar_ > -1; };
-      bool has_bodyforce_contribution() const { return has_bodyforce_contribution_; };
-      const Core::Utils::FunctionManager* function_manager() const { return function_manager_; };
-      const std::vector<double>& bodyforce_contribution_values() const
+      bool has_bodyforce_contribution() const
       {
-        return bodyforce_contribution_values_;
+        return bodyforce_contribution_function_.has_value();
+      };
+      const Core::Utils::FunctionManager* function_manager() const { return function_manager_; };
+      [[nodiscard]] std::optional<const Core::Utils::FunctionOfSpaceTime*>
+      bodyforce_contribution_function() const
+      {
+        return bodyforce_contribution_function_;
       };
       int num_domain_int_functions() const { return domainint_funct_.size(); };
       std::vector<int> domain_int_functions() const { return domainint_funct_; };
@@ -117,11 +124,9 @@ namespace Discret
       //! function manager for configured runtime functions
       const Core::Utils::FunctionManager* function_manager_;
 
-      //! flag for bodyforce contribution
-      bool has_bodyforce_contribution_;
+      //! bodyforce contribution function
+      std::optional<const Core::Utils::FunctionOfSpaceTime*> bodyforce_contribution_function_;
 
-      //! bodyforce contribution values
-      std::vector<double> bodyforce_contribution_values_;
       //@}
 
     };  // class PoroFluidMultiPhaseEleParameter

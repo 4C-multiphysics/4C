@@ -144,35 +144,6 @@ class LubricationFilter : public PostFilterBase
 };
 
 
-/*!
- \brief Writer for (in)stationary heat conduction
-
-*/
-class ThermoFilter : public PostFilterBase
-{
- public:
-  /// constructor
-  ThermoFilter(PostField* field, std::string name, std::string heatfluxtype = "none",
-      std::string tempgradtype = "none")
-      : PostFilterBase(field, name), heatfluxtype_(heatfluxtype), tempgradtype_(tempgradtype)
-  {
-  }
-
- protected:
-  void write_all_results(PostField* field) override;
-
-  /*!
-  \brief postprocess gauss point heatfluxes and write results
-
-  */
-  void post_heatflux(const std::string groupname, const std::string heatfluxtype);
-  void write_heatflux(const std::string groupname, PostResult& result, const ResultType kind);
-
-  std::string heatfluxtype_;  ///< type of heat flux output
-  std::string tempgradtype_;  ///< type of spatial temperature gradient output
-};
-
-
 /// Writer for undefined problem types
 /*
   Just write all the vectors we have.

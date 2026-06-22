@@ -191,6 +191,11 @@ namespace ReducedLung::Airways::FlowResistance
   InternalStateUpdaterFlowModel make_internal_state_updater(FlowModel& flow_model);
 
   /**
+   * @brief Build output evaluator callback for the concrete flow-model variant.
+   */
+  OutputEvaluator make_output_evaluator(FlowModel& flow_model);
+
+  /**
    * @brief Append element parameters and initialize vectors for a concrete flow model.
    */
   void append_model_parameters(FlowModel& flow_model, int global_element_id,

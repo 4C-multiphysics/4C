@@ -1126,20 +1126,20 @@ void XFEM::MultiFieldMapExtractor::add_matrix(
   const Core::LinAlg::SparseMatrix& src_ni =
       partial_mat.matrix(MultiField::block_non_interface, MultiField::block_interface);
   i_mat_col_transform(block)(partial_mat.full_row_map(), partial_mat.full_col_map(), src_ni, scale,
-      Coupling::Adapter::CouplingSlaveConverter(i_coupling(block)), full_mat, false, true);
+      Coupling::Adapter::CouplingSourceConverter(i_coupling(block)), full_mat, false, true);
 
   // (1) Add block interface/non_interface
   const Core::LinAlg::SparseMatrix& src_in =
       partial_mat.matrix(MultiField::block_interface, MultiField::block_non_interface);
   i_mat_row_transform(block)(
-      src_in, scale, Coupling::Adapter::CouplingSlaveConverter(i_coupling(block)), full_mat, true);
+      src_in, scale, Coupling::Adapter::CouplingSourceConverter(i_coupling(block)), full_mat, true);
 
   // (2) Add block interface/interface
   const Core::LinAlg::SparseMatrix& src_ii =
       partial_mat.matrix(MultiField::block_interface, MultiField::block_interface);
   i_mat_row_col_transform(block)(src_ii, scale,
-      Coupling::Adapter::CouplingSlaveConverter(i_coupling(block)),
-      Coupling::Adapter::CouplingSlaveConverter(i_coupling(block)), full_mat, false, true);
+      Coupling::Adapter::CouplingSourceConverter(i_coupling(block)),
+      Coupling::Adapter::CouplingSourceConverter(i_coupling(block)), full_mat, false, true);
 
   return;
 }

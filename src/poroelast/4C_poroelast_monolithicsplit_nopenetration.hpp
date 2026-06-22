@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_coupling_adapter_converter.hpp"
+#include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_poroelast_monolithicsplit.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -29,74 +30,50 @@ namespace PoroElast
     explicit MonolithicSplitNoPenetration(MPI_Comm comm, const Teuchos::ParameterList& timeparams,
         std::shared_ptr<Core::LinAlg::MapExtractor> porosity_splitter);
 
-    //! Setup the monolithic system
     void setup_system() override;
 
-    //! setup composed right hand side from field solvers
     void setup_rhs(bool firstcall = false) override;
 
-    //! setup composed system matrix from field solvers
     void setup_system_matrix(Core::LinAlg::BlockSparseMatrixBase& mat) override;
 
-    //! take current results for converged and save for next time step
     void update() override;
 
-    //! read restart data
-    void read_restart(const int step) override;
+    void read_restart(int step) override;
 
-    //! contains text to print_newton_iter
-    void print_newton_iter_text_stream(std::ostringstream& oss) override;
-
-    //! contains header to print_newton_iter
-    void print_newton_iter_header_stream(std::ostringstream& oss) override;
-
-
-   protected:
-    //! @name Apply current field state to system
-
-    //! Evaluate mechanical-fluid system matrix
-    void apply_str_coupl_matrix(
-        std::shared_ptr<Core::LinAlg::SparseOperator> k_sf  //!< mechanical-fluid stiffness matrix
-        ) override;
-
-    //! Evaluate fluid-mechanical system matrix
-    void apply_fluid_coupl_matrix(
-        std::shared_ptr<Core::LinAlg::SparseOperator> k_fs  //!< fluid-mechanical tangent matrix
-        ) override;
-
-    //! recover Lagrange multiplier \f$\lambda_\Gamma\f$ at the interface at the end of each
-    //! iteration step (i.e. condensed forces onto the structure) needed for rhs in next newton step
     void recover_lagrange_multiplier_after_newton_step(
         std::shared_ptr<const Core::LinAlg::Vector<double>> x) override;
 
-    //! recover Lagrange multiplier \f$\lambda_\Gamma\f$ at the interface at the end of each time
-    //! step (i.e. condensed forces onto the structure) needed for rhs in next time step
     void recover_lagrange_multiplier_after_time_step() override;
 
-    //! output
     void output(bool forced_writerestart = false) override;
 
-    //! setup of coupling object and system matrices
-    void setup_coupling_and_matrices() override;
+    void output_restart();
 
-    //! start a new time step
     void prepare_time_step() override;
 
-    //! convergence check for Newton solver
+    void print_newton_iter_text_stream(std::ostringstream& oss) override;
+
+    void print_newton_iter_header_stream(std::ostringstream& oss) override;
+
+   protected:
+    //! @name Apply current field state to system
+    //!@{
+    void apply_str_coupl_matrix(std::shared_ptr<Core::LinAlg::SparseOperator> k_sf) override;
+
+    void apply_fluid_coupl_matrix(std::shared_ptr<Core::LinAlg::SparseOperator> k_fs) override;
+
+    void setup_coupling_and_matrices() override;
+
     void build_convergence_norms() override;
 
     //!@}
+    void setup_vector(Core::LinAlg::Vector<double>& f,
+        std::shared_ptr<const Core::LinAlg::Vector<double>> sv,
+        std::shared_ptr<const Core::LinAlg::Vector<double>> fv) override;
+
    private:
-    //! build block vector from field vectors, e.g. rhs, increment vector
-    void setup_vector(Core::LinAlg::Vector<double>& f,  //!< vector of length of all dofs
-        std::shared_ptr<const Core::LinAlg::Vector<double>>
-            sv,  //!< vector containing only structural dofs
-        std::shared_ptr<const Core::LinAlg::Vector<double>>
-            fv  //!< vector containing only fluid dofs
-        ) override;
-
     //! @name Global matrices and vectors
-
+    //!@{
     std::shared_ptr<Core::LinAlg::SparseOperator> k_struct_;
     std::shared_ptr<Core::LinAlg::SparseOperator> k_fluid_;
 
@@ -129,7 +106,7 @@ namespace PoroElast
     //!@}
 
     //! @name Some quantities to recover the Lagrange multiplier at the end of each iteration step
-
+    //!@{
     //! block \f$F_{\Gamma I,i+1}\f$ of fluid matrix at current iteration \f$i+1\f$
     std::shared_ptr<const Core::LinAlg::SparseMatrix> fgicur_;
 
@@ -147,12 +124,14 @@ namespace PoroElast
     //!@}
 
     //! @name Iterative solution technique
-
+    //!@{
     //!< norm of no-penetration constraint
     double normrhs_nopenetration_;
     //!@}
 
     std::shared_ptr<Adapter::CouplingNonLinMortar> mortar_adapter_;
+
+    std::unique_ptr<Core::IO::DiscretizationVisualizationWriterMesh> visualization_writer_;
   };
 
 }  // namespace PoroElast

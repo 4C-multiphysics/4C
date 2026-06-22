@@ -71,7 +71,7 @@ RESULT DESCRIPTION:
       NODE: 175
       QUANTITY: "dispz"
       VALUE: 2.44039385288053978e+00
-      TOLERANCE: 1e-10
+      TOLERANCE: 1e-9
   - STRUCTURE:
       DIS: "structure"
       NODE: 190

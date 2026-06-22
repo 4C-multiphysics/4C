@@ -795,7 +795,7 @@ void FSI::MortarMonolithicStructureSplit::setup_system_matrix(
   mat.assign(1, 1, Core::LinAlg::DataAccess::Share, *f);
 
   (*aigtransform_)(a->full_row_map(), a->full_col_map(), aig, 1. / timescale,
-      Coupling::Adapter::CouplingSlaveConverter(interface_fluid_ale_coupling()), mat.matrix(2, 1));
+      Coupling::Adapter::CouplingSourceConverter(interface_fluid_ale_coupling()), mat.matrix(2, 1));
   mat.assign(2, 2, Core::LinAlg::DataAccess::Share, aii);
 
   /*--------------------------------------------------------------------------*/

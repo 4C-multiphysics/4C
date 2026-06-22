@@ -328,7 +328,7 @@ namespace Core::Geo
        \param queryBV             18-DOP for considered element
        \param label               label ???
        \param collisions          ids of elements of overlapping current AABBs
-       \return set of master contact element gids
+       \return set of target contact element gids
        */
       void search_collisions(const std::map<int, Core::LinAlg::Matrix<3, 2>>& currentBVs,
           const Core::LinAlg::Matrix<3, 2>& queryBV, const int label, std::set<int>& collisions);
@@ -340,7 +340,7 @@ namespace Core::Geo
        \param queryBV             18-DOP for considered element
        \param label               label ???
        \param collisions          ids of elements of overlapping current 18-DOPs
-       \return set of master contact element gids
+       \return set of target contact element gids
        */
       void search_collisions(const std::map<int, Core::LinAlg::Matrix<9, 2>>& currentBVs,
           const Core::LinAlg::Matrix<9, 2>& queryBV, const int label, std::set<int>& collisions);
@@ -426,7 +426,7 @@ namespace Core::Geo
      \param currentBVs          map of all current AABB for all elements
      \param queryBV           AABB for considered element
      \param label               label ???
-     \return set of master contact element gids
+     \return set of target contact element gids
      */
     void search_collisions(const std::map<int, Core::LinAlg::Matrix<3, 2>>& currentBVs,
         const Core::LinAlg::Matrix<3, 2>& queryBV, const int label, std::set<int>& collisions);
@@ -437,7 +437,7 @@ namespace Core::Geo
      \param currentKDOPs        map of all current 18-DOPs for all elements
      \param queryKDOP           18-DOP for considered element
      \param label               label ???
-     \return set of master contact element gids
+     \return set of target contact element gids
      */
     void search_collisions(const std::map<int, Core::LinAlg::Matrix<9, 2>>& currentKDOPs,
         const Core::LinAlg::Matrix<9, 2>& queryKDOP, const int label, std::set<int>& contactEleIds);

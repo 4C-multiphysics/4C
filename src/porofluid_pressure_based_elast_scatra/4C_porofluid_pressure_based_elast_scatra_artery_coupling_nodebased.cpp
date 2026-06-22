@@ -219,17 +219,17 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::se
 
   (*col_transform_)(artery_blocks->full_row_map(), artery_blocks->full_col_map(),
       artery_blocks->matrix(0, 1), 1.0,
-      Coupling::Adapter::CouplingSlaveConverter(*coupling_artery_homogenized_),
+      Coupling::Adapter::CouplingSourceConverter(*coupling_artery_homogenized_),
       sysmat->matrix(1, 0));
 
   (*row_transform_)(artery_blocks->matrix(1, 0), 1.0,
-      Coupling::Adapter::CouplingSlaveConverter(*coupling_artery_homogenized_),
+      Coupling::Adapter::CouplingSourceConverter(*coupling_artery_homogenized_),
       sysmat->matrix(0, 1));
 
   (*row_col_transform_)(artery_blocks->matrix(1, 1), 1.0,
-      Coupling::Adapter::CouplingSlaveConverter(*coupling_artery_homogenized_),
-      Coupling::Adapter::CouplingSlaveConverter(*coupling_artery_homogenized_), *sysmat_homogenized,
-      true, true);
+      Coupling::Adapter::CouplingSourceConverter(*coupling_artery_homogenized_),
+      Coupling::Adapter::CouplingSourceConverter(*coupling_artery_homogenized_),
+      *sysmat_homogenized, true, true);
 
   // continuous field
   sysmat->assign(0, 0, Core::LinAlg::DataAccess::Share, *sysmat_homogenized);

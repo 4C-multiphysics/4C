@@ -129,6 +129,8 @@ namespace Discret::Elements
    *
    * @tparam celltype : Cell type
    * @param gl_strain (in) : Green-Lagrange strain
+   * @param stress (in) : Stress container; used for 2D elements to access the consistent
+   *                      3D Green-Lagrange strain and 3D deformation gradient.
    * @param defgrd (in) : Deformation gradient
    * @param strain_type (in) : Strain type, i.e., Green-Lagrange or Euler-Almansi
    * @param data (in/out) : Matrix the strains are assembled into
@@ -138,6 +140,7 @@ namespace Discret::Elements
   void assemble_strain_type_to_matrix_row(const ElementProperties<celltype>& element_properties,
       const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>&
           gl_strain,
+      const Stress<celltype>& stress,
       const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& defgrd,
       const Inpar::Solid::StrainType strain_type, Core::LinAlg::SerialDenseMatrix& data,
       const int row)
@@ -146,24 +149,62 @@ namespace Discret::Elements
     {
       case Inpar::Solid::strain_gl:
       {
-        Internal::assemble_symmetric_tensor_to_matrix_row(gl_strain, data, row);
+        if constexpr (Core::FE::dim<celltype> == 2)
+        {
+          // Use the full 3D GL strain so out-of-plane components (in particular eps_zz
+          // in plane stress) are written to the output.
+          Internal::assemble_symmetric_tensor_to_matrix_row(stress.gl_strain_3d_, data, row);
+        }
+        else
+        {
+          Internal::assemble_symmetric_tensor_to_matrix_row(gl_strain, data, row);
+        }
         return;
       }
       case Inpar::Solid::strain_ea:
       {
-        const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>,
-            Core::FE::dim<celltype>>
-            ea = Solid::Utils::green_lagrange_to_euler_almansi(
-                element_properties, gl_strain, defgrd);
-        Internal::assemble_symmetric_tensor_to_matrix_row(ea, data, row);
+        if constexpr (Core::FE::dim<celltype> == 2)
+        {
+          // For plane stress, the consistent F_zz is not stored in stress.defgrd_3d_
+          // (the solver path keeps a placeholder); reconstruct it lazily here from
+          // gl_strain_3d_ via an eigenvalue decomposition. For plane strain, F_zz = 1
+          // is already correct in stress.defgrd_3d_.
+          const Core::LinAlg::Tensor<double, 3, 3> defgrd_3d =
+              element_properties.plane_assumption == PlaneAssumption::plane_stress
+                  ? compute_deformation_gradient_from_gl_strains(
+                        stress.defgrd_3d_, stress.gl_strain_3d_)
+                  : stress.defgrd_3d_;
+          const Core::LinAlg::SymmetricTensor<double, 3, 3> ea =
+              Solid::Utils::green_lagrange_to_euler_almansi(
+                  element_properties, stress.gl_strain_3d_, defgrd_3d);
+          Internal::assemble_symmetric_tensor_to_matrix_row(ea, data, row);
+        }
+        else
+        {
+          const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>,
+              Core::FE::dim<celltype>>
+              ea = Solid::Utils::green_lagrange_to_euler_almansi(
+                  element_properties, gl_strain, defgrd);
+          Internal::assemble_symmetric_tensor_to_matrix_row(ea, data, row);
+        }
         return;
       }
       case Inpar::Solid::strain_log:
       {
-        const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>,
-            Core::FE::dim<celltype>>
-            log_strain = Solid::Utils::green_lagrange_to_log_strain(element_properties, gl_strain);
-        Internal::assemble_symmetric_tensor_to_matrix_row(log_strain, data, row);
+        if constexpr (Core::FE::dim<celltype> == 2)
+        {
+          const Core::LinAlg::SymmetricTensor<double, 3, 3> log_strain =
+              Solid::Utils::green_lagrange_to_log_strain(element_properties, stress.gl_strain_3d_);
+          Internal::assemble_symmetric_tensor_to_matrix_row(log_strain, data, row);
+        }
+        else
+        {
+          const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>,
+              Core::FE::dim<celltype>>
+              log_strain =
+                  Solid::Utils::green_lagrange_to_log_strain(element_properties, gl_strain);
+          Internal::assemble_symmetric_tensor_to_matrix_row(log_strain, data, row);
+        }
         return;
       }
       case Inpar::Solid::strain_none:
@@ -195,14 +236,40 @@ namespace Discret::Elements
     {
       case Inpar::Solid::stress_2pk:
       {
-        Internal::assemble_symmetric_tensor_to_matrix_row(stress.pk2_, data, row);
+        if constexpr (Core::FE::dim<celltype> == 2)
+        {
+          // Use the full 3D PK2 tensor for 2D elements so that out-of-plane components
+          // (in particular sigma_zz in plane strain) are written to the output.
+          Internal::assemble_symmetric_tensor_to_matrix_row(stress.pk2_3d_, data, row);
+        }
+        else
+        {
+          Internal::assemble_symmetric_tensor_to_matrix_row(stress.pk2_, data, row);
+        }
         return;
       }
       case Inpar::Solid::stress_cauchy:
       {
-        Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
-            cauchy = Solid::Utils::pk2_to_cauchy(element_properties, stress.pk2_, defgrd);
-        Internal::assemble_symmetric_tensor_to_matrix_row(cauchy, data, row);
+        if constexpr (Core::FE::dim<celltype> == 2)
+        {
+          // For plane stress, the consistent F_zz is not stored in stress.defgrd_3d_
+          // (the solver path keeps a placeholder); reconstruct it lazily here from
+          // gl_strain_3d_. For plane strain, F_zz = 1 is already correct.
+          const Core::LinAlg::Tensor<double, 3, 3> defgrd_3d =
+              element_properties.plane_assumption == PlaneAssumption::plane_stress
+                  ? compute_deformation_gradient_from_gl_strains(
+                        stress.defgrd_3d_, stress.gl_strain_3d_)
+                  : stress.defgrd_3d_;
+          const Core::LinAlg::SymmetricTensor<double, 3, 3> cauchy =
+              Solid::Utils::pk2_to_cauchy(element_properties, stress.pk2_3d_, defgrd_3d);
+          Internal::assemble_symmetric_tensor_to_matrix_row(cauchy, data, row);
+        }
+        else
+        {
+          Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+              cauchy = Solid::Utils::pk2_to_cauchy(element_properties, stress.pk2_, defgrd);
+          Internal::assemble_symmetric_tensor_to_matrix_row(cauchy, data, row);
+        }
         return;
       }
       case Inpar::Solid::stress_none:

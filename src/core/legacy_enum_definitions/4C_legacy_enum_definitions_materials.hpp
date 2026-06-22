@@ -167,6 +167,7 @@ namespace Core::Materials
     m_scatra_reaction,          ///< reaction definition and parameters
     m_scatra_chemotaxis,        ///< chemotaxis definition parameters
     m_scatra_gr,                ///< scalar transport for growth and remodeling
+    m_scatra_nl_stimulus,       ///< scalar transport for non-local G&R stimulus (Helmholtz)
     m_scl,                      ///< material for modeling space charge layers in solid electrolytes
     m_soret,   ///< material for heat transport due to Fourier-type thermal conduction and the
                ///< Soret effect
@@ -217,11 +218,10 @@ namespace Core::Materials
     mes_coupSVK,             ///< Saint-Venant-Kirchhoff material
     mes_coupsimopister,      ///< Simo-Pister type material
     mes_coupvarga,           ///< isotropic Varga material
-    mes_genmax,              ///< viscous contribution according to SLS-Model,
-    mes_generalizedgenmax,   ///< viscoelastic branches of the generalized Maxwell Model
-    mes_fract,               ///< viscous contribution according to FSLS-Model,
-    mes_viscopart,           ///< viscous part of generalized Maxwell Model
-    mes_viscobranch,         ///< viscoelastic branch of generalized Maxwell Model
+    mes_generalizedmaxwell,  ///< viscoelastic branches of the generalized Maxwell model
+    mes_quasilineargeneralizedmaxwell,  ///< Fung-type quasi-linear generalized Maxwell model
+    mes_fsls,                           ///< viscous contribution according to FSLS model,
+    mes_viscobranch,                    ///< viscoelastic branch of generalized Maxwell Model
     mes_iso1pow,          ///< isochoric general power hyperelastic potential summand for modinv I
     mes_iso2pow,          ///< isochoric general power hyperelastic potential summand for modiinv II
     mes_isoanisoexpo,     ///< isochoric anisotropic single fiber material

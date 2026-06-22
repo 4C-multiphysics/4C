@@ -44,6 +44,7 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------------*/
 Solid::ModelEvaluator::Structure::Structure()
     : dt_ele_ptr_(nullptr),
+      runtime_csvwriter_rank_eval_times_(nullptr),
       masslin_type_(Inpar::Solid::MassLin::ml_none),
       stiff_ptr_(nullptr),
       stiff_ptc_ptr_(nullptr),
@@ -65,6 +66,16 @@ void Solid::ModelEvaluator::Structure::setup()
     // structural element evaluation time
     dt_ele_ptr_ = &(global_state().get_element_evaluation_time());
   }
+
+  if (Global::Problem::instance()->io_params().get<bool>("PER_RANK_EVAL_TIME"))
+  {
+    runtime_csvwriter_rank_eval_times_ = std::make_unique<Core::IO::RuntimeCsvWriter>(
+        Core::Communication::my_mpi_rank(discret().get_comm()), discret_ptr()->writer()->output(),
+        "rank_eval_time");
+    runtime_csvwriter_rank_eval_times_->register_data_vector(
+        "RankEvalTime", Core::Communication::num_mpi_ranks(discret().get_comm()), 16);
+  }
+
 
   // displ-displ block
   stiff_ptr_ = dynamic_cast<Core::LinAlg::SparseMatrix*>(
@@ -729,6 +740,13 @@ void Solid::ModelEvaluator::Structure::write_output_runtime_structure(
   if (structure_output_params.output_element_gid())
     vtu_writer_ptr_->append_element_gid("element_gid");
 
+  // append element evaluation times if desired
+  if (global_in_output().get_runtime_output_params()->output_element_eval_times())
+    vtu_writer_ptr_->append_element_eval_time("element_evaluation_time");
+
+  // append rank evaluation times if desired
+  if (global_in_output().output_per_rank_eval_time()) output_rank_eval_times(time, timestep_number);
+
   // append element material IDs if desired
   if (structure_output_params.output_element_material_id())
     vtu_writer_ptr_->append_element_material_id();
@@ -1007,6 +1025,18 @@ void Solid::ModelEvaluator::Structure::output_runtime_structure_postprocess_opti
       *discret().node_col_map(), num_components, true);
   export_to(row_nodal_data, *opt_quantity);
   eval_data().set_opt_quantity_data_node_postprocessed(opt_quantity);
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Structure::output_rank_eval_times(
+    const double time, const int timestep_number) const
+{
+  FOUR_C_ASSERT(runtime_csvwriter_rank_eval_times_ != nullptr,
+      "internal error: runtime csv writer not created.");
+  std::map<std::string, std::vector<double>> output_data;
+  output_data["RankEvalTime"] = discret().get_rank_eval_times_on_root();
+  runtime_csvwriter_rank_eval_times_->write_data_to_file(time, timestep_number, output_data);
 }
 
 /*----------------------------------------------------------------------------*
@@ -1416,6 +1446,8 @@ void Solid::ModelEvaluator::Structure::predict(const Inpar::Solid::PredEnum& pre
   // set the element action
   eval_data().set_action_type(Core::Elements::struct_calc_predict);
   eval_data().set_predictor_type(pred_type);
+
+  if (discret().time_ele_evaluations()) discret().reset_element_eval_timers();
 
   // set the matrix and vector pointers to nullptr
   std::array<std::shared_ptr<Core::LinAlg::Vector<double>>, 3> eval_vec = {

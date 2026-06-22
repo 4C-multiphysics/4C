@@ -21,10 +21,10 @@ IO/RUNTIME VTK OUTPUT/STRUCTURE:
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
 porofluid_elasticity_scatra_dynamic:
-  total_simulation_time: 0.2
+  total_simulation_time: 0.5
   time_integration:
     time_step_size: 0.1
-    number_of_time_steps: 2
+    number_of_time_steps: 5
     theta: 1
   output:
     restart_data_every: 1
@@ -41,7 +41,7 @@ porofluid_dynamic:
 porofluid_elasticity_dynamic:
   solve_structure: true
   coupling_scheme: twoway_monolithic
-  body_force: [0.0, -9810.0]
+  body_force_function: 4
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
   MAXTIME: 0.2
@@ -178,43 +178,48 @@ FUNCT3:
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
   - COMPONENT: 1
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+FUNCT4:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "heaviside(-y)*t*(-19620.0)"
 
 RESULT DESCRIPTION:
   - STRUCTURE:
       DIS: "structure"
       NODE: 89
       QUANTITY: "dispx"
-      VALUE: -5.44184225531693547e-04
+      VALUE: -1.55461652839454962e-04
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 28
       QUANTITY: "dispy"
-      VALUE: -1.13515215893868950e-02
+      VALUE: -2.90229016293844233e-03
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 54
       QUANTITY: "dispx"
-      VALUE: -5.10980644159250643e-04
+      VALUE: 2.51869101569604830e-06
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 21
       QUANTITY: "dispy"
-      VALUE: -1.15596926602809340e-02
+      VALUE: -2.90228536364839276e-03
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 32
       QUANTITY: "dispx"
-      VALUE: 3.18975646227633405e-04
+      VALUE: -4.83949397730845728e-07
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 45
       QUANTITY: "dispy"
-      VALUE: -1.03674462400365243e-02
+      VALUE: -2.90427056677836949e-03
       TOLERANCE: 1e-09
 
 DESIGN SURF PORO DIRICH CONDITIONS:

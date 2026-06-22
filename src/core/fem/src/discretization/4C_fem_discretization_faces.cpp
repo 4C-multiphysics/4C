@@ -73,8 +73,6 @@ void Core::FE::DiscretizationFaces::create_internal_faces_extension(const bool v
     if (Core::Communication::my_mpi_rank(comm_) == 0)
       std::cout << "number of created faces:   " << summall << "\n" << std::endl;
   }
-
-  return;
 }
 
 
@@ -183,35 +181,36 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
       }
       else
       {
-        if (surf_it->second.get_slave_peid() != -1) FOUR_C_THROW("slave peid should not be set!!!");
+        if (surf_it->second.get_source_peid() != -1)
+          FOUR_C_THROW("source peid should not be set!!!");
         // if found -> add second neighbor data to existing data
-        surf_it->second.set_slave_peid(ele->id());
-        surf_it->second.set_l_surface_slave(iele);
+        surf_it->second.set_source_peid(ele->id());
+        surf_it->second.set_l_surface_source(iele);
 
         std::vector<int> localtrafomap;
 
         // get the face's nodes sorted w.r.t local coordinate system of the parent's face element
-        const std::vector<Core::Nodes::Node*> nodes_face_master = surf_it->second.get_nodes();
-        if (nodes_face_master.size() != nnode)
+        const std::vector<Core::Nodes::Node*> nodes_face_target = surf_it->second.get_nodes();
+        if (nodes_face_target.size() != nnode)
           FOUR_C_THROW(
-              "the number of the face w.r.t parent element and slave element are not the same. "
+              "the number of the face w.r.t parent element and source element are not the same. "
               "That is wrong!");
 
-        // find the nodes given with the master element node numbering also for the slave element
+        // find the nodes given with the target element node numbering also for the source element
         // to define a connectivity map between the local face's coordinate systems
-        for (unsigned int inode = 0; inode < nnode; inode++)  // master face nodes
+        for (unsigned int inode = 0; inode < nnode; inode++)  // target face nodes
         {
           int position = -1;
           for (std::size_t knode = 0; knode < nodes.size(); knode++)
           {
-            if (nodes[knode] == nodes_face_master[inode]) position = knode;
+            if (nodes[knode] == nodes_face_target[inode]) position = knode;
           }
 
           if (position >= 0)
             localtrafomap.push_back(position);
           else
             FOUR_C_THROW(
-                "face's node from master's face element not found in slave's face element!");
+                "face's node from target's face element not found in source's face element!");
         }
 
         surf_it->second.set_local_numbering_map(localtrafomap);
@@ -239,23 +238,25 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
   std::map<std::vector<int>, std::shared_ptr<Core::Elements::Element>> faces;
 
   // get pbcs
-  const std::map<int, std::vector<int>>* col_pbcmapmastertoslave = get_all_pbc_coupled_col_nodes();
+  const std::map<int, std::vector<int>>* col_pbc_map_target_to_source =
+      get_all_pbc_coupled_col_nodes();
 
   std::map<std::vector<int>, InternalFacesData>::iterator face_it;
   for (face_it = surfmapdata.begin(); face_it != surfmapdata.end(); ++face_it)
   {
-    int master_peid = face_it->second.get_master_peid();
-    int slave_peid = face_it->second.get_slave_peid();
-    if (master_peid == -1) FOUR_C_THROW("Face master expected!");
+    int target_peid = face_it->second.get_target_peid();
+    int source_peid = face_it->second.get_source_peid();
+    if (target_peid == -1) FOUR_C_THROW("Face target expected!");
 
-    FOUR_C_ASSERT(master_peid == g_element(master_peid)->id(), "Internal error");
-    FOUR_C_ASSERT(slave_peid == -1 || slave_peid == g_element(slave_peid)->id(), "Internal error");
+    FOUR_C_ASSERT(target_peid == g_element(target_peid)->id(), "Internal error");
+    FOUR_C_ASSERT(
+        source_peid == -1 || source_peid == g_element(source_peid)->id(), "Internal error");
 
     // check for potential periodic boundary conditions and connect respective faces/elements
-    if (col_pbcmapmastertoslave)
+    if (col_pbc_map_target_to_source)
     {
       // unconnected face is potential pbc face
-      if (slave_peid == -1)
+      if (source_peid == -1)
       {
         // get node ids of current face
         std::vector<int> mynodeids = face_it->first;
@@ -274,122 +275,118 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
         numpbcpairs = mypbcs.size() / 2;
 
         // sets of pbc id and related node ids
-        // for master and slave
-        std::map<int, std::set<int>> mastertopbcset;
-        std::map<int, std::set<int>> slavetopbcset;
+        // for target and source
+        std::map<int, std::set<int>> target_to_pbc_set;
+        std::map<int, std::set<int>> source_to_pbc_set;
         for (auto& mypbc : mypbcs)
         {
           const int zero_based_id = mypbc->parameters().get<int>("ID") - 1;
 
-          const auto mymasterslavetoggle = mypbc->parameters().get<std::string>("MASTER_OR_SLAVE");
+          const auto my_target_source_toggle =
+              mypbc->parameters().get<std::string>("MASTER_OR_SLAVE");
 
-          if (mymasterslavetoggle == "Master")
+          if (my_target_source_toggle == "Master")
           {
-            // get global master node ids
-            const std::vector<int>* masteridstoadd = mypbc->get_nodes();
+            // get global target node ids
+            const std::vector<int>* target_ids_to_add = mypbc->get_nodes();
 
             // store them in list depending on the pbc id
-            for (int idtoadd : *masteridstoadd)
+            for (int idtoadd : *target_ids_to_add)
             {
-              (mastertopbcset[zero_based_id]).insert(idtoadd);
+              (target_to_pbc_set[zero_based_id]).insert(idtoadd);
             }
           }
-          else if (mymasterslavetoggle == "Slave")
+          else if (my_target_source_toggle == "Slave")
           {
-            // get global slave node ids
-            const std::vector<int>* slaveidstoadd = mypbc->get_nodes();
+            // get global source node ids
+            const std::vector<int>* source_ids_to_add = mypbc->get_nodes();
 
             // store them in list depending on the pbc id
-            for (int idtoadd : *slaveidstoadd)
+            for (int idtoadd : *source_ids_to_add)
             {
-              (slavetopbcset[zero_based_id]).insert(idtoadd);
+              (source_to_pbc_set[zero_based_id]).insert(idtoadd);
             }
           }
           else
             FOUR_C_THROW("Unknown type for pbc!");
         }
 
-        // provide vectors for master and slave node ids
-        std::vector<int> mymasternodeids;
-        std::vector<int> myslavenodeids;
+        // provide vectors for target and source node ids
+        std::vector<int> my_target_node_ids;
+        std::vector<int> my_source_node_ids;
         // provide vector for undefined nodes
         // i.e., special nodes on edges or in corners
-        // for multiple pbc sets master nodes of boundary condition
-        // become slave nodes
-        // e.g. for two sets two master nodes at the corners become slave nodes
+        // for multiple pbc sets target nodes of boundary condition
+        // become source nodes
+        // e.g. for two sets two target nodes at the corners become source nodes
         //
-        //                PBC M surface
+        //                PBC T surface
         //           M------------------------S
         //           |                        |
-        //  PBC M    |                        | PBC S
+        //  PBC T    |                        | PBC S
         //  surface  |                        | surface
         //           |                        |
         //           S------------------------S
         //                PBC S surface
-        // these nodes are not contained in the list col_pbcmapmastertoslave as master nodes
-        // but result in more than one slave node for the corner or edge master
-        std::vector<int> myfurthermasternodeids;
+        // these nodes are not contained in the list col_pbc_map_target_to_source as target nodes
+        // but result in more than one source node for the corner or edge target
+        std::vector<int> further_target_node_ids;
 
-        // local (or face) master to slave coupling
-        std::map<int, int> local_pbcmapmastertoslave;
+        // local (or face) target to source coupling
+        std::map<int, int> local_pbc_map_target_to_source;
 
-        // bool to indicate if slave element has been found and should be added to the patch
-        bool add_salve_ele_to_face = true;
+        // bool to indicate if source element has been found and should be added to the patch
+        bool add_source_ele_to_face = true;
 
         // loop node ids of current face and check if they are contained in the list
-        // of all master node ids
+        // of all target node ids
         for (std::size_t inode = 0; inode < mynodeids.size(); inode++)
         {
-          if (col_pbcmapmastertoslave->find(mynodeids[inode]) != col_pbcmapmastertoslave->end())
+          if (col_pbc_map_target_to_source->find(mynodeids[inode]) !=
+              col_pbc_map_target_to_source->end())
           {
-            // add node id to list of current master nodes
-            mymasternodeids.push_back(mynodeids[inode]);
+            // add node id to list of current target nodes
+            my_target_node_ids.push_back(mynodeids[inode]);
           }
           else
           {
-            // if node is not in (master) list col_pbcmapmastertoslave, it may be special
+            // if node is not in (target) list col_pbc_map_target_to_source, it may be special
             // node as explained above
-            // check whether node is master and slave due to several pbcs
+            // check whether node is target and source due to several pbcs
             bool found = false;
-            // loop all master sets
+            // loop all target sets
             for (int ipbc = 0; ipbc < numpbcpairs; ipbc++)
             {
-              if ((mastertopbcset[ipbc]).find(mynodeids[inode]) != (mastertopbcset[ipbc]).end())
+              if ((target_to_pbc_set[ipbc]).find(mynodeids[inode]) !=
+                  (target_to_pbc_set[ipbc]).end())
                 found = true;
             }
 
-            // yes, we have a master node here
-            // add to list of further master nodes which require special care
-            if (found) myfurthermasternodeids.push_back(mynodeids[inode]);
+            // yes, we have a target node here
+            // add to list of further target nodes which require special care
+            if (found) further_target_node_ids.push_back(mynodeids[inode]);
           }
         }
 
-        if (mymasternodeids.size() > 0)
+        if (my_target_node_ids.size() > 0)
         {
-          //          std::cout << "current sets" << std::endl;
-          //          std::cout << "master nodes" << std::endl;
-          //          for (std::size_t rr=0; rr < mymasternodeids.size(); rr++)
-          //            std::cout << mymasternodeids[rr] << std::endl;
-          //          std::cout << "further master nodes" << std::endl;
-          //          for (std::size_t rr=0; rr < myfurthermasternodeids.size(); rr++)
-          //            std::cout << myfurthermasternodeids[rr] << std::endl;
-
-          // check if all nodes of the face are masters of pbcs
-          // -> this is a master face
-          if ((mymasternodeids.size() + myfurthermasternodeids.size()) == mynodeids.size())
+          // check if all nodes of the face are targets of pbcs
+          // -> this is a target face
+          if ((my_target_node_ids.size() + further_target_node_ids.size()) == mynodeids.size())
           {
-            // get corresponding slave ids
-            // do the standard master nodes of col_pbcmapmastertoslave first
-            for (std::size_t rr = 0; rr < mymasternodeids.size(); rr++)
+            // get corresponding source ids
+            // do the standard target nodes of col_pbc_map_target_to_source first
+            for (std::size_t rr = 0; rr < my_target_node_ids.size(); rr++)
             {
-              // this master node has one slave node
-              if (((*col_pbcmapmastertoslave).at(mymasternodeids[rr])).size() == 1)
+              // this target node has one source node
+              if (((*col_pbc_map_target_to_source).at(my_target_node_ids[rr])).size() == 1)
               {
-                myslavenodeids.push_back(((*col_pbcmapmastertoslave).at(mymasternodeids[rr]))[0]);
-                local_pbcmapmastertoslave[mymasternodeids[rr]] =
-                    ((*col_pbcmapmastertoslave).at(mymasternodeids[rr]))[0];
+                my_source_node_ids.push_back(
+                    ((*col_pbc_map_target_to_source).at(my_target_node_ids[rr]))[0]);
+                local_pbc_map_target_to_source[my_target_node_ids[rr]] =
+                    ((*col_pbc_map_target_to_source).at(my_target_node_ids[rr]))[0];
               }
-              // this master node has several slave nodes
+              // this target node has several source nodes
               // it is a corner or edge node of two or three pbc sets
               else
               {
@@ -398,87 +395,89 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
 
                 // identify the pbc condition (i.e., pbc id) to which the current face belongs
 
-                std::map<int, int> pbcspermaster;
+                std::map<int, int> pbcs_per_target;
                 // initialize with zeros
-                for (int ipbc = 0; ipbc < numpbcpairs; ipbc++) pbcspermaster[ipbc] = 0;
+                for (int ipbc = 0; ipbc < numpbcpairs; ipbc++) pbcs_per_target[ipbc] = 0;
 
-                // identify pbc set to which master nodes belong
-                for (std::size_t imnode = 0; imnode < mymasternodeids.size(); imnode++)
+                // identify pbc set to which target nodes belong
+                for (std::size_t imnode = 0; imnode < my_target_node_ids.size(); imnode++)
                 {
                   for (int ipbc = 0; ipbc < numpbcpairs; ipbc++)
                   {
                     std::set<int>::iterator iter =
-                        (mastertopbcset[ipbc]).find(mymasternodeids[imnode]);
-                    if (iter != (mastertopbcset[ipbc]).end()) pbcspermaster[ipbc] += 1;
+                        (target_to_pbc_set[ipbc]).find(my_target_node_ids[imnode]);
+                    if (iter != (target_to_pbc_set[ipbc]).end()) pbcs_per_target[ipbc] += 1;
                   }
                 }
 
-                // all master nodes of current surface share the same pbc id
-                int masterpbcid = -1;
+                // all target nodes of current surface share the same pbc id
+                int target_pbc_id = -1;
                 for (int ipbc = 0; ipbc < numpbcpairs; ipbc++)
                 {
-                  if (pbcspermaster[ipbc] == (int)mymasternodeids.size())
+                  if (pbcs_per_target[ipbc] == (int)my_target_node_ids.size())
                   {
-                    masterpbcid = ipbc;
+                    target_pbc_id = ipbc;
                     break;
                   }
                 }
 
-                // find the corresponding slave of the current master node
+                // find the corresponding source of the current target node
 
-                // the corresponding slave node is
+                // the corresponding source node is
                 // for 2 pbc sets
-                // (i) slave node with respect to the pbc id of the master face
-                // (ii) master with respect to the remaining pbc sets
+                // (i) source node with respect to the pbc id of the target face
+                // (ii) target with respect to the remaining pbc sets
                 // for 3 pbc sets
                 // here to cases may occur
-                // master has 7 slaves -> corner node
+                // target has 7 sources -> corner node
                 // this results as for 2 sets in
-                // (i) slave node with respect to the pbc id of the master face
-                // (ii) master with respect to the remaining pbc sets
-                // master has 3 slaves -> edge node
+                // (i) source node with respect to the pbc id of the target face
+                // (ii) target with respect to the remaining pbc sets
+                // target has 3 sources -> edge node
                 // this results in
-                // (i) slave node with respect to the pbc id of the master face
-                // (ii) master with respect to one of the two remaining pbc sets
+                // (i) source node with respect to the pbc id of the target face
+                // (ii) target with respect to one of the two remaining pbc sets
                 //  this special case is marked by flag
                 bool three_sets_edge_node = false;
                 if (numpbcpairs == 3 and
-                    ((*col_pbcmapmastertoslave).at(mymasternodeids[rr])).size() == 3)
+                    ((*col_pbc_map_target_to_source).at(my_target_node_ids[rr])).size() == 3)
                   three_sets_edge_node = true;
 
-                // pbc id of master face also for the slave
-                int slavepbcid = masterpbcid;
+                // pbc id of target face also for the source
+                int source_pbc_id = target_pbc_id;
                 // identify the remaining pbc sets via their id
-                std::vector<int> remainingmasterpbcids;
+                std::vector<int> remaining_target_pbc_ids;
                 for (int ipbc = 0; ipbc < numpbcpairs; ipbc++)
                 {
-                  if (ipbc != slavepbcid) remainingmasterpbcids.push_back(ipbc);
+                  if (ipbc != source_pbc_id) remaining_target_pbc_ids.push_back(ipbc);
                 }
 
-                // loop all slave nodes of the current master and
+                // loop all source nodes of the current target and
                 // check which node fulfills above conditions
-                int actslaveid = -999;
-                for (std::size_t islave = 0;
-                    islave < ((*col_pbcmapmastertoslave).at(mymasternodeids[rr])).size(); islave++)
+                int act_source_id = -999;
+                for (std::size_t isource = 0;
+                    isource < ((*col_pbc_map_target_to_source).at(my_target_node_ids[rr])).size();
+                    isource++)
                 {
                   // get id
-                  actslaveid = ((*col_pbcmapmastertoslave).at(mymasternodeids[rr]))[islave];
+                  act_source_id =
+                      ((*col_pbc_map_target_to_source).at(my_target_node_ids[rr]))[isource];
 
                   // check first criterion -> (i)
-                  if ((slavetopbcset[slavepbcid]).find(actslaveid) !=
-                      (slavetopbcset[slavepbcid]).end())
+                  if ((source_to_pbc_set[source_pbc_id]).find(act_source_id) !=
+                      (source_to_pbc_set[source_pbc_id]).end())
                   {
                     std::size_t found = 0;
                     // if satisfied
                     // check second criterion -> (ii)
-                    for (std::size_t k = 0; k < remainingmasterpbcids.size(); k++)
+                    for (std::size_t k = 0; k < remaining_target_pbc_ids.size(); k++)
                     {
-                      if ((mastertopbcset[remainingmasterpbcids[k]]).find(actslaveid) !=
-                          (mastertopbcset[remainingmasterpbcids[k]]).end())
+                      if ((target_to_pbc_set[remaining_target_pbc_ids[k]]).find(act_source_id) !=
+                          (target_to_pbc_set[remaining_target_pbc_ids[k]]).end())
                         found++;
                     }
 
-                    if ((not three_sets_edge_node) and found == remainingmasterpbcids.size())
+                    if ((not three_sets_edge_node) and found == remaining_target_pbc_ids.size())
                       break;
                     else if (three_sets_edge_node and found == 1)
                       break;
@@ -486,78 +485,78 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
                 }
 
                 // store in list
-                myslavenodeids.push_back(actslaveid);
-                local_pbcmapmastertoslave[mymasternodeids[rr]] = actslaveid;
+                my_source_node_ids.push_back(act_source_id);
+                local_pbc_map_target_to_source[my_target_node_ids[rr]] = act_source_id;
               }
             }
 
             // next go to the special masters which occur as slaves in the list
-            // col_pbcmapmastertoslave and are indeed edge or corner nodes of master surfaces
-            if (myfurthermasternodeids.size() > 0)
+            // col_pbc_map_target_to_source and are indeed edge or corner nodes of target surfaces
+            if (further_target_node_ids.size() > 0)
             {
               // identify the pbc condition (i.e., id) to which the current face belongs
-              // perform as explained above of the special master nodes with several slaves
+              // perform as explained above of the special target nodes with several sources
 
-              std::map<int, int> pbcspermaster;
-              for (int ipbc = 0; ipbc < numpbcpairs; ipbc++) pbcspermaster[ipbc] = 0;
+              std::map<int, int> pbcs_per_target;
+              for (int ipbc = 0; ipbc < numpbcpairs; ipbc++) pbcs_per_target[ipbc] = 0;
 
-              // identify pbc set to which master nodes belong
-              for (std::size_t imnode = 0; imnode < mymasternodeids.size(); imnode++)
+              // identify pbc set to which target nodes belong
+              for (std::size_t imnode = 0; imnode < my_target_node_ids.size(); imnode++)
               {
                 for (int ipbc = 0; ipbc < numpbcpairs; ipbc++)
                 {
                   std::set<int>::iterator iter =
-                      (mastertopbcset[ipbc]).find(mymasternodeids[imnode]);
-                  if (iter != (mastertopbcset[ipbc]).end()) pbcspermaster[ipbc] += 1;
+                      (target_to_pbc_set[ipbc]).find(my_target_node_ids[imnode]);
+                  if (iter != (target_to_pbc_set[ipbc]).end()) pbcs_per_target[ipbc] += 1;
                 }
               }
-              // identify pbc set to which additional master nodes belong
-              for (std::size_t imnode = 0; imnode < myfurthermasternodeids.size(); imnode++)
+              // identify pbc set to which additional target nodes belong
+              for (std::size_t imnode = 0; imnode < further_target_node_ids.size(); imnode++)
               {
                 for (int ipbc = 0; ipbc < numpbcpairs; ipbc++)
                 {
                   std::set<int>::iterator iter =
-                      (mastertopbcset[ipbc]).find(myfurthermasternodeids[imnode]);
-                  if (iter != (mastertopbcset[ipbc]).end()) pbcspermaster[ipbc] += 1;
+                      (target_to_pbc_set[ipbc]).find(further_target_node_ids[imnode]);
+                  if (iter != (target_to_pbc_set[ipbc]).end()) pbcs_per_target[ipbc] += 1;
                 }
               }
 
-              // all master nodes of current surface share the same pbc id
-              int masterpbcid = -1;
+              // all target nodes of current surface share the same pbc id
+              int target_pbc_id = -1;
               for (int ipbc = 0; ipbc < numpbcpairs; ipbc++)
               {
-                if (pbcspermaster[ipbc] ==
-                    (int)(mymasternodeids.size() + myfurthermasternodeids.size()))
+                if (pbcs_per_target[ipbc] ==
+                    (int)(my_target_node_ids.size() + further_target_node_ids.size()))
                 {
-                  masterpbcid = ipbc;
+                  target_pbc_id = ipbc;
                   break;
                 }
               }
 
-              // find the corresponding slaves of the additional master nodes
+              // find the corresponding sources of the additional target nodes
 
-              for (std::size_t ifnode = 0; ifnode < myfurthermasternodeids.size(); ifnode++)
+              for (std::size_t ifnode = 0; ifnode < further_target_node_ids.size(); ifnode++)
               {
-                // get node id of master
-                int actnodeid = myfurthermasternodeids[ifnode];
+                // get node id of target
+                int act_node_id = further_target_node_ids[ifnode];
 
-                // get list of all potential slave nodes
+                // get list of all potential source nodes
                 // i.e., further edge or corner nodes
-                std::vector<int> mypotslaveids;
+                std::vector<int> potential_source_ids;
 
-                // first, look for masters with more than one slave
-                // then, check whether node id (i.e. actnodeid) is contained in slave list
-                std::map<int, std::vector<int>>::const_iterator master_it;
-                for (master_it = col_pbcmapmastertoslave->begin();
-                    master_it != col_pbcmapmastertoslave->end(); master_it++)
+                // first, look for targets with more than one source
+                // then, check whether node id (i.e. act_node_id) is contained in source list
+                std::map<int, std::vector<int>>::const_iterator target_it;
+                for (target_it = col_pbc_map_target_to_source->begin();
+                    target_it != col_pbc_map_target_to_source->end(); target_it++)
                 {
-                  if ((master_it->second).size() > 1)
+                  if ((target_it->second).size() > 1)
                   {
                     bool found = false;
 
-                    for (std::size_t k = 0; k < (master_it->second).size(); k++)
+                    for (std::size_t k = 0; k < (target_it->second).size(); k++)
                     {
-                      if ((master_it->second)[k] == actnodeid)
+                      if ((target_it->second)[k] == act_node_id)
                       {
                         found = true;
                       }
@@ -565,104 +564,105 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
 
                     if (found)
                     {
-                      for (std::size_t k = 0; k < (master_it->second).size(); k++)
-                        mypotslaveids.push_back((master_it->second)[k]);
+                      for (std::size_t k = 0; k < (target_it->second).size(); k++)
+                        potential_source_ids.push_back((target_it->second)[k]);
                     }
 
                     if (found) break;
                   }
                 }
 
-                if (mypotslaveids.size() == 0) FOUR_C_THROW("Expected to find node!");
+                if (potential_source_ids.size() == 0) FOUR_C_THROW("Expected to find node!");
 
-                // find the corresponding slave of the current master node
+                // find the corresponding source of the current target node
 
-                // the corresponding slave node is
+                // the corresponding source node is
                 // for 2 pbc sets
-                // (i) slave node with respect to the pbc id of the master face
-                // (ii) slave with respect to the remaining pbc sets
+                // (i) source node with respect to the pbc id of the target face
+                // (ii) source with respect to the remaining pbc sets
                 // for 3 pbc sets
-                // master has 3 slaves -> edge node (special case 1)
+                // target has 3 sources -> edge node (special case 1)
                 // this results in
-                // (i) slave node with respect to the pbc id of the master face
-                // (ii) slave with respect to one of the two remaining pbc sets
-                // master has 7 slaves -> corner node (special case 2)
-                // (i) slave node with respect to the pbc id of the master face
-                // (ii) slave or master with respect to the remaining pbc sets
+                // (i) source node with respect to the pbc id of the target face
+                // (ii) source with respect to one of the two remaining pbc sets
+                // target has 7 sources -> corner node (special case 2)
+                // (i) source node with respect to the pbc id of the target face
+                // (ii) source or target with respect to the remaining pbc sets
                 //      depending on the status of the current node with respect to those pbcs
                 // special case 1 marked by flag
                 bool three_sets_edge_node = false;
-                if (numpbcpairs == 3 and mypotslaveids.size() == 3) three_sets_edge_node = true;
+                if (numpbcpairs == 3 and potential_source_ids.size() == 3)
+                  three_sets_edge_node = true;
 
-                int slavepbcid = masterpbcid;
+                int source_pbc_id = target_pbc_id;
 
-                std::vector<int> remainingslavepbcids;
+                std::vector<int> remaining_source_pbc_ids;
                 for (int ipbc = 0; ipbc < numpbcpairs; ipbc++)
                 {
-                  if (ipbc != slavepbcid) remainingslavepbcids.push_back(ipbc);
+                  if (ipbc != source_pbc_id) remaining_source_pbc_ids.push_back(ipbc);
                 }
 
-                std::vector<int> remainingmasterpbcids;
+                std::vector<int> remaining_target_pbc_ids;
                 for (int ipbc = 0; ipbc < numpbcpairs; ipbc++)
                 {
-                  if (ipbc != slavepbcid) remainingmasterpbcids.push_back(ipbc);
+                  if (ipbc != source_pbc_id) remaining_target_pbc_ids.push_back(ipbc);
                 }
 
                 // special case 2 marked by flag
                 bool corner_node = false;
-                int furthermastercond = -1;
-                int slavecond_1 = -1;
+                int further_target_cond = -1;
+                int source_cond_1 = -1;
 
-                // get status of corresponding slave with respect to the
+                // get status of corresponding source with respect to the
                 // remaining to pbc sets
-                // may be master and slave or slave and slave
-                if (numpbcpairs == 3 and mypotslaveids.size() == 7)
+                // may be target and source or source and source
+                if (numpbcpairs == 3 and potential_source_ids.size() == 7)
                 {
                   corner_node = true;
 
-                  // set the sets to check master or slave
-                  for (std::size_t k = 0; k < remainingmasterpbcids.size(); k++)
+                  // set the sets to check target or source
+                  for (std::size_t k = 0; k < remaining_target_pbc_ids.size(); k++)
                   {
-                    if ((mastertopbcset[remainingmasterpbcids[k]]).find(actnodeid) !=
-                        (mastertopbcset[remainingmasterpbcids[k]]).end())
-                      furthermastercond = remainingmasterpbcids[k];
+                    if ((target_to_pbc_set[remaining_target_pbc_ids[k]]).find(act_node_id) !=
+                        (target_to_pbc_set[remaining_target_pbc_ids[k]]).end())
+                      further_target_cond = remaining_target_pbc_ids[k];
                   }
 
-                  // corresponding slave is pure slave
-                  // -> we just have to check the slave lists
+                  // corresponding source is pure source
+                  // -> we just have to check the source lists
                   // -> similar to the 2 pbc-sets case
-                  if (furthermastercond == -1)
+                  if (further_target_cond == -1)
                   {
                     corner_node = false;
                   }
-                  // corresponding slave is master and slave
-                  // -> we set the slave list to check
+                  // corresponding source is target and source
+                  // -> we set the source list to check
                   else
                   {
-                    if (furthermastercond == 0)
+                    if (further_target_cond == 0)
                     {
-                      if (slavepbcid == 1)
-                        slavecond_1 = 2;
-                      else if (slavepbcid == 2)
-                        slavecond_1 = 1;
+                      if (source_pbc_id == 1)
+                        source_cond_1 = 2;
+                      else if (source_pbc_id == 2)
+                        source_cond_1 = 1;
                       else
                         FOUR_C_THROW("Same pbc ids?");
                     }
-                    else if (furthermastercond == 1)
+                    else if (further_target_cond == 1)
                     {
-                      if (slavepbcid == 0)
-                        slavecond_1 = 2;
-                      else if (slavepbcid == 2)
-                        slavecond_1 = 0;
+                      if (source_pbc_id == 0)
+                        source_cond_1 = 2;
+                      else if (source_pbc_id == 2)
+                        source_cond_1 = 0;
                       else
                         FOUR_C_THROW("Same pbc ids?");
                     }
-                    else if (furthermastercond == 2)
+                    else if (further_target_cond == 2)
                     {
-                      if (slavepbcid == 0)
-                        slavecond_1 = 1;
-                      else if (slavepbcid == 1)
-                        slavecond_1 = 0;
+                      if (source_pbc_id == 0)
+                        source_cond_1 = 1;
+                      else if (source_pbc_id == 1)
+                        source_cond_1 = 0;
                       else
                         FOUR_C_THROW("Same pbc ids?");
                     }
@@ -671,58 +671,43 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
                   }
                 }
 
-                //                std::cout << "furthermastercond " <<furthermastercond<< std::endl;
-                //                std::cout << "slavecond_1 " <<slavecond_1<< std::endl;
-
-                //                std::cout<< "master 1 \n" << masterpbcid << std::endl;
-                //                std::set<int>::iterator myiter;
-                //                for (myiter=mastertopbcset[remainingslavepbcids[0]].begin();
-                //                myiter!=mastertopbcset[remainingslavepbcids[0]].end(); myiter++)
-                //                {
-                //                  std::cout<< *myiter << std::endl;
-                //                }
-                //                std::cout<< "master 2 \n" << masterpbcid << std::endl;
-                //                for (myiter=mastertopbcset[remainingslavepbcids[1]].begin();
-                //                myiter!=mastertopbcset[remainingslavepbcids[1]].end(); myiter++)
-                //                  std::cout<< *myiter << std::endl;
-
-                // loop all slave nodes of the current master and
+                // loop all source nodes of the current target and
                 // check which node fulfills above conditions
-                int actslaveid = -999;
-                for (std::size_t islave = 0; islave < mypotslaveids.size(); islave++)
+                int act_source_id = -999;
+                for (std::size_t isource = 0; isource < potential_source_ids.size(); isource++)
                 {
-                  // get slave node id
-                  actslaveid = mypotslaveids[islave];
+                  // get source node id
+                  act_source_id = potential_source_ids[isource];
 
                   // check first criterion
-                  if ((slavetopbcset[slavepbcid]).find(actslaveid) !=
-                      (slavetopbcset[slavepbcid]).end())
+                  if ((source_to_pbc_set[source_pbc_id]).find(act_source_id) !=
+                      (source_to_pbc_set[source_pbc_id]).end())
                   {
                     std::size_t found = 0;
                     // if satisfied
                     // check second criterion
                     if (not corner_node)
                     {
-                      // check to slave conditions
-                      for (std::size_t k = 0; k < remainingslavepbcids.size(); k++)
+                      // check to source conditions
+                      for (std::size_t k = 0; k < remaining_source_pbc_ids.size(); k++)
                       {
-                        if ((slavetopbcset[remainingslavepbcids[k]]).find(actslaveid) !=
-                            (slavetopbcset[remainingslavepbcids[k]]).end())
+                        if ((source_to_pbc_set[remaining_source_pbc_ids[k]]).find(act_source_id) !=
+                            (source_to_pbc_set[remaining_source_pbc_ids[k]]).end())
                           found++;
                       }
                     }
                     else
                     {
-                      // check a master and a slave condition
-                      if ((mastertopbcset[furthermastercond]).find(actslaveid) !=
-                          (mastertopbcset[furthermastercond]).end())
+                      // check a target and a source condition
+                      if ((target_to_pbc_set[further_target_cond]).find(act_source_id) !=
+                          (target_to_pbc_set[further_target_cond]).end())
                         found++;
-                      if ((slavetopbcset[slavecond_1]).find(actslaveid) !=
-                          (slavetopbcset[slavecond_1]).end())
+                      if ((source_to_pbc_set[source_cond_1]).find(act_source_id) !=
+                          (source_to_pbc_set[source_cond_1]).end())
                         found++;
                     }
 
-                    if ((not three_sets_edge_node) and found == remainingslavepbcids.size())
+                    if ((not three_sets_edge_node) and found == remaining_source_pbc_ids.size())
                       break;
                     else if (three_sets_edge_node and found == 1)
                       break;
@@ -730,92 +715,92 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
                 }
 
                 // store in list
-                myslavenodeids.push_back(actslaveid);
-                local_pbcmapmastertoslave[myfurthermasternodeids[ifnode]] = actslaveid;
+                my_source_node_ids.push_back(act_source_id);
+                local_pbc_map_target_to_source[further_target_node_ids[ifnode]] = act_source_id;
               }
             }
 
-            // sort the slave node ids
-            std::sort(myslavenodeids.begin(), myslavenodeids.end());
+            // sort the source node ids
+            std::sort(my_source_node_ids.begin(), my_source_node_ids.end());
           }
           else
           {
-            add_salve_ele_to_face = false;
+            add_source_ele_to_face = false;
           }
 
-          // this criterion ensures that slave set is available on this proc
+          // this criterion ensures that source set is available on this proc
           int counter = 0;
-          for (std::size_t kk = 0; kk < mymasternodeids.size(); kk++)
+          for (std::size_t kk = 0; kk < my_target_node_ids.size(); kk++)
           {
             for (auto node : my_row_node_range())
             {
-              if (node.global_id() == mymasternodeids[kk]) counter++;
+              if (node.global_id() == my_target_node_ids[kk]) counter++;
             }
           }
-          for (std::size_t kk = 0; kk < myfurthermasternodeids.size(); kk++)
+          for (std::size_t kk = 0; kk < further_target_node_ids.size(); kk++)
           {
             for (auto node : my_row_node_range())
             {
-              if (node.global_id() == myfurthermasternodeids[kk]) counter++;
+              if (node.global_id() == further_target_node_ids[kk]) counter++;
             }
           }
           if (counter == 0)
           {
-            add_salve_ele_to_face = false;
+            add_source_ele_to_face = false;
           }
 
-          // add slave element to the patch
-          if (add_salve_ele_to_face)
+          // add source element to the patch
+          if (add_source_ele_to_face)
           {
-            // get master element
-            Core::Elements::Element* master_ele = elecolptr_[0];
+            // get target element
+            Core::Elements::Element* target_ele = elecolptr_[0];
             for (fool = elecolptr_.begin(); fool != elecolptr_.end(); ++fool)
             {
-              if ((*fool)->id() == master_peid) master_ele = *fool;
+              if ((*fool)->id() == target_peid) target_ele = *fool;
             }
 
-            // look for the corresponding slave face in the list of all faces
+            // look for the corresponding source face in the list of all faces
             std::map<std::vector<int>, InternalFacesData>::iterator pbc_surf_it =
-                surfmapdata.find(myslavenodeids);
+                surfmapdata.find(my_source_node_ids);
             if (pbc_surf_it == surfmapdata.end())
             {
               // print some helpful information first
-              master_ele->print(std::cout);
+              target_ele->print(std::cout);
 
-              std::cout << "\n slave " << std::endl;
-              for (std::size_t kk = 0; kk < myslavenodeids.size(); kk++)
-                std::cout << myslavenodeids[kk] << std::endl;
+              std::cout << "\n source " << std::endl;
+              for (std::size_t kk = 0; kk < my_source_node_ids.size(); kk++)
+                std::cout << my_source_node_ids[kk] << std::endl;
 
-              FOUR_C_THROW("Expected to find slave face!");
+              FOUR_C_THROW("Expected to find source face!");
             }
 
-            // add slave data to master data
-            face_it->second.set_slave_peid(pbc_surf_it->second.get_master_peid());
-            slave_peid = face_it->second.get_slave_peid();
-            face_it->second.set_l_surface_slave(pbc_surf_it->second.get_l_surface_master());
+            // add source data to target data
+            face_it->second.set_source_peid(pbc_surf_it->second.get_target_peid());
+            source_peid = face_it->second.get_source_peid();
+            face_it->second.set_l_surface_source(pbc_surf_it->second.get_l_surface_target());
 
-            // add connection of coordinate systems for master and slave
+            // add connection of coordinate systems for target and source
             std::vector<int> localtrafomap;
 
             // get the face's nodes sorted w.r.t local coordinate system of the parent's face
             // element
-            const std::vector<Core::Nodes::Node*> nodes_face_master = face_it->second.get_nodes();
+            const std::vector<Core::Nodes::Node*> nodes_face_target = face_it->second.get_nodes();
             // get number of nodes
-            unsigned int nnode = nodes_face_master.size();
+            unsigned int nnode = nodes_face_target.size();
 
-            // get slave nodes
-            std::vector<Core::Nodes::Node*> slave_nodes = pbc_surf_it->second.get_nodes();
+            // get source nodes
+            std::vector<Core::Nodes::Node*> source_nodes = pbc_surf_it->second.get_nodes();
 
-            // find the nodes given with the master element node numbering also for the slave
+            // find the nodes given with the target element node numbering also for the source
             // element to define a connectivity map between the local face's coordinate systems
-            for (unsigned int inode = 0; inode < nnode; inode++)  // master face nodes
+            for (unsigned int inode = 0; inode < nnode; inode++)  // target face nodes
             {
               int position = -1;
 
-              for (std::size_t knode = 0; knode < slave_nodes.size(); knode++)
+              for (std::size_t knode = 0; knode < source_nodes.size(); knode++)
               {
-                if (slave_nodes[knode]->id() ==
-                    local_pbcmapmastertoslave[nodes_face_master[inode]->id()])
+                if (source_nodes[knode]->id() ==
+                    local_pbc_map_target_to_source[nodes_face_target[inode]->id()])
                   position = knode;
               }
 
@@ -823,49 +808,24 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
                 localtrafomap.push_back(position);
               else
                 FOUR_C_THROW(
-                    "face's node from master's face element not found in slave's face element!");
+                    "face's node from target's face element not found in source's face element!");
             }
             // set in face
             face_it->second.set_local_numbering_map(localtrafomap);
-
-            //            if (Core::Communication::my_mpi_rank(comm_)==1)
-            //            {
-            //            std::cout << "\n added pbc face "  << std::endl;
-            //
-            //            std::cout << "master nodes" << std::endl;
-            //            for (std::size_t rr=0; rr < mymasternodeids.size(); rr++)
-            //              std::cout << mymasternodeids[rr] << std::endl;
-            //
-            //            std::cout << "further master nodes" << std::endl;
-            //            for (std::size_t rr=0; rr < myfurthermasternodeids.size(); rr++)
-            //              std::cout << myfurthermasternodeids[rr] << std::endl;
-            //
-            //              std::cout << "slave node ids "  << std::endl;
-            //            for (std::size_t kk=0; kk<myslavenodeids.size(); kk++)
-            //               std::cout << myslavenodeids[kk] << std::endl;
-            //
-            ////            std::cout << "local trafo map  " << std::endl;
-            ////            for (std::size_t kk=0; kk<localtrafomap.size(); kk++)
-            ////            {
-            ////              std::cout << "master node id " << nodes_face_master[kk]->Id() <<
-            /// std::endl; /              std::cout << "slave node id " << slave_nodes[kk]->Id() <<
-            /// std::endl; /              std::cout << "slave node position " << localtrafomap[kk]
-            /// << std::endl; /            }
-            //            }
           }
         }
       }
     }
 
     // create faces
-    if (doboundaryfaces_ || (master_peid != -1 && slave_peid != -1))
+    if (doboundaryfaces_ || (target_peid != -1 && source_peid != -1))
     {
-      FOUR_C_ASSERT(master_peid != -1, "At least the master element should be present");
-      Core::Elements::Element* parent_master = g_element(master_peid);
-      Core::Elements::Element* parent_slave = slave_peid != -1 ? g_element(slave_peid) : nullptr;
+      FOUR_C_ASSERT(target_peid != -1, "At least the target element should be present");
+      Core::Elements::Element* parent_target = g_element(target_peid);
+      Core::Elements::Element* parent_source = source_peid != -1 ? g_element(source_peid) : nullptr;
 
-      FOUR_C_ASSERT(master_peid == parent_master->id(), "Internal error");
-      FOUR_C_ASSERT(slave_peid == -1 || slave_peid == parent_slave->id(), "Internal error");
+      FOUR_C_ASSERT(target_peid == parent_target->id(), "Internal error");
+      FOUR_C_ASSERT(source_peid == -1 || source_peid == parent_source->id(), "Internal error");
 
       // get the unsorted nodes
       std::vector<Core::Nodes::Node*> nodes = face_it->second.get_nodes();
@@ -877,9 +837,9 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
 
       // create the internal face element
       std::shared_ptr<Core::Elements::FaceElement> surf =
-          std::dynamic_pointer_cast<Core::Elements::FaceElement>(parent_master->create_face_element(
-              parent_slave, nodeids.size(), nodeids.data(), nodes.data(),
-              face_it->second.get_l_surface_master(), face_it->second.get_l_surface_slave(),
+          std::dynamic_pointer_cast<Core::Elements::FaceElement>(parent_target->create_face_element(
+              parent_source, nodeids.size(), nodeids.data(), nodes.data(),
+              face_it->second.get_l_surface_target(), face_it->second.get_l_surface_source(),
               face_it->second.get_local_numbering_map()));
       FOUR_C_ASSERT(surf != nullptr,
           "Creating a face element failed. Check overloading of CreateFaceElement");
@@ -904,9 +864,9 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
           face_it->first, surf_clone));
 
       // set face to elements
-      parent_master->set_face(face_it->second.get_l_surface_master(), surf_clone.get());
-      if (slave_peid != -1)
-        parent_slave->set_face(face_it->second.get_l_surface_slave(), surf_clone.get());
+      parent_target->set_face(face_it->second.get_l_surface_target(), surf_clone.get());
+      if (source_peid != -1)
+        parent_source->set_face(face_it->second.get_l_surface_source(), surf_clone.get());
     }
   }
 
@@ -926,8 +886,6 @@ void Core::FE::DiscretizationFaces::build_faces(const bool verbose)
   {
     std::cout << "... done!" << std::endl;
   }
-
-  return;
 }  // Core::FE::DiscretizationFaces::BuildInternalFaces
 
 
@@ -954,7 +912,6 @@ void Core::FE::DiscretizationFaces::build_face_row_map()
     }
   if (count != nummyeles) FOUR_C_THROW("Mismatch in no. of internal faces");
   facerowmap_ = std::make_shared<Core::LinAlg::Map>(-1, nummyeles, eleids.data(), 0, get_comm());
-  return;
 }
 
 
@@ -977,7 +934,6 @@ void Core::FE::DiscretizationFaces::build_face_col_map()
   }
   if (count != nummyeles) FOUR_C_THROW("Mismatch in no. of elements");
   facecolmap_ = std::make_shared<Core::LinAlg::Map>(-1, nummyeles, eleids.data(), 0, get_comm());
-  return;
 }
 
 
@@ -1098,8 +1054,6 @@ void Core::FE::DiscretizationFaces::print_faces(std::ostream& os) const
     }
     Core::Communication::barrier(get_comm());
   }
-
-  return;
 }
 
 FOUR_C_NAMESPACE_CLOSE

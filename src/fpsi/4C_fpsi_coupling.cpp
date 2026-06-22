@@ -310,7 +310,7 @@ void FPSI::FpsiCoupling::evaluate_coupling_matrixes_rhs()
       {
         TEUCHOS_FUNC_TIME_MONITOR("FPSI::Monolithic::transform");
         (*couplingrowtransform_)(*k_pf_porofluid, 1.0,
-            Coupling::Adapter::CouplingSlaveConverter(couppff_fpsi), c_pf_->matrix(1, 0), true);
+            Coupling::Adapter::CouplingSourceConverter(couppff_fpsi), c_pf_->matrix(1, 0), true);
       }
 
       fparams.set<std::string>("fillblock", "Porofluid_Structure");
@@ -329,9 +329,9 @@ void FPSI::FpsiCoupling::evaluate_coupling_matrixes_rhs()
       {
         TEUCHOS_FUNC_TIME_MONITOR("FPSI::Monolithic::transform");
         (*couplingrowcoltransform2_)(*k_pf_porofluid, 1.0,
-            Coupling::Adapter::CouplingSlaveConverter(
+            Coupling::Adapter::CouplingSourceConverter(
                 couppff_fpsi),  // row converter: important to use slave converter
-            Coupling::Adapter::CouplingSlaveConverter(
+            Coupling::Adapter::CouplingSourceConverter(
                 coupsf_fpsi),  //  col converter: important to use slave converter
             c_pp_->matrix(1, 0),
             false,  // bool exactmatch = true (default)
@@ -406,7 +406,7 @@ void FPSI::FpsiCoupling::evaluate_coupling_matrixes_rhs()
         TEUCHOS_FUNC_TIME_MONITOR("FPSI::Monolithic::transform");
         (*couplingcoltransform_)(fluid_field()->block_system_matrix()->full_row_map(),
             fluid_field()->block_system_matrix()->full_col_map(), *k_pf_porofluid, 1.0,
-            Coupling::Adapter::CouplingSlaveConverter(
+            Coupling::Adapter::CouplingSourceConverter(
                 coupsf_fpsi),  // row converter: important to use slave converter
             c_fp_->matrix(0, 0),
             false,  // bool exactmatch = true (default)
@@ -446,7 +446,7 @@ void FPSI::FpsiCoupling::evaluate_coupling_matrixes_rhs()
         TEUCHOS_FUNC_TIME_MONITOR("FPSI::Monolithic::transform");
         (*couplingrowtransform4_)(
             *std::dynamic_pointer_cast<Core::LinAlg::SparseMatrix>(k_pf_porofluid), 1.0,
-            Coupling::Adapter::CouplingSlaveConverter(
+            Coupling::Adapter::CouplingSourceConverter(
                 coupsf_fpsi),  // important to use slave converter
             c_pf_->matrix(0, 0),
             true);  // add
@@ -472,9 +472,9 @@ void FPSI::FpsiCoupling::evaluate_coupling_matrixes_rhs()
       {
         TEUCHOS_FUNC_TIME_MONITOR("FPSI::Monolithic::transform");
         (*couplingrowcoltransform_)(*k_pf_porofluid, 1.0,
-            Coupling::Adapter::CouplingSlaveConverter(
+            Coupling::Adapter::CouplingSourceConverter(
                 coupsf_fpsi),  // row converter: important to use slave converter
-            Coupling::Adapter::CouplingSlaveConverter(
+            Coupling::Adapter::CouplingSourceConverter(
                 coupsf_fpsi),  // col converter: important to use slave converter
             c_pp_->matrix(0, 0),
             false,  // bool exactmatch = true (default)
@@ -512,7 +512,7 @@ void FPSI::FpsiCoupling::evaluate_coupling_matrixes_rhs()
         (*couplingrowtransform5_)(temp6->matrix(FLD::Utils::MapExtractor::cond_other,
                                       ALE::Utils::MapExtractor::cond_other),
             1.0,
-            Coupling::Adapter::CouplingSlaveConverter(
+            Coupling::Adapter::CouplingSourceConverter(
                 coupsf_fpsi),  // important to use slave converter
             c_pa_->matrix(0, 0), false);
       }
@@ -710,7 +710,7 @@ void FPSI::FpsiCoupling::evaluate_coupling_matrixes_rhs()
         // For Ale Condensation ==> AleColumns to StructuralColumns
         (*couplingcoltransform2_)(ale_field()->block_system_matrix()->full_row_map(),
             ale_field()->block_system_matrix()->full_col_map(), tmp_c_fp, 1.0,
-            Coupling::Adapter::CouplingSlaveConverter(
+            Coupling::Adapter::CouplingSourceConverter(
                 coup_ps_a_fpsi),  // row converter: important to use slave converter
             c_fp_->matrix(0, 0),
             false,  // bool exactmatch = true (default)

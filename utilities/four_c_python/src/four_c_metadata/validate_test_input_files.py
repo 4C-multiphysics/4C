@@ -30,8 +30,9 @@ def cli():
 
     args = parser.parse_args()
 
-    json_schema = json.loads(pathlib.Path(args.schema).read_text())
-    validator = jsonschema_rs.validator_for(json_schema)
+    schema_path = pathlib.Path(args.schema).resolve()
+    json_schema = json.loads(schema_path.read_text())
+    validator = jsonschema_rs.validator_for(json_schema, base_uri=schema_path.as_uri())
 
     def format_dotted(left: str, right: str) -> str:
         dots = "." * (300 - len(left) - len(right))

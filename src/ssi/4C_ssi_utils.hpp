@@ -20,7 +20,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Coupling::Adapter
 {
   class Coupling;
-  class CouplingSlaveConverter;
+  class CouplingSourceConverter;
 }  // namespace Coupling::Adapter
 
 namespace Core::FE
@@ -399,7 +399,7 @@ namespace SSI
       }
 
       //! converter to convert slave dofs to master side
-      [[nodiscard]] std::shared_ptr<Coupling::Adapter::CouplingSlaveConverter>
+      [[nodiscard]] std::shared_ptr<Coupling::Adapter::CouplingSourceConverter>
       slave_side_converter() const
       {
         return slave_side_converter_;
@@ -419,7 +419,7 @@ namespace SSI
       std::shared_ptr<Core::LinAlg::MultiMapExtractor> slave_master_extractor_;
 
       //! converter to convert slave dofs to master side
-      std::shared_ptr<Coupling::Adapter::CouplingSlaveConverter> slave_side_converter_;
+      std::shared_ptr<Coupling::Adapter::CouplingSourceConverter> slave_side_converter_;
 
       //! coupling adapter between new slave nodes and slave nodes from input file
       std::shared_ptr<Coupling::Adapter::Coupling> slave_slave_transformation_;

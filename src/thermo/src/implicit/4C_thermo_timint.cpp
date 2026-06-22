@@ -45,8 +45,6 @@ Thermo::TimInt::TimInt(const Teuchos::ParameterList& ioparams,
       printscreen_(ioparams.get<int>("STDOUTEVERY")),
       writerestartevery_(tdynparams.get<int>("RESTARTEVERY")),
       writeglobevery_(tdynparams.get<int>("RESULTSEVERY")),
-      writeheatflux_(Teuchos::getIntegralValue<Thermo::HeatFluxType>(ioparams, "THERM_HEATFLUX")),
-      writetempgrad_(Teuchos::getIntegralValue<Thermo::TempGradType>(ioparams, "THERM_TEMPGRAD")),
       calcerror_(Teuchos::getIntegralValue<Thermo::CalcError>(tdynparams, "CALCERROR")),
       errorfunctno_(tdynparams.get<int>("CALCERRORFUNCNO")),
       timen_(0.0),
@@ -143,6 +141,10 @@ Thermo::TimInt::TimInt(const Teuchos::ParameterList& ioparams,
       bool output_temperature_rate_state =
           thermo_vtk_runtime_output_list.get<bool>("TEMPERATURE_RATE");
       bool output_conductivity_state = thermo_vtk_runtime_output_list.get<bool>("CONDUCTIVITY");
+      Thermo::HeatFluxType output_heatflux_type =
+          thermo_vtk_runtime_output_list.get<Thermo::HeatFluxType>("HEATFLUX");
+      Thermo::TempGradType output_tempgrad_type =
+          thermo_vtk_runtime_output_list.get<Thermo::TempGradType>("TEMPGRAD");
       bool output_element_owner = thermo_vtk_runtime_output_list.get<bool>("ELEMENT_OWNER");
       bool output_element_gid = thermo_vtk_runtime_output_list.get<bool>("ELEMENT_GID");
       bool output_node_gid = thermo_vtk_runtime_output_list.get<bool>("NODE_GID");
@@ -150,6 +152,8 @@ Thermo::TimInt::TimInt(const Teuchos::ParameterList& ioparams,
       runtime_vtk_params_ = {.output_temperature_state = output_temperature_state,
           .output_temperature_rate_state = output_temperature_rate_state,
           .output_conductivity_state = output_conductivity_state,
+          .output_heatflux_type = output_heatflux_type,
+          .output_tempgrad_type = output_tempgrad_type,
           .output_element_owner = output_element_owner,
           .output_element_gid = output_element_gid,
           .output_node_gid = output_node_gid};
@@ -409,6 +413,29 @@ void Thermo::TimInt::write_runtime_output()
 
     if (runtime_vtk_params_.output_node_gid) runtime_vtk_writer_->append_node_gid("node_gid");
 
+    if (runtime_vtk_params_.output_heatflux_type != Thermo::HeatFluxType::None ||
+        runtime_vtk_params_.output_tempgrad_type != Thermo::TempGradType::None)
+    {
+      std::shared_ptr<Core::LinAlg::MultiVector<double>> heatflux, tempgrad;
+      std::string heatfluxtext, tempgradtext;
+
+      get_heatflux_tempgrad(heatflux, tempgrad, heatfluxtext, tempgradtext);
+
+      if (runtime_vtk_params_.output_heatflux_type != Thermo::HeatFluxType::None)
+      {
+        std::vector<std::optional<std::string>> context(heatflux->num_vectors(), heatfluxtext);
+        runtime_vtk_writer_->append_result_data_vector_with_context(
+            *heatflux, Core::IO::OutputEntity::element, context);
+      }
+
+      if (runtime_vtk_params_.output_tempgrad_type != Thermo::TempGradType::None)
+      {
+        std::vector<std::optional<std::string>> context(tempgrad->num_vectors(), tempgradtext);
+        runtime_vtk_writer_->append_result_data_vector_with_context(
+            *tempgrad, Core::IO::OutputEntity::element, context);
+      }
+    }
+
     // finalize everything and write all required files to filesystem
     runtime_vtk_writer_->write_to_disk(time_[0], step_);
   }
@@ -472,13 +499,6 @@ void Thermo::TimInt::output_step(bool forced_writerestart)
   {
     write_runtime_output();
   }
-
-  // output heatflux & tempgrad
-  if (is_regular_result_step and
-      ((writeheatflux_ != Thermo::heatflux_none) or (writetempgrad_ != Thermo::tempgrad_none)))
-  {
-    output_heatflux_tempgrad(datawritten);
-  }
 }
 
 
@@ -508,7 +528,10 @@ void Thermo::TimInt::output_restart(bool& datawritten)
  | heatflux calculation and output                          bborn 06/08 |
  | originally by lw                                                     |
  *----------------------------------------------------------------------*/
-void Thermo::TimInt::output_heatflux_tempgrad(bool& datawritten)
+void Thermo::TimInt::get_heatflux_tempgrad(
+    std::shared_ptr<Core::LinAlg::MultiVector<double>>& heatfluxdata,
+    std::shared_ptr<Core::LinAlg::MultiVector<double>>& tempgraddata, std::string& heatfluxtext,
+    std::string& tempgradtext)
 {
   // create the parameters for the discretization
   Teuchos::ParameterList p;
@@ -518,13 +541,15 @@ void Thermo::TimInt::output_heatflux_tempgrad(bool& datawritten)
   p.set("total time", time_[0]);
   p.set("delta time", dt_[0]);
 
-  std::shared_ptr<std::vector<char>> heatfluxdata = std::make_shared<std::vector<char>>();
-  p.set("heatflux", heatfluxdata);
-  p.set<Thermo::HeatFluxType>("ioheatflux", writeheatflux_);
+  auto heatfluxdata_col = std::make_shared<Core::LinAlg::MultiVector<double>>(
+      *discret_->element_col_map(), discret_->n_dim(), true);
+  p.set("heatflux", heatfluxdata_col);
+  p.set<Thermo::HeatFluxType>("ioheatflux", runtime_vtk_params_.output_heatflux_type);
 
-  std::shared_ptr<std::vector<char>> tempgraddata = std::make_shared<std::vector<char>>();
-  p.set("tempgrad", tempgraddata);
-  p.set<Thermo::TempGradType>("iotempgrad", writetempgrad_);
+  auto tempgraddata_col = std::make_shared<Core::LinAlg::MultiVector<double>>(
+      *discret_->element_col_map(), discret_->n_dim(), true);
+  p.set("tempgrad", tempgraddata_col);
+  p.set<Thermo::TempGradType>("iotempgrad", runtime_vtk_params_.output_tempgrad_type);
 
   // set vector values needed by elements
   discret_->clear_state();
@@ -532,61 +557,46 @@ void Thermo::TimInt::output_heatflux_tempgrad(bool& datawritten)
   discret_->set_state(0, "residual temperature", *zeros_);
   discret_->set_state(0, "temperature", *temp_(0));
 
-  Core::LinAlg::Vector<double> heatflux(*discret_->dof_row_map(), true);
-
   discret_->evaluate(p, nullptr, nullptr, nullptr, nullptr, nullptr);
   discret_->clear_state();
 
-  // Make new step
-  if (not datawritten)
-  {
-    output_->new_step(step_, time_[0]);
-  }
-  datawritten = true;
+  heatfluxdata = std::make_shared<Core::LinAlg::MultiVector<double>>(
+      *discret_->element_row_map(), discret_->n_dim(), true);
+  tempgraddata = std::make_shared<Core::LinAlg::MultiVector<double>>(
+      *discret_->element_row_map(), discret_->n_dim(), true);
 
+  Core::LinAlg::Import importer(*discret_->element_row_map(), *discret_->element_col_map());
+  heatfluxdata->import(*heatfluxdata_col, importer, Core::LinAlg::CombineMode::insert);
+  tempgraddata->import(*tempgraddata_col, importer, Core::LinAlg::CombineMode::insert);
+  // Naming
   // write heatflux
-  if (writeheatflux_ != Thermo::heatflux_none)
+  if (runtime_vtk_params_.output_heatflux_type == Thermo::HeatFluxType::Current)
   {
-    std::string heatfluxtext = "";
-    if (writeheatflux_ == Thermo::heatflux_current)
-    {
-      heatfluxtext = "gauss_current_heatfluxes_xyz";
-    }
-    else if (writeheatflux_ == Thermo::heatflux_initial)
-    {
-      heatfluxtext = "gauss_initial_heatfluxes_xyz";
-    }
-    else
-    {
-      FOUR_C_THROW("requested heatflux type not supported");
-    }
-    output_->write_vector(heatfluxtext, *heatfluxdata, *(discret_->element_col_map()));
+    heatfluxtext = "element_current_heatfluxes_xyz";
+  }
+  else if (runtime_vtk_params_.output_heatflux_type == Thermo::HeatFluxType::Initial)
+  {
+    heatfluxtext = "element_initial_heatfluxes_xyz";
+  }
+  else
+  {
+    FOUR_C_THROW("requested heatflux type not supported");
   }
 
   // write temperature gradient
-  if (writetempgrad_ != Thermo::tempgrad_none)
+  if (runtime_vtk_params_.output_tempgrad_type == Thermo::TempGradType::Current)
   {
-    std::string tempgradtext = "";
-    if (writetempgrad_ == Thermo::tempgrad_current)
-    {
-      tempgradtext = "gauss_current_tempgrad_xyz";
-    }
-    else if (writetempgrad_ == Thermo::tempgrad_initial)
-    {
-      tempgradtext = "gauss_initial_tempgrad_xyz";
-    }
-    else
-    {
-      FOUR_C_THROW("requested tempgrad type not supported");
-    }
-    output_->write_vector(tempgradtext, *tempgraddata, *(discret_->element_col_map()));
+    tempgradtext = "element_current_tempgrad_xyz";
   }
-
-  // leave me alone
-  return;
-
-}  // output_heatflux_tempgrad()
-
+  else if (runtime_vtk_params_.output_tempgrad_type == Thermo::TempGradType::Initial)
+  {
+    tempgradtext = "element_initial_tempgrad_xyz";
+  }
+  else
+  {
+    FOUR_C_THROW("requested tempgrad type not supported");
+  }
+}
 
 /*----------------------------------------------------------------------*
  | thermal result test                                       dano 01/12 |

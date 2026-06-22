@@ -12,11 +12,17 @@
 
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_reduced_lung_input.hpp"
 
 #include <functional>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
+
+namespace ReducedLung
+{
+  struct RuntimeOutputCollector;
+}
 
 namespace ReducedLung::TerminalUnits
 {
@@ -75,6 +81,11 @@ namespace ReducedLung::TerminalUnits
   ///< Callback type for end-of-timestep history updates.
   using EndOfTimestepRoutine = std::function<void(TerminalUnitData& model_data,
       const Core::LinAlg::Vector<double>& locally_relevant_dof_vector, double time_step_size_dt)>;
+
+  ///< Callback type for collecting additional runtime output.
+  using OutputEvaluator = std::function<void(const TerminalUnitData& model_data,
+      RuntimeOutputCollector& collector, ReducedLungParameters::OutputVerbosity verbosity)>;
+
 }  // namespace ReducedLung::TerminalUnits
 
 FOUR_C_NAMESPACE_CLOSE

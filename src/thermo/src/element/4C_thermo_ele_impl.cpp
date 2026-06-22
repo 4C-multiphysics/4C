@@ -411,11 +411,6 @@ int Discret::Elements::TemperImpl<distype>::evaluate(
     // set views
     // efext, efcap not needed for this action, elemat1+2,elevec1-3 are not used anyway
 
-    // get storage arrays of Gauss-point-wise vectors
-    std::shared_ptr<std::vector<char>> heatfluxdata =
-        params.get<std::shared_ptr<std::vector<char>>>("heatflux");
-    std::shared_ptr<std::vector<char>> tempgraddata =
-        params.get<std::shared_ptr<std::vector<char>>>("tempgrad");
     // working arrays
     Core::LinAlg::Matrix<nquad_, nsd_> eheatflux(Core::LinAlg::Initialization::uninitialized);
     Core::LinAlg::Matrix<nquad_, nsd_> etempgrad(Core::LinAlg::Initialization::uninitialized);
@@ -448,78 +443,29 @@ int Discret::Elements::TemperImpl<distype>::evaluate(
       }
     }
 
-    copy_matrix_into_char_vector(*heatfluxdata, eheatflux);
-    copy_matrix_into_char_vector(*tempgraddata, etempgrad);
-  }  // action == Thermo::calc_thermo_heatflux
-
-  //============================================================================
-  // Calculate heatflux q and temperature gradients gradtemp at gauss points
-  else if (action == Thermo::postproc_thermo_heatflux)
-  {
-    // set views
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_> etang(
-        elemat1.values(), true);  // view only!
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_> ecapa(
-        elemat2.values(), true);                                                   // view only!
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, 1> efint(elevec1.values(), true);  // view only!
-    // efext, efcap not needed for this action
-
-    const std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>
-        gpheatfluxmap = params.get<
-            std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>>(
-            "gpheatfluxmap");
-    std::string heatfluxtype = params.get<std::string>("heatfluxtype", "ndxyz");
-    const int gid = ele->id();
-    Core::LinAlg::Matrix<nquad_, nsd_> gpheatflux(
-        ((*gpheatfluxmap)[gid])->values(), true);  // view only!
-
-    // set views to components
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, 1> efluxx(elevec1, true);  // view only!
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, 1> efluxy(elevec2, true);  // view only!
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, 1> efluxz(elevec3, true);  // view only!
-
-    // catch unknown heatflux types
-    bool processed = false;
-
-    // nodally
-    // extrapolate heatflux q and temperature gradient gradtemp stored at GP
-    if ((heatfluxtype == "ndxyz") or (heatfluxtype == "cxyz_ndxyz"))
+    // Fill element-center averaged Multivectors for runtime VTK output
+    auto heatflux = params.get<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("heatflux");
+    auto tempgrad = params.get<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("tempgrad");
+    int lid = ele->lid();
+    if (lid != -1)
     {
-      processed = true;
-      // extrapolate heatfluxes/temperature gradients at Gauss points to nodes
-      // and store results in
-      extrapolate_from_gauss_points_to_nodes(ele, gpheatflux, efluxx, efluxy, efluxz);
-      // method only applicable if number GP == number nodes
-    }  // end "ndxyz" or "cxyz_ndxyz"
-
-    // centered
-    if ((heatfluxtype == "cxyz") or (heatfluxtype == "cxyz_ndxyz"))
-    {
-      processed = true;
-
-      std::shared_ptr<Core::LinAlg::MultiVector<double>> eleheatflux =
-          params.get<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("eleheatflux");
-      const Core::LinAlg::Map& elemap = eleheatflux->get_map();
-      int lid = elemap.lid(gid);
-      if (lid != -1)
+      for (int idim = 0; idim < nsd_; ++idim)
       {
-        for (int idim = 0; idim < nsd_; ++idim)
         {
-          // double& s = ; // resolve pointer for faster access
           double s = 0.0;
-          // nquad_: number of Gauss points
-          for (int jquad = 0; jquad < nquad_; ++jquad) s += gpheatflux(jquad, idim);
+          for (int jquad = 0; jquad < nquad_; ++jquad) s += eheatflux(jquad, idim);
           s /= nquad_;
-          eleheatflux->get_vector(idim).get_values()[lid] = s;
+          heatflux->get_vector(idim).get_values()[lid] = s;
+        }
+        {
+          double s = 0.0;
+          for (int jquad = 0; jquad < nquad_; ++jquad) s += etempgrad(jquad, idim);
+          s /= nquad_;
+          tempgrad->get_vector(idim).get_values()[lid] = s;
         }
       }
-    }  // end "cxyz" or "cxyz_ndxyz"
-
-    // catch unknown heatflux types
-    if (not processed)
-      FOUR_C_THROW("unknown type of heatflux/temperature gradient output on element level");
-
-  }  // action == Thermo::postproc_thermo_heatflux
+    }
+  }  // action == Thermo::calc_thermo_heatflux
 
   //============================================================================
   else if (action == Thermo::integrate_shape_functions)
@@ -2352,8 +2298,10 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
     Teuchos::ParameterList& params)
 {
   // specific choice of heat flux / temperature gradient
-  const auto ioheatflux = params.get<Thermo::HeatFluxType>("ioheatflux", Thermo::heatflux_none);
-  const auto iotempgrad = params.get<Thermo::TempGradType>("iotempgrad", Thermo::tempgrad_none);
+  const auto ioheatflux =
+      params.get<Thermo::HeatFluxType>("ioheatflux", Thermo::HeatFluxType::None);
+  const auto iotempgrad =
+      params.get<Thermo::TempGradType>("iotempgrad", Thermo::TempGradType::None);
 
   // update element geometry
   Core::LinAlg::Matrix<nen_, nsd_> xcurr;      // current  coord. of element
@@ -2399,14 +2347,14 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
 
     switch (iotempgrad)
     {
-      case Thermo::tempgrad_initial:
+      case Thermo::TempGradType::Initial:
       {
         if (etempgrad == nullptr) FOUR_C_THROW("tempgrad data not available");
         // etempgrad = Grad T
         for (int idim = 0; idim < nsd_; ++idim) (*etempgrad)(iquad, idim) = gradtemp_(idim);
         break;
       }
-      case Thermo::tempgrad_current:
+      case Thermo::TempGradType::Current:
       {
         if (etempgrad == nullptr) FOUR_C_THROW("tempgrad data not available");
         // etempgrad = grad T = Grad T . F^{-1} =  F^{-T} . Grad T
@@ -2417,7 +2365,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
         for (int idim = 0; idim < nsd_; ++idim) (*etempgrad)(iquad, idim) = currentgradT(idim);
         break;
       }
-      case Thermo::tempgrad_none:
+      case Thermo::TempGradType::None:
       {
         // no postprocessing of temperature gradients
         break;
@@ -2429,7 +2377,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
 
     switch (ioheatflux)
     {
-      case Thermo::heatflux_initial:
+      case Thermo::HeatFluxType::Initial:
       {
         if (eheatflux == nullptr) FOUR_C_THROW("heat flux data not available");
         Core::LinAlg::Matrix<nsd_, 1> initialheatflux(Core::LinAlg::Initialization::uninitialized);
@@ -2438,7 +2386,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
         for (int idim = 0; idim < nsd_; ++idim) (*eheatflux)(iquad, idim) = -initialheatflux(idim);
         break;
       }
-      case Thermo::heatflux_current:
+      case Thermo::HeatFluxType::Current:
       {
         if (eheatflux == nullptr) FOUR_C_THROW("heat flux data not available");
         // eheatflux := q = - k_0 . 1/(detF) . F^{-T} . Grad T
@@ -2449,7 +2397,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
         for (int idim = 0; idim < nsd_; ++idim) (*eheatflux)(iquad, idim) = -spatialq(idim);
         break;
       }
-      case Thermo::heatflux_none:
+      case Thermo::HeatFluxType::None:
       {
         // no postprocessing of heat fluxes, continue!
         break;
@@ -3196,15 +3144,6 @@ void Discret::Elements::TemperImpl<distype>::compute_error(
     // integrate analytical velocity for H1 norm
     elevec1(3) += derT.dot(derT) * fac_;
   }
-}
-
-template <Core::FE::CellType distype>
-void Discret::Elements::TemperImpl<distype>::copy_matrix_into_char_vector(
-    std::vector<char>& data, const Core::LinAlg::Matrix<nquad_, nsd_>& stuff) const
-{
-  Core::Communication::PackBuffer tempBuffer;
-  add_to_pack(tempBuffer, stuff);
-  std::copy(tempBuffer().begin(), tempBuffer().end(), std::back_inserter(data));
 }
 
 FOUR_C_NAMESPACE_CLOSE

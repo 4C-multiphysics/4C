@@ -95,25 +95,25 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 4
       QUANTITY: "dispy"
-      VALUE: -4.01558458380913558e-03
+      VALUE: -4.01592180458057706e-03
       TOLERANCE: 4e-11
   - STRUCTURE:
       DIS: "structure"
       NODE: 5
       QUANTITY: "dispx"
-      VALUE: -4.01558458411293510e-03
+      VALUE: -4.01592180458140973e-03
       TOLERANCE: 4e-11
   - STRUCTURE:
       DIS: "structure"
       NODE: 8
       QUANTITY: "dispx"
-      VALUE: -4.01558458411200268e-03
+      VALUE: -4.01592180458110789e-03
       TOLERANCE: 4e-11
   - STRUCTURE:
       DIS: "structure"
       NODE: 8
       QUANTITY: "dispy"
-      VALUE: -4.01558458380949987e-03
+      VALUE: -4.01592180458025701e-03
       TOLERANCE: 4e-11
   - STRUCTURE:
       DIS: "structure"
@@ -125,19 +125,19 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 6
       QUANTITY: "dispx"
-      VALUE: -4.01558458411173293e-03
+      VALUE: -4.01592180458238204e-03
       TOLERANCE: 4e-11
   - STRUCTURE:
       DIS: "structure"
       NODE: 4
       QUANTITY: "stress_zz"
-      VALUE: 9.31099439481390959e+02
+      VALUE: 9.30776106020185466e+02
       TOLERANCE: 0.00098
   - STRUCTURE:
       DIS: "structure"
       NODE: 8
       QUANTITY: "stress_zz"
-      VALUE: 9.31099439481206900e+02
+      VALUE: 9.30776106016615358e+02
       TOLERANCE: 0.00098
 DESIGN POINT DIRICH CONDITIONS:
   - E: 1

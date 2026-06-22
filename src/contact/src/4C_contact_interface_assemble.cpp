@@ -5182,7 +5182,7 @@ void CONTACT::Interface::assemble_normal_coupling_linearisation(Core::LinAlg::Sp
   {
     // store map on all processors, simple but expensive
     TargetDofMap_full = Core::LinAlg::allreduce_e_map(*coupfs.target_dof_map());
-    PermSourceDofMap_full = Core::LinAlg::allreduce_e_map(*coupfs.perm_source_dof_map());
+    PermSourceDofMap_full = Core::LinAlg::allreduce_e_map(*coupfs.permuted_source_dof_map());
   }
 
   for (int i = 0; i < activenodes_->num_my_elements(); ++i)

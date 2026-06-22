@@ -282,12 +282,12 @@ void PoroElast::Utils::set_slave_and_master(const Core::FE::Discretization& vold
   {
     const Core::LinAlg::Map* elecolmap2 = voldiscret2->element_col_map();
     if (elecolmap2->lid(volgid) == -1)  // Volume discretization has not Element
-      faceele->set_parent_slave_element(nullptr, -1);
+      faceele->set_parent_source_element(nullptr, -1);
     else
     {
       vele = voldiscret2->g_element(volgid);
       if (!vele) FOUR_C_THROW("ERROR: Cannot find element with gid %", volgid);
-      faceele->set_parent_slave_element(vele, faceele->face_parent_number());
+      faceele->set_parent_source_element(vele, faceele->face_parent_number());
     }
   }
 }

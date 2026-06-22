@@ -46,7 +46,8 @@ void BeamInteraction::SubmodelEvaluator::BeamContactAssemblyManagerInDirect::eva
       std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_penalty = nullptr;
       if (fe_sysmat != nullptr)
       {
-        sysmat_penalty = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map, 81);
+        sysmat_penalty = std::make_shared<Core::LinAlg::SparseMatrix>(
+            *dof_row_map, 81, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
       }
       std::shared_ptr<Core::LinAlg::FEVector<double>> sysvec_penalty = nullptr;
       if (fe_sysvec != nullptr)

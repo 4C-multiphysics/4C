@@ -41,6 +41,8 @@ std::string_view Core::Materials::to_string(Core::Materials::MaterialType materi
       return "MAT_scatra";
     case m_scatra_gr:
       return "MAT_scatra_gr";
+    case m_scatra_nl_stimulus:
+      return "MAT_scatra_nl_stimulus";
     case m_scatra_reaction_poroECM:
       return "MAT_scatra_reaction_poro";
     case m_scatra_reaction:
@@ -213,16 +215,14 @@ std::string_view Core::Materials::to_string(Core::Materials::MaterialType materi
       return "VISCO_CoupMyocard";
     case mes_isoratedep:
       return "VISCO_IsoRateDep";
-    case mes_genmax:
-      return "VISCO_GenMax";
-    case mes_fract:
-      return "VISCO_Fract";
-    case mes_viscopart:
-      return "VISCO_PART";
-    case mes_generalizedgenmax:
-      return "VISCO_GeneralizedGenMax";
+    case mes_generalizedmaxwell:
+      return "VISCO_GeneralizedMaxwell";
+    case mes_quasilineargeneralizedmaxwell:
+      return "VISCO_QuasiLinearGeneralizedMaxwell";
+    case mes_fsls:
+      return "VISCO_FSLS";
     case mes_viscobranch:
-      return "VISCO_BRANCH";
+      return "VISCO_GeneralizedMaxwellBranch";
     case m_cnst_art:
       return "MAT_CNST_ART";
     case m_thermo_fourier:

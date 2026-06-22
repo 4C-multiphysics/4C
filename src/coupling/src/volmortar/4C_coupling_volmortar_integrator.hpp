@@ -37,7 +37,7 @@ namespace Coupling::VolMortar
 {
   class Cell;
 
-  template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
+  template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
   class VolMortarIntegrator
   {
    public:
@@ -47,14 +47,14 @@ namespace Coupling::VolMortar
     // destructor
     virtual ~VolMortarIntegrator() = default;
 
-    //! ns_: number of slave element nodes
-    static constexpr int ns_ = Core::FE::num_nodes(distype_s);
+    //! nsource_: number of source element nodes
+    static constexpr int nsource_ = Core::FE::num_nodes(distype_source);
 
-    //! nm_: number of master element nodes
-    static constexpr int nm_ = Core::FE::num_nodes(distype_m);
+    //! ntarget_: number of target element nodes
+    static constexpr int ntarget_ = Core::FE::num_nodes(distype_target);
 
     //! number of space dimensions ("+1" due to considering only interface elements)
-    static constexpr int ndim_ = Core::FE::dim<distype_s>;
+    static constexpr int ndim_ = Core::FE::dim<distype_source>;
 
     /*!
     \brief Initialize Gauss rule (points, weights)
@@ -67,10 +67,11 @@ namespace Coupling::VolMortar
     \brief Integrate cell for 2D problems
 
     */
-    void integrate_cells_2d(Core::Elements::Element& sele, Core::Elements::Element& mele,
-        Mortar::IntCell& cell, Core::LinAlg::SparseMatrix& dmatrix,
-        Core::LinAlg::SparseMatrix& mmatrix, const Core::FE::Discretization& slavedis,
-        const Core::FE::Discretization& masterdis, int sdofset, int mdofset);
+    void integrate_cells_2d(Core::Elements::Element& source_ele,
+        Core::Elements::Element& target_ele, Mortar::IntCell& cell,
+        Core::LinAlg::SparseMatrix& dmatrix, Core::LinAlg::SparseMatrix& mmatrix,
+        const Core::FE::Discretization& source_dis, const Core::FE::Discretization& target_dis,
+        int source_dofset, int target_dofset);
 
     /*!
     \brief Integrate cell for 3D problems
@@ -80,8 +81,8 @@ namespace Coupling::VolMortar
         Coupling::VolMortar::Cell& cell, Core::LinAlg::SparseMatrix& dmatrix_A,
         Core::LinAlg::SparseMatrix& mmatrix_A, Core::LinAlg::SparseMatrix& dmatrix_B,
         Core::LinAlg::SparseMatrix& mmatrix_B, const Core::FE::Discretization& Adis,
-        const Core::FE::Discretization& Bdis, int sdofset_A, int mdofset_A, int sdofset_B,
-        int mdofset_B);
+        const Core::FE::Discretization& Bdis, int source_dofset_A, int target_dofset_A,
+        int source_dofset_B, int target_dofset_B);
 
     /*!
     \brief Integrate cell for 3D problems
@@ -92,8 +93,8 @@ namespace Coupling::VolMortar
         std::shared_ptr<Core::FE::GaussPoints> intpoints, bool switched_conf,
         Core::LinAlg::SparseMatrix& dmatrix_A, Core::LinAlg::SparseMatrix& mmatrix_A,
         Core::LinAlg::SparseMatrix& dmatrix_B, Core::LinAlg::SparseMatrix& mmatrix_B,
-        const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int sdofset_A,
-        int mdofset_A, int sdofset_B, int mdofset_B);
+        const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis,
+        int source_dofset_A, int target_dofset_A, int source_dofset_B, int target_dofset_B);
 
     /*!
     \brief Integrate ele for 3D problems
@@ -102,8 +103,8 @@ namespace Coupling::VolMortar
     void integrate_ele_3d(int domain, Core::Elements::Element& Aele, Core::Elements::Element& Bele,
         Core::LinAlg::SparseMatrix& dmatrix_A, Core::LinAlg::SparseMatrix& mmatrix_A,
         Core::LinAlg::SparseMatrix& dmatrix_B, Core::LinAlg::SparseMatrix& mmatrix_B,
-        const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int sdofset_A,
-        int mdofset_A, int sdofset_B, int mdofset_B);
+        const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis,
+        int source_dofset_A, int target_dofset_A, int source_dofset_B, int target_dofset_B);
 
     /*!
     \brief Integrate ele for 3D problems
@@ -128,15 +129,15 @@ namespace Coupling::VolMortar
     \brief Check integration point mapping (2D)
 
     */
-    bool check_mapping_2d(
-        Core::Elements::Element& sele, Core::Elements::Element& mele, double* sxi, double* mxi);
+    bool check_mapping_2d(Core::Elements::Element& source_ele, Core::Elements::Element& target_ele,
+        double* source_xi, double* target_xi);
 
     /*!
     \brief Check integration point mapping (3D)
 
     */
-    bool check_mapping_3d(
-        Core::Elements::Element& sele, Core::Elements::Element& mele, double* sxi, double* mxi);
+    bool check_mapping_3d(Core::Elements::Element& source_ele, Core::Elements::Element& target_ele,
+        double* source_xi, double* target_xi);
 
     //@}
     int ngp_;                                 // number of Gauss points
@@ -148,7 +149,7 @@ namespace Coupling::VolMortar
     Shapefcn shape_;     // type of test function
   };
 
-  template <Core::FE::CellType distype_s>
+  template <Core::FE::CellType distype_source>
   class VolMortarIntegratorEleBased
   {
    public:
@@ -158,11 +159,11 @@ namespace Coupling::VolMortar
     // destructor
     virtual ~VolMortarIntegratorEleBased() = default;
 
-    //! ns_: number of slave element nodes
-    static constexpr int ns_ = Core::FE::num_nodes(distype_s);
+    //! nsource_: number of source element nodes
+    static constexpr int nsource_ = Core::FE::num_nodes(distype_source);
 
     //! number of space dimensions ("+1" due to considering only interface elements)
-    static constexpr int ndim_ = Core::FE::dim<distype_s>;
+    static constexpr int ndim_ = Core::FE::dim<distype_source>;
 
     /*!
     \brief Initialize Gauss rule (points, weights)
@@ -174,7 +175,7 @@ namespace Coupling::VolMortar
     \brief Integrate ele for 3D problems
 
     */
-    void integrate_ele_based_3d(Core::Elements::Element& sele, std::vector<int>& foundeles,
+    void integrate_ele_based_3d(Core::Elements::Element& source_ele, std::vector<int>& foundeles,
         Core::LinAlg::SparseMatrix& dmatrixA, Core::LinAlg::SparseMatrix& mmatrixA,
         const Core::FE::Discretization& Adiscret, const Core::FE::Discretization& Bdiscret,
         int dofseta, int dofsetb, const Core::LinAlg::Map& PAB_dofrowmap,
@@ -185,8 +186,8 @@ namespace Coupling::VolMortar
     \brief Check integration point mapping (3D)
 
     */
-    bool check_mapping_3d(
-        Core::Elements::Element& sele, Core::Elements::Element& mele, double* sxi, double* mxi);
+    bool check_mapping_3d(Core::Elements::Element& source_ele, Core::Elements::Element& target_ele,
+        double* source_xi, double* target_xi);
 
     //@}
     int ngp_;                                 // number of Gauss points
@@ -201,48 +202,54 @@ namespace Coupling::VolMortar
   /*----------------------------------------------------------------------*
    |  Check paraspace mapping                                  farah 02/15|
    *----------------------------------------------------------------------*/
-  template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-  bool check_mapping(
-      Core::Elements::Element& sele, Core::Elements::Element& mele, double* sxi, double* mxi)
+  template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+  bool check_mapping(Core::Elements::Element& source_ele, Core::Elements::Element& target_ele,
+      double* source_xi, double* target_xi)
   {
-    // check GP projection (SLAVE)
+    // check GP projection (SOURCE)
     double tol = 1e-5;
-    if (distype_s == Core::FE::CellType::hex8 || distype_s == Core::FE::CellType::hex20 ||
-        distype_s == Core::FE::CellType::hex27)
+    if (distype_source == Core::FE::CellType::hex8 || distype_source == Core::FE::CellType::hex20 ||
+        distype_source == Core::FE::CellType::hex27)
     {
-      if (sxi[0] < -1.0 - tol || sxi[1] < -1.0 - tol || sxi[2] < -1.0 - tol || sxi[0] > 1.0 + tol ||
-          sxi[1] > 1.0 + tol || sxi[2] > 1.0 + tol)
+      if (source_xi[0] < -1.0 - tol || source_xi[1] < -1.0 - tol || source_xi[2] < -1.0 - tol ||
+          source_xi[0] > 1.0 + tol || source_xi[1] > 1.0 + tol || source_xi[2] > 1.0 + tol)
       {
         return false;
       }
     }
-    else if (distype_s == Core::FE::CellType::pyramid5)
+    else if (distype_source == Core::FE::CellType::pyramid5)
     {
-      if (sxi[2] < 0.0 - tol || -sxi[0] + sxi[2] > 1.0 + tol || sxi[0] + sxi[2] > 1.0 + tol ||
-          -sxi[1] + sxi[2] > 1.0 + tol || sxi[1] + sxi[2] > 1.0 + tol)
+      if (source_xi[2] < 0.0 - tol || -source_xi[0] + source_xi[2] > 1.0 + tol ||
+          source_xi[0] + source_xi[2] > 1.0 + tol || -source_xi[1] + source_xi[2] > 1.0 + tol ||
+          source_xi[1] + source_xi[2] > 1.0 + tol)
       {
         return false;
       }
     }
-    else if (distype_s == Core::FE::CellType::tet4 || distype_s == Core::FE::CellType::tet10)
+    else if (distype_source == Core::FE::CellType::tet4 ||
+             distype_source == Core::FE::CellType::tet10)
     {
-      if (sxi[0] < 0.0 - tol || sxi[1] < 0.0 - tol || sxi[2] < 0.0 - tol ||
-          (sxi[0] + sxi[1] + sxi[2]) > 1.0 + tol)
+      if (source_xi[0] < 0.0 - tol || source_xi[1] < 0.0 - tol || source_xi[2] < 0.0 - tol ||
+          (source_xi[0] + source_xi[1] + source_xi[2]) > 1.0 + tol)
       {
         return false;
       }
     }
-    else if (distype_s == Core::FE::CellType::tri3 || distype_s == Core::FE::CellType::tri6)
+    else if (distype_source == Core::FE::CellType::tri3 ||
+             distype_source == Core::FE::CellType::tri6)
     {
-      if (sxi[0] < 0.0 - tol || sxi[1] < 0.0 - tol || (sxi[0] + sxi[1]) > 1.0 + tol)
+      if (source_xi[0] < 0.0 - tol || source_xi[1] < 0.0 - tol ||
+          (source_xi[0] + source_xi[1]) > 1.0 + tol)
       {
         return false;
       }
     }
-    else if (distype_s == Core::FE::CellType::quad4 || distype_s == Core::FE::CellType::quad8 ||
-             distype_s == Core::FE::CellType::quad9)
+    else if (distype_source == Core::FE::CellType::quad4 ||
+             distype_source == Core::FE::CellType::quad8 ||
+             distype_source == Core::FE::CellType::quad9)
     {
-      if (sxi[0] < -1.0 - tol || sxi[1] < -1.0 - tol || sxi[0] > 1.0 + tol || sxi[1] > 1.0 + tol)
+      if (source_xi[0] < -1.0 - tol || source_xi[1] < -1.0 - tol || source_xi[0] > 1.0 + tol ||
+          source_xi[1] > 1.0 + tol)
       {
         return false;
       }
@@ -250,43 +257,49 @@ namespace Coupling::VolMortar
     else
       FOUR_C_THROW("Wrong element type!");
 
-    // check GP projection (MASTER)
-    if (distype_m == Core::FE::CellType::hex8 || distype_m == Core::FE::CellType::hex20 ||
-        distype_m == Core::FE::CellType::hex27)
+    // check GP projection (TARGET)
+    if (distype_target == Core::FE::CellType::hex8 || distype_target == Core::FE::CellType::hex20 ||
+        distype_target == Core::FE::CellType::hex27)
     {
-      if (mxi[0] < -1.0 - tol || mxi[1] < -1.0 - tol || mxi[2] < -1.0 - tol || mxi[0] > 1.0 + tol ||
-          mxi[1] > 1.0 + tol || mxi[2] > 1.0 + tol)
+      if (target_xi[0] < -1.0 - tol || target_xi[1] < -1.0 - tol || target_xi[2] < -1.0 - tol ||
+          target_xi[0] > 1.0 + tol || target_xi[1] > 1.0 + tol || target_xi[2] > 1.0 + tol)
       {
         return false;
       }
     }
-    else if (distype_m == Core::FE::CellType::pyramid5)
+    else if (distype_target == Core::FE::CellType::pyramid5)
     {
-      if (mxi[2] < 0.0 - tol || -mxi[0] + mxi[2] > 1.0 + tol || mxi[0] + mxi[2] > 1.0 + tol ||
-          -mxi[1] + mxi[2] > 1.0 + tol || mxi[1] + mxi[2] > 1.0 + tol)
+      if (target_xi[2] < 0.0 - tol || -target_xi[0] + target_xi[2] > 1.0 + tol ||
+          target_xi[0] + target_xi[2] > 1.0 + tol || -target_xi[1] + target_xi[2] > 1.0 + tol ||
+          target_xi[1] + target_xi[2] > 1.0 + tol)
       {
         return false;
       }
     }
-    else if (distype_m == Core::FE::CellType::tet4 || distype_m == Core::FE::CellType::tet10)
+    else if (distype_target == Core::FE::CellType::tet4 ||
+             distype_target == Core::FE::CellType::tet10)
     {
-      if (mxi[0] < 0.0 - tol || mxi[1] < 0.0 - tol || mxi[2] < 0.0 - tol ||
-          (mxi[0] + mxi[1] + mxi[2]) > 1.0 + tol)
+      if (target_xi[0] < 0.0 - tol || target_xi[1] < 0.0 - tol || target_xi[2] < 0.0 - tol ||
+          (target_xi[0] + target_xi[1] + target_xi[2]) > 1.0 + tol)
       {
         return false;
       }
     }
-    else if (distype_m == Core::FE::CellType::tri3 || distype_m == Core::FE::CellType::tri6)
+    else if (distype_target == Core::FE::CellType::tri3 ||
+             distype_target == Core::FE::CellType::tri6)
     {
-      if (mxi[0] < 0.0 - tol || mxi[1] < 0.0 - tol || (mxi[0] + mxi[1]) > 1.0 + tol)
+      if (target_xi[0] < 0.0 - tol || target_xi[1] < 0.0 - tol ||
+          (target_xi[0] + target_xi[1]) > 1.0 + tol)
       {
         return false;
       }
     }
-    else if (distype_m == Core::FE::CellType::quad4 || distype_m == Core::FE::CellType::quad8 ||
-             distype_m == Core::FE::CellType::quad9)
+    else if (distype_target == Core::FE::CellType::quad4 ||
+             distype_target == Core::FE::CellType::quad8 ||
+             distype_target == Core::FE::CellType::quad9)
     {
-      if (mxi[0] < -1.0 - tol || mxi[1] < -1.0 - tol || mxi[0] > 1.0 + tol || mxi[1] > 1.0 + tol)
+      if (target_xi[0] < -1.0 - tol || target_xi[1] < -1.0 - tol || target_xi[0] > 1.0 + tol ||
+          target_xi[1] > 1.0 + tol)
       {
         return false;
       }
@@ -355,13 +368,14 @@ namespace Coupling::VolMortar
   }
 
   //===================================
-  template <Core::FE::CellType distype_s, Core::FE::CellType distype_m>
-  bool vol_mortar_ele_based_gp(Core::Elements::Element& sele, Core::Elements::Element* mele,
-      std::vector<int>& foundeles, int& found, int& gpid, double& jac, double& wgt, double& gpdist,
-      double* Axi, double* AuxXi, double* globgp, DualQuad& dq, Shapefcn& shape,
-      Core::LinAlg::SparseMatrix& dmatrix_A, Core::LinAlg::SparseMatrix& mmatrix_A,
-      const Core::FE::Discretization& Adis, const Core::FE::Discretization& Bdis, int dofseta,
-      int dofsetb, const Core::LinAlg::Map& PAB_dofrowmap, const Core::LinAlg::Map& PAB_dofcolmap);
+  template <Core::FE::CellType distype_source, Core::FE::CellType distype_target>
+  bool vol_mortar_ele_based_gp(Core::Elements::Element& source_ele,
+      Core::Elements::Element* target_ele, std::vector<int>& foundeles, int& found, int& gpid,
+      double& jac, double& wgt, double& gpdist, double* Axi, double* AuxXi, double* globgp,
+      DualQuad& dq, Shapefcn& shape, Core::LinAlg::SparseMatrix& dmatrix_A,
+      Core::LinAlg::SparseMatrix& mmatrix_A, const Core::FE::Discretization& Adis,
+      const Core::FE::Discretization& Bdis, int dofseta, int dofsetb,
+      const Core::LinAlg::Map& PAB_dofrowmap, const Core::LinAlg::Map& PAB_dofcolmap);
 
   // evaluation of nts approach
   template <Core::FE::CellType distype>

@@ -19,6 +19,7 @@
 #include "4C_solid_poro_ele_factory.hpp"
 #include "4C_solid_poro_ele_properties.hpp"
 #include "4C_structure_new_elements_paramsinterface.hpp"
+#include "4C_utils_function.hpp"
 
 #include <memory>
 
@@ -171,8 +172,8 @@ namespace Discret::Elements
 
     [[nodiscard]] Mat::FluidPoroMultiPhase& fluid_poro_material(int nummat = 1) const;
 
-    [[nodiscard]] std::optional<Core::LinAlg::Tensor<double, dim>>
-    get_bodyforce_contribution_from_input() const;
+    [[nodiscard]] std::optional<const Core::Utils::FunctionOfSpaceTime*>
+    get_bodyforce_function_from_input() const;
 
     [[nodiscard]] Mat::So3Material& solid_poro_material(int nummat = 0) const;
 
@@ -185,11 +186,6 @@ namespace Discret::Elements
     Inpar::Solid::KinemType get_ele_kinematic_type() { return solid_ele_property_.kintype; }
 
     ScaTra::ImplType get_impl_type() { return poro_ele_property_.impltype; }
-
-    std::optional<Core::LinAlg::Tensor<double, dim>> get_possible_bodyforce_contribution()
-    {
-      return bodyforce_contribution_;
-    }
 
     void vis_names(std::map<std::string, int>& names) override;
 
@@ -220,9 +216,8 @@ namespace Discret::Elements
     //! flag, whether the post setup of materials is already called
     bool material_post_setup_ = false;
 
-    //! optional body force contribution
-    std::optional<Core::LinAlg::Tensor<double, dim>> bodyforce_contribution_{};
-
+    //! function for possible bodyforce contribution
+    std::optional<const Core::Utils::FunctionOfSpaceTime*> bodyforce_function_{std::nullopt};
   };  // class SolidPoro
 
 }  // namespace Discret::Elements

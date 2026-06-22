@@ -23,6 +23,8 @@
 
 #include <Teuchos_TimeMonitor.hpp>
 
+#include <chrono>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
@@ -90,9 +92,19 @@ void Core::FE::Discretization::evaluate(Teuchos::ParameterList& params,
     // Reshape element matrices and vectors and init to zero
     strategy.clear_element_storage(la[row].size(), la[col].size());
 
+    // time the function wrapper separately if timing is enabled, to get per element evaluation.
+    // to avoid double counting evaluate_with_timing should not be passed as element_action
+    const auto start_time = time_ele_evaluations_ ? std::chrono::steady_clock::now()
+                                                  : std::chrono::steady_clock::time_point{};
+
     // call the element evaluate method
     element_action(*actele, la, strategy.elematrix1(), strategy.elematrix2(), strategy.elevector1(),
         strategy.elevector2(), strategy.elevector3());
+
+    // per element timer stop and record if timing is enabled
+    if (time_ele_evaluations_)
+      actele->add_eval_time(
+          std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
 
     int eid = actele->id();
     strategy.assemble_matrix1(eid, la[row].lm_, la[col].lm_, la[row].lmowner_, la[col].stride_);
@@ -122,8 +134,18 @@ void Core::FE::Discretization::evaluate(
 
   for (auto actele : my_col_element_range())
   {
+    // time the function wrapper separately if timing is enabled, to get per element evaluation
+    // to avoid double counting evaluate_with_timing should not be passed as element_action
+    const auto start_time = time_ele_evaluations_ ? std::chrono::steady_clock::now()
+                                                  : std::chrono::steady_clock::time_point{};
+
     // call the element evaluate method
     element_action(*actele.user_element());
+
+    // record per element evaluation time if timing is enabled
+    if (time_ele_evaluations_)
+      actele.user_element()->add_eval_time(
+          std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
   }
 }
 

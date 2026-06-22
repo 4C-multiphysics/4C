@@ -74,6 +74,22 @@ void Mixture::AnisotropicGrowthStrategy::evaluate_inverse_growth_deformation_gra
                              Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
 }
 
+Core::LinAlg::Tensor<double, 3, 3>
+Mixture::AnisotropicGrowthStrategy::evaluate_d_inverse_growth_deformation_gradient_d_growth_scalar(
+    const double currentReferenceGrowthScalar, const Mat::EvaluationContext<3>& context,
+    const int gp, const int eleGID) const
+{
+  if (gp >= static_cast<int>(structural_tensors_.size()))
+  {
+    Core::LinAlg::Tensor<double, 3> growth_direction =
+        params_->growth_direction.interpolate(eleGID, context.xi->as_span());
+    structural_tensors_.emplace_back(Core::LinAlg::self_dyadic(growth_direction));
+  }
+  return Core::LinAlg::get_full(-1.0 /
+                                (currentReferenceGrowthScalar * currentReferenceGrowthScalar) *
+                                structural_tensors_[gp]);
+}
+
 void Mixture::AnisotropicGrowthStrategy::evaluate_growth_stress_cmat(
     const Mixture::MixtureRule& mixtureRule, double currentReferenceGrowthScalar,
     const Core::LinAlg::SymmetricTensor<double, 3, 3>& dCurrentReferenceGrowthScalarDC,

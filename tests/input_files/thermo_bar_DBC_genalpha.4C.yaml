@@ -9,9 +9,6 @@ TITLE:
   - "T(x=5) = 5"
   - "T(x=10) = 10"
   - "-> stationary solution for t_End = 1700"
-IO:
-  THERM_HEATFLUX: "Current"
-  THERM_TEMPGRAD: "Current"
 PROBLEM TYPE:
   PROBLEMTYPE: "Thermo"
 THERMAL DYNAMIC:

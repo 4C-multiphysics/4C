@@ -47,7 +47,7 @@ namespace Adapter
       return fpsiinterface_;
     }
 
-    void setup_interface(const int nds_master = 0) override;
+    void setup_interface(const int target_dofset_number = 0) override;
 
     void use_block_matrix(bool splitmatrix) override;
     virtual void use_block_matrix(

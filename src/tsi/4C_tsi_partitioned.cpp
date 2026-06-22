@@ -478,6 +478,12 @@ void TSI::Partitioned::outer_iteration_loop()
         // get current temperatures due to solve thermo step, like predictor in FSI
         if (itnum != 1) temp_ = thermo_field()->tempnp();
 
+        // Store the current outer iterates before the sub-solves overwrite them.
+        // convergence_check() turns these into increments by subtracting them
+        // from the updated field solutions.
+        tempincnp_->update(1.0, *thermo_field()->tempnp(), 0.0);
+        dispincnp_->update(1.0, *structure_field()->dispnp(), 0.0);
+
         // begin nonlinear solver / outer iteration ***************************
 
         // ---------------------------------------------- structure field

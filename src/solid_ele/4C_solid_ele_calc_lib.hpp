@@ -910,6 +910,29 @@ namespace Discret::Elements
         cmat_;
   };
 
+  /// 2D specialization additionally carrying the consistent 3D 2nd Piola-Kirchhoff stress
+  /// tensor, 3D Green-Lagrange strain tensor, and 3D deformation gradient. These are
+  /// required for the runtime stress and strain output of 2D elements: in plane strain
+  /// the out-of-plane stress is generally nonzero (eps_zz = 0), and in plane stress the
+  /// out-of-plane strain is generally nonzero (sigma_zz = 0).
+  template <Core::FE::CellType celltype>
+    requires(Core::FE::dim<celltype> == 2)
+  struct Stress<celltype>
+  {
+    Core::LinAlg::SymmetricTensor<double, 2, 2> pk2_;
+    Core::LinAlg::SymmetricTensor<double, 2, 2, 2, 2> cmat_;
+
+    /// Full 3D 2nd Piola-Kirchhoff stress tensor for output purposes.
+    Core::LinAlg::SymmetricTensor<double, 3, 3> pk2_3d_;
+
+    /// Full 3D Green-Lagrange strain tensor for output purposes.
+    Core::LinAlg::SymmetricTensor<double, 3, 3> gl_strain_3d_;
+
+    /// Full 3D deformation gradient consistent with the plane assumption (F_zz = 1 for
+    /// plane strain, F_zz determined by the material routine for plane stress).
+    Core::LinAlg::Tensor<double, 3, 3> defgrd_3d_;
+  };
+
   template <Core::FE::CellType celltype>
   struct ElementProperties
   {

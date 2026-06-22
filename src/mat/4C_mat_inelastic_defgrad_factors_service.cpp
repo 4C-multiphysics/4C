@@ -5,10 +5,19 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+#include "4C_config.hpp"
+
 #include "4C_mat_inelastic_defgrad_factors_service.hpp"
 
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_fixedsizematrix_tensor_products.hpp"
+#include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
+#include "4C_linalg_four_tensor_generators.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
+
+#include <string>
+#include <tuple>
 
 
 FOUR_C_NAMESPACE_OPEN
@@ -16,8 +25,19 @@ FOUR_C_NAMESPACE_OPEN
 using namespace Mat::InelasticDefgradTransvIsotropElastViscoplastUtils;
 
 
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
+void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ThermoMechanicalCouplingCache::resize(
+    const unsigned int numgp)
+{
+  std::apply([numgp](auto&... quantity) { (quantity.resize(numgp), ...); }, quantities());
+}
+
+void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ThermoMechanicalCouplingCache::reset(
+    const int gp)
+{
+  std::apply([gp](auto&... quantity) { (quantity.reset(gp), ...); }, quantities());
+}
+
+
 std::string
 Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::get_detailed_error_message_for_error_type(
     ErrorType err_type)
@@ -169,7 +189,8 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalSubsteppingUti
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
-void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities::init()
+void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities::init(
+    const double ref_temperature)
 {
   // auxiliaries
   Core::LinAlg::Matrix<3, 3> id3x3{Core::LinAlg::Initialization::zero};
@@ -191,6 +212,10 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities:
   last_plastic_strain.resize(1, 0.0);
   current_plastic_strain.resize(1, 0.0);  // value irrelevant at this point
   last_substep_plastic_strain.resize(1, 0.0);
+
+  // update last_ and current_ values of the temperature
+  last_temperature.resize(1, ref_temperature);
+  current_temperature.resize(1, ref_temperature);  // value irrelevant at this point
 
   // update last_ and current_ values of the equivalent stress
   last_equiv_stress.resize(1, 0.0);
@@ -241,6 +266,10 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities:
   last_defgrad.resize(numgp, last_defgrad[0]);
   current_defgrad.resize(numgp, current_defgrad[0]);
 
+  // default values of the temperature for ALL Gauss Points
+  last_temperature.resize(numgp, last_temperature[0]);        // value irrelevant at this point
+  current_temperature.resize(numgp, current_temperature[0]);  // value irrelevant at this point
+
   resize_called = true;
 }
 
@@ -266,6 +295,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities:
   last_plastic_strain = current_plastic_strain;
   last_equiv_stress = current_equiv_stress;
   last_substep_plastic_strain = current_plastic_strain;
+  last_temperature = current_temperature;
 }
 
 
@@ -281,6 +311,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities:
   add_to_pack(data, last_equiv_stress);
   add_to_pack(data, last_substep_plastic_defgrad_inverse);
   add_to_pack(data, last_substep_plastic_strain);
+  add_to_pack(data, last_temperature);
 }
 
 /*--------------------------------------------------------------------*
@@ -296,6 +327,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities:
   extract_from_pack(buffer, last_equiv_stress);
   extract_from_pack(buffer, last_substep_plastic_defgrad_inverse);
   extract_from_pack(buffer, last_substep_plastic_strain);
+  extract_from_pack(buffer, last_temperature);
 
   // fill current_ values with the last_ values
   current_rightCG.resize(last_rightCG.size(),
@@ -306,12 +338,63 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities:
       last_plastic_strain[0]);  // value irrelevant
   current_equiv_stress.resize(last_equiv_stress.size(),
       last_equiv_stress[0]);  // value irrelevant
+  current_temperature.resize(last_temperature.size(),
+      0.0);  // value irrelevant
 
   // set evaluated deformation gradient to 0, to make sure that the inverse inelastic deformation
   // gradient is evaluated fully after the restart
   current_defgrad.resize(last_substep_plastic_defgrad_inverse.size(),
       Core::LinAlg::Matrix<3, 3>{Core::LinAlg::Initialization::zero});
 }
+
+Core::LinAlg::Matrix<1, 6>
+Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::compute_taylor_quinney_wrt_cauchygreen(
+    const double taylor_quinney_coefficient, const ThermoMechanicalCouplingState& state,
+    const ThermoMechanicalCouplingStateDerivatives& state_derivatives,
+    const HistoryVariablesDerivativesWrtCauchyGreen& history_variables_derivatives)
+{
+  Core::LinAlg::Matrix<1, 6> total_dequiv_stress_dC =
+      state_derivatives.equiv_stress_wrt_cauchy_green;
+  total_dequiv_stress_dC.multiply(1.0, state_derivatives.equiv_stress_wrt_inverse_plastic_defgrad,
+      history_variables_derivatives.inv_plastic_defgrad_wrt_cauchy_green, 1.0);
+
+  Core::LinAlg::Matrix<1, 6> total_dpsr_dC{Core::LinAlg::Initialization::zero};
+  total_dpsr_dC.update(state_derivatives.plastic_strain_rate_derivs.deriv_plastic_strain,
+      history_variables_derivatives.plastic_strain_wrt_cauchy_green, 0.0);
+  total_dpsr_dC.update(
+      state_derivatives.plastic_strain_rate_derivs.deriv_equiv_stress, total_dequiv_stress_dC, 1.0);
+
+  Core::LinAlg::Matrix<1, 6> dR_TQ_dCV{Core::LinAlg::Initialization::zero};
+  dR_TQ_dCV.update(
+      taylor_quinney_coefficient * state.plastic_strain_rate, total_dequiv_stress_dC, 0.0);
+  dR_TQ_dCV.update(taylor_quinney_coefficient * state.equiv_stress, total_dpsr_dC, 1.0);
+
+  return dR_TQ_dCV;
+}
+
+double
+Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::compute_taylor_quinney_wrt_temperature(
+    const double taylor_quinney_coefficient, const ThermoMechanicalCouplingState& state,
+    const ThermoMechanicalCouplingStateDerivatives& state_derivatives,
+    const HistoryVariablesDerivativesWrtTemperature& history_variables_derivatives)
+{
+  double total_dequiv_stress_dT = state_derivatives.equiv_stress_wrt_temperature;
+  for (int i = 0; i < 9; ++i)
+  {
+    total_dequiv_stress_dT += state_derivatives.equiv_stress_wrt_inverse_plastic_defgrad(i) *
+                              history_variables_derivatives.inv_plastic_defgrad_wrt_temperature(i);
+  }
+
+  const double total_dpsr_dT =
+      state_derivatives.plastic_strain_rate_derivs.deriv_temperature +
+      state_derivatives.plastic_strain_rate_derivs.deriv_plastic_strain *
+          history_variables_derivatives.plastic_strain_wrt_temperature +
+      state_derivatives.plastic_strain_rate_derivs.deriv_equiv_stress * total_dequiv_stress_dT;
+
+  return taylor_quinney_coefficient *
+         (total_dequiv_stress_dT * state.plastic_strain_rate + state.equiv_stress * total_dpsr_dT);
+}
+
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/

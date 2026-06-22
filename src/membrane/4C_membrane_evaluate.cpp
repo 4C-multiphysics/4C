@@ -965,12 +965,6 @@ void Discret::Elements::Membrane<distype>::mem_nlnstiffmass(
           (*massmatrix)(noddof_* i + 2, noddof_ * j + 2) += massfactor;
         }
       }
-
-      // check for non constant mass matrix
-      if (solid_material()->varying_density())
-      {
-        FOUR_C_THROW("Varying Density not supported for Membrane");
-      }
     }
 
     /*===============================================================================*

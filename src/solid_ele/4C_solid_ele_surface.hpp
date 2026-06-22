@@ -161,7 +161,7 @@ namespace Discret::Elements
     }
 
     //! Return local surface number
-    [[nodiscard]] int l_surf_number() const { return face_master_number(); }
+    [[nodiscard]] int l_surf_number() const { return face_target_number(); }
 
    public:
     //! action for surface evaluation

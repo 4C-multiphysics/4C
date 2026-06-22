@@ -41,6 +41,11 @@ namespace Mixture
         const Mixture::MixtureRule& mixtureRule, double currentReferenceGrowthScalar,
         const Mat::EvaluationContext<3>& context, int gp, int eleGID) const override;
 
+    [[nodiscard]] Core::LinAlg::Tensor<double, 3, 3>
+    evaluate_d_inverse_growth_deformation_gradient_d_growth_scalar(
+        double currentReferenceGrowthScalar, const Mat::EvaluationContext<3>& context, int gp,
+        int eleGID) const override;
+
     void evaluate_growth_stress_cmat(const Mixture::MixtureRule& mixtureRule,
         double currentReferenceGrowthScalar,
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& dCurrentReferenceGrowthScalarDC,

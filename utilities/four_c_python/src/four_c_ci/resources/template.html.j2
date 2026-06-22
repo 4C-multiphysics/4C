@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --text-main: #1e293b;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --accent-color: #3b82f6;
+            --hover-bg: #f8fafc;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 98%;
+            max-width: 1600px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            margin-bottom: 3rem;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        details {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        summary {
+            padding: 1.25rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            list-style: none;
+            transition: background-color 0.2s ease;
+        }
+
+        summary:hover {
+            background-color: var(--hover-bg);
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        summary::after {
+            content: '+';
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: var(--accent-color);
+            transition: transform 0.3s ease;
+        }
+
+        details[open] summary::after {
+            transform: rotate(45deg);
+        }
+
+        details[open] summary {
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--hover-bg);
+        }
+
+        .iframe-container {
+            padding: 0.5rem 0.5rem 1rem 0.5rem;
+            display: flex;
+            justify-content: center;
+            background-color: #fafafa;
+        }
+
+        iframe {
+            width: 100%;
+            aspect-ratio: 16/9;
+            max-height: 85vh;
+            border: none;
+            border-radius: 6px;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem 0.5rem;
+            }
+
+            .container {
+                width: 100%;
+            }
+
+            .iframe-container {
+                padding: 0 0 0.5rem 0;
+            }
+
+            iframe {
+                border-radius: 0;
+            }
+
+            summary {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+
+            details {
+                margin-bottom: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>{{ title }}</h1>
+        {% for performance_test in performance_tests %}
+        <details>
+            <summary>{{ performance_test.title }}</summary>
+            <div class="iframe-container">
+                <iframe data-src="{{ performance_test.url }}" loading="lazy"></iframe>
+            </div>
+        </details>
+
+        {% endfor %}
+    </div>
+
+    <!-- JavaScript to fix the Plotly rendering issue within a details element -->
+    <script>
+        document.querySelectorAll('details').forEach(detail => {
+            detail.addEventListener('toggle', function () {
+                if (this.open) {
+                    const iframe = this.querySelector('iframe');
+
+                    // 1. If the iframe hasn't been loaded yet, load it now that the container has dimensions
+                    if (!iframe.src) {
+                        iframe.src = iframe.getAttribute('data-src');
+                    }
+                    // 2. If it is already loaded, force Plotly to resize itself to fix any lingering glitches
+                    else if (iframe.contentWindow) {
+                        iframe.contentWindow.dispatchEvent(new Event('resize'));
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

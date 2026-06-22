@@ -54,8 +54,11 @@ Mixture::PAR::MixtureConstituentRemodelFiberSsi::MixtureConstituentRemodelFiberS
       deposition_stretch_(matdata.parameters.get<double>("DEPOSITION_STRETCH")),
       deposition_stretch_timefunc_num_(matdata.parameters.get<int>("DEPOSITION_STRETCH_TIMEFUNCT")),
       inelastic_external_deformation_(matdata.parameters.get<bool>("INELASTIC_GROWTH")),
-      growth_scalar_id_(matdata.parameters.get<int>("GROWTH_SCALAR_ID")),
-      remodeling_scalar_id_(matdata.parameters.get<int>("REMODELING_SCALAR_ID"))
+      growth_scalar_id_(matdata.parameters.get<std::optional<int>>("GROWTH_SCALAR_ID")),
+      remodeling_scalar_id_(matdata.parameters.get<std::optional<int>>("REMODELING_SCALAR_ID")),
+      nonlocal_stimulus_scalar_id_(
+          matdata.parameters.get<std::optional<int>>("NONLOCAL_STIMULUS_SCALAR_ID")),
+      implicit_integration_(matdata.parameters.get<bool>("IMPLICIT_INTEGRATION"))
 {
 }
 
@@ -125,6 +128,24 @@ void Mixture::MixtureConstituentRemodelFiberSsi::setup(
 {
   Mixture::MixtureConstituent::setup(params, eleGID);
   update_homeostatic_values(params, 0.0, eleGID);
+
+  // Validate scalar-ID configuration: exactly one of the two coupling modes must be active.
+  if (is_nonlocal_stimulus_mode())
+  {
+    FOUR_C_ASSERT_ALWAYS(
+        !params_->growth_scalar_id_.has_value() and !params_->remodeling_scalar_id_.has_value(),
+        "MIX_Constituent_SsiRemodelFiber NONLOCAL_STIMULUS_SCALAR_ID is set, but "
+        "GROWTH_SCALAR_ID and/or REMODELING_SCALAR_ID are also set. Specify exactly "
+        "one coupling mode: either NONLOCAL_STIMULUS_SCALAR_ID or both GROWTH_SCALAR_ID and "
+        "REMODELING_SCALAR_ID.");
+  }
+  else
+  {
+    FOUR_C_ASSERT_ALWAYS(
+        params_->growth_scalar_id_.has_value() and params_->remodeling_scalar_id_.has_value(),
+        "MIX_Constituent_SsiRemodelFiber requires either NONLOCAL_STIMULUS_SCALAR_ID or both "
+        "GROWTH_SCALAR_ID and REMODELING_SCALAR_ID to be set.");
+  }
 }
 
 void Mixture::MixtureConstituentRemodelFiberSsi::update_elastic_part(
@@ -149,8 +170,22 @@ void Mixture::MixtureConstituentRemodelFiberSsi::update_elastic_part(
 
   if (params_->enable_growth_)
   {
-    set_current_growth_scalar(params, gp);
-    set_current_lambda_r(params, gp);
+    if (is_nonlocal_stimulus_mode())
+    {
+      const auto& scalars = *params.get<std::shared_ptr<std::vector<double>>>("scalars");
+      const double psi =
+          scalars[static_cast<std::size_t>(params_->nonlocal_stimulus_scalar_id_.value())];
+      if (!params_->implicit_integration_)
+      {
+        remodel_fiber_[gp].integrate_local_evolution_equations_explicit_with_nonlocal_stimulus(
+            psi, dt);
+      }
+    }
+    else
+    {
+      set_current_growth_scalar(params, gp);
+      set_current_lambda_r(params, gp);
+    }
   }
 }
 
@@ -172,8 +207,23 @@ void Mixture::MixtureConstituentRemodelFiberSsi::update(const Core::LinAlg::Tens
 
     if (params_->enable_growth_)
     {
-      set_current_growth_scalar(params, gp);
-      set_current_lambda_r(params, gp);
+      if (is_nonlocal_stimulus_mode())
+      {
+        const double dt = *context.time_step_size;
+        const auto& scalars = *params.get<std::shared_ptr<std::vector<double>>>("scalars");
+        const double psi =
+            scalars[static_cast<std::size_t>(params_->nonlocal_stimulus_scalar_id_.value())];
+        if (!params_->implicit_integration_)
+        {
+          remodel_fiber_[gp].integrate_local_evolution_equations_explicit_with_nonlocal_stimulus(
+              psi, dt);
+        }
+      }
+      else
+      {
+        set_current_growth_scalar(params, gp);
+        set_current_lambda_r(params, gp);
+      }
     }
   }
 }
@@ -275,6 +325,16 @@ void Mixture::MixtureConstituentRemodelFiberSsi::evaluate(
   const double lambda_f = evaluate_lambdaf(C, gp, eleGID);
   remodel_fiber_[gp].set_state(lambda_f, 1.0);
 
+  if (params_->enable_growth_ && is_nonlocal_stimulus_mode() && params_->implicit_integration_)
+  {
+    FOUR_C_ASSERT(context.time_step_size, "Time step size not given in evaluation context.");
+    const double dt = *context.time_step_size;
+    const auto& scalars = *params.get<std::shared_ptr<std::vector<double>>>("scalars");
+    const double psi =
+        scalars[static_cast<std::size_t>(params_->nonlocal_stimulus_scalar_id_.value())];
+    remodel_fiber_[gp].integrate_local_evolution_equations_implicit_with_nonlocal_stimulus(psi, dt);
+  }
+
   S_stress = evaluate_current_pk2(gp, eleGID);
   cmat = evaluate_current_cmat(gp, eleGID);
 }
@@ -311,6 +371,16 @@ void Mixture::MixtureConstituentRemodelFiberSsi::evaluate_elastic_part(
   const double lambda_ext = evaluate_lambda_ext(iFextin, gp, eleGID);
   remodel_fiber_[gp].set_state(lambda_f, lambda_ext);
 
+  if (params_->enable_growth_ && is_nonlocal_stimulus_mode() && params_->implicit_integration_)
+  {
+    FOUR_C_ASSERT(context.time_step_size, "Time step size not given in evaluation context.");
+    const double dt = *context.time_step_size;
+    const auto& scalars = *params.get<std::shared_ptr<std::vector<double>>>("scalars");
+    const double psi =
+        scalars[static_cast<std::size_t>(params_->nonlocal_stimulus_scalar_id_.value())];
+    remodel_fiber_[gp].integrate_local_evolution_equations_implicit_with_nonlocal_stimulus(psi, dt);
+  }
+
   S_stress = evaluate_current_pk2(gp, eleGID);
   cmat = evaluate_current_cmat(gp, eleGID);
 }
@@ -324,14 +394,14 @@ void Mixture::MixtureConstituentRemodelFiberSsi::set_current_growth_scalar(
     const Teuchos::ParameterList& params, int gp)
 {
   const auto& scalars = *params.get<std::shared_ptr<std::vector<double>>>("scalars");
-  double scalar = scalars[static_cast<std::size_t>(params_->growth_scalar_id_)];
+  double scalar = scalars[static_cast<std::size_t>(params_->growth_scalar_id_.value())];
   remodel_fiber_[gp].set_growth_scalar(scalar);
 }
 void Mixture::MixtureConstituentRemodelFiberSsi::set_current_lambda_r(
     const Teuchos::ParameterList& params, int gp)
 {
   const auto& scalars = *params.get<std::shared_ptr<std::vector<double>>>("scalars");
-  double scalar = scalars[static_cast<std::size_t>(params_->remodeling_scalar_id_)];
+  double scalar = scalars[static_cast<std::size_t>(params_->remodeling_scalar_id_.value())];
   remodel_fiber_[gp].set_lambda_r(scalar);
 }
 
@@ -347,6 +417,30 @@ double Mixture::MixtureConstituentRemodelFiberSsi::evaluate_growth_reaction_coef
 {
   if (params_->enable_growth_) return remodel_fiber_[gp].evaluate_growth_reaction_coefficient();
   return 0.0;
+}
+
+double Mixture::MixtureConstituentRemodelFiberSsi::evaluate_current_fiber_pk2_stress(int gp) const
+{
+  return remodel_fiber_[gp].evaluate_current_fiber_pk2_stress();
+}
+
+double Mixture::MixtureConstituentRemodelFiberSsi::evaluate_d_growth_scalar_d_nonlocal_stimulus(
+    int gp) const
+{
+  return remodel_fiber_[gp].evaluate_d_growth_scalar_d_nonlocal_stimulus();
+}
+
+double Mixture::MixtureConstituentRemodelFiberSsi::evaluate_d_cauchy_stress_d_lambda_f_sq(
+    int gp) const
+{
+  return remodel_fiber_[gp].evaluate_d_current_cauchy_stress_d_lambda_f_sq();
+}
+
+double Mixture::MixtureConstituentRemodelFiberSsi::evaluate_local_stimulus(int gp) const
+{
+  const double sigma = remodel_fiber_[gp].evaluate_current_fiber_cauchy_stress();
+  const double sigma_h = remodel_fiber_[gp].evaluate_current_homeostatic_fiber_cauchy_stress();
+  return sigma - sigma_h;
 }
 
 double Mixture::MixtureConstituentRemodelFiberSsi::evaluate_deposition_stretch(

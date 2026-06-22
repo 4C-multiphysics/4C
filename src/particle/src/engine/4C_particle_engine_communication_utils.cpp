@@ -41,6 +41,7 @@ void Particle::ParticleUtils::immediate_recv_blocking_send(
   // ---- send size of messages to receiving processors ----
   std::vector<MPI_Request> sizerequest(numsendtoprocs);
   std::vector<int> sizetargets(numsendtoprocs);
+  std::vector<int> msgsizestosend(numsendtoprocs);
   int counter = 0;
   for (const auto& p : sdata)
   {
@@ -50,14 +51,15 @@ void Particle::ParticleUtils::immediate_recv_blocking_send(
 
     sizetargets[counter] = torank;
 
-    int msgsizetosend = static_cast<int>((p.second).size());
+    msgsizestosend[counter] = static_cast<int>((p.second).size());
 
     // check sending size of message
-    if (not(msgsizetosend > 0))
-      FOUR_C_THROW("sending non-positive message size {} to proc {}!", msgsizetosend, torank);
+    if (not(msgsizestosend[counter] > 0))
+      FOUR_C_THROW(
+          "sending non-positive message size {} to proc {}!", msgsizestosend[counter], torank);
 
     // perform non-blocking send operation
-    MPI_Isend(&msgsizetosend, 1, MPI_INT, torank, 1234, comm, &sizerequest[counter]);
+    MPI_Isend(&msgsizestosend[counter], 1, MPI_INT, torank, 1234, comm, &sizerequest[counter]);
 
     ++counter;
   }
@@ -67,17 +69,12 @@ void Particle::ParticleUtils::immediate_recv_blocking_send(
   std::vector<MPI_Request> recvrequest(numrecvfromprocs);
   for (int rec = 0; rec < numrecvfromprocs; ++rec)
   {
-    // probe for any message to come
+    // probe for message with size tag to come
     MPI_Status status;
-    MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &status);
+    MPI_Probe(MPI_ANY_SOURCE, 1234, comm, &status);
 
-    // get message sender and tag
+    // get message sender
     int const msgsource = status.MPI_SOURCE;
-    int const msgtag = status.MPI_TAG;
-
-    // check message tag
-    if (msgtag != 1234)
-      FOUR_C_THROW("received data on proc {} with wrong tag from proc {}", myrank, msgsource);
 
     // get message size
     int msgsize = -1;
@@ -88,7 +85,7 @@ void Particle::ParticleUtils::immediate_recv_blocking_send(
 
     // perform blocking receive operation
     int msgsizetorecv = -1;
-    MPI_Recv(&msgsizetorecv, msgsize, MPI_INT, msgsource, msgtag, comm, MPI_STATUS_IGNORE);
+    MPI_Recv(&msgsizetorecv, msgsize, MPI_INT, msgsource, 1234, comm, MPI_STATUS_IGNORE);
 
     // check received size of message
     if (not(msgsizetorecv > 0))

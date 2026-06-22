@@ -90,6 +90,37 @@ if(FOUR_C_WITH_GOOGLE_BENCHMARK)
     )
   fetchcontent_makeavailable(googlebenchmark)
 
+  four_c_process_global_option(
+    FOUR_C_ENABLE_FULL_BENCHMARK_TESTS
+    DESCRIPTION
+    "Enable full benchmark tests (instead of just dry-runs) during testing."
+    DEFAULT
+    OFF
+    )
+  four_c_process_cache_variable(
+    FOUR_C_BENCHMARK_TESTS_COLLECTION_FILE
+    TYPE
+    PATH
+    DESCRIPTION
+    "Path to the collection file for the benchmark test results."
+    DEFAULT
+    ${PROJECT_BINARY_DIR}/benchmark_test_results.json
+    )
+
+  if(FOUR_C_ENABLE_FULL_BENCHMARK_TESTS)
+    set(_benchmark_test_timeout 600) # 10 minutes for full benchmark tests
+  else()
+    set(_benchmark_test_timeout 10) # 10 seconds for dry run
+  endif()
+
+  math(EXPR BENCHMARK_TEST_TIMEOUT "${_benchmark_test_timeout}*${FOUR_C_TEST_TIMEOUT_SCALE}")
+  message(STATUS "The scaled benchmark test timeout is ${BENCHMARK_TEST_TIMEOUT} s.")
+
+  # Add benchmark test result collection
+  four_c_collect_benchmark_test_results(
+    TARGET_FILE ${FOUR_C_BENCHMARK_TESTS_COLLECTION_FILE} ALLOW_EMPTY
+    )
+
 else()
   message(STATUS "Benchmark tests with Google Benchmark: disabled")
 endif()

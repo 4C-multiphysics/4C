@@ -25,7 +25,7 @@ namespace Core::LinAlg
 
 namespace Adapter
 {
-  class CouplingSlaveConverter;
+  class CouplingSourceConverter;
 }
 
 namespace SSI

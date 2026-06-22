@@ -356,25 +356,25 @@ namespace
     FOUR_C_EXPECT_NEAR(interp_matrix_lambda, lambda_ref, 1.0e-9);
 
     // compute relative rotation matrices
-    Core::LinAlg::Matrix<3, 3>& Q_master = right_matrix_Q;
-    Core::LinAlg::Matrix<3, 3>& R_master = right_matrix_R;
+    Core::LinAlg::Matrix<3, 3>& Q_target = right_matrix_Q;
+    Core::LinAlg::Matrix<3, 3>& R_target = right_matrix_R;
     if (loc < 0.5)
     {
-      Q_master = left_matrix_Q;
-      R_master = left_matrix_R;
+      Q_target = left_matrix_Q;
+      R_target = left_matrix_R;
     }
     Core::LinAlg::Matrix<3, 3> left_matrix_Q_rel{Core::LinAlg::Initialization::zero};
-    left_matrix_Q_rel.multiply_tn(1.0, Q_master, left_matrix_Q, 0.0);
+    left_matrix_Q_rel.multiply_tn(1.0, Q_target, left_matrix_Q, 0.0);
     Core::LinAlg::Matrix<3, 3> right_matrix_Q_rel{Core::LinAlg::Initialization::zero};
-    right_matrix_Q_rel.multiply_tn(1.0, Q_master, right_matrix_Q, 0.0);
+    right_matrix_Q_rel.multiply_tn(1.0, Q_target, right_matrix_Q, 0.0);
     Core::LinAlg::Matrix<3, 3> interp_matrix_Q_rel{Core::LinAlg::Initialization::zero};
-    interp_matrix_Q_rel.multiply_tn(1.0, Q_master, interp_matrix_Q, 0.0);
+    interp_matrix_Q_rel.multiply_tn(1.0, Q_target, interp_matrix_Q, 0.0);
     Core::LinAlg::Matrix<3, 3> left_matrix_R_rel{Core::LinAlg::Initialization::zero};
-    left_matrix_R_rel.multiply_tn(1.0, R_master, left_matrix_R, 0.0);
+    left_matrix_R_rel.multiply_tn(1.0, R_target, left_matrix_R, 0.0);
     Core::LinAlg::Matrix<3, 3> right_matrix_R_rel{Core::LinAlg::Initialization::zero};
-    right_matrix_R_rel.multiply_tn(1.0, R_master, right_matrix_R, 0.0);
+    right_matrix_R_rel.multiply_tn(1.0, R_target, right_matrix_R, 0.0);
     Core::LinAlg::Matrix<3, 3> interp_matrix_R_rel{Core::LinAlg::Initialization::zero};
-    interp_matrix_R_rel.multiply_tn(1.0, R_master, interp_matrix_R, 0.0);
+    interp_matrix_R_rel.multiply_tn(1.0, R_target, interp_matrix_R, 0.0);
     // compute relative rotation vectors
     Core::LinAlg::Matrix<3, 1> left_matrix_Q_rel_vect =
         Core::LinAlg::calc_rot_vect_from_rot_matrix(left_matrix_Q_rel);

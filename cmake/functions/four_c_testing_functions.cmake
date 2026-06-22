@@ -658,6 +658,61 @@ function(__four_c_test_add_csv_yaml_comparison)
     )
 endfunction()
 
+##
+# Define a comparison test that checks the header row of a CSV result file.
+#
+# required parameters:
+#   BASED_ON:              name of the base test that created the result file to compare against
+#   RESULT_FILE:           name of the result file created by the base test
+#   HEADERS:               expected CSV header entries
+#
+# optional parameters:
+#   LABELS:                add labels to the test
+#   REQUIRED_DEPENDENCIES: any required external dependencies. The test will be skipped if the dependencies are not met.
+#
+function(four_c_test_add_csv_header_check)
+  set(options "")
+  set(oneValueArgs BASED_ON RESULT_FILE)
+  set(multiValueArgs HEADERS LABELS REQUIRED_DEPENDENCIES)
+  cmake_parse_arguments(
+    _parsed
+    "${options}"
+    "${oneValueArgs}"
+    "${multiValueArgs}"
+    ${ARGN}
+    )
+
+  if(DEFINED _parsed_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "There are unparsed arguments: ${_parsed_UNPARSED_ARGUMENTS}!")
+  endif()
+
+  assert_required_arguments(_parsed BASED_ON RESULT_FILE HEADERS)
+
+  set(name_of_csv_header_test "${_parsed_BASED_ON}-csv_header_check-${_parsed_RESULT_FILE}")
+  get_test_property(${_parsed_BASED_ON} _internal_OUTPUT_DIR test_directory)
+
+  set(csv_header_check_command
+      "${FOUR_C_PYTHON_VENV_BUILD}/bin/check-csv-headers ${test_directory}/${_parsed_RESULT_FILE}"
+      )
+  foreach(header IN LISTS _parsed_HEADERS)
+    string(APPEND csv_header_check_command " \"${header}\"")
+  endforeach()
+
+  list(APPEND _parsed_REQUIRED_DEPENDENCIES "Python")
+  _add_test_with_options(
+    NAME_OF_TEST
+    ${name_of_csv_header_test}
+    TEST_COMMAND
+    ${csv_header_check_command}
+    ADDITIONAL_FIXTURE
+    ${_parsed_BASED_ON}
+    LABELS
+    "${_parsed_LABELS}"
+    REQUIRED_DEPENDENCIES
+    "${_parsed_REQUIRED_DEPENDENCIES}"
+    )
+endfunction()
+
 ###------------------------------------------------------------------ Nested Parallelism
 # Usage in tests/lists_of_tests.cmake: "four_c_test_nested_parallelism(<name_of_input_file_1> <name_of_input_file_2> <restart_step>)"
 # required parameters:

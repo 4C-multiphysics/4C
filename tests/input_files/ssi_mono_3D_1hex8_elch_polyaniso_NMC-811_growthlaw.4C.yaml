@@ -47,21 +47,13 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_electrode:
-      DIFF_COEF_CONC_DEP_FUNCT: -1
-      DIFF_COEF_TEMP_SCALE_FUNCT: 0
-      COND_CONC_DEP_FUNCT: -1
-      COND_TEMP_SCALE_FUNCT: 0
-      DIFF_PARA_NUM: 1
-      DIFF_PARA: [3.3454e-10]
-      COND_PARA_NUM: 1
-      COND_PARA: [170000]
+      DIFF_COEF: 3.3454e-10
+      COND: 170000.0
       C_MAX: 49137.5
       CHI_MAX: 1
       OCP_MODEL:
         Function:
           OCP_FUNCT_NUM: 3
-        X_MIN: -1
-        X_MAX: -1
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
       NUMMATEL: 1

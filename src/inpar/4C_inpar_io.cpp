@@ -119,27 +119,6 @@ std::vector<Core::IO::InputSpec> Inpar::IO::valid_parameters()
 
           parameter<bool>("FLUID_NODEDATA_FIRST_STEP", {.description = "", .default_value = false}),
 
-          deprecated_selection<Thermo::HeatFluxType>("THERM_HEATFLUX",
-              {
-                  {"None", Thermo::heatflux_none},
-                  {"No", Thermo::heatflux_none},
-                  {"NO", Thermo::heatflux_none},
-                  {"no", Thermo::heatflux_none},
-                  {"Current", Thermo::heatflux_current},
-                  {"Initial", Thermo::heatflux_initial},
-              },
-              {.description = "", .default_value = Thermo::heatflux_none}),
-          deprecated_selection<Thermo::TempGradType>("THERM_TEMPGRAD",
-              {
-                  {"None", Thermo::tempgrad_none},
-                  {"No", Thermo::tempgrad_none},
-                  {"NO", Thermo::tempgrad_none},
-                  {"no", Thermo::tempgrad_none},
-                  {"Current", Thermo::tempgrad_current},
-                  {"Initial", Thermo::tempgrad_initial},
-              },
-              {.description = "", .default_value = Thermo::tempgrad_none}),
-
           parameter<int>(
               "FILESTEPS", {.description = "Amount of timesteps written to a single result file",
                                .default_value = 1000}),
@@ -181,7 +160,10 @@ std::vector<Core::IO::InputSpec> Inpar::IO::valid_parameters()
                               "(in seconds), smaller zero to disable",
                   .default_value = -1.0}),
           parameter<int>("RESTARTEVERY",
-              {.description = "write restart every RESTARTEVERY steps", .default_value = -1})},
+              {.description = "write restart every RESTARTEVERY steps", .default_value = -1}),
+          parameter<bool>("PER_RANK_EVAL_TIME",
+              {.description = "write per rank wall time for element evaluation to csv file",
+                  .default_value = false})},
       {.required = false}));
   return specs;
 }

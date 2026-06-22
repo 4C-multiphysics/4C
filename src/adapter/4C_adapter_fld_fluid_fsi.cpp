@@ -73,17 +73,17 @@ void Adapter::FluidFSI::init()
     FOUR_C_THROW("Failed to cast Adapter::Fluid to FLD::FluidImplicitTimeInt.");
 
   // default dofset for coupling
-  int nds_master = 0;
+  int target_dofset_number = 0;
 
-  // set nds_master = 2 in case of HDG discretization
+  // set target_dofset_number = 2 in case of HDG discretization
   // (nds = 0 used for trace values, nds = 1 used for interior values)
   if (problem.spatial_approximation_type() == Core::FE::ShapeFunctionType::hdg)
   {
-    nds_master = 2;
+    target_dofset_number = 2;
   }
 
   // create fluid map extractor
-  setup_interface(nds_master);
+  setup_interface(target_dofset_number);
 
   fluidimpl_->set_surface_splitter(&(*interface_));
 
@@ -294,10 +294,10 @@ void Adapter::FluidFSI::apply_mesh_velocity(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Adapter::FluidFSI::set_mesh_map(
-    std::shared_ptr<const Core::LinAlg::Map> mm, const int nds_master)
+    std::shared_ptr<const Core::LinAlg::Map> mm, const int target_dofset_number)
 {
-  meshmap_->setup(*dis_->dof_row_map(nds_master), mm,
-      Core::LinAlg::split_map(*dis_->dof_row_map(nds_master), *mm));
+  meshmap_->setup(*dis_->dof_row_map(target_dofset_number), mm,
+      Core::LinAlg::split_map(*dis_->dof_row_map(target_dofset_number), *mm));
 }
 
 /*----------------------------------------------------------------------*/
@@ -827,9 +827,9 @@ std::string Adapter::FluidFSI::get_tim_ada_method_name() const
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Adapter::FluidFSI::setup_interface(const int nds_master)
+void Adapter::FluidFSI::setup_interface(const int target_dofset_number)
 {
-  interface_->setup(*dis_, false, false, nds_master);
+  interface_->setup(*dis_, false, false, target_dofset_number);
 }
 
 /*----------------------------------------------------------------------*
@@ -845,9 +845,9 @@ void Adapter::FluidFSI::build_inner_vel_map()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Adapter::FluidFSI::update_slave_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& f)
+void Adapter::FluidFSI::update_source_dof(std::shared_ptr<Core::LinAlg::Vector<double>>& f)
 {
-  fluidimpl_->update_slave_dof(*f);
+  fluidimpl_->update_source_dof(*f);
 }
 
 FOUR_C_NAMESPACE_CLOSE

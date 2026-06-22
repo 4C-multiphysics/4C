@@ -42,11 +42,6 @@
 #include "4C_mat_elast_isovarga.hpp"
 #include "4C_mat_elast_isoyeoh.hpp"
 #include "4C_mat_elast_remodelfiber.hpp"
-#include "4C_mat_elast_visco_coupmyocard.hpp"
-#include "4C_mat_elast_visco_fract.hpp"
-#include "4C_mat_elast_visco_generalizedgenmax.hpp"
-#include "4C_mat_elast_visco_genmax.hpp"
-#include "4C_mat_elast_visco_isoratedep.hpp"
 #include "4C_mat_elast_vologden.hpp"
 #include "4C_mat_elast_volpenalty.hpp"
 #include "4C_mat_elast_volpow.hpp"
@@ -139,11 +134,6 @@ std::shared_ptr<Mat::Elastic::Summand> Mat::Elastic::Summand::factory(int matnum
       auto* params = dynamic_cast<Mat::Elastic::PAR::CoupMooneyRivlin*>(curmat);
       return std::make_shared<CoupMooneyRivlin>(params);
     }
-    case Core::Materials::mes_coupmyocard:
-    {
-      auto* params = dynamic_cast<Mat::Elastic::PAR::CoupMyocard*>(curmat);
-      return std::make_shared<CoupMyocard>(params);
-    }
     case Core::Materials::mes_coupneohooke:
     {
       auto* params = dynamic_cast<Mat::Elastic::PAR::CoupNeoHooke*>(curmat);
@@ -189,21 +179,6 @@ std::shared_ptr<Mat::Elastic::Summand> Mat::Elastic::Summand::factory(int matnum
       auto* params = dynamic_cast<Mat::Elastic::PAR::CoupVarga*>(curmat);
       return std::make_shared<CoupVarga>(params);
     }
-    case Core::Materials::mes_fract:
-    {
-      auto* params = dynamic_cast<Mat::Elastic::PAR::Fract*>(curmat);
-      return std::make_shared<Fract>(params);
-    }
-    case Core::Materials::mes_genmax:
-    {
-      auto* params = dynamic_cast<Mat::Elastic::PAR::GenMax*>(curmat);
-      return std::make_shared<GenMax>(params);
-    }
-    case Core::Materials::mes_generalizedgenmax:
-    {
-      auto* params = dynamic_cast<Mat::Elastic::PAR::GeneralizedGenMax*>(curmat);
-      return std::make_shared<GeneralizedGenMax>(params);
-    }
     case Core::Materials::mes_isoanisoexpo:
     {
       auto* params = dynamic_cast<Mat::Elastic::PAR::IsoAnisoExpo*>(curmat);
@@ -245,11 +220,6 @@ std::shared_ptr<Mat::Elastic::Summand> Mat::Elastic::Summand::factory(int matnum
       auto* params = dynamic_cast<Mat::Elastic::PAR::Iso2Pow*>(curmat);
       return std::make_shared<Iso2Pow>(params);
     }
-    case Core::Materials::mes_isoratedep:
-    {
-      auto* params = dynamic_cast<Mat::Elastic::PAR::IsoRateDep*>(curmat);
-      return std::make_shared<IsoRateDep>(params);
-    }
     case Core::Materials::mes_isotestmaterial:
     {
       auto* params = dynamic_cast<Mat::Elastic::PAR::IsoTestMaterial*>(curmat);
@@ -290,32 +260,17 @@ std::shared_ptr<Mat::Elastic::Summand> Mat::Elastic::Summand::factory(int matnum
       auto* params = dynamic_cast<Mat::Elastic::PAR::VolSussmanBathe*>(curmat);
       return std::make_shared<VolSussmanBathe>(params);
     }
-    case Core::Materials::mes_viscobranch:
-    {
-      auto* params = dynamic_cast<Mat::Elastic::PAR::ViscoBranch*>(curmat);
-      return std::make_shared<ViscoBranch>(params);
-    }
-    case Core::Materials::mes_viscopart:
-    {
-      auto* params = dynamic_cast<Mat::Elastic::PAR::ViscoPart*>(curmat);
-      return std::make_shared<ViscoPart>(params);
-    }
     default:
       FOUR_C_THROW("cannot deal with type {}", curmat->type());
   }
   return nullptr;
 }
 
-void Mat::Elastic::Summand::add_shear_mod(bool& haveshearmod, double& shearmod, int ele_gid) const
-{
-  FOUR_C_THROW("Mat::Elastic::Summand::AddShearMod: Add Shear Modulus not implemented - do so!");
-}
-
 int Mat::Elastic::Summand::unique_par_object_id() const { return -1; }
 
-void Mat::Elastic::Summand::pack(Core::Communication::PackBuffer& data) const { return; }
+void Mat::Elastic::Summand::pack(Core::Communication::PackBuffer& data) const {}
 
-void Mat::Elastic::Summand::unpack(Core::Communication::UnpackBuffer& buffer) { return; };
+void Mat::Elastic::Summand::unpack(Core::Communication::UnpackBuffer& buffer) {};
 
 // Function which reads in the given fiber value due to the CIR-AXI-RAD nomenclature
 void Mat::Elastic::Summand::read_rad_axi_cir(

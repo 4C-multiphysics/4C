@@ -14,17 +14,18 @@
 #include "4C_utils_function.hpp"
 #include "4C_utils_function_manager.hpp"
 
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace
 {
   template <int nsd>
-  Core::LinAlg::Tensor<double, nsd> get_bodyforce_vector(
-      const Discret::Elements::PoroFluidManager::PhaseManagerInterface& phasemanager)
+  Core::LinAlg::Tensor<double, nsd> get_bodyforce_vector(std::span<const double> coords,
+      const double time, const Core::Utils::FunctionOfSpaceTime& bodyforce_function)
   {
     Core::LinAlg::Tensor<double, nsd> bodyforce{};
     for (int idim = 0; idim < nsd; idim++)
-      bodyforce(idim) = phasemanager.bodyforce_contribution_values()[idim];
+      bodyforce(idim) = bodyforce_function.evaluate(coords, time, idim);
     return bodyforce;
   };
 }  // namespace
@@ -3345,12 +3346,12 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
   }
 
   // calculate the coordinates of the gauss point
-  std::vector<double> coords(nsd, 0.0);
+  std::array<double, nsd> coords{};
   for (int idim = 0; idim < nsd; idim++)
   {
     for (int inode = 0; inode < nen; inode++)
     {
-      coords[idim] += funct(inode) * xyze(idim, inode);
+      coords.at(idim) += funct(inode) * xyze(idim, inode);
     }
   }
 
@@ -3428,8 +3429,19 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBodyforce<nsd,
   // get vector to fill
   Core::LinAlg::SerialDenseVector& myvec = *elevec[0];
 
+  // calculate the coordinates of the gauss point
+  std::array<double, nsd> coords{};
+  for (int idim = 0; idim < nsd; idim++)
+  {
+    for (int inode = 0; inode < nen; inode++)
+    {
+      coords.at(idim) += funct(inode) * xyze(idim, inode);
+    }
+  }
+
   // get body force
-  const Core::LinAlg::Tensor<double, nsd> bodyforce = get_bodyforce_vector<nsd>(phasemanager);
+  const Core::LinAlg::Tensor<double, nsd> bodyforce = get_bodyforce_vector<nsd>(
+      coords, phasemanager.get_time(), *phasemanager.bodyforce_contribution_function().value());
 
   const int numfluidphases = phasemanager.num_fluid_phases();
 
@@ -3483,8 +3495,19 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
   // get matrix to fill
   Core::LinAlg::SerialDenseVector& myvec = *elevec[0];
 
+  // calculate the coordinates of the gauss point
+  std::array<double, nsd> coords{};
+  for (int idim = 0; idim < nsd; idim++)
+  {
+    for (int inode = 0; inode < nen; inode++)
+    {
+      coords.at(idim) += funct(inode) * xyze(idim, inode);
+    }
+  }
+
   // get body force
-  const Core::LinAlg::Tensor<double, nsd> bodyforce = get_bodyforce_vector<nsd>(phasemanager);
+  const Core::LinAlg::Tensor<double, nsd> bodyforce = get_bodyforce_vector<nsd>(
+      coords, phasemanager.get_time(), *phasemanager.bodyforce_contribution_function().value());
 
   const int numfluidphases = phasemanager.num_fluid_phases();
   const int numvolfrac = phasemanager.num_vol_frac();
@@ -3543,8 +3566,19 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungBodyforce<n
   // get matrix to fill
   Core::LinAlg::SerialDenseVector& myvec = *elevec[0];
 
+  // calculate the coordinates of the gauss point
+  std::array<double, nsd> coords{};
+  for (int idim = 0; idim < nsd; idim++)
+  {
+    for (int inode = 0; inode < nen; inode++)
+    {
+      coords.at(idim) += funct(inode) * xyze(idim, inode);
+    }
+  }
+
   // get body force
-  const Core::LinAlg::Tensor<double, nsd> bodyforce = get_bodyforce_vector<nsd>(phasemanager);
+  const Core::LinAlg::Tensor<double, nsd> bodyforce = get_bodyforce_vector<nsd>(
+      coords, phasemanager.get_time(), *phasemanager.bodyforce_contribution_function().value());
 
   const int numfluidphases = phasemanager.num_fluid_phases();
   const int ivolfracpress = numfluidphases;

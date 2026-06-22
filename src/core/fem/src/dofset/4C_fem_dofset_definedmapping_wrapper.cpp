@@ -95,7 +95,7 @@ int Core::DOFSets::DofSetDefinedMappingWrapper::assign_degrees_of_freedom(
 
     // map that will be filled with coupled nodes for this condition
     // mapping: target node gid to (source node gid, distance)
-    // note: FindMatch loops over all SOURCE (i.e. slave) nodes
+    // note: FindMatch loops over all source nodes
     //       and finds corresponding target nodes.
     std::map<int, std::pair<int, double>> condcoupling;
     // match target and source nodes using octtree

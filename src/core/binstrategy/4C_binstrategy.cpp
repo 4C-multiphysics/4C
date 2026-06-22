@@ -1502,7 +1502,7 @@ void Core::Binstrategy::BinningStrategy::
     // rowbingids of iproc in vector binids
     Core::Communication::broadcast(binids.data(), numbin, iproc, rowbins.get_comm());
 
-    // loop over all own bins and find requested ones, fill in master elements in these bins
+    // loop over all own bins and find requested ones, fill in target elements in these bins
     // (map key is bin gid owned by iproc, vector contains all node gids of all procs in this bin)
     std::map<int, std::vector<int>> sdata;
     std::map<int, std::vector<int>> rdata;

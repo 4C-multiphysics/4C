@@ -143,7 +143,7 @@ namespace Thermo
     //! print summary after step
     void print_step() override = 0;
 
-    //! runtime output write based on vtk, writing quantities like temperature, elemend ids, ...
+    //! runtime output write based on vtk, writing quantities like temperature, element ids, ...
     void write_runtime_output();
 
     //! Output to file
@@ -160,10 +160,10 @@ namespace Thermo
                                            //!< it was written at this time step
     );
 
-    //! Heatflux & temperature gradient output
-    void output_heatflux_tempgrad(bool& datawritten  //!< (in/out) read and append if
-                                                     //!< it was written at this time step
-    );
+    //! Heatflux and temperature gradient output helper
+    void get_heatflux_tempgrad(std::shared_ptr<Core::LinAlg::MultiVector<double>>& heatfluxdata,
+        std::shared_ptr<Core::LinAlg::MultiVector<double>>& tempgraddata, std::string& heatfluxtext,
+        std::string& tempgradtext);
 
     //! Write internal and external forces (if necessary for restart)
     virtual void write_restart_force(std::shared_ptr<Core::IO::DiscretizationWriter> output) = 0;
@@ -378,10 +378,10 @@ namespace Thermo
       bool output_conductivity_state = false;
 
       /// whether to write heatflux output
-      bool output_heatflux_state = false;
+      Thermo::HeatFluxType output_heatflux_type = Thermo::HeatFluxType::None;
 
       /// whether to write temperature gradient output
-      bool output_tempgrad_state = false;
+      Thermo::TempGradType output_tempgrad_type = Thermo::TempGradType::None;
 
       /// whether to write the owner of elements
       bool output_element_owner = false;
@@ -406,12 +406,10 @@ namespace Thermo
     OptionsThermoCSVRuntimeOutput runtime_csv_params_;
 
 
-    int printscreen_;        //!< print infos to standard out every n steps
-    int writerestartevery_;  //!< write restart every given step;
-                             //!< if 0, restart is not written
-    int writeglobevery_;     //!< write state every given step
-    Thermo::HeatFluxType writeheatflux_;
-    Thermo::TempGradType writetempgrad_;
+    int printscreen_;              //!< print infos to standard out every n steps
+    int writerestartevery_;        //!< write restart every given step;
+                                   //!< if 0, restart is not written
+    int writeglobevery_;           //!< write state every given step
     Thermo::CalcError calcerror_;  //!< evaluate error compared to analytical solution
     int errorfunctno_;             //!< function number of analytical solution for error evaluation
     //@}

@@ -131,21 +131,21 @@ namespace Thermo
   //@{
 
   //! Type of thermal flux output
-  //! (this enum represents the input file parameter THERM_HEATFLUX) CHECK IT!
-  enum HeatFluxType
+  //! (this enum represents the input file parameter HEATFLUX) CHECK IT!
+  enum class HeatFluxType
   {
-    heatflux_none,     //!< no heatflux output
-    heatflux_current,  //!< output of heatflux in current configuration
-    heatflux_initial   //!< output of heat flux in initial configuration
+    None,     //!< no heatflux output
+    Current,  //!< output of heatflux in current configuration
+    Initial   //!< output of heat flux in initial configuration
   };
 
   //! Type of thermal gradient output
-  //! (this enum represents the input file parameter THERM_TEMPGRAD) CHECK IT!
-  enum TempGradType
+  //! (this enum represents the input file parameter TEMPGRAD) CHECK IT!
+  enum class TempGradType
   {
-    tempgrad_none,     //!< no thermal gradient output
-    tempgrad_current,  //!< output of thermal gradient in current configuration
-    tempgrad_initial   //!< output of thermal gradient in initial configuration
+    None,     //!< no thermal gradient output
+    Current,  //!< output of thermal gradient in current configuration
+    Initial   //!< output of thermal gradient in initial configuration
   };
 
   //@}

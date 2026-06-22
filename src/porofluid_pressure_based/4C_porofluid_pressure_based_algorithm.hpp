@@ -23,6 +23,8 @@
 #include "4C_porofluid_pressure_based_input.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
+#include <optional>
+
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -554,10 +556,7 @@ namespace PoroPressureBased
     const double fdchecktol_;
 
     //! flag for bodyforce contribution
-    const bool has_bodyforce_contribution_;
-
-    //! bodyforce contribution values
-    std::vector<double> bodyforce_contribution_values_{};
+    std::optional<const Core::Utils::FunctionOfSpaceTime*> bodyforce_function_;
 
     //! scaling factor for biot stabilization
     double stab_biot_scaling_;

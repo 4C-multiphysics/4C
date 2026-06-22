@@ -115,7 +115,7 @@ void Core::Rebalance::ghost_discretization_on_all_procs(Core::FE::Discretization
     sdata.push_back(gid);
   }
 
-  // gather all master row node gids redundantly in rdata
+  // gather all target row node gids redundantly in rdata
   std::vector<int> rdata;
   Core::LinAlg::gather<int>(sdata, rdata, (int)allproc.size(), allproc.data(), com);
 
@@ -144,7 +144,7 @@ void Core::Rebalance::ghost_discretization_on_all_procs(Core::FE::Discretization
   allproc.clear();
 
   // rebalance the nodes and elements of the discr. according to the
-  // new node / element column layout (i.e. master = full overlap)
+  // new node / element column layout (i.e. target = full overlap)
   distobeghosted.export_column_nodes(newnodecolmap);
   distobeghosted.export_column_elements(newelecolmap);
 
@@ -322,22 +322,22 @@ void Core::Rebalance::match_element_distribution_of_matching_conditioned_element
       rebalance_rowelegid_vec.push_back(rebalance_elerowmap->gid(lid));
 
 
-    // initialize search tree for matching with template (source,master) elements
+    // initialize search tree for matching with template (source,target) elements
     auto elementmatchingtree = Core::GeometricSearch::ElementMatchingOctree();
     elementmatchingtree.init(*dis_from_template_condition, my_template_colelegid_vec, 150, 1e-06);
     elementmatchingtree.setup();
 
     // map that will be filled with matched elements.
     // mapping: redistr. ele gid to (template ele gid, dist.).
-    // note: 'fill_slave_to_master_gid_mapping' loops over all
+    // note: 'fill_source_to_target_gid_mapping' loops over all
     //        template eles and finds corresponding redistr. eles.
     std::map<int, std::vector<double>> matched_ele_map;
-    // match target (slave) elements to source (master) elements using octtree
-    elementmatchingtree.fill_slave_to_master_gid_mapping(
+    // match elements of the redistributed discretization to template elements using octtree
+    elementmatchingtree.fill_source_to_target_gid_mapping(
         dis_to_rebalance, rebalance_rowelegid_vec, matched_ele_map);
 
-    // now we have a map matching the geometry ids of slave elements
-    // to the geometry id of master elements (always starting from 0).
+    // now we have a map matching the geometry ids of source elements
+    // to the geometry id of target elements (always starting from 0).
     // for redistribution we need to translate the geometry ids to the
     // actual element gids.
     // fill vectors with row and col gids for new distribution
@@ -448,7 +448,7 @@ void Core::Rebalance::match_element_distribution_of_matching_conditioned_element
     //       and finds corresponding redistr. nodes.
     std::map<int, std::vector<double>> matched_node_map;
     // match target nodes to source nodes using octtree
-    nodematchingtree.fill_slave_to_master_gid_mapping(
+    nodematchingtree.fill_source_to_target_gid_mapping(
         dis_to_rebalance, rebalance_rownodegid_vec, matched_node_map);
 
     // fill vectors with row gids for new distribution
@@ -602,18 +602,18 @@ void Core::Rebalance::match_element_row_col_distribution(
   for (int lid = 0; lid < rebalance_elerowmap->num_my_elements(); ++lid)
     my_rebalance_elegid_vec.push_back(rebalance_elerowmap->gid(lid));
 
-  // initialize search tree for matching with template (source,master) elements
+  // initialize search tree for matching with template (source,target) elements
   auto elementmatchingtree = Core::GeometricSearch::ElementMatchingOctree();
   elementmatchingtree.init(dis_template, my_template_elegid_vec, 150, 1e-07);
   elementmatchingtree.setup();
 
   // map that will be filled with matched elements.
   // mapping: redistr. ele gid to (template ele gid, dist.).
-  // note: 'fill_slave_to_master_gid_mapping' loops over all
+  // note: 'fill_source_to_target_gid_mapping' loops over all
   //        template eles and finds corresponding redistr. eles.
   std::map<int, std::vector<double>> matched_ele_map;
-  // match target (slave) nodes to source (master) nodes using octtree
-  elementmatchingtree.fill_slave_to_master_gid_mapping(
+  // match elements of the redistributed discretization to template elements using octtree
+  elementmatchingtree.fill_source_to_target_gid_mapping(
       dis_to_rebalance, my_rebalance_elegid_vec, matched_ele_map);
 
   // declare iterator
@@ -670,7 +670,7 @@ void Core::Rebalance::match_nodal_row_col_distribution(const Core::FE::Discretiz
   //       and finds corresponding redistr. nodes.
   std::map<int, std::vector<double>> matched_node_map;
   // match target nodes to source nodes using octtree
-  nodematchingtree.fill_slave_to_master_gid_mapping(
+  nodematchingtree.fill_source_to_target_gid_mapping(
       dis_to_rebalance, my_rebalance_nodegid_vec, matched_node_map);
 
   // declare iterator

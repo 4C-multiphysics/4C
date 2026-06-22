@@ -16,6 +16,7 @@
 #include "4C_mat_scatra_multiporo.hpp"
 #include "4C_porofluid_pressure_based_ele_action.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_utils_function.hpp"
 
 #include <memory>
 #include <vector>
@@ -328,7 +329,11 @@ namespace Discret
             Core::LinAlg::Matrix<1, 1>& permeabilitytensorvolfracpressure) const = 0;
 
         //! get the body force contribution
-        virtual const std::vector<double>& bodyforce_contribution_values() const = 0;
+        virtual std::optional<const Core::Utils::FunctionOfSpaceTime*>
+        bodyforce_contribution_function() const = 0;
+
+        //! get the time
+        virtual double get_time() const = 0;
 
         //! check if volume frac 'volfracnum' has additional scalar dependent flux
         virtual bool has_add_scalar_dependent_flux(int volfracnum) const = 0;
@@ -765,9 +770,16 @@ namespace Discret
         };
 
         //! get the body force contribution
-        [[nodiscard]] const std::vector<double>& bodyforce_contribution_values() const override
+        [[nodiscard]] std::optional<const Core::Utils::FunctionOfSpaceTime*>
+        bodyforce_contribution_function() const override
         {
           FOUR_C_THROW("Bodyforce contribution not available for this phase manager!");
+        };
+
+        //! get the time
+        [[nodiscard]] double get_time() const override
+        {
+          FOUR_C_THROW("Time is not available for this phase manager!");
         };
 
         //! check if volume frac 'volfracnum' has additional scalar dependent flux
@@ -1285,10 +1297,15 @@ namespace Discret
         };
 
         //! get the body force contribution
-        [[nodiscard]] const std::vector<double>& bodyforce_contribution_values() const override
+        [[nodiscard]] std::optional<const Core::Utils::FunctionOfSpaceTime*>
+        bodyforce_contribution_function() const override
         {
-          return phasemanager_->bodyforce_contribution_values();
+          return phasemanager_->bodyforce_contribution_function();
         };
+
+
+        //! get the body force contribution
+        [[nodiscard]] double get_time() const override { return phasemanager_->get_time(); };
 
         //! check if volume frac 'volfracnum' has additional scalar dependent flux
         bool has_add_scalar_dependent_flux(int volfracnum) const override
@@ -1630,7 +1647,11 @@ namespace Discret
             Core::LinAlg::Matrix<nsd, nsd>& permeabilitytensorvolfracpressure) const override;
 
         //! get the body force contribution
-        const std::vector<double>& bodyforce_contribution_values() const override;
+        [[nodiscard]] std::optional<const Core::Utils::FunctionOfSpaceTime*>
+        bodyforce_contribution_function() const override;
+
+        //! get time
+        double get_time() const override;
 
         //! check for constant dynamic viscosity of volume fraction pressure
         bool has_constant_dyn_viscosity_vol_frac_pressure(int volfracpressnum) const override;
@@ -1684,7 +1705,9 @@ namespace Discret
         //! check for constant dynamic viscosities of volume fraction pressure
         std::vector<bool> constdynviscosityvolfracpress_;
         //! fluid bodyforce contribution
-        std::vector<double> bodyforce_contribution_values_{};
+        std::optional<const Core::Utils::FunctionOfSpaceTime*> bodyforce_contribution_function_;
+        //! current time
+        double time_;
       };
 
       /*----------------------------------------------------------------------*

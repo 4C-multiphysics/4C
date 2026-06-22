@@ -26,8 +26,8 @@
       ],
       "cacheVariables": {
         "FOUR_C_TRILINOS_ROOT": "/lnm/packages/trilinos/2025-6/release",
+        "FOUR_C_WITH_PYTHON": "OFF",
         "FOUR_C_BOOST_ROOT": "/cluster/lib/gcc/9.1.0/boost_1_86_0",
-        "FOUR_C_PYTHON_ROOT": "/lnm/miniconda3/envs/python_3_12_env/bin",
         "FOUR_C_VTK_ROOT": "/lnm/packages/vtk/9-5-2/release"
       }
     },

@@ -11,6 +11,7 @@
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_material_parameter_base.hpp"
 #include "4C_mixture_constituent.hpp"
+#include "4C_mixture_constituent_remodelfiber_ssi.hpp"
 #include "4C_mixture_growth_strategy.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -126,6 +127,16 @@ void Mixture::GrowthRemodelMixtureRule::evaluate(const Core::LinAlg::Tensor<doub
 
     growth_strategy_->evaluate_inverse_growth_deformation_gradient(
         iF_gM, *this, currentReferenceGrowthScalar, context, gp, eleGID);
+
+    const Core::LinAlg::Tensor<double, 3, 3> d_iFg_d_growth_scalar =
+        growth_strategy_->evaluate_d_inverse_growth_deformation_gradient_d_growth_scalar(
+            currentReferenceGrowthScalar, context, gp, eleGID);
+
+    // d_iFg_d_growth_scalar w.r.t. the mixture reference growth scalar and additional
+    // chain factor d_growth_scalar_mix_d_growth_scalar_i = w_i per constituent
+    for (std::size_t i = 0; i < constituents().size(); ++i)
+      constituents()[i]->prepare_inelastic_growth_tangent(
+          iF_gM, params_->mass_fractions_[i] * d_iFg_d_growth_scalar, context, gp, eleGID);
   }
 
   // define temporary matrices
@@ -235,4 +246,40 @@ bool Mixture::GrowthRemodelMixtureRule::evaluate_output_data(
   }
   return false;
 }
+std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>
+Mixture::GrowthRemodelMixtureRule::evaluate_d_stress_d_scalars(
+    const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
+    const Teuchos::ParameterList& params, const Mat::EvaluationContext<3>& context, int num_scalars,
+    int gp, int eleGID) const
+{
+  std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> result(num_scalars);
+  for (auto& t : result) t.fill(0.0);
+
+  for (const auto& constituent_ptr : constituents())
+  {
+    const auto* ssi = dynamic_cast<const FourC::Mixture::MixtureConstituentRemodelFiberSsi*>(
+        constituent_ptr.get());
+    if (ssi == nullptr) continue;
+    if (!ssi->is_nonlocal_stimulus_mode()) continue;
+
+    FOUR_C_ASSERT_ALWAYS(ssi->is_implicit_integration(),
+        "MIX_Constituent_SsiRemodelFiber with NONLOCAL_STIMULUS_SCALAR_ID is used in a "
+        "monolithic SSI solver, but IMPLICIT is set to false. Please set IMPLICIT true for "
+        "consistent linearization.");
+
+    const int psi_id = ssi->nonlocal_stimulus_scalar_id();
+    FOUR_C_ASSERT(psi_id < num_scalars, "nonlocal_stimulus_scalar_id {} >= num_scalars {}", psi_id,
+        num_scalars);
+
+    const double rho0 = get_constituent_initial_reference_mass_density(*constituent_ptr);
+    const double S_pk2 = ssi->evaluate_current_fiber_pk2_stress(gp);
+    const double d_growth_scalar_d_stimulus = ssi->evaluate_d_growth_scalar_d_nonlocal_stimulus(gp);
+
+    result[psi_id] += rho0 * S_pk2 * ssi->get_structural_tensor(gp) * d_growth_scalar_d_stimulus;
+  }
+
+  return result;
+}
+
 FOUR_C_NAMESPACE_CLOSE

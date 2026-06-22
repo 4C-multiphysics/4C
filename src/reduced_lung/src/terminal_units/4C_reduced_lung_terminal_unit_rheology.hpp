@@ -120,6 +120,11 @@ namespace ReducedLung::TerminalUnits::Rheology
   EndOfTimestepRoutine make_end_of_timestep_routine(RheologicalModel& rheological_model);
 
   /**
+   * @brief Build output evaluator callback for the concrete rheology variant.
+   */
+  OutputEvaluator make_output_evaluator(RheologicalModel& rheological_model);
+
+  /**
    * @brief Append element parameters and initialize internal vectors for a concrete rheology model.
    */
   void append_model_parameters(RheologicalModel& rheological_model, int global_element_id,

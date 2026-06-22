@@ -62,7 +62,6 @@ MATERIALS:
         constant: [1.0, 0.0, 0.0]
   - MAT: 11
     MIX_Constituent_ElastHyper:
-      NUMMAT: 2
       MATIDS: [111, 112]
       PRESTRESS_STRATEGY: 119
   - MAT: 111

@@ -670,7 +670,7 @@ void FSI::MonolithicStructureSplit::setup_system_matrix(Core::LinAlg::BlockSpars
   mat.assign(1, 0, Core::LinAlg::DataAccess::Share, *lsgi);
 
   (*aigtransform_)(a->full_row_map(), a->full_col_map(), aig, 1. / timescale,
-      Coupling::Adapter::CouplingSlaveConverter(icoupfa), mat.matrix(2, 1));
+      Coupling::Adapter::CouplingSourceConverter(icoupfa), mat.matrix(2, 1));
   mat.assign(2, 2, Core::LinAlg::DataAccess::Share, aii);
 
   /*----------------------------------------------------------------------*/

@@ -284,9 +284,8 @@ bool Discret::Elements::SolidPoroPressureBased<dim>::read_element(const std::str
   // read scalar transport implementation type
   poro_ele_property_.impltype = container.get<ScaTra::ImplType>("TYPE");
 
-  // possible bodyforce contribution
-  bodyforce_contribution_ = get_bodyforce_contribution_from_input();
-
+  // get possible bodyforce contribution
+  bodyforce_function_ = get_bodyforce_function_from_input();
 
   SolidIntegrationRules<dim> rules =
       Core::FE::cell_type_switch<Discret::Elements::ImplementedSolidCellTypes<dim>>(celltype_,
@@ -332,8 +331,6 @@ void Discret::Elements::SolidPoroPressureBased<dim>::pack(
 
   data.add_to_pack(material_post_setup_);
 
-  add_to_pack(data, bodyforce_contribution_);
-
   // optional data, e.g., EAS data
   FOUR_C_ASSERT(solid_calc_variant_.has_value(),
       "The solid calculation interface is not initialized for element id {}. The element needs to "
@@ -364,7 +361,7 @@ void Discret::Elements::SolidPoroPressureBased<dim>::unpack(
 
   extract_from_pack(buffer, material_post_setup_);
 
-  extract_from_pack(buffer, bodyforce_contribution_);
+  bodyforce_function_ = get_bodyforce_function_from_input();
 
   // reset solid and poro interfaces
   SolidIntegrationRules<dim> rules =
@@ -440,30 +437,26 @@ Mat::FluidPoroMultiPhase& Discret::Elements::SolidPoroPressureBased<dim>::fluid_
 }
 
 template <unsigned dim>
-std::optional<Core::LinAlg::Tensor<double, dim>>
-Discret::Elements::SolidPoroPressureBased<dim>::get_bodyforce_contribution_from_input() const
+std::optional<const Core::Utils::FunctionOfSpaceTime*>
+Discret::Elements::SolidPoroPressureBased<dim>::get_bodyforce_function_from_input() const
 {
   // get poro-solid parameter
   const Teuchos::ParameterList& solid_poro_params =
       Global::Problem::instance()->poro_multi_phase_dynamic_params();
 
-  // get optional bodyforce contribution
-  const auto body_force = solid_poro_params.get<std::optional<std::vector<double>>>("body_force");
 
-  if (body_force.has_value())
+  if (solid_poro_params.get<std::optional<int>>("body_force_function").has_value())
   {
-    // safety check
-    FOUR_C_ASSERT_ALWAYS(
-        static_cast<int>(body_force->size()) == Global::Problem::instance()->n_dim() &&
-            Global::Problem::instance()->n_dim() == dim,
-        "The dimension of your bodyforce vector and the dimension of the problem must be equal!");
+    const auto& funct =
+        Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(
+            solid_poro_params.get<std::optional<int>>("body_force_function").value());
 
-    Core::LinAlg::Tensor<double, dim> bodyforce{};
-    for (unsigned idim = 0; idim < dim; idim++)
-    {
-      bodyforce(idim) = body_force.value()[idim];
-    }
-    return bodyforce;
+    // safety check
+    FOUR_C_ASSERT_ALWAYS(static_cast<int>(funct.number_components()) == dim,
+        "The dimension of your bodyforce vector and the dimension of the problem must be "
+        "equal!");
+
+    return &funct;
   }
   else
   {
