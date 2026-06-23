@@ -251,7 +251,7 @@ if(FOUR_C_CLANGCUDA)
   endif()
   if(FOUR_C_WITH_VTK)
     message(
-      WARNING
+      FATAL_ERROR
         "Enabling both FOUR_C_CLANGCUDA and FOUR_C_WITH_VTK currently causes compilation errors."
       )
   endif()
