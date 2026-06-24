@@ -15,7 +15,7 @@ on:
 env:
   REGISTRY: ghcr.io
   PROJECT_NAMESPACE: 4c-multiphysics
-  IMAGE_SUFFIX: dependencies-trilinos
+  IMAGE_SUFFIX: dependencies-trilinos-kokkosparallel
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -65,7 +65,7 @@ jobs:
             }}
           base-image: "nvidia/cuda:12.8.1-devel-ubuntu24.04"
 
-  tag-images-as-kokkosparallel:
+  tag-images-as-latest:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' }} #${{ github.ref == 'refs/heads/main' && github.repository == '4C-multiphysics/4C' }}
     permissions:
@@ -84,9 +84,9 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull current Kokkos parallel dependencies image and tag it with kokkosparallel
+      - name: Pull current Kokkos parallel dependencies image and tag it with latest
         run: |
           IMAGE_NAME="${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-${{ env.IMAGE_SUFFIX }}"
           docker pull $IMAGE_NAME:${{ steps.compute-dependencies-hash.outputs.computed_dependencies_hash }}
-          docker image tag $IMAGE_NAME:${{ steps.compute-dependencies-hash.outputs.computed_dependencies_hash }} $IMAGE_NAME:kokkosparallel
-          docker push $IMAGE_NAME:kokkosparallel
+          docker image tag $IMAGE_NAME:${{ steps.compute-dependencies-hash.outputs.computed_dependencies_hash }} $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:latest

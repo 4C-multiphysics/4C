@@ -39,15 +39,7 @@ function(four_c_auto_define_module)
     target_link_libraries(${_target}_objs PRIVATE four_c_private_compile_interface)
 
     if(FOUR_C_CLANGCUDA)
-      set_target_properties(
-        ${_target}_objs
-        PROPERTIES CXX_COMPILER_LAUNCHER ""
-                   C_COMPILER_LAUNCHER ""
-                   CUDA_COMPILER_LAUNCHER ""
-                   RULE_LAUNCH_COMPILE ""
-                   RULE_LAUNCH_LINK ""
-        )
-      target_compile_definitions(${_target}_objs PRIVATE CLANGCUDA_MODE_HOST)
+      set_clangcuda_mode(${_target}_objs CLANGCUDA_MODE_HOST)
     endif()
 
     if(FOUR_C_ENABLE_IWYU)
