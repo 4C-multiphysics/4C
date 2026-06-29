@@ -1153,22 +1153,30 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*----------------------------------------------------------------------*/
   // Plastic linear elastic St.Venant Kirchhoff / Drucker Prager plasticity
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
     known_materials[Core::Materials::m_pldruckprag] = group("MAT_Struct_DruckerPrager",
         {
-            parameter<double>("YOUNG", {.description = "Young's modulus"}),
-            parameter<double>("NUE", {.description = "Poisson's ratio"}),
-            parameter<double>("DENS", {.description = "Density"}),
-            parameter<double>("ISOHARD", {.description = "linear isotropic hardening"}),
-            parameter<double>("TOL", {.description = "Local Newton iteration tolerance"}),
-            parameter<double>("C", {.description = "cohesion"}),
+            parameter<double>(
+                "YOUNG", {.description = "Young's modulus", .validator = positive<double>()}),
+            parameter<double>(
+                "NUE", {.description = "Poisson's ratio (must be in (-1, 0.5) for stability)",
+                           .validator = in_range(excl(-1.0), excl(0.5))}),
+            parameter<double>(
+                "DENS", {.description = "Density", .validator = positive_or_zero<double>()}),
+            parameter<double>("ISOHARD", {.description = "linear isotropic hardening",
+                                             .validator = positive_or_zero<double>()}),
+            parameter<double>("TOL", {.description = "Local Newton iteration tolerance",
+                                         .validator = positive<double>()}),
+            parameter<double>("C", {.description = "cohesion (must be strictly positive)",
+                                       .validator = positive<double>()}),
             parameter<double>("ETA", {.description = "Drucker Prager Constant Eta"}),
             parameter<double>("XI", {.description = "Drucker Prager Constant Xi"}),
             parameter<double>("ETABAR", {.description = "Drucker Prager Constant Etabar"}),
             parameter<std::string>("TANG", {.description = "Method to compute the material tangent",
                                                .default_value = "consistent"}),
-            parameter<int>(
-                "MAXITER", {.description = "Maximum Iterations for local Neutron Raphson",
-                               .default_value = 50}),
+            parameter<int>("MAXITER", {.description = "Maximum Iterations for local Newton Raphson",
+                                          .default_value = 50,
+                                          .validator = positive<int>()}),
         },
         {.description = "elastic St.Venant Kirchhoff / plastic drucker prager"});
   }
