@@ -2733,8 +2733,12 @@ __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED
 # Tests requiring ArborX
 four_c_test(TEST_FILE rve2d_periodic_bcs_with_mpcs.4C.yaml REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE rve2d_periodic_bcs.4C.yaml REQUIRED_DEPENDENCIES ArborX)
+four_c_test(TEST_FILE rve2d_periodic_bcs.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE rve3d_periodic_bcs.4C.yaml REQUIRED_DEPENDENCIES ArborX)
+four_c_test(TEST_FILE rve3d_periodic_bcs.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
+four_c_test(TEST_FILE rve3d_periodic_bcs.4C.yaml NP 3 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE rve3d_periodic_bcs_nullspace.4C.yaml REQUIRED_DEPENDENCIES ArborX)
+four_c_test(TEST_FILE rve3d_periodic_bcs_nullspace.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE solid_ele_nurbs27_beam3r_herm2line3_static_beam_to_solid_volume_meshtying_mortar_penalty_line4.4C.yaml NP 2 RETURN_AS current REQUIRED_DEPENDENCIES ArborX)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 1 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE beam3eb_genalpha_BTB_contact_elstat_attraction_twocrossedbeams.4C.yaml NP 2 RETURN_AS current REQUIRED_DEPENDENCIES ArborX)

@@ -34,8 +34,8 @@ namespace Constraints::SubmodelEvaluator
     /*!
     \brief Standard Constructor
     */
-    RveMultiPointConstraintManager(std::shared_ptr<const Core::FE::Discretization> disc_ptr,
-        Core::LinAlg::SparseMatrix* st_ptr);
+    RveMultiPointConstraintManager(
+        std::shared_ptr<Core::FE::Discretization> disc_ptr, Core::LinAlg::SparseMatrix* st_ptr);
 
     //! @name Public evaluation methods
 
@@ -55,6 +55,9 @@ namespace Constraints::SubmodelEvaluator
 
    private:
     //! @name member variables
+
+    //! Writable discretization handle, used to ghost the periodic partner nodes
+    std::shared_ptr<Core::FE::Discretization> writable_discret_;
 
     //! Map of the Corner Node IDs Ni
     std::map<std::string, Core::Nodes::Node*> rve_ref_node_map_;
@@ -108,6 +111,9 @@ namespace Constraints::SubmodelEvaluator
     //! retrieve design line periodic rve boundary condition
     void build_periodic_rve_boundary_node_map(
         std::map<std::string, const std::vector<int>*>& rveBoundaryNodeIdMap_);
+
+    //! ghost the given nodes onto this rank
+    void ghost_nodes(const std::vector<int>& node_gids);
     //@}
   };
 }  // namespace Constraints::SubmodelEvaluator
