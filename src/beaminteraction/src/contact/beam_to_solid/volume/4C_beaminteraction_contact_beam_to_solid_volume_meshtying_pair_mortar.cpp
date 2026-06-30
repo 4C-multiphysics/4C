@@ -8,6 +8,7 @@
 #include "4C_beaminteraction_contact_beam_to_solid_volume_meshtying_pair_mortar.hpp"
 
 #include "4C_beaminteraction_contact_beam_to_solid_mortar_manager.hpp"
+#include "4C_beaminteraction_contact_beam_to_solid_mortar_shape_functions_dual_hermite.hpp"
 #include "4C_beaminteraction_contact_beam_to_solid_utils.hpp"
 #include "4C_beaminteraction_contact_beam_to_solid_visualization_output_writer_base.hpp"
 #include "4C_beaminteraction_contact_beam_to_solid_visualization_output_writer_visualization.hpp"
@@ -112,7 +113,8 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
   if (visualization_discret != nullptr || visualization_continuous != nullptr)
   {
     // Setup variables.
-    GeometryPair::ElementData<Mortar, double> element_data_lambda;
+    auto element_data_lambda =
+        GeometryPair::InitializeElementData<Mortar, double>::initialize(this->element1());
     Core::LinAlg::Matrix<3, 1, scalar_type> X;
     Core::LinAlg::Matrix<3, 1, scalar_type> r;
     Core::LinAlg::Matrix<3, 1, scalar_type> u;
@@ -330,8 +332,10 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid, Mortar>:
       N_mortar.clear();
       N_beam.clear();
       N_solid.clear();
+      GeometryPair::ShapeFunctionData<Mortar> shape_function_data;
+      GeometryPair::SetShapeFunctionData<Mortar>::set(shape_function_data, this->element1());
       GeometryPair::EvaluateShapeFunction<Mortar>::evaluate(
-          N_mortar, projected_gauss_point.get_eta());
+          N_mortar, projected_gauss_point.get_eta(), shape_function_data);
       GeometryPair::EvaluateShapeFunction<Beam>::evaluate(
           N_beam, projected_gauss_point.get_eta(), this->ele1pos_.shape_function_data_);
       GeometryPair::EvaluateShapeFunction<Solid>::evaluate(
@@ -425,6 +429,13 @@ namespace BeamInteraction
   template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_tet4, t_line4>;
   template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_tet10, t_line4>;
   template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_nurbs27, t_line4>;
+
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_hex8, HermiteDual>;
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_hex20, HermiteDual>;
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_hex27, HermiteDual>;
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_tet4, HermiteDual>;
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_tet10, HermiteDual>;
+  template class BeamToSolidVolumeMeshtyingPairMortar<t_hermite, t_nurbs27, HermiteDual>;
 }  // namespace BeamInteraction
 
 FOUR_C_NAMESPACE_CLOSE

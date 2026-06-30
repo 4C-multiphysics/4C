@@ -77,6 +77,9 @@ namespace BeamInteraction
     BeamToSolid::BeamToSolidLagrangeFormulation lagrange_formulation =
         BeamToSolid::BeamToSolidLagrangeFormulation::none;
 
+    //! Flag to check whether the relevant D matrix has diagonal-like structure.
+    bool check_diagonal_d_matrix = false;
+
     //! Penalty parameter for positional coupling.
     double penalty_parameter_translational = 0.0;
 
@@ -283,6 +286,12 @@ namespace BeamInteraction
      * @return Global mortar energy.
      */
     double get_energy() const;
+
+    /**
+     * \brief Check if there is only one nonzero entry per row of a matrix.
+     */
+    void check_diagonal_like_structure(
+        const std::shared_ptr<Core::LinAlg::SparseMatrix>& D_matrix) const;
 
     /**
      * \brief  Assembles the LM constraint into the global RHS vector

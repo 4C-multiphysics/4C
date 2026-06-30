@@ -1,5 +1,5 @@
 TITLE:
-  - "Description: Simulate a beam coupled to a solid via penalty mortar coupling."
+  - "Description: Simulate a beam coupled to a solid via lagrange regularized variant of mortar coupling."
   - "The shape functions for the Lagrange multplicators are line3."
 PROBLEM TYPE:
   PROBLEMTYPE: "Structure"

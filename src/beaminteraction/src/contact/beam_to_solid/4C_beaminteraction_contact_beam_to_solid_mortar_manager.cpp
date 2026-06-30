@@ -548,6 +548,12 @@ void BeamInteraction::BeamToSolidMortarManager::evaluate_and_assemble_global_cou
   kappa_->complete();
   lambda_active_->complete();
   constraint_->complete();
+
+  if (parameters_.check_diagonal_d_matrix)
+  {
+    check_diagonal_like_structure(constraint_lin_beam_);
+    check_diagonal_like_structure(force_beam_lin_lambda_);
+  }
 }
 
 /**

@@ -7,7 +7,9 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_beam3_euler_bernoulli.hpp"
 #include "4C_beam3_reissner.hpp"
+#include "4C_beaminteraction_contact_beam_to_solid_mortar_shape_functions_dual_hermite.hpp"
 #include "4C_beaminteraction_contact_beam_to_solid_volume_meshtying_pair_mortar.hpp"
 #include "4C_geometry_pair_element.hpp"
 #include "4C_geometry_pair_line_to_3D_evaluation_data.hpp"
@@ -59,34 +61,58 @@ namespace
         BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<BeamType, SolidType, LambdaType>&
             contact_pair,
         const GeometryPair::ElementData<BeamType, double>& q_beam,
-        const Core::LinAlg::Matrix<9, 1, double>& q_beam_rot,
         const GeometryPair::ElementData<SolidType, double>& q_solid,
         const Core::LinAlg::Matrix<LambdaType::n_dof_, BeamType::n_dof_, double>& result_local_D,
         const Core::LinAlg::Matrix<LambdaType::n_dof_, SolidType::n_dof_, double>& result_local_M,
-        const Core::LinAlg::Matrix<LambdaType::n_dof_, 1, double>& result_local_kappa)
+        const Core::LinAlg::Matrix<LambdaType::n_dof_, 1, double>& result_local_kappa,
+        const Core::LinAlg::Matrix<9, 1, double>* q_beam_rot = nullptr)
     {
       // Create the elements.
       const int dummy_node_ids[2] = {0, 1};
-      std::shared_ptr<Core::Elements::Element> beam_element =
-          std::make_shared<Discret::Elements::Beam3r>(0, 0);
-      beam_element->set_node_ids(2, dummy_node_ids);
+
+      std::shared_ptr<Core::Elements::Element> beam_element;
       std::shared_ptr<Core::Elements::Element> solid_element =
           std::make_shared<Discret::Elements::Solid<3>>(1, 0);
 
-      // Set up the beam element.
+      // Set up the beam element coordinates.
       std::vector<double> xrefe(6);
       for (unsigned int j = 0; j < 2; j++)
         for (unsigned int i = 0; i < 3; i++) xrefe[i + 3 * j] = q_beam.element_position_(i + j * 6);
 
-      // Get the rotational vector.
-      std::vector<double> rotrefe(9);
-      for (unsigned int i = 0; i < 9; i++) rotrefe[i] = q_beam_rot(i);
+      if (q_beam_rot != nullptr)
+      {
+        beam_element = std::make_shared<Discret::Elements::Beam3r>(0, 0);
+        beam_element->set_node_ids(2, dummy_node_ids);
 
-      // Cast beam element and set the hermitian interpolation.
-      std::shared_ptr<Discret::Elements::Beam3r> beam_element_cast =
-          std::dynamic_pointer_cast<Discret::Elements::Beam3r>(beam_element);
-      beam_element_cast->set_centerline_hermite(true);
-      beam_element_cast->set_up_reference_geometry<3, 2, 2>(xrefe, rotrefe);
+        std::vector<double> rotrefe(9);
+        for (unsigned int i = 0; i < 9; i++) rotrefe[i] = (*q_beam_rot)(i);
+
+        auto beam_element_cast = std::dynamic_pointer_cast<Discret::Elements::Beam3r>(beam_element);
+
+        if (beam_element_cast == nullptr)
+        {
+          FOUR_C_THROW("Beam3r cast failed in perform_mortar_pair_unit_test.");
+        }
+
+
+        beam_element_cast->set_centerline_hermite(true);
+        beam_element_cast->set_up_reference_geometry<3, 2, 2>(xrefe, rotrefe);
+      }
+      else
+      {
+        beam_element = std::make_shared<Discret::Elements::Beam3eb>(0, 0);
+        beam_element->set_node_ids(2, dummy_node_ids);
+
+        auto beam_element_cast =
+            std::dynamic_pointer_cast<Discret::Elements::Beam3eb>(beam_element);
+
+        if (beam_element_cast == nullptr)
+        {
+          FOUR_C_THROW("Beam3eb cast failed in perform_mortar_pair_unit_test.");
+        }
+
+        beam_element_cast->set_up_reference_geometry(xrefe, false);
+      }
 
       // Call Init on the beam contact pair.
       std::vector<const Core::Elements::Element*> pair_elements;
@@ -303,8 +329,8 @@ namespace
     result_local_kappa(5) = 0.3247553228731228;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -513,8 +539,8 @@ namespace
     result_local_kappa(8) = 0.4262245939684383;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -762,8 +788,8 @@ namespace
     result_local_kappa(11) = 0.2685308094273101;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -1041,8 +1067,8 @@ namespace
     result_local_kappa(5) = 0.3247553228731228;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -1395,8 +1421,8 @@ namespace
     result_local_kappa(8) = 0.4262245939684383;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -1824,8 +1850,8 @@ namespace
     result_local_kappa(11) = 0.2685308094273101;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -2166,8 +2192,8 @@ namespace
     result_local_kappa(5) = 0.3247553228731228;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -2604,8 +2630,8 @@ namespace
     result_local_kappa(8) = 0.4262245939684383;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -3138,8 +3164,8 @@ namespace
     result_local_kappa(11) = 0.2685308094273101;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -3273,8 +3299,8 @@ namespace
     result_local_kappa(5) = 0.3247553228731228;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -3435,8 +3461,8 @@ namespace
     result_local_kappa(8) = 0.4262245939684383;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -3624,8 +3650,8 @@ namespace
     result_local_kappa(11) = 0.2685308094273101;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -3813,8 +3839,8 @@ namespace
     result_local_kappa(5) = 0.3247553228731228;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -4047,8 +4073,8 @@ namespace
     result_local_kappa(8) = 0.4262245939684383;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
 
   /**
@@ -4326,8 +4352,266 @@ namespace
     result_local_kappa(11) = 0.2685308094273101;
 
     // Perform the unit tests.
-    perform_mortar_pair_unit_test(contact_pair, q_beam, q_beam_rot, q_solid, result_local_D,
-        result_local_M, result_local_kappa);
+    perform_mortar_pair_unit_test(contact_pair, q_beam, q_solid, result_local_D, result_local_M,
+        result_local_kappa, &q_beam_rot);
   }
+
+  /**
+   * \brief Test a non straight beam in a hex8 element, with dual hermite mortar shape functions.
+   */
+  TEST_F(BeamToSolidVolumeMeshtyingPairMortarTest,
+      TestBeamToSolidMeshtyingMortarHermite2Hex8DualHermite)
+  {
+    // Element types.
+    using beam_type = GeometryPair::t_hermite;
+    using solid_type = GeometryPair::t_hex8;
+    using lambda_type = BeamInteraction::HermiteDual;
+
+    // Create the mesh tying mortar pair.
+    BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<beam_type, solid_type, lambda_type>
+        contact_pair = BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<beam_type, solid_type,
+            lambda_type>();
+
+    // Definition of variables for this test case.
+    GeometryPair::ElementData<beam_type, double> q_beam;
+    GeometryPair::ElementData<solid_type, double> q_solid;
+    Core::LinAlg::Matrix<9, 1> q_beam_rot;
+    Core::LinAlg::SerialDenseMatrix local_D;
+    Core::LinAlg::SerialDenseMatrix local_M;
+    Core::LinAlg::SerialDenseVector local_kappa;
+
+    // Matrices for the results.
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::zero);
+
+    // Define the geometry of the two elements.
+    // q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
+    q_beam.shape_function_data_.ref_length_ = 0.4242640687119285;
+
+    // Beam endpoint 1.
+    q_beam.element_position_(0) = 0.0;
+    q_beam.element_position_(1) = 0.0;
+    q_beam.element_position_(2) = 0.0;
+
+    q_beam.element_position_(3) = 0.94280904158;
+    q_beam.element_position_(4) = 0.23570226039;
+    q_beam.element_position_(5) = 0.23570226039;
+
+    // Beam endpoint 2.
+    q_beam.element_position_(6) = 0.4;
+    q_beam.element_position_(7) = 0.1;
+    q_beam.element_position_(8) = 0.1;
+
+    q_beam.element_position_(9) = 0.94280904158;
+    q_beam.element_position_(10) = 0.23570226039;
+    q_beam.element_position_(11) = 0.23570226039;
+
+    q_beam_rot(0) = 0.0;
+    q_beam_rot(1) = 0.0;
+    q_beam_rot(2) = 0.0;
+    q_beam_rot(3) = 0.0;
+    q_beam_rot(4) = 0.0;
+    q_beam_rot(5) = 0.0;
+    q_beam_rot(6) = 0.0;
+    q_beam_rot(7) = 0.0;
+    q_beam_rot(8) = 0.0;
+
+    q_solid.element_position_(0) = -0.2;
+    q_solid.element_position_(1) = -0.2;
+    q_solid.element_position_(2) = -0.2;
+
+    q_solid.element_position_(3) = 1.0;
+    q_solid.element_position_(4) = -0.2;
+    q_solid.element_position_(5) = -0.2;
+
+    q_solid.element_position_(6) = 1.0;
+    q_solid.element_position_(7) = 0.6;
+    q_solid.element_position_(8) = -0.2;
+
+    q_solid.element_position_(9) = -0.2;
+    q_solid.element_position_(10) = 0.6;
+    q_solid.element_position_(11) = -0.2;
+
+    q_solid.element_position_(12) = -0.2;
+    q_solid.element_position_(13) = -0.2;
+    q_solid.element_position_(14) = 0.6;
+
+    q_solid.element_position_(15) = 1.0;
+    q_solid.element_position_(16) = -0.2;
+    q_solid.element_position_(17) = 0.6;
+
+    q_solid.element_position_(18) = 1.0;
+    q_solid.element_position_(19) = 0.6;
+    q_solid.element_position_(20) = 0.6;
+
+    q_solid.element_position_(21) = -0.2;
+    q_solid.element_position_(22) = 0.6;
+    q_solid.element_position_(23) = 0.6;
+
+    // Results for D.
+    result_local_D(0, 0) = 0.2121320343549544;
+    result_local_D(0, 3) = -0.00000000000002726811831887943;
+    result_local_D(0, 6) = 0.00000000000004586608870482678;
+    result_local_D(1, 1) = 0.2121320343549544;
+    result_local_D(1, 4) = -0.00000000000002726811831887943;
+    result_local_D(1, 7) = 0.00000000000004586608870482678;
+    result_local_D(2, 2) = 0.2121320343549544;
+    result_local_D(2, 5) = -0.00000000000002726811831887943;
+    result_local_D(2, 8) = 0.00000000000004586608870482678;
+    result_local_D(3, 0) = 0.00000000001687716633114178;
+    result_local_D(3, 3) = 0.2121320343565151;
+    result_local_D(3, 6) = -0.000000000003244071677954707;
+    result_local_D(3, 9) = -0.0000000000001377231662047507;
+    result_local_D(4, 1) = 0.00000000001687716633114178;
+    result_local_D(4, 4) = 0.2121320343565151;
+    result_local_D(4, 7) = -0.000000000003244071677954707;
+    result_local_D(4, 10) = -0.0000000000001377231662047507;
+    result_local_D(5, 2) = 0.00000000001687716633114178;
+    result_local_D(5, 5) = 0.2121320343565151;
+    result_local_D(5, 8) = -0.000000000003244071677954707;
+    result_local_D(5, 11) = -0.0000000000001377231662047507;
+    result_local_D(6, 0) = 0.00000000000004585221091701897;
+    result_local_D(6, 6) = 0.2121320343549544;
+    result_local_D(6, 9) = 0.00000000000002726985304235541;
+    result_local_D(7, 1) = 0.00000000000004585221091701897;
+    result_local_D(7, 7) = 0.2121320343549544;
+    result_local_D(7, 10) = 0.00000000000002726985304235541;
+    result_local_D(8, 2) = 0.00000000000004585221091701897;
+    result_local_D(8, 8) = 0.2121320343549544;
+    result_local_D(8, 11) = 0.00000000000002726985304235541;
+    result_local_D(9, 0) = 0.000000000003244959856374408;
+    result_local_D(9, 3) = -0.0000000000001378064329315976;
+    result_local_D(9, 6) = -0.00000000001687716633114178;
+    result_local_D(9, 9) = 0.2121320343565152;
+    result_local_D(10, 1) = 0.000000000003244959856374408;
+    result_local_D(10, 4) = -0.0000000000001378064329315976;
+    result_local_D(10, 7) = -0.00000000001687716633114178;
+    result_local_D(10, 10) = 0.2121320343565152;
+    result_local_D(11, 2) = 0.000000000003244959856374408;
+    result_local_D(11, 5) = -0.0000000000001378064329315976;
+    result_local_D(11, 8) = -0.00000000001687716633114178;
+    result_local_D(11, 11) = 0.2121320343565152;
+
+    // Results for M.
+    result_local_M(0, 0) = 0.0994368911039243;
+    result_local_M(0, 3) = 0.01988737822076901;
+    result_local_M(0, 6) = 0.006629126073596114;
+    result_local_M(0, 9) = 0.03314563036796071;
+    result_local_M(0, 12) = 0.03314563036796071;
+    result_local_M(0, 15) = 0.006629126073596114;
+    result_local_M(0, 18) = 0.002209708691205467;
+    result_local_M(0, 21) = 0.01104854345598777;
+    result_local_M(1, 1) = 0.0994368911039243;
+    result_local_M(1, 4) = 0.01988737822076901;
+    result_local_M(1, 7) = 0.006629126073596114;
+    result_local_M(1, 10) = 0.03314563036796071;
+    result_local_M(1, 13) = 0.03314563036796071;
+    result_local_M(1, 16) = 0.006629126073596114;
+    result_local_M(1, 19) = 0.002209708691205467;
+    result_local_M(1, 22) = 0.01104854345598777;
+    result_local_M(2, 2) = 0.0994368911039243;
+    result_local_M(2, 5) = 0.01988737822076901;
+    result_local_M(2, 8) = 0.006629126073596114;
+    result_local_M(2, 11) = 0.03314563036796071;
+    result_local_M(2, 14) = 0.03314563036796071;
+    result_local_M(2, 17) = 0.006629126073596114;
+    result_local_M(2, 20) = 0.002209708691205467;
+    result_local_M(2, 23) = 0.01104854345598777;
+    result_local_M(3, 0) = -0.1718749999916556;
+    result_local_M(3, 3) = 0.07812500000167466;
+    result_local_M(3, 6) = 0.03645833333327941;
+    result_local_M(3, 9) = -0.005208333331326864;
+    result_local_M(3, 12) = -0.005208333331326864;
+    result_local_M(3, 15) = 0.03645833333327941;
+    result_local_M(3, 18) = 0.01562499999958342;
+    result_local_M(3, 21) = 0.01562500000012557;
+    result_local_M(4, 1) = -0.1718749999916556;
+    result_local_M(4, 4) = 0.07812500000167466;
+    result_local_M(4, 7) = 0.03645833333327941;
+    result_local_M(4, 10) = -0.005208333331326864;
+    result_local_M(4, 13) = -0.005208333331326864;
+    result_local_M(4, 16) = 0.03645833333327941;
+    result_local_M(4, 19) = 0.01562499999958342;
+    result_local_M(4, 22) = 0.01562500000012557;
+    result_local_M(5, 2) = -0.1718749999916556;
+    result_local_M(5, 5) = 0.07812500000167466;
+    result_local_M(5, 8) = 0.03645833333327941;
+    result_local_M(5, 11) = -0.005208333331326864;
+    result_local_M(5, 14) = -0.005208333331326864;
+    result_local_M(5, 17) = 0.03645833333327941;
+    result_local_M(5, 20) = 0.01562499999958342;
+    result_local_M(5, 23) = 0.01562500000012557;
+    result_local_M(6, 0) = 0.04143203795997785;
+    result_local_M(6, 3) = 0.04143203795994982;
+    result_local_M(6, 6) = 0.02485922277597786;
+    result_local_M(6, 9) = 0.02485922277596961;
+    result_local_M(6, 12) = 0.02485922277596961;
+    result_local_M(6, 15) = 0.02485922277597786;
+    result_local_M(6, 18) = 0.01491553366559461;
+    result_local_M(6, 21) = 0.01491553366558303;
+    result_local_M(7, 1) = 0.04143203795997785;
+    result_local_M(7, 4) = 0.04143203795994982;
+    result_local_M(7, 7) = 0.02485922277597786;
+    result_local_M(7, 10) = 0.02485922277596961;
+    result_local_M(7, 13) = 0.02485922277596961;
+    result_local_M(7, 16) = 0.02485922277597786;
+    result_local_M(7, 19) = 0.01491553366559461;
+    result_local_M(7, 22) = 0.01491553366558303;
+    result_local_M(8, 2) = 0.04143203795997785;
+    result_local_M(8, 5) = 0.04143203795994982;
+    result_local_M(8, 8) = 0.02485922277597786;
+    result_local_M(8, 11) = 0.02485922277596961;
+    result_local_M(8, 14) = 0.02485922277596961;
+    result_local_M(8, 17) = 0.02485922277597786;
+    result_local_M(8, 20) = 0.01491553366559461;
+    result_local_M(8, 23) = 0.01491553366558303;
+    result_local_M(9, 0) = -0.1041666666670169;
+    result_local_M(9, 3) = 0.02604166666414387;
+    result_local_M(9, 6) = 0.0468749999979674;
+    result_local_M(9, 9) = -0.03125000000186939;
+    result_local_M(9, 12) = -0.03125000000186939;
+    result_local_M(9, 15) = 0.0468749999979674;
+    result_local_M(9, 18) = 0.04687499999864936;
+    result_local_M(9, 21) = -0.000000000001606603738935064;
+    result_local_M(10, 1) = -0.1041666666670169;
+    result_local_M(10, 4) = 0.02604166666414387;
+    result_local_M(10, 7) = 0.0468749999979674;
+    result_local_M(10, 10) = -0.03125000000186939;
+    result_local_M(10, 13) = -0.03125000000186939;
+    result_local_M(10, 16) = 0.0468749999979674;
+    result_local_M(10, 19) = 0.04687499999864936;
+    result_local_M(10, 22) = -0.000000000001606603738935064;
+    result_local_M(11, 2) = -0.1041666666670169;
+    result_local_M(11, 5) = 0.02604166666414387;
+    result_local_M(11, 8) = 0.0468749999979674;
+    result_local_M(11, 11) = -0.03125000000186939;
+    result_local_M(11, 14) = -0.03125000000186939;
+    result_local_M(11, 17) = 0.0468749999979674;
+    result_local_M(11, 20) = 0.04687499999864936;
+    result_local_M(11, 23) = -0.000000000001606603738935064;
+
+    // Results for Kappa.
+    result_local_kappa(0) = 0.2121320343550003;
+    result_local_kappa(1) = 0.2121320343550003;
+    result_local_kappa(2) = 0.2121320343550003;
+    result_local_kappa(3) = 0.00000000001363265056397722;
+    result_local_kappa(4) = 0.00000000001363265056397722;
+    result_local_kappa(5) = 0.00000000001363265056397722;
+    result_local_kappa(6) = 0.2121320343550003;
+    result_local_kappa(7) = 0.2121320343550003;
+    result_local_kappa(8) = 0.2121320343550003;
+    result_local_kappa(9) = -0.00000000001363353874239692;
+    result_local_kappa(10) = -0.00000000001363353874239692;
+    result_local_kappa(11) = -0.00000000001363353874239692;
+
+    // Perform the unit tests.
+    perform_mortar_pair_unit_test(
+        contact_pair, q_beam, q_solid, result_local_D, result_local_M, result_local_kappa);
+  }
+
 
 }  // namespace

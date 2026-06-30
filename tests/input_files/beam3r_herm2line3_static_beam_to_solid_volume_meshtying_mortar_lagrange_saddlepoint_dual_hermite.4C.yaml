@@ -1,7 +1,7 @@
 TITLE:
-  - "Description: Simulate a beam coupled to a solid via mortar coupling using Lagrange multipler method
-    with the saddlepoint variant."
-  - "The shape functions for the Lagrange multplicators are line3."
+  - "Description: Simulate a beam coupled to a solid using mortar coupling and lagrange multipliers with
+    the saddlepoint variant"
+  - "Dual hermite shape functions are used to interpolate the Lagrange Multipliers."
 PROBLEM TYPE:
   PROBLEMTYPE: "Structure"
 IO:
@@ -36,8 +36,7 @@ BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING:
   CONTACT_DISCRETIZATION: mortar
   CONSTRAINT_STRATEGY: lagrange
   LAGRANGE_FORMULATION: saddlepoint
-  MORTAR_SHAPE_FUNCTION: line3
-  PENALTY_PARAMETER: 10
+  MORTAR_SHAPE_FUNCTION: dual_hermite
   GEOMETRY_PAIR_SEGMENTATION_SEARCH_POINTS: 2
 BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING/RUNTIME VTK OUTPUT:
   WRITE_OUTPUT: true
@@ -52,37 +51,37 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 175
       QUANTITY: "dispx"
-      VALUE: -4.57284372265275241e-01
+      VALUE: -4.57012978871066344e-01
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 175
       QUANTITY: "dispy"
-      VALUE: -5.01578377180323387e-02
+      VALUE: -5.09106643401164433e-02
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 175
       QUANTITY: "dispz"
-      VALUE: 2.32174901257959210e+00
+      VALUE: 2.32089865733741574e+00
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 204
       QUANTITY: "dispx"
-      VALUE: -2.44901393895469777e-01
+      VALUE: -2.44649917710540177e-01
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 204
       QUANTITY: "dispy"
-      VALUE: -2.73458442510823886e-02
+      VALUE: -2.80193731640499925e-02
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 204
       QUANTITY: "dispz"
-      VALUE: 1.89956091210363054e+00
+      VALUE: 1.89862575223904129e+00
       TOLERANCE: 1e-10
 STRUCT NOX/Status Test:
   XML File: "beam3r_herm2line3_static_beam_to_solid_volume_meshtying_mortar_lagrange.xml"

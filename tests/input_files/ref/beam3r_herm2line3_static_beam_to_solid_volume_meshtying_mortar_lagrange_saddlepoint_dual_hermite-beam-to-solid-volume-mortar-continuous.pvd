@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!--
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
+  <Collection>
+    <DataSet timestep="5.00000000000000e-01" group="" part="0" file="beam3r_herm2line3_static_beam_to_solid_volume_meshtying_mortar_lagrange_saddlepoint_dual_hermite-vtk-files/beam-to-solid-volume-mortar-continuous-00001.pvtu"/>
+    <DataSet timestep="1.00000000000000e+00" group="" part="0" file="beam3r_herm2line3_static_beam_to_solid_volume_meshtying_mortar_lagrange_saddlepoint_dual_hermite-vtk-files/beam-to-solid-volume-mortar-continuous-00002.pvtu"/>
+  </Collection>
+</VTKFile>
