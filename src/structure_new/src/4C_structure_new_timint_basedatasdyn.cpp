@@ -45,63 +45,63 @@ Solid::TimeInt::BaseDataSDyn::BaseDataSDyn()
       timemax_(-1.0),
       stepmax_(-1),
       timer_(nullptr),
-      damptype_(Inpar::Solid::damp_none),
+      damptype_(Solid::damp_none),
       dampk_(-1.0),
       dampm_(-1.0),
-      masslintype_(Inpar::Solid::MassLin::ml_none),
+      masslintype_(Solid::MassLin::ml_none),
       lumpmass_(false),
       neglectinertia_(false),
       modeltypes_(nullptr),
       eletechs_(nullptr),
       coupling_model_ptr_(nullptr),
-      dyntype_(Inpar::Solid::DynamicType::Statics),
-      stcscale_(Inpar::Solid::stc_inactive),
+      dyntype_(Solid::DynamicType::Statics),
+      stcscale_(Solid::stc_inactive),
       stclayer_(-1),
       itermin_(-1),
       itermax_(-1),
       loadlin_(false),
-      prestresstype_(Inpar::Solid::PreStress::none),
-      predtype_(Inpar::Solid::pred_vague),
-      nlnsolvertype_(Inpar::Solid::soltech_vague),
-      divergenceaction_(Inpar::Solid::divcont_stop),
-      mid_time_energy_type_(Inpar::Solid::midavg_vague),
+      prestresstype_(Solid::PreStress::none),
+      predtype_(Solid::pred_vague),
+      nlnsolvertype_(Solid::soltech_vague),
+      divergenceaction_(Solid::divcont_stop),
+      mid_time_energy_type_(Solid::midavg_vague),
       maxdivconrefinementlevel_(-1),
       noxparams_(nullptr),
       ptc_delta_init_(0.0),
       linsolvers_(nullptr),
-      normtype_(Inpar::Solid::norm_vague),
+      normtype_(Solid::norm_vague),
       nox_normtype_(::NOX::Abstract::Vector::TwoNorm),
       tol_disp_incr_(-1.0),
-      toltype_disp_incr_(Inpar::Solid::convnorm_abs),
+      toltype_disp_incr_(Solid::convnorm_abs),
       tol_fres_(-1.0),
-      toltype_fres_(Inpar::Solid::convnorm_abs),
+      toltype_fres_(Solid::convnorm_abs),
       tol_pres_(-1.0),
-      toltype_pres_(Inpar::Solid::convnorm_abs),
+      toltype_pres_(Solid::convnorm_abs),
       tol_inco_(-1.0),
-      toltype_inco_(Inpar::Solid::convnorm_abs),
-      normcombo_disp_pres_(Inpar::Solid::bop_and),
-      normcombo_fres_inco_(Inpar::Solid::bop_and),
-      normcombo_fres_eas_res_(Inpar::Solid::bop_and),
-      normcombo_disp_eas_incr_(Inpar::Solid::bop_and),
-      normcombo_fres_disp_(Inpar::Solid::bop_and),
-      toltype_cardvasc0d_res_(Inpar::Solid::convnorm_abs),
+      toltype_inco_(Solid::convnorm_abs),
+      normcombo_disp_pres_(Solid::bop_and),
+      normcombo_fres_inco_(Solid::bop_and),
+      normcombo_fres_eas_res_(Solid::bop_and),
+      normcombo_disp_eas_incr_(Solid::bop_and),
+      normcombo_fres_disp_(Solid::bop_and),
+      toltype_cardvasc0d_res_(Solid::convnorm_abs),
       tol_cardvasc0d_res_(-1.0),
-      toltype_cardvasc0d_incr_(Inpar::Solid::convnorm_abs),
+      toltype_cardvasc0d_incr_(Solid::convnorm_abs),
       tol_cardvasc0d_incr_(-1.0),
-      toltype_constr_res_(Inpar::Solid::convnorm_abs),
+      toltype_constr_res_(Solid::convnorm_abs),
       tol_constr_res_(-1.0),
-      toltype_constr_incr_(Inpar::Solid::convnorm_abs),
+      toltype_constr_incr_(Solid::convnorm_abs),
       tol_constr_incr_(-1.0),
-      toltype_contact_res_(Inpar::Solid::convnorm_abs),
+      toltype_contact_res_(Solid::convnorm_abs),
       tol_contact_res_(-1.0),
-      toltype_contact_lm_incr_(Inpar::Solid::convnorm_abs),
+      toltype_contact_lm_incr_(Solid::convnorm_abs),
       tol_contact_lm_incr_(-1.0),
-      normcombo_fres_contact_res_(Inpar::Solid::bop_and),
-      normcombo_disp_contact_lm_incr_(Inpar::Solid::bop_and),
-      normcombo_fres_cardvasc0d_res_(Inpar::Solid::bop_and),
-      normcombo_disp_cardvasc0d_incr_(Inpar::Solid::bop_and),
-      normcombo_fres_constr_res_(Inpar::Solid::bop_and),
-      normcombo_disp_constr_incr_(Inpar::Solid::bop_and),
+      normcombo_fres_contact_res_(Solid::bop_and),
+      normcombo_disp_contact_lm_incr_(Solid::bop_and),
+      normcombo_fres_cardvasc0d_res_(Solid::bop_and),
+      normcombo_disp_cardvasc0d_incr_(Solid::bop_and),
+      normcombo_fres_constr_res_(Solid::bop_and),
+      normcombo_disp_constr_incr_(Solid::bop_and),
       rand_tsfac_(1.0),
       divconrefinementlevel_(0),
       divconnumfinestep_(0),
@@ -115,9 +115,9 @@ Solid::TimeInt::BaseDataSDyn::BaseDataSDyn()
  *----------------------------------------------------------------------------*/
 void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discretization> discret,
     const Teuchos::ParameterList& sdynparams, const Teuchos::ParameterList& xparams,
-    const std::shared_ptr<std::set<Inpar::Solid::ModelType>> modeltypes,
-    const std::shared_ptr<std::set<Inpar::Solid::EleTech>> eletechs,
-    const std::shared_ptr<std::map<Inpar::Solid::ModelType, std::shared_ptr<Core::LinAlg::Solver>>>
+    const std::shared_ptr<std::set<Solid::ModelType>> modeltypes,
+    const std::shared_ptr<std::set<Solid::EleTech>> eletechs,
+    const std::shared_ptr<std::map<Solid::ModelType, std::shared_ptr<Core::LinAlg::Solver>>>
         linsolvers)
 {
   // We have to call setup() after init()
@@ -132,9 +132,9 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
 
     timer_ = std::make_shared<Teuchos::Time>("", true);
 
-    dyntype_ = Teuchos::getIntegralValue<Inpar::Solid::DynamicType>(sdynparams, "DYNAMICTYPE");
+    dyntype_ = Teuchos::getIntegralValue<Solid::DynamicType>(sdynparams, "DYNAMICTYPE");
 
-    stcscale_ = Teuchos::getIntegralValue<Inpar::Solid::StcScale>(sdynparams, "STC_SCALING");
+    stcscale_ = Teuchos::getIntegralValue<Solid::StcScale>(sdynparams, "STC_SCALING");
 
     stclayer_ = sdynparams.get<int>("STC_LAYER");
 
@@ -145,7 +145,7 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
   // initialize the damping control parameters
   // ---------------------------------------------------------------------------
   {
-    damptype_ = Teuchos::getIntegralValue<Inpar::Solid::DampKind>(sdynparams, "DAMPING");
+    damptype_ = Teuchos::getIntegralValue<Solid::DampKind>(sdynparams, "DAMPING");
     dampk_ = sdynparams.get<double>("K_DAMP");
     dampm_ = sdynparams.get<double>("M_DAMP");
   }
@@ -153,7 +153,7 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
   // initialize the mass and inertia control parameters
   // ---------------------------------------------------------------------------
   {
-    masslintype_ = Teuchos::getIntegralValue<Inpar::Solid::MassLin>(sdynparams, "MASSLIN");
+    masslintype_ = Teuchos::getIntegralValue<Solid::MassLin>(sdynparams, "MASSLIN");
     lumpmass_ = sdynparams.get<bool>("LUMPMASS");
     neglectinertia_ = sdynparams.get<bool>("NEGLECTINERTIA");
   }
@@ -163,19 +163,19 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
   {
     modeltypes_ = modeltypes;
     eletechs_ = eletechs;
-    if (modeltypes_->find(Inpar::Solid::model_partitioned_coupling) != modeltypes->end())
+    if (modeltypes_->find(Solid::model_partitioned_coupling) != modeltypes->end())
     {
-      if (modeltypes_->find(Inpar::Solid::model_monolithic_coupling) != modeltypes->end())
+      if (modeltypes_->find(Solid::model_monolithic_coupling) != modeltypes->end())
         FOUR_C_THROW("Cannot have both monolithic and partitioned coupling at the same time!");
       coupling_model_ptr_ = sdynparams.get<std::shared_ptr<Solid::ModelEvaluator::Generic>>(
           "Partitioned Coupling Model");
     }
-    else if (modeltypes_->find(Inpar::Solid::model_monolithic_coupling) != modeltypes->end())
+    else if (modeltypes_->find(Solid::model_monolithic_coupling) != modeltypes->end())
     {
       coupling_model_ptr_ = sdynparams.get<std::shared_ptr<Solid::ModelEvaluator::Generic>>(
           "Monolithic Coupling Model");
     }
-    else if (modeltypes_->find(Inpar::Solid::model_basic_coupling) != modeltypes->end())
+    else if (modeltypes_->find(Solid::model_basic_coupling) != modeltypes->end())
     {
       coupling_model_ptr_ =
           sdynparams.get<std::shared_ptr<Solid::ModelEvaluator::Generic>>("Basic Coupling Model");
@@ -190,16 +190,15 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
     loadlin_ = (sdynparams.get<bool>("LOADLIN"));
     prestresstime_ =
         Global::Problem::instance()->structural_dynamic_params().get<double>("PRESTRESSTIME");
-    prestresstype_ = Teuchos::getIntegralValue<Inpar::Solid::PreStress>(
+    prestresstype_ = Teuchos::getIntegralValue<Solid::PreStress>(
         Global::Problem::instance()->structural_dynamic_params(), "PRESTRESS");
     prestress_displacement_tolerance_ = sdynparams.get<double>("PRESTRESSTOLDISP");
     prestress_min_number_of_load_steps_ = sdynparams.get<int>("PRESTRESSMINLOADSTEPS");
-    predtype_ = Teuchos::getIntegralValue<Inpar::Solid::PredEnum>(sdynparams, "PREDICT");
-    nlnsolvertype_ = Teuchos::getIntegralValue<Inpar::Solid::NonlinSolTech>(sdynparams, "NLNSOL");
-    divergenceaction_ =
-        Teuchos::getIntegralValue<Inpar::Solid::DivContAct>(sdynparams, "DIVERCONT");
+    predtype_ = Teuchos::getIntegralValue<Solid::PredEnum>(sdynparams, "PREDICT");
+    nlnsolvertype_ = Teuchos::getIntegralValue<Solid::NonlinSolTech>(sdynparams, "NLNSOL");
+    divergenceaction_ = Teuchos::getIntegralValue<Solid::DivContAct>(sdynparams, "DIVERCONT");
     mid_time_energy_type_ =
-        Teuchos::getIntegralValue<Inpar::Solid::MidAverageEnum>(sdynparams, "MIDTIME_ENERGY_TYPE");
+        Teuchos::getIntegralValue<Solid::MidAverageEnum>(sdynparams, "MIDTIME_ENERGY_TYPE");
     maxdivconrefinementlevel_ = sdynparams.get<int>("MAXDIVCONREFINEMENTLEVEL");
     noxparams_ = std::make_shared<Teuchos::ParameterList>(xparams.sublist("NOX"));
     ptc_delta_init_ = sdynparams.get<double>("PTCDT");
@@ -214,65 +213,65 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
   // initialize the status test control parameters
   // ---------------------------------------------------------------------------
   {
-    normtype_ = Teuchos::getIntegralValue<Inpar::Solid::VectorNorm>(sdynparams, "ITERNORM");
+    normtype_ = Teuchos::getIntegralValue<Solid::VectorNorm>(sdynparams, "ITERNORM");
     nox_normtype_ = Solid::Nln::convert2_nox_norm_type(normtype_);
 
     // -------------------------------------------------------------------------
     // primary variables
     // -------------------------------------------------------------------------
     tol_disp_incr_ = sdynparams.get<double>("TOLDISP");
-    toltype_disp_incr_ = Teuchos::getIntegralValue<Inpar::Solid::ConvNorm>(sdynparams, "NORM_DISP");
+    toltype_disp_incr_ = Teuchos::getIntegralValue<Solid::ConvNorm>(sdynparams, "NORM_DISP");
 
     tol_fres_ = sdynparams.get<double>("TOLRES");
-    toltype_fres_ = Teuchos::getIntegralValue<Inpar::Solid::ConvNorm>(sdynparams, "NORM_RESF");
+    toltype_fres_ = Teuchos::getIntegralValue<Solid::ConvNorm>(sdynparams, "NORM_RESF");
 
     tol_pres_ = sdynparams.get<double>("TOLPRE");
-    toltype_pres_ = Inpar::Solid::convnorm_abs;
+    toltype_pres_ = Solid::convnorm_abs;
 
     tol_inco_ = sdynparams.get<double>("TOLINCO");
-    toltype_inco_ = Inpar::Solid::convnorm_abs;
+    toltype_inco_ = Solid::convnorm_abs;
 
-    toltype_eas_res_ = Inpar::Solid::convnorm_abs;
+    toltype_eas_res_ = Solid::convnorm_abs;
 
-    toltype_eas_incr_ = Inpar::Solid::convnorm_abs;
+    toltype_eas_incr_ = Solid::convnorm_abs;
 
     normcombo_disp_pres_ =
-        Teuchos::getIntegralValue<Inpar::Solid::BinaryOp>(sdynparams, "NORMCOMBI_DISPPRES");
+        Teuchos::getIntegralValue<Solid::BinaryOp>(sdynparams, "NORMCOMBI_DISPPRES");
     normcombo_fres_inco_ =
-        Teuchos::getIntegralValue<Inpar::Solid::BinaryOp>(sdynparams, "NORMCOMBI_RESFINCO");
+        Teuchos::getIntegralValue<Solid::BinaryOp>(sdynparams, "NORMCOMBI_RESFINCO");
     normcombo_fres_disp_ =
-        Teuchos::getIntegralValue<Inpar::Solid::BinaryOp>(sdynparams, "NORMCOMBI_RESFDISP");
+        Teuchos::getIntegralValue<Solid::BinaryOp>(sdynparams, "NORMCOMBI_RESFDISP");
 
     // -------------------------------------------------------------------------
     // constraint variables
     // -------------------------------------------------------------------------
     tol_constr_res_ = sdynparams.get<double>("TOLCONSTR");
-    toltype_constr_res_ = Inpar::Solid::convnorm_abs;
+    toltype_constr_res_ = Solid::convnorm_abs;
 
     tol_constr_incr_ = sdynparams.get<double>("TOLCONSTRINCR");
-    toltype_constr_incr_ = Inpar::Solid::convnorm_abs;
+    toltype_constr_incr_ = Solid::convnorm_abs;
 
     tol_cardvasc0d_res_ =
         Global::Problem::instance()->cardiovascular0_d_structural_params().get<double>(
             "TOL_CARDVASC0D_RES");
-    toltype_cardvasc0d_res_ = Inpar::Solid::convnorm_abs;
+    toltype_cardvasc0d_res_ = Solid::convnorm_abs;
 
     tol_cardvasc0d_incr_ =
         Global::Problem::instance()->cardiovascular0_d_structural_params().get<double>(
             "TOL_CARDVASC0D_DOFINCR");
-    toltype_cardvasc0d_incr_ = Inpar::Solid::convnorm_abs;
+    toltype_cardvasc0d_incr_ = Solid::convnorm_abs;
 
     tol_contact_res_ =
         Global::Problem::instance()->contact_dynamic_params().get<double>("TOLCONTCONSTR");
-    toltype_contact_res_ = Inpar::Solid::convnorm_abs;
+    toltype_contact_res_ = Solid::convnorm_abs;
 
     tol_contact_lm_incr_ =
         Global::Problem::instance()->contact_dynamic_params().get<double>("TOLLAGR");
-    toltype_contact_lm_incr_ = Inpar::Solid::convnorm_abs;
+    toltype_contact_lm_incr_ = Solid::convnorm_abs;
 
-    normcombo_fres_contact_res_ = Teuchos::getIntegralValue<Inpar::Solid::BinaryOp>(
+    normcombo_fres_contact_res_ = Teuchos::getIntegralValue<Solid::BinaryOp>(
         Global::Problem::instance()->contact_dynamic_params(), "NORMCOMBI_RESFCONTCONSTR");
-    normcombo_disp_contact_lm_incr_ = Teuchos::getIntegralValue<Inpar::Solid::BinaryOp>(
+    normcombo_disp_contact_lm_incr_ = Teuchos::getIntegralValue<Solid::BinaryOp>(
         Global::Problem::instance()->contact_dynamic_params(), "NORMCOMBI_DISPLAGR");
   }
 
@@ -285,7 +284,7 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
   // initial displacement variables
   // -------------------------------------------------------------------------
   {
-    initial_disp_ = Teuchos::getIntegralValue<Inpar::Solid::InitialDisp>(sdynparams, "INITIALDISP");
+    initial_disp_ = Teuchos::getIntegralValue<Solid::InitialDisp>(sdynparams, "INITIALDISP");
     start_func_no_ = sdynparams.get<int>("STARTFUNCNO");
   }
 
@@ -303,20 +302,20 @@ void Solid::TimeInt::BaseDataSDyn::setup()
       parse_dynamic_rebalance_config(get_sdyn_params().sublist("DYNAMIC REBALANCE"));
 
   if (dynamic_rebalance_config_.enabled &&
-      (modeltypes_->size() != 1 || !modeltypes_->contains(Inpar::Solid::model_structure)))
+      (modeltypes_->size() != 1 || !modeltypes_->contains(Solid::model_structure)))
   {
     FOUR_C_THROW("Dynamic rebalance is currently only supported for pure structure problems.");
   }
 
-  std::set<Inpar::Solid::ModelType>::const_iterator it;
+  std::set<Solid::ModelType>::const_iterator it;
   // setup model type specific data containers
   for (it = (*modeltypes_).begin(); it != (*modeltypes_).end(); ++it)
   {
     switch (*it)
     {
-      case Inpar::Solid::model_beaminteraction:
-      case Inpar::Solid::model_beam_interaction_old:
-      case Inpar::Solid::model_browniandyn:
+      case Solid::model_beaminteraction:
+      case Solid::model_beam_interaction_old:
+      case Solid::model_browniandyn:
       {
         periodic_boundingbox_ = std::make_shared<Core::Geo::MeshFree::BoundingBox>();
         periodic_boundingbox_->init(Global::Problem::instance()->binning_strategy_params());
@@ -421,7 +420,7 @@ double Solid::TimeInt::BaseDataSDyn::get_incr_tolerance(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Inpar::Solid::ConvNorm Solid::TimeInt::BaseDataSDyn::get_res_tolerance_type(
+Solid::ConvNorm Solid::TimeInt::BaseDataSDyn::get_res_tolerance_type(
     const NOX::Nln::StatusTest::QuantityType& qtype) const
 {
   check_init_setup();
@@ -455,13 +454,13 @@ Inpar::Solid::ConvNorm Solid::TimeInt::BaseDataSDyn::get_res_tolerance_type(
       break;
   }
 
-  return Inpar::Solid::convnorm_abs;
+  return Solid::convnorm_abs;
 }
 
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Inpar::Solid::ConvNorm Solid::TimeInt::BaseDataSDyn::get_incr_tolerance_type(
+Solid::ConvNorm Solid::TimeInt::BaseDataSDyn::get_incr_tolerance_type(
     const NOX::Nln::StatusTest::QuantityType& qtype) const
 {
   check_init_setup();
@@ -495,13 +494,13 @@ Inpar::Solid::ConvNorm Solid::TimeInt::BaseDataSDyn::get_incr_tolerance_type(
       break;
   }
 
-  return Inpar::Solid::convnorm_abs;
+  return Solid::convnorm_abs;
 }
 
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Inpar::Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_res_combo_type(
+Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_res_combo_type(
     const NOX::Nln::StatusTest::QuantityType& qtype) const
 {
   return get_res_combo_type(NOX::Nln::StatusTest::quantity_structure, qtype);
@@ -510,7 +509,7 @@ Inpar::Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_res_combo_type(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Inpar::Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_res_combo_type(
+Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_res_combo_type(
     const NOX::Nln::StatusTest::QuantityType& qtype_1,
     const NOX::Nln::StatusTest::QuantityType& qtype_2) const
 {
@@ -565,13 +564,13 @@ Inpar::Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_res_combo_type(
         NOX::Nln::StatusTest::quantity_type_to_string(qtype_1).c_str(),
         NOX::Nln::StatusTest::quantity_type_to_string(qtype_2).c_str());
 
-  return Inpar::Solid::bop_and;
+  return Solid::bop_and;
 }
 
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Inpar::Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_incr_combo_type(
+Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_incr_combo_type(
     const NOX::Nln::StatusTest::QuantityType& qtype) const
 {
   return get_incr_combo_type(NOX::Nln::StatusTest::quantity_structure, qtype);
@@ -580,7 +579,7 @@ Inpar::Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_incr_combo_type(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Inpar::Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_incr_combo_type(
+Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_incr_combo_type(
     const NOX::Nln::StatusTest::QuantityType& qtype_1,
     const NOX::Nln::StatusTest::QuantityType& qtype_2) const
 {
@@ -635,13 +634,13 @@ Inpar::Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_incr_combo_type(
         NOX::Nln::StatusTest::quantity_type_to_string(qtype_1).c_str(),
         NOX::Nln::StatusTest::quantity_type_to_string(qtype_2).c_str());
 
-  return Inpar::Solid::bop_and;
+  return Solid::bop_and;
 }
 
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Inpar::Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_res_incr_combo_type(
+Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_res_incr_combo_type(
     const NOX::Nln::StatusTest::QuantityType& qtype_res,
     const NOX::Nln::StatusTest::QuantityType& qtype_incr) const
 {
@@ -658,12 +657,12 @@ Inpar::Solid::BinaryOp Solid::TimeInt::BaseDataSDyn::get_res_incr_combo_type(
         NOX::Nln::StatusTest::quantity_type_to_string(qtype_res).c_str(),
         NOX::Nln::StatusTest::quantity_type_to_string(qtype_incr).c_str());
 
-  return Inpar::Solid::bop_and;
+  return Solid::bop_and;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::TimeInt::BaseDataSDyn::have_model_type(const Inpar::Solid::ModelType& modeltype) const
+bool Solid::TimeInt::BaseDataSDyn::have_model_type(const Solid::ModelType& modeltype) const
 {
   check_init_setup();
   return (get_model_types().find(modeltype) != get_model_types().end());
@@ -671,7 +670,7 @@ bool Solid::TimeInt::BaseDataSDyn::have_model_type(const Inpar::Solid::ModelType
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::TimeInt::BaseDataSDyn::have_ele_tech(const Inpar::Solid::EleTech& eletech) const
+bool Solid::TimeInt::BaseDataSDyn::have_ele_tech(const Solid::EleTech& eletech) const
 {
   check_init_setup();
   return (get_element_technologies().find(eletech) != get_element_technologies().end());
@@ -681,7 +680,7 @@ bool Solid::TimeInt::BaseDataSDyn::have_ele_tech(const Inpar::Solid::EleTech& el
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 Solid::TimeInt::GenAlphaDataSDyn::GenAlphaDataSDyn()
-    : midavg_(Inpar::Solid::midavg_vague),
+    : midavg_(Solid::midavg_vague),
       beta_(-1.0),
       gamma_(-1.0),
       alphaf_(-1.0),
@@ -700,7 +699,7 @@ void Solid::TimeInt::GenAlphaDataSDyn::setup()
   // call base class setup
   Solid::TimeInt::BaseDataSDyn::setup();
 
-  midavg_ = Teuchos::getIntegralValue<Inpar::Solid::MidAverageEnum>(
+  midavg_ = Teuchos::getIntegralValue<Solid::MidAverageEnum>(
       get_sdyn_params().sublist("GENALPHA"), "GENAVG");
   beta_ = get_sdyn_params().sublist("GENALPHA").get<double>("BETA");
   gamma_ = get_sdyn_params().sublist("GENALPHA").get<double>("GAMMA");

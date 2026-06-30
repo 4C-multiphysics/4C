@@ -357,7 +357,7 @@ bool Solid::ModelEvaluator::Structure::initialize_inertia_and_damping(
   discret().clear_state();
   discret().set_state(0, "residual displacement", *integrator().get_dbc().get_zeros_ptr());
   discret().set_state(0, "displacement", displacement);
-  if (velocity != nullptr and eval_data().get_damping_type() == Inpar::Solid::damp_material)
+  if (velocity != nullptr and eval_data().get_damping_type() == Solid::damp_material)
     discret().set_state(0, "velocity", *velocity);
 
   static_contributions(eval_mat.data(), eval_vec.data());

@@ -296,7 +296,7 @@ void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
   stiff_ = nullptr;
   // mass_ and damp_ have to be initialized. This is also done in setup()
   mass_ = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map_view(), 81, true, true);
-  if (datasdyn_->get_damping_type() != Inpar::Solid::damp_none)
+  if (datasdyn_->get_damping_type() != Solid::damp_none)
     damp_ = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map_view(), 81, true, true);
   else
     damp_ = nullptr;
