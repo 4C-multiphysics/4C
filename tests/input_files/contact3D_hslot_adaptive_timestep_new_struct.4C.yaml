@@ -1,5 +1,8 @@
 PROBLEM TYPE:
   PROBLEMTYPE: "Structure"
+IO/MONITOR STRUCTURE DBC:
+  INTERVAL_STEPS: 1
+  FILE_TYPE: csv
 CONSTRAINT:
   CONSTRAINT_ENFORCEMENT: "penalty"
   PENALTY_PARAM: 200000
@@ -46,6 +49,7 @@ DESIGN POINT DIRICH CONDITIONS:
     VAL: [1.0, 1.0, 1.0]
     FUNCT: [1, 2, 3]
     E: 1
+    TAG: "monitor_reaction"
   - NUMDOF: 3
     ONOFF: [1, 1, 1]
     VAL: [1.0, 1.0, 1.0]
