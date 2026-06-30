@@ -175,12 +175,16 @@ void Solid::TimeInt::Base::maybe_perform_dynamic_rebalance()
   const int current_step = get_step_n();
   if (current_step - last_dynamic_rebalance_step_ < cooldown_steps) return;
 
-  Core::IO::cout << "====== Dynamic structure redistribution triggered after step " << current_step
-                 << " (rolling imbalance " << averaged_imbalance << ", threshold "
-                 << rebalance_config.imbalance_threshold << ")" << Core::IO::endl;
-
+  const double rebalance_start_time = dataglobalstate_->get_timer()->wallTime();
   if (perform_dynamic_rebalance())
   {
+    const double rebalance_wall_time =
+        dataglobalstate_->get_timer()->wallTime() - rebalance_start_time;
+    if (dataglobalstate_->get_my_rank() == 0)
+      Core::IO::cout << "====== Dynamic structure redistribution triggered after step "
+                     << current_step << " (rolling imbalance " << averaged_imbalance
+                     << ", threshold " << rebalance_config.imbalance_threshold << ", wall time "
+                     << rebalance_wall_time << " s)" << Core::IO::endl;
     last_dynamic_rebalance_step_ = current_step;
     dynamic_rebalance_imbalance_history_.clear();
   }
