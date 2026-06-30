@@ -34,7 +34,7 @@ jobs:
           cmake-preset: docker_kokkosopenmp
           build-targets: full
           build-directory: ${{ github.workspace }}/build
-          use-ccache: "false"
+          use-ccache: "true"
       - uses: ./.github/actions/upload_directory
         name: Upload 4C build
         with:
@@ -83,6 +83,10 @@ jobs:
           ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/kokkosopenmp_test_report-$TEST_CHUNK.xml
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
+          KOKKOS_NUM_THREADS: "1"
+          OMP_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+          OMP_DYNAMIC: "FALSE"
       - name: Upload test report
         if: success() || failure()
         uses: actions/upload-artifact@v7
@@ -130,7 +134,7 @@ jobs:
           cmake-preset: docker_kokkoscuda_clangcuda
           build-targets: 4C
           build-directory: ${{ github.workspace }}/build
-          use-ccache: "false"
+          use-ccache: "true"
 
   ensure_all_tests_pass:
     needs:

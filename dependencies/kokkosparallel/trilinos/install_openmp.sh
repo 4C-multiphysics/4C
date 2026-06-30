@@ -104,16 +104,15 @@ $CMAKE_COMMAND \
     -D SuperLUDist_INCLUDE_DIRS:PATH="$INSTALL_DIR/../include" \
     -D SuperLUDist_LIBRARY_DIRS:PATH="$INSTALL_DIR/../lib" \
   \
-  -D Trilinos_ENABLE_KokkosKernels=TRUE \
-  -D KokkosKernels_ENABLE_TPL_BLAS=TRUE \
-  -D KokkosKernels_ENABLE_TPL_LAPACK=TRUE \
+  -D Trilinos_ENABLE_KokkosKernels:BOOL=ON \
+  -D KokkosKernels_ENABLE_TPL_BLAS:BOOL=ON \
+  -D KokkosKernels_ENABLE_TPL_LAPACK:BOOL=ON \
   \
-  -D Kokkos_ENABLE_SERIAL=TRUE \
-  -D Tpetra_INST_SERIAL=TRUE \
+  -D Kokkos_ENABLE_SERIAL:BOOL=ON \
+  -D Tpetra_INST_SERIAL:BOOL=ON \
   \
-  -D Trilinos_ENABLE_OpenMP=TRUE \
-  -D Kokkos_ENABLE_OPENMP=TRUE \
-  -D Tpetra_INST_OPENMP=TRUE \
+  -D Trilinos_ENABLE_OpenMP:BOOL=ON \
+  -D Kokkos_ENABLE_OPENMP:BOOL=ON \
   \
   ../Trilinos
 
