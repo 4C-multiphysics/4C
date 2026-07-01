@@ -441,7 +441,8 @@ namespace Solid
                 {.description = "Minimum number of converged steps between rebalances.",
                     .default_value = 3}),
             parameter<double>("IMBALANCE_TOL",
-                {.description = "Target imbalance tolerance passed to the repartitioner.",
+                {.description = "Target vertex imbalance passed to the repartitioner. Higher "
+                                "values allow edge weights to have greater effect.",
                     .default_value = 1.1}),
             parameter<int>("MIN_ELE_PER_PROC",
                 {.description = "Minimum number of elements per processor used for during dynamic "
