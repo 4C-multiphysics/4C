@@ -15,7 +15,8 @@
 
 #include "4C_comm_parobjectfactory.hpp"
 #include "4C_mat_material_factory.hpp"
-#include "4C_mat_thermomechanical.hpp"
+#include "4C_mat_so3_material.hpp"
+#include "4C_mat_trait_thermo_solid.hpp"
 #include "4C_material_parameter_base.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -59,8 +60,6 @@ namespace Mat
       const double hardsoft_;
       //! tolerance for local Newton iteration
       const double abstol_;
-      //! thermal material id, -1 if not used (old interface)
-      const int thermomat_;
 
       //@}
 
@@ -88,7 +87,7 @@ namespace Mat
 
   /*----------------------------------------------------------------------*/
   //! wrapper for finite strain elasto-plastic material
-  class ThermoPlasticHyperElast : public ThermoMechanicalMaterial
+  class ThermoPlasticHyperElast : public Trait::ThermoSolid
   {
    public:
     //! construct empty material object
@@ -194,10 +193,6 @@ namespace Mat
 
     //! initial, reference temperature
     virtual double init_temp() const { return params_->inittemp_; }
-
-    void reinit(const Core::LinAlg::Tensor<double, 3, 3>* defgrd,
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain, double temperature,
-        unsigned gp) override;
 
     void stress_temperature_modulus_and_deriv(Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
         Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp) override;
@@ -333,43 +328,11 @@ namespace Mat
 
     //@}
 
-    //! @name thermo material interface
-
-    void evaluate(const Core::LinAlg::Matrix<3, 1>& gradtemp, Core::LinAlg::Matrix<3, 3>& cmat,
-        Core::LinAlg::Matrix<3, 1>& heatflux, const int eleGID) const override;
-
-    void evaluate(const Core::LinAlg::Matrix<2, 1>& gradtemp, Core::LinAlg::Matrix<2, 2>& cmat,
-        Core::LinAlg::Matrix<2, 1>& heatflux, const int eleGID) const override;
-
-    void evaluate(const Core::LinAlg::Matrix<1, 1>& gradtemp, Core::LinAlg::Matrix<1, 1>& cmat,
-        Core::LinAlg::Matrix<1, 1>& heatflux, const int eleGID) const override;
-
-    std::vector<double> conductivity(int eleGID = 0) const override;
-
-    void conductivity_deriv_t(Core::LinAlg::Matrix<3, 3>& dCondDT) const override;
-
-    void conductivity_deriv_t(Core::LinAlg::Matrix<2, 2>& dCondDT) const override;
-
-    void conductivity_deriv_t(Core::LinAlg::Matrix<1, 1>& dCondDT) const override;
-
-    double capacity() const override;
-
-    double capacity_deriv_t() const override;
-
     void reinit(double temperature, unsigned gp) override;
-
-    void reset_current_state() override;
-
-    void commit_current_state() override;
-
-    //@}
 
    private:
     //! my material parameters
     Mat::PAR::ThermoPlasticHyperElast* params_;
-
-    //! pointer to the internal thermal material
-    std::shared_ptr<Mat::Trait::Thermo> thermo_;
 
     //! current temperature (set by Reinit())
     double current_temperature_{};

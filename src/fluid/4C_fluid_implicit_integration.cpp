@@ -3782,6 +3782,10 @@ void FLD::FluidImplicitTimeInt::read_restart(int step)
     reader.read_vector(dispn_, "dispn");
     reader.read_vector(dispnm_, "dispnm");
     reader.read_vector(gridvn_, "gridvn");
+    // gridv_ and gridvn_ are expected to have the same value like after a normal time update.
+    // This is needed as grid_vel() may be called before the next ALE update
+    // recomputes gridv_.
+    gridv_->update(1.0, *gridvn_, 0.0);
   }
 
   // flow rate and flow volume in case of flow-dependent pressure bc

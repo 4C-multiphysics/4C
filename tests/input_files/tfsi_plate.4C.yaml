@@ -9,7 +9,7 @@ FS3I DYNAMIC:
   TIMESTEP: 0.15
   NUMSTEP: 5
   MAXTIME: 800
-  RESTARTEVERY: 2000
+  RESTARTEVERY: 1
   COUPLED_LINEAR_SOLVER: 2
   LINEAR_SOLVER1: 1
   LINEAR_SOLVER2: 1
@@ -130,7 +130,6 @@ MATERIALS:
       DENS: 1000
       THEXPANS: 6e-05
       INITTEMP: 293
-      THERMOMAT: 4
   - MAT: 3
     MAT_Struct_StVenantKirchhoff:
       YOUNG: 1
@@ -149,7 +148,7 @@ CLONING MATERIAL MAP:
   - SRC_FIELD: "structure"
     SRC_MAT: 2
     TAR_FIELD: "scatra2"
-    TAR_MAT: 2
+    TAR_MAT: 4
   - SRC_FIELD: "fluid"
     SRC_MAT: 1
     TAR_FIELD: "ale"

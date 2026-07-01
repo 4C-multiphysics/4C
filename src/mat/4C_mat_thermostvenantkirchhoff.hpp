@@ -17,7 +17,7 @@
 #include "4C_comm_parobjectfactory.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_mat_so3_material.hpp"
-#include "4C_mat_thermomechanical.hpp"
+#include "4C_mat_trait_thermo_solid.hpp"
 #include "4C_material_parameter_base.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -52,8 +52,6 @@ namespace Mat
       const double thermexpans_;
       //! initial temperature (constant) \f$ \theta_0 \f$
       const double thetainit_;
-      //! thermal material id, -1 if not used (old interface)
-      const int thermomat_;
       //@}
 
       //! create material instance of matching type with my parameters
@@ -78,7 +76,7 @@ namespace Mat
 
   /*----------------------------------------------------------------------*/
   //! Wrapper for St.-Venant-Kirchhoff material with temperature term
-  class ThermoStVenantKirchhoff : public ThermoMechanicalMaterial
+  class ThermoStVenantKirchhoff : public Trait::ThermoSolid
   {
    public:
     //! construct empty material object
@@ -171,36 +169,7 @@ namespace Mat
     //! Return quick accessible material parameter data
     Core::Mat::PAR::Parameter* parameter() const override { return params_; }
 
-    void evaluate(const Core::LinAlg::Matrix<3, 1>& gradtemp, Core::LinAlg::Matrix<3, 3>& cmat,
-        Core::LinAlg::Matrix<3, 1>& heatflux, const int eleGID) const override;
-
-    void evaluate(const Core::LinAlg::Matrix<2, 1>& gradtemp, Core::LinAlg::Matrix<2, 2>& cmat,
-        Core::LinAlg::Matrix<2, 1>& heatflux, const int eleGID) const override;
-
-    void evaluate(const Core::LinAlg::Matrix<1, 1>& gradtemp, Core::LinAlg::Matrix<1, 1>& cmat,
-        Core::LinAlg::Matrix<1, 1>& heatflux, const int eleGID) const override;
-
-    std::vector<double> conductivity(int eleGID = 0) const override;
-
-    void conductivity_deriv_t(Core::LinAlg::Matrix<3, 3>& dCondDT) const override;
-
-    void conductivity_deriv_t(Core::LinAlg::Matrix<2, 2>& dCondDT) const override;
-
-    void conductivity_deriv_t(Core::LinAlg::Matrix<1, 1>& dCondDT) const override;
-
-    double capacity() const override;
-
-    double capacity_deriv_t() const override;
-
     void reinit(double temperature, unsigned gp) override;
-
-    void reset_current_state() override;
-
-    void commit_current_state() override;
-
-    void reinit(const Core::LinAlg::Tensor<double, 3, 3>* defgrd,
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain, double temperature,
-        unsigned gp) override;
 
     Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_d_stress_d_scalar(
         const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
@@ -250,14 +219,8 @@ namespace Mat
         const double& tempnp                     // tmpr (i) current temperature
     ) const;
 
-    //! create thermo material object if specified in input (!= -1)
-    void create_thermo_material_if_set();
-
     //! my material parameters
     Mat::PAR::ThermoStVenantKirchhoff* params_;
-
-    //! pointer to the internal thermal material
-    std::shared_ptr<Mat::Trait::Thermo> thermo_;
 
     //! current temperature (set by Reinit())
     double current_temperature_{};

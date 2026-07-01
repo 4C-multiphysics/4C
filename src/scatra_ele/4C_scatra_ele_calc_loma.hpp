@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_mat_fourier.hpp"
 #include "4C_scatra_ele_calc.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -68,15 +69,20 @@ namespace Discret
           double& visc                   //!< fluid viscosity
       );
 
-      //! material thermo St. Venant Kirchhoff
-      void mat_thermo_st_venant_kirchhoff(const std::shared_ptr<const Core::Mat::Material>
-                                              material,  //!< pointer to current material
-          const int k,                                   //!< id of current scalar
-          double& densn,                                 //!< density at t_(n)
-          double& densnp,                                //!< density at t_(n+1) or t_(n+alpha_F)
-          double& densam,                                //!< density at t_(n+alpha_M)
-          double& visc                                   //!< fluid viscosity
-      );
+      /*!
+       * @brief Evaluate a Fourier material using the associated solid material's density.
+       *
+       * @param[in] material Fourier material of the scalar transport element
+       * @param[in] solid_material_density Density from the associated solid material
+       * @param[in] k Current scalar id
+       * @param[out] densn Density at \f$t_n\f$
+       * @param[out] densnp Density at \f$t_{n+1}\f$ or \f$t_{n+\alpha_F}\f$
+       * @param[out] densam Density at \f$t_{n+\alpha_M}\f$
+       * @param[out] visc Fluid viscosity
+       */
+      void mat_thermo_with_structural_density(const std::shared_ptr<const Mat::Fourier> material,
+          const double solid_material_density, const int k, double& densn, double& densnp,
+          double& densam, double& visc);
 
       /*========================================================================*/
       //! @name methods for evaluation of individual terms

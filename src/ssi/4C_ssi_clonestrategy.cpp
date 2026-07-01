@@ -68,7 +68,7 @@ void SSI::ScatraStructureCloneStrategy::check_material_type(const int matid)
   if ((mtype != Core::Materials::m_scatra) && (mtype != Core::Materials::m_elchmat) &&
       (mtype != Core::Materials::m_electrode) && (mtype != Core::Materials::m_matlist) &&
       (mtype != Core::Materials::m_matlist_reactions) && (mtype != Core::Materials::m_myocard) &&
-      (mtype != Core::Materials::m_thermostvenant))
+      (mtype != Core::Materials::m_thermo_fourier))
     FOUR_C_THROW("Material with ID {} is not admissible for scalar transport elements", matid);
 }
 

@@ -77,7 +77,6 @@ MATERIALS:
       SATHARDENING: 1e+24
       HARDEXPO: 16.93
       TOL: 1e-06
-      THERMOMAT: 2
   - MAT: 2
     MAT_Fourier:
       CAPA: 3.297e+06

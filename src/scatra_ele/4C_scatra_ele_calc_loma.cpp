@@ -12,8 +12,8 @@
 #include "4C_fem_geometry_position_array.hpp"
 #include "4C_fem_nurbs_discretization_utils.hpp"
 #include "4C_inpar_fluid.hpp"
+#include "4C_mat_fourier.hpp"
 #include "4C_mat_sutherland.hpp"
-#include "4C_mat_thermostvenantkirchhoff.hpp"
 #include "4C_scatra_ele.hpp"
 #include "4C_scatra_ele_parameter_std.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
@@ -82,8 +82,18 @@ void Discret::Elements::ScaTraEleCalcLoma<distype>::materials(
 {
   if (material->material_type() == Core::Materials::m_sutherland)
     mat_sutherland(material, k, densn, densnp, densam, visc);
-  else if (material->material_type() == Core::Materials::m_thermostvenant)
-    mat_thermo_st_venant_kirchhoff(material, k, densn, densnp, densam, visc);
+  else if (material->material_type() == Core::Materials::m_thermo_fourier)
+  {
+    FOUR_C_ASSERT(
+        my::ele_ != nullptr, "Current element must be available during material evaluation.");
+    FOUR_C_ASSERT_ALWAYS(my::ele_->num_material() > 1,
+        "Fourier materials on the structural scalar transport field require the structural "
+        "material to be available as material(1). Clone the structural material to the scalar "
+        "transport discretization.");
+
+    mat_thermo_with_structural_density(std::static_pointer_cast<const Mat::Fourier>(material),
+        my::ele_->material(1)->density(), k, densn, densnp, densam, visc);
+  }
   else
     FOUR_C_THROW("Material type is not supported");
 
@@ -152,24 +162,13 @@ void Discret::Elements::ScaTraEleCalcLoma<distype>::mat_sutherland(
 }
 
 
-/*----------------------------------------------------------------------*
- | material thermo St. Venant Kirchhoff                        vg 02/17 |
- *----------------------------------------------------------------------*/
 template <Core::FE::CellType distype>
-void Discret::Elements::ScaTraEleCalcLoma<distype>::mat_thermo_st_venant_kirchhoff(
-    const std::shared_ptr<const Core::Mat::Material> material,  //!< pointer to current material
-    const int k,                                                //!< id of current scalar
-    double& densn,                                              //!< density at t_(n)
-    double& densnp,  //!< density at t_(n+1) or t_(n+alpha_F)
-    double& densam,  //!< density at t_(n+alpha_M)
-    double& visc     //!< fluid viscosity
-)
+void Discret::Elements::ScaTraEleCalcLoma<distype>::mat_thermo_with_structural_density(
+    const std::shared_ptr<const Mat::Fourier> material, const double solid_material_density,
+    const int k, double& densn, double& densnp, double& densam, double& visc)
 {
-  const std::shared_ptr<const Mat::ThermoStVenantKirchhoff>& actmat =
-      std::dynamic_pointer_cast<const Mat::ThermoStVenantKirchhoff>(material);
-
-  // get constant density
-  densnp = actmat->density();
+  // get constant density from associated structural material
+  densnp = solid_material_density;
   densam = densnp;
   densn = densnp;
 
@@ -178,36 +177,20 @@ void Discret::Elements::ScaTraEleCalcLoma<distype>::mat_thermo_st_venant_kirchho
 
   // set specific heat capacity at constant volume
   // (value divided by density here for its intended use on right-hand side)
-  shc_ = actmat->capacity() / densnp;
-
-  // compute velocity divergence required for reaction coefficient
-  // double vdiv(0.0);
-  // get_divergence(vdiv,evelnp_);
+  shc_ = material->capacity() / densnp;
 
   // compute reaction coefficient
-  // (divided by density due to later multiplication by density in CalMatAndRHS)
-  // const double reacoef = -vdiv_*actmat->st_modulus()/(actmat->Capacity()*densnp);
   const double reacoef = 0.0;
 
-  // set reaction flag to true, check whether reaction coefficient is positive
-  // and set derivative of reaction coefficient
-  // if (reacoef > 1e-14) reaction_ = true;
-  // if (reacoef < -1e-14)
-  //   FOUR_C_THROW("Reaction coefficient for Thermo St. Venant-Kirchhoff material is not positive:
-  //  {}",0, reacoef);
-  // reacoeffderiv_[0] = reacoef;
-
   // set different reaction terms in the reaction manager
-  my::reamanager_->set_rea_coeff(reacoef, 0);
-
-  // ensure that temporal derivative of thermodynamic pressure is zero for
+  // and ensure that temporal derivative of thermodynamic pressure is zero for
   // the present structure-based scalar transport
+  my::reamanager_->set_rea_coeff(reacoef, 0);
   thermpressdt_ = 0.0;
 
   // compute diffusivity as ratio of conductivity and specific heat capacity at constant volume
-  my::diffmanager_->set_isotropic_diff(actmat->conductivity()[0] / actmat->capacity(), k);
-
-  return;
+  const std::vector<double>& conductivity = material->conductivity(my::ele_->id());
+  my::diffmanager_->set_isotropic_diff(conductivity[0] / material->capacity(), k);
 }
 
 

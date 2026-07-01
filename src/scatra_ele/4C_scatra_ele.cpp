@@ -306,13 +306,16 @@ void Discret::Elements::Transport::set_material(
   // the standard part:
   Core::Elements::Element::set_material(index, mat);
 
+  // no checks required for index other than 0, since only material
+  // at index 0 is the actual scalar transport material -> early return
+  if (index != 0) return;
+
   if (mat->material_type() == Core::Materials::m_scatra or
       mat->material_type() == Core::Materials::m_scatra_multiscale or
       mat->material_type() == Core::Materials::m_myocard or
       mat->material_type() == Core::Materials::m_sutherland or
       mat->material_type() == Core::Materials::m_ion or
       mat->material_type() == Core::Materials::m_thermo_fourier or
-      mat->material_type() == Core::Materials::m_thermostvenant or
       mat->material_type() == Core::Materials::m_soret or
       mat->material_type() == Core::Materials::m_scatra_in_fluid_porofluid_pressure_based or
       mat->material_type() == Core::Materials::m_scatra_in_volfrac_porofluid_pressure_based or

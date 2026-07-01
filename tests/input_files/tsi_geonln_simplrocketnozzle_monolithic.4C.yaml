@@ -56,7 +56,6 @@ MATERIALS:
       DENS: 9.13e-06
       THEXPANS: 1.72e-05
       INITTEMP: 293.15
-      THERMOMAT: 2
   - MAT: 3
     MAT_Struct_ThermoStVenantK:
       YOUNGNUM: 1
@@ -65,7 +64,6 @@ MATERIALS:
       DENS: 8.91e-06
       THEXPANS: 1.22e-05
       INITTEMP: 293.15
-      THERMOMAT: 4
   - MAT: 0
     MAT_Struct_PlasticLinElast:
       YOUNG: 0

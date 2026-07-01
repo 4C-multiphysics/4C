@@ -9,6 +9,7 @@
 
 #include "4C_adapter_fld_fluid_fsi.hpp"
 #include "4C_adapter_str_fsiwrapper.hpp"
+#include "4C_adapter_structure_scatra_ele.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fluid_timint_loma.hpp"
 #include "4C_fs3i_problem_access.hpp"
@@ -47,6 +48,31 @@ void FS3I::PartFS3I2Wc::init()
   FS3I::PartFS3I::init();
 
   return;
+}
+
+void FS3I::PartFS3I2Wc::validate_structure_scatra_clone_configuration(
+    const Core::FE::Discretization& structdis, const Core::FE::Discretization& structscatradis,
+    const std::map<std::pair<std::string, std::string>, std::map<int, int>>& clonefieldmatmap) const
+{
+  bool requires_loma_mapping = false;
+  for (int i = 0; i < structdis.num_my_col_elements(); ++i)
+  {
+    if (Adapter::get_sca_tra_impl_type(structdis.l_col_element(i)) == ScaTra::impltype_loma)
+    {
+      requires_loma_mapping = true;
+      break;
+    }
+  }
+
+  if (!requires_loma_mapping) return;
+
+  const std::pair<std::string, std::string> key(structdis.name(), structscatradis.name());
+  if (clonefieldmatmap.contains(key)) return;
+
+  FOUR_C_THROW(
+      "Structure-based low-Mach scalar transport requires a CLONING MATERIAL MAP entry from "
+      "'{}' to '{}'.",
+      structdis.name(), structscatradis.name());
 }
 
 /*----------------------------------------------------------------------*/

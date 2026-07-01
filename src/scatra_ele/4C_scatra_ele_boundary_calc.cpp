@@ -16,7 +16,6 @@
 #include "4C_mat_fourier.hpp"
 #include "4C_mat_list.hpp"
 #include "4C_mat_scatra.hpp"
-#include "4C_mat_thermostvenantkirchhoff.hpp"
 #include "4C_scatra_ele_parameter_boundary.hpp"
 #include "4C_scatra_ele_parameter_std.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
@@ -837,21 +836,10 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::convective_heat
       const double fac = eval_shape_func_and_int_fac(intpoints, iquad, &normal_);
 
       // get specific heat capacity at constant volume
-      double shc = 0.0;
-      if (material->material_type() == Core::Materials::m_thermo_fourier)
-      {
-        const auto* actmat = static_cast<const Mat::Fourier*>(material.get());
-
-        shc = actmat->capacity();
-      }
-      else if (material->material_type() == Core::Materials::m_thermostvenant)
-      {
-        const auto* actmat = static_cast<const Mat::ThermoStVenantKirchhoff*>(material.get());
-
-        shc = actmat->capacity();
-      }
-      else
+      if (material->material_type() != Core::Materials::m_thermo_fourier)
         FOUR_C_THROW("Material type is not supported for convective heat transfer!");
+      const auto* actmat = static_cast<const Mat::Fourier*>(material.get());
+      const double shc = actmat->capacity();
 
       // integration factor for left-hand side
       const double lhsfac = heatranscoeff * scatraparamstimint_->time_fac() * fac / shc;

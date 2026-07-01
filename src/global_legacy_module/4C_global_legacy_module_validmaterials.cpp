@@ -1145,8 +1145,6 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>(
                 "THEXPANS", {.description = "constant coefficient of linear thermal expansion"}),
             parameter<double>("INITTEMP", {.description = "initial temperature"}),
-            parameter<int>("THERMOMAT",
-                {.description = "mat id of thermal material part", .default_value = -1}),
         },
         {.description = "Thermo St.Venant--Kirchhoff material"});
   }
@@ -1198,8 +1196,6 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "EPSBAR_P", {.description = "accumulated plastic strain corresponding to SIGMA_Y",
                                 .size = from_parameter<int>("SAMPLENUM")}),
             parameter<double>("TOL", {.description = "tolerance for local Newton iteration"}),
-            parameter<int>("THERMOMAT",
-                {.description = "mat id of thermal material part", .default_value = -1}),
         },
         {.description = "Thermo-elastic St.Venant Kirchhoff / plastic von Mises material with "
                         "isotropic and kinematic hardening. The material also includes adiabatic "
@@ -1340,8 +1336,6 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                     .default_value = 0.}),
             parameter<double>("TOL",
                 {.description = "tolerance for local Newton iteration", .default_value = 1.e-8}),
-            parameter<int>("THERMOMAT",
-                {.description = "mat id of thermal material part", .default_value = -1}),
         },
         {.description = "Thermo-hyperelastic / finite strain plastic von Mises material with "
                         "linear and exponential isotropic hardening"});
@@ -1455,8 +1449,6 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<std::vector<double>>(
                 "BETA", {.description = "beta", .size = from_parameter<int>("BETANUM")}),
             parameter<double>("H_FACT", {.description = "'H'"}),
-            parameter<int>("THERMOMAT",
-                {.description = "mat id of thermal material part", .default_value = -1}),
         },
         {.description = "Robinson's visco-plastic material"});
   }

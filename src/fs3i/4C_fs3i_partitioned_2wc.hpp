@@ -48,6 +48,11 @@ namespace FS3I
     void time_update_and_output();
 
    private:
+    void validate_structure_scatra_clone_configuration(const Core::FE::Discretization& structdis,
+        const Core::FE::Discretization& structscatradis,
+        const std::map<std::pair<std::string, std::string>, std::map<int, int>>& clonefieldmatmap)
+        const override;
+
     //! @name  (preliminary) maximum number of iterations and tolerance for outer iteration
     int itmax_;
     double ittol_;

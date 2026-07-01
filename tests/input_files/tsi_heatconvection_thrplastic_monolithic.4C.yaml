@@ -67,7 +67,6 @@ MATERIALS:
       SIGMA_Y: []
       EPSBAR_P: []
       TOL: 0.0001
-      THERMOMAT: 2
   - MAT: 2
     MAT_Fourier:
       CAPA: 6.445

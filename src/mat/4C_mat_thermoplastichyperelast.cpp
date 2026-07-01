@@ -37,8 +37,7 @@ Mat::PAR::ThermoPlasticHyperElast::ThermoPlasticHyperElast(
       hardexpo_(matdata.parameters.get<double>("HARDEXPO")),
       yieldsoft_(matdata.parameters.get<double>("YIELDSOFT")),
       hardsoft_(matdata.parameters.get<double>("HARDSOFT")),
-      abstol_(matdata.parameters.get<double>("TOL")),
-      thermomat_(matdata.parameters.get<int>("THERMOMAT"))
+      abstol_(matdata.parameters.get<double>("TOL"))
 {
   if (sathardening_ < yield_)
     FOUR_C_THROW("Saturation hardening must not be less than initial yield stress!");
@@ -72,22 +71,15 @@ Core::Communication::ParObject* Mat::ThermoPlasticHyperElastType::create(
 /*----------------------------------------------------------------------*
  | constructor (public)                                      dano 03/13 |
  *----------------------------------------------------------------------*/
-Mat::ThermoPlasticHyperElast::ThermoPlasticHyperElast() : params_(nullptr), thermo_(nullptr) {}
+Mat::ThermoPlasticHyperElast::ThermoPlasticHyperElast() : params_(nullptr) {}
 
 
 /*----------------------------------------------------------------------*
  | copy-constructor (public)                                 dano 03/13 |
  *----------------------------------------------------------------------*/
 Mat::ThermoPlasticHyperElast::ThermoPlasticHyperElast(Mat::PAR::ThermoPlasticHyperElast* params)
-    : params_(params), thermo_(nullptr), plastic_step_(false)
+    : params_(params), plastic_step_(false)
 {
-  const int thermoMatId = this->params_->thermomat_;
-  if (thermoMatId != -1)
-  {
-    auto mat = Mat::factory(thermoMatId);
-    if (mat == nullptr) FOUR_C_THROW("Failed to create thermo material, id={}", thermoMatId);
-    thermo_ = std::dynamic_pointer_cast<Mat::Trait::Thermo>(mat);
-  }
 }
 
 
@@ -353,15 +345,6 @@ void Mat::ThermoPlasticHyperElast::update()
 }  // update()
 
 /*----------------------------------------------------------------------*
- | Set current quantities for this material                             |
- *----------------------------------------------------------------------*/
-void Mat::ThermoPlasticHyperElast::reinit(const Core::LinAlg::Tensor<double, 3, 3>* defgrd,
-    const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain, double temperature, unsigned gp)
-{
-  reinit(temperature, gp);
-}
-
-/*----------------------------------------------------------------------*
  | calculate stress-temperature modulus and thermal derivative          |
  |   for coupled thermomechanics                                        |
  *----------------------------------------------------------------------*/
@@ -403,7 +386,7 @@ Mat::ThermoPlasticHyperElast::evaluate_d_stress_d_scalar(
     }
   }();
 
-  reinit(&defgrad, glstrain, temperature, gp);  // fixme call this before
+  reinit(temperature, gp);  // fixme call this before
 
   // inverse of right Cauchy-Green tensor = F^{-1} . F^{-T}
   Core::LinAlg::SymmetricTensor<double, 3, 3> cauchygreen =
@@ -1414,68 +1397,9 @@ void Mat::ThermoPlasticHyperElast::fd_check(
 
 }  // fd_check()
 
-
-/*----------------------------------------------------------------------*/
-
-void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Matrix<3, 1>& gradtemp,
-    Core::LinAlg::Matrix<3, 3>& cmat, Core::LinAlg::Matrix<3, 1>& heatflux, const int eleGID) const
-{
-  thermo_->evaluate(gradtemp, cmat, heatflux, eleGID);
-}
-
-void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Matrix<2, 1>& gradtemp,
-    Core::LinAlg::Matrix<2, 2>& cmat, Core::LinAlg::Matrix<2, 1>& heatflux, const int eleGID) const
-{
-  thermo_->evaluate(gradtemp, cmat, heatflux, eleGID);
-}
-
-void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Matrix<1, 1>& gradtemp,
-    Core::LinAlg::Matrix<1, 1>& cmat, Core::LinAlg::Matrix<1, 1>& heatflux, const int eleGID) const
-{
-  thermo_->evaluate(gradtemp, cmat, heatflux, eleGID);
-}
-
-std::vector<double> Mat::ThermoPlasticHyperElast::conductivity(int eleGID) const
-{
-  return thermo_->conductivity(eleGID);
-}
-
-
-void Mat::ThermoPlasticHyperElast::conductivity_deriv_t(Core::LinAlg::Matrix<3, 3>& dCondDT) const
-{
-  thermo_->conductivity_deriv_t(dCondDT);
-}
-
-void Mat::ThermoPlasticHyperElast::conductivity_deriv_t(Core::LinAlg::Matrix<2, 2>& dCondDT) const
-{
-  thermo_->conductivity_deriv_t(dCondDT);
-}
-
-void Mat::ThermoPlasticHyperElast::conductivity_deriv_t(Core::LinAlg::Matrix<1, 1>& dCondDT) const
-{
-  thermo_->conductivity_deriv_t(dCondDT);
-}
-
-double Mat::ThermoPlasticHyperElast::capacity() const { return thermo_->capacity(); }
-
-double Mat::ThermoPlasticHyperElast::capacity_deriv_t() const
-{
-  return thermo_->capacity_deriv_t();
-}
-
 void Mat::ThermoPlasticHyperElast::reinit(double temperature, unsigned gp)
 {
   current_temperature_ = temperature;
-  if (thermo_ != nullptr) thermo_->reinit(temperature, gp);
-}
-void Mat::ThermoPlasticHyperElast::reset_current_state()
-{
-  if (thermo_ != nullptr) thermo_->reset_current_state();
-}
-
-void Mat::ThermoPlasticHyperElast::commit_current_state()
-{
-  if (thermo_ != nullptr) thermo_->commit_current_state();
 }
 
 /*----------------------------------------------------------------------*/

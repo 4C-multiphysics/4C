@@ -18,7 +18,7 @@
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
 #include "4C_mat_multiplicative_split_defgrad_elasthyper_service.hpp"
 #include "4C_mat_so3_material.hpp"
-#include "4C_mat_thermomechanical.hpp"
+#include "4C_mat_trait_thermo_solid.hpp"
 #include "4C_material_parameter_base.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -189,7 +189,7 @@ namespace Mat
     that are needed to set up the system to be solved are evaluated in the derived classes
     of the interface class 'InelasticDefgradFactors'.
 */
-  class MultiplicativeSplitDefgradElastHyper : public So3Material, public Trait::ThermoSolid
+  class MultiplicativeSplitDefgradElastHyper : public Trait::ThermoSolid
   {
    public:
     /// construct empty material object
@@ -288,9 +288,7 @@ namespace Mat
         const Teuchos::ParameterList& params, const EvaluationContext<3>& context, int gp,
         int eleGID) override;
 
-    void reinit(const Core::LinAlg::Tensor<double, 3, 3>* defgrd,
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain, double temperature,
-        unsigned gp) override { /* do nothing */ };
+    void reinit(double temperature, unsigned gp) override { /* do nothing */ };
 
     void stress_temperature_modulus_and_deriv(Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
         Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, const int gp) override;
@@ -311,88 +309,6 @@ namespace Mat
     [[nodiscard]] HeatSource evaluate_additional_heat_source(const EvaluationContext<3>& context,
         const int gp, const int eleGID, const Core::LinAlg::Matrix<3, 3>* current_defgrad,
         const double current_temperature);
-
-
-    // *******************************************************************************
-    // All of the following functions in this block are only required since the ThermoSolid
-    // Trait inherits from the ThermoTrait.
-    // https://github.com/4C-multiphysics/4C/pull/2075 aims to remove this dependency. After this,
-    // these functions can be removed. This material hence does not wrap an internal thermo
-    // material, all corresponding functions throw an error if called.
-
-    void evaluate(
-        const Core::LinAlg::Matrix<3, 1>& gradtemp,  ///< temperature gradient (strain tensor)
-        Core::LinAlg::Matrix<3, 3>& cmat,            ///< constitutive matrix
-        Core::LinAlg::Matrix<3, 1>& heatflux,        ///< heatflux
-        const int eleGID) const override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    void evaluate(
-        const Core::LinAlg::Matrix<2, 1>& gradtemp,  ///< temperature gradient (strain tensor)
-        Core::LinAlg::Matrix<2, 2>& cmat,            ///< constitutive matrix
-        Core::LinAlg::Matrix<2, 1>& heatflux,        ///< heatflux
-        const int eleGID) const override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    void evaluate(
-        const Core::LinAlg::Matrix<1, 1>& gradtemp,  ///< temperature gradient (strain tensor)
-        Core::LinAlg::Matrix<1, 1>& cmat,            ///< constitutive matrix
-        Core::LinAlg::Matrix<1, 1>& heatflux,        ///< heatflux
-        const int eleGID) const override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    std::vector<double> conductivity(int eleGID = 0) const override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    void conductivity_deriv_t(Core::LinAlg::Matrix<3, 3>& dCondDT) const override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    void conductivity_deriv_t(Core::LinAlg::Matrix<2, 2>& dCondDT) const override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    void conductivity_deriv_t(Core::LinAlg::Matrix<1, 1>& dCondDT) const override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    double capacity() const override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    double capacity_deriv_t() const override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    void reinit(double temperature, unsigned gp) override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    void reset_current_state() override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    void commit_current_state() override
-    {
-      FOUR_C_THROW("This material does not wrap an internal thermo material");
-    };
-
-    // *******************************************************************************
 
     double evaluate_cauchy_n_dir_and_derivatives(const Core::LinAlg::Tensor<double, 3, 3>& defgrd,
         const Core::LinAlg::Tensor<double, 3>& n, const Core::LinAlg::Tensor<double, 3>& dir,

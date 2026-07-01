@@ -42,8 +42,7 @@ Mat::PAR::Robinson::Robinson(const Core::Mat::PAR::Parameter::Data& matdata)
       g0_(matdata.parameters.get<double>("G0")),
       m_(matdata.parameters.get<double>("M_EXPO")),
       beta_((matdata.parameters.get<std::vector<double>>("BETA"))),
-      h_(matdata.parameters.get<double>("H_FACT")),
-      thermomat_(matdata.parameters.get<int>("THERMOMAT"))
+      h_(matdata.parameters.get<double>("H_FACT"))
 {
 }
 
@@ -77,22 +76,13 @@ Core::Communication::ParObject* Mat::RobinsonType::create(Core::Communication::U
 /*----------------------------------------------------------------------*
  | constructor (public) --> called in Create()               dano 11/11 |
  *----------------------------------------------------------------------*/
-Mat::Robinson::Robinson() : params_(nullptr), thermo_(nullptr) {}
+Mat::Robinson::Robinson() : params_(nullptr) {}
 
 
 /*----------------------------------------------------------------------*
  | copy-constructor (public) --> called in create_material()  dano 11/11 |
  *----------------------------------------------------------------------*/
-Mat::Robinson::Robinson(Mat::PAR::Robinson* params) : params_(params), thermo_(nullptr)
-{
-  const int thermoMatId = this->params_->thermomat_;
-  if (thermoMatId != -1)
-  {
-    auto mat = Mat::factory(thermoMatId);
-    if (mat == nullptr) FOUR_C_THROW("Failed to create thermo material, id={}", thermoMatId);
-    thermo_ = std::dynamic_pointer_cast<Mat::Trait::Thermo>(mat);
-  }
-}
+Mat::Robinson::Robinson(Mat::PAR::Robinson* params) : params_(params) {}
 
 
 /*----------------------------------------------------------------------*
@@ -513,15 +503,6 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* defgrad,
       kev, kea, strain_pres, kve, kvv, kva, backstress_res, kae, kav, kaa, (kvarva_->at(gp)),
       (kvakvae_->at(gp)));
 }  // evaluate()
-
-/*----------------------------------------------------------------------*
- | Set current quantities for this material                             |
- *----------------------------------------------------------------------*/
-void Mat::Robinson::reinit(const Core::LinAlg::Tensor<double, 3, 3>* defgrd,
-    const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain, double temperature, unsigned gp)
-{
-  reinit(temperature, gp);
-}
 
 /*----------------------------------------------------------------------*
  | calculate stress-temperature modulus and thermal derivative          |
@@ -1489,62 +1470,7 @@ void Mat::Robinson::iterative_update_of_internal_variables(const int gp,
 
 /*----------------------------------------------------------------------*/
 
-void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 1>& gradtemp,
-    Core::LinAlg::Matrix<3, 3>& cmat, Core::LinAlg::Matrix<3, 1>& heatflux, const int eleGID) const
-{
-  thermo_->evaluate(gradtemp, cmat, heatflux, eleGID);
-}
-
-void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<2, 1>& gradtemp,
-    Core::LinAlg::Matrix<2, 2>& cmat, Core::LinAlg::Matrix<2, 1>& heatflux, const int eleGID) const
-{
-  thermo_->evaluate(gradtemp, cmat, heatflux, eleGID);
-}
-
-void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<1, 1>& gradtemp,
-    Core::LinAlg::Matrix<1, 1>& cmat, Core::LinAlg::Matrix<1, 1>& heatflux, const int eleGID) const
-{
-  thermo_->evaluate(gradtemp, cmat, heatflux, eleGID);
-}
-
-std::vector<double> Mat::Robinson::conductivity(int eleGID) const
-{
-  return thermo_->conductivity(eleGID);
-}
-
-void Mat::Robinson::conductivity_deriv_t(Core::LinAlg::Matrix<3, 3>& dCondDT) const
-{
-  thermo_->conductivity_deriv_t(dCondDT);
-}
-
-void Mat::Robinson::conductivity_deriv_t(Core::LinAlg::Matrix<2, 2>& dCondDT) const
-{
-  thermo_->conductivity_deriv_t(dCondDT);
-}
-
-void Mat::Robinson::conductivity_deriv_t(Core::LinAlg::Matrix<1, 1>& dCondDT) const
-{
-  thermo_->conductivity_deriv_t(dCondDT);
-}
-
-double Mat::Robinson::capacity() const { return thermo_->capacity(); }
-
-double Mat::Robinson::capacity_deriv_t() const { return thermo_->capacity_deriv_t(); }
-
-void Mat::Robinson::reinit(double temperature, unsigned gp)
-{
-  current_temperature_ = temperature;
-  if (thermo_ != nullptr) thermo_->reinit(temperature, gp);
-}
-void Mat::Robinson::reset_current_state()
-{
-  if (thermo_ != nullptr) thermo_->reset_current_state();
-}
-
-void Mat::Robinson::commit_current_state()
-{
-  if (thermo_ != nullptr) thermo_->commit_current_state();
-}
+void Mat::Robinson::reinit(double temperature, unsigned gp) { current_temperature_ = temperature; }
 
 /*----------------------------------------------------------------------*/
 

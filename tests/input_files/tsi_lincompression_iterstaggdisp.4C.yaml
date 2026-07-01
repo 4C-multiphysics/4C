@@ -56,7 +56,6 @@ MATERIALS:
       DENS: 7850
       THEXPANS: 1.2e-05
       INITTEMP: 300
-      THERMOMAT: 2
   - MAT: 2
     MAT_Fourier:
       CAPA: 3.297e+06
