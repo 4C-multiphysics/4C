@@ -997,8 +997,8 @@ void Particle::ParticleEngine::setup_bin_ghosting()
 
   // copy bin gids to a vector and create bincolmap
   std::vector<int> bincolmapvec(bins.begin(), bins.end());
-  binning_->bincolmap_ = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(bincolmapvec.size()), bincolmapvec.data(), 0, comm_);
+  binning_->bincolmap_ =
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(bincolmapvec), 0, comm_);
 
   if (binning_->bincolmap_->num_global_elements() == 1 &&
       Core::Communication::num_mpi_ranks(comm_) > 1)

@@ -49,10 +49,14 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
       Teuchos::ParameterList& zparams = rebalanceParams.sublist("zoltan_parameters", false);
       zparams.set("DEBUG_LEVEL", "0");
 
-      rowmap = std::make_shared<Core::LinAlg::Map>(
-          -1, graph.row_map().num_my_elements(), graph.row_map().my_global_elements(), 0, comm);
-      colmap = std::make_shared<Core::LinAlg::Map>(
-          -1, graph.col_map().num_my_elements(), graph.col_map().my_global_elements(), 0, comm);
+      rowmap = std::make_shared<Core::LinAlg::Map>(-1,
+          std::span<const int>(
+              graph.row_map().my_global_elements(), graph.row_map().num_my_elements()),
+          0, comm);
+      colmap = std::make_shared<Core::LinAlg::Map>(-1,
+          std::span<const int>(
+              graph.col_map().my_global_elements(), graph.col_map().num_my_elements()),
+          0, comm);
 
       discretization.redistribute(
           {
@@ -78,10 +82,14 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
       Teuchos::ParameterList& zparams = rebalanceParams.sublist("zoltan_parameters", false);
       zparams.set("DEBUG_LEVEL", "0");
 
-      rowmap = std::make_shared<Core::LinAlg::Map>(
-          -1, graph.row_map().num_my_elements(), graph.row_map().my_global_elements(), 0, comm);
-      colmap = std::make_shared<Core::LinAlg::Map>(
-          -1, graph.col_map().num_my_elements(), graph.col_map().my_global_elements(), 0, comm);
+      rowmap = std::make_shared<Core::LinAlg::Map>(-1,
+          std::span<const int>(
+              graph.row_map().my_global_elements(), graph.row_map().num_my_elements()),
+          0, comm);
+      colmap = std::make_shared<Core::LinAlg::Map>(-1,
+          std::span<const int>(
+              graph.col_map().my_global_elements(), graph.col_map().num_my_elements()),
+          0, comm);
 
       discretization.redistribute(
           {
@@ -143,7 +151,7 @@ void Core::Rebalance::rebalance_discretization(Core::FE::Discretization& discret
   }
   else
   {
-    rowmap = colmap = std::make_shared<Core::LinAlg::Map>(-1, 0, nullptr, 0, comm);
+    rowmap = colmap = std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>{}, 0, comm);
   }
 
   auto options_redistribution = Core::FE::OptionsRedistribution();

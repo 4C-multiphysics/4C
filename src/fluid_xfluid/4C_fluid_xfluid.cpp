@@ -4046,8 +4046,9 @@ std::shared_ptr<Core::LinAlg::MapExtractor> FLD::XFluid::create_dbc_map_extracto
     nummyelements = dbcgidsv.size();
     myglobalelements = dbcgidsv.data();
   }
-  std::shared_ptr<Core::LinAlg::Map> dbcmap = std::make_shared<Core::LinAlg::Map>(
-      -1, nummyelements, myglobalelements, dofrowmap->index_base(), dofrowmap->get_comm());
+  std::shared_ptr<Core::LinAlg::Map> dbcmap =
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(myglobalelements, nummyelements),
+          dofrowmap->index_base(), dofrowmap->get_comm());
 
   // build the map extractor of Dirichlet-conditioned and free DOFs
   return std::make_shared<Core::LinAlg::MapExtractor>(*dofrowmap, dbcmap);

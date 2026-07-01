@@ -140,9 +140,9 @@ int Core::DOFSets::DofSetDefinedMappingWrapper::assign_degrees_of_freedom(
     }
   }
 
-  Core::LinAlg::Map targetnodemap(-1, patchedtargetnodes.size(), patchedtargetnodes.data(), 0, com);
+  Core::LinAlg::Map targetnodemap(-1, std::span<const int>(patchedtargetnodes), 0, com);
 
-  Core::LinAlg::Map permsourcenodemap(-1, permsourcenodes.size(), permsourcenodes.data(), 0, com);
+  Core::LinAlg::Map permsourcenodemap(-1, std::span<const int>(permsourcenodes), 0, com);
 
   // we expect to get maps of exactly the same shape
   if (not targetnodemap.point_same_as(permsourcenodemap))

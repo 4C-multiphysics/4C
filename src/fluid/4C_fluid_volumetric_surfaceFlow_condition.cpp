@@ -716,7 +716,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::build_condition_node_row_map(
   // create the node row map of the nodes on the current proc
   //--------------------------------------------------------------------
   cond_noderowmap =
-      std::make_shared<Core::LinAlg::Map>(-1, nodeids.size(), nodeids.data(), 0, dis->get_comm());
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(nodeids), 0, dis->get_comm());
 
 }  // build_condition_node_row_map
 
@@ -770,7 +770,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::build_condition_dof_row_map(
   // create the node row map of the nodes on the current proc
   //--------------------------------------------------------------------
   cond_dofrowmap =
-      std::make_shared<Core::LinAlg::Map>(-1, dofids.size(), dofids.data(), 0, dis->get_comm());
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(dofids), 0, dis->get_comm());
 
 }  // FluidVolumetricSurfaceFlowBc::build_condition_dof_row_map
 

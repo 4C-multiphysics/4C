@@ -150,8 +150,8 @@ namespace Core::IO::GridGenerator
           for (size_t ix = xranges[mysection[0]]; ix < xranges[mysection[0] + 1]; ++ix)
             mynewele[idx++] = (iz * inputData.interval_[1] + it) * inputData.interval_[0] + ix;
 
-      elementRowMap =
-          std::make_shared<Core::LinAlg::Map>(-1, nummynewele, mynewele.data(), 0, comm);
+      elementRowMap = std::make_shared<Core::LinAlg::Map>(
+          -1, std::span<const int>(mynewele.data(), nummynewele), 0, comm);
     }
 
     // Create the actual elements according to the row map
@@ -209,10 +209,15 @@ namespace Core::IO::GridGenerator
     {
       std::shared_ptr<const Core::LinAlg::Graph> graph =
           Core::Rebalance::build_graph(dis, *elementRowMap);
-      nodeRowMap = std::make_shared<Core::LinAlg::Map>(
-          -1, graph->row_map().num_my_elements(), graph->row_map().my_global_elements(), 0, comm);
-      nodeColMap = std::make_shared<Core::LinAlg::Map>(
-          -1, graph->col_map().num_my_elements(), graph->col_map().my_global_elements(), 0, comm);
+      nodeRowMap = std::make_shared<Core::LinAlg::Map>(-1,
+          std::span<const int>(
+              graph->row_map().my_global_elements(), graph->row_map().num_my_elements()),
+          0, comm);
+
+      nodeColMap = std::make_shared<Core::LinAlg::Map>(-1,
+          std::span<const int>(
+              graph->col_map().my_global_elements(), graph->col_map().num_my_elements()),
+          0, comm);
     }
 
 

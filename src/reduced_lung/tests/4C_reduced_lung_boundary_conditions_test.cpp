@@ -250,7 +250,7 @@ namespace
     assign_local_equation_ids(boundary_conditions, n_local_equations);
 
     std::array<int, 3> global_dofs{0, 2, 4};
-    Core::LinAlg::Map col_map(-1, global_dofs.size(), global_dofs.data(), 0, MPI_COMM_WORLD);
+    Core::LinAlg::Map col_map(-1, std::span<const int>(global_dofs), 0, MPI_COMM_WORLD);
     assign_local_dof_ids(col_map, boundary_conditions);
     create_evaluators(boundary_conditions);
 
@@ -290,7 +290,7 @@ namespace
     assign_local_equation_ids(boundary_conditions, n_local_equations);
 
     std::array<int, 3> global_dofs{0, 2, 4};
-    Core::LinAlg::Map col_map(-1, global_dofs.size(), global_dofs.data(), 0, MPI_COMM_WORLD);
+    Core::LinAlg::Map col_map(-1, std::span<const int>(global_dofs), 0, MPI_COMM_WORLD);
     assign_local_dof_ids(col_map, boundary_conditions);
     create_evaluators(boundary_conditions);
 
@@ -376,7 +376,7 @@ namespace
     assign_local_equation_ids(boundary_conditions, n_local_equations);
 
     std::array<int, 1> global_dofs{0};
-    Core::LinAlg::Map col_map(-1, global_dofs.size(), global_dofs.data(), 0, MPI_COMM_WORLD);
+    Core::LinAlg::Map col_map(-1, std::span<const int>(global_dofs), 0, MPI_COMM_WORLD);
     assign_local_dof_ids(col_map, boundary_conditions);
     create_evaluators(boundary_conditions);
 

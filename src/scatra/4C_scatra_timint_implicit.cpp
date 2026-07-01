@@ -3599,9 +3599,9 @@ void ScaTra::ScaTraTimIntImpl::build_block_maps(
 #endif
 
       dof_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
-          -1, static_cast<int>(dof_gids.size()), dof_gids.data(), 0, discret_->get_comm()));
+          -1, std::span<const int>(dof_gids), 0, discret_->get_comm()));
       node_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
-          -1, static_cast<int>(node_gids.size()), node_gids.data(), 0, discret_->get_comm()));
+          -1, std::span<const int>(node_gids), 0, discret_->get_comm()));
     }
   }
   else

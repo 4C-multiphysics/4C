@@ -79,10 +79,10 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
 
   // build node row map which does not include source pbc nodes
   Core::LinAlg::Map noderowmap(
-      -1, (int)reducednoderowmap.size(), reducednoderowmap.data(), 0, fullnoderowmap->get_comm());
+      -1, std::span<const int>(reducednoderowmap), 0, fullnoderowmap->get_comm());
   // build node col map which does not include source pbc nodes
   Core::LinAlg::Map nodecolmap(
-      -1, (int)reducednodecolmap.size(), reducednodecolmap.data(), 0, fullnodecolmap->get_comm());
+      -1, std::span<const int>(reducednoderowmap), 0, fullnodecolmap->get_comm());
 
 
   // step 1: get state to be reconstruced (e.g. velocity gradient) at element

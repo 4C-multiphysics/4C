@@ -227,9 +227,9 @@ std::shared_ptr<Core::LinAlg::MapExtractor> Core::LinAlg::convert_dirichlet_togg
   const Core::LinAlg::Map& fullblockmap = dbctoggle.get_map();
   // this copy is needed because the constructor of Core::LinAlg::MapExtractor
   // accepts only Core::LinAlg::Map and not Core::LinAlg::Map
-  const Core::LinAlg::Map fullmap =
-      Core::LinAlg::Map(fullblockmap.num_global_elements(), fullblockmap.num_my_elements(),
-          fullblockmap.my_global_elements(), fullblockmap.index_base(), fullblockmap.get_comm());
+  const Core::LinAlg::Map fullmap = Core::LinAlg::Map(fullblockmap.num_global_elements(),
+      std::span<const int>(fullblockmap.my_global_elements(), fullblockmap.num_my_elements()),
+      fullblockmap.index_base(), fullblockmap.get_comm());
   const int mylength = dbctoggle.local_length();
   const int* fullgids = fullmap.my_global_elements();
   // build sets containing the DBC or free global IDs, respectively
@@ -257,8 +257,9 @@ std::shared_ptr<Core::LinAlg::MapExtractor> Core::LinAlg::convert_dirichlet_togg
       nummyelements = dbcgids.size();
       myglobalelements = dbcgids.data();
     }
-    dbcmap = std::make_shared<Core::LinAlg::Map>(
-        -1, nummyelements, myglobalelements, fullmap.index_base(), fullmap.get_comm());
+    dbcmap = std::make_shared<Core::LinAlg::Map>(-1,
+        std::span<const int>(myglobalelements, nummyelements), fullmap.index_base(),
+        fullmap.get_comm());
   }
   // build map of free DOFs
   std::shared_ptr<Core::LinAlg::Map> freemap = nullptr;
@@ -270,8 +271,9 @@ std::shared_ptr<Core::LinAlg::MapExtractor> Core::LinAlg::convert_dirichlet_togg
       nummyelements = freegids.size();
       myglobalelements = freegids.data();
     }
-    freemap = std::make_shared<Core::LinAlg::Map>(
-        -1, nummyelements, myglobalelements, fullmap.index_base(), fullmap.get_comm());
+    freemap = std::make_shared<Core::LinAlg::Map>(-1,
+        std::span<const int>(myglobalelements, nummyelements), fullmap.index_base(),
+        fullmap.get_comm());
   }
 
   // build and return the map extractor of Dirichlet-conditioned and free DOFs

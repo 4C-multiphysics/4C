@@ -738,13 +738,13 @@ void Particle::WallHandlerBoundingBox::init_wall_discretization()
 
   // node row map of wall elements
   Core::LinAlg::Map noderowmap(
-      -1, nodeids.size(), nodeids.data(), 0, walldiscretization_->get_comm());
+      -1, std::span<const int>(nodeids), 0, walldiscretization_->get_comm());
 
   // fully overlapping node column map
   std::shared_ptr<Core::LinAlg::Map> nodecolmap = Core::LinAlg::allreduce_e_map(noderowmap);
 
   // element row map of wall elements
-  Core::LinAlg::Map elerowmap(-1, eleids.size(), eleids.data(), 0, walldiscretization_->get_comm());
+  Core::LinAlg::Map elerowmap(-1, std::span<const int>(eleids), 0, walldiscretization_->get_comm());
 
   // fully overlapping element column map
   std::shared_ptr<Core::LinAlg::Map> elecolmap = Core::LinAlg::allreduce_e_map(elerowmap);

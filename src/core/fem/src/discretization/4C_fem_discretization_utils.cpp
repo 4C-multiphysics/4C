@@ -76,8 +76,7 @@ std::unique_ptr<Core::LinAlg::MultiVector<double>> Core::FE::extract_retained_no
   }
   Core::LinAlg::Map filtered_row_map(
       node_row_map.num_global_elements() - static_cast<int>(fully_redundant_skipped_nodes.size()),
-      static_cast<int>(my_filtered_global_node_ids.size()), my_filtered_global_node_ids.data(), 0,
-      node_row_map.get_comm());
+      std::span<const int>(my_filtered_global_node_ids), 0, node_row_map.get_comm());
 
   std::unique_ptr<Core::LinAlg::MultiVector<double>> coordinates =
       std::make_unique<Core::LinAlg::MultiVector<double>>(filtered_row_map, 3, true);

@@ -416,9 +416,9 @@ void XFEM::MeshVolCoupling::redistribute_embedded_discretization()
     std::vector<int> full_eles(full_eles_col.begin(), full_eles_col.end());
 
     const Core::LinAlg::Map full_nodecolmap(
-        -1, full_nodes.size(), full_nodes.data(), 0, cond_dis_->get_comm());
+        -1, std::span<const int>(full_nodes), 0, cond_dis_->get_comm());
     const Core::LinAlg::Map full_elecolmap(
-        -1, full_eles.size(), full_eles.data(), 0, cond_dis_->get_comm());
+        -1, std::span<const int>(full_eles), 0, cond_dis_->get_comm());
 
     // redistribute nodes and elements to column (ghost) map
     cond_dis_->export_column_nodes(full_nodecolmap);
@@ -576,13 +576,13 @@ void XFEM::MeshVolCoupling::create_auxiliary_discretization()
     std::vector<int> rownodes(adjacent_row.begin(), adjacent_row.end());
     // build noderowmap for new distribution of nodes
     newnoderowmap = std::make_shared<Core::LinAlg::Map>(
-        -1, rownodes.size(), rownodes.data(), 0, aux_coup_dis_->get_comm());
+        -1, std::span<const int>(rownodes), 0, aux_coup_dis_->get_comm());
 
     std::vector<int> colnodes(adjacent_col.begin(), adjacent_col.end());
 
     // build nodecolmap for new distribution of nodes
     newnodecolmap = std::make_shared<Core::LinAlg::Map>(
-        -1, colnodes.size(), colnodes.data(), 0, aux_coup_dis_->get_comm());
+        -1, std::span<const int>(colnodes), 0, aux_coup_dis_->get_comm());
 
     aux_coup_dis_->redistribute(
         {*newnoderowmap, *newnodecolmap}, {.fill_complete = Core::FE::OptionsFillComplete::none()});

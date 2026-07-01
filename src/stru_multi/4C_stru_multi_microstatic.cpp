@@ -897,7 +897,7 @@ void MultiScale::MicroStatic::read_restart(const int step,
   const std::vector<int> keys{ks.begin(), ks.end()};
 
   const Core::LinAlg::Map read_in_ele_row_map =
-      Core::LinAlg::Map(-1, static_cast<int>(keys.size()), keys.data(), 0, discret_->get_comm());
+      Core::LinAlg::Map(-1, std::span<const int>(keys), 0, discret_->get_comm());
 
   Core::Communication::Exporter exporter(
       read_in_ele_row_map, *discret_->element_col_map(), discret_->get_comm());

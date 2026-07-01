@@ -522,7 +522,7 @@ void FLD::Utils::setup_fluid_fluid_vel_pres_split(const Core::FE::Discretization
   veldofmapvec.assign(veldofset.begin(), veldofset.end());
   veldofset.clear();
   std::shared_ptr<Core::LinAlg::Map> velrowmap = std::make_shared<Core::LinAlg::Map>(
-      -1, veldofmapvec.size(), veldofmapvec.data(), 0, fluiddis.get_comm());
+      -1, std::span<const int>(veldofmapvec), 0, fluiddis.get_comm());
   veldofmapvec.clear();
 
   std::vector<int> presdofmapvec;
@@ -530,7 +530,7 @@ void FLD::Utils::setup_fluid_fluid_vel_pres_split(const Core::FE::Discretization
   presdofmapvec.assign(presdofset.begin(), presdofset.end());
   presdofset.clear();
   std::shared_ptr<Core::LinAlg::Map> presrowmap = std::make_shared<Core::LinAlg::Map>(
-      -1, presdofmapvec.size(), presdofmapvec.data(), 0, alefluiddis.get_comm());
+      -1, std::span<const int>(presdofmapvec), 0, alefluiddis.get_comm());
   extractor.setup(*fullmap, presrowmap, velrowmap);
 }
 

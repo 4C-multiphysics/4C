@@ -172,7 +172,7 @@ Core::LinAlg::SparseMatrix::SparseMatrix(const Core::LinAlg::Vector<double>& dia
       matrixtype_(matrixtype)
 {
   int length = diag.get_map().num_my_elements();
-  Core::LinAlg::Map map(-1, length, diag.get_map().my_global_elements(),
+  Core::LinAlg::Map map(-1, std::span<const int>(diag.get_map().my_global_elements(), length),
       diag.get_map().index_base(), diag.get_comm());
   if (!map.unique_gids()) FOUR_C_THROW("Row map is not unique");
 

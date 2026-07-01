@@ -235,7 +235,7 @@ FLD::FluidDiscretExtractor::FluidDiscretExtractor(std::shared_ptr<Core::FE::Disc
 
       // build noderowmap for new distribution of nodes
       newrownodemap = std::make_shared<Core::LinAlg::Map>(
-          -1, rownodes.size(), rownodes.data(), 0, childdiscret_->get_comm());
+          -1, std::span<const int>(rownodes), 0, childdiscret_->get_comm());
 
       std::vector<int> colnodes;
 
@@ -246,7 +246,7 @@ FLD::FluidDiscretExtractor::FluidDiscretExtractor(std::shared_ptr<Core::FE::Disc
       }
       // build nodecolmap for new distribution of nodes
       newcolnodemap = std::make_shared<Core::LinAlg::Map>(
-          -1, colnodes.size(), colnodes.data(), 0, childdiscret_->get_comm());
+          -1, std::span<const int>(colnodes), 0, childdiscret_->get_comm());
     }
 
     if (Core::Communication::my_mpi_rank(childdiscret_->get_comm()) == 0)

@@ -209,7 +209,7 @@ namespace
     bifurcations.add_bifurcation(0, 0, 1, 2, {10, 11, 30, 20, 21, 31});
 
     std::array<int, 6> global_dofs{10, 11, 20, 21, 30, 31};
-    Core::LinAlg::Map col_map(-1, global_dofs.size(), global_dofs.data(), 0, MPI_COMM_WORLD);
+    Core::LinAlg::Map col_map(-1, std::span<const int>(global_dofs), 0, MPI_COMM_WORLD);
 
     assign_junction_local_dof_ids(col_map, connections, bifurcations);
 

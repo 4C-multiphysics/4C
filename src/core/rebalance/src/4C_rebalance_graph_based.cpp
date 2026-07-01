@@ -43,12 +43,14 @@ Core::Rebalance::rebalance_node_maps(const Core::LinAlg::Graph& initialGraph,
       initialNodeWeights, initialEdgeWeights, initialNodeCoordinates);
 
   // extract repartitioned maps
-  std::shared_ptr<Core::LinAlg::Map> rownodes =
-      std::make_shared<Core::LinAlg::Map>(-1, balanced_graph->row_map().num_my_elements(),
-          balanced_graph->row_map().my_global_elements(), 0, initialGraph.get_comm());
-  std::shared_ptr<Core::LinAlg::Map> colnodes =
-      std::make_shared<Core::LinAlg::Map>(-1, balanced_graph->col_map().num_my_elements(),
-          balanced_graph->col_map().my_global_elements(), 0, initialGraph.get_comm());
+  std::shared_ptr<Core::LinAlg::Map> rownodes = std::make_shared<Core::LinAlg::Map>(-1,
+      std::span<const int>(balanced_graph->row_map().my_global_elements(),
+          balanced_graph->row_map().num_my_elements()),
+      0, initialGraph.get_comm());
+  std::shared_ptr<Core::LinAlg::Map> colnodes = std::make_shared<Core::LinAlg::Map>(-1,
+      std::span<const int>(balanced_graph->col_map().my_global_elements(),
+          balanced_graph->col_map().num_my_elements()),
+      0, initialGraph.get_comm());
 
   return {rownodes, colnodes};
 }
@@ -253,7 +255,7 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_graph(
     mynodes.clear();
     // create a non-overlapping row map
     rownodes =
-        std::make_shared<Core::LinAlg::Map>(-1, (int)nodes.size(), nodes.data(), 0, dis.get_comm());
+        std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(nodes), 0, dis.get_comm());
   }
 
   // start building the graph object
@@ -431,8 +433,8 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
   }
   std::vector<int> my_colliding_primitives_vec(
       my_colliding_primitives.begin(), my_colliding_primitives.end());
-  Core::LinAlg::Map my_colliding_primitives_map(-1, my_colliding_primitives_vec.size(),
-      my_colliding_primitives_vec.data(), 0, dis.get_comm());
+  Core::LinAlg::Map my_colliding_primitives_map(
+      -1, std::span<const int>(my_colliding_primitives_vec), 0, dis.get_comm());
   Core::LinAlg::Import importer(my_colliding_primitives_map, *dis.element_row_map());
   Core::LinAlg::Graph my_colliding_primitives_connectivity(
       my_colliding_primitives_map, n_nodes_per_element_max);

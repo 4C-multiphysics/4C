@@ -40,11 +40,11 @@ Core::LinAlg::Map::Map(
 {
 }
 
-Core::LinAlg::Map::Map(int NumGlobalElements, int NumMyElements, const int* MyGlobalElements,
-    int IndexBase, const MPI_Comm& Comm)
+Core::LinAlg::Map::Map(int NumGlobalElements, std::span<const int> MyGlobalElements, int IndexBase,
+    const MPI_Comm& Comm)
     : map_(MapVariant(std::in_place_type<Utils::OwnerOrView<Epetra_Map>>,
-          Utils::make_owner<Epetra_Map>(NumGlobalElements, NumMyElements, MyGlobalElements,
-              IndexBase, Core::Communication::as_epetra_comm(Comm))))
+          Utils::make_owner<Epetra_Map>(NumGlobalElements, MyGlobalElements.size(),
+              MyGlobalElements.data(), IndexBase, Core::Communication::as_epetra_comm(Comm))))
 {
 }
 

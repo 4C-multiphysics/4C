@@ -670,7 +670,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::Binstrategy::BinningStrategy::create_li
     }
   }
 
-  return std::make_shared<Core::LinAlg::Map>(numbin, linearmap.size(), linearmap.data(), 0, comm);
+  return std::make_shared<Core::LinAlg::Map>(numbin, std::span<const int>(linearmap), 0, comm);
 }
 
 void Core::Binstrategy::BinningStrategy::write_bin_output(int const step, double const time)
@@ -834,8 +834,10 @@ void Core::Binstrategy::BinningStrategy::distribute_bins_recurs_coord_bisection(
       Core::Rebalance::rebalance_coordinates(*bincenters, params, *binweights);
 
   // create bin row map
-  binrowmap = std::make_shared<Core::LinAlg::Map>(-1, bincenters->get_map().num_my_elements(),
-      bincenters->get_map().my_global_elements(), 0, bin_discret()->get_comm());
+  binrowmap = std::make_shared<Core::LinAlg::Map>(-1,
+      std::span<const int>(
+          bincenters->get_map().my_global_elements(), bincenters->get_map().num_my_elements()),
+      0, bin_discret()->get_comm());
 }
 
 void Core::Binstrategy::BinningStrategy::fill_bins_into_bin_discretization(
@@ -1097,8 +1099,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::Binstrategy::BinningStrategy::
     }
 
     std::vector<int> colnodes(nodes.begin(), nodes.end());
-    Core::LinAlg::Map nodecolmap(
-        -1, (int)colnodes.size(), colnodes.data(), 0, discret[i]->get_comm());
+    Core::LinAlg::Map nodecolmap(-1, std::span<const int>(colnodes), 0, discret[i]->get_comm());
 
     // now ghost the nodes
     discret[i]->export_column_nodes(nodecolmap);
@@ -1244,8 +1245,9 @@ Core::Binstrategy::BinningStrategy::weighted_distribution_of_bins_to_procs(
 
   // extract repartitioned bin row map
   const Core::LinAlg::Map& rbinstmp = balanced_bingraph->row_map();
-  std::shared_ptr<Core::LinAlg::Map> newrowbins = std::make_shared<Core::LinAlg::Map>(
-      -1, rbinstmp.num_my_elements(), rbinstmp.my_global_elements(), 0, discret[0]->get_comm());
+  std::shared_ptr<Core::LinAlg::Map> newrowbins = std::make_shared<Core::LinAlg::Map>(-1,
+      std::span<const int>(rbinstmp.my_global_elements(), rbinstmp.num_my_elements()), 0,
+      discret[0]->get_comm());
 
   return newrowbins;
 }
@@ -1337,7 +1339,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::Binstrategy::BinningStrategy::extend_el
   std::vector<int> colgids(coleleset.begin(), coleleset.end());
 
   // return extended elecolmap
-  return std::make_shared<Core::LinAlg::Map>(-1, (int)colgids.size(), colgids.data(), 0, comm_);
+  return std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(colgids), 0, comm_);
 }
 
 void Core::Binstrategy::BinningStrategy::extend_ghosting_of_binning_discretization(
@@ -1350,8 +1352,7 @@ void Core::Binstrategy::BinningStrategy::extend_ghosting_of_binning_discretizati
   for (int i = 0; i < rowbins.num_my_elements(); ++i) bins.insert(rowbins.gid(i));
 
   std::vector<int> bincolmapvec(bins.begin(), bins.end());
-  Core::LinAlg::Map bincolmap(
-      -1, static_cast<int>(bincolmapvec.size()), bincolmapvec.data(), 0, bindis_->get_comm());
+  Core::LinAlg::Map bincolmap(-1, std::span<const int>(bincolmapvec), 0, bindis_->get_comm());
 
   if (bincolmap.num_global_elements() == 1 &&
       Core::Communication::num_mpi_ranks(bindis_->get_comm()) > 1)
@@ -1426,7 +1427,7 @@ void Core::Binstrategy::BinningStrategy::standard_discretization_ghosting(
   nodesinmybins.clear();
 
   std::shared_ptr<Core::LinAlg::Map> newnoderowmap = std::make_shared<Core::LinAlg::Map>(
-      -1, mynewrownodes.size(), mynewrownodes.data(), 0, discret->get_comm());
+      -1, std::span<const int>(mynewrownodes), 0, discret->get_comm());
 
   // create the new graph and export to it
   std::shared_ptr<Core::LinAlg::Graph> newnodegraph;
@@ -1439,8 +1440,9 @@ void Core::Binstrategy::BinningStrategy::standard_discretization_ghosting(
 
   // the column map will become the new ghosted distribution of nodes (standard ghosting)
   const Core::LinAlg::Map cntmp = newnodegraph->col_map();
-  stdnodecolmap = std::make_shared<Core::LinAlg::Map>(
-      -1, cntmp.num_my_elements(), cntmp.my_global_elements(), 0, discret->get_comm());
+  stdnodecolmap = std::make_shared<Core::LinAlg::Map>(-1,
+      std::span<const int>(cntmp.my_global_elements(), cntmp.num_my_elements()), 0,
+      discret->get_comm());
 
   // rebuild of the discretizations with new maps for standard ghosting
   std::shared_ptr<Core::LinAlg::Map> roweles;

@@ -698,7 +698,7 @@ namespace Core::IO
       }
 
       MPI_Comm comm = target_map.get_comm();
-      Core::LinAlg::Map source_map(-1, local_indices.size(), local_indices.data(), 0, comm);
+      Core::LinAlg::Map source_map(-1, std::span<const int>(local_indices), 0, comm);
       Communication::Exporter exporter(source_map, target_map, comm);
       exporter.do_export(map);
     }

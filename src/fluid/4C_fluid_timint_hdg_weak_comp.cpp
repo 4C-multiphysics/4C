@@ -73,7 +73,7 @@ void FLD::TimIntHDGWeakComp::init()
   dofmapvec_r.assign(dofset_r.begin(), dofset_r.end());
   dofset_r.clear();
   std::shared_ptr<Core::LinAlg::Map> dofmap_r = std::make_shared<Core::LinAlg::Map>(
-      -1, dofmapvec_r.size(), dofmapvec_r.data(), 0, hdgdis->get_comm());
+      -1, std::span<const int>(dofmapvec_r), 0, hdgdis->get_comm());
 
   // define momentum dof map
   std::vector<int> dofmapvec_w;
@@ -81,7 +81,7 @@ void FLD::TimIntHDGWeakComp::init()
   dofmapvec_w.assign(dofset_w.begin(), dofset_w.end());
   dofset_w.clear();
   std::shared_ptr<Core::LinAlg::Map> dofmap_w = std::make_shared<Core::LinAlg::Map>(
-      -1, dofmapvec_w.size(), dofmapvec_w.data(), 0, hdgdis->get_comm());
+      -1, std::span<const int>(dofmapvec_w), 0, hdgdis->get_comm());
 
   // build density/momentum (actually velocity/pressure) splitter
   velpressplitter_->setup(*hdgdis->dof_row_map(), dofmap_r, dofmap_w);

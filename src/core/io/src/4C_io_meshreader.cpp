@@ -206,7 +206,7 @@ namespace
     if (eids.empty())
     {
       // If the element section is empty, we create an empty input and return
-      roweles_ = std::make_shared<Core::LinAlg::Map>(-1, 0, nullptr, 0, comm_);
+      roweles_ = std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>{}, 0, comm_);
 
       return;
     }
@@ -225,7 +225,8 @@ namespace
       if (myrank == numproc - 1) mysize = numele - (numproc - 1) * bsize;
 
       // construct the map
-      roweles_ = std::make_shared<Core::LinAlg::Map>(-1, mysize, &eids[myrank * bsize], 0, comm_);
+      roweles_ = std::make_shared<Core::LinAlg::Map>(
+          -1, std::span<const int>(&eids[myrank * bsize], mysize), 0, comm_);
     }
 
     // define blocksizes for blocks of elements we read
