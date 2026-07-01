@@ -30,6 +30,13 @@ Constraints::SubmodelEvaluator::ConstraintBase::ConstraintBase()
       constraint_parameter_list, "CONSTRAINT_ENFORCEMENT");
 }
 
+void Constraints::SubmodelEvaluator::ConstraintBase::set_owned_constraint_row_ids(
+    std::vector<int> row_ids)
+{
+  owned_constraint_row_ids_ = std::move(row_ids);
+  use_explicit_constraint_row_ids_ = true;
+}
+
 bool Constraints::SubmodelEvaluator::ConstraintBase::evaluate_force_stiff(
     const Core::LinAlg::Vector<double>& displacement_vector,
     std::shared_ptr<Solid::TimeInt::BaseDataGlobalState>& global_state_ptr,
@@ -72,28 +79,34 @@ void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_coupling_terms(
   for (const auto& mpc : constraint_equations_)
     ncon_ += mpc->get_number_of_constraint_equation_objects();
 
-  // ToDo: Add an offset to the constraint dof map.
-  n_condition_map_ = std::make_shared<Core::LinAlg::Map>(ncon_, 0, stiff_ptr_->get_comm());
+  if (!use_explicit_constraint_row_ids_)
+  {
+    n_condition_map_ = std::make_shared<Core::LinAlg::Map>(ncon_, 0, stiff_ptr_->get_comm());
+  }
+  else
+  {
+    n_condition_map_ =
+        std::make_shared<Core::LinAlg::Map>(-1, static_cast<int>(owned_constraint_row_ids_.size()),
+            owned_constraint_row_ids_.data(), 0, stiff_ptr_->get_comm());
+  }
 
   // initialise all global coupling objects
   constraint_residual_ = std::make_shared<Core::LinAlg::Vector<double>>(*n_condition_map_, true);
   Q_Ld_ = std::make_shared<Core::LinAlg::SparseMatrix>(*n_condition_map_, 4);
-  Q_dL_ = std::make_shared<Core::LinAlg::SparseMatrix>(stiff_ptr_->row_map(), 4);
   Q_dd_ = std::make_shared<Core::LinAlg::SparseMatrix>(stiff_ptr_->row_map(), 0);
-
-  // set Q_dd to zero as default
   Q_dd_->zero();
-  // Evaluate the Constraint Pairs / equations objects
-  std::shared_ptr<const Core::LinAlg::Vector<double>> dis_np = gstate.get_dis_np();
-  for (const auto& obj : constraint_equations_)
-  {
-    obj->evaluate_equation(*Q_dd_, *Q_dL_, *Q_Ld_, *constraint_residual_, *dis_np);
-  }
-  Core::IO::cout(Core::IO::debug) << "Evaluated all constraint objects" << Core::IO::endl;
 
-  // Complete
+  std::shared_ptr<const Core::LinAlg::Vector<double>> dis_np = gstate.get_dis_np();
+  for (const auto& obj : constraint_equations_) obj->evaluate_equation(*Q_Ld_);
+
   Q_dd_->complete();
   Q_Ld_->complete(stiff_ptr_->domain_map(), *n_condition_map_);
+
+  // Q_dL = Q_Ld^T
+  Q_dL_ = Core::LinAlg::matrix_transpose(*Q_Ld_);
   Q_dL_->complete(*n_condition_map_, stiff_ptr_->domain_map());
+
+  // constraint residual r_L = Q_Ld * d
+  Q_Ld_->multiply(false, *dis_np, *constraint_residual_);
 }
 FOUR_C_NAMESPACE_CLOSE
