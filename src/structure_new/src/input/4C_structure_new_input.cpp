@@ -435,7 +435,7 @@ namespace Solid
                                 "max-to-mean rank evaluation time ratio exceeds this value.",
                     .default_value = 1.5}),
             parameter<int>("WINDOW_STEPS",
-                {.description = "Number of converged steps used in the rolling imbalance average.",
+                {.description = "Number of steps used in the rolling imbalance average.",
                     .default_value = 3}),
             parameter<int>("COOLDOWN_STEPS",
                 {.description = "Minimum number of converged steps between rebalances.",
