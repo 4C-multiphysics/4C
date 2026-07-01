@@ -605,6 +605,20 @@ namespace Particle
         std::vector<std::vector<std::pair<int, ParticleObjShrdPtr>>>& particlestoreceive) const;
 
     /*!
+     * \brief communicate refreshed particles using cached communication graph
+     *
+     * Uses the pre-computed refresh_send_procs_ and refresh_recv_procs_ to exchange refreshed
+     * particle data without an MPI_Allreduce for target discovery.
+     *
+     *
+     * \param[in]  particlestosend    particles to be send to other processors
+     * \param[out] particlestoreceive particles to be received on this processor
+     */
+    void communicate_refreshed_particles(
+        std::vector<std::vector<ParticleObjShrdPtr>>& particlestosend,
+        std::vector<std::vector<std::pair<int, ParticleObjShrdPtr>>>& particlestoreceive) const;
+
+    /*!
      * \brief communicate and build map for direct ghosting
      *
      * Communicate the information at which local index in the particle container a particle at the
@@ -739,6 +753,12 @@ namespace Particle
 
     //! flag denoting validity of direct ghosting
     bool validdirectghosting_;
+
+    //! cached set of procs to send refreshed particle data to
+    std::set<int> refresh_send_procs_;
+
+    //! cached set of procs to receive refreshed particle data from
+    std::set<int> refresh_recv_procs_;
   };
 
 }  // namespace Particle

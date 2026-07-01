@@ -362,8 +362,8 @@ void Particle::ParticleEngine::refresh_particles() const
   // determine particles that need to be refreshed
   determine_particles_to_be_refreshed(particlestosend);
 
-  // communicate particles
-  communicate_particles(particlestosend, particlestoinsert);
+  // communicate refreshed particles using cached communication graph
+  communicate_refreshed_particles(particlestosend, particlestoinsert);
 
   // insert refreshed particles received from other processors
   insert_refreshed_particles(particlestoinsert);
@@ -383,8 +383,8 @@ void Particle::ParticleEngine::refresh_particles_of_specific_states_and_types(
   determine_specific_states_of_particles_of_specific_types_to_be_refreshed(
       particlestatestotypes, particlestosend);
 
-  // communicate particles
-  communicate_particles(particlestosend, particlestoinsert);
+  // communicate refreshed particles using cached communication graph
+  communicate_refreshed_particles(particlestosend, particlestoinsert);
 
   // insert refreshed particles received from other processors
   insert_refreshed_particles(particlestoinsert);
@@ -1727,6 +1727,113 @@ void Particle::ParticleEngine::communicate_particles(
   }
 }
 
+void Particle::ParticleEngine::communicate_refreshed_particles(
+    std::vector<std::vector<ParticleObjShrdPtr>>& particlestosend,
+    std::vector<std::vector<std::pair<int, ParticleObjShrdPtr>>>& particlestoreceive) const
+{
+  // prepare buffer for sending
+  std::map<int, std::vector<char>> sdata;
+
+  // pack data for sending (only to known refresh targets)
+  for (int torank : refresh_send_procs_)
+  {
+    if (particlestosend[torank].empty()) continue;
+
+    for (const auto& iter : particlestosend[torank])
+    {
+      Core::Communication::PackBuffer data;
+      iter->pack(data);
+      sdata[torank].insert(sdata[torank].end(), data().begin(), data().end());
+    }
+  }
+
+  // clear after all particles are packed
+  particlestosend.clear();
+
+  const int numsendtoprocs = static_cast<int>(refresh_send_procs_.size());
+  const int numrecvfromprocs = static_cast<int>(refresh_recv_procs_.size());
+
+  // send size of messages to ALL known refresh targets (0 if no data)
+  std::vector<MPI_Request> sizesendrequest(numsendtoprocs);
+  std::vector<int> msgsizestosend(numsendtoprocs);
+  {
+    int counter = 0;
+    for (int torank : refresh_send_procs_)
+    {
+      auto it = sdata.find(torank);
+      msgsizestosend[counter] = (it != sdata.end()) ? static_cast<int>(it->second.size()) : 0;
+      MPI_Isend(
+          &msgsizestosend[counter], 1, MPI_INT, torank, 1234, comm_, &sizesendrequest[counter]);
+      ++counter;
+    }
+  }
+
+  // receive size of messages from ALL known senders
+  std::vector<int> recvsources(refresh_recv_procs_.begin(), refresh_recv_procs_.end());
+  std::vector<int> msgsizestorecv(numrecvfromprocs);
+  std::vector<MPI_Request> sizerecvrequest(numrecvfromprocs);
+  for (int i = 0; i < numrecvfromprocs; ++i)
+  {
+    MPI_Irecv(&msgsizestorecv[i], 1, MPI_INT, recvsources[i], 1234, comm_, &sizerecvrequest[i]);
+  }
+
+  // wait for all size receives to complete
+  MPI_Waitall(numrecvfromprocs, sizerecvrequest.data(), MPI_STATUSES_IGNORE);
+
+  // post receives for actual data from senders with non-zero size
+  std::map<int, std::vector<char>> rdata;
+  std::vector<MPI_Request> recvrequest(numrecvfromprocs);
+  for (int i = 0; i < numrecvfromprocs; ++i)
+  {
+    if (msgsizestorecv[i] > 0)
+    {
+      rdata[recvsources[i]].resize(msgsizestorecv[i]);
+      MPI_Irecv(rdata[recvsources[i]].data(), msgsizestorecv[i], MPI_CHAR, recvsources[i], 5678,
+          comm_, &recvrequest[i]);
+    }
+    else
+    {
+      recvrequest[i] = MPI_REQUEST_NULL;
+    }
+  }
+
+  // wait for size sends to complete, then send data
+  MPI_Waitall(numsendtoprocs, sizesendrequest.data(), MPI_STATUSES_IGNORE);
+
+  std::vector<MPI_Request> sendrequest;
+  sendrequest.reserve(sdata.size());
+  for (auto& p : sdata)
+  {
+    sendrequest.emplace_back();
+    MPI_Isend(p.second.data(), static_cast<int>(p.second.size()), MPI_CHAR, p.first, 5678, comm_,
+        &sendrequest.back());
+  }
+
+  // wait for completion
+  if (!sendrequest.empty())
+    MPI_Waitall(static_cast<int>(sendrequest.size()), sendrequest.data(), MPI_STATUSES_IGNORE);
+  sdata.clear();
+  MPI_Waitall(numrecvfromprocs, recvrequest.data(), MPI_STATUSES_IGNORE);
+
+  // unpack and store received data
+  for (const auto& p : rdata)
+  {
+    const int msgsource = p.first;
+    const std::vector<char>& rmsg = p.second;
+
+    Core::Communication::UnpackBuffer buffer(rmsg);
+    while (!buffer.at_end())
+    {
+      std::shared_ptr<Core::Communication::ParObject> object(Core::Communication::factory(buffer));
+      ParticleObjShrdPtr particleobject = std::dynamic_pointer_cast<ParticleObject>(object);
+      FOUR_C_ASSERT(particleobject, "received object is not a particle object!");
+
+      particlestoreceive[particleobject->return_particle_type()].push_back(
+          std::make_pair(msgsource, particleobject));
+    }
+  }
+}
+
 void Particle::ParticleEngine::communicate_direct_ghosting_map(
     std::map<int, std::map<ParticleType, std::map<int, std::pair<int, int>>>>& directghosting)
 {
@@ -1736,6 +1843,11 @@ void Particle::ParticleEngine::communicate_direct_ghosting_map(
 
   // invalidate flags denoting validity of direct ghosting
   validdirectghosting_ = false;
+
+  // cache procs from which we receive refreshed particle data: these are the procs that sent
+  // ghost particles to us (keys of directghosting map)
+  refresh_recv_procs_.clear();
+  for (const auto& p : directghosting) refresh_recv_procs_.insert(p.first);
 
   // prepare buffer for sending and receiving
   std::map<int, std::vector<char>> sdata;
@@ -1788,6 +1900,12 @@ void Particle::ParticleEngine::communicate_direct_ghosting_map(
 
   // validate flags denoting validity of direct ghosting
   validdirectghosting_ = true;
+
+  // cache procs to which we send refreshed particle data
+  refresh_send_procs_.clear();
+  for (const auto& type : particlecontainerbundle_->get_particle_types())
+    for (const auto& [ownedindex, targets] : directghostingtargets_[type])
+      for (const auto& [proc, ghostedindex] : targets) refresh_send_procs_.insert(proc);
 }
 
 void Particle::ParticleEngine::insert_owned_particles(
