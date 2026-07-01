@@ -71,6 +71,10 @@ function(four_c_auto_define_python_binding_submodule)
 
     # Add the current submodule object file to the main python bindings target
     target_link_libraries(${FOUR_C_PYTHON_BINDINGS_PROJECT_NAME} PRIVATE ${_target}_objs)
+
+    if(FOUR_C_CLANGCUDA)
+      set_clangcuda_mode(${_target}_objs CLANGCUDA_MODE_HOST)
+    endif()
   endif()
 
   # Now check if there are more directories that contain CMakeLists.txt. If yes, we also add those.

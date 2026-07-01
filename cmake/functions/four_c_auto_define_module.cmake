@@ -38,6 +38,10 @@ function(four_c_auto_define_module)
     # them on other users of the library.
     target_link_libraries(${_target}_objs PRIVATE four_c_private_compile_interface)
 
+    if(FOUR_C_CLANGCUDA)
+      set_clangcuda_mode(${_target}_objs CLANGCUDA_MODE_HOST)
+    endif()
+
     if(FOUR_C_ENABLE_IWYU)
       set_target_properties(
         ${_target}_objs PROPERTIES CXX_INCLUDE_WHAT_YOU_USE ${FOUR_C_IWYU_EXECUTABLE}

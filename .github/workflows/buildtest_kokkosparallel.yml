@@ -1,0 +1,114 @@
+name: buildtest_kokkosparallel
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kokkosopenmp_build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:latest
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker_kokkosopenmp
+          build-targets: full
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "true"
+      - uses: ./.github/actions/upload_directory
+        name: Upload 4C build
+        with:
+          directory: ${{ github.workspace }}/build
+          retention-days: 1
+          name: kokkosopenmp_build
+
+  kokkosopenmp_test_minimal:
+    needs: kokkosopenmp_build
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:latest
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+      - name: Setup developer environment for testing
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - uses: ./.github/actions/download_directory
+        with:
+          name: kokkosopenmp_build
+          destination: ${{ github.workspace }}/build
+      - name: Test
+        run: |
+          cd $GITHUB_WORKSPACE/build
+          ctest -L minimal -j `nproc` --output-on-failure
+        env:
+          KOKKOS_NUM_THREADS: "1"
+          OMP_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+          OMP_DYNAMIC: "FALSE"
+
+  kokkoscuda_build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:latest
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    env:
+      OMPI_CXX: ${{ github.workspace }}/utilities/clangcuda++
+      OMPI_CC: /usr/bin/clang
+      CLANGCUDA_CLANG_PATH: /usr/bin/clang++
+      CLANGCUDA_CUDA_PATH: /usr/local/cuda
+      CLANGCUDA_ARCH: sm_90
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker_kokkoscuda_clangcuda
+          build-targets: 4C
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "true"
+
+  ensure_all_tests_pass:
+    needs:
+      - kokkoscuda_build
+      - kokkosopenmp_build
+      - kokkosopenmp_test_minimal
+    runs-on: ubuntu-latest
+    if: always() && github.ref != 'refs/heads/main'
+    steps:
+      - name: Check for successful builds and tests
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}

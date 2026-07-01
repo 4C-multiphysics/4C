@@ -54,6 +54,10 @@ function(_set_up_unit_test_target _module_under_test _target)
 
   target_link_libraries(${_target} PRIVATE ${_module_under_test}_module)
 
+  if(FOUR_C_CLANGCUDA)
+    set_clangcuda_mode(${_target} CLANGCUDA_MODE_HOST)
+  endif()
+
   # the first process will write a unit test report
   separate_arguments(
     _mpiexec_all_args_for_testing_list UNIX_COMMAND ${_mpiexec_all_args_for_testing}

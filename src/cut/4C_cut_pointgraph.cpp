@@ -12,7 +12,20 @@
 #include "4C_cut_pointgraph_simple.hpp"
 #include "4C_cut_side.hpp"
 
+#if defined(CLANGCUDA_MODE_HOST) || defined(CLANGCUDA_MODE_DEVICE)
+#ifdef __noinline__
+#pragma push_macro("__noinline__")
+#undef __noinline__
+#define FOUR_C_RESTORE_NOINLINE_MACRO
+#endif
+#endif
+
 #include <boost/graph/graphviz.hpp>
+
+#ifdef FOUR_C_RESTORE_NOINLINE_MACRO
+#pragma pop_macro("__noinline__")
+#undef FOUR_C_RESTORE_NOINLINE_MACRO
+#endif
 
 #include <cmath>
 #include <iostream>

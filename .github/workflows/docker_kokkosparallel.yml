@@ -1,0 +1,92 @@
+name: Docker Kokkos parallel
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/docker_kokkosparallel.yml'
+      - 'dependencies/current/**'
+      - 'dependencies/testing/**'
+      - 'dependencies/kokkosparallel/**'
+      - 'docker/kokkosparallel/**'
+
+env:
+  REGISTRY: ghcr.io
+  PROJECT_NAMESPACE: 4c-multiphysics
+  IMAGE_SUFFIX: dependencies-trilinos-kokkosparallel
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-if-build-dependencies-is-required:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      dependencies_hash: ${{ steps.check-docker-build-required.outputs.dependencies_hash }}
+      build_docker_image: ${{ steps.check-docker-build-required.outputs.build_docker_image }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: check-docker-build-required
+        uses: ./.github/actions/check_docker_build_required
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-${{ env.IMAGE_SUFFIX }}
+          compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+
+  build-dependencies:
+    runs-on: ubuntu-latest
+    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      #
+    needs: check-if-build-dependencies-is-required
+    if: ${{ github.event_name == 'workflow_dispatch' && needs.check-if-build-dependencies-is-required.outputs.build_docker_image
+      == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Build and push image
+        uses: ./.github/actions/build_dependencies
+        with:
+          docker-file: docker/kokkosparallel/Dockerfile
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-${{ env.IMAGE_SUFFIX }}
+          dependencies-hash: ${{ needs.check-if-build-dependencies-is-required.outputs.dependencies_hash
+            }}
+          base-image: "nvidia/cuda:12.8.1-devel-ubuntu24.04"
+
+  tag-images-as-latest:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }} #${{ github.ref == 'refs/heads/main' && github.repository == '4C-multiphysics/4C' }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+      - id: compute-dependencies-hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          skip-check: 'true'
+          compute-dependencies-hash-script: ./docker/kokkosparallel/compute_dependencies_hash.sh
+      - name: Log in to the Container registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull current Kokkos parallel dependencies image and tag it with latest
+        run: |
+          IMAGE_NAME="${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-${{ env.IMAGE_SUFFIX }}"
+          docker pull $IMAGE_NAME:${{ steps.compute-dependencies-hash.outputs.computed_dependencies_hash }}
+          docker image tag $IMAGE_NAME:${{ steps.compute-dependencies-hash.outputs.computed_dependencies_hash }} $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:latest
