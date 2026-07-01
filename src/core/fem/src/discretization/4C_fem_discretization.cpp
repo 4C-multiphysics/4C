@@ -684,10 +684,10 @@ void Core::FE::Discretization::reset_element_eval_timers()
 std::vector<double> Core::FE::Discretization::get_rank_eval_times_on_root() const
 {
   double my_eval_time_sum = 0.0;
-  for (auto* ele : elerowptr_)
+  for (auto* ele : elecolptr_)
   {
     FOUR_C_ASSERT(ele != nullptr,
-        "Encountered null local row element while getting evaluation timers in "
+        "Encountered null local column element while getting evaluation timers in "
         "discretization {}!",
         name_);
     my_eval_time_sum += ele->eval_time();
