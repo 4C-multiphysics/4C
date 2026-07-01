@@ -67,6 +67,8 @@ namespace Solid
         //! derived from the base class
         void reset() override;
 
+        void refresh_after_redistribution() override { rebuild_problem_state(); }
+
         //! derived from the base class
         Solid::ConvergenceStatus solve() override;
 
@@ -99,6 +101,8 @@ namespace Solid
         const Teuchos::ParameterList default_params_;
 
        private:
+        void rebuild_problem_state();
+
         //! @name variables which are reset in each solve() call
         //!@{
 

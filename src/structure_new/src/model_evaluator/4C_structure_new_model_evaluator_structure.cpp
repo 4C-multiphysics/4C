@@ -147,6 +147,23 @@ void Solid::ModelEvaluator::Structure::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Structure::remap_after_redistribution()
+{
+  check_init();
+
+  stiff_ptr_ = dynamic_cast<Core::LinAlg::SparseMatrix*>(
+      global_state().create_structural_stiffness_matrix_block());
+  FOUR_C_ASSERT(stiff_ptr_ != nullptr, "Dynamic cast to Core::LinAlg::SparseMatrix failed!");
+
+  stiff_ptc_ptr_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      *global_state().dof_row_map_view(), 81, true, true);
+
+  masslin_type_ = tim_int().get_data_sdyn().get_mass_lin_type();
+  dis_incr_ptr_ = std::make_shared<Core::LinAlg::Vector<double>>(dis_np().get_map(), true);
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluator::Structure::reset(const Core::LinAlg::Vector<double>& x)
 {
   check_init_setup();
@@ -321,6 +338,37 @@ bool Solid::ModelEvaluator::Structure::initialize_inertia_and_damping()
   fill_complete();
 
   // assemble the rayleigh damping matrix
+  rayleigh_damping_matrix();
+
+  return eval_error_check();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+bool Solid::ModelEvaluator::Structure::initialize_inertia_and_damping(
+    const Core::LinAlg::Vector<double>& displacement, const Core::LinAlg::Vector<double>* velocity)
+{
+  check_init_setup();
+
+  std::array<std::shared_ptr<Core::LinAlg::Vector<double>>, 3> eval_vec = {
+      nullptr, nullptr, nullptr};
+  std::array<std::shared_ptr<Core::LinAlg::SparseOperator>, 2> eval_mat = {nullptr, nullptr};
+
+  discret().clear_state();
+  discret().set_state(0, "residual displacement", *integrator().get_dbc().get_zeros_ptr());
+  discret().set_state(0, "displacement", displacement);
+  if (velocity != nullptr and eval_data().get_damping_type() == Solid::damp_material)
+    discret().set_state(0, "velocity", *velocity);
+
+  static_contributions(eval_mat.data(), eval_vec.data());
+  // rebuilds damp_
+  material_damping_contributions(eval_mat.data());
+  // rebuilds mass_
+  inertial_contributions(eval_mat.data(), eval_vec.data());
+
+  evaluate_internal(eval_mat.data(), eval_vec.data());
+
+  fill_complete();
   rayleigh_damping_matrix();
 
   return eval_error_check();

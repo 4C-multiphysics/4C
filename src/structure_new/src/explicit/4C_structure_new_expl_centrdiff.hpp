@@ -97,6 +97,10 @@ namespace Solid
 
       //@}
 
+     protected:
+      //! Refresh cached force pointers after redistribution.
+      void remap_integrator_state_after_redistribution() override;
+
      private:
       //! viscous force vector F_viscous F_{viscous;n+1}
       std::shared_ptr<Core::LinAlg::Vector<double>> fvisconp_ptr_;

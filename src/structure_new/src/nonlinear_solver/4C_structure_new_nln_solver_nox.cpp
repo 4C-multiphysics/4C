@@ -86,6 +86,13 @@ Solid::Nln::SOLVER::Nox::Nox(const Teuchos::ParameterList& default_params,
   nlnglobaldata_ = Teuchos::make_rcp<NOX::Nln::GlobalData>(data_global_state().get_comm(),
       nox_params, linsolvers, ireq, ijac, opttype, iconstr, iconstr_prec, iscale);
 
+  rebuild_problem_state();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::Nln::SOLVER::Nox::rebuild_problem_state()
+{
   // -------------------------------------------------------------------------
   // Create NOX control class: NoxProblem()
   // -------------------------------------------------------------------------

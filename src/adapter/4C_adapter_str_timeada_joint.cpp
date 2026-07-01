@@ -87,7 +87,7 @@ void Adapter::StructureTimeAdaJoint::setup_auxiliary()
   dataglobalstate->setup();
 
   // setup auxiliary integrator
-  sta_->init(dataio, datasdyn, dataglobalstate);
+  sta_->init(problem, dataio, datasdyn, dataglobalstate);
   sta_->setup();
 
   const int restart = problem.restart();

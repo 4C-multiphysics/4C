@@ -77,6 +77,22 @@ void Solid::IMPLICIT::OneStepTheta::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+void Solid::IMPLICIT::OneStepTheta::remap_integrator_state_after_redistribution()
+{
+  check_init();
+
+  const_vel_acc_update_ptr_ = std::make_shared<Core::LinAlg::MultiVector<double>>(
+      *global_state().dof_row_map_view(), 2, true);
+
+  finertian_ptr_ = global_state().get_finertial_n();
+  finertianp_ptr_ = global_state().get_finertial_np();
+
+  fviscon_ptr_ = global_state().get_fvisco_n();
+  fvisconp_ptr_ = global_state().get_fvisco_np();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 void Solid::IMPLICIT::OneStepTheta::post_setup()
 {
   check_init_setup();

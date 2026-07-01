@@ -100,6 +100,31 @@ void Solid::Integrator::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+void Solid::Integrator::remap_after_redistribution()
+{
+  check_init();
+
+  remap_integrator_state_after_redistribution();
+
+  auto& structure_model =
+      dynamic_cast<Solid::ModelEvaluator::Structure&>(evaluator(Solid::model_structure));
+  structure_model.remap_after_redistribution();
+  // remap gproblem_map_ptr_
+  global_state().setup_block_information(structure_model, Solid::model_structure);
+  // reset blockextractor_
+  global_state().setup_multi_map_extractor();
+  // reset tech map extractors
+  global_state().setup_element_technology_map_extractors();
+
+  monitor_dbc_ptr_->remap_reaction_maps();
+
+  if (!structure_model.initialize_inertia_and_damping(
+          *gstate_ptr_->get_dis_np(), gstate_ptr_->get_vel_np().get()))
+    FOUR_C_THROW("Failed to rebuild structural inertia and damping after redistribution.");
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 void Solid::Integrator::set_initial_displacement(
     const Solid::InitialDisp init, const int startfuncno)
 {

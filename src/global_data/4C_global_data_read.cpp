@@ -39,7 +39,9 @@
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_scatra_multiscale.hpp"
 #include "4C_particle_engine_particlereader.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_rebalance_graph_based.hpp"
+#include "4C_structure_new_timint_basedatasdyn.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_xfem_discretization.hpp"
@@ -829,10 +831,16 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
         dis = std::make_shared<Core::FE::DiscretizationHDG>(name, comm, problem.n_dim());
         break;
     }
+    const bool dynamic_rebalance_enabled =
+        problem.get_problem_type() == Core::ProblemType::structure
+            ? Solid::TimeInt::parse_dynamic_rebalance_config(
+                  problem.structural_dynamic_params().sublist("DYNAMIC REBALANCE"))
+                  .enabled
+            : false;
 
     const bool time_ele_evaluations =
         problem.io_params().sublist("RUNTIME VTK OUTPUT").get<bool>("ELEMENT_EVAL_TIME") or
-        problem.io_params().get<bool>("PER_RANK_EVAL_TIME");
+        problem.io_params().get<bool>("PER_RANK_EVAL_TIME") or dynamic_rebalance_enabled;
     if (time_ele_evaluations and problem.get_problem_type() != Core::ProblemType::structure)
     {
       FOUR_C_THROW(
@@ -926,9 +934,10 @@ void Global::read_micro_fields(Global::Problem& problem, const std::filesystem::
     // do weighted repartitioning to obtain new row/column maps
     Teuchos::ParameterList rebalanceParams;
     std::shared_ptr<const Core::LinAlg::Graph> nodeGraph = macro_dis->build_node_graph();
-    const auto& [nodeWeights, edgeWeights] = Core::Rebalance::build_weights(*macro_dis);
-    const auto& [rownodes, colnodes] =
-        Core::Rebalance::rebalance_node_maps(*nodeGraph, rebalanceParams, nodeWeights, edgeWeights);
+    const Core::Rebalance::PartitionWeights partition_weights =
+        Core::Rebalance::build_static_partition_weights(*macro_dis);
+    const auto& [rownodes, colnodes] = Core::Rebalance::rebalance_node_maps(*nodeGraph,
+        rebalanceParams, partition_weights.node_weights, partition_weights.edge_weights);
 
     // rebuild the discretization with new maps
     macro_dis->redistribute({*rownodes, *colnodes});

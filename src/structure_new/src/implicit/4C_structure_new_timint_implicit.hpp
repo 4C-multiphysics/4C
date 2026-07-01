@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_structure_new_nln_solver_generic.hpp"
 #include "4C_structure_new_timint_implicitbase.hpp"  // base class
 
 FOUR_C_NAMESPACE_OPEN
@@ -127,6 +128,11 @@ namespace Solid
      protected:
       //! returns the current solution group
       [[nodiscard]] const ::NOX::Abstract::Group& get_solution_group() const override;
+
+      void remap_solver_after_redistribution() override
+      {
+        nlnsolver_ptr_->refresh_after_redistribution();
+      }
 
       Solid::IMPLICIT::Generic& impl_int()
       {

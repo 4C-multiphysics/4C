@@ -20,6 +20,23 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+Solid::TimeInt::DynamicRebalanceConfig Solid::TimeInt::parse_dynamic_rebalance_config(
+    const Teuchos::ParameterList& rebalance_params)
+{
+  DynamicRebalanceConfig config;
+  config.enabled = rebalance_params.get<bool>("ENABLED");
+  config.imbalance_threshold = rebalance_params.get<double>("IMBALANCE_THRESHOLD");
+  config.window_steps = rebalance_params.get<int>("WINDOW_STEPS");
+  config.cooldown_steps = rebalance_params.get<int>("COOLDOWN_STEPS");
+  config.mesh_partitioning_parameters.rebalance_type =
+      Teuchos::getIntegralValue<Core::Rebalance::RebalanceType>(rebalance_params, "REBALANCE_TYPE");
+  config.mesh_partitioning_parameters.imbalance_tol = rebalance_params.get<double>("IMBALANCE_TOL");
+  config.mesh_partitioning_parameters.min_ele_per_proc =
+      rebalance_params.get<int>("MIN_ELE_PER_PROC");
+  config.edge_weight_multiplier = rebalance_params.get<double>("EDGE_WEIGHT_MULTIPLIER");
+  return config;
+}
+
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 Solid::TimeInt::BaseDataSDyn::BaseDataSDyn()
@@ -280,6 +297,15 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
 void Solid::TimeInt::BaseDataSDyn::setup()
 {
   check_init();
+
+  dynamic_rebalance_config_ =
+      parse_dynamic_rebalance_config(get_sdyn_params().sublist("DYNAMIC REBALANCE"));
+
+  if (dynamic_rebalance_config_.enabled &&
+      (modeltypes_->size() != 1 || !modeltypes_->contains(Solid::model_structure)))
+  {
+    FOUR_C_THROW("Dynamic rebalance is currently only supported for pure structure problems.");
+  }
 
   std::set<Solid::ModelType>::const_iterator it;
   // setup model type specific data containers

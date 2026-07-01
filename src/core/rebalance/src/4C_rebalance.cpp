@@ -20,9 +20,13 @@ static std::pair<std::shared_ptr<Core::LinAlg::Map>, std::shared_ptr<Core::LinAl
 do_rebalance_discretization(const Core::LinAlg::Graph& graph,
     Core::FE::Discretization& discretization, Core::Rebalance::RebalanceType rebalanceMethod,
     Teuchos::ParameterList& rebalanceParams, const Core::Rebalance::RebalanceParameters& parameters,
-    MPI_Comm comm)
+    MPI_Comm comm, const Core::Rebalance::PartitionWeights* partition_weights)
 {
   std::shared_ptr<Core::LinAlg::Map> rowmap, colmap;
+  const std::shared_ptr<Core::LinAlg::Vector<double>> node_weights =
+      partition_weights != nullptr ? partition_weights->node_weights : nullptr;
+  const std::shared_ptr<Core::LinAlg::SparseMatrix> edge_weights =
+      partition_weights != nullptr ? partition_weights->edge_weights : nullptr;
 
   switch (rebalanceMethod)
   {
@@ -36,7 +40,9 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
       Teuchos::ParameterList& zparams = rebalanceParams.sublist("zoltan_parameters", false);
       zparams.set("DEBUG_LEVEL", "0");
 
-      std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(graph, rebalanceParams);
+      // compute new row and column maps for rank ownership
+      std::tie(rowmap, colmap) =
+          Core::Rebalance::rebalance_node_maps(graph, rebalanceParams, node_weights, edge_weights);
       break;
     }
     case Core::Rebalance::RebalanceType::multijagged:
@@ -64,8 +70,9 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
       std::shared_ptr<Core::LinAlg::MultiVector<double>> coordinates =
           extract_node_coordinates(discretization);
 
+      // compute new row and column maps for rank ownership
       std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(
-          graph, rebalanceParams, nullptr, nullptr, coordinates);
+          graph, rebalanceParams, node_weights, edge_weights, coordinates);
       break;
     }
     case Core::Rebalance::RebalanceType::monolithic:
@@ -95,8 +102,8 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
               Core::GeometricSearch::GeometricSearchParams(
                   parameters.geometric_search_parameters, parameters.io_parameters));
 
-      std::tie(rowmap, colmap) =
-          Core::Rebalance::rebalance_node_maps(*enriched_graph, rebalanceParams);
+      std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(
+          *enriched_graph, rebalanceParams, node_weights, edge_weights);
       break;
     }
     default:
@@ -107,7 +114,8 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
 }
 
 void Core::Rebalance::rebalance_discretization(Core::FE::Discretization& discretization,
-    const Core::LinAlg::Map& row_elements, const RebalanceParameters& parameters, MPI_Comm comm)
+    const Core::LinAlg::Map& row_elements, const RebalanceParameters& parameters, MPI_Comm comm,
+    bool use_eval_time_weights)
 {
   std::shared_ptr<const Core::LinAlg::Graph> graph = nullptr;
 
@@ -138,8 +146,14 @@ void Core::Rebalance::rebalance_discretization(Core::FE::Discretization& discret
 
   if (graph)
   {
-    std::tie(rowmap, colmap) = do_rebalance_discretization(
-        *graph, discretization, rebalanceMethod, rebalanceParams, parameters, comm);
+    const std::optional<Core::Rebalance::PartitionWeights> effective_partition_weights =
+        use_eval_time_weights
+            ? std::make_optional(Core::Rebalance::build_eval_time_partition_weights(
+                  discretization, *graph, parameters.edge_weight_multiplier))
+            : std::nullopt;
+    std::tie(rowmap, colmap) = do_rebalance_discretization(*graph, discretization, rebalanceMethod,
+        rebalanceParams, parameters, comm,
+        effective_partition_weights ? &effective_partition_weights.value() : nullptr);
   }
   else
   {

@@ -545,8 +545,11 @@ namespace Core::FE
     //! Reset stored element evaluation timers for all local column elements
     void reset_element_eval_timers();
 
-    //! Get per-rank evaluation times on rank 0, summed over all local column elements
+    //! Get per-rank evaluation times on rank 0, summed over all local row elements
     std::vector<double> get_rank_eval_times_on_root() const;
+
+    //! Get per-rank evaluation times on all ranks, summed over all local row elements
+    std::vector<double> get_rank_eval_times() const;
 
     /*!
     \brief Get the gid of a dof for given element.

@@ -92,6 +92,9 @@ namespace Solid
     //! Setup (has to be implemented by the derived classes)
     virtual void setup();
 
+    //! Restore integrator state after a discretization redistribution.
+    void remap_after_redistribution();
+
     //! Post setup operation (compute initial equilibrium state), should be run directly after the
     //! setup routine has been finished
     virtual void post_setup() = 0;
@@ -379,6 +382,9 @@ namespace Solid
 
     //! reset the time step dependent parameters for the element evaluation
     virtual void reset_eval_params() {};
+
+    //! Refresh time-integrator-owned cached vectors and helpers after redistribution.
+    virtual void remap_integrator_state_after_redistribution() {}
 
     double get_condensed_global_norm(const NOX::Nln::StatusTest::QuantityType& qtype,
         const enum ::NOX::Abstract::Vector::NormType& normtype, double& mynorm) const;

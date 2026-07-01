@@ -15,6 +15,8 @@
 #include "4C_structure_new_timint_basedataio.hpp"
 #include "4C_structure_new_timint_basedatasdyn.hpp"
 
+#include <deque>
+
 // forward declaration
 namespace Core::LinAlg
 {
@@ -59,7 +61,8 @@ namespace Solid
       Base();
 
       /// initialize (all already existing) class variables
-      virtual void init(const std::shared_ptr<Solid::TimeInt::BaseDataIO> dataio,
+      virtual void init(Global::Problem& problem,
+          const std::shared_ptr<Solid::TimeInt::BaseDataIO> dataio,
           const std::shared_ptr<Solid::TimeInt::BaseDataSDyn> datasdyn,
           const std::shared_ptr<Solid::TimeInt::BaseDataGlobalState> dataglobalstate);
 
@@ -70,8 +73,17 @@ namespace Solid
       /// (e.g. compute mass matrix, initial accelerations, ...)
       void post_setup() override;
 
+      /// Redistribute a pure structure discretization using measured evaluation times.
+      bool perform_dynamic_rebalance();
+
       /// tests if there are more time steps to do
       [[nodiscard]] bool not_finished() const override;
+
+      const Solid::TimeInt::DynamicRebalanceConfig& get_dynamic_rebalance_config() const
+      {
+        check_init_setup();
+        return datasdyn_->get_dynamic_rebalance_config();
+      }
 
       /// reset everything (needed for biofilm simulations)
       void reset() override;
@@ -90,7 +102,7 @@ namespace Solid
       void pre_solve() override {}
 
       /// wrapper for things that should be done after convergence of Newton scheme
-      void post_output() override {}
+      void post_output() override;
 
       /// things that should be done after the actual time loop is finished
       void post_time_loop() override;
@@ -822,6 +834,12 @@ namespace Solid
        *  */
       void initialize_energy_file_stream_and_write_headers();
 
+      /** \brief Compute average rolling imbalance and call perform_dynamic_rebalance()
+       *         when it exceeds STRUCTURAL DYNAMIC/DYNAMIC: IMBALANCE_THRESHOLD
+       *
+       *  */
+      void maybe_perform_dynamic_rebalance();
+
      protected:
       /// flag indicating if init() has been called
       bool isinit_;
@@ -855,7 +873,11 @@ namespace Solid
         }
       }
 
+      virtual void remap_solver_after_redistribution() {}
+
      private:
+      Global::Problem* problem_ = nullptr;
+
       /// pointer to the different data containers
       std::shared_ptr<BaseDataIO> dataio_;
       std::shared_ptr<BaseDataSDyn> datasdyn_;
@@ -866,6 +888,9 @@ namespace Solid
 
       /// pointer to the dirichlet boundary condition handler
       std::shared_ptr<Solid::Dbc> dbc_ptr_;
+
+      std::deque<double> dynamic_rebalance_imbalance_history_;
+      int last_dynamic_rebalance_step_;
     };  // class Base
   }  // namespace TimeInt
 }  // namespace Solid

@@ -53,7 +53,11 @@ namespace Adapter
     void post_update() override {};
 
     /// wrapper for things that should be done after the output
-    void post_output() override {};
+    void post_output() override
+    {
+      // first forward to base class which forwards to structure_->post_output();
+      StructureWrapper::post_output();
+    };
 
    private:
     /// explicit global problem context

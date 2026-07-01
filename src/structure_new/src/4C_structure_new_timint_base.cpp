@@ -19,6 +19,7 @@
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_structure_new_dbc.hpp"
 #include "4C_structure_new_enum_lists.hpp"
 #include "4C_structure_new_factory.hpp"
@@ -30,6 +31,11 @@
 #include "4C_utils_enum.hpp"
 
 #include <Teuchos_ParameterList.hpp>
+#include <Teuchos_StandardParameterEntryValidators.hpp>
+
+#include <algorithm>
+#include <limits>
+#include <numeric>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -45,14 +51,16 @@ Solid::TimeInt::Base::Base()
       datasdyn_(nullptr),
       dataglobalstate_(nullptr),
       int_ptr_(nullptr),
-      dbc_ptr_(nullptr)
+      dbc_ptr_(nullptr),
+      last_dynamic_rebalance_step_(std::numeric_limits<int>::min() / 2)
 {
   // empty constructor
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::TimeInt::Base::init(const std::shared_ptr<Solid::TimeInt::BaseDataIO> dataio,
+void Solid::TimeInt::Base::init(Global::Problem& problem,
+    const std::shared_ptr<Solid::TimeInt::BaseDataIO> dataio,
     const std::shared_ptr<Solid::TimeInt::BaseDataSDyn> datasdyn,
     const std::shared_ptr<Solid::TimeInt::BaseDataGlobalState> dataglobalstate)
 {
@@ -64,6 +72,7 @@ void Solid::TimeInt::Base::init(const std::shared_ptr<Solid::TimeInt::BaseDataIO
   // ---------------------------------------------------------------------------
   // initialize the data container ptrs
   // ---------------------------------------------------------------------------
+  problem_ = &problem;
   dataio_ = dataio;
   datasdyn_ = datasdyn;
   dataglobalstate_ = dataglobalstate;
@@ -118,6 +127,91 @@ void Solid::TimeInt::Base::post_setup()
 {
   check_init_setup();
   int_ptr_->post_setup();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::TimeInt::Base::post_output()
+{
+  check_init_setup();
+  maybe_perform_dynamic_rebalance();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::TimeInt::Base::maybe_perform_dynamic_rebalance()
+{
+  const auto& rebalance_config = datasdyn_->get_dynamic_rebalance_config();
+  if (!rebalance_config.enabled) return;
+
+  const std::vector<double> rank_eval_times =
+      dataglobalstate_->get_discret()->get_rank_eval_times();
+  if (rank_eval_times.empty()) return;
+
+  const auto max_it = std::ranges::max_element(rank_eval_times);
+  if (*max_it <= 1.0e-12) return;
+
+  const double mean_eval_time =
+      std::accumulate(rank_eval_times.begin(), rank_eval_times.end(), 0.0) /
+      static_cast<double>(rank_eval_times.size());
+  if (mean_eval_time <= 1.0e-12) return;
+
+  const int window_steps = std::max(1, rebalance_config.window_steps);
+  const int cooldown_steps = std::max(0, rebalance_config.cooldown_steps);
+
+  const double imbalance = *max_it / mean_eval_time;
+  dynamic_rebalance_imbalance_history_.push_back(imbalance);
+  while (static_cast<int>(dynamic_rebalance_imbalance_history_.size()) > window_steps)
+    dynamic_rebalance_imbalance_history_.pop_front();
+
+  if (static_cast<int>(dynamic_rebalance_imbalance_history_.size()) < window_steps) return;
+
+  const double averaged_imbalance =
+      std::accumulate(dynamic_rebalance_imbalance_history_.begin(),
+          dynamic_rebalance_imbalance_history_.end(), 0.0) /
+      static_cast<double>(dynamic_rebalance_imbalance_history_.size());
+  if (averaged_imbalance <= rebalance_config.imbalance_threshold) return;
+
+  const int current_step = get_step_n();
+  if (current_step - last_dynamic_rebalance_step_ < cooldown_steps) return;
+
+  const double rebalance_start_time = dataglobalstate_->get_timer()->wallTime();
+  if (perform_dynamic_rebalance())
+  {
+    const double rebalance_wall_time =
+        dataglobalstate_->get_timer()->wallTime() - rebalance_start_time;
+    if (dataglobalstate_->get_my_rank() == 0)
+      Core::IO::cout << "====== Dynamic structure redistribution triggered after step "
+                     << current_step << " (rolling imbalance " << averaged_imbalance
+                     << ", threshold " << rebalance_config.imbalance_threshold << ", wall time "
+                     << rebalance_wall_time << " s)" << Core::IO::endl;
+    last_dynamic_rebalance_step_ = current_step;
+    dynamic_rebalance_imbalance_history_.clear();
+  }
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+bool Solid::TimeInt::Base::perform_dynamic_rebalance()
+{
+  check_init_setup();
+  FOUR_C_ASSERT(problem_, "Problem context not initialized");
+
+  const auto& rebalance_config = datasdyn_->get_dynamic_rebalance_config();
+
+  Core::Rebalance::RebalanceParameters parameters;
+  parameters.mesh_partitioning_parameters = rebalance_config.mesh_partitioning_parameters;
+  parameters.edge_weight_multiplier = rebalance_config.edge_weight_multiplier;
+  parameters.geometric_search_parameters = problem_->geometric_search_params();
+  parameters.io_parameters = problem_->io_params();
+  dataglobalstate_->redistribute_and_preserve_state(parameters, rebalance_config.enabled);
+
+  dbc_ptr_->init(dataglobalstate_->get_discret(), dataglobalstate_->get_freact_np(),
+      Core::Utils::shared_ptr_from_ref(*this));
+  dbc_ptr_->setup();
+  int_ptr_->remap_after_redistribution();
+  remap_solver_after_redistribution();
+  return true;
 }
 
 

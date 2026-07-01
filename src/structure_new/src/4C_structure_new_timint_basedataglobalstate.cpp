@@ -15,12 +15,14 @@
 #include "4C_fem_discretization_utils.hpp"
 #include "4C_fem_general_largerotations.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_multi_vector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_solver_nonlin_nox_group.hpp"
 #include "4C_solver_nonlin_nox_group_prepostoperator.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
@@ -32,6 +34,8 @@
 #include "4C_utils_enum.hpp"
 
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
+
+#include <array>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -219,6 +223,93 @@ void Solid::TimeInt::BaseDataGlobalState::setup()
   set_initial_fields();
 
   issetup_ = true;
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::TimeInt::BaseDataGlobalState::redistribute_and_preserve_state(
+    const Core::Rebalance::RebalanceParameters& rebalance_parameters, bool use_eval_time_weights)
+{
+  check_init_setup();
+
+  FOUR_C_ASSERT(discret_->element_row_map() != nullptr,
+      "The discretization has to be fill_complete() before redistribution.");
+
+  struct RemappedVectorState
+  {
+    std::shared_ptr<Core::LinAlg::Vector<double>>* state;
+  };
+
+  // Structural primary state and force-like/history-adjacent vectors are remapped by DOF GID.
+  // The standard DofSet guarantees distribution-independent GIDs for the same mesh.
+  std::array remapped_vector_states = {
+      RemappedVectorState{&disnp_},
+      RemappedVectorState{&velnp_},
+      RemappedVectorState{&accnp_},
+      RemappedVectorState{&fintn_},
+      RemappedVectorState{&fintnp_},
+      RemappedVectorState{&fextn_},
+      RemappedVectorState{&fextnp_},
+      RemappedVectorState{&freactn_},
+      RemappedVectorState{&freactnp_},
+      RemappedVectorState{&finertialn_},
+      RemappedVectorState{&finertialnp_},
+      RemappedVectorState{&fviscon_},
+      RemappedVectorState{&fvisconp_},
+      RemappedVectorState{&fstructold_},
+  };
+
+  Core::Rebalance::rebalance_discretization(
+      *discret_, *discret_->element_row_map(), rebalance_parameters, comm_, use_eval_time_weights);
+
+  const int fill_complete_error = discret_->fill_complete();
+  if (fill_complete_error)
+    FOUR_C_THROW(
+        "fill_complete() returned err={} after dynamic redistribution.", fill_complete_error);
+
+  const auto remap_vector = [this](std::shared_ptr<Core::LinAlg::Vector<double>>& vector_ptr)
+  {
+    auto old_vector = vector_ptr;
+    vector_ptr = std::make_shared<Core::LinAlg::Vector<double>>(*dof_row_map_view(), true);
+    Core::LinAlg::export_to(*old_vector, *vector_ptr);
+  };
+
+  const auto remap_mstep = [this](TimeStepping::TimIntMStep<Core::LinAlg::Vector<double>>& state)
+  {
+    const auto [step_past, step_future] = state.get_steps();
+    TimeStepping::TimIntMStep<Core::LinAlg::Vector<double>> remapped_state(
+        step_past, step_future, dof_row_map_view(), true);
+    for (int step = step_past; step <= step_future; ++step)
+      Core::LinAlg::export_to(state[step], remapped_state[step]);
+    state = std::move(remapped_state);
+  };
+
+  remap_mstep(dis_);
+  remap_mstep(vel_);
+  remap_mstep(acc_);
+
+  for (auto& remapped_vector_state : remapped_vector_states)
+    remap_vector(*remapped_vector_state.state);
+
+  // These matrices are map dependent and no longer correct after redistribution
+  jac_ = nullptr;
+  stiff_ = nullptr;
+  // mass_ and damp_ have to be initialized. This is also done in setup()
+  mass_ = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map_view(), 81, true, true);
+  if (datasdyn_->get_damping_type() != Solid::damp_none)
+    damp_ = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map_view(), 81, true, true);
+  else
+    damp_ = nullptr;
+
+  // These are invalid after redistribution
+  model_maps_.clear();
+  model_block_id_.clear();
+  max_block_num_ = 0;
+  gproblem_map_ptr_ = nullptr;
+  blockextractor_ = Core::LinAlg::MultiMapExtractor();
+  mapextractors_.clear();
+  rotvecextractor_ = Core::LinAlg::MultiMapExtractor();
+  pressextractor_ = nullptr;
 }
 
 /*----------------------------------------------------------------------------*
@@ -459,6 +550,8 @@ void Solid::TimeInt::BaseDataGlobalState::setup_multi_map_extractor()
 void Solid::TimeInt::BaseDataGlobalState::setup_element_technology_map_extractors()
 {
   check_init();
+
+  mapextractors_.clear();
 
   // loop all active element technologies
   const std::set<Solid::EleTech>& ele_techs = datasdyn_->get_element_technologies();

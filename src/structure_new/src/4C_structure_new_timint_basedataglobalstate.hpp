@@ -35,6 +35,11 @@ namespace Core::FE
   class Discretization;
 }  // namespace Core::FE
 
+namespace Core::Rebalance
+{
+  struct RebalanceParameters;
+}  // namespace Core::Rebalance
+
 namespace Discret
 {
   namespace Elements
@@ -108,6 +113,11 @@ namespace Solid
 
       /// setup of the new class variables
       virtual void setup();
+
+      /// Redistribute the discretization and remap all global state vectors to the new maps.
+      void redistribute_and_preserve_state(
+          const Core::Rebalance::RebalanceParameters& rebalance_parameters,
+          bool use_eval_time_weights = false);
 
       /// read initial field conditions
       void set_initial_fields();

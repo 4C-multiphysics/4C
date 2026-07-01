@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_rebalance.hpp"
 #include "4C_solver_nonlin_nox_enum_lists.hpp"
 #include "4C_structure_new_input.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -44,6 +45,19 @@ namespace Solid
   }  // namespace ModelEvaluator
   namespace TimeInt
   {
+    struct DynamicRebalanceConfig
+    {
+      bool enabled = false;
+      double imbalance_threshold = 1.1;
+      int window_steps = 1;
+      int cooldown_steps = 0;
+      Core::Rebalance::MeshPartitioningParameters mesh_partitioning_parameters;
+      double edge_weight_multiplier = 1.0;
+    };
+
+    DynamicRebalanceConfig parse_dynamic_rebalance_config(
+        const Teuchos::ParameterList& rebalance_params);
+
     /** \brief Structural dynamics data container for the structural (time) integration
      *
      * This data container holds everything, which refers directly to the
@@ -511,6 +525,12 @@ namespace Solid
         check_init_setup();
         return start_func_no_;
       }
+
+      const DynamicRebalanceConfig& get_dynamic_rebalance_config() const
+      {
+        check_init_setup();
+        return dynamic_rebalance_config_;
+      }
       ///@}
 
      protected:
@@ -820,6 +840,9 @@ namespace Solid
        * Do not touch this. It should be used only in derived Setup routines. Do not call it from
        * outside! */
       std::shared_ptr<const Teuchos::ParameterList> sdynparams_ptr_;
+
+      /// Parsed dynamic rebalance settings used by the structural time integrator.
+      DynamicRebalanceConfig dynamic_rebalance_config_;
     };  // class BaseDataSDyn
 
     /** \brief Generalized alpha structural dynamics data container

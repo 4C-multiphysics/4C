@@ -706,6 +706,25 @@ std::vector<double> Core::FE::Discretization::get_rank_eval_times_on_root() cons
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+std::vector<double> Core::FE::Discretization::get_rank_eval_times() const
+{
+  double my_eval_time_sum = 0.0;
+  for (auto* ele : elerowptr_)
+  {
+    FOUR_C_ASSERT(ele != nullptr,
+        "Encountered null local row element while getting evaluation timers in "
+        "discretization {}!",
+        name_);
+    my_eval_time_sum += ele->eval_time();
+  }
+
+  std::vector<double> eval_times(Core::Communication::num_mpi_ranks(get_comm()));
+  Core::Communication::gather_all(&my_eval_time_sum, eval_times.data(), 1, get_comm());
+  return eval_times;
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 void Core::FE::Discretization::set_condition(
     const std::string& name, std::shared_ptr<Core::Conditions::Condition> cond)
 {

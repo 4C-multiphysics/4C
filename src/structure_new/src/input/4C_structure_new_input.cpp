@@ -11,6 +11,7 @@
 #include "4C_fem_condition_definition.hpp"
 #include "4C_io_input_spec.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_rebalance.hpp"
 #include "4C_utils_enum.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -423,6 +424,48 @@ namespace Solid
                 {.description = "Function for Initial displacement", .default_value = -1})},
         {.required =
                 false})); /*--------------------------------------------------------------------*/
+    specs.push_back(group("STRUCTURAL DYNAMIC/DYNAMIC REBALANCE",
+        {
+            parameter<bool>("ENABLED", {.description = "Enable dynamic rebalance based on "
+                                                       "Core::Elements::Element::evaluate() times "
+                                                       "for pure structure problems.",
+                                           .default_value = false}),
+            parameter<double>("IMBALANCE_THRESHOLD",
+                {.description = "Trigger rebalance if the rolling average of the "
+                                "max-to-mean rank evaluation time ratio exceeds this value.",
+                    .default_value = 1.5}),
+            parameter<int>("WINDOW_STEPS",
+                {.description = "Number of steps used in the rolling imbalance average.",
+                    .default_value = 3}),
+            parameter<int>("COOLDOWN_STEPS",
+                {.description = "Minimum number of converged steps between rebalances.",
+                    .default_value = 3}),
+            parameter<double>("IMBALANCE_TOL",
+                {.description = "Target vertex imbalance passed to the repartitioner. Higher "
+                                "values allow edge weights to have greater effect.",
+                    .default_value = 1.1}),
+            parameter<int>("MIN_ELE_PER_PROC",
+                {.description = "Minimum number of elements per processor used for dynamic "
+                                "rebalances.",
+                    .default_value = 0}),
+            parameter<double>("EDGE_WEIGHT_MULTIPLIER",
+                {.description = "Multiplier applied graph edge weights during dynamic rebalance. "
+                                "Represents the inter-rank communication overhead per edge.",
+                    .default_value = 1.0}),
+            deprecated_selection<Core::Rebalance::RebalanceType>("REBALANCE_TYPE",
+                {
+                    {"Hypergraph", Core::Rebalance::RebalanceType::hypergraph},
+                    {"hypergraph", Core::Rebalance::RebalanceType::hypergraph},
+                    {"Multijagged", Core::Rebalance::RebalanceType::multijagged},
+                    {"multijagged", Core::Rebalance::RebalanceType::multijagged},
+                    {"Monolithic", Core::Rebalance::RebalanceType::monolithic},
+                    {"monolithic", Core::Rebalance::RebalanceType::monolithic},
+                },
+                {.description = "Partitioning backend used for dynamic rebalances.",
+                    .default_value = Core::Rebalance::RebalanceType::hypergraph}),
+        },
+        {.required = false}));
+
     /* parameters for time step size adaptivity in structural dynamics */
     specs.push_back(group("STRUCTURAL DYNAMIC/TIMEADAPTIVITY",
         {
