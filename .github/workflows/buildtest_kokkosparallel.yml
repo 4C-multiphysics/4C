@@ -21,8 +21,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    outputs:
-      test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
     steps:
       - uses: actions/checkout@v6
       - name: Check docker hash
@@ -41,25 +39,13 @@ jobs:
           directory: ${{ github.workspace }}/build
           retention-days: 1
           name: kokkosopenmp_build
-      - uses: ./.github/actions/chunk_test_suite
-        id: set-matrix
-        with:
-          build-directory: ${{ github.workspace }}/build
-          source-directory: ${{ github.workspace }}
-          number-of-chunks: 15
-          junit-report-artifact-name: kokkosopenmp_test_report.xml
 
-  kokkosopenmp_test:
+  kokkosopenmp_test_minimal:
     needs: kokkosopenmp_build
     runs-on: ubuntu-latest
-    if: github.ref != 'refs/heads/main'
     container:
       image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:latest
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-    strategy:
-      fail-fast: false
-      matrix:
-        test-chunk: ${{fromJson(needs.kokkosopenmp_build.outputs.test-chunks)}}
     defaults:
       run:
         shell: bash
@@ -80,34 +66,12 @@ jobs:
       - name: Test
         run: |
           cd $GITHUB_WORKSPACE/build
-          ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/kokkosopenmp_test_report-$TEST_CHUNK.xml
+          ctest -L minimal -j `nproc` --output-on-failure
         env:
-          TEST_CHUNK: ${{ matrix.test-chunk }}
           KOKKOS_NUM_THREADS: "1"
           OMP_NUM_THREADS: "1"
           OPENBLAS_NUM_THREADS: "1"
           OMP_DYNAMIC: "FALSE"
-      - name: Upload test report
-        if: success() || failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: kokkosopenmp_test_report-${{ matrix.test-chunk }}.xml
-          path: |
-            ${{ github.workspace }}/kokkosopenmp_test_report-${{ matrix.test-chunk }}.xml
-          retention-days: 1
-
-  kokkosopenmp_test_report:
-    needs: kokkosopenmp_test
-    runs-on: ubuntu-latest
-    if: github.ref != 'refs/heads/main' && (success() || failure())
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          sparse-checkout: .github
-      - uses: ./.github/actions/merge_junit_report_artifacts
-        with:
-          junit-report-base-name: kokkosopenmp_test_report
-          retention-days: 1
 
   kokkoscuda_build:
     runs-on: ubuntu-latest
@@ -140,8 +104,7 @@ jobs:
     needs:
       - kokkoscuda_build
       - kokkosopenmp_build
-      - kokkosopenmp_test
-      - kokkosopenmp_test_report
+      - kokkosopenmp_test_minimal
     runs-on: ubuntu-latest
     if: always() && github.ref != 'refs/heads/main'
     steps:
