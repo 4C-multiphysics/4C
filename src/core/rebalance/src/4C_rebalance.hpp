@@ -13,8 +13,6 @@
 #include <mpi.h>
 #include <Teuchos_ParameterList.hpp>
 
-#include <memory>
-
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::FE
