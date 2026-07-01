@@ -445,7 +445,7 @@ namespace Solid
                                 "values allow edge weights to have greater effect.",
                     .default_value = 1.1}),
             parameter<int>("MIN_ELE_PER_PROC",
-                {.description = "Minimum number of elements per processor used for during dynamic "
+                {.description = "Minimum number of elements per processor used for dynamic "
                                 "rebalances.",
                     .default_value = 0}),
             parameter<double>("EDGE_WEIGHT_MULTIPLIER",
