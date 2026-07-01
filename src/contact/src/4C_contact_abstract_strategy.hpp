@@ -834,6 +834,12 @@ namespace CONTACT
      */
     void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
 
+    /*! \brief Reset contact state after a failed trial time step
+
+     \param dis (in): last accepted displacement state
+     */
+    virtual void reset_step_state(const std::shared_ptr<const Core::LinAlg::Vector<double>>& dis);
+
     /*! \brief Perform a write restart
 
      A write restart is initiated by the contact manager. However, the manager has no
