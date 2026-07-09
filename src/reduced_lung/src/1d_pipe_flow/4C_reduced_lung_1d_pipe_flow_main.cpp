@@ -471,7 +471,7 @@ namespace ReducedLung1dPipeFlow
 
     // Get local rank
     int mpi_rank = Core::Communication::my_mpi_rank(discretization->get_comm());
-    auto* comm = discretization->get_comm();
+    MPI_Comm comm = discretization->get_comm();
 
     /**************************
      *Geometry check: go through geometry and check for junctions: same coordinates of nodes
