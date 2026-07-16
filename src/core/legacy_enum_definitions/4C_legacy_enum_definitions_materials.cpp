@@ -101,6 +101,8 @@ std::string_view Core::Materials::to_string(Core::Materials::MaterialType materi
       return "MAT_Struct_ThermoStVenantK";
     case m_pldruckprag:
       return "MAT_Struct_DruckerPrager";
+    case m_plmohrcoulomb:
+      return "MAT_Struct_MohrCoulomb";
     case m_thermopllinelast:
       return "MAT_Struct_ThermoPlasticLinElast";
     case m_superelast:

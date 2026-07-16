@@ -910,6 +910,8 @@ four_c_test(TEST_FILE mat_iso_thermoviscoplast_refJC_log_timint_tsi_monolithic.4
 __four_c_test_restart(BASED_ON ${current} SAME_FILE RESTART_STEP 90)
 four_c_test(TEST_FILE mat_iso_thermoviscoplast_refJC_log_timint_tsi_partitioned.4C.yaml RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE RESTART_STEP 90)
+four_c_test(TEST_FILE mat_mohrcoulomb_return_to_apex.4C.yaml)
+four_c_test(TEST_FILE mat_mohrcoulomb_return_to_compression_edge.4C.yaml)
 four_c_test(TEST_FILE mat_muscle_combo_hex.4C.yaml NP 2 RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 140)
 four_c_test(TEST_FILE mat_muscle_combo_hex_act_map_every_timestep.4C.yaml NP 2 RETURN_AS current)

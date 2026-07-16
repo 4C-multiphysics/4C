@@ -20,12 +20,14 @@
 #include "4C_mat_inelastic_defgrad_factors_service.hpp"
 #include "4C_mat_micromaterial.hpp"
 #include "4C_mat_plasticdruckerprager.hpp"
+#include "4C_mat_plasticmohrcoulomb.hpp"
 #include "4C_mat_scatra_growth_remodel.hpp"
 #include "4C_mat_scatra_nonlocal_stimulus.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
 #include "4C_structure_new_input.hpp"
 
 #include <filesystem>
+#include <numbers>
 #include <optional>
 #include <string>
 
@@ -56,6 +58,55 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "GAMMA", {.description = "surface tension coefficient", .default_value = 0.0}),
         },
         {.description = "Newtonian fluid"});
+  }
+
+  /*----------------------------------------------------------------------*/
+  // Finite-strain logarithmic Mohr-Coulomb plasticity
+  {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+    constexpr double half_pi = std::numbers::pi / 2.0;
+
+    known_materials[Core::Materials::m_plmohrcoulomb] = group("MAT_Struct_MohrCoulomb",
+        {
+            parameter<double>("YOUNG_MODULUS",
+                {.description = "Young's modulus", .validator = positive<double>()}),
+            parameter<double>("POISSON_RATIO",
+                {.description = "Poisson's ratio (must be in (-1, 0.5) for stability)",
+                    .validator = in_range(excl(-1.0), excl(0.5))}),
+            parameter<double>("DENSITY",
+                {.description = "Mass density", .validator = positive_or_zero<double>()}),
+            parameter<double>(
+                "COHESION", {.description = "Initial cohesion", .validator = positive<double>()}),
+            parameter<double>(
+                "FRICTION_ANGLE", {.description = "Friction angle in radians",
+                                      .validator = in_range(excl(0.0), excl(half_pi))}),
+            parameter<double>("DILATANCY_ANGLE",
+                {.description = "Dilatancy angle in radians "
+                                "(equal to friction angle for associated plasticity)",
+                    .validator = in_range(excl(0.0), excl(half_pi))}),
+            parameter<double>(
+                "LINEAR_HARDENING", {.description = "Linear isotropic cohesion-hardening modulus",
+                                        .default_value = 0.0,
+                                        .validator = positive_or_zero<double>()}),
+            parameter<double>("SATURATION_HARDENING",
+                {.description = "Asymptotic cohesion for Voce hardening; zero disables it",
+                    .default_value = 0.0,
+                    .validator = positive_or_zero<double>()}),
+            parameter<double>("HARDENING_EXP", {.description = "Voce hardening exponent",
+                                                   .default_value = 0.0,
+                                                   .validator = positive_or_zero<double>()}),
+            parameter<double>("TOLERANCE", {.description = "Local return-mapping tolerance",
+                                               .default_value = 1.0e-10,
+                                               .validator = positive<double>()}),
+            parameter<int>(
+                "MAX_ITERATIONS", {.description = "Maximum local return-mapping iterations",
+                                      .default_value = 50,
+                                      .validator = positive<int>()}),
+        },
+        {.description =
+                "Finite-strain Mohr-Coulomb plasticity based on elastic logarithmic strain and "
+                "Kirchhoff stress, with non-associated flow and linear plus Voce isotropic "
+                "cohesion hardening."});
   }
 
   /*----------------------------------------------------------------------*/

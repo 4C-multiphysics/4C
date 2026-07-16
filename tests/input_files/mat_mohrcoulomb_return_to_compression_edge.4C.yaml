@@ -1,0 +1,126 @@
+TITLE:
+  - "One-element structure test for the Mohr-Coulomb compression-edge return"
+  - "The prescribed homogeneous deformation matches the constitutive material test"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO:
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "LOG"
+  VERBOSITY: "Standard"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  STRESS_STRAIN: true
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 1
+  NUMSTEP: 1
+  MAXTIME: 1
+  TOLDISP: 1e-12
+  TOLRES: 1e-12
+  MAXITER: 20
+  LOADLIN: true
+  LINEAR_SOLVER: 1
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_MohrCoulomb:
+      YOUNG_MODULUS: 1000
+      POISSON_RATIO: 0.25
+      DENSITY: 0
+      COHESION: 10
+      FRICTION_ANGLE: 0.5235987755982988
+      DILATANCY_ANGLE: 0.3490658503988659
+      TOLERANCE: 1e-12
+      MAX_ITERATIONS: 100
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "stress_xx"
+      VALUE: -73.63415802088231
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "stress_yy"
+      VALUE: -73.63415802088224
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "stress_zz"
+      VALUE: -261.71956603533334
+      TOLERANCE: 1e-10
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [0.02531512052442884, 0, 0]
+    FUNCT: [1, 0, 0]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [0, 1, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [0, 1, 0]
+    VAL: [0, 0.01099753646217638, 0]
+    FUNCT: [0, 1, 0]
+  - E: 5
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 6
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0, 0, -0.1812692469220182]
+    FUNCT: [0, 0, 1]
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
+  - "NODE 3 DSURFACE 1"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 5 DSURFACE 2"
+  - "NODE 6 DSURFACE 2"
+  - "NODE 7 DSURFACE 2"
+  - "NODE 8 DSURFACE 2"
+  - "NODE 1 DSURFACE 3"
+  - "NODE 2 DSURFACE 3"
+  - "NODE 5 DSURFACE 3"
+  - "NODE 6 DSURFACE 3"
+  - "NODE 3 DSURFACE 4"
+  - "NODE 4 DSURFACE 4"
+  - "NODE 7 DSURFACE 4"
+  - "NODE 8 DSURFACE 4"
+  - "NODE 2 DSURFACE 5"
+  - "NODE 3 DSURFACE 5"
+  - "NODE 6 DSURFACE 5"
+  - "NODE 7 DSURFACE 5"
+  - "NODE 1 DSURFACE 6"
+  - "NODE 4 DSURFACE 6"
+  - "NODE 5 DSURFACE 6"
+  - "NODE 8 DSURFACE 6"
+NODE COORDS:
+  - "NODE 1 COORD 0 0 1"
+  - "NODE 2 COORD 0 0 0"
+  - "NODE 3 COORD 0 1 0"
+  - "NODE 4 COORD 0 1 1"
+  - "NODE 5 COORD 1 0 1"
+  - "NODE 6 COORD 1 0 0"
+  - "NODE 7 COORD 1 1 0"
+  - "NODE 8 COORD 1 1 1"
+STRUCTURE ELEMENTS:
+  - "1 SOLID HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM nonlinear"

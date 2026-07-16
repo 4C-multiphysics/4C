@@ -6,3 +6,4 @@ Development of specific code blocks
 .. toctree::
 
     materialdevelopment
+    mohr_coulomb_material
