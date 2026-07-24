@@ -2200,7 +2200,7 @@ namespace Cut::Kernel
         if (det < 1.0e-16) std::cout << "!!! determinant of jacobian is smaller than 1.0e-16 !!!\n";
       }
 
-      if (det < 1.0e-16 && det > 1.0e-16)
+      if (det < 1.0e-16)
 #if EXTENDED_CUT_DEBUG_OUTPUT
         std::cout << "Determinant in  compute position is very close to zero" << std::endl;
 #endif
