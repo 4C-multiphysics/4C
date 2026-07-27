@@ -632,6 +632,10 @@ int Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_linear
     {
       dofPos = 1;
     }
+    else if (dofStr == "dispz")
+    {
+      dofPos = 2;
+    }
     else
     {
       FOUR_C_THROW(
