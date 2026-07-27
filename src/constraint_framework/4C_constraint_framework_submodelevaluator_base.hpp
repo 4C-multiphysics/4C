@@ -15,6 +15,8 @@
 #include "4C_structure_new_enum_lists.hpp"
 #include "4C_structure_new_model_evaluator_generic.hpp"
 
+#include <vector>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace Constraints::SubmodelEvaluator
@@ -58,6 +60,9 @@ namespace Constraints::SubmodelEvaluator
     //! Return the Penalty-Parameter
     double& get_penalty_parameter_ptr() { return penalty_parameter_; }
 
+    //! Set the constraint rows owned by this rank
+    void set_owned_constraint_row_ids(std::vector<int> row_ids);
+
     //! Generate the runtime output
     virtual void runtime_output_step_state(std::pair<double, int> output_time_and_step) {};
 
@@ -69,6 +74,12 @@ namespace Constraints::SubmodelEvaluator
 
     //! Penalty parameter
     double penalty_parameter_;
+
+    //! Constraint rows owned by this rank
+    std::vector<int> owned_constraint_row_ids_;
+
+    //! Use owned_constraint_row_ids_ for the constraint map
+    bool use_explicit_constraint_row_ids_ = false;
 
    protected:
     //! Vector containing all constraint equation objects
