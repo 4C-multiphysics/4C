@@ -51,8 +51,133 @@ Structural Material Models
 
 A material model in structural mechanics defines the connection between deformation (usually strain) and stress.
 Many material models are available, including (hyper-)elastic, elasto-plastic, visco-elastic, visco-plastic, and even damage models.
+The following pages describe the principal continuum material families:
+
+- :doc:`elastic_materials`
+- :doc:`hyperelastic_framework`
+- :doc:`viscoelastic_materials`
+- :doc:`plasticity_materials`
+
+Material directions
+~~~~~~~~~~~~~~~~~~~
+
+Direction-dependent materials usually obtain their material directions from element fiber
+vectors. For a native |FOURC| mesh, append consecutive ``FIBER1``, ``FIBER2``, and, where
+required, ``FIBER3`` vectors to each entry in ``STRUCTURE ELEMENTS``:
+
+.. code-block:: yaml
+
+   STRUCTURE ELEMENTS:
+     - "1 SOLID HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM nonlinear FIBER1 1.0 0.0 0.0 FIBER2 0.0 1.0 0.0"
+
+The vectors are expressed in the Cartesian reference coordinate system and are normalized when
+read. They must be nonzero and numbered without gaps: if ``FIBER1`` is absent, or ``FIBER2`` is
+missing after ``FIBER1``, subsequent vectors are ignored. Fiber vectors are not automatically
+orthogonalized. Materials that require an orthogonal or right-handed basis check this requirement
+themselves.
+
+For an external mesh, the same element parameters can be assigned to every element in an element
+block selected by ``ID`` or ``NAME`` in ``STRUCTURE GEOMETRY``:
+
+.. code-block:: yaml
+
+   STRUCTURE GEOMETRY:
+     FILE: mesh.vtu
+     ELEMENT_BLOCKS:
+       - NAME: anisotropic_solid
+         SOLID:
+           HEX8:
+             MAT: 1
+             KINEM: nonlinear
+             FIBER1: [1.0, 0.0, 0.0]
+             FIBER2: [0.0, 1.0, 0.0]
+
+This applies the specified directions to the complete block. No regression input currently
+exercises fiber assignment through ``STRUCTURE GEOMETRY``.
+
+As an alternative, solid elements accept the local coordinate-system vectors ``RAD``, ``AXI``,
+and ``CIR``. All three must be given together. For materials using the default anisotropy
+framework, this coordinate system takes precedence over explicit ``FIBER*`` vectors. Some
+specialized materials only support one of these input methods; consult the table below and the
+material-specific Input Parameter Reference.
+
+.. list-table:: Direction requirements of the continuum materials documented in this guide
+   :header-rows: 1
+   :widths: 43 13 44
+
+   * - Material or summand
+     - Directions
+     - Direction source and restrictions
+   * - ``ELAST_CoupAnisoExpo``
+     - 1
+     - Element fiber or ``RAD``/``AXI``/``CIR``; ``FIBER_ID`` selects the element fiber.
+   * - ``ELAST_CoupAnisoNeoHooke``
+     - 1
+     - Element fiber or ``RAD``/``AXI``/``CIR``.
+   * - ``ELAST_CoupAnisoNeoHooke_VarProp``
+     - 1
+     - Element fiber or ``RAD``/``AXI``/``CIR``.
+   * - ``ELAST_CoupAnisoPow``
+     - 1
+     - Element fiber or ``RAD``/``AXI``/``CIR``; its fiber selector chooses the family.
+   * - ``ELAST_CoupAnisoExpoActive``
+     - 1
+     - Element fiber or ``RAD``/``AXI``/``CIR``.
+   * - ``ELAST_AnisoActiveStress_Evolution``
+     - 1
+     - Element fiber or ``RAD``/``AXI``/``CIR``.
+   * - ``ELAST_IsoAnisoExpo``
+     - 1
+     - Element fiber or ``RAD``/``AXI``/``CIR``.
+   * - ``ELAST_CoupTransverselyIsotropic``
+     - 1
+     - Element fiber or ``RAD``/``AXI``/``CIR``.
+   * - ``ELAST_CoupAnisoExpoShear``
+     - 2
+     - Requires explicit element or Gauss-point fibers selected by ``FIBER_IDS``; a local
+       coordinate system is not supported.
+   * - ``ELAST_CoupAnisoExpoTwoCoup``
+     - 2
+     - Element fibers or ``RAD``/``AXI``/``CIR``.
+   * - ``ELAST_RemodelFiber``
+     - Variable
+     - One direction for each referenced remodeling-fiber contribution.
+   * - ``ELAST_StructuralTensor``
+     - 1
+     - Defines the structural tensor associated with a selected mean fiber direction; it is a
+       helper rather than an independent strain-energy term.
+   * - ``MAT_PlasticElastHyper`` and ``MAT_PlasticElastHyperVCU``
+     - 0 or 3
+     - Three explicit, mutually orthogonal fibers forming a right-handed basis are required for
+       Hill plasticity; no fibers are used for isotropic von Mises plasticity.
+   * - ``MAT_crystal_plasticity``
+     - 3
+     - ``FIBER1``--``FIBER3`` are the columns of the crystal-to-global rotation matrix.
+   * - ``MAT_VISCOANISO``
+     - 2 derived
+     - Requires ``RAD``, ``AXI``, and ``CIR``; two fiber families are generated using its material
+       angle.
+   * - ``MAT_Struct_StVenantKirchhoffOrthotropic``
+     - None
+     - Its three orthotropic axes are fixed to the Cartesian reference axes and cannot be rotated
+       through material or fiber input.
+
+``MAT_ElastHyper`` and ``MAT_ViscoElastHyper`` do not impose a direction count themselves; their
+requirements are determined by the selected summands. A ``STR_TENS_ID`` controls the
+structural-tensor strategy for several anisotropic summands but does not replace the underlying
+mean fiber direction.
+
 If you wish to implement a new material model, this is of course also possible, it is an in-house code after all.
 You'll find more information on implementing material models in the :ref:`material section<materialdevelopment>` of the developer guide.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   elastic_materials
+   hyperelastic_framework
+   viscoelastic_materials
+   plasticity_materials
 
 
 
@@ -81,5 +206,3 @@ One can see it here in for a simple Thermo-Structure-Interaction problem, taken 
 .. ToDo::
 
     Here we should have a list of the discretizations that can be coupled
-
-
