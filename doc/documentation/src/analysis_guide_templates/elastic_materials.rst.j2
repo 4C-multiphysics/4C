@@ -1,0 +1,150 @@
+{% set iso_stvenant_file = "solid_runtime_hex8.4C.yaml" %}
+{% set iso_stvenant = load_input_file(iso_stvenant_file) %}
+{% set ortho_stvenant_file = "structure_bidomain_material_problem_torsion.4C.yaml" %}
+{% set ortho_stvenant = load_input_file(ortho_stvenant_file) %}
+{% set thermo_stvenant_file = "tsi_lindilatation_geolin.4C.yaml" %}
+{% set thermo_stvenant = load_input_file(thermo_stvenant_file) %}
+{% set aaa_file = "f3_womersley.4C.yaml" %}
+{% set aaa = load_input_file(aaa_file) %}
+{% set elasthyper_file = "cardiovascular0d_arterialproxdist_structure_direct_genalpha.4C.yaml" %}
+{% set elasthyper = load_input_file(elasthyper_file) %}
+{% set ogden_tca_file = "mat_ogden_tca_hex.4C.yaml" %}
+{% set ogden_tca = load_input_file(ogden_tca_file) %}
+
+.. _elastic-materials:
+
+Elastic materials
+=================
+
+This page summarizes the elastic materials that can be used for 2D and 3D solid
+elements. Materials that are composed of hyperelastic energy summands are documented
+separately in :doc:`hyperelastic_framework`.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 18 42
+
+   * - Material
+     - Kinematics
+     - Application
+   * - :ref:`MAT_Struct_StVenantKirchhoff <elastic-stvenant>`
+     - Linear or nonlinear
+     - Isotropic St. Venant--Kirchhoff elasticity.
+   * - :ref:`MAT_Struct_StVenantKirchhoffOrthotropic <elastic-orthotropic-stvenant>`
+     - Linear or nonlinear
+     - Orthotropic St. Venant--Kirchhoff elasticity.
+   * - :ref:`MAT_Struct_ThermoStVenantK <elastic-thermo-stvenant>`
+     - Linear or nonlinear
+     - Temperature-dependent St. Venant--Kirchhoff elasticity.
+   * - :ref:`MAT_Struct_AAANeoHooke <elastic-aaa-neohooke>`
+     - Nonlinear
+     - Nonlinear arterial-wall elasticity.
+   * - :ref:`MAT_Ogden_TCA <elastic-ogden-tca>`
+     - Nonlinear
+     - Ogden hyperelasticity with independently controlled tension--compression asymmetry.
+   * - :ref:`MAT_ElastHyper <elastic-elasthyper>`
+     - Nonlinear
+     - General composition of hyperelastic energy summands.
+
+.. _elastic-stvenant:
+
+``MAT_Struct_StVenantKirchhoff``
+--------------------------------
+
+This isotropic material is linear in Green--Lagrange strain and second Piola--Kirchhoff stress.
+With ``KINEM: linear`` it represents standard small-strain elasticity. With
+``KINEM: nonlinear`` it retains the same constitutive law but includes geometric nonlinearity;
+the model is not suitable for arbitrary large strains because its energy loses physical
+realism under strong compression.
+
+The following material section is taken from ``{{ iso_stvenant_file }}``.
+See details about the parameters in :ref:`MAT_Struct_StVenantKirchhoff
+in the Input Parameter Reference <MATERIALS_MAT_Struct_StVenantKirchhoff>`.
+
+{{ section_dump(iso_stvenant, "MATERIALS") }}
+
+The material does not register model-specific Gauss-point output.
+
+.. _elastic-orthotropic-stvenant:
+
+``MAT_Struct_StVenantKirchhoffOrthotropic``
+-------------------------------------------
+
+This is the orthotropic counterpart of the St. Venant--Kirchhoff material. Three Young's moduli,
+three shear moduli, and three Poisson ratios define the material axes. It accepts both linear and
+nonlinear total-Lagrangian kinematics. The principal material directions are fixed to the
+Cartesian axes of the reference configuration; the material provides no input for rotating this
+orthotropic coordinate system. A different orientation therefore requires a correspondingly
+oriented reference mesh or an extension of the material model.
+
+The following material section is taken from ``{{ ortho_stvenant_file }}``.
+See details about the parameters in
+:ref:`MAT_Struct_StVenantKirchhoffOrthotropic in the Input Parameter Reference
+<MATERIALS_MAT_Struct_StVenantKirchhoffOrthotropic>`.
+
+<MATERIALS_MAT_Struct_StVenantKirchhoffOrthotropic>`.
+
+{{ section_dump(ortho_stvenant, "MATERIALS") }}
+
+The material does not register model-specific Gauss-point output.
+
+.. _elastic-thermo-stvenant:
+
+``MAT_Struct_ThermoStVenantK``
+------------------------------
+
+This thermoelastic St. Venant--Kirchhoff model adds isotropic thermal strain and allows a list of
+Young's moduli for temperature-dependent applications. It accepts linear and nonlinear
+total-Lagrangian kinematics.
+
+The following material section is taken from
+``{{ thermo_stvenant_file }}``. See details about the parameters in
+:ref:`MAT_Struct_ThermoStVenantK in the Input Parameter Reference <MATERIALS_MAT_Struct_ThermoStVenantK>`.
+
+{{ section_dump(thermo_stvenant, "MATERIALS") }}
+
+.. _elastic-aaa-neohooke:
+
+``MAT_Struct_AAANeoHooke``
+--------------------------
+
+This nonlinear isotropic material implements the arterial-wall model of Raghavan and Vorp. It
+requires ``KINEM: nonlinear`` and is intended for nearly incompressible soft-tissue response.
+
+The following material section is taken from ``{{ aaa_file }}``.
+See details about the parameters in
+:ref:`MAT_Struct_AAANeoHooke in the Input Parameter Reference
+<MATERIALS_MAT_Struct_AAANeoHooke>`.
+
+{{ section_dump(aaa, "MATERIALS") }}
+
+.. _elastic-ogden-tca:
+
+``MAT_Ogden_TCA``
+-----------------
+
+``MAT_Ogden_TCA`` is a nonlinear isotropic hyperelastic solid material representing the
+tension--compression asymmetric Ogden model of
+`Moerman et al. (2016) <https://doi.org/10.1016/j.jmbbm.2015.11.027>`_,
+where the tension-compression asymmetry is controlled by the ``Q`` parameter.
+
+The two materials in the following excerpt from ``{{ ogden_tca_file }}`` differ only in ``Q`` and
+therefore demonstrate opposite tension-compression asymmetry. See more details of the parameters
+in the :ref:`Input Parameter Reference for MAT_Ogden_TCA <MATERIALS_MAT_Ogden_TCA>`:
+
+{{ section_dump(ogden_tca, "MATERIALS") }}
+
+.. _elastic-elasthyper:
+
+``MAT_ElastHyper``
+------------------
+
+``MAT_ElastHyper`` is the general finite-strain elastic framework. It sums separately defined
+``ELAST_*`` energy contributions and requires ``KINEM: nonlinear``;
+see :ref:`MAT_ElastHyper in the Input Parameter Reference <MATERIALS_MAT_ElastHyper>` and
+:doc:`hyperelastic_framework` for further parameters, composition rules and the summand catalog.
+The following material section is taken from ``{{ elasthyper_file }}``:
+
+{{ section_dump(elasthyper, "MATERIALS") }}
+
+Anisotropic combinations can provide fiber directions and summand-specific visualization data.
