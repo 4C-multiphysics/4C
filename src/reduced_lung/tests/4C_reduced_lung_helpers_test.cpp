@@ -37,22 +37,6 @@ namespace
         .dynamic_viscosity = 1.79105e-05,
     };
 
-    params.lung_tree.topology.num_nodes = 4;
-    params.lung_tree.topology.num_elements = 3;
-    params.lung_tree.topology.node_coordinates =
-        Core::IO::InputField<std::vector<double>>(std::unordered_map<int, std::vector<double>>{
-            {1, {0.0, 0.0, 0.0}},
-            {2, {1.0, 0.0, 0.0}},
-            {3, {2.0, 0.0, 0.0}},
-            {4, {3.0, 0.0, 0.0}},
-        });
-    params.lung_tree.topology.element_nodes =
-        Core::IO::InputField<std::vector<int>>(std::unordered_map<int, std::vector<int>>{
-            {1, {1, 2}},
-            {2, {2, 3}},
-            {3, {3, 4}},
-        });
-
     params.lung_tree.element_type =
         Core::IO::InputField<ReducedLungParameters::LungTree::ElementType>(
             std::unordered_map<int, ReducedLungParameters::LungTree::ElementType>{
@@ -117,24 +101,6 @@ namespace
         .dynamic_viscosity = 1.79105e-05,
     };
 
-    params.lung_tree.topology.num_nodes = 5;
-    params.lung_tree.topology.num_elements = 4;
-    params.lung_tree.topology.node_coordinates =
-        Core::IO::InputField<std::vector<double>>(std::unordered_map<int, std::vector<double>>{
-            {1, {0.0, 0.0, 0.0}},
-            {2, {1.0, 0.0, 0.0}},
-            {3, {2.0, 0.0, 0.0}},
-            {4, {3.0, 0.0, 0.0}},
-            {5, {4.0, 0.0, 0.0}},
-        });
-    params.lung_tree.topology.element_nodes =
-        Core::IO::InputField<std::vector<int>>(std::unordered_map<int, std::vector<int>>{
-            {1, {1, 2}},
-            {2, {2, 3}},
-            {3, {3, 4}},
-            {4, {4, 5}},
-        });
-
     params.lung_tree.element_type =
         Core::IO::InputField<ReducedLungParameters::LungTree::ElementType>(
             std::unordered_map<int, ReducedLungParameters::LungTree::ElementType>{
@@ -177,39 +143,43 @@ namespace
     return params;
   }
 
-  ReducedLungParameters::LungTree::Topology make_bifurcation_topology()
-  {
-    ReducedLungParameters::LungTree::Topology topology{};
-    topology.num_nodes = 4;
-    topology.num_elements = 3;
-    topology.node_coordinates =
-        Core::IO::InputField<std::vector<double>>(std::unordered_map<int, std::vector<double>>{
-            {1, {0.0, 0.0, 0.0}},
-            {2, {1.0, 0.0, 0.0}},
-            {3, {2.0, 1.0, 0.0}},
-            {4, {2.0, -1.0, 0.0}},
-        });
-    topology.element_nodes =
-        Core::IO::InputField<std::vector<int>>(std::unordered_map<int, std::vector<int>>{
-            {1, {1, 2}},
-            {2, {2, 3}},
-            {3, {2, 4}},
-        });
-    return topology;
-  }
-
-  std::unique_ptr<Core::FE::Discretization> make_discretization_from_topology(
-      const ReducedLungParameters::LungTree::Topology& topology, const char* name)
+  std::unique_ptr<Core::FE::Discretization> make_discretization(
+      const std::vector<std::array<double, 3>>& node_coordinates,
+      const std::vector<std::array<int, 2>>& element_nodes, const char* name)
   {
     auto discretization = std::make_unique<Core::FE::Discretization>(name, MPI_COMM_WORLD, 3);
     Core::Rebalance::RebalanceParameters rebalance_parameters;
-    build_discretization_from_topology(*discretization, topology, rebalance_parameters);
+    build_discretization_from_nodes_and_elements(
+        *discretization, node_coordinates, element_nodes, rebalance_parameters);
     discretization->fill_complete(Core::FE::OptionsFillComplete{
         .assign_degrees_of_freedom = true,
         .init_elements = true,
         .do_boundary_conditions = false,
     });
     return discretization;
+  }
+
+  //! A straight chain of @p num_elements line2 elements with unit length along the x-axis.
+  std::unique_ptr<Core::FE::Discretization> make_chain_discretization(
+      const int num_elements, const char* name)
+  {
+    std::vector<std::array<double, 3>> node_coordinates;
+    std::vector<std::array<int, 2>> element_nodes;
+    for (int node_id = 0; node_id <= num_elements; ++node_id)
+    {
+      node_coordinates.push_back({static_cast<double>(node_id), 0.0, 0.0});
+      if (node_id > 0) element_nodes.push_back({node_id - 1, node_id});
+    }
+    return make_discretization(node_coordinates, element_nodes, name);
+  }
+
+  //! A single element splitting into two elements at its outlet node.
+  std::unique_ptr<Core::FE::Discretization> make_bifurcation_discretization(const char* name)
+  {
+    const std::vector<std::array<double, 3>> node_coordinates{
+        {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {2.0, 1.0, 0.0}, {2.0, -1.0, 0.0}};
+    const std::vector<std::array<int, 2>> element_nodes{{0, 1}, {1, 2}, {1, 3}};
+    return make_discretization(node_coordinates, element_nodes, name);
   }
 
   TEST(ReducedLungHelpersTests, CreateGlobalDofMapsBuildsOffsetsInElementOrder)
@@ -354,8 +324,7 @@ namespace
   TEST(ReducedLungHelpersTests, CreateLocalElementModelsBuildsModelContainers)
   {
     const auto params = make_setup_model_parameters();
-    auto discretization =
-        make_discretization_from_topology(params.lung_tree.topology, "local_element_models_test");
+    auto discretization = make_chain_discretization(3, "local_element_models_test");
 
     Airways::AirwayContainer airways;
     TerminalUnits::TerminalUnitContainer terminal_units;
@@ -399,8 +368,7 @@ namespace
   TEST(ReducedLungHelpersTests, CreateLocalElementModelsUsesSelectedModelStateCount)
   {
     const auto params = make_revisited_airway_model_parameters();
-    auto discretization =
-        make_discretization_from_topology(params.lung_tree.topology, "revisited_airway_model_test");
+    auto discretization = make_chain_discretization(4, "revisited_airway_model_test");
 
     Airways::AirwayContainer airways;
     TerminalUnits::TerminalUnitContainer terminal_units;
@@ -420,8 +388,7 @@ namespace
 
   TEST(ReducedLungHelpersTests, CreateGlobalEleIdsPerNodeCollectsAdjacency)
   {
-    auto discretization =
-        make_discretization_from_topology(make_bifurcation_topology(), "global_ele_ids_test");
+    auto discretization = make_bifurcation_discretization("global_ele_ids_test");
     auto global_ele_ids_per_node = create_global_ele_ids_per_node(*discretization, MPI_COMM_WORLD);
 
     ASSERT_EQ(global_ele_ids_per_node.size(), 4u);

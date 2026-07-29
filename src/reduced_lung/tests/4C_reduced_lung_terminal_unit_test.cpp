@@ -56,22 +56,6 @@ namespace
   {
     ReducedLungParameters params{};
 
-    params.lung_tree.topology.num_nodes = 4;
-    params.lung_tree.topology.num_elements = 3;
-    params.lung_tree.topology.node_coordinates =
-        Core::IO::InputField<std::vector<double>>(std::unordered_map<int, std::vector<double>>{
-            {1, {0.0, 0.0, 0.0}},
-            {2, {1.0, 0.0, 0.0}},
-            {3, {3.0, 0.0, 0.0}},
-            {4, {6.0, 0.0, 0.0}},
-        });
-    params.lung_tree.topology.element_nodes =
-        Core::IO::InputField<std::vector<int>>(std::unordered_map<int, std::vector<int>>{
-            {1, {1, 2}},
-            {2, {2, 3}},
-            {3, {3, 4}},
-        });
-
     params.lung_tree.terminal_units.rheological_model.rheological_model_type =
         Core::IO::InputField<RheologicalModelType>(model_case.rheological_model_type);
     params.lung_tree.terminal_units.rheological_model.kelvin_voigt.viscosity_kelvin_voigt_eta =
@@ -108,11 +92,12 @@ namespace
     const auto params = make_terminal_unit_parameters(model_case);
     TerminalUnitContainer terminal_units;
 
+    constexpr std::array element_lengths{1.0, 2.0, 3.0};
     for (int global_element_id = 0; global_element_id < 3; ++global_element_id)
     {
       TerminalUnits::ModelRegistry::add_terminal_unit_with_model_selection(terminal_units,
-          global_element_id, global_element_id, params, model_case.rheological_model_type,
-          model_case.elasticity_model_type);
+          global_element_id, global_element_id, element_lengths[global_element_id], params,
+          model_case.rheological_model_type, model_case.elasticity_model_type);
     }
     ASSERT_EQ(terminal_units.models.size(), 1u);
 
@@ -204,7 +189,7 @@ namespace
     TerminalUnitContainer terminal_units;
     EXPECT_THROW(
         TerminalUnits::ModelRegistry::add_terminal_unit_with_model_selection(terminal_units, 0, 0,
-            params, static_cast<RheologicalModelType>(-1), ElasticityModelType::Linear),
+            1.0, params, static_cast<RheologicalModelType>(-1), ElasticityModelType::Linear),
         Core::Exception);
   }
 

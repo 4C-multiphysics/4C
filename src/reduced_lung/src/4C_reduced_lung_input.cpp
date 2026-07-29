@@ -257,35 +257,22 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
           .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::elasticity_model),
       });
 
-  Core::IO::InputSpec topology_spec = group<ReducedLungParameters::LungTree::Topology>("topology",
+  Core::IO::InputSpec geometry_spec = group<ReducedLungParameters::Geometry>("geometry",
       {
-          parameter<int>("num_nodes",
+          parameter<std::filesystem::path>("file",
               {
-                  .description = "Total number of nodes in the reduced lung tree.",
-                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::num_nodes),
-              }),
-          parameter<int>("num_elements",
-              {
-                  .description = "Total number of elements in the reduced lung tree.",
-                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::num_elements),
-              }),
-          input_field<std::vector<double>>("node_coordinates",
-              {
-                  .description = "Nodal coordinates as 3-component vectors indexed by 1-based node "
-                                 "id (map keys 1-based).",
-                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::node_coordinates),
-              }),
-          input_field<std::vector<int>>("element_nodes",
-              {
-                  .description = "Element connectivity as [node_in, node_out] with 1-based node "
-                                 "ids, indexed by 1-based element id (map keys 1-based).",
-                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::element_nodes),
+                  .description =
+                      "Path to the VTU mesh file describing the reduced lung tree. Either "
+                      "absolute or relative to the input file. The mesh provides the nodes and "
+                      "the line2 cells of the tree and is also the source of all input fields "
+                      "that are given as `from_mesh`.",
+                  .store = in_struct(&ReducedLungParameters::Geometry::file),
               }),
       },
       {
-          .description = "Topology of the reduced lung tree.",
+          .description = "Geometry of the reduced lung tree.",
           .required = true,
-          .store = in_struct(&ReducedLungParameters::LungTree::topology),
+          .store = in_struct(&ReducedLungParameters::geometry),
       });
 
   auto store_boundary_value = StoreFunction<ReducedLungParameters::BoundaryConditions>(
@@ -414,9 +401,9 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                   .store = in_struct(&ReducedLungParameters::dynamics),
               }),
 
+          geometry_spec,
           group<ReducedLungParameters::LungTree>("lung_tree",
               {
-                  topology_spec,
                   input_field<ReducedLungParameters::LungTree::ElementType>("element_type",
                       {
                           .description = "Type of reduced lung elements.",

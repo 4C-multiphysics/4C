@@ -145,8 +145,8 @@ namespace ReducedLung
 
       void build_discretization()
       {
-        build_discretization_from_topology(
-            *actdis_, context_.parameters.lung_tree.topology, context_.rebalance_parameters);
+        mesh_ = build_discretization_from_mesh(
+            *actdis_, context_.parameters.geometry, context_.rebalance_parameters);
         actdis_->fill_complete();
 
         visualization_writer_ = std::make_unique<Core::IO::DiscretizationVisualizationWriterMesh>(
@@ -296,6 +296,7 @@ namespace ReducedLung
       MPI_Comm comm_;
 
       Airways::AirwayContainer airways_;
+      Core::IO::MeshInput::Mesh<3> mesh_;
       TerminalUnits::TerminalUnitContainer terminal_units_;
       std::map<int, int> dof_per_ele_;
       int n_airways_ = 0;

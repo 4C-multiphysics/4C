@@ -175,11 +175,12 @@ namespace ReducedLung
 
       for (int bc_id = 0; bc_id < bc_parameters.num_conditions; ++bc_id)
       {
+        const int num_nodes = discretization.num_global_nodes();
         const int node_id_one_based = bc_parameters.node_id.at(bc_id, "bc_node_id");
-        if (node_id_one_based < 1 || node_id_one_based > parameters.lung_tree.topology.num_nodes)
+        if (node_id_one_based < 1 || node_id_one_based > num_nodes)
         {
           FOUR_C_THROW("Boundary condition bc_node_id {} is outside the valid range [1, {}].",
-              node_id_one_based, parameters.lung_tree.topology.num_nodes);
+              node_id_one_based, num_nodes);
         }
         const int node_id = node_id_one_based - 1;
         auto node_it = global_ele_ids_per_node.find(node_id);

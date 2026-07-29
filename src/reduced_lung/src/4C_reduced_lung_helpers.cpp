@@ -12,8 +12,10 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_condition.hpp"
 #include "4C_fem_discretization_builder.hpp"
+#include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_io_vtu_reader.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_sparseoperator.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
@@ -29,8 +31,10 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <memory>
+#include <span>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -220,74 +224,116 @@ namespace ReducedLung
   }
 
 
-  void build_discretization_from_topology(Core::FE::Discretization& discretization,
-      const ReducedLungParameters::LungTree::Topology& topology,
+  void build_discretization_from_nodes_and_elements(Core::FE::Discretization& discretization,
+      std::span<const std::array<double, 3>> node_coordinates,
+      std::span<const std::array<int, 2>> element_nodes,
       const Core::Rebalance::RebalanceParameters& rebalance_parameters)
   {
     Core::FE::DiscretizationBuilder<3> builder(discretization.get_comm());
 
-    const int my_rank = Core::Communication::my_mpi_rank(discretization.get_comm());
-    if (my_rank == 0)
+    const int num_nodes = static_cast<int>(node_coordinates.size());
+    for (int node_id = 0; node_id < num_nodes; ++node_id)
     {
-      if (topology.num_nodes <= 0)
-      {
-        FOUR_C_THROW("Topology num_nodes must be positive, got {}.", topology.num_nodes);
-      }
-      if (topology.num_elements <= 0)
-      {
-        FOUR_C_THROW("Topology num_elements must be positive, got {}.", topology.num_elements);
-      }
+      builder.add_node(node_coordinates[node_id], node_id, nullptr);
+    }
 
-      for (int node_id = 0; node_id < topology.num_nodes; ++node_id)
+    const int num_elements = static_cast<int>(element_nodes.size());
+    for (int element_id = 0; element_id < num_elements; ++element_id)
+    {
+      const auto& node_ids = element_nodes[element_id];
+      if (node_ids[0] < 0 || node_ids[0] >= num_nodes || node_ids[1] < 0 ||
+          node_ids[1] >= num_nodes)
       {
-        const auto coords = topology.node_coordinates.at(node_id, "node_coordinates");
-        if (coords.size() != 3u)
-        {
-          FOUR_C_THROW("Topology node_coordinates entry {} must have 3 components, got {}.",
-              node_id + 1, coords.size());
-        }
-        const std::array<double, 3> coord_array{coords[0], coords[1], coords[2]};
-        builder.add_node(coord_array, node_id, nullptr);
+        FOUR_C_THROW("Element {} references node ids outside [0, {}].", element_id, num_nodes - 1);
+      }
+      if (node_ids[0] == node_ids[1])
+      {
+        FOUR_C_THROW("Element {} uses identical in/out node ids.", element_id);
       }
 
-      for (int element_id = 0; element_id < topology.num_elements; ++element_id)
-      {
-        const auto nodes = topology.element_nodes.at(element_id, "element_nodes");
-        if (nodes.size() != 2u)
-        {
-          FOUR_C_THROW("Topology element_nodes entry {} must have 2 entries, got {}.",
-              element_id + 1, nodes.size());
-        }
-        if (nodes[0] < 1 || nodes[1] < 1)
-        {
-          FOUR_C_THROW(
-              "Topology element_nodes entry {} must use 1-based node ids.", element_id + 1);
-        }
-
-        const int node_in = nodes[0] - 1;
-        const int node_out = nodes[1] - 1;
-        if (node_in >= topology.num_nodes || node_out >= topology.num_nodes)
-        {
-          FOUR_C_THROW("Topology element_nodes entry {} references node ids outside [1, {}].",
-              element_id + 1, topology.num_nodes);
-        }
-        if (node_in == node_out)
-        {
-          FOUR_C_THROW(
-              "Topology element_nodes entry {} uses identical in/out node ids.", element_id + 1);
-        }
-
-        const std::array<int, 2> node_ids{node_in, node_out};
-        builder.add_element(Core::FE::CellType::line2, node_ids, element_id,
-            Core::FE::DiscretizationBuilder<3>::DofInfo{
-                .num_dof_per_node = 1,
-                .num_dof_per_element = 0,
-            });
-      }
+      builder.add_element(Core::FE::CellType::line2, node_ids, element_id,
+          Core::FE::DiscretizationBuilder<3>::DofInfo{
+              .num_dof_per_node = 1,
+              .num_dof_per_element = 0,
+          });
     }
 
     builder.build(discretization, rebalance_parameters);
   }
+
+  Core::IO::MeshInput::Mesh<3> build_discretization_from_mesh(
+      Core::FE::Discretization& discretization, const ReducedLungParameters::Geometry& geometry,
+      const Core::Rebalance::RebalanceParameters& rebalance_parameters)
+  {
+    Core::IO::MeshInput::Mesh<3> mesh;
+    std::vector<std::array<double, 3>> node_coordinates;
+    std::vector<std::array<int, 2>> element_nodes;
+
+    const int my_rank = Core::Communication::my_mpi_rank(discretization.get_comm());
+    if (my_rank == 0)
+    {
+      mesh = Core::IO::MeshInput::Mesh<3>(Core::IO::VTU::read_vtu_file(geometry.file));
+
+      // read_vtu_file() already asserts that the mesh has points and non-empty cell blocks.
+      for (const auto& coordinate : mesh.points()) node_coordinates.push_back(coordinate);
+
+      // Element ids are handed out consecutively across all cell blocks in ascending block id
+      // order. This matches the numbering that Core::IO::MeshInput::read_value_from_cell_data()
+      // uses, so that cell data of the mesh can be indexed by the global element id.
+      for (const auto& cell_block : mesh.cell_blocks())
+      {
+        if (cell_block.cell_type() != Core::FE::CellType::line2)
+        {
+          FOUR_C_THROW(
+              "The reduced lung tree only supports line2 cells, but cell block {} of mesh file "
+              "'{}' has cell type '{}'.",
+              cell_block.id(), geometry.file.string(),
+              Core::FE::cell_type_to_string(cell_block.cell_type()));
+        }
+
+        for (const auto& cell : cell_block.cells())
+        {
+          element_nodes.push_back({cell[0], cell[1]});
+        }
+      }
+      if (element_nodes.empty())
+      {
+        FOUR_C_THROW("The mesh file '{}' does not contain any cells.", geometry.file.string());
+      }
+    }
+
+    build_discretization_from_nodes_and_elements(
+        discretization, node_coordinates, element_nodes, rebalance_parameters);
+
+    return mesh;
+  }
+
+  namespace
+  {
+    /**
+     * Distance between the two nodes of a line2 element.
+     */
+    template <typename ElementRefType>
+    double element_length(const ElementRefType& ele)
+    {
+      FOUR_C_ASSERT_ALWAYS(ele.num_nodes() == 2u,
+          "Reduced lung elements must have exactly 2 nodes, but element {} has {}.",
+          ele.global_id(), ele.num_nodes());
+
+      auto node_iterator = ele.nodes().begin();
+      const std::span<const double> x_in = (*node_iterator).x();
+      ++node_iterator;
+      const std::span<const double> x_out = (*node_iterator).x();
+
+      double length_squared = 0.0;
+      for (std::size_t d = 0; d < 3u; ++d)
+      {
+        const double delta = x_in[d] - x_out[d];
+        length_squared += delta * delta;
+      }
+      return std::sqrt(length_squared);
+    }
+  }  // namespace
 
   void create_local_element_models(const Core::FE::Discretization& discretization,
       const ReducedLungParameters& parameters, AirwayContainer& airways,
@@ -306,6 +352,8 @@ namespace ReducedLung
           "Element {} not found in element row map while iterating row elements.",
           global_element_id + 1);
 
+      const double ref_length = element_length(ele);
+
       const auto element_type =
           parameters.lung_tree.element_type.at(global_element_id, "element_type");
       if (element_type == ReducedLungParameters::LungTree::ElementType::Airway)
@@ -317,7 +365,7 @@ namespace ReducedLung
 
         const int n_state_equations =
             Airways::ModelRegistry::add_airway_with_model_selection(airways, global_element_id,
-                local_element_id, parameters, flow_model_name, wall_model_type);
+                local_element_id, ref_length, parameters, flow_model_name, wall_model_type);
 
         // 3 dofs with rigid walls, 4 dofs with compliant walls.
         dof_per_ele[global_element_id] = 2 + n_state_equations;
@@ -333,7 +381,7 @@ namespace ReducedLung
                 global_element_id, "elasticity_model_type");
 
         TerminalUnits::ModelRegistry::add_terminal_unit_with_model_selection(terminal_units,
-            global_element_id, local_element_id, parameters, rheological_model_name,
+            global_element_id, local_element_id, ref_length, parameters, rheological_model_name,
             elasticity_model_name);
 
         dof_per_ele[global_element_id] = 3;

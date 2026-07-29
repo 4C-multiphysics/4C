@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
+#include "4C_io_mesh.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_reduced_lung_airways.hpp"
 #include "4C_reduced_lung_boundary_conditions.hpp"
@@ -21,10 +22,12 @@
 #include <mpi.h>
 #include <Teuchos_ParameterList.hpp>
 
+#include <array>
 #include <functional>
 #include <limits>
 #include <map>
 #include <optional>
+#include <span>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -205,17 +208,41 @@ namespace ReducedLung
   Teuchos::ParameterList create_nox_parameter_list(const ReducedLungParameters::Dynamics& dynamics);
 
   /*!
-   * @brief Build a minimal discretization from the reduced lung topology.
+   * @brief Build a minimal discretization from nodes and line2 connectivity.
    *
-   * Creates line2 elements with a lightweight geometry-only element type and registers
-   * node coordinates/element connectivity for distribution, rebalancing, and output.
+   * Creates line2 elements with a lightweight geometry-only element type. Nodes and elements are
+   * numbered consecutively in the order in which they are passed, and the connectivity of an
+   * element is interpreted as [node_in, node_out], i.e. it is oriented along the flow direction.
    *
    * @param discretization Target 4C discretization to populate.
-   * @param topology Reduced lung topology description (nodes and element connectivity).
+   * @param node_coordinates Nodal coordinates, indexed by 0-based node id.
+   * @param element_nodes Element connectivity as [node_in, node_out] with 0-based node ids,
+   *   indexed by 0-based element id.
    * @param rebalance_parameters Parameters for mesh rebalancing/partitioning.
    */
-  void build_discretization_from_topology(Core::FE::Discretization& discretization,
-      const ReducedLungParameters::LungTree::Topology& topology,
+  void build_discretization_from_nodes_and_elements(Core::FE::Discretization& discretization,
+      std::span<const std::array<double, 3>> node_coordinates,
+      std::span<const std::array<int, 2>> element_nodes,
+      const Core::Rebalance::RebalanceParameters& rebalance_parameters);
+
+  /*!
+   * @brief Build a minimal discretization from a VTU mesh file.
+   *
+   * Reads the mesh on rank 0 and creates line2 elements with a lightweight geometry-only element
+   * type, registering node coordinates/element connectivity for distribution, rebalancing, and
+   * output. Nodes and elements are numbered consecutively in the order in which they appear in
+   * the mesh file, and the connectivity of a cell is interpreted as [node_in, node_out], i.e. the
+   * cells must be oriented along the flow direction.
+   *
+   * @param discretization Target 4C discretization to populate.
+   * @param geometry Reduced lung geometry description pointing to the VTU mesh file.
+   * @param rebalance_parameters Parameters for mesh rebalancing/partitioning.
+   *
+   * @return The mesh that was read. Only rank 0 holds the actual mesh, all other ranks return an
+   *   empty mesh. The returned mesh is the source for all input fields given as `from_mesh`.
+   */
+  Core::IO::MeshInput::Mesh<3> build_discretization_from_mesh(
+      Core::FE::Discretization& discretization, const ReducedLungParameters::Geometry& geometry,
       const Core::Rebalance::RebalanceParameters& rebalance_parameters);
 
   /**

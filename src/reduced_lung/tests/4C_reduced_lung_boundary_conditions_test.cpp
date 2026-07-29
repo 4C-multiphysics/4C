@@ -59,7 +59,6 @@ namespace
   ReducedLungParameters make_constant_parameters()
   {
     ReducedLungParameters params{};
-    params.lung_tree.topology.num_nodes = 3;
 
     params.boundary_conditions.num_conditions = 3;
     params.boundary_conditions.bc_type =
@@ -83,7 +82,6 @@ namespace
       int node_id_one_based, ReducedLungParameters::BoundaryConditions::Type type)
   {
     ReducedLungParameters params{};
-    params.lung_tree.topology.num_nodes = 3;
     params.boundary_conditions.num_conditions = 1;
     params.boundary_conditions.bc_type =
         Core::IO::InputField<ReducedLungParameters::BoundaryConditions::Type>(
@@ -103,7 +101,6 @@ namespace
       int node_id_one_based, ReducedLungParameters::BoundaryConditions::Type type, int function_id)
   {
     ReducedLungParameters params{};
-    params.lung_tree.topology.num_nodes = 3;
     params.boundary_conditions.num_conditions = 1;
     params.boundary_conditions.bc_type =
         Core::IO::InputField<ReducedLungParameters::BoundaryConditions::Type>(
@@ -124,7 +121,6 @@ namespace
   ReducedLungParameters make_duplicate_type_parameters()
   {
     ReducedLungParameters params{};
-    params.lung_tree.topology.num_nodes = 3;
     params.boundary_conditions.num_conditions = 2;
     params.boundary_conditions.bc_type =
         Core::IO::InputField<ReducedLungParameters::BoundaryConditions::Type>(

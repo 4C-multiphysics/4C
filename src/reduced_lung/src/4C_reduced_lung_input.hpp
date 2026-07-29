@@ -14,6 +14,7 @@
 #include "4C_io_input_spec.hpp"
 
 #include <cstdint>
+#include <filesystem>
 #include <vector>
 
 
@@ -46,16 +47,18 @@ namespace ReducedLung
       double nonlinear_increment_tolerance;
       OutputVerbosity output_verbosity = OutputVerbosity::minimal;
     } dynamics;
+    /**
+     * The geometry of the lung tree is read from a VTU mesh file. The mesh provides the
+     * nodes and the line2 cells forming the tree, and it is also the source of all input fields
+     * that are specified as `from_mesh` in the input file.
+     */
+    struct Geometry
+    {
+      std::filesystem::path file;
+    } geometry;
+
     struct LungTree
     {
-      struct Topology
-      {
-        int num_nodes;
-        int num_elements;
-        Core::IO::InputField<std::vector<double>> node_coordinates;  // [x, y, z]
-        Core::IO::InputField<std::vector<int>> element_nodes;        // [node_in, node_out]
-      } topology;
-
       /**
        * Enum to distinguish between airway and terminal unit elements in the reduced
        * lung implementation.

@@ -22,6 +22,7 @@
 #include <Teuchos_ParameterList.hpp>
 
 #include <any>
+#include <array>
 #include <cmath>
 #include <map>
 #include <numbers>
@@ -53,16 +54,6 @@ namespace
         .nonlinear_residual_tolerance = 1e-8,
         .nonlinear_increment_tolerance = 1e-10,
     };
-
-    params.lung_tree.topology.num_nodes = 2;
-    params.lung_tree.topology.num_elements = 1;
-    params.lung_tree.topology.node_coordinates =
-        Core::IO::InputField<std::vector<double>>(std::unordered_map<int, std::vector<double>>{
-            {1, {0.0, 0.0, 0.0}},
-            {2, {radius, 0.0, 0.0}},
-        });
-    params.lung_tree.topology.element_nodes = Core::IO::InputField<std::vector<int>>(
-        std::unordered_map<int, std::vector<int>>{{1, {1, 2}}});
 
     params.lung_tree.element_type =
         Core::IO::InputField<ReducedLungParameters::LungTree::ElementType>(
@@ -136,8 +127,11 @@ namespace
 
     Core::FE::Discretization discretization("reduced_lung_nox_test", MPI_COMM_WORLD, 3);
     Core::Rebalance::RebalanceParameters rebalance_parameters;
-    build_discretization_from_topology(
-        discretization, params.lung_tree.topology, rebalance_parameters);
+    // A single element whose length equals the reference radius of the terminal unit.
+    const std::vector<std::array<double, 3>> node_coordinates{{0.0, 0.0, 0.0}, {radius, 0.0, 0.0}};
+    const std::vector<std::array<int, 2>> element_nodes{{0, 1}};
+    build_discretization_from_nodes_and_elements(
+        discretization, node_coordinates, element_nodes, rebalance_parameters);
     discretization.fill_complete();
 
     Airways::AirwayContainer airways;

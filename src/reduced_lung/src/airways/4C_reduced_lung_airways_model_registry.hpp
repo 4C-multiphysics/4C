@@ -36,7 +36,7 @@ namespace ReducedLung::Airways::ModelRegistry
    * @return Number of state equations for the selected model pair.
    */
   using AirwayFactory = std::function<int(AirwayContainer& airways, int global_element_id,
-      int local_element_id, const ReducedLungParameters& parameters)>;
+      int local_element_id, double ref_length, const ReducedLungParameters& parameters)>;
 
   /**
    * @brief Composite registry key: (flow model type, wall model type).
@@ -51,11 +51,13 @@ namespace ReducedLung::Airways::ModelRegistry
   /**
    * @brief Add one airway element by resolving the selected model pair in the registry.
    *
+   * @param ref_length Reference length of the element, i.e. the distance between its two nodes.
+   *
    * @return Number of state equations for the selected model pair.
    */
   int add_airway_with_model_selection(AirwayContainer& airways, int global_element_id,
-      int local_element_id, const ReducedLungParameters& parameters, FlowModelType flow_model_type,
-      WallModelType wall_model_type);
+      int local_element_id, double ref_length, const ReducedLungParameters& parameters,
+      FlowModelType flow_model_type, WallModelType wall_model_type);
 }  // namespace ReducedLung::Airways::ModelRegistry
 
 FOUR_C_NAMESPACE_CLOSE

@@ -39,22 +39,6 @@ namespace
         .dynamic_viscosity = 1.79105e-05,
     };
 
-    params.lung_tree.topology.node_coordinates =
-        Core::IO::InputField<std::vector<double>>(std::unordered_map<int, std::vector<double>>{
-            {1, {0.0, 0.0, 0.0}},
-            {2, {1.0, 0.0, 0.0}},
-            {3, {2.0, 0.0, 0.0}},
-            {4, {3.0, 0.0, 0.0}},
-            {5, {4.0, 0.0, 0.0}},
-        });
-    params.lung_tree.topology.element_nodes =
-        Core::IO::InputField<std::vector<int>>(std::unordered_map<int, std::vector<int>>{
-            {1, {1, 2}},
-            {2, {2, 3}},
-            {3, {3, 4}},
-            {4, {4, 5}},
-        });
-
     params.lung_tree.airways.radius = Core::IO::InputField<double>(
         std::unordered_map<int, double>{{1, 1.0}, {2, 0.9}, {3, 0.8}, {4, 0.7}});
     params.lung_tree.airways.flow_model.include_inertia = Core::IO::InputField<bool>(
@@ -367,8 +351,8 @@ namespace
   {
     AirwayContainer airways;
     ReducedLungParameters params{};
-    EXPECT_THROW(Airways::ModelRegistry::add_airway_with_model_selection(
-                     airways, 0, 0, params, static_cast<FlowModelType>(-1), WallModelType::Rigid),
+    EXPECT_THROW(Airways::ModelRegistry::add_airway_with_model_selection(airways, 0, 0, 1.0, params,
+                     static_cast<FlowModelType>(-1), WallModelType::Rigid),
         Core::Exception);
   }
 
@@ -376,8 +360,8 @@ namespace
   {
     AirwayContainer airways;
     ReducedLungParameters params{};
-    EXPECT_THROW(Airways::ModelRegistry::add_airway_with_model_selection(
-                     airways, 0, 0, params, FlowModelType::Linear, static_cast<WallModelType>(-1)),
+    EXPECT_THROW(Airways::ModelRegistry::add_airway_with_model_selection(airways, 0, 0, 1.0, params,
+                     FlowModelType::Linear, static_cast<WallModelType>(-1)),
         Core::Exception);
   }
 
@@ -387,16 +371,16 @@ namespace
     const auto params = make_airway_registry_parameters();
 
     EXPECT_EQ(Airways::ModelRegistry::add_airway_with_model_selection(
-                  airways, 0, 0, params, FlowModelType::Linear, WallModelType::Rigid),
+                  airways, 0, 0, 1.0, params, FlowModelType::Linear, WallModelType::Rigid),
         1);
     EXPECT_EQ(Airways::ModelRegistry::add_airway_with_model_selection(
-                  airways, 1, 1, params, FlowModelType::Linear, WallModelType::KelvinVoigt),
+                  airways, 1, 1, 1.0, params, FlowModelType::Linear, WallModelType::KelvinVoigt),
         2);
     EXPECT_EQ(Airways::ModelRegistry::add_airway_with_model_selection(
-                  airways, 2, 2, params, FlowModelType::NonLinear, WallModelType::Rigid),
+                  airways, 2, 2, 1.0, params, FlowModelType::NonLinear, WallModelType::Rigid),
         1);
     EXPECT_EQ(Airways::ModelRegistry::add_airway_with_model_selection(
-                  airways, 3, 3, params, FlowModelType::NonLinear, WallModelType::KelvinVoigt),
+                  airways, 3, 3, 1.0, params, FlowModelType::NonLinear, WallModelType::KelvinVoigt),
         2);
 
     ASSERT_EQ(airways.models.size(), 4u);
@@ -442,7 +426,7 @@ namespace
     EXPECT_TRUE(saw_nonlinear_kv);
 
     EXPECT_EQ(Airways::ModelRegistry::add_airway_with_model_selection(
-                  airways, 0, 4, params, FlowModelType::Linear, WallModelType::Rigid),
+                  airways, 0, 4, 1.0, params, FlowModelType::Linear, WallModelType::Rigid),
         1);
     ASSERT_EQ(airways.models.size(), 4u);
 
