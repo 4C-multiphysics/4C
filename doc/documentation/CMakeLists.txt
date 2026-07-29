@@ -56,6 +56,24 @@ if(FOUR_C_ENABLE_DOCUMENTATION)
       ${PROJECT_SOURCE_DIR}/tests/input_files/constr2D_MPC_angle.4C.yaml
       ${PROJECT_SOURCE_DIR}/tests/input_files/elch_gaussian_hill_pbc_genalpha.4C.yaml
       ${PROJECT_SOURCE_DIR}/tests/input_files/rve3d_periodic_bcs.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/plastic_pressurisedcylinder.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/tsi_plastic_heating_monolithic.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/mat_druckerprager_RetToCone.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/mat_gtn_patch_test.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/plastic_necking_damage.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/tsi_pressurisedcylinder_robinson.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/plastic_necking_fbar_thrplast.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/plastic_necking_fbar_vcu.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/mat_viscoplastic_no_yield_surface_1hex8.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/mat_iso_viscoplast_refJC_log_timint.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/structure_bidomain_material_problem_torsion.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/tsi_lindilatation_geolin.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/f3_womersley.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/elasthyper_coupanisoexpo.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/elasthyper_isoogden.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/elasthyper_isoanisoexpo_DispersedTransverselyIsotropic_ost_h8.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/viscoAnisotropic_creep.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/viscoelasthyper.4C.yaml
       )
 
   set(_sphinx_FILES_FROM_TESTS_DIR "${_sphinx_OUT_DIR}/testfiles")

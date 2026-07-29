@@ -1,0 +1,89 @@
+{% set framework_file = "elasthyper_coupanisoexpo.4C.yaml" %}
+{% set framework = load_input_file(framework_file) %}
+
+.. _hyperelastic-framework:
+
+Hyperelastic framework
+======================
+
+``MAT_ElastHyper`` constructs a strain-energy function by summing separately registered
+``ELAST_*`` contributions:
+
+.. math::
+
+   \Psi = \sum_{a=1}^{n_\mathrm{mat}} \Psi_a.
+
+The parent material is assigned to the element. Its ``MATIDS`` refer to the material IDs of the
+energy summands:
+
+{{ section_dump(framework, "MATERIALS") }}
+
+The example from ``{{ framework_file }}`` combines a compressible isotropic matrix with an
+anisotropic fiber contribution and its structural-tensor definition.
+
+Choosing summands
+-----------------
+
+There are two common ways to construct an isotropic response:
+
+- A **coupled** contribution depends on the full deformation and already contains distortional
+  and volumetric response.
+- A **split** formulation combines one or more isochoric ``ELAST_Iso*`` contributions with one
+  ``ELAST_Vol*`` contribution.
+
+Do not add an extra volumetric penalty to a coupled compressible law unless that additional
+volumetric stiffness is intentional. Anisotropic summands are normally added to an isotropic
+matrix and may reference fiber directions or an ``ELAST_StructuralTensor`` material.
+
+The plain ``MAT_ElastHyper`` framework accepts elastic summands only. Use
+:doc:`viscoelastic_materials` when adding time-dependent branches.
+
+Notation for the potentials
+---------------------------
+
+The summand catalogs state the strain-energy density implemented by each contribution. They use
+
+.. math::
+
+   \boldsymbol C &= \boldsymbol F^\mathrm{T}\boldsymbol F,
+   &\boldsymbol E &= \tfrac12(\boldsymbol C-\boldsymbol I),
+   &J &= \det\boldsymbol F,\\
+   I_1 &= \operatorname{tr}\boldsymbol C,
+   &I_2 &= \tfrac12\left[(\operatorname{tr}\boldsymbol C)^2
+     -\operatorname{tr}(\boldsymbol C^2)\right],
+   &I_3 &= \det\boldsymbol C=J^2.
+
+Isochoric quantities carry an overbar:
+
+.. math::
+
+   \bar{\boldsymbol C}=J^{-2/3}\boldsymbol C,\qquad
+   \bar I_1=J^{-2/3}I_1,\qquad
+   \bar I_2=J^{-4/3}I_2,\qquad
+   \bar\lambda_i=J^{-1/3}\lambda_i.
+
+For a reference fiber direction :math:`\boldsymbol a` and two-family directions
+:math:`\boldsymbol a_1,\boldsymbol a_2`, the anisotropic invariants are
+
+.. math::
+
+   I_4 &= \boldsymbol a\mathbin{\cdot}\boldsymbol C\boldsymbol a,
+   &I_5 &= \boldsymbol a\mathbin{\cdot}\boldsymbol C^2\boldsymbol a,\\
+   I_6 &= \boldsymbol a_2\mathbin{\cdot}\boldsymbol C\boldsymbol a_2,
+   &I_8 &= \tfrac12(\boldsymbol a_1\otimes\boldsymbol a_2+
+     \boldsymbol a_2\otimes\boldsymbol a_1):\boldsymbol C .
+
+The symbols in the equations correspond to the similarly named input parameters; for example,
+:math:`c_1`, :math:`k_1`, and :math:`\kappa` denote ``C1``, ``K1``, and ``KAPPA``. Additive
+constants are retained where they are part of the implementation, although they do not affect
+stress.
+
+Summand catalogs
+----------------
+
+.. toctree::
+   :maxdepth: 1
+
+   hyperelastic_isotropic_coupled
+   hyperelastic_isochoric_volumetric
+   hyperelastic_anisotropic
