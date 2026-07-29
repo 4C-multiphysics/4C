@@ -51,23 +51,6 @@ namespace
         .nonlinear_increment_tolerance = 1e-10,
     };
 
-    params.lung_tree.element_type =
-        Core::IO::InputField<ReducedLungParameters::LungTree::ElementType>(
-            std::unordered_map<int, ReducedLungParameters::LungTree::ElementType>{
-                {1, ReducedLungParameters::LungTree::ElementType::Airway},
-                {2, ReducedLungParameters::LungTree::ElementType::Airway},
-                {3, ReducedLungParameters::LungTree::ElementType::Airway},
-                {4, ReducedLungParameters::LungTree::ElementType::TerminalUnit},
-                {5, ReducedLungParameters::LungTree::ElementType::TerminalUnit},
-            });
-    params.lung_tree.generation = Core::IO::InputField<int>(std::unordered_map<int, int>{
-        {1, 0},
-        {2, 1},
-        {3, 1},
-        {4, -1},
-        {5, -1},
-    });
-
     params.lung_tree.airways.radius =
         Core::IO::InputField<double>(std::unordered_map<int, double>{{1, 1.0}, {2, 0.8}, {3, 0.6}});
     params.lung_tree.airways.flow_model.resistance_type =
@@ -91,23 +74,11 @@ namespace
     params.lung_tree.terminal_units.elasticity_model.linear.elasticity_e =
         Core::IO::InputField<double>(1.0);
 
-    params.boundary_conditions.num_conditions = 3;
-    params.boundary_conditions.bc_type =
-        Core::IO::InputField<ReducedLungParameters::BoundaryConditions::Type>(
-            std::unordered_map<int, ReducedLungParameters::BoundaryConditions::Type>{
-                {1, ReducedLungParameters::BoundaryConditions::Type::Pressure},
-                {2, ReducedLungParameters::BoundaryConditions::Type::Flow},
-                {3, ReducedLungParameters::BoundaryConditions::Type::Flow},
-            });
-    params.boundary_conditions.node_id = Core::IO::InputField<int>(std::unordered_map<int, int>{
-        {1, 1},
-        {2, 5},
-        {3, 9},
-    });
-    params.boundary_conditions.value_source =
-        ReducedLungParameters::BoundaryConditions::ValueSource::bc_value;
-    params.boundary_conditions.value = Core::IO::InputField<double>(
-        std::unordered_map<int, double>{{1, 1.0}, {2, 0.0}, {3, -0.5}});
+    using InputBc = ReducedLungParameters::BoundaryConditions;
+    const auto condition = [](int id, int function_id)
+    { return InputBc::Definition{.id = id, .function_id = function_id}; };
+    params.boundary_conditions.pressure = {condition(1, 1)};
+    params.boundary_conditions.flow = {condition(2, 2), condition(3, 3)};
 
     return params;
   }
@@ -148,13 +119,17 @@ namespace
       }
     }
 
+    using ElementType = ReducedLungParameters::LungTree::ElementType;
+    const std::vector element_types{ElementType::Airway, ElementType::Airway, ElementType::Airway,
+        ElementType::TerminalUnit, ElementType::TerminalUnit};
+
     Airways::AirwayContainer airways;
     TerminalUnits::TerminalUnitContainer terminal_units;
     for (const auto& element : discretization.my_row_element_range())
     {
       const int element_id = element.global_id();
       const int local_element_id = discretization.element_row_map()->lid(element_id);
-      const auto element_kind = params.lung_tree.element_type.at(element_id, "element_type");
+      const auto element_kind = element_types[element_id];
       const auto& nodes = element_nodes[element_id];
       const auto& x_in = node_coordinates[nodes[0]];
       const auto& x_out = node_coordinates[nodes[1]];

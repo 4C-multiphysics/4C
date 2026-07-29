@@ -208,6 +208,38 @@ namespace ReducedLung
   Teuchos::ParameterList create_nox_parameter_list(const ReducedLungParameters::Dynamics& dynamics);
 
   /*!
+   * @brief The cell blocks of the lung mesh.
+   *
+   * Element ids are handed out consecutively across the cell blocks in ascending block id order,
+   * so every block covers a contiguous range of global element ids. This information is small and
+   * replicated on all ranks, unlike the mesh itself.
+   */
+  struct LungMeshBlocks
+  {
+    //! Ids of the cell blocks, in ascending order.
+    std::vector<int> ids;
+    //! Number of elements in each cell block.
+    std::vector<int> sizes;
+  };
+
+  /*!
+   * @brief The mesh the reduced lung tree was built from.
+   */
+  struct LungMesh
+  {
+    //! The mesh that was read. Only rank 0 holds actual data. It is the source of all input
+    //! fields that are given as `from_mesh` and can be released once resolve_mesh_data_fields()
+    //! has run, since the fields copy out the data they need.
+    Core::IO::MeshInput::Mesh<3> mesh;
+    //! The cell blocks of the mesh, replicated on all ranks.
+    LungMeshBlocks blocks;
+    //! The constrained nodes of the mesh, grouped by the boundary condition id they carry and
+    //! sorted within each group. Taken from the `bc_id` point data of the mesh, where the id 0
+    //! means "unconstrained" and is therefore not part of this map. Replicated on all ranks.
+    std::map<int, std::vector<int>> bc_nodes;
+  };
+
+  /*!
    * @brief Build a minimal discretization from nodes and line2 connectivity.
    *
    * Creates line2 elements with a lightweight geometry-only element type. Nodes and elements are
@@ -238,12 +270,38 @@ namespace ReducedLung
    * @param geometry Reduced lung geometry description pointing to the VTU mesh file.
    * @param rebalance_parameters Parameters for mesh rebalancing/partitioning.
    *
-   * @return The mesh that was read. Only rank 0 holds the actual mesh, all other ranks return an
-   *   empty mesh. The returned mesh is the source for all input fields given as `from_mesh`.
+   * @return The mesh that was read together with its cell block layout.
    */
-  Core::IO::MeshInput::Mesh<3> build_discretization_from_mesh(
-      Core::FE::Discretization& discretization, const ReducedLungParameters::Geometry& geometry,
+  LungMesh build_discretization_from_mesh(Core::FE::Discretization& discretization,
+      const ReducedLungParameters::Geometry& geometry,
       const Core::Rebalance::RebalanceParameters& rebalance_parameters);
+
+  /*!
+   * @brief Initialize all input fields that are given as `from_mesh` from the lung mesh.
+   *
+   * This mirrors what Global::read_fields() does for the `fields` section of the input file. The
+   * reduced lung does not go through Global::Problem for its discretization, so it resolves the
+   * references to mesh data against its own mesh instead.
+   *
+   * @note This must be called before the dofs of @p discretization are assigned, because the
+   * redistribution of the fields is triggered by the post_assign_dofs callback.
+   *
+   * @param discretization The reduced lung discretization.
+   * @param mesh The lung mesh. Only rank 0 holds actual data.
+   */
+  void resolve_mesh_data_fields(
+      Core::FE::Discretization& discretization, const Core::IO::MeshInput::Mesh<3>& mesh);
+
+  /*!
+   * @brief Determine the type of every element in the tree from the cell block it belongs to.
+   *
+   * @throws If a cell block of the mesh is claimed by no or by more than one element type, or if
+   *   an element type claims a cell block that does not exist in the mesh.
+   *
+   * @return The element type of every element, indexed by global element id.
+   */
+  std::vector<ReducedLungParameters::LungTree::ElementType> create_element_types(
+      const LungMeshBlocks& blocks, const ReducedLungParameters::LungTree& lung_tree);
 
   /**
    * @brief Create locally owned airway/terminal-unit entities from the row elements.
@@ -251,9 +309,10 @@ namespace ReducedLung
    * Populates model containers and the local element->dof-count map used for global dof numbering.
    */
   void create_local_element_models(const Core::FE::Discretization& discretization,
-      const ReducedLungParameters& parameters, Airways::AirwayContainer& airways,
-      TerminalUnits::TerminalUnitContainer& terminal_units, std::map<int, int>& dof_per_ele,
-      int& n_airways, int& n_terminal_units);
+      const ReducedLungParameters& parameters,
+      std::span<const ReducedLungParameters::LungTree::ElementType> element_types,
+      Airways::AirwayContainer& airways, TerminalUnits::TerminalUnitContainer& terminal_units,
+      std::map<int, int>& dof_per_ele, int& n_airways, int& n_terminal_units);
 
   /**
    * @brief Build global dof layout maps from local element dof counts.

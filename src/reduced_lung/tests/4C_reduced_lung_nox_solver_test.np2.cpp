@@ -55,13 +55,6 @@ namespace
         .nonlinear_increment_tolerance = 1e-10,
     };
 
-    params.lung_tree.element_type =
-        Core::IO::InputField<ReducedLungParameters::LungTree::ElementType>(
-            std::unordered_map<int, ReducedLungParameters::LungTree::ElementType>{
-                {1, ReducedLungParameters::LungTree::ElementType::TerminalUnit},
-            });
-    params.lung_tree.generation = Core::IO::InputField<int>(std::unordered_map<int, int>{{1, -1}});
-
     params.lung_tree.terminal_units.rheological_model.rheological_model_type = Core::IO::InputField<
         ReducedLungParameters::LungTree::TerminalUnits::RheologicalModel::RheologicalModelType>(
         std::unordered_map<int,
@@ -84,19 +77,11 @@ namespace
     params.lung_tree.terminal_units.elasticity_model.ogden.ogden_parameter_beta =
         Core::IO::InputField<double>(std::unordered_map<int, double>{{1, -8.0}});
 
-    params.boundary_conditions.num_conditions = 2;
-    params.boundary_conditions.bc_type =
-        Core::IO::InputField<ReducedLungParameters::BoundaryConditions::Type>(
-            std::unordered_map<int, ReducedLungParameters::BoundaryConditions::Type>{
-                {1, ReducedLungParameters::BoundaryConditions::Type::Pressure},
-                {2, ReducedLungParameters::BoundaryConditions::Type::Pressure},
-            });
-    params.boundary_conditions.node_id =
-        Core::IO::InputField<int>(std::unordered_map<int, int>{{1, 1}, {2, 2}});
-    params.boundary_conditions.value_source =
-        ReducedLungParameters::BoundaryConditions::ValueSource::bc_function_id;
-    params.boundary_conditions.function_id =
-        Core::IO::InputField<int>(std::unordered_map<int, int>{{1, 1}, {2, 2}});
+    using InputBc = ReducedLungParameters::BoundaryConditions;
+    const auto pressure_from_function = [](int id, int function_id)
+    { return InputBc::Definition{.id = id, .function_id = function_id}; };
+    params.boundary_conditions.pressure = {
+        pressure_from_function(1, 1), pressure_from_function(2, 2)};
 
     return params;
   }
@@ -139,8 +124,9 @@ namespace
     std::map<int, int> dof_per_ele;
     int n_airways = 0;
     int n_terminal_units = 0;
-    create_local_element_models(
-        discretization, params, airways, terminal_units, dof_per_ele, n_airways, n_terminal_units);
+    const std::vector element_types{ReducedLungParameters::LungTree::ElementType::TerminalUnit};
+    create_local_element_models(discretization, params, element_types, airways, terminal_units,
+        dof_per_ele, n_airways, n_terminal_units);
 
     std::map<int, int> first_global_dof_of_ele;
     std::map<int, int> global_dof_per_ele;
@@ -158,8 +144,10 @@ namespace
     Junctions::BifurcationData bifurcations;
     const auto function_manager = make_function_manager();
 
-    BoundaryConditions::create_boundary_conditions(discretization, params, global_ele_ids_per_node,
-        global_dof_per_ele, first_global_dof_of_ele, function_manager, boundary_conditions);
+    const std::map<int, std::vector<int>> bc_nodes{{1, {0}}, {2, {1}}};
+    BoundaryConditions::create_boundary_conditions(discretization, params, bc_nodes,
+        global_ele_ids_per_node, global_dof_per_ele, first_global_dof_of_ele, function_manager,
+        boundary_conditions);
     BoundaryConditions::create_evaluators(boundary_conditions);
 
     Junctions::create_junctions(discretization, global_ele_ids_per_node, global_dof_per_ele,

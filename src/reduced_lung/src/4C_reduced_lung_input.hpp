@@ -69,11 +69,9 @@ namespace ReducedLung
         TerminalUnit,
       };
 
-      Core::IO::InputField<ElementType> element_type;
-      Core::IO::InputField<int> generation;
-
       struct Airways
       {
+        std::vector<int> element_blocks;
         Core::IO::InputField<double> radius;
         struct FlowModel
         {
@@ -130,6 +128,8 @@ namespace ReducedLung
 
       struct TerminalUnits
       {
+        std::vector<int> element_blocks;
+
         struct RheologicalModel
         {
           /**
@@ -184,33 +184,24 @@ namespace ReducedLung
         } elasticity_model;
       } terminal_units;
     } lung_tree;
+    /**
+     * Boundary conditions are attached to the nodes of the mesh via its `bc_id` point data
+     * array: a node with `bc_id == 0` is unconstrained, a node with `bc_id == N` carries the
+     * condition defined below under `id: N`.
+     */
     struct BoundaryConditions
     {
-      int num_conditions;
-
       /**
-       * Enum to distinguish between different boundary condition types.
+       * One reusable boundary condition, referenced by the `bc_id` point data of the mesh.
        */
-      enum class Type : std::uint8_t
+      struct Definition
       {
-        Pressure,
-        Flow,
+        int id;
+        int function_id;
       };
 
-      /**
-       * Enum to distinguish between boundary values given by function or constant.
-       */
-      enum class ValueSource : std::uint8_t
-      {
-        bc_function_id,
-        bc_value,
-      };
-
-      Core::IO::InputField<Type> bc_type;
-      Core::IO::InputField<int> node_id;
-      ValueSource value_source;
-      Core::IO::InputField<int> function_id;
-      Core::IO::InputField<double> value;
+      std::vector<Definition> pressure;
+      std::vector<Definition> flow;
     } boundary_conditions;
     struct AirProperties
     {

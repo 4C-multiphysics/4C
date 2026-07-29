@@ -13,7 +13,6 @@
 #include "4C_reduced_lung_terminal_unit_rheology.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <cmath>
 #include <numbers>
 #include <vector>
 

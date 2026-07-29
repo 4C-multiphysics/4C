@@ -145,8 +145,16 @@ namespace ReducedLung
 
       void build_discretization()
       {
-        mesh_ = build_discretization_from_mesh(
+        lung_mesh_ = build_discretization_from_mesh(
             *actdis_, context_.parameters.geometry, context_.rebalance_parameters);
+        element_types_ = create_element_types(lung_mesh_.blocks, context_.parameters.lung_tree);
+
+        // Must happen before fill_complete(), which triggers the redistribution of the fields.
+        resolve_mesh_data_fields(*actdis_, lung_mesh_.mesh);
+        // The input fields have copied out what they need, so rank 0 can drop the mesh. Only the
+        // small replicated parts of lung_mesh_ are used from here on.
+        lung_mesh_.mesh = {};
+
         actdis_->fill_complete();
 
         visualization_writer_ = std::make_unique<Core::IO::DiscretizationVisualizationWriterMesh>(
@@ -158,8 +166,8 @@ namespace ReducedLung
 
       void build_element_models()
       {
-        create_local_element_models(*actdis_, context_.parameters, airways_, terminal_units_,
-            dof_per_ele_, n_airways_, n_terminal_units_);
+        create_local_element_models(*actdis_, context_.parameters, element_types_, airways_,
+            terminal_units_, dof_per_ele_, n_airways_, n_terminal_units_);
 
         create_global_dof_maps(dof_per_ele_, comm_, global_dof_per_ele_, first_global_dof_of_ele_);
         assign_global_dof_ids_to_models(first_global_dof_of_ele_, airways_, terminal_units_);
@@ -173,8 +181,8 @@ namespace ReducedLung
         global_ele_ids_per_node_ = create_global_ele_ids_per_node(*actdis_, comm_);
 
         BoundaryConditions::create_boundary_conditions(*actdis_, context_.parameters,
-            global_ele_ids_per_node_, global_dof_per_ele_, first_global_dof_of_ele_,
-            context_.function_manager, boundary_conditions_);
+            lung_mesh_.bc_nodes, global_ele_ids_per_node_, global_dof_per_ele_,
+            first_global_dof_of_ele_, context_.function_manager, boundary_conditions_);
         BoundaryConditions::create_evaluators(boundary_conditions_);
 
         Junctions::create_junctions(*actdis_, global_ele_ids_per_node_, global_dof_per_ele_,
@@ -296,7 +304,8 @@ namespace ReducedLung
       MPI_Comm comm_;
 
       Airways::AirwayContainer airways_;
-      Core::IO::MeshInput::Mesh<3> mesh_;
+      LungMesh lung_mesh_;
+      std::vector<ReducedLungParameters::LungTree::ElementType> element_types_;
       TerminalUnits::TerminalUnitContainer terminal_units_;
       std::map<int, int> dof_per_ele_;
       int n_airways_ = 0;

@@ -24,6 +24,7 @@
 #include <array>
 #include <map>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -56,85 +57,79 @@ namespace
     return dis;
   }
 
-  ReducedLungParameters make_constant_parameters()
+  using InputBc = ReducedLungParameters::BoundaryConditions;
+
+  //! Boundary condition input together with the constrained nodes of the mesh it refers to.
+  struct BcInput
   {
-    ReducedLungParameters params{};
+    ReducedLungParameters parameters;
+    std::map<int, std::vector<int>> bc_nodes;
+  };
 
-    params.boundary_conditions.num_conditions = 3;
-    params.boundary_conditions.bc_type =
-        Core::IO::InputField<ReducedLungParameters::BoundaryConditions::Type>(
-            std::unordered_map<int, ReducedLungParameters::BoundaryConditions::Type>{
-                {1, ReducedLungParameters::BoundaryConditions::Type::Pressure},
-                {2, ReducedLungParameters::BoundaryConditions::Type::Pressure},
-                {3, ReducedLungParameters::BoundaryConditions::Type::Flow},
-            });
-    params.boundary_conditions.node_id =
-        Core::IO::InputField<int>(std::unordered_map<int, int>{{1, 1}, {2, 3}, {3, 1}});
-    params.boundary_conditions.value_source =
-        ReducedLungParameters::BoundaryConditions::ValueSource::bc_value;
-    params.boundary_conditions.value = Core::IO::InputField<double>(
-        std::unordered_map<int, double>{{1, 2.5}, {2, 4.0}, {3, -1.0}});
-
-    return params;
+  //! The vector of definitions of the given type, so tests can build inputs generically.
+  std::vector<InputBc::Definition>& definitions_of_type(InputBc& boundary_conditions, Type type)
+  {
+    return type == Type::Pressure ? boundary_conditions.pressure : boundary_conditions.flow;
   }
 
-  ReducedLungParameters make_single_bc_parameters(
-      int node_id_one_based, ReducedLungParameters::BoundaryConditions::Type type)
+  InputBc::Definition make_definition(int id, int function_id)
   {
-    ReducedLungParameters params{};
-    params.boundary_conditions.num_conditions = 1;
-    params.boundary_conditions.bc_type =
-        Core::IO::InputField<ReducedLungParameters::BoundaryConditions::Type>(
-            std::unordered_map<int, ReducedLungParameters::BoundaryConditions::Type>{
-                {1, type},
-            });
-    params.boundary_conditions.node_id =
-        Core::IO::InputField<int>(std::unordered_map<int, int>{{1, node_id_one_based}});
-    params.boundary_conditions.value_source =
-        ReducedLungParameters::BoundaryConditions::ValueSource::bc_value;
-    params.boundary_conditions.value =
-        Core::IO::InputField<double>(std::unordered_map<int, double>{{1, 0.0}});
-    return params;
+    return InputBc::Definition{.id = id, .function_id = function_id};
   }
 
-  ReducedLungParameters make_function_bc_parameters(
-      int node_id_one_based, ReducedLungParameters::BoundaryConditions::Type type, int function_id)
+  //! A FunctionManager with one constant-valued SymbolicFunctionOfTime per entry of @p values,
+  //! registered as function ids 1, 2, ... in order.
+  Core::Utils::FunctionManager make_function_manager(const std::vector<double>& values)
   {
-    ReducedLungParameters params{};
-    params.boundary_conditions.num_conditions = 1;
-    params.boundary_conditions.bc_type =
-        Core::IO::InputField<ReducedLungParameters::BoundaryConditions::Type>(
-            std::unordered_map<int, ReducedLungParameters::BoundaryConditions::Type>{
-                {1, type},
-            });
-    params.boundary_conditions.node_id =
-        Core::IO::InputField<int>(std::unordered_map<int, int>{{1, node_id_one_based}});
-    params.boundary_conditions.value_source =
-        ReducedLungParameters::BoundaryConditions::ValueSource::bc_function_id;
-    params.boundary_conditions.function_id =
-        Core::IO::InputField<int>(std::unordered_map<int, int>{{1, function_id}});
-    params.boundary_conditions.value =
-        Core::IO::InputField<double>(std::unordered_map<int, double>{{1, 0.0}});
-    return params;
+    Core::Utils::FunctionManager function_manager;
+    std::vector<std::any> functions;
+    for (const double value : values)
+    {
+      functions.emplace_back(std::shared_ptr<Core::Utils::FunctionOfTime>(
+          std::make_shared<Core::Utils::SymbolicFunctionOfTime>(
+              std::vector<std::string>{std::to_string(value)},
+              std::vector<std::shared_ptr<Core::Utils::FunctionVariable>>{})));
+    }
+    function_manager.set_functions(functions);
+    return function_manager;
   }
 
-  ReducedLungParameters make_duplicate_type_parameters()
+  BcInput make_constant_parameters()
   {
-    ReducedLungParameters params{};
-    params.boundary_conditions.num_conditions = 2;
-    params.boundary_conditions.bc_type =
-        Core::IO::InputField<ReducedLungParameters::BoundaryConditions::Type>(
-            std::unordered_map<int, ReducedLungParameters::BoundaryConditions::Type>{
-                {1, ReducedLungParameters::BoundaryConditions::Type::Pressure},
-                {2, ReducedLungParameters::BoundaryConditions::Type::Pressure},
-            });
-    params.boundary_conditions.node_id =
-        Core::IO::InputField<int>(std::unordered_map<int, int>{{1, 1}, {2, 1}});
-    params.boundary_conditions.value_source =
-        ReducedLungParameters::BoundaryConditions::ValueSource::bc_value;
-    params.boundary_conditions.value =
-        Core::IO::InputField<double>(std::unordered_map<int, double>{{1, 1.0}, {2, 2.0}});
-    return params;
+    BcInput input{};
+    // Node 0 carries both a pressure and a flow condition. The mesh cannot express this
+    // through its `bc_id` array, but the container API can, so the grouping is still tested here.
+    // Both pressure definitions share function id 1, so they group into a single model.
+    input.bc_nodes = {{1, {0}}, {2, {2}}, {3, {0}}};
+    input.parameters.boundary_conditions.pressure = {make_definition(1, 1), make_definition(2, 1)};
+    input.parameters.boundary_conditions.flow = {make_definition(3, 2)};
+    return input;
+  }
+
+  BcInput make_single_bc_parameters(int node_id, Type type)
+  {
+    BcInput input{};
+    input.bc_nodes = {{1, {node_id}}};
+    definitions_of_type(input.parameters.boundary_conditions, type) = {make_definition(1, 1)};
+    return input;
+  }
+
+  BcInput make_function_bc_parameters(int node_id, Type type, int function_id)
+  {
+    BcInput input{};
+    input.bc_nodes = {{1, {node_id}}};
+    definitions_of_type(input.parameters.boundary_conditions, type) = {
+        make_definition(1, function_id)};
+    return input;
+  }
+
+  BcInput make_duplicate_type_parameters()
+  {
+    BcInput input{};
+    // Two definitions claim the same node with the same condition type.
+    input.bc_nodes = {{1, {0}}, {2, {0}}};
+    input.parameters.boundary_conditions.pressure = {make_definition(1, 1), make_definition(2, 1)};
+    return input;
   }
 
   BoundaryConditionModel* find_model(BoundaryConditionContainer& container, Type type)
@@ -165,16 +160,23 @@ namespace
   {
     std::unique_ptr<Core::FE::Discretization> discretization;
     ReducedLungParameters parameters;
+    std::map<int, std::vector<int>> bc_nodes;
     std::map<int, std::vector<int>> ele_ids_per_node;
     std::map<int, int> global_dof_per_ele;
     std::map<int, int> first_global_dof_of_ele;
+
+    void set_bc_input(BcInput&& input)
+    {
+      parameters = std::move(input.parameters);
+      bc_nodes = std::move(input.bc_nodes);
+    }
   };
 
   BoundaryConditionFixture make_fixture()
   {
     BoundaryConditionFixture fixture;
     fixture.discretization = make_airway_discretization({0, 1, 2}, {{0, 1}, {1, 2}});
-    fixture.parameters = make_constant_parameters();
+    fixture.set_bc_input(make_constant_parameters());
     fixture.ele_ids_per_node = {{0, {0}}, {1, {0, 1}}, {2, {1}}};
     fixture.global_dof_per_ele = {{0, 3}, {1, 3}};
     fixture.first_global_dof_of_ele = {{0, 0}, {1, 3}};
@@ -185,7 +187,7 @@ namespace
       const BoundaryConditionFixture& fixture, const Core::Utils::FunctionManager& function_manager)
   {
     BoundaryConditionContainer boundary_conditions;
-    create_boundary_conditions(*fixture.discretization, fixture.parameters,
+    create_boundary_conditions(*fixture.discretization, fixture.parameters, fixture.bc_nodes,
         fixture.ele_ids_per_node, fixture.global_dof_per_ele, fixture.first_global_dof_of_ele,
         function_manager, boundary_conditions);
     return boundary_conditions;
@@ -206,7 +208,7 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    Core::Utils::FunctionManager function_manager;
+    auto function_manager = make_function_manager({2.5, -1.0});
     auto boundary_conditions = create_boundary_conditions_from_fixture(fixture, function_manager);
 
     ASSERT_EQ(boundary_conditions.models.size(), 2u);
@@ -216,18 +218,16 @@ namespace
     ASSERT_NE(pressure_model, nullptr);
     ASSERT_NE(flow_model, nullptr);
 
-    EXPECT_EQ(pressure_model->value_source, ValueSource::constant_value);
-    EXPECT_EQ(flow_model->value_source, ValueSource::constant_value);
+    EXPECT_EQ(pressure_model->function_id, 1);
+    EXPECT_EQ(flow_model->function_id, 2);
 
     EXPECT_EQ(pressure_model->data.size(), 2u);
-    EXPECT_EQ(pressure_model->values, (std::vector<double>{2.5, 4.0}));
     EXPECT_EQ(pressure_model->data.node_id, (std::vector<int>{0, 2}));
     EXPECT_EQ(pressure_model->data.global_element_id, (std::vector<int>{0, 1}));
     EXPECT_EQ(pressure_model->data.global_dof_id, (std::vector<int>{0, 4}));
     EXPECT_EQ(pressure_model->data.local_bc_id, (std::vector<int>{0, 1}));
 
     EXPECT_EQ(flow_model->data.size(), 1u);
-    EXPECT_EQ(flow_model->values, (std::vector<double>{-1.0}));
     EXPECT_EQ(flow_model->data.node_id, (std::vector<int>{0}));
     EXPECT_EQ(flow_model->data.global_element_id, (std::vector<int>{0}));
     EXPECT_EQ(flow_model->data.global_dof_id, (std::vector<int>{2}));
@@ -239,7 +239,9 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    Core::Utils::FunctionManager function_manager;
+    // A constant is expressed as a constant function, since the input has no separate constant
+    // option: function 1 (pressure) is 2.5, function 2 (flow) is -1.0.
+    auto function_manager = make_function_manager({2.5, -1.0});
     auto boundary_conditions = create_boundary_conditions_from_fixture(fixture, function_manager);
 
     int n_local_equations = 0;
@@ -263,12 +265,12 @@ namespace
 
     for (const auto& model : boundary_conditions.models)
     {
+      const double bc_value = model.function->evaluate(0.0);
       for (size_t i = 0; i < model.data.size(); ++i)
       {
         const int eq = model.data.local_equation_id[i];
         const int ldof = model.data.local_dof_id[i];
-        const double expected =
-            locally_relevant_dofs.local_values_as_span()[ldof] - model.values[i];
+        const double expected = locally_relevant_dofs.local_values_as_span()[ldof] - bc_value;
         EXPECT_DOUBLE_EQ(rhs.local_values_as_span()[eq], expected);
       }
     }
@@ -279,7 +281,7 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    Core::Utils::FunctionManager function_manager;
+    auto function_manager = make_function_manager({2.5, -1.0});
     auto boundary_conditions = create_boundary_conditions_from_fixture(fixture, function_manager);
 
     int n_local_equations = 0;
@@ -320,17 +322,16 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    fixture.parameters =
-        make_single_bc_parameters(1, ReducedLungParameters::BoundaryConditions::Type::Pressure);
+    fixture.set_bc_input(make_single_bc_parameters(0, Type::Pressure));
     fixture.ele_ids_per_node.erase(0);
 
     BoundaryConditionContainer boundary_conditions;
     Core::Utils::FunctionManager function_manager;
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        create_boundary_conditions(*fixture.discretization, fixture.parameters,
+        create_boundary_conditions(*fixture.discretization, fixture.parameters, fixture.bc_nodes,
             fixture.ele_ids_per_node, fixture.global_dof_per_ele, fixture.first_global_dof_of_ele,
             function_manager, boundary_conditions),
-        Core::Exception, "not part of the topology");
+        Core::Exception, "is not part of the tree");
   }
 
   TEST(BoundaryConditionsTests, CreateBoundaryConditionsMultipleAdjacencyThrows)
@@ -338,13 +339,12 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    fixture.parameters =
-        make_single_bc_parameters(2, ReducedLungParameters::BoundaryConditions::Type::Pressure);
+    fixture.set_bc_input(make_single_bc_parameters(1, Type::Pressure));
 
     BoundaryConditionContainer boundary_conditions;
     Core::Utils::FunctionManager function_manager;
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        create_boundary_conditions(*fixture.discretization, fixture.parameters,
+        create_boundary_conditions(*fixture.discretization, fixture.parameters, fixture.bc_nodes,
             fixture.ele_ids_per_node, fixture.global_dof_per_ele, fixture.first_global_dof_of_ele,
             function_manager, boundary_conditions),
         Core::Exception, "must connect to exactly one element");
@@ -363,8 +363,7 @@ namespace
     function_manager.set_functions(functions);
 
     auto fixture = make_fixture();
-    fixture.parameters = make_function_bc_parameters(
-        1, ReducedLungParameters::BoundaryConditions::Type::Pressure, 1);
+    fixture.set_bc_input(make_function_bc_parameters(0, Type::Pressure, 1));
 
     auto boundary_conditions = create_boundary_conditions_from_fixture(fixture, function_manager);
 
@@ -395,14 +394,71 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    fixture.parameters = make_duplicate_type_parameters();
+    fixture.set_bc_input(make_duplicate_type_parameters());
+
+    BoundaryConditionContainer boundary_conditions;
+    // Both duplicate definitions share function id 1, so the first node's model can be created
+    // before the duplicate-assignment check on the second definition throws.
+    auto function_manager = make_function_manager({1.0});
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        create_boundary_conditions(*fixture.discretization, fixture.parameters, fixture.bc_nodes,
+            fixture.ele_ids_per_node, fixture.global_dof_per_ele, fixture.first_global_dof_of_ele,
+            function_manager, boundary_conditions),
+        Core::Exception, "Multiple pressure boundary conditions assigned to node");
+  }
+
+  TEST(BoundaryConditionsTests, CreateBoundaryConditionsUndefinedMeshIdThrows)
+  {
+    skip_if_parallel();
+
+    auto fixture = make_fixture();
+    fixture.set_bc_input(make_single_bc_parameters(0, Type::Pressure));
+    // The mesh refers to a definition that the input file does not provide.
+    fixture.bc_nodes[7] = {2};
 
     BoundaryConditionContainer boundary_conditions;
     Core::Utils::FunctionManager function_manager;
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        create_boundary_conditions(*fixture.discretization, fixture.parameters,
+        create_boundary_conditions(*fixture.discretization, fixture.parameters, fixture.bc_nodes,
             fixture.ele_ids_per_node, fixture.global_dof_per_ele, fixture.first_global_dof_of_ele,
             function_manager, boundary_conditions),
-        Core::Exception, "Multiple pressure boundary conditions assigned to node");
+        Core::Exception, "no definition with this id exists in the input file");
+  }
+
+  TEST(BoundaryConditionsTests, CreateBoundaryConditionsUnusedDefinitionThrows)
+  {
+    skip_if_parallel();
+
+    auto fixture = make_fixture();
+    auto input = make_single_bc_parameters(0, Type::Pressure);
+    // The input file defines a condition that no node of the mesh refers to.
+    input.parameters.boundary_conditions.pressure.push_back(make_definition(2, 1));
+    fixture.set_bc_input(std::move(input));
+
+    BoundaryConditionContainer boundary_conditions;
+    Core::Utils::FunctionManager function_manager;
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        create_boundary_conditions(*fixture.discretization, fixture.parameters, fixture.bc_nodes,
+            fixture.ele_ids_per_node, fixture.global_dof_per_ele, fixture.first_global_dof_of_ele,
+            function_manager, boundary_conditions),
+        Core::Exception, "is not used by any node of the mesh");
+  }
+
+  TEST(BoundaryConditionsTests, CreateBoundaryConditionsDuplicateDefinitionIdThrows)
+  {
+    skip_if_parallel();
+
+    auto fixture = make_fixture();
+    auto input = make_single_bc_parameters(0, Type::Pressure);
+    input.parameters.boundary_conditions.flow.push_back(make_definition(1, 1));
+    fixture.set_bc_input(std::move(input));
+
+    BoundaryConditionContainer boundary_conditions;
+    Core::Utils::FunctionManager function_manager;
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        create_boundary_conditions(*fixture.discretization, fixture.parameters, fixture.bc_nodes,
+            fixture.ele_ids_per_node, fixture.global_dof_per_ele, fixture.first_global_dof_of_ele,
+            function_manager, boundary_conditions),
+        Core::Exception, "is defined more than once");
   }
 }  // namespace

@@ -37,14 +37,6 @@ namespace
         .dynamic_viscosity = 1.79105e-05,
     };
 
-    params.lung_tree.element_type =
-        Core::IO::InputField<ReducedLungParameters::LungTree::ElementType>(
-            std::unordered_map<int, ReducedLungParameters::LungTree::ElementType>{
-                {1, ReducedLungParameters::LungTree::ElementType::Airway},
-                {2, ReducedLungParameters::LungTree::ElementType::Airway},
-                {3, ReducedLungParameters::LungTree::ElementType::TerminalUnit},
-            });
-
     params.lung_tree.airways.radius =
         Core::IO::InputField<double>(std::unordered_map<int, double>{{1, 1.0}, {2, 0.9}});
     params.lung_tree.airways.flow_model.resistance_type =
@@ -100,14 +92,6 @@ namespace
         .density = 1.176e-06,
         .dynamic_viscosity = 1.79105e-05,
     };
-
-    params.lung_tree.element_type =
-        Core::IO::InputField<ReducedLungParameters::LungTree::ElementType>(
-            std::unordered_map<int, ReducedLungParameters::LungTree::ElementType>{
-                {1, ReducedLungParameters::LungTree::ElementType::Airway},
-                {2, ReducedLungParameters::LungTree::ElementType::Airway},
-                {3, ReducedLungParameters::LungTree::ElementType::Airway},
-                {4, ReducedLungParameters::LungTree::ElementType::Airway}});
 
     params.lung_tree.airways.radius = Core::IO::InputField<double>(
         std::unordered_map<int, double>{{1, 1.0}, {2, 0.9}, {3, 0.8}, {4, 0.7}});
@@ -332,8 +316,11 @@ namespace
     int n_airways = -1;
     int n_terminal_units = -1;
 
-    create_local_element_models(
-        *discretization, params, airways, terminal_units, dof_per_ele, n_airways, n_terminal_units);
+    using ElementType = ReducedLungParameters::LungTree::ElementType;
+    const std::vector element_types{
+        ElementType::Airway, ElementType::Airway, ElementType::TerminalUnit};
+    create_local_element_models(*discretization, params, element_types, airways, terminal_units,
+        dof_per_ele, n_airways, n_terminal_units);
 
     EXPECT_EQ(n_airways, 2);
     EXPECT_EQ(n_terminal_units, 1);
@@ -376,8 +363,10 @@ namespace
     int n_airways = -1;
     int n_terminal_units = -1;
 
-    create_local_element_models(
-        *discretization, params, airways, terminal_units, dof_per_ele, n_airways, n_terminal_units);
+    using ElementType = ReducedLungParameters::LungTree::ElementType;
+    const std::vector element_types(4, ElementType::Airway);
+    create_local_element_models(*discretization, params, element_types, airways, terminal_units,
+        dof_per_ele, n_airways, n_terminal_units);
 
     EXPECT_EQ(n_airways, 4);
     EXPECT_EQ(n_terminal_units, 0);
