@@ -17,6 +17,7 @@
 #include "4C_geometry_pair_element.hpp"
 #include "4C_geometry_pair_element_evaluation_functions.hpp"
 #include "4C_geometry_pair_line_to_volume.hpp"
+#include "4C_linalg_fixedsizematrix_solver.hpp"
 
 #include <unordered_set>
 
@@ -297,6 +298,14 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid, Mortar>:
       Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<1, Solid::n_nodes_ * Solid::n_val_, double> N_solid(
       Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, Beam::n_nodes_ * Beam::n_val_, double> N_mortar_primal(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Mortar::n_dof_, double> local_D_mortar(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Mortar::n_dof_, double> local_M_mortar(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Mortar::n_dof_, double> local_A(
+      Core::LinAlg::Initialization::zero);
 
   // Initialize variable for beam position derivative.
   Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(Core::LinAlg::Initialization::zero);
@@ -305,9 +314,132 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid, Mortar>:
   double segment_jacobian = 0.0;
   double beam_segmentation_factor = 0.0;
 
+  // compute local_A matrix
+  const unsigned int n_segments = this->line_to_3D_segments_.size();
+  if constexpr (std::is_same_v<Mortar, BeamInteraction::HermiteDual>)
+  {
+    // Helper: hard-coded primal cubic Hermite mortar shape functions on [-1, 1].
+    auto evaluate_primal_mortar_shape_functions =
+        [](const double r, Core::LinAlg::Matrix<1, Mortar::n_nodes_ * Mortar::n_val_, double>& N)
+    {
+      N.clear();
+
+      if constexpr (Mortar::n_nodes_ == 2 && Mortar::n_val_ == 2)
+      {
+        const double r2 = r * r;
+        const double r3 = r2 * r;
+
+        N(0) = 0.25 * (2.0 - 3.0 * r + r3);
+        N(1) = 1.0 / 8.0 * (1.0 - r - r2 + r3);
+        N(2) = 0.25 * (2.0 + 3.0 * r - r3);
+        N(3) = 1.0 / 8.0 * (-1.0 - r + r2 + r3);
+      }
+    };
+
+    // Assemble local_M_mortar and local_D_mortar.
+    for (unsigned int i_segment = 0; i_segment < n_segments; ++i_segment)
+    {
+      const double beam_segmentation_factor =
+          0.5 * this->line_to_3D_segments_[i_segment].get_segment_length();
+
+      const unsigned int n_gp =
+          this->line_to_3D_segments_[i_segment].get_projection_points().size();
+
+      for (unsigned int i_gp = 0; i_gp < n_gp; ++i_gp)
+      {
+        const GeometryPair::ProjectionPoint1DTo3D<double>& projected_gauss_point =
+            this->line_to_3D_segments_[i_segment].get_projection_points()[i_gp];
+
+        const double eta = projected_gauss_point.get_eta();
+
+        GeometryPair::evaluate_position_derivative1<Beam>(eta, this->ele1posref_, dr_beam_ref);
+
+        const double segment_jacobian = dr_beam_ref.norm2() * beam_segmentation_factor;
+
+        const double integration_factor =
+            projected_gauss_point.get_gauss_weight() * segment_jacobian;
+
+        N_mortar_primal.clear();
+
+        GeometryPair::EvaluateShapeFunction<Beam>::evaluate(
+            N_mortar_primal, eta, this->ele1pos_.shape_function_data_);
+
+        for (unsigned int j_shape = 0; j_shape < Beam::n_nodes_ * Beam::n_val_; ++j_shape)
+        {
+          const double N_j = N_mortar_primal(j_shape);
+
+          for (unsigned int k_shape = 0; k_shape < Beam::n_nodes_ * Beam::n_val_; ++k_shape)
+          {
+            const double N_k = N_mortar_primal(k_shape);
+
+            for (unsigned int i_dim = 0; i_dim < 3; ++i_dim)
+            {
+              const unsigned int j_dof = j_shape * 3 + i_dim;
+              const unsigned int k_dof = k_shape * 3 + i_dim;
+
+              local_M_mortar(j_dof, k_dof) += N_j * N_k * integration_factor;
+
+              if (j_dof == k_dof)
+              {
+                const double N_k_measure = N_mortar_primal(k_shape);
+
+                local_D_mortar(j_dof, k_dof) += N_k_measure * integration_factor;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Compute A = D M^{-1}.
+    Core::LinAlg::Matrix<Mortar::n_dof_, Mortar::n_dof_, double> M_trans_const(
+        Core::LinAlg::Initialization::zero);
+
+    for (unsigned int i = 0; i < Mortar::n_dof_; ++i)
+    {
+      for (unsigned int j = 0; j < Mortar::n_dof_; ++j)
+      {
+        M_trans_const(i, j) = local_M_mortar(j, i);
+      }
+    }
+
+    for (unsigned int row = 0; row < Mortar::n_dof_; ++row)
+    {
+      Core::LinAlg::Matrix<Mortar::n_dof_, Mortar::n_dof_, double> M_trans_work(
+          Core::LinAlg::Initialization::zero);
+
+      for (unsigned int i = 0; i < Mortar::n_dof_; ++i)
+      {
+        for (unsigned int j = 0; j < Mortar::n_dof_; ++j)
+        {
+          M_trans_work(i, j) = M_trans_const(i, j);
+        }
+      }
+
+      Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> rhs(Core::LinAlg::Initialization::zero);
+
+      Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> sol(Core::LinAlg::Initialization::zero);
+
+      for (unsigned int i = 0; i < Mortar::n_dof_; ++i)
+      {
+        rhs(i) = local_D_mortar(row, i);
+      }
+
+      Core::LinAlg::FixedSizeSerialDenseSolver<Mortar::n_dof_, Mortar::n_dof_, 1> solver;
+
+      solver.set_matrix(M_trans_work);
+      solver.set_vectors(sol, rhs);
+      solver.solve();
+
+      for (unsigned int j = 0; j < Mortar::n_dof_; ++j)
+      {
+        local_A(row, j) = sol(j);
+      }
+    }
+  }
+
   // Calculate the mortar matrices.
   // Loop over segments.
-  const unsigned int n_segments = this->line_to_3D_segments_.size();
   for (unsigned int i_segment = 0; i_segment < n_segments; i_segment++)
   {
     // Factor to account for the integration segment length.
@@ -321,6 +453,8 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid, Mortar>:
       const GeometryPair::ProjectionPoint1DTo3D<double>& projected_gauss_point =
           this->line_to_3D_segments_[i_segment].get_projection_points()[i_gp];
 
+      const double eta = projected_gauss_point.get_eta();
+
       // Get the jacobian in the reference configuration.
       GeometryPair::evaluate_position_derivative1<Beam>(
           projected_gauss_point.get_eta(), this->ele1posref_, dr_beam_ref);
@@ -332,12 +466,40 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid, Mortar>:
       N_mortar.clear();
       N_beam.clear();
       N_solid.clear();
-      GeometryPair::ShapeFunctionData<Mortar> shape_function_data;
-      GeometryPair::SetShapeFunctionData<Mortar>::set(shape_function_data, this->element1());
-      GeometryPair::EvaluateShapeFunction<Mortar>::evaluate(
-          N_mortar, projected_gauss_point.get_eta(), shape_function_data);
+
       GeometryPair::EvaluateShapeFunction<Beam>::evaluate(
-          N_beam, projected_gauss_point.get_eta(), this->ele1pos_.shape_function_data_);
+          N_beam, eta, this->ele1pos_.shape_function_data_);
+
+      if constexpr (std::is_same_v<Mortar, BeamInteraction::HermiteDual>)
+      {
+        // Build dual mortar shape functions from the same primal beam basis
+        // used in the final local_D integral:
+        //
+        //   Phi_j = sum_k A_jk N_beam_k
+        //
+        N_mortar.clear();
+
+        for (unsigned int j_shape = 0; j_shape < Mortar::n_nodes_ * Mortar::n_val_; ++j_shape)
+        {
+          const unsigned int j_dof_x = j_shape * 3;
+
+          for (unsigned int k_shape = 0; k_shape < Beam::n_nodes_ * Beam::n_val_; ++k_shape)
+          {
+            const unsigned int k_dof_x = k_shape * 3;
+
+            N_mortar(j_shape) += local_A(j_dof_x, k_dof_x) * N_beam(k_shape);
+          }
+        }
+      }
+      else
+      {
+        GeometryPair::ShapeFunctionData<Mortar> shape_function_data;
+        GeometryPair::SetShapeFunctionData<Mortar>::set(shape_function_data, this->element1());
+
+        GeometryPair::EvaluateShapeFunction<Mortar>::evaluate(N_mortar, eta, shape_function_data);
+      }
+      /*GeometryPair::EvaluateShapeFunction<Beam>::evaluate(
+          N_beam, projected_gauss_point.get_eta(), this->ele1pos_.shape_function_data_);*/
       GeometryPair::EvaluateShapeFunction<Solid>::evaluate(
           N_solid, projected_gauss_point.get_xi(), this->ele2pos_.shape_function_data_);
 
