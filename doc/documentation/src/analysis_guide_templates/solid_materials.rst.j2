@@ -1,0 +1,42 @@
+.. _solid-materials:
+
+Solid materials
+===============
+
+A solid material model defines the relation between deformation, usually expressed as strain,
+and stress.
+
+Since users should find an appropriate material law for their application quickly, we have
+grouped the material models into families based on their continuum nature.
+This is just a starting point of a complete documentation, and we are always looking for
+more contributions.
+
+The principal continuum material families and their direction input are documented
+on the following pages. There are various other specialized materials, e.g., muscle materials and
+growth models that are not described here yet.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   elastic_materials
+   hyperelastic_framework
+   viscoelastic_materials
+   plasticity_materials
+   material_directions
+
+The solid-material topics are:
+
+* :doc:`elastic_materials` summarizes elastic materials assigned directly to two- and
+  three-dimensional solid elements.
+* :doc:`viscoelastic_materials` describes direct and framework-based material models with
+  time-dependent behavior.
+* :doc:`hyperelastic_framework` describes hyperelastic materials composed of multiple
+  strain-energy terms.
+* :doc:`plasticity_materials` describes continuum plasticity material models and their kinematic
+  settings.
+* :doc:`material_directions` explains how direction-dependent solid materials obtain fiber and
+  coordinate-system directions.
+
+If you wish to implement a new material model, see the
+:ref:`material section <materialdevelopment>` of the developer guide.
