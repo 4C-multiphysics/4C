@@ -556,8 +556,10 @@ void Particle::ParticleEngine::build_particle_to_particle_neighbors()
               std::make_pair(std::make_tuple(type, Owned, ownedindex),
                   std::make_tuple(neighbortype, neighborstatus, neighborindex)));
 
-          // accumulate interaction cost for load balancing weight estimation
-          bin_interaction_costs_[gidofbin] += 1.0;
+          // accumulate interaction cost for load balancing weight estimation, weighted by the
+          // average of the dynamic load balance factors of the two interacting particle types
+          bin_interaction_costs_[gidofbin] +=
+              0.5 * (typeweights_[type] + typeweights_[neighbortype]);
         }
       }
     }
@@ -2069,7 +2071,7 @@ void Particle::ParticleEngine::determine_bin_weights()
     const int gidofbin = binning_->binrowmap_->gid(rowlidofbin);
 
     // use neighbor pair count from the previous interaction evaluation as a proxy for the
-    // compute cost of this bin; fall back to particle count × type weight when no interaction
+    // compute cost of this bin; fall back to particle count * type weight when no interaction
     // data is available yet (e.g. on the very first load redistribution)
     auto costIt = bin_interaction_costs_.find(gidofbin);
     if (costIt != bin_interaction_costs_.end())
