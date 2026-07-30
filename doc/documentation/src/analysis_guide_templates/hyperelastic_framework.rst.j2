@@ -13,13 +13,10 @@ Hyperelastic framework
 
    \Psi = \sum_{a=1}^{n_\mathrm{mat}} \Psi_a.
 
-The parent material is assigned to the element. Its ``MATIDS`` refer to the material IDs of the
-energy summands:
-
-{{ section_dump(framework, "MATERIALS") }}
-
-The example from ``{{ framework_file }}`` combines a compressible isotropic matrix with an
-anisotropic fiber contribution and its structural-tensor definition.
+One material is the *parent material*, which is assigned to the element.
+This material entry does not define its properties (except the density of the material), but contains
+pointers to the energy summands.
+Its children, denoted by the parameter ``MATIDS``, refer to the material IDs of these summands (see example below).
 
 Choosing summands
 -----------------
@@ -28,12 +25,68 @@ There are two common ways to construct an isotropic response:
 
 - A **coupled** contribution depends on the full deformation and already contains distortional
   and volumetric response.
-- A **split** formulation combines one or more isochoric ``ELAST_Iso*`` contributions with one
-  ``ELAST_Vol*`` contribution.
+- A **split** formulation usually combines one or more isochoric ``ELAST_Iso*`` contributions
+  with one ``ELAST_Vol*`` contribution.
 
 Do not add an extra volumetric penalty to a coupled compressible law unless that additional
 volumetric stiffness is intentional. Anisotropic summands are normally added to an isotropic
 matrix and may reference fiber directions or an ``ELAST_StructuralTensor`` material.
+
+Composition rules and limiting cases
+------------------------------------
+
+The framework adds all referenced potentials and does not require a particular number of
+isochoric, volumetric, or coupled summands. Consequently, the following combinations are
+technically possible:
+
+- If a model contains only isochoric terms, its energy is independent of :math:`J`. This gives
+  zero volumetric stress and stiffness; it does **not** impose :math:`J=1` or otherwise prescribe
+  incompressibility. Without a separate constraint, such a model offers no resistance to volume
+  change and is generally unsuitable for a displacement-based solid.
+- More than one volumetric summand may be included. Their energies, pressures, and bulk
+  stiffnesses are added. This can be useful for constructing a specific volumetric law, but using
+  several terms unintentionally over-stiffens or otherwise changes the volumetric response.
+- Isochoric and coupled summands may be combined. The coupled summand already contributes both
+  distortional and volumetric response, while the isochoric term adds further distortional
+  stiffness. The result is a valid additive energy, but no longer a conventional
+  isochoric--volumetric split and should be calibrated as a combined model.
+- No isochoric summand is required. A coupled isotropic law alone is already a complete
+  compressible material, and it may also serve as the matrix for anisotropic fiber terms. A model
+  containing only volumetric terms has no shear stiffness; similarly, an anisotropic-only model
+  may leave deformation modes unsupported. Such incomplete combinations are accepted by the
+  framework but are normally not suitable as standalone solid materials.
+
+Incompressibility and rubber-like materials
+-------------------------------------------
+
+Classical incompressible hyperelastic laws, e.g., the isochoric NeoHooke, Mooney-Rivlin, Yeoh, etc. models, often
+state only an isochoric energy :math:`\Psi_\mathrm{iso}` because incompressibility is imposed
+separately through a pressure Lagrange multiplier:
+
+.. math::
+
+   \Psi=\Psi_\mathrm{iso}(\bar{\boldsymbol C})+p(J-1).
+
+The absence of a :math:`J`-dependent term in such a law therefore does not itself enforce :math:`J=1`.
+In this framework, rubber-like behavior is commonly represented as **nearly incompressible** by
+combining the isochoric law with a volumetric penalty:
+
+.. math::
+
+   \Psi=\Psi_\mathrm{iso}(\bar{\boldsymbol C})+U(J).
+
+For example, ``ELAST_VolPenalty`` penalizes volume changes through
+
+.. math::
+
+   U(J)=\epsilon\left(J^\gamma+J^{-\gamma}-2\right).
+
+.. note::
+
+    A sufficiently large penalty parameter or bulk modulus keeps :math:`J` close to one, but does not
+    enforce exact incompressibility. Increasing it excessively can lead to poor conditioning and
+    volumetric locking. Suitable EAS or F-bar element technology can alleviate locking for nearly
+    incompressible displacement-based solids, but does not itself impose :math:`J=1`.
 
 The plain ``MAT_ElastHyper`` framework accepts elastic summands only. Use
 :doc:`viscoelastic_materials` when adding time-dependent branches.
@@ -41,7 +94,8 @@ The plain ``MAT_ElastHyper`` framework accepts elastic summands only. Use
 Notation for the potentials
 ---------------------------
 
-The summand catalogs state the strain-energy density implemented by each contribution. They use
+The summand catalogs state the strain-energy density implemented by each contribution.
+They are either based on strain invariants or on principal stretches:
 
 .. math::
 
@@ -52,6 +106,9 @@ The summand catalogs state the strain-energy density implemented by each contrib
    &I_2 &= \tfrac12\left[(\operatorname{tr}\boldsymbol C)^2
      -\operatorname{tr}(\boldsymbol C^2)\right],
    &I_3 &= \det\boldsymbol C=J^2.
+
+The principal stretches :math:`\lambda_i` are the positive square roots of the eigenvalues of
+:math:`\boldsymbol C`.
 
 Isochoric quantities carry an overbar:
 
@@ -87,3 +144,14 @@ Summand catalogs
    hyperelastic_isotropic_coupled
    hyperelastic_isochoric_volumetric
    hyperelastic_anisotropic
+
+Example
+---------
+
+Here, the parent materials, which consist of two coupled material parts each, are assigned to the element.
+They combine a compressible isotropic matrix with an anisotropic fiber contribution and its structural-tensor definition.
+Their ``MATIDS``, that is, the material laws of the summation parts, refer to the material IDs of the energy summands,
+which are given as separate material IDs in the ``MATERIALS`` section.
+The example is taken from ``{{ framework_file }}``.
+
+{{ section_dump(framework, "MATERIALS") }}
