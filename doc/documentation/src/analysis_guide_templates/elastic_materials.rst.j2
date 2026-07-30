@@ -1,20 +1,24 @@
-{% set stvenant_file = "structure_bidomain_material_problem_torsion.4C.yaml" %}
-{% set stvenant = load_input_file(stvenant_file) %}
+{% set iso_stvenant_file = "solid_runtime_hex8.4C.yaml" %}
+{% set iso_stvenant = load_input_file(iso_stvenant_file) %}
+{% set ortho_stvenant_file = "structure_bidomain_material_problem_torsion.4C.yaml" %}
+{% set ortho_stvenant = load_input_file(ortho_stvenant_file) %}
 {% set thermo_stvenant_file = "tsi_lindilatation_geolin.4C.yaml" %}
 {% set thermo_stvenant = load_input_file(thermo_stvenant_file) %}
 {% set aaa_file = "f3_womersley.4C.yaml" %}
 {% set aaa = load_input_file(aaa_file) %}
-{% set elasthyper_file = "elasthyper_coupanisoexpo.4C.yaml" %}
+{% set elasthyper_file = "cardiovascular0d_arterialproxdist_structure_direct_genalpha.4C.yaml" %}
 {% set elasthyper = load_input_file(elasthyper_file) %}
+{% set ogden_tca_file = "mat_ogden_tca_hex.4C.yaml" %}
+{% set ogden_tca = load_input_file(ogden_tca_file) %}
 
 .. _elastic-materials:
 
 Elastic materials
 =================
 
-This page summarizes the elastic materials that are assigned directly to three-dimensional solid
-elements. Hyperelastic energy summands are documented separately in
-:doc:`hyperelastic_framework`.
+This page summarizes the elastic materials that can be used for 2D and 3D solid
+elements. Materials that are composed of hyperelastic energy summands are documented
+separately in :doc:`hyperelastic_framework`.
 
 .. list-table::
    :header-rows: 1
@@ -35,6 +39,9 @@ elements. Hyperelastic energy summands are documented separately in
    * - :ref:`MAT_Struct_AAANeoHooke <elastic-aaa-neohooke>`
      - Nonlinear
      - Nonlinear arterial-wall elasticity.
+   * - :ref:`MAT_Ogden_TCA <elastic-ogden-tca>`
+     - Nonlinear
+     - Ogden hyperelasticity with independently controlled tension--compression asymmetry.
    * - :ref:`MAT_ElastHyper <elastic-elasthyper>`
      - Nonlinear
      - General composition of hyperelastic energy summands.
@@ -53,9 +60,9 @@ realism under strong compression.
 ``YOUNG``, ``NUE``, and ``DENS`` define the material. See
 :ref:`MAT_Struct_StVenantKirchhoff in the Input Parameter Reference
 <MATERIALS_MAT_Struct_StVenantKirchhoff>`. The following material section is taken from
-``{{ stvenant_file }}``:
+``{{ iso_stvenant_file }}``:
 
-{{ section_dump(stvenant, "MATERIALS") }}
+{{ section_dump(iso_stvenant, "MATERIALS") }}
 
 The material does not register model-specific Gauss-point output.
 
@@ -74,8 +81,9 @@ oriented reference mesh or an extension of the material model.
 The vectors ``YOUNG``, ``SHEAR``, and ``NUE`` contain the directional elastic constants;
 ``DENS`` sets density. See
 :ref:`MAT_Struct_StVenantKirchhoffOrthotropic in the Input Parameter Reference
-<MATERIALS_MAT_Struct_StVenantKirchhoffOrthotropic>`. Its definition is included in
-``{{ stvenant_file }}`` above.
+<MATERIALS_MAT_Struct_StVenantKirchhoffOrthotropic>`.
+
+{{ section_dump(ortho_stvenant, "MATERIALS") }}
 
 The material does not register model-specific Gauss-point output.
 
@@ -110,6 +118,41 @@ ratio and density. See :ref:`MAT_Struct_AAANeoHooke in the Input Parameter Refer
 ``{{ aaa_file }}``:
 
 {{ section_dump(aaa, "MATERIALS") }}
+
+.. _elastic-ogden-tca:
+
+``MAT_Ogden_TCA``
+-----------------
+
+``MAT_Ogden_TCA`` is a nonlinear isotropic hyperelastic solid material representing the
+tension--compression asymmetric Ogden model of
+`Moerman et al. (2016) <https://doi.org/10.1016/j.jmbbm.2015.11.027>`_:
+
+.. math::
+
+   \Psi ={}& \frac{c}{m^2}\sum_{i=1}^{3}
+      \left[q\left(\lambda_i^m-1\right)
+      +(1-q)\left(\lambda_i^{-m}-1\right)\right] \\
+      &+\frac{c}{m}(1-2q)\ln J+\frac{\kappa}{2}(J-1)^2 ,
+
+where :math:`\lambda_i` are the principal stretches and :math:`J=\det\boldsymbol F`.
+``C`` (:math:`c>0`) scales the material stiffness and ``M`` (:math:`m>0`) controls its
+nonlinearity. ``Q`` (:math:`q\in[0,1]`) independently controls tension--compression asymmetry:
+
+- :math:`q=0.5` gives a tension--compression symmetric response,
+- :math:`q>0.5` makes the material stiffer in tension than in compression, and
+- :math:`q<0.5` makes the material stiffer in compression than in tension.
+
+``KAPPA`` (:math:`\kappa>0`) is the volumetric penalty parameter. Larger values produce a more
+nearly incompressible response but do not enforce exact incompressibility and may cause poor
+conditioning or volumetric locking. ``DENS`` specifies the non-negative density. The material
+requires nonlinear total-Lagrangian kinematics.
+
+See :ref:`MAT_Ogden_TCA in the Input Parameter Reference <MATERIALS_MAT_Ogden_TCA>`. The two
+materials in the following excerpt from ``{{ ogden_tca_file }}`` differ only in ``Q`` and
+therefore demonstrate opposite asymmetry:
+
+{{ section_dump(ogden_tca, "MATERIALS") }}
 
 .. _elastic-elasthyper:
 

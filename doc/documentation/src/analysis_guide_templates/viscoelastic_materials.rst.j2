@@ -54,41 +54,46 @@ viscous pseudo-potential or stress-evolution equation. Here,
 
 .. list-table::
    :header-rows: 1
-   :widths: 28 24 48
+   :widths: 35 65
 
    * - Summand
      - Model
-     - Implemented potential or evolution equation
    * - :ref:`VISCO_IsoRateDep <MATERIALS_VISCO_IsoRateDep>`
      - Isochoric rate-dependent contribution.
-     - :math:`\Phi_\mathrm{v}=n\,\bar J_2(\bar I_1-3)`, with
+
+       :math:`\Phi_\mathrm{v}=n\,\bar J_2(\bar I_1-3)`, with
        :math:`\bar J_2=\frac12\dot{\bar{\boldsymbol C}}:
        \dot{\bar{\boldsymbol C}}`. The rate is evaluated by a backward difference.
    * - :ref:`VISCO_FSLS <MATERIALS_VISCO_FSLS>`
      - Fractional standard linear solid.
-     - Fractional hereditary stress update; no deformation-only potential. Its implemented
+
+       Fractional hereditary stress update; no deformation-only potential. Its implemented
        discrete equation is given below.
    * - :ref:`VISCO_GeneralizedMaxwell <MATERIALS_VISCO_GeneralizedMaxwell>`
      - Generalized Maxwell model.
-     - :math:`\boldsymbol S_\mathrm{v}=\sum_i\boldsymbol Q_i`, where
+
+       :math:`\boldsymbol S_\mathrm{v}=\sum_i\boldsymbol Q_i`, where
        :math:`\dot{\boldsymbol Q}_i+\boldsymbol Q_i/\tau_i
        =\dot{\boldsymbol S}^{\,e}_i`. Each
        :math:`\boldsymbol S^{\,e}_i` comes from the elastic material referenced by its branch.
    * - :ref:`VISCO_GeneralizedMaxwellBranch
        <MATERIALS_VISCO_GeneralizedMaxwellBranch>`
      - Branch referenced by a generalized Maxwell model.
-     - No independent equation; ``MATID`` defines
+
+       No independent equation; ``MATID`` defines
        :math:`\boldsymbol S^{\,e}_i` and ``TAU`` defines :math:`\tau_i` in the parent Maxwell law.
    * - :ref:`VISCO_QuasiLinearGeneralizedMaxwell
        <MATERIALS_VISCO_QuasiLinearGeneralizedMaxwell>`
      - Fung-type quasi-linear generalized Maxwell model.
-     - :math:`\boldsymbol S_\mathrm{v}=\sum_i\boldsymbol Q_i+
+
+       :math:`\boldsymbol S_\mathrm{v}=\sum_i\boldsymbol Q_i+
        \eta\dot{\boldsymbol E}`, with
        :math:`\dot{\boldsymbol Q}_i+\boldsymbol Q_i/\tau_i
        =\beta_i\dot{\boldsymbol S}_0`.
    * - :ref:`VISCO_CoupMyocard <MATERIALS_VISCO_CoupMyocard>`
      - Coupled myocardial viscoelastic contribution.
-     - :math:`\Phi_\mathrm{v}=\frac{\eta}{2}
+
+       :math:`\Phi_\mathrm{v}=\frac{\eta}{2}
        \dot{\boldsymbol E}:\dot{\boldsymbol E}
        =\frac{\eta}{8}\dot{\boldsymbol C}:\dot{\boldsymbol C}`, hence
        :math:`\boldsymbol S_\mathrm{v}=\eta\dot{\boldsymbol E}`; ``N`` is :math:`\eta`.
