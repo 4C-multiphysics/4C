@@ -412,6 +412,7 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                                    "Ids of the cell blocks of the mesh that hold the airway "
                                    "elements. Every cell block of the mesh must be claimed by "
                                    "exactly one element type.",
+                               .default_value = std::vector<int>{},
                                .store = in_struct(
                                    &ReducedLungParameters::LungTree::Airways::element_blocks),
                            }),
@@ -442,6 +443,7 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                                    "Ids of the cell blocks of the mesh that hold the terminal unit "
                                    "elements. Every cell block of the mesh must be claimed by "
                                    "exactly one element type.",
+                               .default_value = std::vector<int>{},
                                .store = in_struct(
                                    &ReducedLungParameters::LungTree::TerminalUnits::element_blocks),
                            }),

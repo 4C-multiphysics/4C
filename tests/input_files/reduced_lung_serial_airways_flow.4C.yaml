@@ -13,21 +13,13 @@ reduced_dimensional_lung:
     restart_every: 1
     results_every: 1
     time_increment: 1
+  geometry:
+    file: "vtu/reduced_lung_serial_airways.vtu"
   lung_tree:
-    topology:
-      num_nodes: 4
-      num_elements: 3
-      node_coordinates:
-        from_file: "reduced_lung_serial_airways_fields.json"
-      element_nodes:
-        from_file: "reduced_lung_serial_airways_fields.json"
-    element_type:
-      constant: Airway
-    generation:
-      from_file: "reduced_lung_serial_airways_fields.json"
     airways:
+      element_blocks: [1]
       radius:
-        from_file: "reduced_lung_serial_airways_fields.json"
+        from_mesh: "radius"
       flow_model:
         resistance_type:
           constant: Linear
@@ -49,14 +41,11 @@ reduced_dimensional_lung:
           elasticity_e:
             constant: 1.0
   boundary_conditions:
-    num_conditions: 2
-    bc_type:
-      constant: Pressure
-    bc_node_id:
-      from_file: "reduced_lung_serial_airways_fields.json"
-    boundary_value:
-      bc_function_id:
-        from_file: "reduced_lung_serial_airways_fields.json"
+    pressure:
+      - id: 1
+        function_id: 1
+      - id: 2
+        function_id: 2
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Reduced_lung_solver"

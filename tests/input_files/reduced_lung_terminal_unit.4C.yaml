@@ -12,18 +12,9 @@ reduced_dimensional_lung:
     restart_every: 1
     results_every: 1
     time_increment: 1
+  geometry:
+    file: "vtu/reduced_lung_terminal_unit.vtu"
   lung_tree:
-    topology:
-      num_nodes: 2
-      num_elements: 1
-      node_coordinates:
-        from_file: "reduced_lung_terminal_unit_fields.json"
-      element_nodes:
-        from_file: "reduced_lung_terminal_unit_fields.json"
-    element_type:
-      constant: TerminalUnit
-    generation:
-      constant: -1
     airways: # These values won't be used since there are no airways in the model
       radius:
         constant: 1.0
@@ -35,6 +26,7 @@ reduced_dimensional_lung:
       wall_model_type:
         constant: Rigid
     terminal_units:
+      element_blocks: [2]
       rheological_model:
         rheological_model_type:
           constant: KelvinVoigt
@@ -48,14 +40,11 @@ reduced_dimensional_lung:
           elasticity_e:
             constant: 1.0
   boundary_conditions:
-    num_conditions: 2
-    bc_type:
-      constant: Pressure
-    bc_node_id:
-      from_file: "reduced_lung_terminal_unit_fields.json"
-    boundary_value:
-      bc_function_id:
-        from_file: "reduced_lung_terminal_unit_fields.json"
+    pressure:
+      - id: 1
+        function_id: 1
+      - id: 2
+        function_id: 2
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Reduced_lung_solver"
