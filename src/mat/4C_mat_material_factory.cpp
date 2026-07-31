@@ -114,6 +114,7 @@
 #include "4C_mat_plasticelasthyper.hpp"
 #include "4C_mat_plasticgtn.hpp"
 #include "4C_mat_plasticlinelast.hpp"
+#include "4C_mat_plasticmohrcoulomb.hpp"
 #include "4C_mat_plasticnlnlogneohooke.hpp"
 #include "4C_mat_poro_density_law.hpp"
 #include "4C_mat_poro_law.hpp"
@@ -248,6 +249,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     case Core::Materials::m_pldruckprag:
     {
       return make_parameter_impl<Mat::PAR::PlasticDruckerPrager>(id, type, input_data);
+    }
+    case Core::Materials::m_plmohrcoulomb:
+    {
+      return make_parameter_impl<Mat::PAR::PlasticMohrCoulomb>(id, type, input_data);
     }
     case Core::Materials::m_plgtn:
     {
