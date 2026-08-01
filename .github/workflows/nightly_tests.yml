@@ -10,7 +10,7 @@ jobs:
   gcc13_assertions_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -45,7 +45,7 @@ jobs:
     needs: gcc13_assertions_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     strategy:
       fail-fast: false
@@ -97,7 +97,7 @@ jobs:
   clang18_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -202,7 +202,7 @@ jobs:
     needs: clang18_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     strategy:
       fail-fast: false
@@ -254,7 +254,7 @@ jobs:
   clang18_build_oldest_supported_dependencies:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -289,7 +289,7 @@ jobs:
     needs: clang18_build_oldest_supported_dependencies
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     strategy:
       fail-fast: false
@@ -328,7 +328,7 @@ jobs:
   gcc13_no_optional_dependencies_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -363,7 +363,7 @@ jobs:
     needs: gcc13_no_optional_dependencies_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     strategy:
       fail-fast: false
@@ -415,7 +415,7 @@ jobs:
   gcc13_asan_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -450,7 +450,7 @@ jobs:
     needs: gcc13_asan_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     strategy:
       fail-fast: false
@@ -502,7 +502,7 @@ jobs:
   clang18_performance_tests_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -533,7 +533,7 @@ jobs:
     needs: clang18_performance_tests_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:

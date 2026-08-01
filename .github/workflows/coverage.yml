@@ -10,7 +10,7 @@ jobs:
   clang18_coverage_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -47,7 +47,7 @@ jobs:
     needs: clang18_coverage_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     strategy:
       fail-fast: false
@@ -114,7 +114,7 @@ jobs:
     needs: [clang18_coverage_test, clang18_coverage_build]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:bf9c337f
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:b0cc3555
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     steps:
       - uses: actions/checkout@v7
