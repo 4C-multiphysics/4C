@@ -74,6 +74,7 @@ if(FOUR_C_ENABLE_DOCUMENTATION)
       ${PROJECT_SOURCE_DIR}/tests/input_files/elasthyper_isoanisoexpo_DispersedTransverselyIsotropic_ost_h8.4C.yaml
       ${PROJECT_SOURCE_DIR}/tests/input_files/viscoAnisotropic_creep.4C.yaml
       ${PROJECT_SOURCE_DIR}/tests/input_files/viscoelasthyper.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/mat_ogden_tca_hex.4C.yaml
       )
 
   set(_sphinx_FILES_FROM_TESTS_DIR "${_sphinx_OUT_DIR}/testfiles")
