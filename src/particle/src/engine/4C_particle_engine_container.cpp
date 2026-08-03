@@ -94,42 +94,48 @@ void Particle::ParticleContainer::decrease_container_size()
 void Particle::ParticleContainer::add_particle(
     int& index, int globalid, const ParticleStates& states)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  // check states in container
+  for (const auto& state : storedstates_)
+  {
+    if (state < static_cast<int>(states.size()) and not states[state].empty() and
+        static_cast<int>(states[state].size()) != statedim_[state])
+      FOUR_C_THROW("can not add particle: dimensions of state '{}' do not match!",
+          enum_to_state_name(state));
+  }
+#endif
+
   // increase size of container
   if (particlestored_ == containersize_) increase_container_size();
 
-  // store global id
-  globalids_[particlestored_] = globalid;
-
-  // iterate over states stored in container
-  for (const auto& state : storedstates_)
-  {
-    // state not handed over
-    if (states.size() <= state or states[state].empty())
-    {
-      // initialize to zero
-      for (int dim = 0; dim < statedim_[state]; ++dim)
-        (states_[state])[particlestored_ * statedim_[state] + dim] = 0.0;
-    }
-    // state handed over
-    else
-    {
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (static_cast<int>(states[state].size()) != statedim_[state])
-        FOUR_C_THROW("can not add particle: dimensions of state '{}' do not match!",
-            enum_to_state_name(state));
-#endif
-
-      // store state in container
-      for (int dim = 0; dim < statedim_[state]; ++dim)
-        (states_[state])[particlestored_ * statedim_[state] + dim] = states[state][dim];
-    }
-  }
-
-  // set index of added particle
+  // store local index before incrementing
   index = particlestored_;
 
   // increase counter of stored particles
   particlestored_++;
+
+  // store global id
+  globalids_[index] = globalid;
+
+  // iterate over states stored in container
+  for (const auto& state : storedstates_)
+  {
+    // get pointer to particle state
+    double* state_ptr = get_ptr_to_state_writable(state, index);
+
+    // state not handed over
+    if (states.size() <= state or states[state].empty())
+    {
+      // initialize to zero
+      for (int dim = 0; dim < statedim_[state]; ++dim) state_ptr[dim] = 0.0;
+    }
+    // state handed over
+    else
+    {
+      // store state in container
+      for (int dim = 0; dim < statedim_[state]; ++dim) state_ptr[dim] = states[state][dim];
+    }
+  }
 }
 
 void Particle::ParticleContainer::replace_particle(
@@ -160,9 +166,11 @@ void Particle::ParticleContainer::replace_particle(
             enum_to_state_name(state));
 #endif
 
+      // get pointer to particle state
+      double* state_ptr = get_ptr_to_state_writable(state, index);
+
       // replace state in container
-      for (int dim = 0; dim < statedim_[state]; ++dim)
-        (states_[state])[index * statedim_[state] + dim] = states[state][dim];
+      for (int dim = 0; dim < statedim_[state]; ++dim) state_ptr[dim] = states[state][dim];
     }
   }
 }
@@ -185,7 +193,7 @@ void Particle::ParticleContainer::get_particle(
   for (const auto& state : storedstates_)
   {
     // get pointer to particle state
-    const double* state_ptr = &((states_[state])[index * statedim_[state]]);
+    const double* state_ptr = get_ptr_to_state(state, index);
 
     // fill particle state
     states[state].assign(state_ptr, state_ptr + statedim_[state]);
@@ -199,21 +207,57 @@ void Particle::ParticleContainer::remove_particle(int index)
     FOUR_C_THROW("can not remove particle as index {} out of bounds!", index);
 #endif
 
-  // decrease counter of stored particles
-  --particlestored_;
+  // index of last particle
+  auto last_index = particlestored_ - 1;
+
+  if (index == last_index)
+  {
+    --particlestored_;
+    return;
+  }
 
   // overwrite global id in container
-  globalids_[index] = globalids_[particlestored_];
+  globalids_[index] = globalids_[last_index];
 
   // iterate over states stored in container
   for (const auto& state : storedstates_)
   {
-    // overwrite state in container
-    for (int dim = 0; dim < statedim_[state]; ++dim)
-      (states_[state])[index * statedim_[state] + dim] =
-          (states_[state])[particlestored_ * statedim_[state] + dim];
+    // get pointers to particle state
+    double* state_ptr_index = get_ptr_to_state_writable(state, index);
+    double* state_ptr_last = get_ptr_to_state_writable(state, last_index);
+
+    for (int dim = 0; dim < statedim_[state]; ++dim) state_ptr_index[dim] = state_ptr_last[dim];
   }
+
+  // decrease counter of stored particles
+  --particlestored_;
 }
+
+const double* Particle::ParticleContainer::get_ptr_to_state(ParticleState state, int index) const
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  if (not storedstates_.contains(state))
+    FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
+
+  if (index < 0 or index > (particlestored_ - 1))
+    FOUR_C_THROW("can not return pointer to state of particle as index {} out of bounds!", index);
+#endif
+
+  return &((states_[state])[index * statedim_[state]]);
+};
+
+double* Particle::ParticleContainer::get_ptr_to_state_writable(ParticleState state, int index)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  if (not storedstates_.contains(state))
+    FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
+
+  if (index < 0 or index > (particlestored_ - 1))
+    FOUR_C_THROW("can not return pointer to state of particle as index {} out of bounds!", index);
+#endif
+
+  return &((states_[state])[index * statedim_[state]]);
+};
 
 double Particle::ParticleContainer::get_min_value_of_state(ParticleState state) const
 {
@@ -224,10 +268,10 @@ double Particle::ParticleContainer::get_min_value_of_state(ParticleState state) 
 
   if (particlestored_ <= 0) return 0.0;
 
-  double min = (states_[state])[0];
+  const double* state_ptr = get_ptr_to_state(state, 0);
+  double min = state_ptr[0];
 
-  for (int i = 0; i < (particlestored_ * statedim_[state]); ++i)
-    min = std::min(min, states_[state][i]);
+  for (int i = 1; i < (particlestored_ * statedim_[state]); ++i) min = std::min(min, state_ptr[i]);
 
   return min;
 }
@@ -241,10 +285,10 @@ double Particle::ParticleContainer::get_max_value_of_state(ParticleState state) 
 
   if (particlestored_ <= 0) return 0.0;
 
-  double max = (states_[state])[0];
+  const double* state_ptr = get_ptr_to_state(state, 0);
+  double max = state_ptr[0];
 
-  for (int i = 0; i < (particlestored_ * statedim_[state]); ++i)
-    max = std::max(max, states_[state][i]);
+  for (int i = 1; i < (particlestored_ * statedim_[state]); ++i) max = std::max(max, state_ptr[i]);
 
   return max;
 }

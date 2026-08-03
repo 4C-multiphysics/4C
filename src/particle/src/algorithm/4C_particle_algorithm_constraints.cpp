@@ -45,16 +45,10 @@ void Particle::ConstraintsProjectionBase::apply(
     if (n_particle_stored <= 0) continue;
 
     // get pointer to particle velocity and acceleration
-    double* vel = container->get_ptr_to_state(Particle::Velocity, 0);
-    double* acc = container->get_ptr_to_state(Particle::Acceleration, 0);
-
-    double* modvel = nullptr;
-    if (container->have_stored_state(Particle::ModifiedVelocity))
-      modvel = container->get_ptr_to_state(Particle::ModifiedVelocity, 0);
-
-    double* modacc = nullptr;
-    if (container->have_stored_state(Particle::ModifiedAcceleration))
-      modacc = container->get_ptr_to_state(Particle::ModifiedAcceleration, 0);
+    double* vel = container->get_ptr_to_state_writable(Particle::Velocity, 0);
+    double* acc = container->get_ptr_to_state_writable(Particle::Acceleration, 0);
+    double* modvel = container->cond_get_ptr_to_state_writable(Particle::ModifiedVelocity, 0);
+    double* modacc = container->cond_get_ptr_to_state_writable(Particle::ModifiedAcceleration, 0);
 
     // get particle state dimension
     const int pos_state_dim = container->get_state_dim(Particle::Position);

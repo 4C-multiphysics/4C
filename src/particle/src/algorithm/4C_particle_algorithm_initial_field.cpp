@@ -93,7 +93,7 @@ void Particle::InitialFieldHandler::set_initial_fields()
 
       // get pointer to particle states
       const double* pos = container->get_ptr_to_state(Particle::Position, 0);
-      double* state = container->get_ptr_to_state(particleState, 0);
+      double* state = container->get_ptr_to_state_writable(particleState, 0);
 
       // get particle state dimensions
       int posstatedim = container->get_state_dim(Particle::Position);

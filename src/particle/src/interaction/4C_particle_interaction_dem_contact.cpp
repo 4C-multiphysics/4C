@@ -389,26 +389,26 @@ void Particle::DEMContact::evaluate_particle_contact()
     // get pointer to particle states
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
     const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    double* force_i = container_i->get_ptr_to_state(Particle::Force, particle_i);
+    double* force_i = container_i->get_ptr_to_state_writable(Particle::Force, particle_i);
 
     const double* angvel_i = nullptr;
     double* moment_i = nullptr;
     if (contacttangential_ or contactrolling_)
     {
       angvel_i = container_i->get_ptr_to_state(Particle::AngularVelocity, particle_i);
-      moment_i = container_i->get_ptr_to_state(Particle::Moment, particle_i);
+      moment_i = container_i->get_ptr_to_state_writable(Particle::Moment, particle_i);
     }
 
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
     const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
-    double* force_j = container_j->get_ptr_to_state(Particle::Force, particle_j);
+    double* force_j = container_j->get_ptr_to_state_writable(Particle::Force, particle_j);
 
     const double* angvel_j = nullptr;
     double* moment_j = nullptr;
     if (contacttangential_ or contactrolling_)
     {
       angvel_j = container_j->get_ptr_to_state(Particle::AngularVelocity, particle_j);
-      moment_j = container_j->get_ptr_to_state(Particle::Moment, particle_j);
+      moment_j = container_j->get_ptr_to_state_writable(Particle::Moment, particle_j);
     }
 
     // compute vectors from particle i and j to contact point c
@@ -616,14 +616,14 @@ void Particle::DEMContact::evaluate_particle_wall_contact()
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
     const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
     const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    double* force_i = container_i->get_ptr_to_state(Particle::Force, particle_i);
+    double* force_i = container_i->get_ptr_to_state_writable(Particle::Force, particle_i);
 
     const double* angvel_i = nullptr;
     double* moment_i = nullptr;
     if (contacttangential_ or contactrolling_)
     {
       angvel_i = container_i->get_ptr_to_state(Particle::AngularVelocity, particle_i);
-      moment_i = container_i->get_ptr_to_state(Particle::Moment, particle_i);
+      moment_i = container_i->get_ptr_to_state_writable(Particle::Moment, particle_i);
     }
 
     // get pointer to column wall element

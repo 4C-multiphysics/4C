@@ -74,7 +74,7 @@ void Particle::SPHPressure::compute_pressure() const
 
     // get pointer to particle state
     const double* dens = container->get_ptr_to_state(Particle::Density, 0);
-    double* press = container->get_ptr_to_state(Particle::Pressure, 0);
+    double* press = container->get_ptr_to_state_writable(Particle::Pressure, 0);
 
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* material =

@@ -339,20 +339,20 @@ namespace
         mass[0] = 0.5;
       }
 
-      double* currpos = container_->cond_get_ptr_to_state(Particle::Position, index);
+      const double* currpos = container_->cond_get_ptr_to_state(Particle::Position, index);
       FOUR_C_EXPECT_ITERABLE_NEAR(currpos, pos.begin(), 3, 1.0e-14);
 
-      double* currvel = container_->cond_get_ptr_to_state(Particle::Velocity, index);
+      const double* currvel = container_->cond_get_ptr_to_state(Particle::Velocity, index);
       FOUR_C_EXPECT_ITERABLE_NEAR(currvel, vel.begin(), 3, 1.0e-14);
 
-      double* currmass = container_->cond_get_ptr_to_state(Particle::Mass, index);
+      const double* currmass = container_->cond_get_ptr_to_state(Particle::Mass, index);
       EXPECT_NEAR(currmass[0], mass[0], 1e-14);
     }
   }
 
   TEST_F(ParticleContainerTest, CondGetPtrToStateNotStored)
   {
-    double* currpos = container_->cond_get_ptr_to_state(Particle::Acceleration, 0);
+    const double* currpos = container_->cond_get_ptr_to_state(Particle::Acceleration, 0);
     EXPECT_EQ(currpos, nullptr);
   }
 

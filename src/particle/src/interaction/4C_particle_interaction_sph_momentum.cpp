@@ -257,12 +257,12 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
 
     double* acc_i = nullptr;
     if (intfluidtypes_.contains(type_i))
-      acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
+      acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
 
     const double* mod_vel_i =
         container_i->cond_get_ptr_to_state(Particle::ModifiedVelocity, particle_i);
     double* mod_acc_i =
-        container_i->cond_get_ptr_to_state(Particle::ModifiedAcceleration, particle_i);
+        container_i->cond_get_ptr_to_state_writable(Particle::ModifiedAcceleration, particle_i);
 
     // get pointer to particle states
     const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
@@ -273,14 +273,15 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
 
     double* acc_j = nullptr;
     if (intfluidtypes_.contains(type_j) and status_j == Particle::Owned)
-      acc_j = container_j->get_ptr_to_state(Particle::Acceleration, particle_j);
+      acc_j = container_j->get_ptr_to_state_writable(Particle::Acceleration, particle_j);
 
     const double* mod_vel_j =
         container_j->cond_get_ptr_to_state(Particle::ModifiedVelocity, particle_j);
 
     double* mod_acc_j = nullptr;
     if (status_j == Particle::Owned)
-      mod_acc_j = container_j->cond_get_ptr_to_state(Particle::ModifiedAcceleration, particle_j);
+      mod_acc_j =
+          container_j->cond_get_ptr_to_state_writable(Particle::ModifiedAcceleration, particle_j);
 
     // evaluate specific coefficient
     double speccoeff_ij(0.0);
@@ -438,14 +439,15 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
 
     double* acc_i = nullptr;
     if (status_i == Particle::Owned)
-      acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
+      acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
 
     const double* mod_vel_i =
         container_i->cond_get_ptr_to_state(Particle::ModifiedVelocity, particle_i);
 
     double* mod_acc_i = nullptr;
     if (status_i == Particle::Owned)
-      mod_acc_i = container_i->cond_get_ptr_to_state(Particle::ModifiedAcceleration, particle_i);
+      mod_acc_i =
+          container_i->cond_get_ptr_to_state_writable(Particle::ModifiedAcceleration, particle_i);
 
     // get pointer to boundary particle states
     const double* mass_j = container_i->get_ptr_to_state(Particle::Mass, particle_i);
@@ -458,7 +460,7 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
 
     double* force_j = nullptr;
     if (status_j == Particle::Owned)
-      force_j = container_j->cond_get_ptr_to_state(Particle::Force, particle_j);
+      force_j = container_j->cond_get_ptr_to_state_writable(Particle::Force, particle_j);
 
     // contribution from neighboring boundary particle j
     double acc_ij[3] = {0.0, 0.0, 0.0};
@@ -624,12 +626,12 @@ void Particle::SPHMomentum::momentum_equation_particle_wall_contribution() const
     const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
     const double* press_i = container_i->get_ptr_to_state(Particle::Pressure, particle_i);
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    double* acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
+    double* acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
 
     const double* mod_vel_i =
         container_i->cond_get_ptr_to_state(Particle::ModifiedVelocity, particle_i);
     double* mod_acc_i =
-        container_i->cond_get_ptr_to_state(Particle::ModifiedAcceleration, particle_i);
+        container_i->cond_get_ptr_to_state_writable(Particle::ModifiedAcceleration, particle_i);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;

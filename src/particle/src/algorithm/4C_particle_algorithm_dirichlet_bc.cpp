@@ -208,9 +208,9 @@ void Particle::DirichletBoundaryConditionHandler::evaluate_dirichlet_boundary_co
 
     // get pointer to particle states
     const double* refpos = container->get_ptr_to_state(Particle::ReferencePosition, 0);
-    double* pos = container->get_ptr_to_state(Particle::Position, 0);
-    double* vel = container->get_ptr_to_state(Particle::Velocity, 0);
-    double* acc = container->get_ptr_to_state(Particle::Acceleration, 0);
+    double* pos = container->get_ptr_to_state_writable(Particle::Position, 0);
+    double* vel = container->get_ptr_to_state_writable(Particle::Velocity, 0);
+    double* acc = container->get_ptr_to_state_writable(Particle::Acceleration, 0);
 
     // iterate over owned particles of current type and apply dbc values to particle states
     for (int i = 0; i < particlestored; ++i)
@@ -239,9 +239,9 @@ void Particle::DirichletBoundaryConditionHandler::evaluate_dirichlet_boundary_co
     const double* dirichlet_function_id =
         container->get_ptr_to_state(Particle::DirichletFunctionId, 0);
     const double* refpos = container->get_ptr_to_state(Particle::ReferencePosition, 0);
-    double* pos = container->get_ptr_to_state(Particle::Position, 0);
-    double* vel = container->get_ptr_to_state(Particle::Velocity, 0);
-    double* acc = container->get_ptr_to_state(Particle::Acceleration, 0);
+    double* pos = container->get_ptr_to_state_writable(Particle::Position, 0);
+    double* vel = container->get_ptr_to_state_writable(Particle::Velocity, 0);
+    double* acc = container->get_ptr_to_state_writable(Particle::Acceleration, 0);
 
     // iterate over owned particles of current type
     for (int i = 0; i < particlestored; ++i)

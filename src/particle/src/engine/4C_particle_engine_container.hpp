@@ -171,10 +171,10 @@ namespace Particle
     //! @{
 
     /*!
-     * \brief get pointer to state of a particle at index
+     * \brief get read-only pointer to state of a particle at index
      *
-     * This is the default method to be used to get a pointer to the state of a particle at a
-     * certain index.
+     * This is the default method to be used to get a pointer with read-only access to the state of
+     * a particle at a certain index.
      *
      * \note Throws an error in the debug version in case the requested state is not stored in the
      *       particle container.
@@ -183,29 +183,17 @@ namespace Particle
      * \param[in] state particle state
      * \param[in] index index of particle in container
      *
-     * \return pointer to particle state
+     * \return pointer with read-only access to particle state
      */
-    inline double* get_ptr_to_state(ParticleState state, int index)
-    {
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedstates_.contains(state))
-        FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
-
-      if (index < 0 or index > (particlestored_ - 1))
-        FOUR_C_THROW(
-            "can not return pointer to state of particle as index {} out of bounds!", index);
-#endif
-
-      return &((states_[state])[index * statedim_[state]]);
-    };
+    const double* get_ptr_to_state(ParticleState state, int index) const;
 
     /*!
-     * \brief conditionally get pointer to state of a particle at index
+     * \brief conditionally get read-only pointer to state of a particle at index
      *
-     * This method to get a pointer to the state of a particle at a certain index is used in cases
-     * when a state may not be stored in the particle container. Conditionally, a pointer is
-     * returned in case the state is stored in the particle container, otherwise, a nullptr is
-     * returned.
+     * This method to get a pointer with read-only access to the state of a particle at a certain
+     * index is used in cases when a state may not be stored in the particle container.
+     * Conditionally, a pointer is returned in case the state is stored in the particle container,
+     * otherwise, a nullptr is returned.
      *
      * \note The returned pointer may not be used to access memory without checking for a nullptr.
      *
@@ -213,17 +201,51 @@ namespace Particle
      * \param[in] state particle state
      * \param[in] index index of particle in container
      *
-     * \return pointer to particle state or nullptr
+     * \return pointer with read-only access to particle state or nullptr
      */
-    inline double* cond_get_ptr_to_state(ParticleState state, int index)
+    inline const double* cond_get_ptr_to_state(ParticleState state, int index) const
     {
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (index < 0 or index > (particlestored_ - 1))
-        FOUR_C_THROW(
-            "can not return pointer to state of particle as index {} out of bounds!", index);
-#endif
+      if (storedstates_.contains(state)) return get_ptr_to_state(state, index);
 
-      if (storedstates_.contains(state)) return &((states_[state])[index * statedim_[state]]);
+      return nullptr;
+    };
+
+    /*!
+     * \brief get writable pointer to state of a particle at index
+     *
+     * This is the default method to be used to get a pointer with writable access to the state of
+     * a particle at a certain index.
+     *
+     * \note Throws an error in the debug version in case the requested state is not stored in the
+     *       particle container.
+     *
+     *
+     * \param[in] state particle state
+     * \param[in] index index of particle in container
+     *
+     * \return pointer with writable access to particle state
+     */
+    double* get_ptr_to_state_writable(ParticleState state, int index);
+
+    /*!
+     * \brief conditionally get writable pointer to state of a particle at index
+     *
+     * This method to get a pointer with writable access to the state of a particle at a certain
+     * index is used in cases when a state may not be stored in the particle container.
+     * Conditionally, a pointer is returned in case the state is stored in the particle container,
+     * otherwise, a nullptr is returned.
+     *
+     * \note The returned pointer may not be used to access memory without checking for a nullptr.
+     *
+     *
+     * \param[in] state particle state
+     * \param[in] index index of particle in container
+     *
+     * \return pointer with writable access to particle state or nullptr
+     */
+    inline double* cond_get_ptr_to_state_writable(ParticleState state, int index)
+    {
+      if (storedstates_.contains(state)) return get_ptr_to_state_writable(state, index);
 
       return nullptr;
     };
@@ -266,7 +288,11 @@ namespace Particle
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
 #endif
 
-      for (int i = 0; i < (particlestored_ * statedim_[state]); ++i) (states_[state])[i] *= fac;
+      if (particlestored_ <= 0) return;
+
+      double* state_ptr = get_ptr_to_state_writable(state, 0);
+
+      for (int i = 0; i < (particlestored_ * statedim_[state]); ++i) state_ptr[i] *= fac;
     };
 
     /*!
@@ -281,6 +307,9 @@ namespace Particle
     inline void update_state(double facA, ParticleState stateA, double facB, ParticleState stateB)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
+      if (stateA == stateB)
+        FOUR_C_THROW("adding scaled particle state '{}' to itself!", enum_to_state_name(stateA));
+
       if (not storedstates_.contains(stateA))
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(stateA));
 
@@ -291,8 +320,13 @@ namespace Particle
         FOUR_C_THROW("dimensions of states do not match!");
 #endif
 
+      if (particlestored_ <= 0) return;
+
+      const double* state_b_ptr = get_ptr_to_state(stateB, 0);
+      double* state_a_ptr = get_ptr_to_state_writable(stateA, 0);
+
       for (int i = 0; i < (particlestored_ * statedim_[stateA]); ++i)
-        (states_[stateA])[i] = facA * (states_[stateA])[i] + facB * (states_[stateB])[i];
+        state_a_ptr[i] = facA * state_a_ptr[i] + facB * state_b_ptr[i];
     };
 
     /*!
@@ -312,9 +346,13 @@ namespace Particle
         FOUR_C_THROW("dimensions of states do not match!");
 #endif
 
+      if (particlestored_ <= 0) return;
+
+      double* state_ptr = get_ptr_to_state_writable(state, 0);
+
       for (int i = 0; i < particlestored_; ++i)
         for (int dim = 0; dim < statedim_[state]; ++dim)
-          (states_[state])[i * statedim_[state] + dim] = val[dim];
+          state_ptr[i * statedim_[state] + dim] = val[dim];
     };
 
     /*!
@@ -330,7 +368,11 @@ namespace Particle
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
 #endif
 
-      for (int i = 0; i < (particlestored_ * statedim_[state]); ++i) (states_[state])[i] = 0.0;
+      if (particlestored_ <= 0) return;
+
+      double* state_ptr = get_ptr_to_state_writable(state, 0);
+
+      for (int i = 0; i < (particlestored_ * statedim_[state]); ++i) state_ptr[i] = 0.0;
     };
 
     //! @}

@@ -1479,7 +1479,7 @@ void Particle::RigidBodyHandler::set_rigid_particle_relative_position_in_body_fr
     // get pointer to particle states
     const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
     double* relposbody_i =
-        container_i->get_ptr_to_state(Particle::RelativePositionBodyFrame, particle_i);
+        container_i->get_ptr_to_state_writable(Particle::RelativePositionBodyFrame, particle_i);
 
     ParticleUtils::vec_set(relposbody_i, pos_i);
     ParticleUtils::vec_sub(relposbody_i, pos_k);
@@ -1528,7 +1528,8 @@ void Particle::RigidBodyHandler::update_rigid_particle_relative_position()
     // get pointer to particle states
     const double* relposbody_i =
         container_i->get_ptr_to_state(Particle::RelativePositionBodyFrame, particle_i);
-    double* relpos_i = container_i->get_ptr_to_state(Particle::RelativePosition, particle_i);
+    double* relpos_i =
+        container_i->get_ptr_to_state_writable(Particle::RelativePosition, particle_i);
 
     // update relative position of particle i
     ParticleUtils::quaternion_rotate_vector(relpos_i, rot_k, relposbody_i);
@@ -1576,7 +1577,7 @@ void Particle::RigidBodyHandler::set_rigid_particle_position()
 
     // get pointer to particle states
     const double* relpos_i = container_i->get_ptr_to_state(Particle::RelativePosition, particle_i);
-    double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
+    double* pos_i = container_i->get_ptr_to_state_writable(Particle::Position, particle_i);
 
     // set position of particle i
     ParticleUtils::vec_set(pos_i, pos_k);
@@ -1626,8 +1627,9 @@ void Particle::RigidBodyHandler::set_rigid_particle_velocities()
 
     // get pointer to particle states
     const double* relpos_i = container_i->get_ptr_to_state(Particle::RelativePosition, particle_i);
-    double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    double* angvel_i = container_i->cond_get_ptr_to_state(Particle::AngularVelocity, particle_i);
+    double* vel_i = container_i->get_ptr_to_state_writable(Particle::Velocity, particle_i);
+    double* angvel_i =
+        container_i->cond_get_ptr_to_state_writable(Particle::AngularVelocity, particle_i);
 
     // set velocities of particle i
     ParticleUtils::vec_set(vel_i, vel_k);
@@ -1680,9 +1682,9 @@ void Particle::RigidBodyHandler::set_rigid_particle_accelerations()
 
     // get pointer to particle states
     const double* relpos_i = container_i->get_ptr_to_state(Particle::RelativePosition, particle_i);
-    double* acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
+    double* acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
     double* angacc_i =
-        container_i->cond_get_ptr_to_state(Particle::AngularAcceleration, particle_i);
+        container_i->cond_get_ptr_to_state_writable(Particle::AngularAcceleration, particle_i);
 
     // evaluate relative velocity of particle i
     double relvel_i[3];
@@ -1782,7 +1784,7 @@ void Particle::RigidBodyHandler::evaluate_rigid_body_solidification(
       // get pointer to particle states
       const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
       double* rigidbodycolor_i =
-          container_i->get_ptr_to_state(Particle::RigidBodyColor, particle_i);
+          container_i->get_ptr_to_state_writable(Particle::RigidBodyColor, particle_i);
 
       // get particles within radius
       std::vector<Particle::LocalIndexTuple> neighboringparticles;

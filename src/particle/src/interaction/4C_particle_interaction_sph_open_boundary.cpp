@@ -104,7 +104,7 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
     if (static_cast<int>(*boundary_id_i) != boundary_id_) continue;
 
     // get pointer to particle states
-    double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
+    double* pos_i = container_i->get_ptr_to_state_writable(Particle::Position, particle_i);
 
     // compute distance of open boundary particle from plane
     std::vector<double> temp(3);
@@ -151,7 +151,7 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
   for (int particle_j = 0; particle_j < container_j->particles_stored(); ++particle_j)
   {
     // get pointer to particle states
-    double* pos_j = container_j->get_ptr_to_state(Particle::Position, particle_j);
+    double* pos_j = container_j->get_ptr_to_state_writable(Particle::Position, particle_j);
 
     // compute distance of fluid particle from plane
     std::vector<double> temp(3);
@@ -277,7 +277,7 @@ void Particle::SPHOpenBoundaryDirichlet::prescribe_open_boundary_states(const do
 
     // get pointer to particle states
     const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
+    double* vel_i = container_i->get_ptr_to_state_writable(Particle::Velocity, particle_i);
 
     // evaluate function to set velocity
     ParticleUtils::vec_set_scale(
@@ -370,8 +370,8 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
     if (static_cast<int>(*boundary_id_k) != boundary_id_) continue;
 
     // get pointer to particle states
-    double* dens_k = container_k->get_ptr_to_state(Particle::Density, particle_k);
-    double* press_k = container_k->get_ptr_to_state(Particle::Pressure, particle_k);
+    double* dens_k = container_k->get_ptr_to_state_writable(Particle::Density, particle_k);
+    double* press_k = container_k->get_ptr_to_state_writable(Particle::Pressure, particle_k);
 
     // interpolate pressure
     press_k[0] = (sumj_Vj_Wij[particle_k] > 0.0)
@@ -472,7 +472,7 @@ void Particle::SPHOpenBoundaryNeumann::prescribe_open_boundary_states(const doub
 
       // get pointer to particle states
       const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-      double* press_i = container_i->get_ptr_to_state(Particle::Pressure, particle_i);
+      double* press_i = container_i->get_ptr_to_state_writable(Particle::Pressure, particle_i);
 
       // evaluate function to set pressure
       press_i[0] = function.evaluate(std::span(pos_i, 3), evaltime, 0);
@@ -494,7 +494,7 @@ void Particle::SPHOpenBoundaryNeumann::prescribe_open_boundary_states(const doub
 
     // get pointer to particle states
     const double* press_i = container_i->get_ptr_to_state(Particle::Pressure, particle_i);
-    double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
+    double* dens_i = container_i->get_ptr_to_state_writable(Particle::Density, particle_i);
 
     // compute density
     dens_i[0] = equationofstate_i->pressure_to_density(press_i[0], material_i->initDensity_);

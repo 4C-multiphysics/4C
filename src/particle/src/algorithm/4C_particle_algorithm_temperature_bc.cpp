@@ -105,7 +105,7 @@ void Particle::TemperatureBoundaryConditionHandler::evaluate_temperature_boundar
 
     // get pointer to particle states
     const double* refpos = container->get_ptr_to_state(Particle::ReferencePosition, 0);
-    double* temp = container->get_ptr_to_state(Particle::Temperature, 0);
+    double* temp = container->get_ptr_to_state_writable(Particle::Temperature, 0);
 
     // get particle state dimension
     int statedim = container->get_state_dim(Particle::Position);

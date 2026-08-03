@@ -247,7 +247,8 @@ void Particle::SPHTemperature::energy_equation() const
                                : &(basematerial_i->initDensity_);
 
     const double* temp_i = container_i->get_ptr_to_state(Particle::Temperature, particle_i);
-    double* tempdot_i = container_i->cond_get_ptr_to_state(Particle::TemperatureDot, particle_i);
+    double* tempdot_i =
+        container_i->cond_get_ptr_to_state_writable(Particle::TemperatureDot, particle_i);
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
 
@@ -256,7 +257,8 @@ void Particle::SPHTemperature::energy_equation() const
                                : &(basematerial_j->initDensity_);
 
     const double* temp_j = container_j->get_ptr_to_state(Particle::Temperature, particle_j);
-    double* tempdot_j = container_j->cond_get_ptr_to_state(Particle::TemperatureDot, particle_j);
+    double* tempdot_j =
+        container_j->cond_get_ptr_to_state_writable(Particle::TemperatureDot, particle_j);
 
     // thermal conductivities
     const double& k_i = thermomaterial_i->thermalConductivity_;
@@ -329,7 +331,7 @@ void Particle::SPHTemperature::temperature_gradient() const
 
     const double* temp_i = container_i->get_ptr_to_state(Particle::Temperature, particle_i);
     double* tempgrad_i =
-        container_i->cond_get_ptr_to_state(Particle::temperature_gradient, particle_i);
+        container_i->cond_get_ptr_to_state_writable(Particle::temperature_gradient, particle_i);
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
 
@@ -339,7 +341,7 @@ void Particle::SPHTemperature::temperature_gradient() const
 
     const double* temp_j = container_j->get_ptr_to_state(Particle::Temperature, particle_j);
     double* tempgrad_j =
-        container_j->cond_get_ptr_to_state(Particle::temperature_gradient, particle_j);
+        container_j->cond_get_ptr_to_state_writable(Particle::temperature_gradient, particle_j);
 
     const double temp_ji = temp_j[0] - temp_i[0];
 

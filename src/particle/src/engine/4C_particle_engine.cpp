@@ -1275,7 +1275,7 @@ void Particle::ParticleEngine::check_particles_at_boundaries(
       ParticleContainer* container = particlecontainerbundle_->get_specific_container(type, Owned);
 
       // get position of particle
-      double* currpos = container->get_ptr_to_state(Position, ownedindex);
+      const double* currpos = container->get_ptr_to_state(Position, ownedindex);
 
       // get global id of bin
       const int gidofbin = binning_->binstrategy_->convert_pos_to_gid(currpos);
@@ -1310,6 +1310,7 @@ void Particle::ParticleEngine::check_particles_at_boundaries(
                 dim))
         {
           // binning domain length in current spatial direction
+          double* currpos = container->get_ptr_to_state_writable(Position, ownedindex);
           double binningdomainlength =
               binning_->binstrategy_->length_of_binning_domain_in_a_spatial_direction(dim);
 
@@ -1973,7 +1974,7 @@ void Particle::ParticleEngine::store_positions_after_particle_transfer()
 
     // get pointer to particle states
     const double* pos = container->get_ptr_to_state(Position, 0);
-    double* lasttransferpos = container->get_ptr_to_state(LastTransferPosition, 0);
+    double* lasttransferpos = container->get_ptr_to_state_writable(LastTransferPosition, 0);
 
     // get particle state dimension
     int statedim = container->get_state_dim(Position);

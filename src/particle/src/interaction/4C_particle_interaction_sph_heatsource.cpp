@@ -127,7 +127,8 @@ void Particle::SPHHeatSourceVolume::evaluate_heat_source(const double& evaltime)
                                  : &(basematerial_i->initDensity_);
 
       const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-      double* tempdot_i = container_i->get_ptr_to_state(Particle::TemperatureDot, particle_i);
+      double* tempdot_i =
+          container_i->get_ptr_to_state_writable(Particle::TemperatureDot, particle_i);
 
       // evaluate function defining heat source
       funct = function.evaluate_time_derivative(std::span(pos_i, 3), evaltime, 0, 0);
@@ -313,7 +314,8 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
                                  : &(basematerial_i->initDensity_);
 
       const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-      double* tempdot_i = container_i->get_ptr_to_state(Particle::TemperatureDot, particle_i);
+      double* tempdot_i =
+          container_i->get_ptr_to_state_writable(Particle::TemperatureDot, particle_i);
 
       // evaluate function defining heat source
       funct = function.evaluate_time_derivative(std::span(pos_i, 3), evaltime, 0, 0);

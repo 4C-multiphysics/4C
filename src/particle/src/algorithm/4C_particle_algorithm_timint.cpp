@@ -205,7 +205,7 @@ void Particle::TimInt::add_initial_random_noise_to_position()
     if (particlestored <= 0) continue;
 
     // get pointer to particle state
-    double* pos = container->get_ptr_to_state(Particle::Position, 0);
+    double* pos = container->get_ptr_to_state_writable(Particle::Position, 0);
 
     // get particle state dimension
     int statedim = container->get_state_dim(Particle::Position);

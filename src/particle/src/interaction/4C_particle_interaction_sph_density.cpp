@@ -138,7 +138,7 @@ void Particle::SPHDensityBase::sum_weighted_mass_self_contribution() const
       // get pointer to particle states
       const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
       const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-      double* denssum_i = container_i->get_ptr_to_state(Particle::DensitySum, particle_i);
+      double* denssum_i = container_i->get_ptr_to_state_writable(Particle::DensitySum, particle_i);
 
       // evaluate kernel
       const double Wii = kernel_->w0(rad_i[0]);
@@ -176,10 +176,12 @@ void Particle::SPHDensityBase::sum_weighted_mass_particle_contribution() const
 
     // get pointer to particle states
     const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    double* denssum_i = container_i->cond_get_ptr_to_state(Particle::DensitySum, particle_i);
+    double* denssum_i =
+        container_i->cond_get_ptr_to_state_writable(Particle::DensitySum, particle_i);
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
-    double* denssum_j = container_j->cond_get_ptr_to_state(Particle::DensitySum, particle_j);
+    double* denssum_j =
+        container_j->cond_get_ptr_to_state_writable(Particle::DensitySum, particle_j);
 
     // sum contribution of neighboring particle j
     if (denssum_i) denssum_i[0] += particlepair.Wij_ * mass_i[0];
@@ -217,7 +219,7 @@ void Particle::SPHDensityBase::sum_weighted_mass_particle_wall_contribution() co
     // get pointer to particle states
     const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
     const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    double* denssum_i = container_i->get_ptr_to_state(Particle::DensitySum, particle_i);
+    double* denssum_i = container_i->get_ptr_to_state_writable(Particle::DensitySum, particle_i);
 
     // compute vector from wall contact point j to particle i
     double r_ij[3];
@@ -302,7 +304,8 @@ void Particle::SPHDensityBase::sum_colorfield_self_contribution() const
       const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
       const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
       const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
-      double* colorfield_i = container_i->get_ptr_to_state(Particle::Colorfield, particle_i);
+      double* colorfield_i =
+          container_i->get_ptr_to_state_writable(Particle::Colorfield, particle_i);
 
       // evaluate kernel
       const double Wii = kernel_->w0(rad_i[0]);
@@ -352,7 +355,8 @@ void Particle::SPHDensityBase::sum_colorfield_particle_contribution() const
                                ? container_i->get_ptr_to_state(Particle::Density, particle_i)
                                : &(material_j->initDensity_);
 
-    double* colorfield_i = container_i->cond_get_ptr_to_state(Particle::Colorfield, particle_i);
+    double* colorfield_i =
+        container_i->cond_get_ptr_to_state_writable(Particle::Colorfield, particle_i);
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
 
@@ -360,7 +364,8 @@ void Particle::SPHDensityBase::sum_colorfield_particle_contribution() const
                                ? container_j->get_ptr_to_state(Particle::Density, particle_j)
                                : &(material_i->initDensity_);
 
-    double* colorfield_j = container_j->cond_get_ptr_to_state(Particle::Colorfield, particle_j);
+    double* colorfield_j =
+        container_j->cond_get_ptr_to_state_writable(Particle::Colorfield, particle_j);
 
     // sum contribution of neighboring particle j
     if (colorfield_i) colorfield_i[0] += (particlepair.Wij_ / dens_j[0]) * mass_j[0];
@@ -401,7 +406,7 @@ void Particle::SPHDensityBase::sum_colorfield_particle_wall_contribution() const
 
     // get pointer to particle states
     const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    double* colorfield_i = container_i->get_ptr_to_state(Particle::Colorfield, particle_i);
+    double* colorfield_i = container_i->get_ptr_to_state_writable(Particle::Colorfield, particle_i);
 
     // get pointer to virtual particle states
     const double* mass_k = container_i->get_ptr_to_state(Particle::Mass, particle_i);
@@ -516,7 +521,8 @@ void Particle::SPHDensityBase::continuity_equation_particle_contribution() const
                                ? container_i->get_ptr_to_state(Particle::Density, particle_i)
                                : &(material_j->initDensity_);
 
-    double* densdot_i = container_i->cond_get_ptr_to_state(Particle::DensityDot, particle_i);
+    double* densdot_i =
+        container_i->cond_get_ptr_to_state_writable(Particle::DensityDot, particle_i);
 
     const double* vel_j =
         container_j->have_stored_state(Particle::ModifiedVelocity)
@@ -529,7 +535,8 @@ void Particle::SPHDensityBase::continuity_equation_particle_contribution() const
                                ? container_j->get_ptr_to_state(Particle::Density, particle_j)
                                : &(material_i->initDensity_);
 
-    double* densdot_j = container_j->cond_get_ptr_to_state(Particle::DensityDot, particle_j);
+    double* densdot_j =
+        container_j->cond_get_ptr_to_state_writable(Particle::DensityDot, particle_j);
 
     // relative velocity (use modified velocities in case of transport velocity formulation)
     double vel_ij[3];
@@ -589,7 +596,7 @@ void Particle::SPHDensityBase::continuity_equation_particle_wall_contribution() 
 
     const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
     const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
-    double* densdot_i = container_i->get_ptr_to_state(Particle::DensityDot, particle_i);
+    double* densdot_i = container_i->get_ptr_to_state_writable(Particle::DensityDot, particle_i);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;
@@ -907,9 +914,9 @@ void Particle::SPHDensityPredictCorrect::correct_density() const
     if (particlestored <= 0) continue;
 
     // get pointer to particle state
-    double* dens = container_i->get_ptr_to_state(Particle::Density, 0);
     const double* denssum = container_i->get_ptr_to_state(Particle::DensitySum, 0);
     const double* colorfield = container_i->get_ptr_to_state(Particle::Colorfield, 0);
+    double* dens = container_i->get_ptr_to_state_writable(Particle::Density, 0);
 
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* material =

@@ -77,7 +77,8 @@ void Particle::SPHHeatLossEvaporation::evaluate_evaporation_induced_heat_loss() 
     const double* temp_i = container_i->get_ptr_to_state(Particle::Temperature, particle_i);
     const double* cfg_i = container_i->get_ptr_to_state(Particle::ColorfieldGradient, particle_i);
     const double* ifn_i = container_i->get_ptr_to_state(Particle::InterfaceNormal, particle_i);
-    double* tempdot_i = container_i->get_ptr_to_state(Particle::TemperatureDot, particle_i);
+    double* tempdot_i =
+        container_i->get_ptr_to_state_writable(Particle::TemperatureDot, particle_i);
 
     // evaluation only for non-zero interface normal
     if (not(ParticleUtils::vec_norm_two(ifn_i) > 0.0)) continue;

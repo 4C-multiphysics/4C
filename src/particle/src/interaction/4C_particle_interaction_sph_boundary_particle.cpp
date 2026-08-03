@@ -201,9 +201,9 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
         const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
         const double* acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
         double* boundarypress_i =
-            container_i->get_ptr_to_state(Particle::BoundaryPressure, particle_i);
+            container_i->get_ptr_to_state_writable(Particle::BoundaryPressure, particle_i);
         double* boundaryvel_i =
-            container_i->get_ptr_to_state(Particle::BoundaryVelocity, particle_i);
+            container_i->get_ptr_to_state_writable(Particle::BoundaryVelocity, particle_i);
 
         // get relative acceleration of boundary particle
         double relacc[3];
