@@ -45,13 +45,13 @@ void Particle::TemperatureBoundaryConditionHandler::setup(
 }
 
 void Particle::TemperatureBoundaryConditionHandler::insert_particle_states_of_particle_types(
-    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const
 {
   // iterate over particle types subjected to temperature boundary conditions
   for (auto& particleType : typessubjectedtotemperaturebc_)
   {
     // insert states for types subjected to temperature boundary conditions
-    particlestatestotypes[particleType].insert(Particle::ReferencePosition);
+    particlestatestotypes[particleType].insert(Particle::State::ReferencePosition);
   }
 }
 
@@ -69,7 +69,8 @@ void Particle::TemperatureBoundaryConditionHandler::set_particle_reference_posit
         particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // set particle reference position
-    container->update_state(0.0, Particle::ReferencePosition, 1.0, Particle::Position);
+    container->update_state(
+        0.0, Particle::State::ReferencePosition, 1.0, Particle::State::Position);
   }
 }
 
@@ -104,11 +105,11 @@ void Particle::TemperatureBoundaryConditionHandler::evaluate_temperature_boundar
         Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(functid);
 
     // get pointer to particle states
-    const double* refpos = container->get_ptr_to_state(Particle::ReferencePosition, 0);
-    double* temp = container->get_ptr_to_state_writable(Particle::Temperature, 0);
+    const double* refpos = container->get_ptr_to_state(Particle::State::ReferencePosition, 0);
+    double* temp = container->get_ptr_to_state_writable(Particle::State::Temperature, 0);
 
     // get particle state dimension
-    int statedim = container->get_state_dim(Particle::Position);
+    int statedim = container->get_state_dim(Particle::State::Position);
 
     // safety check
     if (function.number_components() != 1)

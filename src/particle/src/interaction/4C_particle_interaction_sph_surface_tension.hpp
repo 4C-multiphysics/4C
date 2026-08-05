@@ -68,7 +68,7 @@ namespace Particle
 
     //! insert surface tension evaluation dependent states
     void insert_particle_states_of_particle_types(
-        std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const;
+        std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const;
 
     //! compute interface quantities
     void compute_interface_quantities();

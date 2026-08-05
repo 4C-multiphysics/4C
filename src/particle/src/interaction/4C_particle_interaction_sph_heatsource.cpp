@@ -125,13 +125,14 @@ void Particle::SPHHeatSourceVolume::evaluate_heat_source(const double& evaltime)
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
     {
       // get pointer to particle states
-      const double* dens_i = (container_i->have_stored_state(Particle::Density))
-                                 ? container_i->get_ptr_to_state(Particle::Density, particle_i)
-                                 : &(basematerial_i->initDensity_);
+      const double* dens_i =
+          (container_i->have_stored_state(Particle::State::Density))
+              ? container_i->get_ptr_to_state(Particle::State::Density, particle_i)
+              : &(basematerial_i->initDensity_);
 
-      const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
+      const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
       double* tempdot_i =
-          container_i->get_ptr_to_state_writable(Particle::TemperatureDot, particle_i);
+          container_i->get_ptr_to_state_writable(Particle::State::TemperatureDot, particle_i);
 
       // evaluate function defining heat source
       funct = function.evaluate_time_derivative(std::span(pos_i, 3), evaltime, 0, 0);
@@ -233,16 +234,16 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
         particlematerial_->get_ptr_to_particle_mat_parameter(type_j);
 
     // get pointer to particle states
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
 
-    const double* dens_i = container_i->have_stored_state(Particle::Density)
-                               ? container_i->get_ptr_to_state(Particle::Density, particle_i)
+    const double* dens_i = container_i->have_stored_state(Particle::State::Density)
+                               ? container_i->get_ptr_to_state(Particle::State::Density, particle_i)
                                : &(material_i->initDensity_);
 
-    const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
+    const double* mass_j = container_j->get_ptr_to_state(Particle::State::Mass, particle_j);
 
-    const double* dens_j = container_j->have_stored_state(Particle::Density)
-                               ? container_j->get_ptr_to_state(Particle::Density, particle_j)
+    const double* dens_j = container_j->have_stored_state(Particle::State::Density)
+                               ? container_j->get_ptr_to_state(Particle::State::Density, particle_j)
                                : &(material_j->initDensity_);
 
     // (current) volume of particle i and j
@@ -315,13 +316,14 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
       if (f_i_proj < 0.0) continue;
 
       // get pointer to particle states
-      const double* dens_i = (container_i->have_stored_state(Particle::Density))
-                                 ? container_i->get_ptr_to_state(Particle::Density, particle_i)
-                                 : &(basematerial_i->initDensity_);
+      const double* dens_i =
+          (container_i->have_stored_state(Particle::State::Density))
+              ? container_i->get_ptr_to_state(Particle::State::Density, particle_i)
+              : &(basematerial_i->initDensity_);
 
-      const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
+      const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
       double* tempdot_i =
-          container_i->get_ptr_to_state_writable(Particle::TemperatureDot, particle_i);
+          container_i->get_ptr_to_state_writable(Particle::State::TemperatureDot, particle_i);
 
       // evaluate function defining heat source
       funct = function.evaluate_time_derivative(std::span(pos_i, 3), evaltime, 0, 0);

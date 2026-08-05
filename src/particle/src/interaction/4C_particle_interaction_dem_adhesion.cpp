@@ -169,15 +169,15 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
     const int* globalid_j = container_j->get_ptr_to_global_id(particle_j);
 
     // get pointer to particle states
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    double* force_i = container_i->get_ptr_to_state_writable(Particle::Force, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    double* force_i = container_i->get_ptr_to_state_writable(Particle::State::Force, particle_i);
 
-    const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
+    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
+    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
     double* force_j = nullptr;
     if (status_j == Particle::Status::Owned)
-      force_j = container_j->get_ptr_to_state_writable(Particle::Force, particle_j);
+      force_j = container_j->get_ptr_to_state_writable(Particle::State::Force, particle_j);
 
     // relative velocity in contact point c between particle i and j (neglecting angular velocity)
     double vel_rel[3];
@@ -289,11 +289,11 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    double* force_i = container_i->get_ptr_to_state_writable(Particle::Force, particle_i);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    double* force_i = container_i->get_ptr_to_state_writable(Particle::State::Force, particle_i);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;

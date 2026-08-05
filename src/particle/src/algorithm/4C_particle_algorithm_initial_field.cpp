@@ -28,12 +28,12 @@ Particle::InitialFieldHandler::InitialFieldHandler(const Teuchos::ParameterList&
       params_.sublist("INITIAL AND BOUNDARY CONDITIONS");
 
   // relate particle state to input name
-  std::map<std::string, Particle::StateEnum> initialfieldtostateenum = {
-      std::make_pair("INITIAL_TEMP_FIELD", Particle::Temperature),
-      std::make_pair("INITIAL_VELOCITY_FIELD", Particle::Velocity),
-      std::make_pair("INITIAL_ANGULAR_VELOCITY_FIELD", Particle::AngularVelocity),
-      std::make_pair("INITIAL_ACCELERATION_FIELD", Particle::Acceleration),
-      std::make_pair("INITIAL_ANGULAR_ACCELERATION_FIELD", Particle::AngularAcceleration)};
+  std::map<std::string, Particle::State> initialfieldtostateenum = {
+      std::make_pair("INITIAL_TEMP_FIELD", Particle::State::Temperature),
+      std::make_pair("INITIAL_VELOCITY_FIELD", Particle::State::Velocity),
+      std::make_pair("INITIAL_ANGULAR_VELOCITY_FIELD", Particle::State::AngularVelocity),
+      std::make_pair("INITIAL_ACCELERATION_FIELD", Particle::State::Acceleration),
+      std::make_pair("INITIAL_ANGULAR_ACCELERATION_FIELD", Particle::State::AngularAcceleration)};
 
   // iterate over particle states
   for (auto& stateIt : initialfieldtostateenum)
@@ -64,7 +64,7 @@ void Particle::InitialFieldHandler::set_initial_fields()
   for (auto& stateIt : statetotypetofunctidmap_)
   {
     // get state of particles
-    Particle::StateEnum particleState = stateIt.first;
+    Particle::State particleState = stateIt.first;
 
     // iterate over particle types
     for (auto& initialFieldIt : stateIt.second)
@@ -92,11 +92,11 @@ void Particle::InitialFieldHandler::set_initial_fields()
           Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(functid);
 
       // get pointer to particle states
-      const double* pos = container->get_ptr_to_state(Particle::Position, 0);
+      const double* pos = container->get_ptr_to_state(Particle::State::Position, 0);
       double* state = container->get_ptr_to_state_writable(particleState, 0);
 
       // get particle state dimensions
-      int posstatedim = container->get_state_dim(Particle::Position);
+      int posstatedim = container->get_state_dim(Particle::State::Position);
       int statedim = container->get_state_dim(particleState);
 
       // safety check

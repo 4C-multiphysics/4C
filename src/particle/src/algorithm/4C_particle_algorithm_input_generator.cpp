@@ -37,10 +37,10 @@ void Particle::InputGenerator::add_generated_particle(const std::vector<double>&
 
   // allocate memory to hold particle states
   Particle::ParticleStates particlestates;
-  particlestates.assign((Particle::Position + 1), std::vector<double>(0));
+  particlestates.assign((static_cast<int>(Particle::State::Position) + 1), std::vector<double>(0));
 
   // set position state
-  particlestates[Particle::Position] = position;
+  particlestates[static_cast<int>(Particle::State::Position)] = position;
 
   // construct and store generated particle object
   particlesgenerated.emplace_back(

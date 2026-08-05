@@ -50,7 +50,7 @@ namespace Particle
   using Status = ParticleStatus;
 
   //! particle state enum
-  using StateEnum = ParticleState;
+  using State = ParticleState;
 
   //! particle memory space enum
   using Space = ParticleSpace;

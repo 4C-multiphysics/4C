@@ -31,14 +31,16 @@ void Particle::ParticleRuntimeVtpWriter::init(
   particlecontainerbundle_ = particlecontainerbundle;
 
   // insert specific particle states in black list
-  blackliststates_.insert({DensitySum, DensityDot});
-  blackliststates_.insert(TemperatureDot);
-  blackliststates_.insert({LastTransferPosition, ReferencePosition});
-  blackliststates_.insert({ModifiedVelocity, ModifiedAcceleration});
-  blackliststates_.insert({InterfaceNormal, Curvature, WallColorfield, WallInterfaceNormal});
-  blackliststates_.insert({LastIterPosition, LastIterVelocity, LastIterAcceleration,
-      LastIterAngularVelocity, LastIterAngularAcceleration, LastIterModifiedAcceleration,
-      LastIterDensity, LastIterTemperature});
+  blackliststates_.insert({State::DensitySum, State::DensityDot});
+  blackliststates_.insert(State::TemperatureDot);
+  blackliststates_.insert({State::LastTransferPosition, State::ReferencePosition});
+  blackliststates_.insert({State::ModifiedVelocity, State::ModifiedAcceleration});
+  blackliststates_.insert({State::InterfaceNormal, State::Curvature, State::WallColorfield,
+      State::WallInterfaceNormal});
+  blackliststates_.insert(
+      {State::LastIterPosition, State::LastIterVelocity, State::LastIterAcceleration,
+          State::LastIterAngularVelocity, State::LastIterAngularAcceleration,
+          State::LastIterModifiedAcceleration, State::LastIterDensity, State::LastIterTemperature});
 }
 
 void Particle::ParticleRuntimeVtpWriter::setup(bool write_ghosted_particles)
@@ -101,12 +103,12 @@ void Particle::ParticleRuntimeVtpWriter::set_particle_positions_and_states()
       const int particlestored = container->particles_stored();
 
       // get particle states stored in container
-      const std::set<ParticleState>& states = container->get_stored_states();
+      const std::set<State>& states = container->get_stored_states();
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
       // safety check
-      if (not container->have_stored_state(Position))
-        FOUR_C_THROW("particle state '{}' not found!", enum_to_state_name(Position));
+      if (not container->have_stored_state(State::Position))
+        FOUR_C_THROW("particle state '{}' not found!", enum_to_state_name(State::Position));
 #endif
 
       // iterate over particle states
@@ -122,7 +124,7 @@ void Particle::ParticleRuntimeVtpWriter::set_particle_positions_and_states()
         const double* state_ptr =
             (particlestored > 0) ? container->get_ptr_to_state(state, 0) : nullptr;
 
-        if (state == Position)
+        if (state == State::Position)
         {
           // get and prepare storage for position data
           std::vector<double>& positiondata =

@@ -19,58 +19,58 @@ int Particle::enum_to_state_dim(const ParticleState& state)
   switch (state)
   {
     // scalar states
-    case Radius:
-    case Mass:
-    case Density:
-    case Pressure:
-    case Temperature:
-    case RigidBodyColor:
-    case Inertia:
-    case DensitySum:
-    case DensityDot:
-    case TemperatureDot:
-    case BoundaryPressure:
-    case Colorfield:
-    case Curvature:
-    case WallColorfield:
-    case LastIterDensity:
-    case LastIterTemperature:
-    case Young:
-    case CriticalStretch:
-    case PDBodyId:
-    case InitialConnectedBonds:
-    case CurrentConnectedBonds:
-    case PDDamageVariable:
-    case DirichletFunctionId:
-    case OpenBoundaryId:
+    case ParticleState::Radius:
+    case ParticleState::Mass:
+    case ParticleState::Density:
+    case ParticleState::Pressure:
+    case ParticleState::Temperature:
+    case ParticleState::RigidBodyColor:
+    case ParticleState::Inertia:
+    case ParticleState::DensitySum:
+    case ParticleState::DensityDot:
+    case ParticleState::TemperatureDot:
+    case ParticleState::BoundaryPressure:
+    case ParticleState::Colorfield:
+    case ParticleState::Curvature:
+    case ParticleState::WallColorfield:
+    case ParticleState::LastIterDensity:
+    case ParticleState::LastIterTemperature:
+    case ParticleState::Young:
+    case ParticleState::CriticalStretch:
+    case ParticleState::PDBodyId:
+    case ParticleState::InitialConnectedBonds:
+    case ParticleState::CurrentConnectedBonds:
+    case ParticleState::PDDamageVariable:
+    case ParticleState::DirichletFunctionId:
+    case ParticleState::OpenBoundaryId:
       dim = 1;
       break;
 
     // vectorial states
-    case Position:
-    case Velocity:
-    case Acceleration:
-    case LastTransferPosition:
-    case ModifiedVelocity:
-    case ModifiedAcceleration:
-    case ReferencePosition:
-    case RelativePosition:
-    case RelativePositionBodyFrame:
-    case BoundaryVelocity:
-    case ColorfieldGradient:
-    case InterfaceNormal:
-    case WallInterfaceNormal:
-    case temperature_gradient:
-    case AngularVelocity:
-    case AngularAcceleration:
-    case Force:
-    case Moment:
-    case LastIterPosition:
-    case LastIterVelocity:
-    case LastIterAcceleration:
-    case LastIterAngularVelocity:
-    case LastIterAngularAcceleration:
-    case LastIterModifiedAcceleration:
+    case ParticleState::Position:
+    case ParticleState::Velocity:
+    case ParticleState::Acceleration:
+    case ParticleState::LastTransferPosition:
+    case ParticleState::ModifiedVelocity:
+    case ParticleState::ModifiedAcceleration:
+    case ParticleState::ReferencePosition:
+    case ParticleState::RelativePosition:
+    case ParticleState::RelativePositionBodyFrame:
+    case ParticleState::BoundaryVelocity:
+    case ParticleState::ColorfieldGradient:
+    case ParticleState::InterfaceNormal:
+    case ParticleState::WallInterfaceNormal:
+    case ParticleState::temperature_gradient:
+    case ParticleState::AngularVelocity:
+    case ParticleState::AngularAcceleration:
+    case ParticleState::Force:
+    case ParticleState::Moment:
+    case ParticleState::LastIterPosition:
+    case ParticleState::LastIterVelocity:
+    case ParticleState::LastIterAcceleration:
+    case ParticleState::LastIterAngularVelocity:
+    case ParticleState::LastIterAngularAcceleration:
+    case ParticleState::LastIterModifiedAcceleration:
       dim = 3;
       break;
 
@@ -87,148 +87,148 @@ std::string Particle::enum_to_state_name(const ParticleState& state)
 
   switch (state)
   {
-    case Radius:
+    case ParticleState::Radius:
       name = "radius";
       break;
-    case Mass:
+    case ParticleState::Mass:
       name = "mass";
       break;
-    case Density:
+    case ParticleState::Density:
       name = "density";
       break;
-    case DensitySum:
+    case ParticleState::DensitySum:
       name = "density sum";
       break;
-    case DensityDot:
+    case ParticleState::DensityDot:
       name = "density dot";
       break;
-    case Pressure:
+    case ParticleState::Pressure:
       name = "pressure";
       break;
-    case Temperature:
+    case ParticleState::Temperature:
       name = "temperature";
       break;
-    case RigidBodyColor:
+    case ParticleState::RigidBodyColor:
       name = "rigid body color";
       break;
-    case Inertia:
+    case ParticleState::Inertia:
       name = "inertia";
       break;
-    case TemperatureDot:
+    case ParticleState::TemperatureDot:
       name = "temperature dot";
       break;
-    case Position:
+    case ParticleState::Position:
       name = "position";
       break;
-    case Velocity:
+    case ParticleState::Velocity:
       name = "velocity";
       break;
-    case Acceleration:
+    case ParticleState::Acceleration:
       name = "acceleration";
       break;
-    case AngularVelocity:
+    case ParticleState::AngularVelocity:
       name = "angular velocity";
       break;
-    case AngularAcceleration:
+    case ParticleState::AngularAcceleration:
       name = "angular acceleration";
       break;
-    case Force:
+    case ParticleState::Force:
       name = "force";
       break;
-    case Moment:
+    case ParticleState::Moment:
       name = "moment";
       break;
-    case LastTransferPosition:
+    case ParticleState::LastTransferPosition:
       name = "position last transfer";
       break;
-    case ReferencePosition:
+    case ParticleState::ReferencePosition:
       name = "reference position";
       break;
-    case RelativePosition:
+    case ParticleState::RelativePosition:
       name = "relative position";
       break;
-    case RelativePositionBodyFrame:
+    case ParticleState::RelativePositionBodyFrame:
       name = "body frame relative position";
       break;
-    case ModifiedVelocity:
+    case ParticleState::ModifiedVelocity:
       name = "modified velocity";
       break;
-    case ModifiedAcceleration:
+    case ParticleState::ModifiedAcceleration:
       name = "modified acceleration";
       break;
-    case BoundaryPressure:
+    case ParticleState::BoundaryPressure:
       name = "boundary pressure";
       break;
-    case BoundaryVelocity:
+    case ParticleState::BoundaryVelocity:
       name = "boundary velocity";
       break;
-    case Colorfield:
+    case ParticleState::Colorfield:
       name = "colorfield";
       break;
-    case ColorfieldGradient:
+    case ParticleState::ColorfieldGradient:
       name = "colorfield gradient";
       break;
-    case InterfaceNormal:
+    case ParticleState::InterfaceNormal:
       name = "interface normal";
       break;
-    case Curvature:
+    case ParticleState::Curvature:
       name = "curvature";
       break;
-    case WallColorfield:
+    case ParticleState::WallColorfield:
       name = "wall colorfield";
       break;
-    case WallInterfaceNormal:
+    case ParticleState::WallInterfaceNormal:
       name = "wall interface normal";
       break;
-    case temperature_gradient:
+    case ParticleState::temperature_gradient:
       name = "temperature gradient";
       break;
-    case LastIterPosition:
+    case ParticleState::LastIterPosition:
       name = "position last iteration";
       break;
-    case LastIterVelocity:
+    case ParticleState::LastIterVelocity:
       name = "velocity last iteration";
       break;
-    case LastIterAcceleration:
+    case ParticleState::LastIterAcceleration:
       name = "acceleration last iteration";
       break;
-    case LastIterAngularVelocity:
+    case ParticleState::LastIterAngularVelocity:
       name = "angular velocity last iteration";
       break;
-    case LastIterAngularAcceleration:
+    case ParticleState::LastIterAngularAcceleration:
       name = "angular acceleration last iteration";
       break;
-    case LastIterModifiedAcceleration:
+    case ParticleState::LastIterModifiedAcceleration:
       name = "modified acceleration last iteration";
       break;
-    case LastIterDensity:
+    case ParticleState::LastIterDensity:
       name = "density last iteration";
       break;
-    case LastIterTemperature:
+    case ParticleState::LastIterTemperature:
       name = "temperature last iteration";
       break;
-    case PDBodyId:
+    case ParticleState::PDBodyId:
       name = "peridynamics body id";
       break;
-    case CriticalStretch:
+    case ParticleState::CriticalStretch:
       name = "critical stretch";
       break;
-    case Young:
+    case ParticleState::Young:
       name = "Youngs modulus";
       break;
-    case InitialConnectedBonds:
+    case ParticleState::InitialConnectedBonds:
       name = "initial active bonds";
       break;
-    case CurrentConnectedBonds:
+    case ParticleState::CurrentConnectedBonds:
       name = "remained active bonds";
       break;
-    case PDDamageVariable:
+    case ParticleState::PDDamageVariable:
       name = "pd_damage_phi";
       break;
-    case DirichletFunctionId:
+    case ParticleState::DirichletFunctionId:
       name = "dirichlet_function_id";
       break;
-    case OpenBoundaryId:
+    case ParticleState::OpenBoundaryId:
       name = "open_boundary_id";
       break;
     default:
@@ -243,11 +243,11 @@ Particle::ParticleState Particle::enum_from_state_name(const std::string& name)
   ParticleState state;
 
   if (name == "density")
-    state = Density;
+    state = ParticleState::Density;
   else if (name == "pressure")
-    state = Pressure;
+    state = ParticleState::Pressure;
   else if (name == "temperature")
-    state = Temperature;
+    state = ParticleState::Temperature;
   else
     FOUR_C_THROW("particle state '{}' unknown!", name);
 

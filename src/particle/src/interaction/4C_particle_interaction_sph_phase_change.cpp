@@ -26,7 +26,7 @@ Particle::SPHPhaseChangeBase::SPHPhaseChangeBase(const Teuchos::ParameterList& p
     : params_sph_(params),
       belowphase_(Particle::Type::Phase1),
       abovephase_(Particle::Type::Phase2),
-      transitionstate_(Particle::Density),
+      transitionstate_(Particle::State::Density),
       transitionvalue_(0.0),
       hysteresisgap_(0.0)
 {
@@ -181,19 +181,20 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_below_to_above_pha
       // add density and pressure state for boundary or rigid particles
       if (isboundaryrigid_source and (not isboundaryrigid_target))
       {
-        particlestates[Particle::Density].assign(1, material_source->initDensity_);
+        particlestates[static_cast<int>(Particle::State::Density)].assign(
+            1, material_source->initDensity_);
 
         const double press = equationofstate_target->density_to_pressure(
             material_source->initDensity_, material_target->initDensity_);
 
-        particlestates[Particle::Pressure].assign(1, press);
+        particlestates[static_cast<int>(Particle::State::Pressure)].assign(1, press);
       }
 
       // clear velocity and acceleration state of boundary or rigid particles
       if (isboundaryrigid_target and (not isboundaryrigid_source))
       {
-        particlestates[Particle::Velocity].assign(3, 0.0);
-        particlestates[Particle::Acceleration].assign(3, 0.0);
+        particlestates[static_cast<int>(Particle::State::Velocity)].assign(3, 0.0);
+        particlestates[static_cast<int>(Particle::State::Acceleration)].assign(3, 0.0);
       }
 
       Particle::ParticleObjShrdPtr particleobject =
@@ -265,19 +266,20 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_above_to_below_pha
       // add density and pressure state for boundary or rigid particles
       if (isboundaryrigid_source and (not isboundaryrigid_target))
       {
-        particlestates[Particle::Density].assign(1, material_source->initDensity_);
+        particlestates[static_cast<int>(Particle::State::Density)].assign(
+            1, material_source->initDensity_);
 
         const double press = equationofstate_target->density_to_pressure(
             material_source->initDensity_, material_target->initDensity_);
 
-        particlestates[Particle::Pressure].assign(1, press);
+        particlestates[static_cast<int>(Particle::State::Pressure)].assign(1, press);
       }
 
       // clear velocity and acceleration state of boundary or rigid particles
       if (isboundaryrigid_target and (not isboundaryrigid_source))
       {
-        particlestates[Particle::Velocity].assign(3, 0.0);
-        particlestates[Particle::Acceleration].assign(3, 0.0);
+        particlestates[static_cast<int>(Particle::State::Velocity)].assign(3, 0.0);
+        particlestates[static_cast<int>(Particle::State::Acceleration)].assign(3, 0.0);
       }
 
       Particle::ParticleObjShrdPtr particleobject =

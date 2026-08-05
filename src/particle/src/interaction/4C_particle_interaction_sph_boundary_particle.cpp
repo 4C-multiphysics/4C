@@ -73,7 +73,8 @@ void Particle::SPHBoundaryParticleAdami::setup(
 
   // setup modified states of ghosted boundary particles to refresh
   {
-    std::vector<Particle::StateEnum> states{Particle::BoundaryPressure, Particle::BoundaryVelocity};
+    std::vector<Particle::State> states{
+        Particle::State::BoundaryPressure, Particle::State::BoundaryVelocity};
 
     for (const auto& type_i : boundarytypes_)
       boundarystatestorefresh_.push_back(std::make_pair(type_i, states));
@@ -141,9 +142,9 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
           particlecontainerbundle_->get_specific_container(type_j, status_j);
 
       // get pointer to particle states
-      const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
-      const double* dens_j = container_j->get_ptr_to_state(Particle::Density, particle_j);
-      const double* press_j = container_j->get_ptr_to_state(Particle::Pressure, particle_j);
+      const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
+      const double* dens_j = container_j->get_ptr_to_state(Particle::State::Density, particle_j);
+      const double* press_j = container_j->get_ptr_to_state(Particle::State::Pressure, particle_j);
 
       // sum contribution of neighboring particle j
       sumj_wij_[static_cast<int>(type_i)][particle_i] += particlepair.Wij_;
@@ -166,9 +167,9 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
           particlecontainerbundle_->get_specific_container(type_i, status_i);
 
       // get pointer to particle states
-      const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-      const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
-      const double* press_i = container_i->get_ptr_to_state(Particle::Pressure, particle_i);
+      const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+      const double* dens_i = container_i->get_ptr_to_state(Particle::State::Density, particle_i);
+      const double* press_i = container_i->get_ptr_to_state(Particle::State::Pressure, particle_i);
 
       // sum contribution of neighboring particle i
       sumj_wij_[static_cast<int>(type_j)][particle_j] += particlepair.Wji_;
@@ -192,8 +193,8 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
         particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear modified boundary particle states
-    container_i->clear_state(Particle::BoundaryPressure);
-    container_i->clear_state(Particle::BoundaryVelocity);
+    container_i->clear_state(Particle::State::BoundaryPressure);
+    container_i->clear_state(Particle::State::BoundaryVelocity);
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -202,12 +203,13 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
       if (sumj_wij_[static_cast<int>(type_i)][particle_i] > 0.0)
       {
         // get pointer to particle states
-        const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-        const double* acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
+        const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+        const double* acc_i =
+            container_i->get_ptr_to_state(Particle::State::Acceleration, particle_i);
         double* boundarypress_i =
-            container_i->get_ptr_to_state_writable(Particle::BoundaryPressure, particle_i);
+            container_i->get_ptr_to_state_writable(Particle::State::BoundaryPressure, particle_i);
         double* boundaryvel_i =
-            container_i->get_ptr_to_state_writable(Particle::BoundaryVelocity, particle_i);
+            container_i->get_ptr_to_state_writable(Particle::State::BoundaryVelocity, particle_i);
 
         // get relative acceleration of boundary particle
         double relacc[3];

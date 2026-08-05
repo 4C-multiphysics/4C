@@ -47,7 +47,8 @@ void Particle::ViscousDampingHandler::apply_viscous_damping()
         particlecontainerbundle->get_specific_container(type, Particle::Status::Owned);
 
     // apply viscous damping contribution
-    container->update_state(1.0, Particle::Acceleration, -viscdampfac_, Particle::Velocity);
+    container->update_state(
+        1.0, Particle::State::Acceleration, -viscdampfac_, Particle::State::Velocity);
   }
 }
 

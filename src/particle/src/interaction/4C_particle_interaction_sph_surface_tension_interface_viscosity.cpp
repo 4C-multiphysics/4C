@@ -152,21 +152,27 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_contr
     const Mat::PAR::ParticleMaterialSPHFluid* material_j = fluidmaterial_[static_cast<int>(type_j)];
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* cfg_i = container_i->get_ptr_to_state(Particle::ColorfieldGradient, particle_i);
-    const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
-    double* acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    const double* dens_i = container_i->get_ptr_to_state(Particle::State::Density, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    const double* cfg_i =
+        container_i->get_ptr_to_state(Particle::State::ColorfieldGradient, particle_i);
+    const double* temp_i =
+        container_i->try_get_ptr_to_state(Particle::State::Temperature, particle_i);
+    double* acc_i =
+        container_i->get_ptr_to_state_writable(Particle::State::Acceleration, particle_i);
 
-    const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
-    const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
-    const double* dens_j = container_j->get_ptr_to_state(Particle::Density, particle_j);
-    const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
-    const double* cfg_j = container_j->get_ptr_to_state(Particle::ColorfieldGradient, particle_j);
-    const double* temp_j = container_j->try_get_ptr_to_state(Particle::Temperature, particle_j);
-    double* acc_j = container_j->get_ptr_to_state_writable(Particle::Acceleration, particle_j);
+    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
+    const double* mass_j = container_j->get_ptr_to_state(Particle::State::Mass, particle_j);
+    const double* dens_j = container_j->get_ptr_to_state(Particle::State::Density, particle_j);
+    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
+    const double* cfg_j =
+        container_j->get_ptr_to_state(Particle::State::ColorfieldGradient, particle_j);
+    const double* temp_j =
+        container_j->try_get_ptr_to_state(Particle::State::Temperature, particle_j);
+    double* acc_j =
+        container_j->get_ptr_to_state_writable(Particle::State::Acceleration, particle_j);
 
     // get smoothing length
     const double h_i = kernel_->smoothing_length(rad_i[0]);
@@ -272,21 +278,25 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_bound
         equationofstatebundle_->get_ptr_to_specific_equation_of_state(type_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* cfg_i = container_i->get_ptr_to_state(Particle::ColorfieldGradient, particle_i);
-    const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    const double* dens_i = container_i->get_ptr_to_state(Particle::State::Density, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    const double* cfg_i =
+        container_i->get_ptr_to_state(Particle::State::ColorfieldGradient, particle_i);
+    const double* temp_i =
+        container_i->try_get_ptr_to_state(Particle::State::Temperature, particle_i);
 
     double* acc_i = nullptr;
     if (status_i == Particle::Status::Owned)
-      acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
+      acc_i = container_i->get_ptr_to_state_writable(Particle::State::Acceleration, particle_i);
 
     // get pointer to boundary particle states
-    const double* mass_j = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    const double* press_j = container_j->get_ptr_to_state(Particle::BoundaryPressure, particle_j);
-    const double* vel_j = container_j->get_ptr_to_state(Particle::BoundaryVelocity, particle_j);
+    const double* mass_j = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    const double* press_j =
+        container_j->get_ptr_to_state(Particle::State::BoundaryPressure, particle_j);
+    const double* vel_j =
+        container_j->get_ptr_to_state(Particle::State::BoundaryVelocity, particle_j);
 
     double temp_dens(0.0);
     temp_dens = equationofstate_i->pressure_to_density(press_j[0], material_i->initDensity_);

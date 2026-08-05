@@ -25,14 +25,14 @@ namespace
     ParticleContainerTest()
     {
       const int size = 7;
-      std::set<Particle::StateEnum> stateEnumSet = {
-          Particle::Position, Particle::Velocity, Particle::Mass};
+      std::set<Particle::State> stateEnumSet = {
+          Particle::State::Position, Particle::State::Velocity, Particle::State::Mass};
 
       // create, init and setup container
       container_ = std::make_unique<Particle::ParticleContainer>();
       container_->setup(size, stateEnumSet);
 
-      const int maximum_stored_state_enum_set_value{*(--stateEnumSet.end())};
+      const int maximum_stored_state_enum_set_value{static_cast<int>(*(--stateEnumSet.end()))};
       statesvectorsize_ = maximum_stored_state_enum_set_value + 1;
 
       // init some particles
@@ -70,9 +70,9 @@ namespace
       Particle::ParticleStates particle;
       particle.assign(statesvectorsize_, std::vector<double>{});
 
-      particle[Particle::Position] = pos;
-      particle[Particle::Velocity] = vel;
-      particle[Particle::Mass] = mass;
+      particle[static_cast<int>(Particle::State::Position)] = pos;
+      particle[static_cast<int>(Particle::State::Velocity)] = vel;
+      particle[static_cast<int>(Particle::State::Mass)] = mass;
 
       return particle;
     }
@@ -245,9 +245,9 @@ namespace
 
   TEST_F(ParticleContainerTest, GetStateDim)
   {
-    EXPECT_EQ(container_->get_state_dim(Particle::Position), 3);
-    EXPECT_EQ(container_->get_state_dim(Particle::Velocity), 3);
-    EXPECT_EQ(container_->get_state_dim(Particle::Mass), 1);
+    EXPECT_EQ(container_->get_state_dim(Particle::State::Position), 3);
+    EXPECT_EQ(container_->get_state_dim(Particle::State::Velocity), 3);
+    EXPECT_EQ(container_->get_state_dim(Particle::State::Mass), 1);
   }
 
   TEST_F(ParticleContainerTest, GetPtrToState)
@@ -289,21 +289,21 @@ namespace
         mass[0] = 0.5;
       }
 
-      const double* currpos = container_->get_ptr_to_state(Particle::Position, index);
+      const double* currpos = container_->get_ptr_to_state(Particle::State::Position, index);
       FOUR_C_EXPECT_ITERABLE_NEAR(currpos, pos.begin(), 3, 1e-14);
 
-      const double* currvel = container_->get_ptr_to_state(Particle::Velocity, index);
+      const double* currvel = container_->get_ptr_to_state(Particle::State::Velocity, index);
       FOUR_C_EXPECT_ITERABLE_NEAR(currvel, vel.begin(), 3, 1e-14);
 
-      const double* currmass = container_->get_ptr_to_state(Particle::Mass, index);
+      const double* currmass = container_->get_ptr_to_state(Particle::State::Mass, index);
       EXPECT_NEAR(currmass[0], mass[0], 1e-14);
 
       {
-        double* newmass = container_->get_ptr_to_state_writable(Particle::Mass, index);
+        double* newmass = container_->get_ptr_to_state_writable(Particle::State::Mass, index);
         newmass[0] = newmass[0] * 3.14;
       }
       {
-        const double* currmass = container_->get_ptr_to_state(Particle::Mass, index);
+        const double* currmass = container_->get_ptr_to_state(Particle::State::Mass, index);
         EXPECT_NEAR(currmass[0], mass[0] * 3.14, 1e-14);
       }
     }
@@ -348,20 +348,20 @@ namespace
         mass[0] = 0.5;
       }
 
-      const double* currpos = container_->try_get_ptr_to_state(Particle::Position, index);
+      const double* currpos = container_->try_get_ptr_to_state(Particle::State::Position, index);
       FOUR_C_EXPECT_ITERABLE_NEAR(currpos, pos.begin(), 3, 1.0e-14);
 
-      const double* currvel = container_->try_get_ptr_to_state(Particle::Velocity, index);
+      const double* currvel = container_->try_get_ptr_to_state(Particle::State::Velocity, index);
       FOUR_C_EXPECT_ITERABLE_NEAR(currvel, vel.begin(), 3, 1.0e-14);
 
-      const double* currmass = container_->try_get_ptr_to_state(Particle::Mass, index);
+      const double* currmass = container_->try_get_ptr_to_state(Particle::State::Mass, index);
       EXPECT_NEAR(currmass[0], mass[0], 1e-14);
     }
   }
 
   TEST_F(ParticleContainerTest, TryGetPtrToStateNotStored)
   {
-    const double* currpos = container_->try_get_ptr_to_state(Particle::Acceleration, 0);
+    const double* currpos = container_->try_get_ptr_to_state(Particle::State::Acceleration, 0);
     EXPECT_EQ(currpos, nullptr);
   }
 
@@ -392,9 +392,9 @@ namespace
     Particle::ParticleStates particle_reference;
     particle_reference.assign(statesvectorsize_, std::vector<double>{});
 
-    container_->scale_state(1.5, Particle::Position);
-    container_->scale_state(3.25, Particle::Velocity);
-    container_->scale_state(0.95, Particle::Mass);
+    container_->scale_state(1.5, Particle::State::Position);
+    container_->scale_state(3.25, Particle::State::Velocity);
+    container_->scale_state(0.95, Particle::State::Mass);
 
     for (int index = 0; index < 3; ++index)
     {
@@ -430,7 +430,7 @@ namespace
     Particle::ParticleStates particle_reference;
     particle_reference.assign(statesvectorsize_, std::vector<double>{});
 
-    container_->update_state(1.0, Particle::Position, 0.5, Particle::Velocity);
+    container_->update_state(1.0, Particle::State::Position, 0.5, Particle::State::Velocity);
 
     for (int index = 0; index < 3; ++index)
     {
@@ -479,9 +479,9 @@ namespace
 
     particle_reference = create_test_particle(pos, vel, mass);
 
-    container_->set_state(pos, Particle::Position);
-    container_->set_state(vel, Particle::Velocity);
-    container_->set_state(mass, Particle::Mass);
+    container_->set_state(pos, Particle::State::Position);
+    container_->set_state(vel, Particle::State::Velocity);
+    container_->set_state(mass, Particle::State::Mass);
 
     for (int index = 0; index < 3; ++index)
     {
@@ -501,9 +501,9 @@ namespace
 
     particle_reference = create_test_particle({0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0});
 
-    container_->clear_state(Particle::Position);
-    container_->clear_state(Particle::Velocity);
-    container_->clear_state(Particle::Mass);
+    container_->clear_state(Particle::State::Position);
+    container_->clear_state(Particle::State::Velocity);
+    container_->clear_state(Particle::State::Mass);
 
     for (int index = 0; index < 3; ++index)
     {
@@ -514,33 +514,33 @@ namespace
 
   TEST_F(ParticleContainerTest, GetMinValueOfState)
   {
-    EXPECT_NEAR(container_->get_min_value_of_state(Particle::Mass), 0.12, 1e-14);
-    EXPECT_NEAR(container_->get_min_value_of_state(Particle::Position), -8.54, 1e-14);
+    EXPECT_NEAR(container_->get_min_value_of_state(Particle::State::Mass), 0.12, 1e-14);
+    EXPECT_NEAR(container_->get_min_value_of_state(Particle::State::Position), -8.54, 1e-14);
   }
 
   TEST_F(ParticleContainerTest, GetMaxValueOfState)
   {
-    EXPECT_NEAR(container_->get_max_value_of_state(Particle::Mass), 12.34, 1e-14);
-    EXPECT_NEAR(container_->get_max_value_of_state(Particle::Position), 61.0, 1e-14);
+    EXPECT_NEAR(container_->get_max_value_of_state(Particle::State::Mass), 12.34, 1e-14);
+    EXPECT_NEAR(container_->get_max_value_of_state(Particle::State::Position), 61.0, 1e-14);
   }
 
   TEST_F(ParticleContainerTest, GetStoredStates)
   {
-    const std::set<Particle::StateEnum>& particleStates = container_->get_stored_states();
+    const std::set<Particle::State>& particleStates = container_->get_stored_states();
     EXPECT_EQ(particleStates.size(), 3);
-    EXPECT_TRUE(particleStates.find(Particle::Position) != particleStates.end());
-    EXPECT_TRUE(particleStates.find(Particle::Velocity) != particleStates.end());
-    EXPECT_TRUE(particleStates.find(Particle::Mass) != particleStates.end());
+    EXPECT_TRUE(particleStates.find(Particle::State::Position) != particleStates.end());
+    EXPECT_TRUE(particleStates.find(Particle::State::Velocity) != particleStates.end());
+    EXPECT_TRUE(particleStates.find(Particle::State::Mass) != particleStates.end());
   }
 
   TEST_F(ParticleContainerTest, HaveStoredState)
   {
-    EXPECT_TRUE(container_->have_stored_state(Particle::Position));
-    EXPECT_TRUE(container_->have_stored_state(Particle::Velocity));
-    EXPECT_TRUE(container_->have_stored_state(Particle::Mass));
+    EXPECT_TRUE(container_->have_stored_state(Particle::State::Position));
+    EXPECT_TRUE(container_->have_stored_state(Particle::State::Velocity));
+    EXPECT_TRUE(container_->have_stored_state(Particle::State::Mass));
 
-    EXPECT_FALSE(container_->have_stored_state(Particle::Acceleration));
-    EXPECT_FALSE(container_->have_stored_state(Particle::Density));
+    EXPECT_FALSE(container_->have_stored_state(Particle::State::Acceleration));
+    EXPECT_FALSE(container_->have_stored_state(Particle::State::Density));
   }
 
   TEST_F(ParticleContainerTest, ContainerSize) { EXPECT_EQ(container_->container_size(), 7); }

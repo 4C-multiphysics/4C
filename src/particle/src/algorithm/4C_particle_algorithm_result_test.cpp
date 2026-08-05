@@ -69,13 +69,13 @@ void Particle::ParticleResultTest::test_special(
       int dim = 0;
 
       // declare enum of particle state
-      Particle::StateEnum particleState;
+      Particle::State particleState;
 
       // position
       if (quantity == "posx" or quantity == "posy" or quantity == "posz")
       {
         // get enum of particle state
-        particleState = Particle::Position;
+        particleState = Particle::State::Position;
 
         // get component of result
         if (quantity == "posx")
@@ -89,7 +89,7 @@ void Particle::ParticleResultTest::test_special(
       else if (quantity == "velx" or quantity == "vely" or quantity == "velz")
       {
         // get enum of particle state
-        particleState = Particle::Velocity;
+        particleState = Particle::State::Velocity;
 
         // get component of result
         if (quantity == "velx")
@@ -103,7 +103,7 @@ void Particle::ParticleResultTest::test_special(
       else if (quantity == "accx" or quantity == "accy" or quantity == "accz")
       {
         // get enum of particle state
-        particleState = Particle::Acceleration;
+        particleState = Particle::State::Acceleration;
 
         // get component of result
         if (quantity == "accx")
@@ -117,7 +117,7 @@ void Particle::ParticleResultTest::test_special(
       else if (quantity == "angvelx" or quantity == "angvely" or quantity == "angvelz")
       {
         // get enum of particle state
-        particleState = Particle::AngularVelocity;
+        particleState = Particle::State::AngularVelocity;
 
         // get component of result
         if (quantity == "angvelx")
@@ -131,7 +131,7 @@ void Particle::ParticleResultTest::test_special(
       else if (quantity == "radius")
       {
         // get enum of particle state
-        particleState = Particle::Radius;
+        particleState = Particle::State::Radius;
 
         // get component of result
         dim = 0;
@@ -140,7 +140,7 @@ void Particle::ParticleResultTest::test_special(
       else if (quantity == "density")
       {
         // get enum of particle state
-        particleState = Particle::Density;
+        particleState = Particle::State::Density;
 
         // get component of result
         dim = 0;
@@ -149,7 +149,7 @@ void Particle::ParticleResultTest::test_special(
       else if (quantity == "pressure")
       {
         // get enum of particle state
-        particleState = Particle::Pressure;
+        particleState = Particle::State::Pressure;
 
         // get component of result
         dim = 0;
@@ -158,7 +158,7 @@ void Particle::ParticleResultTest::test_special(
       else if (quantity == "temperature")
       {
         // get enum of particle state
-        particleState = Particle::Temperature;
+        particleState = Particle::State::Temperature;
 
         // get component of result
         dim = 0;
@@ -167,7 +167,7 @@ void Particle::ParticleResultTest::test_special(
       else if (quantity == "tempgradx" or quantity == "tempgrady" or quantity == "tempgradz")
       {
         // get enum of particle state
-        particleState = Particle::temperature_gradient;
+        particleState = Particle::State::temperature_gradient;
 
         // get component of result
         if (quantity == "tempgradx")
@@ -181,7 +181,7 @@ void Particle::ParticleResultTest::test_special(
       else if (quantity == "pd_damage_phi")
       {
         // get enum of particle state
-        particleState = Particle::PDDamageVariable;
+        particleState = Particle::State::PDDamageVariable;
 
         // get component of result
         dim = 0;

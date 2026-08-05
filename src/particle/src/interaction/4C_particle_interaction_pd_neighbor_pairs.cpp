@@ -171,8 +171,8 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
 
     // all close and non-bonded particle pairs are considered as potential colliding partners
     // undergoing short range force interaction
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    const double* pos_j = container_j->get_ptr_to_state(Particle::Position, particle_j);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+    const double* pos_j = container_j->get_ptr_to_state(Particle::State::Position, particle_j);
 
     // vector from particle i to j
     double r_ji[3];
@@ -184,8 +184,8 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
     const double absdist = ParticleUtils::vec_norm_two(r_ji);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
 
     if (absdist < (1.0e-10 * rad_i[0]) or absdist < (1.0e-10 * rad_j[0]))
       FOUR_C_THROW("absolute distance %f between particles close to zero!", absdist);
@@ -309,11 +309,11 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
 
     // get position of particle i
     const Core::LinAlg::Matrix<3, 1> pos_i(
-        container_i->get_ptr_to_state(Particle::Position, particle_i));
+        container_i->get_ptr_to_state(Particle::State::Position, particle_i));
 
     // get pointer to column wall element
     Core::Elements::Element* ele = potentialneighbors.second;
@@ -410,7 +410,7 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
         particlecontainerbundle_->get_specific_container(type_i, status_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
 
     // define tolerance dependent on the particle radius
     const double adaptedtol = 1.0e-7 * rad_i[0];

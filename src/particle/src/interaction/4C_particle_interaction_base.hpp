@@ -69,7 +69,7 @@ namespace Particle
 
     //! insert interaction dependent states of all particle types
     virtual void insert_particle_states_of_particle_types(
-        std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) = 0;
+        std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) = 0;
 
     //! set initial states
     virtual void set_initial_states() = 0;

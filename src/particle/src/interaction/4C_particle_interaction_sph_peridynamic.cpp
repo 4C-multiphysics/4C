@@ -161,7 +161,7 @@ void Particle::SPHPeridynamic::setup(
 }
 
 void Particle::SPHPeridynamic::insert_particle_states_of_particle_types(
-    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
@@ -169,12 +169,13 @@ void Particle::SPHPeridynamic::insert_particle_states_of_particle_types(
     if (typeIt.first == Particle::Type::PDPhase)
     {
       // set of particle states for current particle type
-      std::set<Particle::StateEnum>& particlestates = typeIt.second;
+      std::set<Particle::State>& particlestates = typeIt.second;
 
       // set temperature state
-      particlestates.insert({Particle::Force, Particle::PDBodyId, Particle::ReferencePosition,
-          Particle::Young, Particle::CriticalStretch, Particle::InitialConnectedBonds,
-          Particle::CurrentConnectedBonds, Particle::PDDamageVariable});
+      particlestates.insert({Particle::State::Force, Particle::State::PDBodyId,
+          Particle::State::ReferencePosition, Particle::State::Young,
+          Particle::State::CriticalStretch, Particle::State::InitialConnectedBonds,
+          Particle::State::CurrentConnectedBonds, Particle::State::PDDamageVariable});
     }
   }
 }
@@ -218,19 +219,19 @@ void Particle::SPHPeridynamic::init_peridynamic_bondlist()
         particlecontainerbundle->get_specific_container(type_j, status_j);
 
     // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    const double* pdbodyid_i = container_i->get_ptr_to_state(Particle::PDBodyId, particle_i);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+    const double* pdbodyid_i = container_i->get_ptr_to_state(Particle::State::PDBodyId, particle_i);
     double* initialconnectedbonds_i =
-        container_i->get_ptr_to_state_writable(Particle::InitialConnectedBonds, particle_i);
+        container_i->get_ptr_to_state_writable(Particle::State::InitialConnectedBonds, particle_i);
     double* currentconnectedbonds_i =
-        container_i->get_ptr_to_state_writable(Particle::CurrentConnectedBonds, particle_i);
+        container_i->get_ptr_to_state_writable(Particle::State::CurrentConnectedBonds, particle_i);
 
-    const double* pos_j = container_j->get_ptr_to_state(Particle::Position, particle_j);
-    const double* pdbodyid_j = container_j->get_ptr_to_state(Particle::PDBodyId, particle_j);
+    const double* pos_j = container_j->get_ptr_to_state(Particle::State::Position, particle_j);
+    const double* pdbodyid_j = container_j->get_ptr_to_state(Particle::State::PDBodyId, particle_j);
     double* initialconnectedbonds_j =
-        container_j->get_ptr_to_state_writable(Particle::InitialConnectedBonds, particle_j);
+        container_j->get_ptr_to_state_writable(Particle::State::InitialConnectedBonds, particle_j);
     double* currentconnectedbonds_j =
-        container_j->get_ptr_to_state_writable(Particle::CurrentConnectedBonds, particle_j);
+        container_j->get_ptr_to_state_writable(Particle::State::CurrentConnectedBonds, particle_j);
 
     // vector from particle i to j
     double r_ji[3];
@@ -296,7 +297,7 @@ void Particle::SPHPeridynamic::add_acceleration_contribution() const
   Particle::ParticleContainer* container =
       particleengineinterface_->get_particle_container_bundle()->get_specific_container(
           Particle::Type::PDPhase, Particle::Status::Owned);
-  container->clear_state(Particle::Force);
+  container->clear_state(Particle::State::Force);
 }
 
 void Particle::SPHPeridynamic::compute_interaction_forces() const
@@ -329,24 +330,25 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
 
     //  get pointer to particle states
     const double* ref_pos_i =
-        container_i->get_ptr_to_state(Particle::ReferencePosition, particle_i);
+        container_i->get_ptr_to_state(Particle::State::ReferencePosition, particle_i);
 
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    const double* young_i = container_i->get_ptr_to_state(Particle::Young, particle_i);
-    double* force_i = container_i->try_get_ptr_to_state_writable(Particle::Force, particle_i);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+    const double* young_i = container_i->get_ptr_to_state(Particle::State::Young, particle_i);
+    double* force_i =
+        container_i->try_get_ptr_to_state_writable(Particle::State::Force, particle_i);
     const double* critical_stretch_i =
-        container_i->get_ptr_to_state(Particle::CriticalStretch, particle_i);
+        container_i->get_ptr_to_state(Particle::State::CriticalStretch, particle_i);
 
     const double* ref_pos_j =
-        container_j->get_ptr_to_state(Particle::ReferencePosition, particle_j);
-    const double* pos_j = container_j->get_ptr_to_state(Particle::Position, particle_j);
-    const double* young_j = container_j->get_ptr_to_state(Particle::Young, particle_j);
+        container_j->get_ptr_to_state(Particle::State::ReferencePosition, particle_j);
+    const double* pos_j = container_j->get_ptr_to_state(Particle::State::Position, particle_j);
+    const double* young_j = container_j->get_ptr_to_state(Particle::State::Young, particle_j);
     double* force_j = nullptr;
     if (status_j == Particle::Status::Owned)
-      force_j = container_j->get_ptr_to_state_writable(Particle::Force, particle_j);
+      force_j = container_j->get_ptr_to_state_writable(Particle::State::Force, particle_j);
 
     const double* critical_stretch_j =
-        container_j->get_ptr_to_state(Particle::CriticalStretch, particle_j);
+        container_j->get_ptr_to_state(Particle::State::CriticalStretch, particle_j);
     // calculate the bond between two particles
     double xi[3];
     ParticleUtils::vec_set(xi, ref_pos_j);
@@ -405,10 +407,10 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
     }
     else
     {
-      double* currentconnectedbonds_i =
-          container_i->get_ptr_to_state_writable(Particle::CurrentConnectedBonds, particle_i);
-      double* currentconnectedbonds_j =
-          container_j->get_ptr_to_state_writable(Particle::CurrentConnectedBonds, particle_j);
+      double* currentconnectedbonds_i = container_i->get_ptr_to_state_writable(
+          Particle::State::CurrentConnectedBonds, particle_i);
+      double* currentconnectedbonds_j = container_j->get_ptr_to_state_writable(
+          Particle::State::CurrentConnectedBonds, particle_j);
 
       currentconnectedbonds_i[0] -= 1.0;
       currentconnectedbonds_j[0] -= 1.0;
@@ -443,15 +445,16 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
         particlecontainerbundle->get_specific_container(type_j, status_j);
 
     // get pointer to particle states
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    double* force_i = container_i->try_get_ptr_to_state_writable(Particle::Force, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    double* force_i =
+        container_i->try_get_ptr_to_state_writable(Particle::State::Force, particle_i);
 
     // get pointer to particle states
-    const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
+    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
 
     double* force_j = nullptr;
     if (status_j == Particle::Status::Owned)
-      force_j = container_j->try_get_ptr_to_state_writable(Particle::Force, particle_j);
+      force_j = container_j->try_get_ptr_to_state_writable(Particle::State::Force, particle_j);
 
     // compute normal gap and rate of normal gap
     const double gap = particlepair.gap_;
@@ -482,15 +485,16 @@ void Particle::SPHPeridynamic::compute_acceleration() const
   if (particlestored <= 0) return;
 
   // get particle state dimension
-  const int statedim = container->get_state_dim(Particle::Acceleration);
+  const int statedim = container->get_state_dim(Particle::State::Acceleration);
 
   // get pointer to particle states
-  const double* radius = container->get_ptr_to_state(Particle::Radius, 0);
-  const double* mass = container->get_ptr_to_state(Particle::Mass, 0);
-  const double* force = container->get_ptr_to_state(Particle::Force, 0);
-  const double* moment = container->try_get_ptr_to_state(Particle::Moment, 0);
-  double* acc = container->get_ptr_to_state_writable(Particle::Acceleration, 0);
-  double* angacc = container->try_get_ptr_to_state_writable(Particle::AngularAcceleration, 0);
+  const double* radius = container->get_ptr_to_state(Particle::State::Radius, 0);
+  const double* mass = container->get_ptr_to_state(Particle::State::Mass, 0);
+  const double* force = container->get_ptr_to_state(Particle::State::Force, 0);
+  const double* moment = container->try_get_ptr_to_state(Particle::State::Moment, 0);
+  double* acc = container->get_ptr_to_state_writable(Particle::State::Acceleration, 0);
+  double* angacc =
+      container->try_get_ptr_to_state_writable(Particle::State::AngularAcceleration, 0);
 
   // compute acceleration
   for (int i = 0; i < particlestored; ++i)
@@ -520,13 +524,13 @@ void Particle::SPHPeridynamic::damage_evaluation()
   for (int particle_i = 0; particle_i < container->particles_stored(); ++particle_i)
   {
     const double* initialconnectedbonds_i =
-        container->get_ptr_to_state(Particle::InitialConnectedBonds, particle_i);
+        container->get_ptr_to_state(Particle::State::InitialConnectedBonds, particle_i);
 
     const double* currentconnectedbonds_i =
-        container->get_ptr_to_state(Particle::CurrentConnectedBonds, particle_i);
+        container->get_ptr_to_state(Particle::State::CurrentConnectedBonds, particle_i);
 
     double* pddamagevariable_i =
-        container->get_ptr_to_state_writable(Particle::PDDamageVariable, particle_i);
+        container->get_ptr_to_state_writable(Particle::State::PDDamageVariable, particle_i);
 
     pddamagevariable_i[0] = 1.0 - currentconnectedbonds_i[0] / initialconnectedbonds_i[0];
   }

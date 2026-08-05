@@ -17,18 +17,18 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace
 {
-  std::map<Particle::StateEnum, std::map<Particle::Type, int>>
-  extract_particle_types_to_function_ids(const Teuchos::ParameterList& params);
+  std::map<Particle::State, std::map<Particle::Type, int>> extract_particle_types_to_function_ids(
+      const Teuchos::ParameterList& params);
 
   std::vector<std::vector<double>>& get_rigid_body_state(
-      Particle::StateEnum particleState, Particle::RigidBodyDataState& rigidbodydatastates);
+      Particle::State particleState, Particle::RigidBodyDataState& rigidbodydatastates);
 }  // namespace
 
 void Particle::set_initial_fields(const Teuchos::ParameterList& params,
     const std::vector<int>& ownedrigidbodies, Particle::RigidBodyDataState& rigidbodydatastates)
 {
   // relating particle types to function ids
-  std::map<Particle::StateEnum, std::map<Particle::Type, int>> statetotypetofunctidmap =
+  std::map<Particle::State, std::map<Particle::Type, int>> statetotypetofunctidmap =
       extract_particle_types_to_function_ids(params);
 
   for (auto& stateIt : statetotypetofunctidmap)
@@ -36,7 +36,7 @@ void Particle::set_initial_fields(const Teuchos::ParameterList& params,
     if (not stateIt.second.contains(Particle::Type::RigidPhase)) continue;
 
     // state vector
-    Particle::StateEnum particleState = stateIt.first;
+    Particle::State particleState = stateIt.first;
 
     // get pointer to rigid body state
     std::vector<std::vector<double>>& state =
@@ -78,21 +78,21 @@ void Particle::set_initial_fields(const Teuchos::ParameterList& params,
 
 namespace
 {
-  std::map<Particle::StateEnum, std::map<Particle::Type, int>>
-  extract_particle_types_to_function_ids(const Teuchos::ParameterList& params)
+  std::map<Particle::State, std::map<Particle::Type, int>> extract_particle_types_to_function_ids(
+      const Teuchos::ParameterList& params)
   {
-    std::map<Particle::StateEnum, std::map<Particle::Type, int>> statetotypetofunctidmap;
+    std::map<Particle::State, std::map<Particle::Type, int>> statetotypetofunctidmap;
 
     // get control parameters for initial/boundary conditions
     const Teuchos::ParameterList& params_conditions =
         params.sublist("INITIAL AND BOUNDARY CONDITIONS");
 
     // relate particle state to input name
-    std::map<std::string, Particle::StateEnum> initialfieldtostateenum = {
-        std::make_pair("INITIAL_VELOCITY_FIELD", Particle::Velocity),
-        std::make_pair("INITIAL_ANGULAR_VELOCITY_FIELD", Particle::AngularVelocity),
-        std::make_pair("INITIAL_ACCELERATION_FIELD", Particle::Acceleration),
-        std::make_pair("INITIAL_ANGULAR_ACCELERATION_FIELD", Particle::AngularAcceleration)};
+    std::map<std::string, Particle::State> initialfieldtostateenum = {
+        std::make_pair("INITIAL_VELOCITY_FIELD", Particle::State::Velocity),
+        std::make_pair("INITIAL_ANGULAR_VELOCITY_FIELD", Particle::State::AngularVelocity),
+        std::make_pair("INITIAL_ACCELERATION_FIELD", Particle::State::Acceleration),
+        std::make_pair("INITIAL_ANGULAR_ACCELERATION_FIELD", Particle::State::AngularAcceleration)};
 
     // iterate over particle states
     for (const auto& stateIt : initialfieldtostateenum)
@@ -110,7 +110,7 @@ namespace
     // safety check
     for (const auto& iter : statetotypetofunctidmap)
     {
-      if (iter.first == Particle::Temperature and not iter.second.empty())
+      if (iter.first == Particle::State::Temperature and not iter.second.empty())
         FOUR_C_THROW("initial temperature cannot be specified for rigid bodies '{}' !",
             Particle::enum_to_state_name(iter.first));
     }
@@ -120,17 +120,17 @@ namespace
   }
 
   std::vector<std::vector<double>>& get_rigid_body_state(
-      Particle::StateEnum particleState, Particle::RigidBodyDataState& rigidbodydatastates)
+      Particle::State particleState, Particle::RigidBodyDataState& rigidbodydatastates)
   {
     switch (particleState)
     {
-      case Particle::Velocity:
+      case Particle::State::Velocity:
         return rigidbodydatastates.get_ref_velocity();
-      case Particle::AngularVelocity:
+      case Particle::State::AngularVelocity:
         return rigidbodydatastates.get_ref_angular_velocity();
-      case Particle::Acceleration:
+      case Particle::State::Acceleration:
         return rigidbodydatastates.get_ref_acceleration();
-      case Particle::AngularAcceleration:
+      case Particle::State::AngularAcceleration:
         return rigidbodydatastates.get_ref_angular_acceleration();
 
       default:

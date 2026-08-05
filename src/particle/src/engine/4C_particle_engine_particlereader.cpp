@@ -50,22 +50,24 @@ void Particle::read_particles(Core::IO::InputFile& input, const std::string& sec
       particletype = Particle::enum_from_type_name(type);
 
       // allocate memory to hold particle position state
-      particlestates.resize(Particle::Position + 1);
+      particlestates.resize(static_cast<int>(Particle::State::Position) + 1);
 
       // set position state
-      particlestates[Particle::Position] = std::vector<double>(pos.begin(), pos.end());
+      particlestates[static_cast<int>(Particle::State::Position)] =
+          std::vector<double>(pos.begin(), pos.end());
 
       // optional particle states
       {
         std::string statelabel;
-        Particle::StateEnum particlestate;
+        Particle::State particlestate;
         std::vector<double> state;
 
         // optional particle parameters
         const std::unordered_map<std::string, Particle::ParticleState> additional_states = {
-            {"RAD", Particle::Radius}, {"RIGIDCOLOR", Particle::RigidBodyColor},
-            {"PDBODYID", Particle::PDBodyId}, {"DIRICHLET_FUNCT", Particle::DirichletFunctionId},
-            {"BOUNDARYID", Particle::OpenBoundaryId}};
+            {"RAD", Particle::State::Radius}, {"RIGIDCOLOR", Particle::State::RigidBodyColor},
+            {"PDBODYID", Particle::State::PDBodyId},
+            {"DIRICHLET_FUNCT", Particle::State::DirichletFunctionId},
+            {"BOUNDARYID", Particle::State::OpenBoundaryId}};
 
         while (!parser.at_end())
         {
@@ -93,11 +95,13 @@ void Particle::read_particles(Core::IO::InputFile& input, const std::string& sec
             FOUR_C_THROW("Optional particle state with label '{}' unknown!", statelabel);
 
           // allocate memory to hold optional particle state
-          if (static_cast<int>(particlestates.size()) < (particlestate + 1))
-            particlestates.resize(particlestate + 1);
+          const int particlestate_idx = static_cast<int>(particlestate);
+
+          if (static_cast<int>(particlestates.size()) < (particlestate_idx + 1))
+            particlestates.resize(particlestate_idx + 1);
 
           // set optional particle state
-          particlestates[particlestate] = state;
+          particlestates[particlestate_idx] = state;
         }
       }
 

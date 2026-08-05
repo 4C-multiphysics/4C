@@ -27,9 +27,9 @@ namespace
       particlecontainerbundle_ = std::make_unique<Particle::ParticleContainerBundle>();
 
       // init two phases with different particle states
-      std::map<Particle::Type, std::set<Particle::StateEnum>> particlestatestotypes;
-      std::set<Particle::StateEnum> stateEnumSet = {
-          Particle::Position, Particle::Mass, Particle::Radius};
+      std::map<Particle::Type, std::set<Particle::State>> particlestatestotypes;
+      std::set<Particle::State> stateEnumSet = {
+          Particle::State::Position, Particle::State::Mass, Particle::State::Radius};
       particlestatestotypes.insert(std::make_pair(Particle::Type::Phase1, stateEnumSet));
       particlestatestotypes.insert(std::make_pair(Particle::Type::Phase2, stateEnumSet));
 
@@ -37,8 +37,8 @@ namespace
       particlecontainerbundle_->setup(particlestatestotypes);
 
       const auto GetMaximumStoredStateEnumSetValue = [&stateEnumSet]()
-      { return *(--stateEnumSet.end()); };
-      statesvectorsize_ = GetMaximumStoredStateEnumSetValue() + 1;
+      { return static_cast<int>(*(--stateEnumSet.end())); };
+      statesvectorsize_ = static_cast<int>(GetMaximumStoredStateEnumSetValue()) + 1;
 
       // init some particles
       int index(0);
@@ -112,9 +112,9 @@ namespace
       Particle::ParticleStates particle;
       particle.assign(statesvectorsize_, std::vector<double>{});
 
-      particle[Particle::Position] = pos;
-      particle[Particle::Mass] = mass;
-      particle[Particle::Radius] = rad;
+      particle[static_cast<int>(Particle::State::Position)] = pos;
+      particle[static_cast<int>(Particle::State::Mass)] = mass;
+      particle[static_cast<int>(Particle::State::Radius)] = rad;
 
       return particle;
     }
@@ -146,7 +146,7 @@ namespace
   TEST_F(ParticleContainerBundleTest, scale_state_specific_container)
   {
     particlecontainerbundle_->scale_state_specific_container(
-        2.0, Particle::Radius, Particle::Type::Phase1);
+        2.0, Particle::State::Radius, Particle::Type::Phase1);
 
     Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
         Particle::Type::Phase1, Particle::Status::Owned);
@@ -185,7 +185,7 @@ namespace
   TEST_F(ParticleContainerBundleTest, update_state_specific_container)
   {
     particlecontainerbundle_->update_state_specific_container(
-        2.0, Particle::Radius, 1.0, Particle::Mass, Particle::Type::Phase1);
+        2.0, Particle::State::Radius, 1.0, Particle::State::Mass, Particle::Type::Phase1);
 
     Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
         Particle::Type::Phase1, Particle::Status::Owned);
@@ -226,7 +226,7 @@ namespace
     std::vector<double> mass{1.1};
 
     particlecontainerbundle_->set_state_specific_container(
-        mass, Particle::Mass, Particle::Type::Phase2);
+        mass, Particle::State::Mass, Particle::Type::Phase2);
 
     Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
         Particle::Type::Phase2, Particle::Status::Owned);
@@ -267,7 +267,7 @@ namespace
     std::vector<double> mass{0.0};
 
     particlecontainerbundle_->clear_state_specific_container(
-        Particle::Mass, Particle::Type::Phase2);
+        Particle::State::Mass, Particle::Type::Phase2);
 
     Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
         Particle::Type::Phase2, Particle::Status::Owned);
@@ -305,7 +305,7 @@ namespace
 
   TEST_F(ParticleContainerBundleTest, scale_state_all_containers)
   {
-    particlecontainerbundle_->scale_state_all_containers(2.0, Particle::Mass);
+    particlecontainerbundle_->scale_state_all_containers(2.0, Particle::State::Mass);
 
     Particle::ParticleContainer* container = nullptr;
     int globalid(0);
@@ -371,7 +371,7 @@ namespace
   TEST_F(ParticleContainerBundleTest, update_state_all_containers)
   {
     particlecontainerbundle_->update_state_all_containers(
-        2.0, Particle::Mass, 1.0, Particle::Radius);
+        2.0, Particle::State::Mass, 1.0, Particle::State::Radius);
 
     Particle::ParticleContainer* container = nullptr;
     int globalid(0);
@@ -438,7 +438,7 @@ namespace
   {
     std::vector<double> mass{1.1};
 
-    particlecontainerbundle_->set_state_all_containers(mass, Particle::Mass);
+    particlecontainerbundle_->set_state_all_containers(mass, Particle::State::Mass);
 
     Particle::ParticleContainer* container = nullptr;
     int globalid(0);
@@ -505,7 +505,7 @@ namespace
   {
     std::vector<double> mass{0.0};
 
-    particlecontainerbundle_->clear_state_all_containers(Particle::Mass);
+    particlecontainerbundle_->clear_state_all_containers(Particle::State::Mass);
 
     Particle::ParticleContainer* container = nullptr;
     int globalid(0);

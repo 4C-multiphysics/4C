@@ -31,7 +31,7 @@ namespace Particle
    * \brief enums of particle states
    *
    */
-  enum ParticleState
+  enum class ParticleState
   {
     /*---------------------------------------------------------------------------*/
     // default particle states

@@ -94,7 +94,7 @@ namespace Particle
     Particle::Type abovephase_;
 
     //! transition state of phase change
-    Particle::StateEnum transitionstate_;
+    Particle::State transitionstate_;
 
     //! transition value of phase change
     double transitionvalue_;

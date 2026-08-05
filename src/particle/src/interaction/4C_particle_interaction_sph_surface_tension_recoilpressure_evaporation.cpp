@@ -48,11 +48,14 @@ void Particle::SPHRecoilPressureEvaporation::compute_recoil_pressure_contributio
   // iterate over particles in container
   for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
   {
-    const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
-    const double* temp_i = container_i->get_ptr_to_state(Particle::Temperature, particle_i);
-    const double* cfg_i = container_i->get_ptr_to_state(Particle::ColorfieldGradient, particle_i);
-    const double* ifn_i = container_i->get_ptr_to_state(Particle::InterfaceNormal, particle_i);
-    double* acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
+    const double* dens_i = container_i->get_ptr_to_state(Particle::State::Density, particle_i);
+    const double* temp_i = container_i->get_ptr_to_state(Particle::State::Temperature, particle_i);
+    const double* cfg_i =
+        container_i->get_ptr_to_state(Particle::State::ColorfieldGradient, particle_i);
+    const double* ifn_i =
+        container_i->get_ptr_to_state(Particle::State::InterfaceNormal, particle_i);
+    double* acc_i =
+        container_i->get_ptr_to_state_writable(Particle::State::Acceleration, particle_i);
 
     // evaluation only for non-zero interface normal
     if (not(ParticleUtils::vec_norm_two(ifn_i) > 0.0)) continue;

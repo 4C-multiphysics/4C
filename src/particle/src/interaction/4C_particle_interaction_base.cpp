@@ -133,7 +133,7 @@ double Particle::ParticleInteractionBase::max_particle_radius() const
         particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get maximum stored value of state
-    double currmaxrad = container->get_max_value_of_state(Particle::Radius);
+    double currmaxrad = container->get_max_value_of_state(Particle::State::Radius);
 
     // compare to current maximum
     maxrad = std::max(maxrad, currmaxrad);

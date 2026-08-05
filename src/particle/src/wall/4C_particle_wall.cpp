@@ -89,7 +89,7 @@ void Particle::WallHandlerBase::write_restart(const int step, const double time)
 void Particle::WallHandlerBase::read_restart(const int restartstep) {}
 
 void Particle::WallHandlerBase::insert_particle_states_of_particle_types(
-    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const
 {
   // get flags defining considered states of particle wall
   const bool ismoving = params_.get<bool>("PARTICLE_WALL_MOVING");
@@ -101,29 +101,29 @@ void Particle::WallHandlerBase::insert_particle_states_of_particle_types(
   for (auto& typeIt : particlestatestotypes)
   {
     // set of particle states for current particle type
-    std::set<Particle::StateEnum>& particlestates = typeIt.second;
+    std::set<Particle::State>& particlestates = typeIt.second;
 
     // insert states needed for iteration in particle structure interaction
     particlestates.insert({
-        Particle::LastIterPosition,
-        Particle::LastIterVelocity,
-        Particle::LastIterAcceleration,
+        Particle::State::LastIterPosition,
+        Particle::State::LastIterVelocity,
+        Particle::State::LastIterAcceleration,
     });
 
-    if (particlestates.contains(Particle::AngularVelocity))
-      particlestates.insert(Particle::LastIterAngularVelocity);
+    if (particlestates.contains(Particle::State::AngularVelocity))
+      particlestates.insert(Particle::State::LastIterAngularVelocity);
 
-    if (particlestates.contains(Particle::AngularAcceleration))
-      particlestates.insert(Particle::LastIterAngularAcceleration);
+    if (particlestates.contains(Particle::State::AngularAcceleration))
+      particlestates.insert(Particle::State::LastIterAngularAcceleration);
 
-    if (particlestates.contains(Particle::ModifiedAcceleration))
-      particlestates.insert(Particle::LastIterModifiedAcceleration);
+    if (particlestates.contains(Particle::State::ModifiedAcceleration))
+      particlestates.insert(Particle::State::LastIterModifiedAcceleration);
 
-    if (particlestates.contains(Particle::DensityDot))
-      particlestates.insert(Particle::LastIterDensity);
+    if (particlestates.contains(Particle::State::DensityDot))
+      particlestates.insert(Particle::State::LastIterDensity);
 
-    if (particlestates.contains(Particle::TemperatureDot))
-      particlestates.insert(Particle::LastIterTemperature);
+    if (particlestates.contains(Particle::State::TemperatureDot))
+      particlestates.insert(Particle::State::LastIterTemperature);
   }
 }
 
@@ -337,7 +337,7 @@ void Particle::WallHandlerBase::build_particle_to_wall_neighbors(
 
         // get position of neighboring particle
         const Core::LinAlg::Matrix<3, 1> currpos(
-            neighborcontainer->get_ptr_to_state(Particle::Position, neighborindex));
+            neighborcontainer->get_ptr_to_state(Particle::State::Position, neighborindex));
 
         // get coordinates of closest point on current column wall element to particle
         Core::LinAlg::Matrix<3, 1> closestpos;

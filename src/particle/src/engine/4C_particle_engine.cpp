@@ -197,7 +197,7 @@ void Particle::ParticleEngine::erase_particles_outside_bounding_box(
     const ParticleStates& states = particlestocheck[i]->return_particle_states();
 
     // get position of particle
-    const std::vector<double>& pos = states[Position];
+    const std::vector<double>& pos = states[static_cast<int>(State::Position)];
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
     // get type of particles
@@ -207,8 +207,9 @@ void Particle::ParticleEngine::erase_particles_outside_bounding_box(
     ParticleContainer* container =
         particlecontainerbundle_->get_specific_container(type, Status::Owned);
 
-    if (static_cast<int>(pos.size()) != container->get_state_dim(Position))
-      FOUR_C_THROW("dimension of particle state '{}' not valid!", enum_to_state_name(Position));
+    if (static_cast<int>(pos.size()) != container->get_state_dim(State::Position))
+      FOUR_C_THROW(
+          "dimension of particle state '{}' not valid!", enum_to_state_name(State::Position));
 #endif
 
     // check particle location with respect to bounding box in each spatial directions
@@ -508,7 +509,7 @@ void Particle::ParticleEngine::build_particle_to_particle_neighbors()
       const int* currglobalid = container->get_ptr_to_global_id(ownedindex);
 
       // get position of particle
-      const double* currpos = container->get_ptr_to_state(Position, ownedindex);
+      const double* currpos = container->get_ptr_to_state(State::Position, ownedindex);
 
       // iterate over neighboring bins (including current bin)
       for (int gidofneighborbin : binning_->halfneighboringbinstobins_[rowlidofbin])
@@ -543,7 +544,8 @@ void Particle::ParticleEngine::build_particle_to_particle_neighbors()
           if (gidofbin == gidofneighborbin and neighborglobalid[0] <= currglobalid[0]) continue;
 
           // get position of neighboring particle
-          const double* neighborpos = neighborcontainer->get_ptr_to_state(Position, neighborindex);
+          const double* neighborpos =
+              neighborcontainer->get_ptr_to_state(State::Position, neighborindex);
 
           // distance vector from owned particle to neighboring particle
           double dist[3];
@@ -779,7 +781,8 @@ void Particle::ParticleEngine::get_particles_within_radius(const double* positio
           particlecontainerbundle_->get_specific_container(neighbortype, neighborstatus);
 
       // get position of neighboring particle
-      const double* neighborpos = neighborcontainer->get_ptr_to_state(Position, neighborindex);
+      const double* neighborpos =
+          neighborcontainer->get_ptr_to_state(State::Position, neighborindex);
 
       // distance vector from position to neighboring particle
       double dist[3];
@@ -1286,7 +1289,7 @@ void Particle::ParticleEngine::check_particles_at_boundaries(
           particlecontainerbundle_->get_specific_container(type, Status::Owned);
 
       // get position of particle
-      const double* currpos = container->get_ptr_to_state(Position, ownedindex);
+      const double* currpos = container->get_ptr_to_state(State::Position, ownedindex);
 
       // get global id of bin
       const int gidofbin = binning_->binstrategy_->convert_pos_to_gid(currpos);
@@ -1321,7 +1324,7 @@ void Particle::ParticleEngine::check_particles_at_boundaries(
                 dim))
         {
           // binning domain length in current spatial direction
-          double* currpos = container->get_ptr_to_state_writable(Position, ownedindex);
+          double* currpos = container->get_ptr_to_state_writable(State::Position, ownedindex);
           double binningdomainlength =
               binning_->binstrategy_->length_of_binning_domain_in_a_spatial_direction(dim);
 
@@ -1363,7 +1366,7 @@ void Particle::ParticleEngine::determine_particles_to_be_distributed(
     const ParticleStates& states = particlestodistribute[i]->return_particle_states();
 
     // get position of particle
-    const std::vector<double>& pos = states[Position];
+    const std::vector<double>& pos = states[static_cast<int>(State::Position)];
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
     // get type of particles
@@ -1373,8 +1376,9 @@ void Particle::ParticleEngine::determine_particles_to_be_distributed(
     ParticleContainer* container =
         particlecontainerbundle_->get_specific_container(type, Status::Owned);
 
-    if (static_cast<int>(pos.size()) != container->get_state_dim(Position))
-      FOUR_C_THROW("dimension of particle state '{}' not valid!", enum_to_state_name(Position));
+    if (static_cast<int>(pos.size()) != container->get_state_dim(State::Position))
+      FOUR_C_THROW(
+          "dimension of particle state '{}' not valid!", enum_to_state_name(State::Position));
 #endif
 
     // get global id of bin
@@ -1489,7 +1493,7 @@ void Particle::ParticleEngine::determine_particles_to_be_transferred(
           particlecontainerbundle_->get_specific_container(type, Status::Owned);
 
       // get position of particle
-      const double* currpos = container->get_ptr_to_state(Position, ownedindex);
+      const double* currpos = container->get_ptr_to_state(State::Position, ownedindex);
 
       // get global id of bin
       const int gidofbin = binning_->binstrategy_->convert_pos_to_gid(currpos);
@@ -1670,7 +1674,7 @@ Particle::ParticleEngine::pack_specific_states_of_particles_to_be_refreshed(
         const double* state_ptr = container->get_ptr_to_state(state, ownedindex);
 
         // fill particle state
-        states[state].assign(state_ptr, state_ptr + statedim);
+        states[static_cast<int>(state)].assign(state_ptr, state_ptr + statedim);
       }
 
       pack_states_and_append_to_send_buffers(type, indexIt.second, states, sdata);
@@ -1857,7 +1861,7 @@ void Particle::ParticleEngine::insert_owned_particles(
       if (gidofbin < 0)
       {
         // get position of particle
-        const std::vector<double>& pos = states[Position];
+        const std::vector<double>& pos = states[static_cast<int>(State::Position)];
 
         // get type of particles
         ParticleType type = particleobject->return_particle_type();
@@ -1866,8 +1870,9 @@ void Particle::ParticleEngine::insert_owned_particles(
         ParticleContainer* container =
             particlecontainerbundle_->get_specific_container(type, Status::Owned);
 
-        if (static_cast<int>(pos.size()) != container->get_state_dim(Position))
-          FOUR_C_THROW("dimension of particle state '{}' not valid!", enum_to_state_name(Position));
+        if (static_cast<int>(pos.size()) != container->get_state_dim(State::Position))
+          FOUR_C_THROW(
+              "dimension of particle state '{}' not valid!", enum_to_state_name(State::Position));
 
         // get global id of bin
         gidofbin = binning_->binstrategy_->convert_pos_to_gid(pos.data());
@@ -1996,11 +2001,11 @@ void Particle::ParticleEngine::store_positions_after_particle_transfer()
     if (particlestored == 0) continue;
 
     // get pointer to particle states
-    const double* pos = container->get_ptr_to_state(Position, 0);
-    double* lasttransferpos = container->get_ptr_to_state_writable(LastTransferPosition, 0);
+    const double* pos = container->get_ptr_to_state(State::Position, 0);
+    double* lasttransferpos = container->get_ptr_to_state_writable(State::LastTransferPosition, 0);
 
     // get particle state dimension
-    int statedim = container->get_state_dim(Position);
+    int statedim = container->get_state_dim(State::Position);
 
     // copy particle position data
     for (int i = 0; i < (statedim * particlestored); ++i) lasttransferpos[i] = pos[i];
@@ -2030,10 +2035,10 @@ void Particle::ParticleEngine::relate_owned_particles_to_bins()
     if (particlestored <= 0) continue;
 
     // get pointer to position of particle after last transfer
-    const double* lasttransferpos = container->get_ptr_to_state(LastTransferPosition, 0);
+    const double* lasttransferpos = container->get_ptr_to_state(State::LastTransferPosition, 0);
 
     // get particle state dimension
-    int statedim = container->get_state_dim(Position);
+    int statedim = container->get_state_dim(State::Position);
 
     // loop over particles in container
     for (int index = 0; index < particlestored; ++index)

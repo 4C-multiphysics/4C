@@ -48,7 +48,7 @@ void Particle::SPHPressure::setup(
 
   // setup pressure of ghosted particles to refresh
   {
-    std::vector<Particle::StateEnum> states{Particle::Pressure};
+    std::vector<Particle::State> states{Particle::State::Pressure};
 
     for (const auto& type_i : fluidtypes_)
       pressuretorefresh_.push_back(std::make_pair(type_i, states));
@@ -73,8 +73,8 @@ void Particle::SPHPressure::compute_pressure() const
     if (particlestored <= 0) continue;
 
     // get pointer to particle state
-    const double* dens = container->get_ptr_to_state(Particle::Density, 0);
-    double* press = container->get_ptr_to_state_writable(Particle::Pressure, 0);
+    const double* dens = container->get_ptr_to_state(Particle::State::Density, 0);
+    double* press = container->get_ptr_to_state_writable(Particle::State::Pressure, 0);
 
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* material =
