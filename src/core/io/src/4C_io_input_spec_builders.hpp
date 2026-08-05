@@ -911,6 +911,12 @@ namespace Core::IO
        * The size of the List.
        */
       int size{dynamic_size};
+
+      /**
+       * If given, this function decides where the parsed list ends up, instead of the default of
+       * nesting it under its own name inside the parent storage.
+       */
+      StoreFunction<InputParameterContainer::List> store{};
     };
 
     /**

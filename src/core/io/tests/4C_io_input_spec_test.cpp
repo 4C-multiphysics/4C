@@ -1969,6 +1969,94 @@ outer:
     EXPECT_FALSE(model.get_if<B>("b"));
   }
 
+  TEST(InputSpecTest, ListWithExplicitStore)
+  {
+    struct Item
+    {
+      int value;
+    };
+
+    struct Parameters
+    {
+      std::vector<Item> items;
+    };
+
+    // A list that collects its entries in an InputParameterContainer::List, but post-processes
+    // that list into a struct member via an explicit store function, instead of nesting it under
+    // its own name.
+    const auto store_items = StoreFunction<InputParameterContainer::List>(
+        [](Storage& storage, InputParameterContainer::List&& value)
+        {
+          auto& target = std::any_cast<Parameters&>(storage).items;
+          for (const auto& entry : value) target.push_back(Item{entry.get<int>("value")});
+          return StoreStatus::ok();
+        },
+        typeid(Parameters));
+
+    auto spec = group<Parameters>(
+        "parameters", {
+                          list("items", parameter<int>("value"), {.store = store_items}),
+                      });
+
+    const InputParameterContainer container = Helpers::match(spec, R"(
+parameters:
+  items:
+    - value: 1
+    - value: 2
+    - value: 3)");
+
+    const auto& items = container.get<Parameters>("parameters").items;
+    ASSERT_EQ(items.size(), 3u);
+    EXPECT_EQ(items[0].value, 1);
+    EXPECT_EQ(items[1].value, 2);
+    EXPECT_EQ(items[2].value, 3);
+  }
+
+  TEST(InputSpecTest, ListWithExplicitStoreUsesDefault)
+  {
+    struct Item
+    {
+      int value;
+    };
+
+    struct Parameters
+    {
+      std::vector<Item> items;
+    };
+
+    // A list is only defaultable if it has a fixed size and its entries have a default value.
+    // Whenever the enclosing group is then absent from the input, the default list must reach
+    // the struct member through the explicit store function, not just through
+    // InputParameterContainer::add_list().
+    const auto store_items = StoreFunction<InputParameterContainer::List>(
+        [](Storage& storage, InputParameterContainer::List&& value)
+        {
+          auto& target = std::any_cast<Parameters&>(storage).items;
+          for (const auto& entry : value) target.push_back(Item{entry.get<int>("value")});
+          return StoreStatus::ok();
+        },
+        typeid(Parameters));
+
+    auto spec = group<Parameters>("parameters",
+        {
+            list("items", parameter<int>("value", {.default_value = 42}),
+                {.size = 2, .store = store_items}),
+        },
+        {.required = false});
+
+    ryml::Tree tree = init_yaml_tree_with_exceptions();
+    ryml::NodeRef root = tree.rootref();
+
+    ConstYamlNodeRef node(root, "");
+    InputParameterContainer container;
+    spec.match(node, container);
+
+    const auto& items = container.get<Parameters>("parameters").items;
+    ASSERT_EQ(items.size(), 2u);
+    EXPECT_EQ(items[0].value, 42);
+    EXPECT_EQ(items[1].value, 42);
+  }
+
   TEST(InputSpecTest, StoreSelectionStructsInStruct)
   {
     enum class Options

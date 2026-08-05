@@ -1102,7 +1102,15 @@ bool Core::IO::Internal::ListSpec::match(ConstYamlNodeRef node,
   }
 
   // Everything was correctly matched, so mark the list node as matched.
-  std::any_cast<InputParameterContainer&>(container).add_list(name, std::move(container_list));
+  if (data.store)
+  {
+    [[maybe_unused]] auto [ok, msg] = data.store(container, std::move(container_list));
+    FOUR_C_ASSERT(ok, "Internal error: could not move storage: {}.", msg);
+  }
+  else
+  {
+    std::any_cast<InputParameterContainer&>(container).add_list(name, std::move(container_list));
+  }
   match_entry.state = IO::Internal::MatchEntry::State::matched;
 
   return true;
@@ -1111,8 +1119,6 @@ bool Core::IO::Internal::ListSpec::match(ConstYamlNodeRef node,
 
 void Core::IO::Internal::ListSpec::set_default_value(InputSpecBuilders::Storage& container) const
 {
-  FOUR_C_ASSERT_ALWAYS(Internal::holds<InputParameterContainer>(container),
-      "Internal error: ListSpec can only set default values for InputParameterContainer.");
   std::vector<InputParameterContainer> default_list(data.size);
 
   for (auto& list_entry : default_list)
@@ -1124,7 +1130,17 @@ void Core::IO::Internal::ListSpec::set_default_value(InputSpecBuilders::Storage&
     list_entry = std::any_cast<InputParameterContainer&&>(std::move(subcontainer));
   }
 
-  std::any_cast<InputParameterContainer>(container).add_list(name, std::move(default_list));
+  if (data.store)
+  {
+    [[maybe_unused]] auto [ok, msg] = data.store(container, std::move(default_list));
+    FOUR_C_ASSERT(ok, "Internal error: could not move storage: {}.", msg);
+  }
+  else
+  {
+    FOUR_C_ASSERT_ALWAYS(Internal::holds<InputParameterContainer>(container),
+        "Internal error: ListSpec can only set default values for InputParameterContainer.");
+    std::any_cast<InputParameterContainer&>(container).add_list(name, std::move(default_list));
+  }
 }
 
 
@@ -1402,7 +1418,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::list(
       // a default value.
       .has_default_value = spec.impl().has_default_value() && data.size != dynamic_size,
       .type = InputSpecType::list,
-      .stores_to = &typeid(InputParameterContainer),
+      .stores_to = data.store ? &data.store.stores_to() : &typeid(InputParameterContainer),
   };
 
   return IO::Internal::make_spec(
