@@ -125,7 +125,9 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_contribution() co
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
     const double* temp_j = container_j->cond_get_ptr_to_state(Particle::Temperature, particle_j);
-    double* acc_j = container_j->get_ptr_to_state_writable(Particle::Acceleration, particle_j);
+    double* acc_j = nullptr;
+    if (status_j == Particle::Owned)
+      acc_j = container_j->get_ptr_to_state_writable(Particle::Acceleration, particle_j);
 
     // evaluate transition factor above reference temperature
     double tempfac_i = 0.0;
@@ -158,8 +160,7 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_contribution() co
       ParticleUtils::vec_add_scale(acc_i, -fac / mass_i[0], particlepair.e_ij_);
 
       // sum contribution of neighboring particle i
-      if (status_j == Particle::Owned)
-        ParticleUtils::vec_add_scale(acc_j, fac / mass_j[0], particlepair.e_ij_);
+      if (acc_j) ParticleUtils::vec_add_scale(acc_j, fac / mass_j[0], particlepair.e_ij_);
     }
   }
 }

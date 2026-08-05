@@ -401,14 +401,17 @@ void Particle::DEMContact::evaluate_particle_contact()
 
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
     const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
-    double* force_j = container_j->get_ptr_to_state_writable(Particle::Force, particle_j);
+    double* force_j = nullptr;
+    if (status_j == Particle::Owned)
+      force_j = container_j->get_ptr_to_state_writable(Particle::Force, particle_j);
 
     const double* angvel_j = nullptr;
     double* moment_j = nullptr;
     if (contacttangential_ or contactrolling_)
     {
       angvel_j = container_j->get_ptr_to_state(Particle::AngularVelocity, particle_j);
-      moment_j = container_j->get_ptr_to_state_writable(Particle::Moment, particle_j);
+      if (status_j == Particle::Owned)
+        moment_j = container_j->get_ptr_to_state_writable(Particle::Moment, particle_j);
     }
 
     // compute vectors from particle i and j to contact point c
@@ -447,8 +450,7 @@ void Particle::DEMContact::evaluate_particle_contact()
 
     // add normal contact force contribution
     ParticleUtils::vec_add_scale(force_i, normalcontactforce, particlepair.e_ji_);
-    if (status_j == Particle::Owned)
-      ParticleUtils::vec_add_scale(force_j, -normalcontactforce, particlepair.e_ji_);
+    if (force_j) ParticleUtils::vec_add_scale(force_j, -normalcontactforce, particlepair.e_ji_);
 
     // calculation of tangential contact force
     if (contacttangential_)
@@ -495,12 +497,11 @@ void Particle::DEMContact::evaluate_particle_contact()
 
       // add tangential contact force contribution
       ParticleUtils::vec_add(force_i, tangentialcontactforce);
-      if (status_j == Particle::Owned) ParticleUtils::vec_sub(force_j, tangentialcontactforce);
+      if (force_j) ParticleUtils::vec_sub(force_j, tangentialcontactforce);
 
       // add tangential contact moment contribution
       ParticleUtils::vec_add_cross(moment_i, r_ci, tangentialcontactforce);
-      if (status_j == Particle::Owned)
-        ParticleUtils::vec_add_cross(moment_j, tangentialcontactforce, r_cj);
+      if (moment_j) ParticleUtils::vec_add_cross(moment_j, tangentialcontactforce, r_cj);
     }
 
     // calculation of rolling contact moment
@@ -551,7 +552,7 @@ void Particle::DEMContact::evaluate_particle_contact()
 
       // add rolling contact moment contribution
       ParticleUtils::vec_add(moment_i, rollingcontactmoment);
-      if (status_j == Particle::Owned) ParticleUtils::vec_sub(moment_j, rollingcontactmoment);
+      if (moment_j) ParticleUtils::vec_sub(moment_j, rollingcontactmoment);
     }
   }
 }

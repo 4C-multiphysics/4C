@@ -180,14 +180,15 @@ void Particle::SPHDensityBase::sum_weighted_mass_particle_contribution() const
         container_i->cond_get_ptr_to_state_writable(Particle::DensitySum, particle_i);
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
-    double* denssum_j =
-        container_j->cond_get_ptr_to_state_writable(Particle::DensitySum, particle_j);
+    double* denssum_j = nullptr;
+    if (status_j == Particle::Owned)
+      denssum_j = container_j->cond_get_ptr_to_state_writable(Particle::DensitySum, particle_j);
 
     // sum contribution of neighboring particle j
     if (denssum_i) denssum_i[0] += particlepair.Wij_ * mass_i[0];
 
     // sum contribution of neighboring particle i
-    if (denssum_j and status_j == Particle::Owned) denssum_j[0] += particlepair.Wji_ * mass_j[0];
+    if (denssum_j) denssum_j[0] += particlepair.Wji_ * mass_j[0];
   }
 }
 
@@ -364,15 +365,15 @@ void Particle::SPHDensityBase::sum_colorfield_particle_contribution() const
                                ? container_j->get_ptr_to_state(Particle::Density, particle_j)
                                : &(material_i->initDensity_);
 
-    double* colorfield_j =
-        container_j->cond_get_ptr_to_state_writable(Particle::Colorfield, particle_j);
+    double* colorfield_j = nullptr;
+    if (status_j == Particle::Owned)
+      colorfield_j = container_j->cond_get_ptr_to_state_writable(Particle::Colorfield, particle_j);
 
     // sum contribution of neighboring particle j
     if (colorfield_i) colorfield_i[0] += (particlepair.Wij_ / dens_j[0]) * mass_j[0];
 
     // sum contribution of neighboring particle i
-    if (colorfield_j and status_j == Particle::Owned)
-      colorfield_j[0] += (particlepair.Wji_ / dens_i[0]) * mass_i[0];
+    if (colorfield_j) colorfield_j[0] += (particlepair.Wji_ / dens_i[0]) * mass_i[0];
   }
 }
 
@@ -535,8 +536,9 @@ void Particle::SPHDensityBase::continuity_equation_particle_contribution() const
                                ? container_j->get_ptr_to_state(Particle::Density, particle_j)
                                : &(material_i->initDensity_);
 
-    double* densdot_j =
-        container_j->cond_get_ptr_to_state_writable(Particle::DensityDot, particle_j);
+    double* densdot_j = nullptr;
+    if (status_j == Particle::Owned)
+      densdot_j = container_j->cond_get_ptr_to_state_writable(Particle::DensityDot, particle_j);
 
     // relative velocity (use modified velocities in case of transport velocity formulation)
     double vel_ij[3];
@@ -550,7 +552,7 @@ void Particle::SPHDensityBase::continuity_equation_particle_contribution() const
       densdot_i[0] += dens_i[0] * (mass_j[0] / dens_j[0]) * particlepair.dWdrij_ * e_ij_vel_ij;
 
     // sum contribution of neighboring particle i
-    if (densdot_j and status_j == Particle::Owned)
+    if (densdot_j)
       densdot_j[0] += dens_j[0] * (mass_i[0] / dens_i[0]) * particlepair.dWdrji_ * e_ij_vel_ij;
   }
 }

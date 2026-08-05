@@ -341,7 +341,9 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
         container_j->get_ptr_to_state(Particle::ReferencePosition, particle_j);
     const double* pos_j = container_j->get_ptr_to_state(Particle::Position, particle_j);
     const double* young_j = container_j->get_ptr_to_state(Particle::Young, particle_j);
-    double* force_j = container_j->get_ptr_to_state_writable(Particle::Force, particle_j);
+    double* force_j = nullptr;
+    if (status_j == Particle::Owned)
+      force_j = container_j->get_ptr_to_state_writable(Particle::Force, particle_j);
 
     const double* critical_stretch_j =
         container_j->get_ptr_to_state(Particle::CriticalStretch, particle_j);
@@ -397,7 +399,7 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
 
       // add bond force contribution
       ParticleUtils::vec_add_scale(force_i, fac, m);
-      if (status_j == Particle::Owned) ParticleUtils::vec_add_scale(force_j, -fac, m);
+      if (force_j) ParticleUtils::vec_add_scale(force_j, -fac, m);
 
       ++iter;
     }

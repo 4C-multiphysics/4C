@@ -286,8 +286,9 @@ void Particle::SPHSurfaceTension::compute_colorfield_gradient() const
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
     const double* dens_j = container_j->get_ptr_to_state(Particle::Density, particle_j);
-    double* cfg_j =
-        container_j->get_ptr_to_state_writable(Particle::ColorfieldGradient, particle_j);
+    double* cfg_j = nullptr;
+    if (status_j == Particle::Owned)
+      cfg_j = container_j->get_ptr_to_state_writable(Particle::ColorfieldGradient, particle_j);
 
     // (current) volume of particle i and j
     const double V_i = mass_i[0] / dens_i[0];
@@ -301,7 +302,7 @@ void Particle::SPHSurfaceTension::compute_colorfield_gradient() const
         cfg_i, dens_i[0] / V_i * fac * particlepair.dWdrij_, particlepair.e_ij_);
 
     // sum contribution of neighboring particle i
-    if (status_j == Particle::Owned)
+    if (cfg_j)
       ParticleUtils::vec_add_scale(
           cfg_j, -dens_j[0] / V_j * fac * particlepair.dWdrji_, particlepair.e_ij_);
   }
