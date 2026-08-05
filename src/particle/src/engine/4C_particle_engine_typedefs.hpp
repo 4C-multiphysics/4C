@@ -52,6 +52,9 @@ namespace Particle
   //! particle state enum
   using State = ParticleState;
 
+  //! particle memory space
+  using Space = ParticleSpace;
+
   //! states of particle indexed by particle state enum
   using ParticleStates = std::vector<std::vector<double>>;
 

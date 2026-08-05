@@ -16,6 +16,8 @@
 #include "4C_particle_engine_enums.hpp"
 #include "4C_particle_engine_typedefs.hpp"
 
+#include <memory>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*---------------------------------------------------------------------------*
@@ -36,6 +38,9 @@ namespace Particle
    public:
     //! constructor
     explicit ParticleContainer();
+
+    //! destructor
+    ~ParticleContainer();
 
     /*!
      * \brief setup particle container
@@ -178,10 +183,12 @@ namespace Particle
      *
      * \param[in] state particle state
      * \param[in] index index of particle in container
+     * \param[in] space memory space to access
      *
      * \return pointer with read-only access to particle state
      */
-    const double* get_ptr_to_state(Particle::State state, int index) const;
+    const double* get_ptr_to_state(
+        Particle::State state, int index, Particle::Space space = Particle::Space::Host) const;
 
     /*!
      * \brief conditionally get read-only pointer to state of a particle at index
@@ -196,15 +203,17 @@ namespace Particle
      *
      * \param[in] state particle state
      * \param[in] index index of particle in container
+     * \param[in] space memory space to access
      *
      * \return pointer with read-only access to particle state or nullptr
      */
-    inline const double* try_get_ptr_to_state(Particle::State state, int index) const
+    inline const double* try_get_ptr_to_state(
+        Particle::State state, int index, Particle::Space space = Particle::Space::Host) const
     {
       FOUR_C_ASSERT(index >= 0 and index < particlestored_,
           "can not return pointer to state of particle as index {} out of bounds!", index);
 
-      if (storedstates_.contains(state)) return get_ptr_to_state(state, index);
+      if (storedstates_.contains(state)) return get_ptr_to_state(state, index, space);
 
       return nullptr;
     };
@@ -221,10 +230,12 @@ namespace Particle
      *
      * \param[in] state particle state
      * \param[in] index index of particle in container
+     * \param[in] space memory space to access
      *
      * \return pointer with writable access to particle state
      */
-    double* get_ptr_to_state_writable(Particle::State state, int index);
+    double* get_ptr_to_state_writable(
+        Particle::State state, int index, Particle::Space space = Particle::Space::Host);
 
     /*!
      * \brief conditionally get writable pointer to state of a particle at index
@@ -239,15 +250,17 @@ namespace Particle
      *
      * \param[in] state particle state
      * \param[in] index index of particle in container
+     * \param[in] space memory space to access
      *
      * \return pointer with writable access to particle state or nullptr
      */
-    inline double* try_get_ptr_to_state_writable(Particle::State state, int index)
+    inline double* try_get_ptr_to_state_writable(
+        Particle::State state, int index, Particle::Space space = Particle::Space::Host)
     {
       FOUR_C_ASSERT(index >= 0 and index < particlestored_,
           "can not return pointer to state of particle as index {} out of bounds!", index);
 
-      if (storedstates_.contains(state)) return get_ptr_to_state_writable(state, index);
+      if (storedstates_.contains(state)) return get_ptr_to_state_writable(state, index, space);
 
       return nullptr;
     };
@@ -448,11 +461,25 @@ namespace Particle
     //! global ids of stored particles
     std::vector<int> globalids_;
 
-    //! particle states in container indexed by particle state enum
-    std::vector<std::vector<double>> states_;
+    //! particle states private data
+    struct StatesImpl;
+    std::unique_ptr<StatesImpl> states_;
 
     //! particle state dimension indexed by particle state enum
     std::vector<int> statedim_;
+
+    /*!
+     * \brief initialize DualView for on-device computation
+     *
+     * \note This method is labeled as const because it does not change the _logical_ state of the
+     * ParticleContainer, only the representation of the data.
+     *
+     *
+     * \param[in] state particle state
+     *
+     * \return none
+     */
+    void init_state_dual(Particle::State state) const;
   };
 
 }  // namespace Particle
