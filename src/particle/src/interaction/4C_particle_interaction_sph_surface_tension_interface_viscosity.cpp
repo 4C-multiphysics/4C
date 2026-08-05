@@ -154,7 +154,7 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_contr
     const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
     const double* cfg_i = container_i->get_ptr_to_state(Particle::ColorfieldGradient, particle_i);
-    const double* temp_i = container_i->cond_get_ptr_to_state(Particle::Temperature, particle_i);
+    const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
     double* acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
 
     const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
@@ -162,7 +162,7 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_contr
     const double* dens_j = container_j->get_ptr_to_state(Particle::Density, particle_j);
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
     const double* cfg_j = container_j->get_ptr_to_state(Particle::ColorfieldGradient, particle_j);
-    const double* temp_j = container_j->cond_get_ptr_to_state(Particle::Temperature, particle_j);
+    const double* temp_j = container_j->try_get_ptr_to_state(Particle::Temperature, particle_j);
     double* acc_j = container_j->get_ptr_to_state_writable(Particle::Acceleration, particle_j);
 
     // get smoothing length
@@ -274,7 +274,7 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_bound
     const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
     const double* cfg_i = container_i->get_ptr_to_state(Particle::ColorfieldGradient, particle_i);
-    const double* temp_i = container_i->cond_get_ptr_to_state(Particle::Temperature, particle_i);
+    const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
 
     double* acc_i = nullptr;
     if (status_i == Particle::Owned)

@@ -203,7 +203,7 @@ namespace Particle
      *
      * \return pointer with read-only access to particle state or nullptr
      */
-    inline const double* cond_get_ptr_to_state(ParticleState state, int index) const
+    inline const double* try_get_ptr_to_state(ParticleState state, int index) const
     {
       if (storedstates_.contains(state)) return get_ptr_to_state(state, index);
 
@@ -243,7 +243,7 @@ namespace Particle
      *
      * \return pointer with writable access to particle state or nullptr
      */
-    inline double* cond_get_ptr_to_state_writable(ParticleState state, int index)
+    inline double* try_get_ptr_to_state_writable(ParticleState state, int index)
     {
       if (storedstates_.contains(state)) return get_ptr_to_state_writable(state, index);
 

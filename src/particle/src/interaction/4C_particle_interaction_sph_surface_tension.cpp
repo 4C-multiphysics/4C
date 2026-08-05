@@ -422,7 +422,7 @@ void Particle::SPHSurfaceTension::compute_wall_colorfield_and_wall_interface_nor
           container_i->get_ptr_to_state_writable(Particle::WallInterfaceNormal, particle_i);
 
       const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
-      const double* temp_j = container_j->cond_get_ptr_to_state(Particle::Temperature, particle_j);
+      const double* temp_j = container_j->try_get_ptr_to_state(Particle::Temperature, particle_j);
 
       // (current) volume of particle i
       const double V_i = mass_i[0] / dens_i[0];
@@ -462,7 +462,7 @@ void Particle::SPHSurfaceTension::compute_wall_colorfield_and_wall_interface_nor
           container_j->get_ptr_to_state_writable(Particle::WallInterfaceNormal, particle_j);
 
       const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-      const double* temp_i = container_i->cond_get_ptr_to_state(Particle::Temperature, particle_i);
+      const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
 
       // (initial) volume of boundary particle i
       const double V_i = mass_i[0] / material_i->initDensity_;
@@ -617,7 +617,7 @@ void Particle::SPHSurfaceTension::compute_curvature() const
       const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
       const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
       const double* ifn_i = container_i->get_ptr_to_state(Particle::InterfaceNormal, particle_i);
-      const double* temp_i = container_i->cond_get_ptr_to_state(Particle::Temperature, particle_i);
+      const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
 
       // evaluation only for non-zero interface normal
       if (not(ParticleUtils::vec_norm_two(ifn_i) > 0.0)) continue;
@@ -671,12 +671,12 @@ void Particle::SPHSurfaceTension::compute_curvature() const
     const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
     const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
     const double* ifn_i = container_i->get_ptr_to_state(Particle::InterfaceNormal, particle_i);
-    const double* temp_i = container_i->cond_get_ptr_to_state(Particle::Temperature, particle_i);
+    const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
     const double* dens_j = container_j->get_ptr_to_state(Particle::Density, particle_j);
     const double* ifn_j = container_j->get_ptr_to_state(Particle::InterfaceNormal, particle_j);
-    const double* temp_j = container_j->cond_get_ptr_to_state(Particle::Temperature, particle_j);
+    const double* temp_j = container_j->try_get_ptr_to_state(Particle::Temperature, particle_j);
 
     // evaluation only for non-zero interface normals
     if (not(ParticleUtils::vec_norm_two(ifn_i) > 0.0) or
@@ -778,7 +778,7 @@ void Particle::SPHSurfaceTension::compute_surface_tension_contribution() const
       const double* curv_i = container_i->get_ptr_to_state(Particle::Curvature, particle_i);
       const double* cfg_i = container_i->get_ptr_to_state(Particle::ColorfieldGradient, particle_i);
       const double* ifn_i = container_i->get_ptr_to_state(Particle::InterfaceNormal, particle_i);
-      const double* temp_i = container_i->cond_get_ptr_to_state(Particle::Temperature, particle_i);
+      const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
       double* acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
 
       // evaluation only for non-zero interface normal

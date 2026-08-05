@@ -471,9 +471,9 @@ void Particle::ParticleInteractionDEM::compute_acceleration() const
     const double* radius = container->get_ptr_to_state(Particle::Radius, 0);
     const double* mass = container->get_ptr_to_state(Particle::Mass, 0);
     const double* force = container->get_ptr_to_state(Particle::Force, 0);
-    const double* moment = container->cond_get_ptr_to_state(Particle::Moment, 0);
+    const double* moment = container->try_get_ptr_to_state(Particle::Moment, 0);
     double* acc = container->get_ptr_to_state_writable(Particle::Acceleration, 0);
-    double* angacc = container->cond_get_ptr_to_state_writable(Particle::AngularAcceleration, 0);
+    double* angacc = container->try_get_ptr_to_state_writable(Particle::AngularAcceleration, 0);
 
     // compute acceleration
     for (int i = 0; i < particlestored; ++i)
@@ -551,7 +551,7 @@ void Particle::ParticleInteractionDEM::evaluate_particle_kinetic_energy(double& 
     const double* radius = container->get_ptr_to_state(Particle::Radius, 0);
     const double* mass = container->get_ptr_to_state(Particle::Mass, 0);
     const double* vel = container->get_ptr_to_state(Particle::Velocity, 0);
-    double* angvel = container->cond_get_ptr_to_state_writable(Particle::AngularVelocity, 0);
+    double* angvel = container->try_get_ptr_to_state_writable(Particle::AngularVelocity, 0);
 
     // add translational kinetic energy contribution
     for (int i = 0; i < particlestored; ++i)

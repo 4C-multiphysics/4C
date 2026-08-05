@@ -119,12 +119,12 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_contribution() co
     // get pointer to particle states
     const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* temp_i = container_i->cond_get_ptr_to_state(Particle::Temperature, particle_i);
+    const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
     double* acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
-    const double* temp_j = container_j->cond_get_ptr_to_state(Particle::Temperature, particle_j);
+    const double* temp_j = container_j->try_get_ptr_to_state(Particle::Temperature, particle_j);
     double* acc_j = nullptr;
     if (status_j == Particle::Owned)
       acc_j = container_j->get_ptr_to_state_writable(Particle::Acceleration, particle_j);
@@ -215,7 +215,7 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_boundary_contribu
     // get pointer to particle states
     const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* temp_i = container_i->cond_get_ptr_to_state(Particle::Temperature, particle_i);
+    const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
 
     double* acc_i = nullptr;
     if (status_i == Particle::Owned)
@@ -223,7 +223,7 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_boundary_contribu
 
     // get pointer to boundary particle states
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
-    const double* temp_j = container_j->cond_get_ptr_to_state(Particle::Temperature, particle_j);
+    const double* temp_j = container_j->try_get_ptr_to_state(Particle::Temperature, particle_j);
 
     // evaluate transition factor above reference temperature
     double tempfac_i = 0.0;

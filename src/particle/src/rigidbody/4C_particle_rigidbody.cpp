@@ -1629,7 +1629,7 @@ void Particle::RigidBodyHandler::set_rigid_particle_velocities()
     const double* relpos_i = container_i->get_ptr_to_state(Particle::RelativePosition, particle_i);
     double* vel_i = container_i->get_ptr_to_state_writable(Particle::Velocity, particle_i);
     double* angvel_i =
-        container_i->cond_get_ptr_to_state_writable(Particle::AngularVelocity, particle_i);
+        container_i->try_get_ptr_to_state_writable(Particle::AngularVelocity, particle_i);
 
     // set velocities of particle i
     ParticleUtils::vec_set(vel_i, vel_k);
@@ -1684,7 +1684,7 @@ void Particle::RigidBodyHandler::set_rigid_particle_accelerations()
     const double* relpos_i = container_i->get_ptr_to_state(Particle::RelativePosition, particle_i);
     double* acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
     double* angacc_i =
-        container_i->cond_get_ptr_to_state_writable(Particle::AngularAcceleration, particle_i);
+        container_i->try_get_ptr_to_state_writable(Particle::AngularAcceleration, particle_i);
 
     // evaluate relative velocity of particle i
     double relvel_i[3];

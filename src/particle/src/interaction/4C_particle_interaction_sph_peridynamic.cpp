@@ -333,7 +333,7 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
 
     const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
     const double* young_i = container_i->get_ptr_to_state(Particle::Young, particle_i);
-    double* force_i = container_i->cond_get_ptr_to_state_writable(Particle::Force, particle_i);
+    double* force_i = container_i->try_get_ptr_to_state_writable(Particle::Force, particle_i);
     const double* critical_stretch_i =
         container_i->get_ptr_to_state(Particle::CriticalStretch, particle_i);
 
@@ -444,14 +444,14 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
 
     // get pointer to particle states
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    double* force_i = container_i->cond_get_ptr_to_state_writable(Particle::Force, particle_i);
+    double* force_i = container_i->try_get_ptr_to_state_writable(Particle::Force, particle_i);
 
     // get pointer to particle states
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
 
     double* force_j = nullptr;
     if (status_j == Particle::Owned)
-      force_j = container_j->cond_get_ptr_to_state_writable(Particle::Force, particle_j);
+      force_j = container_j->try_get_ptr_to_state_writable(Particle::Force, particle_j);
 
     // compute normal gap and rate of normal gap
     const double gap = particlepair.gap_;
@@ -488,9 +488,9 @@ void Particle::SPHPeridynamic::compute_acceleration() const
   const double* radius = container->get_ptr_to_state(Particle::Radius, 0);
   const double* mass = container->get_ptr_to_state(Particle::Mass, 0);
   const double* force = container->get_ptr_to_state(Particle::Force, 0);
-  const double* moment = container->cond_get_ptr_to_state(Particle::Moment, 0);
+  const double* moment = container->try_get_ptr_to_state(Particle::Moment, 0);
   double* acc = container->get_ptr_to_state_writable(Particle::Acceleration, 0);
-  double* angacc = container->cond_get_ptr_to_state_writable(Particle::AngularAcceleration, 0);
+  double* angacc = container->try_get_ptr_to_state_writable(Particle::AngularAcceleration, 0);
 
   // compute acceleration
   for (int i = 0; i < particlestored; ++i)

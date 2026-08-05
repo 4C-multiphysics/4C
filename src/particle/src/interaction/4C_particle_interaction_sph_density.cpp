@@ -177,12 +177,12 @@ void Particle::SPHDensityBase::sum_weighted_mass_particle_contribution() const
     // get pointer to particle states
     const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
     double* denssum_i =
-        container_i->cond_get_ptr_to_state_writable(Particle::DensitySum, particle_i);
+        container_i->try_get_ptr_to_state_writable(Particle::DensitySum, particle_i);
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
     double* denssum_j = nullptr;
     if (status_j == Particle::Owned)
-      denssum_j = container_j->cond_get_ptr_to_state_writable(Particle::DensitySum, particle_j);
+      denssum_j = container_j->try_get_ptr_to_state_writable(Particle::DensitySum, particle_j);
 
     // sum contribution of neighboring particle j
     if (denssum_i) denssum_i[0] += particlepair.Wij_ * mass_i[0];
@@ -357,7 +357,7 @@ void Particle::SPHDensityBase::sum_colorfield_particle_contribution() const
                                : &(material_j->initDensity_);
 
     double* colorfield_i =
-        container_i->cond_get_ptr_to_state_writable(Particle::Colorfield, particle_i);
+        container_i->try_get_ptr_to_state_writable(Particle::Colorfield, particle_i);
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
 
@@ -367,7 +367,7 @@ void Particle::SPHDensityBase::sum_colorfield_particle_contribution() const
 
     double* colorfield_j = nullptr;
     if (status_j == Particle::Owned)
-      colorfield_j = container_j->cond_get_ptr_to_state_writable(Particle::Colorfield, particle_j);
+      colorfield_j = container_j->try_get_ptr_to_state_writable(Particle::Colorfield, particle_j);
 
     // sum contribution of neighboring particle j
     if (colorfield_i) colorfield_i[0] += (particlepair.Wij_ / dens_j[0]) * mass_j[0];
@@ -523,7 +523,7 @@ void Particle::SPHDensityBase::continuity_equation_particle_contribution() const
                                : &(material_j->initDensity_);
 
     double* densdot_i =
-        container_i->cond_get_ptr_to_state_writable(Particle::DensityDot, particle_i);
+        container_i->try_get_ptr_to_state_writable(Particle::DensityDot, particle_i);
 
     const double* vel_j =
         container_j->have_stored_state(Particle::ModifiedVelocity)
@@ -538,7 +538,7 @@ void Particle::SPHDensityBase::continuity_equation_particle_contribution() const
 
     double* densdot_j = nullptr;
     if (status_j == Particle::Owned)
-      densdot_j = container_j->cond_get_ptr_to_state_writable(Particle::DensityDot, particle_j);
+      densdot_j = container_j->try_get_ptr_to_state_writable(Particle::DensityDot, particle_j);
 
     // relative velocity (use modified velocities in case of transport velocity formulation)
     double vel_ij[3];

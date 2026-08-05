@@ -157,14 +157,14 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_contribu
 
     // get pointer to particle states
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    double* force_i = container_i->cond_get_ptr_to_state_writable(Particle::Force, particle_i);
+    double* force_i = container_i->try_get_ptr_to_state_writable(Particle::Force, particle_i);
 
     // get pointer to particle states
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
 
     double* force_j = nullptr;
     if (status_j == Particle::Owned)
-      force_j = container_j->cond_get_ptr_to_state_writable(Particle::Force, particle_j);
+      force_j = container_j->try_get_ptr_to_state_writable(Particle::Force, particle_j);
 
     // compute normal gap and rate of normal gap
     const double gap = particlepair.absdist_ - initialparticlespacing;
@@ -242,7 +242,7 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
     // get pointer to particle states
     const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    double* force_i = container_i->cond_get_ptr_to_state_writable(Particle::Force, particle_i);
+    double* force_i = container_i->try_get_ptr_to_state_writable(Particle::Force, particle_i);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;
