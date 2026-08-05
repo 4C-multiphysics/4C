@@ -19,9 +19,9 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 struct Particle::ParticleContainer::StatesImpl
 {
-  //! particle states in Kokkos Views indexed by particle state enum
-  //! note: `states_->host_` should only be used before the dual state is initialized.
-  //!        All code should use `states_->dual_` if valid otherwise use `states_->host_`.
+  // particle states in Kokkos Views indexed by particle state enum
+  // note: `states_->host_` should only be used before the dual state is initialized.
+  //        All code should use `states_->dual_` if valid otherwise use `states_->host_`.
   std::vector<Kokkos::View<double*, Kokkos::HostSpace>> host_;
   std::vector<Kokkos::DualView<double*>> dual_;
   std::vector<bool> is_dual_valid_;
@@ -303,7 +303,7 @@ const double* Particle::ParticleContainer::get_ptr_to_state(
   }
   else
   {
-    FOUR_C_THROW("unknown space requested");
+    FOUR_C_THROW("unknown memory space requested");
   }
 }
 
@@ -335,7 +335,7 @@ double* Particle::ParticleContainer::get_ptr_to_state_writable(
   }
   else
   {
-    FOUR_C_THROW("unknown space requested");
+    FOUR_C_THROW("unknown memory space requested");
   }
 }
 
