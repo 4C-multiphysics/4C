@@ -66,7 +66,7 @@ void Particle::SPHHeatLossEvaporation::evaluate_evaporation_induced_heat_loss() 
 
   // get container of owned particles of evaporating phase
   Particle::ParticleContainer* container_i =
-      particlecontainerbundle_->get_specific_container(evaporatingphase_, Particle::Owned);
+      particlecontainerbundle_->get_specific_container(evaporatingphase_, Particle::Status::Owned);
 
   const Mat::PAR::ParticleMaterialThermo* thermomaterial_i = thermomaterial_[evaporatingphase_];
 

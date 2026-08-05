@@ -97,7 +97,7 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container_i->particles_stored();
@@ -122,12 +122,12 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -156,7 +156,7 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
     }
 
     // evaluate contribution of neighboring fluid particle i
-    if (boundarytypes_.contains(type_j) and status_j == Particle::Owned)
+    if (boundarytypes_.contains(type_j) and status_j == Particle::Status::Owned)
     {
       // get container of owned particles
       Particle::ParticleContainer* container_i =
@@ -185,7 +185,7 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
   {
     // get container of owned particles
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear modified boundary particle states
     container_i->clear_state(Particle::BoundaryPressure);

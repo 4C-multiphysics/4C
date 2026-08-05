@@ -52,7 +52,7 @@ namespace
     // unresolved until the particle is found in a local container, and local id = -1 marks that
     // "not yet resolved on this rank" state
     return std::make_tuple(
-        Particle::UninitializedType, Particle::UninitializedStatus, -1, globalid);
+        Particle::UninitializedType, Particle::Status::Uninitialized, -1, globalid);
   }
 
   std::set<long> build_known_peridynamic_bond_hashes(const std::shared_ptr<std::vector<
@@ -120,11 +120,11 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
   {
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
@@ -219,11 +219,11 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
     auto& particlepair = (*bondlist_)[iter];
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i, globalid_i;
     std::tie(type_i, status_i, particle_i, globalid_i) = particlepair.first;
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j, globalid_j;
     std::tie(type_j, status_j, particle_j, globalid_j) = particlepair.second;
 
@@ -296,7 +296,7 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
   {
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
@@ -400,7 +400,7 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
 
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = tuple_i;
 

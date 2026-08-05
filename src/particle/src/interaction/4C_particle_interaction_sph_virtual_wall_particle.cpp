@@ -155,7 +155,7 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
 
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
@@ -236,7 +236,7 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
     {
       // access values of local index tuple of particle k
       Particle::TypeEnum type_k;
-      Particle::StatusEnum status_k;
+      Particle::Status status_k;
       int particle_k;
       std::tie(type_k, status_k, particle_k) = neighboringparticle;
 

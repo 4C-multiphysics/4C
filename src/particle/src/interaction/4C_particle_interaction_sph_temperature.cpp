@@ -149,7 +149,7 @@ void Particle::SPHTemperature::compute_temperature() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // update temperature of all particles
     container_i->update_state(1.0, Particle::Temperature, dt_, Particle::TemperatureDot);
@@ -203,7 +203,7 @@ void Particle::SPHTemperature::energy_equation() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear temperature dot state
     container_i->clear_state(Particle::TemperatureDot);
@@ -214,12 +214,12 @@ void Particle::SPHTemperature::energy_equation() const
   {
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -258,7 +258,7 @@ void Particle::SPHTemperature::energy_equation() const
 
     const double* temp_j = container_j->get_ptr_to_state(Particle::Temperature, particle_j);
     double* tempdot_j = nullptr;
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
       tempdot_j = container_j->try_get_ptr_to_state_writable(Particle::TemperatureDot, particle_j);
 
     // thermal conductivities
@@ -290,7 +290,7 @@ void Particle::SPHTemperature::temperature_gradient() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear temperature gradient state
     container_i->clear_state(Particle::temperature_gradient);
@@ -301,12 +301,12 @@ void Particle::SPHTemperature::temperature_gradient() const
   {
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -342,7 +342,7 @@ void Particle::SPHTemperature::temperature_gradient() const
 
     const double* temp_j = container_j->get_ptr_to_state(Particle::Temperature, particle_j);
     double* tempgrad_j = nullptr;
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
       tempgrad_j =
           container_j->try_get_ptr_to_state_writable(Particle::temperature_gradient, particle_j);
 

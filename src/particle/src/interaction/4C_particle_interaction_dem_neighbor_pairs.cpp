@@ -73,12 +73,12 @@ void Particle::DEMNeighborPairs::evaluate_particle_pairs()
   {
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
@@ -159,7 +159,7 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs()
   {
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
@@ -263,7 +263,7 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs()
 
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = tuple_i;
 
@@ -362,12 +362,12 @@ void Particle::DEMNeighborPairs::evaluate_particle_pairs_adhesion(const double& 
   {
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
@@ -449,7 +449,7 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs_adhesion(
   {
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
@@ -571,7 +571,7 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs_adhesion(
 
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = tuple_i;
 

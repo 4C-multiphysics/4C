@@ -241,7 +241,7 @@ void Particle::SPHSurfaceTension::compute_colorfield_gradient() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear colorfield gradient state
     container_i->clear_state(Particle::ColorfieldGradient);
@@ -259,12 +259,12 @@ void Particle::SPHSurfaceTension::compute_colorfield_gradient() const
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -287,7 +287,7 @@ void Particle::SPHSurfaceTension::compute_colorfield_gradient() const
     const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
     const double* dens_j = container_j->get_ptr_to_state(Particle::Density, particle_j);
     double* cfg_j = nullptr;
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
       cfg_j = container_j->get_ptr_to_state_writable(Particle::ColorfieldGradient, particle_j);
 
     // (current) volume of particle i and j
@@ -312,7 +312,7 @@ void Particle::SPHSurfaceTension::compute_colorfield_gradient() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -338,7 +338,7 @@ void Particle::SPHSurfaceTension::compute_interface_normal() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear interface normal state
     container_i->clear_state(Particle::InterfaceNormal);
@@ -368,7 +368,7 @@ void Particle::SPHSurfaceTension::compute_wall_colorfield_and_wall_interface_nor
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear wall colorfield state
     container_i->clear_state(Particle::WallColorfield);
@@ -390,12 +390,12 @@ void Particle::SPHSurfaceTension::compute_wall_colorfield_and_wall_interface_nor
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -447,7 +447,7 @@ void Particle::SPHSurfaceTension::compute_wall_colorfield_and_wall_interface_nor
     }
 
     // evaluate contribution of neighboring boundary particle i
-    if (fluidtypes_.contains(type_j) and status_j == Particle::Owned)
+    if (fluidtypes_.contains(type_j) and status_j == Particle::Status::Owned)
     {
       // get material for current particle type
       const Mat::PAR::ParticleMaterialBase* material_i =
@@ -491,7 +491,7 @@ void Particle::SPHSurfaceTension::compute_wall_colorfield_and_wall_interface_nor
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -527,7 +527,7 @@ void Particle::SPHSurfaceTension::correct_triple_point_normal() const
 
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -597,7 +597,7 @@ void Particle::SPHSurfaceTension::compute_curvature() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear curvature state
     container_i->clear_state(Particle::Curvature);
@@ -651,12 +651,12 @@ void Particle::SPHSurfaceTension::compute_curvature() const
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -709,7 +709,7 @@ void Particle::SPHSurfaceTension::compute_curvature() const
     }
 
     // evaluate contribution of neighboring particle i
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
     {
       // (current) volume of particle i
       const double V_i = mass_i[0] / dens_i[0];
@@ -732,7 +732,7 @@ void Particle::SPHSurfaceTension::compute_curvature() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -768,7 +768,7 @@ void Particle::SPHSurfaceTension::compute_surface_tension_contribution() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -822,7 +822,7 @@ void Particle::SPHSurfaceTension::compute_temp_grad_driven_contribution() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)

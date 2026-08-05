@@ -196,7 +196,7 @@ void Particle::TimInt::add_initial_random_noise_to_position()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -249,7 +249,7 @@ void Particle::TimIntSemiImplicitEuler::setup(
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // safety check
     if (container->have_stored_state(Particle::ModifiedVelocity) or
@@ -279,7 +279,7 @@ void Particle::TimIntSemiImplicitEuler::pre_interaction_routine()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // update velocity of all particles
     container->update_state(1.0, Particle::Velocity, dt_, Particle::Acceleration);
@@ -348,7 +348,7 @@ void Particle::TimIntVelocityVerlet::set_initial_states()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // modified velocity states
     if (container->have_stored_state(Particle::ModifiedVelocity))
@@ -375,7 +375,7 @@ void Particle::TimIntVelocityVerlet::pre_interaction_routine()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // update velocity of all particles
     container->update_state(1.0, Particle::Velocity, dthalf_, Particle::Acceleration);
@@ -455,7 +455,7 @@ void Particle::TimIntVelocityVerlet::post_interaction_routine()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // update velocity of all particles
     container->update_state(1.0, Particle::Velocity, dthalf_, Particle::Acceleration);

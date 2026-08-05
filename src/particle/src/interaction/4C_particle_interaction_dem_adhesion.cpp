@@ -148,12 +148,12 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
   {
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -176,7 +176,7 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
     const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
     double* force_j = nullptr;
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
       force_j = container_j->get_ptr_to_state_writable(Particle::Force, particle_j);
 
     // relative velocity in contact point c between particle i and j (neglecting angular velocity)
@@ -210,7 +210,7 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
         vel_rel_normal, particlepair.m_eff_, adhesionhistory_ij.adhesion_force_);
 
     // copy history from interaction pair ij to ji
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
     {
       // get reference to touched adhesion history
       TouchedDEMHistoryPairAdhesion& touchedadhesionhistory_ji =
@@ -277,7 +277,7 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
   {
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 

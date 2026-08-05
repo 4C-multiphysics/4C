@@ -93,7 +93,7 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
 
   // get container of owned particles of open boundary phase
   Particle::ParticleContainer* container_i =
-      particlecontainerbundle_->get_specific_container(openboundaryphase_, Particle::Owned);
+      particlecontainerbundle_->get_specific_container(openboundaryphase_, Particle::Status::Owned);
 
   // iterate over particles in container
   for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -145,7 +145,7 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
 
   // get container of owned particles of fluid phase
   Particle::ParticleContainer* container_j =
-      particlecontainerbundle_->get_specific_container(fluidphase_, Particle::Owned);
+      particlecontainerbundle_->get_specific_container(fluidphase_, Particle::Status::Owned);
 
   // iterate over particles in container
   for (int particle_j = 0; particle_j < container_j->particles_stored(); ++particle_j)
@@ -250,7 +250,7 @@ void Particle::SPHOpenBoundaryDirichlet::prescribe_open_boundary_states(const do
 {
   // get container of owned particles of open boundary phase
   Particle::ParticleContainer* container_i =
-      particlecontainerbundle_->get_specific_container(openboundaryphase_, Particle::Owned);
+      particlecontainerbundle_->get_specific_container(openboundaryphase_, Particle::Status::Owned);
 
   // get number of particles stored in container
   const int particlestored = container_i->particles_stored();
@@ -289,7 +289,7 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
 {
   // get container of owned particles of open boundary phase
   Particle::ParticleContainer* container_k =
-      particlecontainerbundle_->get_specific_container(openboundaryphase_, Particle::Owned);
+      particlecontainerbundle_->get_specific_container(openboundaryphase_, Particle::Status::Owned);
 
   // get material for current particle type
   const Mat::PAR::ParticleMaterialBase* material_k =
@@ -318,12 +318,12 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -353,7 +353,7 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
     }
 
     // evaluate contribution of neighboring particle i
-    if (type_j == openboundaryphase_ and status_j == Particle::Owned)
+    if (type_j == openboundaryphase_ and status_j == Particle::Status::Owned)
     {
       const double fac = mass_i[0] / dens_i[0] * particlepair.Wji_;
       sumj_Vj_Wij[particle_j] += fac;
@@ -435,7 +435,7 @@ void Particle::SPHOpenBoundaryNeumann::prescribe_open_boundary_states(const doub
 {
   // get container of owned particles of open boundary phase
   Particle::ParticleContainer* container_i =
-      particlecontainerbundle_->get_specific_container(openboundaryphase_, Particle::Owned);
+      particlecontainerbundle_->get_specific_container(openboundaryphase_, Particle::Status::Owned);
 
   // get material for current particle type
   const Mat::PAR::ParticleMaterialBase* material_i =

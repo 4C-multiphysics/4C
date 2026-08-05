@@ -44,12 +44,12 @@ void Particle::ParticleResultTest::test_special(
   {
     // access values of local index tuple
     Particle::TypeEnum particleType;
-    Particle::StatusEnum particleStatus;
+    Particle::Status particleStatus;
     int index;
     std::tie(particleType, particleStatus, index) = *localindextuple;
 
     // consider only owned particle
-    if (particleStatus == Particle::Owned)
+    if (particleStatus == Particle::Status::Owned)
     {
       // get particle container bundle
       Particle::ParticleContainerBundleShrdPtr particlecontainerbundle =
@@ -57,7 +57,7 @@ void Particle::ParticleResultTest::test_special(
 
       // get container of owned particles of current particle type
       Particle::ParticleContainer* container =
-          particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+          particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
       // get result
       std::string quantity = result_container.get<std::string>("QUANTITY");

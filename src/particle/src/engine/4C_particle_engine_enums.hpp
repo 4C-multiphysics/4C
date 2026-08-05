@@ -207,11 +207,11 @@ namespace Particle
    * processor.
    *
    */
-  enum ParticleStatus
+  enum class ParticleStatus
   {
-    Owned,               //!< particle status for particles being owned on processors
-    Ghosted,             //!< particle status for particles being ghosted on processors
-    UninitializedStatus  //!< not yet defined particle status
+    Owned,         //!< particle status for particles being owned on processors
+    Ghosted,       //!< particle status for particles being ghosted on processors
+    Uninitialized  //!< not yet defined particle status
   };
 
   /*!
@@ -235,7 +235,7 @@ namespace Particle
    * Enum for particle memory spaces, used to distinguish host and device pointers.
    *
    */
-  enum ParticleSpace
+  enum class ParticleSpace
   {
     Host,    //!< particle memory space for computation on host
     Device,  //!< particle memory space for computation on device, or host if device not supported

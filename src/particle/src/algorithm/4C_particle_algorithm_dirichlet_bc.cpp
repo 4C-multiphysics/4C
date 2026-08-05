@@ -91,7 +91,7 @@ void Particle::DirichletBoundaryConditionHandler::set_particle_reference_positio
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particle_type, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particle_type, Particle::Status::Owned);
 
     // set particle reference position
     container->update_state(0.0, Particle::ReferencePosition, 1.0, Particle::Position);
@@ -104,7 +104,7 @@ void Particle::DirichletBoundaryConditionHandler::set_particle_reference_positio
 
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particle_type, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particle_type, Particle::Status::Owned);
 
     // set particle reference position
     container->update_state(0.0, Particle::ReferencePosition, 1.0, Particle::Position);
@@ -191,7 +191,7 @@ void Particle::DirichletBoundaryConditionHandler::evaluate_dirichlet_boundary_co
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particle_container_bundle->get_specific_container(particle_type, Particle::Owned);
+        particle_container_bundle->get_specific_container(particle_type, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -222,7 +222,7 @@ void Particle::DirichletBoundaryConditionHandler::evaluate_dirichlet_boundary_co
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particle_container_bundle->get_specific_container(particle_type, Particle::Owned);
+        particle_container_bundle->get_specific_container(particle_type, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -278,7 +278,7 @@ void Particle::DirichletBoundaryConditionHandler::build_funct_cache(MPI_Comm com
   for (const auto& particle_type : types_with_per_particle_dirichlet_bc_)
   {
     Particle::ParticleContainer* container =
-        bundle->get_specific_container(particle_type, Particle::Owned);
+        bundle->get_specific_container(particle_type, Particle::Status::Owned);
 
     const int n = container->particles_stored();
     if (n <= 0) continue;

@@ -43,7 +43,7 @@ void Particle::SPHRecoilPressureEvaporation::compute_recoil_pressure_contributio
 {
   // get container of owned particles of evaporating phase
   Particle::ParticleContainer* container_i =
-      particlecontainerbundle_->get_specific_container(evaporatingphase_, Particle::Owned);
+      particlecontainerbundle_->get_specific_container(evaporatingphase_, Particle::Status::Owned);
 
   // iterate over particles in container
   for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)

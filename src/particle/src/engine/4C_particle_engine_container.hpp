@@ -192,7 +192,7 @@ namespace Particle
      * \return pointer with read-only access to particle state
      */
     const double* get_ptr_to_state(
-        ParticleState state, int index, ParticleSpace space = Host) const;
+        ParticleState state, int index, ParticleSpace space = ParticleSpace::Host) const;
 
     /*!
      * \brief conditionally get read-only pointer to state of a particle at index
@@ -212,7 +212,7 @@ namespace Particle
      * \return pointer with read-only access to particle state or nullptr
      */
     inline const double* try_get_ptr_to_state(
-        ParticleState state, int index, ParticleSpace space = Host) const
+        ParticleState state, int index, ParticleSpace space = ParticleSpace::Host) const
     {
       if (storedstates_.contains(state)) return get_ptr_to_state(state, index, space);
 
@@ -235,7 +235,8 @@ namespace Particle
      *
      * \return pointer with writable access to particle state
      */
-    double* get_ptr_to_state_writable(ParticleState state, int index, ParticleSpace space = Host);
+    double* get_ptr_to_state_writable(
+        ParticleState state, int index, ParticleSpace space = ParticleSpace::Host);
 
     /*!
      * \brief conditionally get writable pointer to state of a particle at index
@@ -255,7 +256,7 @@ namespace Particle
      * \return pointer with writable access to particle state or nullptr
      */
     inline double* try_get_ptr_to_state_writable(
-        ParticleState state, int index, ParticleSpace space = Host)
+        ParticleState state, int index, ParticleSpace space = ParticleSpace::Host)
     {
       if (storedstates_.contains(state)) return get_ptr_to_state_writable(state, index, space);
 

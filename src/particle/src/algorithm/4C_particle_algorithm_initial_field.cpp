@@ -74,7 +74,7 @@ void Particle::InitialFieldHandler::set_initial_fields()
 
       // get container of owned particles of current particle type
       Particle::ParticleContainer* container =
-          particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+          particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
       // get number of particles stored in container
       const int particlestored = container->particles_stored();

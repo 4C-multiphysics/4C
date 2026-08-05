@@ -186,7 +186,7 @@ void Particle::ParticleInteractionSPH::check_open_boundaries() const
 
     // get container of owned particles of open boundary phase
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_id, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_id, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container_i->particles_stored();
@@ -304,7 +304,7 @@ void Particle::ParticleInteractionSPH::set_initial_states()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();

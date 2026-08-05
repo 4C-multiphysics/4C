@@ -228,12 +228,12 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -272,14 +272,14 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
 
     double* acc_j = nullptr;
-    if (intfluidtypes_.contains(type_j) and status_j == Particle::Owned)
+    if (intfluidtypes_.contains(type_j) and status_j == Particle::Status::Owned)
       acc_j = container_j->get_ptr_to_state_writable(Particle::Acceleration, particle_j);
 
     const double* mod_vel_j =
         container_j->try_get_ptr_to_state(Particle::ModifiedVelocity, particle_j);
 
     double* mod_acc_j = nullptr;
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
       mod_acc_j =
           container_j->try_get_ptr_to_state_writable(Particle::ModifiedAcceleration, particle_j);
 
@@ -388,12 +388,12 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -438,14 +438,14 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
     const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
 
     double* acc_i = nullptr;
-    if (status_i == Particle::Owned)
+    if (status_i == Particle::Status::Owned)
       acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
 
     const double* mod_vel_i =
         container_i->try_get_ptr_to_state(Particle::ModifiedVelocity, particle_i);
 
     double* mod_acc_i = nullptr;
-    if (status_i == Particle::Owned)
+    if (status_i == Particle::Status::Owned)
       mod_acc_i =
           container_i->try_get_ptr_to_state_writable(Particle::ModifiedAcceleration, particle_i);
 
@@ -459,7 +459,7 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
     const double* dens_j = &temp_dens;
 
     double* force_j = nullptr;
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
       force_j = container_j->try_get_ptr_to_state_writable(Particle::Force, particle_j);
 
     // contribution from neighboring boundary particle j
@@ -604,7 +604,7 @@ void Particle::SPHMomentum::momentum_equation_particle_wall_contribution() const
 
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 

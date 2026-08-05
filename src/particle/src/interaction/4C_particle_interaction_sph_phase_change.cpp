@@ -145,7 +145,7 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_below_to_above_pha
 
   // get container of owned particles of source particle type
   Particle::ParticleContainer* container =
-      particlecontainerbundle_->get_specific_container(type_source, Particle::Owned);
+      particlecontainerbundle_->get_specific_container(type_source, Particle::Status::Owned);
 
   // get number of particles stored in container
   int particlestored = container->particles_stored();
@@ -228,7 +228,7 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_above_to_below_pha
 
   // get container of owned particles of source particle type
   Particle::ParticleContainer* container =
-      particlecontainerbundle_->get_specific_container(type_source, Particle::Owned);
+      particlecontainerbundle_->get_specific_container(type_source, Particle::Status::Owned);
 
   // get number of particles stored in container
   int particlestored = container->particles_stored();

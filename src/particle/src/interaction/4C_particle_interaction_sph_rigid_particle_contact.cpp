@@ -139,12 +139,12 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_contribu
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -163,7 +163,7 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_contribu
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
 
     double* force_j = nullptr;
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
       force_j = container_j->try_get_ptr_to_state_writable(Particle::Force, particle_j);
 
     // compute normal gap and rate of normal gap
@@ -231,7 +231,7 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
 
     // access values of local index tuple of particle i
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 

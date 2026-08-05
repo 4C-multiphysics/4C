@@ -152,8 +152,8 @@ void Particle::RigidBodyHandler::set_initial_affiliation_pair_data()
       particleengineinterface_->get_particle_container_bundle();
 
   // get container of owned particles of rigid phase
-  Particle::ParticleContainer* container_i =
-      particlecontainerbundle->get_specific_container(Particle::RigidPhase, Particle::Owned);
+  Particle::ParticleContainer* container_i = particlecontainerbundle->get_specific_container(
+      Particle::RigidPhase, Particle::Status::Owned);
 
   // loop over particles in container
   for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -754,8 +754,8 @@ void Particle::RigidBodyHandler::compute_partial_mass_quantities()
       particleengineinterface_->get_particle_container_bundle();
 
   // get container of owned particles of rigid phase
-  Particle::ParticleContainer* container_i =
-      particlecontainerbundle->get_specific_container(Particle::RigidPhase, Particle::Owned);
+  Particle::ParticleContainer* container_i = particlecontainerbundle->get_specific_container(
+      Particle::RigidPhase, Particle::Status::Owned);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   if (static_cast<int>(affiliationpairdata.size()) != container_i->particles_stored())
@@ -1027,8 +1027,8 @@ void Particle::RigidBodyHandler::clear_rigid_particle_force()
       particleengineinterface_->get_particle_container_bundle();
 
   // get container of owned particles of rigid phase
-  Particle::ParticleContainer* container_i =
-      particlecontainerbundle->get_specific_container(Particle::RigidPhase, Particle::Owned);
+  Particle::ParticleContainer* container_i = particlecontainerbundle->get_specific_container(
+      Particle::RigidPhase, Particle::Status::Owned);
 
   // clear force of all particles
   container_i->clear_state(Particle::Force);
@@ -1045,8 +1045,8 @@ void Particle::RigidBodyHandler::compute_partial_force_and_torque()
       particleengineinterface_->get_particle_container_bundle();
 
   // get container of owned particles of rigid phase
-  Particle::ParticleContainer* container_i =
-      particlecontainerbundle->get_specific_container(Particle::RigidPhase, Particle::Owned);
+  Particle::ParticleContainer* container_i = particlecontainerbundle->get_specific_container(
+      Particle::RigidPhase, Particle::Status::Owned);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   if (static_cast<int>(affiliationpairdata.size()) != container_i->particles_stored())
@@ -1448,8 +1448,8 @@ void Particle::RigidBodyHandler::set_rigid_particle_relative_position_in_body_fr
       particleengineinterface_->get_particle_container_bundle();
 
   // get container of owned particles of rigid phase
-  Particle::ParticleContainer* container_i =
-      particlecontainerbundle->get_specific_container(Particle::RigidPhase, Particle::Owned);
+  Particle::ParticleContainer* container_i = particlecontainerbundle->get_specific_container(
+      Particle::RigidPhase, Particle::Status::Owned);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   if (static_cast<int>(affiliationpairdata.size()) != container_i->particles_stored())
@@ -1497,8 +1497,8 @@ void Particle::RigidBodyHandler::update_rigid_particle_relative_position()
       particleengineinterface_->get_particle_container_bundle();
 
   // get container of owned particles of rigid phase
-  Particle::ParticleContainer* container_i =
-      particlecontainerbundle->get_specific_container(Particle::RigidPhase, Particle::Owned);
+  Particle::ParticleContainer* container_i = particlecontainerbundle->get_specific_container(
+      Particle::RigidPhase, Particle::Status::Owned);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   if (static_cast<int>(affiliationpairdata.size()) != container_i->particles_stored())
@@ -1547,8 +1547,8 @@ void Particle::RigidBodyHandler::set_rigid_particle_position()
       particleengineinterface_->get_particle_container_bundle();
 
   // get container of owned particles of rigid phase
-  Particle::ParticleContainer* container_i =
-      particlecontainerbundle->get_specific_container(Particle::RigidPhase, Particle::Owned);
+  Particle::ParticleContainer* container_i = particlecontainerbundle->get_specific_container(
+      Particle::RigidPhase, Particle::Status::Owned);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   if (static_cast<int>(affiliationpairdata.size()) != container_i->particles_stored())
@@ -1596,8 +1596,8 @@ void Particle::RigidBodyHandler::set_rigid_particle_velocities()
       particleengineinterface_->get_particle_container_bundle();
 
   // get container of owned particles of rigid phase
-  Particle::ParticleContainer* container_i =
-      particlecontainerbundle->get_specific_container(Particle::RigidPhase, Particle::Owned);
+  Particle::ParticleContainer* container_i = particlecontainerbundle->get_specific_container(
+      Particle::RigidPhase, Particle::Status::Owned);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   if (static_cast<int>(affiliationpairdata.size()) != container_i->particles_stored())
@@ -1649,8 +1649,8 @@ void Particle::RigidBodyHandler::set_rigid_particle_accelerations()
       particleengineinterface_->get_particle_container_bundle();
 
   // get container of owned particles of rigid phase
-  Particle::ParticleContainer* container_i =
-      particlecontainerbundle->get_specific_container(Particle::RigidPhase, Particle::Owned);
+  Particle::ParticleContainer* container_i = particlecontainerbundle->get_specific_container(
+      Particle::RigidPhase, Particle::Status::Owned);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   if (static_cast<int>(affiliationpairdata.size()) != container_i->particles_stored())
@@ -1744,8 +1744,8 @@ void Particle::RigidBodyHandler::evaluate_rigid_body_solidification(
       particleengineinterface_->get_particle_container_bundle();
 
   // get container of owned particles of rigid phase
-  Particle::ParticleContainer* container_i =
-      particlecontainerbundle->get_specific_container(Particle::RigidPhase, Particle::Owned);
+  Particle::ParticleContainer* container_i = particlecontainerbundle->get_specific_container(
+      Particle::RigidPhase, Particle::Status::Owned);
 
   // iterate over particle phase change tuples
   for (const auto& particletypetotype : particlesfromphasetophase)
@@ -1766,14 +1766,14 @@ void Particle::RigidBodyHandler::evaluate_rigid_body_solidification(
 
       // access values of local index tuples of particle i
       Particle::TypeEnum type_i;
-      Particle::StatusEnum status_i;
+      Particle::Status status_i;
       std::tie(type_i, status_i, std::ignore) = *localindextuple;
 
       if (type_i != Particle::RigidPhase)
         FOUR_C_THROW("particle with global id {} not of particle type '{}'!", globalid_i,
             Particle::enum_to_type_name(Particle::RigidPhase));
 
-      if (status_i == Particle::Ghosted)
+      if (status_i == Particle::Status::Ghosted)
         FOUR_C_THROW("particle with global id {} not owned on this processor!", globalid_i);
 #endif
 
@@ -1799,7 +1799,7 @@ void Particle::RigidBodyHandler::evaluate_rigid_body_solidification(
       {
         // access values of local index tuple of particle j
         Particle::TypeEnum type_j;
-        Particle::StatusEnum status_j;
+        Particle::Status status_j;
         int particle_j;
         std::tie(type_j, status_j, particle_j) = neighboringparticle;
 

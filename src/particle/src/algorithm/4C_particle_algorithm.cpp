@@ -783,7 +783,7 @@ double Particle::ParticleAlgorithm::get_max_particle_position_increment()
       }
       // get container of owned particles of current particle type
       Particle::ParticleContainer* container =
-          particlecontainerbundle->get_specific_container(typeEnum, Particle::Owned);
+          particlecontainerbundle->get_specific_container(typeEnum, Particle::Status::Owned);
 
       // get number of particles stored in container
       const int particlestored = container->particles_stored();
@@ -862,7 +862,7 @@ double Particle::ParticleAlgorithm::get_max_particle_position_increment()
     Particle::ParticleContainerBundleShrdPtr particlecontainerbundle =
         particleengine_->get_particle_container_bundle();
     ParticleContainer* container = particlecontainerbundle->get_specific_container(
-        debug_output->particle_type_of_max_position_increment, Owned);
+        debug_output->particle_type_of_max_position_increment, Status::Owned);
     const double* position =
         container->get_ptr_to_state(Position, debug_output->lid_of_max_position_increment);
     const double* velocity =

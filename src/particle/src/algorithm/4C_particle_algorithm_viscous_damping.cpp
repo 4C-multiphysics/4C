@@ -44,7 +44,7 @@ void Particle::ViscousDampingHandler::apply_viscous_damping()
 
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(type, Particle::Owned);
+        particlecontainerbundle->get_specific_container(type, Particle::Status::Owned);
 
     // apply viscous damping contribution
     container->update_state(1.0, Particle::Acceleration, -viscdampfac_, Particle::Velocity);

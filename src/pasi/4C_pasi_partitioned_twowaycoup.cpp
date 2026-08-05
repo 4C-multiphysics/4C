@@ -240,7 +240,7 @@ void PaSI::PasiPartTwoWayCoup::reset_particle_states()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(type, Particle::Owned);
+        particlecontainerbundle->get_specific_container(type, Particle::Status::Owned);
 
     // reset position, velocity and acceleration states of all particles
     container->update_state(0.0, Particle::Position, 1.0, Particle::LastIterPosition);
@@ -440,7 +440,7 @@ void PaSI::PasiPartTwoWayCoup::save_particle_states()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(type, Particle::Owned);
+        particlecontainerbundle->get_specific_container(type, Particle::Status::Owned);
 
     // save position, velocity and acceleration states of all particles
     container->update_state(0.0, Particle::LastIterPosition, 1.0, Particle::Position);

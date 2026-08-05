@@ -110,7 +110,7 @@ void Particle::SPHHeatSourceVolume::evaluate_heat_source(const double& evaltime)
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* basematerial_i =
@@ -184,7 +184,7 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container_i->particles_stored();
@@ -206,12 +206,12 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -258,7 +258,7 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
     }
 
     // evaluate contribution of neighboring particle i
-    if (absorbingtypes_.contains(type_j) and status_j == Particle::Owned)
+    if (absorbingtypes_.contains(type_j) and status_j == Particle::Status::Owned)
     {
       // sum contribution of neighboring particle i
       ParticleUtils::vec_add_scale(cfg_i[type_j][particle_j].data(),
@@ -283,7 +283,7 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* basematerial_i =

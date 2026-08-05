@@ -128,12 +128,12 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_contr
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -226,12 +226,12 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_bound
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -277,7 +277,7 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_bound
     const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
 
     double* acc_i = nullptr;
-    if (status_i == Particle::Owned)
+    if (status_i == Particle::Status::Owned)
       acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
 
     // get pointer to boundary particle states

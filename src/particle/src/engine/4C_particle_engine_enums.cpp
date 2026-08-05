@@ -279,10 +279,10 @@ std::string Particle::enum_to_status_name(const ParticleStatus& status)
 
   switch (status)
   {
-    case Owned:
+    case ParticleStatus::Owned:
       name = "owned";
       break;
-    case Ghosted:
+    case ParticleStatus::Ghosted:
       name = "ghosted";
       break;
     default:
@@ -298,10 +298,10 @@ std::string Particle::enum_to_space_name(const ParticleSpace& space)
 
   switch (space)
   {
-    case Host:
+    case ParticleSpace::Host:
       name = "host";
       break;
-    case Device:
+    case ParticleSpace::Device:
       name = "device";
       break;
     default:

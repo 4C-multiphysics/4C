@@ -36,7 +36,7 @@ void Particle::ConstraintsProjectionBase::apply(
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particle_container_bundle->get_specific_container(particleType, Particle::Owned);
+        particle_container_bundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int n_particle_stored = container->particles_stored();
@@ -95,7 +95,7 @@ void Particle::ConstraintsProjectionBase::check_particles(
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particle_container_bundle->get_specific_container(particleType, Particle::Owned);
+        particle_container_bundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int n_particle_stored = container->particles_stored();
@@ -135,7 +135,7 @@ int Particle::ConstraintsProjection2D::calc_primary_axis_local(
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particle_container_bundle->get_specific_container(particleType, Particle::Owned);
+        particle_container_bundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int n_particle_stored = container->particles_stored();
@@ -261,7 +261,7 @@ int Particle::ConstraintsProjection1D::calc_primary_axis_local(
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particle_container_bundle->get_specific_container(particleType, Particle::Owned);
+        particle_container_bundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int n_particle_stored = container->particles_stored();

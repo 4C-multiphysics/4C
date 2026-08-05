@@ -288,14 +288,14 @@ const double* Particle::ParticleContainer::get_ptr_to_state(
     FOUR_C_THROW("can not return pointer to state of particle as index {} out of bounds!", index);
 #endif
 
-  if (space == Host)
+  if (space == ParticleSpace::Host)
   {
     if (!states_->is_dual_valid_[state])
       return &(states_->host_[state].data()[index * statedim_[state]]);
     states_->dual_[state].sync_host();
     return &(states_->dual_[state].view_host().data()[index * statedim_[state]]);
   }
-  else if (space == Device)
+  else if (space == ParticleSpace::Device)
   {
     if (!states_->is_dual_valid_[state]) init_state_dual(state);
     states_->dual_[state].sync_device();
@@ -318,7 +318,7 @@ double* Particle::ParticleContainer::get_ptr_to_state_writable(
     FOUR_C_THROW("can not return pointer to state of particle as index {} out of bounds!", index);
 #endif
 
-  if (space == Host)
+  if (space == ParticleSpace::Host)
   {
     if (!states_->is_dual_valid_[state])
       return &(states_->host_[state].data()[index * statedim_[state]]);
@@ -326,7 +326,7 @@ double* Particle::ParticleContainer::get_ptr_to_state_writable(
     states_->dual_[state].modify_host();
     return &(states_->dual_[state].view_host().data()[index * statedim_[state]]);
   }
-  else if (space == Device)
+  else if (space == ParticleSpace::Device)
   {
     if (!states_->is_dual_valid_[state]) init_state_dual(state);
     states_->dual_[state].sync_device();

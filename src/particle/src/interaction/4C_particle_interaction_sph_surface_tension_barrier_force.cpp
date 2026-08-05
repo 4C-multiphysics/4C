@@ -100,12 +100,12 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_contribution() co
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -126,7 +126,7 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_contribution() co
     const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
     const double* temp_j = container_j->try_get_ptr_to_state(Particle::Temperature, particle_j);
     double* acc_j = nullptr;
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
       acc_j = container_j->get_ptr_to_state_writable(Particle::Acceleration, particle_j);
 
     // evaluate transition factor above reference temperature
@@ -180,12 +180,12 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_boundary_contribu
 
     // access values of local index tuples of particle i and j
     Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
     Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -218,7 +218,7 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_boundary_contribu
     const double* temp_i = container_i->try_get_ptr_to_state(Particle::Temperature, particle_i);
 
     double* acc_i = nullptr;
-    if (status_i == Particle::Owned)
+    if (status_i == Particle::Status::Owned)
       acc_i = container_i->get_ptr_to_state_writable(Particle::Acceleration, particle_i);
 
     // get pointer to boundary particle states

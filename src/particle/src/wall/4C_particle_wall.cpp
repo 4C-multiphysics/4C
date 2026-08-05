@@ -333,7 +333,8 @@ void Particle::WallHandlerBase::build_particle_to_wall_neighbors(
 
         // get container of neighboring particle of current particle type
         Particle::ParticleContainer* neighborcontainer =
-            particlecontainerbundle->get_specific_container(neighborTypeEnum, Particle::Owned);
+            particlecontainerbundle->get_specific_container(
+                neighborTypeEnum, Particle::Status::Owned);
 
         // get position of neighboring particle
         const Core::LinAlg::Matrix<3, 1> currpos(
@@ -352,8 +353,8 @@ void Particle::WallHandlerBase::build_particle_to_wall_neighbors(
           continue;
 
         // append potential wall neighbor pair
-        potentialwallneighbors_.push_back(
-            std::make_pair(std::make_tuple(neighborTypeEnum, Particle::Owned, neighborindex), ele));
+        potentialwallneighbors_.push_back(std::make_pair(
+            std::make_tuple(neighborTypeEnum, Particle::Status::Owned, neighborindex), ele));
       }
     }
   }

@@ -66,7 +66,7 @@ void Particle::TemperatureBoundaryConditionHandler::set_particle_reference_posit
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // set particle reference position
     container->update_state(0.0, Particle::ReferencePosition, 1.0, Particle::Position);
@@ -88,7 +88,7 @@ void Particle::TemperatureBoundaryConditionHandler::evaluate_temperature_boundar
 
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();

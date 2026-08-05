@@ -238,7 +238,7 @@ void Particle::ParticleInteractionDEM::set_initial_radius()
       {
         // get container of owned particles of current particle type
         Particle::ParticleContainer* container =
-            particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+            particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
         // get number of particles stored in container
         const int particlestored = container->particles_stored();
@@ -277,7 +277,7 @@ void Particle::ParticleInteractionDEM::set_initial_radius()
       {
         // get container of owned particles of current particle type
         Particle::ParticleContainer* container =
-            particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+            particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
         // get number of particles stored in container
         const int particlestored = container->particles_stored();
@@ -321,7 +321,7 @@ void Particle::ParticleInteractionDEM::set_initial_radius()
       {
         // get container of owned particles of current particle type
         Particle::ParticleContainer* container =
-            particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+            particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
         // get number of particles stored in container
         const int particlestored = container->particles_stored();
@@ -379,7 +379,7 @@ void Particle::ParticleInteractionDEM::set_initial_mass()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -408,7 +408,7 @@ void Particle::ParticleInteractionDEM::set_initial_inertia()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -437,7 +437,7 @@ void Particle::ParticleInteractionDEM::clear_force_and_moment_states() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear force of all particles
     container->clear_state(Particle::Force);
@@ -456,7 +456,7 @@ void Particle::ParticleInteractionDEM::compute_acceleration() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -536,7 +536,7 @@ void Particle::ParticleInteractionDEM::evaluate_particle_kinetic_energy(double& 
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -580,7 +580,7 @@ void Particle::ParticleInteractionDEM::evaluate_particle_gravitational_potential
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
