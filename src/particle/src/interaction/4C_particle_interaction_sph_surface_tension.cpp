@@ -861,7 +861,7 @@ void Particle::SPHSurfaceTension::compute_temp_grad_driven_contribution() const
       const double* temp_i =
           container_i->get_ptr_to_state(Particle::State::Temperature, particle_i);
       const double* tempgrad_i =
-          container_i->get_ptr_to_state(Particle::State::temperature_gradient, particle_i);
+          container_i->get_ptr_to_state(Particle::State::TemperatureGradient, particle_i);
       double* acc_i =
           container_i->get_ptr_to_state_writable(Particle::State::Acceleration, particle_i);
 

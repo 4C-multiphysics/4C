@@ -61,18 +61,18 @@ namespace Particle
     Inertia,                    //!< mass moment of inertia
     /*---------------------------------------------------------------------------*/
     // particle states for SPH interaction
-    DensitySum,            //!< density from summation of weighted masses
-    DensityDot,            //!< first time derivative of density
-    TemperatureDot,        //!< first time derivative of temperature
-    BoundaryPressure,      //!< boundary pressure
-    BoundaryVelocity,      //!< boundary velocity
-    Colorfield,            //!< colorfield
-    ColorfieldGradient,    //!< colorfield gradient
-    InterfaceNormal,       //!< interface normal
-    Curvature,             //!< curvature
-    WallColorfield,        //!< wall colorfield
-    WallInterfaceNormal,   //!< wall interface normal
-    temperature_gradient,  //!< temperature gradient
+    DensitySum,           //!< density from summation of weighted masses
+    DensityDot,           //!< first time derivative of density
+    TemperatureDot,       //!< first time derivative of temperature
+    BoundaryPressure,     //!< boundary pressure
+    BoundaryVelocity,     //!< boundary velocity
+    Colorfield,           //!< colorfield
+    ColorfieldGradient,   //!< colorfield gradient
+    InterfaceNormal,      //!< interface normal
+    Curvature,            //!< curvature
+    WallColorfield,       //!< wall colorfield
+    WallInterfaceNormal,  //!< wall interface normal
+    TemperatureGradient,  //!< temperature gradient
     /*---------------------------------------------------------------------------*/
     // particle states for DEM interaction
     AngularVelocity,      //!< angular velocity

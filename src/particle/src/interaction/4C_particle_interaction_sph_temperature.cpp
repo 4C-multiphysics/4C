@@ -129,7 +129,7 @@ void Particle::SPHTemperature::insert_particle_states_of_particle_types(
     particlestates.insert(Particle::State::TemperatureDot);
 
     // state for temperature gradient evaluation
-    if (temperaturegradient_) particlestates.insert(Particle::State::temperature_gradient);
+    if (temperaturegradient_) particlestates.insert(Particle::State::TemperatureGradient);
   }
 }
 
@@ -299,7 +299,7 @@ void Particle::SPHTemperature::temperature_gradient() const
         particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear temperature gradient state
-    container_i->clear_state(Particle::State::temperature_gradient);
+    container_i->clear_state(Particle::State::TemperatureGradient);
   }
 
   // iterate over particle pairs
@@ -338,7 +338,7 @@ void Particle::SPHTemperature::temperature_gradient() const
 
     const double* temp_i = container_i->get_ptr_to_state(Particle::State::Temperature, particle_i);
     double* tempgrad_i = container_i->try_get_ptr_to_state_writable(
-        Particle::State::temperature_gradient, particle_i);
+        Particle::State::TemperatureGradient, particle_i);
 
     const double* mass_j = container_j->get_ptr_to_state(Particle::State::Mass, particle_j);
 
@@ -350,7 +350,7 @@ void Particle::SPHTemperature::temperature_gradient() const
     double* tempgrad_j = nullptr;
     if (status_j == Particle::Status::Owned)
       tempgrad_j = container_j->try_get_ptr_to_state_writable(
-          Particle::State::temperature_gradient, particle_j);
+          Particle::State::TemperatureGradient, particle_j);
 
     const double temp_ji = temp_j[0] - temp_i[0];
 

@@ -60,7 +60,7 @@ int Particle::enum_to_state_dim(const ParticleState& state)
     case ParticleState::ColorfieldGradient:
     case ParticleState::InterfaceNormal:
     case ParticleState::WallInterfaceNormal:
-    case ParticleState::temperature_gradient:
+    case ParticleState::TemperatureGradient:
     case ParticleState::AngularVelocity:
     case ParticleState::AngularAcceleration:
     case ParticleState::Force:
@@ -180,7 +180,7 @@ std::string Particle::enum_to_state_name(const ParticleState& state)
     case ParticleState::WallInterfaceNormal:
       name = "wall interface normal";
       break;
-    case ParticleState::temperature_gradient:
+    case ParticleState::TemperatureGradient:
       name = "temperature gradient";
       break;
     case ParticleState::LastIterPosition:

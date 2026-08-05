@@ -167,7 +167,7 @@ void Particle::ParticleResultTest::test_special(
       else if (quantity == "tempgradx" or quantity == "tempgrady" or quantity == "tempgradz")
       {
         // get enum of particle state
-        particleState = Particle::State::temperature_gradient;
+        particleState = Particle::State::TemperatureGradient;
 
         // get component of result
         if (quantity == "tempgradx")
