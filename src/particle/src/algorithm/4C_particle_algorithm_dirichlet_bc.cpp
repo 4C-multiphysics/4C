@@ -46,8 +46,8 @@ Particle::DirichletBoundaryConditionHandler::DirichletBoundaryConditionHandler(
     {
       for (const auto& type_name : *flagged_types)
       {
-        const Particle::TypeEnum particle_type = Particle::enum_from_type_name(type_name);
-        FOUR_C_ASSERT_ALWAYS(particle_type != Particle::RigidPhase,
+        const Particle::Type particle_type = Particle::enum_from_type_name(type_name);
+        FOUR_C_ASSERT_ALWAYS(particle_type != Particle::Type::RigidPhase,
             "per-particle Dirichlet BC is not allowed for rigidphase");
         types_with_per_particle_dirichlet_bc_.insert(particle_type);
       }
@@ -63,7 +63,7 @@ void Particle::DirichletBoundaryConditionHandler::setup(
 }
 
 void Particle::DirichletBoundaryConditionHandler::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   // iterate over particle types subjected to dirichlet boundary conditions
   for (auto& particle_type : types_subjected_to_dirichlet_bc_)

@@ -45,7 +45,7 @@ void Particle::TemperatureBoundaryConditionHandler::setup(
 }
 
 void Particle::TemperatureBoundaryConditionHandler::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   // iterate over particle types subjected to temperature boundary conditions
   for (auto& particleType : typessubjectedtotemperaturebc_)
@@ -84,7 +84,7 @@ void Particle::TemperatureBoundaryConditionHandler::evaluate_temperature_boundar
   for (auto& typeIt : temperaturebctypetofunctid_)
   {
     // get type of particles
-    Particle::TypeEnum particleType = typeIt.first;
+    Particle::Type particleType = typeIt.first;
 
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =

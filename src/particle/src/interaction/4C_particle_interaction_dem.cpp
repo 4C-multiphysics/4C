@@ -95,7 +95,7 @@ void Particle::ParticleInteractionDEM::read_restart(
 }
 
 void Particle::ParticleInteractionDEM::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes)
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes)
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)

@@ -24,7 +24,8 @@ Core::Communication::ParObject* Particle::ParticleObjectType::create(
   return my_particleobject;
 }
 
-Particle::ParticleObject::ParticleObject() : type_(Phase1), globalid_(0), bingid_(-1), index_(-1)
+Particle::ParticleObject::ParticleObject()
+    : type_(ParticleType::Phase1), globalid_(0), bingid_(-1), index_(-1)
 {
   // empty constructor
 }

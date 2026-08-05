@@ -32,7 +32,7 @@ Particle::SPHRigidParticleContactBase::SPHRigidParticleContactBase(
     const Teuchos::ParameterList& params)
     : params_sph_(params),
       writeparticlewallinteraction_(params_sph_.get<bool>("WRITE_PARTICLE_WALL_INTERACTION")),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase})
+      boundarytypes_({Particle::Type::BoundaryPhase, Particle::Type::RigidPhase})
 {
   // empty constructor
 }
@@ -68,7 +68,7 @@ void Particle::SPHRigidParticleContactBase::setup(
       boundarytypes_.erase(type_i);
 
   // safety check
-  if (not boundarytypes_.contains(Particle::RigidPhase))
+  if (not boundarytypes_.contains(Particle::Type::RigidPhase))
     FOUR_C_THROW("no rigid particles defined but a rigid particle contact formulation is set!");
 }
 
@@ -138,12 +138,12 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_contribu
     if (not(particlepair.absdist_ < initialparticlespacing)) continue;
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -219,7 +219,7 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
 
   // get relevant particle wall pair indices for specific particle types
   std::vector<int> relindices;
-  neighborpairs_->get_relevant_particle_wall_pair_indices({Particle::RigidPhase}, relindices);
+  neighborpairs_->get_relevant_particle_wall_pair_indices({Particle::Type::RigidPhase}, relindices);
 
   // iterate over relevant particle-wall pairs
   for (const int particlewallpairindex : relindices)
@@ -230,7 +230,7 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
     if (not(particlewallpair.absdist_ < 0.5 * initialparticlespacing)) continue;
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;

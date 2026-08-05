@@ -89,7 +89,7 @@ void Particle::WallHandlerBase::write_restart(const int step, const double time)
 void Particle::WallHandlerBase::read_restart(const int restartstep) {}
 
 void Particle::WallHandlerBase::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   // get flags defining considered states of particle wall
   const bool ismoving = params_.get<bool>("PARTICLE_WALL_MOVING");
@@ -326,15 +326,14 @@ void Particle::WallHandlerBase::build_particle_to_wall_neighbors(
       for (auto& neighborParticleIt : particlestobins[collidofneighboringbin])
       {
         // get type of neighboring particle
-        Particle::TypeEnum neighborTypeEnum = neighborParticleIt.first;
+        Particle::Type neighborType = neighborParticleIt.first;
 
         // get local index of neighboring particle
         const int neighborindex = neighborParticleIt.second;
 
         // get container of neighboring particle of current particle type
         Particle::ParticleContainer* neighborcontainer =
-            particlecontainerbundle->get_specific_container(
-                neighborTypeEnum, Particle::Status::Owned);
+            particlecontainerbundle->get_specific_container(neighborType, Particle::Status::Owned);
 
         // get position of neighboring particle
         const Core::LinAlg::Matrix<3, 1> currpos(
@@ -354,7 +353,7 @@ void Particle::WallHandlerBase::build_particle_to_wall_neighbors(
 
         // append potential wall neighbor pair
         potentialwallneighbors_.push_back(std::make_pair(
-            std::make_tuple(neighborTypeEnum, Particle::Status::Owned, neighborindex), ele));
+            std::make_tuple(neighborType, Particle::Status::Owned, neighborindex), ele));
       }
     }
   }

@@ -36,7 +36,7 @@ namespace Particle
      * \param[in] types_to_integrate types to integrate
      */
     virtual void apply(Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-        const std::set<Particle::TypeEnum>& types_to_integrate, const double time) const = 0;
+        const std::set<Particle::Type>& types_to_integrate, const double time) const = 0;
   };
 
   class ConstraintsProjectionBase : public ConstraintsHandler
@@ -60,7 +60,7 @@ namespace Particle
      * \param[in] types_to_integrate types to integrate
      */
     void apply(Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-        const std::set<Particle::TypeEnum>& types_to_integrate, const double time) const override;
+        const std::set<Particle::Type>& types_to_integrate, const double time) const override;
 
    private:
     /*!
@@ -73,7 +73,7 @@ namespace Particle
      * \param[in] types_to_integrate types to integrate
      */
     void setup(Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-        const std::set<Particle::TypeEnum>& types_to_integrate) const;
+        const std::set<Particle::Type>& types_to_integrate) const;
 
     /*!
      * \brief Identify the primary axis for the projection (applies to both 2D and 1D cases). Calls
@@ -84,7 +84,7 @@ namespace Particle
      * \param[in] types_to_integrate types to integrate
      */
     int calc_primary_axis(Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-        const std::set<Particle::TypeEnum>& types_to_integrate) const;
+        const std::set<Particle::Type>& types_to_integrate) const;
 
     /*!
      * \brief Check if all the particles are properly positioned in the initial configuration with
@@ -95,7 +95,7 @@ namespace Particle
      * \param[in] types_to_integrate types to integrate
      */
     void check_particles(Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-        const std::set<Particle::TypeEnum>& types_to_integrate) const;
+        const std::set<Particle::Type>& types_to_integrate) const;
 
     /*!
      * \brief Identify the primary axis for the projection within an MPI rank.
@@ -106,7 +106,7 @@ namespace Particle
      */
     virtual int calc_primary_axis_local(
         Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-        const std::set<Particle::TypeEnum>& types_to_integrate) const = 0;
+        const std::set<Particle::Type>& types_to_integrate) const = 0;
 
     /*!
      * \brief Set the primary axis.
@@ -172,7 +172,7 @@ namespace Particle
      * \param[in] types_to_integrate types to integrate
      */
     int calc_primary_axis_local(Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-        const std::set<Particle::TypeEnum>& types_to_integrate) const override;
+        const std::set<Particle::Type>& types_to_integrate) const override;
 
     /*!
      * \brief Set the primary axis. The provided axis index is used then to nullify the
@@ -232,7 +232,7 @@ namespace Particle
      * \param[in] types_to_integrate types to integrate
      */
     int calc_primary_axis_local(Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-        const std::set<Particle::TypeEnum>& types_to_integrate) const override;
+        const std::set<Particle::Type>& types_to_integrate) const override;
 
     /*!
      * \brief Set the primary axis. This method gets the index of the new axis and stores the

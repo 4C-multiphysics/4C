@@ -34,10 +34,11 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 Particle::SPHSurfaceTension::SPHSurfaceTension(const Teuchos::ParameterList& params)
     : params_sph_(params),
-      liquidtype_(Particle::Phase1),
-      gastype_(Particle::Phase2),
+      liquidtype_(Particle::Type::Phase1),
+      gastype_(Particle::Type::Phase2),
       fluidtypes_({liquidtype_, gastype_}),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase, Particle::PDPhase}),
+      boundarytypes_(
+          {Particle::Type::BoundaryPhase, Particle::Type::RigidPhase, Particle::Type::PDPhase}),
       time_(0.0),
       timerampfct_(params.get<int>("SURFACETENSION_RAMP_FUNCT")),
       alpha0_(params_sph_.get<double>("SURFACETENSIONCOEFFICIENT")),
@@ -153,7 +154,7 @@ void Particle::SPHSurfaceTension::set_current_time(const double currenttime)
 }
 
 void Particle::SPHSurfaceTension::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   bool haveboundarytypes = false;
 
@@ -161,7 +162,7 @@ void Particle::SPHSurfaceTension::insert_particle_states_of_particle_types(
   for (auto& typeIt : particlestatestotypes)
   {
     // get type of particles
-    Particle::TypeEnum type = typeIt.first;
+    Particle::Type type = typeIt.first;
 
     if (boundarytypes_.contains(type)) haveboundarytypes = true;
   }
@@ -170,7 +171,7 @@ void Particle::SPHSurfaceTension::insert_particle_states_of_particle_types(
   for (auto& typeIt : particlestatestotypes)
   {
     // get type of particles
-    Particle::TypeEnum type = typeIt.first;
+    Particle::Type type = typeIt.first;
 
     // set of particle states for current particle type
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
@@ -258,12 +259,12 @@ void Particle::SPHSurfaceTension::compute_colorfield_gradient() const
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -389,12 +390,12 @@ void Particle::SPHSurfaceTension::compute_wall_colorfield_and_wall_interface_nor
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -587,7 +588,8 @@ void Particle::SPHSurfaceTension::correct_triple_point_normal() const
 void Particle::SPHSurfaceTension::compute_curvature() const
 {
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   std::vector<std::vector<double>> sumj_nij_Vj_eij_dWij(typevectorsize);
   std::vector<std::vector<double>> sumj_Vj_Wij(typevectorsize);
@@ -606,8 +608,8 @@ void Particle::SPHSurfaceTension::compute_curvature() const
     const int particlestored = container_i->particles_stored();
 
     // allocate memory
-    sumj_nij_Vj_eij_dWij[type_i].assign(particlestored, 0.0);
-    sumj_Vj_Wij[type_i].assign(particlestored, 0.0);
+    sumj_nij_Vj_eij_dWij[static_cast<int>(type_i)].assign(particlestored, 0.0);
+    sumj_Vj_Wij[static_cast<int>(type_i)].assign(particlestored, 0.0);
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -635,7 +637,7 @@ void Particle::SPHSurfaceTension::compute_curvature() const
             ParticleUtils::lin_trans(temp_i[0], trans_ref_temp_, trans_ref_temp_ + trans_d_t_curv_);
 
       // add self-interaction
-      sumj_Vj_Wij[type_i][particle_i] += tempfac * V_i * Wii;
+      sumj_Vj_Wij[static_cast<int>(type_i)][particle_i] += tempfac * V_i * Wii;
     }
   }
 
@@ -650,12 +652,12 @@ void Particle::SPHSurfaceTension::compute_curvature() const
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -704,8 +706,9 @@ void Particle::SPHSurfaceTension::compute_curvature() const
             ParticleUtils::lin_trans(temp_j[0], trans_ref_temp_, trans_ref_temp_ + trans_d_t_curv_);
 
       // sum contribution of neighboring particle j
-      sumj_nij_Vj_eij_dWij[type_i][particle_i] += tempfac * V_j * nij_eij * particlepair.dWdrij_;
-      sumj_Vj_Wij[type_i][particle_i] += tempfac * V_j * particlepair.Wij_;
+      sumj_nij_Vj_eij_dWij[static_cast<int>(type_i)][particle_i] +=
+          tempfac * V_j * nij_eij * particlepair.dWdrij_;
+      sumj_Vj_Wij[static_cast<int>(type_i)][particle_i] += tempfac * V_j * particlepair.Wij_;
     }
 
     // evaluate contribution of neighboring particle i
@@ -721,9 +724,9 @@ void Particle::SPHSurfaceTension::compute_curvature() const
             ParticleUtils::lin_trans(temp_i[0], trans_ref_temp_, trans_ref_temp_ + trans_d_t_curv_);
 
       // sum contribution of neighboring particle i
-      sumj_nij_Vj_eij_dWij[type_j][particle_j] +=
+      sumj_nij_Vj_eij_dWij[static_cast<int>(type_j)][particle_j] +=
           signfac * tempfac * V_i * nij_eij * particlepair.dWdrji_;
-      sumj_Vj_Wij[type_j][particle_j] += tempfac * V_i * particlepair.Wji_;
+      sumj_Vj_Wij[static_cast<int>(type_j)][particle_j] += tempfac * V_i * particlepair.Wji_;
     }
   }
 
@@ -746,10 +749,12 @@ void Particle::SPHSurfaceTension::compute_curvature() const
       if (not(ParticleUtils::vec_norm_two(ifn_i) > 0.0)) continue;
 
       // evaluation only for meaningful contributions
-      if (not(std::abs(sumj_Vj_Wij[type_i][particle_i]) > (1.0e-10 * rad_i[0]))) continue;
+      if (not(std::abs(sumj_Vj_Wij[static_cast<int>(type_i)][particle_i]) > (1.0e-10 * rad_i[0])))
+        continue;
 
       // compute curvature
-      curv_i[0] = -sumj_nij_Vj_eij_dWij[type_i][particle_i] / sumj_Vj_Wij[type_i][particle_i];
+      curv_i[0] = -sumj_nij_Vj_eij_dWij[static_cast<int>(type_i)][particle_i] /
+                  sumj_Vj_Wij[static_cast<int>(type_i)][particle_i];
     }
   }
 }

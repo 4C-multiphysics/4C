@@ -85,7 +85,7 @@ namespace Particle
      * \param[out] particlestatestotypes map of particle types and corresponding states
      */
     void insert_particle_states_of_particle_types(
-        std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const;
+        std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const;
 
     /*!
      * \brief time integration scheme specific initialization routine
@@ -152,7 +152,7 @@ namespace Particle
     std::shared_ptr<Particle::ConstraintsHandler> constraints_;
 
     //! set of particle types to integrate in time
-    std::set<Particle::TypeEnum> typestointegrate_;
+    std::set<Particle::Type> typestointegrate_;
 
     //! current time
     double time_;

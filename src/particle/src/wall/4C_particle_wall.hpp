@@ -122,8 +122,7 @@ namespace Particle
      * \param[out] particlestatestotypes map of particle types and corresponding states
      */
     virtual void insert_particle_states_of_particle_types(
-        std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes)
-        const final;
+        std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const final;
 
     /*!
      * \brief write wall runtime output

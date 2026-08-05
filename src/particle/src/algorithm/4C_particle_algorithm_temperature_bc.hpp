@@ -60,7 +60,7 @@ namespace Particle
      *
      * \return set of particle types subjected to temperature boundary conditions
      */
-    const std::set<Particle::TypeEnum>& get_particle_types_subjected_to_temperature_bc_set() const
+    const std::set<Particle::Type>& get_particle_types_subjected_to_temperature_bc_set() const
     {
       return typessubjectedtotemperaturebc_;
     };
@@ -72,7 +72,7 @@ namespace Particle
      * \param[out] particlestatestotypes map of particle types and corresponding states
      */
     void insert_particle_states_of_particle_types(
-        std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const;
+        std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const;
 
     /*!
      * \brief set particle reference position
@@ -96,10 +96,10 @@ namespace Particle
     std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface_;
 
     //! relating particle types to function ids of temperature boundary conditions
-    std::map<Particle::TypeEnum, int> temperaturebctypetofunctid_;
+    std::map<Particle::Type, int> temperaturebctypetofunctid_;
 
     //! set of particle types subjected to temperature boundary conditions
-    std::set<Particle::TypeEnum> typessubjectedtotemperaturebc_;
+    std::set<Particle::Type> typessubjectedtotemperaturebc_;
   };
 
 }  // namespace Particle

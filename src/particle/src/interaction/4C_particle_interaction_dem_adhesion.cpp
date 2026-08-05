@@ -147,12 +147,12 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
   for (const auto& particlepair : neighborpairs_->get_ref_to_particle_pair_adhesion_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -276,7 +276,7 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
   for (const auto& particlewallpair : particlewallpairdata)
   {
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;

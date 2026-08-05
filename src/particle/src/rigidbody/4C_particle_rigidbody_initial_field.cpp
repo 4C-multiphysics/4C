@@ -17,7 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace
 {
-  std::map<Particle::StateEnum, std::map<Particle::TypeEnum, int>>
+  std::map<Particle::StateEnum, std::map<Particle::Type, int>>
   extract_particle_types_to_function_ids(const Teuchos::ParameterList& params);
 
   std::vector<std::vector<double>>& get_rigid_body_state(
@@ -28,12 +28,12 @@ void Particle::set_initial_fields(const Teuchos::ParameterList& params,
     const std::vector<int>& ownedrigidbodies, Particle::RigidBodyDataState& rigidbodydatastates)
 {
   // relating particle types to function ids
-  std::map<Particle::StateEnum, std::map<Particle::TypeEnum, int>> statetotypetofunctidmap =
+  std::map<Particle::StateEnum, std::map<Particle::Type, int>> statetotypetofunctidmap =
       extract_particle_types_to_function_ids(params);
 
   for (auto& stateIt : statetotypetofunctidmap)
   {
-    if (not stateIt.second.contains(Particle::RigidPhase)) continue;
+    if (not stateIt.second.contains(Particle::Type::RigidPhase)) continue;
 
     // state vector
     Particle::StateEnum particleState = stateIt.first;
@@ -43,7 +43,7 @@ void Particle::set_initial_fields(const Teuchos::ParameterList& params,
         get_rigid_body_state(particleState, rigidbodydatastates);
 
     // get id of function
-    const int functid = stateIt.second[Particle::RigidPhase];
+    const int functid = stateIt.second[Particle::Type::RigidPhase];
 
     // get reference to function
     const auto& function =
@@ -78,10 +78,10 @@ void Particle::set_initial_fields(const Teuchos::ParameterList& params,
 
 namespace
 {
-  std::map<Particle::StateEnum, std::map<Particle::TypeEnum, int>>
+  std::map<Particle::StateEnum, std::map<Particle::Type, int>>
   extract_particle_types_to_function_ids(const Teuchos::ParameterList& params)
   {
-    std::map<Particle::StateEnum, std::map<Particle::TypeEnum, int>> statetotypetofunctidmap;
+    std::map<Particle::StateEnum, std::map<Particle::Type, int>> statetotypetofunctidmap;
 
     // get control parameters for initial/boundary conditions
     const Teuchos::ParameterList& params_conditions =
@@ -98,7 +98,7 @@ namespace
     for (const auto& stateIt : initialfieldtostateenum)
     {
       // get reference to sub-map
-      std::map<Particle::TypeEnum, int>& currentstatetypetofunctidmap =
+      std::map<Particle::Type, int>& currentstatetypetofunctidmap =
           statetotypetofunctidmap[stateIt.second];
 
       // read parameters relating particle types to values

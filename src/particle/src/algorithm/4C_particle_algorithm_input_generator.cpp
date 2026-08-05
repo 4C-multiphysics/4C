@@ -28,7 +28,7 @@ void Particle::InputGenerator::generate_particles(
 }
 
 void Particle::InputGenerator::add_generated_particle(const std::vector<double>& position,
-    const Particle::TypeEnum particletype,
+    const Particle::Type particletype,
     std::vector<Particle::ParticleObjShrdPtr>& particlesgenerated) const
 {
   // safety check

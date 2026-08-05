@@ -26,7 +26,7 @@ Particle::ConstraintsProjectionBase::ConstraintsProjectionBase(MPI_Comm comm, do
 
 void Particle::ConstraintsProjectionBase::apply(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate, const double time) const
+    const std::set<Particle::Type>& types_to_integrate, const double time) const
 {
   // perform setup if needed
   setup(particle_container_bundle, types_to_integrate);
@@ -60,7 +60,7 @@ void Particle::ConstraintsProjectionBase::apply(
 
 int Particle::ConstraintsProjectionBase::calc_primary_axis(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate) const
+    const std::set<Particle::Type>& types_to_integrate) const
 {
   int local_result = calc_primary_axis_local(particle_container_bundle, types_to_integrate);
 
@@ -77,7 +77,7 @@ int Particle::ConstraintsProjectionBase::calc_primary_axis(
 
 void Particle::ConstraintsProjectionBase::setup(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate) const
+    const std::set<Particle::Type>& types_to_integrate) const
 {
   if (axis_ == axis_invalid_)
   {
@@ -89,7 +89,7 @@ void Particle::ConstraintsProjectionBase::setup(
 
 void Particle::ConstraintsProjectionBase::check_particles(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate) const
+    const std::set<Particle::Type>& types_to_integrate) const
 {
   for (auto& particleType : types_to_integrate)
   {
@@ -123,7 +123,7 @@ Particle::ConstraintsProjection2D::ConstraintsProjection2D(MPI_Comm comm)
 
 int Particle::ConstraintsProjection2D::calc_primary_axis_local(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate) const
+    const std::set<Particle::Type>& types_to_integrate) const
 {
   int axis_direction = axis_invalid_;
 
@@ -249,7 +249,7 @@ Particle::ConstraintsProjection1D::ConstraintsProjection1D(MPI_Comm comm)
 
 int Particle::ConstraintsProjection1D::calc_primary_axis_local(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate) const
+    const std::set<Particle::Type>& types_to_integrate) const
 {
   int axis_direction = axis_invalid_;
 

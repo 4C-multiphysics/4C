@@ -161,12 +161,12 @@ void Particle::SPHPeridynamic::setup(
 }
 
 void Particle::SPHPeridynamic::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
-    if (typeIt.first == Particle::PDPhase)
+    if (typeIt.first == Particle::Type::PDPhase)
     {
       // set of particle states for current particle type
       std::set<Particle::StateEnum>& particlestates = typeIt.second;
@@ -184,7 +184,7 @@ void Particle::SPHPeridynamic::init_peridynamic_bondlist()
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   // get material for peridynamic phase
   const Mat::PAR::ParticleMaterialBase* material =
-      particlematerial_->get_ptr_to_particle_mat_parameter(Particle::PDPhase);
+      particlematerial_->get_ptr_to_particle_mat_parameter(Particle::Type::PDPhase);
 
   // (initial) radius of current phase
   const double initradius = material->initRadius_;
@@ -198,18 +198,18 @@ void Particle::SPHPeridynamic::init_peridynamic_bondlist()
       particleengineinterface_->get_potential_particle_neighbors())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
     // only peridynamic phase particles can undergo peridynamic interaction
-    if (type_i != Particle::PDPhase || type_j != Particle::PDPhase) continue;
+    if (type_i != Particle::Type::PDPhase || type_j != Particle::Type::PDPhase) continue;
 
     // get corresponding particle containers
     Particle::ParticleContainer* container_i =
@@ -295,7 +295,7 @@ void Particle::SPHPeridynamic::add_acceleration_contribution() const
   // clear force of peridynamic phase particles
   Particle::ParticleContainer* container =
       particleengineinterface_->get_particle_container_bundle()->get_specific_container(
-          Particle::PDPhase, Particle::Status::Owned);
+          Particle::Type::PDPhase, Particle::Status::Owned);
   container->clear_state(Particle::Force);
 }
 
@@ -310,12 +310,12 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
     const auto& particlepair = (*bondlist_)[iter];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i, globalid_i;
     std::tie(type_i, status_i, particle_i, globalid_i) = particlepair.first;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j, globalid_j;
     std::tie(type_j, status_j, particle_j, globalid_j) = particlepair.second;
@@ -425,12 +425,12 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
   for (const auto& particlepair : pd_neighbor_pairs)
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -472,8 +472,8 @@ void Particle::SPHPeridynamic::compute_acceleration() const
   TEUCHOS_FUNC_TIME_MONITOR("Particle::SPHPeridynamic::compute_acceleration");
 
   // get container of owned particles of current particle type
-  Particle::ParticleContainer* container =
-      particlecontainerbundle_->get_specific_container(Particle::PDPhase, Particle::Status::Owned);
+  Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
+      Particle::Type::PDPhase, Particle::Status::Owned);
 
   // get number of particles stored in container
   const int particlestored = container->particles_stored();
@@ -513,8 +513,8 @@ void Particle::SPHPeridynamic::damage_evaluation()
   Particle::ParticleContainerBundleShrdPtr particlecontainerbundle =
       particleengineinterface_->get_particle_container_bundle();
   // get container of owned particles of peridynamic phase
-  Particle::ParticleContainer* container =
-      particlecontainerbundle->get_specific_container(Particle::PDPhase, Particle::Status::Owned);
+  Particle::ParticleContainer* container = particlecontainerbundle->get_specific_container(
+      Particle::Type::PDPhase, Particle::Status::Owned);
 
   // loop over particles in container
   for (int particle_i = 0; particle_i < container->particles_stored(); ++particle_i)

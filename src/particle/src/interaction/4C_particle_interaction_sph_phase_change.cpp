@@ -24,8 +24,8 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 Particle::SPHPhaseChangeBase::SPHPhaseChangeBase(const Teuchos::ParameterList& params)
     : params_sph_(params),
-      belowphase_(Particle::Phase1),
-      abovephase_(Particle::Phase2),
+      belowphase_(Particle::Type::Phase1),
+      abovephase_(Particle::Type::Phase2),
       transitionstate_(Particle::Density),
       transitionvalue_(0.0),
       hysteresisgap_(0.0)
@@ -134,14 +134,14 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_below_to_above_pha
     std::vector<std::vector<std::pair<int, Particle::ParticleObjShrdPtr>>>& particlestoinsert) const
 {
   // set source and target type of particles
-  Particle::TypeEnum type_source = belowphase_;
-  Particle::TypeEnum type_target = abovephase_;
+  Particle::Type type_source = belowphase_;
+  Particle::Type type_target = abovephase_;
 
   // check for boundary or rigid particles
   bool isboundaryrigid_source =
-      (type_source == Particle::BoundaryPhase or type_source == Particle::RigidPhase);
+      (type_source == Particle::Type::BoundaryPhase or type_source == Particle::Type::RigidPhase);
   bool isboundaryrigid_target =
-      (type_target == Particle::BoundaryPhase or type_target == Particle::RigidPhase);
+      (type_target == Particle::Type::BoundaryPhase or type_target == Particle::Type::RigidPhase);
 
   // get container of owned particles of source particle type
   Particle::ParticleContainer* container =
@@ -200,10 +200,11 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_below_to_above_pha
           std::make_shared<Particle::ParticleObject>(type_target, globalid, particlestates);
 
       // append particle to be insert
-      particlestoinsert[type_target].push_back(std::make_pair(-1, particleobject));
+      particlestoinsert[static_cast<int>(type_target)].push_back(
+          std::make_pair(-1, particleobject));
 
       // store index of particle to be removed from containers
-      particlestoremove[type_source].insert(index);
+      particlestoremove[static_cast<int>(type_source)].insert(index);
 
       // append source and target type together with global id of particle
       particlesfromphasetophase.push_back(std::make_tuple(type_source, type_target, globalid));
@@ -217,14 +218,14 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_above_to_below_pha
     std::vector<std::vector<std::pair<int, Particle::ParticleObjShrdPtr>>>& particlestoinsert) const
 {
   // set source and target type of particles
-  Particle::TypeEnum type_source = abovephase_;
-  Particle::TypeEnum type_target = belowphase_;
+  Particle::Type type_source = abovephase_;
+  Particle::Type type_target = belowphase_;
 
   // check for boundary or rigid particles
   bool isboundaryrigid_source =
-      (type_source == Particle::BoundaryPhase or type_source == Particle::RigidPhase);
+      (type_source == Particle::Type::BoundaryPhase or type_source == Particle::Type::RigidPhase);
   bool isboundaryrigid_target =
-      (type_target == Particle::BoundaryPhase or type_target == Particle::RigidPhase);
+      (type_target == Particle::Type::BoundaryPhase or type_target == Particle::Type::RigidPhase);
 
   // get container of owned particles of source particle type
   Particle::ParticleContainer* container =
@@ -283,10 +284,11 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_above_to_below_pha
           std::make_shared<Particle::ParticleObject>(type_target, globalid, particlestates);
 
       // append particle to be insert
-      particlestoinsert[type_target].push_back(std::make_pair(-1, particleobject));
+      particlestoinsert[static_cast<int>(type_target)].push_back(
+          std::make_pair(-1, particleobject));
 
       // store index of particle to be removed from containers
-      particlestoremove[type_source].insert(index);
+      particlestoremove[static_cast<int>(type_source)].insert(index);
 
       // append source and target type together with global id of particle
       particlesfromphasetophase.push_back(std::make_tuple(type_source, type_target, globalid));
@@ -305,7 +307,8 @@ void Particle::SPHPhaseChangeOneWayScalarBelowToAbove::evaluate_phase_change(
     std::vector<Particle::ParticleTypeToType>& particlesfromphasetophase) const
 {
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   std::vector<std::set<int>> particlestoremove(typevectorsize);
   std::vector<std::vector<std::pair<int, Particle::ParticleObjShrdPtr>>> particlestoinsert(
@@ -333,7 +336,8 @@ void Particle::SPHPhaseChangeOneWayScalarAboveToBelow::evaluate_phase_change(
     std::vector<Particle::ParticleTypeToType>& particlesfromphasetophase) const
 {
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   std::vector<std::set<int>> particlestoremove(typevectorsize);
   std::vector<std::vector<std::pair<int, Particle::ParticleObjShrdPtr>>> particlestoinsert(
@@ -361,7 +365,8 @@ void Particle::SPHPhaseChangeTwoWayScalar::evaluate_phase_change(
     std::vector<Particle::ParticleTypeToType>& particlesfromphasetophase) const
 {
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   std::vector<std::set<int>> particlestoremove(typevectorsize);
   std::vector<std::vector<std::pair<int, Particle::ParticleObjShrdPtr>>> particlestoinsert(

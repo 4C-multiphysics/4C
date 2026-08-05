@@ -88,10 +88,10 @@ namespace Particle
     std::shared_ptr<Particle::SPHEquationOfStateBundle> equationofstatebundle_;
 
     //! phase below transition value
-    Particle::TypeEnum belowphase_;
+    Particle::Type belowphase_;
 
     //! phase above transition value
-    Particle::TypeEnum abovephase_;
+    Particle::Type abovephase_;
 
     //! transition state of phase change
     Particle::StateEnum transitionstate_;

@@ -118,10 +118,10 @@ namespace Particle
     std::vector<std::vector<double>> weightedvelocity_;
 
     //! set of all fluid particle types
-    std::set<Particle::TypeEnum> allfluidtypes_;
+    std::set<Particle::Type> allfluidtypes_;
 
     //! set of integrated fluid particle types
-    std::set<Particle::TypeEnum> intfluidtypes_;
+    std::set<Particle::Type> intfluidtypes_;
   };
 
 }  // namespace Particle

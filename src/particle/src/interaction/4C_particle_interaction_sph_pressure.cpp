@@ -18,7 +18,7 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-Particle::SPHPressure::SPHPressure() : fluidtypes_({Particle::Phase1, Particle::Phase2})
+Particle::SPHPressure::SPHPressure() : fluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2})
 {
   // empty constructor
 }

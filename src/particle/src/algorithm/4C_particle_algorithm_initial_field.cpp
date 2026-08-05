@@ -39,7 +39,7 @@ Particle::InitialFieldHandler::InitialFieldHandler(const Teuchos::ParameterList&
   for (auto& stateIt : initialfieldtostateenum)
   {
     // get reference to sub-map
-    std::map<Particle::TypeEnum, int>& currentstatetypetofunctidmap =
+    std::map<Particle::Type, int>& currentstatetypetofunctidmap =
         statetotypetofunctidmap_[stateIt.second];
 
     // read parameters relating particle types to values
@@ -70,7 +70,7 @@ void Particle::InitialFieldHandler::set_initial_fields()
     for (auto& initialFieldIt : stateIt.second)
     {
       // get type of particles
-      Particle::TypeEnum particleType = initialFieldIt.first;
+      Particle::Type particleType = initialFieldIt.first;
 
       // get container of owned particles of current particle type
       Particle::ParticleContainer* container =

@@ -52,7 +52,7 @@ namespace
     // unresolved until the particle is found in a local container, and local id = -1 marks that
     // "not yet resolved on this rank" state
     return std::make_tuple(
-        Particle::UninitializedType, Particle::Status::Uninitialized, -1, globalid);
+        Particle::Type::Uninitialized, Particle::Status::Uninitialized, -1, globalid);
   }
 
   std::set<long> build_known_peridynamic_bond_hashes(const std::shared_ptr<std::vector<
@@ -119,22 +119,23 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
   for (auto& potentialneighbors : particleengineinterface_->get_potential_particle_neighbors())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
     // filter rigid phase and boundary phase to find close pairs which interact in peridynamic or
     // DEM way
-    if ((type_i != PDPhase and type_i != BoundaryPhase) or
-        (type_j != PDPhase and type_j != BoundaryPhase))
+    if ((type_i != Particle::Type::PDPhase and type_i != Particle::Type::BoundaryPhase) or
+        (type_j != Particle::Type::PDPhase and type_j != Particle::Type::BoundaryPhase))
       continue;
 
-    if (type_i == BoundaryPhase and type_j == BoundaryPhase) continue;
+    if (type_i == Particle::Type::BoundaryPhase and type_j == Particle::Type::BoundaryPhase)
+      continue;
 
     // get corresponding particle containers
     Particle::ParticleContainer* container_i =
@@ -218,11 +219,11 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
   {
     auto& particlepair = (*bondlist_)[iter];
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i, globalid_i;
     std::tie(type_i, status_i, particle_i, globalid_i) = particlepair.first;
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j, globalid_j;
     std::tie(type_j, status_j, particle_j, globalid_j) = particlepair.second;
@@ -295,7 +296,7 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
   for (const auto& potentialneighbors : particlewallinterface_->get_potential_wall_neighbors())
   {
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
@@ -399,7 +400,7 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
         particlewallpairdata_[indexofparticlewallpairs[0].second].tuple_i_;
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = tuple_i;

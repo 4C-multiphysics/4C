@@ -1018,7 +1018,7 @@ void Particle::ParticleEngine::setup_data_storage(
     const std::map<ParticleType, std::set<ParticleState>>& particlestatestotypes)
 {
   // determine size of vectors indexed by particle types
-  typevectorsize_ = ((--particlestatestotypes.end())->first) + 1;
+  typevectorsize_ = static_cast<int>((--particlestatestotypes.end())->first) + 1;
 
   // allocate memory to hold particle types
   directghostingtargets_.resize(typevectorsize_);
@@ -1057,7 +1057,8 @@ void Particle::ParticleEngine::setup_type_weights()
       params_, "PHASE_TO_DYNLOADBALFAC", typetodynloadbal);
 
   // insert weight of particle type
-  for (const auto& typeIt : typetodynloadbal) typeweights_[typeIt.first] = typeIt.second;
+  for (const auto& typeIt : typetodynloadbal)
+    typeweights_[static_cast<int>(typeIt.first)] = typeIt.second;
 }
 
 void Particle::ParticleEngine::determine_bin_dis_dependent_maps_and_sets()
@@ -1293,7 +1294,7 @@ void Particle::ParticleEngine::check_particles_at_boundaries(
       // particle left computational domain
       if (gidofbin == -1)
       {
-        (particlestoremove[type]).insert(ownedindex);
+        (particlestoremove[static_cast<int>(type)]).insert(ownedindex);
 
         // get global id of particle
         const int* currglobalid = container->get_ptr_to_global_id(ownedindex);
@@ -1431,7 +1432,8 @@ void Particle::ParticleEngine::determine_particles_to_be_distributed(
     }
     // particle is owned by this processor
     else if (myrank_ == ownerofparticle)
-      particlestokeep[type].push_back(std::make_pair(ownerofparticle, particlestodistribute[i]));
+      particlestokeep[static_cast<int>(type)].push_back(
+          std::make_pair(ownerofparticle, particlestodistribute[i]));
     // particle is owned by another processor
     else
     {
@@ -1496,7 +1498,7 @@ void Particle::ParticleEngine::determine_particles_to_be_transferred(
       if (gidofbin == -1)
       {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-        if (not particlestoremove[type].contains(ownedindex))
+        if (not particlestoremove[static_cast<int>(type)].contains(ownedindex))
           FOUR_C_THROW(
               "on processor {} a particle left the computational domain without being detected!",
               myrank_);
@@ -1522,7 +1524,7 @@ void Particle::ParticleEngine::determine_particles_to_be_transferred(
           std::make_shared<ParticleObject>(type, globalid, states, gidofbin));
 
       // store index of particle to be removed from containers after particle transfer
-      (particlestoremove[type]).insert(ownedindex);
+      (particlestoremove[static_cast<int>(type)]).insert(ownedindex);
 
       // append global id of particle to be send
       communicatedparticletargets_[sendtoproc].emplace_back(globalid);
@@ -1587,14 +1589,14 @@ std::map<int, std::vector<char>> Particle::ParticleEngine::pack_particles_to_be_
   for (const auto& type : particlecontainerbundle_->get_particle_types())
   {
     // check for particles of current type to be sent
-    if (directghostingtargets_[type].empty()) continue;
+    if (directghostingtargets_[static_cast<int>(type)].empty()) continue;
 
     // get container of owned particles of current particle type
     ParticleContainer* container =
         particlecontainerbundle_->get_specific_container(type, Status::Owned);
 
     // iterate over owned particles of current type
-    for (const auto& indexIt : directghostingtargets_[type])
+    for (const auto& indexIt : directghostingtargets_[static_cast<int>(type)])
     {
       int ownedindex = indexIt.first;
 
@@ -1639,17 +1641,18 @@ Particle::ParticleEngine::pack_specific_states_of_particles_to_be_refreshed(
     ParticleType type = typeIt.first;
 
     // check for particles of current type to be sent
-    if (directghostingtargets_[type].empty()) continue;
+    if (directghostingtargets_[static_cast<int>(type)].empty()) continue;
 
     // determine necessary size of vector for states
-    int statesvectorsize = *std::max_element(typeIt.second.begin(), typeIt.second.end()) + 1;
+    int statesvectorsize =
+        static_cast<int>(*std::max_element(typeIt.second.begin(), typeIt.second.end())) + 1;
 
     // get container of owned particles of current particle type
     ParticleContainer* container =
         particlecontainerbundle_->get_specific_container(type, Status::Owned);
 
     // iterate over owned particles of current type
-    for (const auto& indexIt : directghostingtargets_[type])
+    for (const auto& indexIt : directghostingtargets_[static_cast<int>(type)])
     {
       int ownedindex = indexIt.first;
 
@@ -1715,7 +1718,7 @@ void Particle::ParticleEngine::communicate_particles(
       FOUR_C_ASSERT_ALWAYS(particleobject, "received object is not a particle object!");
 
       // store received particle
-      particlestoreceive[particleobject->return_particle_type()].push_back(
+      particlestoreceive[static_cast<int>(particleobject->return_particle_type())].push_back(
           std::make_pair(msgsource, particleobject));
     }
   }
@@ -1752,7 +1755,7 @@ void Particle::ParticleEngine::communicate_direct_ghosting_map(
 {
   // iterate over particle types
   for (const auto& type : particlecontainerbundle_->get_particle_types())
-    directghostingtargets_[type].clear();
+    directghostingtargets_[static_cast<int>(type)].clear();
 
   // invalidate flags denoting validity of direct ghosting
   validdirectghosting_ = false;
@@ -1802,7 +1805,7 @@ void Particle::ParticleEngine::communicate_direct_ghosting_map(
           // get index of owned particle
           int ownedindex = indexIt.first;
 
-          (directghostingtargets_[type])[ownedindex].push_back(indexIt.second);
+          (directghostingtargets_[static_cast<int>(type)])[ownedindex].push_back(indexIt.second);
         }
       }
     }
@@ -1814,7 +1817,7 @@ void Particle::ParticleEngine::communicate_direct_ghosting_map(
   // cache procs to which this proc sends refreshed particle data
   cached_procs_send_ghost_data_to_.clear();
   for (const auto& type : particlecontainerbundle_->get_particle_types())
-    for (const auto& [ownedindex, targets] : directghostingtargets_[type])
+    for (const auto& [ownedindex, targets] : directghostingtargets_[static_cast<int>(type)])
       for (const auto& [proc, ghostedindex] : targets)
         cached_procs_send_ghost_data_to_.insert(proc);
 }
@@ -1826,14 +1829,14 @@ void Particle::ParticleEngine::insert_owned_particles(
   for (const auto& type : particlecontainerbundle_->get_particle_types())
   {
     // check for particles of current type
-    if (particlestoinsert[type].empty()) continue;
+    if (particlestoinsert[static_cast<int>(type)].empty()) continue;
 
     // get container of owned particles of current particle type
     ParticleContainer* container =
         particlecontainerbundle_->get_specific_container(type, Status::Owned);
 
     // iterate over particle objects pairs
-    for (const auto& objectpair : particlestoinsert[type])
+    for (const auto& objectpair : particlestoinsert[static_cast<int>(type)])
     {
       // get particle object
       ParticleObjShrdPtr particleobject = objectpair.second;
@@ -1896,14 +1899,14 @@ void Particle::ParticleEngine::insert_ghosted_particles(
   for (const auto& type : particlecontainerbundle_->get_particle_types())
   {
     // check for particles of current type
-    if (particlestoinsert[type].empty()) continue;
+    if (particlestoinsert[static_cast<int>(type)].empty()) continue;
 
     // get container of ghosted particles of current particle type
     ParticleContainer* container =
         particlecontainerbundle_->get_specific_container(type, Status::Ghosted);
 
     // iterate over particle objects pairs
-    for (const auto& objectpair : particlestoinsert[type])
+    for (const auto& objectpair : particlestoinsert[static_cast<int>(type)])
     {
       // get owner of sending processor
       int sendingproc = objectpair.first;
@@ -1957,7 +1960,7 @@ void Particle::ParticleEngine::remove_particles_from_containers(
   for (const auto& type : particlecontainerbundle_->get_particle_types())
   {
     // check for particles of current type
-    if (particlestoremove[type].empty()) continue;
+    if (particlestoremove[static_cast<int>(type)].empty()) continue;
 
     // get container of owned particles of current particle type
     ParticleContainer* container =
@@ -1965,7 +1968,8 @@ void Particle::ParticleEngine::remove_particles_from_containers(
 
     // iterate in reversed order over particles to be removed
     std::set<int>::reverse_iterator rit;
-    for (rit = particlestoremove[type].rbegin(); rit != particlestoremove[type].rend(); ++rit)
+    for (rit = particlestoremove[static_cast<int>(type)].rbegin();
+        rit != particlestoremove[static_cast<int>(type)].rend(); ++rit)
       container->remove_particle(*rit);
   }
 
@@ -2090,7 +2094,7 @@ void Particle::ParticleEngine::determine_bin_weights()
     {
       // add weight of particle of specific type
       binning_->binweights_->get_vector(0).get_values()[rowlidofbin] +=
-          typeweights_[particleIt.first];
+          typeweights_[static_cast<int>(particleIt.first)];
     }
   }
 }

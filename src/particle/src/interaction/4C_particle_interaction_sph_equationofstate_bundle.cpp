@@ -32,7 +32,7 @@ void Particle::SPHEquationOfStateBundle::init(Particle::MaterialHandler& particl
       Teuchos::getIntegralValue<Particle::EquationOfStateType>(params_sph_, "EQUATIONOFSTATE");
 
   // determine size of vector indexed by particle types
-  const int typevectorsize = *(--particlematerial.get_particle_types().end()) + 1;
+  const int typevectorsize = static_cast<int>(*(--particlematerial.get_particle_types().end())) + 1;
 
   // allocate memory to hold particle types
   phasetypetoequationofstate_.resize(typevectorsize);
@@ -41,8 +41,8 @@ void Particle::SPHEquationOfStateBundle::init(Particle::MaterialHandler& particl
   for (const auto& type_i : particlematerial.get_particle_types())
   {
     // no equation of state for boundary or rigid particles
-    if (type_i == Particle::BoundaryPhase or type_i == Particle::RigidPhase or
-        type_i == Particle::PDPhase)
+    if (type_i == Particle::Type::BoundaryPhase or type_i == Particle::Type::RigidPhase or
+        type_i == Particle::Type::PDPhase)
       continue;
 
     // add to set of particle types of stored equation of state handlers
@@ -62,16 +62,18 @@ void Particle::SPHEquationOfStateBundle::init(Particle::MaterialHandler& particl
         const double refdensfac = material->refDensFac_;
         const double exponent = material->exponent_;
 
-        phasetypetoequationofstate_[type_i] = std::unique_ptr<Particle::SPHEquationOfStateGenTait>(
-            new Particle::SPHEquationOfStateGenTait(speedofsound, refdensfac, exponent));
+        phasetypetoequationofstate_[static_cast<int>(type_i)] =
+            std::unique_ptr<Particle::SPHEquationOfStateGenTait>(
+                new Particle::SPHEquationOfStateGenTait(speedofsound, refdensfac, exponent));
         break;
       }
       case Particle::IdealGas:
       {
         const double speedofsound = material->speed_of_sound();
 
-        phasetypetoequationofstate_[type_i] = std::unique_ptr<Particle::SPHEquationOfStateIdealGas>(
-            new Particle::SPHEquationOfStateIdealGas(speedofsound));
+        phasetypetoequationofstate_[static_cast<int>(type_i)] =
+            std::unique_ptr<Particle::SPHEquationOfStateIdealGas>(
+                new Particle::SPHEquationOfStateIdealGas(speedofsound));
         break;
       }
       default:

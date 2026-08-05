@@ -70,7 +70,7 @@ namespace Particle
 
     //! insert contact evaluation dependent states
     void insert_particle_states_of_particle_types(
-        std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const;
+        std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const;
 
     //! get normal contact stiffness
     double get_normal_contact_stiffness() const;

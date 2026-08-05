@@ -259,9 +259,11 @@ static std::vector<std::string> particle_type_names = {
 
 std::string Particle::enum_to_type_name(const ParticleType& type)
 {
-  FOUR_C_ASSERT(type >= 0 and type < static_cast<int>(particle_type_names.size()),
+  const int type_idx = static_cast<int>(type);
+
+  FOUR_C_ASSERT(type_idx >= 0 and type_idx < static_cast<int>(particle_type_names.size()),
       "particle type out of range!");
-  return particle_type_names[type];
+  return particle_type_names[type_idx];
 }
 
 Particle::ParticleType Particle::enum_from_type_name(const std::string& name)

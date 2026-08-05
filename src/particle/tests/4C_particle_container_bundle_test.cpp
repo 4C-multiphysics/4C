@@ -27,11 +27,11 @@ namespace
       particlecontainerbundle_ = std::make_unique<Particle::ParticleContainerBundle>();
 
       // init two phases with different particle states
-      std::map<Particle::TypeEnum, std::set<Particle::StateEnum>> particlestatestotypes;
+      std::map<Particle::Type, std::set<Particle::StateEnum>> particlestatestotypes;
       std::set<Particle::StateEnum> stateEnumSet = {
           Particle::Position, Particle::Mass, Particle::Radius};
-      particlestatestotypes.insert(std::make_pair(Particle::Phase1, stateEnumSet));
-      particlestatestotypes.insert(std::make_pair(Particle::Phase2, stateEnumSet));
+      particlestatestotypes.insert(std::make_pair(Particle::Type::Phase1, stateEnumSet));
+      particlestatestotypes.insert(std::make_pair(Particle::Type::Phase2, stateEnumSet));
 
       // setup particle container bundle
       particlecontainerbundle_->setup(particlestatestotypes);
@@ -50,7 +50,7 @@ namespace
       // owned particles for phase 1
       {
         Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
-            Particle::Phase1, Particle::Status::Owned);
+            Particle::Type::Phase1, Particle::Status::Owned);
 
         // first particle
         globalid = 1;
@@ -71,7 +71,7 @@ namespace
       // ghosted particles for phase 1
       {
         Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
-            Particle::Phase1, Particle::Status::Ghosted);
+            Particle::Type::Phase1, Particle::Status::Ghosted);
 
         // first particle
         globalid = 4;
@@ -87,7 +87,7 @@ namespace
       // owned particles for phase 2
       {
         Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
-            Particle::Phase2, Particle::Status::Owned);
+            Particle::Type::Phase2, Particle::Status::Owned);
 
         // first particle
         globalid = 6;
@@ -146,10 +146,10 @@ namespace
   TEST_F(ParticleContainerBundleTest, scale_state_specific_container)
   {
     particlecontainerbundle_->scale_state_specific_container(
-        2.0, Particle::Radius, Particle::Phase1);
+        2.0, Particle::Radius, Particle::Type::Phase1);
 
-    Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase1, Particle::Status::Owned);
+    Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase1, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -185,10 +185,10 @@ namespace
   TEST_F(ParticleContainerBundleTest, update_state_specific_container)
   {
     particlecontainerbundle_->update_state_specific_container(
-        2.0, Particle::Radius, 1.0, Particle::Mass, Particle::Phase1);
+        2.0, Particle::Radius, 1.0, Particle::Mass, Particle::Type::Phase1);
 
-    Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase1, Particle::Status::Owned);
+    Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase1, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -225,10 +225,11 @@ namespace
   {
     std::vector<double> mass{1.1};
 
-    particlecontainerbundle_->set_state_specific_container(mass, Particle::Mass, Particle::Phase2);
+    particlecontainerbundle_->set_state_specific_container(
+        mass, Particle::Mass, Particle::Type::Phase2);
 
-    Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase2, Particle::Status::Owned);
+    Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase2, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -265,10 +266,11 @@ namespace
   {
     std::vector<double> mass{0.0};
 
-    particlecontainerbundle_->clear_state_specific_container(Particle::Mass, Particle::Phase2);
+    particlecontainerbundle_->clear_state_specific_container(
+        Particle::Mass, Particle::Type::Phase2);
 
-    Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase2, Particle::Status::Owned);
+    Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase2, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -313,8 +315,8 @@ namespace
     Particle::ParticleStates particle_reference;
     particle_reference.assign(statesvectorsize_, std::vector<double>{});
 
-    container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase1, Particle::Status::Owned);
+    container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase1, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -339,8 +341,8 @@ namespace
       compare_particle_states(particle_reference, particle);
     }
 
-    container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase2, Particle::Status::Owned);
+    container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase2, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -379,8 +381,8 @@ namespace
     Particle::ParticleStates particle_reference;
     particle_reference.assign(statesvectorsize_, std::vector<double>{});
 
-    container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase1, Particle::Status::Owned);
+    container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase1, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -405,8 +407,8 @@ namespace
       compare_particle_states(particle_reference, particle);
     }
 
-    container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase2, Particle::Status::Owned);
+    container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase2, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -446,8 +448,8 @@ namespace
     Particle::ParticleStates particle_reference;
     particle_reference.assign(statesvectorsize_, std::vector<double>{});
 
-    container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase1, Particle::Status::Owned);
+    container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase1, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -472,8 +474,8 @@ namespace
       compare_particle_states(particle_reference, particle);
     }
 
-    container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase2, Particle::Status::Owned);
+    container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase2, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -513,8 +515,8 @@ namespace
     Particle::ParticleStates particle_reference;
     particle_reference.assign(statesvectorsize_, std::vector<double>{});
 
-    container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase1, Particle::Status::Owned);
+    container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase1, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -539,8 +541,8 @@ namespace
       compare_particle_states(particle_reference, particle);
     }
 
-    container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase2, Particle::Status::Owned);
+    container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase2, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
 
@@ -568,8 +570,8 @@ namespace
 
   TEST_F(ParticleContainerBundleTest, check_and_decrease_size_all_containers_of_specific_status)
   {
-    Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(Particle::Phase1, Particle::Status::Owned);
+    Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
+        Particle::Type::Phase1, Particle::Status::Owned);
 
     ASSERT_EQ(container->particles_stored(), 3);
     ASSERT_EQ(container->container_size(), 4);
@@ -589,7 +591,7 @@ namespace
     particlecontainerbundle_->clear_all_containers_of_specific_status(Particle::Status::Ghosted);
 
     Particle::ParticleContainer* container = particlecontainerbundle_->get_specific_container(
-        Particle::Phase1, Particle::Status::Ghosted);
+        Particle::Type::Phase1, Particle::Status::Ghosted);
 
     EXPECT_EQ(container->particles_stored(), 0);
   }

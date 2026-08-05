@@ -44,7 +44,7 @@ namespace Core::Elements
 namespace Particle
 {
   //! particle type enum
-  using TypeEnum = ParticleType;
+  using Type = ParticleType;
 
   //! particle status enum
   using Status = ParticleStatus;

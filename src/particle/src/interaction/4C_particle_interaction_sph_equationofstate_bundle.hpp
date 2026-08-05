@@ -44,9 +44,9 @@ namespace Particle
 
     //! return pointer to specific equation of state
     inline const Particle::SPHEquationOfStateBase* get_ptr_to_specific_equation_of_state(
-        Particle::TypeEnum type_i) const
+        Particle::Type type_i) const
     {
-      return phasetypetoequationofstate_[type_i].get();
+      return phasetypetoequationofstate_[static_cast<int>(type_i)].get();
     };
 
    private:
@@ -57,7 +57,7 @@ namespace Particle
     std::vector<std::unique_ptr<Particle::SPHEquationOfStateBase>> phasetypetoequationofstate_;
 
     //! set of particle types of stored equation of state handlers
-    std::set<Particle::TypeEnum> storedtypes_;
+    std::set<Particle::Type> storedtypes_;
   };
 
 }  // namespace Particle

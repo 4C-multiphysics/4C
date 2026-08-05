@@ -34,7 +34,7 @@ FOUR_C_NAMESPACE_OPEN
  | definitions                                                               |
  *---------------------------------------------------------------------------*/
 Particle::SPHDensityBase::SPHDensityBase(const Teuchos::ParameterList& params)
-    : params_sph_(params), fluidtypes_({Particle::Phase1, Particle::Phase2}), dt_(0.0)
+    : params_sph_(params), fluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2}), dt_(0.0)
 {
   // empty constructor
 }
@@ -157,12 +157,12 @@ void Particle::SPHDensityBase::sum_weighted_mass_particle_contribution() const
   for (auto& particlepair : neighborpairs_->get_ref_to_particle_pair_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -208,7 +208,7 @@ void Particle::SPHDensityBase::sum_weighted_mass_particle_wall_contribution() co
         neighborpairs_->get_ref_to_particle_wall_pair_data()[particlewallpairindex];
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
@@ -325,12 +325,12 @@ void Particle::SPHDensityBase::sum_colorfield_particle_contribution() const
   for (auto& particlepair : neighborpairs_->get_ref_to_particle_pair_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -392,7 +392,7 @@ void Particle::SPHDensityBase::sum_colorfield_particle_wall_contribution() const
         neighborpairs_->get_ref_to_particle_wall_pair_data()[particlewallpairindex];
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
@@ -486,12 +486,12 @@ void Particle::SPHDensityBase::continuity_equation_particle_contribution() const
   for (auto& particlepair : neighborpairs_->get_ref_to_particle_pair_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -577,7 +577,7 @@ void Particle::SPHDensityBase::continuity_equation_particle_wall_contribution() 
         neighborpairs_->get_ref_to_particle_wall_pair_data()[particlewallpairindex];
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
@@ -724,13 +724,13 @@ Particle::SPHDensitySummation::SPHDensitySummation(const Teuchos::ParameterList&
 }
 
 void Particle::SPHDensitySummation::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // get type of particles
-    Particle::TypeEnum type_i = typeIt.first;
+    Particle::Type type_i = typeIt.first;
 
     // set of particle states for current particle type
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
@@ -764,13 +764,13 @@ Particle::SPHDensityIntegration::SPHDensityIntegration(const Teuchos::ParameterL
 }
 
 void Particle::SPHDensityIntegration::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // get type of particles
-    Particle::TypeEnum type_i = typeIt.first;
+    Particle::Type type_i = typeIt.first;
 
     // set of particle states for current particle type
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
@@ -820,13 +820,13 @@ void Particle::SPHDensityPredictCorrect::setup(
 }
 
 void Particle::SPHDensityPredictCorrect::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // get type of particles
-    Particle::TypeEnum type_i = typeIt.first;
+    Particle::Type type_i = typeIt.first;
 
     // set of particle states for current particle type
     std::set<Particle::StateEnum>& particlestates = typeIt.second;

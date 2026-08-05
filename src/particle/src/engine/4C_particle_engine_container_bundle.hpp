@@ -78,7 +78,7 @@ namespace Particle
         FOUR_C_THROW("container for particle type '{}' not stored!", enum_to_type_name(type));
 #endif
 
-      return (containers_[type])[static_cast<int>(status)].get();
+      return (containers_[static_cast<int>(type)])[static_cast<int>(status)].get();
     };
 
     //! \name manipulate particle states of owned particles of specific type
@@ -100,7 +100,8 @@ namespace Particle
         FOUR_C_THROW("container for particle type '{}' not stored!", enum_to_type_name(type));
 #endif
 
-      ((containers_[type])[static_cast<int>(Status::Owned)])->scale_state(fac, state);
+      ((containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)])
+          ->scale_state(fac, state);
     };
 
     /*!
@@ -122,7 +123,7 @@ namespace Particle
         FOUR_C_THROW("container for particle type '{}' not stored!", enum_to_type_name(type));
 #endif
 
-      ((containers_[type])[static_cast<int>(Status::Owned)])
+      ((containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)])
           ->update_state(facA, stateA, facB, stateB);
     };
 
@@ -142,7 +143,8 @@ namespace Particle
         FOUR_C_THROW("container for particle type '{}' not stored!", enum_to_type_name(type));
 #endif
 
-      ((containers_[type])[static_cast<int>(Status::Owned)])->set_state(val, state);
+      ((containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)])
+          ->set_state(val, state);
     };
 
     /*!
@@ -159,7 +161,7 @@ namespace Particle
         FOUR_C_THROW("container for particle type '{}' not stored!", enum_to_type_name(type));
 #endif
 
-      ((containers_[type])[static_cast<int>(Status::Owned)])->clear_state(state);
+      ((containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)])->clear_state(state);
     };
 
     //! @}
@@ -177,7 +179,8 @@ namespace Particle
     inline void scale_state_all_containers(double fac, ParticleState state) const
     {
       for (const auto& type : storedtypes_)
-        ((containers_[type])[static_cast<int>(Status::Owned)])->scale_state(fac, state);
+        ((containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)])
+            ->scale_state(fac, state);
     };
 
     /*!
@@ -194,7 +197,7 @@ namespace Particle
         double facA, ParticleState stateA, double facB, ParticleState stateB) const
     {
       for (const auto& type : storedtypes_)
-        ((containers_[type])[static_cast<int>(Status::Owned)])
+        ((containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)])
             ->update_state(facA, stateA, facB, stateB);
     };
 
@@ -208,7 +211,8 @@ namespace Particle
     inline void set_state_all_containers(std::vector<double> val, ParticleState state) const
     {
       for (const auto& type : storedtypes_)
-        ((containers_[type])[static_cast<int>(Status::Owned)])->set_state(val, state);
+        ((containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)])
+            ->set_state(val, state);
     };
 
     /*!
@@ -220,7 +224,8 @@ namespace Particle
     inline void clear_state_all_containers(ParticleState state) const
     {
       for (const auto& type : storedtypes_)
-        ((containers_[type])[static_cast<int>(Status::Owned)])->clear_state(state);
+        ((containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)])
+            ->clear_state(state);
     };
 
     //! @}
@@ -238,7 +243,8 @@ namespace Particle
         ParticleStatus status) const
     {
       for (const auto& type : storedtypes_)
-        ((containers_[type])[static_cast<int>(status)])->check_and_decrease_container_size();
+        ((containers_[static_cast<int>(type)])[static_cast<int>(status)])
+            ->check_and_decrease_container_size();
     }
 
     /*!
@@ -250,7 +256,7 @@ namespace Particle
     inline void clear_all_containers_of_specific_status(ParticleStatus status) const
     {
       for (const auto& type : storedtypes_)
-        ((containers_[type])[static_cast<int>(status)])->clear_container();
+        ((containers_[static_cast<int>(type)])[static_cast<int>(status)])->clear_container();
     };
 
     //! @}

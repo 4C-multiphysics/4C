@@ -30,10 +30,11 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 Particle::SPHInterfaceViscosity::SPHInterfaceViscosity(const Teuchos::ParameterList& params)
     : params_sph_(params),
-      liquidtype_(Particle::Phase1),
-      gastype_(Particle::Phase2),
+      liquidtype_(Particle::Type::Phase1),
+      gastype_(Particle::Type::Phase2),
       fluidtypes_({liquidtype_, gastype_}),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase, Particle::PDPhase}),
+      boundarytypes_(
+          {Particle::Type::BoundaryPhase, Particle::Type::RigidPhase, Particle::Type::PDPhase}),
       artvisc_lg_int_(params_sph_.get<double>("INTERFACE_VISCOSITY_LIQUIDGAS")),
       artvisc_sl_int_(params_sph_.get<double>("INTERFACE_VISCOSITY_SOLIDLIQUID")),
       trans_ref_temp_(params_sph_.get<double>("TRANS_REF_TEMPERATURE")),
@@ -86,7 +87,8 @@ void Particle::SPHInterfaceViscosity::setup(
       boundarytypes_.erase(type_i);
 
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   // allocate memory to hold particle types
   fluidmaterial_.resize(typevectorsize);
@@ -94,8 +96,9 @@ void Particle::SPHInterfaceViscosity::setup(
   // iterate over all fluid particle types
   for (const auto& type_i : fluidtypes_)
   {
-    fluidmaterial_[type_i] = dynamic_cast<const Mat::PAR::ParticleMaterialSPHFluid*>(
-        particlematerial.get_ptr_to_particle_mat_parameter(type_i));
+    fluidmaterial_[static_cast<int>(type_i)] =
+        dynamic_cast<const Mat::PAR::ParticleMaterialSPHFluid*>(
+            particlematerial.get_ptr_to_particle_mat_parameter(type_i));
   }
 }
 
@@ -127,12 +130,12 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_contr
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -145,8 +148,8 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_contr
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // get material for particle types
-    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[type_i];
-    const Mat::PAR::ParticleMaterialSPHFluid* material_j = fluidmaterial_[type_j];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[static_cast<int>(type_i)];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_j = fluidmaterial_[static_cast<int>(type_j)];
 
     // get pointer to particle states
     const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
@@ -225,12 +228,12 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_bound
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -262,7 +265,7 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_bound
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // get material for particle types
-    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[type_i];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[static_cast<int>(type_i)];
 
     // get equation of state for particle types
     const Particle::SPHEquationOfStateBase* equationofstate_i =

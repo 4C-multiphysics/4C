@@ -153,7 +153,7 @@ namespace Particle
    * Enum for respective particle type used to relate and distinguish particles to different phases.
    *
    */
-  enum ParticleType
+  enum class ParticleType
   {
     /*---------------------------------------------------------------------------*/
     // default particle types
@@ -161,12 +161,12 @@ namespace Particle
     Phase2,  //!< particle type for particles of second phase
     /*---------------------------------------------------------------------------*/
     // particle types for SPH interaction
-    BoundaryPhase,     //!< particle type for boundary phase particles
-    RigidPhase,        //!< particle type for rigid phase particles
-    DirichletPhase,    //!< particle type for dirichlet phase particles (open boundary)
-    NeumannPhase,      //!< particle type for neumann phase particles (open boundary)
-    PDPhase,           //!< particle type for peridynamic phase particles
-    UninitializedType  //!< not yet defined particle type
+    BoundaryPhase,   //!< particle type for boundary phase particles
+    RigidPhase,      //!< particle type for rigid phase particles
+    DirichletPhase,  //!< particle type for dirichlet phase particles (open boundary)
+    NeumannPhase,    //!< particle type for neumann phase particles (open boundary)
+    PDPhase,         //!< particle type for peridynamic phase particles
+    Uninitialized    //!< not yet defined particle type
     /*---------------------------------------------------------------------------*/
   };
 

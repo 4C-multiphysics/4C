@@ -169,7 +169,7 @@ void Particle::ParticleInteractionSPH::check_open_boundaries() const
 {
   // types of particles to check
   const std::unordered_map<Particle::ParticleType, std::string> types_to_check{
-      {{Particle::DirichletPhase, "Dirichlet"}, {Particle::NeumannPhase, "Neumann"}}};
+      {{Particle::Type::DirichletPhase, "Dirichlet"}, {Particle::Type::NeumannPhase, "Neumann"}}};
 
   // get all available boundary ids
   std::vector<int> available_boundary_ids(openboundaries_.size());
@@ -236,25 +236,25 @@ void Particle::ParticleInteractionSPH::read_restart(
 }
 
 void Particle::ParticleInteractionSPH::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes)
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes)
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // get type of particles
-    Particle::TypeEnum type = typeIt.first;
+    Particle::Type type = typeIt.first;
 
     // set of particle states for current particle type
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
 
-    if (type == Particle::BoundaryPhase or type == Particle::RigidPhase or
-        type == Particle::PDPhase)
+    if (type == Particle::Type::BoundaryPhase or type == Particle::Type::RigidPhase or
+        type == Particle::Type::PDPhase)
     {
       // insert states of boundary and rigid particles
       particlestates.insert({Particle::Mass, Particle::Radius, Particle::BoundaryPressure,
           Particle::BoundaryVelocity});
     }
-    else if (type == Particle::DirichletPhase or type == Particle::NeumannPhase)
+    else if (type == Particle::Type::DirichletPhase or type == Particle::Type::NeumannPhase)
     {
       // insert states of open boundary particles
       particlestates.insert({Particle::Mass, Particle::Radius, Particle::Density,
@@ -385,7 +385,7 @@ void Particle::ParticleInteractionSPH::set_initial_states()
     }
 
     // set initial state for peridynamics
-    if (peridynamics_ && type_i == Particle::PDPhase)
+    if (peridynamics_ && type_i == Particle::Type::PDPhase)
     {
       // set particle reference position
       container->update_state(0.0, Particle::ReferencePosition, 1.0, Particle::Position);

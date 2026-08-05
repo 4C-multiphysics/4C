@@ -21,7 +21,7 @@ FOUR_C_NAMESPACE_OPEN
 Particle::SPHRecoilPressureEvaporation::SPHRecoilPressureEvaporation(
     const Teuchos::ParameterList& params)
     : params_sph_(params),
-      evaporatingphase_(Particle::Phase1),
+      evaporatingphase_(Particle::Type::Phase1),
       recoilboilingtemp_(params_sph_.get<double>("VAPOR_RECOIL_BOILINGTEMPERATURE")),
       recoil_pfac_(params_sph_.get<double>("VAPOR_RECOIL_PFAC")),
       recoil_tfac_(params_sph_.get<double>("VAPOR_RECOIL_TFAC"))

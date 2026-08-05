@@ -22,14 +22,14 @@ Particle::MaterialHandler::MaterialHandler(const Teuchos::ParameterList& params)
 void Particle::MaterialHandler::initialize_parameters()
 {
   // init map relating particle types to material ids
-  std::map<Particle::TypeEnum, int> typetomatidmap;
+  std::map<Particle::Type, int> typetomatidmap;
 
   // read parameters relating particle types to values
   ParticleUtils::read_params_types_related_to_values(
       params_, "PHASE_TO_MATERIAL_ID", typetomatidmap);
 
   // determine size of vector indexed by particle types
-  const int typevectorsize = ((--typetomatidmap.end())->first) + 1;
+  const int typevectorsize = static_cast<int>((--typetomatidmap.end())->first) + 1;
 
   // allocate memory to hold particle types
   phasetypetoparticlematpar_.resize(typevectorsize);
@@ -38,7 +38,7 @@ void Particle::MaterialHandler::initialize_parameters()
   for (auto& typeIt : typetomatidmap)
   {
     // get type of particle
-    Particle::TypeEnum type_i = typeIt.first;
+    Particle::Type type_i = typeIt.first;
 
     // add to set of particle types of stored particle material parameters
     storedtypes_.insert(type_i);
@@ -53,7 +53,7 @@ void Particle::MaterialHandler::initialize_parameters()
     if (particlematparameter == nullptr) FOUR_C_THROW("cast to specific particle material failed!");
 
     // relate particle types to particle material parameters
-    phasetypetoparticlematpar_[type_i] = particlematparameter;
+    phasetypetoparticlematpar_[static_cast<int>(type_i)] = particlematparameter;
   }
 }
 

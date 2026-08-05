@@ -60,25 +60,26 @@ void Particle::TimInt::setup(
       particleengineinterface_->get_particle_container_bundle();
 
   // set of particle types being excluded from time integration
-  std::set<Particle::TypeEnum> typesexludedfromtimeintegration;
+  std::set<Particle::Type> typesexludedfromtimeintegration;
 
   // boundary and rigid particles are not integrated in time
-  typesexludedfromtimeintegration.insert({Particle::BoundaryPhase, Particle::RigidPhase});
+  typesexludedfromtimeintegration.insert(
+      {Particle::Type::BoundaryPhase, Particle::Type::RigidPhase});
 
   if (dirichletboundarycondition_)
   {
     // get reference to set of particle types subjected to dirichlet boundary conditions
-    const std::set<Particle::TypeEnum>& typessubjectedtodirichletbc =
+    const std::set<Particle::Type>& typessubjectedtodirichletbc =
         dirichletboundarycondition_->get_particle_types_subjected_to_dirichlet_bc_set();
 
     // particles subjected to dirichlet boundary conditions are not integrated in time
-    for (Particle::TypeEnum currtype : typessubjectedtodirichletbc)
+    for (Particle::Type currtype : typessubjectedtodirichletbc)
       typesexludedfromtimeintegration.insert(currtype);
   }
 
   // determine set of particle types to be integrated in time
-  for (auto& typeEnum : particlecontainerbundle->get_particle_types())
-    if (not typesexludedfromtimeintegration.contains(typeEnum)) typestointegrate_.insert(typeEnum);
+  for (auto& type : particlecontainerbundle->get_particle_types())
+    if (not typesexludedfromtimeintegration.contains(type)) typestointegrate_.insert(type);
 
   // set constraints handler
   constraints_ = constraints;
@@ -90,7 +91,7 @@ void Particle::TimInt::build_dirichlet_bc_funct_cache(MPI_Comm comm)
 }
 
 void Particle::TimInt::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   // insert dbc dependent states of all particle types
   if (dirichletboundarycondition_)
@@ -145,7 +146,7 @@ void Particle::TimInt::init_temperature_boundary_condition()
       std::make_unique<Particle::TemperatureBoundaryConditionHandler>(params_);
 
   // get reference to set of particle types subjected to temperature boundary conditions
-  const std::set<Particle::TypeEnum>& typessubjectedtotempbc =
+  const std::set<Particle::Type>& typessubjectedtotempbc =
       temperatureboundarycondition_->get_particle_types_subjected_to_temperature_bc_set();
 
   // no particle types are subjected to temperature boundary conditions

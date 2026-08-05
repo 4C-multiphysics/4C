@@ -32,7 +32,7 @@ Particle::SPHTemperature::SPHTemperature(const Teuchos::ParameterList& params)
       time_(0.0),
       dt_(0.0),
       temperaturegradient_(params_sph_.get<bool>("TEMPERATUREGRADIENT")),
-      intthermotypes_({Particle::Phase1, Particle::Phase2, Particle::RigidPhase})
+      intthermotypes_({Particle::Type::Phase1, Particle::Type::Phase2, Particle::Type::RigidPhase})
 {
   init_heat_source_handler();
 
@@ -74,7 +74,8 @@ void Particle::SPHTemperature::setup(
   }
 
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   // allocate memory to hold particle types
   thermomaterial_.resize(typevectorsize);
@@ -82,11 +83,12 @@ void Particle::SPHTemperature::setup(
   // iterate over particle types
   for (const auto& type_i : particlecontainerbundle_->get_particle_types())
   {
-    thermomaterial_[type_i] = dynamic_cast<const Mat::PAR::ParticleMaterialThermo*>(
-        particlematerial_->get_ptr_to_particle_mat_parameter(type_i));
+    thermomaterial_[static_cast<int>(type_i)] =
+        dynamic_cast<const Mat::PAR::ParticleMaterialThermo*>(
+            particlematerial_->get_ptr_to_particle_mat_parameter(type_i));
 
     // safety check
-    if (not(thermomaterial_[type_i]->thermalCapacity_ > 0.0))
+    if (not(thermomaterial_[static_cast<int>(type_i)]->thermalCapacity_ > 0.0))
       FOUR_C_THROW("thermal capacity for particles of type '{}' not positive!",
           Particle::enum_to_type_name(type_i));
   }
@@ -106,13 +108,13 @@ void Particle::SPHTemperature::set_current_step_size(const double currentstepsiz
 }
 
 void Particle::SPHTemperature::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // get type of particles
-    Particle::TypeEnum type = typeIt.first;
+    Particle::Type type = typeIt.first;
 
     // set of particle states for current particle type
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
@@ -213,12 +215,12 @@ void Particle::SPHTemperature::energy_equation() const
   for (auto& particlepair : neighborpairs_->get_ref_to_particle_pair_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -236,8 +238,10 @@ void Particle::SPHTemperature::energy_equation() const
     const Mat::PAR::ParticleMaterialBase* basematerial_j =
         particlematerial_->get_ptr_to_particle_mat_parameter(type_j);
 
-    const Mat::PAR::ParticleMaterialThermo* thermomaterial_i = thermomaterial_[type_i];
-    const Mat::PAR::ParticleMaterialThermo* thermomaterial_j = thermomaterial_[type_j];
+    const Mat::PAR::ParticleMaterialThermo* thermomaterial_i =
+        thermomaterial_[static_cast<int>(type_i)];
+    const Mat::PAR::ParticleMaterialThermo* thermomaterial_j =
+        thermomaterial_[static_cast<int>(type_j)];
 
     // get pointer to particle states
     const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
@@ -300,12 +304,12 @@ void Particle::SPHTemperature::temperature_gradient() const
   for (auto& particlepair : neighborpairs_->get_ref_to_particle_pair_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;

@@ -57,7 +57,7 @@ namespace Particle
     Particle::ParticleContainerBundleShrdPtr particlecontainerbundle_;
 
     //! evaporating phase
-    Particle::TypeEnum evaporatingphase_;
+    Particle::Type evaporatingphase_;
 
     //! boiling temperature in recoil pressure formula
     double recoilboilingtemp_;

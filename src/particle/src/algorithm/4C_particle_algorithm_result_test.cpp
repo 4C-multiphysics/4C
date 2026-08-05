@@ -43,7 +43,7 @@ void Particle::ParticleResultTest::test_special(
   if (localindextuple)
   {
     // access values of local index tuple
-    Particle::TypeEnum particleType;
+    Particle::Type particleType;
     Particle::Status particleStatus;
     int index;
     std::tie(particleType, particleStatus, index) = *localindextuple;

@@ -47,11 +47,13 @@ Particle::SPHMomentum::SPHMomentum(const Teuchos::ParameterList& params)
               params_sph_, "TRANSPORTVELOCITYFORMULATION")),
       writeparticlewallinteraction_(params_sph_.get<bool>("WRITE_PARTICLE_WALL_INTERACTION")),
       reduced_dimension_scale_factor_(params_sph_.get<double>("REDUCED_DIMENSION_SCALE_FACTOR")),
-      allfluidtypes_(
-          {Particle::Phase1, Particle::Phase2, Particle::DirichletPhase, Particle::NeumannPhase}),
-      intfluidtypes_({Particle::Phase1, Particle::Phase2, Particle::NeumannPhase}),
-      purefluidtypes_({Particle::Phase1, Particle::Phase2}),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase, Particle::PDPhase})
+      allfluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2,
+          Particle::Type::DirichletPhase, Particle::Type::NeumannPhase}),
+      intfluidtypes_(
+          {Particle::Type::Phase1, Particle::Type::Phase2, Particle::Type::NeumannPhase}),
+      purefluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2}),
+      boundarytypes_(
+          {Particle::Type::BoundaryPhase, Particle::Type::RigidPhase, Particle::Type::PDPhase})
 {
   init_momentum_formulation_handler();
 
@@ -123,7 +125,8 @@ void Particle::SPHMomentum::setup(
       boundarytypes_.erase(type_i);
 
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   // allocate memory to hold particle types
   fluidmaterial_.resize(typevectorsize);
@@ -131,19 +134,20 @@ void Particle::SPHMomentum::setup(
   // iterate over all fluid particle types
   for (const auto& type_i : allfluidtypes_)
   {
-    fluidmaterial_[type_i] = dynamic_cast<const Mat::PAR::ParticleMaterialSPHFluid*>(
-        particlematerial_->get_ptr_to_particle_mat_parameter(type_i));
+    fluidmaterial_[static_cast<int>(type_i)] =
+        dynamic_cast<const Mat::PAR::ParticleMaterialSPHFluid*>(
+            particlematerial_->get_ptr_to_particle_mat_parameter(type_i));
   }
 }
 
 void Particle::SPHMomentum::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // get type of particles
-    Particle::TypeEnum type_i = typeIt.first;
+    Particle::Type type_i = typeIt.first;
 
     // set of particle states for current particle type
     std::set<Particle::StateEnum>& particlestates = typeIt.second;
@@ -227,12 +231,12 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -245,8 +249,8 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // get material for particle types
-    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[type_i];
-    const Mat::PAR::ParticleMaterialSPHFluid* material_j = fluidmaterial_[type_j];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[static_cast<int>(type_i)];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_j = fluidmaterial_[static_cast<int>(type_j)];
 
     // get pointer to particle states
     const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
@@ -387,12 +391,12 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -424,7 +428,7 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // get material for particle types
-    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[type_i];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[static_cast<int>(type_i)];
 
     // get equation of state for particle types
     const Particle::SPHEquationOfStateBase* equationofstate_i =
@@ -603,7 +607,7 @@ void Particle::SPHMomentum::momentum_equation_particle_wall_contribution() const
     const SPHParticleWallPair& particlewallpair = particlewallpairdata[particlewallpairindex];
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
@@ -613,7 +617,7 @@ void Particle::SPHMomentum::momentum_equation_particle_wall_contribution() const
         particlecontainerbundle_->get_specific_container(type_i, status_i);
 
     // get material for particle types
-    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[type_i];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[static_cast<int>(type_i)];
 
     // get equation of state for particle types
     const Particle::SPHEquationOfStateBase* equationofstate_i =

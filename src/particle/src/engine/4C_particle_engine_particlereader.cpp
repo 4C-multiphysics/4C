@@ -36,7 +36,7 @@ void Particle::read_particles(Core::IO::InputFile& input, const std::string& sec
     any_particles_read = true;
 
     {
-      Particle::TypeEnum particletype;
+      Particle::Type particletype;
       Particle::ParticleStates particlestates;
 
       Core::IO::ValueParser parser{particle_line.get_as_dat_style_string(),

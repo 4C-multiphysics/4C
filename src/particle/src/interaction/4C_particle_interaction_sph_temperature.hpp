@@ -74,7 +74,7 @@ namespace Particle
 
     //! insert temperature evaluation dependent states
     void insert_particle_states_of_particle_types(
-        std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const;
+        std::map<Particle::Type, std::set<Particle::StateEnum>>& particlestatestotypes) const;
 
     //! compute temperature field using energy equation
     void compute_temperature() const;
@@ -126,7 +126,7 @@ namespace Particle
     std::vector<const Mat::PAR::ParticleMaterialThermo*> thermomaterial_;
 
     //! set of integrated thermo particle types
-    std::set<Particle::TypeEnum> intthermotypes_;
+    std::set<Particle::Type> intthermotypes_;
   };
 
 }  // namespace Particle

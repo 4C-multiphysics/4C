@@ -68,7 +68,7 @@ namespace Particle
     std::shared_ptr<Particle::ParticleEngineInterface> particleengineinterface_;
 
     //! relating particle types to function ids
-    std::map<Particle::StateEnum, std::map<Particle::TypeEnum, int>> statetotypetofunctidmap_;
+    std::map<Particle::StateEnum, std::map<Particle::Type, int>> statetotypetofunctidmap_;
   };
 
 }  // namespace Particle

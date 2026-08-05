@@ -30,8 +30,8 @@ FOUR_C_NAMESPACE_OPEN
 Particle::SPHOpenBoundaryBase::SPHOpenBoundaryBase(double initialparticlespacing, int boundary_id)
     : initialparticlespacing_(initialparticlespacing),
       prescribedstatefunctid_(-1),
-      fluidphase_(Particle::Phase1),
-      openboundaryphase_(Particle::DirichletPhase),
+      fluidphase_(Particle::Type::Phase1),
+      openboundaryphase_(Particle::Type::DirichletPhase),
       boundary_id_(boundary_id)
 {
   // empty constructor
@@ -73,7 +73,8 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
     const double maxinteractiondistance)
 {
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   std::vector<std::set<int>> particlestoremove(typevectorsize);
   std::vector<std::vector<std::pair<int, Particle::ParticleObjShrdPtr>>> particlestoinsert(
@@ -139,7 +140,7 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
       globalidstofree.push_back(globalid_i[0]);
 
       // store index of open boundary particle to be removed from container
-      particlestoremove[openboundaryphase_].insert(particle_i);
+      particlestoremove[static_cast<int>(openboundaryphase_)].insert(particle_i);
     }
   }
 
@@ -171,10 +172,11 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
           std::make_shared<Particle::ParticleObject>(openboundaryphase_, globalid, particlestates);
 
       // append particle to be insert
-      particlestoinsert[openboundaryphase_].push_back(std::make_pair(-1, particleobject));
+      particlestoinsert[static_cast<int>(openboundaryphase_)].push_back(
+          std::make_pair(-1, particleobject));
 
       // store index of fluid particle to be removed from container
-      particlestoremove[fluidphase_].insert(particle_j);
+      particlestoremove[static_cast<int>(fluidphase_)].insert(particle_j);
     }
   }
 
@@ -189,7 +191,7 @@ void Particle::SPHOpenBoundaryBase::check_open_boundary_phase_change(
 
   // append particle to be insert
   for (auto& particleobject : particlesgenerated)
-    particlestoinsert[particleobject->return_particle_type()].push_back(
+    particlestoinsert[static_cast<int>(particleobject->return_particle_type())].push_back(
         std::make_pair(-1, particleobject));
 
   // hand over particles to be inserted
@@ -223,8 +225,8 @@ Particle::SPHOpenBoundaryDirichlet::SPHOpenBoundaryDirichlet(
       "dimension (dim = {}) of plane point is not equal to 3!", planepoint_.size());
 
   // init fluid phase and open boundary phase
-  fluidphase_ = Phase1;
-  openboundaryphase_ = DirichletPhase;
+  fluidphase_ = Particle::Type::Phase1;
+  openboundaryphase_ = Particle::Type::DirichletPhase;
 }
 
 void Particle::SPHOpenBoundaryDirichlet::setup(
@@ -317,12 +319,12 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
+    Particle::Type type_i;
     Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
+    Particle::Type type_j;
     Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
@@ -408,8 +410,8 @@ Particle::SPHOpenBoundaryNeumann::SPHOpenBoundaryNeumann(
       "dimension (dim = {}) of plane point is not equal to 3!", planepoint_.size());
 
   // init fluid phase and open boundary phase
-  fluidphase_ = Particle::Phase1;
-  openboundaryphase_ = Particle::NeumannPhase;
+  fluidphase_ = Particle::Type::Phase1;
+  openboundaryphase_ = Particle::Type::NeumannPhase;
 }
 
 void Particle::SPHOpenBoundaryNeumann::setup(

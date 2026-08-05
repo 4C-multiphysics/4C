@@ -33,9 +33,10 @@ Particle::ParticleRefreshEntry Particle::ParticleRefreshEntry::unpack(
   ParticleRefreshEntry entry;
 
   // unpack particle type
-  int type_int;
-  extract_from_pack(buffer, type_int);
-  entry.type = static_cast<ParticleType>(type_int);
+  int type_idx;
+
+  extract_from_pack(buffer, type_idx);
+  entry.type = static_cast<ParticleType>(type_idx);
 
   // unpack ghosted index
   extract_from_pack(buffer, entry.ghostedindex);
