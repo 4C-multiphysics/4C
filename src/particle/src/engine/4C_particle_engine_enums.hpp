@@ -226,6 +226,33 @@ namespace Particle
 
   //! @}
 
+  //! \name definition of particle memory space
+  //! @{
+
+  /*!
+   * \brief enums of particle memory space
+   *
+   * Enum for particle memory spaces, used to distinguish host and device pointers.
+   *
+   */
+  enum ParticleSpace
+  {
+    Host,    //!< particle memory space for computation on host
+    Device,  //!< particle memory space for computation on device, or host if device not supported
+  };
+
+  /*!
+   * \brief convert particle memory space enum to name
+   *
+   *
+   * \param[in] space particle memory space
+   *
+   * \return particle memory space name
+   */
+  std::string enum_to_space_name(const ParticleSpace& space);
+
+  //! @}
+
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*/

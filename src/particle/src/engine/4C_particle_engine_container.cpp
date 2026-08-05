@@ -9,15 +9,37 @@
 
 #include "4C_utils_exceptions.hpp"
 
+#include <Kokkos_Core.hpp>
+#include <Kokkos_DualView.hpp>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*---------------------------------------------------------------------------*
  | definitions                                                               |
  *---------------------------------------------------------------------------*/
+struct Particle::ParticleContainer::StatesImpl
+{
+  //! particle states in Kokkos Views indexed by particle state enum
+  //! note: `states_->host_` should only be used before the dual state is initialized.
+  //!        All code should use `states_->dual_` if valid otherwise use `states_->host_`.
+  std::vector<Kokkos::View<double*, Kokkos::HostSpace>> host_;
+  std::vector<Kokkos::DualView<double*>> dual_;
+  std::vector<bool> is_dual_valid_;
+};
+
 Particle::ParticleContainer::ParticleContainer()
-    : containersize_(0), particlestored_(0), statesvectorsize_(0), globalids_(0, -1)
+    : containersize_(0),
+      particlestored_(0),
+      statesvectorsize_(0),
+      globalids_(0, -1),
+      states_(std::make_unique<StatesImpl>())
 {
   // empty constructor
+}
+
+Particle::ParticleContainer::~ParticleContainer()
+{
+  // empty (default) destructor
 }
 
 void Particle::ParticleContainer::setup(int containersize, const std::set<ParticleState>& stateset)
@@ -35,7 +57,9 @@ void Particle::ParticleContainer::setup(int containersize, const std::set<Partic
   globalids_.resize(containersize_, -1);
 
   // allocate memory to hold particle states and dimension
-  states_.resize(statesvectorsize_);
+  states_->host_.resize(statesvectorsize_);
+  states_->dual_.resize(statesvectorsize_);
+  states_->is_dual_valid_.resize(statesvectorsize_);
   statedim_.resize(statesvectorsize_);
 
   // iterate over states to be stored in container
@@ -44,8 +68,11 @@ void Particle::ParticleContainer::setup(int containersize, const std::set<Partic
     // set particle state dimension for current state
     statedim_[state] = enum_to_state_dim(state);
 
+    // flag dual view as not currently valid
+    states_->is_dual_valid_[state] = false;
+
     // allocate memory for current state in particle container
-    states_[state].resize(containersize_ * statedim_[state]);
+    Kokkos::resize(states_->host_[state], containersize_ * statedim_[state]);
   }
 }
 
@@ -60,8 +87,16 @@ void Particle::ParticleContainer::increase_container_size()
   // iterate over states stored in container
   for (const auto& state : storedstates_)
   {
-    // resize vector of current state
-    states_[state].resize(containersize_ * statedim_[state]);
+    // resize container of current state
+    if (states_->is_dual_valid_[state])
+    {
+      states_->dual_[state].resize(containersize_ * statedim_[state]);
+      states_->host_[state] = states_->dual_[state].view_host();
+    }
+    else
+    {
+      Kokkos::resize(states_->host_[state], containersize_ * statedim_[state]);
+    }
   }
 }
 
@@ -86,8 +121,16 @@ void Particle::ParticleContainer::decrease_container_size()
   // iterate over states stored in container
   for (const auto& state : storedstates_)
   {
-    // resize vector of current state
-    states_[state].resize(containersize_ * statedim_[state]);
+    // resize container of current state
+    if (states_->is_dual_valid_[state])
+    {
+      states_->dual_[state].resize(containersize_ * statedim_[state]);
+      states_->host_[state] = states_->dual_[state].view_host();
+    }
+    else
+    {
+      Kokkos::resize(states_->host_[state], containersize_ * statedim_[state]);
+    }
   }
 }
 
@@ -226,6 +269,7 @@ void Particle::ParticleContainer::remove_particle(int index)
     double* state_ptr_index = get_ptr_to_state_writable(state, index);
     double* state_ptr_last = get_ptr_to_state_writable(state, last_index);
 
+    // overwrite state in container
     for (int dim = 0; dim < statedim_[state]; ++dim) state_ptr_index[dim] = state_ptr_last[dim];
   }
 
@@ -233,7 +277,8 @@ void Particle::ParticleContainer::remove_particle(int index)
   --particlestored_;
 }
 
-const double* Particle::ParticleContainer::get_ptr_to_state(ParticleState state, int index) const
+const double* Particle::ParticleContainer::get_ptr_to_state(
+    ParticleState state, int index, ParticleSpace space) const
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   if (not storedstates_.contains(state))
@@ -243,10 +288,27 @@ const double* Particle::ParticleContainer::get_ptr_to_state(ParticleState state,
     FOUR_C_THROW("can not return pointer to state of particle as index {} out of bounds!", index);
 #endif
 
-  return &((states_[state])[index * statedim_[state]]);
-};
+  if (space == Host)
+  {
+    if (!states_->is_dual_valid_[state])
+      return &(states_->host_[state].data()[index * statedim_[state]]);
+    states_->dual_[state].sync_host();
+    return &(states_->dual_[state].view_host().data()[index * statedim_[state]]);
+  }
+  else if (space == Device)
+  {
+    if (!states_->is_dual_valid_[state]) init_state_dual(state);
+    states_->dual_[state].sync_device();
+    return &(states_->dual_[state].view_device().data()[index * statedim_[state]]);
+  }
+  else
+  {
+    FOUR_C_THROW("unknown space requested");
+  }
+}
 
-double* Particle::ParticleContainer::get_ptr_to_state_writable(ParticleState state, int index)
+double* Particle::ParticleContainer::get_ptr_to_state_writable(
+    ParticleState state, int index, ParticleSpace space)
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   if (not storedstates_.contains(state))
@@ -256,8 +318,26 @@ double* Particle::ParticleContainer::get_ptr_to_state_writable(ParticleState sta
     FOUR_C_THROW("can not return pointer to state of particle as index {} out of bounds!", index);
 #endif
 
-  return &((states_[state])[index * statedim_[state]]);
-};
+  if (space == Host)
+  {
+    if (!states_->is_dual_valid_[state])
+      return &(states_->host_[state].data()[index * statedim_[state]]);
+    states_->dual_[state].sync_host();
+    states_->dual_[state].modify_host();
+    return &(states_->dual_[state].view_host().data()[index * statedim_[state]]);
+  }
+  else if (space == Device)
+  {
+    if (!states_->is_dual_valid_[state]) init_state_dual(state);
+    states_->dual_[state].sync_device();
+    states_->dual_[state].modify_device();
+    return &(states_->dual_[state].view_device().data()[index * statedim_[state]]);
+  }
+  else
+  {
+    FOUR_C_THROW("unknown space requested");
+  }
+}
 
 double Particle::ParticleContainer::get_min_value_of_state(ParticleState state) const
 {
@@ -291,6 +371,15 @@ double Particle::ParticleContainer::get_max_value_of_state(ParticleState state) 
   for (int i = 1; i < (particlestored_ * statedim_[state]); ++i) max = std::max(max, state_ptr[i]);
 
   return max;
+}
+
+void Particle::ParticleContainer::init_state_dual(ParticleState state) const
+{
+  if (states_->is_dual_valid_[state]) return;
+  Kokkos::View<double*> device_view = Kokkos::create_mirror_view_and_copy(
+      Kokkos::DefaultExecutionSpace::memory_space(), states_->host_[state]);
+  states_->dual_[state] = Kokkos::DualView<double*>(device_view, states_->host_[state]);
+  states_->is_dual_valid_[state] = true;
 }
 
 FOUR_C_NAMESPACE_CLOSE
