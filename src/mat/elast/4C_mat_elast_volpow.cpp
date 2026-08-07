@@ -30,7 +30,7 @@ void Mat::Elastic::VolPow::add_strain_energy(double& psi, const Core::LinAlg::Ma
 
   // strain energy: Psi = \frac{a}{expon-1} J^(-expon+1) + aJ
   // add to overall strain energy
-  psi += a / (expon - 1.) * std::pow(modinv(2), -expon - 1.) + a * modinv(2);
+  psi += a / (expon - 1.) * std::pow(modinv(2), -expon + 1.) + a * modinv(2);
 }
 
 void Mat::Elastic::VolPow::add_derivatives_modified(Core::LinAlg::Matrix<3, 1>& dPmodI,

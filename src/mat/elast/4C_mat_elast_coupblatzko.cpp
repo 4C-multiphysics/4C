@@ -9,6 +9,8 @@
 
 #include "4C_material_parameter_base.hpp"
 
+#include <cmath>
+
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -40,12 +42,13 @@ void Mat::Elastic::CoupBlatzKo::add_strain_energy(double& psi,
   //         C}}{III_{\boldsymbol C}}-3 \right) + \frac 1 {\beta}
   //         (III_{\boldsymbol C}^{\beta}-1)\right]
 
-  double psiadd =
-      f * mue * 0.5 * (prinv(0) - 3.) + (1. - f) * mue * 0.5 * (prinv(1) / prinv(2) - 3.);
-  if (beta != 0)  // take care of possible division by zero in case of Poisson's ratio nu = 0.0
+  const double log_i3 = std::log(prinv(2));
+  const double negative_power_term = beta == 0.0 ? -log_i3 : std::expm1(-beta * log_i3) / beta;
+  const double positive_power_term = beta == 0.0 ? log_i3 : std::expm1(beta * log_i3) / beta;
 
-    // add to overall strain energy
-    psi += psiadd;
+  psi += 0.5 * mue *
+         (f * (prinv(0) - 3.0 + negative_power_term) +
+             (1.0 - f) * (prinv(1) / prinv(2) - 3.0 + positive_power_term));
 }
 
 void Mat::Elastic::CoupBlatzKo::add_derivatives_principal(Core::LinAlg::Matrix<3, 1>& dPI,
