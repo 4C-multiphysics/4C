@@ -87,6 +87,7 @@ BeamInteraction::BeamToSolidVolumeMeshtyingVisualizationOutputWriter::
       auto& visualization_data = visualization_writer->get_visualization_data();
       visualization_data.register_point_data<double>("displacement", 3);
       visualization_data.register_point_data<double>("lambda", 3);
+      visualization_data.register_point_data<double>("lambda_postprocessed", 3);
       if (write_unique_ids)
       {
         visualization_data.register_point_data<int>("uid_0_pair_beam_id", 1);
@@ -205,8 +206,14 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingVisualizationOutputWriter::
       // Get the global vector with the Lagrange Multiplier values and add it to the parameter
       // list that will be passed to the pairs.
       std::shared_ptr<Core::LinAlg::Vector<double>> lambda =
+          indirect_assembly_manager->get_mortar_manager()->get_global_lambda_col();  //
+      std::shared_ptr<Core::LinAlg::Vector<double>> lambda_postprocessed =
           indirect_assembly_manager->get_mortar_manager()->get_global_lambda_col();
+
       visualization_params.set<std::shared_ptr<Core::LinAlg::Vector<double>>>("lambda", lambda);
+      visualization_params.set<std::shared_ptr<Core::LinAlg::Vector<double>>>(
+          "lambda_postprocessed", lambda_postprocessed);
+
 
       // The pairs will need the mortar manager to extract their Lambda DOFs.
       visualization_params.set<std::shared_ptr<const BeamInteraction::BeamToSolidMortarManager>>(

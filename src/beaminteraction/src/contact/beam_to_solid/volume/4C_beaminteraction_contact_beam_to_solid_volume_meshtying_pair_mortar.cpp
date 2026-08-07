@@ -119,6 +119,7 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
     Core::LinAlg::Matrix<3, 1, scalar_type> r;
     Core::LinAlg::Matrix<3, 1, scalar_type> u;
     Core::LinAlg::Matrix<3, 1, double> lambda_discret;
+    Core::LinAlg::Matrix<3, 1, double> lambda_postprocessed;
     Core::LinAlg::Matrix<3, 1, double> xi_mortar_node;
 
     // Get the mortar manager and the global lambda vector, those objects will be used to get the
@@ -216,6 +217,8 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
           "displacement", (mortar_segments + 1) * 3 * this->line_to_3D_segments_.size());
       std::vector<double>& lambda_vis = visualization_data.get_point_data<double>(
           "lambda", (mortar_segments + 1) * 3 * this->line_to_3D_segments_.size());
+      std::vector<double>& lambda_postprocessed_vis = visualization_data.get_point_data<double>(
+          "lambda_postprocessed", (mortar_segments + 1) * 3 * this->line_to_3D_segments_.size());
       std::vector<uint8_t>& cell_types = visualization_data.get_cell_types();
       std::vector<int32_t>& cell_offsets = visualization_data.get_cell_offsets();
 
@@ -244,6 +247,38 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
           u = r;
           u -= X;
           GeometryPair::evaluate_position<Mortar>(xi, element_data_lambda, lambda_discret);
+          lambda_postprocessed.put_scalar(0.0);
+
+          if constexpr (std::is_same_v<Mortar, BeamInteraction::t_hermite_dual>)
+          {
+            Core::LinAlg::Matrix<1, Beam::n_nodes_ * Beam::n_val_, double> N_primal(
+                Core::LinAlg::Initialization::zero);
+
+            GeometryPair::EvaluateShapeFunction<Beam>::evaluate(
+                N_primal, xi, this->ele1pos_.shape_function_data_);
+
+            FOUR_C_ASSERT_ALWAYS(Mortar::n_nodes_ == Beam::n_nodes_,
+                "Postprocessed lambda assumes Mortar and Beam have the same number of nodes.");
+            FOUR_C_ASSERT_ALWAYS(Mortar::n_val_ == Beam::n_val_,
+                "Postprocessed lambda assumes Mortar and Beam have the same number of values per "
+                "node.");
+
+            for (unsigned int i_node = 0; i_node < Beam::n_nodes_; ++i_node)
+            {
+              for (unsigned int i_val = 0; i_val < Beam::n_val_; ++i_val)
+              {
+                const unsigned int shape_index = i_node * Beam::n_val_ + i_val;
+
+                for (unsigned int dim = 0; dim < 3; ++dim)
+                {
+                  const unsigned int lambda_index = i_node * Mortar::n_val_ * 3 + i_val * 3 + dim;
+
+                  lambda_postprocessed(dim) +=
+                      N_primal(shape_index) * element_data_lambda.element_position_(lambda_index);
+                }
+              }
+            }
+          }
 
           // Add to output data.
           for (unsigned int dim = 0; dim < 3; dim++)
@@ -251,6 +286,8 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
             point_coordinates.push_back(Core::FADUtils::cast_to_double(X(dim)));
             displacement.push_back(Core::FADUtils::cast_to_double(u(dim)));
             lambda_vis.push_back(Core::FADUtils::cast_to_double(lambda_discret(dim)));
+            lambda_postprocessed_vis.push_back(
+                Core::FADUtils::cast_to_double(lambda_postprocessed(dim)));
           }
         }
 
