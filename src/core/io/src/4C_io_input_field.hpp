@@ -635,6 +635,7 @@ namespace Core::IO
               std::bind_front(&GeneralizedInputField::redistribute, this), this);
         }
       }
+      other.ref_ = std::monostate{};
     }
 
 
@@ -665,6 +666,7 @@ namespace Core::IO
               std::bind_front(&GeneralizedInputField::redistribute, this), this);
         }
       }
+      other.ref_ = std::monostate{};
       return *this;
     }
 

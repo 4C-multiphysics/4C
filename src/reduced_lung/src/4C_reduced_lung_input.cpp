@@ -257,95 +257,83 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
           .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::elasticity_model),
       });
 
-  Core::IO::InputSpec topology_spec = group<ReducedLungParameters::LungTree::Topology>("topology",
+  Core::IO::InputSpec geometry_spec = group<ReducedLungParameters::Geometry>("geometry",
       {
-          parameter<int>("num_nodes",
+          parameter<std::filesystem::path>("file",
               {
-                  .description = "Total number of nodes in the reduced lung tree.",
-                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::num_nodes),
-              }),
-          parameter<int>("num_elements",
-              {
-                  .description = "Total number of elements in the reduced lung tree.",
-                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::num_elements),
-              }),
-          input_field<std::vector<double>>("node_coordinates",
-              {
-                  .description = "Nodal coordinates as 3-component vectors indexed by 1-based node "
-                                 "id (map keys 1-based).",
-                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::node_coordinates),
-              }),
-          input_field<std::vector<int>>("element_nodes",
-              {
-                  .description = "Element connectivity as [node_in, node_out] with 1-based node "
-                                 "ids, indexed by 1-based element id (map keys 1-based).",
-                  .store = in_struct(&ReducedLungParameters::LungTree::Topology::element_nodes),
+                  .description =
+                      "Path to the VTU mesh file describing the reduced lung tree. Either "
+                      "absolute or relative to the input file. The mesh provides the nodes and "
+                      "the line2 cells of the tree and is also the source of all input fields "
+                      "that are given as `from_mesh`. Such fields are read from the cell data of "
+                      "the mesh; point data is not supported.",
+                  .store = in_struct(&ReducedLungParameters::Geometry::file),
               }),
       },
       {
-          .description = "Topology of the reduced lung tree.",
+          .description = "Geometry of the reduced lung tree.",
           .required = true,
-          .store = in_struct(&ReducedLungParameters::LungTree::topology),
+          .store = in_struct(&ReducedLungParameters::geometry),
       });
 
-  auto store_boundary_value = StoreFunction<ReducedLungParameters::BoundaryConditions>(
-      [](Storage& storage, ReducedLungParameters::BoundaryConditions&& value)
-      {
-        FOUR_C_ASSERT(storage.type() == typeid(ReducedLungParameters::BoundaryConditions),
-            "Implementation error: expected BoundaryConditions storage.");
-        auto& target = std::any_cast<ReducedLungParameters::BoundaryConditions&>(storage);
-        target.value_source = value.value_source;
-        target.function_id = std::move(value.function_id);
-        target.value = std::move(value.value);
-        return StoreStatus::ok();
-      },
-      typeid(ReducedLungParameters::BoundaryConditions));
+  using BoundaryConditions = ReducedLungParameters::BoundaryConditions;
+  using Definition = BoundaryConditions::Definition;
 
-  Core::IO::InputSpec boundary_conditions_spec = group<ReducedLungParameters::BoundaryConditions>(
-      "boundary_conditions",
-      {
-          parameter<int>("num_conditions",
-              {
-                  .description = "Total number of boundary conditions.",
-                  .store = in_struct(&ReducedLungParameters::BoundaryConditions::num_conditions),
-              }),
-          input_field<ReducedLungParameters::BoundaryConditions::Type>("bc_type",
-              {
-                  .description = "Boundary condition type (Pressure or Flow).",
-                  .store = in_struct(&ReducedLungParameters::BoundaryConditions::bc_type),
-              }),
-          input_field<int>("bc_node_id",
-              {
-                  .description = "Boundary node id (1-based).",
-                  .store = in_struct(&ReducedLungParameters::BoundaryConditions::node_id),
-              }),
-          selection<ReducedLungParameters::BoundaryConditions::ValueSource,
-              ReducedLungParameters::BoundaryConditions>("boundary_value",
-              {
-                  input_field<int>("bc_function_id",
-                      {
-                          .description = "Function id for time-dependent boundary values.",
-                          .store =
-                              in_struct(&ReducedLungParameters::BoundaryConditions::function_id),
-                      }),
-                  input_field<double>("bc_value",
-                      {
-                          .description = "Constant boundary value.",
-                          .store = in_struct(&ReducedLungParameters::BoundaryConditions::value),
-                      }),
-              },
-              {
-                  .description = "Boundary condition value definition.",
-                  .store = store_boundary_value,
-                  .store_selector =
-                      in_struct(&ReducedLungParameters::BoundaryConditions::value_source),
-              }),
-      },
-      {
-          .description = "Boundary conditions for the reduced lung tree.",
-          .required = true,
-          .store = in_struct(&ReducedLungParameters::boundary_conditions),
-      });
+  // The spec is identical for every condition type, so share one instance. Entries stay flat
+  // (no wrapping group), since a named group would force an extra nesting level in the yaml.
+  const Core::IO::InputSpec definition_spec = all_of({
+      parameter<int>(
+          "id", {.description = "Unique positive id of this definition. It is referenced by the "
+                                "`bc_id` point data of the mesh: every node with this `bc_id` "
+                                "carries this boundary condition."}),
+      parameter<int>("function_id", {.description = "Id of the function of time prescribing the "
+                                                    "boundary value."}),
+  });
+
+  // Converts the list's entries into a Definition vector; the same for every condition type up
+  // to which member it targets.
+  const auto store_definitions = [](std::vector<Definition> BoundaryConditions::* member)
+  {
+    return StoreFunction<Core::IO::InputParameterContainer::List>(
+        [member](Storage& storage, Core::IO::InputParameterContainer::List&& value)
+        {
+          FOUR_C_ASSERT(storage.type() == typeid(BoundaryConditions),
+              "Implementation error: expected BoundaryConditions storage.");
+
+          auto& target = std::any_cast<BoundaryConditions&>(storage).*member;
+          target.clear();
+          for (const auto& definition_entry : value)
+          {
+            target.push_back(Definition{.id = definition_entry.get<int>("id"),
+                .function_id = definition_entry.get<int>("function_id")});
+          }
+
+          return StoreStatus::ok();
+        },
+        typeid(BoundaryConditions));
+  };
+
+  Core::IO::InputSpec boundary_conditions_spec =
+      group<ReducedLungParameters::BoundaryConditions>("boundary_conditions",
+          {
+              list("pressure", definition_spec,
+                  {
+                      .description = "Reusable pressure boundary condition definitions.",
+                      .required = false,
+                      .store = store_definitions(&BoundaryConditions::pressure),
+                  }),
+              list("flow", definition_spec,
+                  {
+                      .description = "Reusable volumetric flow boundary condition definitions.",
+                      .required = false,
+                      .store = store_definitions(&BoundaryConditions::flow),
+                  }),
+          },
+          {
+              .description = "Boundary conditions for the reduced lung tree.",
+              .required = true,
+              .store = in_struct(&ReducedLungParameters::boundary_conditions),
+          });
 
   Core::IO::InputSpec spec = group<ReducedLungParameters>("reduced_dimensional_lung",
       {
@@ -414,26 +402,26 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                   .store = in_struct(&ReducedLungParameters::dynamics),
               }),
 
+          geometry_spec,
           group<ReducedLungParameters::LungTree>("lung_tree",
               {
-                  topology_spec,
-                  input_field<ReducedLungParameters::LungTree::ElementType>("element_type",
-                      {
-                          .description = "Type of reduced lung elements.",
-                          .store = in_struct(&ReducedLungParameters::LungTree::element_type),
-                      }),
-                  input_field<int>("generation",
-                      {
-                          .description = "Generation of the airway elements.",
-                          .store = in_struct(&ReducedLungParameters::LungTree::generation),
-                      }),
                   group<ReducedLungParameters::LungTree::Airways>("airways",
-                      {input_field<double>("radius",
+                      {parameter<std::vector<int>>("element_blocks",
                            {
-                               .description = "Radius of the Airway.",
-                               .store =
-                                   in_struct(&ReducedLungParameters::LungTree::Airways::radius),
+                               .description =
+                                   "Ids of the cell blocks of the mesh that hold the airway "
+                                   "elements. Every cell block of the mesh must be claimed by "
+                                   "exactly one element type.",
+                               .default_value = std::vector<int>{},
+                               .store = in_struct(
+                                   &ReducedLungParameters::LungTree::Airways::element_blocks),
                            }),
+                          input_field<double>("radius",
+                              {
+                                  .description = "Radius of the Airway.",
+                                  .store =
+                                      in_struct(&ReducedLungParameters::LungTree::Airways::radius),
+                              }),
                           flow_model_spec_airway,
                           input_field<ReducedLungParameters::LungTree::Airways::WallModelType>(
                               "wall_model_type",
@@ -449,7 +437,18 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                           .store = in_struct(&ReducedLungParameters::LungTree::airways),
                       }),
                   group<ReducedLungParameters::LungTree::TerminalUnits>("terminal_units",
-                      {rheological_model_spec_terminal_unit, elasticity_model_spec_terminal_units},
+                      {parameter<std::vector<int>>("element_blocks",
+                           {
+                               .description =
+                                   "Ids of the cell blocks of the mesh that hold the terminal unit "
+                                   "elements. Every cell block of the mesh must be claimed by "
+                                   "exactly one element type.",
+                               .default_value = std::vector<int>{},
+                               .store = in_struct(
+                                   &ReducedLungParameters::LungTree::TerminalUnits::element_blocks),
+                           }),
+                          rheological_model_spec_terminal_unit,
+                          elasticity_model_spec_terminal_units},
                       {
                           .description = "Terminal units.",
                           .store = in_struct(&ReducedLungParameters::LungTree::terminal_units),

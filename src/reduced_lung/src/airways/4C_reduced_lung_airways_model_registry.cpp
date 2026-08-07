@@ -59,26 +59,14 @@ namespace ReducedLung
 
     template <typename FlowModelT, typename WallModelT>
     void add_airway_element(Airways::AirwayContainer& airways, const int global_element_id,
-        const int local_element_id, const ReducedLungParameters& parameters)
+        const int local_element_id, const double ref_length,
+        const ReducedLungParameters& parameters)
     {
       auto& model = register_or_access_airway_model<FlowModelT, WallModelT>(airways);
 
       model.data.global_element_id.push_back(global_element_id);
       model.data.local_element_id.push_back(local_element_id);
-
-      const auto& node_ids =
-          parameters.lung_tree.topology.element_nodes.at(global_element_id, "element_nodes");
-      const int node_in = node_ids[0] - 1;
-      const int node_out = node_ids[1] - 1;
-      const auto& coords_node_1 =
-          parameters.lung_tree.topology.node_coordinates.at(node_in, "node_coordinates");
-      const auto& coords_node_2 =
-          parameters.lung_tree.topology.node_coordinates.at(node_out, "node_coordinates");
-      const double length =
-          std::sqrt((coords_node_1[0] - coords_node_2[0]) * (coords_node_1[0] - coords_node_2[0]) +
-                    (coords_node_1[1] - coords_node_2[1]) * (coords_node_1[1] - coords_node_2[1]) +
-                    (coords_node_1[2] - coords_node_2[2]) * (coords_node_1[2] - coords_node_2[2]));
-      model.data.ref_length.push_back(length);
+      model.data.ref_length.push_back(ref_length);
 
       const double radius = parameters.lung_tree.airways.radius.at(global_element_id, "radius");
       const double area = radius * radius * M_PI;
@@ -110,7 +98,7 @@ namespace ReducedLung
           const auto [it, inserted] = factories.emplace(
               AirwayModelKey{flow_model_type, wall_model_type},
               [flow_model_type, wall_model_type](Airways::AirwayContainer& airways,
-                  int global_element_id, int local_element_id,
+                  int global_element_id, int local_element_id, double ref_length,
                   const ReducedLungParameters& parameters) -> int
               {
                 int n_state_equations = 0;
@@ -120,8 +108,8 @@ namespace ReducedLung
                       Airways::WallMechanics::dispatch_wall_model_type(wall_model_type,
                           [&]<typename WallModelT>()
                           {
-                            add_airway_element<FlowModelT, WallModelT>(
-                                airways, global_element_id, local_element_id, parameters);
+                            add_airway_element<FlowModelT, WallModelT>(airways, global_element_id,
+                                local_element_id, ref_length, parameters);
                             n_state_equations =
                                 Airways::FlowResistance::FlowModelStateCount<FlowModelT>::value +
                                 Airways::WallMechanics::WallModelStateCount<WallModelT>::value;
@@ -149,7 +137,7 @@ namespace ReducedLung
   namespace Airways::ModelRegistry
   {
     int add_airway_with_model_selection(AirwayContainer& airways, int global_element_id,
-        int local_element_id, const ReducedLungParameters& parameters,
+        int local_element_id, double ref_length, const ReducedLungParameters& parameters,
         FlowModelType flow_model_type, WallModelType wall_model_type)
     {
       const AirwayModelKey key{flow_model_type, wall_model_type};
@@ -162,7 +150,8 @@ namespace ReducedLung
             Airways::WallMechanics::wall_model_name(wall_model_type));
       }
 
-      return factory_it->second(airways, global_element_id, local_element_id, parameters);
+      return factory_it->second(
+          airways, global_element_id, local_element_id, ref_length, parameters);
     }
   }  // namespace Airways::ModelRegistry
 }  // namespace ReducedLung

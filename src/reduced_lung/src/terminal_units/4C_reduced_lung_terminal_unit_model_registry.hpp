@@ -35,8 +35,9 @@ namespace ReducedLung::TerminalUnits::ModelRegistry
   /**
    * @brief Factory callback that appends one terminal-unit element to the proper model block.
    */
-  using TerminalUnitFactory = std::function<void(TerminalUnitContainer& terminal_units,
-      int global_element_id, int local_element_id, const ReducedLungParameters& parameters)>;
+  using TerminalUnitFactory =
+      std::function<void(TerminalUnitContainer& terminal_units, int global_element_id,
+          int local_element_id, double ref_length, const ReducedLungParameters& parameters)>;
 
   /**
    * @brief Composite registry key: (rheology type, elasticity type).
@@ -54,13 +55,15 @@ namespace ReducedLung::TerminalUnits::ModelRegistry
    * @param terminal_units Container of terminal-unit model blocks.
    * @param global_element_id Global element id.
    * @param local_element_id Local element id in element row map.
+   * @param ref_length Reference length of the element, i.e. the distance between its two nodes.
    * @param parameters Reduced-lung input parameters.
    * @param rheological_model_type Selected rheology model type.
    * @param elasticity_model_type Selected elasticity model type.
    */
   void add_terminal_unit_with_model_selection(TerminalUnitContainer& terminal_units,
-      int global_element_id, int local_element_id, const ReducedLungParameters& parameters,
-      RheologicalModelType rheological_model_type, ElasticityModelType elasticity_model_type);
+      int global_element_id, int local_element_id, double ref_length,
+      const ReducedLungParameters& parameters, RheologicalModelType rheological_model_type,
+      ElasticityModelType elasticity_model_type);
 }  // namespace ReducedLung::TerminalUnits::ModelRegistry
 
 FOUR_C_NAMESPACE_CLOSE

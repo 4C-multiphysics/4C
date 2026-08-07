@@ -50,15 +50,6 @@ namespace ReducedLung
       Flow
     };
 
-    /**
-     * @brief Source of the boundary condition value.
-     */
-    enum class ValueSource
-    {
-      function_id,
-      constant_value
-    };
-
     struct BoundaryConditionModel;
 
     /**
@@ -73,7 +64,7 @@ namespace ReducedLung
       std::vector<int> node_id;
       // Global element id attached to the boundary node.
       std::vector<int> global_element_id;
-      // Input index for diagnostics (zero-based).
+      // Id of the input definition this condition came from, i.e. the `bc_id` of the node.
       std::vector<int> input_bc_id;
       // Local boundary condition id.
       std::vector<int> local_bc_id;
@@ -119,19 +110,15 @@ namespace ReducedLung
     /**
      * @brief Boundary condition model containing a homogeneous set of equations.
      *
-     * Boundary conditions are grouped by type and value source. Constant values are stored per
-     * entry, whereas function-based models share a function pointer evaluated at assembly time.
+     * Boundary conditions are grouped by type and function id; all equations of one model share
+     * a function pointer evaluated at assembly time.
      */
     struct BoundaryConditionModel
     {
       Type type;
-      ValueSource value_source;
       int function_id = 0;
       // Cached function pointer for time-dependent boundary conditions.
       const Core::Utils::FunctionOfTime* function = nullptr;
-      // Per-entry constant values (only used for constant value sources or potential mixed
-      // conditions in the future).
-      std::vector<double> values;
       BoundaryConditionData data;
       ResidualEvaluator residual_evaluator;
       JacobianEvaluator jacobian_evaluator;
@@ -140,7 +127,7 @@ namespace ReducedLung
        * @brief Add a boundary condition entry to this model.
        */
       void add_condition(int node_id_value, int element_id_value, int local_bc_id_value,
-          int global_dof_id_value, int input_bc_id_value, double value);
+          int global_dof_id_value, int input_bc_id_value);
     };
 
     /**
@@ -152,13 +139,14 @@ namespace ReducedLung
     };
 
     /*!
-     * @brief Create boundary condition models from the input parameters and topology.
+     * @brief Create boundary condition models from the input parameters and the mesh.
      *
-     * This function groups boundary conditions by type and value source, maps boundary nodes to
-     * the connected element, and assigns the constrained dof id.
+     * Every definition of the input applies to all nodes that carry its id in the `bc_id` point
+     * data of the mesh. This function groups boundary conditions by type and function id, maps
+     * boundary nodes to the connected element, and assigns the constrained dof id.
      */
     void create_boundary_conditions(const Core::FE::Discretization& discretization,
-        const ReducedLungParameters& parameters,
+        const ReducedLungParameters& parameters, const std::map<int, std::vector<int>>& bc_nodes,
         const std::map<int, std::vector<int>>& global_ele_ids_per_node,
         const std::map<int, int>& global_dof_per_ele,
         const std::map<int, int>& first_global_dof_of_ele,

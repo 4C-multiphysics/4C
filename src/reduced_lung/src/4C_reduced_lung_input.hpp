@@ -14,6 +14,7 @@
 #include "4C_io_input_spec.hpp"
 
 #include <cstdint>
+#include <filesystem>
 #include <vector>
 
 
@@ -46,16 +47,18 @@ namespace ReducedLung
       double nonlinear_increment_tolerance;
       OutputVerbosity output_verbosity = OutputVerbosity::minimal;
     } dynamics;
+    /**
+     * The geometry of the lung tree is read from a VTU mesh file. The mesh provides the
+     * nodes and the line2 cells forming the tree, and it is also the source of all input fields
+     * that are specified as `from_mesh` in the input file.
+     */
+    struct Geometry
+    {
+      std::filesystem::path file;
+    } geometry;
+
     struct LungTree
     {
-      struct Topology
-      {
-        int num_nodes;
-        int num_elements;
-        Core::IO::InputField<std::vector<double>> node_coordinates;  // [x, y, z]
-        Core::IO::InputField<std::vector<int>> element_nodes;        // [node_in, node_out]
-      } topology;
-
       /**
        * Enum to distinguish between airway and terminal unit elements in the reduced
        * lung implementation.
@@ -66,11 +69,9 @@ namespace ReducedLung
         TerminalUnit,
       };
 
-      Core::IO::InputField<ElementType> element_type;
-      Core::IO::InputField<int> generation;
-
       struct Airways
       {
+        std::vector<int> element_blocks;
         Core::IO::InputField<double> radius;
         struct FlowModel
         {
@@ -127,6 +128,8 @@ namespace ReducedLung
 
       struct TerminalUnits
       {
+        std::vector<int> element_blocks;
+
         struct RheologicalModel
         {
           /**
@@ -181,33 +184,24 @@ namespace ReducedLung
         } elasticity_model;
       } terminal_units;
     } lung_tree;
+    /**
+     * Boundary conditions are attached to the nodes of the mesh via its `bc_id` point data
+     * array: a node with `bc_id == 0` is unconstrained, a node with `bc_id == N` carries the
+     * condition defined below under `id: N`.
+     */
     struct BoundaryConditions
     {
-      int num_conditions;
-
       /**
-       * Enum to distinguish between different boundary condition types.
+       * One reusable boundary condition, referenced by the `bc_id` point data of the mesh.
        */
-      enum class Type : std::uint8_t
+      struct Definition
       {
-        Pressure,
-        Flow,
+        int id;
+        int function_id;
       };
 
-      /**
-       * Enum to distinguish between boundary values given by function or constant.
-       */
-      enum class ValueSource : std::uint8_t
-      {
-        bc_function_id,
-        bc_value,
-      };
-
-      Core::IO::InputField<Type> bc_type;
-      Core::IO::InputField<int> node_id;
-      ValueSource value_source;
-      Core::IO::InputField<int> function_id;
-      Core::IO::InputField<double> value;
+      std::vector<Definition> pressure;
+      std::vector<Definition> flow;
     } boundary_conditions;
     struct AirProperties
     {

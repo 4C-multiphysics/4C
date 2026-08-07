@@ -215,4 +215,25 @@ namespace
     EXPECT_NEAR(field.interpolate(0, std::array{0.0, 0.0, 0.0}), 12.00, 1e-12);
   }
 
+  TEST(InputField, MoveConstructMeshDataReferenceDoesNotThrowOnSourceDestruction)
+  {
+    auto& registry = global_mesh_data_input_field_registry();
+    MeshDataReference ref = registry.register_field_reference("move_ctor_mesh_data_repro");
+
+    // Moving out of `a` must leave it in a state where its destructor is a no-op: `a` no longer
+    // owns the registry attachment, `b` does.
+    InputField<double> a(ref);
+    InputField<double> b(std::move(a));
+  }
+
+  TEST(InputField, MoveAssignMeshDataReferenceDoesNotThrowOnSourceDestruction)
+  {
+    auto& registry = global_mesh_data_input_field_registry();
+    MeshDataReference ref = registry.register_field_reference("move_assign_mesh_data_repro");
+
+    InputField<double> a(ref);
+    InputField<double> b(10.0);
+    b = std::move(a);
+  }
+
 }  // namespace
