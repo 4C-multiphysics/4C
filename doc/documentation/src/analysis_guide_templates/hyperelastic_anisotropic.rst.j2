@@ -1,0 +1,94 @@
+{% set anisotropic_file = "elasthyper_isoanisoexpo_DispersedTransverselyIsotropic_ost_h8.4C.yaml" %}
+{% set anisotropic = load_input_file(anisotropic_file) %}
+
+.. _hyperelastic-anisotropic:
+
+Anisotropic, fiber, and active hyperelastic summands
+====================================================
+
+Anisotropic summands are normally combined with an isotropic matrix. Depending on the model,
+fiber information comes from element fibers, explicit fiber IDs, or an
+``ELAST_StructuralTensor`` helper.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
+
+   * - Summand or helper
+     - Model
+   * - :ref:`ELAST_CoupAnisoExpo <MATERIALS_ELAST_CoupAnisoExpo>`
+     - Exponential reinforcement for one fiber.
+
+       :math:`\Psi=\frac{k_1}{2k_2}\{\exp[k_2(I_4-1)^2]-1\}`.
+       ``K1COMP`` and ``K2COMP`` apply in compression.
+   * - :ref:`ELAST_CoupAnisoExpoShear <MATERIALS_ELAST_CoupAnisoExpoShear>`
+     - Exponential shear coupling between two fibers.
+
+       :math:`\Psi=\frac{k_1}{2k_2}\{\exp[k_2(I_8-
+       \boldsymbol a_1\mathbin{\cdot}\boldsymbol a_2)^2]-1\}`.
+   * - :ref:`ELAST_CoupAnisoExpoTwoCoup <MATERIALS_ELAST_CoupAnisoExpoTwoCoup>`
+     - Exponential coupling of two fiber families.
+
+       :math:`\Psi=\sum_{\alpha=4,6,8}\frac{a_\alpha}{2b_\alpha}
+       [\exp(b_\alpha x_\alpha^2)-1]`, with :math:`x_4=I_4-1`,
+       :math:`x_6=I_6-1`, and
+       :math:`x_8=I_8-\boldsymbol a_1\mathbin{\cdot}\boldsymbol a_2`.
+   * - :ref:`ELAST_CoupAnisoNeoHooke <MATERIALS_ELAST_CoupAnisoNeoHooke>`
+     - Neo-Hookean reinforcement for one fiber.
+
+       :math:`\Psi=c(I_4-1)`.
+   * - :ref:`ELAST_CoupAnisoNeoHooke_VarProp <MATERIALS_ELAST_CoupAnisoNeoHooke_VarProp>`
+     - Neo-Hookean response for one fiber with variable properties.
+
+       :math:`\Psi=c(\boldsymbol x,t)(I_4-1)`, with ``SOURCE_ACTIVATION`` defining
+       :math:`c(\boldsymbol x,t)`.
+   * - :ref:`ELAST_CoupAnisoPow <MATERIALS_ELAST_CoupAnisoPow>`
+     - Power-law energy for one fiber.
+
+       :math:`\Psi=k(I_4^{d_1}-1)^{d_2}` where active; ``ACTIVETHRES`` disables
+       its stress contribution below the selected fiber stretch.
+   * - :ref:`ELAST_CoupAnisoExpoActive <MATERIALS_ELAST_CoupAnisoExpoActive>`
+     - Exponential law for one fiber with active response.
+
+       Passive exponential potential as for ``ELAST_CoupAnisoExpo``, plus
+       :math:`\Psi_\mathrm{act}=\frac{s}{\rho}\left[\lambda_\mathrm{act}+
+       \frac{(\lambda_\mathrm{max}-\lambda_\mathrm{act})^3}
+       {3(\lambda_\mathrm{max}-\lambda_0)^2}\right]`.
+   * - :ref:`ELAST_AnisoActiveStress_Evolution
+       <MATERIALS_ELAST_AnisoActiveStress_Evolution>`
+     - Active-stress evolution law for one fiber.
+
+       No stored-energy potential; it supplies the evolving active stress
+       :math:`\boldsymbol S_\mathrm{act}=\tau(t)\boldsymbol A`.
+   * - :ref:`ELAST_IsoAnisoExpo <MATERIALS_ELAST_IsoAnisoExpo>`
+     - Combined isotropic-anisotropic exponential response for one fiber.
+
+       :math:`\Psi=\frac{k_1}{2k_2}\{\exp[k_2(\bar I_4-1)^2]-1\}`, with
+       :math:`\bar I_4=J^{-2/3}I_4`.
+   * - :ref:`ELAST_CoupTransverselyIsotropic
+       <MATERIALS_ELAST_CoupTransverselyIsotropic>`
+     - General transversely isotropic coupling for one fiber.
+
+       :math:`\Psi=[\alpha+\frac{\beta}{2}\ln I_3+\gamma(I_4-1)](I_4-1)
+       -\frac{\alpha}{2}(I_5-1)`.
+   * - :ref:`ELAST_RemodelFiber <MATERIALS_ELAST_RemodelFiber>`
+     - Remodeling contribution for a variable number of fibers.
+
+       No single fixed potential; it combines the referenced exponential fiber potentials with
+       evolving remodeling and growth histories.
+   * - :ref:`ELAST_StructuralTensor <MATERIALS_ELAST_StructuralTensor>`
+     - Structural-tensor strategy for one fiber, referenced by anisotropic summands.
+
+       No potential; it supplies :math:`\boldsymbol A`, for example
+       :math:`\boldsymbol A=\boldsymbol a\otimes\boldsymbol a` for ``Standard``.
+
+The active-stress and structural-tensor entries are state/helper models rather than independent
+strain-energy terms. Follow the linked parameter reference for required IDs and fiber strategies.
+
+Example
+-------
+
+The following dispersed transversely isotropic composition is taken from
+``{{ anisotropic_file }}``:
+
+{{ section_dump(anisotropic, "MATERIALS") }}

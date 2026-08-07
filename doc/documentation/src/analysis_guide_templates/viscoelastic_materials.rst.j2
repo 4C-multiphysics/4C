@@ -1,0 +1,138 @@
+{% set visco_neohooke_file = "constr3D_NormComp_STI.4C.yaml" %}
+{% set visco_neohooke = load_input_file(visco_neohooke_file) %}
+{% set visco_anisotropic_file = "viscoAnisotropic_creep.4C.yaml" %}
+{% set visco_anisotropic = load_input_file(visco_anisotropic_file) %}
+{% set visco_hyper_file = "viscoelasthyper.4C.yaml" %}
+{% set visco_hyper = load_input_file(visco_hyper_file) %}
+
+.. _viscoelastic-materials:
+
+Viscoelastic materials
+======================
+
+All continuum materials on this page require ``KINEM: nonlinear``.
+
+Direct materials
+----------------
+
+``MAT_VISCONEOHOOKE`` is a finite-strain isotropic Neo-Hookean viscoelastic material. See
+:ref:`MAT_VISCONEOHOOKE in the Input Parameter Reference <MATERIALS_MAT_VISCONEOHOOKE>`.
+The following material section is taken from ``{{ visco_neohooke_file }}``:
+
+{{ section_dump(visco_neohooke, "MATERIALS") }}
+
+``MAT_VISCOANISO`` adds anisotropic fiber relaxation to isotropic viscoelasticity. See
+:ref:`MAT_VISCOANISO in the Input Parameter Reference <MATERIALS_MAT_VISCOANISO>`.
+The following material section is taken from ``{{ visco_anisotropic_file }}``:
+
+{{ section_dump(visco_anisotropic, "MATERIALS") }}
+
+``MAT_ViscoElastHyper`` framework
+---------------------------------
+
+``MAT_ViscoElastHyper`` combines elastic ``ELAST_*`` and viscous ``VISCO_*`` summands.
+``NUMMAT`` and ``MATIDS`` provide the complete list. Alternatively, ``NUMELAST`` with
+``ELAST_MATIDS`` and ``NUMVISCO`` with ``VISCO_MATIDS`` explicitly partition the branches; all
+four split fields must be supplied together. ``POLYCONVEX`` is not supported for viscoelastic
+combinations.
+
+See :ref:`MAT_ViscoElastHyper in the Input Parameter Reference
+<MATERIALS_MAT_ViscoElastHyper>`. The following definition is taken from
+``{{ visco_hyper_file }}``:
+
+{{ section_dump(visco_hyper, "MATERIALS") }}
+
+Viscoelastic summands
+---------------------
+
+Unlike elastic summands, a viscoelastic contribution generally cannot be described by a stored
+energy depending only on the current deformation. The table therefore gives the implemented
+viscous pseudo-potential or stress-evolution equation. Here,
+:math:`\boldsymbol S_0` is the second Piola--Kirchhoff stress of the hyperelastic base law,
+:math:`\boldsymbol Q_i` is a branch stress, and
+:math:`\dot{\boldsymbol E}` is the Green--Lagrange strain rate.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
+
+   * - Summand
+     - Model
+   * - :ref:`VISCO_IsoRateDep <MATERIALS_VISCO_IsoRateDep>`
+     - Isochoric rate-dependent contribution.
+
+       :math:`\Phi_\mathrm{v}=n\,\bar J_2(\bar I_1-3)`, with
+       :math:`\bar J_2=\frac12\dot{\bar{\boldsymbol C}}:
+       \dot{\bar{\boldsymbol C}}`. The rate is evaluated by a backward difference.
+   * - :ref:`VISCO_FSLS <MATERIALS_VISCO_FSLS>`
+     - Fractional standard linear solid.
+
+       Fractional hereditary stress update; no deformation-only potential. Its implemented
+       discrete equation is given below.
+   * - :ref:`VISCO_GeneralizedMaxwell <MATERIALS_VISCO_GeneralizedMaxwell>`
+     - Generalized Maxwell model.
+
+       :math:`\boldsymbol S_\mathrm{v}=\sum_i\boldsymbol Q_i`, where
+       :math:`\dot{\boldsymbol Q}_i+\boldsymbol Q_i/\tau_i
+       =\dot{\boldsymbol S}^{\,e}_i`. Each
+       :math:`\boldsymbol S^{\,e}_i` comes from the elastic material referenced by its branch.
+   * - :ref:`VISCO_GeneralizedMaxwellBranch
+       <MATERIALS_VISCO_GeneralizedMaxwellBranch>`
+     - Branch referenced by a generalized Maxwell model.
+
+       No independent equation; ``MATID`` defines
+       :math:`\boldsymbol S^{\,e}_i` and ``TAU`` defines :math:`\tau_i` in the parent Maxwell law.
+   * - :ref:`VISCO_QuasiLinearGeneralizedMaxwell
+       <MATERIALS_VISCO_QuasiLinearGeneralizedMaxwell>`
+     - Fung-type quasi-linear generalized Maxwell model.
+
+       :math:`\boldsymbol S_\mathrm{v}=\sum_i\boldsymbol Q_i+
+       \eta\dot{\boldsymbol E}`, with
+       :math:`\dot{\boldsymbol Q}_i+\boldsymbol Q_i/\tau_i
+       =\beta_i\dot{\boldsymbol S}_0`.
+   * - :ref:`VISCO_CoupMyocard <MATERIALS_VISCO_CoupMyocard>`
+     - Coupled myocardial viscoelastic contribution.
+
+       :math:`\Phi_\mathrm{v}=\frac{\eta}{2}
+       \dot{\boldsymbol E}:\dot{\boldsymbol E}
+       =\frac{\eta}{8}\dot{\boldsymbol C}:\dot{\boldsymbol C}`, hence
+       :math:`\boldsymbol S_\mathrm{v}=\eta\dot{\boldsymbol E}`; ``N`` is :math:`\eta`.
+
+Fractional standard linear solid
+--------------------------------
+
+``VISCO_FSLS`` stores an artificial stress :math:`\boldsymbol Q`. With
+
+.. math::
+
+   b_0=1,\qquad b_j=\frac{j-1-\alpha}{j}b_{j-1},\qquad
+   \lambda_1=\frac{\Delta t^\alpha}{\Delta t^\alpha+\tau^\alpha},\qquad
+   \lambda_2=-\frac{\tau^\alpha}{\Delta t^\alpha+\tau^\alpha},
+
+the implemented history update is
+
+.. math::
+
+   \boldsymbol Q^{n+1}
+   =\lambda_1\beta\boldsymbol S_0^{n+1}
+    +\lambda_2\sum_{j=1}^{m}b_j\boldsymbol Q^{n+1-j},
+   \qquad
+   \boldsymbol S_\mathrm{v}^{n+1}
+   =\boldsymbol Q^{n+1}-\beta\boldsymbol S_0^{n+1}.
+
+``TAU`` is :math:`\tau`, ``ALPHA`` is the fractional order :math:`\alpha`, and ``BETA`` is the
+relative viscous weight :math:`\beta`.
+
+Maxwell time integration
+------------------------
+
+For both Maxwell models, ``SOLVE`` selects either ``OneStepTheta`` or
+``ExponentialTimeDiscretization`` for the branch evolution equations shown in the table. The
+generalized Maxwell model obtains a separate elastic law and ``TAU`` from each
+``VISCO_GeneralizedMaxwellBranch``. The quasi-linear model instead uses ``BETA`` and ``TAU`` arrays
+and drives every branch from the same surrounding hyperelastic base law. Its optional
+``VISCOSITY`` defines the parallel-dashpot pseudo-potential
+
+.. math::
+
+   \Phi_\eta=\frac{\eta}{2}\dot{\boldsymbol E}:\dot{\boldsymbol E}.
