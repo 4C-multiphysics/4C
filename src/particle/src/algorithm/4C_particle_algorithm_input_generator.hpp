@@ -82,7 +82,7 @@ namespace Particle
      * \param[out] particlesgenerated particle objects generated
      */
     void add_generated_particle(const std::vector<double>& position,
-        const Particle::TypeEnum particletype,
+        const Particle::Type particletype,
         std::vector<Particle::ParticleObjShrdPtr>& particlesgenerated) const;
 
     //! processor id

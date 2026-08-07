@@ -240,35 +240,37 @@ void PaSI::PasiPartTwoWayCoup::reset_particle_states()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(type, Particle::Owned);
+        particlecontainerbundle->get_specific_container(type, Particle::Status::Owned);
 
     // reset position, velocity and acceleration states of all particles
-    container->update_state(0.0, Particle::Position, 1.0, Particle::LastIterPosition);
-    container->update_state(0.0, Particle::Velocity, 1.0, Particle::LastIterVelocity);
-    container->update_state(0.0, Particle::Acceleration, 1.0, Particle::LastIterAcceleration);
+    container->update_state(0.0, Particle::State::Position, 1.0, Particle::State::LastIterPosition);
+    container->update_state(0.0, Particle::State::Velocity, 1.0, Particle::State::LastIterVelocity);
+    container->update_state(
+        0.0, Particle::State::Acceleration, 1.0, Particle::State::LastIterAcceleration);
 
     // reset angular velocity state of all particles
-    if (container->have_stored_state(Particle::AngularVelocity))
+    if (container->have_stored_state(Particle::State::AngularVelocity))
       container->update_state(
-          0.0, Particle::AngularVelocity, 1.0, Particle::LastIterAngularVelocity);
+          0.0, Particle::State::AngularVelocity, 1.0, Particle::State::LastIterAngularVelocity);
 
     // reset angular acceleration state of all particles
-    if (container->have_stored_state(Particle::AngularAcceleration))
-      container->update_state(
-          0.0, Particle::AngularAcceleration, 1.0, Particle::LastIterAngularAcceleration);
+    if (container->have_stored_state(Particle::State::AngularAcceleration))
+      container->update_state(0.0, Particle::State::AngularAcceleration, 1.0,
+          Particle::State::LastIterAngularAcceleration);
 
     // reset modified acceleration state of all particles
-    if (container->have_stored_state(Particle::ModifiedAcceleration))
-      container->update_state(
-          0.0, Particle::ModifiedAcceleration, 1.0, Particle::LastIterModifiedAcceleration);
+    if (container->have_stored_state(Particle::State::ModifiedAcceleration))
+      container->update_state(0.0, Particle::State::ModifiedAcceleration, 1.0,
+          Particle::State::LastIterModifiedAcceleration);
 
     // reset density state of all particles
-    if (container->have_stored_state(Particle::DensityDot))
-      container->update_state(0.0, Particle::Density, 1.0, Particle::LastIterDensity);
+    if (container->have_stored_state(Particle::State::DensityDot))
+      container->update_state(0.0, Particle::State::Density, 1.0, Particle::State::LastIterDensity);
 
     // reset temperature state of all particles
-    if (container->have_stored_state(Particle::TemperatureDot))
-      container->update_state(0.0, Particle::Temperature, 1.0, Particle::LastIterTemperature);
+    if (container->have_stored_state(Particle::State::TemperatureDot))
+      container->update_state(
+          0.0, Particle::State::Temperature, 1.0, Particle::State::LastIterTemperature);
   }
 }
 
@@ -440,35 +442,37 @@ void PaSI::PasiPartTwoWayCoup::save_particle_states()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(type, Particle::Owned);
+        particlecontainerbundle->get_specific_container(type, Particle::Status::Owned);
 
     // save position, velocity and acceleration states of all particles
-    container->update_state(0.0, Particle::LastIterPosition, 1.0, Particle::Position);
-    container->update_state(0.0, Particle::LastIterVelocity, 1.0, Particle::Velocity);
-    container->update_state(0.0, Particle::LastIterAcceleration, 1.0, Particle::Acceleration);
+    container->update_state(0.0, Particle::State::LastIterPosition, 1.0, Particle::State::Position);
+    container->update_state(0.0, Particle::State::LastIterVelocity, 1.0, Particle::State::Velocity);
+    container->update_state(
+        0.0, Particle::State::LastIterAcceleration, 1.0, Particle::State::Acceleration);
 
     // save angular velocity state of all particles
-    if (container->have_stored_state(Particle::AngularVelocity))
+    if (container->have_stored_state(Particle::State::AngularVelocity))
       container->update_state(
-          0.0, Particle::LastIterAngularVelocity, 1.0, Particle::AngularVelocity);
+          0.0, Particle::State::LastIterAngularVelocity, 1.0, Particle::State::AngularVelocity);
 
     // save angular acceleration state of all particles
-    if (container->have_stored_state(Particle::AngularAcceleration))
-      container->update_state(
-          0.0, Particle::LastIterAngularAcceleration, 1.0, Particle::AngularAcceleration);
+    if (container->have_stored_state(Particle::State::AngularAcceleration))
+      container->update_state(0.0, Particle::State::LastIterAngularAcceleration, 1.0,
+          Particle::State::AngularAcceleration);
 
     // save modified acceleration state of all particles
-    if (container->have_stored_state(Particle::ModifiedAcceleration))
-      container->update_state(
-          0.0, Particle::LastIterModifiedAcceleration, 1.0, Particle::ModifiedAcceleration);
+    if (container->have_stored_state(Particle::State::ModifiedAcceleration))
+      container->update_state(0.0, Particle::State::LastIterModifiedAcceleration, 1.0,
+          Particle::State::ModifiedAcceleration);
 
     // save density state of all particles
-    if (container->have_stored_state(Particle::DensityDot))
-      container->update_state(0.0, Particle::LastIterDensity, 1.0, Particle::Density);
+    if (container->have_stored_state(Particle::State::DensityDot))
+      container->update_state(0.0, Particle::State::LastIterDensity, 1.0, Particle::State::Density);
 
     // save temperature state of all particles
-    if (container->have_stored_state(Particle::TemperatureDot))
-      container->update_state(0.0, Particle::LastIterTemperature, 1.0, Particle::Temperature);
+    if (container->have_stored_state(Particle::State::TemperatureDot))
+      container->update_state(
+          0.0, Particle::State::LastIterTemperature, 1.0, Particle::State::Temperature);
   }
 }
 

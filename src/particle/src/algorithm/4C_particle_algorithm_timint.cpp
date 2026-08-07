@@ -60,25 +60,26 @@ void Particle::TimInt::setup(
       particleengineinterface_->get_particle_container_bundle();
 
   // set of particle types being excluded from time integration
-  std::set<Particle::TypeEnum> typesexludedfromtimeintegration;
+  std::set<Particle::Type> typesexludedfromtimeintegration;
 
   // boundary and rigid particles are not integrated in time
-  typesexludedfromtimeintegration.insert({Particle::BoundaryPhase, Particle::RigidPhase});
+  typesexludedfromtimeintegration.insert(
+      {Particle::Type::BoundaryPhase, Particle::Type::RigidPhase});
 
   if (dirichletboundarycondition_)
   {
     // get reference to set of particle types subjected to dirichlet boundary conditions
-    const std::set<Particle::TypeEnum>& typessubjectedtodirichletbc =
+    const std::set<Particle::Type>& typessubjectedtodirichletbc =
         dirichletboundarycondition_->get_particle_types_subjected_to_dirichlet_bc_set();
 
     // particles subjected to dirichlet boundary conditions are not integrated in time
-    for (Particle::TypeEnum currtype : typessubjectedtodirichletbc)
+    for (Particle::Type currtype : typessubjectedtodirichletbc)
       typesexludedfromtimeintegration.insert(currtype);
   }
 
   // determine set of particle types to be integrated in time
-  for (auto& typeEnum : particlecontainerbundle->get_particle_types())
-    if (not typesexludedfromtimeintegration.contains(typeEnum)) typestointegrate_.insert(typeEnum);
+  for (auto& type : particlecontainerbundle->get_particle_types())
+    if (not typesexludedfromtimeintegration.contains(type)) typestointegrate_.insert(type);
 
   // set constraints handler
   constraints_ = constraints;
@@ -90,7 +91,7 @@ void Particle::TimInt::build_dirichlet_bc_funct_cache(MPI_Comm comm)
 }
 
 void Particle::TimInt::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const
 {
   // insert dbc dependent states of all particle types
   if (dirichletboundarycondition_)
@@ -145,7 +146,7 @@ void Particle::TimInt::init_temperature_boundary_condition()
       std::make_unique<Particle::TemperatureBoundaryConditionHandler>(params_);
 
   // get reference to set of particle types subjected to temperature boundary conditions
-  const std::set<Particle::TypeEnum>& typessubjectedtotempbc =
+  const std::set<Particle::Type>& typessubjectedtotempbc =
       temperatureboundarycondition_->get_particle_types_subjected_to_temperature_bc_set();
 
   // no particle types are subjected to temperature boundary conditions
@@ -196,7 +197,7 @@ void Particle::TimInt::add_initial_random_noise_to_position()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -205,10 +206,10 @@ void Particle::TimInt::add_initial_random_noise_to_position()
     if (particlestored <= 0) continue;
 
     // get pointer to particle state
-    double* pos = container->get_ptr_to_state(Particle::Position, 0);
+    double* pos = container->get_ptr_to_state_writable(Particle::State::Position, 0);
 
     // get particle state dimension
-    int statedim = container->get_state_dim(Particle::Position);
+    int statedim = container->get_state_dim(Particle::State::Position);
 
     // iterate over owned particles of current type
     for (int i = 0; i < particlestored; ++i)
@@ -249,11 +250,11 @@ void Particle::TimIntSemiImplicitEuler::setup(
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // safety check
-    if (container->have_stored_state(Particle::ModifiedVelocity) or
-        container->have_stored_state(Particle::ModifiedAcceleration))
+    if (container->have_stored_state(Particle::State::ModifiedVelocity) or
+        container->have_stored_state(Particle::State::ModifiedAcceleration))
       FOUR_C_THROW(
           "modified velocity and acceleration states not implemented yet for semi-implicit Euler "
           "time integration scheme!");
@@ -279,27 +280,28 @@ void Particle::TimIntSemiImplicitEuler::pre_interaction_routine()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // update velocity of all particles
-    container->update_state(1.0, Particle::Velocity, dt_, Particle::Acceleration);
+    container->update_state(1.0, Particle::State::Velocity, dt_, Particle::State::Acceleration);
 
     // clear acceleration of all particles
-    container->clear_state(Particle::Acceleration);
+    container->clear_state(Particle::State::Acceleration);
 
     // angular velocity and acceleration states
-    if (container->have_stored_state(Particle::AngularVelocity) and
-        container->have_stored_state(Particle::AngularAcceleration))
+    if (container->have_stored_state(Particle::State::AngularVelocity) and
+        container->have_stored_state(Particle::State::AngularAcceleration))
     {
       // update angular velocity of all particles
-      container->update_state(1.0, Particle::AngularVelocity, dt_, Particle::AngularAcceleration);
+      container->update_state(
+          1.0, Particle::State::AngularVelocity, dt_, Particle::State::AngularAcceleration);
 
       // clear angular acceleration of all particles
-      container->clear_state(Particle::AngularAcceleration);
+      container->clear_state(Particle::State::AngularAcceleration);
     }
 
     // update position of all particles
-    container->update_state(1.0, Particle::Position, dt_, Particle::Velocity);
+    container->update_state(1.0, Particle::State::Position, dt_, Particle::State::Velocity);
   }
 
   if (particlerigidbodyinterface_)
@@ -348,13 +350,14 @@ void Particle::TimIntVelocityVerlet::set_initial_states()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // modified velocity states
-    if (container->have_stored_state(Particle::ModifiedVelocity))
+    if (container->have_stored_state(Particle::State::ModifiedVelocity))
     {
       // update modified velocity of all particles
-      container->update_state(0.0, Particle::ModifiedVelocity, 1.0, Particle::Velocity);
+      container->update_state(
+          0.0, Particle::State::ModifiedVelocity, 1.0, Particle::State::Velocity);
     }
   }
 }
@@ -375,45 +378,47 @@ void Particle::TimIntVelocityVerlet::pre_interaction_routine()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // update velocity of all particles
-    container->update_state(1.0, Particle::Velocity, dthalf_, Particle::Acceleration);
+    container->update_state(1.0, Particle::State::Velocity, dthalf_, Particle::State::Acceleration);
 
     // clear acceleration of all particles
-    container->clear_state(Particle::Acceleration);
+    container->clear_state(Particle::State::Acceleration);
 
     // angular velocity and acceleration states
-    if (container->have_stored_state(Particle::AngularVelocity) and
-        container->have_stored_state(Particle::AngularAcceleration))
+    if (container->have_stored_state(Particle::State::AngularVelocity) and
+        container->have_stored_state(Particle::State::AngularAcceleration))
     {
       // update angular velocity of all particles
       container->update_state(
-          1.0, Particle::AngularVelocity, dthalf_, Particle::AngularAcceleration);
+          1.0, Particle::State::AngularVelocity, dthalf_, Particle::State::AngularAcceleration);
 
       // clear angular acceleration of all particles
-      container->clear_state(Particle::AngularAcceleration);
+      container->clear_state(Particle::State::AngularAcceleration);
     }
 
     // modified velocity and acceleration states
-    if (container->have_stored_state(Particle::ModifiedVelocity) and
-        container->have_stored_state(Particle::ModifiedAcceleration))
+    if (container->have_stored_state(Particle::State::ModifiedVelocity) and
+        container->have_stored_state(Particle::State::ModifiedAcceleration))
     {
       // update modified velocity of all particles
-      container->update_state(0.0, Particle::ModifiedVelocity, 1.0, Particle::Velocity);
       container->update_state(
-          1.0, Particle::ModifiedVelocity, dthalf_, Particle::ModifiedAcceleration);
+          0.0, Particle::State::ModifiedVelocity, 1.0, Particle::State::Velocity);
+      container->update_state(
+          1.0, Particle::State::ModifiedVelocity, dthalf_, Particle::State::ModifiedAcceleration);
 
       // clear modified acceleration of all particles
-      container->clear_state(Particle::ModifiedAcceleration);
+      container->clear_state(Particle::State::ModifiedAcceleration);
 
       // update position of all particles
-      container->update_state(1.0, Particle::Position, dt_, Particle::ModifiedVelocity);
+      container->update_state(
+          1.0, Particle::State::Position, dt_, Particle::State::ModifiedVelocity);
     }
     else
     {
       // update position of all particles
-      container->update_state(1.0, Particle::Position, dt_, Particle::Velocity);
+      container->update_state(1.0, Particle::State::Position, dt_, Particle::State::Velocity);
     }
   }
 
@@ -455,18 +460,18 @@ void Particle::TimIntVelocityVerlet::post_interaction_routine()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle->get_specific_container(particleType, Particle::Owned);
+        particlecontainerbundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // update velocity of all particles
-    container->update_state(1.0, Particle::Velocity, dthalf_, Particle::Acceleration);
+    container->update_state(1.0, Particle::State::Velocity, dthalf_, Particle::State::Acceleration);
 
     // angular velocity and acceleration states
-    if (container->have_stored_state(Particle::AngularVelocity) and
-        container->have_stored_state(Particle::AngularAcceleration))
+    if (container->have_stored_state(Particle::State::AngularVelocity) and
+        container->have_stored_state(Particle::State::AngularAcceleration))
     {
       // update angular velocity of all particles
       container->update_state(
-          1.0, Particle::AngularVelocity, dthalf_, Particle::AngularAcceleration);
+          1.0, Particle::State::AngularVelocity, dthalf_, Particle::State::AngularAcceleration);
     }
   }
 

@@ -36,13 +36,13 @@ namespace Particle
 
     //! return pointer to particle material parameter
     inline const Mat::PAR::ParticleMaterialBase* get_ptr_to_particle_mat_parameter(
-        Particle::TypeEnum type_i) const
+        Particle::Type type_i) const
     {
-      return phasetypetoparticlematpar_[type_i];
+      return phasetypetoparticlematpar_[static_cast<int>(type_i)];
     }
 
     //! get particle types of stored particle material parameters
-    inline std::set<Particle::TypeEnum> get_particle_types() const { return storedtypes_; };
+    inline std::set<Particle::Type> get_particle_types() const { return storedtypes_; };
 
    private:
     void initialize_parameters();
@@ -54,7 +54,7 @@ namespace Particle
     std::vector<const Mat::PAR::ParticleMaterialBase*> phasetypetoparticlematpar_;
 
     //! set of particle types of stored particle material parameters
-    std::set<Particle::TypeEnum> storedtypes_;
+    std::set<Particle::Type> storedtypes_;
   };
 }  // namespace Particle
 

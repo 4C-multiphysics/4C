@@ -147,13 +147,13 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
   for (const auto& particlepair : neighborpairs_->get_ref_to_particle_pair_adhesion_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -169,13 +169,15 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
     const int* globalid_j = container_j->get_ptr_to_global_id(particle_j);
 
     // get pointer to particle states
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    double* force_i = container_i->get_ptr_to_state(Particle::Force, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    double* force_i = container_i->get_ptr_to_state_writable(Particle::State::Force, particle_i);
 
-    const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
-    double* force_j = container_j->get_ptr_to_state(Particle::Force, particle_j);
+    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
+    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
+    double* force_j = nullptr;
+    if (status_j == Particle::Status::Owned)
+      force_j = container_j->get_ptr_to_state_writable(Particle::State::Force, particle_j);
 
     // relative velocity in contact point c between particle i and j (neglecting angular velocity)
     double vel_rel[3];
@@ -208,7 +210,7 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
         vel_rel_normal, particlepair.m_eff_, adhesionhistory_ij.adhesion_force_);
 
     // copy history from interaction pair ij to ji
-    if (status_j == Particle::Owned)
+    if (status_j == Particle::Status::Owned)
     {
       // get reference to touched adhesion history
       TouchedDEMHistoryPairAdhesion& touchedadhesionhistory_ji =
@@ -227,7 +229,7 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
 
     // add adhesion force contribution
     ParticleUtils::vec_add_scale(force_i, adhesionhistory_ij.adhesion_force_, particlepair.e_ji_);
-    if (status_j == Particle::Owned)
+    if (force_j)
       ParticleUtils::vec_add_scale(
           force_j, -adhesionhistory_ij.adhesion_force_, particlepair.e_ji_);
   }
@@ -274,8 +276,8 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
   for (const auto& particlewallpair : particlewallpairdata)
   {
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
@@ -287,11 +289,11 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    double* force_i = container_i->get_ptr_to_state(Particle::Force, particle_i);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    double* force_i = container_i->get_ptr_to_state_writable(Particle::State::Force, particle_i);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;

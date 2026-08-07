@@ -31,7 +31,7 @@ namespace Particle
    * \brief enums of particle states
    *
    */
-  enum ParticleState
+  enum class ParticleState
   {
     /*---------------------------------------------------------------------------*/
     // default particle states
@@ -61,18 +61,18 @@ namespace Particle
     Inertia,                    //!< mass moment of inertia
     /*---------------------------------------------------------------------------*/
     // particle states for SPH interaction
-    DensitySum,            //!< density from summation of weighted masses
-    DensityDot,            //!< first time derivative of density
-    TemperatureDot,        //!< first time derivative of temperature
-    BoundaryPressure,      //!< boundary pressure
-    BoundaryVelocity,      //!< boundary velocity
-    Colorfield,            //!< colorfield
-    ColorfieldGradient,    //!< colorfield gradient
-    InterfaceNormal,       //!< interface normal
-    Curvature,             //!< curvature
-    WallColorfield,        //!< wall colorfield
-    WallInterfaceNormal,   //!< wall interface normal
-    temperature_gradient,  //!< temperature gradient
+    DensitySum,           //!< density from summation of weighted masses
+    DensityDot,           //!< first time derivative of density
+    TemperatureDot,       //!< first time derivative of temperature
+    BoundaryPressure,     //!< boundary pressure
+    BoundaryVelocity,     //!< boundary velocity
+    Colorfield,           //!< colorfield
+    ColorfieldGradient,   //!< colorfield gradient
+    InterfaceNormal,      //!< interface normal
+    Curvature,            //!< curvature
+    WallColorfield,       //!< wall colorfield
+    WallInterfaceNormal,  //!< wall interface normal
+    TemperatureGradient,  //!< temperature gradient
     /*---------------------------------------------------------------------------*/
     // particle states for DEM interaction
     AngularVelocity,      //!< angular velocity
@@ -153,7 +153,7 @@ namespace Particle
    * Enum for respective particle type used to relate and distinguish particles to different phases.
    *
    */
-  enum ParticleType
+  enum class ParticleType
   {
     /*---------------------------------------------------------------------------*/
     // default particle types
@@ -161,12 +161,12 @@ namespace Particle
     Phase2,  //!< particle type for particles of second phase
     /*---------------------------------------------------------------------------*/
     // particle types for SPH interaction
-    BoundaryPhase,     //!< particle type for boundary phase particles
-    RigidPhase,        //!< particle type for rigid phase particles
-    DirichletPhase,    //!< particle type for dirichlet phase particles (open boundary)
-    NeumannPhase,      //!< particle type for neumann phase particles (open boundary)
-    PDPhase,           //!< particle type for peridynamic phase particles
-    UninitializedType  //!< not yet defined particle type
+    BoundaryPhase,   //!< particle type for boundary phase particles
+    RigidPhase,      //!< particle type for rigid phase particles
+    DirichletPhase,  //!< particle type for dirichlet phase particles (open boundary)
+    NeumannPhase,    //!< particle type for neumann phase particles (open boundary)
+    PDPhase,         //!< particle type for peridynamic phase particles
+    Uninitialized    //!< not yet defined particle type
     /*---------------------------------------------------------------------------*/
   };
 
@@ -207,11 +207,11 @@ namespace Particle
    * processor.
    *
    */
-  enum ParticleStatus
+  enum class ParticleStatus
   {
-    Owned,               //!< particle status for particles being owned on processors
-    Ghosted,             //!< particle status for particles being ghosted on processors
-    UninitializedStatus  //!< not yet defined particle status
+    Owned,         //!< particle status for particles being owned on processors
+    Ghosted,       //!< particle status for particles being ghosted on processors
+    Uninitialized  //!< not yet defined particle status
   };
 
   /*!
@@ -223,6 +223,33 @@ namespace Particle
    * \return particle status name
    */
   std::string enum_to_status_name(const ParticleStatus& status);
+
+  //! @}
+
+  //! \name definition of particle memory space
+  //! @{
+
+  /*!
+   * \brief enums of particle memory space
+   *
+   * Enum for particle memory spaces, used to distinguish host and device pointers.
+   *
+   */
+  enum class ParticleSpace
+  {
+    Host,    //!< particle memory space for computation on host
+    Device,  //!< particle memory space for computation on device, or host if device not supported
+  };
+
+  /*!
+   * \brief convert particle memory space enum to name
+   *
+   *
+   * \param[in] space particle memory space
+   *
+   * \return particle memory space name
+   */
+  std::string enum_to_space_name(const ParticleSpace& space);
 
   //! @}
 

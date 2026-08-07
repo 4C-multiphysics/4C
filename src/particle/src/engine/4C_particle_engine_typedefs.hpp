@@ -44,13 +44,16 @@ namespace Core::Elements
 namespace Particle
 {
   //! particle type enum
-  using TypeEnum = ParticleType;
+  using Type = ParticleType;
 
   //! particle status enum
-  using StatusEnum = ParticleStatus;
+  using Status = ParticleStatus;
 
   //! particle state enum
-  using StateEnum = ParticleState;
+  using State = ParticleState;
+
+  //! particle memory space enum
+  using Space = ParticleSpace;
 
   //! states of particle indexed by particle state enum
   using ParticleStates = std::vector<std::vector<double>>;

@@ -47,11 +47,13 @@ Particle::SPHMomentum::SPHMomentum(const Teuchos::ParameterList& params)
               params_sph_, "TRANSPORTVELOCITYFORMULATION")),
       writeparticlewallinteraction_(params_sph_.get<bool>("WRITE_PARTICLE_WALL_INTERACTION")),
       reduced_dimension_scale_factor_(params_sph_.get<double>("REDUCED_DIMENSION_SCALE_FACTOR")),
-      allfluidtypes_(
-          {Particle::Phase1, Particle::Phase2, Particle::DirichletPhase, Particle::NeumannPhase}),
-      intfluidtypes_({Particle::Phase1, Particle::Phase2, Particle::NeumannPhase}),
-      purefluidtypes_({Particle::Phase1, Particle::Phase2}),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase, Particle::PDPhase})
+      allfluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2,
+          Particle::Type::DirichletPhase, Particle::Type::NeumannPhase}),
+      intfluidtypes_(
+          {Particle::Type::Phase1, Particle::Type::Phase2, Particle::Type::NeumannPhase}),
+      purefluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2}),
+      boundarytypes_(
+          {Particle::Type::BoundaryPhase, Particle::Type::RigidPhase, Particle::Type::PDPhase})
 {
   init_momentum_formulation_handler();
 
@@ -123,7 +125,8 @@ void Particle::SPHMomentum::setup(
       boundarytypes_.erase(type_i);
 
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   // allocate memory to hold particle types
   fluidmaterial_.resize(typevectorsize);
@@ -131,22 +134,23 @@ void Particle::SPHMomentum::setup(
   // iterate over all fluid particle types
   for (const auto& type_i : allfluidtypes_)
   {
-    fluidmaterial_[type_i] = dynamic_cast<const Mat::PAR::ParticleMaterialSPHFluid*>(
-        particlematerial_->get_ptr_to_particle_mat_parameter(type_i));
+    fluidmaterial_[static_cast<int>(type_i)] =
+        dynamic_cast<const Mat::PAR::ParticleMaterialSPHFluid*>(
+            particlematerial_->get_ptr_to_particle_mat_parameter(type_i));
   }
 }
 
 void Particle::SPHMomentum::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // get type of particles
-    Particle::TypeEnum type_i = typeIt.first;
+    Particle::Type type_i = typeIt.first;
 
     // set of particle states for current particle type
-    std::set<Particle::StateEnum>& particlestates = typeIt.second;
+    std::set<Particle::State>& particlestates = typeIt.second;
 
     // current particle type is not a pure fluid particle type
     if (not purefluidtypes_.contains(type_i)) continue;
@@ -154,7 +158,8 @@ void Particle::SPHMomentum::insert_particle_states_of_particle_types(
     // additional states for transport velocity formulation
     if (transportvelocityformulation_ !=
         Particle::TransportVelocityFormulation::NoTransportVelocity)
-      particlestates.insert({Particle::ModifiedVelocity, Particle::ModifiedAcceleration});
+      particlestates.insert(
+          {Particle::State::ModifiedVelocity, Particle::State::ModifiedAcceleration});
   }
 }
 
@@ -227,13 +232,13 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -245,42 +250,43 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // get material for particle types
-    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[type_i];
-    const Mat::PAR::ParticleMaterialSPHFluid* material_j = fluidmaterial_[type_j];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[static_cast<int>(type_i)];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_j = fluidmaterial_[static_cast<int>(type_j)];
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
-    const double* press_i = container_i->get_ptr_to_state(Particle::Pressure, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    const double* dens_i = container_i->get_ptr_to_state(Particle::State::Density, particle_i);
+    const double* press_i = container_i->get_ptr_to_state(Particle::State::Pressure, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
 
     double* acc_i = nullptr;
     if (intfluidtypes_.contains(type_i))
-      acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
+      acc_i = container_i->get_ptr_to_state_writable(Particle::State::Acceleration, particle_i);
 
     const double* mod_vel_i =
-        container_i->cond_get_ptr_to_state(Particle::ModifiedVelocity, particle_i);
-    double* mod_acc_i =
-        container_i->cond_get_ptr_to_state(Particle::ModifiedAcceleration, particle_i);
+        container_i->try_get_ptr_to_state(Particle::State::ModifiedVelocity, particle_i);
+    double* mod_acc_i = container_i->try_get_ptr_to_state_writable(
+        Particle::State::ModifiedAcceleration, particle_i);
 
     // get pointer to particle states
-    const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
-    const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
-    const double* dens_j = container_j->get_ptr_to_state(Particle::Density, particle_j);
-    const double* press_j = container_j->get_ptr_to_state(Particle::Pressure, particle_j);
-    const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
+    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
+    const double* mass_j = container_j->get_ptr_to_state(Particle::State::Mass, particle_j);
+    const double* dens_j = container_j->get_ptr_to_state(Particle::State::Density, particle_j);
+    const double* press_j = container_j->get_ptr_to_state(Particle::State::Pressure, particle_j);
+    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
 
     double* acc_j = nullptr;
-    if (intfluidtypes_.contains(type_j) and status_j == Particle::Owned)
-      acc_j = container_j->get_ptr_to_state(Particle::Acceleration, particle_j);
+    if (intfluidtypes_.contains(type_j) and status_j == Particle::Status::Owned)
+      acc_j = container_j->get_ptr_to_state_writable(Particle::State::Acceleration, particle_j);
 
     const double* mod_vel_j =
-        container_j->cond_get_ptr_to_state(Particle::ModifiedVelocity, particle_j);
+        container_j->try_get_ptr_to_state(Particle::State::ModifiedVelocity, particle_j);
 
     double* mod_acc_j = nullptr;
-    if (status_j == Particle::Owned)
-      mod_acc_j = container_j->cond_get_ptr_to_state(Particle::ModifiedAcceleration, particle_j);
+    if (status_j == Particle::Status::Owned)
+      mod_acc_j = container_j->try_get_ptr_to_state_writable(
+          Particle::State::ModifiedAcceleration, particle_j);
 
     // evaluate specific coefficient
     double speccoeff_ij(0.0);
@@ -386,13 +392,13 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -423,42 +429,45 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // get material for particle types
-    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[type_i];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[static_cast<int>(type_i)];
 
     // get equation of state for particle types
     const Particle::SPHEquationOfStateBase* equationofstate_i =
         equationofstatebundle_->get_ptr_to_specific_equation_of_state(type_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
-    const double* press_i = container_i->get_ptr_to_state(Particle::Pressure, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    const double* dens_i = container_i->get_ptr_to_state(Particle::State::Density, particle_i);
+    const double* press_i = container_i->get_ptr_to_state(Particle::State::Pressure, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
 
     double* acc_i = nullptr;
-    if (status_i == Particle::Owned)
-      acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
+    if (status_i == Particle::Status::Owned)
+      acc_i = container_i->get_ptr_to_state_writable(Particle::State::Acceleration, particle_i);
 
     const double* mod_vel_i =
-        container_i->cond_get_ptr_to_state(Particle::ModifiedVelocity, particle_i);
+        container_i->try_get_ptr_to_state(Particle::State::ModifiedVelocity, particle_i);
 
     double* mod_acc_i = nullptr;
-    if (status_i == Particle::Owned)
-      mod_acc_i = container_i->cond_get_ptr_to_state(Particle::ModifiedAcceleration, particle_i);
+    if (status_i == Particle::Status::Owned)
+      mod_acc_i = container_i->try_get_ptr_to_state_writable(
+          Particle::State::ModifiedAcceleration, particle_i);
 
     // get pointer to boundary particle states
-    const double* mass_j = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    const double* press_j = container_j->get_ptr_to_state(Particle::BoundaryPressure, particle_j);
-    const double* vel_j = container_j->get_ptr_to_state(Particle::BoundaryVelocity, particle_j);
+    const double* mass_j = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    const double* press_j =
+        container_j->get_ptr_to_state(Particle::State::BoundaryPressure, particle_j);
+    const double* vel_j =
+        container_j->get_ptr_to_state(Particle::State::BoundaryVelocity, particle_j);
 
     double temp_dens(0.0);
     temp_dens = equationofstate_i->pressure_to_density(press_j[0], material_i->initDensity_);
     const double* dens_j = &temp_dens;
 
     double* force_j = nullptr;
-    if (status_j == Particle::Owned)
-      force_j = container_j->cond_get_ptr_to_state(Particle::Force, particle_j);
+    if (status_j == Particle::Status::Owned)
+      force_j = container_j->try_get_ptr_to_state_writable(Particle::State::Force, particle_j);
 
     // contribution from neighboring boundary particle j
     double acc_ij[3] = {0.0, 0.0, 0.0};
@@ -601,8 +610,8 @@ void Particle::SPHMomentum::momentum_equation_particle_wall_contribution() const
     const SPHParticleWallPair& particlewallpair = particlewallpairdata[particlewallpairindex];
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
@@ -611,25 +620,26 @@ void Particle::SPHMomentum::momentum_equation_particle_wall_contribution() const
         particlecontainerbundle_->get_specific_container(type_i, status_i);
 
     // get material for particle types
-    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[type_i];
+    const Mat::PAR::ParticleMaterialSPHFluid* material_i = fluidmaterial_[static_cast<int>(type_i)];
 
     // get equation of state for particle types
     const Particle::SPHEquationOfStateBase* equationofstate_i =
         equationofstatebundle_->get_ptr_to_specific_equation_of_state(type_i);
 
     // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    const double* dens_i = container_i->get_ptr_to_state(Particle::Density, particle_i);
-    const double* press_i = container_i->get_ptr_to_state(Particle::Pressure, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    double* acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    const double* dens_i = container_i->get_ptr_to_state(Particle::State::Density, particle_i);
+    const double* press_i = container_i->get_ptr_to_state(Particle::State::Pressure, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    double* acc_i =
+        container_i->get_ptr_to_state_writable(Particle::State::Acceleration, particle_i);
 
     const double* mod_vel_i =
-        container_i->cond_get_ptr_to_state(Particle::ModifiedVelocity, particle_i);
-    double* mod_acc_i =
-        container_i->cond_get_ptr_to_state(Particle::ModifiedAcceleration, particle_i);
+        container_i->try_get_ptr_to_state(Particle::State::ModifiedVelocity, particle_i);
+    double* mod_acc_i = container_i->try_get_ptr_to_state_writable(
+        Particle::State::ModifiedAcceleration, particle_i);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;
@@ -717,7 +727,7 @@ void Particle::SPHMomentum::momentum_equation_particle_wall_contribution() const
         ParticleUtils::vec_sub(r_kl_weighted, r_jk);
 
         // get pointer to virtual particle states
-        const double* mass_k = container_i->get_ptr_to_state(Particle::Mass, particle_i);
+        const double* mass_k = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
 
         const double temp_press_k = weightedpressure[particlewallpairindex] +
                                     ParticleUtils::vec_dot(r_kl_weighted,

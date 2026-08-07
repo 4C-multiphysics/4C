@@ -31,20 +31,23 @@ void Particle::ParticleRuntimeVtpWriter::init(
   particlecontainerbundle_ = particlecontainerbundle;
 
   // insert specific particle states in black list
-  blackliststates_.insert({DensitySum, DensityDot});
-  blackliststates_.insert(TemperatureDot);
-  blackliststates_.insert({LastTransferPosition, ReferencePosition});
-  blackliststates_.insert({ModifiedVelocity, ModifiedAcceleration});
-  blackliststates_.insert({InterfaceNormal, Curvature, WallColorfield, WallInterfaceNormal});
-  blackliststates_.insert({LastIterPosition, LastIterVelocity, LastIterAcceleration,
-      LastIterAngularVelocity, LastIterAngularAcceleration, LastIterModifiedAcceleration,
-      LastIterDensity, LastIterTemperature});
+  blackliststates_.insert({State::DensitySum, State::DensityDot});
+  blackliststates_.insert(State::TemperatureDot);
+  blackliststates_.insert({State::LastTransferPosition, State::ReferencePosition});
+  blackliststates_.insert({State::ModifiedVelocity, State::ModifiedAcceleration});
+  blackliststates_.insert({State::InterfaceNormal, State::Curvature, State::WallColorfield,
+      State::WallInterfaceNormal});
+  blackliststates_.insert(
+      {State::LastIterPosition, State::LastIterVelocity, State::LastIterAcceleration,
+          State::LastIterAngularVelocity, State::LastIterAngularAcceleration,
+          State::LastIterModifiedAcceleration, State::LastIterDensity, State::LastIterTemperature});
 }
 
 void Particle::ParticleRuntimeVtpWriter::setup(bool write_ghosted_particles)
 {
   // determine size of vector indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   // allocate memory to hold particle types
   runtime_visualization_managers_.resize(typevectorsize);
@@ -53,18 +56,18 @@ void Particle::ParticleRuntimeVtpWriter::setup(bool write_ghosted_particles)
   for (const auto& type : particlecontainerbundle_->get_particle_types())
   {
     // allocate memory for vtp writer objects of owned and ghosted states
-    (runtime_visualization_managers_[type]).resize(2);
+    (runtime_visualization_managers_[static_cast<int>(type)]).resize(2);
 
     // iterate over particle statuses
-    for (const auto& status : {Owned, Ghosted})
+    for (const auto& status : {Status::Owned, Status::Ghosted})
     {
-      if (status == Ghosted and write_ghosted_particles == false) continue;
+      if (status == Status::Ghosted and write_ghosted_particles == false) continue;
 
       std::ostringstream fieldname;
       fieldname << "particle-" << enum_to_type_name(type) << "-" << enum_to_status_name(status);
 
       // construct visualiation manager object for current particle type and status
-      (runtime_visualization_managers_[type])[status] =
+      (runtime_visualization_managers_[static_cast<int>(type)])[static_cast<int>(status)] =
           std::make_shared<Core::IO::VisualizationManager>(
               Core::IO::visualization_parameters_factory(
                   Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
@@ -87,10 +90,11 @@ void Particle::ParticleRuntimeVtpWriter::set_particle_positions_and_states()
   for (const auto& type : particlecontainerbundle_->get_particle_types())
   {
     // iterate over particle statuses
-    for (const auto& status : {Owned, Ghosted})
+    for (const auto& status : {Status::Owned, Status::Ghosted})
     {
       // check for runtime vtp writer for current particle type and status
-      if (not(runtime_visualization_managers_[type])[status]) continue;
+      if (not(runtime_visualization_managers_[static_cast<int>(type)])[static_cast<int>(status)])
+        continue;
 
       // get container of current particle type and status
       ParticleContainer* container = particlecontainerbundle_->get_specific_container(type, status);
@@ -99,12 +103,12 @@ void Particle::ParticleRuntimeVtpWriter::set_particle_positions_and_states()
       const int particlestored = container->particles_stored();
 
       // get particle states stored in container
-      const std::set<ParticleState>& states = container->get_stored_states();
+      const std::set<State>& states = container->get_stored_states();
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
       // safety check
-      if (not container->have_stored_state(Position))
-        FOUR_C_THROW("particle state '{}' not found!", enum_to_state_name(Position));
+      if (not container->have_stored_state(State::Position))
+        FOUR_C_THROW("particle state '{}' not found!", enum_to_state_name(State::Position));
 #endif
 
       // iterate over particle states
@@ -120,12 +124,13 @@ void Particle::ParticleRuntimeVtpWriter::set_particle_positions_and_states()
         const double* state_ptr =
             (particlestored > 0) ? container->get_ptr_to_state(state, 0) : nullptr;
 
-        if (state == Position)
+        if (state == State::Position)
         {
           // get and prepare storage for position data
-          std::vector<double>& positiondata = (runtime_visualization_managers_[type])[status]
-                                                  ->get_visualization_data()
-                                                  .get_point_coordinates();
+          std::vector<double>& positiondata =
+              (runtime_visualization_managers_[static_cast<int>(type)])[static_cast<int>(status)]
+                  ->get_visualization_data()
+                  .get_point_coordinates();
           positiondata.clear();
           positiondata.reserve(statedim * particlestored);
 
@@ -150,7 +155,7 @@ void Particle::ParticleRuntimeVtpWriter::set_particle_positions_and_states()
           for (int i = 0; i < (statedim * particlestored); ++i) statedata.push_back(state_ptr[i]);
 
           // append particle state data to vtp writer
-          (runtime_visualization_managers_[type])[status]
+          (runtime_visualization_managers_[static_cast<int>(type)])[static_cast<int>(status)]
               ->get_visualization_data()
               .set_point_data_vector<double>(statename, statedata, statedim);
         }
@@ -167,7 +172,7 @@ void Particle::ParticleRuntimeVtpWriter::set_particle_positions_and_states()
       for (int i = 0; i < particlestored; ++i) globaliddata.push_back(globalids[i]);
 
       // append global id of particles to vtp writer
-      (runtime_visualization_managers_[type])[status]
+      (runtime_visualization_managers_[static_cast<int>(type)])[static_cast<int>(status)]
           ->get_visualization_data()
           .set_point_data_vector<int>("globalid", globaliddata, 1);
 
@@ -175,7 +180,7 @@ void Particle::ParticleRuntimeVtpWriter::set_particle_positions_and_states()
       std::vector<int> ownerdata(particlestored, Core::Communication::my_mpi_rank(comm_));
 
       // append owner of particles to vtp writer
-      (runtime_visualization_managers_[type])[status]
+      (runtime_visualization_managers_[static_cast<int>(type)])[static_cast<int>(status)]
           ->get_visualization_data()
           .set_point_data_vector<int>("owner", ownerdata, 1);
     }
@@ -189,13 +194,14 @@ void Particle::ParticleRuntimeVtpWriter::write_to_disk(
   for (const auto& type : particlecontainerbundle_->get_particle_types())
   {
     // iterate over particle statuses
-    for (const auto& status : {Owned, Ghosted})
+    for (const auto& status : {Status::Owned, Status::Ghosted})
     {
       // check for runtime vtp writer for current particle type and status
-      if (not(runtime_visualization_managers_[type])[status]) continue;
+      if (not(runtime_visualization_managers_[static_cast<int>(type)])[static_cast<int>(status)])
+        continue;
 
-      (runtime_visualization_managers_[type])[status]->write_to_disk(
-          visualization_time, visualization_step);
+      (runtime_visualization_managers_[static_cast<int>(type)])[static_cast<int>(status)]
+          ->write_to_disk(visualization_time, visualization_step);
     }
   }
 }

@@ -33,7 +33,7 @@ namespace Particle::ParticleUtils
    */
   template <typename Valtype>
   void read_params_types_related_to_values(const Teuchos::ParameterList& params,
-      const std::string& name, std::map<Particle::TypeEnum, Valtype>& typetovalmap);
+      const std::string& name, std::map<Particle::Type, Valtype>& typetovalmap);
 
 }  // namespace Particle::ParticleUtils
 

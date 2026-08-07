@@ -19,7 +19,7 @@ FOUR_C_NAMESPACE_OPEN
 template <typename Valtype>
 void Particle::ParticleUtils::read_params_types_related_to_values(
     const Teuchos::ParameterList& params, const std::string& name,
-    std::map<Particle::TypeEnum, Valtype>& typetovalmap)
+    std::map<Particle::Type, Valtype>& typetovalmap)
 {
   // read from input file
   std::vector<std::string> typetoval;
@@ -43,7 +43,7 @@ void Particle::ParticleUtils::read_params_types_related_to_values(
     valstring = typetoval[2 * i + 1];
 
     // get enum of particle types
-    Particle::TypeEnum particleType = Particle::enum_from_type_name(typestring);
+    Particle::Type particleType = Particle::enum_from_type_name(typestring);
 
     // get numeric value
     Valtype val;
@@ -73,10 +73,10 @@ void Particle::ParticleUtils::read_params_types_related_to_values(
  *---------------------------------------------------------------------------*/
 template void Particle::ParticleUtils::read_params_types_related_to_values<int>(
     const Teuchos::ParameterList& params, const std::string& name,
-    std::map<Particle::TypeEnum, int>& typetovalmap);
+    std::map<Particle::Type, int>& typetovalmap);
 
 template void Particle::ParticleUtils::read_params_types_related_to_values<double>(
     const Teuchos::ParameterList& params, const std::string& name,
-    std::map<Particle::TypeEnum, double>& typetovalmap);
+    std::map<Particle::Type, double>& typetovalmap);
 
 FOUR_C_NAMESPACE_CLOSE

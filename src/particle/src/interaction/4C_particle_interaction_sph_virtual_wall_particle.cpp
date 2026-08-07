@@ -29,9 +29,9 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 Particle::SPHVirtualWallParticle::SPHVirtualWallParticle(const Teuchos::ParameterList& params)
     : params_sph_(params),
-      allfluidtypes_(
-          {Particle::Phase1, Particle::Phase2, Particle::DirichletPhase, Particle::NeumannPhase}),
-      intfluidtypes_({Particle::Phase1, Particle::Phase2, Particle::NeumannPhase})
+      allfluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2,
+          Particle::Type::DirichletPhase, Particle::Type::NeumannPhase}),
+      intfluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2, Particle::Type::NeumannPhase})
 {
   // empty constructor
 }
@@ -154,8 +154,8 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
     const SPHParticleWallPair& particlewallpair = particlewallpairdata[particlewallpairindex];
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
@@ -164,10 +164,10 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
         particlecontainerbundle_->get_specific_container(type_i, status_i);
 
     // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
 
     // get pointer to wall contact point states
-    const double* rad_j = container_i->get_ptr_to_state(Particle::Radius, particle_i);
+    const double* rad_j = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;
@@ -235,8 +235,8 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
     for (const auto& neighboringparticle : neighboringparticles)
     {
       // access values of local index tuple of particle k
-      Particle::TypeEnum type_k;
-      Particle::StatusEnum status_k;
+      Particle::Type type_k;
+      Particle::Status status_k;
       int particle_k;
       std::tie(type_k, status_k, particle_k) = neighboringparticle;
 
@@ -248,10 +248,10 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
           particlecontainerbundle_->get_specific_container(type_k, status_k);
 
       // get pointer to particle states
-      const double* pos_k = container_k->get_ptr_to_state(Particle::Position, particle_k);
-      const double* vel_k = container_k->get_ptr_to_state(Particle::Velocity, particle_k);
-      const double* dens_k = container_k->get_ptr_to_state(Particle::Density, particle_k);
-      const double* press_k = container_k->get_ptr_to_state(Particle::Pressure, particle_k);
+      const double* pos_k = container_k->get_ptr_to_state(Particle::State::Position, particle_k);
+      const double* vel_k = container_k->get_ptr_to_state(Particle::State::Velocity, particle_k);
+      const double* dens_k = container_k->get_ptr_to_state(Particle::State::Density, particle_k);
+      const double* press_k = container_k->get_ptr_to_state(Particle::State::Pressure, particle_k);
 
       // vector from particle k to wall contact point j
       double r_jk[3];

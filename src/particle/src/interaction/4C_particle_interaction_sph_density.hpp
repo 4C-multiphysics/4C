@@ -65,8 +65,7 @@ namespace Particle
 
     //! insert density evaluation dependent states
     virtual void insert_particle_states_of_particle_types(
-        std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes)
-        const = 0;
+        std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const = 0;
 
     //! compute density field
     virtual void compute_density() const = 0;
@@ -151,7 +150,7 @@ namespace Particle
     Particle::StatesOfTypesToRefresh densitytorefresh_;
 
     //! set of fluid particle types
-    std::set<Particle::TypeEnum> fluidtypes_;
+    std::set<Particle::Type> fluidtypes_;
 
     //! time step size
     double dt_;
@@ -165,8 +164,7 @@ namespace Particle
 
     //! insert density evaluation dependent states
     void insert_particle_states_of_particle_types(
-        std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes)
-        const override;
+        std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const override;
 
     //! compute density field
     void compute_density() const override;
@@ -180,8 +178,7 @@ namespace Particle
 
     //! insert density evaluation dependent states
     void insert_particle_states_of_particle_types(
-        std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes)
-        const override;
+        std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const override;
 
     //! compute density field
     void compute_density() const override;
@@ -213,8 +210,7 @@ namespace Particle
 
     //! insert density evaluation dependent states
     void insert_particle_states_of_particle_types(
-        std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes)
-        const override;
+        std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const override;
 
     //! compute density field
     void compute_density() const override;

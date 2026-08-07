@@ -95,16 +95,16 @@ void Particle::ParticleInteractionDEM::read_restart(
 }
 
 void Particle::ParticleInteractionDEM::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes)
+    std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes)
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // set of particle states for current particle type
-    std::set<Particle::StateEnum>& particlestates = typeIt.second;
+    std::set<Particle::State>& particlestates = typeIt.second;
 
     // insert states of regular phase particles
-    particlestates.insert({Particle::Force, Particle::Mass, Particle::Radius});
+    particlestates.insert({Particle::State::Force, Particle::State::Mass, Particle::State::Radius});
   }
 
   // states for contact evaluation scheme
@@ -238,7 +238,7 @@ void Particle::ParticleInteractionDEM::set_initial_radius()
       {
         // get container of owned particles of current particle type
         Particle::ParticleContainer* container =
-            particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+            particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
         // get number of particles stored in container
         const int particlestored = container->particles_stored();
@@ -262,7 +262,7 @@ void Particle::ParticleInteractionDEM::set_initial_radius()
         initradius[0] = material->initRadius_;
 
         // set initial radius for all particles of current type
-        container->set_state(initradius, Particle::Radius);
+        container->set_state(initradius, Particle::State::Radius);
       }
 
       break;
@@ -277,7 +277,7 @@ void Particle::ParticleInteractionDEM::set_initial_radius()
       {
         // get container of owned particles of current particle type
         Particle::ParticleContainer* container =
-            particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+            particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
         // get number of particles stored in container
         const int particlestored = container->particles_stored();
@@ -286,10 +286,10 @@ void Particle::ParticleInteractionDEM::set_initial_radius()
         if (particlestored <= 0) continue;
 
         // safety checks
-        FOUR_C_ASSERT_ALWAYS(container->get_min_value_of_state(Particle::Radius) > 0,
+        FOUR_C_ASSERT_ALWAYS(container->get_min_value_of_state(Particle::State::Radius) > 0,
             "the minimum particle radius is smaller than zero. Fix the particle input.");
 
-        FOUR_C_ASSERT_ALWAYS(container->get_max_value_of_state(Particle::Radius) <= r_max,
+        FOUR_C_ASSERT_ALWAYS(container->get_max_value_of_state(Particle::State::Radius) <= r_max,
             "the maximum particle radius is larger than the maximum allowed particle radius!");
       }
 
@@ -321,7 +321,7 @@ void Particle::ParticleInteractionDEM::set_initial_radius()
       {
         // get container of owned particles of current particle type
         Particle::ParticleContainer* container =
-            particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+            particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
         // get number of particles stored in container
         const int particlestored = container->particles_stored();
@@ -334,7 +334,7 @@ void Particle::ParticleInteractionDEM::set_initial_radius()
             particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
 
         // get pointer to particle state
-        double* radius = container->get_ptr_to_state(Particle::Radius, 0);
+        double* radius = container->get_ptr_to_state_writable(Particle::State::Radius, 0);
 
         // determine mu of random particle radius distribution
         const double mu = (radiusdistributiontype == Particle::NormalRadiusDistribution)
@@ -379,7 +379,7 @@ void Particle::ParticleInteractionDEM::set_initial_mass()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -392,8 +392,8 @@ void Particle::ParticleInteractionDEM::set_initial_mass()
         particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
 
     // get pointer to particle states
-    const double* radius = container->get_ptr_to_state(Particle::Radius, 0);
-    double* mass = container->get_ptr_to_state(Particle::Mass, 0);
+    const double* radius = container->get_ptr_to_state(Particle::State::Radius, 0);
+    double* mass = container->get_ptr_to_state_writable(Particle::State::Mass, 0);
 
     // compute mass via particle volume and initial density
     const double fac = material->initDensity_ * 4.0 / 3.0 * std::numbers::pi;
@@ -408,7 +408,7 @@ void Particle::ParticleInteractionDEM::set_initial_inertia()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -417,12 +417,12 @@ void Particle::ParticleInteractionDEM::set_initial_inertia()
     if (particlestored <= 0) continue;
 
     // no inertia state for current particle type
-    if (not container->have_stored_state(Particle::Inertia)) continue;
+    if (not container->have_stored_state(Particle::State::Inertia)) continue;
 
     // get pointer to particle states
-    const double* radius = container->get_ptr_to_state(Particle::Radius, 0);
-    const double* mass = container->get_ptr_to_state(Particle::Mass, 0);
-    double* inertia = container->get_ptr_to_state(Particle::Inertia, 0);
+    const double* radius = container->get_ptr_to_state(Particle::State::Radius, 0);
+    const double* mass = container->get_ptr_to_state(Particle::State::Mass, 0);
+    double* inertia = container->get_ptr_to_state_writable(Particle::State::Inertia, 0);
 
     // compute mass via particle volume and initial density
     for (int i = 0; i < particlestored; ++i)
@@ -437,13 +437,14 @@ void Particle::ParticleInteractionDEM::clear_force_and_moment_states() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // clear force of all particles
-    container->clear_state(Particle::Force);
+    container->clear_state(Particle::State::Force);
 
     // clear moment of all particles
-    if (container->have_stored_state(Particle::Moment)) container->clear_state(Particle::Moment);
+    if (container->have_stored_state(Particle::State::Moment))
+      container->clear_state(Particle::State::Moment);
   }
 }
 
@@ -456,7 +457,7 @@ void Particle::ParticleInteractionDEM::compute_acceleration() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -465,15 +466,16 @@ void Particle::ParticleInteractionDEM::compute_acceleration() const
     if (particlestored <= 0) continue;
 
     // get particle state dimension
-    const int statedim = container->get_state_dim(Particle::Acceleration);
+    const int statedim = container->get_state_dim(Particle::State::Acceleration);
 
     // get pointer to particle states
-    const double* radius = container->get_ptr_to_state(Particle::Radius, 0);
-    const double* mass = container->get_ptr_to_state(Particle::Mass, 0);
-    const double* force = container->get_ptr_to_state(Particle::Force, 0);
-    const double* moment = container->cond_get_ptr_to_state(Particle::Moment, 0);
-    double* acc = container->get_ptr_to_state(Particle::Acceleration, 0);
-    double* angacc = container->cond_get_ptr_to_state(Particle::AngularAcceleration, 0);
+    const double* radius = container->get_ptr_to_state(Particle::State::Radius, 0);
+    const double* mass = container->get_ptr_to_state(Particle::State::Mass, 0);
+    const double* force = container->get_ptr_to_state(Particle::State::Force, 0);
+    const double* moment = container->try_get_ptr_to_state(Particle::State::Moment, 0);
+    double* acc = container->get_ptr_to_state_writable(Particle::State::Acceleration, 0);
+    double* angacc =
+        container->try_get_ptr_to_state_writable(Particle::State::AngularAcceleration, 0);
 
     // compute acceleration
     for (int i = 0; i < particlestored; ++i)
@@ -536,7 +538,7 @@ void Particle::ParticleInteractionDEM::evaluate_particle_kinetic_energy(double& 
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -545,13 +547,13 @@ void Particle::ParticleInteractionDEM::evaluate_particle_kinetic_energy(double& 
     if (particlestored <= 0) continue;
 
     // get particle state dimension
-    const int statedim = container->get_state_dim(Particle::Position);
+    const int statedim = container->get_state_dim(Particle::State::Position);
 
     // get pointer to particle states
-    const double* radius = container->get_ptr_to_state(Particle::Radius, 0);
-    const double* mass = container->get_ptr_to_state(Particle::Mass, 0);
-    const double* vel = container->get_ptr_to_state(Particle::Velocity, 0);
-    double* angvel = container->cond_get_ptr_to_state(Particle::AngularVelocity, 0);
+    const double* radius = container->get_ptr_to_state(Particle::State::Radius, 0);
+    const double* mass = container->get_ptr_to_state(Particle::State::Mass, 0);
+    const double* vel = container->get_ptr_to_state(Particle::State::Velocity, 0);
+    double* angvel = container->try_get_ptr_to_state_writable(Particle::State::AngularVelocity, 0);
 
     // add translational kinetic energy contribution
     for (int i = 0; i < particlestored; ++i)
@@ -580,7 +582,7 @@ void Particle::ParticleInteractionDEM::evaluate_particle_gravitational_potential
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -589,11 +591,11 @@ void Particle::ParticleInteractionDEM::evaluate_particle_gravitational_potential
     if (particlestored <= 0) continue;
 
     // get particle state dimension
-    const int statedim = container->get_state_dim(Particle::Position);
+    const int statedim = container->get_state_dim(Particle::State::Position);
 
     // get pointer to particle states
-    const double* pos = container->get_ptr_to_state(Particle::Position, 0);
-    const double* mass = container->get_ptr_to_state(Particle::Mass, 0);
+    const double* pos = container->get_ptr_to_state(Particle::State::Position, 0);
+    const double* mass = container->get_ptr_to_state(Particle::State::Mass, 0);
 
     // add gravitational potential energy contribution
     for (int i = 0; i < particlestored; ++i)

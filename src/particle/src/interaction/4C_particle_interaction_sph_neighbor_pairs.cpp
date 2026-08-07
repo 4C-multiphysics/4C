@@ -46,7 +46,8 @@ void Particle::SPHNeighborPairs::setup(
   kernel_ = kernel;
 
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   // allocate memory to hold index of particle pairs for each type
   indexofparticlepairs_.resize(typevectorsize, std::vector<std::vector<int>>(typevectorsize));
@@ -56,7 +57,7 @@ void Particle::SPHNeighborPairs::setup(
 }
 
 void Particle::SPHNeighborPairs::get_relevant_particle_pair_indices_for_disjoint_combination(
-    const std::set<Particle::TypeEnum>& types_a, const std::set<Particle::TypeEnum>& types_b,
+    const std::set<Particle::Type>& types_a, const std::set<Particle::Type>& types_b,
     std::vector<int>& relindices) const
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
@@ -69,15 +70,17 @@ void Particle::SPHNeighborPairs::get_relevant_particle_pair_indices_for_disjoint
   for (const auto& type_i : types_a)
     for (const auto& type_j : types_b)
     {
-      relindices.insert(relindices.end(), indexofparticlepairs_[type_i][type_j].begin(),
-          indexofparticlepairs_[type_i][type_j].end());
-      relindices.insert(relindices.end(), indexofparticlepairs_[type_j][type_i].begin(),
-          indexofparticlepairs_[type_j][type_i].end());
+      relindices.insert(relindices.end(),
+          indexofparticlepairs_[static_cast<int>(type_i)][static_cast<int>(type_j)].begin(),
+          indexofparticlepairs_[static_cast<int>(type_i)][static_cast<int>(type_j)].end());
+      relindices.insert(relindices.end(),
+          indexofparticlepairs_[static_cast<int>(type_j)][static_cast<int>(type_i)].begin(),
+          indexofparticlepairs_[static_cast<int>(type_j)][static_cast<int>(type_i)].end());
     }
 }
 
 void Particle::SPHNeighborPairs::get_relevant_particle_pair_indices_for_equal_combination(
-    const std::set<Particle::TypeEnum>& types_a, std::vector<int>& relindices) const
+    const std::set<Particle::Type>& types_a, std::vector<int>& relindices) const
 {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
   if (relindices.size() != 0) FOUR_C_THROW("vector of relevant particle pair indices not cleared!");
@@ -85,17 +88,18 @@ void Particle::SPHNeighborPairs::get_relevant_particle_pair_indices_for_equal_co
 
   for (const auto& type_i : types_a)
     for (const auto& type_j : types_a)
-      relindices.insert(relindices.end(), indexofparticlepairs_[type_i][type_j].begin(),
-          indexofparticlepairs_[type_i][type_j].end());
+      relindices.insert(relindices.end(),
+          indexofparticlepairs_[static_cast<int>(type_i)][static_cast<int>(type_j)].begin(),
+          indexofparticlepairs_[static_cast<int>(type_i)][static_cast<int>(type_j)].end());
 }
 
 void Particle::SPHNeighborPairs::get_relevant_particle_wall_pair_indices(
-    const std::set<Particle::TypeEnum>& types_a, std::vector<int>& relindices) const
+    const std::set<Particle::Type>& types_a, std::vector<int>& relindices) const
 {
   // iterate over particle types to consider
   for (const auto& type_i : types_a)
-    relindices.insert(relindices.end(), indexofparticlewallpairs_[type_i].begin(),
-        indexofparticlewallpairs_[type_i].end());
+    relindices.insert(relindices.end(), indexofparticlewallpairs_[static_cast<int>(type_i)].begin(),
+        indexofparticlewallpairs_[static_cast<int>(type_i)].end());
 }
 
 void Particle::SPHNeighborPairs::evaluate_neighbor_pairs()
@@ -117,7 +121,7 @@ void Particle::SPHNeighborPairs::evaluate_particle_pairs()
   // clear index of particle pairs for each type
   for (const auto& type_i : particlecontainerbundle_->get_particle_types())
     for (const auto& type_j : particlecontainerbundle_->get_particle_types())
-      indexofparticlepairs_[type_i][type_j].clear();
+      indexofparticlepairs_[static_cast<int>(type_i)][static_cast<int>(type_j)].clear();
 
   // index of particle pairs
   int particlepairindex = 0;
@@ -126,17 +130,18 @@ void Particle::SPHNeighborPairs::evaluate_particle_pairs()
   for (auto& potentialneighbors : particleengineinterface_->get_potential_particle_neighbors())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
-    if (type_i == Particle::BoundaryPhase and type_j == Particle::BoundaryPhase) continue;
+    if (type_i == Particle::Type::BoundaryPhase and type_j == Particle::Type::BoundaryPhase)
+      continue;
 
     // get corresponding particle containers
     Particle::ParticleContainer* container_i =
@@ -146,11 +151,11 @@ void Particle::SPHNeighborPairs::evaluate_particle_pairs()
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
 
-    const double* pos_j = container_j->get_ptr_to_state(Particle::Position, particle_j);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
+    const double* pos_j = container_j->get_ptr_to_state(Particle::State::Position, particle_j);
+    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
 
     // vector from particle i to j
     double r_ji[3];
@@ -176,7 +181,8 @@ void Particle::SPHNeighborPairs::evaluate_particle_pairs()
       SPHParticlePair& particlepair = particlepairdata_[particlepairindex];
 
       // store index of particle pairs for each type
-      indexofparticlepairs_[type_i][type_j].push_back(particlepairindex);
+      indexofparticlepairs_[static_cast<int>(type_i)][static_cast<int>(type_j)].push_back(
+          particlepairindex);
 
       // increase index
       ++particlepairindex;
@@ -235,7 +241,7 @@ void Particle::SPHNeighborPairs::evaluate_particle_wall_pairs()
 
   // clear index of particle wall pairs for each type
   for (const auto& type_i : particlecontainerbundle_->get_particle_types())
-    indexofparticlewallpairs_[type_i].clear();
+    indexofparticlewallpairs_[static_cast<int>(type_i)].clear();
 
   // relate particles to index of particle-wall pairs (considering object type of contact point)
   std::unordered_map<int, std::vector<std::pair<Core::Geo::ObjectType, int>>>
@@ -248,8 +254,8 @@ void Particle::SPHNeighborPairs::evaluate_particle_wall_pairs()
   for (const auto& potentialneighbors : particlewallinterface_->get_potential_wall_neighbors())
   {
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
@@ -261,11 +267,11 @@ void Particle::SPHNeighborPairs::evaluate_particle_wall_pairs()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
 
     // get position of particle i
     const Core::LinAlg::Matrix<3, 1> pos_i(
-        container_i->get_ptr_to_state(Particle::Position, particle_i));
+        container_i->get_ptr_to_state(Particle::State::Position, particle_i));
 
     // get pointer to column wall element
     Core::Elements::Element* ele = potentialneighbors.second;
@@ -349,8 +355,8 @@ void Particle::SPHNeighborPairs::evaluate_particle_wall_pairs()
         particlewallpairdata_[indexofparticlewallpairs[0].second].tuple_i_;
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = tuple_i;
 
@@ -359,7 +365,7 @@ void Particle::SPHNeighborPairs::evaluate_particle_wall_pairs()
         particlecontainerbundle_->get_specific_container(type_i, status_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
 
     // define tolerance dependent on the particle radius
     const double adaptedtol = 1.0e-7 * rad_i[0];
@@ -437,13 +443,13 @@ void Particle::SPHNeighborPairs::evaluate_particle_wall_pairs()
   for (auto& particlewallpair : particlewallpairdata_)
   {
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
     // store index of particle wall pairs for each type
-    indexofparticlewallpairs_[type_i].push_back(particlewallpairindex);
+    indexofparticlewallpairs_[static_cast<int>(type_i)].push_back(particlewallpairindex);
 
     // increase index
     ++particlewallpairindex;

@@ -543,7 +543,7 @@ void Particle::ParticleAlgorithm::generate_initial_particles()
 void Particle::ParticleAlgorithm::determine_particle_types()
 {
   // init map relating particle types to dynamic load balance factor
-  std::map<Particle::TypeEnum, double> typetodynloadbal;
+  std::map<Particle::Type, double> typetodynloadbal;
 
   // read parameters relating particle types to values
   ParticleUtils::read_params_types_related_to_values(
@@ -551,7 +551,7 @@ void Particle::ParticleAlgorithm::determine_particle_types()
 
   // insert into map of particle types and corresponding states with empty set
   for (auto& typeIt : typetodynloadbal)
-    particlestatestotypes_.insert(std::make_pair(typeIt.first, std::set<Particle::StateEnum>()));
+    particlestatestotypes_.insert(std::make_pair(typeIt.first, std::set<Particle::State>()));
 
   // safety check
   for (auto& particle : particlestodistribute_)
@@ -566,11 +566,11 @@ void Particle::ParticleAlgorithm::determine_particle_states_of_particle_types()
   for (auto& typeIt : particlestatestotypes_)
   {
     // set of particle states for current particle type
-    std::set<Particle::StateEnum>& particlestates = typeIt.second;
+    std::set<Particle::State>& particlestates = typeIt.second;
 
     // insert default particle states
-    particlestates.insert({Particle::Position, Particle::Velocity, Particle::Acceleration,
-        Particle::LastTransferPosition});
+    particlestates.insert({Particle::State::Position, Particle::State::Velocity,
+        Particle::State::Acceleration, Particle::State::LastTransferPosition});
   }
 
   // insert integration dependent states of all particle types
@@ -775,15 +775,15 @@ double Particle::ParticleAlgorithm::get_max_particle_position_increment()
         particleengine_->get_particle_container_bundle();
 
     // iterate over particle types
-    for (const auto& typeEnum : particlecontainerbundle->get_particle_types())
+    for (const auto& type : particlecontainerbundle->get_particle_types())
     {
       if (debug_output)
       {
-        debug_output->violating_particles_per_type[typeEnum] = 0;
+        debug_output->violating_particles_per_type[type] = 0;
       }
       // get container of owned particles of current particle type
       Particle::ParticleContainer* container =
-          particlecontainerbundle->get_specific_container(typeEnum, Particle::Owned);
+          particlecontainerbundle->get_specific_container(type, Particle::Status::Owned);
 
       // get number of particles stored in container
       const int particlestored = container->particles_stored();
@@ -792,7 +792,7 @@ double Particle::ParticleAlgorithm::get_max_particle_position_increment()
       if (particlestored == 0) continue;
 
       // get particle state dimension
-      int statedim = container->get_state_dim(Particle::Position);
+      int statedim = container->get_state_dim(Particle::State::Position);
 
       // position increment of particle
       double positionincrement[3];
@@ -801,9 +801,9 @@ double Particle::ParticleAlgorithm::get_max_particle_position_increment()
       for (int i = 0; i < particlestored; ++i)
       {
         // get pointer to particle states
-        const double* pos = container->get_ptr_to_state(Particle::Position, i);
+        const double* pos = container->get_ptr_to_state(Particle::State::Position, i);
         const double* lasttransferpos =
-            container->get_ptr_to_state(Particle::LastTransferPosition, i);
+            container->get_ptr_to_state(Particle::State::LastTransferPosition, i);
 
         // position increment of particle considering periodic boundaries
         particleengine_->distance_between_particles(pos, lasttransferpos, positionincrement);
@@ -819,12 +819,12 @@ double Particle::ParticleAlgorithm::get_max_particle_position_increment()
           }
           if (max_position_increment_of_particle > minimum_bin_size)
           {
-            debug_output->violating_particles_per_type[typeEnum]++;
+            debug_output->violating_particles_per_type[type]++;
             // Save gid and type of particle with maximum position increment
             if (max_position_increment_of_particle > maxpositionincrement)
             {
               debug_output->lid_of_max_position_increment = i;
-              debug_output->particle_type_of_max_position_increment = typeEnum;
+              debug_output->particle_type_of_max_position_increment = type;
             }
           }
         }
@@ -862,11 +862,11 @@ double Particle::ParticleAlgorithm::get_max_particle_position_increment()
     Particle::ParticleContainerBundleShrdPtr particlecontainerbundle =
         particleengine_->get_particle_container_bundle();
     ParticleContainer* container = particlecontainerbundle->get_specific_container(
-        debug_output->particle_type_of_max_position_increment, Owned);
+        debug_output->particle_type_of_max_position_increment, Status::Owned);
     const double* position =
-        container->get_ptr_to_state(Position, debug_output->lid_of_max_position_increment);
+        container->get_ptr_to_state(State::Position, debug_output->lid_of_max_position_increment);
     const double* velocity =
-        container->get_ptr_to_state(Velocity, debug_output->lid_of_max_position_increment);
+        container->get_ptr_to_state(State::Velocity, debug_output->lid_of_max_position_increment);
     const int gid = *container->get_ptr_to_global_id(debug_output->lid_of_max_position_increment);
     FOUR_C_THROW(
         "{} particle(s) traveled more than one bin on this processor.\n"
@@ -1055,17 +1055,17 @@ void Particle::ParticleAlgorithm::set_gravity_acceleration()
       particleengine_->get_particle_container_bundle();
 
   // iterate over particle types
-  for (auto& typeEnum : particlecontainerbundle->get_particle_types())
+  for (auto& type : particlecontainerbundle->get_particle_types())
   {
     // gravity is not set for boundary or rigid particles
-    if (typeEnum == Particle::BoundaryPhase or typeEnum == Particle::RigidPhase) continue;
+    if (type == Particle::Type::BoundaryPhase or type == Particle::Type::RigidPhase) continue;
 
     // gravity is not set for open boundary particles
-    if (typeEnum == Particle::DirichletPhase or typeEnum == Particle::NeumannPhase) continue;
+    if (type == Particle::Type::DirichletPhase or type == Particle::Type::NeumannPhase) continue;
 
     // set gravity acceleration for all particles of current type
     particlecontainerbundle->set_state_specific_container(
-        scaled_gravity, Particle::Acceleration, typeEnum);
+        scaled_gravity, Particle::State::Acceleration, type);
   }
 
   // add gravity acceleration

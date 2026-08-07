@@ -72,7 +72,7 @@ namespace Particle
      *
      * \return set of particle types subjected to dirichlet boundary conditions
      */
-    const std::set<Particle::TypeEnum>& get_particle_types_subjected_to_dirichlet_bc_set() const
+    const std::set<Particle::Type>& get_particle_types_subjected_to_dirichlet_bc_set() const
     {
       return types_subjected_to_dirichlet_bc_;
     };
@@ -83,8 +83,7 @@ namespace Particle
      *
      * \return set of particle types with per-particle dirichlet boundary conditions
      */
-    const std::set<Particle::TypeEnum>& get_particle_types_with_per_particle_dirichlet_bc_set()
-        const
+    const std::set<Particle::Type>& get_particle_types_with_per_particle_dirichlet_bc_set() const
     {
       return types_with_per_particle_dirichlet_bc_;
     };
@@ -96,7 +95,7 @@ namespace Particle
      * \param[out] particlestatestotypes map of particle types and corresponding states
      */
     void insert_particle_states_of_particle_types(
-        std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const;
+        std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const;
 
     /*!
      * \brief set particle reference position
@@ -124,13 +123,13 @@ namespace Particle
     std::shared_ptr<Particle::ParticleEngineInterface> particle_engine_interface_;
 
     //! relating particle types to function ids of dirichlet boundary conditions
-    std::map<Particle::TypeEnum, int> dirichlet_bc_type_to_funct_id_;
+    std::map<Particle::Type, int> dirichlet_bc_type_to_funct_id_;
 
     //! set of particle types subjected to dirichlet boundary conditions
-    std::set<Particle::TypeEnum> types_subjected_to_dirichlet_bc_;
+    std::set<Particle::Type> types_subjected_to_dirichlet_bc_;
 
     //! set of particle types with per-particle Dirichlet function id
-    std::set<Particle::TypeEnum> types_with_per_particle_dirichlet_bc_;
+    std::set<Particle::Type> types_with_per_particle_dirichlet_bc_;
 
     //! cache of per-particle Dirichlet functions, keyed by function id
     mutable std::map<int, const Core::Utils::FunctionOfSpaceTime*> per_particle_function_cache_;

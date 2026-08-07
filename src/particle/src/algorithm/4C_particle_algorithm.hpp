@@ -407,7 +407,7 @@ namespace Particle
     std::unique_ptr<Particle::ViscousDampingHandler> viscousdamping_;
 
     //! map of particle types and corresponding states
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>> particlestatestotypes_;
+    std::map<Particle::Type, std::set<Particle::State>> particlestatestotypes_;
 
     //! vector of initial or generated particles to distribute
     std::vector<Particle::ParticleObjShrdPtr> particlestodistribute_;

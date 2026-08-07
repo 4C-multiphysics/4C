@@ -107,16 +107,16 @@ namespace Particle
     std::vector<const Mat::PAR::ParticleMaterialSPHFluid*> fluidmaterial_;
 
     //! liquid particle type
-    Particle::TypeEnum liquidtype_;
+    Particle::Type liquidtype_;
 
     //! gas particle type
-    Particle::TypeEnum gastype_;
+    Particle::Type gastype_;
 
     //! set of fluid particle types
-    std::set<Particle::TypeEnum> fluidtypes_;
+    std::set<Particle::Type> fluidtypes_;
 
     //! set of boundary particle types
-    std::set<Particle::TypeEnum> boundarytypes_;
+    std::set<Particle::Type> boundarytypes_;
 
     //! artificial viscosity on liquid-gas interface
     const double artvisc_lg_int_;

@@ -122,18 +122,18 @@ void Particle::DEMContact::set_current_step_size(const double currentstepsize)
 }
 
 void Particle::DEMContact::insert_particle_states_of_particle_types(
-    std::map<Particle::TypeEnum, std::set<Particle::StateEnum>>& particlestatestotypes) const
+    std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // set of particle states for current particle type
-    std::set<Particle::StateEnum>& particlestates = typeIt.second;
+    std::set<Particle::State>& particlestates = typeIt.second;
 
     // states for tangential and rolling contact evaluation scheme
     if (contacttangential_ or contactrolling_)
-      particlestates.insert(
-          {Particle::Moment, Particle::AngularVelocity, Particle::AngularAcceleration});
+      particlestates.insert({Particle::State::Moment, Particle::State::AngularVelocity,
+          Particle::State::AngularAcceleration});
   }
 }
 
@@ -153,7 +153,7 @@ void Particle::DEMContact::check_critical_time_step() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -162,7 +162,7 @@ void Particle::DEMContact::check_critical_time_step() const
     if (particlestored <= 0) continue;
 
     // get minimum stored value of state
-    double currminmass = container->get_min_value_of_state(Particle::Mass);
+    double currminmass = container->get_min_value_of_state(Particle::State::Mass);
 
     // update value of minimum mass
     minmass = std::min(minmass, currminmass);
@@ -365,13 +365,13 @@ void Particle::DEMContact::evaluate_particle_contact()
   for (const auto& particlepair : neighborpairs_->get_ref_to_particle_pair_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -387,28 +387,31 @@ void Particle::DEMContact::evaluate_particle_contact()
     const int* globalid_j = container_j->get_ptr_to_global_id(particle_j);
 
     // get pointer to particle states
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    double* force_i = container_i->get_ptr_to_state(Particle::Force, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    double* force_i = container_i->get_ptr_to_state_writable(Particle::State::Force, particle_i);
 
     const double* angvel_i = nullptr;
     double* moment_i = nullptr;
     if (contacttangential_ or contactrolling_)
     {
-      angvel_i = container_i->get_ptr_to_state(Particle::AngularVelocity, particle_i);
-      moment_i = container_i->get_ptr_to_state(Particle::Moment, particle_i);
+      angvel_i = container_i->get_ptr_to_state(Particle::State::AngularVelocity, particle_i);
+      moment_i = container_i->get_ptr_to_state_writable(Particle::State::Moment, particle_i);
     }
 
-    const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
-    double* force_j = container_j->get_ptr_to_state(Particle::Force, particle_j);
+    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
+    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
+    double* force_j = nullptr;
+    if (status_j == Particle::Status::Owned)
+      force_j = container_j->get_ptr_to_state_writable(Particle::State::Force, particle_j);
 
     const double* angvel_j = nullptr;
     double* moment_j = nullptr;
     if (contacttangential_ or contactrolling_)
     {
-      angvel_j = container_j->get_ptr_to_state(Particle::AngularVelocity, particle_j);
-      moment_j = container_j->get_ptr_to_state(Particle::Moment, particle_j);
+      angvel_j = container_j->get_ptr_to_state(Particle::State::AngularVelocity, particle_j);
+      if (status_j == Particle::Status::Owned)
+        moment_j = container_j->get_ptr_to_state_writable(Particle::State::Moment, particle_j);
     }
 
     // compute vectors from particle i and j to contact point c
@@ -447,8 +450,7 @@ void Particle::DEMContact::evaluate_particle_contact()
 
     // add normal contact force contribution
     ParticleUtils::vec_add_scale(force_i, normalcontactforce, particlepair.e_ji_);
-    if (status_j == Particle::Owned)
-      ParticleUtils::vec_add_scale(force_j, -normalcontactforce, particlepair.e_ji_);
+    if (force_j) ParticleUtils::vec_add_scale(force_j, -normalcontactforce, particlepair.e_ji_);
 
     // calculation of tangential contact force
     if (contacttangential_)
@@ -475,7 +477,7 @@ void Particle::DEMContact::evaluate_particle_contact()
           mu_tangential, normalcontactforce, tangentialcontactforce);
 
       // copy history from interaction pair ij to ji
-      if (status_j == Particle::Owned)
+      if (status_j == Particle::Status::Owned)
       {
         // get reference to touched tangential history
         TouchedDEMHistoryPairTangential& touchedtangentialhistory_ji =
@@ -495,12 +497,11 @@ void Particle::DEMContact::evaluate_particle_contact()
 
       // add tangential contact force contribution
       ParticleUtils::vec_add(force_i, tangentialcontactforce);
-      if (status_j == Particle::Owned) ParticleUtils::vec_sub(force_j, tangentialcontactforce);
+      if (force_j) ParticleUtils::vec_sub(force_j, tangentialcontactforce);
 
       // add tangential contact moment contribution
       ParticleUtils::vec_add_cross(moment_i, r_ci, tangentialcontactforce);
-      if (status_j == Particle::Owned)
-        ParticleUtils::vec_add_cross(moment_j, tangentialcontactforce, r_cj);
+      if (moment_j) ParticleUtils::vec_add_cross(moment_j, tangentialcontactforce, r_cj);
     }
 
     // calculation of rolling contact moment
@@ -532,7 +533,7 @@ void Particle::DEMContact::evaluate_particle_contact()
           normalcontactforce, rollingcontactmoment);
 
       // copy history from interaction pair ij to ji
-      if (status_j == Particle::Owned)
+      if (status_j == Particle::Status::Owned)
       {
         // get reference to touched rolling history
         TouchedDEMHistoryPairRolling& touchedrollinghistory_ji =
@@ -551,7 +552,7 @@ void Particle::DEMContact::evaluate_particle_contact()
 
       // add rolling contact moment contribution
       ParticleUtils::vec_add(moment_i, rollingcontactmoment);
-      if (status_j == Particle::Owned) ParticleUtils::vec_sub(moment_j, rollingcontactmoment);
+      if (moment_j) ParticleUtils::vec_sub(moment_j, rollingcontactmoment);
     }
   }
 }
@@ -599,8 +600,8 @@ void Particle::DEMContact::evaluate_particle_wall_contact()
   for (const auto& particlewallpair : particlewallpairdata)
   {
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
@@ -612,18 +613,18 @@ void Particle::DEMContact::evaluate_particle_wall_contact()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    double* force_i = container_i->get_ptr_to_state(Particle::Force, particle_i);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    double* force_i = container_i->get_ptr_to_state_writable(Particle::State::Force, particle_i);
 
     const double* angvel_i = nullptr;
     double* moment_i = nullptr;
     if (contacttangential_ or contactrolling_)
     {
-      angvel_i = container_i->get_ptr_to_state(Particle::AngularVelocity, particle_i);
-      moment_i = container_i->get_ptr_to_state(Particle::Moment, particle_i);
+      angvel_i = container_i->get_ptr_to_state(Particle::State::AngularVelocity, particle_i);
+      moment_i = container_i->get_ptr_to_state_writable(Particle::State::Moment, particle_i);
     }
 
     // get pointer to column wall element
@@ -852,13 +853,13 @@ void Particle::DEMContact::evaluate_particle_elastic_potential_energy(
   for (const auto& particlepair : neighborpairs_->get_ref_to_particle_pair_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -879,7 +880,7 @@ void Particle::DEMContact::evaluate_particle_elastic_potential_energy(
 
     // add normal potential energy contribution
     elasticpotentialenergy += 0.5 * normalpotentialenergy;
-    if (status_j == Particle::Owned) elasticpotentialenergy += 0.5 * normalpotentialenergy;
+    if (status_j == Particle::Status::Owned) elasticpotentialenergy += 0.5 * normalpotentialenergy;
 
     // calculation of tangential potential energy
     if (contacttangential_)
@@ -898,7 +899,8 @@ void Particle::DEMContact::evaluate_particle_elastic_potential_energy(
 
       // add tangential potential energy contribution
       elasticpotentialenergy += 0.5 * tangentialpotentialenergy;
-      if (status_j == Particle::Owned) elasticpotentialenergy += 0.5 * tangentialpotentialenergy;
+      if (status_j == Particle::Status::Owned)
+        elasticpotentialenergy += 0.5 * tangentialpotentialenergy;
     }
 
     // calculation of rolling potential energy
@@ -917,7 +919,8 @@ void Particle::DEMContact::evaluate_particle_elastic_potential_energy(
 
       // add rolling potential energy contribution
       elasticpotentialenergy += 0.5 * rollingpotentialenergy;
-      if (status_j == Particle::Owned) elasticpotentialenergy += 0.5 * rollingpotentialenergy;
+      if (status_j == Particle::Status::Owned)
+        elasticpotentialenergy += 0.5 * rollingpotentialenergy;
     }
   }
 }
@@ -940,8 +943,8 @@ void Particle::DEMContact::evaluate_particle_wall_elastic_potential_energy(
   for (const auto& particlewallpair : neighborpairs_->get_ref_to_particle_wall_pair_data())
   {
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 

@@ -32,7 +32,7 @@ Particle::SPHRigidParticleContactBase::SPHRigidParticleContactBase(
     const Teuchos::ParameterList& params)
     : params_sph_(params),
       writeparticlewallinteraction_(params_sph_.get<bool>("WRITE_PARTICLE_WALL_INTERACTION")),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase})
+      boundarytypes_({Particle::Type::BoundaryPhase, Particle::Type::RigidPhase})
 {
   // empty constructor
 }
@@ -68,7 +68,7 @@ void Particle::SPHRigidParticleContactBase::setup(
       boundarytypes_.erase(type_i);
 
   // safety check
-  if (not boundarytypes_.contains(Particle::RigidPhase))
+  if (not boundarytypes_.contains(Particle::Type::RigidPhase))
     FOUR_C_THROW("no rigid particles defined but a rigid particle contact formulation is set!");
 }
 
@@ -138,13 +138,13 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_contribu
     if (not(particlepair.absdist_ < initialparticlespacing)) continue;
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -156,15 +156,16 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_contribu
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // get pointer to particle states
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    double* force_i = container_i->cond_get_ptr_to_state(Particle::Force, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    double* force_i =
+        container_i->try_get_ptr_to_state_writable(Particle::State::Force, particle_i);
 
     // get pointer to particle states
-    const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
+    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
 
     double* force_j = nullptr;
-    if (status_j == Particle::Owned)
-      force_j = container_j->cond_get_ptr_to_state(Particle::Force, particle_j);
+    if (status_j == Particle::Status::Owned)
+      force_j = container_j->try_get_ptr_to_state_writable(Particle::State::Force, particle_j);
 
     // compute normal gap and rate of normal gap
     const double gap = particlepair.absdist_ - initialparticlespacing;
@@ -219,7 +220,7 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
 
   // get relevant particle wall pair indices for specific particle types
   std::vector<int> relindices;
-  neighborpairs_->get_relevant_particle_wall_pair_indices({Particle::RigidPhase}, relindices);
+  neighborpairs_->get_relevant_particle_wall_pair_indices({Particle::Type::RigidPhase}, relindices);
 
   // iterate over relevant particle-wall pairs
   for (const int particlewallpairindex : relindices)
@@ -230,8 +231,8 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
     if (not(particlewallpair.absdist_ < 0.5 * initialparticlespacing)) continue;
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
@@ -240,9 +241,10 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
         particlecontainerbundle_->get_specific_container(type_i, status_i);
 
     // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    double* force_i = container_i->cond_get_ptr_to_state(Particle::Force, particle_i);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    double* force_i =
+        container_i->try_get_ptr_to_state_writable(Particle::State::Force, particle_i);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;

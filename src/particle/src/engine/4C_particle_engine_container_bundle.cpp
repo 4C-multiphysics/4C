@@ -25,7 +25,7 @@ void Particle::ParticleContainerBundle::setup(
   std::shared_ptr<ParticleContainer> container;
 
   // determine necessary size of vector for particle types
-  const int typevectorsize = ((--particlestatestotypes.end())->first) + 1;
+  const int typevectorsize = static_cast<int>((--particlestatestotypes.end())->first) + 1;
 
   // allocate memory to hold particle types
   containers_.resize(typevectorsize);
@@ -40,7 +40,7 @@ void Particle::ParticleContainerBundle::setup(
     storedtypes_.insert(type);
 
     // allocate memory for container of owned and ghosted particles
-    (containers_[type]).resize(2);
+    (containers_[static_cast<int>(type)]).resize(2);
 
     // set of particle state enums of current particle type (equal for owned and ghosted particles)
     const std::set<ParticleState>& stateset = typeIt.second;
@@ -52,14 +52,14 @@ void Particle::ParticleContainerBundle::setup(
     container = std::make_shared<ParticleContainer>();
     container->setup(initialsize, stateset);
     // set container of owned particles
-    (containers_[type])[Owned] = container;
+    (containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)] = container;
 
     // create container of ghosted particles
     container = std::make_shared<ParticleContainer>();
     // setup container of ghosted particles
     container->setup(initialsize, stateset);
     // set container of ghosted particles
-    (containers_[type])[Ghosted] = container;
+    (containers_[static_cast<int>(type)])[static_cast<int>(Status::Ghosted)] = container;
   }
 }
 
@@ -70,7 +70,8 @@ void Particle::ParticleContainerBundle::get_packed_particle_objects_of_all_conta
   for (const auto& type : storedtypes_)
   {
     // get container of owned particles
-    ParticleContainer* container = (containers_[type])[Owned].get();
+    ParticleContainer* container =
+        (containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)].get();
 
     // loop over particles in container
     for (int index = 0; index < container->particles_stored(); ++index)
@@ -96,7 +97,8 @@ void Particle::ParticleContainerBundle::get_vector_of_particle_objects_of_all_co
   for (const auto& type : storedtypes_)
   {
     // get container of owned particles
-    ParticleContainer* container = (containers_[type])[Owned].get();
+    ParticleContainer* container =
+        (containers_[static_cast<int>(type)])[static_cast<int>(Status::Owned)].get();
 
     // loop over particles in container
     for (int index = 0; index < container->particles_stored(); ++index)

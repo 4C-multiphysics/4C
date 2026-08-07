@@ -26,7 +26,7 @@ Particle::ConstraintsProjectionBase::ConstraintsProjectionBase(MPI_Comm comm, do
 
 void Particle::ConstraintsProjectionBase::apply(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate, const double time) const
+    const std::set<Particle::Type>& types_to_integrate, const double time) const
 {
   // perform setup if needed
   setup(particle_container_bundle, types_to_integrate);
@@ -36,7 +36,7 @@ void Particle::ConstraintsProjectionBase::apply(
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particle_container_bundle->get_specific_container(particleType, Particle::Owned);
+        particle_container_bundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int n_particle_stored = container->particles_stored();
@@ -45,19 +45,14 @@ void Particle::ConstraintsProjectionBase::apply(
     if (n_particle_stored <= 0) continue;
 
     // get pointer to particle velocity and acceleration
-    double* vel = container->get_ptr_to_state(Particle::Velocity, 0);
-    double* acc = container->get_ptr_to_state(Particle::Acceleration, 0);
-
-    double* modvel = nullptr;
-    if (container->have_stored_state(Particle::ModifiedVelocity))
-      modvel = container->get_ptr_to_state(Particle::ModifiedVelocity, 0);
-
-    double* modacc = nullptr;
-    if (container->have_stored_state(Particle::ModifiedAcceleration))
-      modacc = container->get_ptr_to_state(Particle::ModifiedAcceleration, 0);
+    double* vel = container->get_ptr_to_state_writable(Particle::State::Velocity, 0);
+    double* acc = container->get_ptr_to_state_writable(Particle::State::Acceleration, 0);
+    double* modvel = container->try_get_ptr_to_state_writable(Particle::State::ModifiedVelocity, 0);
+    double* modacc =
+        container->try_get_ptr_to_state_writable(Particle::State::ModifiedAcceleration, 0);
 
     // get particle state dimension
-    const int pos_state_dim = container->get_state_dim(Particle::Position);
+    const int pos_state_dim = container->get_state_dim(Particle::State::Position);
 
     // project quantities
     project(n_particle_stored, pos_state_dim, vel, acc, modvel, modacc);
@@ -66,7 +61,7 @@ void Particle::ConstraintsProjectionBase::apply(
 
 int Particle::ConstraintsProjectionBase::calc_primary_axis(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate) const
+    const std::set<Particle::Type>& types_to_integrate) const
 {
   int local_result = calc_primary_axis_local(particle_container_bundle, types_to_integrate);
 
@@ -83,7 +78,7 @@ int Particle::ConstraintsProjectionBase::calc_primary_axis(
 
 void Particle::ConstraintsProjectionBase::setup(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate) const
+    const std::set<Particle::Type>& types_to_integrate) const
 {
   if (axis_ == axis_invalid_)
   {
@@ -95,13 +90,13 @@ void Particle::ConstraintsProjectionBase::setup(
 
 void Particle::ConstraintsProjectionBase::check_particles(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate) const
+    const std::set<Particle::Type>& types_to_integrate) const
 {
   for (auto& particleType : types_to_integrate)
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particle_container_bundle->get_specific_container(particleType, Particle::Owned);
+        particle_container_bundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int n_particle_stored = container->particles_stored();
@@ -110,13 +105,13 @@ void Particle::ConstraintsProjectionBase::check_particles(
     if (n_particle_stored <= 0) continue;
 
     // get pointer to particle position
-    const double* pos = container->get_ptr_to_state(Particle::Position, 0);
+    const double* pos = container->get_ptr_to_state(Particle::State::Position, 0);
 
     // get pointer to particle radius
-    const double* rad = container->get_ptr_to_state(Particle::Radius, 0);
+    const double* rad = container->get_ptr_to_state(Particle::State::Radius, 0);
 
     // get particle state dimension
-    const int pos_state_dim = container->get_state_dim(Particle::Position);
+    const int pos_state_dim = container->get_state_dim(Particle::State::Position);
 
     check(n_particle_stored, pos_state_dim, pos, rad);
   }
@@ -129,7 +124,7 @@ Particle::ConstraintsProjection2D::ConstraintsProjection2D(MPI_Comm comm)
 
 int Particle::ConstraintsProjection2D::calc_primary_axis_local(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate) const
+    const std::set<Particle::Type>& types_to_integrate) const
 {
   int axis_direction = axis_invalid_;
 
@@ -141,7 +136,7 @@ int Particle::ConstraintsProjection2D::calc_primary_axis_local(
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particle_container_bundle->get_specific_container(particleType, Particle::Owned);
+        particle_container_bundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int n_particle_stored = container->particles_stored();
@@ -150,11 +145,11 @@ int Particle::ConstraintsProjection2D::calc_primary_axis_local(
     if (n_particle_stored < 3) continue;
 
     // get pointer to particle position and radius
-    const double* pos = container->get_ptr_to_state(Particle::Position, 0);
-    const double* rad = container->get_ptr_to_state(Particle::Radius, 0);
+    const double* pos = container->get_ptr_to_state(Particle::State::Position, 0);
+    const double* rad = container->get_ptr_to_state(Particle::State::Radius, 0);
 
     // get particle state dimension
-    const int pos_state_dim = container->get_state_dim(Particle::Position);
+    const int pos_state_dim = container->get_state_dim(Particle::State::Position);
 
     // We already assume that there is not coinciding points
     const auto p0 = pos;
@@ -255,7 +250,7 @@ Particle::ConstraintsProjection1D::ConstraintsProjection1D(MPI_Comm comm)
 
 int Particle::ConstraintsProjection1D::calc_primary_axis_local(
     Particle::ParticleContainerBundleShrdPtr particle_container_bundle,
-    const std::set<Particle::TypeEnum>& types_to_integrate) const
+    const std::set<Particle::Type>& types_to_integrate) const
 {
   int axis_direction = axis_invalid_;
 
@@ -267,7 +262,7 @@ int Particle::ConstraintsProjection1D::calc_primary_axis_local(
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particle_container_bundle->get_specific_container(particleType, Particle::Owned);
+        particle_container_bundle->get_specific_container(particleType, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int n_particle_stored = container->particles_stored();
@@ -276,10 +271,10 @@ int Particle::ConstraintsProjection1D::calc_primary_axis_local(
     if (n_particle_stored < 2) continue;
 
     // get pointer to particle position
-    const double* pos = container->get_ptr_to_state(Particle::Position, 0);
+    const double* pos = container->get_ptr_to_state(Particle::State::Position, 0);
 
     // get particle state dimension
-    const int pos_state_dim = container->get_state_dim(Particle::Position);
+    const int pos_state_dim = container->get_state_dim(Particle::State::Position);
 
     // We already assume that there is not coinciding points
     const auto p0 = pos;

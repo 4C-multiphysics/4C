@@ -52,7 +52,7 @@ namespace
     // unresolved until the particle is found in a local container, and local id = -1 marks that
     // "not yet resolved on this rank" state
     return std::make_tuple(
-        Particle::UninitializedType, Particle::UninitializedStatus, -1, globalid);
+        Particle::Type::Uninitialized, Particle::Status::Uninitialized, -1, globalid);
   }
 
   std::set<long> build_known_peridynamic_bond_hashes(const std::shared_ptr<std::vector<
@@ -119,22 +119,23 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
   for (auto& potentialneighbors : particleengineinterface_->get_potential_particle_neighbors())
   {
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
     // filter rigid phase and boundary phase to find close pairs which interact in peridynamic or
     // DEM way
-    if ((type_i != PDPhase and type_i != BoundaryPhase) or
-        (type_j != PDPhase and type_j != BoundaryPhase))
+    if ((type_i != Particle::Type::PDPhase and type_i != Particle::Type::BoundaryPhase) or
+        (type_j != Particle::Type::PDPhase and type_j != Particle::Type::BoundaryPhase))
       continue;
 
-    if (type_i == BoundaryPhase and type_j == BoundaryPhase) continue;
+    if (type_i == Particle::Type::BoundaryPhase and type_j == Particle::Type::BoundaryPhase)
+      continue;
 
     // get corresponding particle containers
     Particle::ParticleContainer* container_i =
@@ -170,8 +171,8 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
 
     // all close and non-bonded particle pairs are considered as potential colliding partners
     // undergoing short range force interaction
-    const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-    const double* pos_j = container_j->get_ptr_to_state(Particle::Position, particle_j);
+    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+    const double* pos_j = container_j->get_ptr_to_state(Particle::State::Position, particle_j);
 
     // vector from particle i to j
     double r_ji[3];
@@ -183,8 +184,8 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
     const double absdist = ParticleUtils::vec_norm_two(r_ji);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::Radius, particle_j);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
 
     if (absdist < (1.0e-10 * rad_i[0]) or absdist < (1.0e-10 * rad_j[0]))
       FOUR_C_THROW("absolute distance %f between particles close to zero!", absdist);
@@ -218,12 +219,12 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
   {
     auto& particlepair = (*bondlist_)[iter];
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i, globalid_i;
     std::tie(type_i, status_i, particle_i, globalid_i) = particlepair.first;
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j, globalid_j;
     std::tie(type_j, status_j, particle_j, globalid_j) = particlepair.second;
 
@@ -295,8 +296,8 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
   for (const auto& potentialneighbors : particlewallinterface_->get_potential_wall_neighbors())
   {
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
@@ -308,11 +309,11 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
 
     // get position of particle i
     const Core::LinAlg::Matrix<3, 1> pos_i(
-        container_i->get_ptr_to_state(Particle::Position, particle_i));
+        container_i->get_ptr_to_state(Particle::State::Position, particle_i));
 
     // get pointer to column wall element
     Core::Elements::Element* ele = potentialneighbors.second;
@@ -399,8 +400,8 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
         particlewallpairdata_[indexofparticlewallpairs[0].second].tuple_i_;
 
     // access values of local index tuple of particle i
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = tuple_i;
 
@@ -409,7 +410,7 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
         particlecontainerbundle_->get_specific_container(type_i, status_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::Radius, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
 
     // define tolerance dependent on the particle radius
     const double adaptedtol = 1.0e-7 * rad_i[0];

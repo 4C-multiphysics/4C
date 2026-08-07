@@ -83,7 +83,7 @@ namespace Particle
     const bool writeparticlewallinteraction_;
 
     //! set of boundary particle types
-    std::set<Particle::TypeEnum> boundarytypes_;
+    std::set<Particle::Type> boundarytypes_;
   };
 
   class SPHRigidParticleContactElastic : public SPHRigidParticleContactBase

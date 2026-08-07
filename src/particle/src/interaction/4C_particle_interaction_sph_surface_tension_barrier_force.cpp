@@ -22,10 +22,11 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 Particle::SPHBarrierForce::SPHBarrierForce(const Teuchos::ParameterList& params)
     : params_sph_(params),
-      liquidtype_(Particle::Phase1),
-      gastype_(Particle::Phase2),
+      liquidtype_(Particle::Type::Phase1),
+      gastype_(Particle::Type::Phase2),
       fluidtypes_({liquidtype_, gastype_}),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase, Particle::PDPhase}),
+      boundarytypes_(
+          {Particle::Type::BoundaryPhase, Particle::Type::RigidPhase, Particle::Type::PDPhase}),
       dist_(params_sph_.get<double>("BARRIER_FORCE_DISTANCE")),
       cr_(params_sph_.get<double>("BARRIER_FORCE_TEMPSCALE")),
       trans_ref_temp_(params_sph_.get<double>("TRANS_REF_TEMPERATURE")),
@@ -99,13 +100,13 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_contribution() co
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -117,15 +118,20 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_contribution() co
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // get pointer to particle states
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* temp_i = container_i->cond_get_ptr_to_state(Particle::Temperature, particle_i);
-    double* acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    const double* temp_i =
+        container_i->try_get_ptr_to_state(Particle::State::Temperature, particle_i);
+    double* acc_i =
+        container_i->get_ptr_to_state_writable(Particle::State::Acceleration, particle_i);
 
-    const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
-    const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
-    const double* temp_j = container_j->cond_get_ptr_to_state(Particle::Temperature, particle_j);
-    double* acc_j = container_j->get_ptr_to_state(Particle::Acceleration, particle_j);
+    const double* mass_j = container_j->get_ptr_to_state(Particle::State::Mass, particle_j);
+    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
+    const double* temp_j =
+        container_j->try_get_ptr_to_state(Particle::State::Temperature, particle_j);
+    double* acc_j = nullptr;
+    if (status_j == Particle::Status::Owned)
+      acc_j = container_j->get_ptr_to_state_writable(Particle::State::Acceleration, particle_j);
 
     // evaluate transition factor above reference temperature
     double tempfac_i = 0.0;
@@ -158,8 +164,7 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_contribution() co
       ParticleUtils::vec_add_scale(acc_i, -fac / mass_i[0], particlepair.e_ij_);
 
       // sum contribution of neighboring particle i
-      if (status_j == Particle::Owned)
-        ParticleUtils::vec_add_scale(acc_j, fac / mass_j[0], particlepair.e_ij_);
+      if (acc_j) ParticleUtils::vec_add_scale(acc_j, fac / mass_j[0], particlepair.e_ij_);
     }
   }
 }
@@ -178,13 +183,13 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_boundary_contribu
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -212,17 +217,19 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_boundary_contribu
         particlecontainerbundle_->get_specific_container(type_j, status_j);
 
     // get pointer to particle states
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::Velocity, particle_i);
-    const double* temp_i = container_i->cond_get_ptr_to_state(Particle::Temperature, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
+    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
+    const double* temp_i =
+        container_i->try_get_ptr_to_state(Particle::State::Temperature, particle_i);
 
     double* acc_i = nullptr;
-    if (status_i == Particle::Owned)
-      acc_i = container_i->get_ptr_to_state(Particle::Acceleration, particle_i);
+    if (status_i == Particle::Status::Owned)
+      acc_i = container_i->get_ptr_to_state_writable(Particle::State::Acceleration, particle_i);
 
     // get pointer to boundary particle states
-    const double* vel_j = container_j->get_ptr_to_state(Particle::Velocity, particle_j);
-    const double* temp_j = container_j->cond_get_ptr_to_state(Particle::Temperature, particle_j);
+    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
+    const double* temp_j =
+        container_j->try_get_ptr_to_state(Particle::State::Temperature, particle_j);
 
     // evaluate transition factor above reference temperature
     double tempfac_i = 0.0;

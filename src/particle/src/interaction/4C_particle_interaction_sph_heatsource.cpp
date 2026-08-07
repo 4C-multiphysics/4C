@@ -48,25 +48,27 @@ void Particle::SPHHeatSourceBase::setup(
   neighborpairs_ = neighborpairs;
 
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--particlecontainerbundle_->get_particle_types().end()) + 1;
+  const int typevectorsize =
+      static_cast<int>(*(--particlecontainerbundle_->get_particle_types().end())) + 1;
 
   // allocate memory to hold particle types
   thermomaterial_.resize(typevectorsize);
 
   // iterate over particle types
   for (const auto& type_i : particlecontainerbundle_->get_particle_types())
-    thermomaterial_[type_i] = dynamic_cast<const Mat::PAR::ParticleMaterialThermo*>(
-        particlematerial_->get_ptr_to_particle_mat_parameter(type_i));
+    thermomaterial_[static_cast<int>(type_i)] =
+        dynamic_cast<const Mat::PAR::ParticleMaterialThermo*>(
+            particlematerial_->get_ptr_to_particle_mat_parameter(type_i));
 
   // set of potential absorbing particle types
-  std::set<Particle::TypeEnum> potentialabsorbingtypes = {
-      Particle::Phase1, Particle::Phase2, Particle::RigidPhase, Particle::PDPhase};
+  std::set<Particle::Type> potentialabsorbingtypes = {Particle::Type::Phase1,
+      Particle::Type::Phase2, Particle::Type::RigidPhase, Particle::Type::PDPhase};
 
   // iterate over particle types
   for (const auto& type_i : particlecontainerbundle_->get_particle_types())
   {
     // determine absorbing particle types
-    if (thermomaterial_[type_i]->thermalAbsorptivity_ > 0.0)
+    if (thermomaterial_[static_cast<int>(type_i)]->thermalAbsorptivity_ > 0.0)
     {
       // safety check
       if (not potentialabsorbingtypes.contains(type_i))
@@ -110,24 +112,27 @@ void Particle::SPHHeatSourceVolume::evaluate_heat_source(const double& evaltime)
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* basematerial_i =
         particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
 
-    const Mat::PAR::ParticleMaterialThermo* thermomaterial_i = thermomaterial_[type_i];
+    const Mat::PAR::ParticleMaterialThermo* thermomaterial_i =
+        thermomaterial_[static_cast<int>(type_i)];
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
     {
       // get pointer to particle states
-      const double* dens_i = (container_i->have_stored_state(Particle::Density))
-                                 ? container_i->get_ptr_to_state(Particle::Density, particle_i)
-                                 : &(basematerial_i->initDensity_);
+      const double* dens_i =
+          (container_i->have_stored_state(Particle::State::Density))
+              ? container_i->get_ptr_to_state(Particle::State::Density, particle_i)
+              : &(basematerial_i->initDensity_);
 
-      const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-      double* tempdot_i = container_i->get_ptr_to_state(Particle::TemperatureDot, particle_i);
+      const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+      double* tempdot_i =
+          container_i->get_ptr_to_state_writable(Particle::State::TemperatureDot, particle_i);
 
       // evaluate function defining heat source
       funct = function.evaluate_time_derivative(std::span(pos_i, 3), evaltime, 0, 0);
@@ -173,7 +178,7 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
   TEUCHOS_FUNC_TIME_MONITOR("Particle::SPHHeatSourceSurface::EvaluateHeatSource");
 
   // determine size of vectors indexed by particle types
-  const int typevectorsize = *(--absorbingtypes_.end()) + 1;
+  const int typevectorsize = static_cast<int>(*(--absorbingtypes_.end())) + 1;
 
   // colorfield gradient of absorbing interface particles
   std::vector<std::vector<std::vector<double>>> cfg_i(typevectorsize);
@@ -183,13 +188,13 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get number of particles stored in container
     const int particlestored = container_i->particles_stored();
 
     // allocate memory
-    cfg_i[type_i].assign(particlestored, std::vector<double>(3, 0.0));
+    cfg_i[static_cast<int>(type_i)].assign(particlestored, std::vector<double>(3, 0.0));
   }
 
   // get relevant particle pair indices
@@ -204,13 +209,13 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::TypeEnum type_i;
-    Particle::StatusEnum status_i;
+    Particle::Type type_i;
+    Particle::Status status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::TypeEnum type_j;
-    Particle::StatusEnum status_j;
+    Particle::Type type_j;
+    Particle::Status status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -229,16 +234,16 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
         particlematerial_->get_ptr_to_particle_mat_parameter(type_j);
 
     // get pointer to particle states
-    const double* mass_i = container_i->get_ptr_to_state(Particle::Mass, particle_i);
+    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
 
-    const double* dens_i = container_i->have_stored_state(Particle::Density)
-                               ? container_i->get_ptr_to_state(Particle::Density, particle_i)
+    const double* dens_i = container_i->have_stored_state(Particle::State::Density)
+                               ? container_i->get_ptr_to_state(Particle::State::Density, particle_i)
                                : &(material_i->initDensity_);
 
-    const double* mass_j = container_j->get_ptr_to_state(Particle::Mass, particle_j);
+    const double* mass_j = container_j->get_ptr_to_state(Particle::State::Mass, particle_j);
 
-    const double* dens_j = container_j->have_stored_state(Particle::Density)
-                               ? container_j->get_ptr_to_state(Particle::Density, particle_j)
+    const double* dens_j = container_j->have_stored_state(Particle::State::Density)
+                               ? container_j->get_ptr_to_state(Particle::State::Density, particle_j)
                                : &(material_j->initDensity_);
 
     // (current) volume of particle i and j
@@ -252,15 +257,15 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
     if (absorbingtypes_.contains(type_i))
     {
       // sum contribution of neighboring particle j
-      ParticleUtils::vec_add_scale(cfg_i[type_i][particle_i].data(),
+      ParticleUtils::vec_add_scale(cfg_i[static_cast<int>(type_i)][particle_i].data(),
           dens_i[0] / V_i * fac * particlepair.dWdrij_, particlepair.e_ij_);
     }
 
     // evaluate contribution of neighboring particle i
-    if (absorbingtypes_.contains(type_j) and status_j == Particle::Owned)
+    if (absorbingtypes_.contains(type_j) and status_j == Particle::Status::Owned)
     {
       // sum contribution of neighboring particle i
-      ParticleUtils::vec_add_scale(cfg_i[type_j][particle_j].data(),
+      ParticleUtils::vec_add_scale(cfg_i[static_cast<int>(type_j)][particle_j].data(),
           -dens_j[0] / V_j * fac * particlepair.dWdrji_, particlepair.e_ij_);
     }
   }
@@ -282,38 +287,43 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
 
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* basematerial_i =
         particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
 
-    const Mat::PAR::ParticleMaterialThermo* thermomaterial_i = thermomaterial_[type_i];
+    const Mat::PAR::ParticleMaterialThermo* thermomaterial_i =
+        thermomaterial_[static_cast<int>(type_i)];
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
     {
       // norm of colorfield gradient of absorbing interface particles
-      const double f_i = ParticleUtils::vec_norm_two(cfg_i[type_i][particle_i].data());
+      const double f_i =
+          ParticleUtils::vec_norm_two(cfg_i[static_cast<int>(type_i)][particle_i].data());
 
       // no heat source contribution to current particle
       if (not(f_i > 0.0)) continue;
 
       // projection of colorfield gradient with heat source direction
-      const double f_i_proj = eval_direction_ ? -ParticleUtils::vec_dot(direction_.data(),
-                                                    cfg_i[type_i][particle_i].data())
-                                              : f_i;
+      const double f_i_proj = eval_direction_
+                                  ? -ParticleUtils::vec_dot(direction_.data(),
+                                        cfg_i[static_cast<int>(type_i)][particle_i].data())
+                                  : f_i;
 
       // heat source contribution only for surface opposing heat source
       if (f_i_proj < 0.0) continue;
 
       // get pointer to particle states
-      const double* dens_i = (container_i->have_stored_state(Particle::Density))
-                                 ? container_i->get_ptr_to_state(Particle::Density, particle_i)
-                                 : &(basematerial_i->initDensity_);
+      const double* dens_i =
+          (container_i->have_stored_state(Particle::State::Density))
+              ? container_i->get_ptr_to_state(Particle::State::Density, particle_i)
+              : &(basematerial_i->initDensity_);
 
-      const double* pos_i = container_i->get_ptr_to_state(Particle::Position, particle_i);
-      double* tempdot_i = container_i->get_ptr_to_state(Particle::TemperatureDot, particle_i);
+      const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
+      double* tempdot_i =
+          container_i->get_ptr_to_state_writable(Particle::State::TemperatureDot, particle_i);
 
       // evaluate function defining heat source
       funct = function.evaluate_time_derivative(std::span(pos_i, 3), evaltime, 0, 0);
