@@ -242,10 +242,11 @@ void Core::FE::DiscretizationBuilder<dim>::build(Discretization& discretization,
     {
       if (!cell_blocks.contains(cell_type))
       {
-        cell_blocks.emplace(cell_type, IO::MeshInput::CellBlock<dim>(cell_type));
+        const auto block_id = static_cast<IO::MeshInput::ExternalIdType>(cell_blocks.size());
+        cell_blocks.emplace(
+            cell_type, IO::MeshInput::CellBlock<dim>(block_id, cell_type,
+                           "auto_clustered_group_for_" + cell_type_to_string(cell_type)));
         cell_blocks.at(cell_type).external_ids_.emplace();
-        cell_blocks.at(cell_type).name.emplace(
-            "auto_clustered_block_for_" + cell_type_to_string(cell_type));
       }
       return cell_blocks.at(cell_type);
     };
@@ -260,11 +261,9 @@ void Core::FE::DiscretizationBuilder<dim>::build(Discretization& discretization,
       if (elem.user_element) user_elements.emplace(eid, elem.user_element);
     }
 
-    int cell_block_index = 0;
     for (auto&& [cell_type, cell_block] : cell_blocks)
     {
-      mesh.cell_blocks.emplace(cell_block_index, std::move(cell_block));
-      cell_block_index++;
+      mesh.cell_blocks.push_back(std::move(cell_block));
     }
     assert_valid(mesh);
   }

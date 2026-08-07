@@ -14,6 +14,7 @@
 #include <Teuchos_Time.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 
+#include <optional>
 #include <utility>
 
 FOUR_C_NAMESPACE_OPEN
@@ -205,10 +206,11 @@ Core::IO::MeshInput::RawMesh<3> Core::IO::Exodus::read_exodus_file(
       CHECK_EXODUS_CALL(
           ex_get_conn(exo_handle, EX_ELEM_BLOCK, ebids[i], allconn.data(), nullptr, nullptr));
 
-      MeshInput::CellBlock<3> cell_block(cell_type_from_exodus_string(ele_type));
+      std::string block_name(mychar);
+      MeshInput::CellBlock<3> cell_block(ebids[i], cell_type_from_exodus_string(ele_type),
+          block_name.empty() ? std::nullopt : std::make_optional(std::move(block_name)));
       cell_block.external_ids_ = std::vector<int>{};
       cell_block.reserve(num_el_in_blk);
-      cell_block.name = mychar;
 
       for (int j = 0; j < num_el_in_blk; ++j)
       {
@@ -225,7 +227,7 @@ Core::IO::MeshInput::RawMesh<3> Core::IO::Exodus::read_exodus_file(
         cell_block.external_ids_->push_back(elem_ids[element_offset + j]);
       }
 
-      mesh.cell_blocks.emplace(ebids[i], std::move(cell_block));
+      mesh.cell_blocks.push_back(std::move(cell_block));
       element_offset += num_el_in_blk;
     }
   }  // end of element section

@@ -31,6 +31,7 @@
 #include <typeindex>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -59,6 +60,8 @@ namespace Core::IO::MeshInput
 
   template <unsigned dim>
   class CellBlock;
+  template <unsigned dim>
+  class Mesh;
   struct PointSet;
 
   using InternalIdType = int;
@@ -145,14 +148,13 @@ namespace Core::IO::MeshInput
     std::optional<std::vector<ExternalIdType>> external_ids;
 
     /**
-     * The cell blocks in the mesh. The keys are the cell block IDs, and the values are the cell
-     * blocks.
+     * The cell blocks in the mesh.
      *
      * The mesh is organized into cell blocks, each containing a collection of cells. Each
      * cell-block is required to have the same cell-type. 4C can solve different equations on each
      * block.
      */
-    std::map<ExternalIdType, CellBlock<dim>> cell_blocks{};
+    std::vector<CellBlock<dim>> cell_blocks{};
 
     /**
      * The points in the mesh. The keys are the point-set IDs, and the values are the point-sets.
@@ -186,17 +188,24 @@ namespace Core::IO::MeshInput
      */
     FE::CellType cell_type;
 
+    /**
+     * ID of the logical group this homogeneous cell block belongs to.
+     *
+     * Multiple homogeneous cell blocks may belong to the same group.
+     */
+    const ExternalIdType group_id;
+
     /*!
      * The external IDs of the cells in this block (if available).
      */
     std::optional<std::vector<ExternalIdType>> external_ids_{};
 
     /**
-     * An optional name for the cell block.
+     * An optional name for the logical group this homogeneous cell block belongs to.
      *
      * @note Not every file formats provides std::string-names for cell blocks.
      */
-    std::optional<std::string> name{};
+    const std::optional<std::string> group_name{};
 
     /**
      * Cell data associated with each cell in the block.
@@ -207,7 +216,16 @@ namespace Core::IO::MeshInput
      */
     std::unordered_map<std::string, FieldDataVariantType> cell_data{};
 
-    CellBlock(FE::CellType cell_type) : cell_type(cell_type) {}
+    explicit CellBlock(ExternalIdType group_id, FE::CellType cell_type,
+        std::optional<std::string> group_name = std::nullopt)
+        : cell_type(cell_type), group_id(group_id), group_name(std::move(group_name))
+    {
+    }
+
+    [[nodiscard]] std::string label() const
+    {
+      return group_name.value_or(std::to_string(group_id));
+    }
 
     /*!
      * @brief Returns the number of cells in this block
@@ -518,29 +536,36 @@ namespace Core::IO::MeshInput
     template <typename T>
     using MaybeConst = std::conditional_t<is_const, const T, T>;
 
-    CellBlockReference(MaybeConst<RawMesh<dim>>* raw_mesh, size_t id)
-        : raw_mesh_(raw_mesh), cell_block_(&raw_mesh_->cell_blocks.at(id)), id_(id)
+    CellBlockReference(MaybeConst<RawMesh<dim>>* raw_mesh, MaybeConst<CellBlock<dim>>* cell_block)
+        : raw_mesh_(raw_mesh), cell_block_(cell_block)
     {
       FOUR_C_ASSERT(raw_mesh_ != nullptr, "RawMesh pointer must not be null.");
+      FOUR_C_ASSERT(cell_block_ != nullptr, "CellBlock pointer must not be null.");
     }
 
     [[nodiscard]] MaybeConst<CellBlock<dim>>& get() { return *cell_block_; }
 
     [[nodiscard]] const CellBlock<dim>& get() const { return *cell_block_; }
 
-    /**
-     * Get the ID of the cell-block in the mesh.
-     */
-    [[nodiscard]] size_t id() const { return id_; }
+    [[nodiscard]] ExternalIdType group_id() const { return cell_block_->group_id; }
 
-    [[nodiscard]] const std::optional<std::string>& name() const { return cell_block_->name; }
+    [[nodiscard]] const std::optional<std::string>& group_name() const
+    {
+      return cell_block_->group_name;
+    }
 
+    [[nodiscard]] std::string label() const { return cell_block_->label(); }
 
     [[nodiscard]] std::size_t size() const { return cell_block_->size(); }
 
     [[nodiscard]] FE::CellType cell_type() const { return cell_block_->cell_type; }
 
     [[nodiscard]] auto cells() const { return cell_block_->cells(); }
+
+    [[nodiscard]] bool belongs_to(const RawMesh<dim>& raw_mesh) const
+    {
+      return raw_mesh_ == &raw_mesh;
+    }
 
     /**
      * Get a lightweight cells iterator in this block along with their associated data (if any).
@@ -557,7 +582,6 @@ namespace Core::IO::MeshInput
    private:
     MaybeConst<RawMesh<dim>>* raw_mesh_;
     MaybeConst<CellBlock<dim>>* cell_block_;
-    size_t id_;
   };
 
   /**
@@ -566,8 +590,8 @@ namespace Core::IO::MeshInput
   template <unsigned dim>
   struct CellBlockLookupTables
   {
-    /// map from id to cell blocks
-    std::unordered_map<ExternalIdType, CellBlockReference<dim, true>> by_id{};
+    /// map from logical group id to its homogeneous cell blocks
+    std::unordered_map<ExternalIdType, std::vector<CellBlockReference<dim, true>>> by_id{};
     /// map from name to cell blocks (there can be multiple blocks with the same name)
     std::unordered_map<std::string, std::vector<CellBlockReference<dim, true>>> by_name{};
   };
@@ -605,22 +629,25 @@ namespace Core::IO::MeshInput
      */
     [[nodiscard]] auto cell_blocks() const
     {
-      return cell_blocks_ids_filter_ |
-             std::views::transform(
-                 [this](size_t id) { return CellBlockReference<dim, true>(raw_mesh_.get(), id); });
+      return cell_blocks_filter_ |
+             std::views::transform([this](const CellBlock<dim>* cell_block)
+                 { return CellBlockReference<dim, true>(raw_mesh_.get(), cell_block); });
     }
 
     [[nodiscard]] auto cell_blocks()
     {
-      return cell_blocks_ids_filter_ |
-             std::views::transform(
-                 [this](size_t id) { return CellBlockReference<dim, false>(raw_mesh_.get(), id); });
+      return cell_blocks_filter_ | std::views::transform(
+                                       [this](const CellBlock<dim>* cell_block)
+                                       {
+                                         return CellBlockReference<dim, false>(raw_mesh_.get(),
+                                             const_cast<CellBlock<dim>*>(cell_block));
+                                       });
     }
 
-    /** @brief Builds lookup tables for cell blocks, indexed by ID and by name.
+    /** @brief Builds lookup tables for cell blocks, indexed by group ID and by group name.
      *
      * Iterates over all cell blocks in the mesh and populates tables for efficient lookup during
-     * mesh reading. Blocks without a name are only accessible by ID.
+     * mesh reading. Blocks without a name are only accessible by group ID.
      */
     [[nodiscard]] CellBlockLookupTables<dim> create_cell_block_lookup_tables() const;
 
@@ -681,15 +708,15 @@ namespace Core::IO::MeshInput
     }
 
     /**
-     * Filter the mesh to only contain cell blocks with the given IDs. The points are filtered to
-     * only contain those that are used by the remaining cell blocks. Point sets must either
-     * contain all the remaining points or none of them, otherwise an error is thrown. Only the
-     * point sets that contain all the remaining points are kept.
+     * Filter the mesh to only contain the given cell blocks. The points are
+     * filtered to only contain those that are used by the remaining cell blocks. Point sets must
+     * either contain all the remaining points or none of them, otherwise an error is thrown. Only
+     * the point sets that contain all the remaining points are kept.
      *
      * @note The returned filtered mesh is a view on the original mesh and does not own any data.
      */
-    [[nodiscard]] Mesh filter_by_cell_block_ids(
-        const std::vector<ExternalIdType>& cell_block_ids) const;
+    [[nodiscard]] Mesh filter_by_cell_blocks(
+        std::span<const CellBlockReference<dim, true>> cell_blocks) const;
 
     /**
      * Check whether the mesh is empty, i.e., it contains no cell blocks and no points.
@@ -699,7 +726,7 @@ namespace Core::IO::MeshInput
      */
     [[nodiscard]] bool empty() const
     {
-      return point_ids_filter_.empty() && cell_blocks_ids_filter_.empty();
+      return point_ids_filter_.empty() && cell_blocks_filter_.empty();
     }
 
     [[nodiscard]] const auto& converters() const { return raw_mesh_->converters; }
@@ -716,10 +743,9 @@ namespace Core::IO::MeshInput
     Utils::OwnerOrView<RawMesh<dim>> raw_mesh_;
 
     /**
-     * A list of filtered indices to be used to filter cell blocks when accessing them. By default,
-     * nothing is filtered.
+     * A list of filtered cell blocks. By default, nothing is filtered.
      */
-    std::vector<ExternalIdType> cell_blocks_ids_filter_{};
+    std::vector<const CellBlock<dim>*> cell_blocks_filter_{};
 
     /**
      * A list of filtered indices to be used to filter point sets when accessing them.
@@ -855,7 +881,8 @@ namespace Core::IO::MeshInput
     for (const auto& cell_block : mesh.cell_blocks())
     {
       FOUR_C_ASSERT_ALWAYS(cell_block.cell_data().contains(key),
-          "The cell block {} does not contain cell data with the name '{}'.", cell_block.id(), key);
+          "A cell block in group {} does not contain cell data with the name '{}'.",
+          cell_block.label(), key);
 
       const FieldDataVariantType& data = cell_block.cell_data().at(key);
 

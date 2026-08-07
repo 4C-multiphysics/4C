@@ -26,8 +26,7 @@ namespace Core::IO::VTU
    *
    *  - zero or more point-arrays named "point_set_#": Integer arrays telling whether a point is
    *    part of a point-set, where `#` is the id of the point-set
-   *  - cell-array "block_id": The id of the block of the respective cell. Note that every block can
-   *    only contain elements of the same cell-type.
+   *  - cell-array "block_id": The id of the block of the respective cell.
    *
    * @param vtu_file (in) : Path to the file
    * @return Core::IO::MeshInput::RawMesh

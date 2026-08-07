@@ -13,8 +13,10 @@
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_io_input_spec.hpp"
 
+#include <cstdint>
 #include <map>
 #include <string>
+#include <utility>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -29,6 +31,12 @@ namespace Core::Elements
    */
   struct ElementDefinition
   {
+    enum class CellTypeGrouping : std::uint8_t
+    {
+      one_of,  //< only one cell type group is allowed (and required) in the input
+      all_of,  //< all cell type groups are allowed in the input, but none are required.
+    };
+
     //! Gather all valid element definitions from global state
     ElementDefinition();
 
@@ -40,18 +48,23 @@ namespace Core::Elements
 
     /**
      * Get an InputSpec that describes all valid element definitions.
+     *
+     * @param cell_type_grouping Whether the cell type groups are wrapped in a @c one_of or @c
+     * all_of group.
      */
-    [[nodiscard]] Core::IO::InputSpec element_data_spec() const;
+    [[nodiscard]] Core::IO::InputSpec element_data_spec(
+        CellTypeGrouping cell_type_grouping = CellTypeGrouping::all_of) const;
 
     /**
-     * Given a @p data container that matches the element_data_spec(), unpack the information
-     * into a tuple of (element_name, cell_type, specific_data), where specific_data is a
-     * container that matches the spec from get(element_name, cell_type).
+     * Given a @p data container with exactly one element definition group, unpack the the element
+     * name and a map from all present cell type definitions to their corresponding input data.
+     * Asserts that at least one cell type group is defined.
      */
-    [[nodiscard]] std::tuple<std::string, Core::FE::CellType, Core::IO::InputParameterContainer>
+    [[nodiscard]] std::pair<std::string,
+        std::map<Core::FE::CellType, Core::IO::InputParameterContainer>>
     unpack_element_data(const Core::IO::InputParameterContainer& data) const;
 
-    //! Map from physics to cell type to InputSpec.
+    //! Map from element name to cell type to InputSpec.
     std::map<std::string, std::map<Core::FE::CellType, Core::IO::InputSpec>> definitions;
   };
 

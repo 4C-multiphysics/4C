@@ -129,7 +129,8 @@ void Core::FE::Discretization::fill_from_mesh(const IO::MeshInput::Mesh<3>& mesh
 
         // Currently, we always require a user element
         FOUR_C_ASSERT_ALWAYS(user_element,
-            "Need a user element for element ID {} in block with ID {}.", ele_count, block.id());
+            "Need a user element for element ID {} in element block {} with cell type {}.",
+            ele_count, block.label(), block.cell_type());
 
         add_element(user_element);
         ele_count++;

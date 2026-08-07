@@ -567,9 +567,9 @@ namespace
     }
   }
 
-  const auto& find_element_block_by_id(
-      const int id, const std::unordered_map<Core::IO::MeshInput::ExternalIdType,
-                        Core::IO::MeshInput::CellBlockReference<3, true>>& mesh_blocks_by_id)
+  const auto& find_element_blocks_by_id(const int id,
+      const std::unordered_map<Core::IO::MeshInput::ExternalIdType,
+          std::vector<Core::IO::MeshInput::CellBlockReference<3, true>>>& mesh_blocks_by_id)
   {
     // try to find the block with the given ID in the external mesh
     if (auto it = mesh_blocks_by_id.find(id); it != mesh_blocks_by_id.end())
@@ -582,22 +582,19 @@ namespace
     }
   }
 
-  const auto& find_element_block_by_name(const std::string& name,
+  const auto& find_element_blocks_by_name(const std::string& name,
       const std::unordered_map<std::string,
           std::vector<Core::IO::MeshInput::CellBlockReference<3, true>>>& mesh_blocks_by_name)
   {
-    // try to find the block(s) with the given NAME in the external mesh.
-    // We allow multiple blocks with the same name in the external mesh,
-    // but we do not allow the input to select multiple blocks with the same name.
+    // A logical external block may consist of multiple homogeneous cell blocks.
     if (auto it = mesh_blocks_by_name.find(name); it != mesh_blocks_by_name.end())
     {
-      FOUR_C_ASSERT_ALWAYS(it->second.size() == 1,
-          "Element block with NAME: '{}' is not unique in the external mesh file ({} occurrences "
-          "found).",
+      FOUR_C_ASSERT_ALWAYS(std::ranges::all_of(it->second, [&](const auto& cell_block)
+                               { return cell_block.group_id() == it->second.front().group_id(); }),
+          "Element block with NAME: '{}' is not unique in the external mesh file ({} unrelated "
+          "blocks found).",
           name, it->second.size());
-
-      // use the first (and only) block ID
-      return it->second.front();
+      return it->second;
     }
     FOUR_C_THROW("Element block with NAME: '{}' not found in the external mesh file.", name);
   }
@@ -631,8 +628,9 @@ namespace
 
     int ele_count = 0;
 
-    /// All element block IDs that are referenced in the input and found in the external mesh.
-    std::set<Core::IO::MeshInput::ExternalIdType> relevant_blocks;
+    /// All element blocks that are referenced in the input and found in the external mesh.
+    std::set<const Core::IO::MeshInput::CellBlock<3>*> relevant_block_pointers;
+    std::vector<Core::IO::MeshInput::CellBlockReference<3, true>> relevant_blocks;
 
     // Parse input section
     Core::IO::InputParameterContainer data;
@@ -652,52 +650,53 @@ namespace
               ? "ID: " + std::to_string(*input_id) + " and NAME: '" + *input_name + "'"
               : "neither");
 
-      const auto& cell_block = [&]() -> const Core::IO::MeshInput::CellBlockReference<3, true>&
+      const auto& cell_blocks =
+          [&]() -> const std::vector<Core::IO::MeshInput::CellBlockReference<3, true>>&
       {
         if (input_id.has_value())
         {
-          return find_element_block_by_id(*input_id, mesh_blocks_by_id);
+          return find_element_blocks_by_id(*input_id, mesh_blocks_by_id);
         }
         if (input_name.has_value())
         {
-          return find_element_block_by_name(*input_name, mesh_blocks_by_name);
+          return find_element_blocks_by_name(*input_name, mesh_blocks_by_name);
         }
         FOUR_C_THROW(
             "Element block definition must specify exactly one of ID or NAME but got neither.");
       }();
 
-      const auto inserted = relevant_blocks.insert(cell_block.id()).second;
-      FOUR_C_ASSERT_ALWAYS(inserted,
-          "Element block with {} is referenced more than once in the input file.",
-          (input_id.has_value() ? "ID: " + std::to_string(*input_id)
-                                : "NAME: '" + *input_name + "'"));
-
-      const auto& [element_name, cell_type, specific_data] =
+      const auto& [element_name, data_by_cell_type] =
           element_definition.unpack_element_data(current_element_block_input);
 
-      FOUR_C_ASSERT_ALWAYS(cell_type == cell_block.cell_type(),
-          "Element block with {} has cell type '{}' but your given element definition for '{}' "
-          "has cell type '{}'.",
-          (input_id.has_value() ? "ID: " + std::to_string(*input_id)
-                                : "NAME: '" + *input_name + "'"),
-          cell_block.cell_type(), element_name, cell_type);
-
-      // Build elements from cells
-      size_t cell_id_in_block = 0;
-      for (const auto& cell : cell_block.cells())
+      for (const auto& cell_block : cell_blocks)
       {
-        // Do not yet use the external cell ID. 4C is not yet prepared to deal with this!
-        // replace ele_count with cell.external_id once possible
-        auto ele = Core::Communication::factory(element_name, cell_block.cell_type(), ele_count, 0);
-        if (!ele) FOUR_C_THROW("element creation failed");
-        ele->set_node_ids(cell.size(), cell.data());
-        Core::IO::MeshInput::ElementDataFromCellData element_data{
-            cell_block.cell_data(), cell_id_in_block, mesh.converters()};
-        ele->read_element(element_name, cell_block.cell_type(), specific_data, element_data);
+        const auto inserted = relevant_block_pointers.insert(&cell_block.get()).second;
+        FOUR_C_ASSERT_ALWAYS(inserted,
+            "Element block {} is referenced more than once in the input file.", cell_block.label());
+        relevant_blocks.push_back(cell_block);
 
-        user_elements.emplace(ele_count, std::move(ele));
-        ele_count++;
-        cell_id_in_block++;
+        const auto data_it = data_by_cell_type.find(cell_block.cell_type());
+        FOUR_C_ASSERT_ALWAYS(data_it != data_by_cell_type.end(),
+            "Element block {} contains cell type '{}', but element '{}' has no matching "
+            "definition in the input.",
+            cell_block.label(), cell_block.cell_type(), element_name);
+
+        // Build elements from cells
+        size_t cell_id_in_block = 0;
+        for (const auto& cell : cell_block.cells())
+        {
+          auto ele =
+              Core::Communication::factory(element_name, cell_block.cell_type(), ele_count, 0);
+          if (!ele) FOUR_C_THROW("element creation failed");
+          ele->set_node_ids(cell.size(), cell.data());
+          Core::IO::MeshInput::ElementDataFromCellData element_data{
+              cell_block.cell_data(), cell_id_in_block, mesh.converters()};
+          ele->read_element(element_name, cell_block.cell_type(), data_it->second, element_data);
+
+          user_elements.emplace(ele_count, std::move(ele));
+          ele_count++;
+          cell_id_in_block++;
+        }
       }
     }
 
@@ -705,8 +704,7 @@ namespace
         "None of the element blocks specified in the input file could be found in the external "
         "mesh. Please check your input and mesh files.");
 
-    mesh_reader.filtered_mesh_on_rank_zero.emplace(
-        mesh.filter_by_cell_block_ids(std::vector(relevant_blocks.begin(), relevant_blocks.end())));
+    mesh_reader.filtered_mesh_on_rank_zero.emplace(mesh.filter_by_cell_blocks(relevant_blocks));
 
     // Rank zero provides the actual data.
     mesh_reader.target_discretization.fill_from_mesh(
@@ -966,12 +964,13 @@ void Core::IO::MeshReader::get_element_block_nodes(
     {
       for (const auto& cell_block : external_mesh->cell_blocks())
       {
-        std::set<int> nodes;
+        auto& block_nodes = element_block_nodes[cell_block.group_id()];
+        std::set<int> nodes(block_nodes.begin(), block_nodes.end());
         for (const auto& cell : cell_block.cells())
         {
           nodes.insert(cell.begin(), cell.end());
         }
-        element_block_nodes[cell_block.id()] = std::vector<int>(nodes.begin(), nodes.end());
+        block_nodes.assign(nodes.begin(), nodes.end());
       }
     }
     Core::Communication::broadcast(element_block_nodes, 0, get_comm());

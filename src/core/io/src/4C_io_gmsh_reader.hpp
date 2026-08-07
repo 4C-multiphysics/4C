@@ -31,8 +31,7 @@ namespace Core::IO::Gmsh
    *
    * @subsection element_blocks Element blocks
    * For each physical group, an element block is created using the corresponding
-   * (unique) tag as a key. If a physical group contains multiple element types, a warning is issued
-   * and the group is excluded from the element blocks.
+   * (unique) tag as a key.
    *
    * @subsection point_sets Point sets
    * All physical groups (independent of their dimension) are converted into point

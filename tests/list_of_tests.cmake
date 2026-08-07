@@ -2722,6 +2722,7 @@ four_c_test(TEST_FILE mixture_prestress_iterative_prescribed.4C.yaml NP 2 REQUIR
 four_c_test(TEST_FILE ssi_homogenized_constraint_mixture_qcyl.4C.yaml NP 2 REQUIRED_DEPENDENCIES VTK TRILINOS_MUMPS)
 four_c_test(TEST_FILE ssi_homogenized_constraint_mixture_prestress_qcyl.4C.yaml NP 2 REQUIRED_DEPENDENCIES VTK TRILINOS_MUMPS)
 four_c_test(TEST_FILE solid_vtu_input.4C.yaml NP 2 REQUIRED_DEPENDENCIES VTK TRILINOS_MUMPS RETURN_AS current)
+four_c_test(TEST_FILE solid_vtu_mixed_element_block.4C.yaml NP 2 REQUIRED_DEPENDENCIES VTK TRILINOS_MUMPS)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES VTK TRILINOS_MUMPS)
 four_c_test(TEST_FILE solid_vtu_field_input.4C.yaml NP 2 REQUIRED_DEPENDENCIES VTK TRILINOS_MUMPS RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES VTK TRILINOS_MUMPS)
@@ -2732,6 +2733,7 @@ four_c_test(TEST_FILE solid_vtu_named_point_sets.4C.yaml NP 2 REQUIRED_DEPENDENC
 # Tests requiring Gmsh
 four_c_test(TEST_FILE solid_gmsh_input.4C.yaml NP 2 REQUIRED_DEPENDENCIES GMSH RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES GMSH)
+four_c_test(TEST_FILE solid_gmsh_mixed_element_block.4C.yaml NP 2 REQUIRED_DEPENDENCIES GMSH)
 four_c_test(TEST_FILE solid_gmsh_input_node_set_names_monitor_dbc_csv.4C.yaml NP 2 REQUIRED_DEPENDENCIES GMSH RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES GMSH RETURN_AS current_restart)
 __four_c_test_add_csv_yaml_comparison(BASED_ON ${current_restart} RESULT_FILE xxx-1-left_faces_monitor_dbc.csv REFERENCE_FILE ref/solid_gmsh_input-left_faces_monitor_dbc.csv TOL_R 1e-6 TOL_A 1e-10 REQUIRED_DEPENDENCIES GMSH)

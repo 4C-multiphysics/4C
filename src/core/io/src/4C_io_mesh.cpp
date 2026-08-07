@@ -78,17 +78,11 @@ Core::IO::MeshInput::Mesh<dim>::create_cell_block_lookup_tables() const
 
   for (const auto& cell_block : cell_blocks())
   {
-    const auto cell_block_id = cell_block.id();
+    lookup_tables.by_id[cell_block.group_id()].emplace_back(cell_block);
 
-    bool inserted = lookup_tables.by_id.emplace(cell_block_id, cell_block).second;
-
-    FOUR_C_ASSERT_ALWAYS(inserted,
-        "Duplicate cell block ID {} found in the mesh. Cell block IDs must be unique.",
-        cell_block_id);
-
-    if (cell_block.name().has_value())
+    if (cell_block.group_name().has_value())
     {
-      lookup_tables.by_name[cell_block.name().value()].emplace_back(cell_block);
+      lookup_tables.by_name[cell_block.group_name().value()].emplace_back(cell_block);
     }
   }
 
@@ -97,24 +91,22 @@ Core::IO::MeshInput::Mesh<dim>::create_cell_block_lookup_tables() const
 
 
 template <unsigned dim>
-Core::IO::MeshInput::Mesh<dim> Core::IO::MeshInput::Mesh<dim>::filter_by_cell_block_ids(
-    const std::vector<ExternalIdType>& cell_block_ids) const
+Core::IO::MeshInput::Mesh<dim> Core::IO::MeshInput::Mesh<dim>::filter_by_cell_blocks(
+    std::span<const CellBlockReference<dim, true>> cell_blocks) const
 {
   Mesh filtered_mesh;
   filtered_mesh.raw_mesh_ = Utils::make_view(raw_mesh_.get());
-  filtered_mesh.cell_blocks_ids_filter_ = cell_block_ids;
+  filtered_mesh.cell_blocks_filter_.reserve(cell_blocks.size());
 
-  // Check that the given cell-block IDs exist in the mesh, and collect all point IDs that are used
-  // by the cell-blocks
+  // Collect all point IDs that are used by the selected cell-blocks.
   std::set<size_t> point_ids_set;
-  for (const auto id : cell_block_ids)
+  for (const auto& cell_block : cell_blocks)
   {
-    FOUR_C_ASSERT_ALWAYS(raw_mesh_->cell_blocks.contains(id),
-        "You are trying to filter the mesh by cell-block ID {}, but the mesh does not contain "
-        "a cell-block with this ID.",
-        id);
+    FOUR_C_ASSERT_ALWAYS(cell_block.belongs_to(*raw_mesh_),
+        "You are trying to filter a mesh by cell-blocks from another mesh.");
+    filtered_mesh.cell_blocks_filter_.push_back(&cell_block.get());
 
-    for (const auto& cell : raw_mesh_->cell_blocks.at(id).cells())
+    for (const auto& cell : cell_block.cells())
     {
       point_ids_set.insert(cell.begin(), cell.end());
     }
@@ -140,7 +132,7 @@ Core::IO::MeshInput::Mesh<dim> Core::IO::MeshInput::Mesh<dim>::filter_by_cell_bl
     if (has_relevant_points && has_irrelevant_points)
     {
       FOUR_C_THROW(
-          "While filtering the mesh by cell-block IDs, point-set {} contains some points "
+          "While filtering the mesh by cell-blocks, point-set {} contains some points "
           "that are used by the remaining cell-blocks, and some that are not. Point-sets "
           "must either contain all or none of the remaining points.",
           id);
@@ -158,8 +150,9 @@ void Core::IO::MeshInput::Mesh<dim>::default_fill_indices()
 {
   FOUR_C_ASSERT(raw_mesh_.get() != nullptr, "Internal error: RawMesh pointer must not be null.");
 
-  cell_blocks_ids_filter_.resize(raw_mesh_->cell_blocks.size());
-  std::ranges::copy(raw_mesh_->cell_blocks | std::views::keys, cell_blocks_ids_filter_.begin());
+  cell_blocks_filter_.clear();
+  cell_blocks_filter_.reserve(raw_mesh_->cell_blocks.size());
+  for (const auto& cell_block : raw_mesh_->cell_blocks) cell_blocks_filter_.push_back(&cell_block);
 
   point_sets_ids_filter_.resize(raw_mesh_->point_sets.size());
   std::ranges::copy(raw_mesh_->point_sets | std::views::keys, point_sets_ids_filter_.begin());
@@ -193,16 +186,16 @@ void Core::IO::MeshInput::assert_valid(const RawMesh<dim>& mesh)
 
   FOUR_C_ASSERT_ALWAYS(!mesh.cell_blocks.empty(), "The mesh has no cell blocks.");
 
-  for (const auto& [id, cell_block] : mesh.cell_blocks)
+  for (const auto& cell_block : mesh.cell_blocks)
   {
     // Avoid capturing structured binding for clang OpenMP
     const CellBlock<dim>& cell_block_ref = cell_block;
-    FOUR_C_ASSERT_ALWAYS(cell_block.size() > 0, "Cell block {} has no cells.", id);
+    FOUR_C_ASSERT_ALWAYS(cell_block.size() > 0, "Cell block {} has no cells.", cell_block.label());
 
     if (cell_block.external_ids_.has_value())
     {
       FOUR_C_ASSERT_ALWAYS(cell_block.external_ids_->size() == cell_block.size(),
-          "Cell block {} has {} cells but {} external IDs.", id, cell_block.size(),
+          "Cell block {} has {} cells but {} external IDs.", cell_block.label(), cell_block.size(),
           cell_block.external_ids_->size());
     }
 
@@ -211,7 +204,7 @@ void Core::IO::MeshInput::assert_valid(const RawMesh<dim>& mesh)
       for (const auto node_id : connectivity)
       {
         FOUR_C_ASSERT_ALWAYS(node_id >= 0 && static_cast<std::size_t>(node_id) < mesh.points.size(),
-            "Cell block {} has a cell with invalid node ID {}.", id, node_id);
+            "Cell block {} has a cell with invalid node ID {}.", cell_block.label(), node_id);
       }
     }
 
@@ -290,9 +283,7 @@ void Core::IO::MeshInput::print(const Mesh<dim>& mesh, std::ostream& os, Verbosi
     os << "cell-blocks:\n";
     for (const auto& cell_block : mesh.cell_blocks())
     {
-      os << "  cell-block " << cell_block.id();
-      if (cell_block.name().has_value()) os << " (" << *cell_block.name() << ")";
-      os << ": ";
+      os << "  cell-block " << cell_block.label() << ": ";
       print(cell_block.get(), os, verbose);
     }
     os << "\n";

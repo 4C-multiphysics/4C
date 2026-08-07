@@ -9,11 +9,13 @@
 
 #include "4C_io_exodus.hpp"
 
+#include "4C_io_mesh_test_utils_test.hpp"
 #include "4C_unittest_utils_support_files_test.hpp"
 
 namespace
 {
   using namespace FourC;
+  using Core::IO::MeshInput::Test::unique_cell_block_by_group_id;
 
   TEST(Exodus, MeshCubeHex)
   {
@@ -23,8 +25,8 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 2);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 27);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 4);
-    EXPECT_EQ(mesh.cell_blocks.at(2).size(), 4);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 4);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 2).size(), 4);
 
     EXPECT_EQ(mesh.points[0], (std::array{-5.0, 0.0, 0.0}));
     ASSERT_TRUE(mesh.external_ids.has_value());
@@ -38,18 +40,18 @@ namespace
     }};
 
     std::size_t i = 0;
-    for (const auto& cell : mesh.cell_blocks.at(1).cells())
+    for (const auto& cell : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       std::vector cell_vec(cell.begin(), cell.end());
       EXPECT_EQ(cell_vec, expected_cells[i]);
       ++i;
     }
 
-    ASSERT_TRUE(mesh.cell_blocks.at(1).name.has_value());
-    EXPECT_EQ(*mesh.cell_blocks.at(1).name, "left");
+    ASSERT_TRUE(unique_cell_block_by_group_id(mesh, 1).group_name.has_value());
+    EXPECT_EQ(*unique_cell_block_by_group_id(mesh, 1).group_name, "left");
 
-    ASSERT_TRUE(mesh.cell_blocks.at(2).name.has_value());
-    EXPECT_EQ(*mesh.cell_blocks.at(2).name, "right");
+    ASSERT_TRUE(unique_cell_block_by_group_id(mesh, 2).group_name.has_value());
+    EXPECT_EQ(*unique_cell_block_by_group_id(mesh, 2).group_name, "right");
 
     ASSERT_TRUE(mesh.point_sets.at(1).name.has_value());
     EXPECT_EQ(*mesh.point_sets.at(1).name, "node_set_top");

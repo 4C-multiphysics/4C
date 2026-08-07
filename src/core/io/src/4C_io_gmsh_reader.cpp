@@ -14,9 +14,11 @@
 #include "4C_io_mesh.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -272,8 +274,7 @@ namespace
 
   /**
    * @brief Fill the element block corresponding to a gmsh physical group into RawMesh.
-   * If multiple element types are detected in the physical group, a warning is printed and the
-   * physical group is not added to the element blocks (but can still be used as a point set).
+   * A separate homogeneous cell block is created for every element type in the physical group.
    *
    * @param dim The dimension of the physical group.
    * @param tag The tag of the physical group.
@@ -288,15 +289,14 @@ namespace
 
     get_elements_for_physical_group(dim, tag, elementType_to_element_data_map);
 
-    // fill element blocks
-    // loop over element types; if multiple types are found for the same physical group,
-    // a warning is issued and the corresponding element block is removed
+    // A physical group can contain multiple element types. Keep the cell blocks homogeneous and
+    // link all of them to the same group ID and group name if not empty.
     for (auto& [element_type, element_data] : elementType_to_element_data_map)
     {
       // get cell type from Gmsh element type
       Core::FE::CellType cell_type = gmsh_element_type_to_core_cell_type(element_type);
-      Core::IO::MeshInput::CellBlock<3> cell_block(cell_type);
-      cell_block.name = group_name;
+      Core::IO::MeshInput::CellBlock<3> cell_block(
+          tag, cell_type, group_name.empty() ? std::nullopt : std::make_optional(group_name));
       cell_block.external_ids_ = element_data.element_tags;
       cell_block.reserve(element_data.element_tags.size());
 
@@ -317,22 +317,7 @@ namespace
         cell_block.add_cell(translate_gmsh_connectivity(cell_type, connectivity));
       }
 
-      // tag is already a unique tag for element blocks. In the future, we might want to make the
-      // internal block_id independent of the physical group tag and use a mapping instead.
-      int block_id = tag;
-
-      auto [pair_in_map, inserted] = mesh.cell_blocks.emplace(block_id, cell_block);
-      if (!inserted)
-      {
-        std::cout << "Warning: Multiple element types detected "
-                  << "in physical group " << (group_name.empty() ? "(unnamed)" : group_name)
-                  << " (dim=" << dim << ", tag=" << tag << "). "
-                  << "Detected at least " << Core::FE::cell_type_to_string(cell_type) << " and "
-                  << Core::FE::cell_type_to_string(pair_in_map->second.cell_type) << ".\n"
-                  << "This physical group is removed from element blocks, but can still be used as "
-                     "a point set.\n";
-        mesh.cell_blocks.erase(pair_in_map);
-      }
+      mesh.cell_blocks.push_back(std::move(cell_block));
     }
   }
 

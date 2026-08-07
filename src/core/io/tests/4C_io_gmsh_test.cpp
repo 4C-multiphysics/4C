@@ -11,14 +11,20 @@
 #include "4C_fem_general_element_integration.hpp"
 #include "4C_io_gmsh_reader.hpp"
 #include "4C_io_mesh.hpp"
+#include "4C_io_mesh_test_utils_test.hpp"
 #include "4C_linalg_tensor.hpp"
 #include "4C_unittest_utils_support_files_test.hpp"
 
 #include <cstdio>
+#include <iterator>
+#include <set>
 
 namespace
 {
   using namespace FourC;
+  using Core::IO::MeshInput::Test::cell_blocks_by_group_id;
+  using Core::IO::MeshInput::Test::cell_blocks_by_group_name;
+  using Core::IO::MeshInput::Test::unique_cell_block_by_group_id;
 
   template <Core::FE::CellType celltype, unsigned dim>
   double evaluate_jacobian_determinant(Core::IO::MeshInput::RawMesh<3>& mesh,
@@ -52,16 +58,37 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 2);
     EXPECT_EQ(mesh.point_sets.size(), 2);
     EXPECT_EQ(mesh.points.size(), 16);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 2);
-    EXPECT_EQ(mesh.cell_blocks.at(2).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 2);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 2).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ =
           evaluate_jacobian_determinant<celltype, 3>(mesh, connectivities, {{0.1, 0.2, 0.3}});
       EXPECT_NEAR(detJ, 0.125, 1e-9);
     }
+  }
+
+  TEST(GMSH, SplitsMixedCellTypesInPhysicalGroup)
+  {
+#ifndef FOUR_C_WITH_GMSH
+    GTEST_SKIP() << "Skipping test: 4C msh-input requires Gmsh support";
+#endif
+    Core::IO::MeshInput::RawMesh<3> raw_mesh = Core::IO::Gmsh::read_msh_file(
+        TESTING::get_support_file_path("test_files/gmsh/mixed_hex8_tet4.msh.test"));
+
+    ASSERT_EQ(raw_mesh.cell_blocks.size(), 2);
+
+    const auto physical_group_1 = cell_blocks_by_group_id(raw_mesh, 1);
+    ASSERT_EQ(physical_group_1.size(), 2);
+    const std::set cell_types_in_physical_group_1{
+        physical_group_1[0].cell_type(), physical_group_1[1].cell_type()};
+    EXPECT_EQ(cell_types_in_physical_group_1,
+        (std::set{Core::FE::CellType::hex8, Core::FE::CellType::tet4}));
+
+    const auto mixed_volume_group = cell_blocks_by_group_name(raw_mesh, "MixedVolume");
+    EXPECT_EQ(mixed_volume_group.size(), 2);
   }
 
   TEST(GMSH, MeshCubeHex20)
@@ -76,11 +103,11 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 2);
     EXPECT_EQ(mesh.point_sets.size(), 2);
     EXPECT_EQ(mesh.points.size(), 44);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 2);
-    EXPECT_EQ(mesh.cell_blocks.at(2).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 2);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 2).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ =
           evaluate_jacobian_determinant<celltype, 3>(mesh, connectivities, {{0.1, 0.2, 0.3}});
@@ -100,11 +127,11 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 2);
     EXPECT_EQ(mesh.point_sets.size(), 2);
     EXPECT_EQ(mesh.points.size(), 63);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 2);
-    EXPECT_EQ(mesh.cell_blocks.at(2).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 2);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 2).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ =
           evaluate_jacobian_determinant<celltype, 3>(mesh, connectivities, {{0.1, 0.2, 0.3}});
@@ -125,10 +152,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 14);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 24);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 24);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ =
           evaluate_jacobian_determinant<celltype, 3>(mesh, connectivities, {{0.1, 0.2, 0.3}});
@@ -148,10 +175,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 63);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 24);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 24);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ =
           evaluate_jacobian_determinant<celltype, 3>(mesh, connectivities, {{0.1, 0.2, 0.3}});
@@ -171,10 +198,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 10);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 4);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 4);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ =
           evaluate_jacobian_determinant<celltype, 3>(mesh, connectivities, {{0.1, 0.2, 0.3}});
@@ -194,10 +221,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 31);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 4);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 4);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ =
           evaluate_jacobian_determinant<celltype, 3>(mesh, connectivities, {{0.1, 0.2, 0.3}});
@@ -217,10 +244,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 5);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ =
           evaluate_jacobian_determinant<celltype, 3>(mesh, connectivities, {{0.1, 0.2, 0.3}});
@@ -240,10 +267,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 4);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ = evaluate_jacobian_determinant<celltype, 2>(mesh, connectivities, {{0.1, 0.2}});
       EXPECT_NEAR(detJ, 0.25, 1e-9);
@@ -262,10 +289,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 8);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ = evaluate_jacobian_determinant<celltype, 2>(mesh, connectivities, {{0.1, 0.2}});
       EXPECT_NEAR(detJ, 0.25, 1e-9);
@@ -284,10 +311,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 9);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ = evaluate_jacobian_determinant<celltype, 2>(mesh, connectivities, {{0.1, 0.2}});
       EXPECT_NEAR(detJ, 0.25, 1e-9);
@@ -306,10 +333,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 4);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 2);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 2);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ = evaluate_jacobian_determinant<celltype, 2>(mesh, connectivities, {{0.1, 0.2}});
       EXPECT_NEAR(detJ, 1.0, 1e-9);
@@ -328,10 +355,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 9);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 2);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 2);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ = evaluate_jacobian_determinant<celltype, 2>(mesh, connectivities, {{0.1, 0.2}});
       EXPECT_NEAR(detJ, 1.0, 1e-9);
@@ -350,10 +377,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 2);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ = evaluate_jacobian_determinant<celltype, 1>(mesh, connectivities, {{0.1}});
       EXPECT_NEAR(detJ, 0.5, 1e-9);
@@ -371,10 +398,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 3);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ = evaluate_jacobian_determinant<celltype, 1>(mesh, connectivities, {{0.1}});
       EXPECT_NEAR(detJ, 0.5, 1e-9);
@@ -393,10 +420,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 4);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ = evaluate_jacobian_determinant<celltype, 1>(mesh, connectivities, {{0.1}});
       EXPECT_NEAR(detJ, 0.5, 1e-9);
@@ -415,10 +442,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 5);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ = evaluate_jacobian_determinant<celltype, 1>(mesh, connectivities, {{0.1}});
       EXPECT_NEAR(detJ, 0.5, 1e-9);
@@ -437,10 +464,10 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 6);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 1);
 
     // check node ordering of the connectivity by evaluating the jacobian at xi=[0.1,0.2,0.3]
-    for (const auto& connectivities : mesh.cell_blocks.at(1).cells())
+    for (const auto& connectivities : unique_cell_block_by_group_id(mesh, 1).cells())
     {
       double detJ = evaluate_jacobian_determinant<celltype, 1>(mesh, connectivities, {{0.1}});
       EXPECT_NEAR(detJ, 0.5, 1e-9);
@@ -459,8 +486,7 @@ namespace
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
     EXPECT_EQ(mesh.point_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 1);
-    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 1);
-
-    EXPECT_EQ(mesh.cell_blocks.at(1).cell_type, celltype);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).size(), 1);
+    EXPECT_EQ(unique_cell_block_by_group_id(mesh, 1).cell_type, celltype);
   }
 }  // namespace

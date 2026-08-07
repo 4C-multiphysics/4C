@@ -9,8 +9,6 @@
 
 #include "4C_io_mesh.hpp"
 
-#include "4C_utils_flat_vector_vector.hpp"
-
 namespace
 {
   using namespace FourC;
@@ -27,13 +25,13 @@ namespace
         {0.5, 0.0, 1.0}, {1.0, 0.0, 1.0}, {0.0, 0.5, 1}, {0.5, 0.5, 1}, {1.0, 0.5, 1},
         {0.0, 1.0, 1}, {0.5, 1.0, 1.0}, {1.0, 1.0, 1.0}};
 
-    CellBlock<3> block1(Core::FE::CellType::hex8);
+    CellBlock<3> block1(1, Core::FE::CellType::hex8);
     block1.add_cell(std::array{0, 1, 4, 3, 9, 10, 13, 12});
-    mesh.cell_blocks.emplace(1, block1);
+    mesh.cell_blocks.push_back(block1);
 
-    CellBlock<3> block2(Core::FE::CellType::hex8);
+    CellBlock<3> block2(2, Core::FE::CellType::hex8);
     block2.add_cell(std::array{1, 2, 5, 4, 10, 11, 14, 13});
-    mesh.cell_blocks.emplace(2, block2);
+    mesh.cell_blocks.push_back(block2);
 
     mesh.point_sets[10].point_ids = {0, 1, 3, 4};
     mesh.point_sets[20].point_ids = {22, 23, 25, 26};
@@ -53,7 +51,8 @@ namespace
     Core::IO::MeshInput::Mesh<3> mesh(std::move(raw_mesh));
     EXPECT_EQ(mesh.cell_blocks().size(), 2);
 
-    auto filtered_mesh = mesh.filter_by_cell_block_ids({1});
+    const auto cell_blocks = mesh.create_cell_block_lookup_tables().by_id.at(1);
+    auto filtered_mesh = mesh.filter_by_cell_blocks(cell_blocks);
 
     EXPECT_EQ(filtered_mesh.cell_blocks().size(), 1);
     EXPECT_EQ(filtered_mesh.points().size(), 8);

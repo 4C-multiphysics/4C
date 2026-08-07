@@ -18,8 +18,10 @@
 #include "4C_utils_vector2D.hpp"
 
 #include <algorithm>
+#include <map>
 #include <type_traits>
 #include <typeindex>
+#include <utility>
 
 #ifdef FOUR_C_WITH_VTK
 #include <vtkArrayDispatch.h>
@@ -51,7 +53,7 @@ namespace
         "Array {} not found!\n\n4C requires:\n\n * Zero or more integer-type point-arrays "
         "'point_set_#' that define the points in a set with id #. A point is in the set if the "
         "respective value is not zero.\n * Exactly one integer-typed cell-array `block_id` that "
-        "defines blocks of the mesh. Each block can only contain cells of the same type.",
+        "defines blocks of the mesh.",
         name);
 
     return *data_array;
@@ -422,9 +424,23 @@ Core::IO::MeshInput::RawMesh<3> Core::IO::VTU::read_vtu_file(const std::filesyst
   auto cell_data = get_vtk_data(vtk_mesh->GetCellData());
   vtkDataArray& cell_block_info = get_array(vtk_mesh->GetCellData(), "block_id");
 
+  // map from (group_id, cell_type) to the index of the cell block in the mesh.cell_blocks vector
+  std::map<std::pair<int, Core::FE::CellType>, std::size_t> cell_block_index_by_id_and_type;
+  // get the cell block for the given group_id and cell_type, creating a new one if it does not
+  // exist yet
+  auto get_cell_block = [&](int group_id, Core::FE::CellType cell_type) -> auto&
+  {
+    const auto key = std::pair{group_id, cell_type};
+    const auto [cell_block_index_it, inserted] =
+        cell_block_index_by_id_and_type.try_emplace(key, mesh.cell_blocks.size());
+    if (inserted) mesh.cell_blocks.emplace_back(group_id, cell_type);
+
+    return mesh.cell_blocks[cell_block_index_it->second];
+  };
+
   for (vtkIdType i = 0; i < vtk_mesh->GetNumberOfCells(); i++)
   {
-    const int block_id = extract_component_from_integral_array<int>(cell_block_info, i, 0);
+    const int group_id = extract_component_from_integral_array<int>(cell_block_info, i, 0);
 
     // extract connectivity
     vtkIdType number_of_points;
@@ -436,17 +452,7 @@ Core::IO::MeshInput::RawMesh<3> Core::IO::VTU::read_vtu_file(const std::filesyst
     const auto [cell_type, four_c_connectivity] = get_celltype_from_vtk_and_translate_connectivity(
         vtk_cell_type, std::span{connectivity, static_cast<std::size_t>(number_of_points)});
 
-    const auto [emplaced_item, inserted] =
-        mesh.cell_blocks.try_emplace(block_id, MeshInput::CellBlock<3>{cell_type});
-
-    MeshInput::CellBlock<3>& cell_block = emplaced_item->second;
-
-    FOUR_C_ASSERT_ALWAYS(emplaced_item->second.cell_type == cell_type,
-        "Cell block {} has mixed cell types: {} and {}.", block_id,
-        Core::FE::cell_type_to_string(emplaced_item->second.cell_type),
-        Core::FE::cell_type_to_string(cell_type));
-
-    // add to cell_block
+    MeshInput::CellBlock<3>& cell_block = get_cell_block(group_id, cell_type);
     cell_block.add_cell(four_c_connectivity);
 
     // process all cell data

@@ -20,6 +20,7 @@
 #include "4C_io_value_parser.hpp"
 #include "4C_rebalance_binning_based.hpp"
 #include "4C_rebalance_graph_based.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_ParameterList.hpp>
 
@@ -332,7 +333,9 @@ namespace Core::IO::GridGenerator
                             "techniques (when true) or manually partition based on the knowledge "
                             "of the domain intervals (when false).",
                 .default_value = false}),
-        group("elements", {element_definition.element_data_spec()},
+        group("elements",
+            {element_definition.element_data_spec(
+                Elements::ElementDefinition::CellTypeGrouping::one_of)},
             {.description = "Specify which elements should be generated."}),
     });
   }
@@ -350,8 +353,17 @@ namespace Core::IO::GridGenerator
     result.autopartition_ = input.get<bool>("auto_partition");
 
     Elements::ElementDefinition element_definition;
-    std::tie(result.elementtype_, result.cell_type, result.element_arguments) =
+    const auto& [element_name, data_by_cell_type] =
         element_definition.unpack_element_data(input.group("elements"));
+
+    // technically, this is guarded by the input spec already.
+    FOUR_C_ASSERT_ALWAYS(data_by_cell_type.size() == 1,
+        "Expected exactly one cell type group for {} elements, but got {}.", element_name,
+        data_by_cell_type.size());
+
+    result.elementtype_ = element_name;
+    result.cell_type = data_by_cell_type.begin()->first;
+    result.element_arguments = data_by_cell_type.begin()->second;
 
     return result;
   }
