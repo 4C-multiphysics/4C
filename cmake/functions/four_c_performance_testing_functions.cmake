@@ -13,7 +13,11 @@
 # enabled by enabling the option FOUR_C_ENABLE_FULL_PERFORMANCE_TESTS.
 #
 # required parameters:
-#   TEST_FILE:                    Name of the input file in the directory tests/performance_tests.
+#   TEST_FILE:                    Name of the input file in the directory tests/performance_tests. If this name
+#                                 ends in `.in`, the file is treated as a template and the suffix is stripped
+#                                 for the generated test name and the file actually handed to 4C. Use the `.in`
+#                                 suffix for input files that contain placeholders (e.g. @NUM_NODES@) that are
+#                                 not valid 4C-YAML input and would fail schema validation.
 #   MESH:                         Path the mesh file in the directory tests/performance_tests/meshes/{minimal/full}/. The minimal mesh is used during regular testing, and the full mesh is used for performance testing.
 #
 # optional parameters:
@@ -28,6 +32,18 @@
 #                                 If multiple dependencies are provided, all must be met for the test to run.
 #                                 Note that the version is the _internal_ version that 4C assigns to the dependency.
 #   COPY_FILES:                   List of files that should be copied to the build directory for the test.
+#   PLACEHOLDERS:                 Additional placeholders to substitute in the input file, on top of the mandatory
+#                                 @MESH_FILE@ substitution. One quoted string per placeholder: "NAME MINIMAL_VALUE
+#                                 FULL_VALUE". Every @NAME@ in the input file becomes MINIMAL_VALUE (minimal variant)
+#                                 or FULL_VALUE (full variant). Example:
+#                                   PLACEHOLDERS
+#                                   "NUM_NODES      192 134535"
+#                                   "NUM_ELEMENTS   191 134534"
+#                                 Use for problem-specific parameters that depend on the mesh/data variant, without
+#                                 teaching this generic function about any physics module's parameters.
+#                                 Each entry needs exactly 3 tokens, a valid/unique NAME that actually occurs as
+#                                 @NAME@ in the resolved test file. NAME "MESH_FILE" is reserved (it would collide
+#                                 with the mandatory @MESH_FILE@ substitution) and is rejected.
 function(four_c_performance_test)
   set(options "")
   set(oneValueArgs
@@ -38,7 +54,7 @@ function(four_c_performance_test)
       TIMEOUT_MINIMAL
       TIMEOUT_FULL
       )
-  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES COPY_FILES)
+  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES COPY_FILES PLACEHOLDERS)
   cmake_parse_arguments(
     _parsed
     "${options}"
@@ -53,6 +69,8 @@ function(four_c_performance_test)
   endif()
 
   assert_required_arguments(_parsed TEST_FILE MESH)
+
+  string(REGEX REPLACE "\\.in$" "" _generated_test_file_name "${_parsed_TEST_FILE}")
 
   if(NOT DEFINED _parsed_NP_FULL)
     # Query the system for the number of logical cores
@@ -91,6 +109,55 @@ function(four_c_performance_test)
     PROPERTY CMAKE_CONFIGURE_DEPENDS "${test_file_full_path}"
     )
 
+  # Validate PLACEHOLDERS entries: 3 tokens (NAME MINIMAL_VALUE FULL_VALUE), NAME valid and unique,
+  # and NAME must occur as @NAME@ in the test file source.
+  if(_parsed_PLACEHOLDERS)
+    file(READ "${test_file_full_path}" _test_file_source_content)
+    set(_seen_placeholder_names "")
+
+    foreach(_placeholder_entry IN LISTS _parsed_PLACEHOLDERS)
+      string(REGEX MATCHALL "[^ \t]+" _placeholder_tokens "${_placeholder_entry}")
+      list(LENGTH _placeholder_tokens _num_placeholder_tokens)
+      if(NOT _num_placeholder_tokens EQUAL 3)
+        message(
+          FATAL_ERROR
+            "Invalid PLACEHOLDERS entry '${_placeholder_entry}' for test file ${test_file_full_path}: expected exactly 3 whitespace-separated tokens \"NAME MINIMAL_VALUE FULL_VALUE\" as one quoted argument, got ${_num_placeholder_tokens}."
+          )
+      endif()
+      list(GET _placeholder_tokens 0 _placeholder_name)
+
+      if(NOT _placeholder_name MATCHES "^[A-Za-z_][A-Za-z0-9_]*$")
+        message(
+          FATAL_ERROR
+            "Invalid PLACEHOLDERS name '${_placeholder_name}' for test file ${test_file_full_path}: must be a valid identifier matching [A-Za-z_][A-Za-z0-9_]*."
+          )
+      endif()
+
+      if(_placeholder_name STREQUAL "MESH_FILE")
+        message(
+          FATAL_ERROR
+            "PLACEHOLDERS name 'MESH_FILE' is reserved for the mandatory mesh substitution; choose a different name."
+          )
+      endif()
+
+      if(_placeholder_name IN_LIST _seen_placeholder_names)
+        message(
+          FATAL_ERROR
+            "Duplicate PLACEHOLDERS name '${_placeholder_name}' for test file ${test_file_full_path}: each name must only be given once."
+          )
+      endif()
+      list(APPEND _seen_placeholder_names "${_placeholder_name}")
+
+      string(FIND "${_test_file_source_content}" "@${_placeholder_name}@" _placeholder_position)
+      if(_placeholder_position EQUAL -1)
+        message(
+          FATAL_ERROR
+            "PLACEHOLDERS name '${_placeholder_name}' does not occur as @${_placeholder_name}@ in test file source ${test_file_full_path}."
+          )
+      endif()
+    endforeach()
+  endif()
+
   # Full path to the both mesh files
   set(minimal_mesh_file_full_path
       "${PROJECT_SOURCE_DIR}/tests/performance_tests/meshes/minimal/${_parsed_MESH}"
@@ -113,7 +180,7 @@ function(four_c_performance_test)
       )
   endif()
 
-  set(name_of_test ${_parsed_TEST_FILE}-performance)
+  set(name_of_test ${_generated_test_file_name}-performance)
   set(test_directory ${PROJECT_BINARY_DIR}/framework_test_output/performance_tests/${name_of_test})
 
   # copy additional files to the test directory
@@ -150,16 +217,43 @@ function(four_c_performance_test)
     set(num_procs "${_parsed_NP_MINIMAL}")
   endif()
 
-  # configure the respective input file for the test (exchange the MESH_FILE placeholder)
-  set(configured_input_file "${test_directory}/${_parsed_TEST_FILE}")
+  # configure the respective input file for the test (exchange the MESH_FILE placeholder and any
+  # additional placeholders given via PLACEHOLDERS)
+  set(configured_input_file "${test_directory}/${_generated_test_file_name}")
+  set(_sed_expression "s|@MESH_FILE@|${mesh_file_full_path}|g")
+
+  foreach(_placeholder_entry IN LISTS _parsed_PLACEHOLDERS)
+    string(REGEX MATCHALL "[^ \t]+" _placeholder_tokens "${_placeholder_entry}")
+    list(GET _placeholder_tokens 0 _placeholder_name)
+    list(GET _placeholder_tokens 1 _placeholder_minimal_value)
+    list(GET _placeholder_tokens 2 _placeholder_full_value)
+
+    if(FOUR_C_ENABLE_FULL_PERFORMANCE_TESTS)
+      set(_placeholder_value "${_placeholder_full_value}")
+    else()
+      set(_placeholder_value "${_placeholder_minimal_value}")
+    endif()
+
+    string(APPEND _sed_expression ";s|@${_placeholder_name}@|${_placeholder_value}|g")
+  endforeach()
+
   set(_configure_inputfile
-      "sed 's|@MESH_FILE@|${mesh_file_full_path}|g' ${test_file_full_path} > ${configured_input_file}"
+      "sed '${_sed_expression}' ${test_file_full_path} > ${configured_input_file}"
+      )
+
+  # Safety net: after substitution, no @NAME@-shaped token must remain in the configured file.
+  set(_check_no_leftover_placeholders
+      "if grep -nE '@[A-Za-z_][A-Za-z0-9_]*@' ${configured_input_file}; then \
+echo 'Error: unsubstituted placeholder(s) remain in ${configured_input_file}; check MESH_FILE/PLACEHOLDERS for ${_parsed_TEST_FILE}.'; \
+exit 1; \
+fi"
       )
 
   # define the run command
   set(test_command
       "mkdir -p ${test_directory} \
                 && ${_configure_inputfile} \
+                && ${_check_no_leftover_placeholders} \
                 && ${_run_copy_files} \
                 && ${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np ${num_procs} $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> ${configured_input_file} ${test_directory}/xxx"
       )
