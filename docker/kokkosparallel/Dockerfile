@@ -7,8 +7,9 @@
 
 ARG BASE_IMAGE=nvidia/cuda:12.8.1-devel-ubuntu24.04
 FROM ${BASE_IMAGE}
-LABEL org.opencontainers.image.description="Image containing all the dependencies required for building and testing 4C"
+LABEL org.opencontainers.image.description="Image containing all the dependencies required for building and testing 4C with Kokkos' OpenMP and CUDA backends"
 LABEL org.4c-multiphysics.project=4C
+LABEL maintainer="4C-multiphysics"
 
 # Prevents tzdata asking for user feedback
 ENV DEBIAN_FRONTEND=noninteractive

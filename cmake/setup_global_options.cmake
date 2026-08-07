@@ -235,6 +235,28 @@ four_c_process_global_option(
   OFF
   )
 
+four_c_process_global_option(
+  FOUR_C_CLANGCUDA
+  DESCRIPTION
+  "Enable the relevant CMake compile definitions needed to use utilities/clangcuda++ as the compiler. This is currently necessary to use the CUDA backend of Kokkos in 4C, e.g. along with MIRCO."
+  DEFAULT
+  OFF
+  )
+if(FOUR_C_CLANGCUDA)
+  if(FOUR_C_WITH_ARBORX)
+    message(
+      WARNING
+        "Enabling both FOUR_C_CLANGCUDA and FOUR_C_WITH_ARBORX is not advised. This requires using an external CUDA-enabled ArborX installation and has not been tested."
+      )
+  endif()
+  if(FOUR_C_WITH_VTK)
+    message(
+      FATAL_ERROR
+        "Enabling both FOUR_C_CLANGCUDA and FOUR_C_WITH_VTK currently causes compilation errors."
+      )
+  endif()
+endif()
+
 ##
 # Optimization flags
 # These flags are reasonable defaults. Users may amend them by setting FOUR_C_CXX_FLAGS and/or FOUR_C_CXX_FLAGS_<CONFIG>.

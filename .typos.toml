@@ -12,8 +12,8 @@ ser = "ser" # "switched evolution relaxation" (used for pseudo transient continu
 ded = "ded" # derivative w.r.t. electrode variables
 uncomplete = "uncomplete" # used in the context of the uncomplete() call fo a sparse matrix
 Comput = "Comput" # abbreviation Comput. for Computational / Computing (typo fix cannot contain .)
-LOCA = "LOCA" # Trilinos/NOX package name
 Equil = "Equil" # "Equilibration" (used to pre-order a linear system)
+LOCA = "LOCA" # Trilinos/NOX package name
 
 # German words we want to keep as is.
 Interaktion = "Interaktion"

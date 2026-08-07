@@ -110,7 +110,7 @@ Currently supported versions are listed in ``<4C_sourceDir>/dependencies/support
 MIRCO can be used as optional dependency inside |FOURC| to be used for linear elastic frictionless normal contact between a rigid rough indentor and an elastic half-space.
 See the `MIRCO repository <https://github.com/imcs-compsim/MIRCO>`_ for details and downloads.
 
-Building |FOURC| with MIRCO enabled automatically fetches the repository during the configure stage and later builds the library as dependency.
+Building |FOURC| with MIRCO enabled automatically fetches the repository during the configure stage and later builds the library as dependency. Alternatively, an external MIRCO installation can be specified. In either case, MIRCO can make use of shared memory parallelism through Kokkos :ref:`when enabled <build4Cwithkokkosparallel>` in |FOURC|. Note that 4C and MIRCO must depend on the same Kokkos installation. When using Kokkos with CUDA enabled, MIRCO must be built with `CMAKE_POSITION_INDEPENDENT_CODE=ON`.
 
 .. _qhull:
 
@@ -605,3 +605,17 @@ This will install |FOURC| in the specified location. You can then use the instal
     # This pulls in all the necessary dependencies and headers.
     target_link_libraries(<your-target> PRIVATE 4C::lib4C)
 
+.. _build4Cwithkokkosparallel:
+
+Building |FOURC| with OpenMP and CUDA support through Kokkos
+------------------------------------------------------------
+
+|FOURC| is primarily developed around MPI parallelism, but also offers the ability to use shared memory parallelism through `Kokkos <https://kokkos.org/> _`, enabling hybrid parallelism on the CPU through OpenMP and GPU acceleration through CUDA.
+
+Kokkos (and Kokkos-Kernels) can be built within Trilinos or specified as an external TPL in Trilinos, and its configuration follows the usual procedure for the desired backend (see the `Kokkos configuration guide <https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html> _`). Trilinos then requires `Trilinos_ENABLE_<Backend>=ON` and, specifically for CUDA, `TPL_ENABLE_CUDA=ON`. To prevent oversubscription and unwanted shared memory parallelism in 4C, you should disable these backends for Tpetra with `TPETRA_INST_<BACKEND>=OFF` and explicitly set `TPETRA_INST_SERIAL=ON`. When using the CUDA backend, you must also make sure to enable the correct architecture during the Kokkos or Trilinos configuration (e.g. `Kokkos_ARCH_HOPPER90=ON`).
+
+Building 4C with Kokkos' CUDA backend enabled currently requires using a compiler wrapper, `utilities/clangcuda++`, as the C++ compiler and clang as the C compiler. Nvidia's NVCC, which Kokkos uses by default, has issues compiling some modern C++ code in 4C. To build 4C with Kokkos' CUDA backend, you must first enable the `FOUR_C_CLANGCUDA` compile option. When using Open MPI, you should then set the following environment variables to point to the underlying compilers: `export OMPI_CXX=</path/to/4C>/utilities/clangcuda++` and `export OMPI_CC=</path/to/clang>`. The `clangcuda++` compiler wrapper will detect and use the same architecture as the Kokkos installation, but you can explicitly override this by setting the `CLANGCUDA_ARCH` environment variable. The default clang++ and CUDA paths can also be overridden with the environment variables `CLANGCUDA_CLANG_PATH` and `CLANGCUDA_CUDA_PATH`, respectively.
+
+Due to incompatibility with the serial version of ArborX, it is recommended to disable `FOUR_C_WITH_ARBORX` when using shared memory Kokkos backends. It is also necessary to disable `FOUR_C_WITH_VTK` when using the CUDA backend, due to compilation errors.
+
+For developers, it is important to know that any target in 4C which contains Kokkos device code (e.g. `Kokkos::parallel_for()` or `KOKKOS_LAMBDA`) must be marked with the `CLANGCUDA_MODE_DEVICE` compile definition for CUDA compilation to be possible.
