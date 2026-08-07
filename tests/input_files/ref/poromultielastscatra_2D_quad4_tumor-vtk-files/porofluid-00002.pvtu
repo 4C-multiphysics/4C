@@ -13,12 +13,12 @@
       <PDataArray type="Float64" Name="flux_2" NumberOfComponents="3" format="ascii"/>
       <PDataArray type="Float64" Name="phi_1" format="ascii"/>
       <PDataArray type="Float64" Name="phi_2" format="ascii"/>
-      <PDataArray type="Float64" Name="porosity" format="ascii"/>
       <PDataArray type="Float64" Name="pressure_1" format="ascii"/>
       <PDataArray type="Float64" Name="pressure_2" format="ascii"/>
       <PDataArray type="Float64" Name="saturation_1" format="ascii"/>
       <PDataArray type="Float64" Name="saturation_2" format="ascii"/>
       <PDataArray type="Float64" Name="solidpressure" format="ascii"/>
+      <PDataArray type="Float64" Name="volfrac_multiphase" format="ascii"/>
     </PPointData>
     <PCellData>
       <PDataArray type="Float64" Name="Owner" format="ascii"/>

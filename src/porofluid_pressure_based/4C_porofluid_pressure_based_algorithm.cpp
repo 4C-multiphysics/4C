@@ -780,7 +780,7 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
         *discret_, *porosity_, nds_solidpressure_, 1);
 
     visualization_writer_->append_result_data_vector_with_context(
-        *porosity_multi, Core::IO::OutputEntity::node, {"porosity"});
+        *porosity_multi, Core::IO::OutputEntity::node, {"volfrac_multiphase"});
   }
 
   //! determinant of deformation gradient
