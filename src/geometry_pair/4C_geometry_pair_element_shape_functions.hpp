@@ -51,7 +51,7 @@ namespace GeometryPair
     template <typename V, typename T, typename... NotNeededArgumentType>
     static void evaluate(V& N, const T& xi, const NotNeededArgumentType&... not_needed_argument)
     {
-      if constexpr (ElementType::element_dim_ == 1)
+      if constexpr (ElementType::element_dim_ == 1 or ElementType::element_dim_ == 0)
       {
         Core::FE::shape_function_1d(N, xi, ElementType::discretization_);
       }
@@ -83,7 +83,7 @@ namespace GeometryPair
     static void evaluate_deriv1(
         V& dN, const T& xi, const NotNeededArgumentType&... not_needed_argument)
     {
-      if constexpr (ElementType::element_dim_ == 1)
+      if constexpr (ElementType::element_dim_ == 1 or ElementType::element_dim_ == 0)
       {
         Core::FE::shape_function_1d_deriv1(dN, xi, ElementType::discretization_);
       }
@@ -115,7 +115,7 @@ namespace GeometryPair
     static void evaluate_deriv2(
         V& ddN, const T& xi, const NotNeededArgumentType&... not_needed_argument)
     {
-      if constexpr (ElementType::element_dim_ == 1)
+      if constexpr (ElementType::element_dim_ == 1 or ElementType::element_dim_ == 0)
       {
         Core::FE::shape_function_1d_deriv2(ddN, xi, ElementType::discretization_);
       }

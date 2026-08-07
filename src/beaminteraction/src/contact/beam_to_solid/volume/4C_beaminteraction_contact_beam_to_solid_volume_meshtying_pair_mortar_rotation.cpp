@@ -648,14 +648,22 @@ namespace BeamInteraction
   template class BeamToSolidVolumeMeshtyingPairMortarRotation<t_hermite, t_nurbs27, mortar, \
       mortar_rot>;
 
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line1, t_line1);
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line1, t_line2);
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line1, t_line3);
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line1, t_line4);
+
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line2, t_line1);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line2, t_line2);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line2, t_line3);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line2, t_line4);
 
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line3, t_line1);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line3, t_line2);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line3, t_line3);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line3, t_line4);
 
+  initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line4, t_line1);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line4, t_line2);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line4, t_line3);
   initialize_template_beam_to_solid_volume_meshtying_pair_mortar_rotation(t_line4, t_line4);
