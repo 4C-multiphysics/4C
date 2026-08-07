@@ -10,11 +10,13 @@
 
 #include "4C_config.hpp"
 
+#include "4C_fem_general_fiber_node.hpp"
 #include "4C_linalg_graph.hpp"
 #include "4C_rebalance.hpp"
 
 #include <Teuchos_ParameterList.hpp>
 
+#include <array>
 #include <map>
 #include <string>
 #include <vector>
@@ -29,6 +31,7 @@ namespace Core::FE
 namespace Core::IO
 {
   class InputFile;
+  class ValueParser;
 
   namespace MeshInput
   {
@@ -39,7 +42,17 @@ namespace Core::IO
   namespace Internal
   {
     struct MeshReader;
-  }
+
+    struct FiberNodeData
+    {
+      std::map<Core::Nodes::CoordinateSystemDirection, std::array<double, 3>>
+          coordinate_system_directions;
+      std::vector<std::array<double, 3>> fibers;
+      std::map<Core::Nodes::AngleType, double> angles;
+    };
+
+    FiberNodeData read_fiber_node_data(Core::IO::ValueParser& parser);
+  }  // namespace Internal
 
 
   /**

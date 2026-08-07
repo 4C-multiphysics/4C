@@ -53,9 +53,9 @@ The nodes are read in by the section ``NODE COORDS``.
 
 Within this section, the nodes are read one per line. There are different types of nodes:
 
-- General nodes (NODE)
-- Control points for nurbs geometry (CP)
-- Nodes with addition fiber information (FNODE)
+- General nodes (`NODE`)
+- Control points for nurbs geometry (`CP`)
+- Nodes with addition fiber information  (`FNODE`)
 
 All node coordinates must be given with three coordinates, even if the problem is 1D or 2D:
 
@@ -64,8 +64,14 @@ All node coordinates must be given with three coordinates, even if the problem i
    NODE COORDS:
    - "NODE <ID> COORD <coord-x> <coord-y> <coord-z> [ROTANGLE <coord-yz> <coord-xz> <coord-xy>]"
    - "CP <ID> COORD <coord-x> <coord-y> <coord-z> <weight>"
-   - "FNODE <ID> COORD <coord-x> <coord-y> <coord-z> [FIBER1|FIBER2|FIBER3|CIR|TAN|RAD|HELIX|TRANS] <further parameters>"
+   - "FNODE <ID> COORD <coord-x> <coord-y> <coord-z> FIBER1 <x y z> [FIBER2 <x y z> [FIBER3 <x y z>]]"
+   - "FNODE <ID> "COORD <coord-x> <coord-y> <coord-z> CIR <x y z> TAN <x y z> HELIX <angle> TRANS <angle>"
 
+For ``FNODE`` in combination with fiber directions, the directions must be numbered consecutively starting with ``FIBER1``.
+For the problemtype `Cardiac_Monodomain`, the fiber directions can be entered alternatively
+using ``CIR``, ``TAN``, ``HELIX``, and ``TRANS``.
+All nodes of an element must provide the same set of parameters, either explicit or cardiac fiber directions.
+Their direction vectors and angle values may vary between nodes.
 
 .. _geometrysets:
 
@@ -177,4 +183,3 @@ while the parameter :math:`\sigma` is defined by the parameter ``RADIUSDISTRIBUT
     PARTICLE DYNAMIC/DEM:
       INITIAL_RADIUS: RadiusFromParticleInput|NormalRadiusDistribution|LogNormalRadiusDistribution
       RADIUSDISTRIBUTION_SIGMA: <variation>   # variation sigma for a radius distribution
-

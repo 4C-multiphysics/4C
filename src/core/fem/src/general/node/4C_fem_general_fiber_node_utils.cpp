@@ -36,6 +36,43 @@ void Core::Nodes::project_fibers_to_gauss_points(const Core::Nodes::Node* const*
       FOUR_C_THROW("At least one node of the element does not provide fibers.");
     }
 
+    if (inode > 0)
+    {
+      if (fiberNodes[inode]->fibers().size() != fiberNodes[0]->fibers().size())
+      {
+        FOUR_C_THROW(
+            "All nodes of an element must define the same number of FIBER directions. Node {} "
+            "defines {}, but node {} defines {}.",
+            fiberNodes[inode]->id(), fiberNodes[inode]->fibers().size(), fiberNodes[0]->id(),
+            fiberNodes[0]->fibers().size());
+      }
+
+      const auto& reference_directions = fiberNodes[0]->coordinate_system_directions();
+      const auto& node_directions = fiberNodes[inode]->coordinate_system_directions();
+      const bool same_coordinate_directions =
+          reference_directions.size() == node_directions.size() &&
+          std::all_of(reference_directions.begin(), reference_directions.end(),
+              [&node_directions](const auto& direction)
+              { return node_directions.contains(direction.first); });
+      if (!same_coordinate_directions)
+      {
+        FOUR_C_THROW(
+            "All nodes of an element must define the same set of coordinate system direction "
+            "types (CIR and TAN).");
+      }
+
+      const auto& reference_angles = fiberNodes[0]->angles();
+      const auto& node_angles = fiberNodes[inode]->angles();
+      const bool same_angles =
+          reference_angles.size() == node_angles.size() &&
+          std::all_of(reference_angles.begin(), reference_angles.end(),
+              [&node_angles](const auto& angle) { return node_angles.contains(angle.first); });
+      if (!same_angles)
+      {
+        FOUR_C_THROW("All nodes of an element must define the same angle types.");
+      }
+    }
+
     for (const auto& pair : fiberNodes[inode]->coordinate_system_directions())
     {
       coordinateSystemDirections[pair.first][inode] = pair.second;
@@ -119,21 +156,6 @@ void Core::Nodes::project_fibers_to_gauss_points(const Core::Nodes::Node* const*
       double tancir = tan[gp] * cir[gp];
       tan[gp] += -tancir * cir[gp];
       tan[gp] *= 1.0 / Core::LinAlg::norm2(tan[gp]);
-    }
-
-    // orthogonalize radial vector, preserve circular and tangential direction
-    if (gpFiberHolder.contains_coordinate_system_direction(CoordinateSystemDirection::Radial))
-    {
-      std::vector<Core::LinAlg::Tensor<double, 3>>& rad =
-          gpFiberHolder.get_coordinate_system_direction_mutual(CoordinateSystemDirection::Radial);
-      for (std::size_t gp = 0; gp < tan.size(); ++gp)
-      {
-        double radcir = rad[gp] * cir[gp];
-        double radtan = rad[gp] * tan[gp];
-        // double
-        rad[gp] += -radcir * cir[gp] - radtan * tan[gp];
-        rad[gp] *= 1.0 / Core::LinAlg::norm2(rad[gp]);
-      }
     }
   }
 }

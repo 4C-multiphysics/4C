@@ -66,6 +66,74 @@ namespace Core::IO::Internal
      */
     std::optional<Core::IO::MeshInput::Mesh<3>> filtered_mesh_on_rank_zero{};
   };
+
+  FiberNodeData read_fiber_node_data(Core::IO::ValueParser& parser)
+  {
+    FiberNodeData data;
+
+    while (!parser.at_end())
+    {
+      const auto next = parser.read<std::string>();
+
+      if (next.starts_with("FIBER"))
+      {
+        const std::string expected = "FIBER" + std::to_string(data.fibers.size() + 1);
+        if (next != expected)
+        {
+          FOUR_C_THROW(
+              "Fiber directions in FNODE must be numbered consecutively. Expected '{}', found "
+              "'{}'.",
+              expected, next);
+        }
+        data.fibers.emplace_back(parser.read<std::array<double, 3>>());
+      }
+      else if (next == "CIR")
+      {
+        data.coordinate_system_directions[Core::Nodes::CoordinateSystemDirection::Circular] =
+            parser.read<std::array<double, 3>>();
+      }
+      else if (next == "TAN")
+      {
+        data.coordinate_system_directions[Core::Nodes::CoordinateSystemDirection::Tangential] =
+            parser.read<std::array<double, 3>>();
+      }
+      else if (next == "HELIX")
+      {
+        data.angles[Core::Nodes::AngleType::Helix] = parser.read<double>();
+      }
+      else if (next == "TRANS")
+      {
+        data.angles[Core::Nodes::AngleType::Transverse] = parser.read<double>();
+      }
+      else
+      {
+        FOUR_C_THROW("Unknown FNODE parameter '{}'.", next);
+      }
+    }
+
+    const bool has_circular = data.coordinate_system_directions.contains(
+        Core::Nodes::CoordinateSystemDirection::Circular);
+    const bool has_tangential = data.coordinate_system_directions.contains(
+        Core::Nodes::CoordinateSystemDirection::Tangential);
+    const bool has_helix = data.angles.contains(Core::Nodes::AngleType::Helix);
+    const bool has_transverse = data.angles.contains(Core::Nodes::AngleType::Transverse);
+    const bool has_cardiac_directions =
+        has_circular || has_tangential || has_helix || has_transverse;
+
+    if (!data.fibers.empty() && has_cardiac_directions)
+    {
+      FOUR_C_THROW(
+          "Fiber directions in FNODE must be defined either by CIR/TAN/HELIX/TRANS or by FIBER1, "
+          "FIBER2, etc., but not by both.");
+    }
+
+    if (has_cardiac_directions && !(has_circular && has_tangential && has_helix && has_transverse))
+    {
+      FOUR_C_THROW("Cardiac fiber directions in FNODE require all of CIR, TAN, HELIX, and TRANS.");
+    }
+
+    return data;
+  }
 }  // namespace Core::IO::Internal
 
 namespace
@@ -453,56 +521,11 @@ namespace
       // this is a special node with additional fiber information
       else if (type == "FNODE")
       {
-        enum class FiberType
-        {
-          Unknown,
-          Angle,
-          Fiber,
-          CosyDirection
-        };
-
-        // read fiber node
-        std::map<Core::Nodes::CoordinateSystemDirection, std::array<double, 3>> cosyDirections;
-        std::vector<std::array<double, 3>> fibers;
-        std::map<Core::Nodes::AngleType, double> angles;
-
         int nodeid = parser.read<int>() - 1;
         parser.consume("COORD");
         auto coords = parser.read<std::vector<double>>(3);
         max_node_id = std::max(max_node_id, nodeid) + 1;
-
-        while (!parser.at_end())
-        {
-          auto next = parser.read<std::string>();
-
-          if (next == "FIBER" + std::to_string(1 + fibers.size()))
-          {
-            fibers.emplace_back(parser.read<std::array<double, 3>>());
-          }
-          else if (next == "CIR")
-          {
-            cosyDirections[Core::Nodes::CoordinateSystemDirection::Circular] =
-                parser.read<std::array<double, 3>>();
-          }
-          else if (next == "TAN")
-          {
-            cosyDirections[Core::Nodes::CoordinateSystemDirection::Tangential] =
-                parser.read<std::array<double, 3>>();
-          }
-          else if (next == "RAD")
-          {
-            cosyDirections[Core::Nodes::CoordinateSystemDirection::Radial] =
-                parser.read<std::array<double, 3>>();
-          }
-          else if (next == "HELIX")
-          {
-            angles[Core::Nodes::AngleType::Helix] = parser.read<double>();
-          }
-          else if (next == "TRANS")
-          {
-            angles[Core::Nodes::AngleType::Transverse] = parser.read<double>();
-          }
-        }
+        auto fiber_node_data = Core::IO::Internal::read_fiber_node_data(parser);
 
         // add fiber information to node
         std::vector<std::shared_ptr<Core::FE::Discretization>> discretizations =
@@ -510,8 +533,9 @@ namespace
         for (auto& dis : discretizations)
         {
           sanitize_node_coordinates(nodeid, dis->n_dim(), coords);
-          auto node = std::make_shared<Core::Nodes::FiberNode>(
-              nodeid, coords, cosyDirections, fibers, angles, myrank);
+          auto node = std::make_shared<Core::Nodes::FiberNode>(nodeid, coords,
+              fiber_node_data.coordinate_system_directions, fiber_node_data.fibers,
+              fiber_node_data.angles, myrank);
           dis->add_node(coords, nodeid, node);
         }
       }

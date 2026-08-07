@@ -9,6 +9,7 @@
 
 #include "4C_comm_parobject.hpp"
 #include "4C_fem_general_fiber_node.hpp"
+#include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -60,7 +61,13 @@ void Core::Nodes::NodalFiberHolder::set_angle(AngleType type, const std::vector<
 const std::vector<double>& Core::Nodes::NodalFiberHolder::get_angle(
     Core::Nodes::AngleType type) const
 {
-  return angles_.at(type);
+  const auto angle = angles_.find(type);
+  if (angle == angles_.end())
+  {
+    FOUR_C_THROW("Nodal fiber data does not contain the requested {} angle.",
+        type == AngleType::Helix ? "HELIX" : "TRANS");
+  }
+  return angle->second;
 }
 
 std::size_t Core::Nodes::NodalFiberHolder::fibers_size() const { return fibers_.size(); }
