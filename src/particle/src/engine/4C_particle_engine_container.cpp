@@ -74,7 +74,8 @@ void Particle::ParticleContainer::setup(int containersize, const std::set<Partic
     states_->is_dual_valid_[state_idx] = false;
 
     // allocate memory for current state in particle container
-    Kokkos::resize(states_->host_[state_idx], containersize_ * statedim_[state_idx]);
+    states_->host_[state_idx] = Kokkos::View<double*, Kokkos::HostSpace>(
+        enum_to_state_name(state), containersize_ * statedim_[state_idx]);
   }
 }
 
