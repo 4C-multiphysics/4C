@@ -37,8 +37,8 @@ FOUR_C_NAMESPACE_OPEN
  | constructor                                          kremheller 03/17 |
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastMonolithicAlgorithm::PorofluidElastMonolithicAlgorithm(
-    MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
-    : PorofluidElastAlgorithm(comm, globaltimeparams),
+    Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
+    : PorofluidElastAlgorithm(problem, comm, globaltimeparams),
       ittolinc_(0.0),
       ittolres_(0.0),
       itmax_(0),

@@ -23,8 +23,8 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastScatraPartitionedAlgorithm::
     PorofluidElastScatraPartitionedAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
-    : PorofluidElastScatraBaseAlgorithm(comm, globaltimeparams),
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
+    : PorofluidElastScatraBaseAlgorithm(problem, comm, globaltimeparams),
       scatra_inc_np_(nullptr),
       structure_inc_np_(nullptr),
       porofluid_inc_np_(nullptr),
@@ -354,8 +354,8 @@ bool PoroPressureBased::PorofluidElastScatraPartitionedAlgorithm::convergence_ch
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastScatraNestedPartitionedAlgorithm::
     PorofluidElastScatraNestedPartitionedAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
-    : PorofluidElastScatraPartitionedAlgorithm(comm, globaltimeparams)
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
+    : PorofluidElastScatraPartitionedAlgorithm(problem, comm, globaltimeparams)
 {
 }
 
@@ -414,8 +414,8 @@ void PoroPressureBased::PorofluidElastScatraNestedPartitionedAlgorithm::solve()
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastScatraSequentialPartitionedAlgorithm::
     PorofluidElastScatraSequentialPartitionedAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
-    : PorofluidElastScatraPartitionedAlgorithm(comm, globaltimeparams)
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
+    : PorofluidElastScatraPartitionedAlgorithm(problem, comm, globaltimeparams)
 {
 }
 

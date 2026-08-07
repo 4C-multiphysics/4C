@@ -177,7 +177,7 @@ void PoroPressureBased::assign_material_pointers_porofluid_elast(
  | create algorithm                                                      |
  *----------------------------------------------------------------------*/
 std::shared_ptr<PoroPressureBased::PorofluidElastAlgorithm>
-PoroPressureBased::create_algorithm_porofluid_elast(
+PoroPressureBased::create_algorithm_porofluid_elast(Global::Problem& problem,
     PoroPressureBased::SolutionSchemePorofluidElast solscheme,
     const Teuchos::ParameterList& timeparams, MPI_Comm comm,
     PorofluidElastAlgorithmDeps algorithm_deps)
@@ -200,7 +200,7 @@ PoroPressureBased::create_algorithm_porofluid_elast(
     {
       // call constructor
       algo = std::make_shared<PoroPressureBased::PorofluidElastPartitionedAlgorithm>(
-          comm, adapter_global_time_params);
+          problem, comm, adapter_global_time_params);
       break;
     }
     case SolutionSchemePorofluidElast::twoway_monolithic:
@@ -210,13 +210,13 @@ PoroPressureBased::create_algorithm_porofluid_elast(
       {
         // call constructor
         algo = std::make_shared<PoroPressureBased::PorofluidElastMonolithicAlgorithm>(
-            comm, adapter_global_time_params);
+            problem, comm, adapter_global_time_params);
       }
       else
       {
         // call constructor
         algo = std::make_shared<PoroPressureBased::PorofluidElastArteryCouplingAlgorithm>(
-            comm, adapter_global_time_params);
+            problem, comm, adapter_global_time_params);
       }
       break;
     }

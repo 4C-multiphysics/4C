@@ -82,7 +82,7 @@ void porofluid_pressure_based_elast_scatra_dyn(int restart)
 
   std::shared_ptr<PoroPressureBased::PorofluidElastScatraBaseAlgorithm> algo =
       PoroPressureBased::create_algorithm_porofluid_elast_scatra(
-          solution_scheme, porofluid_elast_scatra_params, comm);
+          *problem, solution_scheme, porofluid_elast_scatra_params, comm);
   algo->set_algorithm_deps(algorithm_deps);
 
   algo->init(porofluid_elast_scatra_params, porofluid_elast_scatra_params, porofluid_elast_params,

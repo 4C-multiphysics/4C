@@ -31,7 +31,7 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::shared_ptr<PoroPressureBased::PorofluidElastScatraBaseAlgorithm>
-PoroPressureBased::create_algorithm_porofluid_elast_scatra(
+PoroPressureBased::create_algorithm_porofluid_elast_scatra(Global::Problem& problem,
     PoroPressureBased::SolutionSchemePorofluidElastScatra solscheme,
     const Teuchos::ParameterList& timeparams, MPI_Comm comm)
 {
@@ -57,7 +57,7 @@ PoroPressureBased::create_algorithm_porofluid_elast_scatra(
     {
       // call constructor
       algo = std::make_shared<PoroPressureBased::PorofluidElastScatraNestedPartitionedAlgorithm>(
-          comm, adapter_global_time_params);
+          problem, comm, adapter_global_time_params);
       break;
     }
     case SolutionSchemePorofluidElastScatra::twoway_partitioned_sequential:
@@ -65,7 +65,7 @@ PoroPressureBased::create_algorithm_porofluid_elast_scatra(
       // call constructor
       algo =
           std::make_shared<PoroPressureBased::PorofluidElastScatraSequentialPartitionedAlgorithm>(
-              comm, adapter_global_time_params);
+              problem, comm, adapter_global_time_params);
       break;
     }
     case SolutionSchemePorofluidElastScatra::twoway_monolithic:
@@ -75,7 +75,7 @@ PoroPressureBased::create_algorithm_porofluid_elast_scatra(
       {
         // call constructor
         algo = std::make_shared<PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm>(
-            comm, adapter_global_time_params);
+            problem, comm, adapter_global_time_params);
       }
       else
       {
@@ -83,7 +83,7 @@ PoroPressureBased::create_algorithm_porofluid_elast_scatra(
         algo = std::make_shared<
             PoroPressureBased::PorofluidElastScatraMonolithicArteryCouplingAlgorithm>(
 
-            comm, adapter_global_time_params);
+            problem, comm, adapter_global_time_params);
       }
       break;
     }

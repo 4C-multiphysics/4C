@@ -28,8 +28,8 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastScatraBaseAlgorithm::PorofluidElastScatraBaseAlgorithm(
-    MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
-    : AlgorithmBase(*Global::Problem::instance(), comm, globaltimeparams),
+    Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
+    : AlgorithmBase(problem, comm, globaltimeparams),
       porofluid_elast_algo_(nullptr),
       scatra_algo_(nullptr),
       flux_reconstruction_active_(false),
@@ -115,9 +115,9 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::init(
         "approach instead.");
   }
 
-  porofluid_elast_algo_ =
-      PoroPressureBased::create_algorithm_porofluid_elast(solution_scheme_porofluid_elast,
-          global_time_params, get_comm(), porofluid_elast_algorithm_deps);
+  porofluid_elast_algo_ = PoroPressureBased::create_algorithm_porofluid_elast(problem(),
+      solution_scheme_porofluid_elast, global_time_params, get_comm(),
+      porofluid_elast_algorithm_deps);
 
   // initialize
   porofluid_elast_algo_->init(global_time_params, porofluid_elast_params, structure_params,
@@ -141,9 +141,9 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::init(
       "RESULTSEVERY", global_time_params.sublist("output").get<int>("result_data_every"));
 
   // scatra problem
-  scatra_algo_ = std::make_shared<Adapter::ScaTraBaseAlgorithm>(*Global::Problem::instance(),
-      scatra_global_time_params, scatra_params, algorithm_deps.solver_params_by_id(linsolvernumber),
-      scatra_disname, true);
+  scatra_algo_ =
+      std::make_shared<Adapter::ScaTraBaseAlgorithm>(problem(), scatra_global_time_params,
+          scatra_params, algorithm_deps.solver_params_by_id(linsolvernumber), scatra_disname, true);
 
   // initialize the base algo.
   // scatra time integrator is constructed and initialized inside.

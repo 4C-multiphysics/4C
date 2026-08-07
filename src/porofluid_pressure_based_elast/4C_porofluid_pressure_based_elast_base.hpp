@@ -34,13 +34,19 @@ namespace Core::FE
   class Discretization;
 }  // namespace Core::FE
 
+namespace Global
+{
+  class Problem;
+}  // namespace Global
+
 namespace PoroPressureBased
 {
   //! Base class of porofluid-elasticity algorithms
   class PorofluidElastAlgorithm : public Adapter::AlgorithmBase
   {
    public:
-    PorofluidElastAlgorithm(MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
+    PorofluidElastAlgorithm(
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
 
     /// initialization
     virtual void init(const Teuchos::ParameterList& global_time_params,

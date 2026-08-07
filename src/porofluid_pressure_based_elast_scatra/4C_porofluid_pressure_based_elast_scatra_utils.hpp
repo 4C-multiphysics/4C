@@ -52,6 +52,7 @@ namespace PoroPressureBased
 
   //! create solution algorithm depending on input file
   std::shared_ptr<PorofluidElastScatraBaseAlgorithm> create_algorithm_porofluid_elast_scatra(
+      Global::Problem& problem,                      //!< global problem instance (i)
       SolutionSchemePorofluidElastScatra solscheme,  //!< solution scheme to build (i)
       const Teuchos::ParameterList& timeparams,      //!< problem parameters (i)
       MPI_Comm comm                                  //!< communicator(i)

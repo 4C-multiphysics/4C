@@ -75,7 +75,7 @@ void porofluid_elast_dyn(int restart)
 
   std::shared_ptr<PoroPressureBased::PorofluidElastAlgorithm> algo =
       PoroPressureBased::create_algorithm_porofluid_elast(
-          solscheme, poroparams, comm, algorithm_deps);
+          *problem, solscheme, poroparams, comm, algorithm_deps);
 
   // initialize
   algo->init(poroparams, poroparams, structdyn, fluiddyn, struct_disname, fluid_disname, true,

@@ -42,6 +42,11 @@ namespace ScaTra
   class MeshtyingStrategyArtery;
 }
 
+namespace Global
+{
+  class Problem;
+}  // namespace Global
+
 namespace PoroPressureBased
 {
   //! Base class of all algorithms for porofluid-elasticity problems with scalar transport and
@@ -50,7 +55,7 @@ namespace PoroPressureBased
   {
    public:
     PorofluidElastScatraBaseAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
 
     //! initialization
     virtual void init(const Teuchos::ParameterList& global_time_params,

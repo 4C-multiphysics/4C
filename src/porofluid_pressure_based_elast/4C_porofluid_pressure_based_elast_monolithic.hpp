@@ -38,6 +38,11 @@ namespace Core::Conditions
   class LocsysManager;
 }
 
+namespace Global
+{
+  class Problem;
+}  // namespace Global
+
 namespace PoroPressureBased
 {
   //! Monolithic solution scheme for porofluid-elasticity problems
@@ -45,7 +50,7 @@ namespace PoroPressureBased
   {
    public:
     PorofluidElastMonolithicAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
 
     /// initialization
     void init(const Teuchos::ParameterList& globaltimeparams,

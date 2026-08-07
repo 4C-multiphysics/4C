@@ -15,6 +15,11 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+namespace Global
+{
+  class Problem;
+}  // namespace Global
+
 namespace PoroPressureBased
 {
   //! Partitioned solution scheme of porofluid-elasticity problems with scalar transport
@@ -22,7 +27,7 @@ namespace PoroPressureBased
   {
    public:
     PorofluidElastScatraPartitionedAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
 
     /// initialization
     void init(const Teuchos::ParameterList& globaltimeparams,
@@ -93,7 +98,7 @@ namespace PoroPressureBased
   {
    public:
     PorofluidElastScatraNestedPartitionedAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
 
     /// initialization
     void init(const Teuchos::ParameterList& globaltimeparams,
@@ -122,7 +127,7 @@ namespace PoroPressureBased
   {
    public:
     PorofluidElastScatraSequentialPartitionedAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
 
     /// initialization
     void init(const Teuchos::ParameterList& globaltimeparams,

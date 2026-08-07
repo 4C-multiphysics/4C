@@ -35,6 +35,11 @@ namespace Core::LinearSolver
   enum class SolverType;
 }
 
+namespace Global
+{
+  class Problem;
+}  // namespace Global
+
 namespace PoroPressureBased
 {
   //! Monolithic solution scheme of porofluid-elasticity problems with scalar transport
@@ -42,7 +47,7 @@ namespace PoroPressureBased
   {
    public:
     PorofluidElastScatraMonolithicAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
 
     /// initialization
     void init(const Teuchos::ParameterList& globaltimeparams,
@@ -298,7 +303,7 @@ namespace PoroPressureBased
   {
    public:
     PorofluidElastScatraMonolithicArteryCouplingAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
 
    private:
     // Setup full map

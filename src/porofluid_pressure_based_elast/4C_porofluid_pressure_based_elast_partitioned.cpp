@@ -22,8 +22,8 @@ FOUR_C_NAMESPACE_OPEN
  | constructor                                              vuong 08/16 |
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastPartitionedAlgorithm::PorofluidElastPartitionedAlgorithm(
-    MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
-    : PorofluidElastAlgorithm(comm, globaltimeparams),
+    Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
+    : PorofluidElastAlgorithm(problem, comm, globaltimeparams),
       phiincnp_(nullptr),
       dispincnp_(nullptr),
       fluidphinp_(nullptr),

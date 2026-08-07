@@ -25,6 +25,11 @@ namespace Core::FE
   class Discretization;
 }  // namespace Core::FE
 
+namespace Global
+{
+  class Problem;
+}  // namespace Global
+
 namespace PoroPressureBased
 {
   /// setup discretizations and dofsets of porofluid and structure
@@ -42,6 +47,7 @@ namespace PoroPressureBased
 
   /// create solution algorithm depending on input file
   std::shared_ptr<PorofluidElastAlgorithm> create_algorithm_porofluid_elast(
+      Global::Problem& problem,                   //!< global problem instance (i)
       SolutionSchemePorofluidElast solscheme,     //!< solution scheme to build (i)
       const Teuchos::ParameterList& timeparams,   //!< problem parameters (i)
       MPI_Comm comm,                              //!< communicator(i)

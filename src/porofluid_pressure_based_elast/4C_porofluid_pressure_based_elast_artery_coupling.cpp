@@ -38,8 +38,8 @@ FOUR_C_NAMESPACE_OPEN
  | constructor                                         kremheller 05/18 |
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastArteryCouplingAlgorithm::PorofluidElastArteryCouplingAlgorithm(
-    MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
-    : PorofluidElastMonolithicAlgorithm(comm, globaltimeparams)
+    Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
+    : PorofluidElastMonolithicAlgorithm(problem, comm, globaltimeparams)
 {
   blockrowdofmap_artporo_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
 

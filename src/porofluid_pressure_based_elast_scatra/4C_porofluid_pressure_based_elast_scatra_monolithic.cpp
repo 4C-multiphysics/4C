@@ -34,8 +34,8 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::PorofluidElastScatraMonolithicAlgorithm(
-    MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
-    : PorofluidElastScatraBaseAlgorithm(comm, globaltimeparams),
+    Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
+    : PorofluidElastScatraBaseAlgorithm(problem, comm, globaltimeparams),
       iter_tol_inc_(0.0),
       iter_tol_res_(0.0),
       iter_max_(0),
@@ -1317,8 +1317,8 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastScatraMonolithicArteryCouplingAlgorithm::
     PorofluidElastScatraMonolithicArteryCouplingAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
-    : PorofluidElastScatraMonolithicAlgorithm(comm, globaltimeparams)
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
+    : PorofluidElastScatraMonolithicAlgorithm(problem, comm, globaltimeparams)
 {
   blockrowdofmap_artscatra_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
   blockrowdofmap_artporo_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();

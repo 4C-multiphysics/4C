@@ -16,6 +16,11 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+namespace Global
+{
+  class Problem;
+}  // namespace Global
+
 namespace PoroPressureBased
 {
   ///! Monolithic solution scheme for porofluid-elasticity problems with artery coupling
@@ -23,7 +28,7 @@ namespace PoroPressureBased
   {
    public:
     PorofluidElastArteryCouplingAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
 
     //! extract the field vectors from a given composed vector.
     /*!

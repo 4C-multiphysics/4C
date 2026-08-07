@@ -15,6 +15,11 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+namespace Global
+{
+  class Problem;
+}  // namespace Global
+
 namespace PoroPressureBased
 {
   //! Partitioned solution scheme of porofluid-elasticity problems
@@ -22,7 +27,7 @@ namespace PoroPressureBased
   {
    public:
     PorofluidElastPartitionedAlgorithm(
-        MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams);
 
     /// initialization
     void init(const Teuchos::ParameterList& globaltimeparams,
