@@ -468,8 +468,9 @@ void Particle::ParticleEngine::build_particle_to_particle_neighbors()
   // relate half neighboring bins to owned bins
   if (not binning_->validhalfneighboringbins_) relate_half_neighboring_bins_to_owned_bins();
 
-  // clear potential particle neighbors
+  // clear potential particle neighbors and accumulated interaction costs
   potentialparticleneighbors_.clear();
+  bin_interaction_costs_.clear();
 
   // invalidate flag denoting validity of particle neighbors map
   validparticleneighbors_ = false;
@@ -554,6 +555,11 @@ void Particle::ParticleEngine::build_particle_to_particle_neighbors()
           potentialparticleneighbors_.push_back(
               std::make_pair(std::make_tuple(type, Owned, ownedindex),
                   std::make_tuple(neighbortype, neighborstatus, neighborindex)));
+
+          // accumulate interaction cost for load balancing weight estimation, weighted by the
+          // average of the dynamic load balance factors of the two interacting particle types
+          bin_interaction_costs_[gidofbin] +=
+              0.5 * (typeweights_[type] + typeweights_[neighbortype]);
         }
       }
     }
@@ -2064,12 +2070,19 @@ void Particle::ParticleEngine::determine_bin_weights()
     // get global id of bin
     const int gidofbin = binning_->binrowmap_->gid(rowlidofbin);
 
-    // iterate over owned particles in current bin
-    for (const auto& particleIt : particlestobins_[binning_->bincolmap_->lid(gidofbin)])
+    // use neighbor pair count from the previous interaction evaluation as a proxy for the
+    // compute cost of this bin; fall back to particle count * type weight when no interaction
+    // data is available yet (e.g. on the very first load redistribution)
+    auto costIt = bin_interaction_costs_.find(gidofbin);
+    if (costIt != bin_interaction_costs_.end())
     {
-      // add weight of particle of specific type
-      binning_->binweights_->get_vector(0).get_values()[rowlidofbin] +=
-          typeweights_[particleIt.first];
+      binning_->binweights_->get_vector(0).get_values()[rowlidofbin] += costIt->second;
+    }
+    else
+    {
+      for (const auto& particleIt : particlestobins_[binning_->bincolmap_->lid(gidofbin)])
+        binning_->binweights_->get_vector(0).get_values()[rowlidofbin] +=
+            typeweights_[particleIt.first];
     }
   }
 }

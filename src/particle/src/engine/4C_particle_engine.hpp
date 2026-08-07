@@ -738,6 +738,9 @@ namespace Particle
     //! relate potential particle neighbors of all types and statuses
     PotentialParticleNeighbors potentialparticleneighbors_;
 
+    //! accumulated interaction pair count per bin global id for load balancing weight estimation
+    std::unordered_map<int, double> bin_interaction_costs_;
+
     //! owned particles being communicated (transfered/distributed) to target processors
     std::vector<std::vector<int>> communicatedparticletargets_;
 

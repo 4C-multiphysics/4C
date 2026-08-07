@@ -134,16 +134,31 @@ void Particle::ParticleAlgorithm::setup()
   // setup initial rigid bodies
   if (particlerigidbody_) setup_initial_rigid_bodies();
 
-  // distribute load among processors
+  // distribute load among processors (first pass: by particle count)
   distribute_load_among_procs();
 
   // ghost particles on other processors
   particleengine_->ghost_particles();
 
-  // build global id to local index map
+  if (particleinteraction_)
+  {
+    // build particle-to-particle neighbors only, to populate bin_interaction_costs_ for
+    // cost-aware rebalancing below; the global id map and wall neighbor relations are skipped
+    // here since both would be invalidated by the redistribution pass right after anyway
+    build_potential_neighbor_relation(/*include_wall_neighbors=*/false);
+
+    // second redistribution pass: redistribute load using interaction-pair counts as bin weights
+    // now that bin_interaction_costs_ is available from the neighbor build above
+    distribute_load_among_procs();
+
+    // re-ghost after second redistribution
+    particleengine_->ghost_particles();
+  }
+
+  // build global id to local index map (once, for the final distribution)
   particleengine_->build_global_id_to_local_index_map();
 
-  // build potential neighbor relation
+  // build potential neighbor relation, including wall neighbors, for the final distribution
   if (particleinteraction_) build_potential_neighbor_relation();
 
   // setup initial states
@@ -970,14 +985,14 @@ void Particle::ParticleAlgorithm::distribute_load_among_procs()
     Core::IO::cout(Core::IO::verbose) << "distribute load in step " << step() << Core::IO::endl;
 }
 
-void Particle::ParticleAlgorithm::build_potential_neighbor_relation()
+void Particle::ParticleAlgorithm::build_potential_neighbor_relation(bool include_wall_neighbors)
 {
   TEUCHOS_FUNC_TIME_MONITOR("Particle::ParticleAlgorithm::build_potential_neighbor_relation");
 
   // build particle to particle neighbors
   particleengine_->build_particle_to_particle_neighbors();
 
-  if (particlewall_)
+  if (particlewall_ && include_wall_neighbors)
   {
     // relate bins to column wall elements
     particlewall_->relate_bins_to_col_wall_eles();

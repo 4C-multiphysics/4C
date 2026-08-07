@@ -340,8 +340,10 @@ namespace Particle
     /*!
      * \brief build potential neighbor relation
      *
+     * \param[in] include_wall_neighbors  also build particle to wall neighbors
+     *
      */
-    void build_potential_neighbor_relation();
+    void build_potential_neighbor_relation(bool include_wall_neighbors = true);
 
     /*!
      * \brief set initial conditions
