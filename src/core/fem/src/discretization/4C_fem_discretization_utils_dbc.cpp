@@ -582,8 +582,9 @@ void Core::FE::Dbc::build_dbc_map_extractor(const Core::FE::Discretization& disc
     nummyelements = dbcgidsv.size();
     myglobalelements = dbcgidsv.data();
   }
-  std::shared_ptr<Core::LinAlg::Map> dbcmap = std::make_shared<Core::LinAlg::Map>(-1, nummyelements,
-      myglobalelements, discret.dof_row_map()->index_base(), discret.dof_row_map()->get_comm());
+  std::shared_ptr<Core::LinAlg::Map> dbcmap =
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(myglobalelements, nummyelements),
+          discret.dof_row_map()->index_base(), discret.dof_row_map()->get_comm());
   // build the map extractor of Dirichlet-conditioned and free DOFs
   dbcmapextractor->setup(*(discret.dof_row_map()), dbcmap);
 }

@@ -373,8 +373,7 @@ namespace BeamInteraction
       std::vector<int> colgids(coleleset.begin(), coleleset.end());
 
       // create new ele col map
-      Core::LinAlg::Map newelecolmap(
-          -1, static_cast<int>(colgids.size()), colgids.data(), 0, discret.get_comm());
+      Core::LinAlg::Map newelecolmap(-1, std::span<const int>(colgids), 0, discret.get_comm());
 
       // temporarily extend ghosting
       Core::Binstrategy::Utils::extend_discretization_ghosting(
@@ -1254,7 +1253,7 @@ namespace BeamInteraction
         std::vector<int> mapvec(eletypeset[i].begin(), eletypeset[i].end());
         eletypeset[i].clear();
         maps[i] = std::make_shared<Core::LinAlg::Map>(
-            -1, mapvec.size(), mapvec.data(), 0, discret.get_comm());
+            -1, std::span<const int>(mapvec), 0, discret.get_comm());
       }
 
       eletypeextractor.setup(*discret.element_row_map(), maps);

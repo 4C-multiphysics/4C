@@ -133,13 +133,13 @@ void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization&
   // maps in original distribution
 
   std::shared_ptr<Core::LinAlg::Map> target_node_map = std::make_shared<Core::LinAlg::Map>(
-      -1, patched_target_nodes.size(), patched_target_nodes.data(), 0, target_dis.get_comm());
+      -1, std::span<const int>(patched_target_nodes), 0, target_dis.get_comm());
 
   std::shared_ptr<Core::LinAlg::Map> source_node_map = std::make_shared<Core::LinAlg::Map>(
-      -1, source_nodes.size(), source_nodes.data(), 0, source_dis.get_comm());
+      -1, std::span<const int>(source_nodes), 0, source_dis.get_comm());
 
   std::shared_ptr<Core::LinAlg::Map> permuted_source_node_map = std::make_shared<Core::LinAlg::Map>(
-      -1, permuted_source_nodes.size(), permuted_source_nodes.data(), 0, source_dis.get_comm());
+      -1, std::span<const int>(permuted_source_nodes), 0, source_dis.get_comm());
 
   finish_coupling(target_dis, source_dis, target_node_map, source_node_map,
       permuted_source_node_map, target_dofs, source_dofs, target_dofset_number,
@@ -201,13 +201,13 @@ void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization&
   // maps in original distribution
 
   std::shared_ptr<Core::LinAlg::Map> target_node_map = std::make_shared<Core::LinAlg::Map>(
-      -1, target_vect.size(), target_vect.data(), 0, target_dis.get_comm());
+      -1, std::span<const int>(target_vect), 0, target_dis.get_comm());
 
   std::shared_ptr<Core::LinAlg::Map> source_node_map =
       std::make_shared<Core::LinAlg::Map>(source_nodes);
 
   std::shared_ptr<Core::LinAlg::Map> permuted_source_node_map = std::make_shared<Core::LinAlg::Map>(
-      -1, permuted_source_nodes.size(), permuted_source_nodes.data(), 0, source_dis.get_comm());
+      -1, std::span<const int>(permuted_source_nodes), 0, source_dis.get_comm());
 
   finish_coupling(target_dis, source_dis, target_node_map, source_node_map,
       permuted_source_node_map, build_dof_vector_from_num_dof(numdof),
@@ -293,11 +293,11 @@ void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization&
         tolerance);
 
     target_node_map_cond.push_back(std::make_shared<Core::LinAlg::Map>(
-        -1, target_nodes.size(), target_nodes.data(), 0, target_dis.get_comm()));
+        -1, std::span<const int>(target_nodes), 0, target_dis.get_comm()));
     source_node_map_cond.push_back(std::make_shared<Core::LinAlg::Map>(
-        -1, source_nodes.size(), source_nodes.data(), 0, source_dis.get_comm()));
+        -1, std::span<const int>(source_nodes), 0, source_dis.get_comm()));
     permuted_source_node_map_cond.push_back(std::make_shared<Core::LinAlg::Map>(
-        -1, permuted_source_nodes.size(), permuted_source_nodes.data(), 0, source_dis.get_comm()));
+        -1, std::span<const int>(permuted_source_nodes), 0, source_dis.get_comm()));
   }
 
   // merge maps for all conditions, but keep order (= keep assignment of permuted source node map
@@ -388,8 +388,10 @@ void Coupling::Adapter::Coupling::finish_coupling(const Core::FE::Discretization
       *target_node_vec, target_node_export, Core::LinAlg::CombineMode::insert);
 
   std::shared_ptr<const Core::LinAlg::Map> permuted_target_node_map =
-      std::make_shared<Core::LinAlg::Map>(-1, permuted_target_node_vec->local_length(),
-          permuted_target_node_vec->get_local_values().data(), 0, target_dis.get_comm());
+      std::make_shared<Core::LinAlg::Map>(-1,
+          std::span<const int>(permuted_target_node_vec->get_local_values().data(),
+              permuted_target_node_vec->local_length()),
+          0, target_dis.get_comm());
 
   if (not source_node_map->point_same_as(*permuted_target_node_map))
     FOUR_C_THROW("source and permuted target node maps do not match");
@@ -514,8 +516,8 @@ void Coupling::Adapter::Coupling::build_dof_maps(const Core::FE::Discretization&
   if (pos != dofmapvec.end() and *pos < 0) FOUR_C_THROW("illegal dof number {}", *pos);
 
   // dof map is the original, unpermuted distribution of dofs
-  dofmap = std::make_shared<Core::LinAlg::Map>(
-      -1, dofmapvec.size(), dofmapvec.data(), 0, dis.get_comm());
+  dofmap =
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(dofmapvec), 0, dis.get_comm());
 
   dofmapvec.clear();
 
@@ -534,8 +536,8 @@ void Coupling::Adapter::Coupling::build_dof_maps(const Core::FE::Discretization&
   dofs.clear();
 
   // permuted dof map according to a given permuted node map
-  permdofmap = std::make_shared<Core::LinAlg::Map>(
-      -1, dofmapvec.size(), dofmapvec.data(), 0, dis.get_comm());
+  permdofmap =
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(dofmapvec), 0, dis.get_comm());
 
   // prepare communication plan to create a dofmap out of a permuted
   // dof map
@@ -741,7 +743,7 @@ std::shared_ptr<Core::LinAlg::Map> Coupling::Adapter::Coupling::source_to_target
   }
 
   return std::make_shared<Core::LinAlg::Map>(
-      -1, nummyele, globalelements.data(), 0, source.get_comm());
+      -1, std::span<const int>(globalelements.data(), nummyele), 0, source.get_comm());
 }
 
 /*----------------------------------------------------------------------*/
@@ -763,7 +765,7 @@ std::shared_ptr<Core::LinAlg::Map> Coupling::Adapter::Coupling::target_to_source
   }
 
   return std::make_shared<Core::LinAlg::Map>(
-      -1, nummyele, globalelements.data(), 0, target.get_comm());
+      -1, std::span<const int>(globalelements.data(), nummyele), 0, target.get_comm());
 }
 
 /*----------------------------------------------------------------------*/

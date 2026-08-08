@@ -179,8 +179,9 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::init(
   }
 
   std::vector<int> mydirichdofs;
-  add_dirichmaps_volfrac_spec_ = std::make_shared<Core::LinAlg::Map>(
-      -1, 0, mydirichdofs.data(), 0, scatra_algo()->scatra_field()->discretization()->get_comm());
+  add_dirichmaps_volfrac_spec_ =
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(mydirichdofs), 0,
+          scatra_algo()->scatra_field()->discretization()->get_comm());
 }
 
 /*----------------------------------------------------------------------*
@@ -458,8 +459,9 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::
 
   // build map
   int number_dirichlet_values = dirichlet_dofs.size();
-  add_dirichmaps_volfrac_spec_ = std::make_shared<Core::LinAlg::Map>(-1, number_dirichlet_values,
-      dirichlet_dofs.data(), 0, scatra_algo()->scatra_field()->discretization()->get_comm());
+  add_dirichmaps_volfrac_spec_ = std::make_shared<Core::LinAlg::Map>(-1,
+      std::span<const int>(dirichlet_dofs.data(), number_dirichlet_values), 0,
+      scatra_algo()->scatra_field()->discretization()->get_comm());
 
   // add the condition
   scatra_algo()->scatra_field()->add_dirich_cond(add_dirichmaps_volfrac_spec_);

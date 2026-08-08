@@ -577,14 +577,12 @@ namespace ReducedLung1dPipeFlow
     }
 
     // Define maps for junction mapping
-    Core::LinAlg::Map locally_relevant_junction_dof_map(-1,
-        static_cast<int>(locally_relevant_dof_for_junctions.size()),
-        locally_relevant_dof_for_junctions.data(), 0, comm);
-    Core::LinAlg::Map locally_relevant_junction_node_map(-1,
-        static_cast<int>(locally_relevant_nodes_for_junctions.size()),
-        locally_relevant_nodes_for_junctions.data(), 0, comm);
-    Core::LinAlg::Map owned_junction_node_map(-1, static_cast<int>(owned_nodes_at_junctions.size()),
-        owned_nodes_at_junctions.data(), 0, comm);
+    Core::LinAlg::Map locally_relevant_junction_dof_map(
+        -1, std::span<const int>(locally_relevant_dof_for_junctions), 0, comm);
+    Core::LinAlg::Map locally_relevant_junction_node_map(
+        -1, std::span<const int>(locally_relevant_nodes_for_junctions), 0, comm);
+    Core::LinAlg::Map owned_junction_node_map(
+        -1, std::span<const int>(owned_nodes_at_junctions), 0, comm);
 
     Core::LinAlg::Vector<double> solution_for_junction(locally_relevant_junction_dof_map);
     Core::LinAlg::export_to(solution, solution_for_junction);

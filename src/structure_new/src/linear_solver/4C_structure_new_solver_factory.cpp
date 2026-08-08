@@ -193,7 +193,7 @@ std::shared_ptr<Core::LinAlg::Solver> Solid::SOLVER::Factory::build_structure_li
         }
 
         auto dof_condition_map =
-            Core::LinAlg::Map(-1, cond_dof_gids.size(), cond_dof_gids.data(), 0, actdis.get_comm());
+            Core::LinAlg::Map(-1, std::span<const int>(cond_dof_gids), 0, actdis.get_comm());
 
         std::shared_ptr<Core::LinAlg::MultiVector<double>> nullspace =
             Core::FE::compute_null_space(actdis, dimns, dof_condition_map);
@@ -575,14 +575,14 @@ std::shared_ptr<Core::LinAlg::Solver> Solid::SOLVER::Factory::build_beam_interac
       }
 
       const auto dof_row_map_solid = std::make_shared<Core::LinAlg::Map>(
-          -1, solid_dof_gids.size(), solid_dof_gids.data(), 0, actdis.get_comm());
+          -1, std::span<const int>(solid_dof_gids), 0, actdis.get_comm());
       const auto node_row_map_solid = std::make_shared<Core::LinAlg::Map>(
-          -1, solid_node_gids.size(), solid_node_gids.data(), 0, actdis.get_comm());
+          -1, std::span<const int>(solid_node_gids), 0, actdis.get_comm());
 
       const auto dof_row_map_beams = std::make_shared<Core::LinAlg::Map>(
-          -1, beam_dof_gids.size(), beam_dof_gids.data(), 0, actdis.get_comm());
+          -1, std::span<const int>(beam_dof_gids), 0, actdis.get_comm());
       const auto node_row_map_beam = std::make_shared<Core::LinAlg::Map>(
-          -1, beam_node_gids.size(), beam_node_gids.data(), 0, actdis.get_comm());
+          -1, std::span<const int>(beam_node_gids), 0, actdis.get_comm());
 
       std::vector<std::shared_ptr<const Core::LinAlg::Map>> maps;
       maps.emplace_back(dof_row_map_solid);

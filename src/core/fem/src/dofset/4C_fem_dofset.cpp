@@ -526,16 +526,16 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
   }
 
   dofrowmap_ = std::make_shared<Core::LinAlg::Map>(
-      -1, localrowdofs.size(), localrowdofs.data(), 0, dis.get_comm());
+      -1, std::span<const int>(localrowdofs), 0, dis.get_comm());
   if (!dofrowmap_->unique_gids()) FOUR_C_THROW("Dof row map is not unique");
   dofcolmap_ = std::make_shared<Core::LinAlg::Map>(
-      -1, localcoldofs.size(), localcoldofs.data(), 0, dis.get_comm());
+      -1, std::span<const int>(localcoldofs), 0, dis.get_comm());
 
   // **********************************************************************
   // **********************************************************************
   // build map of all (non-unique) column DoFs
   dofscolnodes_ = std::make_shared<Core::LinAlg::Map>(
-      -1, allnodelocalcoldofs.size(), allnodelocalcoldofs.data(), 0, dis.get_comm());
+      -1, std::span<const int>(allnodelocalcoldofs), 0, dis.get_comm());
 
   // build shift vector
   shiftcolnodes_ = std::make_shared<Core::LinAlg::Vector<int>>(*dis.node_col_map());

@@ -230,14 +230,14 @@ std::map<int, std::set<int>> PoroPressureBased::extended_ghosting_artery_discret
   // extended ghosting for elements
   std::vector<int> coleles(elecolset.begin(), elecolset.end());
   const Core::LinAlg::Map extendedelecolmap(
-      -1, coleles.size(), coleles.data(), 0, contdis.get_comm());
+      -1, std::span<const int>(coleles), 0, contdis.get_comm());
 
   artdis->export_column_elements(extendedelecolmap);
 
   // extended ghosting for nodes
   std::vector<int> colnodes(nodecolset.begin(), nodecolset.end());
   const Core::LinAlg::Map extendednodecolmap(
-      -1, colnodes.size(), colnodes.data(), 0, contdis.get_comm());
+      -1, std::span<const int>(colnodes), 0, contdis.get_comm());
 
   artdis->export_column_nodes(extendednodecolmap);
 

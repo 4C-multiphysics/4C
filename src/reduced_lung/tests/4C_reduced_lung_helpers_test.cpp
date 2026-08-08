@@ -298,7 +298,7 @@ namespace
 
     const std::array<int, 10> global_dofs{20, 21, 22, 23, 10, 11, 12, 30, 31, 32};
     const Core::LinAlg::Map locally_relevant_dof_map(
-        -1, global_dofs.size(), global_dofs.data(), 0, MPI_COMM_WORLD);
+        -1, std::span<const int>(global_dofs), 0, MPI_COMM_WORLD);
     Airways::assign_local_dof_ids(locally_relevant_dof_map, airways);
 
     EXPECT_EQ(airways.models[0].data.lid_p1, (std::vector<int>{4, 7}));
@@ -339,7 +339,7 @@ namespace
 
     const std::array<int, 9> global_dofs{3000, 3001, 3002, 1000, 1001, 1002, 2000, 2001, 2002};
     const Core::LinAlg::Map locally_relevant_dof_map(
-        -1, global_dofs.size(), global_dofs.data(), 0, MPI_COMM_WORLD);
+        -1, std::span<const int>(global_dofs), 0, MPI_COMM_WORLD);
     TerminalUnits::assign_local_dof_ids(locally_relevant_dof_map, terminal_units);
 
     EXPECT_EQ(terminal_units.models[0].data.lid_p1, (std::vector<int>{3, 6}));

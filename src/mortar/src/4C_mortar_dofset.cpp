@@ -76,10 +76,10 @@ int Mortar::DofSet::assign_degrees_of_freedom(
   }
 
   // we have new vectors, so recreate maps and replace old ones with them
-  std::shared_ptr<Core::LinAlg::Map> newdofrowmap =
-      std::make_shared<Core::LinAlg::Map>(-1, nummyrow, myrow.data(), 0, dofrowmap_->get_comm());
-  std::shared_ptr<Core::LinAlg::Map> newdofcolmap =
-      std::make_shared<Core::LinAlg::Map>(-1, nummycol, mycol.data(), 0, dofcolmap_->get_comm());
+  std::shared_ptr<Core::LinAlg::Map> newdofrowmap = std::make_shared<Core::LinAlg::Map>(
+      -1, std::span<const int>(myrow.data(), nummyrow), 0, dofrowmap_->get_comm());
+  std::shared_ptr<Core::LinAlg::Map> newdofcolmap = std::make_shared<Core::LinAlg::Map>(
+      -1, std::span<const int>(mycol.data(), nummycol), 0, dofcolmap_->get_comm());
 
   // be a little psychotic in checking whether everything is ok....
   if (newdofrowmap->num_my_elements() != dofrowmap_->num_my_elements() ||

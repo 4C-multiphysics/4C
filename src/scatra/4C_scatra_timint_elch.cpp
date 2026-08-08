@@ -362,9 +362,9 @@ void ScaTra::ScaTraTimIntElch::setup_conc_pot_split()
   }
 
   auto concdofmap = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(conc_dofs.size()), conc_dofs.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(conc_dofs), 0, discret_->get_comm());
   auto potdofmap = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(pot_dofs.size()), pot_dofs.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(pot_dofs), 0, discret_->get_comm());
 
   // set up concentration-potential splitter
   splitter_ =
@@ -399,11 +399,11 @@ void ScaTra::ScaTraTimIntElch::setup_conc_pot_pot_split()
   // transform sets to maps
   std::vector<std::shared_ptr<const Core::LinAlg::Map>> maps(3, nullptr);
   maps[0] = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(conc_dofs.size()), conc_dofs.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(conc_dofs), 0, discret_->get_comm());
   maps[1] = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(pot_el_dofs.size()), pot_el_dofs.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(pot_el_dofs), 0, discret_->get_comm());
   maps[2] = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(pot_ed_dofs.size()), pot_ed_dofs.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(pot_ed_dofs), 0, discret_->get_comm());
 
   // set up concentration-potential-potential splitter
   splitter_macro_ =
@@ -2920,8 +2920,9 @@ void ScaTra::ScaTraTimIntElch::apply_dirichlet_bc(const double time,
 
       // transform set into vector and then into map
       std::vector<int> dbcgidsvec(dbcgids.begin(), dbcgids.end());
-      auto dbcmap = std::make_shared<Core::LinAlg::Map>(-1, static_cast<int>(dbcgids.size()),
-          dbcgidsvec.data(), dof_row_map()->index_base(), dof_row_map()->get_comm());
+      auto dbcmap = std::make_shared<Core::LinAlg::Map>(-1,
+          std::span<const int>(dbcgidsvec.data(), dbcgids.size()), dof_row_map()->index_base(),
+          dof_row_map()->get_comm());
 
       // merge map with existing map for Dirichlet boundary conditions
       // Note: the dbcmaps_ internal member is reset every time evaluate_dirichlet() is called on
@@ -3194,9 +3195,9 @@ void ScaTra::ScaTraTimIntElch::build_block_maps(
         FOUR_C_ASSERT(node_set.size() == node_gids.size(), "The nodes are not unique");
 #endif
         dof_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
-            -1, static_cast<int>(dof_gids.size()), dof_gids.data(), 0, discret_->get_comm()));
+            -1, std::span<const int>(dof_gids), 0, discret_->get_comm()));
         node_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
-            -1, static_cast<int>(node_gids.size()), node_gids.data(), 0, discret_->get_comm()));
+            -1, std::span<const int>(node_gids), 0, discret_->get_comm()));
       }
     }
   }

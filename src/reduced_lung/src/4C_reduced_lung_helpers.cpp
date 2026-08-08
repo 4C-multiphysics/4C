@@ -516,7 +516,7 @@ namespace ReducedLung
           locally_owned_dof_indices.end(), tu_model.data.gid_q.begin(), tu_model.data.gid_q.end());
     }
     const Core::LinAlg::Map domain_map(
-        -1, locally_owned_dof_indices.size(), locally_owned_dof_indices.data(), 0, comm);
+        -1, std::span<const int>(locally_owned_dof_indices), 0, comm);
 
     return domain_map;
   }
@@ -555,7 +555,8 @@ namespace ReducedLung
     global_row_indices.insert(global_row_indices.end(), boundaries.my_global_elements(),
         boundaries.my_global_elements() + boundaries.num_my_elements());
 
-    const Core::LinAlg::Map row_map(-1, n_local_indices, global_row_indices.data(), 0, comm);
+    const Core::LinAlg::Map row_map(
+        -1, std::span<const int>(global_row_indices.data(), n_local_indices), 0, comm);
 
     return row_map;
   }
@@ -652,7 +653,7 @@ namespace ReducedLung
         locally_relevant_dof_indices.end());
 
     const Core::LinAlg::Map column_map(
-        -1, locally_relevant_dof_indices.size(), locally_relevant_dof_indices.data(), 0, comm);
+        -1, std::span<const int>(locally_relevant_dof_indices), 0, comm);
 
     return column_map;
   }
