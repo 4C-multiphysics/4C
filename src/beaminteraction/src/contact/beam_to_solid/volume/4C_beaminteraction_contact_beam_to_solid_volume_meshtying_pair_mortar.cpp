@@ -109,6 +109,7 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
               .get<std::shared_ptr<const BeamToSolidVolumeMeshtyingVisualizationOutputParams>>(
                   "btsv-output_params_ptr");
   const bool write_unique_ids = output_params_ptr->get_write_unique_ids_flag();
+  const bool postprocess_lambda = output_params_ptr->get_postprocess_lambda_flag();
 
   if (visualization_discret != nullptr || visualization_continuous != nullptr)
   {
@@ -217,8 +218,6 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
           "displacement", (mortar_segments + 1) * 3 * this->line_to_3D_segments_.size());
       std::vector<double>& lambda_vis = visualization_data.get_point_data<double>(
           "lambda", (mortar_segments + 1) * 3 * this->line_to_3D_segments_.size());
-      std::vector<double>& lambda_postprocessed_vis = visualization_data.get_point_data<double>(
-          "lambda_postprocessed", (mortar_segments + 1) * 3 * this->line_to_3D_segments_.size());
       std::vector<uint8_t>& cell_types = visualization_data.get_cell_types();
       std::vector<int32_t>& cell_offsets = visualization_data.get_cell_offsets();
 
@@ -247,10 +246,50 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
           u = r;
           u -= X;
           GeometryPair::evaluate_position<Mortar>(xi, element_data_lambda, lambda_discret);
-          lambda_postprocessed.put_scalar(0.0);
 
-          if constexpr (std::is_same_v<Mortar, BeamInteraction::t_hermite_dual>)
+          // Add to output data.
+          for (unsigned int dim = 0; dim < 3; dim++)
           {
+            point_coordinates.push_back(Core::FADUtils::cast_to_double(X(dim)));
+            displacement.push_back(Core::FADUtils::cast_to_double(u(dim)));
+            lambda_vis.push_back(Core::FADUtils::cast_to_double(lambda_discret(dim)));
+          }
+        }
+
+        // Add the cell for this segment (poly line).
+        cell_types.push_back(4);
+        cell_offsets.push_back(point_coordinates.size() / 3);
+
+        if (write_unique_ids)
+        {
+          pair_cell_beam_id->push_back(this->element1()->id());
+          pair_cell_solid_id->push_back(this->element2()->id());
+          for (unsigned int i_curve_segment = 0; i_curve_segment <= mortar_segments;
+              i_curve_segment++)
+          {
+            pair_point_beam_id->push_back(this->element1()->id());
+            pair_point_solid_id->push_back(this->element2()->id());
+          }
+        }
+      }
+
+      if (postprocess_lambda)
+      {
+        std::vector<double>& lambda_postprocessed_vis = visualization_data.get_point_data<double>(
+            "lambda_postprocessed", (mortar_segments + 1) * 3 * this->line_to_3D_segments_.size());
+        for (const auto& segment : this->line_to_3D_segments_)
+        {
+          for (unsigned int i_curve_segment = 0; i_curve_segment <= mortar_segments;
+              i_curve_segment++)
+          {
+            // Get the position, displacement and lambda value at the current point.
+            xi = segment.get_eta_a() + i_curve_segment *
+                                           (segment.get_eta_b() - segment.get_eta_a()) /
+                                           (double)mortar_segments;
+            GeometryPair::evaluate_position<Beam>(xi, this->ele1pos_, r);
+            GeometryPair::evaluate_position<Beam>(xi, this->ele1posref_, X);
+            lambda_postprocessed.put_scalar(0.0);
+
             Core::LinAlg::Matrix<1, Beam::n_nodes_ * Beam::n_val_, double> N_primal(
                 Core::LinAlg::Initialization::zero);
 
@@ -278,32 +317,11 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
                 }
               }
             }
-          }
-
-          // Add to output data.
-          for (unsigned int dim = 0; dim < 3; dim++)
-          {
-            point_coordinates.push_back(Core::FADUtils::cast_to_double(X(dim)));
-            displacement.push_back(Core::FADUtils::cast_to_double(u(dim)));
-            lambda_vis.push_back(Core::FADUtils::cast_to_double(lambda_discret(dim)));
-            lambda_postprocessed_vis.push_back(
-                Core::FADUtils::cast_to_double(lambda_postprocessed(dim)));
-          }
-        }
-
-        // Add the cell for this segment (poly line).
-        cell_types.push_back(4);
-        cell_offsets.push_back(point_coordinates.size() / 3);
-
-        if (write_unique_ids)
-        {
-          pair_cell_beam_id->push_back(this->element1()->id());
-          pair_cell_solid_id->push_back(this->element2()->id());
-          for (unsigned int i_curve_segment = 0; i_curve_segment <= mortar_segments;
-              i_curve_segment++)
-          {
-            pair_point_beam_id->push_back(this->element1()->id());
-            pair_point_solid_id->push_back(this->element2()->id());
+            for (unsigned int dim = 0; dim < 3; ++dim)
+            {
+              lambda_postprocessed_vis.push_back(
+                  Core::FADUtils::cast_to_double(lambda_postprocessed(dim)));
+            }
           }
         }
       }

@@ -185,6 +185,10 @@ std::vector<Core::IO::InputSpec> BeamToSolid::valid_parameters()
               "UNIQUE_IDS", {.description = "Enable / disable output of unique IDs (mainly "
                                             "for testing of created VTK files).",
                                 .default_value = false}),
+
+          parameter<bool>("POSTPROCESS_LAMBDA",
+              {.description = "Enable/Disable postprocessing of Lagrange multipliers for dual LM.",
+                  .default_value = false}),
       },
       {.required = false}));
 
