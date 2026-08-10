@@ -1,0 +1,217 @@
+TITLE:
+  - "Simulation of a viscoplastic HEX8 element under uniaxial tension with a constant strain rate of $1
+    \\ \\mathrm{s}^{-1}$, as shown in Ana, Schmidt, Wall: Accelerating Local Newton--Raphson Schemes in
+    Computational Plasticity / Viscoplasticity."
+  - "The Adaptive Estimate Interpolation scheme is used for local time integration, in order to determine
+    efficient initial and updated estimates (due to re-estimations) for the Local Newton--Raphson procedure."
+  - "The accumulated plastic strain of the estimates is integrated according to its evolution equation,
+    consistent with the interpolated elastic deformation gradient."
+  - "The starting point of the adaptive estimate interpolation procedure for the next timestep is set
+    using the solution equivalent stress, in relation to the elastic and plastic predictors (I_HIST variant
+    in the paper)."
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO:
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "log"
+  STDOUTEVERY: 1
+  VERBOSITY: minimal
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+  GAUSS_POINT_DATA_OUTPUT_TYPE: gauss_points
+IO/RUNTIME VTK OUTPUT:
+  EVERY_ITERATION: false
+  INTERVAL_STEPS: 1
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  RESTARTEVERY: 1
+  TIMESTEP: 1
+  NUMSTEP: 5000000
+  MAXTIME: 1.0
+  TOLDISP: 1e-06
+  NORM_DISP: Abs
+  TOLRES: 1e-06
+  NORM_RESF: Abs
+  NEGLECTINERTIA: true
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 2
+    TIMES: [0.0, 1.6e+16]
+    DESCRIPTION: ["exp(1.0 * t) - 1.0"]
+MATERIALS:
+  - MAT: 1
+    MAT_MultiplicativeSplitDefgradElastHyper:
+      NUMMATEL: 1
+      MATIDSEL: [2]
+      NUMFACINEL: 1
+      INELDEFGRADFACIDS: [3]
+      DENS: 7830
+  - MAT: 2
+    ELAST_CoupSVK:
+      YOUNG: 2.0e5
+      NUE: 0.29
+  - MAT: 3
+    MAT_InelasticDefgradTransvIsotropElastViscoplast:
+      LOCAL_NEWTON:
+        CONV_CHECK: residual_and_increment_ratio
+        MAX_ITER: 100
+        RES_TOL: 1.0e-10
+        INCR_TOL: 1.0e-10
+        DIVER_CONT: stop
+      ADAPTIVE_ESTIMATE_INTERPOLATION:
+        USE_ADAPTIVE_ESTIMATE_INTERPOLATION: true
+        PRECONDITIONING:
+          PRECONDITION_ELASTIC_PRED: true
+          TOL_PRECONDITION_ELASTIC_PRED: 1e-13
+        PLASTIC_PREDICTOR_CONSTRUCTION:
+          ELASTIC_STRETCH_EIGENVAL_TYPE: scale_unit
+          ELASTIC_STRETCH_EIGENVECT_TYPE: from_elastic_predictor
+          ELASTIC_ROTATION_TYPE: from_elastic_predictor
+          MAX_ITER: 50
+          RELATIVE_UNDERSTRESS_TOL: 0.000001
+          INTERVAL_SCANNING_PARAM: 0.5
+        ESTIMATE_INTERPOLATION:
+          STARTING_POINT_TYPE: equiv_stress_history
+          MAX_ITER: 50
+          INTERVAL_SCANNING_PARAM: 0.5
+        HARDENING:
+          METHOD: integrate_via_evol_eqs
+          MAX_ITER_INTEGRATION: 50
+          TOL_INTEGRATION: 1e-8
+        REESTIMATION:
+          MAX_NUM_REESTIMATIONS: 10
+          INTERVAL_SCANNING_PARAM: 0.5
+      ERROR_REGISTRATION_SETTINGS:
+        REGISTER_PLASTIC_STRAIN_INCR_OVERFLOW: True
+        MAX_PLASTIC_STRAIN_INCR: 1.0e12
+      FIBER_READER_ID: 5
+      LINEARIZATION: analytic
+      MATRIX_EXP_CALC_METHOD: automatic
+      MATRIX_EXP_DERIV_CALC_METHOD: automatic
+      MATRIX_LOG_CALC_METHOD: inv_scal_square
+      MATRIX_LOG_DERIV_CALC_METHOD: pade_part_fract
+      MAT_BEHAVIOR: isotropic
+      TIME_INTEGRATION_HIST_VARS: logarithmic
+      VISCOPLAST_LAW_ID: 4
+      YIELD_COND_A: 0
+      YIELD_COND_B: 0
+      YIELD_COND_F: 0
+  - MAT: 4
+    MAT_ViscoplasticLawReformulatedJohnsonCook:
+      STRAIN_RATE_PREFAC: 1
+      STRAIN_RATE_EXP_FAC: 0.014
+      INIT_YIELD_STRENGTH: 792.0
+      ISOTROP_HARDEN_PREFAC: 510.0
+      ISOTROP_HARDEN_EXP: 0.26
+      REF_TEMPERATURE: 293
+      MELT_TEMPERATURE: 1000
+      TEMPERATURE_SENS: 0.1
+  - MAT: 5
+    ELAST_CoupTransverselyIsotropic:
+      ALPHA: 1
+      BETA: 1
+      GAMMA: 1
+      ANGLE: 0
+      STR_TENS_ID: 100
+  - MAT: 100
+    ELAST_StructuralTensor:
+      STRATEGY: "Standard"
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 1]
+    FUNCT: [null, null, 1]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [1, 0, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [1, 0, 1]
+    VAL: [0, 0, 1]
+    FUNCT: [null, null, 1]
+  - E: 5
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 1]
+    FUNCT: [null, null, 1]
+  - E: 6
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 7
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 8
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0, 0, 1]
+    FUNCT: [null, null, 1]
+DNODE-NODE TOPOLOGY:
+  - NODE 1 DNODE 1
+  - NODE 2 DNODE 2
+  - NODE 3 DNODE 3
+  - NODE 4 DNODE 4
+  - NODE 5 DNODE 5
+  - NODE 6 DNODE 6
+  - NODE 7 DNODE 7
+  - NODE 8 DNODE 8
+DLINE-NODE TOPOLOGY:
+  - NODE 1 DLINE 1
+  - NODE 4 DLINE 1
+  - NODE 1 DLINE 2
+  - NODE 5 DLINE 2
+  - NODE 1 DLINE 3
+  - NODE 2 DLINE 3
+  - NODE 2 DLINE 4
+  - NODE 3 DLINE 4
+  - NODE 2 DLINE 5
+  - NODE 6 DLINE 5
+DSURF-NODE TOPOLOGY:
+  - NODE 1 DSURFACE 1
+  - NODE 4 DSURFACE 1
+  - NODE 5 DSURFACE 1
+  - NODE 8 DSURFACE 1
+  - NODE 2 DSURFACE 2
+  - NODE 3 DSURFACE 2
+  - NODE 6 DSURFACE 2
+  - NODE 7 DSURFACE 2
+  - NODE 1 DSURFACE 3
+  - NODE 2 DSURFACE 3
+  - NODE 3 DSURFACE 3
+  - NODE 4 DSURFACE 3
+  - NODE 1 DSURFACE 4
+  - NODE 2 DSURFACE 4
+  - NODE 5 DSURFACE 4
+  - NODE 6 DSURFACE 4
+NODE COORDS:
+  - NODE 1 COORD -5.0000000000000000e-01 -5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 2 COORD -5.0000000000000000e-01 -5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 3 COORD -5.0000000000000000e-01 5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 4 COORD -5.0000000000000000e-01 5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 5 COORD 5.0000000000000000e-01 -5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 6 COORD 5.0000000000000000e-01 -5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 7 COORD 5.0000000000000000e-01 5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 8 COORD 5.0000000000000000e-01 5.0000000000000000e-01 5.0000000000000000e-01
+STRUCTURE ELEMENTS:
+  - 1 SOLID HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM nonlinear FIBER1 0 0 1.0
