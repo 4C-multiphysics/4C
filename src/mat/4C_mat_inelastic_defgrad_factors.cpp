@@ -55,6 +55,8 @@ FOUR_C_NAMESPACE_OPEN
 namespace
 {
   namespace ViscoplastUtils = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils;
+  namespace AEINamespace =
+      Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation;
 
   // declare file-scope instance of the constant non-material tensors
   static ViscoplastUtils::ConstNonMatTensors const_non_mat_tensors =
@@ -700,7 +702,9 @@ Mat::PAR::InelasticDefgradTransvIsotropElastViscoplast::
           matdata.parameters.get<ViscoplastUtils::LocalNewtonParams>("LOCAL_NEWTON")),
       error_registration_settings_(
           matdata.parameters.get<ViscoplastUtils::ErrorRegistrationSettings>(
-              "ERROR_REGISTRATION_SETTINGS"))
+              "ERROR_REGISTRATION_SETTINGS")),
+      adaptive_estimate_interpolation_params_(
+          matdata.parameters.get<AEINamespace::AEIParams>("ADAPTIVE_ESTIMATE_INTERPOLATION"))
 {
   // consistency check: yield parameters in case of transversely-isotropic behavior
   const bool all_yield_cond_param_specified =

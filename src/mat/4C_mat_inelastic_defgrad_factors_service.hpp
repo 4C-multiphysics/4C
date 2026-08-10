@@ -1077,6 +1077,169 @@ namespace Mat
       double step;
     };
 
+    //! namespace containing utilities dedicated to the Adaptive Estimate Interpolation algorithm,
+    //! presented in Ana, Schmidt, Wall: Adaptive Estimate Interpolation: Accelerating Local
+    //! Newton-Raphson Schemes in Computational Plasticity and Viscoplasticity, Preprint
+    namespace AdaptiveEstimateInterpolation
+    {
+
+      //! namespace containing specifications for the preliminary plastic predictor used within the
+      //! Adaptive Estimate Interpolation
+      namespace PrelimPlasticPredictor
+      {
+        //! strategy for choosing the elastic stretch eigenvalues \f$ \boldsymbol{\Lambda} \f$
+        enum class ElasticStretchEigenvalType : std::uint8_t
+        {
+          scale_unit,  ///< the unit tensor is scaled with the deformation gradient determinant to
+                       ///< maintain plastic incompressibility: \f$ \boldsymbol{\Lambda} =
+                       ///< \det(\boldsymbol{F}_{n+1})^{1/3} \boldsymbol{I} \f$
+        };
+
+        //! strategy for choosing the elastic stretch eigenvectors \f$ \boldsymbol{Q} \f$
+        enum class ElasticStretchEigenvectType : std::uint8_t
+        {
+          from_elastic_predictor,  ///< the elastic stretch eigenvectors are taken directly from the
+                                   ///< elastic predictor, which is a consistent assumption for
+                                   ///< isotropic material behavior
+        };
+
+        //! strategy for choosing the elastic stretch rotations \f$ \boldsymbol{R} \f$
+        enum class ElasticRotationType : std::uint8_t
+        {
+          from_elastic_predictor,  ///< the elastic rotation is taken directly from the
+                                   ///< elastic predictor, which is a consistent assumption for
+                                   ///< isotropic material behavior
+        };
+      }  // namespace PrelimPlasticPredictor
+
+      //! starting point type to be used for the estimate interpolation between predictors
+      enum class StartingPointType : std::uint8_t
+      {
+        user_set,             ///< user-set constant factor
+        equiv_stress_history  ///< computes the interpolation factor based on the equivalent
+                              ///< stress from the previous timestep with respect to its
+                              ///< corresponding elastic and plastic predictors, see \emph{IH}
+                              ///< strategy in the paper
+      };
+
+      //! enum class: method to be used for handling the hardening variables within the Adaptive
+      //! Estimate Interpolation procedures
+      enum class HardeningMethod : std::uint8_t
+      {
+        use_previous,  ///< use hardening variables from the previously converged time step
+        integrate_via_evol_eqs,  ///< integrate the hardening variables via their dedicated
+                                 ///< evolution equations, using the interpolated elastic
+                                 ///< deformation gradient as input --> "smaller local Newton"
+      };
+
+      //! struct containing parameters for the iterative construction of the plastic predictor
+      struct PlasticPredictorConstructionParams
+      {
+        //! elastic stretch eigenvalue specification for the preliminary plastic predictor
+        PrelimPlasticPredictor::ElasticStretchEigenvalType elastic_stretch_eigenval_type;
+
+        //! elastic stretch eigenvector specification for the preliminary plastic predictor
+        PrelimPlasticPredictor::ElasticStretchEigenvectType elastic_stretch_eigenvect_type;
+
+        //! elastic rotation specification for the preliminary plastic predictor
+        PrelimPlasticPredictor::ElasticRotationType elastic_rotation_type;
+
+        //! maximum number of construction iterations \f$ i_{\text{C,max}} \f$
+        int max_iter;
+
+        //! relative understress tolerance $\kappa_{\text{\sigma}_{\text{Y}}}$ for \f$
+        //! \overline{\sigma}(\tau) / \sigma_{\text{Y},n} - 1
+        //! \f$
+        double relative_understress_tol;
+
+        //! interval scanning parameter $s$ for updating the construction parameter \f$\tau \gets
+        //! \tau_{\text{E}} + s \, \left( \tau_{\hat{\text{P}}} - \tau_{\text{E}} \right) \f$
+        //! (bisection: = 1/2)
+        double interval_scanning_param;
+      };
+
+
+      //! struct containing parameters for the estimate interpolation between the elastic and the
+      //! constructed plastic predictor
+      struct EstimateInterpolationParams
+      {
+        //! starting point type
+        StartingPointType starting_point_type;
+
+        //! specified starting point in case that the starting point is user_set
+        double user_set_starting_point;
+
+        //! maximum number of estimate interpolation iterations \f$ i_{\text{EI,max}} \f$
+        int max_iter;
+
+        //! interval scanning parameter $s$ for updating the interpolation parameter \f$\xi \gets
+        //! \xi_{\text{E}} + s \, \left( \xi_{\text{P}} - \xi_{\text{E}} \right) \f$ (bisection: =
+        //! 1/2)
+        double interval_scanning_param;
+      };
+
+
+      //! struct containing parameters dedicated to handling the hardening variables
+      struct HardeningParams
+      {  //! method to use for handling / "interpolating" the hardening variables
+        HardeningMethod method;
+
+        //! maximum number of iterations for hardening integration via the evolution equations
+        int max_iter_integration;
+
+        //! tolerance for hardening integration via the evolution equations
+        double tol_integration;
+      };
+
+
+      //! struct containing parameters for the re-estimation procedures
+      struct ReestimationParams
+      {
+        //! maximum number of adaptive re-estimations allowed
+        int max_num_reestimations;
+
+        //! interval scanning parameter $s$ for determining the intermediate parameter \f$
+        //! \xi_{\mathrm{I}} \gets
+        //! \xi_{\mathrm{E}} + s \, \left( \xi - \xi_{\mathrm{E}}\right) \f$ (bisection: = 1 / 2)
+        double interval_scanning_param;
+      };
+
+
+      //! struct containing preconditioning settings (for the elastic predictor)
+      struct PreconditioningSettings
+      {
+        //! precondition the elastic deformation gradient within the elastic predictor to
+        //! stabilize interpolation, i.e., components smaller than a set tolerance are set to 0.0 to
+        //! avoid unnecessary, "numerical" rotations
+        bool precondition_elastic_pred;
+
+        //! tolerance for preconditioning the elastic deformation gradient within the elastic
+        //! predictor to stabilize interpolation
+        double tol_precondition_elastic_pred;
+      };
+
+      //! struct: parameters used for the AEI routines (main parameter set for the scheme)
+      struct AEIParams
+      {
+        //! is the Adaptive Estimate Interpolation used?
+        bool use_adaptive_estimate_interpolation;
+
+        //! preconditioning settings
+        PreconditioningSettings preconditioning;
+
+        //! parameters for plastic predictor construction
+        PlasticPredictorConstructionParams plastic_predictor_construction;
+
+        //! parameters for estimate interpolation between predictors
+        EstimateInterpolationParams estimate_interpolation;
+
+        //! hardening parameters
+        HardeningParams hardening;
+
+        //! re-estimation parameters
+        ReestimationParams reestimation;
+      };
+    }  // namespace AdaptiveEstimateInterpolation
   }  // namespace InelasticDefgradTransvIsotropElastViscoplastUtils
 
 }  // namespace Mat
