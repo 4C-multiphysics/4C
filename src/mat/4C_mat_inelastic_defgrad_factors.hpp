@@ -414,6 +414,20 @@ namespace Mat
         return error_registration_settings_;
       }
 
+      //! is the Adaptive Estimate Interpolation used?
+      [[nodiscard]] bool use_adaptive_estimate_interpolation() const
+      {
+        return adaptive_estimate_interpolation_params_.use_adaptive_estimate_interpolation;
+      }
+
+      //! get Adaptive Estimate Interpolation parameters
+      [[nodiscard]] const InelasticDefgradTransvIsotropElastViscoplastUtils::
+          AdaptiveEstimateInterpolation::AEIParams&
+          adaptive_estimate_interpolation_params() const
+      {
+        return adaptive_estimate_interpolation_params_;
+      }
+
      private:
       //! ID of the viscoplasticity law
       const int viscoplastic_law_id_;
@@ -468,6 +482,10 @@ namespace Mat
       //! get error registration settings for the constitutive update
       const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings
           error_registration_settings_;
+
+      //! Adaptive Estimate Interpolation parameters
+      const InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation::
+          AEIParams adaptive_estimate_interpolation_params_;
     };
   }  // namespace PAR
 
