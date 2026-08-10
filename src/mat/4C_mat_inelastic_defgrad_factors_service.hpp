@@ -1242,6 +1242,23 @@ namespace Mat
         ReestimationParams reestimation;
       };
 
+      //! struct: input for the interpolation point determination based on the equivalent
+      //! stress of the previous solution between both predictors (I_HIST method from paper:
+      //! $\hat{\xi}_{n+1} = \text{min}[1, \text{max}(\frac{\overline{\sigma}_n -
+      //! \overline{\sigma}_n^{\text{E}}}{\overline{\sigma}_{n}^{\text{P}} -
+      //! \overline{\sigma}_{n}^{\text{E}}},0)]$)
+      struct InputEquivStressStartingPoint
+      {
+        //! equivalent stress of the solution: \f$ \overline{\sigma}_{n} \f$
+        double equiv_stress_solution;
+
+        //! equivalent stress of the elastic predictor: \f$ \overline{\sigma}_{n}^{\text{E}} \f$
+        double equiv_stress_elast_pred;
+
+        //! equivalent stress of the plastic predictor: \f$ \overline{\sigma}_{n}^{\text{P}} \f$
+        double equiv_stress_plast_pred;
+      };
+
       //! Interpolator of elastic deformation gradients between two predictor states: between the
       //! elastic predictor and the preliminary plastic predictor (during plastic predictor
       //! construction), or between the elastic predictor and the plastic predictor (estimate
@@ -1379,6 +1396,260 @@ namespace Mat
 
         //! starting point for interpolation \f$ \hat{\xi} \f$
         double starting_point;
+      };
+
+      //! Shift direction for the interpolation intervals
+      enum class InterpolationIntervalShift : std::uint8_t
+      {
+        towards_elastic_pred,  ///< shift towards the elastic predictor (e.g., in case of
+                               ///< vanishing plastic strain increments)
+        towards_plastic_pred,  ///< shift towards the plastic predictor (e.g., in case of
+                               ///< overflow errors due to high overstresses)
+      };
+
+      /// Types of interpolation points / bounds which can be used to set the current interpolation
+      /// point
+      enum class CurrentInterpPointPreset : std::uint8_t
+      {
+        plastic_pred_construct_update,  ///< update current interpolation point between the lower
+                                        ///< and upper bound for the plastic predictor
+                                        ///< construction:
+                                        ///< (\f$
+                                        ///< \tau \gets \tau_{\text{E}} +  s \, \left(
+                                        ///< \tau_{\text{P}} - \tau_{\text{E}}
+                                        ///< \right) \f$)
+        estimate_interpolation_update,  ///< update current interpolation point between the
+                                        ///< lower and upper bound for the estimate interpolation
+                                        ///< between predictors:
+                                        ///< (\f$
+                                        ///< \xi \gets \xi_{\text{E}} + s \, \left(
+                                        ///< \xi_{\text{P}} - \xi_{\text{E}}
+                                        ///< \right) \f$)
+        lower_interp_bound,  ///< shift towards elastic predictor (\f$ \xi \gets \xi_{\text{E}} \f$)
+        upper_interp_bound,  ///< shift towards plastic predictor (\f$ \xi \gets \xi_{\text{P}} \f$)
+        elastic_predictor,   ///< elastic predictor (\f$ \xi \gets 0.0 \f$)
+        plastic_predictor,   ///< plastic predictor (\f$ \xi \gets 1.0 \f$)
+        starting_point,      ///< starting point (\f$ \xi \gets \hat{\xi} \f$)
+        intermediate_point   ///<  intermediate point between lower bound and current interpolation
+                             ///<  point:
+                             ///< (\f$
+                             ///< \xi \gets \xi_{\text{E}} + s \, \left(
+                             ///< \xi - \xi_{\text{E}}
+                             ///< \right) \f$)
+      };
+
+      //! class: manager for the Adaptive Estimate Interpolation (AEI) algorithm across all Gauss
+      //! points
+      class AEIManager
+      {
+       public:
+        AEIManager() = delete;
+
+        /*!
+         * @brief Constructor
+         *
+         * @param[in] aei_params Adaptive Estimate Interpolation parameters
+         */
+        explicit AEIManager(const AEIParams& aei_params);
+
+        //! resize method: set the correct number of Gauss Points
+        void resize(unsigned int num_gp);
+
+        //! get info as string
+        [[nodiscard]] std::string get_info(const unsigned int gp) const
+        {
+          std::string out;
+          out += "\nAdaptive estimate interpolation info: \n";
+          out += std::format(
+              "number of plastic predictor construction iterations: {} / {}, number of estimate "
+              "interpolation iterations: {} / {}, number of re-estimations: {} / {}, interpolation "
+              "interval: [{}, {}], "
+              "current interpolation point: {} \n",
+              num_plastic_pred_construct_iters_, params_.plastic_predictor_construction.max_iter,
+              num_estimate_interp_iters_, params_.estimate_interpolation.max_iter,
+              num_reestimations_, params_.reestimation.max_num_reestimations,
+              lower_interp_bound(gp), upper_interp_bound(gp), current_interp_point(gp));
+          return out;
+        };
+
+
+        /*!
+         * @brief Verify whether plastic predictor construction is still possible, based on the set
+         * maximum number of iterations
+         *
+         *
+         */
+        [[nodiscard]] bool is_plastic_pred_construct_possible() const
+        {
+          return (
+              num_plastic_pred_construct_iters_ <= params_.plastic_predictor_construction.max_iter);
+        };
+
+        /*!
+         * @brief Verify whether estimate interpolation is still possible, based on the set maximum
+         * number of interpolation iterations
+         *
+         */
+        [[nodiscard]] bool is_estimate_interp_possible() const
+        {
+          return (num_estimate_interp_iters_ <= params_.estimate_interpolation.max_iter);
+        };
+
+        /*!
+         * @brief Verify whether re-estimations are still possible, based on the
+         * set maximum number of re-estimations
+         *
+         */
+        [[nodiscard]] bool is_reestimation_possible() const
+        {
+          return (num_reestimations_ <= params_.reestimation.max_num_reestimations);
+        };
+
+        /*!
+         * @brief Reset tasks and construction of the preliminary plastic
+         * predictor at a given Gauss point
+         *
+         * @param[in] gp Gauss point index
+         * @param[in] local_integration_input input data used for local time integration
+         */
+        void reset_and_construct_prelim_plastic_pred(
+            unsigned int gp, const LocalIntegrationInput& local_integration_input);
+
+
+        //! pack method
+        void pack(Core::Communication::PackBuffer& data) const;
+
+        //! unpack method
+        void unpack(Core::Communication::UnpackBuffer& buffer);
+
+        /*!
+         * @brief Interpolate the inverse inelastic deformation gradient required by the
+         * viscoplastic material.
+         *
+         * @note The interpolation takes place between the elastic deformation gradients
+         * associated with the elastic and the plastic predictors at the current
+         * interpolation point saved internally.
+         *
+         *
+         * @param[in] gp Gauss point index
+         * @param[in] inv_defgrad inverse deformation gradient
+         */
+        [[nodiscard]] Core::LinAlg::Matrix<3, 3> interpolate_inverse_inelastic_defgrad(
+            unsigned int gp, const Core::LinAlg::Matrix<3, 3>& inv_defgrad) const;
+
+        /*!
+         * Retrieves the inverse inelastic deformation gradient associated with the plastic
+         * predictor, via interpolation using \f$ \xi = 1.0 \f$, at the specified Gauss point
+         *
+         * @param[in] gp Gauss point index
+         * @param[in] inv_defgrad inverse deformation gradient
+         */
+        [[nodiscard]] Core::LinAlg::Matrix<3, 3> get_inverse_inelastic_defgrad_plastic_pred(
+            unsigned int gp, const Core::LinAlg::Matrix<3, 3>& inv_defgrad) const;
+
+        /*!
+         * @brief Updates the plastic predictor quantities based on the current interpolation point;
+         * then resets the interpolation point container consistently, at the specified Gauss point
+         *
+         * @param[in] gp Gauss point
+         */
+        void update_plastic_predictor_after_construction_algo(unsigned int gp);
+
+        /*!
+         * @brief Adapt interpolation / construction intervals \f$ \left[\xi_{\mathrm{E}},
+         * \xi_{\mathrm{P}} \right] \f$ based on evaluation error
+         *
+         * @param[in] gp Gauss point
+         * @param[in] interval_shift interval shift direction
+         */
+        void adapt_interpolation_interval(
+            unsigned int gp, const InterpolationIntervalShift& interval_shift);
+
+        //! get current interpolation point at a specified Gauss point
+        [[nodiscard]] double current_interp_point(unsigned int gp) const
+        {
+          FOUR_C_ASSERT(gp < interpolation_point_containers_.size(), "GP index out of range");
+          return interpolation_point_containers_[gp].current_interp_point;
+        }
+
+        //! set current interpolation point at the specified Gauss point using a given preset
+        void set_current_interp_point(unsigned int gp, CurrentInterpPointPreset preset);
+
+        //! get lower interpolation bound at the specified Gauss point
+        [[nodiscard]] double lower_interp_bound(unsigned int gp) const
+        {
+          FOUR_C_ASSERT(gp < interpolation_point_containers_.size(), "GP index out of range");
+          return interpolation_point_containers_[gp].lower_interp_bound;
+        }
+
+        //! get upper interpolation bound at the specified Gauss point
+        [[nodiscard]] double upper_interp_bound(unsigned int gp) const
+        {
+          FOUR_C_ASSERT(gp < interpolation_point_containers_.size(), "GP index out of range");
+          return interpolation_point_containers_[gp].upper_interp_bound;
+        }
+
+        //! get starting point at the specified Gauss point
+        [[nodiscard]] double starting_point(unsigned int gp) const
+        {
+          FOUR_C_ASSERT(gp < interpolation_point_containers_.size(), "GP index out of range");
+          return interpolation_point_containers_[gp].starting_point;
+        }
+
+        //! set starting point at a specified Gauss point to the user-set value
+        void set_user_starting_point(unsigned int gp);
+
+        //! set starting point at a specified Gauss point based on the equivalent stress from the
+        //! previous solution (see I_HIST method from the paper)
+        void set_stress_based_starting_point(
+            unsigned int gp, InputEquivStressStartingPoint input_equiv_stress_starting_point);
+
+        //! increment number of re-estimations
+        void increment_num_reestimations() { ++num_reestimations_; }
+
+        //! disable further re-estimations
+        void disable_further_reestimations()
+        {
+          num_reestimations_ = params_.reestimation.max_num_reestimations + 1;
+        }
+
+        //! reset number of estimate interpolation iterations
+        void reset_num_estimate_interp_iters() { num_estimate_interp_iters_ = 0; }
+
+        //! increment number of estimate interpolation iterations
+        void increment_num_estimate_interp_iters() { ++num_estimate_interp_iters_; }
+
+        //! reset number of plastic predictor construction iterations
+        void reset_num_plastic_pred_construct_iters() { num_plastic_pred_construct_iters_ = 0; }
+
+        //! increment number of plastic predictor construction iterations
+        void increment_num_plastic_pred_construct_iters() { ++num_plastic_pred_construct_iters_; }
+
+       private:
+        //! Adaptive Estimate Interpolation parameters
+        const AEIParams params_;
+
+        //! tracks whether the resizing function has been called, to set the current number of
+        //! Gauss points exactly once!
+        bool resize_called_{false};
+
+        //! current number of plastic predictor construction iterations at the currently evaluated
+        //! Gauss point
+        int num_plastic_pred_construct_iters_;
+
+        //! current number of estimation interpolation iterations at the currently evaluated Gauss
+        //! point
+        int num_estimate_interp_iters_;
+
+        //! current number of re-estimations at the currently evaluated Gauss point
+        int num_reestimations_;
+
+        //! containers of interpolation points / bounds (vector over all Gauss points)
+        std::vector<InterpolationPointContainer> interpolation_point_containers_;
+
+        //! predictor interpolators containing data and interpolation logic for the elastic and
+        //! plastic predictors (vector over all Gauss points)
+        std::vector<PredictorInterpolator> predictor_interpolators_;
       };
     }  // namespace AdaptiveEstimateInterpolation
   }  // namespace InelasticDefgradTransvIsotropElastViscoplastUtils

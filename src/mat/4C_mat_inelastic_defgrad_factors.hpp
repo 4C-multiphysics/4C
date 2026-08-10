@@ -1711,6 +1711,12 @@ namespace Mat
     //! vector tracking whether there is plastic flow at each Gauss point
     std::vector<bool> is_plastic_gp_;
 
+    //! dedicated Adaptive Estimate Interpolation manager containing the fundamental logic of the
+    //! scheme
+    std::optional<InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation::
+            AEIManager>
+        adaptive_estimate_interp_manager_;
+
     /*!
      * @brief Calculate the Holzapfel gamma and delta values of the isotropic elastic material
      * components

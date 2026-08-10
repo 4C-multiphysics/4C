@@ -738,4 +738,360 @@ namespace
     EXPECT_EQ(interp_point_container.upper_interp_bound, 1.0);
   }
 
+  /// tests the bookkeeping of iterations / re-estimations within the Adaptive Estimate
+  /// Interpolation manager
+  TEST_F(InelasticDefgradFactorsServiceTest, TestAdaptiveEstimateInterpolationManagerBookkeeping)
+  {
+    // consider a single Gauss point
+    const unsigned int gp = 0;
+
+    // setup Adaptive Estimate Interpolation parameters
+    AEI::AEIParams aei_params = InelasticDefgradFactorsTestUtils::set_up_aei_params();
+    aei_params.plastic_predictor_construction.max_iter = 1;
+    aei_params.estimate_interpolation.max_iter = 1;
+    aei_params.reestimation.max_num_reestimations = 1;
+
+    // setup manager
+    AEI::AEIManager aei_manager(aei_params);
+
+    // setup deformation tensors
+    Core::LinAlg::Matrix<3, 3> defgrad{Core::LinAlg::Initialization::zero};
+    defgrad(0, 0) = 2.0;
+    defgrad(1, 1) = 1.0;
+    defgrad(2, 2) = 1.0;
+    Core::LinAlg::Matrix<3, 3> last_inv_inelastic_defgrad{Core::LinAlg::Initialization::zero};
+    last_inv_inelastic_defgrad(0, 0) = 1.0;
+    last_inv_inelastic_defgrad(1, 1) = 1.0;
+    last_inv_inelastic_defgrad(2, 2) = 1.0;
+    // setup dummy temperature, last plastic strain and timestep
+    const double temperature = 293.15;
+    const double last_plastic_strain = 0.0;
+    const double timestep = 0.1;
+
+
+    // determine local integration input, in particular the elastic predictor
+    auto local_integration_input = ViscoplastUtils::LocalIntegrationInput{{.defgrad = defgrad,
+        .temperature = temperature,
+        .last_inv_inelastic_defgrad = last_inv_inelastic_defgrad,
+        .last_plastic_strain = last_plastic_strain,
+        .step = timestep}};
+
+    // test bookkeeping for plastic predictor construction iterations
+    aei_manager.reset_and_construct_prelim_plastic_pred(gp, local_integration_input);
+    EXPECT_TRUE(aei_manager.is_plastic_pred_construct_possible());  // 0 iterations -> true
+    aei_manager.increment_num_plastic_pred_construct_iters();
+    EXPECT_TRUE(aei_manager.is_plastic_pred_construct_possible());  // 1 iterations -> true
+    aei_manager.increment_num_plastic_pred_construct_iters();
+    EXPECT_FALSE(aei_manager.is_plastic_pred_construct_possible());  // 2 iterations -> false
+
+    // test bookkeeping for estimate interpolation iterations
+    aei_manager.reset_and_construct_prelim_plastic_pred(gp, local_integration_input);
+    EXPECT_TRUE(aei_manager.is_estimate_interp_possible());  // 0 iterations -> true
+    aei_manager.increment_num_estimate_interp_iters();
+    EXPECT_TRUE(aei_manager.is_estimate_interp_possible());  // 1 iterations -> true
+    aei_manager.increment_num_estimate_interp_iters();
+    EXPECT_FALSE(aei_manager.is_estimate_interp_possible());  // 2 iterations -> false
+
+
+    // test bookkeeping for re-estimations
+    // 1. using the number of re-estimations
+    aei_manager.reset_and_construct_prelim_plastic_pred(gp, local_integration_input);
+    EXPECT_TRUE(aei_manager.is_reestimation_possible());  // 0 re-estimations -> true
+    aei_manager.increment_num_reestimations();
+    EXPECT_TRUE(aei_manager.is_reestimation_possible());  // 1 re-estimation -> true
+    aei_manager.increment_num_reestimations();
+    EXPECT_FALSE(aei_manager.is_reestimation_possible());  // 2 iterations -> false
+
+    // 2. using the re-estimation disabling function
+    aei_manager.reset_and_construct_prelim_plastic_pred(gp, local_integration_input);
+    EXPECT_TRUE(aei_manager.is_reestimation_possible());  // 0 re-estimations -> true
+    aei_manager.disable_further_reestimations();
+    EXPECT_FALSE(aei_manager.is_reestimation_possible());  // re-estimations disabled
+  }
+
+  /// tests the plastic predictor construction and interpolation at different locations within the
+  /// Adaptive Estimate Interpolation manager
+  TEST_F(InelasticDefgradFactorsServiceTest, TestAdaptiveEstimateInterpolationManagerInterpolation)
+  {
+    // consider a single Gauss point
+    const unsigned int gp = 0;
+
+    // setup Adaptive Estimate Interpolation parameters + manager
+    AEI::AEIParams aei_params = InelasticDefgradFactorsTestUtils::set_up_aei_params();
+    aei_params.estimate_interpolation.starting_point_type = AEI::StartingPointType::constant;
+    aei_params.estimate_interpolation.user_set_starting_point = 0.1;
+    AEI::AEIManager aei_manager(aei_params);
+
+    // setup deformation tensors (diagonal deformation gradient)
+    Core::LinAlg::Matrix<3, 3> defgrad{Core::LinAlg::Initialization::zero};
+    defgrad(0, 0) = 2.0;
+    defgrad(1, 1) = 1.0;
+    defgrad(2, 2) = 1.0;
+    Core::LinAlg::Matrix<3, 3> last_inv_inelastic_defgrad{Core::LinAlg::Initialization::zero};
+    last_inv_inelastic_defgrad(0, 0) = 1.0;
+    last_inv_inelastic_defgrad(1, 1) = 1.0;
+    last_inv_inelastic_defgrad(2, 2) = 1.0;
+    // setup dummy temperature, last plastic strain and timestep
+    const double temperature = 293.15;
+    const double last_plastic_strain = 0.0;
+    const double timestep = 0.1;
+
+    auto local_integration_input = ViscoplastUtils::LocalIntegrationInput{{.defgrad = defgrad,
+        .temperature = temperature,
+        .last_inv_inelastic_defgrad = last_inv_inelastic_defgrad,
+        .last_plastic_strain = last_plastic_strain,
+        .step = timestep}};
+
+
+    // construct preliminary plastic predictor, and verify endpoints
+    aei_manager.reset_and_construct_prelim_plastic_pred(gp, local_integration_input);
+    aei_manager.set_current_interp_point(gp, AEI::CurrentInterpPointPreset::elastic_predictor);
+    FOUR_C_EXPECT_NEAR(
+        aei_manager.interpolate_inverse_inelastic_defgrad(gp, local_integration_input.inv_defgrad),
+        last_inv_inelastic_defgrad, 1.0e-15);
+
+    aei_manager.set_current_interp_point(gp, AEI::CurrentInterpPointPreset::plastic_predictor);
+    Core::LinAlg::Matrix<3, 3> elastic_defgrad_plastic_pred{Core::LinAlg::Initialization::zero};
+    elastic_defgrad_plastic_pred(0, 0) = elastic_defgrad_plastic_pred(1, 1) =
+        elastic_defgrad_plastic_pred(2, 2) = std::pow(defgrad.determinant(), 1.0 / 3.0);
+    Core::LinAlg::Matrix<3, 3> inv_inelastic_defgrad_plastic_pred_ref{
+        Core::LinAlg::Initialization::zero};
+    inv_inelastic_defgrad_plastic_pred_ref.multiply(
+        1.0, local_integration_input.inv_defgrad, elastic_defgrad_plastic_pred, 0.0);
+    FOUR_C_EXPECT_NEAR(
+        aei_manager.interpolate_inverse_inelastic_defgrad(gp, local_integration_input.inv_defgrad),
+        inv_inelastic_defgrad_plastic_pred_ref,
+        1.0e-15);  // check using the saved current interpolation point
+    FOUR_C_EXPECT_NEAR(aei_manager.get_inverse_inelastic_defgrad_plastic_pred(
+                           gp, local_integration_input.inv_defgrad),
+        inv_inelastic_defgrad_plastic_pred_ref,
+        1.0e-15);  // check using the dedicated plastic predictor recovery method
+
+
+    // construct the plastic predictor between the elastic predictor and the preliminary plastic
+    // predictor (here: exactly in the middle based on the set interval scanning parameter: 0.5),
+    // and repeat the checks
+    aei_manager.set_current_interp_point(gp,
+        AEI::CurrentInterpPointPreset::
+            plastic_pred_construct_update);  // right in the middle of the elastic predictor and the
+                                             // preliminary plastic predictor
+    aei_manager.update_plastic_predictor_after_construction_algo(gp);
+
+    aei_manager.set_current_interp_point(gp, AEI::CurrentInterpPointPreset::elastic_predictor);
+    FOUR_C_EXPECT_NEAR(
+        aei_manager.interpolate_inverse_inelastic_defgrad(gp, local_integration_input.inv_defgrad),
+        last_inv_inelastic_defgrad, 1.0e-15);
+
+    aei_manager.set_current_interp_point(gp, AEI::CurrentInterpPointPreset::plastic_predictor);
+    elastic_defgrad_plastic_pred.clear();
+    elastic_defgrad_plastic_pred(0, 0) = 1.5874010519681996;
+    elastic_defgrad_plastic_pred(1, 1) = 1.122462048309373;
+    elastic_defgrad_plastic_pred(2, 2) = 1.122462048309373;
+    inv_inelastic_defgrad_plastic_pred_ref.multiply(
+        1.0, local_integration_input.inv_defgrad, elastic_defgrad_plastic_pred, 0.0);
+    FOUR_C_EXPECT_NEAR(
+        aei_manager.interpolate_inverse_inelastic_defgrad(gp, local_integration_input.inv_defgrad),
+        inv_inelastic_defgrad_plastic_pred_ref,
+        1.0e-15);  // check using the saved current interpolation point
+    FOUR_C_EXPECT_NEAR(aei_manager.get_inverse_inelastic_defgrad_plastic_pred(
+                           gp, local_integration_input.inv_defgrad),
+        inv_inelastic_defgrad_plastic_pred_ref,
+        1.0e-15);  // check using the dedicated plastic predictor recovery method
+
+
+    // --> test further setter options for the current interpolation point
+    Core::LinAlg::Matrix<3, 3> interp_elastic_defgrad_ref{Core::LinAlg::Initialization::zero};
+    Core::LinAlg::Matrix<3, 3> interp_inv_inelastic_defgrad_ref{Core::LinAlg::Initialization::zero};
+
+
+    // update preset for plastic predictor construction: specified with the interval scanning
+    // parameter internally, based on the current interpolation bounds (here: \f$ \tau =  0.5 \f$,
+    // pristine bounds \f$ \tau_{\text{E}} = 0.0 \f$ and \f$ \tau_{\text{P}} = 1.0 \f$)
+    aei_manager.set_current_interp_point(
+        gp, AEI::CurrentInterpPointPreset::plastic_pred_construct_update);
+    interp_elastic_defgrad_ref(0, 0) = 1.7817974362806785;
+    interp_elastic_defgrad_ref(1, 1) = 1.0594630943592953;
+    interp_elastic_defgrad_ref(2, 2) = 1.0594630943592953;
+    interp_inv_inelastic_defgrad_ref.multiply(
+        1.0, local_integration_input.inv_defgrad, interp_elastic_defgrad_ref, 0.0);
+    FOUR_C_EXPECT_NEAR(
+        aei_manager.interpolate_inverse_inelastic_defgrad(gp, local_integration_input.inv_defgrad),
+        interp_inv_inelastic_defgrad_ref,
+        1.0e-15);  // check using the saved current interpolation point
+
+
+    // update preset for estimate interpolation: specified with the interval scanning parameter
+    // internally, based on the current interpolation bounds (here: \f$ \xi =  0.5 \f$, pristine
+    // bounds \f$ \xi_{\text{E}} = 0.0 \f$ and \f$ \xi_{\text{P}} = 1.0 \f$)
+    aei_manager.set_current_interp_point(
+        gp, AEI::CurrentInterpPointPreset::estimate_interpolation_update);
+    interp_elastic_defgrad_ref(0, 0) = 1.7817974362806785;
+    interp_elastic_defgrad_ref(1, 1) = 1.0594630943592953;
+    interp_elastic_defgrad_ref(2, 2) = 1.0594630943592953;
+    interp_inv_inelastic_defgrad_ref.multiply(
+        1.0, local_integration_input.inv_defgrad, interp_elastic_defgrad_ref, 0.0);
+    FOUR_C_EXPECT_NEAR(
+        aei_manager.interpolate_inverse_inelastic_defgrad(gp, local_integration_input.inv_defgrad),
+        interp_inv_inelastic_defgrad_ref,
+        1.0e-15);  // check using the saved current interpolation point
+
+    // user-set starting point (here: \f$ \xi = 0.1 \f$)
+    aei_manager.set_user_starting_point(gp);
+    aei_manager.set_current_interp_point(gp, AEI::CurrentInterpPointPreset::starting_point);
+    interp_elastic_defgrad_ref(0, 0) = 1.9543199368684918;
+    interp_elastic_defgrad_ref(1, 1) = 1.0116194403019225;
+    interp_elastic_defgrad_ref(2, 2) = 1.0116194403019225;
+    interp_inv_inelastic_defgrad_ref.multiply(
+        1.0, local_integration_input.inv_defgrad, interp_elastic_defgrad_ref, 0.0);
+    FOUR_C_EXPECT_NEAR(
+        aei_manager.interpolate_inverse_inelastic_defgrad(gp, local_integration_input.inv_defgrad),
+        interp_inv_inelastic_defgrad_ref,
+        1.0e-15);  // check using the saved current interpolation point
+
+    // intermediate point between the lower bound (here \f$ \xi_{\text{E}} = 0.0 \f$), and the
+    // current interpolation point (here \f$ \xi = 0.1 \f$) because of the user-set starting
+    // point --> here: \f$ \xi_{\text{I}} = 0.05 \f$
+    aei_manager.set_current_interp_point(gp, AEI::CurrentInterpPointPreset::intermediate_point);
+    interp_elastic_defgrad_ref(0, 0) = 1.9770280407057923;
+    interp_elastic_defgrad_ref(1, 1) = 1.0057929410678534;
+    interp_elastic_defgrad_ref(2, 2) = 1.0057929410678534;
+    interp_inv_inelastic_defgrad_ref.multiply(
+        1.0, local_integration_input.inv_defgrad, interp_elastic_defgrad_ref, 0.0);
+    FOUR_C_EXPECT_NEAR(
+        aei_manager.interpolate_inverse_inelastic_defgrad(gp, local_integration_input.inv_defgrad),
+        interp_inv_inelastic_defgrad_ref,
+        1.0e-15);  // check using the saved current interpolation point
+
+
+    // we now shift towards the plastic predictor, i.e, set the lower bound as the current
+    // interpolation point, i.e., \f$ \xi_{\text{E}} =
+    // \xi_{\text{I}} = 0.05 \f$; and redo the estimate interpolation update, \f$ \xi = 0.5 \left(
+    // 0.05 + 1.0 \right) = 0.525 \f$
+    aei_manager.adapt_interpolation_interval(
+        gp, AEI::InterpolationIntervalShift::towards_plastic_pred);
+    aei_manager.set_current_interp_point(
+        gp, AEI::CurrentInterpPointPreset::estimate_interpolation_update);
+    interp_elastic_defgrad_ref(0, 0) = 1.7715350382047212;
+    interp_elastic_defgrad_ref(1, 1) = 1.0625273666151527;
+    interp_elastic_defgrad_ref(2, 2) = 1.0625273666151527;
+    interp_inv_inelastic_defgrad_ref.multiply(
+        1.0, local_integration_input.inv_defgrad, interp_elastic_defgrad_ref, 0.0);
+    FOUR_C_EXPECT_NEAR(
+        aei_manager.interpolate_inverse_inelastic_defgrad(gp, local_integration_input.inv_defgrad),
+        interp_inv_inelastic_defgrad_ref,
+        1.0e-15);  // check using the saved current interpolation point
+
+    // we now shift towards the elastic predictor, i.e., set the upper bound as the current
+    // interpolation point: $\xi_{\text{P}} = 0.525$ and redo the estimate interpolation update, \f$
+    // \xi = 0.5 \left( 0.05 + 0.525 \right) = 0.2875 \f$
+    aei_manager.adapt_interpolation_interval(
+        gp, AEI::InterpolationIntervalShift::towards_elastic_pred);
+    aei_manager.set_current_interp_point(
+        gp, AEI::CurrentInterpPointPreset::estimate_interpolation_update);
+    interp_elastic_defgrad_ref(0, 0) = 1.8714631830798973;
+    interp_elastic_defgrad_ref(1, 1) = 1.033771021567608;
+    interp_elastic_defgrad_ref(2, 2) = 1.033771021567608;
+    interp_inv_inelastic_defgrad_ref.multiply(
+        1.0, local_integration_input.inv_defgrad, interp_elastic_defgrad_ref, 0.0);
+    FOUR_C_EXPECT_NEAR(
+        aei_manager.interpolate_inverse_inelastic_defgrad(gp, local_integration_input.inv_defgrad),
+        interp_inv_inelastic_defgrad_ref,
+        1.0e-15);  // check using the saved current interpolation point
+  }
+
+
+  /// tests the starting point update routines of the Adaptive Estimate Interpolation manager
+  TEST_F(InelasticDefgradFactorsServiceTest, TestAdaptiveEstimateInterpolationManagerStartingPoints)
+  {
+    // consider a single Gauss point
+    const unsigned int gp = 0;
+
+    // function: setup plastic predictor for a given aei manager, and set its current interpolation
+    // point <- starting point
+    auto construct_plastic_predictor_and_init_curr_interp_point =
+        [](AEI::AEIManager& input_aei_manager)
+    {
+      // setup deformation tensors (diagonal deformation gradient)
+      Core::LinAlg::Matrix<3, 3> defgrad{Core::LinAlg::Initialization::zero};
+      defgrad(0, 0) = 2.0;
+      defgrad(1, 1) = 1.0;
+      defgrad(2, 2) = 1.0;
+      Core::LinAlg::Matrix<3, 3> last_inv_inelastic_defgrad{Core::LinAlg::Initialization::zero};
+      last_inv_inelastic_defgrad(0, 0) = 1.0;
+      last_inv_inelastic_defgrad(1, 1) = 1.0;
+      last_inv_inelastic_defgrad(2, 2) = 1.0;
+
+      // setup dummy temperature, last plastic strain and timestep
+      const double temperature = 293.15;
+      const double last_plastic_strain = 0.0;
+      const double timestep = 0.1;
+
+
+      // determine the elastic predictor via the local integration input
+      auto local_integration_input = ViscoplastUtils::LocalIntegrationInput{{.defgrad = defgrad,
+          .temperature = temperature,
+          .last_inv_inelastic_defgrad = last_inv_inelastic_defgrad,
+          .last_plastic_strain = last_plastic_strain,
+          .step = timestep}};
+
+
+      // reset all interpolation points (also sets the starting point) and construct plastic
+      // predictor
+      input_aei_manager.reset_and_construct_prelim_plastic_pred(gp, local_integration_input);
+    };
+
+    // create AEI manager with set starting point
+    AEI::AEIParams aei_params_user_set = InelasticDefgradFactorsTestUtils::set_up_aei_params();
+    aei_params_user_set.estimate_interpolation.starting_point_type =
+        AEI::StartingPointType::constant;
+    aei_params_user_set.estimate_interpolation.user_set_starting_point = 0.1;
+    AEI::AEIManager aei_manager_user_set(aei_params_user_set);
+    construct_plastic_predictor_and_init_curr_interp_point(aei_manager_user_set);
+
+    EXPECT_EQ(aei_manager_user_set.current_interp_point(gp), 0.1);  // user set starting point
+    aei_manager_user_set.set_user_starting_point(gp);               // starting point: 0.1
+    EXPECT_EQ(aei_manager_user_set.starting_point(gp), 0.1);
+
+
+    // create AEI manager with a starting point based on the evolution of the equivalent stress
+    AEI::AEIParams aei_params_equiv_stress_starting_point =
+        InelasticDefgradFactorsTestUtils::set_up_aei_params();
+    aei_params_equiv_stress_starting_point.estimate_interpolation.starting_point_type =
+        AEI::StartingPointType::equiv_stress_history;
+    AEI::AEIManager aei_manager_equiv_stress_starting_point(aei_params_equiv_stress_starting_point);
+    construct_plastic_predictor_and_init_curr_interp_point(aei_manager_equiv_stress_starting_point);
+
+    // test initialization of starting point at the interval scanning parameter, since no
+    // stress-based update has taken place yet
+    EXPECT_EQ(aei_manager_equiv_stress_starting_point.starting_point(gp), 0.5);
+    EXPECT_EQ(aei_manager_equiv_stress_starting_point.current_interp_point(gp), 0.5);
+
+    // set starting point using stress input, and see whether this also translates to
+    // the current interpolation point upon initialization: first specify the stress as the
+    // predictor values, then an arbitrary value
+    aei_manager_equiv_stress_starting_point.set_stress_based_starting_point(
+        gp, AEI::InputEquivStressStartingPoint{.equiv_stress_solution = 10.0,
+                .equiv_stress_elast_pred = 10.0,
+                .equiv_stress_plast_pred = 0.0});
+    construct_plastic_predictor_and_init_curr_interp_point(aei_manager_equiv_stress_starting_point);
+    EXPECT_EQ(aei_manager_equiv_stress_starting_point.starting_point(gp), 0.0);
+    EXPECT_EQ(aei_manager_equiv_stress_starting_point.current_interp_point(gp), 0.0);
+
+    aei_manager_equiv_stress_starting_point.set_stress_based_starting_point(
+        gp, AEI::InputEquivStressStartingPoint{.equiv_stress_solution = 0.0,
+                .equiv_stress_elast_pred = 10.0,
+                .equiv_stress_plast_pred = 0.0});
+    construct_plastic_predictor_and_init_curr_interp_point(aei_manager_equiv_stress_starting_point);
+    EXPECT_EQ(aei_manager_equiv_stress_starting_point.starting_point(gp), 1.0);
+    EXPECT_EQ(aei_manager_equiv_stress_starting_point.current_interp_point(gp), 1.0);
+
+    aei_manager_equiv_stress_starting_point.set_stress_based_starting_point(
+        gp, AEI::InputEquivStressStartingPoint{.equiv_stress_solution = 2.5,
+                .equiv_stress_elast_pred = 10.0,
+                .equiv_stress_plast_pred = 0.0});
+    construct_plastic_predictor_and_init_curr_interp_point(aei_manager_equiv_stress_starting_point);
+    EXPECT_EQ(aei_manager_equiv_stress_starting_point.starting_point(gp), 0.75);
+    EXPECT_EQ(aei_manager_equiv_stress_starting_point.current_interp_point(gp), 0.75);
+  }
+
 }  // namespace

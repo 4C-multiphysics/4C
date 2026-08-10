@@ -1790,7 +1790,12 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::InelasticDefgradTransvIsotrop
       state_quantity_derivatives_(),
       tensor_interpolator_(init_tensor_interpolator()),
       local_substepping_utils_(0.0),
-      local_newton_manager_(parameter()->local_newton_params())
+      local_newton_manager_(parameter()->local_newton_params()),
+      adaptive_estimate_interp_manager_(
+          parameter()->use_adaptive_estimate_interpolation()
+              ? std::make_optional(
+                    AEI::AEIManager(parameter()->adaptive_estimate_interpolation_params()))
+              : std::nullopt)
 {
   // set time step size to 0.0 (this is set to the correct and current value in the
   // preevaluate method)
@@ -3289,6 +3294,12 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::setup(const int numgp,
   // resize plastic flow tracking vector with the correct number of Gauss points
   is_plastic_gp_.resize(numgp, is_plastic_gp_[0]);
 
+  // resize the data within the AEI manager
+  if (adaptive_estimate_interp_manager_.has_value())
+  {
+    adaptive_estimate_interp_manager_->resize(numgp);
+  }
+
   // read fiber and structural tensor in the case of transverse isotropy
   if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::transv_isotropic)
   {
@@ -3329,6 +3340,10 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::pack_inelastic(
 
     // pack plastic flow tracking vector
     add_to_pack(data, is_plastic_gp_);
+
+    // pack the adaptive estimate interpolation manager
+    if (adaptive_estimate_interp_manager_.has_value())
+      adaptive_estimate_interp_manager_->pack(data);
   }
 }
 
@@ -3353,6 +3368,9 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::unpack_inelastic(
     local_newton_manager_.unpack(buffer);
     // unpack the plastic flow tracking vector
     extract_from_pack(buffer, is_plastic_gp_);
+    // unpack the adaptive estimate interpolation manager
+    if (adaptive_estimate_interp_manager_.has_value())
+      adaptive_estimate_interp_manager_->unpack(buffer);
   }
 
   // set number of Gauss points manually, since the setup method is not called
@@ -4480,6 +4498,10 @@ std::string Mat::InelasticDefgradTransvIsotropElastViscoplast::get_error_warning
   if (parameter()->use_local_substepping())
   {
     extended_error_string += local_substepping_utils_.get_info();
+  }
+  if (adaptive_estimate_interp_manager_.has_value())
+  {
+    extended_error_string += adaptive_estimate_interp_manager_->get_info(gp_);
   }
 
   // get relevant error info
