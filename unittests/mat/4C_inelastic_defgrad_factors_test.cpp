@@ -2323,6 +2323,289 @@ namespace
   }
 
 
+  /// Tests a challenging local integration scenario, where using the elastic predictor to
+  /// initialize the Local Newton-Raphson scheme does not converge, whilst using the Adaptive
+  /// Estimate Interpolation (AEI) with hardening integration does (but only when the re-estimation
+  /// mechanism is enabled!)
+  TEST_F(InelasticDefgradFactorsTest, TestElasticPredictorAgainstAdaptiveEstimateInterpolation)
+  {
+    // setup common material parameters to be used
+    Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonParams local_newton_params{
+        .res_tol = 1.0e-8,
+        .incr_tol = 1.0e-8,
+        .conv_check = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonConvCheck::
+            residual_and_increment_ratio,
+        .diver_cont =
+            Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonDiverCont::stop,
+        .max_iter = 100,
+        .max_exceedance_fact_res_tol = 0.0,
+        .max_exceedance_fact_incr_tol = 0.0,
+    };
+    ReformulatedJohnsonCookParameters ref_jc_params = {.strain_rate_prefac = 1.0,
+        .strain_rate_exp_fac = 0.014,
+        .init_yield_strength = 792.0,
+        .isotrop_harden_prefac = 510.0,
+        .isotrop_harden_exp = 0.26,
+        .ref_temperature = 293.0,
+        .melt_temperature = 1000.0,
+        .temperature_sens = 0.1};
+
+    // setup the general test settings
+    Teuchos::ParameterList params_list;
+    double total_time = 1.0e0;
+    double time_step_size = 1.0e0;
+    Mat::EvaluationContext<3> context{.total_time = &total_time,
+        .time_step_size = &time_step_size,
+        .xi = {},
+        .ref_coords = nullptr};
+
+    Core::LinAlg::Matrix<3, 3> unit_3x3 = Core::LinAlg::identity_matrix<3>();
+    Core::LinAlg::Matrix<3, 3> iFin_other(unit_3x3);
+
+    Core::LinAlg::Matrix<3, 3> FM(Core::LinAlg::Initialization::zero);
+    FM(0, 0) = 3.0;
+    FM(1, 1) = 1.0;
+    FM(2, 2) = 1.0;
+
+    Core::LinAlg::Matrix<3, 3> iFin_result(Core::LinAlg::Initialization::zero);
+
+    // setup the material using the elastic predictor
+    auto material_elastic_pred =
+        set_up_viscoplastic_material({.local_newton_params = local_newton_params,
+                                         .use_substepping = false,
+                                         .viscoplastic_law_params = ref_jc_params})
+            .material;
+    // the use of the elastic predictor fails to converge
+    material_elastic_pred->pre_evaluate(params_list, context, 0, 0);
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        material_elastic_pred->evaluate_inverse_inelastic_def_grad(&FM, iFin_other, iFin_result),
+        Core::Exception,
+        "Local Newton evaluation has failed and there is no evaluation management strategy");
+
+    // setup the material using the AEI with hardening integration + reestimation
+    AEI::AEIParams aei_params_with_reestim =
+        InelasticDefgradFactorsTestUtils::set_up_aei_params();  // default: hardening integration
+    auto material_aei_with_reestim =
+        set_up_viscoplastic_material({.local_newton_params = local_newton_params,
+                                         .use_substepping = false,
+                                         .adaptive_estimate_interp_params = aei_params_with_reestim,
+                                         .viscoplastic_law_params = ref_jc_params})
+            .material;
+
+
+    // setup the material using the AEI with hardening integration, but without the reestimation
+    // mechanism
+    AEI::AEIParams aei_params_no_reestim =
+        InelasticDefgradFactorsTestUtils::set_up_aei_params();     // default: hardening integration
+    aei_params_no_reestim.reestimation.max_num_reestimations = 0;  // disable reestimations
+    auto material_aei_no_reestim =
+        set_up_viscoplastic_material({.local_newton_params = local_newton_params,
+                                         .use_substepping = false,
+                                         .adaptive_estimate_interp_params = aei_params_no_reestim,
+                                         .viscoplastic_law_params = ref_jc_params})
+            .material;
+
+    // the use of the AEI converges only when re-estimations are enabled
+    Core::LinAlg::Matrix<3, 3> iFin_result_ref{Core::LinAlg::Initialization::zero};
+    iFin_result_ref(0, 0) = 0.48201356865;
+    iFin_result_ref(1, 1) = 1.44035773137;
+    iFin_result_ref(2, 2) = 1.44035773137;
+    material_aei_with_reestim->pre_evaluate(params_list, context, 0, 0);
+    material_aei_with_reestim->evaluate_inverse_inelastic_def_grad(&FM, iFin_other, iFin_result);
+    FOUR_C_EXPECT_NEAR(iFin_result, iFin_result_ref, 1.0e-10);
+
+    material_aei_no_reestim->pre_evaluate(params_list, context, 0, 0);
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        material_aei_no_reestim->evaluate_inverse_inelastic_def_grad(&FM, iFin_other, iFin_result),
+        Core::Exception, "The re-estimation procedure has failed!");
+  }
+
+  /// Tests two challenging local integration scenarios using the Adaptive Estimate Interpolation
+  /// algorithm. In the first, numerically more tractable scenario, both hardening strategies
+  /// converge: fixing the plastic state and performing consistent integration based on the
+  /// interpolated equivalent stress.
+  /// In the second, more numerically challenging scenario, only the
+  /// consistent hardening integration converges.
+  TEST_F(InelasticDefgradFactorsTest, TestHardeningManagementAdaptiveEstimateInterpolation)
+  {
+    // setup common material parameters to be used
+    Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonParams local_newton_params{
+        .res_tol = 1.0e-8,
+        .incr_tol = 1.0e-8,
+        .conv_check = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonConvCheck::
+            residual_and_increment_ratio,
+        .diver_cont =
+            Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonDiverCont::stop,
+        .max_iter = 50,
+        .max_exceedance_fact_res_tol = 0.0,
+        .max_exceedance_fact_incr_tol = 0.0,
+    };
+
+
+    // setup the general test settings
+    Teuchos::ParameterList params_list;
+    double total_time = 1.0;
+    double time_step_size = 1.0;
+    Mat::EvaluationContext<3> context{.total_time = &total_time,
+        .time_step_size = &time_step_size,
+        .xi = {},
+        .ref_coords = nullptr};
+
+    Core::LinAlg::Matrix<3, 3> unit_3x3 = Core::LinAlg::identity_matrix<3>();
+    Core::LinAlg::Matrix<3, 3> iFin_other(unit_3x3);
+
+    Core::LinAlg::Matrix<3, 3> iFin_result(Core::LinAlg::Initialization::zero);
+
+
+    // setup material using AEI with hardening integration
+    AEI::AEIParams aei_params_hardening_integration =
+        InelasticDefgradFactorsTestUtils::set_up_aei_params();  // default: hardening integration
+    auto material_aei_hardening_integration = set_up_viscoplastic_material(
+        {
+            .local_newton_params = local_newton_params,
+            .use_substepping = false,
+            .adaptive_estimate_interp_params = aei_params_hardening_integration,
+        })
+                                                  .material;
+
+    // setup material using AEI with fixed plastic state / hardening
+    AEI::AEIParams aei_params_fixed_hardening = InelasticDefgradFactorsTestUtils::set_up_aei_params(
+        {.hardening = {.method = AEI::HardeningManagementMethod::use_previous,
+             .max_iter_integration = 0,
+             .tol_integration = 0.0}});
+    auto material_aei_fixed_hardening = set_up_viscoplastic_material(
+        {
+            .local_newton_params = local_newton_params,
+            .use_substepping = false,
+            .adaptive_estimate_interp_params = aei_params_fixed_hardening,
+        })
+                                            .material;
+
+    // first deformation scenario: both hardening strategies converge
+    Core::LinAlg::Matrix<3, 3> FM(Core::LinAlg::Initialization::zero);
+    FM(0, 0) = 1.1;
+    FM(1, 1) = 0.9;
+    FM(2, 2) = 0.9;
+    Core::LinAlg::Matrix<3, 3> iFin_result_ref{Core::LinAlg::Initialization::zero};
+    iFin_result_ref(0, 0) = 0.96637623335;
+    iFin_result_ref(1, 1) = 1.01724808212;
+    iFin_result_ref(2, 2) = 1.01724808212;
+
+    material_aei_hardening_integration->pre_evaluate(params_list, context, 0, 0);
+    material_aei_hardening_integration->evaluate_inverse_inelastic_def_grad(
+        &FM, iFin_other, iFin_result);
+    FOUR_C_EXPECT_NEAR(iFin_result, iFin_result_ref, 1.0e-10);
+    material_aei_fixed_hardening->pre_evaluate(params_list, context, 0, 0);
+    material_aei_fixed_hardening->evaluate_inverse_inelastic_def_grad(&FM, iFin_other, iFin_result);
+    FOUR_C_EXPECT_NEAR(iFin_result, iFin_result_ref, 1.0e-10);
+
+    // second deformation scenario: repeat the tests with a more numerically complex state, such
+    // that only the use of hardening integration converges
+    FM.clear();
+    FM(0, 0) = 1.5;
+    FM(1, 1) = 0.75;
+    FM(2, 2) = 0.75;
+    iFin_result_ref.clear();
+    iFin_result_ref(0, 0) = 0.70480335583;
+    iFin_result_ref(1, 1) = 1.19114880226;
+    iFin_result_ref(2, 2) = 1.19114880226;
+
+    material_aei_hardening_integration->pre_evaluate(params_list, context, 0, 0);
+    material_aei_hardening_integration->evaluate_inverse_inelastic_def_grad(
+        &FM, iFin_other, iFin_result);
+    FOUR_C_EXPECT_NEAR(iFin_result, iFin_result_ref, 1.0e-10);
+
+    material_aei_fixed_hardening->pre_evaluate(params_list, context, 0, 0);
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        material_aei_fixed_hardening->evaluate_inverse_inelastic_def_grad(
+            &FM, iFin_other, iFin_result),
+        Core::Exception, "The re-estimation procedure has failed!");
+  }
+
+
+  /// Tests a challenging local integration scenario where the use of Adaptive Estimate
+  /// Interpolation alone does not converge (re-estimation disabled), but including substepping as a
+  /// fallback strategy does
+  TEST_F(InelasticDefgradFactorsTest, TestAdaptiveEstimateInterpolationWithSubstepping)
+  {
+    // setup common material parameters to be used
+    Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonParams local_newton_params{
+        .res_tol = 1.0e-8,
+        .incr_tol = 1.0e-8,
+        .conv_check = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonConvCheck::
+            residual_and_increment_ratio,
+        .diver_cont =
+            Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonDiverCont::stop,
+        .max_iter = 50,
+        .max_exceedance_fact_res_tol = 0.0,
+        .max_exceedance_fact_incr_tol = 0.0,
+    };
+    ReformulatedJohnsonCookParameters ref_jc_params = {.strain_rate_prefac = 1.0,
+        .strain_rate_exp_fac = 0.014,
+        .init_yield_strength = 792.0,
+        .isotrop_harden_prefac = 510.0,
+        .isotrop_harden_exp = 0.26,
+        .ref_temperature = 293.0,
+        .melt_temperature = 1000.0,
+        .temperature_sens = 0.1};
+
+
+    // setup the general test settings
+    Teuchos::ParameterList params_list;
+    double total_time = 1.0;
+    double time_step_size = 1.0;
+    Mat::EvaluationContext<3> context{.total_time = &total_time,
+        .time_step_size = &time_step_size,
+        .xi = {},
+        .ref_coords = nullptr};
+
+    Core::LinAlg::Matrix<3, 3> unit_3x3 = Core::LinAlg::identity_matrix<3>();
+    Core::LinAlg::Matrix<3, 3> iFin_other(unit_3x3);
+
+    Core::LinAlg::Matrix<3, 3> iFin_result(Core::LinAlg::Initialization::zero);
+
+
+    // setup the material using AEI without substepping (and without re-estimation)
+    AEI::AEIParams aei_params =
+        InelasticDefgradFactorsTestUtils::set_up_aei_params();  // default: hardening integration
+    aei_params.reestimation.max_num_reestimations = 0;          // disable reestimations
+    auto material_aei_no_substepping =
+        set_up_viscoplastic_material({.local_newton_params = local_newton_params,
+                                         .use_substepping = false,
+                                         .adaptive_estimate_interp_params = aei_params,
+                                         .viscoplastic_law_params = ref_jc_params})
+            .material;
+
+    // setup the material using AEI with substepping
+    auto material_aei_with_substepping =
+        set_up_viscoplastic_material({.local_newton_params = local_newton_params,
+                                         .use_substepping = true,
+                                         .max_substepping_halve_num = 10,
+                                         .adaptive_estimate_interp_params = aei_params,
+                                         .viscoplastic_law_params = ref_jc_params})
+            .material;
+
+    // complex deformation scenario: only the additional use of substepping converges
+    Core::LinAlg::Matrix<3, 3> FM(Core::LinAlg::Initialization::zero);
+    FM(0, 0) = 5.5;
+    FM(1, 1) = 1.0;
+    FM(2, 2) = 1.0;
+    Core::LinAlg::Matrix<3, 3> iFin_result_ref{Core::LinAlg::Initialization::zero};
+    iFin_result_ref(0, 0) = 0.32153119143;
+    iFin_result_ref(1, 1) = 1.76355271195;
+    iFin_result_ref(2, 2) = 1.76355271195;
+
+    material_aei_no_substepping->pre_evaluate(params_list, context, 0, 0);
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        material_aei_no_substepping->evaluate_inverse_inelastic_def_grad(
+            &FM, iFin_other, iFin_result),
+        Core::Exception, "The re-estimation procedure has failed!");
+
+    material_aei_with_substepping->pre_evaluate(params_list, context, 0, 0);
+    material_aei_with_substepping->evaluate_inverse_inelastic_def_grad(
+        &FM, iFin_other, iFin_result);
+    FOUR_C_EXPECT_NEAR(iFin_result, iFin_result_ref, 1.0e-10);
+  }
 
   TEST_F(InelasticDefgradFactorsTest, TestEvaluateStateQuantityDerivatives)
   {
