@@ -10,7 +10,9 @@ TITLE:
   - "- time integration of internal variables using logarithmic substepping, as shown in:"
   - "Ana: Continuum Modeling and Calibration of Viscoplasticity in the Context"
   - "of the Lithium Anode in Solid-State Batteries"
-  - "(Master's Thesis, Institute for Computational Mechanics, TU Munich, 2024)"
+  - "(Master's Thesis, Institute for Computational Mechanics, TU Munich, 2024)."
+  - "The Adaptive Estimate Interpolation algorithm presented in Ana, Schmidt, Wall: Accelerating Local
+    Newton--Raphson Schemes in Computational Plasticity / Viscoplasticity is not used in this test."
 PROBLEM TYPE:
   PROBLEMTYPE: "Structure"
 IO:
@@ -64,6 +66,8 @@ MATERIALS:
         MAX_PLASTIC_STRAIN_INCR: 10686474581524.463
         REGISTER_PLASTIC_STRAIN_DERIV_INCR_OVERFLOW: false
         MAX_PLASTIC_STRAIN_DERIV_INCR: 10686474581524.463
+      ADAPTIVE_ESTIMATE_INTERPOLATION:
+        USE_ADAPTIVE_ESTIMATE_INTERPOLATION: false
   - MAT: 4
     MAT_ViscoplasticLawReformulatedJohnsonCook:
       STRAIN_RATE_PREFAC: 1
