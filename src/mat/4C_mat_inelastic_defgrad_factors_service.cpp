@@ -9,6 +9,7 @@
 
 #include "4C_mat_inelastic_defgrad_factors_service.hpp"
 
+#include "4C_comm_pack_helpers.hpp"
 #include "4C_fem_general_largerotations.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
@@ -133,6 +134,41 @@ namespace
     }
     return out_matrix;
   }
+
+
+  //! calculates the starting point for the Adaptive Estimate Interpolation based on the equivalent
+  //! stress of the previous solution between its both predictors
+  double calculate_equiv_stress_starting_point(
+      const AEINamespace::InputEquivStressStartingPoint& input_equiv_stress_starting_point)
+  {
+    // set to elastic predictor if the stress of the elastic predictor is numerically 0.0 ->
+    // this is theoretically
+    // possible for viscoplastic laws without yield surfaces, which may exhibit plastic flow
+    // even in this case; however, the determination of the starting point requires dividing
+    // over this stress value, which will not be possible in this specific case.
+    // Same goes for the case where the elastic predictor and the plastic predictor are
+    // associated with effectively the same stress value (e.g., during stress relaxation) -> set
+    // starting point as elastic predictor in these particular cases
+    if (input_equiv_stress_starting_point.equiv_stress_elast_pred <= 1.0e-12 ||
+        std::abs(input_equiv_stress_starting_point.equiv_stress_plast_pred -
+                 input_equiv_stress_starting_point.equiv_stress_elast_pred) /
+                input_equiv_stress_starting_point.equiv_stress_elast_pred <
+            1.0e-8)
+    {
+      return ELASTIC_PREDICTOR_LOCATION;
+    }
+
+
+    // compute starting point based on the equivalent stress: we clamp between the elastic and
+    // plastic predictors because in some special cases such as stress relaxation, the starting
+    // point may be slightly out of this interval (machine precision)
+    return std::clamp((input_equiv_stress_starting_point.equiv_stress_solution -
+                          input_equiv_stress_starting_point.equiv_stress_elast_pred) /
+                          (input_equiv_stress_starting_point.equiv_stress_plast_pred -
+                              input_equiv_stress_starting_point.equiv_stress_elast_pred),
+        ELASTIC_PREDICTOR_LOCATION, PLASTIC_PREDICTOR_LOCATION);
+  }
+
 
 }  // namespace
 
@@ -1082,6 +1118,238 @@ void AEINamespace::InterpolationPointContainer::unpack(Core::Communication::Unpa
   Core::Communication::extract_from_pack(buffer, upper_interp_bounds);
   Core::Communication::extract_from_pack(buffer, starting_points);
   Core::Communication::extract_from_pack(buffer, resize_called);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+AEINamespace::AEIManager::AEIManager(const AEINamespace::AEIParams& aei_params)
+    : params_(aei_params),
+      interp_point_container_(aei_params.estimate_interpolation),
+      predictor_interpolator_()
+{
+  // initialize class variables
+  num_plastic_pred_construct_iters_ = 0;
+  num_estimate_interp_iters_ = 0;
+  num_reestimations_ = 0;
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEINamespace::AEIManager::resize(const unsigned int num_gp)
+{
+  FOUR_C_ASSERT(!resize_called_,
+      "You already called resize for the adaptive estimate interpolation manager! You attempt to "
+      "set it to {}",
+      num_gp);
+
+  interp_point_container_.resize(num_gp);
+  predictor_interpolator_.resize(num_gp);
+
+  resize_called_ = true;
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEINamespace::AEIManager::reset_and_construct_prelim_plastic_pred(
+    const unsigned int gp, const LocalIntegrationInput& local_integration_input)
+{
+  // reset tracking variables
+  num_plastic_pred_construct_iters_ = 0;
+  num_estimate_interp_iters_ = 0;
+  num_reestimations_ = 0;
+  interp_point_container_.reset_bounds_and_current_interp_point(gp);
+
+  // construct the preliminary predictor
+  predictor_interpolator_.construct_prelim_plastic_pred(gp,
+      local_integration_input.elastic_predictor_elastic_defgrad, params_.preconditioning,
+      params_.plastic_predictor_construction);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEINamespace::AEIManager::pack(Core::Communication::PackBuffer& data) const
+{
+  interp_point_container_.pack(data);
+  predictor_interpolator_.pack(data);
+  Core::Communication::add_to_pack(data, resize_called_);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEINamespace::AEIManager::unpack(Core::Communication::UnpackBuffer& buffer)
+{
+  interp_point_container_.unpack(buffer);
+  predictor_interpolator_.unpack(buffer);
+  Core::Communication::extract_from_pack(buffer, resize_called_);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+Core::LinAlg::Matrix<3, 3> AEINamespace::AEIManager::interpolate_inverse_inelastic_defgrad(
+    const unsigned int gp, const Core::LinAlg::Matrix<3, 3>& inv_defgrad)
+{
+  Core::LinAlg::Matrix<3, 3> interp_elastic_defgrad =
+      predictor_interpolator_.interpolate_elastic_defgrad(
+          gp, interp_point_container_.current_interp_points[gp]);
+
+  Core::LinAlg::Matrix<3, 3> inv_inelastic_defgrad{Core::LinAlg::Initialization::zero};
+  inv_inelastic_defgrad.multiply(1.0, inv_defgrad, interp_elastic_defgrad);
+
+  return inv_inelastic_defgrad;
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+Core::LinAlg::Matrix<3, 3> AEINamespace::AEIManager::get_inverse_inelastic_defgrad_plastic_pred(
+    const unsigned int gp, const Core::LinAlg::Matrix<3, 3>& inv_defgrad)
+{
+  // the plastic predictor lies at the location 1.0
+  Core::LinAlg::Matrix<3, 3> interp_elastic_defgrad =
+      predictor_interpolator_.interpolate_elastic_defgrad(gp, 1.0);
+
+  Core::LinAlg::Matrix<3, 3> inv_inelastic_defgrad{Core::LinAlg::Initialization::zero};
+  inv_inelastic_defgrad.multiply(1.0, inv_defgrad, interp_elastic_defgrad);
+
+  return inv_inelastic_defgrad;
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEINamespace::AEIManager::set_plastic_predictor_after_construction_algo(const unsigned int gp)
+{
+  // set the plastic predictor quantities
+  predictor_interpolator_.set_plastic_predictor_after_construction_algo(
+      gp, interp_point_container_.current_interp_points[gp]);
+
+  // reset the interpolation point container
+  interp_point_container_.reset_bounds_and_current_interp_point(gp);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEINamespace::AEIManager::adapt_interpolation_interval(
+    const unsigned int gp, const InterpolationIntervalShift& interval_shift)
+{
+  switch (interval_shift)
+  {
+    case InterpolationIntervalShift::towards_elastic_pred:
+    {
+      interp_point_container_.upper_interp_bounds[gp] =
+          interp_point_container_.current_interp_points[gp];
+      break;
+    }
+    case InterpolationIntervalShift::towards_plastic_pred:
+    {
+      interp_point_container_.lower_interp_bounds[gp] =
+          interp_point_container_.current_interp_points[gp];
+      break;
+    }
+    default:
+    {
+      FOUR_C_THROW(
+          "You should not be here in the interpolation routine! The shift direction {} is not "
+          "supported!",
+          EnumTools::enum_name(interval_shift));
+    }
+  }
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEINamespace::AEIManager::set_current_interp_point(
+    const unsigned int gp, const CurrentInterpPointPreset preset)
+{
+  FOUR_C_ASSERT(gp < interp_point_container_.current_interp_points.size(), "GP index out of range");
+  switch (preset)
+  {
+    case CurrentInterpPointPreset::plastic_pred_construct_update:
+    {
+      interp_point_container_.current_interp_points[gp] =
+          interp_point_container_.lower_interp_bounds[gp] +
+          params_.plastic_predictor_construction.interval_scanning_param *
+              (interp_point_container_.upper_interp_bounds[gp] -
+                  interp_point_container_.lower_interp_bounds[gp]);
+      return;
+    }
+    case CurrentInterpPointPreset::estimate_interpolation_update:
+    {
+      interp_point_container_.current_interp_points[gp] =
+          interp_point_container_.lower_interp_bounds[gp] +
+          params_.estimate_interpolation.interval_scanning_param *
+              (interp_point_container_.upper_interp_bounds[gp] -
+                  interp_point_container_.lower_interp_bounds[gp]);
+      return;
+    }
+    case CurrentInterpPointPreset::lower_interp_bound:
+    {
+      interp_point_container_.current_interp_points[gp] =
+          interp_point_container_.lower_interp_bounds[gp];
+      return;
+    }
+    case CurrentInterpPointPreset::upper_interp_bound:
+    {
+      interp_point_container_.current_interp_points[gp] =
+          interp_point_container_.upper_interp_bounds[gp];
+      return;
+    }
+    case CurrentInterpPointPreset::elastic_predictor:
+    {
+      interp_point_container_.current_interp_points[gp] = ELASTIC_PREDICTOR_LOCATION;
+      return;
+    }
+    case CurrentInterpPointPreset::plastic_predictor:
+    {
+      interp_point_container_.current_interp_points[gp] = PLASTIC_PREDICTOR_LOCATION;
+      return;
+    }
+    case CurrentInterpPointPreset::starting_point:
+    {
+      interp_point_container_.current_interp_points[gp] =
+          interp_point_container_.starting_points[gp];
+      return;
+    }
+    case CurrentInterpPointPreset::intermediate_point:
+    {
+      interp_point_container_.current_interp_points[gp] =
+          interp_point_container_.lower_interp_bounds[gp] +
+          params_.reestimation.interval_scanning_param *
+              (interp_point_container_.current_interp_points[gp] -
+                  interp_point_container_.lower_interp_bounds[gp]);
+      return;
+    }
+    default:
+      FOUR_C_THROW(
+          "Unsupported current interpolation point preset {}", EnumTools::enum_name(preset));
+  }
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEINamespace::AEIManager::set_user_starting_point(const unsigned gp)
+{
+  FOUR_C_ASSERT(gp < interp_point_container_.starting_points.size(), "GP index out of range");
+  FOUR_C_ASSERT_ALWAYS(params_.estimate_interpolation.starting_point_type ==
+                           AEINamespace::StartingPointType::user_set,
+      "Setter should only be called for user-set starting points, not for {}",
+      EnumTools::enum_name(params_.estimate_interpolation.starting_point_type));
+
+  interp_point_container_.starting_points[gp] =
+      params_.estimate_interpolation.user_set_starting_point;
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEINamespace::AEIManager::set_stress_based_starting_point(
+    const unsigned gp, InputEquivStressStartingPoint input_equiv_stress_starting_point)
+{
+  FOUR_C_ASSERT(gp < interp_point_container_.starting_points.size(), "GP index out of range");
+  FOUR_C_ASSERT_ALWAYS(params_.estimate_interpolation.starting_point_type ==
+                           AEINamespace::StartingPointType::equiv_stress_history,
+      "Setter should only be called for stress-based starting points, not for {}",
+      EnumTools::enum_name(params_.estimate_interpolation.starting_point_type));
+
+  interp_point_container_.starting_points[gp] =
+      calculate_equiv_stress_starting_point(input_equiv_stress_starting_point);
 }
 
 FOUR_C_NAMESPACE_CLOSE
