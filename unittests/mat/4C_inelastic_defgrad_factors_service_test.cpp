@@ -28,9 +28,9 @@ namespace
     Core::Utils::SingletonOwnerRegistry::ScopeGuard guard;
   };
 
-  /// tests the LocalIntegrationDeformationTensors of
+  /// tests the LocalIntegrationInput of
   /// InelasticDefgradTransvIsotropElastViscoplast
-  TEST_F(InelasticDefgradFactorsServiceTest, TestLocalIntegrationDeformationTensors)
+  TEST_F(InelasticDefgradFactorsServiceTest, TestLocalIntegrationInput)
   {
     // setup input
     Core::LinAlg::Matrix<3, 3> defgrad{Core::LinAlg::Initialization::zero};
@@ -107,15 +107,27 @@ namespace
     elastic_predictor_elastic_defgrad_ref(2, 1) = 0.7307524651000326;
     elastic_predictor_elastic_defgrad_ref(2, 2) = 0.5290836326068751;
 
-    // initialize LocalIntegrationDeformationTensors and perform checks for the saved quantities
-    ViscoplastUtils::LocalIntegrationDeformationTensors deftensors(defgrad, last_iFin);
-    FOUR_C_EXPECT_NEAR(deftensors.defgrad, defgrad, 1.0e-15);
-    FOUR_C_EXPECT_NEAR(deftensors.inv_defgrad, inv_defgrad_ref, 1.0e-15);
-    FOUR_C_EXPECT_NEAR(deftensors.right_cg, right_cg_ref, 1.0e-15);
-    FOUR_C_EXPECT_NEAR(deftensors.elastic_predictor_elastic_defgrad,
+    const double temperature = 293.15;
+    const double last_plastic_strain = 0.0;
+    const double timestep = 0.1;
+
+
+    // initialize LocalIntegrationInput and perform checks for the saved quantities
+    ViscoplastUtils::LocalIntegrationInput local_integration_input{{.defgrad = defgrad,
+        .temperature = temperature,
+        .last_inv_inelastic_defgrad = last_iFin,
+        .last_plastic_strain = last_plastic_strain,
+        .step = timestep}};
+    FOUR_C_EXPECT_NEAR(local_integration_input.defgrad, defgrad, 1.0e-15);
+    FOUR_C_EXPECT_NEAR(local_integration_input.inv_defgrad, inv_defgrad_ref, 1.0e-15);
+    FOUR_C_EXPECT_NEAR(local_integration_input.right_cg, right_cg_ref, 1.0e-15);
+    FOUR_C_EXPECT_NEAR(local_integration_input.elastic_predictor_elastic_defgrad,
         elastic_predictor_elastic_defgrad_ref, 1.0e-15);
-    FOUR_C_EXPECT_NEAR(deftensors.elastic_predictor_inverse_plastic_defgrad,
+    FOUR_C_EXPECT_NEAR(local_integration_input.elastic_predictor_inverse_plastic_defgrad,
         elastic_predictor_inverse_plastic_defgrad_ref, 1.0e-15);
+    EXPECT_EQ(local_integration_input.temperature, temperature);
+    EXPECT_EQ(local_integration_input.last_plastic_strain, last_plastic_strain);
+    EXPECT_EQ(local_integration_input.step, timestep);
   }
 
 

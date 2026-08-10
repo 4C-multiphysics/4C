@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <exception>
 #include <memory>
+#include <numbers>
 #include <optional>
 
 
@@ -1738,9 +1739,16 @@ namespace
     // set reference solution for the state quantities
     set_up_state_quantities_solution();
 
-    // compute right Cauchy-Green deformation tensor
-    Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::zero);
-    CM.multiply_tn(1.0, FM_, FM_, 0.0);
+    // setup local integration input
+    Core::LinAlg::Matrix<3, 3> dummy_last_iFinM{Core::LinAlg::Initialization::zero};
+    dummy_last_iFinM(0, 0) = dummy_last_iFinM(1, 1) = dummy_last_iFinM(2, 2) = 1.0;
+    const double dummy_last_plastic_strain = 0.0;
+
+    auto local_integration_input = ViscoplastUtils::LocalIntegrationInput{{.defgrad = FM_,
+        .temperature = ref_temperature,
+        .last_inv_inelastic_defgrad = dummy_last_iFinM,
+        .last_plastic_strain = dummy_last_plastic_strain,
+        .step = time_step_size}};
 
     // declare error status
     Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType err_status =
@@ -1749,15 +1757,15 @@ namespace
     // compute StateQuantities objects
     Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantities
         computed_state_quantities_transv_isotrop =
-            transv_isotropic_material->evaluate_state_quantities(CM, ref_temperature,
+            transv_isotropic_material->evaluate_state_quantities(local_integration_input,
                 iFin_transv_isotrop_vplast_refJC_solution_,
-                plastic_strain_transv_isotrop_vplast_refJC_solution_, err_status, 1.0,
+                plastic_strain_transv_isotrop_vplast_refJC_solution_, err_status,
                 Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityEvalType::
                     full_eval);
     Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantities
-        computed_state_quantities_isotrop = isotropic_material->evaluate_state_quantities(CM,
-            ref_temperature, iFin_transv_isotrop_vplast_refJC_solution_,
-            plastic_strain_transv_isotrop_vplast_refJC_solution_, err_status, 1.0,
+        computed_state_quantities_isotrop = isotropic_material->evaluate_state_quantities(
+            local_integration_input, iFin_transv_isotrop_vplast_refJC_solution_,
+            plastic_strain_transv_isotrop_vplast_refJC_solution_, err_status,
             Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityEvalType::
                 full_eval);
 
@@ -2334,9 +2342,16 @@ namespace
 
     set_up_state_quantity_derivatives_solution();
 
-    // compute right Cauchy-Green deformation tensor
-    Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::zero);
-    CM.multiply_tn(1.0, FM_, FM_, 0.0);
+    // setup local integration input
+    Core::LinAlg::Matrix<3, 3> dummy_last_iFinM{Core::LinAlg::Initialization::zero};
+    dummy_last_iFinM(0, 0) = dummy_last_iFinM(1, 1) = dummy_last_iFinM(2, 2) = 1.0;
+    const double dummy_last_plastic_strain = 0.0;
+
+    auto local_integration_input = ViscoplastUtils::LocalIntegrationInput{{.defgrad = FM_,
+        .temperature = ref_temperature,
+        .last_inv_inelastic_defgrad = dummy_last_iFinM,
+        .last_plastic_strain = dummy_last_plastic_strain,
+        .step = time_step_size}};
 
     Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType err_status =
         Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors;
@@ -2344,18 +2359,18 @@ namespace
     // compute StateQuantityDerivatives objects
     Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivatives
         computed_state_quantity_derivatives_transv_isotrop =
-            transv_isotropic_material->evaluate_state_quantity_derivatives(CM, ref_temperature,
+            transv_isotropic_material->evaluate_state_quantity_derivatives(local_integration_input,
                 iFin_transv_isotrop_vplast_refJC_solution_,
-                plastic_strain_transv_isotrop_vplast_refJC_solution_, err_status, 1.0,
+                plastic_strain_transv_isotrop_vplast_refJC_solution_, err_status,
                 Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivEvalType::
                     full_eval,
                 true);
 
     Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivatives
         computed_state_quantity_derivatives_isotrop =
-            isotropic_material->evaluate_state_quantity_derivatives(CM, ref_temperature,
+            isotropic_material->evaluate_state_quantity_derivatives(local_integration_input,
                 iFin_transv_isotrop_vplast_refJC_solution_,
-                plastic_strain_transv_isotrop_vplast_refJC_solution_, err_status, 1.0,
+                plastic_strain_transv_isotrop_vplast_refJC_solution_, err_status,
                 Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivEvalType::
                     full_eval,
                 true);
@@ -2436,16 +2451,16 @@ namespace
     //**************************************************
     const double current_temperature = 313.0;
     //**************************************************
-    Core::LinAlg::Matrix<3, 3> CM{Core::LinAlg::Initialization::zero};
-    CM(0, 0) = 2.0000000000000000;
-    CM(0, 1) = 0.0000000000000000;
-    CM(0, 2) = 0.0000000000000000;
-    CM(1, 0) = 0.0000000000000000;
-    CM(1, 1) = 1.0000000000000000;
-    CM(1, 2) = 0.0000000000000000;
-    CM(2, 0) = 0.0000000000000000;
-    CM(2, 1) = 0.0000000000000000;
-    CM(2, 2) = 1.0000000000000000;
+    Core::LinAlg::Matrix<3, 3> FM{Core::LinAlg::Initialization::zero};
+    FM(0, 0) = std::numbers::sqrt2;
+    FM(0, 1) = 0.0000000000000000;
+    FM(0, 2) = 0.0000000000000000;
+    FM(1, 0) = 0.0000000000000000;
+    FM(1, 1) = 1.0000000000000000;
+    FM(1, 2) = 0.0000000000000000;
+    FM(2, 0) = 0.0000000000000000;
+    FM(2, 1) = 0.0000000000000000;
+    FM(2, 2) = 1.0000000000000000;
     //**************************************************
     Core::LinAlg::Matrix<3, 3> iFinM{Core::LinAlg::Initialization::zero};
     iFinM(0, 0) = 1.2771823873225885;
@@ -2659,14 +2674,25 @@ namespace
     // call pre_evaluate
     material->pre_evaluate(param_list_thermo_vplast, context, 0, 0);
 
+    // setup local integration input
+    Core::LinAlg::Matrix<3, 3> dummy_last_iFinM{Core::LinAlg::Initialization::zero};
+    dummy_last_iFinM(0, 0) = dummy_last_iFinM(1, 1) = dummy_last_iFinM(2, 2) = 1.0;
+    const double dummy_last_plastic_strain = 0.0;
+
+    auto local_integration_input = ViscoplastUtils::LocalIntegrationInput{{.defgrad = FM,
+        .temperature = current_temperature,
+        .last_inv_inelastic_defgrad = dummy_last_iFinM,
+        .last_plastic_strain = dummy_last_plastic_strain,
+        .step = time_step_size}};
+
 
     Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType err_status{
         FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors};
 
     // compute StateQuantities objects
     Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantities
-        computed_state_quantities = material->evaluate_state_quantities(CM, current_temperature,
-            iFinM, plastic_strain, err_status, 1.0,
+        computed_state_quantities = material->evaluate_state_quantities(local_integration_input,
+            iFinM, plastic_strain, err_status,
             Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityEvalType::
                 full_eval);
 
@@ -2681,8 +2707,8 @@ namespace
 
     // compute StateQuantityDerivatives objects
     Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivatives
-        computed_state_quantity_derivatives = material->evaluate_state_quantity_derivatives(CM,
-            current_temperature, iFinM, plastic_strain, err_status, 1.0,
+        computed_state_quantity_derivatives = material->evaluate_state_quantity_derivatives(
+            local_integration_input, iFinM, plastic_strain, err_status,
             Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivEvalType::
                 full_eval,
             true);
