@@ -7,10 +7,15 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_fem_general_largerotations.hpp"
+#include "4C_inelastic_defgrad_factors_test_utils.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_mat_inelastic_defgrad_factors_service.hpp"
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_utils_singleton_owner.hpp"
+
+#include <array>
+#include <cmath>
 
 
 namespace
@@ -18,6 +23,8 @@ namespace
   using namespace FourC;
 
   namespace ViscoplastUtils = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils;
+  namespace AEINamespace =
+      Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation;
 
   class InelasticDefgradFactorsServiceTest : public ::testing::Test
   {
@@ -430,4 +437,366 @@ namespace
     EXPECT_FALSE(manager_res.is_local_newton_converged());
     EXPECT_TRUE(manager_incr.is_local_newton_converged());
   }
+
+  /// Tests the plastic predictor construction, and the interpolation procedures associated with it
+  /// within the predictor interpolator used for the Adaptive Estimate Interpolation.
+  /// Note that the test only covers the already implemented specifications for the preliminary
+  /// plastic predictor, i.e., both rotations contributions are taken from the elastic predictor,
+  /// and therefore, only the eigenvalues are really interpolated. Further tests should be added
+  /// when other alternatives are implemented for the rotational contributions.
+  TEST_F(InelasticDefgradFactorsServiceTest, TestPredictorInterpolatorPlasticPredConstruction)
+  {
+    // construct predictor interpolator with a single Gauss point
+    AEINamespace::PredictorInterpolator pred_interpolator{};
+    const unsigned int gp = 0;
+
+    // setup AEI parameters
+    AEINamespace::AEIParams aei_params = InelasticDefgradFactorsTestUtils::set_up_aei_params();
+
+    // auxiliaries
+    Core::LinAlg::Matrix<3, 3> unit_3x3{Core::LinAlg::Initialization::zero};
+    unit_3x3(0, 0) = unit_3x3(1, 1) = unit_3x3(2, 2) = 1.0;
+
+    // setup dummy temperature, last plastic strain, and timestep
+    const double temperature = 293.15;
+    const double last_plastic_strain = 0.0;
+    const double timestep = 0.1;
+
+    // setup previous inelastic defgrad: unit tensor
+    Core::LinAlg::Matrix<3, 3> last_inv_inelastic_defgrad{unit_3x3};
+
+    // setup deformation tensor components to be used subsequently
+    Core::LinAlg::Matrix<3, 3> lambda{
+        Core::LinAlg::Initialization::zero};  // eigenvalue matrix \f$ \boldsymbol{Lambda} \f$
+    Core::LinAlg::Matrix<3, 3> Q{
+        Core::LinAlg::Initialization::zero};  // eigenvector rotation \f$ \boldsymbol{Q} \f$
+    Core::LinAlg::Matrix<3, 3> R{
+        Core::LinAlg::Initialization::zero};  // rotation \f$ \boldsymbol{R} \f$
+    Core::LinAlg::Matrix<3, 3> ref_rotation{
+        Core::LinAlg::Initialization::zero};  // reference rotation to test for: either \f$
+                                              // \boldsymbol{Q}_{\mathrm{ref}} \f$ or \f$
+                                              // \boldsymbol{R}_{\mathrm{ref}} \f$
+    Core::LinAlg::Matrix<3, 3> defgrad{
+        Core::LinAlg::Initialization::zero};  // full deformation gradient \f$ \boldsymbol{F} =
+                                              // \boldsymbol{R} \boldsymbol{Q}^T
+                                              // \boldsymbol{\Lambda}
+                                              // \boldsymbol{Q}\f$
+    Core::LinAlg::Matrix<3, 3> ref_defgrad{
+        Core::LinAlg::Initialization::zero};  // reference: full deformation gradient to test for:
+                                              // \f$ \boldsymbol{F}_{\text{ref}} \f$
+
+    auto get_rotation_matrix_from_rot_angle_around_z_axis = [](const double angle)
+    {
+      Core::LinAlg::Matrix<4, 1> rot_quat{Core::LinAlg::Initialization::zero};
+      rot_quat(2) = std::sin(0.5 * angle);
+      rot_quat(3) = std::cos(0.5 * angle);
+      Core::LinAlg::Matrix<3, 3> rot_matrix{Core::LinAlg::Initialization::zero};
+      Core::LargeRotations::quaterniontotriad(rot_quat, rot_matrix);
+      return rot_matrix;
+    };
+    auto compute_full_defgrad = [](const Core::LinAlg::Matrix<3, 3>& R,
+                                    const Core::LinAlg::Matrix<3, 3>& Q,
+                                    const Core::LinAlg::Matrix<3, 3>& lambda)
+    {
+      Core::LinAlg::Matrix<3, 3> LQ{Core::LinAlg::Initialization::zero};
+      LQ.multiply(1.0, lambda, Q, 0.0);
+      Core::LinAlg::Matrix<3, 3> QTLQ{Core::LinAlg::Initialization::zero};
+      QTLQ.multiply_tn(1.0, Q, LQ, 0.0);
+      Core::LinAlg::Matrix<3, 3> defgrad{Core::LinAlg::Initialization::zero};
+      defgrad.multiply(1.0, R, QTLQ, 0.0);
+      return defgrad;
+    };
+
+
+
+    // setup eigenvalues of the deformation gradient to be used within all subsequent tests, and
+    // already scale them for the plastic predictor
+    lambda.clear();
+    lambda(0, 0) = 2.0;
+    lambda(1, 1) = 1.0;
+    lambda(2, 2) = 1.0;
+    Core::LinAlg::Matrix<3, 3> scaled_unit{unit_3x3};
+    scaled_unit.scale(std::pow(lambda.determinant(), 1.0 / 3.0));
+
+    // --> first: test the construction and interpolation procedure for a diagonal deformation
+    // gradient
+
+    // setup deformation gradient
+    Q = get_rotation_matrix_from_rot_angle_around_z_axis(0.0);
+    FOUR_C_EXPECT_NEAR(Q, unit_3x3, 1.0e-15);
+    R = get_rotation_matrix_from_rot_angle_around_z_axis(0.0);
+    FOUR_C_EXPECT_NEAR(R, unit_3x3, 1.0e-15);
+    defgrad = compute_full_defgrad(R, Q, lambda);
+    FOUR_C_EXPECT_NEAR(defgrad, lambda, 1.0e-15);
+
+    // check the elastic predictor
+    ViscoplastUtils::LocalIntegrationInput local_integration_input{
+        ViscoplastUtils::LocalIntegrationInputConfig{.defgrad = defgrad,
+            .temperature = temperature,
+            .last_inv_inelastic_defgrad = last_inv_inelastic_defgrad,
+            .last_plastic_strain = last_plastic_strain,
+            .step = timestep}};
+    FOUR_C_EXPECT_NEAR(local_integration_input.elastic_predictor_elastic_defgrad, defgrad, 1.0e-15);
+
+    // construct preliminary plastic predictor
+    pred_interpolator.construct_prelim_plastic_pred(gp,
+        local_integration_input.elastic_predictor_elastic_defgrad, aei_params.preconditioning,
+        aei_params.plastic_predictor_construction);
+
+    // verify whether both predictors are initialized consistently
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 0.0),
+        local_integration_input.elastic_predictor_elastic_defgrad, 1.0e-15);
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 1.0),
+        compute_full_defgrad(R, Q, scaled_unit), 1.0e-15);
+
+    // now set the plastic predictor at the interpolation location 0.5 between the elastic and the
+    // preliminary plastic predictors
+    Core::LinAlg::Matrix<3, 3> lambda_plastic_pred_ref{Core::LinAlg::Initialization::zero};
+    lambda_plastic_pred_ref(0, 0) = 1.5874010519681996;
+    lambda_plastic_pred_ref(1, 1) = 1.122462048309373;
+    lambda_plastic_pred_ref(2, 2) = 1.122462048309373;
+    pred_interpolator.set_plastic_predictor_after_construction_algo(gp, 0.5);
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 1.0),
+        compute_full_defgrad(R, Q, lambda_plastic_pred_ref), 1.0e-8);
+
+    // --> repeat the procedure above with a deformation gradient additionally containing an
+    // eigenvector rotation of 45deg around the z-axis
+
+    // setup deformation gradient
+    const double angle_Q = std::numbers::pi / 4.0;
+    Q = get_rotation_matrix_from_rot_angle_around_z_axis(angle_Q);
+    ref_rotation.clear();
+    ref_rotation(0, 0) = ref_rotation(1, 1) = ref_rotation(1, 0) = 0.5 * std::numbers::sqrt2;
+    ref_rotation(0, 1) = -0.5 * std::numbers::sqrt2;
+    ref_rotation(2, 2) = 1.0;
+    FOUR_C_EXPECT_NEAR(Q, ref_rotation, 1.0e-15);
+    R = get_rotation_matrix_from_rot_angle_around_z_axis(0.0);
+    FOUR_C_EXPECT_NEAR(R, unit_3x3, 1.0e-15);
+    defgrad = compute_full_defgrad(R, Q, lambda);
+    ref_defgrad.clear();
+    ref_defgrad(0, 0) = ref_defgrad(1, 1) = 1.5;
+    ref_defgrad(0, 1) = ref_defgrad(1, 0) = -0.5;
+    ref_defgrad(2, 2) = 1.0;
+    FOUR_C_EXPECT_NEAR(defgrad, ref_defgrad, 1.0e-15);
+
+    // check elastic predictor
+    local_integration_input = ViscoplastUtils::LocalIntegrationInput{
+        ViscoplastUtils::LocalIntegrationInputConfig{.defgrad = defgrad,
+            .temperature = temperature,
+            .last_inv_inelastic_defgrad = last_inv_inelastic_defgrad,
+            .last_plastic_strain = last_plastic_strain,
+            .step = timestep}};
+    FOUR_C_EXPECT_NEAR(local_integration_input.elastic_predictor_elastic_defgrad, defgrad, 1.0e-15);
+
+    // construct preliminary plastic predictor
+    pred_interpolator.construct_prelim_plastic_pred(gp,
+        local_integration_input.elastic_predictor_elastic_defgrad, aei_params.preconditioning,
+        aei_params.plastic_predictor_construction);
+
+    // verify whether both predictors are initialized consistently
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 0.0),
+        local_integration_input.elastic_predictor_elastic_defgrad, 1.0e-15);
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 1.0),
+        compute_full_defgrad(R, Q, scaled_unit), 1.0e-15);
+
+    // now set the plastic predictor at the interpolation location 0.5 between the elastic and the
+    // preliminary plastic predictors
+    pred_interpolator.set_plastic_predictor_after_construction_algo(gp, 0.5);
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 1.0),
+        compute_full_defgrad(R, Q, lambda_plastic_pred_ref), 1.0e-8);
+
+
+    // --> finally, repeat the procedure above with a deformation gradient additionally containing
+    // an eigenvector rotation AND a rotation of 45deg around the z-axis
+
+    // setup deformation gradient
+    FOUR_C_EXPECT_NEAR(Q, ref_rotation, 1.0e-15);  // Q stays the same as above
+    R = get_rotation_matrix_from_rot_angle_around_z_axis(angle_Q);
+    FOUR_C_EXPECT_NEAR(R, ref_rotation, 1.0e-15);
+    defgrad = compute_full_defgrad(R, Q, lambda);
+    ref_defgrad.clear();
+    ref_defgrad(0, 0) = std::numbers::sqrt2;
+    ref_defgrad(0, 1) = -std::numbers::sqrt2;
+    ref_defgrad(1, 0) = ref_defgrad(1, 1) = 0.5 * std::numbers::sqrt2;
+    ref_defgrad(2, 2) = 1.0;
+    FOUR_C_EXPECT_NEAR(defgrad, ref_defgrad, 1.0e-15);
+
+    // check elastic predictor
+    local_integration_input = ViscoplastUtils::LocalIntegrationInput{
+        ViscoplastUtils::LocalIntegrationInputConfig{.defgrad = defgrad,
+            .temperature = temperature,
+            .last_inv_inelastic_defgrad = last_inv_inelastic_defgrad,
+            .last_plastic_strain = last_plastic_strain,
+            .step = timestep}};
+    FOUR_C_EXPECT_NEAR(local_integration_input.elastic_predictor_elastic_defgrad, defgrad, 1.0e-15);
+
+    // construct preliminary plastic predictor
+    pred_interpolator.construct_prelim_plastic_pred(gp,
+        local_integration_input.elastic_predictor_elastic_defgrad, aei_params.preconditioning,
+        aei_params.plastic_predictor_construction);
+
+    // verify whether both predictors are initialized consistently
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 0.0),
+        local_integration_input.elastic_predictor_elastic_defgrad, 1.0e-15);
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 1.0),
+        compute_full_defgrad(R, Q, scaled_unit), 1.0e-15);
+
+    // now set the plastic predictor at the interpolation location 0.5 between the elastic and the
+    // preliminary plastic predictors
+    pred_interpolator.set_plastic_predictor_after_construction_algo(gp, 0.5);
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 1.0),
+        compute_full_defgrad(R, Q, lambda_plastic_pred_ref), 1.0e-8);
+  }
+
+
+  /// Tests the preconditioning procedure for the elastic deformation gradient within the predictor
+  /// interpolator used for the Adaptive Estimate Interpolation
+  TEST_F(InelasticDefgradFactorsServiceTest, TestPredictorInterpolatorPreconditioning)
+  {
+    // construct predictor interpolator with a single Gauss point
+    AEINamespace::PredictorInterpolator pred_interpolator{};
+    const unsigned int gp = 0;
+
+    // initialize AEI parameters with and without preconditioning
+    AEINamespace::AEIParams aei_params_preconditioning =
+        InelasticDefgradFactorsTestUtils::set_up_aei_params(
+            {.preconditioning = {
+                 .precondition_elastic_pred = true, .tol_precondition_elastic_pred = 1.0e-8}});
+    AEINamespace::AEIParams aei_params_no_preconditioning =
+        InelasticDefgradFactorsTestUtils::set_up_aei_params(
+            {.preconditioning = {
+                 .precondition_elastic_pred = false, .tol_precondition_elastic_pred = 0.0}});
+
+
+    // auxiliaries
+    Core::LinAlg::Matrix<3, 3> unit_3x3{Core::LinAlg::Initialization::zero};
+    unit_3x3(0, 0) = unit_3x3(1, 1) = unit_3x3(2, 2) = 1.0;
+
+    // setup previous inelastic defgrad, and deformation gradient
+    Core::LinAlg::Matrix<3, 3> last_inv_inelastic_defgrad{unit_3x3};
+    Core::LinAlg::Matrix<3, 3> defgrad{Core::LinAlg::Initialization::zero};
+    defgrad(0, 0) = 2.0;
+    defgrad(1, 1) = defgrad(2, 2) = 1.0;
+    defgrad(0, 1) = defgrad(1, 0) = 1.0e-9;
+
+    // setup dummy temperature, last plastic strain, and timestep
+    const double temperature = 293.15;
+    const double last_plastic_strain = 0.0;
+    const double timestep = 0.1;
+
+    // determine the elastic predictor
+    auto local_integration_input = ViscoplastUtils::LocalIntegrationInput{
+        ViscoplastUtils::LocalIntegrationInputConfig{.defgrad = defgrad,
+            .temperature = temperature,
+            .last_inv_inelastic_defgrad = last_inv_inelastic_defgrad,
+            .last_plastic_strain = last_plastic_strain,
+            .step = timestep}};
+
+    // construct preliminary plastic predictor and verify interpolated matrix at point 0.0
+
+    // for the case of no preconditioning, the exact elastic deformation gradient within the elastic
+    // predictor must be recovered
+    pred_interpolator.construct_prelim_plastic_pred(gp,
+        local_integration_input.elastic_predictor_elastic_defgrad,
+        aei_params_no_preconditioning.preconditioning,
+        aei_params_no_preconditioning.plastic_predictor_construction);
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 0.0),
+        local_integration_input.elastic_predictor_elastic_defgrad, 1.0e-15);
+
+    // for the case of preconditioning, the small off-diagonal elements must be 0
+    Core::LinAlg::Matrix<3, 3> preconditioned_elastic_defgrad_elastic_predictor{
+        local_integration_input.elastic_predictor_elastic_defgrad};
+    preconditioned_elastic_defgrad_elastic_predictor(0, 1) =
+        preconditioned_elastic_defgrad_elastic_predictor(1, 0) = 0.0;
+    pred_interpolator.construct_prelim_plastic_pred(gp,
+        local_integration_input.elastic_predictor_elastic_defgrad,
+        aei_params_preconditioning.preconditioning,
+        aei_params_preconditioning.plastic_predictor_construction);
+    FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 0.0),
+        preconditioned_elastic_defgrad_elastic_predictor, 1.0e-15);
+  }
+
+  /// Tests the resizing procedure for the predictor interpolator used for the Adaptive Estimate
+  /// Interpolation
+  TEST_F(InelasticDefgradFactorsServiceTest, TestPredictorInterpolatorResize)
+  {
+    AEINamespace::PredictorInterpolator pred_interpolator{};
+    constexpr unsigned int numgp = 3;
+    pred_interpolator.resize(numgp);
+
+    AEINamespace::AEIParams aei_params = InelasticDefgradFactorsTestUtils::set_up_aei_params();
+
+    // populate each GP with a different predictor
+    std::array<Core::LinAlg::Matrix<3, 3>, numgp> all_ref_elastic_pred{
+        Core::LinAlg::Matrix<3, 3>{Core::LinAlg::Initialization::zero},
+        Core::LinAlg::Matrix<3, 3>{Core::LinAlg::Initialization::zero},
+        Core::LinAlg::Matrix<3, 3>{Core::LinAlg::Initialization::zero}};
+    for (unsigned int gp = 0; gp < numgp; ++gp)
+    {
+      all_ref_elastic_pred[gp](0, 0) = 1.0 + 0.1 * gp;
+      all_ref_elastic_pred[gp](1, 1) = 1.0;
+      all_ref_elastic_pred[gp](2, 2) = 1.0;
+
+      pred_interpolator.construct_prelim_plastic_pred(gp, all_ref_elastic_pred[gp],
+          aei_params.preconditioning, aei_params.plastic_predictor_construction);
+    }
+
+    // verify that each GP retains its own state via the interpolated elastic predictor
+    for (unsigned int gp = 0; gp < numgp; ++gp)
+    {
+      FOUR_C_EXPECT_NEAR(pred_interpolator.interpolate_elastic_defgrad(gp, 0.0),
+          all_ref_elastic_pred[gp], 1.0e-12);
+    }
+  }
+
+  /// Tests the initialization, the resizing and the reset procedure for the interpolation point
+  /// containers used within the Adaptive Estimate Interpolation
+  TEST_F(InelasticDefgradFactorsServiceTest, TestInterpolationPointContainer)
+  {
+    // setup Adaptive Estimate Interpolation parameters
+    AEINamespace::AEIParams aei_params = InelasticDefgradFactorsTestUtils::set_up_aei_params();
+    aei_params.estimate_interpolation.starting_point_type =
+        AEINamespace::StartingPointType::user_set;
+    aei_params.estimate_interpolation.user_set_starting_point = 0.2;
+
+    // construct interpolation point container with a single Gauss point
+    AEINamespace::InterpolationPointContainer interp_point_container{
+        aei_params.estimate_interpolation};
+    const unsigned int gp = 0;
+
+    // test consistent initialization
+    EXPECT_EQ(interp_point_container.lower_interp_bounds[gp], 0.0);
+    EXPECT_EQ(interp_point_container.upper_interp_bounds[gp], 1.0);
+    EXPECT_EQ(
+        interp_point_container.starting_points[gp], 0.2);  // has to be the user-set starting point
+    EXPECT_EQ(interp_point_container.current_interp_points[gp],
+        interp_point_container.starting_points[gp]);
+
+    // set some dummy values
+    interp_point_container.current_interp_points[gp] = 0.9;
+    interp_point_container.lower_interp_bounds[gp] = 0.7;
+    interp_point_container.upper_interp_bounds[gp] = 0.99;
+    const double dummy_starting_point = 0.34;
+    interp_point_container.starting_points[gp] = dummy_starting_point;
+
+
+    // reset and test consistency
+    interp_point_container.reset_bounds_and_current_interp_point(gp);
+    EXPECT_EQ(interp_point_container.starting_points[gp], dummy_starting_point);
+    EXPECT_EQ(interp_point_container.current_interp_points[gp],
+        interp_point_container.starting_points[gp]);
+    EXPECT_EQ(interp_point_container.lower_interp_bounds[gp], 0.0);
+    EXPECT_EQ(interp_point_container.upper_interp_bounds[gp], 1.0);
+
+    // test resizing
+    interp_point_container.resize(3);
+    EXPECT_EQ(interp_point_container.current_interp_points[2],
+        interp_point_container.current_interp_points[0]);
+    EXPECT_EQ(interp_point_container.lower_interp_bounds[2],
+        interp_point_container.lower_interp_bounds[0]);
+    EXPECT_EQ(interp_point_container.upper_interp_bounds[2],
+        interp_point_container.upper_interp_bounds[0]);
+    EXPECT_EQ(interp_point_container.starting_points[2], interp_point_container.starting_points[0]);
+  }
+
 }  // namespace
