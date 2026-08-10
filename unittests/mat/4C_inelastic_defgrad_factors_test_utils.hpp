@@ -33,7 +33,7 @@ namespace FourC::InelasticDefgradFactorsTestUtils
     };
     AEI::EstimateInterpolationParams estimate_interpolation{
         .starting_point_type = AEI::StartingPointType::equiv_stress_history,
-        .user_set_starting_point = 0.5,
+        .user_set_starting_point = std::nullopt,
         .max_iter = 50,
         .interval_scanning_param = 0.5,
     };
