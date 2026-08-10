@@ -3138,8 +3138,13 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::constitutive_update(
   HistoryVariables result;
 
   // construct struct containing deformation tensors used for local integration
-  ViscoplastUtils::LocalIntegrationDeformationTensors deftensors(
-      FredM, time_step_quantities_.last_plastic_defgrad_inverse[gp_]);
+  auto local_integration_input = ViscoplastUtils::LocalIntegrationInput{
+      ViscoplastUtils::LocalIntegrationInputConfig{.defgrad = FredM,
+          .temperature = temperature,
+          .last_inv_inelastic_defgrad = time_step_quantities_.last_plastic_defgrad_inverse[gp_],
+          .last_plastic_strain = time_step_quantities_.last_plastic_strain[gp_],
+          .step = time_step_tracker_.dt}};
+
 
   // perform non-repeatable pre-evaluation tasks (non-repeatable: not
   // called in the redundant evaluate call, which is already handled -> direct return
@@ -3155,13 +3160,13 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::constitutive_update(
   ViscoplastUtils::ErrorType err_status = ViscoplastUtils::ErrorType::no_errors;
 
   // set current defgrad and current right CG tensor
-  time_step_quantities_.current_defgrad[gp_] = deftensors.defgrad;
-  time_step_quantities_.current_rightCG[gp_] = deftensors.right_cg;
+  time_step_quantities_.current_defgrad[gp_] = local_integration_input.defgrad;
+  time_step_quantities_.current_rightCG[gp_] = local_integration_input.right_cg;
   time_step_quantities_.current_temperature[gp_] = temperature;
   thermo_mechanical_coupling_cache_.reset(gp_);
   // check whether the predictor is the solution (no plastic strain during this time step)
   bool pred_is_sol = check_elastic_predictor(
-      deftensors.right_cg, temperature, iFinM_pred, plastic_strain_pred, err_status);
+      local_integration_input.right_cg, temperature, iFinM_pred, plastic_strain_pred, err_status);
   if ((err_status == ViscoplastUtils::ErrorType::no_errors) && (pred_is_sol))
   {
     // update inverse inelastic defgrad and plastic strain
@@ -3173,7 +3178,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::constitutive_update(
     is_plastic_gp_[gp_] = true;
     err_status = ViscoplastUtils::ErrorType::no_errors;
     // perform local time integration
-    Core::LinAlg::Matrix<10, 1> sol = viscoplastic_correction(deftensors, temperature, err_status);
+    Core::LinAlg::Matrix<10, 1> sol = viscoplastic_correction(local_integration_input, err_status);
     // throw error if the Local Newton Loop cannot be evaluated with the given substepping
     // settings
     if (err_status != ViscoplastUtils::ErrorType::no_errors)
@@ -3196,8 +3201,8 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::constitutive_update(
     time_step_quantities_.current_plastic_defgrad_inverse[gp_] = result.inv_plastic_defgrad;
     time_step_quantities_.current_plastic_strain[gp_] = result.plastic_strain;
     time_step_quantities_.current_equiv_stress[gp_] = state_quantities_.curr_equiv_stress;
-    time_step_quantities_.current_rightCG[gp_] = deftensors.right_cg;
-    time_step_quantities_.current_defgrad[gp_] = deftensors.defgrad;
+    time_step_quantities_.current_rightCG[gp_] = local_integration_input.right_cg;
+    time_step_quantities_.current_defgrad[gp_] = local_integration_input.defgrad;
   }
 
   return result;
@@ -3574,9 +3579,9 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_local_newton_jacobia
  *--------------------------------------------------------------------*/
 Core::LinAlg::Matrix<10, 1>
 Mat::InelasticDefgradTransvIsotropElastViscoplast::viscoplastic_correction(
-    const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationDeformationTensors&
-        deftensors,
-    const double temperature, ViscoplastUtils::ErrorType& err_status)
+    const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+        local_integration_input,
+    ViscoplastUtils::ErrorType& err_status)
 {
   ensure_error_free_evaluation(err_status);
 
@@ -3608,7 +3613,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::viscoplastic_correction(
       // interpolate deformation gradient if we use local substepping, and calculate the right
       // Cauchy-Green deformation tensor accordingly
       curr_FM = tensor_interpolator_.get_interpolated_matrix(
-          {time_step_quantities_.last_defgrad[gp_], deftensors.defgrad}, {0.0, 1.0},
+          {time_step_quantities_.last_defgrad[gp_], local_integration_input.defgrad}, {0.0, 1.0},
           local_substepping_utils_.get_normalized_next_time_param(time_step_tracker_.dt),
           tensor_interp_err_status);
       if (tensor_interp_err_status != Core::LinAlg::TensorInterpolationErrorType::NoErrors)
@@ -3617,18 +3622,23 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::viscoplastic_correction(
             "{}", get_error_warning_info(std::format("Tensor interpolation failed with err: {}",
                       Core::LinAlg::make_error_message(tensor_interp_err_status))));
       }
-      ViscoplastUtils::LocalIntegrationDeformationTensors curr_deftensors(
-          curr_FM, time_step_quantities_.last_substep_plastic_defgrad_inverse[gp_]);
 
       // interpolate temperature
-      curr_temp = std::lerp(time_step_quantities_.last_temperature[gp_], temperature,
+      curr_temp = std::lerp(time_step_quantities_.last_temperature[gp_],
+          local_integration_input.temperature,
           local_substepping_utils_.get_normalized_next_time_param(time_step_tracker_.dt));
+
+      auto curr_local_integration_input = ViscoplastUtils::LocalIntegrationInput{
+          ViscoplastUtils::LocalIntegrationInputConfig{.defgrad = curr_FM,
+              .temperature = curr_temp,
+              .last_inv_inelastic_defgrad =
+                  time_step_quantities_.last_substep_plastic_defgrad_inverse[gp_],
+              .last_plastic_strain = time_step_quantities_.last_substep_plastic_strain[gp_],
+              .step = local_substepping_utils_.get_substep_size()}};
 
       // perform substep local Newton loop
       err_status = ViscoplastUtils::ErrorType::no_errors;
-      sol = local_newton_loop(curr_deftensors, curr_temp,
-          time_step_quantities_.last_substep_plastic_strain[gp_],
-          local_substepping_utils_.get_substep_size(), err_status);
+      sol = local_newton_loop(curr_local_integration_input, err_status);
       // update Local Newton quantities
       local_newton_manager_.update_after_local_newton(gp_);
 
@@ -3649,7 +3659,8 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::viscoplastic_correction(
       else
       {
         // halve and prepare a new substep
-        bool halving_success = halve_and_prepare_new_substep(sol, curr_deftensors.right_cg);
+        bool halving_success =
+            halve_and_prepare_new_substep(sol, curr_local_integration_input.right_cg);
         // if the halving number was exceeded --> return with error
         if (!halving_success)
         {
@@ -3666,8 +3677,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::viscoplastic_correction(
   {
     // perform local Newton loop
 
-    sol = local_newton_loop(deftensors, temperature, time_step_quantities_.last_plastic_strain[gp_],
-        time_step_tracker_.dt, err_status);
+    sol = local_newton_loop(local_integration_input, err_status);
     if (err_status != ViscoplastUtils::ErrorType::no_errors)
     {
       FOUR_C_THROW("{}", get_error_warning_info(std::format(
@@ -3687,9 +3697,8 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::viscoplastic_correction(
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::local_newton_loop(
-    const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationDeformationTensors&
-        deftensors,
-    const double temperature, const double last_plastic_strain, const double dt,
+    const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+        local_integration_input,
     InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
 {
   ensure_error_free_evaluation(err_status);
@@ -3711,7 +3720,7 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
 
   // initialize local Newton
   local_newton_manager_.reset_iter();
-  temp10x1 = determine_local_newton_init_estimate(dt, deftensors, last_plastic_strain, err_status);
+  temp10x1 = determine_local_newton_init_estimate(local_integration_input, err_status);
   local_newton_manager_.save_init_estimate_and_reset_convergence_quantities(temp10x1);
   // handle eventual error in the initial estimate determination
   if (err_status != ViscoplastUtils::ErrorType::no_errors)
@@ -3738,9 +3747,11 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
     err_status = ViscoplastUtils::ErrorType::no_errors;
 
     // evaluate residual
-    residual = evaluate_local_newton_residual(deftensors.right_cg, temperature,
-        local_newton_manager_.sol(), last_plastic_strain,
-        deftensors.elastic_predictor_inverse_plastic_defgrad, dt, err_status);
+    residual = evaluate_local_newton_residual(local_integration_input.right_cg,
+        local_integration_input.temperature, local_newton_manager_.sol(),
+        local_integration_input.last_plastic_strain,
+        local_integration_input.elastic_predictor_inverse_plastic_defgrad,
+        local_integration_input.step, err_status);
 
     // error management after residual evaluation
     manage_evaluation(err_status, eval_action);
@@ -3845,9 +3856,11 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
     }
 
     // evaluate Jacobian
-    jacMat = evaluate_local_newton_jacobian(deftensors.right_cg, temperature,
-        local_newton_manager_.sol(), last_plastic_strain,
-        deftensors.elastic_predictor_inverse_plastic_defgrad, dt, err_status);
+    jacMat = evaluate_local_newton_jacobian(local_integration_input.right_cg,
+        local_integration_input.temperature, local_newton_manager_.sol(),
+        local_integration_input.last_plastic_strain,
+        local_integration_input.elastic_predictor_inverse_plastic_defgrad,
+        local_integration_input.step, err_status);
 
     // error management after Jacobian evaluation
     manage_evaluation(err_status, eval_action);
@@ -4602,15 +4615,14 @@ bool Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_output_data(
  *--------------------------------------------------------------------*/
 Core::LinAlg::Matrix<10, 1>
 Mat::InelasticDefgradTransvIsotropElastViscoplast::determine_local_newton_init_estimate(
-    const double dt,
-    const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationDeformationTensors&
-        deftensors,
-    const double last_plastic_strain,
+    const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+        local_integration_input,
     const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status) const
 {
   ensure_error_free_evaluation(err_status);
 
   // we use the elastic predictor
-  return wrap_unknowns(deftensors.elastic_predictor_inverse_plastic_defgrad, last_plastic_strain);
+  return wrap_unknowns(local_integration_input.elastic_predictor_inverse_plastic_defgrad,
+      local_integration_input.last_plastic_strain);
 }
 FOUR_C_NAMESPACE_CLOSE

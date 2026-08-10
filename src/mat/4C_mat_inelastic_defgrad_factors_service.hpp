@@ -1023,20 +1023,32 @@ namespace Mat
       bool resize_called_{false};
     };
 
-    //! helper struct containing deformation tensors passed as input
-    //! for the local time integration
-    struct LocalIntegrationDeformationTensors
+    //! configuration struct for LocalIntegrationInput
+    struct LocalIntegrationInputConfig
     {
-      /*!
-       * @brief constructor
-       *
-       * @param[in] F deformation gradient \f$ \mathbf{F}_{n+1} \f$
-       * @param[in] last_iFp previous inverse inelastic/plastic deformation gradient \f$
-       \mathbf{F}_{\text{p},n}^{-1} \f$
-       *
-       */
-      LocalIntegrationDeformationTensors(
-          const Core::LinAlg::Matrix<3, 3>& F, const Core::LinAlg::Matrix<3, 3>& last_iFp);
+      //! deformation gradient \f$ \boldsymbol{F}_{n+1} \f$
+      Core::LinAlg::Matrix<3, 3> defgrad;
+
+      //! absolute temperature \f$ T_{n+1} \f$
+      double temperature;
+
+      //! previous inverse inelastic/plastic deformation gradient \f$ \mathbf{F}_{\text{p},n}^{-1}
+      //! \f$
+      Core::LinAlg::Matrix<3, 3> last_inv_inelastic_defgrad;
+
+      //! previous plastic strain \f$ \varepsilon_{\text{p},n} \f$
+      double last_plastic_strain;
+
+      //! timestep / substep size \f$ \Delta t \f$ / \f$ \Delta \tilde{t} \f$
+      double step;
+    };
+
+    //! helper struct containing relevant input for the local time integration via the Local
+    //! Newton-Raphson scheme
+    struct LocalIntegrationInput
+    {
+      //! constructor based on a given config
+      explicit LocalIntegrationInput(const LocalIntegrationInputConfig& cfg);
 
       //! deformation gradient \f$ \mathbf{F}_{n+1} \f$
       Core::LinAlg::Matrix<3, 3> defgrad;
@@ -1054,6 +1066,15 @@ namespace Mat
       //! elastic deformation gradient within the elastic predictor \f$
       //! \mathbf{F}_{\mathrm{e},n+1}^{(\mathrm{E})} \f$
       Core::LinAlg::Matrix<3, 3> elastic_predictor_elastic_defgrad;
+
+      //! absolute temperature \f$ T_{n+1} \f$
+      double temperature;
+
+      //! accumulated plastic strain at the previous time instant \f$ \varepsilon_{\mathrm{P},n} \f$
+      double last_plastic_strain;
+
+      //! timestep / substep size \f$ \Delta t \f$ / \f$ \Delta \tilde{t} \f$
+      double step;
     };
 
   }  // namespace InelasticDefgradTransvIsotropElastViscoplastUtils
