@@ -159,7 +159,7 @@ namespace Core::LinAlg
      */
     std::vector<double> get_interpolated_scalar(const std::vector<std::vector<double>>& scalar_data,
         const std::vector<Core::LinAlg::Matrix<loc_dim, 1>>& ref_locs,
-        const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc);
+        const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc) const;
 
    private:
     /**
@@ -179,7 +179,8 @@ namespace Core::LinAlg
      */
     std::vector<double> moving_least_square(const std::vector<std::vector<double>>& scalar_data,
         const std::vector<Core::LinAlg::Matrix<loc_dim, 1>>& ref_locs,
-        const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc, const std::vector<double>& weights);
+        const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc,
+        const std::vector<double>& weights) const;
 
     /**
      * @brief Computes the logarithmic interpolation of scalar data using the provided weights.
@@ -193,7 +194,8 @@ namespace Core::LinAlg
      * @return A vector of doubles representing the logarithmic interpolation results.
      */
     std::vector<double> logarithmic_weighted_average(
-        const std::vector<std::vector<double>>& scalar_data, const std::vector<double>& weights);
+        const std::vector<std::vector<double>>& scalar_data,
+        const std::vector<double>& weights) const;
 
     /**
      * @brief Computes the log moving least squares interpolation for scalar data.
@@ -213,7 +215,8 @@ namespace Core::LinAlg
     std::vector<double> logarithmic_moving_least_squares(
         const std::vector<std::vector<double>>& scalar_data,
         const std::vector<Core::LinAlg::Matrix<loc_dim, 1>>& ref_locs,
-        const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc, const std::vector<double>& weights);
+        const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc,
+        const std::vector<double>& weights) const;
 
     const ScalarInterpolationType scalar_interp_type_;
     const ScalarInterpolationWeightingFunction weight_func_;

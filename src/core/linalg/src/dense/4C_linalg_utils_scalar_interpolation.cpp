@@ -304,7 +304,7 @@ template <unsigned int loc_dim, unsigned int poly_order, unsigned int num_coeffi
 std::vector<double> Core::LinAlg::ScalarInterpolator<loc_dim, poly_order,
     num_coefficients>::logarithmic_weighted_average(const std::vector<std::vector<double>>&
                                                         scalar_data,
-    const std::vector<double>& weights)
+    const std::vector<double>& weights) const
 {
   const size_t field_size = scalar_data[0].size();
   std::vector<double> log_sum(field_size, 0.0);
@@ -336,7 +336,7 @@ std::vector<double>
 Core::LinAlg::ScalarInterpolator<loc_dim, poly_order, num_coefficients>::moving_least_square(
     const std::vector<std::vector<double>>& scalar_data,
     const std::vector<Core::LinAlg::Matrix<loc_dim, 1>>& ref_locs,
-    const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc, const std::vector<double>& weights)
+    const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc, const std::vector<double>& weights) const
 {
   const size_t field_size = scalar_data[0].size();
   std::vector<double> interp_scalar(field_size, 0.0);
@@ -409,7 +409,7 @@ std::vector<double> Core::LinAlg::ScalarInterpolator<loc_dim, poly_order,
     num_coefficients>::logarithmic_moving_least_squares(const std::vector<std::vector<double>>&
                                                             scalar_data,
     const std::vector<Core::LinAlg::Matrix<loc_dim, 1>>& ref_locs,
-    const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc, const std::vector<double>& weights)
+    const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc, const std::vector<double>& weights) const
 {
   std::vector<double> interp_scalar(scalar_data[0].size(), 0.0);
 
@@ -450,7 +450,7 @@ std::vector<double>
 Core::LinAlg::ScalarInterpolator<loc_dim, poly_order, num_coefficients>::get_interpolated_scalar(
     const std::vector<std::vector<double>>& scalar_data,
     const std::vector<Core::LinAlg::Matrix<loc_dim, 1>>& ref_locs,
-    const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc)
+    const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc) const
 {
   // Check for size consistency
   if (scalar_data.empty()) FOUR_C_THROW("Scalar data vector is empty.");
