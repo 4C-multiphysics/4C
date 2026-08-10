@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include "4C_global_data.hpp"
+#include "4C_inelastic_defgrad_factors_test_utils.hpp"
 #include "4C_io_input_parameter_container.templates.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_fixedsizematrix_generators.hpp"
@@ -44,6 +45,9 @@ namespace
 {
   using namespace FourC;
   namespace ViscoplastUtils = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils;
+  namespace AEI =
+      Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation;
+
 
   struct ReformulatedJohnsonCookParameters
   {
@@ -71,6 +75,11 @@ namespace
     };
     bool use_substepping = false;
     unsigned int max_substepping_halve_num = 0;
+    AEI::AEIParams adaptive_estimate_interp_params =
+        InelasticDefgradFactorsTestUtils::set_up_aei_params(
+            {.use_adaptive_estimate_interpolation =
+                    false});  // no usage of AEI by default, must be explicitly enabled and
+                              // configured in the subsequent tests
     ViscoplastUtils::LinearizationType linearization_type =
         ViscoplastUtils::LinearizationType::analytic;
     std::optional<double> yield_cond_a = 1.0;
@@ -187,8 +196,7 @@ namespace
             .register_plastic_strain_deriv_incr_overflow = false,
             .max_plastic_strain_deriv_incr = std::exp(30.0)};
     material_data.add("ERROR_REGISTRATION_SETTINGS", error_registration_settings);
-
-
+    material_data.add("ADAPTIVE_ESTIMATE_INTERPOLATION", setup.adaptive_estimate_interp_params);
 
     auto material_params =
         std::dynamic_pointer_cast<Mat::PAR::InelasticDefgradTransvIsotropElastViscoplast>(
