@@ -31,6 +31,7 @@ namespace Inpar
       using OptQuantityType = FourC::Solid::OptQuantityType;
       using FourC::Solid::optquantity_membranethickness;
       using FourC::Solid::optquantity_none;
+      using FourC::Solid::optquantity_porosity;
       using FourC::Solid::optquantity_shell7pthickness;
       using FourC::Solid::optquantity_shell7pthicknessdirector;
 

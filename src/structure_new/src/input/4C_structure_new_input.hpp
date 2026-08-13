@@ -290,6 +290,7 @@ namespace Solid
   enum OptQuantityType
   {
     optquantity_none,                     ///< no optional output
+    optquantity_porosity,                 ///< output element-averaged porosity
     optquantity_membranethickness,        ///< output of thickness of membrane finite elements
     optquantity_shell7pthickness,         ///< output of thickness of shell7p finite elements
     optquantity_shell7pthicknessdirector  ///< output of thickness director vector of shell7p
@@ -305,6 +306,7 @@ namespace Solid
         return 0;
       case optquantity_membranethickness:
       case optquantity_shell7pthickness:
+      case optquantity_porosity:
         return 1;
       case optquantity_shell7pthicknessdirector:
         return 3;

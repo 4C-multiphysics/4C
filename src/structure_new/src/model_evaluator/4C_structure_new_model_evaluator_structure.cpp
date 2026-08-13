@@ -25,6 +25,8 @@
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_mat_structporo.hpp"
+#include "4C_solid_poro_ele_pressure_velocity_based_p1.hpp"
 #include "4C_structure_new_dbc.hpp"
 #include "4C_structure_new_discretization_runtime_output_params.hpp"
 #include "4C_structure_new_error_evaluator.hpp"
@@ -892,7 +894,15 @@ void Solid::ModelEvaluator::Structure::write_output_runtime_structure(
 
 
   // add output for optional quantity
-  if (structure_output_params.output_optional_quantity() == Solid::optquantity_membranethickness)
+  if (structure_output_params.output_optional_quantity() == Solid::optquantity_porosity)
+  {
+    std::vector<std::optional<std::string>> context(1, "porosity");
+    vtu_writer_ptr_->append_result_data_vector_with_context(
+        eval_data().get_opt_quantity_data_element_postprocessed(), Core::IO::OutputEntity::element,
+        context);
+  }
+  else if (structure_output_params.output_optional_quantity() ==
+           Solid::optquantity_membranethickness)
   {
     // Write nodal membrane thickness
     std::vector<std::optional<std::string>> context(1, "membrane_thickness");
@@ -956,6 +966,40 @@ void Solid::ModelEvaluator::Structure::output_runtime_structure_postprocess_opti
     case Solid::optquantity_none:
     {
       // do nothing and return
+      return;
+    }
+    case Solid::optquantity_porosity:
+    {
+      auto porosity = std::make_shared<Core::LinAlg::MultiVector<double>>(
+          *discret().element_row_map(), 1, true);
+
+      int local_element_id = 0;
+      for (auto element : discret().my_row_element_range())
+      {
+        FOUR_C_ASSERT_ALWAYS(
+            element.user_element()->element_type() !=
+                    Discret::Elements::SolidPoroPressureVelocityBasedP1Type<2>::instance() &&
+                element.user_element()->element_type() !=
+                    Discret::Elements::SolidPoroPressureVelocityBasedP1Type<3>::instance(),
+            "OPTIONAL_QUANTITY 'porosity' is not supported for  "
+            "SOLIDPORO_PRESSURE_VELOCITY_BASED_P1 elements! ");
+
+
+        FOUR_C_ASSERT_ALWAYS(
+            element.user_element()->material()->material_type() == Core::Materials::m_structporo ||
+                element.user_element()->material()->material_type() ==
+                    Core::Materials::m_structpororeaction ||
+                element.user_element()->material()->material_type() ==
+                    Core::Materials::m_structpororeactionECM,
+            "OPTIONAL_QUANTITY 'porosity' is only supported for the StructPoro* material");
+
+        std::vector<double> value(1);
+        FOUR_C_ASSERT_ALWAYS(element.user_element()->vis_data("porosity", value),
+            "StructPoro element does not provide calculated porosity");
+        porosity->get_vector(0).get_values()[local_element_id++] = value[0];
+      }
+
+      eval_data().set_opt_quantity_data_element_postprocessed(std::move(porosity));
       return;
     }
     case Solid::optquantity_membranethickness:

@@ -614,6 +614,18 @@ namespace Solid
         opt_quantity_data_postprocessed_nodal_ptr_ = opt_quantity_data_postprocessed_nodal_ptr;
       }
 
+      [[nodiscard]] const Core::LinAlg::MultiVector<double>&
+      get_opt_quantity_data_element_postprocessed() const
+      {
+        return *opt_quantity_data_postprocessed_element_ptr_;
+      }
+
+      void set_opt_quantity_data_element_postprocessed(
+          std::shared_ptr<Core::LinAlg::MultiVector<double>> data)
+      {
+        opt_quantity_data_postprocessed_element_ptr_ = std::move(data);
+      }
+
 
       //! set model evaluator ptr
       inline void set_model_evaluator(Generic* model_ptr) { model_ptr_ = model_ptr; }
@@ -889,6 +901,9 @@ namespace Solid
 
       //! post processed nodal optional quantity data vector
       std::shared_ptr<Core::LinAlg::MultiVector<double>> opt_quantity_data_postprocessed_nodal_ptr_;
+
+      std::shared_ptr<Core::LinAlg::MultiVector<double>>
+          opt_quantity_data_postprocessed_element_ptr_;
 
       //! system energy, stored separately by type
       std::map<Solid::EnergyType, double> energy_data_;
