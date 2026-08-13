@@ -42,8 +42,7 @@ Particle::ParticleContainer::~ParticleContainer()
   // empty (default) destructor
 }
 
-void Particle::ParticleContainer::setup(
-    int containersize, const std::set<Particle::State>& stateset)
+void Particle::ParticleContainer::setup(int containersize, const std::set<ParticleState>& stateset)
 {
   // set size of particle container (at least one)
   containersize_ = (containersize > 0) ? containersize : 1;
@@ -283,7 +282,7 @@ void Particle::ParticleContainer::remove_particle(int index)
 }
 
 const double* Particle::ParticleContainer::get_ptr_to_state(
-    Particle::State state, int index, Particle::Space space) const
+    ParticleState state, int index, ParticleSpace space) const
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
       enum_to_state_name(state));
@@ -293,14 +292,14 @@ const double* Particle::ParticleContainer::get_ptr_to_state(
 
   const int state_idx = static_cast<int>(state);
 
-  if (space == Particle::Space::Host)
+  if (space == ParticleSpace::Host)
   {
     if (!states_->is_dual_valid_[state_idx])
       return &(states_->host_[state_idx].data()[index * statedim_[state_idx]]);
     states_->dual_[state_idx].sync_host();
     return &(states_->dual_[state_idx].view_host().data()[index * statedim_[state_idx]]);
   }
-  else if (space == Particle::Space::Device)
+  else if (space == ParticleSpace::Device)
   {
     if (!states_->is_dual_valid_[state_idx]) init_state_dual(state);
     states_->dual_[state_idx].sync_device();
@@ -313,7 +312,7 @@ const double* Particle::ParticleContainer::get_ptr_to_state(
 }
 
 double* Particle::ParticleContainer::get_ptr_to_state_writable(
-    Particle::State state, int index, Particle::Space space)
+    ParticleState state, int index, ParticleSpace space)
 {
   auto ptr = const_cast<double*>(
       const_cast<const ParticleContainer&>(*this).get_ptr_to_state(state, index, space));
@@ -322,15 +321,15 @@ double* Particle::ParticleContainer::get_ptr_to_state_writable(
 
   if (states_->is_dual_valid_[state_idx])
   {
-    if (space == Particle::Space::Host)
+    if (space == ParticleSpace::Host)
       states_->dual_[state_idx].modify_host();
-    else if (space == Particle::Space::Device)
+    else if (space == ParticleSpace::Device)
       states_->dual_[state_idx].modify_device();
   }
   return ptr;
 }
 
-double Particle::ParticleContainer::get_min_value_of_state(Particle::State state) const
+double Particle::ParticleContainer::get_min_value_of_state(ParticleState state) const
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
       enum_to_state_name(state));
@@ -346,7 +345,7 @@ double Particle::ParticleContainer::get_min_value_of_state(Particle::State state
   return min;
 }
 
-double Particle::ParticleContainer::get_max_value_of_state(Particle::State state) const
+double Particle::ParticleContainer::get_max_value_of_state(ParticleState state) const
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
       enum_to_state_name(state));
@@ -362,7 +361,7 @@ double Particle::ParticleContainer::get_max_value_of_state(Particle::State state
   return max;
 }
 
-void Particle::ParticleContainer::init_state_dual(Particle::State state) const
+void Particle::ParticleContainer::init_state_dual(ParticleState state) const
 {
   const int state_idx = static_cast<int>(state);
 
