@@ -857,11 +857,16 @@ void BeamInteraction::check_diagonal_like_structure(
 
     int nnz_in_row = 0;
     double row_scale = 0.0;
-
     for (int k = 0; k < num_extracted; ++k)
     {
       row_scale = std::max(row_scale, std::abs(values[k]));
-      const double tol = atol + rtol * row_scale;
+    }
+
+    const double tol = atol + rtol * row_scale;
+
+
+    for (int k = 0; k < num_extracted; ++k)
+    {
       if (std::abs(values[k]) > tol)
       {
         ++nnz_in_row;
