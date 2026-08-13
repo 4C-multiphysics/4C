@@ -293,18 +293,7 @@ namespace Particle
      * \param[in] fac   scale factor
      * \param[in] state particle state
      */
-    inline void scale_state(double fac, ParticleState state)
-    {
-      FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
-          enum_to_state_name(state));
-
-      if (particlestored_ <= 0) return;
-
-      double* state_ptr = get_ptr_to_state_writable(state, 0);
-
-      for (int i = 0; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)
-        state_ptr[i] *= fac;
-    };
+    void scale_state(double fac, ParticleState state);
 
     /*!
      * \brief add scaled states to first state of particles
@@ -315,30 +304,7 @@ namespace Particle
      * \param[in] facB   second scale factor
      * \param[in] stateB second particle state
      */
-    inline void update_state(double facA, ParticleState stateA, double facB, ParticleState stateB)
-    {
-      FOUR_C_ASSERT(stateA != stateB,
-          "adding scaled particle state '{}' to itself is not allowed. Use "
-          "scale_state instead!",
-          enum_to_state_name(stateA));
-
-      FOUR_C_ASSERT(storedstates_.contains(stateA), "particle state '{}' not stored in container!",
-          enum_to_state_name(stateA));
-
-      FOUR_C_ASSERT(storedstates_.contains(stateB), "particle state '{}' not stored in container!",
-          enum_to_state_name(stateB));
-
-      FOUR_C_ASSERT(statedim_[static_cast<int>(stateA)] == statedim_[static_cast<int>(stateB)],
-          "dimensions of states do not match!");
-
-      if (particlestored_ <= 0) return;
-
-      const double* state_b_ptr = get_ptr_to_state(stateB, 0);
-      double* state_a_ptr = get_ptr_to_state_writable(stateA, 0);
-
-      for (int i = 0; i < (particlestored_ * statedim_[static_cast<int>(stateA)]); ++i)
-        state_a_ptr[i] = facA * state_a_ptr[i] + facB * state_b_ptr[i];
-    };
+    void update_state(double facA, ParticleState stateA, double facB, ParticleState stateB);
 
     /*!
      * \brief set given state to all particles
@@ -347,22 +313,7 @@ namespace Particle
      * \param[in] val   particle state
      * \param[in] state particle state
      */
-    inline void set_state(std::vector<double> val, ParticleState state)
-    {
-      FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
-          enum_to_state_name(state));
-
-      FOUR_C_ASSERT(statedim_[static_cast<int>(state)] == static_cast<int>(val.size()),
-          "dimensions of states do not match!");
-
-      if (particlestored_ <= 0) return;
-
-      double* state_ptr = get_ptr_to_state_writable(state, 0);
-
-      for (int i = 0; i < particlestored_; ++i)
-        for (int dim = 0; dim < statedim_[static_cast<int>(state)]; ++dim)
-          state_ptr[i * statedim_[static_cast<int>(state)] + dim] = val[dim];
-    };
+    void set_state(std::vector<double> val, ParticleState state);
 
     /*!
      * \brief clear state of all particles
@@ -370,18 +321,7 @@ namespace Particle
      *
      * \param[in] state particle state
      */
-    inline void clear_state(ParticleState state)
-    {
-      FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
-          enum_to_state_name(state));
-
-      if (particlestored_ <= 0) return;
-
-      double* state_ptr = get_ptr_to_state_writable(state, 0);
-
-      for (int i = 0; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)
-        state_ptr[i] = 0.0;
-    };
+    void clear_state(ParticleState state);
 
     //! @}
 
