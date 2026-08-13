@@ -290,38 +290,49 @@ namespace Particle
      * \brief scale state of particles
      *
      *
-     * \param[in] fac   scale factor
-     * \param[in] state particle state
+     * \param[in] fac          scale factor
+     * \param[in] state        particle state
+     * \param[in] space_option particle space (optional), defaults to last updated space if unset,
+     * or device space if both are in sync
      */
-    void scale_state(double fac, ParticleState state);
+    void scale_state(
+        double fac, ParticleState state, std::optional<ParticleSpace> space_option = std::nullopt);
 
     /*!
      * \brief add scaled states to first state of particles
      *
      *
-     * \param[in] facA   first scale factor
-     * \param[in] stateA first particle state
-     * \param[in] facB   second scale factor
-     * \param[in] stateB second particle state
+     * \param[in] facA         first scale factor
+     * \param[in] stateA       first particle state
+     * \param[in] facB         second scale factor
+     * \param[in] stateB       second particle state
+     * \param[in] space_option particle space (optional), defaults to last updated space if unset,
+     * or device space if both are in sync
      */
-    void update_state(double facA, ParticleState stateA, double facB, ParticleState stateB);
+    void update_state(double facA, ParticleState stateA, double facB, ParticleState stateB,
+        std::optional<ParticleSpace> space_option = std::nullopt);
 
     /*!
      * \brief set given state to all particles
      *
      *
-     * \param[in] val   particle state
-     * \param[in] state particle state
+     * \param[in] val          particle state
+     * \param[in] state        particle state
+     * \param[in] space_option particle space (optional), defaults to last updated space if unset,
+     * or device space if both are in sync
      */
-    void set_state(std::vector<double> val, ParticleState state);
+    void set_state(std::vector<double> val, ParticleState state,
+        std::optional<ParticleSpace> space_option = std::nullopt);
 
     /*!
      * \brief clear state of all particles
      *
      *
-     * \param[in] state particle state
+     * \param[in] state        particle state
+     * \param[in] space_option particle space (optional), defaults to last updated space if unset,
+     * or device space if both are in sync
      */
-    void clear_state(ParticleState state);
+    void clear_state(ParticleState state, std::optional<ParticleSpace> space_option = std::nullopt);
 
     //! @}
 

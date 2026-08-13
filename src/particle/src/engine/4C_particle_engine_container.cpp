@@ -329,21 +329,43 @@ double* Particle::ParticleContainer::get_ptr_to_state_writable(
   return ptr;
 }
 
-void Particle::ParticleContainer::scale_state(double fac, ParticleState state)
+template <class ExecutionSpace>
+void scale_kernel(int size, double fac, double* ptr)
+{
+  Kokkos::parallel_for(
+      "scale state", Kokkos::RangePolicy<ExecutionSpace>(0, size),
+      KOKKOS_LAMBDA(const int i) { ptr[i] *= fac; });
+}
+
+void Particle::ParticleContainer::scale_state(
+    double fac, ParticleState state, std::optional<ParticleSpace> space_option)
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
       enum_to_state_name(state));
 
   if (particlestored_ <= 0) return;
 
-  double* state_ptr = get_ptr_to_state_writable(state, 0);
+  ParticleSpace space =
+      space_option.value_or(is_sync_device(state) ? ParticleSpace::Device : ParticleSpace::Host);
+  double* state_ptr = get_ptr_to_state_writable(state, 0, space);
+  const int size = particlestored_ * statedim_[static_cast<int>(state)];
 
-  for (int i = 0; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)
-    state_ptr[i] *= fac;
+  if (space == ParticleSpace::Device)
+    scale_kernel<Kokkos::DefaultExecutionSpace>(size, fac, state_ptr);
+  else if (space == ParticleSpace::Host)
+    scale_kernel<Kokkos::Serial>(size, fac, state_ptr);
 }
 
-void Particle::ParticleContainer::update_state(
-    double facA, ParticleState stateA, double facB, ParticleState stateB)
+template <class ExecutionSpace>
+void update_kernel(int size, double facA, double* ptrA, double facB, const double* ptrB)
+{
+  Kokkos::parallel_for(
+      "update state", Kokkos::RangePolicy<ExecutionSpace>(0, size),
+      KOKKOS_LAMBDA(const int i) { ptrA[i] = facA * ptrA[i] + facB * ptrB[i]; });
+}
+
+void Particle::ParticleContainer::update_state(double facA, ParticleState stateA, double facB,
+    ParticleState stateB, std::optional<ParticleSpace> space_option)
 {
   FOUR_C_ASSERT(stateA != stateB,
       "adding scaled particle state '{}' to itself is not allowed. Use "
@@ -361,14 +383,30 @@ void Particle::ParticleContainer::update_state(
 
   if (particlestored_ <= 0) return;
 
-  const double* state_b_ptr = get_ptr_to_state(stateB, 0);
-  double* state_a_ptr = get_ptr_to_state_writable(stateA, 0);
+  ParticleSpace space = space_option.value_or(is_sync_device(stateA) and is_sync_device(stateB)
+                                                  ? ParticleSpace::Device
+                                                  : ParticleSpace::Host);
+  const double* state_b_ptr = get_ptr_to_state(stateB, 0, space);
+  double* state_a_ptr = get_ptr_to_state_writable(stateA, 0, space);
+  const int size = particlestored_ * statedim_[static_cast<int>(stateA)];
 
-  for (int i = 0; i < (particlestored_ * statedim_[static_cast<int>(stateA)]); ++i)
-    state_a_ptr[i] = facA * state_a_ptr[i] + facB * state_b_ptr[i];
+  if (space == ParticleSpace::Device)
+    update_kernel<Kokkos::DefaultExecutionSpace>(size, facA, state_a_ptr, facB, state_b_ptr);
+  else if (space == ParticleSpace::Host)
+    update_kernel<Kokkos::Serial>(size, facA, state_a_ptr, facB, state_b_ptr);
 }
 
-void Particle::ParticleContainer::set_state(std::vector<double> val, ParticleState state)
+template <class ExecutionSpace>
+void set_kernel(int size, int dim, double* val, double* ptr)
+{
+  Kokkos::parallel_for(
+      "set state", Kokkos::RangePolicy<ExecutionSpace>(0, size), KOKKOS_LAMBDA(const int i) {
+        for (int j = 0; j < dim; ++j) ptr[i * dim + j] = val[j];
+      });
+}
+
+void Particle::ParticleContainer::set_state(
+    std::vector<double> val, ParticleState state, std::optional<ParticleSpace> space_option)
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
       enum_to_state_name(state));
@@ -378,24 +416,51 @@ void Particle::ParticleContainer::set_state(std::vector<double> val, ParticleSta
 
   if (particlestored_ <= 0) return;
 
+  ParticleSpace space =
+      space_option.value_or(is_sync_device(state) ? ParticleSpace::Device : ParticleSpace::Host);
   double* state_ptr = get_ptr_to_state_writable(state, 0);
+  const int dim = statedim_[static_cast<int>(state)];
 
-  for (int i = 0; i < particlestored_; ++i)
-    for (int dim = 0; dim < statedim_[static_cast<int>(state)]; ++dim)
-      state_ptr[i * statedim_[static_cast<int>(state)] + dim] = val[dim];
+  if (space == ParticleSpace::Device)
+  {
+    Kokkos::View<double*> val_view("values to set", val.size());
+
+    Kokkos::deep_copy(
+        val_view, Kokkos::View<double*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
+                      val.data(), val.size()));
+    set_kernel<Kokkos::DefaultExecutionSpace>(particlestored_, dim, val_view.data(), state_ptr);
+  }
+  else if (space == ParticleSpace::Host)
+  {
+    set_kernel<Kokkos::Serial>(particlestored_, dim, val.data(), state_ptr);
+  }
 }
 
-void Particle::ParticleContainer::clear_state(ParticleState state)
+template <class ExecutionSpace>
+void clear_kernel(int size, double* ptr)
+{
+  Kokkos::parallel_for(
+      "clear state", Kokkos::RangePolicy<ExecutionSpace>(0, size),
+      KOKKOS_LAMBDA(const int i) { ptr[i] = 0.0; });
+}
+
+void Particle::ParticleContainer::clear_state(
+    ParticleState state, std::optional<ParticleSpace> space_option)
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
       enum_to_state_name(state));
 
   if (particlestored_ <= 0) return;
 
+  ParticleSpace space =
+      space_option.value_or(is_sync_device(state) ? ParticleSpace::Device : ParticleSpace::Host);
   double* state_ptr = get_ptr_to_state_writable(state, 0);
+  const int size = particlestored_ * statedim_[static_cast<int>(state)];
 
-  for (int i = 0; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)
-    state_ptr[i] = 0.0;
+  if (space == ParticleSpace::Device)
+    clear_kernel<Kokkos::DefaultExecutionSpace>(size, state_ptr);
+  else if (space == ParticleSpace::Host)
+    clear_kernel<Kokkos::Serial>(size, state_ptr);
 }
 
 double Particle::ParticleContainer::get_min_value_of_state(ParticleState state) const
