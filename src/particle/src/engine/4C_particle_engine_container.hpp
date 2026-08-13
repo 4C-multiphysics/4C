@@ -419,6 +419,26 @@ namespace Particle
      * \return none
      */
     void init_state_dual(ParticleState state) const;
+
+    /*!
+     * \brief determine if host space values are up to date
+     *
+     *
+     * \param[in] state particle state
+     *
+     * \return none
+     */
+    bool is_sync_host(ParticleState state) const;
+
+    /*!
+     * \brief determine if device space values up to date
+     *
+     *
+     * \param[in] state particle state
+     *
+     * \return none
+     */
+    bool is_sync_device(ParticleState state) const;
   };
 
 }  // namespace Particle

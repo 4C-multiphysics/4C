@@ -441,4 +441,22 @@ void Particle::ParticleContainer::init_state_dual(ParticleState state) const
   states_->is_dual_valid_[state_idx] = true;
 }
 
+bool Particle::ParticleContainer::is_sync_host(ParticleState state) const
+{
+  const int state_idx = static_cast<int>(state);
+
+  if (!states_->is_dual_valid_[state_idx]) return true;
+  return states_->dual_[state_idx].need_sync_device() ||
+         !states_->dual_[state_idx].need_sync_host();
+}
+
+bool Particle::ParticleContainer::is_sync_device(ParticleState state) const
+{
+  const int state_idx = static_cast<int>(state);
+
+  if (!states_->is_dual_valid_[state_idx]) return false;
+  return states_->dual_[state_idx].need_sync_host() ||
+         !states_->dual_[state_idx].need_sync_device();
+}
+
 FOUR_C_NAMESPACE_CLOSE
