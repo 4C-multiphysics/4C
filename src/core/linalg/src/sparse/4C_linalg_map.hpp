@@ -52,7 +52,7 @@ namespace Core::LinAlg
 
     Map(int NumGlobalElements, int NumMyElements, int IndexBase, const MPI_Comm& Comm);
 
-    Map(int NumGlobalElements, int NumMyElements, const int* MyGlobalElements, int IndexBase,
+    Map(int NumGlobalElements, std::span<const int> myGlobalElements, int IndexBase,
         const MPI_Comm& Comm);
 
     Map(const Map& Source);

@@ -2618,8 +2618,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                     scatratimint_->dof_row_map()->max_all_gid() + 1 + offset + lmdoflid;
 
               // build Lagrange multiplier dofrowmap
-              const auto lmdofrowmap = std::make_shared<Core::LinAlg::Map>(
-                  -1, static_cast<int>(lmdofgids.size()), lmdofgids.data(), 0, comm);
+              const auto lmdofrowmap =
+                  std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(lmdofgids), 0, comm);
 
               // initialize vectors associated with Lagrange multiplier dofs
               lm_ = std::make_shared<Core::LinAlg::Vector<double>>(*lmdofrowmap);
