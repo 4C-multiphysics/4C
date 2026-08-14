@@ -96,7 +96,7 @@ void Particle::ParticleContainer::increase_container_size()
     if (states_->is_dual_valid_[state_idx])
     {
       states_->dual_[state_idx].resize(containersize_ * statedim_[state_idx]);
-      states_->host_[state_idx] = states_->dual_[state_idx].view_host();
+      states_->host_[state_idx] = states_->dual_[state_idx].view<Kokkos::HostSpace>();
     }
     else
     {
@@ -129,7 +129,7 @@ void Particle::ParticleContainer::decrease_container_size()
     if (states_->is_dual_valid_[state_idx])
     {
       states_->dual_[state_idx].resize(containersize_ * statedim_[state_idx]);
-      states_->host_[state_idx] = states_->dual_[state_idx].view_host();
+      states_->host_[state_idx] = states_->dual_[state_idx].view<Kokkos::HostSpace>();
     }
     else
     {
@@ -296,14 +296,17 @@ const double* Particle::ParticleContainer::get_ptr_to_state(
   {
     if (!states_->is_dual_valid_[state_idx])
       return &(states_->host_[state_idx].data()[index * statedim_[state_idx]]);
-    states_->dual_[state_idx].sync_host();
-    return &(states_->dual_[state_idx].view_host().data()[index * statedim_[state_idx]]);
+    states_->dual_[state_idx].sync<Kokkos::HostSpace>();
+    return &(
+        states_->dual_[state_idx].view<Kokkos::HostSpace>().data()[index * statedim_[state_idx]]);
   }
   else if (space == ParticleSpace::Device)
   {
     if (!states_->is_dual_valid_[state_idx]) init_state_dual(state);
-    states_->dual_[state_idx].sync_device();
-    return &(states_->dual_[state_idx].view_device().data()[index * statedim_[state_idx]]);
+    states_->dual_[state_idx].sync<Kokkos::DefaultExecutionSpace>();
+    return &(states_->dual_[state_idx]
+            .view<Kokkos::DefaultExecutionSpace>()
+            .data()[index * statedim_[state_idx]]);
   }
   else
   {
@@ -322,9 +325,9 @@ double* Particle::ParticleContainer::get_ptr_to_state_writable(
   if (states_->is_dual_valid_[state_idx])
   {
     if (space == ParticleSpace::Host)
-      states_->dual_[state_idx].modify_host();
+      states_->dual_[state_idx].modify<Kokkos::HostSpace>();
     else if (space == ParticleSpace::Device)
-      states_->dual_[state_idx].modify_device();
+      states_->dual_[state_idx].modify<Kokkos::DefaultExecutionSpace>();
   }
   return ptr;
 }
@@ -418,7 +421,7 @@ void Particle::ParticleContainer::set_state(
 
   ParticleSpace space =
       space_option.value_or(is_sync_device(state) ? ParticleSpace::Device : ParticleSpace::Host);
-  double* state_ptr = get_ptr_to_state_writable(state, 0);
+  double* state_ptr = get_ptr_to_state_writable(state, 0, space);
   const int dim = statedim_[static_cast<int>(state)];
 
   if (space == ParticleSpace::Device)
@@ -454,7 +457,7 @@ void Particle::ParticleContainer::clear_state(
 
   ParticleSpace space =
       space_option.value_or(is_sync_device(state) ? ParticleSpace::Device : ParticleSpace::Host);
-  double* state_ptr = get_ptr_to_state_writable(state, 0);
+  double* state_ptr = get_ptr_to_state_writable(state, 0, space);
   const int size = particlestored_ * statedim_[static_cast<int>(state)];
 
   if (space == ParticleSpace::Device)
@@ -511,8 +514,8 @@ bool Particle::ParticleContainer::is_sync_host(ParticleState state) const
   const int state_idx = static_cast<int>(state);
 
   if (!states_->is_dual_valid_[state_idx]) return true;
-  return states_->dual_[state_idx].need_sync_device() ||
-         !states_->dual_[state_idx].need_sync_host();
+  return states_->dual_[state_idx].need_sync<Kokkos::DefaultExecutionSpace>() ||
+         !states_->dual_[state_idx].need_sync<Kokkos::HostSpace>();
 }
 
 bool Particle::ParticleContainer::is_sync_device(ParticleState state) const
@@ -520,8 +523,8 @@ bool Particle::ParticleContainer::is_sync_device(ParticleState state) const
   const int state_idx = static_cast<int>(state);
 
   if (!states_->is_dual_valid_[state_idx]) return false;
-  return states_->dual_[state_idx].need_sync_host() ||
-         !states_->dual_[state_idx].need_sync_device();
+  return states_->dual_[state_idx].need_sync<Kokkos::HostSpace>() ||
+         !states_->dual_[state_idx].need_sync<Kokkos::DefaultExecutionSpace>();
 }
 
 FOUR_C_NAMESPACE_CLOSE
