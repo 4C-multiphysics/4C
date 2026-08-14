@@ -241,16 +241,6 @@ namespace Particle
     Device,  //!< particle memory space for computation on device, or host if device not supported
   };
 
-  /*!
-   * \brief convert particle memory space enum to name
-   *
-   *
-   * \param[in] space particle memory space
-   *
-   * \return particle memory space name
-   */
-  std::string enum_to_space_name(const ParticleSpace& space);
-
   //! @}
 
 }  // namespace Particle

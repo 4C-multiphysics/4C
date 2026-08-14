@@ -294,23 +294,4 @@ std::string Particle::enum_to_status_name(const ParticleStatus& status)
   return name;
 }
 
-std::string Particle::enum_to_space_name(const ParticleSpace& space)
-{
-  std::string name;
-
-  switch (space)
-  {
-    case ParticleSpace::Host:
-      name = "host";
-      break;
-    case ParticleSpace::Device:
-      name = "device";
-      break;
-    default:
-      FOUR_C_THROW("particle memory space unknown!");
-  }
-
-  return name;
-}
-
 FOUR_C_NAMESPACE_CLOSE

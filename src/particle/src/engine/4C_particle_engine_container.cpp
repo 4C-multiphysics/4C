@@ -7,6 +7,7 @@
 
 #include "4C_particle_engine_container.hpp"
 
+#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Kokkos_Core.hpp>
@@ -37,10 +38,7 @@ Particle::ParticleContainer::ParticleContainer()
   // empty constructor
 }
 
-Particle::ParticleContainer::~ParticleContainer()
-{
-  // empty (default) destructor
-}
+Particle::ParticleContainer::~ParticleContainer() = default;
 
 void Particle::ParticleContainer::setup(int containersize, const std::set<ParticleState>& stateset)
 {
@@ -75,7 +73,7 @@ void Particle::ParticleContainer::setup(int containersize, const std::set<Partic
 
     // allocate memory for current state in particle container
     states_->host_[state_idx] = Kokkos::View<double*, Kokkos::HostSpace>(
-        enum_to_state_name(state), containersize_ * statedim_[state_idx]);
+        std::string{EnumTools::enum_name(state)}, containersize_ * statedim_[state_idx]);
   }
 }
 
@@ -150,7 +148,7 @@ void Particle::ParticleContainer::add_particle(
     if (state_idx < static_cast<int>(states.size()) and not states[state_idx].empty() and
         static_cast<int>(states[state_idx].size()) != statedim_[state_idx])
       FOUR_C_THROW("can not add particle: dimensions of state '{}' do not match!",
-          enum_to_state_name(state));
+          EnumTools::enum_name(state));
   }
 #endif
 
@@ -213,7 +211,7 @@ void Particle::ParticleContainer::replace_particle(
     {
       FOUR_C_ASSERT(static_cast<int>(states[state_idx].size()) == statedim_[state_idx],
           "can not replace particle: dimensions of state '{}' do not match!",
-          enum_to_state_name(state));
+          EnumTools::enum_name(state));
 
       // get pointer to particle state
       double* state_ptr = get_ptr_to_state_writable(state, index);
@@ -285,7 +283,7 @@ const double* Particle::ParticleContainer::get_ptr_to_state(
     ParticleState state, int index, ParticleSpace space) const
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
-      enum_to_state_name(state));
+      EnumTools::enum_name(state));
 
   FOUR_C_ASSERT(index >= 0 and index < particlestored_,
       "can not return pointer to state of particle as index {} out of bounds!", index);
@@ -344,7 +342,7 @@ void Particle::ParticleContainer::scale_state(
     double fac, ParticleState state, std::optional<ParticleSpace> space_option)
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
-      enum_to_state_name(state));
+      EnumTools::enum_name(state));
 
   if (particlestored_ <= 0) return;
 
@@ -373,13 +371,13 @@ void Particle::ParticleContainer::update_state(double facA, ParticleState stateA
   FOUR_C_ASSERT(stateA != stateB,
       "adding scaled particle state '{}' to itself is not allowed. Use "
       "scale_state instead!",
-      enum_to_state_name(stateA));
+      EnumTools::enum_name(stateA));
 
   FOUR_C_ASSERT(storedstates_.contains(stateA), "particle state '{}' not stored in container!",
-      enum_to_state_name(stateA));
+      EnumTools::enum_name(stateA));
 
   FOUR_C_ASSERT(storedstates_.contains(stateB), "particle state '{}' not stored in container!",
-      enum_to_state_name(stateB));
+      EnumTools::enum_name(stateB));
 
   FOUR_C_ASSERT(statedim_[static_cast<int>(stateA)] == statedim_[static_cast<int>(stateB)],
       "dimensions of states do not match!");
@@ -412,7 +410,7 @@ void Particle::ParticleContainer::set_state(
     std::vector<double> val, ParticleState state, std::optional<ParticleSpace> space_option)
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
-      enum_to_state_name(state));
+      EnumTools::enum_name(state));
 
   FOUR_C_ASSERT(statedim_[static_cast<int>(state)] == static_cast<int>(val.size()),
       "dimensions of states do not match!");
@@ -451,7 +449,7 @@ void Particle::ParticleContainer::clear_state(
     ParticleState state, std::optional<ParticleSpace> space_option)
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
-      enum_to_state_name(state));
+      EnumTools::enum_name(state));
 
   if (particlestored_ <= 0) return;
 
@@ -469,7 +467,7 @@ void Particle::ParticleContainer::clear_state(
 double Particle::ParticleContainer::get_min_value_of_state(ParticleState state) const
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
-      enum_to_state_name(state));
+      EnumTools::enum_name(state));
 
   if (particlestored_ <= 0) return 0.0;
 
@@ -485,7 +483,7 @@ double Particle::ParticleContainer::get_min_value_of_state(ParticleState state) 
 double Particle::ParticleContainer::get_max_value_of_state(ParticleState state) const
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
-      enum_to_state_name(state));
+      EnumTools::enum_name(state));
 
   if (particlestored_ <= 0) return 0.0;
 
