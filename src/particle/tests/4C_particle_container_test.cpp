@@ -469,7 +469,7 @@ namespace
     }
   }
 
-  TEST_F(ParticleContainerTest, set_state)
+  TEST_F(ParticleContainerTest, SetState)
   {
     int globalid(0);
 
