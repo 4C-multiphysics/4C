@@ -846,9 +846,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description = "stiffness scaling parameter", .validator = positive<double>()}),
             parameter<double>(
                 "M", {.description = "nonlinearity parameter", .validator = positive<double>()}),
-            parameter<double>(
-                "Q", {.description = "tension-compression asymmetry control parameter",
-                         .validator = in_range(0.0, 1.0)}),
+            parameter<double>("Q",
+                {.description =
+                        "tension-compression asymmetry control parameter. "
+                        "$q=0.5$ gives a tension--compression symmetric response, "
+                        "$q>0.5$ makes the material stiffer in tension than in compression, "
+                        "and $q<0.5$ makes the material stiffer in compression than in tension",
+                    .validator = in_range(0.0, 1.0)}),
             parameter<double>("KAPPA",
                 {.description = "incompressibility parameter", .validator = positive<double>()}),
             parameter<double>(
@@ -1277,22 +1281,52 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description = "Function number for isotropic hardening", .default_value = 0}),
             parameter<double>("TOL", {.description = "Local Newton iteration tolerance"}),
             parameter<int>("MAXITER",
-                {.description = "Maximum Neutron Raphson Iterations", .default_value = 50}),
-            parameter<double>("K1", {.description = "GTN Constant k1"}),
-            parameter<double>("K2", {.description = "GTN Constant k2"}),
-            parameter<double>("K3", {.description = "GTN constant k3"}),
-            parameter<double>("F0", {.description = "GTN constant f0 for initial damage"}),
-            parameter<double>("FN", {.description = "GTN constant fN for damage nucleation"}),
-            parameter<double>("EN", {.description = "GTN constant eN for damage nucleation"}),
-            parameter<double>("SN", {.description = "GTN constant sN for damage nucleation"}),
-            parameter<double>("FC", {.description = "GTN constant fC for damage coalescence"}),
+                {.description = "Maximum Newton Raphson Iterations", .default_value = 50}),
+            parameter<double>("K1", {.description = "GTN Constant $k_1$"}),
+            parameter<double>("K2", {.description = "GTN Constant $k_2$"}),
+            parameter<double>("K3", {.description = "GTN constant $k_3$"}),
             parameter<double>(
-                "KAPPA", {.description = "GTN constant kappa for damage coalescence"}),
+                "F0", {.description = "GTN constant $f_0$: initial void volume fraction"}),
+            parameter<double>("FN", {.description = "GTN constant $f_N$ for damage nucleation"}),
+            parameter<double>(
+                "EN", {.description = "GTN constant $\\varepsilon_N$ for damage nucleation"}),
+            parameter<double>("SN", {.description = "GTN constant $s_N$ for damage nucleation"}),
+            parameter<double>("FC", {.description = "GTN constant $f_C$: "
+                                                    "void volume fraction at damage coalescence"}),
+            parameter<double>("KAPPA",
+                {.description = "GTN constant $\\kappa$: Increased damage rate after coalescence"}),
             parameter<double>(
                 "EF", {.description = "GTN stabilization parameter ef for damage coalescence",
                           .default_value = 0.0}),
         },
-        {.description = "elastic St.Venant Kirchhoff / plastic GTN"});
+        {.description = "elastic St.Venant Kirchhoff / plastic GTN for porous metal plasticity."
+                        "It uses an associated yield function of the form\n\n"
+                        "$$\n"
+                        "\\Phi = \\left( \\frac{Q}{R^{(3)}} \\right)^2 + "
+                        "2 k_1 f^* \\cosh \\left( -\\frac{3}{2} k_2 \\frac{P}{R^{(3)}} \\right) "
+                        "- \\left(1 + k_3 {f^*}^2 \\right) = 0\n"
+                        "$$\n\n"
+                        "with $Q=\\sqrt{\\sigma_\\text{dev} : \\sigma_\\text{dev}}$ "
+                        "and P being the trace of the stress.\n\n"
+                        "The damage $f^*$ is calculated by\n\n"
+                        "$$\n"
+                        "f^* = \\begin{cases}\n"
+                        "f & f \\leq f_c \\\\\n"
+                        "f_c + \\kappa ( f - f_c) & f > f_c\n"
+                        "\\end{cases}\n"
+                        "$$\n\n"
+                        "The rate of the void volume fraction includes growth and nucleation:\n\n"
+                        "$$\n"
+                        "\\dot{f} = \\dot{f}_\\text{growth} + \\dot{f}_\\text{nucl}\n"
+                        "$$\n\n"
+                        "with\n\n"
+                        "$$\n"
+                        "\\dot{f}_\\text{nucl} = \\frac{f_N}{s_N \\sqrt{2\\pi}} "
+                        "\\exp \\left\\{ -\\frac{1}{2} "
+                        "\\left[ \\frac{\\overline{\\varepsilon}^{pl} - \\epsilon_N}{s_N} "
+                        "\\right]^2 \\right\\} "
+                        "\\dot{\\overline{\\varepsilon}}^{pl}\n"
+                        "$$"});
   }
 
   /*----------------------------------------------------------------------*/
@@ -1655,8 +1689,10 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "VISCO_MATIDS", {.description = "explicit visco summand IDs",
                                     .size = size_from_optional_count("NUMVISCO")}),
             parameter<double>("DENS", {.description = "material mass density"}),
-            parameter<int>("POLYCONVEX",
-                {.description = "1.0 if polyconvexity of system is checked", .default_value = 0}),
+            parameter<int>(
+                "POLYCONVEX", {.description = "1.0 if polyconvexity of system is checked "
+                                              "(not supported for viscoelastic combinations.)",
+                                  .default_value = 0}),
         },
         {.description = "Viscohyperelastic material. Uses NUMMAT/MATIDS as the complete summand "
                         "list and supports explicit elastic/visco splits with NUMELAST/"
@@ -2767,7 +2803,14 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {
             parameter<double>("N", {.description = "material parameter"}),
         },
-        {.description = "Iso-rate viscous contribution of myocardial matrix"});
+        {.description =
+                "Coupled myocardial viscoelastic contribution.\n\n"
+                "$$\n"
+                "\\Phi_\\mathrm{v} = \\frac{\\eta}{2}\\dot{\\boldsymbol E}:\\dot{\\boldsymbol E} "
+                "= \\frac{\\eta}{8}\\dot{\\boldsymbol C}:\\dot{\\boldsymbol C}\n"
+                "$$\n\n"
+                "hence $\\boldsymbol S_\\mathrm{v}=\\eta\\dot{\\boldsymbol E}$; `N` is "
+                "$\\eta$."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2777,7 +2820,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {
             parameter<double>("N", {.description = "material parameter"}),
         },
-        {.description = "Isochoric iso-rate viscous summand"});
+        {.description = "Isochoric rate-dependent contribution.\n\n"
+                        "$$\n"
+                        "\\Phi_\\mathrm{v} = n\\,\\bar J_2(\\bar I_1-3)\n"
+                        "$$\n\n"
+                        "with $\\bar J_2=\\frac12\\dot{\\bar{\\boldsymbol C}}:"
+                        "\\dot{\\bar{\\boldsymbol C}}$. The rate is evaluated by a backward "
+                        "difference."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2789,7 +2838,22 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("ALPHA", {.description = "fractional order derivative"}),
             parameter<double>("BETA", {.description = "emphasis of viscous to elastic part"}),
         },
-        {.description = "Fractional standard linear solid visco summand"});
+        {.description =
+                "Fractional standard linear solid.\n"
+                "Hereditary viscous stress update from artificial stress $\\boldsymbol Q$. With "
+                "\n\n"
+                "$$\n"
+                "b_0=1,\\quad b_j=\\frac{j-1-\\alpha}{j}b_{j-1}, \\quad"
+                "\\lambda_1=\\frac{\\Delta t^\\alpha}{\\Delta t^\\alpha+\\tau^\\alpha},\\quad"
+                "\\lambda_2=-\\frac{\\tau^\\alpha}{\\Delta t^\\alpha+\\tau^\\alpha},\n"
+                "$$\n\n"
+                "the implemented history update is \n\n"
+                "$$\n"
+                "\\boldsymbol Q^{n+1}=\\lambda_1\\beta\\boldsymbol S_0^{n+1}"
+                "+\\lambda_2\\sum_{j=1}^{m}b_j\\boldsymbol Q^{n+1-j},"
+                "\\quad \\boldsymbol S_\\mathrm{v}^{n+1}"
+                "=\\boldsymbol Q^{n+1}-\\beta\\boldsymbol S_0^{n+1}.\n"
+                "$$\n"});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2805,7 +2869,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                 "ExponentialTimeDiscretization (convolution integral)",
                     .default_value = "OneStepTheta"}),
         },
-        {.description = "Top-level generalized Maxwell visco summand"});
+        {.description =
+                "Generalized Maxwell model, obtains a separate elastic law and $\\tau$ from each "
+                "VISCO_GeneralizedMaxwellBranch.\n\n"
+                "$$\n"
+                "\\boldsymbol S_\\mathrm{v} = \\sum_i \\boldsymbol Q_i\n"
+                "$$\n\n"
+                "where $\\dot{\\boldsymbol Q}_i+\\boldsymbol Q_i/\\tau_i="
+                "\\dot{\\boldsymbol S}^{\\,e}_i$. Each $\\boldsymbol S^{\\,e}_i$ comes from "
+                "the elastic material referenced by its branch."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2832,7 +2904,19 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                                    .default_value = 0.0,
                                                    .validator = positive_or_zero<double>()}),
             },
-            {.description = "Fung-type quasi-linear generalized Maxwell viscoelastic summand"});
+            {.description =
+                    "Fung-type quasi-linear generalized Maxwell model; "
+                    "uses $\\beta$ and $\\tau$ arrays and drives every branch from the same "
+                    "surrounding hyperelastic base law. "
+                    "Its optional viscosity $\\eta$ defines the parallel-dashpot pseudo-potential "
+                    "$\\Phi_\\eta=\\frac{\\eta}{2}\\dot{\\boldsymbol E}:\\dot{\\boldsymbol E}$, "
+                    "from which the viscous stress is derived as\n\n"
+                    "$$\n"
+                    "\\boldsymbol S_\\mathrm{v} = \\sum_i \\boldsymbol Q_i + "
+                    "\\eta\\dot{\\boldsymbol E} \\quad \\text{with} \\quad "
+                    "\\dot{\\boldsymbol Q}_i+\\boldsymbol Q_i/\\tau_i="
+                    "\\beta_i\\dot{\\boldsymbol S}_0.\n"
+                    "$$\n"});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2844,7 +2928,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "TAU", {.description = "dynamic viscosity divided by branch stiffness"}),
             parameter<int>("MATID", {.description = "material ID of branch elasticity rule"}),
         },
-        {.description = "Branch definition for a generalized Maxwell visco summand"});
+        {.description = "Branch referenced by a generalized Maxwell model.\n\n"
+                        "No independent equation; `MATID` defines $\\boldsymbol S^{\\,e}_i$ and "
+                        "`TAU` defines $\\tau_i$ in the parent Maxwell law."});
   }
 
   /*--------------------------------------------------------------------*/

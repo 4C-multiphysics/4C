@@ -8,12 +8,14 @@ Anisotropic, fiber, and active hyperelastic summands
 
 Anisotropic summands are normally combined with an isotropic matrix. Depending on the model,
 fiber information comes from element fibers or nodal fibers. The distribution of fibers can be
-controlled by the structural tensor, which is supplied by the ``ELAST_StructuralTensor`` helper.
+controlled by the structural tensor, which is supplied by the ``ELAST_StructuralTensor`` helper,
+its evolution can be controlled by the ``ELAST_AnisoActiveStress_Evolution`` helper.
 The strain-energy formulation of each summand is documented in the Input Parameter Reference.
+Follow the linked parameter reference for the exact formulation, required IDs, and fiber strategies.
 
 .. list-table::
    :header-rows: 1
-   :widths: 35 65
+   :widths: 40 60
 
    * - Summand or helper
      - Model
@@ -31,11 +33,6 @@ The strain-energy formulation of each summand is documented in the Input Paramet
      - Power-law energy for one fiber.
    * - :ref:`ELAST_CoupAnisoExpoActive <MATERIALS_ELAST_CoupAnisoExpoActive>`
      - Exponential law for one fiber with active response.
-   * - :ref:`ELAST_AnisoActiveStress_Evolution
-       <MATERIALS_ELAST_AnisoActiveStress_Evolution>`
-     - Active-stress evolution law for one fiber.
-
-       No stored-energy potential; it supplies the evolving active stress.
    * - :ref:`ELAST_IsoAnisoExpo <MATERIALS_ELAST_IsoAnisoExpo>`
      - Combined isotropic-anisotropic exponential response for one fiber.
    * - :ref:`ELAST_CoupTransverselyIsotropic
@@ -46,14 +43,16 @@ The strain-energy formulation of each summand is documented in the Input Paramet
 
        No single fixed potential; it combines the referenced exponential fiber potentials with
        evolving remodeling and growth histories.
+   * - :ref:`ELAST_AnisoActiveStress_Evolution
+       <MATERIALS_ELAST_AnisoActiveStress_Evolution>`
+     - Active-stress evolution law for one fiber.
+
+       No stored-energy potential; it supplies the evolving active stress.
    * - :ref:`ELAST_StructuralTensor <MATERIALS_ELAST_StructuralTensor>`
-     - Structural-tensor strategy for one fiber, referenced by anisotropic summands.
+     - Structural-tensor strategy for one fiber, that is, the distribution of the fiber in a specific direction;
+       referenced by anisotropic summands.
 
-       No potential; it supplies the structural tensor used by the anisotropic summands above.
-
-The active-stress and structural-tensor entries are state/helper models rather than independent
-strain-energy terms. Follow the linked parameter reference for the exact formulation, required
-IDs, and fiber strategies.
+       This is not a potential; it supplies the structural tensor used by the anisotropic summands above.
 
 Example
 -------

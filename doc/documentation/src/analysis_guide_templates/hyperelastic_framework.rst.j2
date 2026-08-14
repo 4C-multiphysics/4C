@@ -71,11 +71,9 @@ There are two common ways to define the full hyperelastic response:
 
 - A **coupled** contribution depends on the full deformation and already contains distortional
   and volumetric response.
-- A **split** formulation usually combines one or more isochoric ``ELAST_Iso*`` contributions
-  with one ``ELAST_Vol*`` contribution.
-
-Do not add an extra volumetric penalty to a coupled compressible law unless that additional
-volumetric stiffness is intentional.
+- A **split** formulation usually combines any number of isochoric ``ELAST_Iso*`` contributions
+  with any number of ``ELAST_Vol*`` contributions. It is also possible (but less common) to add
+  coupled laws (``ELAST_Coup*``) as well.
 
 Composition rules and limiting cases
 ------------------------------------

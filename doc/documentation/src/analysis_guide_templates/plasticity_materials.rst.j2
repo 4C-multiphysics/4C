@@ -50,7 +50,7 @@ Overview
      - Thermomechanically coupled von Mises plasticity.
    * - :ref:`MAT_Struct_DruckerPrager <plasticity-drucker-prager>`
      - Linear
-     - Pressure-dependent plasticity.
+     - Pressure-dependent porous metal plasticity.
    * - :ref:`MAT_Struct_PlasticGTN <plasticity-gtn>`
      - Linear
      - Porous plasticity and ductile failure.
@@ -93,23 +93,13 @@ transformation in shape-memory alloys rather than classical plasticity.
 ``MAT_Struct_PlasticLinElast``
 ------------------------------
 
-Formulation
-~~~~~~~~~~~
-
 This small-strain material combines isotropic linear elasticity with associative von Mises
 plasticity. It supports linear isotropic and linear kinematic hardening. Use it for metals when
 geometric nonlinearities and temperature effects are negligible.
 
-Input
-~~~~~
-
-The material requires ``KINEM: linear``. ``YOUNG``, ``NUE``, and ``DENS`` define elasticity and
-density. ``YIELD`` is the initial yield stress, ``ISOHARD`` and ``KINHARD`` are the isotropic and
-kinematic hardening moduli, and ``TOL`` controls the local constitutive iteration.
-
+The following definition of the material is taken from ``{{ plastic_linear_file }}``.
 See :ref:`MAT_Struct_PlasticLinElast in the Input Parameter Reference
-<MATERIALS_MAT_Struct_PlasticLinElast>` for the complete schema. The following definition is
-taken from ``{{ plastic_linear_file }}``:
+<MATERIALS_MAT_Struct_PlasticLinElast>` for the complete parameter reference.
 
 {{ section_dump(plastic_linear, "MATERIALS") }}
 
@@ -125,25 +115,13 @@ Gauss-point output is available as ``accumulated_plastic_strain``, ``active_plas
 ``MAT_Struct_ThermoPlasticLinElast``
 ------------------------------------
 
-Formulation
-~~~~~~~~~~~
-
 This is the thermomechanically coupled extension of ``MAT_Struct_PlasticLinElast``. It includes
 thermal strain, associative von Mises flow, isotropic and kinematic hardening, and heating caused
-by plastic dissipation. The isotropic hardening curve can be linear or piecewise linear.
+by plastic dissipation.
 
-Input
-~~~~~
-
-The material requires ``KINEM: linear``. In addition to ``YOUNG``, ``NUE``, and ``DENS``, specify
-the thermal expansion coefficient ``THEXPANS`` and reference temperature ``INITTEMP``.
-``YIELD``, ``ISOHARD``, and ``KINHARD`` define linear hardening. For piecewise-linear isotropic
-hardening, ``SAMPLENUM`` sets the number of entries in ``SIGMA_Y`` and ``EPSBAR_P``. ``TOL``
-controls the local iteration.
-
+The following material definition is taken from ``{{ thermo_plastic_linear_file }}``.
 See :ref:`MAT_Struct_ThermoPlasticLinElast in the Input Parameter Reference
-<MATERIALS_MAT_Struct_ThermoPlasticLinElast>` for the complete schema. The following definition
-is taken from ``{{ thermo_plastic_linear_file }}``:
+<MATERIALS_MAT_Struct_ThermoPlasticLinElast>` for the complete parameter reference.
 
 {{ section_dump(thermo_plastic_linear, "MATERIALS") }}
 
@@ -159,32 +137,14 @@ Gauss-point output is available as ``accumulated_plastic_strain``, ``active_plas
 ``MAT_Struct_DruckerPrager``
 ----------------------------
 
-Formulation
-~~~~~~~~~~~
-
-This small-strain pressure-dependent material uses a Drucker--Prager yield surface,
-
-.. math::
-
-   f = \sqrt{J_2} + \eta\,\operatorname{tr}(\boldsymbol{\sigma})
-       - \xi\left(c + H_\mathrm{iso}\bar{\varepsilon}^{p}\right).
-
+This small-strain pressure-dependent material uses a Drucker--Prager yield surface.
 The flow rule can be non-associated and the return mapping treats both the conical surface and
 its apex. It is suitable for frictional materials when a smooth approximation of a
 Mohr--Coulomb surface is sufficient.
 
-Input
-~~~~~
-
-The material requires ``KINEM: linear``. ``YOUNG``, ``NUE``, and ``DENS`` define elasticity and
-density. ``C`` is the cohesion and ``ISOHARD`` the linear isotropic hardening modulus. ``ETA`` and
-``XI`` control the yield cone; ``ETABAR`` controls the plastic potential and equals ``ETA`` for
-associative flow. ``TANG`` selects a ``consistent`` or ``elastic`` tangent. ``TOL`` and
-``MAXITER`` control the local iteration.
-
+The following material definition is taken from ``{{ drucker_prager_file }}``:
 See :ref:`MAT_Struct_DruckerPrager in the Input Parameter Reference
-<MATERIALS_MAT_Struct_DruckerPrager>` for the complete schema. The following definition is taken
-from ``{{ drucker_prager_file }}``:
+<MATERIALS_MAT_Struct_DruckerPrager>` for the formulation of the yield surface and the complete parameter schema.
 
 {{ section_dump(drucker_prager, "MATERIALS") }}
 
@@ -198,27 +158,14 @@ Gauss-point output is available as ``accumulated_plastic_strain`` and ``plastic_
 ``MAT_Struct_PlasticGTN``
 -------------------------
 
-Formulation
-~~~~~~~~~~~
-
 The Gurson--Tvergaard--Needleman model describes porous metal plasticity. Its yield surface
 depends on equivalent stress, hydrostatic pressure, matrix flow stress, and void volume fraction.
 The void fraction evolves through growth and nucleation and is modified after the onset of
 coalescence. This model is intended for ductile damage and failure under small strains.
 
-Input
-~~~~~
-
-The material requires ``KINEM: linear``. ``YOUNG``, ``NUE``, and ``DENS`` define elasticity and
-density. Matrix hardening is specified by ``YIELD`` and ``ISOHARD`` or by ``HARDENING_FUNC``.
-``K1``, ``K2``, and ``K3`` are the GTN yield-surface parameters. ``F0`` is the initial void
-fraction; ``FN``, ``EN``, and ``SN`` control nucleation; ``FC`` and ``KAPPA`` control
-coalescence; and ``EF`` regularizes the coalescence transition. ``TOL`` and ``MAXITER`` control
-the local iteration.
-
+The following definition is taken from ``{{ gtn_file }}``.
 See :ref:`MAT_Struct_PlasticGTN in the Input Parameter Reference
-<MATERIALS_MAT_Struct_PlasticGTN>` for the complete schema. The following definition is taken
-from ``{{ gtn_file }}``:
+<MATERIALS_MAT_Struct_PlasticGTN>` for the complete schema.
 
 {{ section_dump(gtn, "MATERIALS") }}
 
