@@ -118,6 +118,7 @@ elif [[ "$compile" == "1" && "$mode_cuda_device" == "1" ]]; then
     --cuda-path="$cuda_path"
     --cuda-gpu-arch="$arch"
     -Wno-unknown-cuda-version
+    -Wno-unsupported-floating-point-opt
     "${args[@]}"
   )
 else

@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-four_c_auto_define_module()
+four_c_auto_define_module(CLANGCUDA_USE_DEVICE)
 
 set(_dependencies
     # cmake-format: sortable

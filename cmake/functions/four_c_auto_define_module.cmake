@@ -10,7 +10,7 @@
 # defined module, the sources are appended to the already defined module. The module name is returned
 # in the variable AUTO_DEFINED_MODULE_NAME which is set at the call site.
 function(four_c_auto_define_module)
-  set(options NO_CYCLES)
+  set(options NO_CYCLES CLANGCUDA_USE_DEVICE)
   set(oneValueArgs "")
   set(multiValueArgs "")
   cmake_parse_arguments(
@@ -39,7 +39,11 @@ function(four_c_auto_define_module)
     target_link_libraries(${_target}_objs PRIVATE four_c_private_compile_interface)
 
     if(FOUR_C_CLANGCUDA)
-      set_clangcuda_mode(${_target}_objs CLANGCUDA_MODE_HOST)
+      if(_parsed_CLANGCUDA_USE_DEVICE)
+        set_clangcuda_mode(${_target}_objs CLANGCUDA_MODE_DEVICE)
+      else()
+        set_clangcuda_mode(${_target}_objs CLANGCUDA_MODE_HOST)
+      endif()
     endif()
 
     if(FOUR_C_ENABLE_IWYU)
