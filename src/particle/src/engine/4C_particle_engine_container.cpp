@@ -464,34 +464,76 @@ void Particle::ParticleContainer::clear_state(
     clear_kernel<Kokkos::Serial>(size, state_ptr);
 }
 
-double Particle::ParticleContainer::get_min_value_of_state(ParticleState state) const
+template <class ExecutionSpace>
+double min_kernel(int size, const double* ptr)
+{
+  double min_ = 0.;
+
+  Kokkos::parallel_reduce(
+      "min state value", Kokkos::RangePolicy<ExecutionSpace>(0, size),
+      KOKKOS_LAMBDA(const int i, double& local_min) {
+        if (ptr[i] < local_min) local_min = ptr[i];
+      },
+      Kokkos::Min<double>(min_));
+
+  return min_;
+}
+
+double Particle::ParticleContainer::get_min_value_of_state(
+    ParticleState state, std::optional<ParticleSpace> space_option) const
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
       EnumTools::enum_name(state));
 
   if (particlestored_ <= 0) return 0.0;
 
-  const double* state_ptr = get_ptr_to_state(state, 0);
-  double min = state_ptr[0];
+  ParticleSpace space =
+      space_option.value_or(is_sync_device(state) ? ParticleSpace::Device : ParticleSpace::Host);
+  const double* state_ptr = get_ptr_to_state(state, 0, space);
+  const int size = particlestored_ * statedim_[static_cast<int>(state)];
+  double min = 0.;
 
-  for (int i = 1; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)
-    min = std::min(min, state_ptr[i]);
+  if (space == ParticleSpace::Device)
+    min = min_kernel<Kokkos::DefaultExecutionSpace>(size, state_ptr);
+  else if (space == ParticleSpace::Host)
+    min = min_kernel<Kokkos::Serial>(size, state_ptr);
 
   return min;
 }
 
-double Particle::ParticleContainer::get_max_value_of_state(ParticleState state) const
+template <class ExecutionSpace>
+double max_kernel(int size, const double* ptr)
+{
+  double max_ = 0.;
+
+  Kokkos::parallel_reduce(
+      "max state value", Kokkos::RangePolicy<ExecutionSpace>(0, size),
+      KOKKOS_LAMBDA(const int i, double& local_max) {
+        if (ptr[i] > local_max) local_max = ptr[i];
+      },
+      Kokkos::Max<double>(max_));
+
+  return max_;
+}
+
+double Particle::ParticleContainer::get_max_value_of_state(
+    ParticleState state, std::optional<ParticleSpace> space_option) const
 {
   FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
       EnumTools::enum_name(state));
 
   if (particlestored_ <= 0) return 0.0;
 
-  const double* state_ptr = get_ptr_to_state(state, 0);
-  double max = state_ptr[0];
+  ParticleSpace space =
+      space_option.value_or(is_sync_device(state) ? ParticleSpace::Device : ParticleSpace::Host);
+  const double* state_ptr = get_ptr_to_state(state, 0, space);
+  const int size = particlestored_ * statedim_[static_cast<int>(state)];
+  double max = 0.;
 
-  for (int i = 1; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)
-    max = std::max(max, state_ptr[i]);
+  if (space == ParticleSpace::Device)
+    max = max_kernel<Kokkos::DefaultExecutionSpace>(size, state_ptr);
+  else if (space == ParticleSpace::Host)
+    max = max_kernel<Kokkos::Serial>(size, state_ptr);
 
   return max;
 }

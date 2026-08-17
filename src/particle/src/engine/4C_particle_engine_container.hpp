@@ -379,21 +379,27 @@ namespace Particle
      * \brief get minimum stored value of state in container
      *
      *
-     * \param[in] state particle state
+     * \param[in] state        particle state
+     * \param[in] space_option particle space (optional), defaults to last updated space if unset,
+     * or device space if both are in sync
      *
      * \return minimum stored value of state in container
      */
-    double get_min_value_of_state(ParticleState state) const;
+    double get_min_value_of_state(
+        ParticleState state, std::optional<ParticleSpace> space_option = std::nullopt) const;
 
     /*!
      * \brief get maximum stored value of state in container
      *
      *
-     * \param[in] state particle state
+     * \param[in] state        particle state
+     * \param[in] space_option particle space (optional), defaults to last updated space if unset,
+     * or device space if both are in sync
      *
      * \return maximum stored value of state in container
      */
-    double get_max_value_of_state(ParticleState state) const;
+    double get_max_value_of_state(
+        ParticleState state, std::optional<ParticleSpace> space_option = std::nullopt) const;
 
    private:
     //! size of particles container

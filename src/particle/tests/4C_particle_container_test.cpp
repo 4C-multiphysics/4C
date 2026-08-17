@@ -579,14 +579,17 @@ namespace
 
   TEST_F(ParticleContainerTest, GetMinValueOfState)
   {
-    EXPECT_NEAR(container_->get_min_value_of_state(Particle::State::Mass), 0.12, 1e-14);
     EXPECT_NEAR(container_->get_min_value_of_state(Particle::State::Position), -8.54, 1e-14);
+    EXPECT_NEAR(container_->get_min_value_of_state(Particle::State::Mass, Particle::Space::Device),
+        0.12, 1e-14);
   }
 
   TEST_F(ParticleContainerTest, GetMaxValueOfState)
   {
     EXPECT_NEAR(container_->get_max_value_of_state(Particle::State::Mass), 12.34, 1e-14);
-    EXPECT_NEAR(container_->get_max_value_of_state(Particle::State::Position), 61.0, 1e-14);
+    EXPECT_NEAR(
+        container_->get_max_value_of_state(Particle::State::Position, Particle::Space::Device),
+        61.0, 1e-14);
   }
 
   TEST_F(ParticleContainerTest, GetStoredStates)
