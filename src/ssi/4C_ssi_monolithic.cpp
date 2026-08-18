@@ -583,7 +583,7 @@ void SSI::SsiMono::read_restart(int restart)
   if (ssi_interface_contact())
   {
     setup_contact_strategy();
-    set_ssi_contact_states(scatra_field()->phinp());
+    set_ssi_contact_states(*scatra_field()->phinp());
   }
 }
 
@@ -591,7 +591,7 @@ void SSI::SsiMono::read_restart(int restart)
  *--------------------------------------------------------------------------*/
 void SSI::SsiMono::prepare_time_loop()
 {
-  set_struct_solution(*structure_field()->dispnp(), structure_field()->velnp(),
+  set_struct_solution(*structure_field()->dispnp(), *structure_field()->velnp(),
       is_s2i_kinetics_with_pseudo_contact());
 
   // calculate initial potential field if needed
@@ -612,7 +612,7 @@ void SSI::SsiMono::prepare_time_step()
   increment_time_and_step();
 
   // pass structural degrees of freedom to scalar transport discretization
-  set_struct_solution(*structure_field()->dispnp(), structure_field()->velnp(),
+  set_struct_solution(*structure_field()->dispnp(), *structure_field()->velnp(),
       is_s2i_kinetics_with_pseudo_contact());
 
   // prepare time step for scalar transport field
@@ -626,7 +626,7 @@ void SSI::SsiMono::prepare_time_step()
   // pass scalar transport degrees of freedom to structural discretization
   // has to be called AFTER ScaTraField()->prepare_time_step() to ensure
   // consistent scalar transport state vector with valid Dirichlet conditions
-  set_scatra_solution(scatra_field()->phinp());
+  set_scatra_solution(*scatra_field()->phinp());
   if (is_scatra_manifold()) set_scatra_manifold_solution(*scatra_manifold()->phinp());
 
   // evaluate temperature from function and set to structural discretization
@@ -1168,9 +1168,9 @@ void SSI::SsiMono::distribute_solution_all_fields(const bool restore_velocity)
   }
 
   // distribute states to other fields
-  set_struct_solution(*structure_field()->dispnp(), structure_field()->velnp(),
+  set_struct_solution(*structure_field()->dispnp(), *structure_field()->velnp(),
       is_s2i_kinetics_with_pseudo_contact());
-  set_scatra_solution(scatra_field()->phinp());
+  set_scatra_solution(*scatra_field()->phinp());
   if (is_scatra_manifold()) set_scatra_manifold_solution(*scatra_manifold()->phinp());
 }
 

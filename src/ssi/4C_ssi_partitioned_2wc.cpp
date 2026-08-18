@@ -148,7 +148,7 @@ void SSI::SSIPart2WC::do_struct_step()
   if (is_s2i_kinetics_with_pseudo_contact()) structure_field()->determine_stress_strain();
 
   //  set mesh displacement and velocity fields
-  return set_struct_solution(*structure_field()->dispnp(), structure_field()->velnp(),
+  return set_struct_solution(*structure_field()->dispnp(), *structure_field()->velnp(),
       is_s2i_kinetics_with_pseudo_contact());
 }
 
@@ -168,10 +168,10 @@ void SSI::SSIPart2WC::do_scatra_step()
   scatra_field()->solve();
 
   // set structure-based scalar transport values
-  set_scatra_solution(scatra_field()->phinp());
+  set_scatra_solution(*scatra_field()->phinp());
 
   // set micro scale value (projected to macro scale) to structure field
-  if (macro_scale()) set_micro_scatra_solution(scatra_field()->phinp_micro());
+  if (macro_scale()) set_micro_scatra_solution(*scatra_field()->phinp_micro());
 
   // evaluate temperature from function and set to structural discretization
   evaluate_and_set_temperature_field();
@@ -186,7 +186,7 @@ void SSI::SSIPart2WC::prepare_time_loop()
   constexpr bool force_prepare = true;
   structure_field()->prepare_output(force_prepare);
   structure_field()->output();
-  set_struct_solution(*structure_field()->dispnp(), structure_field()->velnp(), false);
+  set_struct_solution(*structure_field()->dispnp(), *structure_field()->velnp(), false);
   scatra_field()->prepare_time_loop();
 }
 
@@ -197,15 +197,15 @@ void SSI::SSIPart2WC::prepare_time_step(bool printheader)
 {
   increment_time_and_step();
 
-  set_struct_solution(*structure_field()->dispnp(), structure_field()->velnp(), false);
+  set_struct_solution(*structure_field()->dispnp(), *structure_field()->velnp(), false);
   scatra_field()->prepare_time_step();
 
   // if adaptive time stepping and different time step size: calculate time step in scatra
   // (prepare_time_step() of Scatra) and pass to other fields
   if (scatra_field()->time_step_adapted()) set_dt_from_scatra_to_ssi();
 
-  set_scatra_solution(scatra_field()->phinp());
-  if (macro_scale()) set_micro_scatra_solution(scatra_field()->phinp_micro());
+  set_scatra_solution(*scatra_field()->phinp());
+  if (macro_scale()) set_micro_scatra_solution(*scatra_field()->phinp_micro());
 
   // NOTE: the predictor of the structure is called in here
   structure_field()->prepare_time_step();
@@ -493,7 +493,7 @@ void SSI::SSIPart2WCSolidToScatraRelax::outer_loop()
     // begin nonlinear solver / outer iteration ***************************
 
     // set relaxed mesh displacements and velocity field
-    set_struct_solution(*dispnp, velnp, is_s2i_kinetics_with_pseudo_contact());
+    set_struct_solution(*dispnp, *velnp, is_s2i_kinetics_with_pseudo_contact());
 
     // solve scalar transport equation
     do_scatra_step();
@@ -718,7 +718,7 @@ void SSI::SSIPart2WCScatraToSolidRelax::outer_loop()
     // begin nonlinear solver / outer iteration ***************************
 
     // set relaxed scalars
-    set_scatra_solution(phinp);
+    set_scatra_solution(*phinp);
 
     // evaluate temperature from function and set to structural discretization
     evaluate_and_set_temperature_field();

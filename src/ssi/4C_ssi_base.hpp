@@ -215,24 +215,23 @@ namespace SSI
 
     /// set structure solution on other fields
     void set_struct_solution(const Core::LinAlg::Vector<double>& disp,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vel, bool set_mechanical_stress);
+        const Core::LinAlg::Vector<double>& vel, bool set_mechanical_stress) const;
 
     /// set scatra solution on other fields
-    virtual void set_scatra_solution(std::shared_ptr<const Core::LinAlg::Vector<double>> phi) const;
+    void set_scatra_solution(const Core::LinAlg::Vector<double>& phi) const;
 
     /*!
      * @brief set contact states needed for evaluation of ssi contact
      *
      * @param[in] phi  scatra state to be set to contact nitsche strategy
      */
-    void set_ssi_contact_states(std::shared_ptr<const Core::LinAlg::Vector<double>> phi) const;
+    void set_ssi_contact_states(const Core::LinAlg::Vector<double>& phi) const;
 
     /// set micro scatra solution on other fields
-    virtual void set_micro_scatra_solution(
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi) const;
+    void set_micro_scatra_solution(const Core::LinAlg::Vector<double>& phi) const;
 
     /// set temperature field  by evaluating time dependent function
-    void evaluate_and_set_temperature_field();
+    void evaluate_and_set_temperature_field() const;
 
     //! get bool indicating if we have at least one ssi interface meshtying condition
     [[nodiscard]] bool ssi_interface_meshtying() const { return ssi_interface_meshtying_; }
@@ -300,7 +299,7 @@ namespace SSI
 
     //! set structure stress state on scatra field
     void set_mechanical_stress_state(
-        std::shared_ptr<const Core::LinAlg::Vector<double>> mechanical_stress_state) const;
+        const Core::LinAlg::Vector<double>& mechanical_stress_state) const;
 
     void set_modelevaluator_base_ssi(
         std::shared_ptr<Solid::ModelEvaluator::Generic> modelevaluator_ssi_base)
@@ -374,10 +373,10 @@ namespace SSI
     [[nodiscard]] bool is_init() const { return isinit_; }
 
     /// set structure mesh displacement on scatra field
-    void set_mesh_disp(const Core::LinAlg::Vector<double>& disp);
+    void set_mesh_disp(const Core::LinAlg::Vector<double>& disp) const;
 
     /// set structure velocity field on scatra field
-    void set_velocity_fields(std::shared_ptr<const Core::LinAlg::Vector<double>> vel);
+    void set_velocity_fields(const Core::LinAlg::Vector<double>& vel) const;
 
     //! different time step size between scatra field and structure field
     const bool diff_time_step_size_;
