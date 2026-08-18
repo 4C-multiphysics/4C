@@ -24,17 +24,12 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*/
 Mat::PAR::ElastHyper::ElastHyper(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
-      nummat_(matdata.parameters.get<int>("NUMMAT")),
+      nummat_(static_cast<int>(matdata.parameters.get<std::vector<int>>("MATIDS").size())),
       matids_(matdata.parameters.get<std::vector<int>>("MATIDS")),
       density_(matdata.parameters.get<double>("DENS")),
       polyconvex_(matdata.parameters.get<int>("POLYCONVEX"))
 
 {
-  // check if sizes fit
-  if (nummat_ != (int)matids_.size())
-    FOUR_C_THROW("number of materials {} does not fit to size of material vector {}", nummat_,
-        matids_.size());
-
   // output, that polyconvexity is checked
   if (polyconvex_ != 0) std::cout << "Polyconvexity of your simulation is checked." << std::endl;
 }
