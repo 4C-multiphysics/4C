@@ -279,29 +279,29 @@ void Particle::ParticleContainer::remove_particle(int index)
   --particlestored_;
 }
 
-const double* Particle::ParticleContainer::get_ptr_to_state(
-    ParticleState state, int index, ParticleSpace space) const
+inline double* Particle::ParticleContainer::get_ptr_to_state_internal(
+    ParticleState state, int index, ParticleSpace space, bool sync) const
 {
-  FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
-      EnumTools::enum_name(state));
-
-  FOUR_C_ASSERT(index >= 0 and index < particlestored_,
-      "can not return pointer to state of particle as index {} out of bounds!", index);
-
   const int state_idx = static_cast<int>(state);
 
   if (space == ParticleSpace::Host)
   {
     if (!states_->is_dual_valid_[state_idx])
       return &(states_->host_[state_idx].data()[index * statedim_[state_idx]]);
-    states_->dual_[state_idx].sync<Kokkos::HostSpace>();
+    if (sync)
+      states_->dual_[state_idx].sync<Kokkos::HostSpace>();
+    else
+      states_->dual_[state_idx].clear_sync_state();
     return &(
         states_->dual_[state_idx].view<Kokkos::HostSpace>().data()[index * statedim_[state_idx]]);
   }
   else if (space == ParticleSpace::Device)
   {
     if (!states_->is_dual_valid_[state_idx]) init_state_dual(state);
-    states_->dual_[state_idx].sync<Kokkos::DefaultExecutionSpace>();
+    if (sync)
+      states_->dual_[state_idx].sync<Kokkos::DefaultExecutionSpace>();
+    else
+      states_->dual_[state_idx].clear_sync_state();
     return &(states_->dual_[state_idx]
             .view<Kokkos::DefaultExecutionSpace>()
             .data()[index * statedim_[state_idx]]);
@@ -312,11 +312,23 @@ const double* Particle::ParticleContainer::get_ptr_to_state(
   }
 }
 
-double* Particle::ParticleContainer::get_ptr_to_state_writable(
-    ParticleState state, int index, ParticleSpace space)
+const double* Particle::ParticleContainer::get_ptr_to_state(
+    ParticleState state, int index, ParticleSpace space) const
 {
-  auto ptr = const_cast<double*>(
-      const_cast<const ParticleContainer&>(*this).get_ptr_to_state(state, index, space));
+  FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
+      EnumTools::enum_name(state));
+
+  FOUR_C_ASSERT(index >= 0 and index < particlestored_,
+      "can not return pointer to state of particle as index {} out of bounds!", index);
+
+  return get_ptr_to_state_internal(state, index, space, true);
+}
+
+double* Particle::ParticleContainer::get_ptr_to_state_writable(
+    ParticleState state, int index, ParticleSpace space, bool sync)
+{
+  auto ptr = const_cast<const ParticleContainer&>(*this).get_ptr_to_state_internal(
+      state, index, space, sync);
 
   const int state_idx = static_cast<int>(state);
 
@@ -419,7 +431,7 @@ void Particle::ParticleContainer::set_state(
 
   ParticleSpace space =
       space_option.value_or(is_sync_device(state) ? ParticleSpace::Device : ParticleSpace::Host);
-  double* state_ptr = get_ptr_to_state_writable(state, 0, space);
+  double* state_ptr = get_ptr_to_state_writable(state, 0, space, false);
   const int dim = statedim_[static_cast<int>(state)];
 
   if (space == ParticleSpace::Device)
@@ -456,7 +468,7 @@ void Particle::ParticleContainer::clear_state(
 
   ParticleSpace space =
       space_option.value_or(is_sync_device(state) ? ParticleSpace::Device : ParticleSpace::Host);
-  double* state_ptr = get_ptr_to_state_writable(state, 0, space);
+  double* state_ptr = get_ptr_to_state_writable(state, 0, space, false);
   const int size = particlestored_ * statedim_[static_cast<int>(state)];
 
   if (space == ParticleSpace::Device)

@@ -183,7 +183,7 @@ namespace Particle
      *
      * \param[in] state particle state
      * \param[in] index index of particle in container
-     * \param[in] space memory space to access
+     * \param[in] space memory space to access, default `Particle::Space::Host`
      *
      * \return pointer with read-only access to particle state
      */
@@ -230,12 +230,13 @@ namespace Particle
      *
      * \param[in] state particle state
      * \param[in] index index of particle in container
-     * \param[in] space memory space to access
+     * \param[in] space memory space to access, default `Particle::Space::Host`
+     * \param[in] sync  optional flag to sync values to target `space`, default `true`
      *
      * \return pointer with writable access to particle state
      */
-    double* get_ptr_to_state_writable(
-        ParticleState state, int index, ParticleSpace space = ParticleSpace::Host);
+    double* get_ptr_to_state_writable(ParticleState state, int index,
+        ParticleSpace space = ParticleSpace::Host, bool sync = true);
 
     /*!
      * \brief conditionally get writable pointer to state of a particle at index
@@ -456,6 +457,22 @@ namespace Particle
      * \return none
      */
     bool is_sync_device(ParticleState state) const;
+
+    /*!
+     * \brief internal function to get pointer to state of a particle at index
+     *
+     * \note This is only called by `get_ptr_to_state` and `get_ptr_to_state_writable`
+     *
+     *
+     * \param[in] state particle state
+     * \param[in] index index of particle in container
+     * \param[in] space memory space to access
+     * \param[in] sync  flag to sync values to target `space`
+     *
+     * \return pointer with access to particle state
+     */
+    inline double* get_ptr_to_state_internal(
+        ParticleState state, int index, ParticleSpace space, bool sync) const;
   };
 
 }  // namespace Particle
