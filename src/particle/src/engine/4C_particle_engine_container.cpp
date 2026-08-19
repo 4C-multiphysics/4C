@@ -430,6 +430,7 @@ void Particle::ParticleContainer::set_state(
         val_view, Kokkos::View<double*, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
                       val.data(), val.size()));
     set_kernel<Kokkos::DefaultExecutionSpace>(particlestored_, dim, val_view.data(), state_ptr);
+    Kokkos::fence();
   }
   else if (space == ParticleSpace::Host)
   {
