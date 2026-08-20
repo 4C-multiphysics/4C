@@ -28,6 +28,7 @@
 #include <Teuchos_ParameterList.hpp>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -414,6 +415,20 @@ namespace Mat
         return error_registration_settings_;
       }
 
+      //! is the Adaptive Estimate Interpolation used?
+      [[nodiscard]] bool use_adaptive_estimate_interpolation() const
+      {
+        return adaptive_estimate_interpolation_params_.use_adaptive_estimate_interpolation;
+      }
+
+      //! get Adaptive Estimate Interpolation parameters
+      [[nodiscard]] const InelasticDefgradTransvIsotropElastViscoplastUtils::
+          AdaptiveEstimateInterpolation::AEIParams&
+          adaptive_estimate_interpolation_params() const
+      {
+        return adaptive_estimate_interpolation_params_;
+      }
+
      private:
       //! ID of the viscoplasticity law
       const int viscoplastic_law_id_;
@@ -468,6 +483,10 @@ namespace Mat
       //! get error registration settings for the constitutive update
       const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings
           error_registration_settings_;
+
+      //! Adaptive Estimate Interpolation parameters
+      const InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation::
+          AEIParams adaptive_estimate_interpolation_params_;
     };
   }  // namespace PAR
 
@@ -1570,21 +1589,20 @@ namespace Mat
      * deformation tensor, given inverse plastic deformation gradient and given equivalent
      * plastic strain
      *
-     * @param[in] CM right Cauchy-Green deformation tensor \f[ \boldsymbol{C} \f] in matrix form
-     * @param[in] temperature absolute temperature
+     * @param[in] local_integration_input input for the local time integration
      * @param[in] iFinM inverse inelastic deformation gradient
      *                  \f[ \boldsymbol{F}_{\text{in}}^{-1} \f] in matrix form
      * @param[in] plastic_strain plastic strain  \f$ \varepsilon_{\text{p}} \f$
      * @param[out] err_status error status
-     * @param[in] dt time step (or substep) length used for time integration
      * @param[in] eval_type evaluation type: full evaluation or only
      * partial evaluation, e.g. stop once the plastic strain rate has
      * been evaluated
      */
     InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantities evaluate_state_quantities(
-        const Core::LinAlg::Matrix<3, 3>& CM, const double temperature,
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
         const Core::LinAlg::Matrix<3, 3>& iFinM, const double plastic_strain,
-        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status, const double dt,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
         const InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityEvalType& eval_type)
         const;
 
@@ -1592,14 +1610,11 @@ namespace Mat
      * Cauchy-Green deformation tensor, the inverse plastic deformation gradient and the equivalent
      * plastic strain (for a given/calculated state)
      *
-     * @param[in] CM right Cauchy-Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
-     * @param[in] temperature absolute temperature
+     * @param[in] local_integration_input input for the local time integration
      * @param[in] iFinM inverse inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1}
      *                  \f$ in matrix form
      * @param[in] plastic_strain plastic strain  \f$ \varepsilon_{\text{p}} \f$
      * @param[out] err_status error status
-     * @param[in] dt time step length  \f$ \Delta t
-     * \f$ (used for the integration)
      * @param[in] eval_state boolean: do we want to also evaluate the current state first (true)
      *                       or is this already available from the
      *                       current state variables (false)
@@ -1608,10 +1623,11 @@ namespace Mat
      * been evaluated
      */
     InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivatives
-    evaluate_state_quantity_derivatives(const Core::LinAlg::Matrix<3, 3>& CM,
-        const double temperature, const Core::LinAlg::Matrix<3, 3>& iFinM,
-        const double plastic_strain,
-        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status, const double dt,
+    evaluate_state_quantity_derivatives(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        const Core::LinAlg::Matrix<3, 3>& iFinM, const double plastic_strain,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
         const InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivEvalType&
             eval_type,
         const bool eval_state = false) const;
@@ -1696,6 +1712,12 @@ namespace Mat
     //! vector tracking whether there is plastic flow at each Gauss point
     std::vector<bool> is_plastic_gp_;
 
+    //! dedicated Adaptive Estimate Interpolation manager containing the fundamental logic of the
+    //! scheme
+    std::optional<InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation::
+            AEIManager>
+        adaptive_estimate_interp_manager_;
+
     /*!
      * @brief Calculate the Holzapfel gamma and delta values of the isotropic elastic material
      * components
@@ -1714,17 +1736,13 @@ namespace Mat
      * i.e., the deformation in the current time step is purely elastic with no viscoplastic
      * contribution.
      *
-     * @param[in] CM right Cauchy_Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
-     * @param[in] temperature absolute temperature
-     * @param[in] iFinM_pred predictor of the inverse inelastic deformation gradient \f$
-     * \bm{F}_{\text{in, pred}} \f$
-     * @param[in] plastic_strain_pred predictor of the plastic strain \f$ \varepsilon_{\text{p,
-     * pred}} \f$
+     * @param[in] local_integration_input input for the local time integration
      * @param[out] err_status error status
      * @return boolean value: true (predictor = solution), or false (predictor != solution)
      */
-    bool check_elastic_predictor(const Core::LinAlg::Matrix<3, 3>& CM, const double temperature,
-        const Core::LinAlg::Matrix<3, 3>& iFinM_pred, const double plastic_strain_pred,
+    bool check_elastic_predictor(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /*!
@@ -1733,24 +1751,18 @@ namespace Mat
      * @note The state quantities (class variable) are updated in this method, since they
      * are used for the computation of the residual!
      *
-     * @param[in] CM right Cauchy_Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
-     * @param[in] temperature absolute temperature
+     * @param[in] local_integration_input input for the local time integration
      * @param[in] x vector of Local Newton Loop unknowns, composed of the components of the
      * inverse inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1} \f$ and plastic
      * strain \f$ \varepsilon_{\text{p}} \f$
-     * @param[in] last_plastic_strain plastic strain \f$ \varepsilon_{\text{p}, n}\f$ at the
-     * previous time instant
-     * @param[in] last_iFinM last inverse inelastic deformation gradient
-     *                      \f$ \boldsymbol{F}_{\text{in}, n}^{-1} \f$ at the previous time instant
-     * in matrix form
-     * @param[in] dt time step (or substep) length used for time integration
      * @param[out] err_status error status
      * @return  residual of the LNL equations
      */
-    Core::LinAlg::Matrix<10, 1> evaluate_local_newton_residual(const Core::LinAlg::Matrix<3, 3>& CM,
-        const double temperature, const Core::LinAlg::Matrix<10, 1>& x,
-        const double last_plastic_strain, const Core::LinAlg::Matrix<3, 3>& last_iFinM,
-        const double dt, InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+    Core::LinAlg::Matrix<10, 1> evaluate_local_newton_residual(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        const Core::LinAlg::Matrix<10, 1>& x,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /*!
      * @brief   After an unsuccessful convergence check and after the maximum number of local
@@ -1787,25 +1799,18 @@ namespace Mat
      * They require the state quantities, which were evaluated and stored
      * previously when calculating the residual.
      *
-     * @param[in] CM right Cauchy_Green deformation tensor \f$ \boldsymbol{C} \f$ in matrix form
-     * @param[in] temperature absolute temperature
+     * @param[in] local_integration_input input for the local time integration
      * @param[in] x vector of Local Newton Loop unknowns, composed of the components of the
      * inverse inelastic deformation gradient \f$ \boldsymbol{F}_{\text{in}}^{-1} \f$ and plastic
      * strain \f$ \varepsilon_{\text{p}} \f$
-     * @param[in] last_plastic_strain last plastic strain \f$ \varepsilon_{\text{p}, n}\f$ at the
-     * previous time instant
-     * @param[in] last_iFinM last inverse plastic deformation gradient
-     *                      \f$ \boldsymbol{F}_{\text{in}, n}^{-1} \f$ at the previous time instant
-     * in matrix form
-     * @param[in] dt time step (or substep) length used for time integration
      * @param[out] err_status error status
      * @return 10x10 jacobian matrix of the Local Newton Loop and of the linearization
      *         \f$ \boldsymbol{J} \f$
      */
     Core::LinAlg::Matrix<10, 10> evaluate_local_newton_jacobian(
-        const Core::LinAlg::Matrix<3, 3>& CM, const double temperature,
-        const Core::LinAlg::Matrix<10, 1>& x, const double last_plastic_strain,
-        const Core::LinAlg::Matrix<3, 3>& last_iFinM, const double dt,
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        const Core::LinAlg::Matrix<10, 1>& x,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /*!
@@ -1814,17 +1819,15 @@ namespace Mat
      * @note Uses local substepping if specified so by the user; the current time step is halved if
      * problematic numerical states, marked with an error status, are encountered
      *
-     * @param[in] deftensors deformation tensors used for local time integration (reset if
+     * @param[in] local_integration_input input for the local time integration (reset if
      * substepping is used)
-     * @param[in] temperature absolute temperature
      * @param[out] err_status error status
      * @return solution vector of the Local Newton Loop, structured analogously to the initial guess
      * x
      */
     Core::LinAlg::Matrix<10, 1> viscoplastic_correction(
-        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationDeformationTensors&
-            deftensors,
-        const double temperature,
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /*!
@@ -1834,17 +1837,13 @@ namespace Mat
      * @note The method does not perform local substepping internally, but only determines the
      * solution of a single substep in the substep loop.
      *
-     * @param[in] deftensors deformation tensors used for local time integration
-     * @param[in] temperature absolute temperature
-     * @param[in] last_plastic_strain plastic strain at the previous time instant
-     * @param[in] dt time step size to use for evaluation
+     * @param[in] local_integration_input input for the local time integration
      * @param[out] err_status error status
      * @return solution of the Local Newton Loop
      */
     Core::LinAlg::Matrix<10, 1> local_newton_loop(
-        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationDeformationTensors&
-            deftensors,
-        const double temperature, const double last_plastic_strain, const double dt,
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
 
@@ -1894,14 +1893,14 @@ namespace Mat
      * Currently, analytical off-diagonal stiffness integration is implemented
      * only for logarithmic local time integration.
      *
-     * @param CredM Right Cauchy-Green deformation tensor.
-     * @param temperature Current temperature.
-     * @param err_status Error flag describing the evaluation status.
+     * @param[in] local_integration_input input for the local time integration
+     * @param[out] err_status Error flag describing the evaluation status.
      * @return derivatives of the history variables with respect to temperature
      */
     InelasticDefgradTransvIsotropElastViscoplastUtils::HistoryVariablesDerivativesWrtTemperature
-    evaluate_history_variables_wrt_temperature(const Core::LinAlg::Matrix<3, 3>& CredM,
-        const double temperature,
+    evaluate_history_variables_wrt_temperature(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /**
@@ -1916,16 +1915,16 @@ namespace Mat
      * a local linear system is assembled and solved
      * to determine the total Cauchy-Green derivatives of the history variables.
      *
-     * @param CredM Right Cauchy-Green deformation tensor.
-     * @param temperature Current temperature.
-     * @param err_status Error flag describing the evaluation status.
+     * @param[in] local_integration_input input for the local time integration
+     * @param[out] err_status Error flag describing the evaluation status.
      *
      * @return derivatives of the history variables with respect to the right Cauchy-Green
      * deformation tensor
      */
     InelasticDefgradTransvIsotropElastViscoplastUtils::HistoryVariablesDerivativesWrtCauchyGreen
-    evaluate_history_variables_wrt_cauchy_green(const Core::LinAlg::Matrix<3, 3>& CredM,
-        const double temperature,
+    evaluate_history_variables_wrt_cauchy_green(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /*!
@@ -1935,14 +1934,14 @@ namespace Mat
      * directly. Otherwise, this method evaluates the full state quantities for the current state
      * and fills the reduced coupling-state cache.
      *
-     * @param[in] CredM Right Cauchy-Green deformation tensor
-     * @param[in] temperature Current temperature
+     * @param[in] local_integration_input input for the local time integration
      * @param[out] err_status Error flag describing the evaluation status
      * @return thermo-mechanical coupling state
      */
     InelasticDefgradTransvIsotropElastViscoplastUtils::ThermoMechanicalCouplingState
-    evaluate_thermo_mechanical_coupling_state(const Core::LinAlg::Matrix<3, 3>& CredM,
-        const double temperature,
+    evaluate_thermo_mechanical_coupling_state(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
     /*!
@@ -1952,14 +1951,14 @@ namespace Mat
      * returned directly. Otherwise, this method evaluates the full state quantities and derivatives
      * for the current state and fills the reduced coupling-state cache.
      *
-     * @param[in] CredM Right Cauchy-Green deformation tensor
-     * @param[in] temperature Current temperature
+     * @param[in] local_integration_input input for the local time integration
      * @param[out] err_status Error flag describing the evaluation status
      * @return thermo-mechanical coupling state derivatives
      */
     InelasticDefgradTransvIsotropElastViscoplastUtils::ThermoMechanicalCouplingStateDerivatives
-    evaluate_thermo_mechanical_coupling_state_derivatives(const Core::LinAlg::Matrix<3, 3>& CredM,
-        const double temperature,
+    evaluate_thermo_mechanical_coupling_state_derivatives(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
         InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
 
 
@@ -1988,11 +1987,14 @@ namespace Mat
      *
      *
      * @param[in] err_status error status
+     * @param[in] local_integration_input input required for the local time integration
      * @param[out] eval_action action to be performed subsequently in the local Newton Loop
      */
     void manage_evaluation(
         const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
-        InelasticDefgradTransvIsotropElastViscoplastUtils::EvaluationAction& eval_action) const;
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::EvaluationAction& eval_action);
 
     /*!
      * @brief Evaluate the additional cmat stiffness tensor using a perturbation-based approach, if
@@ -2070,20 +2072,156 @@ namespace Mat
      * If adaptive estimate interpolation is used, this method also prepares everything for the
      * further re-estimations.
      *
-     * @param[in] dt time step / substep size
-     * @param[in] deftensors deformation tensors used for local time integration
-     * @param[in] last_plastic_strain equivalent plastic strain at the previously converged
-     * time instant
-     * @param[in] err_status error status after the procedure
+     * @param[in] local_integration_input input for the local time integration
+     * @param[out] err_status error status after the procedure
      * @return initial estimate containing the inverse inelastic defgrad (components 0 - 8), and
      * the equivalent plastic strain (component 9) for the Local Newton within this time step /
      * substep
      */
-    [[nodiscard]] Core::LinAlg::Matrix<10, 1> determine_local_newton_init_estimate(const double dt,
-        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationDeformationTensors&
-            deftensors,
-        const double last_plastic_strain,
-        const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status) const;
+    [[nodiscard]] Core::LinAlg::Matrix<10, 1> determine_local_newton_init_estimate(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+
+    //! verify whether plastic flow is exhibited based on the current value for the equivalent
+    //! stress \f$ \overline{\sigma}_{n+1} \f$, and the plastic strain at the previous time instant
+    //! \f$ \varepsilon_{\text{p},n} \f$ -> Note that this function includes both viscoplastic flow
+    //! rules with, and without yield surfaces, whereby we assume for the latter that plastic flow
+    //! is exhibited whenever the equivalent stress exceeds numerical 0.0
+    bool exhibits_plastic_flow(const double curr_equiv_stress, const double last_plastic_strain)
+    {
+      // numerical tolerance for stresses = 0.0
+      const double numerical_tol = 1.0e-12;
+
+      if (viscoplastic_law_->uses_yield_surface())
+      {
+        return (viscoplastic_law_->evaluate_stress_ratio(curr_equiv_stress, last_plastic_strain) >=
+                1.0);
+      }
+      else
+      {
+        return (viscoplastic_law_->evaluate_stress_ratio(curr_equiv_stress, last_plastic_strain) >=
+                numerical_tol);
+      }
+    }
+
+
+    /*!
+     * @brief Asserts whether the elastic and the preliminary plastic predictors (AEI) exhibit
+     * suitable stress values with respect to the lowest meaningful bound \f$ S \f$, prior to the
+     * iterative construction of the plastic predictor
+     *
+     * @param[in] local_integration_input input for the local time integration
+     * @param[in] invS inverse lowest meaningful bound \f$ 1 / S \f$
+     */
+    void assert_predictor_stress_consistency(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        const double invS);
+
+    /*!
+     * @brief Construct the plastic predictor for the Adaptive Estimate Interpolation algorithm
+     via the dedicated manager and its utilities.
+     *
+     * @param[in] local_integration_input input for the local time integration
+     * @param[out] err_status error status after the procedure
+     */
+    void construct_plastic_predictor(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+
+    /*!
+     * @brief Interpolates initial / updated estimates for the Local Newton loop between the
+     * elastic and plastic predictors according to the Adaptive Estimate Interpolation algorithm
+     *
+     * @param[in] local_integration_input input for the local time integration
+     * @param[out] err_status error status after the procedure
+     * @return initial / updated estimate to be used within the Local Newton
+     */
+    Core::LinAlg::Matrix<10, 1> interpolate_estimate(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+
+    /*!
+     * @brief Integrates the equivalent plastic strain based on its evolution equation; relevant
+     * for the plastic strain update / "interpolation" within the Adaptive Estimate Interpolation
+     * procedures
+     *
+     * @param[in] integration_input struct containing variables required for hardening integration
+     * @param[out] err_status error status after the procedure
+     */
+    double integrate_plastic_strain(
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation::
+            InputHardeningIntegration& integration_input,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status) const;
+
+    /*!
+     * @brief Verifies whether the specified estimate candidate is a valid Local Newton estimate,
+    i.e., whether it is numerically admissible, meaning that Local Newton residual and Jacobian can
+    be evaluated
+     * without triggering overflow.
+     * Note: the verification that plastic flow is exhibited should happen beforehand, this function
+    does not verify this, as is also the case in Algorithm 2 of the paper (Ana, Schmidt, Wall:
+    Adaptive Estimate Interpolation: Accelerating Local Newton-Raphson Schemes in Computational
+    Plasticity and Viscoplasticity, Preprint).
+     *
+     * @param[in] local_integration_input input for the local time integration
+     * @param[in] iFin_candidate estimate candidate: inverse inelastic deformation gradient
+     * @param[in] plastic_strain_candidate estimate candidate: equivalent plastic strain
+     * @return error status; no_errors means that this is a valid estimate for the Local Newton
+     * scheme
+     */
+    [[nodiscard]] InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType
+    verify_estimate_candidate(
+        const Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        const Core::LinAlg::Matrix<3, 3>& iFin_candidate, const double plastic_strain_candidate);
+
+
+    /*!
+     * @brief Perform the re-estimation procedure of the Adaptive Estimate Interpolation
+     * algorithm, to effectively restart the Local Newton loop
+     *
+     * @param[in] local_integration_input input for the local time integration
+     * @param[out] eval_action action to be performed subsequently in the Local Newton scheme
+     * @return updated estimate for the Local Newton scheme
+     */
+    Core::LinAlg::Matrix<10, 1> reestimate_to_restart_local_newton(
+        const Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::EvaluationAction& eval_action);
+
+
+    /*!
+     * @brief Reinterpolates an updated estimate using the updated interpolation interval
+     *
+     * @note Helper function to be called within the re-estimation procedure of the Adaptive
+     * Estimate Interpolation
+     *
+     * @param[in] local_integration_input input for the local time integration
+     * @param[out] eval_action action to be performed subsequently in the Local Newton scheme
+     * @return updated estimate for the Local Newton scheme
+     */
+    Core::LinAlg::Matrix<10, 1> reinterpolate_with_updated_bounds(
+        const Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
+            local_integration_input,
+        InelasticDefgradTransvIsotropElastViscoplastUtils::EvaluationAction& eval_action);
+
+    //! updates the starting point used at a given Gauss point within the Adaptive Estimate
+    //! Interpolation algorithm for the next time step
+    void update_aei_starting_point(const unsigned int gp);
+
+    //! get the input needed for determining the interpolation starting point (Adaptive Estimate
+    //! Interpolation) based on the equivalent stress of the previous solution, between the elastic
+    //! and the plastic predictors (see I_HIST method within the paper) -> Note that this input is
+    //! determined based on the current_ values of local integration variables for the NEXT
+    //! timestep, so the function should be called before updating last_ <- current_ in the update
+    //! method
+    InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation::
+        InputEquivStressStartingPoint
+        get_input_equiv_stress_starting_point(const unsigned int gp);
   };
 }  // namespace Mat
 

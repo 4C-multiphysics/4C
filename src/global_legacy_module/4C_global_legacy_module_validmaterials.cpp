@@ -2875,7 +2875,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     using namespace Core::IO::InputSpecBuilders::Validators;
     namespace ViscoplastUtils = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils;
-
+    namespace AEI =
+        Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation;
     known_materials[Core::Materials::mfi_transv_isotrop_elast_viscoplast] = group(
         "MAT_InelasticDefgradTransvIsotropElastViscoplast",
         {parameter<int>(
@@ -3039,6 +3040,188 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                     max_plastic_strain_deriv_incr)})},
                 {.description = "Settings for registering errors within the procedures used for "
                                 "constitutive update",
+                    .required = false}),
+            group<AEI::AEIParams>("ADAPTIVE_ESTIMATE_INTERPOLATION",
+                {
+                    parameter<bool>("USE_ADAPTIVE_ESTIMATE_INTERPOLATION",
+                        {.description = "use adaptive estimate interpolation?",
+                            .default_value = true,
+                            .store =
+                                in_struct(&AEI::AEIParams::use_adaptive_estimate_interpolation)}),
+                    parameter<double>("ELASTIC_PREDICTOR_ZERO_COMPONENT_THRESHOLD",
+                        {.description = "components of the elastic predictor (specifically: the "
+                                        "respective elastic deformation gradient) smaller than "
+                                        "this threshold are set to 0.0 to avoid "
+                                        "unnecessary, numerical rotations",
+                            .default_value = 1.0e-13,
+                            .validator = positive<double>(),
+                            .store = in_struct(
+                                &AEI::AEIParams::elastic_predictor_zero_component_threshold)}),
+                    group<AEI::PlasticPredictorConstructionParams>("PLASTIC_PREDICTOR_CONSTRUCTION",
+                        {
+                            parameter<AEI::PrelimPlasticPredictor::ElasticStretchEigenvalType>(
+                                "ELASTIC_STRETCH_EIGENVAL_TYPE",
+                                {.description = "elastic stretch eigenvalue specification for the "
+                                                "preliminary plastic predictor",
+                                    .default_value = AEI::PrelimPlasticPredictor::
+                                        ElasticStretchEigenvalType::scale_unit,
+                                    .store = in_struct(&AEI::PlasticPredictorConstructionParams::
+                                            elastic_stretch_eigenval_type)}),
+                            parameter<AEI::PrelimPlasticPredictor::ElasticStretchEigenvectType>(
+                                "ELASTIC_STRETCH_EIGENVECT_TYPE",
+                                {.description = "elastic stretch eigenvector specification for the "
+                                                "preliminary plastic predictor",
+                                    .default_value = AEI::PrelimPlasticPredictor::
+                                        ElasticStretchEigenvectType::from_elastic_predictor,
+                                    .store = in_struct(&AEI::PlasticPredictorConstructionParams::
+                                            elastic_stretch_eigenvect_type)}),
+                            parameter<AEI::PrelimPlasticPredictor::ElasticRotationType>(
+                                "ELASTIC_ROTATION_TYPE",
+                                {.description = "elastic rotation specification for the "
+                                                "preliminary plastic predictor",
+                                    .default_value = AEI::PrelimPlasticPredictor::
+                                        ElasticRotationType::from_elastic_predictor,
+                                    .store = in_struct(&AEI::PlasticPredictorConstructionParams::
+                                            elastic_rotation_type)}),
+                            parameter<int>("MAX_ITER",
+                                {.description = "maximum number of construction iterations $ "
+                                                "i_{\\text{C,max}} $",
+                                    .default_value = 50,
+                                    .validator = positive<int>(),
+                                    .store = in_struct(
+                                        &AEI::PlasticPredictorConstructionParams::max_iter)}),
+                            parameter<double>("RELATIVE_UNDERSTRESS_TOL",
+                                {.description = "relative understress tolerance $ \\kappa_{S} $ "
+                                                "used to determine the plastic predictor according "
+                                                "to $ 1 \\ge \\overline{\\sigma}^{(\\text{P})} / S "
+                                                "\\ge 1 - \\kappa_{S} $ ",
+                                    .default_value = 1.0e-6,
+                                    .validator = in_range(excl(0.), 1.0),
+                                    .store = in_struct(&AEI::PlasticPredictorConstructionParams::
+                                            relative_understress_tol)}),
+                            parameter<double>("INTERVAL_SCANNING_PARAM",
+                                {.description =
+                                        "interval scanning parameter $s$ for updating the "
+                                        "construction parameter $\\tau \\gets \\tau_{\\text{E}} + "
+                                        "s \\, \\left( \\tau_{\\hat{\\text{P}}} - "
+                                        "\\tau_{\\text{E}} \\right)$ (bisection: $ s = 1/2 $)",
+                                    .default_value = 0.5,
+                                    .validator = in_range(excl(0.), excl(1.)),
+                                    .store = in_struct(&AEI::PlasticPredictorConstructionParams::
+                                            interval_scanning_param)}),
+                        },
+                        {
+                            .description = "Parameters used for the iterative construction of the "
+                                           "plastic predictor",
+                            .required = false,
+                            .store = in_struct(&AEI::AEIParams::plastic_predictor_construction),
+                        }),
+                    group<AEI::EstimateInterpolationParams>("ESTIMATE_INTERPOLATION",
+                        {
+                            parameter<AEI::StartingPointType>("STARTING_POINT_TYPE",
+                                {.description = "starting point type",
+                                    .default_value = AEI::StartingPointType::equiv_stress_history,
+                                    .store = in_struct(
+                                        &AEI::EstimateInterpolationParams::starting_point_type)}),
+                            parameter<std::optional<double>>("USER_SET_STARTING_POINT",
+                                {
+                                    .description = "specified starting point in case that the "
+                                                   "starting point is 'constant'",
+                                    .validator = null_or(in_range<double>(0.0, 1.0)),
+                                    .store = in_struct(
+                                        &AEI::EstimateInterpolationParams::user_set_starting_point),
+                                }),
+                            parameter<int>("MAX_ITER",
+                                {
+                                    .description = "maximum number of estimate interpolation "
+                                                   "iterations "
+                                                   "$i_{\\text{EI,max}}$",
+                                    .default_value = 50,
+                                    .validator = positive<int>(),
+                                    .store = in_struct(&AEI::EstimateInterpolationParams::max_iter),
+                                }),
+                            parameter<double>("INTERVAL_SCANNING_PARAM",
+                                {
+                                    .description =
+                                        "interval scanning parameter $s$ for updating the "
+                                        "interpolation parameter $\\xi \\gets \\xi_{\\text{E}} + s "
+                                        "\\, \\left( \\xi_{\\text{P}} - \\xi_{\\text{E}} \\right) "
+                                        "(bisection: = $ s = 1/2 $)",
+                                    .default_value = 0.5,
+                                    .validator = in_range(excl(0.), excl(1.)),
+                                    .store = in_struct(
+                                        &AEI::EstimateInterpolationParams::interval_scanning_param),
+                                }),
+                        },
+                        {.description =
+                                "Parameters used for the estimate interpolation between predictors",
+                            .required = false,
+                            .store = in_struct(&AEI::AEIParams::estimate_interpolation)}),
+                    group<AEI::HardeningParams>("HARDENING_MANAGEMENT",
+                        {
+                            parameter<AEI::HardeningManagementMethod>("METHOD",
+                                {
+                                    .description = "method to be used for handling hardening "
+                                                   "variables "
+                                                   "within the "
+                                                   "adaptive estimate interpolation algorithm",
+                                    .default_value = AEI::HardeningManagementMethod::
+                                        integrate_via_evolution_equations,
+                                    .store = in_struct(&AEI::HardeningParams::method),
+
+                                }),
+                            parameter<int>("MAX_ITER_INTEGRATION",
+                                {
+                                    .description =
+                                        "maximum number of iterations for the integration of the "
+                                        "hardening variables via the evolution equations",
+                                    .default_value = 50,
+                                    .validator = positive<int>(),
+                                    .store = in_struct(&AEI::HardeningParams::max_iter_integration),
+                                }),
+                            parameter<double>("TOL_INTEGRATION",
+                                {
+                                    .description = "tolerance for the integration of the hardening "
+                                                   "variables via the evolution equations",
+                                    .default_value = 1.0e-8,
+                                    .validator = positive<double>(),
+                                    .store = in_struct(&AEI::HardeningParams::tol_integration),
+                                }),
+
+                        },
+                        {.description = "Parameters used for the management of hardening variables "
+                                        "during interpolation",
+                            .required = false,
+                            .store = in_struct(&AEI::AEIParams::hardening)}),
+                    group<AEI::ReestimationParams>("REESTIMATION",
+                        {
+                            parameter<int>("MAX_NUM_REESTIMATIONS",
+                                {.description = "maximum number of adaptive re-estimations allowed",
+                                    .default_value = 10,
+                                    .validator = positive_or_zero<int>(),
+                                    .store = in_struct(
+                                        &AEI::ReestimationParams::max_num_reestimations)}),
+                            parameter<double>("INTERVAL_SCANNING_PARAM",
+                                {.description =
+                                        "interval scanning parameter $s$ for determining "
+                                        "the intermediate parameter $ \\xi_{\\mathrm{I}} "
+                                        "\\gets \\xi_{\\mathrm{E}} + s \\, \\left( \\xi - "
+                                        "\\xi_{\\mathrm{E}}\\right) $ (bisection: $ s = 1/2 $)",
+                                    .default_value = 0.5,
+                                    .validator = in_range(excl(0.), excl(1.)),
+                                    .store = in_struct(
+                                        &AEI::ReestimationParams::interval_scanning_param)}),
+                        },
+                        {.description = "Parameters used for the re-estimation procedures",
+                            .required = false,
+                            .store = in_struct(&AEI::AEIParams::reestimation)}),
+
+                },
+                {.description = "Parameters used in the Adaptive Estimate Interpolation for Local "
+                                "Newton--Raphson estimates, as presented "
+                                "in Ana, Schmidt, Wall: Adaptive Estimate Interpolation: "
+                                "Accelerating Local Newton--Raphson Schemes in Computational "
+                                "Plasticity / Viscoplasticity, Preprint",
                     .required = false})},
         {.description = "Versatile transversely isotropic (or isotropic) viscoplasticity model for "
                         "finite deformations with isotropic hardening, using user-defined "
