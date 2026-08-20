@@ -192,16 +192,58 @@ namespace ReducedLung
     struct BoundaryConditions
     {
       /**
-       * One reusable boundary condition, referenced by the `bc_id` point data of the mesh.
+       * One reusable boundary condition whose value follows a function of time. The variable it
+       * constrains is not part of the definition: it follows from the list the definition sits in.
+       * Any number of nodes may carry the same id.
        */
-      struct Definition
+      struct FromFunctionDefinition
       {
         int id;
         int function_id;
       };
 
-      std::vector<Definition> pressure;
-      std::vector<Definition> flow;
+      /**
+       * One reusable boundary condition prescribing the pleural pressure of a boundary node from
+       * the total volume of all terminal units. Any number of nodes may carry the same id.
+       */
+      struct VolumeDependentPleuralPressureDefinition
+      {
+        /**
+         * How the pleural pressure is tied to the terminal unit volume.
+         */
+        enum class Coupling : std::uint8_t
+        {
+          //! Evaluate from the total volume of the last converged timestep.
+          Frozen,
+        };
+
+        /**
+         * Pleural pressure over the normalized volume
+         * xi = (V - residual_volume) / (total_lung_capacity - residual_volume) as
+         * p_pl(xi) = pressure_offset + linear_coefficient * xi
+         *          + exponential_coefficient * (exp(exponential_rate * xi) - 1).
+         */
+        struct NormalizedLinearExponential
+        {
+          double pressure_offset;
+          double linear_coefficient;
+          double exponential_coefficient;
+          double exponential_rate;
+        };
+
+        int id;
+        Coupling coupling;
+        double residual_volume;
+        double total_lung_capacity;
+        NormalizedLinearExponential normalized_linear_exponential;
+      };
+
+      //! Definitions constraining the pressure dof, prescribing it by a function of time.
+      std::vector<FromFunctionDefinition> pressure;
+      //! Definitions constraining the flow dof, prescribing it by a function of time.
+      std::vector<FromFunctionDefinition> flow;
+      //! Definitions constraining the pressure dof, prescribing it from the terminal unit volume.
+      std::vector<VolumeDependentPleuralPressureDefinition> volume_dependent_pleural_pressure;
     } boundary_conditions;
     struct AirProperties
     {

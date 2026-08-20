@@ -7,20 +7,24 @@
 
 #include "4C_reduced_lung_boundary_conditions.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_function_manager.hpp"
 #include "4C_utils_function_of_time.hpp"
 
-#include <cstdint>
+#include <cmath>
 #include <map>
 #include <ranges>
-#include <tuple>
+#include <set>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -31,52 +35,13 @@ namespace ReducedLung
   {
     namespace
     {
-      struct ModelKey
-      {
-        Type type;
-        int function_id;
-
-        bool operator<(const ModelKey& other) const
-        {
-          return std::tie(type, function_id) < std::tie(other.type, other.function_id);
-        }
-      };
-
-      const char* bc_type_label(Type type)
-      {
-        switch (type)
-        {
-          case Type::Pressure:
-            return "pressure";
-          case Type::Flow:
-            return "flow";
-        }
-        return "unknown";
-      }
+      using InputFromFunction = ReducedLungParameters::BoundaryConditions::FromFunctionDefinition;
+      using InputPleuralPressure =
+          ReducedLungParameters::BoundaryConditions::VolumeDependentPleuralPressureDefinition;
 
       /**
-       * The solution variable a boundary condition constrains. Several boundary condition types
-       * may constrain the same variable, and at most one of them may act on a given node.
+       * Human-readable name of a constrained variable, for error messages.
        */
-      enum class ConstrainedVariable : std::uint8_t
-      {
-        Pressure,
-        Flow,
-      };
-
-      [[nodiscard]] ConstrainedVariable constrained_variable(Type type)
-      {
-        switch (type)
-        {
-          case Type::Pressure:
-            return ConstrainedVariable::Pressure;
-          case Type::Flow:
-            return ConstrainedVariable::Flow;
-        }
-        FOUR_C_THROW(
-            "Boundary condition type '{}' constrains no known variable.", bc_type_label(type));
-      }
-
       [[nodiscard]] const char* constrained_variable_label(ConstrainedVariable variable)
       {
         switch (variable)
@@ -87,6 +52,30 @@ namespace ReducedLung
             return "flow";
         }
         return "unknown";
+      }
+
+      /**
+       * A definition of the input file, reduced to what assembly needs.
+       */
+      struct ResolvedDefinition
+      {
+        ConstrainedVariable constrained_variable;
+        ValueModel value_model;
+      };
+
+      /**
+       * Pleural pressure over the normalized terminal unit volume
+       * xi = (V - residual_volume) / (total_lung_capacity - residual_volume).
+       */
+      [[nodiscard]] double evaluate(
+          const VolumeDependentPleuralPressure& pleural_pressure, double total_terminal_unit_volume)
+      {
+        const auto& parameters = pleural_pressure.parameters;
+        const auto& curve = parameters.normalized_linear_exponential;
+        const double xi = (total_terminal_unit_volume - parameters.residual_volume) /
+                          (parameters.total_lung_capacity - parameters.residual_volume);
+        return curve.pressure_offset + curve.linear_coefficient * xi +
+               curve.exponential_coefficient * (std::exp(curve.exponential_rate * xi) - 1.0);
       }
 
       /**
@@ -104,83 +93,25 @@ namespace ReducedLung
         }
       }
 
-      void evaluate_function_value(const BoundaryConditionModel& model,
+      void evaluate_time_function(const BoundaryConditionModel& model,
           Core::LinAlg::Vector<double>& rhs, const Core::LinAlg::Vector<double>& dofs,
           const AssemblyContext& assembly_context)
       {
-        if (model.function == nullptr)
-        {
-          FOUR_C_THROW(
-              "Boundary condition function not set for bc_function_id {}.", model.function_id);
-        }
-        apply_dirichlet_residual(model, rhs, dofs, model.function->evaluate(assembly_context.time));
+        const auto& time_function = std::get<TimeFunction>(model.value_model);
+        FOUR_C_ASSERT(time_function.function != nullptr,
+            "Implementation error: function of boundary condition definition {} was not resolved.",
+            model.definition_id);
+        apply_dirichlet_residual(
+            model, rhs, dofs, time_function.function->evaluate(assembly_context.time));
       }
 
-      /**
-       * The definitions of the input file and the `bc_id`s of the mesh must describe the same set
-       * of boundary conditions: every id used by the mesh needs a definition, and every definition
-       * needs at least one node. Definition ids must be unique and positive across all condition
-       * types combined, since 0 is reserved for unconstrained nodes.
-       *
-       * @return The definitions, indexed by their id.
-       */
-      std::map<int, std::pair<Type, const ReducedLungParameters::BoundaryConditions::Definition*>>
-      index_boundary_condition_definitions(
-          const ReducedLungParameters::BoundaryConditions& bc_parameters,
-          const std::map<int, std::vector<int>>& bc_nodes)
+      void evaluate_volume_dependent_pleural_pressure(const BoundaryConditionModel& model,
+          Core::LinAlg::Vector<double>& rhs, const Core::LinAlg::Vector<double>& dofs,
+          const AssemblyContext& assembly_context)
       {
-        std::map<int, std::pair<Type, const ReducedLungParameters::BoundaryConditions::Definition*>>
-            definitions;
-
-        const auto index_definitions_of_type =
-            [&](Type type, const std::vector<ReducedLungParameters::BoundaryConditions::Definition>&
-                               type_definitions)
-        {
-          for (const auto& definition : type_definitions)
-          {
-            if (definition.id <= 0)
-            {
-              FOUR_C_THROW(
-                  "Boundary condition definition ids must be positive, got {}. The id 0 marks "
-                  "nodes without a boundary condition and cannot be defined.",
-                  definition.id);
-            }
-            if (!definitions.emplace(definition.id, std::pair{type, &definition}).second)
-            {
-              FOUR_C_THROW(
-                  "Boundary condition definition id {} is defined more than once.", definition.id);
-            }
-            if (definition.function_id <= 0)
-            {
-              FOUR_C_THROW(
-                  "The function_id of boundary condition definition {} must be positive, got {}.",
-                  definition.id, definition.function_id);
-            }
-            if (!bc_nodes.contains(definition.id))
-            {
-              FOUR_C_THROW(
-                  "Boundary condition definition {} is not used by any node of the mesh. Assign "
-                  "it by setting 'bc_id' to {} on the respective nodes.",
-                  definition.id, definition.id);
-            }
-          }
-        };
-
-        index_definitions_of_type(Type::Pressure, bc_parameters.pressure);
-        index_definitions_of_type(Type::Flow, bc_parameters.flow);
-
-        for (const int bc_id : bc_nodes | std::views::keys)
-        {
-          if (!definitions.contains(bc_id))
-          {
-            FOUR_C_THROW(
-                "The mesh assigns the boundary condition id {} to some of its nodes, but no "
-                "definition with this id exists in the input file.",
-                bc_id);
-          }
-        }
-
-        return definitions;
+        apply_dirichlet_residual(model, rhs, dofs,
+            evaluate(std::get<VolumeDependentPleuralPressure>(model.value_model),
+                assembly_context.total_terminal_unit_volume));
       }
 
       /**
@@ -198,13 +129,118 @@ namespace ReducedLung
           sysmat.insert_my_values(model.data.local_equation_id[i], 1, &val, &local_dof_id);
         }
       }
+
+      /**
+       * Build the value a function-valued definition prescribes.
+       */
+      [[nodiscard]] ValueModel make_value_model(
+          const InputFromFunction& definition, const Core::Utils::FunctionManager& function_manager)
+      {
+        return TimeFunction{.function_id = definition.function_id,
+            .function = &function_manager.function_by_id<Core::Utils::FunctionOfTime>(
+                definition.function_id)};
+      }
+
+      /**
+       * Build the value a pleural pressure definition prescribes.
+       */
+      [[nodiscard]] ValueModel make_value_model(const InputPleuralPressure& definition)
+      {
+        // Relates two parameters, so the input specs cannot check it.
+        if (definition.total_lung_capacity <= definition.residual_volume)
+        {
+          FOUR_C_THROW(
+              "The volume-dependent pleural pressure definition {} requires total_lung_capacity > "
+              "residual_volume, got {} <= {}.",
+              definition.id, definition.total_lung_capacity, definition.residual_volume);
+        }
+
+        return VolumeDependentPleuralPressure{.parameters = definition};
+      }
+
+      /**
+       * The definitions of the input file and the `bc_id`s of the mesh must describe the same set
+       * of boundary conditions: every id used by the mesh needs a definition, and every definition
+       * needs at least one node. Definition ids must be unique across all condition types
+       * combined; that they are positive is checked by the input specs.
+       *
+       * Runs before the definitions are resolved, so an input/mesh mismatch is reported first.
+       */
+      void check_definition_ids(const ReducedLungParameters::BoundaryConditions& bc_parameters,
+          const std::map<int, std::vector<int>>& bc_nodes)
+      {
+        std::set<int> definition_ids;
+
+        const auto check_id = [&](int id)
+        {
+          if (!definition_ids.insert(id).second)
+          {
+            FOUR_C_THROW("Boundary condition definition id {} is defined more than once.", id);
+          }
+          if (!bc_nodes.contains(id))
+          {
+            FOUR_C_THROW(
+                "Boundary condition definition {} is not used by any node of the mesh. Assign "
+                "it by setting 'bc_id' to {} on the respective nodes.",
+                id, id);
+          }
+        };
+
+        for (const auto& definition : bc_parameters.pressure) check_id(definition.id);
+        for (const auto& definition : bc_parameters.flow) check_id(definition.id);
+        for (const auto& definition : bc_parameters.volume_dependent_pleural_pressure)
+          check_id(definition.id);
+
+        for (const int bc_id : bc_nodes | std::views::keys)
+        {
+          if (!definition_ids.contains(bc_id))
+          {
+            FOUR_C_THROW(
+                "The mesh assigns the boundary condition id {} to some of its nodes, but no "
+                "definition with this id exists in the input file.",
+                bc_id);
+          }
+        }
+      }
+
+      /**
+       * Reduce every definition of the input to what assembly needs, indexed by definition id.
+       * Every rank resolves every definition, so a broken one fails identically everywhere.
+       */
+      std::map<int, ResolvedDefinition> resolve_boundary_condition_definitions(
+          const ReducedLungParameters::BoundaryConditions& bc_parameters,
+          const Core::Utils::FunctionManager& function_manager)
+      {
+        std::map<int, ResolvedDefinition> definitions;
+
+        const auto add_from_function_definitions =
+            [&](ConstrainedVariable variable, const std::vector<InputFromFunction>& list)
+        {
+          for (const auto& definition : list)
+          {
+            definitions.emplace(
+                definition.id, ResolvedDefinition{.constrained_variable = variable,
+                                   .value_model = make_value_model(definition, function_manager)});
+          }
+        };
+
+        add_from_function_definitions(ConstrainedVariable::Pressure, bc_parameters.pressure);
+        add_from_function_definitions(ConstrainedVariable::Flow, bc_parameters.flow);
+        for (const auto& definition : bc_parameters.volume_dependent_pleural_pressure)
+        {
+          definitions.emplace(definition.id,
+              ResolvedDefinition{.constrained_variable = ConstrainedVariable::Pressure,
+                  .value_model = make_value_model(definition)});
+        }
+
+        return definitions;
+      }
     }  // namespace
 
     void BoundaryConditionData::clear()
     {
       node_id.clear();
       global_element_id.clear();
-      input_bc_id.clear();
       local_bc_id.clear();
       local_equation_id.clear();
       global_equation_id.clear();
@@ -216,7 +252,6 @@ namespace ReducedLung
     {
       node_id.reserve(count);
       global_element_id.reserve(count);
-      input_bc_id.reserve(count);
       local_bc_id.reserve(count);
       local_equation_id.reserve(count);
       global_equation_id.reserve(count);
@@ -224,12 +259,11 @@ namespace ReducedLung
       local_dof_id.reserve(count);
     }
 
-    void BoundaryConditionData::add_entry(int node_id_value, int element_id_value,
-        int local_bc_id_value, int global_dof_id_value, int input_bc_id_value)
+    void BoundaryConditionData::add_entry(
+        int node_id_value, int element_id_value, int local_bc_id_value, int global_dof_id_value)
     {
       node_id.push_back(node_id_value);
       global_element_id.push_back(element_id_value);
-      input_bc_id.push_back(input_bc_id_value);
       local_bc_id.push_back(local_bc_id_value);
       local_equation_id.push_back(0);
       global_equation_id.push_back(0);
@@ -237,11 +271,10 @@ namespace ReducedLung
       local_dof_id.push_back(0);
     }
 
-    void BoundaryConditionModel::add_condition(int node_id_value, int element_id_value,
-        int local_bc_id_value, int global_dof_id_value, int input_bc_id_value)
+    void BoundaryConditionModel::add_condition(
+        int node_id_value, int element_id_value, int local_bc_id_value, int global_dof_id_value)
     {
-      data.add_entry(node_id_value, element_id_value, local_bc_id_value, global_dof_id_value,
-          input_bc_id_value);
+      data.add_entry(node_id_value, element_id_value, local_bc_id_value, global_dof_id_value);
     }
 
     void create_boundary_conditions(const Core::FE::Discretization& discretization,
@@ -255,9 +288,16 @@ namespace ReducedLung
       boundary_conditions.models.clear();
 
       const auto& bc_parameters = parameters.boundary_conditions;
-      const auto definitions = index_boundary_condition_definitions(bc_parameters, bc_nodes);
+      check_definition_ids(bc_parameters, bc_nodes);
+      const auto definitions =
+          resolve_boundary_condition_definitions(bc_parameters, function_manager);
 
-      std::map<ModelKey, size_t> model_indices;
+      // Derived from the input, not from the models: the reduction is collective, but a model
+      // only exists on the rank owning its element.
+      boundary_conditions.requires_total_terminal_unit_volume =
+          !bc_parameters.volume_dependent_pleural_pressure.empty();
+
+      std::map<int, size_t> model_indices;
       std::map<std::pair<int, ConstrainedVariable>, int> bc_per_node_and_variable;
       int local_bc_id = 0;
 
@@ -265,10 +305,8 @@ namespace ReducedLung
       // exactly one `bc_id`, it can never appear in more than one group.
       for (const auto& [bc_id, nodes] : bc_nodes)
       {
-        const auto& [bc_type, definition] = definitions.at(bc_id);
-
-        const int function_id = definition->function_id;
-        const ModelKey key{.type = bc_type, .function_id = function_id};
+        const auto& definition = definitions.at(bc_id);
+        const auto variable = definition.constrained_variable;
 
         for (const int node_id : nodes)
         {
@@ -306,11 +344,8 @@ namespace ReducedLung
                 node_id, bc_id, element_id);
           }
 
-          // Enforce at most one boundary condition per (node, constrained variable). For a
-          // `bc_nodes` derived from the mesh this can never trigger, since a node carries exactly
-          // one `bc_id` and therefore appears in exactly one group. It guards callers that
-          // assemble `bc_nodes` themselves, which the unit tests do.
-          const auto variable = constrained_variable(bc_type);
+          // Unreachable for a `bc_nodes` built from the mesh; guards callers that assemble it
+          // themselves.
           const auto duplicate_key = std::make_pair(node_id, variable);
           auto duplicate_it = bc_per_node_and_variable.find(duplicate_key);
           if (duplicate_it != bc_per_node_and_variable.end())
@@ -321,8 +356,6 @@ namespace ReducedLung
           }
           bc_per_node_and_variable.emplace(duplicate_key, bc_id);
 
-          // The dof a condition acts on follows from the variable it constrains, not from its
-          // type.
           int dof_offset = 0;
           switch (variable)
           {
@@ -352,23 +385,19 @@ namespace ReducedLung
               "Missing dof offset for element {}.", element_id + 1);
           const int global_dof_id = first_dof_it->second + dof_offset;
 
-          auto model_it = model_indices.find(key);
+          auto model_it = model_indices.find(bc_id);
           if (model_it == model_indices.end())
           {
-            // Create a new model block for this (type, function) group.
             BoundaryConditionModel model;
-            model.type = bc_type;
-            model.function_id = function_id;
-            model.function =
-                &function_manager.function_by_id<Core::Utils::FunctionOfTime>(function_id);
+            model.definition_id = bc_id;
+            model.constrained_variable = variable;
+            model.value_model = definition.value_model;
             boundary_conditions.models.push_back(std::move(model));
-            const size_t new_index = boundary_conditions.models.size() - 1;
-            model_indices.emplace(key, new_index);
-            model_it = model_indices.find(key);
+            model_it = model_indices.emplace(bc_id, boundary_conditions.models.size() - 1).first;
           }
 
           auto& model = boundary_conditions.models[model_it->second];
-          model.add_condition(node_id, element_id, local_bc_id, global_dof_id, bc_id);
+          model.add_condition(node_id, element_id, local_bc_id, global_dof_id);
           local_bc_id++;
         }
       }
@@ -425,9 +454,32 @@ namespace ReducedLung
     {
       for (auto& model : boundary_conditions.models)
       {
-        model.residual_evaluator = evaluate_function_value;
-        model.jacobian_evaluator = assemble_unit_diagonal_jacobian;
-        model.has_constant_jacobian = true;
+        std::visit(
+            [&model]<typename Value>(const Value& value)
+            {
+              if constexpr (std::is_same_v<Value, TimeFunction>)
+              {
+                model.residual_evaluator = evaluate_time_function;
+                model.jacobian_evaluator = assemble_unit_diagonal_jacobian;
+                model.has_constant_jacobian = true;
+              }
+              else if constexpr (std::is_same_v<Value, VolumeDependentPleuralPressure>)
+              {
+                switch (value.parameters.coupling)
+                {
+                  case InputPleuralPressure::Coupling::Frozen:
+                    model.residual_evaluator = evaluate_volume_dependent_pleural_pressure;
+                    model.jacobian_evaluator = assemble_unit_diagonal_jacobian;
+                    model.has_constant_jacobian = true;
+                    break;
+                }
+              }
+              else
+              {
+                FOUR_C_THROW("Unknown boundary condition value model.");
+              }
+            },
+            model.value_model);
       }
     }
 
@@ -435,7 +487,8 @@ namespace ReducedLung
         const BoundaryConditionContainer& boundary_conditions,
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double time)
     {
-      const AssemblyContext assembly_context{.time = time};
+      const AssemblyContext assembly_context{.time = time,
+          .total_terminal_unit_volume = boundary_conditions.total_terminal_unit_volume};
 
       for (const auto& model : boundary_conditions.models)
       {
@@ -447,7 +500,8 @@ namespace ReducedLung
         const BoundaryConditionContainer& boundary_conditions,
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double time)
     {
-      const AssemblyContext assembly_context{.time = time};
+      const AssemblyContext assembly_context{.time = time,
+          .total_terminal_unit_volume = boundary_conditions.total_terminal_unit_volume};
 
       for (const auto& model : boundary_conditions.models)
       {
@@ -458,6 +512,32 @@ namespace ReducedLung
         }
         model.jacobian_evaluator(model, sysmat, locally_relevant_dofs, assembly_context);
       }
+    }
+
+    double compute_total_terminal_unit_volume(
+        const TerminalUnits::TerminalUnitContainer& terminal_units, MPI_Comm comm)
+    {
+      double local_volume = 0.0;
+      for (const auto& model : terminal_units.models)
+      {
+        for (const double volume : model.data.volume_v)
+        {
+          local_volume += volume;
+        }
+      }
+      return Core::Communication::sum_all(local_volume, comm);
+    }
+
+    void refresh_total_terminal_unit_volume(BoundaryConditionContainer& boundary_conditions,
+        const TerminalUnits::TerminalUnitContainer& terminal_units, MPI_Comm comm)
+    {
+      if (!boundary_conditions.requires_total_terminal_unit_volume)
+      {
+        return;
+      }
+
+      boundary_conditions.total_terminal_unit_volume =
+          compute_total_terminal_unit_volume(terminal_units, comm);
     }
   }  // namespace BoundaryConditions
 }  // namespace ReducedLung

@@ -273,6 +273,9 @@ namespace ReducedLung
             "integration.");
 
         current_time_ += dt_;
+        // Constant during the solve, so refresh once per timestep rather than per iteration.
+        BoundaryConditions::refresh_total_terminal_unit_volume(
+            boundary_conditions_, terminal_units_, comm_);
         nox_solver_->solve(current_time_);
 
         TerminalUnits::end_of_timestep_routine(terminal_units_, *locally_relevant_dofs_, dt_);

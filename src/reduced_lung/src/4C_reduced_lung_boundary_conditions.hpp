@@ -12,8 +12,12 @@
 
 #include "4C_reduced_lung_input.hpp"
 
+#include <mpi.h>
+
+#include <cstdint>
 #include <functional>
 #include <map>
+#include <variant>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -21,6 +25,11 @@ FOUR_C_NAMESPACE_OPEN
 namespace Core::FE
 {
   class Discretization;
+}
+
+namespace ReducedLung::TerminalUnits
+{
+  struct TerminalUnitContainer;
 }
 
 namespace Core::LinAlg
@@ -42,12 +51,14 @@ namespace ReducedLung
   namespace BoundaryConditions
   {
     /**
-     * @brief Boundary condition equation types for the reduced lung model.
+     * @brief The solution variable a boundary condition constrains.
+     *
+     * At most one condition may constrain a given variable on a given node.
      */
-    enum class Type
+    enum class ConstrainedVariable : std::uint8_t
     {
       Pressure,
-      Flow
+      Flow,
     };
 
     struct BoundaryConditionModel;
@@ -58,6 +69,7 @@ namespace ReducedLung
     struct AssemblyContext
     {
       double time = 0.0;
+      double total_terminal_unit_volume = 0.0;
     };
 
     /**
@@ -72,8 +84,6 @@ namespace ReducedLung
       std::vector<int> node_id;
       // Global element id attached to the boundary node.
       std::vector<int> global_element_id;
-      // Id of the input definition this condition came from, i.e. the `bc_id` of the node.
-      std::vector<int> input_bc_id;
       // Local boundary condition id.
       std::vector<int> local_bc_id;
       // Local equation id.
@@ -100,8 +110,8 @@ namespace ReducedLung
       /**
        * @brief Append a new boundary condition entry.
        */
-      void add_entry(int node_id_value, int element_id_value, int local_bc_id_value,
-          int global_dof_id_value, int input_bc_id_value);
+      void add_entry(
+          int node_id_value, int element_id_value, int local_bc_id_value, int global_dof_id_value);
     };
 
     /**
@@ -118,17 +128,41 @@ namespace ReducedLung
             const Core::LinAlg::Vector<double>& dofs, const AssemblyContext& assembly_context)>;
 
     /**
+     * @brief A prescribed value that follows a function of time.
+     */
+    struct TimeFunction
+    {
+      int function_id = 0;
+      //! Never null after create_boundary_conditions().
+      const Core::Utils::FunctionOfTime* function = nullptr;
+    };
+
+    /**
+     * @brief A pleural pressure evaluated from the total volume of all terminal units.
+     */
+    struct VolumeDependentPleuralPressure
+    {
+      ReducedLungParameters::BoundaryConditions::VolumeDependentPleuralPressureDefinition
+          parameters;
+    };
+
+    /**
+     * @brief How a boundary condition computes the value it prescribes.
+     */
+    using ValueModel = std::variant<TimeFunction, VolumeDependentPleuralPressure>;
+
+    /**
      * @brief Boundary condition model containing a homogeneous set of equations.
      *
-     * Boundary conditions are grouped by type and function id; all equations of one model share
-     * a function pointer evaluated at assembly time.
+     * All equations of one model evaluate to the same value, so a model holds the entries of
+     * exactly one input definition.
      */
     struct BoundaryConditionModel
     {
-      Type type;
-      int function_id = 0;
-      // Cached function pointer for time-dependent boundary conditions.
-      const Core::Utils::FunctionOfTime* function = nullptr;
+      //! The `id` of the input definition all entries of this model come from.
+      int definition_id = 0;
+      ConstrainedVariable constrained_variable = ConstrainedVariable::Pressure;
+      ValueModel value_model;
       BoundaryConditionData data;
       ResidualEvaluator residual_evaluator;
       JacobianEvaluator jacobian_evaluator;
@@ -139,8 +173,8 @@ namespace ReducedLung
       /**
        * @brief Add a boundary condition entry to this model.
        */
-      void add_condition(int node_id_value, int element_id_value, int local_bc_id_value,
-          int global_dof_id_value, int input_bc_id_value);
+      void add_condition(
+          int node_id_value, int element_id_value, int local_bc_id_value, int global_dof_id_value);
     };
 
     /**
@@ -149,14 +183,19 @@ namespace ReducedLung
     struct BoundaryConditionContainer
     {
       std::vector<BoundaryConditionModel> models;
+
+      //! Total volume of all terminal units of the last converged timestep.
+      double total_terminal_unit_volume = 0.0;
+      //! Whether any condition needs the volume; the collective reduction is skipped otherwise.
+      bool requires_total_terminal_unit_volume = false;
     };
 
     /*!
      * @brief Create boundary condition models from the input parameters and the mesh.
      *
      * Every definition of the input applies to all nodes that carry its id in the `bc_id` point
-     * data of the mesh. This function groups boundary conditions by type and function id, maps
-     * boundary nodes to the connected element, and assigns the constrained dof id.
+     * data of the mesh. This function creates one model per definition, maps boundary nodes to
+     * the connected element, and assigns the constrained dof id.
      */
     void create_boundary_conditions(const Core::FE::Discretization& discretization,
         const ReducedLungParameters& parameters, const std::map<int, std::vector<int>>& bc_nodes,
@@ -207,6 +246,20 @@ namespace ReducedLung
     void update_jacobian(Core::LinAlg::SparseMatrix& sysmat,
         const BoundaryConditionContainer& boundary_conditions,
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double time);
+
+    /**
+     * @brief Refresh the total terminal unit volume the boundary conditions evaluate against.
+     *
+     * Must be called once per timestep, before the Newton solve, and collectively on all ranks.
+     */
+    void refresh_total_terminal_unit_volume(BoundaryConditionContainer& boundary_conditions,
+        const TerminalUnits::TerminalUnitContainer& terminal_units, MPI_Comm comm);
+
+    /**
+     * @brief Sum the volume of all terminal units across all ranks. Collective.
+     */
+    double compute_total_terminal_unit_volume(
+        const TerminalUnits::TerminalUnitContainer& terminal_units, MPI_Comm comm);
   }  // namespace BoundaryConditions
 }  // namespace ReducedLung
 
