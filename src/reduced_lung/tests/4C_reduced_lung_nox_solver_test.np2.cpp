@@ -79,7 +79,7 @@ namespace
 
     using InputBc = ReducedLungParameters::BoundaryConditions;
     const auto pressure_from_function = [](int id, int function_id)
-    { return InputBc::Definition{.id = id, .function_id = function_id}; };
+    { return InputBc::FromFunctionDefinition{.id = id, .function_id = function_id}; };
     params.boundary_conditions.pressure = {
         pressure_from_function(1, 1), pressure_from_function(2, 2)};
 

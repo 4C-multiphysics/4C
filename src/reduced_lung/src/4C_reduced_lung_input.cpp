@@ -277,22 +277,33 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
       });
 
   using BoundaryConditions = ReducedLungParameters::BoundaryConditions;
-  using Definition = BoundaryConditions::Definition;
+  using FromFunctionDefinition = BoundaryConditions::FromFunctionDefinition;
+  using VolumeDependentPleuralPressureDefinition =
+      BoundaryConditions::VolumeDependentPleuralPressureDefinition;
 
-  // The spec is identical for every condition type, so share one instance. Entries stay flat
-  // (no wrapping group), since a named group would force an extra nesting level in the yaml.
-  const Core::IO::InputSpec definition_spec = all_of({
-      parameter<int>(
-          "id", {.description = "Unique positive id of this definition. It is referenced by the "
-                                "`bc_id` point data of the mesh: every node with this `bc_id` "
-                                "carries this boundary condition."}),
-      parameter<int>("function_id", {.description = "Id of the function of time prescribing the "
-                                                    "boundary value."}),
+  // Every definition is identified the same way, whichever value it prescribes, so share one spec.
+  const Core::IO::InputSpec definition_id_spec = parameter<int>("id",
+      {
+          .description = "Unique positive id of this definition. It is referenced by the `bc_id` "
+                         "point data of the mesh: every node with this `bc_id` carries this "
+                         "boundary condition. The id 0 marks nodes without a boundary condition "
+                         "and cannot be defined.",
+          .validator = Validators::positive<int>(),
+      });
+
+  // Entries stay flat: a named group would force an extra nesting level in the yaml.
+  const Core::IO::InputSpec from_function_definition_spec = all_of({
+      definition_id_spec,
+      parameter<int>("function_id",
+          {
+              .description = "Id of the function of time prescribing the boundary value.",
+              .validator = Validators::positive<int>(),
+          }),
   });
 
-  // Converts the list's entries into a Definition vector; the same for every condition type up
-  // to which member it targets.
-  const auto store_definitions = [](std::vector<Definition> BoundaryConditions::* member)
+  // Converts a list of function-valued definitions into @p member.
+  const auto store_from_function_definitions =
+      [](std::vector<FromFunctionDefinition> BoundaryConditions::* member)
   {
     return StoreFunction<Core::IO::InputParameterContainer::List>(
         [member](Storage& storage, Core::IO::InputParameterContainer::List&& value)
@@ -301,11 +312,12 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
               "Implementation error: expected BoundaryConditions storage.");
 
           auto& target = std::any_cast<BoundaryConditions&>(storage).*member;
+          // The store also runs from set_default_value(), so it may see the same target twice.
           target.clear();
-          for (const auto& definition_entry : value)
+          for (const auto& entry : value)
           {
-            target.push_back(Definition{.id = definition_entry.get<int>("id"),
-                .function_id = definition_entry.get<int>("function_id")});
+            target.push_back(FromFunctionDefinition{
+                .id = entry.get<int>("id"), .function_id = entry.get<int>("function_id")});
           }
 
           return StoreStatus::ok();
@@ -313,20 +325,107 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
         typeid(BoundaryConditions));
   };
 
+  // The curve sits behind a one_of so that further curve shapes can be added later.
+  const Core::IO::InputSpec pleural_pressure_definition_spec = all_of({
+      definition_id_spec,
+      parameter<VolumeDependentPleuralPressureDefinition::Coupling>("coupling",
+          {
+              .description = "How the pleural pressure follows the terminal unit volume. 'Frozen' "
+                             "evaluates it from the total volume of the last converged timestep, "
+                             "which makes it an explicit source term without Jacobian "
+                             "contribution.",
+              .default_value = VolumeDependentPleuralPressureDefinition::Coupling::Frozen,
+          }),
+      parameter<double>("residual_volume",
+          {
+              .description = "Total terminal unit volume at which the normalized volume is zero. "
+                             "Must be smaller than total_lung_capacity.",
+              .validator = Validators::positive_or_zero<double>(),
+          }),
+      parameter<double>("total_lung_capacity",
+          {
+              .description = "Total terminal unit volume at which the normalized volume is one. "
+                             "Must be larger than residual_volume.",
+              .validator = Validators::positive<double>(),
+          }),
+      one_of({
+          group("normalized_linear_exponential",
+              {
+                  parameter<double>("pressure_offset",
+                      {.description = "Pleural pressure at the residual volume, where the linear "
+                                      "and the exponential term both vanish."}),
+                  parameter<double>(
+                      "linear_coefficient", {.description = "Factor of the linear term."}),
+                  parameter<double>("exponential_coefficient",
+                      {.description = "Factor of the exponential term."}),
+                  parameter<double>(
+                      "exponential_rate", {.description = "Rate inside the exponential term."}),
+              },
+              {
+                  .description =
+                      "p_pl(xi) = pressure_offset + linear_coefficient * xi + "
+                      "exponential_coefficient * (exp(exponential_rate * xi) - 1), with the "
+                      "normalized volume xi = (V - residual_volume) / (total_lung_capacity - "
+                      "residual_volume).",
+              }),
+      }),
+  });
+
+  const auto store_pleural_pressure_definitions =
+      StoreFunction<Core::IO::InputParameterContainer::List>(
+          [](Storage& storage, Core::IO::InputParameterContainer::List&& value)
+          {
+            FOUR_C_ASSERT(storage.type() == typeid(BoundaryConditions),
+                "Implementation error: expected BoundaryConditions storage.");
+
+            auto& target =
+                std::any_cast<BoundaryConditions&>(storage).volume_dependent_pleural_pressure;
+            // The store also runs from set_default_value(), so it may see the same target twice.
+            target.clear();
+            for (const auto& entry : value)
+            {
+              const auto& curve = entry.group("normalized_linear_exponential");
+              target.push_back(VolumeDependentPleuralPressureDefinition{.id = entry.get<int>("id"),
+                  .coupling =
+                      entry.get<VolumeDependentPleuralPressureDefinition::Coupling>("coupling"),
+                  .residual_volume = entry.get<double>("residual_volume"),
+                  .total_lung_capacity = entry.get<double>("total_lung_capacity"),
+                  .normalized_linear_exponential =
+                      VolumeDependentPleuralPressureDefinition::NormalizedLinearExponential{
+                          .pressure_offset = curve.get<double>("pressure_offset"),
+                          .linear_coefficient = curve.get<double>("linear_coefficient"),
+                          .exponential_coefficient = curve.get<double>("exponential_coefficient"),
+                          .exponential_rate = curve.get<double>("exponential_rate")}});
+            }
+
+            return StoreStatus::ok();
+          },
+          typeid(BoundaryConditions));
+
   Core::IO::InputSpec boundary_conditions_spec =
       group<ReducedLungParameters::BoundaryConditions>("boundary_conditions",
           {
-              list("pressure", definition_spec,
+              list("pressure", from_function_definition_spec,
                   {
                       .description = "Reusable pressure boundary condition definitions.",
                       .required = false,
-                      .store = store_definitions(&BoundaryConditions::pressure),
+                      .store = store_from_function_definitions(&BoundaryConditions::pressure),
                   }),
-              list("flow", definition_spec,
+              list("flow", from_function_definition_spec,
                   {
                       .description = "Reusable volumetric flow boundary condition definitions.",
                       .required = false,
-                      .store = store_definitions(&BoundaryConditions::flow),
+                      .store = store_from_function_definitions(&BoundaryConditions::flow),
+                  }),
+              list("volume_dependent_pleural_pressure", pleural_pressure_definition_spec,
+                  {
+                      .description =
+                          "Reusable definitions of a pleural pressure that follows the total "
+                          "volume of all terminal units. Every node carrying one of these ids "
+                          "has its pressure dof constrained to the pleural pressure, evaluated "
+                          "from the curve given below at the total terminal unit volume.",
+                      .required = false,
+                      .store = store_pleural_pressure_definitions,
                   }),
           },
           {

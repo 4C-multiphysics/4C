@@ -22,10 +22,12 @@
 #include <mpi.h>
 
 #include <array>
+#include <cmath>
 #include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 namespace
@@ -66,15 +68,35 @@ namespace
     std::map<int, std::vector<int>> bc_nodes;
   };
 
-  //! The vector of definitions of the given type, so tests can build inputs generically.
-  std::vector<InputBc::Definition>& definitions_of_type(InputBc& boundary_conditions, Type type)
+  using PleuralPressureDefinition = InputBc::VolumeDependentPleuralPressureDefinition;
+
+  InputBc::FromFunctionDefinition make_definition(int id, int function_id)
   {
-    return type == Type::Pressure ? boundary_conditions.pressure : boundary_conditions.flow;
+    return InputBc::FromFunctionDefinition{.id = id, .function_id = function_id};
   }
 
-  InputBc::Definition make_definition(int id, int function_id)
+  PleuralPressureDefinition make_pleural_pressure_definition(
+      int id, double residual_volume = 1.0, double total_lung_capacity = 5.0)
   {
-    return InputBc::Definition{.id = id, .function_id = function_id};
+    return PleuralPressureDefinition{.id = id,
+        .coupling = PleuralPressureDefinition::Coupling::Frozen,
+        .residual_volume = residual_volume,
+        .total_lung_capacity = total_lung_capacity,
+        .normalized_linear_exponential =
+            PleuralPressureDefinition::NormalizedLinearExponential{.pressure_offset = 0.5,
+                .linear_coefficient = 2.0,
+                .exponential_coefficient = 0.25,
+                .exponential_rate = 0.1}};
+  }
+
+  BcInput make_single_pleural_bc_parameters(
+      int node_id, double residual_volume = 1.0, double total_lung_capacity = 5.0)
+  {
+    BcInput input{};
+    input.bc_nodes = {{1, {node_id}}};
+    input.parameters.boundary_conditions.volume_dependent_pleural_pressure = {
+        make_pleural_pressure_definition(1, residual_volume, total_lung_capacity)};
+    return input;
   }
 
   //! A FunctionManager with one constant-valued SymbolicFunctionOfTime per entry of @p values,
@@ -99,28 +121,29 @@ namespace
     BcInput input{};
     // Node 0 carries both a pressure and a flow condition. The mesh cannot express this
     // through its `bc_id` array, but the container API can, so the grouping is still tested here.
-    // Both pressure definitions share function id 1, so they group into a single model.
+    // The two pressure definitions share function id 1 but stay separate models, since a model
+    // holds the entries of exactly one definition.
     input.bc_nodes = {{1, {0}}, {2, {2}}, {3, {0}}};
     input.parameters.boundary_conditions.pressure = {make_definition(1, 1), make_definition(2, 1)};
     input.parameters.boundary_conditions.flow = {make_definition(3, 2)};
     return input;
   }
 
-  BcInput make_single_bc_parameters(int node_id, Type type)
+  //! A single function-valued condition on @p node_id, constraining @p variable.
+  BcInput make_function_bc_parameters(int node_id, ConstrainedVariable variable, int function_id)
   {
     BcInput input{};
     input.bc_nodes = {{1, {node_id}}};
-    definitions_of_type(input.parameters.boundary_conditions, type) = {make_definition(1, 1)};
+    auto& boundary_conditions = input.parameters.boundary_conditions;
+    auto& definitions = variable == ConstrainedVariable::Pressure ? boundary_conditions.pressure
+                                                                  : boundary_conditions.flow;
+    definitions = {make_definition(1, function_id)};
     return input;
   }
 
-  BcInput make_function_bc_parameters(int node_id, Type type, int function_id)
+  BcInput make_single_bc_parameters(int node_id, ConstrainedVariable variable)
   {
-    BcInput input{};
-    input.bc_nodes = {{1, {node_id}}};
-    definitions_of_type(input.parameters.boundary_conditions, type) = {
-        make_definition(1, function_id)};
-    return input;
+    return make_function_bc_parameters(node_id, variable, 1);
   }
 
   BcInput make_duplicate_type_parameters()
@@ -132,11 +155,12 @@ namespace
     return input;
   }
 
-  BoundaryConditionModel* find_model(BoundaryConditionContainer& container, Type type)
+  //! The model holding the entries of the definition with the given id, if this rank owns any.
+  BoundaryConditionModel* find_model(BoundaryConditionContainer& container, int definition_id)
   {
     for (auto& model : container.models)
     {
-      if (model.type == type)
+      if (model.definition_id == definition_id)
       {
         return &model;
       }
@@ -203,7 +227,7 @@ namespace
     }
   }
 
-  TEST(BoundaryConditionsTests, CreateBoundaryConditionsGroupsByType)
+  TEST(BoundaryConditionsTests, CreateBoundaryConditionsGroupsPerDefinition)
   {
     skip_if_parallel();
 
@@ -211,21 +235,35 @@ namespace
     auto function_manager = make_function_manager({2.5, -1.0});
     auto boundary_conditions = create_boundary_conditions_from_fixture(fixture, function_manager);
 
-    ASSERT_EQ(boundary_conditions.models.size(), 2u);
+    // One model per definition, including the two pressure definitions sharing function id 1.
+    ASSERT_EQ(boundary_conditions.models.size(), 3u);
 
-    auto* pressure_model = find_model(boundary_conditions, Type::Pressure);
-    auto* flow_model = find_model(boundary_conditions, Type::Flow);
-    ASSERT_NE(pressure_model, nullptr);
+    auto* first_pressure_model = find_model(boundary_conditions, 1);
+    auto* second_pressure_model = find_model(boundary_conditions, 2);
+    auto* flow_model = find_model(boundary_conditions, 3);
+    ASSERT_NE(first_pressure_model, nullptr);
+    ASSERT_NE(second_pressure_model, nullptr);
     ASSERT_NE(flow_model, nullptr);
 
-    EXPECT_EQ(pressure_model->function_id, 1);
-    EXPECT_EQ(flow_model->function_id, 2);
+    EXPECT_EQ(first_pressure_model->constrained_variable, ConstrainedVariable::Pressure);
+    EXPECT_EQ(second_pressure_model->constrained_variable, ConstrainedVariable::Pressure);
+    EXPECT_EQ(flow_model->constrained_variable, ConstrainedVariable::Flow);
 
-    EXPECT_EQ(pressure_model->data.size(), 2u);
-    EXPECT_EQ(pressure_model->data.node_id, (std::vector<int>{0, 2}));
-    EXPECT_EQ(pressure_model->data.global_element_id, (std::vector<int>{0, 1}));
-    EXPECT_EQ(pressure_model->data.global_dof_id, (std::vector<int>{0, 4}));
-    EXPECT_EQ(pressure_model->data.local_bc_id, (std::vector<int>{0, 1}));
+    EXPECT_EQ(std::get<TimeFunction>(first_pressure_model->value_model).function_id, 1);
+    EXPECT_EQ(std::get<TimeFunction>(second_pressure_model->value_model).function_id, 1);
+    EXPECT_EQ(std::get<TimeFunction>(flow_model->value_model).function_id, 2);
+
+    EXPECT_EQ(first_pressure_model->data.size(), 1u);
+    EXPECT_EQ(first_pressure_model->data.node_id, (std::vector<int>{0}));
+    EXPECT_EQ(first_pressure_model->data.global_element_id, (std::vector<int>{0}));
+    EXPECT_EQ(first_pressure_model->data.global_dof_id, (std::vector<int>{0}));
+    EXPECT_EQ(first_pressure_model->data.local_bc_id, (std::vector<int>{0}));
+
+    EXPECT_EQ(second_pressure_model->data.size(), 1u);
+    EXPECT_EQ(second_pressure_model->data.node_id, (std::vector<int>{2}));
+    EXPECT_EQ(second_pressure_model->data.global_element_id, (std::vector<int>{1}));
+    EXPECT_EQ(second_pressure_model->data.global_dof_id, (std::vector<int>{4}));
+    EXPECT_EQ(second_pressure_model->data.local_bc_id, (std::vector<int>{1}));
 
     EXPECT_EQ(flow_model->data.size(), 1u);
     EXPECT_EQ(flow_model->data.node_id, (std::vector<int>{0}));
@@ -265,7 +303,7 @@ namespace
 
     for (const auto& model : boundary_conditions.models)
     {
-      const double bc_value = model.function->evaluate(0.0);
+      const double bc_value = std::get<TimeFunction>(model.value_model).function->evaluate(0.0);
       for (size_t i = 0; i < model.data.size(); ++i)
       {
         const int eq = model.data.local_equation_id[i];
@@ -294,8 +332,9 @@ namespace
 
     Core::LinAlg::Map row_map(-1, n_local_equations, 0, MPI_COMM_WORLD);
     Core::LinAlg::SparseMatrix jac(row_map, col_map, 1);
+    Core::LinAlg::Vector<double> locally_relevant_dofs(col_map, true);
 
-    update_jacobian(jac, boundary_conditions);
+    update_jacobian(jac, boundary_conditions, locally_relevant_dofs, 0.0);
     jac.complete();
 
     for (const auto& model : boundary_conditions.models)
@@ -306,7 +345,7 @@ namespace
       }
     }
 
-    update_jacobian(jac, boundary_conditions);
+    update_jacobian(jac, boundary_conditions, locally_relevant_dofs, 0.0);
 
     for (const auto& model : boundary_conditions.models)
     {
@@ -322,11 +361,11 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    fixture.set_bc_input(make_single_bc_parameters(0, Type::Pressure));
+    fixture.set_bc_input(make_single_bc_parameters(0, ConstrainedVariable::Pressure));
     fixture.ele_ids_per_node.erase(0);
 
     BoundaryConditionContainer boundary_conditions;
-    Core::Utils::FunctionManager function_manager;
+    auto function_manager = make_function_manager({1.0});
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
         create_boundary_conditions(*fixture.discretization, fixture.parameters, fixture.bc_nodes,
             fixture.ele_ids_per_node, fixture.global_dof_per_ele, fixture.first_global_dof_of_ele,
@@ -339,10 +378,10 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    fixture.set_bc_input(make_single_bc_parameters(1, Type::Pressure));
+    fixture.set_bc_input(make_single_bc_parameters(1, ConstrainedVariable::Pressure));
 
     BoundaryConditionContainer boundary_conditions;
-    Core::Utils::FunctionManager function_manager;
+    auto function_manager = make_function_manager({1.0});
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
         create_boundary_conditions(*fixture.discretization, fixture.parameters, fixture.bc_nodes,
             fixture.ele_ids_per_node, fixture.global_dof_per_ele, fixture.first_global_dof_of_ele,
@@ -363,7 +402,7 @@ namespace
     function_manager.set_functions(functions);
 
     auto fixture = make_fixture();
-    fixture.set_bc_input(make_function_bc_parameters(0, Type::Pressure, 1));
+    fixture.set_bc_input(make_function_bc_parameters(0, ConstrainedVariable::Pressure, 1));
 
     auto boundary_conditions = create_boundary_conditions_from_fixture(fixture, function_manager);
 
@@ -389,6 +428,125 @@ namespace
     EXPECT_DOUBLE_EQ(rhs.local_values_as_span()[model.data.local_equation_id[0]], 1.0 - 2.0 * time);
   }
 
+  TEST(BoundaryConditionsTests, ResidualAssemblyVolumeDependentPleuralPressure)
+  {
+    skip_if_parallel();
+
+    auto fixture = make_fixture();
+    fixture.set_bc_input(make_single_pleural_bc_parameters(0));
+
+    Core::Utils::FunctionManager function_manager;
+    auto boundary_conditions = create_boundary_conditions_from_fixture(fixture, function_manager);
+
+    int n_local_equations = 0;
+    assign_local_equation_ids(boundary_conditions, n_local_equations);
+
+    std::array<int, 1> global_dofs{0};
+    Core::LinAlg::Map col_map(-1, global_dofs.size(), global_dofs.data(), 0, MPI_COMM_WORLD);
+    assign_local_dof_ids(col_map, boundary_conditions);
+    create_evaluators(boundary_conditions);
+
+    Core::LinAlg::Map row_map(-1, n_local_equations, 0, MPI_COMM_WORLD);
+    Core::LinAlg::Vector<double> rhs(row_map, true);
+    Core::LinAlg::Vector<double> locally_relevant_dofs(col_map, true);
+    locally_relevant_dofs.get_values()[0] = 10.0;
+
+    const double total_terminal_unit_volume = 3.0;
+    boundary_conditions.total_terminal_unit_volume = total_terminal_unit_volume;
+    update_residual_vector(rhs, boundary_conditions, locally_relevant_dofs, 0.0);
+
+    const double xi = (total_terminal_unit_volume - 1.0) / (5.0 - 1.0);
+    const double expected_pressure = 0.5 + 2.0 * xi + 0.25 * (std::exp(0.1 * xi) - 1.0);
+
+    ASSERT_EQ(boundary_conditions.models.size(), 1u);
+    const auto& model = boundary_conditions.models.front();
+    ASSERT_TRUE(std::holds_alternative<VolumeDependentPleuralPressure>(model.value_model));
+    EXPECT_DOUBLE_EQ(
+        rhs.local_values_as_span()[model.data.local_equation_id[0]], 10.0 - expected_pressure);
+  }
+
+  TEST(BoundaryConditionsTests, PleuralPressureGroupsPerDefinition)
+  {
+    skip_if_parallel();
+
+    // Unlike the function-valued types, two pleural pressure definitions never share a model:
+    // they carry their own parameters and so evaluate to different values.
+    auto fixture = make_fixture();
+    fixture.bc_nodes = {{1, {0}}, {2, {2}}};
+    fixture.parameters.boundary_conditions.pressure.clear();
+    fixture.parameters.boundary_conditions.flow.clear();
+    fixture.parameters.boundary_conditions.volume_dependent_pleural_pressure = {
+        make_pleural_pressure_definition(1), make_pleural_pressure_definition(2, 2.0, 6.0)};
+
+    Core::Utils::FunctionManager function_manager;
+    auto boundary_conditions = create_boundary_conditions_from_fixture(fixture, function_manager);
+
+    ASSERT_EQ(boundary_conditions.models.size(), 2u);
+    for (const auto& model : boundary_conditions.models)
+    {
+      EXPECT_EQ(model.constrained_variable, ConstrainedVariable::Pressure);
+      ASSERT_TRUE(std::holds_alternative<VolumeDependentPleuralPressure>(model.value_model));
+      EXPECT_EQ(model.data.size(), 1u);
+    }
+    const auto residual_volume_of = [](const BoundaryConditionModel& model)
+    {
+      return std::get<VolumeDependentPleuralPressure>(model.value_model).parameters.residual_volume;
+    };
+    EXPECT_DOUBLE_EQ(residual_volume_of(boundary_conditions.models[0]), 1.0);
+    EXPECT_DOUBLE_EQ(residual_volume_of(boundary_conditions.models[1]), 2.0);
+  }
+
+  TEST(BoundaryConditionsTests, PleuralPressureRequestsTerminalUnitVolume)
+  {
+    skip_if_parallel();
+
+    // The global reduction computing the total volume is skipped unless a condition asks for it.
+    {
+      auto fixture = make_fixture();
+      auto function_manager = make_function_manager({2.5, -1.0});
+      auto boundary_conditions = create_boundary_conditions_from_fixture(fixture, function_manager);
+      EXPECT_FALSE(boundary_conditions.requires_total_terminal_unit_volume);
+    }
+
+    {
+      auto fixture = make_fixture();
+      fixture.set_bc_input(make_single_pleural_bc_parameters(0));
+      Core::Utils::FunctionManager function_manager;
+      auto boundary_conditions = create_boundary_conditions_from_fixture(fixture, function_manager);
+      EXPECT_TRUE(boundary_conditions.requires_total_terminal_unit_volume);
+    }
+  }
+
+  TEST(BoundaryConditionsTests, PleuralPressureClashesWithPressureOnSameNode)
+  {
+    skip_if_parallel();
+
+    // Both constrain the pressure dof of the same node, so they must be rejected even though
+    // their boundary condition types differ.
+    auto fixture = make_fixture();
+    fixture.set_bc_input(make_single_pleural_bc_parameters(0));
+    fixture.bc_nodes[2] = {0};
+    fixture.parameters.boundary_conditions.pressure = {make_definition(2, 1)};
+
+    auto function_manager = make_function_manager({1.0});
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        create_boundary_conditions_from_fixture(fixture, function_manager), Core::Exception,
+        "Multiple pressure boundary conditions assigned to node 0");
+  }
+
+  TEST(BoundaryConditionsTests, PleuralPressureRejectsCapacityBelowResidualVolume)
+  {
+    skip_if_parallel();
+
+    auto fixture = make_fixture();
+    fixture.set_bc_input(make_single_pleural_bc_parameters(0, 5.0, 5.0));
+
+    Core::Utils::FunctionManager function_manager;
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        create_boundary_conditions_from_fixture(fixture, function_manager), Core::Exception,
+        "requires total_lung_capacity > residual_volume");
+  }
+
   TEST(BoundaryConditionsTests, CreateBoundaryConditionsDuplicateTypeThrows)
   {
     skip_if_parallel();
@@ -412,7 +570,7 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    fixture.set_bc_input(make_single_bc_parameters(0, Type::Pressure));
+    fixture.set_bc_input(make_single_bc_parameters(0, ConstrainedVariable::Pressure));
     // The mesh refers to a definition that the input file does not provide.
     fixture.bc_nodes[7] = {2};
 
@@ -430,7 +588,7 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    auto input = make_single_bc_parameters(0, Type::Pressure);
+    auto input = make_single_bc_parameters(0, ConstrainedVariable::Pressure);
     // The input file defines a condition that no node of the mesh refers to.
     input.parameters.boundary_conditions.pressure.push_back(make_definition(2, 1));
     fixture.set_bc_input(std::move(input));
@@ -449,7 +607,7 @@ namespace
     skip_if_parallel();
 
     auto fixture = make_fixture();
-    auto input = make_single_bc_parameters(0, Type::Pressure);
+    auto input = make_single_bc_parameters(0, ConstrainedVariable::Pressure);
     input.parameters.boundary_conditions.flow.push_back(make_definition(1, 1));
     fixture.set_bc_input(std::move(input));
 

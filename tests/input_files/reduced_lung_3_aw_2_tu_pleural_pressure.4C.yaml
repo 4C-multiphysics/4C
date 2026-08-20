@@ -1,0 +1,65 @@
+TITLE:
+  - "3 resistive airways forming a bifurcation, 2 attached terminal units with linear stiffness,"
+  - "pressure bc at airway inlet, volume-dependent pleural pressure at both terminal unit outlets."
+  - "Both outlets share one definition, and 'coupling' is omitted so that the Frozen default is"
+  - "exercised."
+PROBLEM TYPE:
+  PROBLEMTYPE: "Reduced_Lung"
+reduced_dimensional_lung:
+  air_properties:
+    density: 1.176e-06
+    dynamic_viscosity: 1.79105e-05
+  dynamics:
+    linear_solver: 1
+    number_of_steps: 2
+    restart_every: 1
+    results_every: 1
+    time_increment: 1
+  geometry:
+    file: "vtu/reduced_lung_3_aw_2_tu.vtu"
+  lung_tree:
+    airways:
+      element_blocks: [1]
+      radius:
+        from_mesh: "radius"
+      flow_model:
+        resistance_type:
+          constant: Linear
+        include_inertia:
+          constant: false
+      wall_model_type:
+        constant: Rigid
+    terminal_units:
+      element_blocks: [2]
+      rheological_model:
+        rheological_model_type:
+          constant: KelvinVoigt
+        kelvin_voigt:
+          viscosity_kelvin_voigt_eta:
+            constant: 0.0
+      elasticity_model:
+        elasticity_model_type:
+          constant: Linear
+        linear:
+          elasticity_e:
+            constant: 1.0
+  boundary_conditions:
+    pressure:
+      - id: 1
+        function_id: 1
+    volume_dependent_pleural_pressure:
+      - id: 2
+        # Both terminal units are spheres of radius 1, so the total volume starts at 8/3*pi and
+        # the normalized volume at pi/6.
+        residual_volume: 0.0
+        total_lung_capacity: 16.0
+        normalized_linear_exponential:
+          pressure_offset: 0.1
+          linear_coefficient: 0.4
+          exponential_coefficient: 0.25
+          exponential_rate: 2.0
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Reduced_lung_solver"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "t"

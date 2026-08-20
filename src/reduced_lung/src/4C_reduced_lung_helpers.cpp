@@ -107,9 +107,12 @@ namespace ReducedLung
         { Junctions::update_jacobian(jacobian, connections, bifurcations); });
     pipeline.jacobian_assemblers.emplace_back(
         [&boundary_conditions](Core::LinAlg::SparseMatrix& jacobian,
-            const Core::LinAlg::Vector<double>& /*locally_relevant_dofs*/, double /*current_time*/,
+            const Core::LinAlg::Vector<double>& locally_relevant_dofs, double current_time,
             double /*time_step_size_dt*/)
-        { BoundaryConditions::update_jacobian(jacobian, boundary_conditions); });
+        {
+          BoundaryConditions::update_jacobian(
+              jacobian, boundary_conditions, locally_relevant_dofs, current_time);
+        });
 
     pipeline.state_updaters.emplace_back(
         [&airways](
