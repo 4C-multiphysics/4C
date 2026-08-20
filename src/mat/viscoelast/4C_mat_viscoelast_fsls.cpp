@@ -12,6 +12,7 @@
 
 #include <Teuchos_ParameterList.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 
@@ -24,13 +25,17 @@ namespace Mat::ViscoElast
       : Parameter(matdata),
         tau_(matdata.parameters.get<double>("TAU")),
         alpha_(matdata.parameters.get<double>("ALPHA")),
-        beta_(matdata.parameters.get<double>("BETA"))
+        beta_(matdata.parameters.get<double>("BETA")),
+        solve_(matdata.parameters.get<std::string>("SOLVE"))
   {
     FOUR_C_ASSERT_ALWAYS(tau_ > 0.0,
         "Invalid TAU={} in VISCO_FSLS (MAT {}). TAU has to be positive.", tau_, matdata.id);
 
     FOUR_C_ASSERT_ALWAYS(alpha_ >= 0.0 && alpha_ < 1.0,
         "Invalid ALPHA={} in VISCO_FSLS (MAT {}). Expected 0 <= ALPHA < 1.", alpha_, matdata.id);
+
+    FOUR_C_ASSERT_ALWAYS(beta_ >= 0.0,
+        "Invalid BETA={} in VISCO_FSLS (MAT {}). Expected BETA >= 0.", beta_, matdata.id);
   }
 
   Fsls::Fsls(PAR::Fsls* params) : params_(params) {}
@@ -41,6 +46,7 @@ namespace Mat::ViscoElast
     tau = params_->tau_;
     alpha = params_->alpha_;
     beta = params_->beta_;
+    solve = params_->solve_;
   }
 
 
@@ -68,6 +74,14 @@ namespace Mat::ViscoElast
     kernel_input.alpha = metadata.alpha;
     kernel_input.beta = metadata.beta;
     kernel_input.previous_history = &fsls_previous_history;
+
+    kernel_input.solve_kind = metadata.solve_kind;
+    if (metadata.solve_kind == FslsSolveKind::l1)
+    {
+      if (static_cast<std::size_t>(point.gp) >= l1_step_cache_.size())
+        l1_step_cache_.resize(point.gp + 1);
+      kernel_input.l1 = {&l1_weight_cache_, &l1_step_cache_[point.gp]};
+    }
 
     Kernels::FslsStressVector q_current_for_history(Core::LinAlg::Initialization::zero);
     Kernels::FslsStressVector q_additive(Core::LinAlg::Initialization::zero);
@@ -144,6 +158,7 @@ namespace Mat::ViscoElast
       ++fsls_model_count;
       metadata.summand_mat_id = context.visco_summand_mat_ids.at(p);
       fsls->read_material_parameters_visco(metadata.tau, metadata.beta, metadata.alpha, solve);
+      metadata.solve_kind = parse_solve_kind(solve, point.visco_mat_id, point.gp, point.ele_gid);
     }
 
     FOUR_C_ASSERT_ALWAYS(fsls_model_count == 1,
@@ -161,7 +176,25 @@ namespace Mat::ViscoElast
         "{}, ELE {}). Expected 0 <= ALPHA < 1.",
         metadata.alpha, metadata.summand_mat_id, point.visco_mat_id, point.gp, point.ele_gid);
 
+    FOUR_C_ASSERT_ALWAYS(metadata.beta >= 0.0,
+        "Invalid BETA={} in VISCO_FSLS (MAT {}, referenced by MAT_ViscoElastHyper MAT {}, GP {}, "
+        "ELE {}). Expected BETA >= 0.",
+        metadata.beta, metadata.summand_mat_id, point.visco_mat_id, point.gp, point.ele_gid);
+
     metadata_ = metadata;
+  }
+
+
+  FslsSolveKind FslsContribution::parse_solve_kind(
+      const std::string& solve, const int visco_mat_id, const int gp, const int ele_gid)
+  {
+    if (solve == "GrunwaldLetnikov") return FslsSolveKind::grunwald_letnikov;
+    if (solve == "L1") return FslsSolveKind::l1;
+
+    FOUR_C_THROW(
+        "Invalid SOLVE='{}' in VISCO_FSLS for MAT_ViscoElastHyper (MAT {}, GP {}, ELE {}). Use "
+        "GrunwaldLetnikov or L1.",
+        solve, visco_mat_id, gp, ele_gid);
   }
 
 
@@ -186,80 +219,272 @@ namespace Mat::ViscoElast
   }
 
 
+  namespace
+  {
+    /// Common preconditions shared by every FSLS kernel scheme; returns the per-GP history.
+    const Kernels::FslsPointHistory& require_fsls_history_at_gp(
+        const Kernels::FslsKernelInput& input)
+    {
+      FOUR_C_ASSERT_ALWAYS(input.dt > 0.0,
+          "Invalid time step size dt={} in FSLS kernel evaluation (MAT {}, GP {}, ELE {}). "
+          "Expected dt > 0.",
+          input.dt, input.visco_mat_id, input.gp, input.ele_gid);
+
+      FOUR_C_ASSERT_ALWAYS(input.tau > 0.0,
+          "Invalid TAU={} in FSLS kernel evaluation (MAT {}, GP {}, ELE {}). Expected TAU > 0.",
+          input.tau, input.visco_mat_id, input.gp, input.ele_gid);
+
+      FOUR_C_ASSERT_ALWAYS(input.alpha >= 0.0 && input.alpha < 1.0,
+          "Invalid ALPHA={} in FSLS kernel evaluation (MAT {}, GP {}, ELE {}). Expected 0 <= "
+          "ALPHA < 1.",
+          input.alpha, input.visco_mat_id, input.gp, input.ele_gid);
+
+      FOUR_C_ASSERT_ALWAYS(input.previous_history != nullptr,
+          "Missing FSLS history state in kernel evaluation (MAT {}, GP {}, ELE {}).",
+          input.visco_mat_id, input.gp, input.ele_gid);
+
+      const Kernels::FslsHistory& previous_history = *input.previous_history;
+      FOUR_C_ASSERT_ALWAYS(!previous_history.empty(),
+          "Missing FSLS history state in kernel evaluation (MAT {}, GP {}, ELE {}).",
+          input.visco_mat_id, input.gp, input.ele_gid);
+
+      FOUR_C_ASSERT_ALWAYS(input.gp >= 0 && input.gp < static_cast<int>(previous_history.size()),
+          "Invalid Gauss point index GP={} for FSLS history in kernel evaluation (MAT {}, ELE "
+          "{}). History container size is {}.",
+          input.gp, input.visco_mat_id, input.ele_gid, previous_history.size());
+
+      const auto& fsls_history_at_gp = previous_history.at(input.gp);
+      FOUR_C_ASSERT_ALWAYS(!fsls_history_at_gp.empty(),
+          "Invalid FSLS history size {} at GP {} in kernel evaluation (MAT {}, ELE {}). "
+          "Expected at least one entry.",
+          fsls_history_at_gp.size(), input.gp, input.visco_mat_id, input.ele_gid);
+
+      return fsls_history_at_gp;
+    }
+
+
+    /// Grunwald-Letnikov discretization: full convolution of the artificial-stress history with
+    /// recursive binomial-type coefficients (Adolfsson and Enelund 2003).
+    void evaluate_fsls_kernel_grunwald_letnikov(const Kernels::FslsStressVector& stress,
+        const Kernels::FslsTangentMatrix& cmat, Kernels::FslsStressVector& q_current_for_history,
+        Kernels::FslsStressVector& q_additive, Kernels::FslsTangentMatrix& cmatq_additive,
+        const Kernels::FslsKernelInput& input)
+    {
+      const auto& fsls_history_at_gp = require_fsls_history_at_gp(input);
+      const int hs = static_cast<int>(fsls_history_at_gp.size());
+
+      // calculate artificial history stress Qq with weights b_j
+      // Qq = sum[j=1 up to j=n][b_j*Q_(n+1-j)] (short: b*Qj)
+      // b_j = (j-1-alpha)/j * b_(j-1), with b_0 = 1
+      double bj = 1.;
+      double fac = 1.;
+      Kernels::FslsStressVector q_history_sum(Core::LinAlg::Initialization::zero);
+
+      for (int j = 1; j <= hs; j++)
+      {
+        fac = (j - 1. - input.alpha) / j;
+        bj = bj * fac;
+
+        Kernels::FslsStressVector qj(fsls_history_at_gp.at(hs - j));
+        q_history_sum.update(bj, qj, 1.0);
+      }
+
+      const double dtalpha = std::pow(input.dt, input.alpha);
+      const double taualpha = std::pow(input.tau, input.alpha);
+      const double denominator = dtalpha + taualpha;
+      FOUR_C_ASSERT_ALWAYS(denominator > 0.0,
+          "Invalid FSLS update denominator dt^alpha + tau^alpha = {} in kernel evaluation (MAT "
+          "{}, GP {}, ELE {}): dt={}, tau={}, alpha={}. Expected a positive denominator.",
+          denominator, input.visco_mat_id, input.gp, input.ele_gid, input.dt, input.tau,
+          input.alpha);
+
+      const double lambda_1 = dtalpha / denominator;
+      const double lambda_2 = -1. * taualpha / denominator;
+
+      q_current_for_history.update(lambda_1 * input.beta, stress, 0.);
+      q_current_for_history.update(lambda_2, q_history_sum, 1.);
+
+      q_additive.update(1.0, q_current_for_history, 0.0);
+      q_additive.update(input.beta, stress, -1.);
+
+      cmatq_additive.update(lambda_1 * input.beta, cmat, 0.);
+      cmatq_additive.update(input.beta, cmat, -1.);
+    }
+
+
+    /// K_k^h = c * b_k with c = (tau/h)^alpha / Gamma(2-alpha) and
+    /// b_k = k^(1-alpha) * expm1((1-alpha) * log1p(1/k)) for k >= 1, b_0 = 1.
+    /// The expm1/log1p formulation avoids the catastrophic cancellation that direct evaluation of
+    /// (k+1)^(1-alpha) - k^(1-alpha) suffers from for large k.
+    double fsls_l1_weight_from_prefactor(const std::size_t k, const double alpha, const double c)
+    {
+      if (k == 0) return c;
+
+      const double p = 1.0 - alpha;
+      const double kd = static_cast<double>(k);
+      const double bk = std::pow(kd, p) * std::expm1(p * std::log1p(1.0 / kd));
+      return c * bk;
+    }
+
+
+    /// c = (tau/h)^alpha / Gamma(2-alpha), evaluated in log space to avoid overflow/underflow of
+    /// the power for extreme tau/h ratios. alpha == 0 is special-cased to the exact value 1 so
+    /// that a degenerate tau/h (e.g. from an extreme time step) can never produce a 0 * inf = NaN
+    /// in alpha * log(tau/h).
+    double fsls_l1_prefactor(const double alpha, const double tau, const double dt)
+    {
+      if (alpha == 0.0) return 1.0;
+
+      const double log_c = alpha * std::log(tau / dt) - std::lgamma(2.0 - alpha);
+      return std::exp(log_c);
+    }
+
+
+    /// Returns K_k^h from the contribution-wide cache, extending it as needed. The L1 scheme is
+    /// only valid on a uniform time grid, so a change of dt after the cache has been established
+    /// is a hard user-facing error rather than a silent rebuild.
+    double fsls_l1_weight_cached(
+        FslsL1WeightCache& cache, const Kernels::FslsKernelInput& input, const std::size_t k)
+    {
+      const double alpha = input.alpha;
+      const double tau = input.tau;
+      const double dt = input.dt;
+
+      if (!cache.valid)
+      {
+        cache.alpha = alpha;
+        cache.tau = tau;
+        cache.dt = dt;
+        cache.valid = true;
+      }
+      else
+      {
+        constexpr double relative_grid_tolerance = 1.0e-12;
+        const bool grid_matches =
+            cache.alpha == alpha && cache.tau == tau &&
+            std::abs(cache.dt - dt) <= relative_grid_tolerance * std::max(cache.dt, dt);
+        FOUR_C_ASSERT_ALWAYS(grid_matches,
+            "FSLS L1 scheme requires a uniform time step, but the time step size changed from "
+            "{} to {} (MAT {}, GP {}, ELE {}). A variable-step L1 scheme is a different, "
+            "unimplemented method; keep TIMESTEP constant while VISCO_FSLS uses SOLVE L1.",
+            cache.dt, dt, input.visco_mat_id, input.gp, input.ele_gid);
+      }
+
+      if (k >= cache.weights.size())
+      {
+        const double c = fsls_l1_prefactor(alpha, tau, dt);
+        cache.weights.reserve(k + 1);
+        for (std::size_t j = cache.weights.size(); j <= k; ++j)
+          cache.weights.push_back(fsls_l1_weight_from_prefactor(j, alpha, c));
+      }
+
+      return cache.weights[k];
+    }
+
+
+    /// Uniform-grid L1 discretization: closed-form affine update of the artificial stress,
+    /// obtained by splitting the L1 convolution sum into a committed history remainder r_n^Q and
+    /// a term linear in the current trial equilibrium stress (formula and caching rationale: see
+    /// FslsL1StepCache).
+    void evaluate_fsls_kernel_l1(const Kernels::FslsStressVector& stress,
+        const Kernels::FslsTangentMatrix& cmat, Kernels::FslsStressVector& q_current_for_history,
+        Kernels::FslsStressVector& q_additive, Kernels::FslsTangentMatrix& cmatq_additive,
+        const Kernels::FslsKernelInput& input)
+    {
+      const auto& fsls_history_at_gp = require_fsls_history_at_gp(input);
+      FOUR_C_ASSERT_ALWAYS(input.l1.weights != nullptr && input.l1.step != nullptr,
+          "Missing FSLS L1 cache state in kernel evaluation (MAT {}, GP {}, ELE {}).",
+          input.visco_mat_id, input.gp, input.ele_gid);
+
+      // History holds committed values Q_0 .. Q_n (hs = n+1 entries); we are solving for Q_{n+1}.
+      const std::size_t hs = fsls_history_at_gp.size();
+      const std::size_t n = hs - 1;
+
+      // K_0 is looked up (and, on a uniform grid, always re-validated against alpha/tau/dt) on
+      // every call, independent of whether the r_n^Q cache below is reused: this is what
+      // guarantees a dt change is still caught even when the history length happens to be
+      // unchanged since the last call.
+      const double k0 = fsls_l1_weight_cached(*input.l1.weights, input, 0);
+
+      FslsL1StepCache& step_cache = *input.l1.step;
+      if (!step_cache.valid || step_cache.history_size != hs)
+      {
+        // r_n^Q accumulation (see FslsL1StepCache for the formula).
+        Kernels::FslsStressVector r_q(fsls_history_at_gp.at(n));
+        r_q.scale(-k0);
+
+        Kernels::FslsStressVector delta_q(Core::LinAlg::Initialization::zero);
+        for (std::size_t k = 1; k <= n; ++k)
+        {
+          const double kk = fsls_l1_weight_cached(*input.l1.weights, input, k);
+
+          delta_q.update(1.0, fsls_history_at_gp.at(n - k + 1), -1.0, fsls_history_at_gp.at(n - k));
+          r_q.update(kk, delta_q, 1.0);
+        }
+
+        step_cache.r_q = r_q;
+        step_cache.history_size = hs;
+        step_cache.valid = true;
+      }
+
+      const Kernels::FslsStressVector& r_q = step_cache.r_q;
+
+      const double denominator = 1.0 + k0;
+      FOUR_C_ASSERT_ALWAYS(denominator > 0.0,
+          "Invalid FSLS L1 update denominator 1 + K_0 = {} in kernel evaluation (MAT {}, GP {}, "
+          "ELE {}). Expected a positive denominator.",
+          denominator, input.visco_mat_id, input.gp, input.ele_gid);
+
+      // Q_{n+1} = (beta * S_inf - r_n^Q) / (1 + K_0)
+      Kernels::FslsStressVector q_next(Core::LinAlg::Initialization::zero);
+      q_next.update(input.beta, stress, -1.0, r_q);
+      q_next.scale(1.0 / denominator);
+
+      q_current_for_history.update(q_next);
+
+      // S_eff = (1+beta) * S_inf - Q  =>  additive = S_eff - S_inf = beta*S_inf - Q
+      q_additive.update(1.0, q_next, 0.0);
+      q_additive.update(input.beta, stress, -1.0);
+
+      // C_eff = [(1+beta) - beta/(1+K0)] * C_inf  =>  additive = beta*K0/(1+K0) * C_inf
+      const double tangent_factor = input.beta * k0 / denominator;
+      cmatq_additive.update(tangent_factor, cmat);
+    }
+  }  // namespace
+
+
   void Kernels::evaluate_fsls_kernel(const FslsStressVector& stress, const FslsTangentMatrix& cmat,
       FslsStressVector& q_current_for_history, FslsStressVector& q_additive,
       FslsTangentMatrix& cmatq_additive, const FslsKernelInput& input)
   {
-    FOUR_C_ASSERT_ALWAYS(input.dt > 0.0,
-        "Invalid time step size dt={} in FSLS kernel evaluation (MAT {}, GP {}, ELE {}). "
-        "Expected dt > 0.",
-        input.dt, input.visco_mat_id, input.gp, input.ele_gid);
-
-    FOUR_C_ASSERT_ALWAYS(input.tau > 0.0,
-        "Invalid TAU={} in FSLS kernel evaluation (MAT {}, GP {}, ELE {}). Expected TAU > 0.",
-        input.tau, input.visco_mat_id, input.gp, input.ele_gid);
-
-    FOUR_C_ASSERT_ALWAYS(input.alpha >= 0.0 && input.alpha < 1.0,
-        "Invalid ALPHA={} in FSLS kernel evaluation (MAT {}, GP {}, ELE {}). Expected 0 <= "
-        "ALPHA < 1.",
-        input.alpha, input.visco_mat_id, input.gp, input.ele_gid);
-
-    FOUR_C_ASSERT_ALWAYS(input.previous_history != nullptr,
-        "Missing FSLS history state in kernel evaluation (MAT {}, GP {}, ELE {}).",
-        input.visco_mat_id, input.gp, input.ele_gid);
-
-    const FslsHistory& previous_history = *input.previous_history;
-    FOUR_C_ASSERT_ALWAYS(!previous_history.empty(),
-        "Missing FSLS history state in kernel evaluation (MAT {}, GP {}, ELE {}).",
-        input.visco_mat_id, input.gp, input.ele_gid);
-
-    FOUR_C_ASSERT_ALWAYS(input.gp >= 0 && input.gp < static_cast<int>(previous_history.size()),
-        "Invalid Gauss point index GP={} for FSLS history in kernel evaluation (MAT {}, ELE "
-        "{}). History container size is {}.",
-        input.gp, input.visco_mat_id, input.ele_gid, previous_history.size());
-
-    const auto& fsls_history_at_gp = previous_history.at(input.gp);
-    const int hs = fsls_history_at_gp.size();
-    FOUR_C_ASSERT_ALWAYS(hs > 0,
-        "Invalid FSLS history size {} at GP {} in kernel evaluation (MAT {}, ELE {}). "
-        "Expected at least one entry.",
-        hs, input.gp, input.visco_mat_id, input.ele_gid);
-
-    // calculate artificial history stress Qq with weights b_j
-    // Qq = sum[j=1 up to j=n][b_j*Q_(n+1-j)] (short: b*Qj)
-    // b_j = (j-1-alpha)/j * b_(j-1), with b_0 = 1
-    double bj = 1.;
-    double fac = 1.;
-    FslsStressVector q_history_sum(Core::LinAlg::Initialization::zero);
-
-    for (int j = 1; j <= hs; j++)
+    switch (input.solve_kind)
     {
-      fac = (j - 1. - input.alpha) / j;
-      bj = bj * fac;
-
-      FslsStressVector qj(fsls_history_at_gp.at(hs - j));
-      q_history_sum.update(bj, qj, 1.0);
+      case FslsSolveKind::grunwald_letnikov:
+        evaluate_fsls_kernel_grunwald_letnikov(
+            stress, cmat, q_current_for_history, q_additive, cmatq_additive, input);
+        return;
+      case FslsSolveKind::l1:
+        evaluate_fsls_kernel_l1(
+            stress, cmat, q_current_for_history, q_additive, cmatq_additive, input);
+        return;
     }
 
-    const double dtalpha = std::pow(input.dt, input.alpha);
-    const double taualpha = std::pow(input.tau, input.alpha);
-    const double denominator = dtalpha + taualpha;
-    FOUR_C_ASSERT_ALWAYS(denominator > 0.0,
-        "Invalid FSLS update denominator dt^alpha + tau^alpha = {} in kernel evaluation (MAT "
-        "{}, GP {}, ELE {}): dt={}, tau={}, alpha={}. Expected a positive denominator.",
-        denominator, input.visco_mat_id, input.gp, input.ele_gid, input.dt, input.tau, input.alpha);
+    FOUR_C_THROW("Unhandled FSLS scheme in kernel evaluation (MAT {}, GP {}, ELE {}).",
+        input.visco_mat_id, input.gp, input.ele_gid);
+  }
 
-    const double lambda_1 = dtalpha / denominator;
-    const double lambda_2 = -1. * taualpha / denominator;
 
-    q_current_for_history.update(lambda_1 * input.beta, stress, 0.);
-    q_current_for_history.update(lambda_2, q_history_sum, 1.);
+  double Kernels::evaluate_l1_weight(
+      const std::size_t k, const double alpha, const double tau, const double dt)
+  {
+    FOUR_C_ASSERT_ALWAYS(dt > 0.0,
+        "Invalid time step size dt={} in FSLS L1 weight evaluation. Expected dt > 0.", dt);
+    FOUR_C_ASSERT_ALWAYS(
+        tau > 0.0, "Invalid TAU={} in FSLS L1 weight evaluation. Expected TAU > 0.", tau);
+    FOUR_C_ASSERT_ALWAYS(alpha >= 0.0 && alpha < 1.0,
+        "Invalid ALPHA={} in FSLS L1 weight evaluation. Expected 0 <= ALPHA < 1.", alpha);
 
-    q_additive.update(1.0, q_current_for_history, 0.0);
-    q_additive.update(input.beta, stress, -1.);
-
-    cmatq_additive.update(lambda_1 * input.beta, cmat, 0.);
-    cmatq_additive.update(input.beta, cmat, -1.);
+    return fsls_l1_weight_from_prefactor(k, alpha, fsls_l1_prefactor(alpha, tau, dt));
   }
 
 }  // namespace Mat::ViscoElast

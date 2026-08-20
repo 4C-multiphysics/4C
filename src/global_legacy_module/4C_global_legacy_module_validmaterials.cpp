@@ -2452,6 +2452,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("TAU", {.description = "relaxation parameter"}),
             parameter<double>("ALPHA", {.description = "fractional order derivative"}),
             parameter<double>("BETA", {.description = "emphasis of viscous to elastic part"}),
+            deprecated_selection<std::string>("SOLVE", {"GrunwaldLetnikov", "L1"},
+                {.description = "Time discretization of the fractional derivative: "
+                                "GrunwaldLetnikov (default, full-history convolution) or L1 "
+                                "(uniform-grid L1 scheme, closed-form affine update)",
+                    .default_value = "GrunwaldLetnikov"}),
         },
         {.description = "Fractional standard linear solid visco summand"});
   }
