@@ -82,6 +82,7 @@ namespace Inpar
                 deprecated_selection<Solid::OptQuantityType>("OPTIONAL_QUANTITY",
                     {
                         {"No", Solid::optquantity_none},
+                        {"porosity", Solid::optquantity_porosity},
                         {"membranethickness", Solid::optquantity_membranethickness},
                         {"shell7pthickness", Solid::optquantity_shell7pthickness},
                         {"shell7pthicknessdirector", Solid::optquantity_shell7pthicknessdirector},
