@@ -1885,6 +1885,120 @@ void CONTACT::AbstractStrategy::update(std::shared_ptr<const Core::LinAlg::Vecto
 }
 
 /*----------------------------------------------------------------------*
+ |  Reset contact after failed trial time step                           |
+ *----------------------------------------------------------------------*/
+void CONTACT::AbstractStrategy::reset_step_state(
+    const std::shared_ptr<const Core::LinAlg::Vector<double>>& dis)
+{
+  if (zold_ != nullptr)
+  {
+    z_ = std::make_shared<Core::LinAlg::Vector<double>>(*zold_);
+  }
+  else if (z_ != nullptr)
+  {
+    z_->put_scalar(0.0);
+  }
+
+  if (zincr_ != nullptr)
+  {
+    zincr_->put_scalar(0.0);
+  }
+
+  if (zuzawa_ != nullptr)
+  {
+    if (z_ != nullptr)
+    {
+      zuzawa_ = std::make_shared<Core::LinAlg::Vector<double>>(*z_);
+    }
+    else
+    {
+      zuzawa_->put_scalar(0.0);
+    }
+  }
+
+  if (lagrange_multiplier() != nullptr)
+  {
+    store_nodal_quantities(Mortar::StrategyBase::lmcurrent);
+  }
+  if (lagrange_multiplier_old() != nullptr)
+  {
+    store_nodal_quantities(Mortar::StrategyBase::lmold);
+  }
+  if (lagrange_multiplier_uzawa() != nullptr)
+  {
+    store_nodal_quantities(Mortar::StrategyBase::lmuzawa);
+  }
+
+  for (const auto& interface : interfaces())
+  {
+    for (int j = 0; j < interface->source_col_nodes()->num_my_elements(); ++j)
+    {
+      const int gid = interface->source_col_nodes()->gid(j);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
+      if (node == nullptr)
+      {
+        FOUR_C_THROW("Cannot find node with gid {}", gid);
+      }
+
+      auto* cnode = dynamic_cast<CONTACT::Node*>(node);
+      cnode->active() = cnode->data().active_old();
+
+      if (friction_)
+      {
+        auto* fnode = dynamic_cast<CONTACT::FriNode*>(cnode);
+        fnode->fri_data().slip() = fnode->fri_data().slip_old();
+      }
+    }
+  }
+
+  gactivenodes_ = nullptr;
+  gactivedofs_ = nullptr;
+  ginactivenodes_ = nullptr;
+  ginactivedofs_ = nullptr;
+  gactiven_ = nullptr;
+  gactivet_ = nullptr;
+  gslipnodes_ = nullptr;
+  gslipdofs_ = nullptr;
+  gslipt_ = nullptr;
+
+  for (const auto& interface : interfaces())
+  {
+    interface->build_active_set();
+    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface->active_nodes(), false);
+    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface->active_dofs(), false);
+    ginactivenodes_ = Core::LinAlg::merge_map(ginactivenodes_, interface->inactive_nodes(), false);
+    ginactivedofs_ = Core::LinAlg::merge_map(ginactivedofs_, interface->inactive_dofs(), false);
+    gactiven_ = Core::LinAlg::merge_map(gactiven_, interface->active_n_dofs(), false);
+    gactivet_ = Core::LinAlg::merge_map(gactivet_, interface->active_t_dofs(), false);
+
+    if (friction_)
+    {
+      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface->slip_nodes(), false);
+      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interface->slip_dofs(), false);
+      gslipt_ = Core::LinAlg::merge_map(gslipt_, interface->slip_t_dofs(), false);
+    }
+  }
+
+  if (dold_ != nullptr && mold_ != nullptr)
+  {
+    store_dm("current");
+  }
+
+  if (dis != nullptr)
+  {
+    set_state(Mortar::state_new_displacement, *dis);
+    set_state(Mortar::state_old_displacement, *dis);
+  }
+
+  reset_active_set();
+
+  const bool restored_contact = (gactivenodes_ != nullptr && gactivenodes_->num_global_elements());
+  isincontact_ = restored_contact;
+  wasincontact_ = restored_contact;
+  wasincontactlts_ = restored_contact;
+}
+
+/*----------------------------------------------------------------------*
  |  write restart information for contact                     popp 03/08|
  *----------------------------------------------------------------------*/
 void CONTACT::AbstractStrategy::do_write_restart(
