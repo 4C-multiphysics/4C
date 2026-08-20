@@ -37,9 +37,6 @@ FOUR_C_NAMESPACE_OPEN
 Mat::PAR::GrowthRemodelElastHyper::GrowthRemodelElastHyper(
     const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
-      nummat_remodelfiber_(matdata.parameters.get<int>("NUMMATRF")),
-      nummat_elastiniso_(matdata.parameters.get<int>("NUMMATEL3D")),
-      nummat_elastinmem_(matdata.parameters.get<int>("NUMMATEL2D")),
       matids_remodelfiber_(matdata.parameters.get<std::vector<int>>("MATIDSRF")),
       matids_elastiniso_(matdata.parameters.get<std::vector<int>>("MATIDSEL3D")),
       matids_elastinmem_(matdata.parameters.get<std::vector<int>>("MATIDSEL2D")),
@@ -57,18 +54,6 @@ Mat::PAR::GrowthRemodelElastHyper::GrowthRemodelElastHyper(
       membrane_(matdata.parameters.get<int>("MEMBRANE")),
       cylinder_(matdata.parameters.get<int>("CYLINDER"))
 {
-  // check if sizes fit
-  if (nummat_remodelfiber_ != (int)matids_remodelfiber_.size())
-    FOUR_C_THROW(
-        "number of remodelfiber materials {} does not fit to size of remodelfiber material vector "
-        "{}",
-        nummat_remodelfiber_, matids_remodelfiber_.size());
-
-  if (nummat_elastinmem_ != (int)matids_elastinmem_.size())
-    FOUR_C_THROW(
-        "number of elastin materials {} does not fit to size of elastin material vector {}",
-        nummat_elastinmem_, matids_elastinmem_.size());
-
   if (membrane_ == 1)
   {
     if ((growthtype_ != 1) || (loctimeint_ != 0))
@@ -78,11 +63,7 @@ Mat::PAR::GrowthRemodelElastHyper::GrowthRemodelElastHyper(
   }
   else
   {
-    if (nummat_elastiniso_ != (int)matids_elastiniso_.size())
-      FOUR_C_THROW(
-          "number of elastin materials {} does not fit to size of elastin material vector {}",
-          nummat_elastiniso_, matids_elastiniso_.size());
-    if (nummat_elastiniso_ == 0) FOUR_C_THROW("you have to set a 3D elastin material");
+    if (matids_elastiniso_.empty()) FOUR_C_THROW("you have to set a 3D elastin material");
     if (matid_penalty_ == -1) FOUR_C_THROW("you have to set a volumetric penalty material");
     if ((p_mean_ == -1) || (ri_ == -1) || (t_ref_ == -1))
       FOUR_C_THROW(
