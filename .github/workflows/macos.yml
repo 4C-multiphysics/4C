@@ -18,13 +18,18 @@ jobs:
       - uses: actions/checkout@v7
       - name: System preparation
         run: ./dependencies/darwin/prepare_system.sh
+      - name: Get Homebrew versions
+        id: brew-versions
+        run: |
+          # Generate a key of all brew libraries
+          echo "hash=$(brew list --versions | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Restore dependencies cache
         id: cache-deps
         uses: actions/cache/restore@v6
         with:
           path: ${{ env.HOME }}/opt
           key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh', 'dependencies/darwin/**/install.sh',
-            'dependencies/current/**/install.sh') }}
+            'dependencies/current/**/install.sh') }}-brew-${{ steps.brew-versions.outputs.hash }}
       - name: Compile and install the dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
         run: |
@@ -37,13 +42,13 @@ jobs:
         with:
           path: ${{ env.HOME }}/opt
           key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh', 'dependencies/darwin/**/install.sh',
-            'dependencies/current/**/install.sh') }}
+            'dependencies/current/**/install.sh') }}-brew-${{ steps.brew-versions.outputs.hash }}
       - name: Restore build cache
         id: cache-build
         uses: actions/cache/restore@v6
         with:
           path: build/
-          key: ${{ runner.os }}-build-${{ github.sha }}
+          key: ${{ runner.os }}-build-${{ github.sha }}-brew-${{ steps.brew-versions.outputs.hash }}
       - name: Build 4C
         if: steps.cache-build.outputs.cache-hit != 'true'
         run: |
@@ -56,7 +61,7 @@ jobs:
         uses: actions/cache/save@v6
         with:
           path: build/
-          key: ${{ runner.os }}-build-${{ github.sha }}
+          key: ${{ runner.os }}-build-${{ github.sha }}-brew-${{ steps.brew-versions.outputs.hash }}
 
   test:
     name: Test 4C on macOS
@@ -66,19 +71,24 @@ jobs:
       - uses: actions/checkout@v7
       - name: System preparation
         run: ./dependencies/darwin/prepare_system.sh
+      - name: Get Homebrew versions
+        id: brew-versions
+        run: |
+          # Generate a key of all brew libraries
+          echo "hash=$(brew list --versions | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Restore dependencies cache
         id: cache-deps
         uses: actions/cache/restore@v6
         with:
           path: ${{ env.HOME }}/opt
           key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh', 'dependencies/darwin/**/install.sh',
-            'dependencies/current/**/install.sh') }}
+            'dependencies/current/**/install.sh') }}-brew-${{ steps.brew-versions.outputs.hash }}
       - name: Restore build cache
         id: cache-build
         uses: actions/cache/restore@v6
         with:
           path: build/
-          key: ${{ runner.os }}-build-${{ github.sha }}
+          key: ${{ runner.os }}-build-${{ github.sha }}-brew-${{ steps.brew-versions.outputs.hash }}
       - name: Run tests
         run: |
           echo "tests"
