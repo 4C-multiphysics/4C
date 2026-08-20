@@ -119,10 +119,10 @@ void SSI::SSICouplingMatchingVolume::assign_material_pointers(
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void SSI::SSICouplingMatchingVolume::set_mechanical_stress_state(
-    Core::FE::Discretization& scatradis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> stress_state, unsigned nds)
+    Core::FE::Discretization& scatradis, const Core::LinAlg::Vector<double>& stress_state,
+    const unsigned nds)
 {
-  scatradis.set_state(nds, "mechanicalStressState", *stress_state);
+  scatradis.set_state(nds, "mechanicalStressState", stress_state);
 }
 
 /*----------------------------------------------------------------------*/
@@ -136,28 +136,27 @@ void SSI::SSICouplingMatchingVolume::set_mesh_disp(
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void SSI::SSICouplingMatchingVolume::set_velocity_fields(
-    std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> convvel,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vel)
+    const std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
+    const Core::LinAlg::Vector<double>& convvel, const Core::LinAlg::Vector<double>& vel)
 {
-  scatra->scatra_field()->set_convective_velocity(*convvel);
-  scatra->scatra_field()->set_velocity_field(*vel);
+  scatra->scatra_field()->set_convective_velocity(convvel);
+  scatra->scatra_field()->set_velocity_field(vel);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSICouplingMatchingVolume::set_scalar_field(Core::FE::Discretization& dis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds)
+void SSI::SSICouplingMatchingVolume::set_scalar_field(
+    Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi, const unsigned nds)
 {
-  dis.set_state(nds, "scalarfield", *phi);
+  dis.set_state(nds, "scalarfield", phi);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSICouplingMatchingVolume::set_scalar_field_micro(Core::FE::Discretization& dis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds)
+void SSI::SSICouplingMatchingVolume::set_scalar_field_micro(
+    Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi, const unsigned nds)
 {
-  dis.set_state(nds, "MicroCon", *phi);
+  dis.set_state(nds, "MicroCon", phi);
 }
 
 /*----------------------------------------------------------------------*/
@@ -291,20 +290,19 @@ void SSI::SSICouplingNonMatchingBoundary::set_mesh_disp(
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void SSI::SSICouplingNonMatchingBoundary::set_velocity_fields(
-    std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> convvel,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vel)
+    const std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
+    const Core::LinAlg::Vector<double>& convvel, const Core::LinAlg::Vector<double>& vel)
 {
   scatra->scatra_field()->set_convective_velocity(
-      *adaptermeshtying_->target_to_source(*extractor_->extract_cond_vector(*convvel)));
+      *adaptermeshtying_->target_to_source(*extractor_->extract_cond_vector(convvel)));
   scatra->scatra_field()->set_velocity_field(
-      *adaptermeshtying_->target_to_source(*extractor_->extract_cond_vector(*vel)));
+      *adaptermeshtying_->target_to_source(*extractor_->extract_cond_vector(vel)));
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSICouplingNonMatchingBoundary::set_scalar_field(Core::FE::Discretization& dis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds)
+void SSI::SSICouplingNonMatchingBoundary::set_scalar_field(
+    Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi, unsigned nds)
 {
   FOUR_C_THROW(
       "transferring scalar state to structure discretization not implemented for "
@@ -313,8 +311,8 @@ void SSI::SSICouplingNonMatchingBoundary::set_scalar_field(Core::FE::Discretizat
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSICouplingNonMatchingBoundary::set_scalar_field_micro(Core::FE::Discretization& dis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds)
+void SSI::SSICouplingNonMatchingBoundary::set_scalar_field_micro(
+    Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi, unsigned nds)
 {
   FOUR_C_THROW("transferring micro scalar state to structure discretization not implemented.");
 }
@@ -421,28 +419,27 @@ void SSI::SSICouplingNonMatchingVolume::set_mesh_disp(
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void SSI::SSICouplingNonMatchingVolume::set_velocity_fields(
-    std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> convvel,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vel)
+    const std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
+    const Core::LinAlg::Vector<double>& convvel, const Core::LinAlg::Vector<double>& vel)
 {
   scatra->scatra_field()->set_convective_velocity(
-      *volcoupl_structurescatra_->apply_vector_mapping21(*convvel));
+      *volcoupl_structurescatra_->apply_vector_mapping21(convvel));
   scatra->scatra_field()->set_velocity_field(
-      *volcoupl_structurescatra_->apply_vector_mapping21(*vel));
+      *volcoupl_structurescatra_->apply_vector_mapping21(vel));
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSICouplingNonMatchingVolume::set_scalar_field(Core::FE::Discretization& dis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds)
+void SSI::SSICouplingNonMatchingVolume::set_scalar_field(
+    Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi, const unsigned nds)
 {
-  dis.set_state(nds, "scalarfield", *volcoupl_structurescatra_->apply_vector_mapping12(*phi));
+  dis.set_state(nds, "scalarfield", *volcoupl_structurescatra_->apply_vector_mapping12(phi));
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSICouplingNonMatchingVolume::set_scalar_field_micro(Core::FE::Discretization& dis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds)
+void SSI::SSICouplingNonMatchingVolume::set_scalar_field_micro(
+    Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi, unsigned nds)
 {
   FOUR_C_THROW("transferring micro scalar state to structure discretization not implemented.");
 }
@@ -621,27 +618,25 @@ void SSI::SSICouplingMatchingVolumeAndBoundary::set_mesh_disp(
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void SSI::SSICouplingMatchingVolumeAndBoundary::set_velocity_fields(
-    std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> convvel,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vel)
+    const std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
+    const Core::LinAlg::Vector<double>& convvel, const Core::LinAlg::Vector<double>& vel)
 {
-  scatra->scatra_field()->set_convective_velocity(*convvel);
-  scatra->scatra_field()->set_velocity_field(*vel);
+  scatra->scatra_field()->set_convective_velocity(convvel);
+  scatra->scatra_field()->set_velocity_field(vel);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSICouplingMatchingVolumeAndBoundary::set_scalar_field(Core::FE::Discretization& dis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds)
+void SSI::SSICouplingMatchingVolumeAndBoundary::set_scalar_field(
+    Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi, const unsigned nds)
 {
-  dis.set_state(nds, "scalarfield", *phi);
+  dis.set_state(nds, "scalarfield", phi);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void SSI::SSICouplingMatchingVolumeAndBoundary::set_scalar_field_micro(
-    Core::FE::Discretization& dis, std::shared_ptr<const Core::LinAlg::Vector<double>> phi,
-    unsigned nds)
+    Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi, unsigned nds)
 {
   FOUR_C_THROW("transferring micro scalar state to structure discretization not implemented.");
 }

@@ -23,9 +23,6 @@ namespace Adapter
 {
   class ScaTraBaseAlgorithm;
   class Structure;
-  class ScaTraTimIntImpl;
-  class CouplingMortar;
-  class MortarVolCoupl;
 }  // namespace Adapter
 
 namespace SSI
@@ -43,7 +40,7 @@ namespace SSI
     //! \param ndim                        dimension of the problem
     //! \param structdis                   underlying structure discretization
     //! \param ssi_base                    underlying scatra-structure time integrator
-    virtual void init(const int ndim, std::shared_ptr<Core::FE::Discretization> structdis,
+    virtual void init(int ndim, std::shared_ptr<Core::FE::Discretization> structdis,
         std::shared_ptr<SSI::SSIBase> ssi_base) = 0;
 
     //! \brief setup this class
@@ -62,7 +59,7 @@ namespace SSI
     //! \param stress_state   mechanical stress state vector to set
     //! \param nds            number of dofset to write state on
     virtual void set_mechanical_stress_state(Core::FE::Discretization& scatradis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> stress_state, unsigned nds) = 0;
+        const Core::LinAlg::Vector<double>& stress_state, unsigned nds) = 0;
 
     //! \brief set structure mesh displacement on other field
     //!
@@ -77,24 +74,23 @@ namespace SSI
     //! \param convvel   convective velocity field to set
     //! \param vel       velocity field to set
     virtual void set_velocity_fields(std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> convvel,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vel) = 0;
+        const Core::LinAlg::Vector<double>& convvel, const Core::LinAlg::Vector<double>& vel) = 0;
 
     //! \brief set scatra solution on other field
     //!
     //! \param dis    discretization to write scatra solution on
     //! \param phi    scalar field solution
     //! \param nds    number of dofset to write state on
-    virtual void set_scalar_field(Core::FE::Discretization& dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds) = 0;
+    virtual void set_scalar_field(
+        Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi, unsigned nds) = 0;
 
     //! \brief set micro solution of scatra field other field
     //!
     //! \param dis     discretization to write micro scatra solution on
     //! \param phi     micro scatra solution
     //! \param nds     number of dofset to write micro scatra solution on
-    virtual void set_scalar_field_micro(Core::FE::Discretization& dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds) = 0;
+    virtual void set_scalar_field_micro(
+        Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi, unsigned nds) = 0;
 
     //! set temperature field on structure field
     virtual void set_temperature_field(Core::FE::Discretization& structdis,
@@ -105,8 +101,9 @@ namespace SSI
   class SSICouplingMatchingVolume : public SSICouplingBase
   {
    public:
-    SSICouplingMatchingVolume() : issetup_(false), isinit_(false) {};
-    void init(const int ndim, std::shared_ptr<Core::FE::Discretization> structdis,
+    SSICouplingMatchingVolume() : issetup_(false), isinit_(false) {}
+
+    void init(int ndim, std::shared_ptr<Core::FE::Discretization> structdis,
         std::shared_ptr<SSI::SSIBase> ssi_base) override;
 
     void setup() override;
@@ -115,21 +112,20 @@ namespace SSI
         std::shared_ptr<Core::FE::Discretization> scatradis) override;
 
     void set_mechanical_stress_state(Core::FE::Discretization& scatradis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> stress_statetemp,
-        unsigned nds) override;
+        const Core::LinAlg::Vector<double>& stress_state, unsigned nds) override;
 
     void set_mesh_disp(std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
         const Core::LinAlg::Vector<double>& disp) override;
 
     void set_velocity_fields(std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> convvel,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vel) override;
+        const Core::LinAlg::Vector<double>& convvel,
+        const Core::LinAlg::Vector<double>& vel) override;
 
-    void set_scalar_field(Core::FE::Discretization& dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds) override;
+    void set_scalar_field(Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi,
+        unsigned nds) override;
 
     void set_scalar_field_micro(Core::FE::Discretization& dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds) override;
+        const Core::LinAlg::Vector<double>& phi, unsigned nds) override;
 
     void set_temperature_field(Core::FE::Discretization& structdis,
         std::shared_ptr<const Core::LinAlg::Vector<double>> temp) override;
@@ -143,29 +139,23 @@ namespace SSI
 
    protected:
     //! returns true if setup() was called and is still valid
-    bool is_setup() { return issetup_; };
+    [[nodiscard]] bool is_setup() const { return issetup_; }
 
     //! returns true if init(..) was called and is still valid
-    bool is_init() { return isinit_; };
+    [[nodiscard]] bool is_init() const { return isinit_; }
 
     //! returns true if class was setup and setup is still valid
-    void check_is_setup()
-    {
-      if (not is_setup()) FOUR_C_THROW("setup() was not called.");
-    };
+    void check_is_setup() const { FOUR_C_ASSERT_ALWAYS(is_setup(), "setup() was not called."); }
 
     //! returns true if class was init and init is still valid
-    void check_is_init()
-    {
-      if (not is_init()) FOUR_C_THROW("init(...) was not called.");
-    };
+    void check_is_init() const { FOUR_C_ASSERT_ALWAYS(is_init(), "init(...) was not called."); }
 
    public:
     //! set flag true after setup or false if setup became invalid
-    void set_is_setup(bool trueorfalse) { issetup_ = trueorfalse; };
+    void set_is_setup(bool trueorfalse) { issetup_ = trueorfalse; }
 
     //! set flag true after init or false if init became invalid
-    void set_is_init(bool trueorfalse) { isinit_ = trueorfalse; };
+    void set_is_init(bool trueorfalse) { isinit_ = trueorfalse; }
   };
 
   //! solid-scatra coupling for matching boundary meshes
@@ -174,7 +164,7 @@ namespace SSI
    public:
     SSICouplingNonMatchingBoundary() = default;
 
-    void init(const int ndim, std::shared_ptr<Core::FE::Discretization> structdis,
+    void init(int ndim, std::shared_ptr<Core::FE::Discretization> structdis,
         std::shared_ptr<SSI::SSIBase> ssi_base) override;
 
     void setup() override;
@@ -183,7 +173,7 @@ namespace SSI
         std::shared_ptr<Core::FE::Discretization> scatradis) override;
 
     void set_mechanical_stress_state(Core::FE::Discretization& scatradis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> stress_state, unsigned nds) override
+        const Core::LinAlg::Vector<double>& stress_state, unsigned nds) override
     {
       FOUR_C_THROW("only implemented for 'SSICouplingMatchingVolume'");
     }
@@ -192,20 +182,20 @@ namespace SSI
         const Core::LinAlg::Vector<double>& disp) override;
 
     void set_velocity_fields(std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> convvel,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vel) override;
+        const Core::LinAlg::Vector<double>& convvel,
+        const Core::LinAlg::Vector<double>& vel) override;
 
-    void set_scalar_field(Core::FE::Discretization& dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds) override;
+    void set_scalar_field(Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi,
+        unsigned nds) override;
 
     void set_scalar_field_micro(Core::FE::Discretization& dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds) override;
+        const Core::LinAlg::Vector<double>& phi, unsigned nds) override;
 
     void set_temperature_field(Core::FE::Discretization& structdis,
         std::shared_ptr<const Core::LinAlg::Vector<double>> temp) override
     {
       FOUR_C_THROW("only for matching nodes");
-    };
+    }
 
    private:
     //! adapter to mortar framework
@@ -214,7 +204,6 @@ namespace SSI
     //! extractor for coupled surface of structure discretization with surface scatra
     std::shared_ptr<Core::LinAlg::MapExtractor> extractor_;
 
-   private:
     //! flag indicating if class is setup
     bool issetup_;
 
@@ -232,29 +221,23 @@ namespace SSI
 
    protected:
     //! returns true if setup() was called and is still valid
-    bool is_setup() { return issetup_; };
+    [[nodiscard]] bool is_setup() const { return issetup_; }
 
     //! returns true if init(..) was called and is still valid
-    bool is_init() { return isinit_; };
+    [[nodiscard]] bool is_init() const { return isinit_; }
 
     //! returns true if class was setup and setup is still valid
-    void check_is_setup()
-    {
-      if (not is_setup()) FOUR_C_THROW("setup() was not called.");
-    };
+    void check_is_setup() const { FOUR_C_ASSERT_ALWAYS(is_setup(), "setup() was not called."); }
 
     //! returns true if class was init and init is still valid
-    void check_is_init()
-    {
-      if (not is_init()) FOUR_C_THROW("init(...) was not called.");
-    };
+    void check_is_init() const { FOUR_C_ASSERT_ALWAYS(is_init(), "init(...) was not called."); }
 
    public:
     //! set flag true after setup or false if setup became invalid
-    void set_is_setup(bool trueorfalse) { issetup_ = trueorfalse; };
+    void set_is_setup(bool trueorfalse) { issetup_ = trueorfalse; }
 
     //! set flag true after init or false if init became invalid
-    void set_is_init(bool trueorfalse) { isinit_ = trueorfalse; };
+    void set_is_init(bool trueorfalse) { isinit_ = trueorfalse; }
   };
 
   //! solid-scatra coupling for non-matching boundary meshes
@@ -262,8 +245,11 @@ namespace SSI
   {
    public:
     SSICouplingNonMatchingVolume()
-        : volcoupl_structurescatra_(nullptr), issetup_(false), isinit_(false) {};
-    void init(const int ndim, std::shared_ptr<Core::FE::Discretization> structdis,
+        : volcoupl_structurescatra_(nullptr), issetup_(false), isinit_(false)
+    {
+    }
+
+    void init(int ndim, std::shared_ptr<Core::FE::Discretization> structdis,
         std::shared_ptr<SSI::SSIBase> ssi_base) override;
 
     void setup() override;
@@ -272,7 +258,7 @@ namespace SSI
         std::shared_ptr<Core::FE::Discretization> scatradis) override;
 
     void set_mechanical_stress_state(Core::FE::Discretization& scatradis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> stress_state, unsigned nds) override
+        const Core::LinAlg::Vector<double>& stress_state, unsigned nds) override
     {
       FOUR_C_THROW("only implemented for 'SSICouplingMatchingVolume'");
     }
@@ -281,26 +267,25 @@ namespace SSI
         const Core::LinAlg::Vector<double>& disp) override;
 
     void set_velocity_fields(std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> convvel,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vel) override;
+        const Core::LinAlg::Vector<double>& convvel,
+        const Core::LinAlg::Vector<double>& vel) override;
 
-    void set_scalar_field(Core::FE::Discretization& dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds) override;
+    void set_scalar_field(Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi,
+        unsigned nds) override;
 
     void set_scalar_field_micro(Core::FE::Discretization& dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds) override;
+        const Core::LinAlg::Vector<double>& phi, unsigned nds) override;
 
     void set_temperature_field(Core::FE::Discretization& structdis,
         std::shared_ptr<const Core::LinAlg::Vector<double>> temp) override
     {
       FOUR_C_THROW("only for matching nodes");
-    };
+    }
 
    private:
     //! volume coupling (using mortar) adapter
     std::shared_ptr<Coupling::Adapter::MortarVolCoupl> volcoupl_structurescatra_;
 
-   private:
     //! flag indicating if class is setup
     bool issetup_;
 
@@ -309,37 +294,32 @@ namespace SSI
 
    protected:
     //! returns true if setup() was called and is still valid
-    bool is_setup() { return issetup_; };
+    [[nodiscard]] bool is_setup() const { return issetup_; }
 
     //! returns true if init(..) was called and is still valid
-    bool is_init() { return isinit_; };
+    [[nodiscard]] bool is_init() const { return isinit_; }
 
     //! returns true if class was setup and setup is still valid
-    void check_is_setup()
-    {
-      if (not is_setup()) FOUR_C_THROW("setup() was not called.");
-    };
+    void check_is_setup() const { FOUR_C_ASSERT_ALWAYS(is_setup(), "setup() was not called."); }
 
     //! returns true if class was init and init is still valid
-    void check_is_init()
-    {
-      if (not is_init()) FOUR_C_THROW("init(...) was not called.");
-    };
+    void check_is_init() const { FOUR_C_ASSERT_ALWAYS(is_init(), "init(...) was not called."); }
 
    public:
     //! set flag true after setup or false if setup became invalid
-    void set_is_setup(bool trueorfalse) { issetup_ = trueorfalse; };
+    void set_is_setup(bool trueorfalse) { issetup_ = trueorfalse; }
 
     //! set flag true after init or false if init became invalid
-    void set_is_init(bool trueorfalse) { isinit_ = trueorfalse; };
+    void set_is_init(bool trueorfalse) { isinit_ = trueorfalse; }
   };
 
   //! solid-scatra coupling for matching volume and boundary meshes
   class SSICouplingMatchingVolumeAndBoundary : public SSICouplingBase
   {
    public:
-    SSICouplingMatchingVolumeAndBoundary() : issetup_(false), isinit_(false) {};
-    void init(const int ndim, std::shared_ptr<Core::FE::Discretization> structdis,
+    SSICouplingMatchingVolumeAndBoundary() : issetup_(false), isinit_(false) {}
+
+    void init(int ndim, std::shared_ptr<Core::FE::Discretization> structdis,
         std::shared_ptr<SSI::SSIBase> ssi_base) override;
 
     void setup() override;
@@ -349,7 +329,7 @@ namespace SSI
         std::shared_ptr<Core::FE::Discretization> scatradis) override;
 
     void set_mechanical_stress_state(Core::FE::Discretization& scatradis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> stress_state, unsigned nds) override
+        const Core::LinAlg::Vector<double>& stress_state, unsigned nds) override
     {
       FOUR_C_THROW("only implemented for 'SSICouplingMatchingVolume'");
     }
@@ -358,14 +338,14 @@ namespace SSI
         const Core::LinAlg::Vector<double>& disp) override;
 
     void set_velocity_fields(std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> convvel,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vel) override;
+        const Core::LinAlg::Vector<double>& convvel,
+        const Core::LinAlg::Vector<double>& vel) override;
 
-    void set_scalar_field(Core::FE::Discretization& dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds) override;
+    void set_scalar_field(Core::FE::Discretization& dis, const Core::LinAlg::Vector<double>& phi,
+        unsigned nds) override;
 
     void set_scalar_field_micro(Core::FE::Discretization& dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> phi, unsigned nds) override;
+        const Core::LinAlg::Vector<double>& phi, unsigned nds) override;
 
     void set_temperature_field(Core::FE::Discretization& structdis,
         std::shared_ptr<const Core::LinAlg::Vector<double>> temp) override;
@@ -379,29 +359,23 @@ namespace SSI
 
    protected:
     //! returns true if setup() was called and is still valid
-    bool is_setup() { return issetup_; };
+    [[nodiscard]] bool is_setup() const { return issetup_; }
 
     //! returns true if init(..) was called and is still valid
-    bool is_init() { return isinit_; };
+    [[nodiscard]] bool is_init() const { return isinit_; }
 
     //! returns true if class was setup and setup is still valid
-    void check_is_setup()
-    {
-      if (not is_setup()) FOUR_C_THROW("setup() was not called.");
-    };
+    void check_is_setup() const { FOUR_C_ASSERT_ALWAYS(is_setup(), "setup() was not called."); }
 
     //! returns true if class was init and init is still valid
-    void check_is_init()
-    {
-      if (not is_init()) FOUR_C_THROW("init(...) was not called.");
-    };
+    void check_is_init() const { FOUR_C_ASSERT_ALWAYS(is_init(), "init(...) was not called."); }
 
    public:
     //! set flag true after setup or false if setup became invalid
-    void set_is_setup(bool trueorfalse) { issetup_ = trueorfalse; };
+    void set_is_setup(bool trueorfalse) { issetup_ = trueorfalse; }
 
     //! set flag true after init or false if init became invalid
-    void set_is_init(bool trueorfalse) { isinit_ = trueorfalse; };
+    void set_is_init(bool trueorfalse) { isinit_ = trueorfalse; }
   };
 }  // namespace SSI
 

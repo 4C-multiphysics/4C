@@ -45,7 +45,7 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-SSI::SSIBase::SSIBase(MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
+SSI::SSIBase::SSIBase(const MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams)
     : AlgorithmBase(*SSI::Utils::problem_from_instance(), comm, globaltimeparams),
       diff_time_step_size_(globaltimeparams.get<bool>("DIFFTIMESTEPSIZE")),
       fieldcoupling_(Teuchos::getIntegralValue<SSI::FieldCoupling>(
@@ -76,29 +76,24 @@ SSI::SSIBase::SSIBase(MPI_Comm comm, const Teuchos::ParameterList& globaltimepar
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void SSI::SSIBase::init(MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams,
+void SSI::SSIBase::init(const MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams,
     const Teuchos::ParameterList& scatraparams, const Teuchos::ParameterList& structparams,
     const std::string& struct_disname, const std::string& scatra_disname, const bool is_ale)
 {
   // do some initial checks
-  auto convform = Teuchos::getIntegralValue<ScaTra::ConvForm>(scatraparams, "CONVFORM");
+  const auto convform = Teuchos::getIntegralValue<ScaTra::ConvForm>(scatraparams, "CONVFORM");
   const bool isintensive = scatraparams.get<bool>("IS_INTENSIVE_SCALAR");
-  if (convform != ScaTra::convform_conservative && !isintensive)
-  {
-    FOUR_C_THROW(
-        "Inconsistent scalar transport formulation on a deforming domain: "
-        "The scalar is defined as volume-referenced (IS_INTENSIVE_SCALAR = false), "
-        "therefore the conservative form is required to account for volume changes. "
-        "Please set 'CONVFORM' to 'conservative' in the SCALAR TRANSPORT DYNAMIC section.");
-  }
-  if (convform == ScaTra::convform_conservative && isintensive)
-  {
-    FOUR_C_THROW(
-        "Inconsistent scalar transport formulation on a deforming domain: "
-        "The scalar is defined as intensive (IS_INTENSIVE_SCALAR = true), "
-        "therefore the non-conservative form should be used. "
-        "Please set 'CONVFORM' to 'convective' in the SCALAR TRANSPORT DYNAMIC section.");
-  }
+  FOUR_C_ASSERT_ALWAYS(convform == ScaTra::convform_conservative or isintensive,
+      "Inconsistent scalar transport formulation on a deforming domain: "
+      "The scalar is defined as volume-referenced (IS_INTENSIVE_SCALAR = false), "
+      "therefore the conservative form is required to account for volume changes. "
+      "Please set 'CONVFORM' to 'conservative' in the SCALAR TRANSPORT DYNAMIC section.");
+
+  FOUR_C_ASSERT_ALWAYS(convform != ScaTra::convform_conservative or !isintensive,
+      "Inconsistent scalar transport formulation on a deforming domain: "
+      "The scalar is defined as intensive (IS_INTENSIVE_SCALAR = true), "
+      "therefore the non-conservative form should be used. "
+      "Please set 'CONVFORM' to 'convective' in the SCALAR TRANSPORT DYNAMIC section.");
 
   // reset the setup flag
   set_is_setup(false);
@@ -135,7 +130,7 @@ void SSI::SSIBase::setup()
   ssicoupling_->setup();
 
   // in case of an ssi  multi scale formulation we need to set the displacement here
-  auto dummy_vec =
+  const auto dummy_vec =
       Core::LinAlg::Vector<double>(*problem->get_dis("structure")->dof_row_map(), true);
   ssicoupling_->set_mesh_disp(scatra_base_algorithm(), dummy_vec);
 
@@ -153,13 +148,15 @@ void SSI::SSIBase::setup()
     // accelerations
     if (Teuchos::getIntegralValue<SSI::SolutionSchemeOverFields>(problem->ssi_control_params(),
             "COUPALGO") != SSI::SolutionSchemeOverFields::ssi_OneWay_SolidToScatra)
-      ssicoupling_->set_scalar_field(*problem->get_dis("structure"), scatra_field()->phinp(), 1);
+    {
+      ssicoupling_->set_scalar_field(*problem->get_dis("structure"), *scatra_field()->phinp(), 1);
+    }
 
     if (macro_scale_)
     {
       scatra_field()->calc_mean_micro_concentration();
       ssicoupling_->set_scalar_field_micro(
-          *problem->get_dis("structure"), scatra_field()->phinp_micro(), 2);
+          *problem->get_dis("structure"), *scatra_field()->phinp_micro(), 2);
     }
 
     //   temperature is non primary variable. Only set, if function for temperature is given
@@ -181,30 +178,30 @@ void SSI::SSIBase::setup()
     // get wrapper and cast it to specific type
     // do not do so, in case the wrapper has already been set from outside
     if (structure_ == nullptr)
+    {
       structure_ = std::dynamic_pointer_cast<Adapter::SSIStructureWrapper>(
           struct_adapterbase_ptr_->structure_field());
-
-    if (structure_ == nullptr)
-    {
-      FOUR_C_THROW(
-          "No valid pointer to Adapter::SSIStructureWrapper !\n"
-          "Either cast failed, or no valid wrapper was set using set_structure_wrapper(...) !");
     }
+
+    FOUR_C_ASSERT_ALWAYS(structure_ != nullptr,
+        "No valid pointer to Adapter::SSIStructureWrapper!\n"
+        "Either cast failed, or no valid wrapper was set using set_structure_wrapper(...)!");
   }
 
   if (is_s2i_kinetics_with_pseudo_contact())
   {
     const auto dummy_stress_state = std::make_shared<Core::LinAlg::Vector<double>>(
         *structure_field()->discretization()->dof_row_map(2), true);
-    ssicoupling_->set_mechanical_stress_state(*scatra_field()->discretization(), dummy_stress_state,
-        scatra_field()->nds_two_tensor_quantity());
+    ssicoupling_->set_mechanical_stress_state(*scatra_field()->discretization(),
+        *dummy_stress_state, scatra_field()->nds_two_tensor_quantity());
   }
 
   // check maps from scalar transport and structure discretizations
-  if (scatra_field()->dof_row_map()->num_global_elements() == 0)
-    FOUR_C_THROW("Scalar transport discretization does not have any degrees of freedom!");
-  if (structure_->dof_row_map()->num_global_elements() == 0)
-    FOUR_C_THROW("Structure discretization does not have any degrees of freedom!");
+  FOUR_C_ASSERT_ALWAYS(scatra_field()->dof_row_map()->num_global_elements() != 0,
+      "Scalar transport discretization does not have any degrees of freedom!");
+  FOUR_C_ASSERT_ALWAYS(structure_->dof_row_map()->num_global_elements() != 0,
+      "Structure discretization does not have any degrees of freedom!");
+
   // set up scatra-scatra interface coupling
   if (ssi_interface_meshtying())
   {
@@ -216,8 +213,8 @@ void SSI::SSIBase::setup()
         std::dynamic_pointer_cast<const ScaTra::MeshtyingStrategyS2I>(scatra_field()->strategy());
 
     // safety checks
-    if (meshtying_strategy_s2i_ == nullptr)
-      FOUR_C_THROW("Invalid scatra-scatra interface coupling strategy!");
+    FOUR_C_ASSERT_ALWAYS(meshtying_strategy_s2i_ != nullptr,
+        "Scatra-scatra interface coupling strategy not found in scatra field!");
   }
 
   // construct vector of zeroes
@@ -239,7 +236,7 @@ void SSI::SSIBase::post_setup() const
   if (Teuchos::getIntegralValue<SSI::SolutionSchemeOverFields>(problem->ssi_control_params(),
           "COUPALGO") != SSI::SolutionSchemeOverFields::ssi_OneWay_SolidToScatra)
   {
-    set_scatra_solution(scatra_field()->phinp());
+    set_scatra_solution(*scatra_field()->phinp());
   }
 
   structure_->post_setup();
@@ -340,8 +337,7 @@ void SSI::SSIBase::init_discretizations(MPI_Comm comm, const std::string& struct
             static_cast<int>(my_node_ids.size()), get_comm());
 
         // remove place holders (-1)
-        glob_node_ids.erase(
-            std::remove(glob_node_ids.begin(), glob_node_ids.end(), -1), glob_node_ids.end());
+        std::erase(glob_node_ids, -1);
 
         // create new condition
         const int num_conditions =
@@ -411,9 +407,9 @@ SSI::RedistributionType SSI::SSIBase::init_field_coupling(const std::string& str
     // check for ssi coupling condition
     std::vector<const Core::Conditions::Condition*> ssicoupling;
     scatra_integrator->discretization()->get_condition("SSICoupling", ssicoupling);
-    const bool havessicoupling = ssicoupling.size() > 0;
+    const bool has_ssi_coupling = !ssicoupling.empty();
 
-    FOUR_C_ASSERT_ALWAYS(!havessicoupling or
+    FOUR_C_ASSERT_ALWAYS(!has_ssi_coupling or
                              fieldcoupling_ == SSI::FieldCoupling::boundary_nonmatching or
                              fieldcoupling_ == SSI::FieldCoupling::volumeboundary_matching,
         "SSICoupling condition only valid in combination with FIELDCOUPLING set to "
@@ -500,14 +496,16 @@ void SSI::SSIBase::read_restart(const int restart)
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSIBase::test_results(MPI_Comm comm) const
+void SSI::SSIBase::test_results(const MPI_Comm comm) const
 {
   Global::Problem* problem = SSI::Utils::problem_from_instance();
 
   problem->add_field_test(structure_->create_field_test());
   problem->add_field_test(scatra_base_algorithm()->create_scatra_field_test());
   if (is_scatra_manifold())
+  {
     problem->add_field_test(scatra_manifold_base_algorithm()->create_scatra_field_test());
+  }
   problem->add_field_test(std::make_shared<SSIResultTest>(Core::Utils::shared_ptr_from_ref(*this)));
   problem->test_all(comm);
 }
@@ -515,7 +513,7 @@ void SSI::SSIBase::test_results(MPI_Comm comm) const
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void SSI::SSIBase::set_struct_solution(const Core::LinAlg::Vector<double>& disp,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vel, const bool set_mechanical_stress)
+    const Core::LinAlg::Vector<double>& vel, const bool set_mechanical_stress) const
 {
   // safety checks
   check_is_init();
@@ -525,13 +523,12 @@ void SSI::SSIBase::set_struct_solution(const Core::LinAlg::Vector<double>& disp,
   set_velocity_fields(vel);
 
   if (set_mechanical_stress)
-    set_mechanical_stress_state(modelevaluator_ssi_base_->get_mechanical_stress_state_n());
+    set_mechanical_stress_state(*modelevaluator_ssi_base_->get_mechanical_stress_state_n());
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSIBase::set_scatra_solution(
-    std::shared_ptr<const Core::LinAlg::Vector<double>> phi) const
+void SSI::SSIBase::set_scatra_solution(const Core::LinAlg::Vector<double>& phi) const
 {
   // safety checks
   check_is_init();
@@ -545,16 +542,14 @@ void SSI::SSIBase::set_scatra_solution(
 
 /*---------------------------------------------------------------------------------*
  *---------------------------------------------------------------------------------*/
-void SSI::SSIBase::set_ssi_contact_states(
-    std::shared_ptr<const Core::LinAlg::Vector<double>> phi) const
+void SSI::SSIBase::set_ssi_contact_states(const Core::LinAlg::Vector<double>& phi) const
 {
-  contact_strategy_nitsche_->set_state(Mortar::state_scalar, *phi);
+  contact_strategy_nitsche_->set_state(Mortar::state_scalar, phi);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSIBase::set_micro_scatra_solution(
-    std::shared_ptr<const Core::LinAlg::Vector<double>> phi) const
+void SSI::SSIBase::set_micro_scatra_solution(const Core::LinAlg::Vector<double>& phi) const
 {
   // safety checks
   check_is_init();
@@ -565,7 +560,7 @@ void SSI::SSIBase::set_micro_scatra_solution(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSIBase::evaluate_and_set_temperature_field()
+void SSI::SSIBase::evaluate_and_set_temperature_field() const
 {
   Global::Problem* problem = SSI::Utils::problem_from_instance();
 
@@ -585,21 +580,21 @@ void SSI::SSIBase::evaluate_and_set_temperature_field()
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSIBase::set_velocity_fields(std::shared_ptr<const Core::LinAlg::Vector<double>> vel)
+void SSI::SSIBase::set_velocity_fields(const Core::LinAlg::Vector<double>& vel) const
 {
   // safety checks
   check_is_init();
   check_is_setup();
 
-  ssicoupling_->set_velocity_fields(scatra_base_algorithm(), zeros_structure_, vel);
+  ssicoupling_->set_velocity_fields(scatra_base_algorithm(), *zeros_structure_, vel);
   if (is_scatra_manifold())
-    ssicoupling_->set_velocity_fields(scatra_manifold_base_algorithm(), zeros_structure_, vel);
+    ssicoupling_->set_velocity_fields(scatra_manifold_base_algorithm(), *zeros_structure_, vel);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void SSI::SSIBase::set_mechanical_stress_state(
-    std::shared_ptr<const Core::LinAlg::Vector<double>> mechanical_stress_state) const
+    const Core::LinAlg::Vector<double>& mechanical_stress_state) const
 {
   check_is_init();
   check_is_setup();
@@ -610,7 +605,7 @@ void SSI::SSIBase::set_mechanical_stress_state(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void SSI::SSIBase::set_mesh_disp(const Core::LinAlg::Vector<double>& disp)
+void SSI::SSIBase::set_mesh_disp(const Core::LinAlg::Vector<double>& disp) const
 {
   // safety checks
   check_is_init();
@@ -626,14 +621,10 @@ void SSI::SSIBase::check_ssi_flags() const
 {
   if (scatra_field()->s2i_kinetics())
   {
-    if (!(ssi_interface_contact() or ssi_interface_meshtying()))
-    {
-      FOUR_C_THROW(
-          "You defined an 'S2IKinetics' condition in the input-file. However, neither an "
-          "'SSIInterfaceContact' condition nor an 'ssi_interface_meshtying' condition defined. "
-          "This "
-          "is not reasonable!");
-    }
+    FOUR_C_ASSERT_ALWAYS(ssi_interface_contact() or ssi_interface_meshtying(),
+        "You defined an 'S2IKinetics' condition in the input-file. However, neither an "
+        "'SSIInterfaceContact' condition nor an 'ssi_interface_meshtying' condition defined. "
+        "This is not reasonable!");
   }
 }
 
@@ -748,7 +739,7 @@ void SSI::SSIBase::init_time_integrators(const Teuchos::ParameterList& globaltim
   if (struct_adapterbase_ptr_ == nullptr)
   {
     // access the structural discretization
-    auto structdis = problem->get_dis(struct_disname);
+    const auto structdis = problem->get_dis(struct_disname);
 
     // build structure based on new structural time integration
     if (Teuchos::getIntegralValue<Solid::IntegrationStrategy>(structparams, "INT_STRATEGY") ==
@@ -768,8 +759,8 @@ void SSI::SSIBase::init_time_integrators(const Teuchos::ParameterList& globaltim
           const_cast<Teuchos::ParameterList&>(structparams), structdis);
       structure_ =
           std::dynamic_pointer_cast<Adapter::SSIStructureWrapper>(structure.structure_field());
-      if (structure_ == nullptr)
-        FOUR_C_THROW("cast from Adapter::Structure to Adapter::SSIStructureWrapper failed");
+      FOUR_C_ASSERT_ALWAYS(structure_ != nullptr,
+          "cast from Adapter::Structure to Adapter::SSIStructureWrapper failed");
     }
     else
     {
@@ -840,7 +831,7 @@ bool SSI::SSIBase::is_restart() const
 
   const int restartstep = problem->restart();
 
-  return (restartstep > 0);
+  return restartstep > 0;
 }
 
 /*----------------------------------------------------------------------*/
@@ -849,18 +840,21 @@ void SSI::SSIBase::check_adaptive_time_stepping(
     const Teuchos::ParameterList& scatraparams, const Teuchos::ParameterList& structparams)
 {
   // safety check: adaptive time stepping in one of the sub problems
-  if (!scatraparams.get<bool>("ADAPTIVE_TIMESTEPPING"))
-  {
-    FOUR_C_THROW(
-        "Must provide adaptive time stepping algorithm in one of the sub problems. (Currently "
-        "just ScaTra)");
-  }
-  if (Teuchos::getIntegralValue<Solid::TimAdaKind>(
-          structparams.sublist("TIMEADAPTIVITY"), "KIND") != Solid::timada_kind_none)
-    FOUR_C_THROW("Adaptive time stepping in SSI currently just from ScaTra");
-  if (Teuchos::getIntegralValue<Solid::DynamicType>(structparams, "DYNAMICTYPE") ==
-      Solid::DynamicType::AdamsBashforth2)
-    FOUR_C_THROW("Currently, only one step methods are allowed for adaptive time stepping");
+  FOUR_C_ASSERT_ALWAYS(scatraparams.get<bool>("ADAPTIVE_TIMESTEPPING"),
+      "Must provide adaptive time stepping algorithm in one of the sub problems. (Currently "
+      "just ScaTra)");
+
+  FOUR_C_ASSERT_ALWAYS(
+      Teuchos::getIntegralValue<Solid::TimAdaKind>(
+          structparams.sublist("TIMEADAPTIVITY"), "KIND") == Solid::timada_kind_none,
+      "Adaptive time stepping in SSI currently just from ScaTra");
+
+  const auto struct_dynamic_type =
+      Teuchos::getIntegralValue<Solid::DynamicType>(structparams, "DYNAMICTYPE");
+  FOUR_C_ASSERT_ALWAYS(struct_dynamic_type == Solid::DynamicType::OneStepTheta or
+                           struct_dynamic_type == Solid::DynamicType::GenAlpha or
+                           struct_dynamic_type == Solid::DynamicType::Statics,
+      "Currently, only specific implicit one step methods are allowed for adaptive time stepping");
 }
 
 /*----------------------------------------------------------------------*/
@@ -871,7 +865,7 @@ bool SSI::SSIBase::check_s2i_kinetics_condition_for_pseudo_contact(
   const auto* problem = SSI::Utils::problem_from_instance();
   bool is_s2i_kinetic_with_pseudo_contact = false;
 
-  auto structdis = problem->get_dis(struct_disname);
+  const auto structdis = problem->get_dis(struct_disname);
   // get all s2i kinetics conditions
   std::vector<const Core::Conditions::Condition*> s2ikinetics_conditions;
   structdis->get_condition("S2IKinetics", s2ikinetics_conditions);
@@ -880,10 +874,10 @@ bool SSI::SSIBase::check_s2i_kinetics_condition_for_pseudo_contact(
   structdis->get_condition("SSIInterfaceContact", ssi_contact_conditions);
   for (auto* s2ikinetics_cond : s2ikinetics_conditions)
   {
-    if ((s2ikinetics_cond->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") ==
-            S2I::side_source) and
-        (s2ikinetics_cond->parameters().get<S2I::KineticModels>("KINETIC_MODEL") !=
-            S2I::kinetics_nointerfaceflux) and
+    if (s2ikinetics_cond->parameters().get<S2I::InterfaceSides>("INTERFACE_SIDE") ==
+            S2I::side_source and
+        s2ikinetics_cond->parameters().get<S2I::KineticModels>("KINETIC_MODEL") !=
+            S2I::kinetics_nointerfaceflux and
         s2ikinetics_cond->parameters().get<bool>("IS_PSEUDO_CONTACT"))
     {
       is_s2i_kinetic_with_pseudo_contact = true;
@@ -891,14 +885,11 @@ bool SSI::SSIBase::check_s2i_kinetics_condition_for_pseudo_contact(
 
       for (auto* contact_condition : ssi_contact_conditions)
       {
-        if (contact_condition->parameters().get<int>("ConditionID") == s2i_kinetics_condition_id)
-        {
-          FOUR_C_THROW(
-              "Pseudo contact formulation of s2i kinetics conditions does not make sense in "
-              "combination with resolved contact formulation. Set the respective "
-              "IS_PSEUDO_CONTACT "
-              "flag to 'False'");
-        }
+        FOUR_C_ASSERT_ALWAYS(
+            contact_condition->parameters().get<int>("ConditionID") != s2i_kinetics_condition_id,
+            "Pseudo contact formulation of s2i kinetics conditions does not make sense in "
+            "combination with resolved contact formulation. Set the respective IS_PSEUDO_CONTACT "
+            "flag to 'False'");
       }
     }
   }
@@ -907,12 +898,9 @@ bool SSI::SSIBase::check_s2i_kinetics_condition_for_pseudo_contact(
       Teuchos::getIntegralValue<Solid::StressType>(problem->io_params(), "STRUCT_STRESS") ==
       Solid::stress_cauchy;
 
-  if (is_s2i_kinetic_with_pseudo_contact and !do_output_cauchy_stress)
-  {
-    FOUR_C_THROW(
-        "Consideration of pseudo contact with 'S2IKinetics' condition only possible when Cauchy "
-        "stress output is written.");
-  }
+  FOUR_C_ASSERT_ALWAYS(!is_s2i_kinetic_with_pseudo_contact or do_output_cauchy_stress,
+      "Consideration of pseudo contact with 'S2IKinetics' condition only possible when Cauchy "
+      "stress output is written.");
 
   return is_s2i_kinetic_with_pseudo_contact;
 }
@@ -924,11 +912,13 @@ void SSI::SSIBase::check_ssi_interface_conditions(const std::string& struct_disn
   const auto* problem = SSI::Utils::problem_from_instance();
 
   // access the structural discretization
-  auto structdis = problem->get_dis(struct_disname);
+  const auto structdis = problem->get_dis(struct_disname);
 
   if (ssi_interface_meshtying())
+  {
     ScaTra::ScaTraUtils::check_consistency_with_s2_i_kinetics_condition(
         "ssi_interface_meshtying", structdis);
+  }
 
   // check scatra-structure-interaction contact condition
   if (ssi_interface_contact())
@@ -945,8 +935,10 @@ void SSI::SSIBase::check_ssi_interface_conditions(const std::string& struct_disn
 void SSI::SSIBase::setup_system()
 {
   if (ssi_interface_meshtying_)
+  {
     ssi_structure_mesh_tying()->check_slave_side_has_dirichlet_conditions(
         structure_field()->get_dbc_map_extractor()->cond_map());
+  }
 }
 
 /*---------------------------------------------------------------------------------*
@@ -969,16 +961,15 @@ void SSI::SSIBase::setup_contact_strategy()
   const auto* problem = SSI::Utils::problem_from_instance();
 
   // get the contact solution strategy
-  auto contact_solution_type = Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(
+  const auto contact_solution_type = Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(
       problem->contact_dynamic_params(), "STRATEGY");
 
   if (contact_solution_type == CONTACT::SolvingStrategy::nitsche)
   {
-    if (Teuchos::getIntegralValue<Solid::IntegrationStrategy>(
-            problem->structural_dynamic_params(), "INT_STRATEGY") != Solid::int_standard)
-    {
-      FOUR_C_THROW("ssi contact only with new structural time integration");
-    }
+    FOUR_C_ASSERT_ALWAYS(
+        Teuchos::getIntegralValue<Solid::IntegrationStrategy>(
+            problem->structural_dynamic_params(), "INT_STRATEGY") == Solid::int_standard,
+        "ssi contact only with new structural time integration");
 
     // get the contact model evaluator and store a pointer to the strategy
     auto& model_evaluator_contact = dynamic_cast<Solid::ModelEvaluator::Contact&>(
