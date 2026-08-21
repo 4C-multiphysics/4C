@@ -13,6 +13,7 @@
 #include "4C_legacy_enum_definitions_element_actions.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_tensor.hpp"
+#include "4C_solid_ele.hpp"
 #include "4C_solid_ele_neumann_evaluator.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -234,6 +235,24 @@ int Discret::Elements::SolidLine<dim>::evaluate_neumann(Teuchos::ParameterList& 
         else
           return params.get("total time", -1.0);
       });
+
+  const auto& load_type = condition.parameters().get<std::string>("TYPE");
+  if (load_type == "pseudo_orthopressure" || load_type == "orthopressure")
+  {
+    if constexpr (dim == 2)
+    {
+      const auto* parent_solid = dynamic_cast<const Discret::Elements::Solid<2>*>(parent_element());
+      FOUR_C_ASSERT_ALWAYS(
+          parent_solid != nullptr, "Solid line has no two-dimensional solid parent.");
+      Discret::Elements::evaluate_normal_pressure_by_element(*this, discretization, condition, lm,
+          elevec1, elemat1, total_time, parent_solid->reference_thickness());
+      return 0;
+    }
+    else
+    {
+      FOUR_C_THROW("Normal pressure on a solid line is only supported in two dimensions.");
+    }
+  }
 
   Discret::Elements::evaluate_neumann_by_element<dim>(
       *this, discretization, condition, elevec1, total_time);
