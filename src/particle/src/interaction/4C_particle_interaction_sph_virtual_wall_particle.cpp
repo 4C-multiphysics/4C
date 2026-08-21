@@ -29,9 +29,9 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 Particle::SPHVirtualWallParticle::SPHVirtualWallParticle(const Teuchos::ParameterList& params)
     : params_sph_(params),
-      allfluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2,
-          Particle::Type::DirichletPhase, Particle::Type::NeumannPhase}),
-      intfluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2, Particle::Type::NeumannPhase})
+      allfluidtypes_({ParticleType::Phase1, ParticleType::Phase2, ParticleType::DirichletPhase,
+          ParticleType::NeumannPhase}),
+      intfluidtypes_({ParticleType::Phase1, ParticleType::Phase2, ParticleType::NeumannPhase})
 {
   // empty constructor
 }
@@ -148,26 +148,35 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
   std::vector<int> relindices;
   neighborpairs_->get_relevant_particle_wall_pair_indices(intfluidtypes_, relindices);
 
+  // get pointers to particle states
+  const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& pos =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& rad =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+  ConstParticleContainerBundleStatePtrs& vel =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+  ConstParticleContainerBundleStatePtrs& dens =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Density);
+  ConstParticleContainerBundleStatePtrs& press =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Pressure);
+
   // iterate over relevant particle-wall pairs
   for (const int particlewallpairindex : relindices)
   {
     const SPHParticleWallPair& particlewallpair = particlewallpairdata[particlewallpairindex];
 
     // access values of local index tuple of particle i
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
-    // get corresponding particle container
-    Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, status_i);
-
-    // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
-
-    // get pointer to wall contact point states
-    const double* rad_j = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    // get pointers to particle states
+    const int type_i_idx = static_cast<int>(type_i);
+    const int status_i_idx = static_cast<int>(status_i);
+    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* rad_j = &rad[type_i_idx][status_i_idx][particle_i];
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;
@@ -235,23 +244,21 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
     for (const auto& neighboringparticle : neighboringparticles)
     {
       // access values of local index tuple of particle k
-      Particle::Type type_k;
-      Particle::Status status_k;
+      ParticleType type_k;
+      ParticleStatus status_k;
       int particle_k;
       std::tie(type_k, status_k, particle_k) = neighboringparticle;
 
       // evaluation only for fluid particles
       if (not allfluidtypes_.contains(type_k)) continue;
 
-      // get container of particles of current particle type
-      Particle::ParticleContainer* container_k =
-          particlecontainerbundle_->get_specific_container(type_k, status_k);
-
-      // get pointer to particle states
-      const double* pos_k = container_k->get_ptr_to_state(Particle::State::Position, particle_k);
-      const double* vel_k = container_k->get_ptr_to_state(Particle::State::Velocity, particle_k);
-      const double* dens_k = container_k->get_ptr_to_state(Particle::State::Density, particle_k);
-      const double* press_k = container_k->get_ptr_to_state(Particle::State::Pressure, particle_k);
+      // get pointers to particle states
+      const int type_k_idx = static_cast<int>(type_k);
+      const int status_k_idx = static_cast<int>(status_k);
+      const double* pos_k = &pos[type_k_idx][status_k_idx][particle_k * statedim];
+      const double* vel_k = &vel[type_k_idx][status_k_idx][particle_k * statedim];
+      const double* dens_k = &dens[type_k_idx][status_k_idx][particle_k];
+      const double* press_k = &press[type_k_idx][status_k_idx][particle_k];
 
       // vector from particle k to wall contact point j
       double r_jk[3];

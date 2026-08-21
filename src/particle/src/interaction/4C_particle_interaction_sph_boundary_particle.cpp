@@ -19,10 +19,9 @@ FOUR_C_NAMESPACE_OPEN
 
 Particle::SPHBoundaryParticleBase::SPHBoundaryParticleBase(const Teuchos::ParameterList& params)
     : params_sph_(params),
-      fluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2, Particle::Type::DirichletPhase,
-          Particle::Type::NeumannPhase}),
-      boundarytypes_(
-          {Particle::Type::BoundaryPhase, Particle::Type::RigidPhase, Particle::Type::PDPhase})
+      fluidtypes_({ParticleType::Phase1, ParticleType::Phase2, ParticleType::DirichletPhase,
+          ParticleType::NeumannPhase}),
+      boundarytypes_({ParticleType::BoundaryPhase, ParticleType::RigidPhase, ParticleType::PDPhase})
 {
   // empty constructor
 }
@@ -73,8 +72,8 @@ void Particle::SPHBoundaryParticleAdami::setup(
 
   // setup modified states of ghosted boundary particles to refresh
   {
-    std::vector<Particle::State> states{
-        Particle::State::BoundaryPressure, Particle::State::BoundaryVelocity};
+    std::vector<ParticleState> states{
+        ParticleState::BoundaryPressure, ParticleState::BoundaryVelocity};
 
     for (const auto& type_i : boundarytypes_)
       boundarystatestorefresh_.push_back(std::make_pair(type_i, states));
@@ -99,7 +98,7 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, ParticleStatus::Owned);
 
     // get number of particles stored in container
     const int particlestored = container_i->particles_stored();
@@ -117,6 +116,17 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
   neighborpairs_->get_relevant_particle_pair_indices_for_disjoint_combination(
       boundarytypes_, fluidtypes_, relindices);
 
+  // get pointers to particle states
+  const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& vel =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+  ConstParticleContainerBundleStatePtrs& acc =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Acceleration);
+  ConstParticleContainerBundleStatePtrs& dens =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Density);
+  ConstParticleContainerBundleStatePtrs& press =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Pressure);
+
   // iterate over relevant particle pairs
   for (const int particlepairindex : relindices)
   {
@@ -124,27 +134,25 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
         neighborpairs_->get_ref_to_particle_pair_data()[particlepairindex];
 
     // access values of local index tuples of particle i and j
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::Type type_j;
-    Particle::Status status_j;
+    ParticleType type_j;
+    ParticleStatus status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
     // evaluate contribution of neighboring fluid particle j
     if (boundarytypes_.contains(type_i))
     {
-      // get container of owned particles
-      Particle::ParticleContainer* container_j =
-          particlecontainerbundle_->get_specific_container(type_j, status_j);
-
       // get pointer to particle states
-      const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
-      const double* dens_j = container_j->get_ptr_to_state(Particle::State::Density, particle_j);
-      const double* press_j = container_j->get_ptr_to_state(Particle::State::Pressure, particle_j);
+      const int type_j_idx = static_cast<int>(type_j);
+      const int status_j_idx = static_cast<int>(status_j);
+      const double* vel_j = &vel[type_j_idx][status_j_idx][particle_j * statedim];
+      const double* dens_j = &dens[type_j_idx][status_j_idx][particle_j];
+      const double* press_j = &press[type_j_idx][status_j_idx][particle_j];
 
       // sum contribution of neighboring particle j
       sumj_wij_[static_cast<int>(type_i)][particle_i] += particlepair.Wij_;
@@ -160,16 +168,14 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
     }
 
     // evaluate contribution of neighboring fluid particle i
-    if (boundarytypes_.contains(type_j) and status_j == Particle::Status::Owned)
+    if (boundarytypes_.contains(type_j) and status_j == ParticleStatus::Owned)
     {
-      // get container of owned particles
-      Particle::ParticleContainer* container_i =
-          particlecontainerbundle_->get_specific_container(type_i, status_i);
-
       // get pointer to particle states
-      const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
-      const double* dens_i = container_i->get_ptr_to_state(Particle::State::Density, particle_i);
-      const double* press_i = container_i->get_ptr_to_state(Particle::State::Pressure, particle_i);
+      const int type_i_idx = static_cast<int>(type_i);
+      const int status_i_idx = static_cast<int>(status_i);
+      const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
+      const double* dens_i = &dens[type_i_idx][status_i_idx][particle_i];
+      const double* press_i = &press[type_i_idx][status_i_idx][particle_i];
 
       // sum contribution of neighboring particle i
       sumj_wij_[static_cast<int>(type_j)][particle_j] += particlepair.Wji_;
@@ -189,12 +195,19 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
   for (const auto& type_i : boundarytypes_)
   {
     // get container of owned particles
+    const int type_i_idx = static_cast<int>(type_i);
+    const int status_i_idx = static_cast<int>(ParticleStatus::Owned);
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, ParticleStatus::Owned);
 
     // clear modified boundary particle states
-    container_i->clear_state(Particle::State::BoundaryPressure);
-    container_i->clear_state(Particle::State::BoundaryVelocity);
+    container_i->clear_state(ParticleState::BoundaryPressure);
+    container_i->clear_state(ParticleState::BoundaryVelocity);
+
+    // get pointers to particle states
+    double* boundarypress =
+        container_i->get_ptr_to_state_writable(Particle::State::BoundaryPressure);
+    double* boundaryvel = container_i->get_ptr_to_state_writable(Particle::State::BoundaryVelocity);
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -202,14 +215,11 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
       // set modified boundary particle states
       if (sumj_wij_[static_cast<int>(type_i)][particle_i] > 0.0)
       {
-        // get pointer to particle states
-        const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
-        const double* acc_i =
-            container_i->get_ptr_to_state(Particle::State::Acceleration, particle_i);
-        double* boundarypress_i =
-            container_i->get_ptr_to_state_writable(Particle::State::BoundaryPressure, particle_i);
-        double* boundaryvel_i =
-            container_i->get_ptr_to_state_writable(Particle::State::BoundaryVelocity, particle_i);
+        // get pointers to particle states
+        const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
+        const double* acc_i = &acc[type_i_idx][status_i_idx][particle_i * statedim];
+        double* boundarypress_i = &boundarypress[particle_i];
+        double* boundaryvel_i = &boundaryvel[particle_i * statedim];
 
         // get relative acceleration of boundary particle
         double relacc[3];

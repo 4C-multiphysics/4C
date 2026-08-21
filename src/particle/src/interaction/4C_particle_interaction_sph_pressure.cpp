@@ -18,7 +18,7 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-Particle::SPHPressure::SPHPressure() : fluidtypes_({Particle::Type::Phase1, Particle::Type::Phase2})
+Particle::SPHPressure::SPHPressure() : fluidtypes_({ParticleType::Phase1, ParticleType::Phase2})
 {
   // empty constructor
 }
@@ -48,7 +48,7 @@ void Particle::SPHPressure::setup(
 
   // setup pressure of ghosted particles to refresh
   {
-    std::vector<Particle::State> states{Particle::State::Pressure};
+    std::vector<ParticleState> states{ParticleState::Pressure};
 
     for (const auto& type_i : fluidtypes_)
       pressuretorefresh_.push_back(std::make_pair(type_i, states));
@@ -64,7 +64,7 @@ void Particle::SPHPressure::compute_pressure() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, ParticleStatus::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -72,9 +72,9 @@ void Particle::SPHPressure::compute_pressure() const
     // no owned particles of current particle type
     if (particlestored <= 0) continue;
 
-    // get pointer to particle state
-    const double* dens = container->get_ptr_to_state(Particle::State::Density);
-    double* press = container->get_ptr_to_state_writable(Particle::State::Pressure);
+    // get pointers to particle states
+    const double* dens = container->get_ptr_to_state(ParticleState::Density);
+    double* press = container->get_ptr_to_state_writable(ParticleState::Pressure);
 
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* material =

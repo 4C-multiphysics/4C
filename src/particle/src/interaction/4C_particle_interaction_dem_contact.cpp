@@ -122,18 +122,18 @@ void Particle::DEMContact::set_current_step_size(const double currentstepsize)
 }
 
 void Particle::DEMContact::insert_particle_states_of_particle_types(
-    std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const
+    std::map<ParticleType, std::set<ParticleState>>& particlestatestotypes) const
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // set of particle states for current particle type
-    std::set<Particle::State>& particlestates = typeIt.second;
+    std::set<ParticleState>& particlestates = typeIt.second;
 
     // states for tangential and rolling contact evaluation scheme
     if (contacttangential_ or contactrolling_)
-      particlestates.insert({Particle::State::Moment, Particle::State::AngularVelocity,
-          Particle::State::AngularAcceleration});
+      particlestates.insert({ParticleState::Moment, ParticleState::AngularVelocity,
+          ParticleState::AngularAcceleration});
   }
 }
 
@@ -153,7 +153,7 @@ void Particle::DEMContact::check_critical_time_step() const
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, ParticleStatus::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -162,7 +162,7 @@ void Particle::DEMContact::check_critical_time_step() const
     if (particlestored <= 0) continue;
 
     // get minimum stored value of state
-    double currminmass = container->get_min_value_of_state(Particle::State::Mass);
+    double currminmass = container->get_min_value_of_state(ParticleState::Mass);
 
     // update value of minimum mass
     minmass = std::min(minmass, currminmass);
@@ -361,17 +361,31 @@ void Particle::DEMContact::evaluate_particle_contact()
   // rolling contact friction coefficient
   const double mu_rolling = contactrolling_ ? params_dem_.get<double>("FRICT_COEFF_ROLL") : 0.0;
 
+  // get pointers to particle states
+  const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& vel =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+  ConstParticleContainerBundleStatePtrs& rad =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+  ParticleContainerBundleStatePtrs& force =
+      particlecontainerbundle_->get_ptrs_to_state_writable(ParticleState::Force);
+
+  ConstParticleContainerBundleStatePtrs& angvel =
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::AngularVelocity);
+  ParticleContainerBundleStatePtrs& moment =
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::Moment);
+
   // iterate over particle pairs
   for (const auto& particlepair : neighborpairs_->get_ref_to_particle_pair_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::Type type_j;
-    Particle::Status status_j;
+    ParticleType type_j;
+    ParticleStatus status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -386,32 +400,36 @@ void Particle::DEMContact::evaluate_particle_contact()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
     const int* globalid_j = container_j->get_ptr_to_global_id(particle_j);
 
-    // get pointer to particle states
-    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
-    double* force_i = container_i->get_ptr_to_state_writable(Particle::State::Force, particle_i);
+    // get pointers to particle states
+    const int type_i_idx = static_cast<int>(type_i);
+    const int status_i_idx = static_cast<int>(status_i);
+    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
+    double* force_i = &force[type_i_idx][status_i_idx][particle_i * statedim];
 
     const double* angvel_i = nullptr;
     double* moment_i = nullptr;
     if (contacttangential_ or contactrolling_)
     {
-      angvel_i = container_i->get_ptr_to_state(Particle::State::AngularVelocity, particle_i);
-      moment_i = container_i->get_ptr_to_state_writable(Particle::State::Moment, particle_i);
+      angvel_i = &angvel[type_i_idx][status_i_idx][particle_i * statedim];
+      moment_i = &moment[type_i_idx][status_i_idx][particle_i * statedim];
     }
 
-    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
+    const int type_j_idx = static_cast<int>(type_j);
+    const int status_j_idx = static_cast<int>(status_j);
+    const double* vel_j = &vel[type_j_idx][status_j_idx][particle_j * statedim];
+    const double* rad_j = &rad[type_j_idx][status_j_idx][particle_j];
     double* force_j = nullptr;
-    if (status_j == Particle::Status::Owned)
-      force_j = container_j->get_ptr_to_state_writable(Particle::State::Force, particle_j);
+    if (status_j == ParticleStatus::Owned)
+      force_j = &force[type_j_idx][status_j_idx][particle_j * statedim];
 
     const double* angvel_j = nullptr;
     double* moment_j = nullptr;
     if (contacttangential_ or contactrolling_)
     {
-      angvel_j = container_j->get_ptr_to_state(Particle::State::AngularVelocity, particle_j);
-      if (status_j == Particle::Status::Owned)
-        moment_j = container_j->get_ptr_to_state_writable(Particle::State::Moment, particle_j);
+      angvel_j = &angvel[type_j_idx][status_j_idx][particle_j * statedim];
+      if (status_j == ParticleStatus::Owned)
+        moment_j = &moment[type_j_idx][status_j_idx][particle_j * statedim];
     }
 
     // compute vectors from particle i and j to contact point c
@@ -477,7 +495,7 @@ void Particle::DEMContact::evaluate_particle_contact()
           mu_tangential, normalcontactforce, tangentialcontactforce);
 
       // copy history from interaction pair ij to ji
-      if (status_j == Particle::Status::Owned)
+      if (status_j == ParticleStatus::Owned)
       {
         // get reference to touched tangential history
         TouchedDEMHistoryPairTangential& touchedtangentialhistory_ji =
@@ -533,7 +551,7 @@ void Particle::DEMContact::evaluate_particle_contact()
           normalcontactforce, rollingcontactmoment);
 
       // copy history from interaction pair ij to ji
-      if (status_j == Particle::Status::Owned)
+      if (status_j == ParticleStatus::Owned)
       {
         // get reference to touched rolling history
         TouchedDEMHistoryPairRolling& touchedrollinghistory_ji =
@@ -596,12 +614,30 @@ void Particle::DEMContact::evaluate_particle_wall_contact()
     normaldirection.reserve(3 * numparticlewallpairs);
   }
 
+  // get pointers to particle states
+  static int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& pos =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& vel =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+  ConstParticleContainerBundleStatePtrs& rad =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+  ConstParticleContainerBundleStatePtrs& mass =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+  ParticleContainerBundleStatePtrs& force =
+      particlecontainerbundle_->get_ptrs_to_state_writable(ParticleState::Force);
+
+  ConstParticleContainerBundleStatePtrs& angvel =
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::AngularVelocity);
+  ParticleContainerBundleStatePtrs& moment =
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::Moment);
+
   // iterate over particle-wall pairs
   for (const auto& particlewallpair : particlewallpairdata)
   {
     // access values of local index tuple of particle i
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
@@ -613,18 +649,20 @@ void Particle::DEMContact::evaluate_particle_wall_contact()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
-    double* force_i = container_i->get_ptr_to_state_writable(Particle::State::Force, particle_i);
+    const int type_i_idx = static_cast<int>(type_i);
+    const int status_i_idx = static_cast<int>(status_i);
+    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
+    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
+    double* force_i = &force[type_i_idx][status_i_idx][particle_i * statedim];
 
     const double* angvel_i = nullptr;
     double* moment_i = nullptr;
     if (contacttangential_ or contactrolling_)
     {
-      angvel_i = container_i->get_ptr_to_state(Particle::State::AngularVelocity, particle_i);
-      moment_i = container_i->get_ptr_to_state_writable(Particle::State::Moment, particle_i);
+      angvel_i = &angvel[type_i_idx][status_i_idx][particle_i * statedim];
+      moment_i = &moment[type_i_idx][status_i_idx][particle_i * statedim];
     }
 
     // get pointer to column wall element
@@ -853,13 +891,13 @@ void Particle::DEMContact::evaluate_particle_elastic_potential_energy(
   for (const auto& particlepair : neighborpairs_->get_ref_to_particle_pair_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::Type type_j;
-    Particle::Status status_j;
+    ParticleType type_j;
+    ParticleStatus status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -880,7 +918,7 @@ void Particle::DEMContact::evaluate_particle_elastic_potential_energy(
 
     // add normal potential energy contribution
     elasticpotentialenergy += 0.5 * normalpotentialenergy;
-    if (status_j == Particle::Status::Owned) elasticpotentialenergy += 0.5 * normalpotentialenergy;
+    if (status_j == ParticleStatus::Owned) elasticpotentialenergy += 0.5 * normalpotentialenergy;
 
     // calculation of tangential potential energy
     if (contacttangential_)
@@ -899,7 +937,7 @@ void Particle::DEMContact::evaluate_particle_elastic_potential_energy(
 
       // add tangential potential energy contribution
       elasticpotentialenergy += 0.5 * tangentialpotentialenergy;
-      if (status_j == Particle::Status::Owned)
+      if (status_j == ParticleStatus::Owned)
         elasticpotentialenergy += 0.5 * tangentialpotentialenergy;
     }
 
@@ -919,8 +957,7 @@ void Particle::DEMContact::evaluate_particle_elastic_potential_energy(
 
       // add rolling potential energy contribution
       elasticpotentialenergy += 0.5 * rollingpotentialenergy;
-      if (status_j == Particle::Status::Owned)
-        elasticpotentialenergy += 0.5 * rollingpotentialenergy;
+      if (status_j == ParticleStatus::Owned) elasticpotentialenergy += 0.5 * rollingpotentialenergy;
     }
   }
 }
@@ -943,8 +980,8 @@ void Particle::DEMContact::evaluate_particle_wall_elastic_potential_energy(
   for (const auto& particlewallpair : neighborpairs_->get_ref_to_particle_wall_pair_data())
   {
     // access values of local index tuple of particle i
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 

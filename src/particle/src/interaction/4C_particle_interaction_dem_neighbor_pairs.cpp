@@ -67,36 +67,42 @@ void Particle::DEMNeighborPairs::evaluate_particle_pairs()
   // clear particle pair data
   particlepairdata_.clear();
 
+  // get pointers to particle states
+  const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& pos =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& rad =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+  ConstParticleContainerBundleStatePtrs& mass =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+
   // iterate over potential particle neighbors
   for (const auto& potentialneighbors :
       particleengineinterface_->get_potential_particle_neighbors())
   {
     // access values of local index tuples of particle i and j
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
-    Particle::Type type_j;
-    Particle::Status status_j;
+    ParticleType type_j;
+    ParticleStatus status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
-    // get corresponding particle containers
-    Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, status_i);
+    // get pointers to particle states
+    const int type_i_idx = static_cast<int>(type_i);
+    const int status_i_idx = static_cast<int>(status_i);
+    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
+    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
 
-    Particle::ParticleContainer* container_j =
-        particlecontainerbundle_->get_specific_container(type_j, status_j);
-
-    // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
-
-    const double* pos_j = container_j->get_ptr_to_state(Particle::State::Position, particle_j);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
-    const double* mass_j = container_j->get_ptr_to_state(Particle::State::Mass, particle_j);
+    const int type_j_idx = static_cast<int>(type_j);
+    const int status_j_idx = static_cast<int>(status_j);
+    const double* pos_j = &pos[type_j_idx][status_j_idx][particle_j * statedim];
+    const double* rad_j = &rad[type_j_idx][status_j_idx][particle_j];
+    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
 
     // vector from particle i to j
     double r_ji[3];
@@ -154,12 +160,19 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs()
   // index of particle-wall pairs
   int particlewallpairindex = 0;
 
+  // get pointers to particle states
+  const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& rad =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+  ConstParticleContainerBundleStatePtrs& pos =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position);
+
   // iterate over potential wall neighbors
   for (const auto& potentialneighbors : particlewallinterface_->get_potential_wall_neighbors())
   {
     // access values of local index tuple of particle i
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
@@ -171,11 +184,12 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const int type_i_idx = static_cast<int>(type_i);
+    const int status_i_idx = static_cast<int>(status_i);
+    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
 
     // get position of particle i
-    const Core::LinAlg::Matrix<3, 1> pos_i(
-        container_i->get_ptr_to_state(Particle::State::Position, particle_i));
+    const Core::LinAlg::Matrix<3, 1> pos_i(&pos[type_i_idx][status_i_idx][particle_i * statedim]);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = potentialneighbors.second;
@@ -262,17 +276,15 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs()
         particlewallpairdata_[indexofparticlewallpairs[0].second].tuple_i_;
 
     // access values of local index tuple of particle i
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = tuple_i;
 
-    // get corresponding particle container
-    Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, status_i);
-
-    // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    // get pointer to particle state
+    const int type_i_idx = static_cast<int>(type_i);
+    const int status_i_idx = static_cast<int>(status_i);
+    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
 
     // define tolerance dependent on the particle radius
     const double adaptedtol = 1.0e-7 * rad_i[0];
@@ -356,36 +368,42 @@ void Particle::DEMNeighborPairs::evaluate_particle_pairs_adhesion(const double& 
   // clear adhesion particle pair data
   particlepairadhesiondata_.clear();
 
+  // get pointers to particle states
+  static int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& pos =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& rad =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+  ConstParticleContainerBundleStatePtrs& mass =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+
   // iterate over potential particle neighbors
   for (const auto& potentialneighbors :
       particleengineinterface_->get_potential_particle_neighbors())
   {
     // access values of local index tuples of particle i and j
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
-    Particle::Type type_j;
-    Particle::Status status_j;
+    ParticleType type_j;
+    ParticleStatus status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
-    // get corresponding particle containers
-    Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, status_i);
+    // get pointers to particle states
+    const int type_i_idx = static_cast<int>(type_i);
+    const int status_i_idx = static_cast<int>(status_i);
+    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
+    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
 
-    Particle::ParticleContainer* container_j =
-        particlecontainerbundle_->get_specific_container(type_j, status_j);
-
-    // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
-
-    const double* pos_j = container_j->get_ptr_to_state(Particle::State::Position, particle_j);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
-    const double* mass_j = container_j->get_ptr_to_state(Particle::State::Mass, particle_j);
+    const int type_j_idx = static_cast<int>(type_j);
+    const int status_j_idx = static_cast<int>(status_j);
+    const double* pos_j = &pos[type_j_idx][status_j_idx][particle_j * statedim];
+    const double* rad_j = &rad[type_j_idx][status_j_idx][particle_j];
+    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
 
     // vector from particle i to j
     double r_ji[3];
@@ -444,12 +462,19 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs_adhesion(
   // index of particle-wall pairs
   int particlewallpairindex = 0;
 
+  // get pointers to particle states
+  static int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& rad =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+  ConstParticleContainerBundleStatePtrs& pos =
+      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position);
+
   // iterate over potential wall neighbors
   for (const auto& potentialneighbors : particlewallinterface_->get_potential_wall_neighbors())
   {
     // access values of local index tuple of particle i
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = potentialneighbors.first;
 
@@ -461,11 +486,12 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs_adhesion(
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const int type_i_idx = static_cast<int>(type_i);
+    const int status_i_idx = static_cast<int>(status_i);
+    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
 
     // get position of particle i
-    const Core::LinAlg::Matrix<3, 1> pos_i(
-        container_i->get_ptr_to_state(Particle::State::Position, particle_i));
+    const Core::LinAlg::Matrix<3, 1> pos_i(&pos[type_i_idx][status_i_idx][particle_i * statedim]);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = potentialneighbors.second;
@@ -570,17 +596,15 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs_adhesion(
         particlewallpairadhesiondata_[indexofparticlewallpairs[0].second].tuple_i_;
 
     // access values of local index tuple of particle i
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = tuple_i;
 
-    // get corresponding particle container
-    Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, status_i);
-
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const int type_i_idx = static_cast<int>(type_i);
+    const int status_i_idx = static_cast<int>(status_i);
+    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
 
     // define tolerance dependent on the particle radius
     const double adaptedtol = 1.0e-7 * rad_i[0];

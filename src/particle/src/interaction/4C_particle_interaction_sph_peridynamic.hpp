@@ -53,7 +53,7 @@ namespace Particle
 
     //! insert peridynamic evaluation dependent states
     void insert_particle_states_of_particle_types(
-        std::map<Type, std::set<Particle::State>>& particlestatestotypes) const;
+        std::map<Type, std::set<ParticleState>>& particlestatestotypes) const;
 
     //! setup peridynamic bond list
     void init_peridynamic_bondlist();
