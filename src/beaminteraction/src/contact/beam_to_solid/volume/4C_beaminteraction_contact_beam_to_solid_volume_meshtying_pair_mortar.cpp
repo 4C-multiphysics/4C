@@ -109,6 +109,7 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
               .get<std::shared_ptr<const BeamToSolidVolumeMeshtyingVisualizationOutputParams>>(
                   "btsv-output_params_ptr");
   const bool write_unique_ids = output_params_ptr->get_write_unique_ids_flag();
+  const bool postprocess_lambda = output_params_ptr->get_postprocess_lambda_flag();
 
   if (visualization_discret != nullptr || visualization_continuous != nullptr)
   {
@@ -119,6 +120,7 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
     Core::LinAlg::Matrix<3, 1, scalar_type> r;
     Core::LinAlg::Matrix<3, 1, scalar_type> u;
     Core::LinAlg::Matrix<3, 1, double> lambda_discret;
+    Core::LinAlg::Matrix<3, 1, double> lambda_postprocessed;
     Core::LinAlg::Matrix<3, 1, double> xi_mortar_node;
 
     // Get the mortar manager and the global lambda vector, those objects will be used to get the
@@ -267,6 +269,59 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
           {
             pair_point_beam_id->push_back(this->element1()->id());
             pair_point_solid_id->push_back(this->element2()->id());
+          }
+        }
+      }
+
+      if (postprocess_lambda)
+      {
+        std::vector<double>& lambda_postprocessed_vis = visualization_data.get_point_data<double>(
+            "lambda_postprocessed", (mortar_segments + 1) * 3 * this->line_to_3D_segments_.size());
+        for (const auto& segment : this->line_to_3D_segments_)
+        {
+          for (unsigned int i_curve_segment = 0; i_curve_segment <= mortar_segments;
+              i_curve_segment++)
+          {
+            // Get the position, displacement and lambda value at the current point.
+            xi = segment.get_eta_a() + i_curve_segment *
+                                           (segment.get_eta_b() - segment.get_eta_a()) /
+                                           (double)mortar_segments;
+            GeometryPair::evaluate_position<Beam>(xi, this->ele1pos_, r);
+            GeometryPair::evaluate_position<Beam>(xi, this->ele1posref_, X);
+            lambda_postprocessed.put_scalar(0.0);
+
+            Core::LinAlg::Matrix<1, Beam::n_nodes_ * Beam::n_val_, double> N_primal(
+                Core::LinAlg::Initialization::zero);
+
+            GeometryPair::EvaluateShapeFunction<Beam>::evaluate(
+                N_primal, xi, this->ele1pos_.shape_function_data_);
+
+            FOUR_C_ASSERT_ALWAYS(Mortar::n_nodes_ == Beam::n_nodes_,
+                "Postprocessed lambda assumes Mortar and Beam have the same number of nodes.");
+            FOUR_C_ASSERT_ALWAYS(Mortar::n_val_ == Beam::n_val_,
+                "Postprocessed lambda assumes Mortar and Beam have the same number of values per "
+                "node.");
+
+            for (unsigned int i_node = 0; i_node < Beam::n_nodes_; ++i_node)
+            {
+              for (unsigned int i_val = 0; i_val < Beam::n_val_; ++i_val)
+              {
+                const unsigned int shape_index = i_node * Beam::n_val_ + i_val;
+
+                for (unsigned int dim = 0; dim < 3; ++dim)
+                {
+                  const unsigned int lambda_index = i_node * Mortar::n_val_ * 3 + i_val * 3 + dim;
+
+                  lambda_postprocessed(dim) +=
+                      N_primal(shape_index) * element_data_lambda.element_position_(lambda_index);
+                }
+              }
+            }
+            for (unsigned int dim = 0; dim < 3; ++dim)
+            {
+              lambda_postprocessed_vis.push_back(
+                  Core::FADUtils::cast_to_double(lambda_postprocessed(dim)));
+            }
           }
         }
       }
