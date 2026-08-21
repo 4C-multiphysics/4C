@@ -102,10 +102,10 @@ namespace Particle
     std::vector<double> planepoint_;
 
     //! fluid phase
-    Particle::Type fluidphase_;
+    ParticleType fluidphase_;
 
     //! open boundary phase
-    Particle::Type openboundaryphase_;
+    ParticleType openboundaryphase_;
 
     //! boundary id
     int boundary_id_;
