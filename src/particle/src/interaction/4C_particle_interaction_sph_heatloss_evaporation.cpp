@@ -20,7 +20,7 @@ FOUR_C_NAMESPACE_OPEN
 
 Particle::SPHHeatLossEvaporation::SPHHeatLossEvaporation(const Teuchos::ParameterList& params)
     : params_sph_(params),
-      evaporatingphase_(Particle::Type::Phase1),
+      evaporatingphase_(ParticleType::Phase1),
       recoilboilingtemp_(params_sph_.get<double>("VAPOR_RECOIL_BOILINGTEMPERATURE")),
       recoil_pfac_(params_sph_.get<double>("VAPOR_RECOIL_PFAC")),
       recoil_tfac_(params_sph_.get<double>("VAPOR_RECOIL_TFAC")),
@@ -68,22 +68,27 @@ void Particle::SPHHeatLossEvaporation::evaluate_evaporation_induced_heat_loss() 
 
   // get container of owned particles of evaporating phase
   Particle::ParticleContainer* container_i =
-      particlecontainerbundle_->get_specific_container(evaporatingphase_, Particle::Status::Owned);
+      particlecontainerbundle_->get_specific_container(evaporatingphase_, ParticleStatus::Owned);
 
   const Mat::PAR::ParticleMaterialThermo* thermomaterial_i =
       thermomaterial_[static_cast<int>(evaporatingphase_)];
 
+  // get pointers to states
+  const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  const double* dens = container_i->get_ptr_to_state(ParticleState::Density);
+  const double* temp = container_i->get_ptr_to_state(ParticleState::Temperature);
+  const double* cfg = container_i->get_ptr_to_state(ParticleState::ColorfieldGradient);
+  const double* ifn = container_i->get_ptr_to_state(ParticleState::InterfaceNormal);
+  double* tempdot = container_i->get_ptr_to_state_writable(ParticleState::TemperatureDot);
+
   // iterate over particles in container
   for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
   {
-    const double* dens_i = container_i->get_ptr_to_state(Particle::State::Density, particle_i);
-    const double* temp_i = container_i->get_ptr_to_state(Particle::State::Temperature, particle_i);
-    const double* cfg_i =
-        container_i->get_ptr_to_state(Particle::State::ColorfieldGradient, particle_i);
-    const double* ifn_i =
-        container_i->get_ptr_to_state(Particle::State::InterfaceNormal, particle_i);
-    double* tempdot_i =
-        container_i->get_ptr_to_state_writable(Particle::State::TemperatureDot, particle_i);
+    const double* dens_i = &dens[particle_i];
+    const double* temp_i = &temp[particle_i];
+    const double* cfg_i = &cfg[particle_i * statedim];
+    const double* ifn_i = &ifn[particle_i * statedim];
+    double* tempdot_i = &tempdot[particle_i];
 
     // evaluation only for non-zero interface normal
     if (not(ParticleUtils::vec_norm_two(ifn_i) > 0.0)) continue;
