@@ -846,9 +846,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description = "stiffness scaling parameter", .validator = positive<double>()}),
             parameter<double>(
                 "M", {.description = "nonlinearity parameter", .validator = positive<double>()}),
-            parameter<double>(
-                "Q", {.description = "tension-compression asymmetry control parameter",
-                         .validator = in_range(0.0, 1.0)}),
+            parameter<double>("Q",
+                {.description =
+                        "tension-compression asymmetry control parameter. "
+                        "$q=0.5$ gives a tension--compression symmetric response, "
+                        "$q>0.5$ makes the material stiffer in tension than in compression, "
+                        "and $q<0.5$ makes the material stiffer in compression than in tension",
+                    .validator = in_range(0.0, 1.0)}),
             parameter<double>("KAPPA",
                 {.description = "incompressibility parameter", .validator = positive<double>()}),
             parameter<double>(
@@ -856,11 +860,16 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         },
         {.description =
                 "Hyperelastic Ogden material with tension-compression asymmetry control. The "
-                "second Piola--Kirchhoff stress is computed as S = sum_{i=1}^{3} [c/m * (q * "
-                "lambda_i^{m-2} - (1-q) * lambda_i^{-m-2}) N_i otimes N_i] + [kappa * J * (J-1) + "
-                "c/m * (1-2q)] C^{-1}] with J being the determinant of the deformation gradient, "
-                "lambda_i the principal stretches of the right Cauchy-Green deformation tensor C, "
-                "and N_i the corresponding principal directions."});
+                "second Piola-Kirchhoff stress is computed as\n\n"
+                "$$\n"
+                "\\mathbf{S} = \\sum_{i=1}^{3} \\left[\\frac{c}{m}\\left(q\\,"
+                "\\lambda_i^{m-2} - (1-q)\\,\\lambda_i^{-m-2}\\right) "
+                "\\mathbf{N}_i \\otimes \\mathbf{N}_i\\right] "
+                "+ \\left[\\kappa J (J-1) + \\frac{c}{m}(1-2q)\\right] \\mathbf{C}^{-1}\n"
+                "$$\n\n"
+                "with $J$ the determinant of the deformation gradient, $\\lambda_i$ the principal "
+                "stretches of the right Cauchy-Green deformation tensor $\\mathbf{C}$, and "
+                "$\\mathbf{N}_i$ the corresponding principal directions."});
   }
 
   {
@@ -1156,7 +1165,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                        "[nu12, nu23, nu13]."}),
             parameter<double>("DENS", {.description = "mass density"}),
         },
-        {.description = "St.Venant--Kirchhoff material with orthotropy"});
+        {.description = "St.Venant--Kirchhoff material with orthotropy. Direction requirements: "
+                        "none; its three orthotropic axes are fixed to the Cartesian reference "
+                        "axes and cannot be rotated through material or fiber input."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1210,12 +1221,19 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                           .default_value = 50,
                                           .validator = positive<int>()}),
         },
-        {.description = "Linear-elasto-plastic material with a Drucker-Prager yield surface: "
-                        "$\\phi = \\sqrt{J_2} + \\eta \\, \\mathrm{tr}(\\mathbf{\\sigma}) - "
-                        "\\xi\\, (c + H_\\mathrm{iso}\\varepsilon_\\mathrm{p}^\\mathrm{acc}$ "
-                        "and a potentially non-associated plastic potential: = "
-                        "\\sqrt{J_2} + \\overline{\\eta} \\, \\mathrm{tr}(\\mathbf{\\sigma}) - "
-                        "\\xi\\, (c + H_\\mathrm{iso}\\varepsilon_\\mathrm{p}^\\mathrm{acc}$"});
+        {.description = "Linear-elasto-plastic material with a Drucker-Prager yield surface\n\n"
+                        "$$\n"
+                        "\\phi = \\sqrt{J_2} + \\eta \\, \\mathrm{tr}(\\boldsymbol{\\sigma}) - "
+                        "\\xi\\, \\left(c + H_\\mathrm{iso}\\varepsilon_\\mathrm{p}^\\mathrm{acc}"
+                        "\\right)\n"
+                        "$$\n\n"
+                        "and a potentially non-associated plastic potential\n\n"
+                        "$$\n"
+                        "g = \\sqrt{J_2} + \\overline{\\eta} \\, "
+                        "\\mathrm{tr}(\\boldsymbol{\\sigma}) - "
+                        "\\xi\\, \\left(c + H_\\mathrm{iso}\\varepsilon_\\mathrm{p}^\\mathrm{acc}"
+                        "\\right)\n"
+                        "$$"});
   }
 
   /*----------------------------------------------------------------------*/
@@ -1263,22 +1281,52 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description = "Function number for isotropic hardening", .default_value = 0}),
             parameter<double>("TOL", {.description = "Local Newton iteration tolerance"}),
             parameter<int>("MAXITER",
-                {.description = "Maximum Neutron Raphson Iterations", .default_value = 50}),
-            parameter<double>("K1", {.description = "GTN Constant k1"}),
-            parameter<double>("K2", {.description = "GTN Constant k2"}),
-            parameter<double>("K3", {.description = "GTN constant k3"}),
-            parameter<double>("F0", {.description = "GTN constant f0 for initial damage"}),
-            parameter<double>("FN", {.description = "GTN constant fN for damage nucleation"}),
-            parameter<double>("EN", {.description = "GTN constant eN for damage nucleation"}),
-            parameter<double>("SN", {.description = "GTN constant sN for damage nucleation"}),
-            parameter<double>("FC", {.description = "GTN constant fC for damage coalescence"}),
+                {.description = "Maximum Newton Raphson Iterations", .default_value = 50}),
+            parameter<double>("K1", {.description = "GTN Constant $k_1$"}),
+            parameter<double>("K2", {.description = "GTN Constant $k_2$"}),
+            parameter<double>("K3", {.description = "GTN constant $k_3$"}),
             parameter<double>(
-                "KAPPA", {.description = "GTN constant kappa for damage coalescence"}),
+                "F0", {.description = "GTN constant $f_0$: initial void volume fraction"}),
+            parameter<double>("FN", {.description = "GTN constant $f_N$ for damage nucleation"}),
+            parameter<double>(
+                "EN", {.description = "GTN constant $\\varepsilon_N$ for damage nucleation"}),
+            parameter<double>("SN", {.description = "GTN constant $s_N$ for damage nucleation"}),
+            parameter<double>("FC", {.description = "GTN constant $f_C$: "
+                                                    "void volume fraction at damage coalescence"}),
+            parameter<double>("KAPPA",
+                {.description = "GTN constant $\\kappa$: Increased damage rate after coalescence"}),
             parameter<double>(
                 "EF", {.description = "GTN stabilization parameter ef for damage coalescence",
                           .default_value = 0.0}),
         },
-        {.description = "elastic St.Venant Kirchhoff / plastic GTN"});
+        {.description = "elastic St.Venant Kirchhoff / plastic GTN for porous metal plasticity."
+                        "It uses an associated yield function of the form\n\n"
+                        "$$\n"
+                        "\\Phi = \\left( \\frac{Q}{R^{(3)}} \\right)^2 + "
+                        "2 k_1 f^* \\cosh \\left( -\\frac{3}{2} k_2 \\frac{P}{R^{(3)}} \\right) "
+                        "- \\left(1 + k_3 {f^*}^2 \\right) = 0\n"
+                        "$$\n\n"
+                        "with $Q=\\sqrt{\\sigma_\\text{dev} : \\sigma_\\text{dev}}$ "
+                        "and P being the trace of the stress.\n\n"
+                        "The damage $f^*$ is calculated by\n\n"
+                        "$$\n"
+                        "f^* = \\begin{cases}\n"
+                        "f & f \\leq f_c \\\\\n"
+                        "f_c + \\kappa ( f - f_c) & f > f_c\n"
+                        "\\end{cases}\n"
+                        "$$\n\n"
+                        "The rate of the void volume fraction includes growth and nucleation:\n\n"
+                        "$$\n"
+                        "\\dot{f} = \\dot{f}_\\text{growth} + \\dot{f}_\\text{nucl}\n"
+                        "$$\n\n"
+                        "with\n\n"
+                        "$$\n"
+                        "\\dot{f}_\\text{nucl} = \\frac{f_N}{s_N \\sqrt{2\\pi}} "
+                        "\\exp \\left\\{ -\\frac{1}{2} "
+                        "\\left[ \\frac{\\overline{\\varepsilon}^{pl} - \\epsilon_N}{s_N} "
+                        "\\right]^2 \\right\\} "
+                        "\\dot{\\overline{\\varepsilon}}^{pl}\n"
+                        "$$"});
   }
 
   /*----------------------------------------------------------------------*/
@@ -1579,7 +1627,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<int>("ELETHICKDIR",
                 {.description = "Element thickness direction applies also to fibers (only sosh)"}),
         },
-        {.description = "visco-elastic anisotropic fibre material law"});
+        {.description = "visco-elastic anisotropic fibre material law. Direction requirements: "
+                        "2 derived directions; requires the cylindrical coordinate system, from "
+                        "which two fiber families are generated using its material angle GAMMA."});
   }
 
   /*----------------------------------------------------------------------*/
@@ -1613,7 +1663,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<int>("POLYCONVEX",
                 {.description = "1.0 if polyconvexity of system is checked", .default_value = 0}),
         },
-        {.description = "list/collection of hyperelastic materials, i.e. material IDs"});
+        {.description = "list/collection of hyperelastic materials, i.e. material IDs. Direction "
+                        "requirements: none imposed by this container itself; the requirements "
+                        "are determined by the selected summands. A `STR_TENS_ID` on an "
+                        "anisotropic summand controls the structural-tensor strategy but does not "
+                        "replace the underlying mean fiber direction."});
   }
 
   /*----------------------------------------------------------------------*/
@@ -1635,12 +1689,18 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "VISCO_MATIDS", {.description = "explicit visco summand IDs",
                                     .size = size_from_optional_count("NUMVISCO")}),
             parameter<double>("DENS", {.description = "material mass density"}),
-            parameter<int>("POLYCONVEX",
-                {.description = "1.0 if polyconvexity of system is checked", .default_value = 0}),
+            parameter<int>(
+                "POLYCONVEX", {.description = "1.0 if polyconvexity of system is checked "
+                                              "(not supported for viscoelastic combinations.)",
+                                  .default_value = 0}),
         },
         {.description = "Viscohyperelastic material. Uses NUMMAT/MATIDS as the complete summand "
                         "list and supports explicit elastic/visco splits with NUMELAST/"
-                        "ELAST_MATIDS and NUMVISCO/VISCO_MATIDS."});
+                        "ELAST_MATIDS and NUMVISCO/VISCO_MATIDS. Direction requirements: none "
+                        "imposed by this container itself; the requirements are determined by "
+                        "the selected summands. A `STR_TENS_ID` on an anisotropic summand "
+                        "controls the structural-tensor strategy but does not replace the "
+                        "underlying mean fiber direction."});
   }
 
   /*----------------------------------------------------------------------*/
@@ -1715,7 +1775,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description = "Taylor-Quinney factor for plastic heat conversion",
                     .default_value = 1.}),
         },
-        {.description = "collection of hyperelastic materials for finite strain plasticity"});
+        {.description = "collection of hyperelastic materials for finite strain plasticity. "
+                        "Direction requirements: 0 or 3 directions; three explicit, mutually "
+                        "orthogonal fibers forming a right-handed basis are required for Hill "
+                        "plasticity, while no fibers are used for isotropic von Mises "
+                        "plasticity."});
   }
 
   /*----------------------------------------------------------------------*/
@@ -1791,7 +1855,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<int>("POLYCONVEX",
                 {.description = "1.0 if polyconvexity of system is checked", .default_value = 0}),
         },
-        {.description = "collection of hyperelastic materials for finite strain plasticity"});
+        {.description = "collection of hyperelastic materials for finite strain plasticity. "
+                        "Direction requirements: 0 or 3 directions; three explicit, mutually "
+                        "orthogonal fibers forming a right-handed basis are required for Hill "
+                        "plasticity, while no fibers are used for isotropic von Mises "
+                        "plasticity."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1805,7 +1873,14 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C1", {.description = "E or mue"}),
             parameter<double>("C2", {.description = "nue or lambda"}),
         },
-        {.description = "logarithmic neo-Hooke material acc. to Bonet and Wood"});
+        {.description = "Logarithmic neo-Hooke material acc. to Bonet and Wood. The strain energy "
+                        "is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{\\mu}{2}(I_1-3) - \\mu \\ln(J) + "
+                        "\\frac{\\lambda}{2}(\\ln J)^2\n"
+                        "$$\n\n"
+                        "with $I_1$ the first invariant of the right Cauchy-Green deformation "
+                        "tensor and $J$ the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1816,7 +1891,14 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("YOUNG", {.description = "Young's modulus"}),
             parameter<double>("NUE", {.description = "Poisson's ratio"}),
         },
-        {.description = "Saint-Venant-Kirchhoff as elastic summand"});
+        {.description = "Saint-Venant-Kirchhoff as elastic summand. The strain energy is computed "
+                        "as\n\n"
+                        "$$\n"
+                        "\\Psi = \\mu\\,\\mathrm{tr}(\\mathbf{E}^2) + "
+                        "\\frac{\\lambda}{2}(\\mathrm{tr}\\,\\mathbf{E})^2\n"
+                        "$$\n\n"
+                        "with $\\mathbf{E}$ the Green-Lagrange strain tensor and $\\mu$, "
+                        "$\\lambda$ the Lame constants."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1826,7 +1908,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {
             parameter<double>("MUE", {.description = "material constant"}),
         },
-        {.description = "Simo-Pister type material"});
+        {.description = "Simo-Pister type material. The strain energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{\\mu}{2}(I_1-3) - \\mu \\ln(J)\n"
+                        "$$\n\n"
+                        "with $I_1$ the first invariant of the right Cauchy-Green deformation "
+                        "tensor and $J$ the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1840,7 +1927,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C1", {.description = "E or mue"}),
             parameter<double>("C2", {.description = "nue or lambda"}),
         },
-        {.description = "mixed logarithmic neo-Hooke material"});
+        {.description = "Mixed logarithmic neo-Hooke material. The strain energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{\\mu}{2}(I_1-3) - \\mu \\ln(J) + "
+                        "\\frac{\\lambda}{2}(J-1)^2\n"
+                        "$$\n\n"
+                        "with $I_1$ the first invariant of the right Cauchy-Green deformation "
+                        "tensor and $J$ the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1852,7 +1945,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("B", {.description = "material constant linear I_1"}),
             parameter<double>("C", {.description = "material constant linear J"}),
         },
-        {.description = "compressible, isochoric exponential material law for soft tissue"});
+        {.description = "Compressible, isochoric exponential material law for soft tissue. The "
+                        "strain energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = a \\exp\\left[b(I_1-3)-(2b+c)\\ln(J)+c(J-1)\\right] - a\n"
+                        "$$\n\n"
+                        "with $I_1$ the first invariant of the right Cauchy-Green deformation "
+                        "tensor and $J$ the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1863,7 +1962,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("YOUNG", {.description = "Young's modulus", .default_value = 0.0}),
             parameter<double>("NUE", {.description = "Poisson's ratio", .default_value = 0.0}),
         },
-        {.description = "compressible neo-Hooke material acc. to Holzapfel"});
+        {.description = "Compressible neo-Hooke material acc. to Holzapfel. The strain energy is "
+                        "computed as\n\n"
+                        "$$\n"
+                        "\\Psi = c(I_1-3) + \\frac{c}{\\beta}\\left(I_3^{-\\beta} - 1\\right)\n"
+                        "$$\n\n"
+                        "with $c = E/(4(1+\\nu))$, $\\beta = \\nu/(1-2\\nu)$, and $I_1$, $I_3$ "
+                        "the invariants of the right Cauchy-Green deformation tensor."});
   }
   // Mooney Rivlin  material acc. to Holzapfel
   {
@@ -1873,7 +1978,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C2", {.description = "material constant", .default_value = 0.0}),
             parameter<double>("C3", {.description = "material constant", .default_value = 0.0}),
         },
-        {.description = "Mooney - Rivlin material acc. to Holzapfel"});
+        {.description = "Mooney-Rivlin material acc. to Holzapfel. The strain energy is computed "
+                        "as\n\n"
+                        "$$\n"
+                        "\\Psi = c_1(I_1-3)+c_2(I_2-3)-(2c_1+4c_2)\\ln(J)+c_3(J-1)^2\n"
+                        "$$\n\n"
+                        "with $I_1$ and $I_2$ the invariants of the right Cauchy-Green deformation "
+                        "tensor and $J$ the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1885,7 +1996,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("NUE", {.description = "Poisson's ratio"}),
             parameter<double>("F", {.description = "interpolation parameter"}),
         },
-        {.description = "Blatz and Ko material acc. to Holzapfel"});
+        {.description = "Blatz and Ko material acc. to Holzapfel. The strain energy is computed "
+                        "as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{\\mu}{2} \\left\\{f\\left[I_1-3+\\frac{I_3^{-\\beta}-1}"
+                        "{\\beta}\\right] + (1-f)\\left[\\frac{I_2}{I_3}-3+"
+                        "\\frac{I_3^{\\beta}-1}{\\beta}\\right]\\right\\}\n"
+                        "$$\n\n"
+                        "with $\\beta = \\nu/(1-2\\nu)$, and $I_1$, $I_2$, $I_3$ the invariants of "
+                        "the right Cauchy-Green deformation tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1895,7 +2014,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {
             input_field<double>("MUE", {.description = "Shear modulus"}),
         },
-        {.description = "isochoric part of neo-Hooke material acc. to Holzapfel"});
+        {.description = "Isochoric part of neo-Hooke material acc. to Holzapfel. The strain "
+                        "energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{\\mu}{2}(\\bar{I}_1 - 3)\n"
+                        "$$\n\n"
+                        "with $\\bar{I}_1$ the first invariant of the isochoric right "
+                        "Cauchy-Green deformation tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1906,7 +2031,14 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("MUE", {.description = "Shear modulus"}),
             parameter<double>("ALPHA", {.description = "Nonlinearity parameter"}),
         },
-        {.description = "isochoric part of the one-term Ogden material"});
+        {.description = "Isochoric part of the one-term Ogden material. The strain energy is "
+                        "computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{2\\mu}{\\alpha^2}\\left(\\bar{\\lambda}_1^{\\alpha} + "
+                        "\\bar{\\lambda}_2^{\\alpha} + \\bar{\\lambda}_3^{\\alpha} - 3\\right)\n"
+                        "$$\n\n"
+                        "with $\\bar{\\lambda}_i$ the principal stretches of the isochoric right "
+                        "Cauchy-Green deformation tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1918,7 +2050,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C2", {.description = "Quadratic modulus"}),
             parameter<double>("C3", {.description = "Cubic modulus"}),
         },
-        {.description = "isochoric part of  Yeoh material acc. to Holzapfel"});
+        {.description = "Isochoric part of Yeoh material acc. to Holzapfel. The strain energy is "
+                        "computed as\n\n"
+                        "$$\n"
+                        "\\Psi = c_1(\\bar{I}_1-3) + c_2(\\bar{I}_1-3)^2 + c_3(\\bar{I}_1-3)^3\n"
+                        "$$\n\n"
+                        "with $\\bar{I}_1$ the first invariant of the isochoric right Cauchy-Green "
+                        "deformation tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1929,7 +2067,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C", {.description = "material parameter"}),
             parameter<int>("D", {.description = "exponent"}),
         },
-        {.description = "isochoric part of general power material"});
+        {.description = "Isochoric part of general power material. The strain energy is computed "
+                        "as\n\n"
+                        "$$\n"
+                        "\\Psi = c(\\bar{I}_1-3)^d\n"
+                        "$$\n\n"
+                        "with $\\bar{I}_1$ the first invariant of the isochoric right Cauchy-Green "
+                        "deformation tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1940,7 +2084,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C", {.description = "material parameter"}),
             parameter<int>("D", {.description = "exponent"}),
         },
-        {.description = "isochoric part of general power material"});
+        {.description = "Isochoric part of general power material. The strain energy is computed "
+                        "as\n\n"
+                        "$$\n"
+                        "\\Psi = c(\\bar{I}_2-3)^d\n"
+                        "$$\n\n"
+                        "with $\\bar{I}_2$ the second invariant of the isochoric right "
+                        "Cauchy-Green deformation tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1951,7 +2101,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C", {.description = "material parameter"}),
             parameter<int>("D", {.description = "exponent"}),
         },
-        {.description = "part of general power material"});
+        {.description = "Part of general power material. The strain energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = c(I_1-3)^d\n"
+                        "$$\n\n"
+                        "with $I_1$ the first invariant of the right Cauchy-Green deformation "
+                        "tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1962,7 +2117,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C", {.description = "material parameter"}),
             parameter<int>("D", {.description = "exponent"}),
         },
-        {.description = "part of general power material"});
+        {.description = "Part of general power material. The strain energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = c(I_2-3)^d\n"
+                        "$$\n\n"
+                        "with $I_2$ the second invariant of the right Cauchy-Green deformation "
+                        "tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1973,7 +2133,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C", {.description = "material parameter"}),
             parameter<int>("D", {.description = "exponent"}),
         },
-        {.description = "part of general power material"});
+        {.description = "Part of general power material. The strain energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = c\\left(I_3^{1/3}-1\\right)^d\n"
+                        "$$\n\n"
+                        "with $I_3$ the third invariant of the right Cauchy-Green deformation "
+                        "tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1986,7 +2151,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("A", {.description = "negative exponent of I3"}),
         },
         {.description =
-                "hyperelastic potential summand for multiplicative coupled invariants I1 and I3"});
+                "Hyperelastic potential summand for multiplicative coupled invariants I1 and I3. "
+                "The strain energy is computed as\n\n"
+                "$$\n"
+                "\\Psi = c\\left(I_1 I_3^{-a} - 3\\right)^d\n"
+                "$$"});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1998,7 +2167,14 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("K2", {.description = "material parameter"}),
             parameter<int>("C", {.description = "exponent"}),
         },
-        {.description = "isochoric part of  exponential material acc. to Holzapfel"});
+        {.description = "Isochoric part of exponential material acc. to Holzapfel. The strain "
+                        "energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{k_1}{2k_2} \\left\\{\\exp\\left[k_2(\\bar{I}_1-3)^c"
+                        "\\right]-1\\right\\}\n"
+                        "$$\n\n"
+                        "with $\\bar{I}_1$ the first invariant of the isochoric right "
+                        "Cauchy-Green deformation tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2009,7 +2185,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C1", {.description = "Linear modulus for first invariant"}),
             parameter<double>("C2", {.description = "Linear modulus for second invariant"}),
         },
-        {.description = "isochoric part of  Mooney-Rivlin material acc. to Holzapfel"});
+        {.description = "Isochoric part of Mooney-Rivlin material acc. to Holzapfel. The strain "
+                        "energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = c_1(\\bar{I}_1-3)+c_2(\\bar{I}_2-3)\n"
+                        "$$\n\n"
+                        "with $\\bar{I}_1$ and $\\bar{I}_2$ the invariants of the isochoric right "
+                        "Cauchy-Green deformation tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2048,7 +2230,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "FIBER_ORIENTATION",
                 {.description = "A unit vector field pointing in the direction of the fibers."}),
         },
-        {.description = "anisotropic Blemker muscle material"});
+        {.description = "Anisotropic Blemker muscle material. No scalar potential is evaluated; "
+                        "passive and time-dependent active stresses are assembled from the "
+                        "piecewise muscle force laws."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2059,7 +2243,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C1", {.description = "Modulus for first invariant"}),
             parameter<double>("C2", {.description = "Modulus for second invariant"}),
         },
-        {.description = "test material to test elasthyper-toolbox"});
+        {.description = "Test material to test elasthyper-toolbox. The strain energy is computed "
+                        "as\n\n"
+                        "$$\n"
+                        "\\Psi = c_1 x + \\frac{c_1}{2} x^2 + c_2 y + \\frac{c_2}{2} y^2 + "
+                        "(c_1+2c_2)\\,x y\n"
+                        "$$\n\n"
+                        "with $x = \\bar{I}_1-3$ and $y = \\bar{I}_2-3$, where $\\bar{I}_1$ and "
+                        "$\\bar{I}_2$ are the invariants of the isochoric right Cauchy-Green "
+                        "deformation tensor."});
   }
 
   /*----------------------------------------------------------------------*/
@@ -2081,7 +2273,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                    .size = from_parameter<int>("NUMMAT")}),
             parameter<double>("DEPOSITIONSTRETCH", {.description = "deposition stretch"}),
         },
-        {.description = "General fiber material for remodeling"});
+        {.description = "General fiber material for remodeling. No single fixed potential is "
+                        "used; it combines the referenced exponential fiber potentials with "
+                        "evolving remodeling and growth histories. Direction requirements: "
+                        "variable number of directions, one for each referenced "
+                        "remodeling-fiber contribution."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2091,7 +2287,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {
             parameter<double>("KAPPA", {.description = "dilatation modulus"}),
         },
-        {.description = "volumetric part of  SussmanBathe material"});
+        {.description = "Volumetric part of Sussman-Bathe material. The strain energy is computed "
+                        "as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{\\kappa}{2}(J-1)^2\n"
+                        "$$\n\n"
+                        "with $J$ the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2102,7 +2303,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("EPSILON", {.description = "penalty parameter"}),
             parameter<double>("GAMMA", {.description = "penalty parameter"}),
         },
-        {.description = "Penalty formulation for the volumetric part"});
+        {.description = "Penalty formulation for the volumetric part. The strain energy is "
+                        "computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\epsilon\\left(J^{\\gamma} + J^{-\\gamma} - 2\\right)\n"
+                        "$$\n\n"
+                        "with $J$ the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2113,7 +2319,14 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("KAPPA", {.description = "dilatation modulus"}),
             parameter<double>("BETA", {.description = "empiric constant"}),
         },
-        {.description = "Ogden formulation for the volumetric part"});
+        {.description = "Ogden formulation for the volumetric part. The strain energy is computed "
+                        "as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{\\kappa}{\\beta^2}\\left[\\beta \\ln(J) + "
+                        "J^{-\\beta} - 1\\right]\n"
+                        "$$\n\n"
+                        "with $J$ the determinant of the deformation gradient; for $\\beta=0$, "
+                        "$\\Psi = \\frac{\\kappa}{2}(\\ln J)^2$."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2124,7 +2337,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("A", {.description = "prefactor of power law"}),
             parameter<double>("EXPON", {.description = "exponent of power law"}),
         },
-        {.description = "Power law formulation for the volumetric part"});
+        {.description = "Power law formulation for the volumetric part. The strain energy is "
+                        "computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{a}{n-1} J^{1-n} + a J\n"
+                        "$$\n\n"
+                        "with $n$ = EXPON and $J$ the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2140,7 +2358,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<int>(
                 "STR_TENS_ID", {.description = "MAT ID for definition of Structural Tensor"}),
             parameter<int>("INIT",
-                {.description = "initialization modus for fiber alignment", .default_value = 1}),
+                {.description =
+                        "Initialization mode for fiber alignment: "
+                        "0 - Fibers defined by material parameters on element basis;"
+                        "1 - Fibers defined in input file on element basis;"
+                        "4 - Fibers defined in material on gauss point basis, i.e., by nodes;"
+                        "3 - Fibers defined in input file on gauss point basis, i.e., by nodes",
+                    .default_value = 1}),
             parameter<bool>("ADAPT_ANGLE",
                 {.description = "adapt angle during remodeling", .default_value = false}),
             parameter<double>("S", {.description = "maximum contractile stress"}),
@@ -2151,7 +2375,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>(
                 "DENS", {.description = "total reference mass density of constrained mixture"}),
         },
-        {.description = "anisotropic active fiber"});
+        {.description = "Anisotropic active fiber. The passive strain energy follows "
+                        "ELAST_CoupAnisoExpo. In addition, the active response is computed as\n\n"
+                        "$$\n"
+                        "\\Psi_\\mathrm{act} = \\frac{s}{\\rho} \\left[\\lambda_\\mathrm{act} + "
+                        "\\frac{(\\lambda_\\mathrm{max}-\\lambda_\\mathrm{act})^3}"
+                        "{3(\\lambda_\\mathrm{max}-\\lambda_0)^2}\\right]\n"
+                        "$$\n\n"
+                        "Direction requirements: 1 direction, given by an element fiber or the "
+                        "cylindrical coordinate system."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2167,14 +2399,29 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<int>(
                 "STR_TENS_ID", {.description = "MAT ID for definition of Structural Tensor"}),
             parameter<int>("INIT",
-                {.description = "initialization modus for fiber alignment", .default_value = 1}),
+                {.description =
+                        "Initialization mode for fiber alignment: "
+                        "0 - Fibers defined by material parameters on element basis;"
+                        "1 - Fibers defined in input file on element basis;"
+                        "4 - Fibers defined in material on gauss point basis, i.e., by nodes;"
+                        "3 - Fibers defined in input file on gauss point basis, i.e., by nodes",
+                    .default_value = 1}),
             parameter<bool>("ADAPT_ANGLE",
                 {.description = "adapt angle during remodeling", .default_value = false}),
             parameter<int>("FIBER_ID",
                 {.description = "Id of the fiber to be used (1 for first fiber, default)",
                     .default_value = 1}),
         },
-        {.description = "anisotropic part with one exp. fiber"});
+        {.description = "Anisotropic part with one exponential fiber. The strain energy is "
+                        "computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{k_1}{2k_2} \\left\\{\\exp\\left[k_2(I_4-1)^2\\right]"
+                        "-1\\right\\}\n"
+                        "$$\n\n"
+                        "with $I_4$ the pseudo-invariant associated with the fiber direction. "
+                        "K1COMP and K2COMP apply the same law in compression. Direction "
+                        "requirements: 1 direction, given by an element fiber or the cylindrical "
+                        "coordinate system; `FIBER_ID` selects the element fiber."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2188,13 +2435,28 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("K1COMP", {.description = "linear constant"}),
             parameter<double>("K2COMP", {.description = "exponential constant"}),
             parameter<int>("INIT",
-                {.description = "initialization modus for fiber alignment", .default_value = 1}),
+                {.description =
+                        "Initialization mode for fiber alignment: "
+                        "0 - Fibers defined by material parameters on element basis;"
+                        "1 - Fibers defined in input file on element basis;"
+                        "4 - Fibers defined in material on gauss point basis, i.e., by nodes;"
+                        "3 - Fibers defined in input file on gauss point basis, i.e., by nodes",
+                    .default_value = 1}),
             parameter<std::vector<int>>(
                 "FIBER_IDS", {.description = "Ids of the two fibers to be used (1 for the first "
                                              "fiber, 2 for the second, default)",
                                  .size = 2}),
         },
-        {.description = "Exponential shear behavior between two fibers"});
+        {.description = "Exponential shear behavior between two fibers. The strain energy is "
+                        "computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{k_1}{2k_2} \\left\\{\\exp\\left[k_2(I_8 - "
+                        "\\mathbf{a}_1\\cdot\\mathbf{a}_2)^2\\right]-1\\right\\}\n"
+                        "$$\n\n"
+                        "with $I_8$ the mixed pseudo-invariant of the two fiber directions "
+                        "$\\mathbf{a}_1$ and $\\mathbf{a}_2$. Direction requirements: 2 "
+                        "directions; requires explicit element or Gauss-point fibers selected by "
+                        "`FIBER_IDS`, a cylindrical coordinate system is not supported."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2216,11 +2478,26 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                              .default_value = 1}),
             parameter<double>("GAMMA", {.description = "angle", .default_value = 0.0}),
             parameter<int>("INIT",
-                {.description = "initialization modus for fiber alignment", .default_value = 1}),
+                {.description =
+                        "Initialization mode for fiber alignment: "
+                        "0 - Fibers defined by material parameters on element basis;"
+                        "1 - Fibers defined in input file on element basis;"
+                        "4 - Fibers defined in material on gauss point basis, i.e., by nodes;"
+                        "3 - Fibers defined in input file on gauss point basis, i.e., by nodes",
+                    .default_value = 1}),
             parameter<bool>("ADAPT_ANGLE",
                 {.description = "adapt angle during remodeling", .default_value = false}),
         },
-        {.description = "anisotropic part with one pow-like fiber"});
+        {.description = "Anisotropic part with one pow-like fiber. Where active, the strain "
+                        "energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = k\\left(I_4^{d_1}-1\\right)^{d_2}\n"
+                        "$$\n\n"
+                        "with $I_4$ the pseudo-invariant associated with the fiber direction; "
+                        "ACTIVETHRES disables its stress contribution below the selected fiber "
+                        "stretch. Direction requirements: 1 direction, given by an element fiber "
+                        "or the cylindrical coordinate system; its `FIBER` selector chooses the "
+                        "family."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2242,14 +2519,30 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<int>(
                 "STR_TENS_ID", {.description = "MAT ID for definition of Structural Tensor"}),
             parameter<int>("INIT",
-                {.description = "initialization modus for fiber alignment", .default_value = 1}),
+                {.description =
+                        "Initialization mode for fiber alignment: "
+                        "0 - Fibers defined by material parameters on element basis;"
+                        "1 - Fibers defined in input file on element basis;"
+                        "4 - Fibers defined in material on gauss point basis, i.e., by nodes;"
+                        "3 - Fibers defined in input file on gauss point basis, i.e., by nodes",
+                    .default_value = 1}),
             parameter<bool>(
                 "FIB_COMP", {.description = "fibers support compression: yes (true) or no (false)",
                                 .default_value = true}),
             parameter<bool>("ADAPT_ANGLE",
                 {.description = "adapt angle during remodeling", .default_value = false}),
         },
-        {.description = "anisotropic part with two exp. fibers"});
+        {.description = "Anisotropic part with two exponential fibers. The strain energy is "
+                        "computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\sum_{\\alpha=4,6,8} \\frac{a_\\alpha}{2b_\\alpha} "
+                        "\\left[\\exp\\left(b_\\alpha x_\\alpha^2\\right)-1\\right]\n"
+                        "$$\n\n"
+                        "with $x_4 = I_4-1$, $x_6 = I_6-1$, and $x_8 = I_8 - "
+                        "\\mathbf{a}_1\\cdot\\mathbf{a}_2$, where $I_4$, $I_6$, $I_8$ are the "
+                        "pseudo-invariants of the two fiber directions $\\mathbf{a}_1$, "
+                        "$\\mathbf{a}_2$. Direction requirements: 2 directions, given by element "
+                        "fibers or the cylindrical coordinate system."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2262,52 +2555,72 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<int>(
                 "STR_TENS_ID", {.description = "MAT ID for definition of Structural Tensor"}),
             parameter<int>("INIT",
-                {.description = "initialization modus for fiber alignment", .default_value = 1}),
+                {.description =
+                        "Initialization mode for fiber alignment: "
+                        "0 - Fibers defined by material parameters on element basis;"
+                        "1 - Fibers defined in input file on element basis;"
+                        "4 - Fibers defined in material on gauss point basis, i.e., by nodes;"
+                        "3 - Fibers defined in input file on gauss point basis, i.e., by nodes",
+                    .default_value = 1}),
             parameter<bool>("ADAPT_ANGLE",
                 {.description = "adapt angle during remodeling", .default_value = false}),
         },
-        {.description = "anisotropic part with one neo Hookean fiber"});
+        {.description = "Anisotropic part with one neo-Hookean fiber. The strain energy is "
+                        "computed as\n\n"
+                        "$$\n"
+                        "\\Psi = c(I_4-1)\n"
+                        "$$\n\n"
+                        "with $I_4$ the pseudo-invariant associated with the fiber direction. "
+                        "Direction requirements: 1 direction, given by an element fiber or the "
+                        "cylindrical coordinate system."});
   }
 
   /*--------------------------------------------------------------------*/
   // coupled anisotropic material with the stress given by a simplified version of the contraction
   // law of Bestel-Clement-Sorine
   {
-    known_materials[Core::Materials::mes_anisoactivestress_evolution] =
-        group("ELAST_AnisoActiveStress_Evolution",
-            {
-                parameter<double>("SIGMA", {.description = "Contractility (maximal stress)"}),
-                parameter<double>("TAUC0", {.description = "Initial value for the active stress"}),
-                parameter<double>(
-                    "MAX_ACTIVATION", {.description = "Maximal value for the rescaled activation"}),
-                parameter<double>(
-                    "MIN_ACTIVATION", {.description = "Minimal value for the rescaled activation"}),
-                parameter<int>("SOURCE_ACTIVATION",
-                    {.description = "Where the activation comes from: 0=scatra , >0 Id for FUNCT"}),
-                parameter<double>("ACTIVATION_THRES",
-                    {.description = "Threshold for activation (contraction starts when activation "
-                                    "function is larger than this value, relaxes otherwise)"}),
-                parameter<bool>("STRAIN_DEPENDENCY",
-                    {.description = "model strain dependency of contractility (Frank-Starling "
-                                    "law): no (false) or yes (true)",
-                        .default_value = false}),
-                parameter<double>(
-                    "LAMBDA_LOWER", {.description = "lower fiber stretch for Frank-Starling law",
-                                        .default_value = 1.0}),
-                parameter<double>(
-                    "LAMBDA_UPPER", {.description = "upper fiber stretch for Frank-Starling law",
-                                        .default_value = 1.0}),
-                parameter<double>("GAMMA", {.description = "angle", .default_value = 0.0}),
-                parameter<int>(
-                    "STR_TENS_ID", {.description = "MAT ID for definition of Structural Tensor"}),
-                parameter<int>("INIT",
-                    {.description = "initialization mode for fiber alignment", .default_value = 1}),
-                parameter<bool>("ADAPT_ANGLE",
-                    {.description = "adapt angle during remodeling", .default_value = false}),
-            },
-            {.description =
-                    "anisotropic part with one fiber with coefficient given by a simplification of "
-                    "the activation-contraction law of Bestel-Clement-Sorine-2001"});
+    known_materials[Core::Materials::mes_anisoactivestress_evolution] = group(
+        "ELAST_AnisoActiveStress_Evolution",
+        {
+            parameter<double>("SIGMA", {.description = "Contractility (maximal stress)"}),
+            parameter<double>("TAUC0", {.description = "Initial value for the active stress"}),
+            parameter<double>(
+                "MAX_ACTIVATION", {.description = "Maximal value for the rescaled activation"}),
+            parameter<double>(
+                "MIN_ACTIVATION", {.description = "Minimal value for the rescaled activation"}),
+            parameter<int>("SOURCE_ACTIVATION",
+                {.description = "Where the activation comes from: 0=scatra , >0 Id for FUNCT"}),
+            parameter<double>("ACTIVATION_THRES",
+                {.description = "Threshold for activation (contraction starts when activation "
+                                "function is larger than this value, relaxes otherwise)"}),
+            parameter<bool>("STRAIN_DEPENDENCY",
+                {.description = "model strain dependency of contractility (Frank-Starling "
+                                "law): no (false) or yes (true)",
+                    .default_value = false}),
+            parameter<double>(
+                "LAMBDA_LOWER", {.description = "lower fiber stretch for Frank-Starling law",
+                                    .default_value = 1.0}),
+            parameter<double>(
+                "LAMBDA_UPPER", {.description = "upper fiber stretch for Frank-Starling law",
+                                    .default_value = 1.0}),
+            parameter<double>("GAMMA", {.description = "angle", .default_value = 0.0}),
+            parameter<int>(
+                "STR_TENS_ID", {.description = "MAT ID for definition of Structural Tensor"}),
+            parameter<int>("INIT",
+                {.description = "initialization mode for fiber alignment", .default_value = 1}),
+            parameter<bool>("ADAPT_ANGLE",
+                {.description = "adapt angle during remodeling", .default_value = false}),
+        },
+        {.description =
+                "Anisotropic part with one fiber with coefficient given by a simplification of "
+                "the activation-contraction law of Bestel-Clement-Sorine-2001. No stored-energy "
+                "potential is evaluated; it supplies the evolving active stress\n\n"
+                "$$\n"
+                "\\mathbf{S}_\\mathrm{act} = \\tau(t)\\, \\mathbf{A}\n"
+                "$$\n\n"
+                "with $\\mathbf{A}$ the structural tensor of the fiber direction. Direction "
+                "requirements: 1 direction, given by an element fiber or the cylindrical "
+                "coordinate system."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2328,7 +2641,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<bool>("ADAPT_ANGLE",
                 {.description = "adapt angle during remodeling", .default_value = false}),
         },
-        {.description = "anisotropic part with one neo Hookean fiber with variable coefficient"});
+        {.description = "Anisotropic part with one neo-Hookean fiber with variable coefficient. "
+                        "The strain energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = c(\\mathbf{x},t)(I_4-1)\n"
+                        "$$\n\n"
+                        "with $I_4$ the pseudo-invariant associated with the fiber direction and "
+                        "SOURCE_ACTIVATION defining the spatially and temporally varying "
+                        "coefficient $c(\\mathbf{x},t)$. Direction requirements: 1 direction, "
+                        "given by an element fiber or the cylindrical coordinate system."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2344,11 +2665,26 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<int>(
                 "STR_TENS_ID", {.description = "MAT ID for definition of Structural Tensor"}),
             parameter<int>("INIT",
-                {.description = "initialization modus for fiber alignment", .default_value = 1}),
+                {.description =
+                        "Initialization mode for fiber alignment: "
+                        "0 - Fibers defined by material parameters on element basis;"
+                        "1 - Fibers defined in input file on element basis;"
+                        "4 - Fibers defined in material on gauss point basis, i.e., by nodes;"
+                        "3 - Fibers defined in input file on gauss point basis, i.e., by nodes",
+                    .default_value = 1}),
             parameter<bool>("ADAPT_ANGLE",
                 {.description = "adapt angle during remodeling", .default_value = false}),
         },
-        {.description = "anisotropic part with one exp. fiber"});
+        {.description = "Anisotropic part with one exponential fiber, combined isochoric-"
+                        "anisotropic response. The strain energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\frac{k_1}{2k_2} \\left\\{\\exp\\left[k_2(\\bar{I}_4-1)^2"
+                        "\\right]-1\\right\\}\n"
+                        "$$\n\n"
+                        "with $\\bar{I}_4 = J^{-2/3} I_4$ the isochoric pseudo-invariant "
+                        "associated with the fiber direction. Direction requirements: 1 "
+                        "direction, given by an element fiber or the cylindrical coordinate "
+                        "system."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2379,7 +2715,16 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("C4",
                 {.description = "constant 4 for distribution function", .default_value = 1e16}),
         },
-        {.description = "Structural tensor strategy in anisotropic materials"});
+        {.description =
+                "Structural tensor strategy in anisotropic materials. No potential is "
+                "evaluated; it supplies the structural tensor $\\mathbf{A}$, for example\n\n"
+                "$$\n"
+                "\\mathbf{A} = \\mathbf{a} \\otimes \\mathbf{a}\n"
+                "$$\n\n"
+                "for the Standard strategy, with $\\mathbf{a}$ the fiber direction and "
+                "$\\otimes$ the dyadic product. Direction requirements: 1 direction, "
+                "defining the mean fiber direction the structural tensor is built from; "
+                "this is a helper rather than an independent strain-energy term."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2396,10 +2741,23 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "STR_TENS_ID", {.description = "MAT ID for definition of Structural Tensor"}),
             parameter<int>("FIBER", {.description = "exponential constant", .default_value = 1}),
             parameter<int>("INIT",
-                {.description = "initialization modus for fiber alignment", .default_value = 1}),
+                {.description =
+                        "Initialization mode for fiber alignment: "
+                        "0 - Fibers defined by material parameters on element basis;"
+                        "1 - Fibers defined in input file on element basis;"
+                        "4 - Fibers defined in material on gauss point basis, i.e., by nodes;"
+                        "3 - Fibers defined in input file on gauss point basis, i.e., by nodes",
+                    .default_value = 1}),
         },
-        {.description = "transversely part of a simple othotropic, transversely isotropic "
-                        "hyperelastic constitutive equation"});
+        {.description = "Transversely part of a simple orthotropic, transversely isotropic "
+                        "hyperelastic constitutive equation. The strain energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = \\left[\\alpha + \\frac{\\beta}{2}\\ln(I_3) + "
+                        "\\gamma(I_4-1)\\right](I_4-1) - \\frac{\\alpha}{2}(I_5-1)\n"
+                        "$$\n\n"
+                        "with $I_3$, $I_4$, $I_5$ invariants of the right Cauchy-Green deformation "
+                        "tensor and the fiber direction. Direction requirements: 1 direction, "
+                        "given by an element fiber or the cylindrical coordinate system."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2410,7 +2768,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("MUE", {.description = "Shear modulus"}),
             parameter<double>("BETA", {.description = "'Anti-modulus'"}),
         },
-        {.description = "Varga material acc. to Holzapfel"});
+        {.description = "Varga material acc. to Holzapfel. The strain energy is computed as\n\n"
+                        "$$\n"
+                        "\\Psi = (2\\mu-\\beta)(\\lambda_1+\\lambda_2+\\lambda_3-3) + "
+                        "\\beta\\left(\\lambda_1^{-1}+\\lambda_2^{-1}+\\lambda_3^{-1}-3\\right)\n"
+                        "$$\n\n"
+                        "with $\\lambda_i$ the principal stretches of the right Cauchy-Green "
+                        "deformation tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2421,7 +2785,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("MUE", {.description = "Shear modulus"}),
             parameter<double>("BETA", {.description = "'Anti-modulus'"}),
         },
-        {.description = "Isochoric Varga material acc. to Holzapfel"});
+        {.description = "Isochoric Varga material acc. to Holzapfel. The strain energy is "
+                        "computed as\n\n"
+                        "$$\n"
+                        "\\Psi = (2\\mu-\\beta)\\left(\\bar{\\lambda}_1+\\bar{\\lambda}_2+"
+                        "\\bar{\\lambda}_3-3\\right) + \\beta\\left(\\bar{\\lambda}_1^{-1}+"
+                        "\\bar{\\lambda}_2^{-1}+\\bar{\\lambda}_3^{-1}-3\\right)\n"
+                        "$$\n\n"
+                        "with $\\bar{\\lambda}_i$ the principal stretches of the isochoric right "
+                        "Cauchy-Green deformation tensor."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2431,7 +2803,14 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {
             parameter<double>("N", {.description = "material parameter"}),
         },
-        {.description = "Iso-rate viscous contribution of myocardial matrix"});
+        {.description =
+                "Coupled myocardial viscoelastic contribution.\n\n"
+                "$$\n"
+                "\\Phi_\\mathrm{v} = \\frac{\\eta}{2}\\dot{\\boldsymbol E}:\\dot{\\boldsymbol E} "
+                "= \\frac{\\eta}{8}\\dot{\\boldsymbol C}:\\dot{\\boldsymbol C}\n"
+                "$$\n\n"
+                "hence $\\boldsymbol S_\\mathrm{v}=\\eta\\dot{\\boldsymbol E}$; `N` is "
+                "$\\eta$."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2441,7 +2820,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {
             parameter<double>("N", {.description = "material parameter"}),
         },
-        {.description = "Isochoric iso-rate viscous summand"});
+        {.description = "Isochoric rate-dependent contribution.\n\n"
+                        "$$\n"
+                        "\\Phi_\\mathrm{v} = n\\,\\bar J_2(\\bar I_1-3)\n"
+                        "$$\n\n"
+                        "with $\\bar J_2=\\frac12\\dot{\\bar{\\boldsymbol C}}:"
+                        "\\dot{\\bar{\\boldsymbol C}}$. The rate is evaluated by a backward "
+                        "difference."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2453,7 +2838,22 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("ALPHA", {.description = "fractional order derivative"}),
             parameter<double>("BETA", {.description = "emphasis of viscous to elastic part"}),
         },
-        {.description = "Fractional standard linear solid visco summand"});
+        {.description =
+                "Fractional standard linear solid.\n"
+                "Hereditary viscous stress update from artificial stress $\\boldsymbol Q$. With "
+                "\n\n"
+                "$$\n"
+                "b_0=1,\\quad b_j=\\frac{j-1-\\alpha}{j}b_{j-1}, \\quad"
+                "\\lambda_1=\\frac{\\Delta t^\\alpha}{\\Delta t^\\alpha+\\tau^\\alpha},\\quad"
+                "\\lambda_2=-\\frac{\\tau^\\alpha}{\\Delta t^\\alpha+\\tau^\\alpha},\n"
+                "$$\n\n"
+                "the implemented history update is \n\n"
+                "$$\n"
+                "\\boldsymbol Q^{n+1}=\\lambda_1\\beta\\boldsymbol S_0^{n+1}"
+                "+\\lambda_2\\sum_{j=1}^{m}b_j\\boldsymbol Q^{n+1-j},"
+                "\\quad \\boldsymbol S_\\mathrm{v}^{n+1}"
+                "=\\boldsymbol Q^{n+1}-\\beta\\boldsymbol S_0^{n+1}.\n"
+                "$$\n"});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2469,7 +2869,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                 "ExponentialTimeDiscretization (convolution integral)",
                     .default_value = "OneStepTheta"}),
         },
-        {.description = "Top-level generalized Maxwell visco summand"});
+        {.description =
+                "Generalized Maxwell model, obtains a separate elastic law and $\\tau$ from each "
+                "VISCO_GeneralizedMaxwellBranch.\n\n"
+                "$$\n"
+                "\\boldsymbol S_\\mathrm{v} = \\sum_i \\boldsymbol Q_i\n"
+                "$$\n\n"
+                "where $\\dot{\\boldsymbol Q}_i+\\boldsymbol Q_i/\\tau_i="
+                "\\dot{\\boldsymbol S}^{\\,e}_i$. Each $\\boldsymbol S^{\\,e}_i$ comes from "
+                "the elastic material referenced by its branch."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2496,7 +2904,19 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                                    .default_value = 0.0,
                                                    .validator = positive_or_zero<double>()}),
             },
-            {.description = "Fung-type quasi-linear generalized Maxwell viscoelastic summand"});
+            {.description =
+                    "Fung-type quasi-linear generalized Maxwell model; "
+                    "uses $\\beta$ and $\\tau$ arrays and drives every branch from the same "
+                    "surrounding hyperelastic base law. "
+                    "Its optional viscosity $\\eta$ defines the parallel-dashpot pseudo-potential "
+                    "$\\Phi_\\eta=\\frac{\\eta}{2}\\dot{\\boldsymbol E}:\\dot{\\boldsymbol E}$, "
+                    "from which the viscous stress is derived as\n\n"
+                    "$$\n"
+                    "\\boldsymbol S_\\mathrm{v} = \\sum_i \\boldsymbol Q_i + "
+                    "\\eta\\dot{\\boldsymbol E} \\quad \\text{with} \\quad "
+                    "\\dot{\\boldsymbol Q}_i+\\boldsymbol Q_i/\\tau_i="
+                    "\\beta_i\\dot{\\boldsymbol S}_0.\n"
+                    "$$\n"});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2508,7 +2928,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "TAU", {.description = "dynamic viscosity divided by branch stiffness"}),
             parameter<int>("MATID", {.description = "material ID of branch elasticity rule"}),
         },
-        {.description = "Branch definition for a generalized Maxwell visco summand"});
+        {.description = "Branch referenced by a generalized Maxwell model.\n\n"
+                        "No independent equation; `MATID` defines $\\boldsymbol S^{\\,e}_i$ and "
+                        "`TAU` defines $\\tau_i$ in the parent Maxwell law."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -4716,7 +5138,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                     .default_value = std::vector{0.},
                     .size = from_parameter<int>("NUMTWINSETS")}),
         },
-        {.description = " Crystal plasticity "});
+        {.description = "Crystal plasticity. Direction requirements: 3 directions; "
+                        "`FIBER1`--`FIBER3` are the columns of the crystal-to-global rotation "
+                        "matrix."});
   }
 
   /*--------------------------------------------------------------------*/
