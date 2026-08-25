@@ -30,19 +30,11 @@ Mixture::PAR::MixtureConstituentElastHyperElastinMembrane::
     MixtureConstituentElastHyperElastinMembrane(const Core::Mat::PAR::Parameter::Data& matdata)
     : MixtureConstituentElastHyperBase(matdata),
       damage_function_id_(matdata.parameters.get<int>("DAMAGE_FUNCT")),
-      nummat_membrane_(matdata.parameters.get<int>("MEMBRANENUMMAT")),
       matids_membrane_(matdata.parameters.get<std::vector<int>>("MEMBRANEMATIDS")),
       membrane_normal(
           matdata.parameters.get<Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
               Mat::FiberInterpolation>>("MEMBRANE_NORMAL"))
 {
-  if (nummat_membrane_ != (int)matids_membrane_.size())
-  {
-    FOUR_C_THROW(
-        "number of membrane summands {} does not fit to the size of the membrane summands vector"
-        " {}",
-        nummat_membrane_, matids_membrane_.size());
-  }
 }
 
 // Create an instance of Mixture::MixtureConstituentElastHyper from the parameters

@@ -114,7 +114,6 @@ MATERIALS:
       GAMMA: 1
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [7]
       DENS: 0.001
   - MAT: 7
@@ -123,12 +122,10 @@ MATERIALS:
   - MAT: 3
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 1
       MATIDS: [5]
   - MAT: 4
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 1
       MATIDS: [6]
   - MAT: 5
     MAT_scatra:

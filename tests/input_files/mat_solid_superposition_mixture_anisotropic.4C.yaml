@@ -81,7 +81,6 @@ MATERIALS:
       NUE: 0.3
   - MAT: 20
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [21, 22]
       DENS: 1 # note that this density is ignored by the superposition material
   - MAT: 21

@@ -57,9 +57,7 @@ MATERIALS:
           X_MAX: 1
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [4]
       DENS: 1
   - MAT: 3
@@ -86,7 +84,6 @@ MATERIALS:
     MAT_elchphase:
       EPSILON: 1
       TORTUOSITY: 1
-      NUMMAT: 1
       MATIDS: [7]
   - MAT: 7
     MAT_newman:
@@ -97,9 +94,7 @@ MATERIALS:
       COND: 1.0
   - MAT: 8
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [9]
       DENS: 1
   - MAT: 9
@@ -115,9 +110,7 @@ MATERIALS:
           OCP_FUNCT_NUM: 8
   - MAT: 11
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [12]
       DENS: 1
   - MAT: 12
@@ -137,9 +130,7 @@ MATERIALS:
           OCP_FUNCT_NUM: 8
   - MAT: 14
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [9]
       DENS: 1
   - MAT: 15
@@ -153,9 +144,7 @@ MATERIALS:
           OCP_FUNCT_NUM: 8
   - MAT: 16
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [9]
       DENS: 1
 CLONING MATERIAL MAP:

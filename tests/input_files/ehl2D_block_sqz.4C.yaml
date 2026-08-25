@@ -56,7 +56,6 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [10]
       DENS: 0.2
   - MAT: 10
@@ -64,7 +63,6 @@ MATERIALS:
       YOUNG: 100000
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [20]
       DENS: 1
   - MAT: 20

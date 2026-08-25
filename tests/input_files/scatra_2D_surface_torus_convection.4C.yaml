@@ -28,7 +28,6 @@ MATERIALS:
   - MAT: 1
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 1
       MATIDS: [3]
   - MAT: 2
     MAT_scatra:

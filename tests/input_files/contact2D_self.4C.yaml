@@ -5019,7 +5019,6 @@ STRUCTURE ELEMENTS:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [2]
       DENS: 0.01
   - MAT: 2

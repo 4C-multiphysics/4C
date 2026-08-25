@@ -75,7 +75,6 @@ MATERIALS:
       PENALTYPARAMETER: 0.001
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [3]
       DENS: 1
   - MAT: 3
@@ -90,9 +89,7 @@ MATERIALS:
   - MAT: 5
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 9
       MATIDS: [8, 9, 10, 11, 12, 13, 14, 15, 16]
-      NUMREAC: 9
       REACIDS: [71, 72, 73, 74, 75, 76, 77, 78, 79]
   - MAT: 8
     MAT_scatra:

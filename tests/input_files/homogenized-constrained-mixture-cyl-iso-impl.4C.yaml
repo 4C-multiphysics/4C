@@ -19,9 +19,6 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_GrowthRemodel_ElastHyper:
-      NUMMATRF: 2
-      NUMMATEL3D: 1
-      NUMMATEL2D: 1
       MATIDSRF: [11, 21]
       MATIDSEL3D: [31]
       MATIDSEL2D: [41]
@@ -38,7 +35,6 @@ MATERIALS:
       LOCTIMEINT: 1
   - MAT: 11
     ELAST_RemodelFiber:
-      NUMMAT: 4
       MATIDS: [111, 112, 113, 114]
       TDECAY: 101
       GROWTHFAC: 0.0004951051289713897
@@ -78,7 +74,6 @@ MATERIALS:
       STR_TENS_ID: 100
   - MAT: 21
     ELAST_RemodelFiber:
-      NUMMAT: 1
       MATIDS: [121]
       TDECAY: 101
       GROWTHFAC: 0.0004951051289713897

@@ -54,20 +54,17 @@ MATERIALS:
       LOCAL: true
       EPSILON: 0.422012856128946
       TORTUOSITY: 0.649625165867938
-      NUMMAT: 1
       MATIDS: [7]
   - MAT: 5
     MAT_elchphase:
       EPSILON: 1
       TORTUOSITY: 1
-      NUMMAT: 1
       MATIDS: [8]
   - MAT: 6
     MAT_elchphase:
       LOCAL: true
       EPSILON: 0.422012856128946
       TORTUOSITY: 0.649625165867938
-      NUMMAT: 1
       MATIDS: [9]
   - MAT: 7
     MAT_newman_multiscale:

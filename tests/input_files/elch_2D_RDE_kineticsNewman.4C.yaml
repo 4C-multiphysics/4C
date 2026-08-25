@@ -51,7 +51,6 @@ MATERIALS:
   - MAT: 5
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 4
       MATIDS: [1, 2, 3, 4]
 FUNCT1:
   - COMPONENT: 0

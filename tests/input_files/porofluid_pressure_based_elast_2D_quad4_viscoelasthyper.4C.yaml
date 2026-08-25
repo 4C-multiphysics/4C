@@ -39,7 +39,6 @@ MATERIALS:
     MAT_FluidPoroMultiPhase:
       LOCAL: false
       PERMEABILITY: 1
-      NUMMAT: 1
       MATIDS: [12]
       NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE: 1
   - MAT: 12
@@ -70,7 +69,6 @@ MATERIALS:
       INITPOROSITY: 0.8
   - MAT: 501
     MAT_ViscoElastHyper:
-      NUMMAT: 2
       MATIDS: [505, 506]
       DENS: 1.0e-6
   - MAT: 505

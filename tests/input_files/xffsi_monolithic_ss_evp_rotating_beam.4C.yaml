@@ -73,7 +73,6 @@ MATERIALS:
       DENS: 1
   - MAT: 4
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [5]
       DENS: 0.1
   - MAT: 5

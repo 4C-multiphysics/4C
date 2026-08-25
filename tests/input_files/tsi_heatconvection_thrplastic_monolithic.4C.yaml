@@ -63,7 +63,6 @@ MATERIALS:
       YIELD: 21000
       ISOHARD: 0.12
       KINHARD: 210
-      SAMPLENUM: 0
       SIGMA_Y: []
       EPSBAR_P: []
       TOL: 0.0001

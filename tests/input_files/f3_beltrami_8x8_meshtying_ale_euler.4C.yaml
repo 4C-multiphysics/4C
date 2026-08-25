@@ -72,7 +72,6 @@ MATERIALS:
       GAMMA: 1
   - MAT: 4
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [6]
       DENS: 1
   - MAT: 6

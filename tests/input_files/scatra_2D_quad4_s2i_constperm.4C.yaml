@@ -40,7 +40,6 @@ MATERIALS:
   - MAT: 4
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 3
       MATIDS: [1, 2, 3]
 FUNCT1:
   - COMPONENT: 0

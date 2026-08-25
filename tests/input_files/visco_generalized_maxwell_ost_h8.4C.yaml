@@ -30,7 +30,6 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_ViscoElastHyper:
-      NUMMAT: 2
       MATIDS: [2, 3]
       DENS: 0.01
   - MAT: 2
@@ -39,7 +38,6 @@ MATERIALS:
       NUE: 0.1
   - MAT: 3
     VISCO_GeneralizedMaxwell:
-      NUMBRANCH: 3
       MATIDS: [4, 5, 6]
       SOLVE: "OneStepTheta"
   - MAT: 4

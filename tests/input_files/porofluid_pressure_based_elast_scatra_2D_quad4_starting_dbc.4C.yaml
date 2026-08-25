@@ -70,10 +70,8 @@ MATERIALS:
     MAT_FluidPoroMultiPhaseReactions:
       LOCAL: false
       PERMEABILITY: 1e-09
-      NUMMAT: 2
       MATIDS: [11, 12]
       NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE: 2
-      NUMREAC: 1
       REACIDS: [30]
   - MAT: 11
     MAT_FluidPoroSinglePhase:
@@ -131,7 +129,6 @@ MATERIALS:
       INITPOROSITY: 0.8
   - MAT: 300
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [3000]
       DENS: 0.001
   - MAT: 3000
@@ -155,9 +152,7 @@ MATERIALS:
   - MAT: 5
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 2
       MATIDS: [501, 502]
-      NUMREAC: 1
       REACIDS: [503]
   - MAT: 501
     MAT_scatra_multiporo_fluid:

@@ -62,9 +62,7 @@ MATERIALS:
           OCP_FUNCT_NUM: 8
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 2
       INELDEFGRADFACIDS: [4, 5]
       DENS: 5000
   - MAT: 3
@@ -95,7 +93,6 @@ MATERIALS:
     MAT_elchphase:
       EPSILON: 1
       TORTUOSITY: 1
-      NUMMAT: 1
       MATIDS: [9]
   - MAT: 9
     MAT_newman:
@@ -106,9 +103,7 @@ MATERIALS:
       COND: 100.0
   - MAT: 10
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [11]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [12]
       DENS: 2000
   - MAT: 11
@@ -133,9 +128,7 @@ MATERIALS:
           OCP_FUNCT_NUM: 9
   - MAT: 16
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [17]
-      NUMFACINEL: 2
       INELDEFGRADFACIDS: [18, 19]
       DENS: 1000
   - MAT: 17

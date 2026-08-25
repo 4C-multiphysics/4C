@@ -72,12 +72,10 @@ MATERIALS:
       GAMMA: 1
   - MAT: 3
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [5]
       DENS: 1
   - MAT: 4
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [6]
       DENS: 1
   - MAT: 5

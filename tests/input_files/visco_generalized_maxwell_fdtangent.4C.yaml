@@ -42,7 +42,6 @@ STRUCTURAL DYNAMIC:
 MATERIALS:
   - MAT: 1
     MAT_ViscoElastHyper:
-      NUMMAT: 4
       MATIDS: [2, 3, 4, 5]
       DENS: 0.0002
   - MAT: 2
@@ -59,7 +58,6 @@ MATERIALS:
       D: 3
   - MAT: 5
     VISCO_GeneralizedMaxwell:
-      NUMBRANCH: 3
       MATIDS: [6, 7, 8]
       SOLVE: "OneStepTheta"
   - MAT: 6

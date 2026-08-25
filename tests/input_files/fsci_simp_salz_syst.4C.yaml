@@ -99,7 +99,6 @@ MATERIALS:
       DENSITY: 0.0014
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [201]
       DENS: 0.001037
   - MAT: 201
@@ -108,7 +107,6 @@ MATERIALS:
       NUE: 0.48
   - MAT: 3
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [301]
       DENS: 0.00133
   - MAT: 301

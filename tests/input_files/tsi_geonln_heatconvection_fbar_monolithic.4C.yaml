@@ -43,7 +43,6 @@ SOLVER 2:
 MATERIALS:
   - MAT: 1
     MAT_Struct_ThermoStVenantK:
-      YOUNGNUM: 1
       YOUNG: [2.1e+08]
       NUE: 0.3
       DENS: 7.85e-06

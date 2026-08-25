@@ -41,7 +41,6 @@ MATERIALS:
     MAT_FluidPoroMultiPhase:
       LOCAL: false
       PERMEABILITY: 1
-      NUMMAT: 4
       MATIDS: [10, 11, 12, 13]
       NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE: 4
   - MAT: 10

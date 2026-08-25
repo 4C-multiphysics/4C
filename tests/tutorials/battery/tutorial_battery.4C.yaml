@@ -77,9 +77,7 @@ MATERIALS:
 
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [4]
       DENS: 4780
 
@@ -110,7 +108,6 @@ MATERIALS:
     MAT_elchphase:
       EPSILON: 1
       TORTUOSITY: 1
-      NUMMAT: 1
       MATIDS: [7]
 
   - MAT: 7
@@ -123,9 +120,7 @@ MATERIALS:
 
   - MAT: 8
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [9]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [10]
       DENS: 1850
 
@@ -149,9 +144,7 @@ MATERIALS:
 
   - MAT: 12
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [13]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [14]
       DENS: 530
 
@@ -179,9 +172,7 @@ MATERIALS:
 
   - MAT: 16
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [17]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [10]
       DENS: 8920
 
@@ -202,9 +193,7 @@ MATERIALS:
 
   - MAT: 20
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [21]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [10]
       DENS: 2700
 

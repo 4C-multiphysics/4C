@@ -109,9 +109,7 @@ MATERIALS:
       DENS: 1050
   - MAT: 16
     MIX_Constituent_ElastHyper_ElastinMembrane:
-      NUMMAT: 2
       MATIDS: [161, 163]
-      MEMBRANENUMMAT: 1
       MEMBRANEMATIDS: [162]
       PRESTRESS_STRATEGY: 169
       DAMAGE_FUNCT: 2

@@ -91,7 +91,6 @@ MATERIALS:
       INITPOROSITY: 0.5
   - MAT: 4
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [6]
       DENS: 50
   - MAT: 5
@@ -106,7 +105,6 @@ MATERIALS:
       NUE: 0.3
   - MAT: 7
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [8]
       DENS: 500
   - MAT: 8

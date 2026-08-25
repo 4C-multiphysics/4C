@@ -25,7 +25,6 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [5]
       DENS: 1
   - MAT: 5
@@ -35,7 +34,6 @@ MATERIALS:
       C2: 0.4995
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [6]
       DENS: 1
   - MAT: 6

@@ -29,7 +29,6 @@ MATERIALS:
   - MAT: 3
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 2
       MATIDS: [1, 2]
 RESULT DESCRIPTION:
   - SCATRA:

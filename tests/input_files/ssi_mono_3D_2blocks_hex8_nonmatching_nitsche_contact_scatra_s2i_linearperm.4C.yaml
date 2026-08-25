@@ -49,9 +49,7 @@ MATERIALS:
       DIFFUSIVITY: 2.5
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [4]
       DENS: 1
   - MAT: 3
@@ -64,9 +62,7 @@ MATERIALS:
       SCALAR1_RefConc: 0
   - MAT: 5
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [6]
       DENS: 1
   - MAT: 6

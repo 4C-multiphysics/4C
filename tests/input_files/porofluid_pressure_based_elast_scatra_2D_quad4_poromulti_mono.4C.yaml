@@ -67,7 +67,6 @@ MATERIALS:
     MAT_FluidPoroMultiPhase:
       LOCAL: false
       PERMEABILITY: 1000
-      NUMMAT: 4
       MATIDS: [10, 11, 12, 13]
       NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE: 4
   - MAT: 10
@@ -190,9 +189,7 @@ MATERIALS:
   - MAT: 5
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 2
       MATIDS: [301, 302]
-      NUMREAC: 2
       REACIDS: [401, 402]
   - MAT: 301
     MAT_scatra_multiporo_fluid:

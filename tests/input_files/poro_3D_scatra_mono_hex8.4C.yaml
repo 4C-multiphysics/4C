@@ -92,7 +92,6 @@ MATERIALS:
       PENALTYPARAMETER: 0.001
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [3]
       DENS: 2
   - MAT: 3
@@ -107,7 +106,6 @@ MATERIALS:
   - MAT: 5
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 7
       MATIDS: [6, 7, 8, 9, 10, 11, 12]
   - MAT: 6
     MAT_scatra:

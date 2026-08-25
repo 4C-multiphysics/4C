@@ -27,7 +27,6 @@ STRUCTURAL DYNAMIC:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 3
       MATIDS: [10, 11, 20]
       DENS: 0.001
   - MAT: 10

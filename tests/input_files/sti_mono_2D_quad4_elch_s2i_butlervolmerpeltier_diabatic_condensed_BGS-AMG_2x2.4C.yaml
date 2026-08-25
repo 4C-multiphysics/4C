@@ -66,7 +66,6 @@ MATERIALS:
     MAT_elchphase:
       EPSILON: 1
       TORTUOSITY: 1
-      NUMMAT: 1
       MATIDS: [4]
   - MAT: 4
     MAT_newman:

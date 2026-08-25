@@ -58,7 +58,6 @@ VOLMORTAR COUPLING:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [10, 20]
       DENS: 0.001
   - MAT: 10

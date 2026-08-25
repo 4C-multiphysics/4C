@@ -70,7 +70,6 @@ MATERIALS:
       PENALTYPARAMETER: 0
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [7]
       DENS: 1.2
   - MAT: 3
@@ -89,7 +88,6 @@ MATERIALS:
       DENS: 0
   - MAT: 6
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [7]
       DENS: 1.2
   - MAT: 7

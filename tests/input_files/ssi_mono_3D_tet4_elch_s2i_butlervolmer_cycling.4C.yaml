@@ -60,23 +60,17 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [4]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [5]
       DENS: 1
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [4]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [5]
       DENS: 1
   - MAT: 3
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [4]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [5]
       DENS: 1
   - MAT: 4
@@ -115,7 +109,6 @@ MATERIALS:
     MAT_elchphase:
       EPSILON: 1
       TORTUOSITY: 1
-      NUMMAT: 1
       MATIDS: [10]
   - MAT: 10
     MAT_newman:

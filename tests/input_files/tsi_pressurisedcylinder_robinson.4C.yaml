@@ -46,7 +46,6 @@ MATERIALS:
   - MAT: 1
     MAT_Struct_Robinson:
       KIND: "arya_narloyz"
-      YOUNGNUM: 1
       YOUNG: [1.395e+08]
       NUE: 0.296
       DENS: 7.85e-06

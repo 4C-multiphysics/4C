@@ -124,7 +124,6 @@ PARTICLES:
 MATERIALS:
   - MAT: 1
     MAT_Membrane_ElastHyper:
-      NUMMAT: 1
       MATIDS: [11]
       DENS: 1
   - MAT: 11

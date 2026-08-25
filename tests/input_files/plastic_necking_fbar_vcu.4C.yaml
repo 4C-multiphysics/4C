@@ -22,7 +22,6 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_PlasticElastHyperVCU:
-      NUMMAT: 1
       MATIDS: [20]
       DENS: 1
       INITYIELD: 0.45

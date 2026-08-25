@@ -46,7 +46,6 @@ MATERIALS:
       DENSITY: 1e-06
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [3]
       DENS: 500
   - MAT: 3

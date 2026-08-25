@@ -26,7 +26,6 @@ ALE DYNAMIC:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [10]
       DENS: 1e-07
   - MAT: 10

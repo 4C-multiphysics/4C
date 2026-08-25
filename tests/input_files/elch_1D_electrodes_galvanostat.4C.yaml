@@ -49,7 +49,6 @@ MATERIALS:
     MAT_elchphase:
       EPSILON: 0.202
       TORTUOSITY: 0.532
-      NUMMAT: 1
       MATIDS: [3]
 FUNCT1:
   - SYMBOLIC_FUNCTION_OF_TIME: "-1.0e-3"

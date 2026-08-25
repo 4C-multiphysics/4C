@@ -81,7 +81,6 @@ MATERIALS:
   - MAT: 999
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 5
       MATIDS: [151, 152, 153, 154, 155]
   - MAT: 151
     MAT_scatra:

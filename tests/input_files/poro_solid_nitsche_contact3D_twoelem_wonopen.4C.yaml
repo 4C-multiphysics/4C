@@ -72,7 +72,6 @@ MATERIALS:
       PENALTYPARAMETER: 0.001
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [4]
       DENS: 5
   - MAT: 4
@@ -85,7 +84,6 @@ MATERIALS:
       PERMEABILITY: 0.01
   - MAT: 5
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [6]
       DENS: 5
   - MAT: 6

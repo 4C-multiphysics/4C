@@ -43,7 +43,6 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [2]
       DENS: 0.1
   - MAT: 2

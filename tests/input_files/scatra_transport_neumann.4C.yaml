@@ -32,9 +32,7 @@ MATERIALS:
   - MAT: 1
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 8
       MATIDS: [21, 22, 23, 24, 25, 26, 27, 28]
-      NUMREAC: 1
       REACIDS: [31]
   - MAT: 21
     MAT_scatra:

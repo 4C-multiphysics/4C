@@ -87,7 +87,6 @@ STRUCTURE ELEMENTS:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [2, 3]
       DENS: 0.001
       POLYCONVEX: 1

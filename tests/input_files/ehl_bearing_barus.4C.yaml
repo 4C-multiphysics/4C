@@ -45,7 +45,6 @@ SOLVER 3:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [10]
       DENS: 7.85e-06
   - MAT: 10

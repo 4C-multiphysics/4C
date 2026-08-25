@@ -80,11 +80,8 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_ViscoElastHyper:
-      NUMMAT: 4
       MATIDS: [2, 3, 4, 5]
-      NUMELAST: 3
       ELAST_MATIDS: [2, 3, 4]
-      NUMVISCO: 1
       VISCO_MATIDS: [5]
       DENS: 0.0002
   - MAT: 2
@@ -101,7 +98,6 @@ MATERIALS:
       D: 6
   - MAT: 5
     VISCO_GeneralizedMaxwell:
-      NUMBRANCH: 3
       MATIDS: [6, 7, 8]
       SOLVE: "OneStepTheta"
   - MAT: 6
@@ -118,11 +114,8 @@ MATERIALS:
       MATID: 4
   - MAT: 10
     MAT_ViscoElastHyper:
-      NUMMAT: 4
       MATIDS: [12, 13, 14, 15]
-      NUMELAST: 3
       ELAST_MATIDS: [12, 13, 14]
-      NUMVISCO: 1
       VISCO_MATIDS: [15]
       DENS: 0.0002
   - MAT: 12
@@ -142,11 +135,8 @@ MATERIALS:
       N: 1
   - MAT: 20
     MAT_ViscoElastHyper:
-      NUMMAT: 4
       MATIDS: [22, 23, 24, 25]
-      NUMELAST: 3
       ELAST_MATIDS: [22, 23, 24]
-      NUMVISCO: 1
       VISCO_MATIDS: [25]
       DENS: 0.0002
   - MAT: 22

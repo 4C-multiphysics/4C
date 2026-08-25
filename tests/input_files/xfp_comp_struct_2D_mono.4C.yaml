@@ -109,7 +109,6 @@ MATERIALS:
       PENALTYPARAMETER: 0.01
   - MAT: 4
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [5]
       DENS: 0.5
   - MAT: 5

@@ -76,7 +76,6 @@ MATERIALS:
         constant: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [21, 22]
       DENS: 1
   - MAT: 21

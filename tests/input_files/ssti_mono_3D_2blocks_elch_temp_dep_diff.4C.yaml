@@ -49,9 +49,7 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [2]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [3]
       DENS: 0.001
   - MAT: 2
@@ -86,7 +84,6 @@ MATERIALS:
     MAT_elchphase:
       EPSILON: 1
       TORTUOSITY: 1
-      NUMMAT: 1
       MATIDS: [8]
   - MAT: 8
     MAT_newman:
@@ -98,9 +95,7 @@ MATERIALS:
       COND: 0.01
   - MAT: 9
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [2]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [3]
       DENS: 0.001
 CLONING MATERIAL MAP:

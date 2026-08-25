@@ -40,7 +40,6 @@ STRUCTURAL DYNAMIC/GENALPHA:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 4
       MATIDS: [11, 12, 13, 14]
       DENS: 1e-06
   - MAT: 11

@@ -10,7 +10,6 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [101]
       DENS: 0.001
   - MAT: 101
@@ -21,7 +20,6 @@ MATERIALS:
       STR_TENS_ID: 100
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [102]
       DENS: 0.001
   - MAT: 102
@@ -34,7 +32,6 @@ MATERIALS:
       STR_TENS_ID: 100
   - MAT: 3
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [103]
       DENS: 0.001
   - MAT: 103
@@ -49,7 +46,6 @@ MATERIALS:
       STR_TENS_ID: 100
   - MAT: 4
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [104]
       DENS: 0.001
   - MAT: 104
@@ -62,7 +58,6 @@ MATERIALS:
       STR_TENS_ID: 100
   - MAT: 5
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [105]
       DENS: 0.001
   - MAT: 105
@@ -73,7 +68,6 @@ MATERIALS:
       STR_TENS_ID: 100
   - MAT: 6
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [106]
       DENS: 0.001
   - MAT: 106
@@ -84,7 +78,6 @@ MATERIALS:
       STR_TENS_ID: 100
   - MAT: 7
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [107]
       DENS: 0.001
   - MAT: 107

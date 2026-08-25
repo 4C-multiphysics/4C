@@ -32,7 +32,6 @@ STRUCTURAL DYNAMIC/ONESTEPTHETA:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [2]
       DENS: 2
   - MAT: 2

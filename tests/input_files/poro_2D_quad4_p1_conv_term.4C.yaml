@@ -68,7 +68,6 @@ MATERIALS:
     MAT_PoroLawConstant: {}
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [4]
       DENS: 1
   - MAT: 4

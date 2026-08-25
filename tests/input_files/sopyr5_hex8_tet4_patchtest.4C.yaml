@@ -25,12 +25,10 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [21, 22]
       DENS: 0.005
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [21, 22]
       DENS: 0.005
   - MAT: 21
@@ -43,7 +41,6 @@ MATERIALS:
       D: 2
   - MAT: 3
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [21, 22]
       DENS: 0.005
 DESIGN SURF NEUMANN CONDITIONS:

@@ -94,7 +94,6 @@ MATERIALS:
       GAMMA: 1
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [13]
       DENS: 1
   - MAT: 13
@@ -103,7 +102,6 @@ MATERIALS:
       NUE: 0.3
   - MAT: 3
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [13]
       DENS: 1
 CLONING MATERIAL MAP:

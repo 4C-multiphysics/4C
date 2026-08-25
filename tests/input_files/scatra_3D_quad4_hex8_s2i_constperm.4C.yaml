@@ -32,12 +32,10 @@ MATERIALS:
   - MAT: 10
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 2
       MATIDS: [1, 2]
   - MAT: 11
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 2
       MATIDS: [3, 4]
 FUNCT1:
   - COMPONENT: 0

@@ -225,7 +225,6 @@ MATERIALS:
   - MAT: 101
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 4
       MATIDS: [1000, 1001, 1002, 1003]
 DESIGN SURF DIRICH CONDITIONS:
   - E: 4

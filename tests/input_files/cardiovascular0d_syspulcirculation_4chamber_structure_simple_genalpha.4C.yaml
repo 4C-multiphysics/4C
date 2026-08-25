@@ -91,7 +91,6 @@ STRUCTURAL DYNAMIC/GENALPHA:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 4
       MATIDS: [11, 12, 13, 14]
       DENS: 1e-06
   - MAT: 11
@@ -124,7 +123,6 @@ MATERIALS:
       STR_TENS_ID: 100
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 4
       MATIDS: [21, 22, 23, 24]
       DENS: 1e-06
   - MAT: 21
@@ -157,7 +155,6 @@ MATERIALS:
       STR_TENS_ID: 100
   - MAT: 3
     MAT_ElastHyper:
-      NUMMAT: 3
       MATIDS: [31, 32, 33]
       DENS: 1e-06
   - MAT: 31
@@ -178,7 +175,6 @@ MATERIALS:
       STR_TENS_ID: 100
   - MAT: 4
     MAT_ElastHyper:
-      NUMMAT: 3
       MATIDS: [41, 42, 43]
       DENS: 1e-06
   - MAT: 41

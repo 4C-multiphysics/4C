@@ -69,7 +69,6 @@ MATERIALS:
   - MAT: 5
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 3
       MATIDS: [2, 3, 4]
 CLONING MATERIAL MAP:
   - SRC_FIELD: "fluid"

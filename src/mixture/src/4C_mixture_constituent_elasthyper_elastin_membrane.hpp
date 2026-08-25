@@ -54,9 +54,6 @@ namespace Mixture
       /// @{
       const int damage_function_id_;
 
-      /// number of summands
-      const int nummat_membrane_;
-
       /// List of material ids of the summands
       const std::vector<int> matids_membrane_;
 

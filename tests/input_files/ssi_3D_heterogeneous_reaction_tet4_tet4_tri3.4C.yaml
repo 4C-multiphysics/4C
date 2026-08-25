@@ -45,19 +45,15 @@ MATERIALS:
   - MAT: 1
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 1
       MATIDS: [11]
   - MAT: 3
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 2
       MATIDS: [10, 10]
   - MAT: 4
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 3
       MATIDS: [11, 10, 10]
-      NUMREAC: 1
       REACIDS: [20]
   - MAT: 2
     MAT_Struct_StVenantKirchhoff:

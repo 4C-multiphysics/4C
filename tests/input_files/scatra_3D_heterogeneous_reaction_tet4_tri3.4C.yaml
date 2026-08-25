@@ -30,19 +30,15 @@ MATERIALS:
   - MAT: 1
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 2
       MATIDS: [10, 11]
   - MAT: 3
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 3
       MATIDS: [12, 13, 14]
   - MAT: 4
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 5
       MATIDS: [10, 11, 12, 13, 14]
-      NUMREAC: 5
       REACIDS: [20, 21, 22, 23, 24]
   - MAT: 10
     MAT_scatra:

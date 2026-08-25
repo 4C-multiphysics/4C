@@ -12,7 +12,6 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_Membrane_ElastHyper:
-      NUMMAT: 2
       MATIDS: [2, 3]
       DENS: 1
   - MAT: 2

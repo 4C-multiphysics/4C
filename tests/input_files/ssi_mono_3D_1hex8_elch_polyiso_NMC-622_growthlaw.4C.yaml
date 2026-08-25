@@ -57,9 +57,7 @@ MATERIALS:
           OCP_FUNCT_NUM: 3
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [4]
       DENS: 7480
   - MAT: 3

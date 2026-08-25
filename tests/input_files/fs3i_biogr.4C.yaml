@@ -142,14 +142,11 @@ MATERIALS:
   - MAT: 3
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 1
       MATIDS: [5]
   - MAT: 4
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 1
       MATIDS: [5]
-      NUMREAC: 1
       REACIDS: [6]
   - MAT: 5
     MAT_scatra:

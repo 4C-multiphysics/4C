@@ -103,7 +103,6 @@ MATERIALS:
     MAT_PoroLawConstant: {}
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [3]
       DENS: 2
   - MAT: 3
@@ -119,9 +118,7 @@ MATERIALS:
   - MAT: 5
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 5
       MATIDS: [6, 7, 8, 9, 11]
-      NUMREAC: 3
       REACIDS: [101, 102, 103]
   - MAT: 6
     MAT_scatra:
@@ -140,7 +137,6 @@ MATERIALS:
       DIFFUSIVITY: 0
   - MAT: 20
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [21]
       DENS: 2
   - MAT: 21

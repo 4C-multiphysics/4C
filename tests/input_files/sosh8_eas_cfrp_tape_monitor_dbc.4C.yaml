@@ -21,7 +21,6 @@ STRUCT NOX/Status Test:
 MATERIALS:
   - MAT: 3
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [301, 302]
       DENS: 0.1
   - MAT: 301

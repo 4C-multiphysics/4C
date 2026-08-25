@@ -37,7 +37,6 @@ MATERIALS:
       MATID: 110
   - MAT: 110
     MAT_ViscoElastHyper:
-      NUMMAT: 3
       MATIDS: [1100, 1101, 1102]
       DENS: 1
   - MAT: 1100
@@ -54,7 +53,6 @@ MATERIALS:
       STR_TENS_ID: 1000
   - MAT: 1102
     VISCO_GeneralizedMaxwell:
-      NUMBRANCH: 1
       MATIDS: [1103]
       SOLVE: OneStepTheta
   - MAT: 1103

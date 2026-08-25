@@ -33,28 +33,21 @@ MATERIALS:
   - MAT: 1
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 3
       MATIDS: [101, 102, 103]
-      NUMREAC: 3
       REACIDS: [11, 12, 13]
   - MAT: 2
     MAT_matlist_reactions:
       LOCAL: true
-      NUMMAT: 3
       MATIDS: [101, 102, 103]
-      NUMREAC: 2
       REACIDS: [11, 22]
   - MAT: 3
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 3
       MATIDS: [101, 102, 103]
-      NUMREAC: 2
       REACIDS: [11, 32]
   - MAT: 4
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 3
       MATIDS: [101, 102, 103]
   - MAT: 101
     MAT_scatra:

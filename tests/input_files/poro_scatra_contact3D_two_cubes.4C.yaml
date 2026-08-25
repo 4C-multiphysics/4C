@@ -83,7 +83,6 @@ MATERIALS:
       PENALTYPARAMETER: 0.001
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [3]
       DENS: 5
   - MAT: 3
@@ -98,7 +97,6 @@ MATERIALS:
   - MAT: 5
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 1
       MATIDS: [6]
   - MAT: 6
     MAT_scatra:
@@ -112,7 +110,6 @@ MATERIALS:
     MAT_PoroLawConstant: {}
   - MAT: 22
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [23]
       DENS: 5
   - MAT: 23
@@ -127,7 +124,6 @@ MATERIALS:
   - MAT: 25
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 1
       MATIDS: [26]
   - MAT: 26
     MAT_scatra:

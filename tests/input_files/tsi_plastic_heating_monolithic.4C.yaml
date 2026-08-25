@@ -94,7 +94,6 @@ MATERIALS:
       YIELD: 250
       ISOHARD: 0
       KINHARD: 0
-      SAMPLENUM: 4
       SIGMA_Y: [250, 500, 750, 1000]
       EPSBAR_P: [0.0, 0.01, 0.1, 1.0]
       TOL: 0.0001

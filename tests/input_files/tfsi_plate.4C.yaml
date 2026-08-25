@@ -124,7 +124,6 @@ MATERIALS:
       GASCON: 287
   - MAT: 2
     MAT_Struct_ThermoStVenantK:
-      YOUNGNUM: 1
       YOUNG: [1e+07]
       NUE: 0.3
       DENS: 1000

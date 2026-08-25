@@ -38,9 +38,7 @@ MATERIALS:
   - MAT: 1
     MAT_matlist_chemotaxis:
       LOCAL: false
-      NUMMAT: 5
       MATIDS: [101, 102, 103, 104, 105]
-      NUMPAIR: 3
       PAIRIDS: [111, 112, 113]
   - MAT: 101
     MAT_scatra:

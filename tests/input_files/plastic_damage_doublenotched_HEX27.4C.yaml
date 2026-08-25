@@ -35,7 +35,6 @@ MATERIALS:
       YOUNG: 206.9
       NUE: 0.29
       DENS: 0
-      SAMPLENUM: 2
       SIGMA_Y: [0.45, 0.65]
       EPSBAR_P: [0, 1]
       DAMDEN: 0.0035

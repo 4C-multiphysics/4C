@@ -28,7 +28,6 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [10, 11]
       DENS: 0.1
   - MAT: 10
@@ -45,7 +44,6 @@ MATERIALS:
       STR_TENS_ID: 1000
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [20, 21]
       DENS: 0.1
   - MAT: 20
@@ -63,7 +61,6 @@ MATERIALS:
       FIBER_ID: 2
   - MAT: 3
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [30, 31]
       DENS: 0.1
   - MAT: 30
@@ -81,7 +78,6 @@ MATERIALS:
       INIT: 3
   - MAT: 4
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [40, 41]
       DENS: 0.1
   - MAT: 40

@@ -419,7 +419,6 @@ MATERIALS:
   - MAT: 2
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 3
       MATIDS: [3, 4, 5]
   - MAT: 3
     MAT_ion:

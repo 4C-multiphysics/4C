@@ -118,7 +118,6 @@ MATERIALS:
       DENSITY: 0.00105
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [21, 22]
       DENS: 0.001
   - MAT: 21
@@ -138,7 +137,6 @@ MATERIALS:
   - MAT: 4
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 2
       MATIDS: [41, 42]
   - MAT: 41
     MAT_scatra:
@@ -149,9 +147,7 @@ MATERIALS:
   - MAT: 5
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 2
       MATIDS: [51, 52]
-      NUMREAC: 1
       REACIDS: [53]
   - MAT: 51
     MAT_scatra:

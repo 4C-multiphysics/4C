@@ -40,11 +40,8 @@ MATERIALS:
   - MAT: 1
     MAT_matlist_chemo_reac:
       LOCAL: false
-      NUMMAT: 4
       MATIDS: [101, 102, 103, 104]
-      NUMPAIR: 2
       PAIRIDS: [111, 112]
-      NUMREAC: 2
       REACIDS: [121, 122]
   - MAT: 101
     MAT_scatra:

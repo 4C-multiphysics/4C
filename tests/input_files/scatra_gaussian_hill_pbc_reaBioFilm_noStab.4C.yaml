@@ -50,9 +50,7 @@ MATERIALS:
   - MAT: 4
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 3
       MATIDS: [1, 2, 3]
-      NUMREAC: 3
       REACIDS: [5, 6, 7]
   - MAT: 5
     MAT_scatra_reaction:

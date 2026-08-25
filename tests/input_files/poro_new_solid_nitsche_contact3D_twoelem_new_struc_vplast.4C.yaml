@@ -72,9 +72,7 @@ MATERIALS:
       PENALTYPARAMETER: 0.001
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [21]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [22]
       DENS: 7830
   - MAT: 21
@@ -115,7 +113,6 @@ MATERIALS:
       PERMEABILITY: 0.01
   - MAT: 5
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [6]
       DENS: 5
   - MAT: 6

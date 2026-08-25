@@ -15,7 +15,6 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [101]
       DENS: 0.001
   - MAT: 101
@@ -24,7 +23,6 @@ MATERIALS:
       NUE: 0.45
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [102]
       DENS: 0.001
   - MAT: 102
@@ -33,7 +31,6 @@ MATERIALS:
       D: 2
   - MAT: 3
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [103]
       DENS: 0.001
   - MAT: 103
@@ -42,7 +39,6 @@ MATERIALS:
       D: 2
   - MAT: 4
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [104]
       DENS: 0.001
   - MAT: 104
@@ -52,7 +48,6 @@ MATERIALS:
       F: 1
   - MAT: 5
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [105]
       DENS: 0.001
   - MAT: 105
@@ -62,7 +57,6 @@ MATERIALS:
       C2: 0.5
   - MAT: 6
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [106]
       DENS: 0.001
   - MAT: 106
@@ -72,7 +66,6 @@ MATERIALS:
       C3: 1
   - MAT: 7
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [107]
       DENS: 0.001
   - MAT: 107
@@ -81,7 +74,6 @@ MATERIALS:
       BETA: 1
   - MAT: 8
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [108]
       DENS: 0.001
   - MAT: 108
@@ -90,7 +82,6 @@ MATERIALS:
       D: 1
   - MAT: 9
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [109]
       DENS: 0.001
   - MAT: 109
@@ -99,7 +90,6 @@ MATERIALS:
       D: 1
   - MAT: 11
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [111]
       DENS: 0.001
   - MAT: 111
@@ -109,7 +99,6 @@ MATERIALS:
       C: 1
   - MAT: 12
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [112]
       DENS: 0.001
   - MAT: 112
@@ -118,7 +107,6 @@ MATERIALS:
         constant: 1
   - MAT: 13
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [113]
       DENS: 0.001
   - MAT: 113
@@ -127,7 +115,6 @@ MATERIALS:
       C2: 1
   - MAT: 15
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [115]
       DENS: 0.001
   - MAT: 115
@@ -136,7 +123,6 @@ MATERIALS:
       BETA: 1
   - MAT: 18
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [118]
       DENS: 0.001
   - MAT: 118
@@ -145,7 +131,6 @@ MATERIALS:
       BETA: 1
   - MAT: 19
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [119]
       DENS: 0.001
   - MAT: 119
@@ -154,7 +139,6 @@ MATERIALS:
       GAMMA: 1
   - MAT: 20
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [120]
       DENS: 0.001
   - MAT: 120
@@ -162,7 +146,6 @@ MATERIALS:
       KAPPA: 1
   - MAT: 21
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [121]
       DENS: 0.001
   - MAT: 121
@@ -172,7 +155,6 @@ MATERIALS:
       C3: 1
   - MAT: 22
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [122]
       DENS: 0.001
   - MAT: 122
@@ -182,7 +164,6 @@ MATERIALS:
       C: 5
   - MAT: 23
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [123]
       DENS: 0.001
   - MAT: 123
@@ -191,7 +172,6 @@ MATERIALS:
       NUE: 0.45
   - MAT: 24
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [124]
       DENS: 0.001
   - MAT: 124
@@ -200,7 +180,6 @@ MATERIALS:
       NUE: 0.45
   - MAT: 25
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [125]
       DENS: 0.001
   - MAT: 125
@@ -209,7 +188,6 @@ MATERIALS:
       NUE: 0.45
   - MAT: 26
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [126]
       DENS: 0.001
   - MAT: 126

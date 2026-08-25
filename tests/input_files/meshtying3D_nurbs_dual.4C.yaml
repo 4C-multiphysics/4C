@@ -30,7 +30,6 @@ SOLVER 2:
 MATERIALS:
   - MAT: 1
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [10]
       DENS: 0.1
   - MAT: 10
@@ -39,7 +38,6 @@ MATERIALS:
       NUE: 0.3
   - MAT: 2
     MAT_ElastHyper:
-      NUMMAT: 1
       MATIDS: [20]
       DENS: 0.1
   - MAT: 20

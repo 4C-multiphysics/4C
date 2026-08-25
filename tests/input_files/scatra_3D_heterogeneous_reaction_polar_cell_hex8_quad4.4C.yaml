@@ -26,12 +26,10 @@ MATERIALS:
   - MAT: 1
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 9
       MATIDS: [101, 102, 103, 104, 105, 106, 107, 108, 109]
   - MAT: 2
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 4
       MATIDS: [110, 111, 112, 113]
   - MAT: 101
     MAT_scatra:
@@ -75,9 +73,7 @@ MATERIALS:
   - MAT: 20
     MAT_matlist_reactions:
       LOCAL: false
-      NUMMAT: 13
       MATIDS: [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113]
-      NUMREAC: 17
       REACIDS: [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56]
   - MAT: 40
     MAT_scatra_reaction:

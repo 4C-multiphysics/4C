@@ -46,9 +46,7 @@ MATERIALS:
       DIFFUSIVITY: 1
   - MAT: 2
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [3]
-      NUMFACINEL: 2
       INELDEFGRADFACIDS: [4, 5]
       DENS: 0.001
   - MAT: 3

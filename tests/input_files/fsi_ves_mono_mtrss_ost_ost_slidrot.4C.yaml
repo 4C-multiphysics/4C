@@ -96,7 +96,6 @@ MATERIALS:
       ELETHICKDIR: 1
   - MAT: 4
     MAT_ElastHyper:
-      NUMMAT: 2
       MATIDS: [6, 7]
       DENS: 0.0011
   - MAT: 6

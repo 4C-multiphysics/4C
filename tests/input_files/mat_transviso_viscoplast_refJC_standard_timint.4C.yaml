@@ -36,9 +36,7 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [2]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [3]
       DENS: 7830
   - MAT: 2

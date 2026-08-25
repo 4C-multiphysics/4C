@@ -51,7 +51,6 @@ MATERIALS:
       LOCAL: true
       EPSILON: 0.422012856128946
       TORTUOSITY: 0.649625165867938
-      NUMMAT: 1
       MATIDS: [4]
   - MAT: 4
     MAT_newman_multiscale:

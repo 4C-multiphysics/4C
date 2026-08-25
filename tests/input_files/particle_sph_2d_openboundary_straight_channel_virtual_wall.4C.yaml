@@ -60,7 +60,6 @@ MATERIALS:
       ARTIFICIAL_VISCOSITY: 0
   - MAT: 3
     MAT_Membrane_ElastHyper:
-      NUMMAT: 1
       MATIDS: [31]
       DENS: 1
   - MAT: 31

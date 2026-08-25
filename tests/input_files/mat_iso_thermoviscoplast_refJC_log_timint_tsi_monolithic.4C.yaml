@@ -54,9 +54,7 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_MultiplicativeSplitDefgradElastHyper:
-      NUMMATEL: 1
       MATIDSEL: [2]
-      NUMFACINEL: 1
       INELDEFGRADFACIDS: [3]
       DENS: 7830e-12 # [t/mm^3 = N*s^2/mm^4]
       REF_TEMPERATURE: 293.0 # [K]

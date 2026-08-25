@@ -44,7 +44,6 @@ MATERIALS:
   - MAT: 4
     MAT_matlist:
       LOCAL: false
-      NUMMAT: 4
       MATIDS: [1, 2, 3, 5]
   - MAT: 5
     MAT_ion:

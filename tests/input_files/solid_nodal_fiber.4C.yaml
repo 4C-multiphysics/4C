@@ -24,7 +24,6 @@ STRUCTURAL DYNAMIC:
 MATERIALS:
   - MAT: 1
     MAT_ViscoElastHyper:
-      NUMMAT: 5
       MATIDS: [100, 101, 102, 103, 104]
       DENS: 1e-06
   - MAT: 100
