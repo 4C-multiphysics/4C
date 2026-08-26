@@ -148,6 +148,8 @@ namespace BeamToSolid
   {
     //! Default value.
     none,
+    //! constant.
+    point1,
     //! Linear.
     line2,
     //! Quadratic.

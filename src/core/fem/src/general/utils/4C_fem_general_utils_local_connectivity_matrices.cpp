@@ -1185,6 +1185,12 @@ Core::LinAlg::Matrix<probdim, 1> Core::FE::get_node_coordinates(
 
       break;
     }
+    case Core::FE::CellType::point1:
+    {
+      coord(0) = eleNodeNumbering_point1_nodes_reference[0][0];
+
+      break;
+    }
     case Core::FE::CellType::line2:
     case Core::FE::CellType::line3:
     {
