@@ -381,8 +381,6 @@ namespace Particle
       FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
           enum_to_state_name(state));
 
-      if (particlestored_ <= 0) return;
-
       double* state_ptr = get_ptr_to_state_writable(state);
 
       for (int i = 0; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)
@@ -415,8 +413,6 @@ namespace Particle
       FOUR_C_ASSERT(statedim_[static_cast<int>(stateA)] == statedim_[static_cast<int>(stateB)],
           "dimensions of states do not match!");
 
-      if (particlestored_ <= 0) return;
-
       const double* state_b_ptr = get_ptr_to_state(stateB);
       double* state_a_ptr = get_ptr_to_state_writable(stateA);
 
@@ -439,8 +435,6 @@ namespace Particle
       FOUR_C_ASSERT(statedim_[static_cast<int>(state)] == static_cast<int>(val.size()),
           "dimensions of states do not match!");
 
-      if (particlestored_ <= 0) return;
-
       double* state_ptr = get_ptr_to_state_writable(state);
 
       for (int i = 0; i < particlestored_; ++i)
@@ -458,8 +452,6 @@ namespace Particle
     {
       FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
           enum_to_state_name(state));
-
-      if (particlestored_ <= 0) return;
 
       double* state_ptr = get_ptr_to_state_writable(state);
 
