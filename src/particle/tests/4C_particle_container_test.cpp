@@ -19,6 +19,7 @@ namespace
   {
    protected:
     std::unique_ptr<Particle::ParticleContainer> container_;
+    std::unique_ptr<Particle::ParticleContainer> container_empty_;
 
     int statesvectorsize_;
 
@@ -31,6 +32,10 @@ namespace
       // create, init and setup container
       container_ = std::make_unique<Particle::ParticleContainer>();
       container_->setup(size, stateEnumSet);
+
+      // and the empty container
+      container_empty_ = std::make_unique<Particle::ParticleContainer>();
+      container_empty_->setup(0, stateEnumSet);
 
       const int maximum_stored_state_enum_set_value{static_cast<int>(*(--stateEnumSet.end()))};
       statesvectorsize_ = maximum_stored_state_enum_set_value + 1;
@@ -301,12 +306,19 @@ namespace
       {
         double* newmass = container_->get_ptr_to_state_writable(Particle::State::Mass, index);
         newmass[0] = newmass[0] * 3.14;
+
+        double* newvel = container_->get_ptr_to_state_writable(Particle::State::Velocity);
+        newvel[index * 3] = newvel[index * 3] * 3.14;
       }
       {
         const double* currmass = container_->get_ptr_to_state(Particle::State::Mass, index);
         EXPECT_NEAR(currmass[0], mass[0] * 3.14, 1e-14);
+
+        const double* currvel = container_->get_ptr_to_state(Particle::State::Velocity, index);
+        EXPECT_NEAR(currvel[0], vel[0] * 3.14, 1e-14);
       }
     }
+    EXPECT_EQ(container_empty_->get_ptr_to_state(Particle::State::Velocity), nullptr);
   }
 
   TEST_F(ParticleContainerTest, TryGetPtrToState)
@@ -360,21 +372,35 @@ namespace
       {
         double* newmass = container_->try_get_ptr_to_state_writable(Particle::State::Mass, index);
         newmass[0] = newmass[0] * 3.14;
+
+        double* newvel = container_->try_get_ptr_to_state_writable(Particle::State::Velocity);
+        newvel[index * 3] = newvel[index * 3] * 3.14;
       }
       {
         const double* currmass = container_->try_get_ptr_to_state(Particle::State::Mass, index);
         EXPECT_NEAR(currmass[0], mass[0] * 3.14, 1e-14);
+
+        const double* currvel = container_->try_get_ptr_to_state(Particle::State::Velocity, index);
+        EXPECT_NEAR(currvel[0], vel[0] * 3.14, 1e-14);
       }
     }
+    EXPECT_EQ(container_empty_->try_get_ptr_to_state(Particle::State::Velocity), nullptr);
   }
 
   TEST_F(ParticleContainerTest, TryGetPtrToStateNotStored)
   {
-    const double* acc = container_->try_get_ptr_to_state(Particle::State::Acceleration, 0);
+    const double* acc_0 = container_->try_get_ptr_to_state(Particle::State::Acceleration, 0);
+    EXPECT_EQ(acc_0, nullptr);
+
+    const double* acc = container_->try_get_ptr_to_state(Particle::State::Acceleration);
     EXPECT_EQ(acc, nullptr);
 
-    double* angacc =
+    double* angacc_0 =
         container_->try_get_ptr_to_state_writable(Particle::State::AngularAcceleration, 0);
+    EXPECT_EQ(angacc_0, nullptr);
+
+    double* angacc =
+        container_->try_get_ptr_to_state_writable(Particle::State::AngularAcceleration);
     EXPECT_EQ(angacc, nullptr);
   }
 
