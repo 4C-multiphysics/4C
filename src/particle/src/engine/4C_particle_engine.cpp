@@ -2012,8 +2012,8 @@ void Particle::ParticleEngine::store_positions_after_particle_transfer()
     if (particlestored == 0) continue;
 
     // get pointer to particle states
-    const double* pos = container->get_ptr_to_state(State::Position, 0);
-    double* lasttransferpos = container->get_ptr_to_state_writable(State::LastTransferPosition, 0);
+    const double* pos = container->get_ptr_to_state(State::Position);
+    double* lasttransferpos = container->get_ptr_to_state_writable(State::LastTransferPosition);
 
     // get particle state dimension
     int statedim = container->get_state_dim(State::Position);
@@ -2046,7 +2046,7 @@ void Particle::ParticleEngine::relate_owned_particles_to_bins()
     if (particlestored <= 0) continue;
 
     // get pointer to position of particle after last transfer
-    const double* lasttransferpos = container->get_ptr_to_state(State::LastTransferPosition, 0);
+    const double* lasttransferpos = container->get_ptr_to_state(State::LastTransferPosition);
 
     // get particle state dimension
     int statedim = container->get_state_dim(State::Position);

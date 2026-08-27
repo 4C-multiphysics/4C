@@ -334,7 +334,7 @@ void Particle::ParticleInteractionDEM::set_initial_radius()
             particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
 
         // get pointer to particle state
-        double* radius = container->get_ptr_to_state_writable(Particle::State::Radius, 0);
+        double* radius = container->get_ptr_to_state_writable(Particle::State::Radius);
 
         // determine mu of random particle radius distribution
         const double mu = (radiusdistributiontype == Particle::NormalRadiusDistribution)
@@ -392,8 +392,8 @@ void Particle::ParticleInteractionDEM::set_initial_mass()
         particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
 
     // get pointer to particle states
-    const double* radius = container->get_ptr_to_state(Particle::State::Radius, 0);
-    double* mass = container->get_ptr_to_state_writable(Particle::State::Mass, 0);
+    const double* radius = container->get_ptr_to_state(Particle::State::Radius);
+    double* mass = container->get_ptr_to_state_writable(Particle::State::Mass);
 
     // compute mass via particle volume and initial density
     const double fac = material->initDensity_ * 4.0 / 3.0 * std::numbers::pi;
@@ -420,9 +420,9 @@ void Particle::ParticleInteractionDEM::set_initial_inertia()
     if (not container->have_stored_state(Particle::State::Inertia)) continue;
 
     // get pointer to particle states
-    const double* radius = container->get_ptr_to_state(Particle::State::Radius, 0);
-    const double* mass = container->get_ptr_to_state(Particle::State::Mass, 0);
-    double* inertia = container->get_ptr_to_state_writable(Particle::State::Inertia, 0);
+    const double* radius = container->get_ptr_to_state(Particle::State::Radius);
+    const double* mass = container->get_ptr_to_state(Particle::State::Mass);
+    double* inertia = container->get_ptr_to_state_writable(Particle::State::Inertia);
 
     // compute mass via particle volume and initial density
     for (int i = 0; i < particlestored; ++i)
@@ -469,13 +469,12 @@ void Particle::ParticleInteractionDEM::compute_acceleration() const
     const int statedim = container->get_state_dim(Particle::State::Acceleration);
 
     // get pointer to particle states
-    const double* radius = container->get_ptr_to_state(Particle::State::Radius, 0);
-    const double* mass = container->get_ptr_to_state(Particle::State::Mass, 0);
-    const double* force = container->get_ptr_to_state(Particle::State::Force, 0);
-    const double* moment = container->try_get_ptr_to_state(Particle::State::Moment, 0);
-    double* acc = container->get_ptr_to_state_writable(Particle::State::Acceleration, 0);
-    double* angacc =
-        container->try_get_ptr_to_state_writable(Particle::State::AngularAcceleration, 0);
+    const double* radius = container->get_ptr_to_state(Particle::State::Radius);
+    const double* mass = container->get_ptr_to_state(Particle::State::Mass);
+    const double* force = container->get_ptr_to_state(Particle::State::Force);
+    const double* moment = container->try_get_ptr_to_state(Particle::State::Moment);
+    double* acc = container->get_ptr_to_state_writable(Particle::State::Acceleration);
+    double* angacc = container->try_get_ptr_to_state_writable(Particle::State::AngularAcceleration);
 
     // compute acceleration
     for (int i = 0; i < particlestored; ++i)
@@ -550,10 +549,10 @@ void Particle::ParticleInteractionDEM::evaluate_particle_kinetic_energy(double& 
     const int statedim = container->get_state_dim(Particle::State::Position);
 
     // get pointer to particle states
-    const double* radius = container->get_ptr_to_state(Particle::State::Radius, 0);
-    const double* mass = container->get_ptr_to_state(Particle::State::Mass, 0);
-    const double* vel = container->get_ptr_to_state(Particle::State::Velocity, 0);
-    const double* angvel = container->try_get_ptr_to_state(Particle::State::AngularVelocity, 0);
+    const double* radius = container->get_ptr_to_state(Particle::State::Radius);
+    const double* mass = container->get_ptr_to_state(Particle::State::Mass);
+    const double* vel = container->get_ptr_to_state(Particle::State::Velocity);
+    const double* angvel = container->try_get_ptr_to_state(Particle::State::AngularVelocity);
 
     // add translational kinetic energy contribution
     for (int i = 0; i < particlestored; ++i)
@@ -594,8 +593,8 @@ void Particle::ParticleInteractionDEM::evaluate_particle_gravitational_potential
     const int statedim = container->get_state_dim(Particle::State::Position);
 
     // get pointer to particle states
-    const double* pos = container->get_ptr_to_state(Particle::State::Position, 0);
-    const double* mass = container->get_ptr_to_state(Particle::State::Mass, 0);
+    const double* pos = container->get_ptr_to_state(Particle::State::Position);
+    const double* mass = container->get_ptr_to_state(Particle::State::Mass);
 
     // add gravitational potential energy contribution
     for (int i = 0; i < particlestored; ++i)

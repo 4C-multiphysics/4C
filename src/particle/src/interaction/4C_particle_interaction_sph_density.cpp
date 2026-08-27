@@ -924,9 +924,9 @@ void Particle::SPHDensityPredictCorrect::correct_density() const
     if (particlestored <= 0) continue;
 
     // get pointer to particle state
-    const double* denssum = container_i->get_ptr_to_state(Particle::State::DensitySum, 0);
-    const double* colorfield = container_i->get_ptr_to_state(Particle::State::Colorfield, 0);
-    double* dens = container_i->get_ptr_to_state_writable(Particle::State::Density, 0);
+    const double* denssum = container_i->get_ptr_to_state(Particle::State::DensitySum);
+    const double* colorfield = container_i->get_ptr_to_state(Particle::State::Colorfield);
+    double* dens = container_i->get_ptr_to_state_writable(Particle::State::Density);
 
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* material =

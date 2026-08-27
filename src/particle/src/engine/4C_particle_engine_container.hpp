@@ -184,6 +184,32 @@ namespace Particle
     const double* get_ptr_to_state(Particle::State state, int index) const;
 
     /*!
+     * \brief get read-only pointer to state of all particles
+     *
+     * This is the default method to be used to get a pointer with read-only access to the state of
+     * all particles. Returns a nullptr if the container is empty.
+     *
+     * \note Throws an error in the debug version in case the requested state is not stored in the
+     *       particle container.
+     *
+     * \note The returned pointer may not be used to access memory without checking for a nullptr.
+     *
+     *
+     * \param[in] state particle state
+     *
+     * \return pointer with read-only access to particle state or nullptr
+     */
+    inline const double* get_ptr_to_state(Particle::State state) const
+    {
+      FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
+          enum_to_state_name(state));
+
+      if (particlestored_ == 0) return nullptr;
+
+      return get_ptr_to_state(state, 0);
+    };
+
+    /*!
      * \brief conditionally get read-only pointer to state of a particle at index
      *
      * This method to get a pointer with read-only access to the state of a particle at a certain
@@ -210,6 +236,28 @@ namespace Particle
     };
 
     /*!
+     * \brief conditionally get read-only pointer to state of all particles
+     *
+     * This method to get a pointer with read-only access to the state of all particles
+     * is used in cases when a state may not be stored in the particle container.
+     * Conditionally, a pointer is returned in case the state is stored in the particle container,
+     * otherwise, a nullptr is returned. Returns a nullptr if the container is empty.
+     *
+     * \note The returned pointer may not be used to access memory without checking for a nullptr.
+     *
+     *
+     * \param[in] state particle state
+     *
+     * \return pointer with read-only access to particle state or nullptr
+     */
+    inline const double* try_get_ptr_to_state(Particle::State state) const
+    {
+      if (particlestored_ == 0) return nullptr;
+
+      return try_get_ptr_to_state(state, 0);
+    };
+
+    /*!
      * \brief get writable pointer to state of a particle at index
      *
      * This is the default method to be used to get a pointer with writable access to the state of
@@ -225,6 +273,32 @@ namespace Particle
      * \return pointer with writable access to particle state
      */
     double* get_ptr_to_state_writable(Particle::State state, int index);
+
+    /*!
+     * \brief get writable pointer to state of all particles
+     *
+     * This is the default method to be used to get a pointer with writable access to the state of
+     * all particles. Returns a nullptr if the container is empty.
+     *
+     * \note Throws an error in the debug version in case the requested state is not stored in the
+     *       particle container.
+     *
+     * \note The returned pointer may not be used to access memory without checking for a nullptr.
+     *
+     *
+     * \param[in] state particle state
+     *
+     * \return pointer with writable access to particle state or nullptr
+     */
+    double* get_ptr_to_state_writable(Particle::State state)
+    {
+      FOUR_C_ASSERT(storedstates_.contains(state), "particle state '{}' not stored in container!",
+          enum_to_state_name(state));
+
+      if (particlestored_ == 0) return nullptr;
+
+      return get_ptr_to_state_writable(state, 0);
+    };
 
     /*!
      * \brief conditionally get writable pointer to state of a particle at index
@@ -250,6 +324,28 @@ namespace Particle
       if (storedstates_.contains(state)) return get_ptr_to_state_writable(state, index);
 
       return nullptr;
+    };
+
+    /*!
+     * \brief conditionally get writable pointer to state of all particles
+     *
+     * This method to get a pointer with writable access to the state of all particles
+     * is used in cases when a state may not be stored in the particle container.
+     * Conditionally, a pointer is returned in case the state is stored in the particle container,
+     * otherwise, a nullptr is returned. Returns a nullptr if the container is empty.
+     *
+     * \note The returned pointer may not be used to access memory without checking for a nullptr.
+     *
+     *
+     * \param[in] state particle state
+     *
+     * \return pointer with writable access to particle state or nullptr
+     */
+    inline double* try_get_ptr_to_state_writable(Particle::State state)
+    {
+      if (particlestored_ == 0) return nullptr;
+
+      return try_get_ptr_to_state_writable(state, 0);
     };
 
     /*!
@@ -287,7 +383,7 @@ namespace Particle
 
       if (particlestored_ <= 0) return;
 
-      double* state_ptr = get_ptr_to_state_writable(state, 0);
+      double* state_ptr = get_ptr_to_state_writable(state);
 
       for (int i = 0; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)
         state_ptr[i] *= fac;
@@ -321,8 +417,8 @@ namespace Particle
 
       if (particlestored_ <= 0) return;
 
-      const double* state_b_ptr = get_ptr_to_state(stateB, 0);
-      double* state_a_ptr = get_ptr_to_state_writable(stateA, 0);
+      const double* state_b_ptr = get_ptr_to_state(stateB);
+      double* state_a_ptr = get_ptr_to_state_writable(stateA);
 
       for (int i = 0; i < (particlestored_ * statedim_[static_cast<int>(stateA)]); ++i)
         state_a_ptr[i] = facA * state_a_ptr[i] + facB * state_b_ptr[i];
@@ -345,7 +441,7 @@ namespace Particle
 
       if (particlestored_ <= 0) return;
 
-      double* state_ptr = get_ptr_to_state_writable(state, 0);
+      double* state_ptr = get_ptr_to_state_writable(state);
 
       for (int i = 0; i < particlestored_; ++i)
         for (int dim = 0; dim < statedim_[static_cast<int>(state)]; ++dim)
@@ -365,7 +461,7 @@ namespace Particle
 
       if (particlestored_ <= 0) return;
 
-      double* state_ptr = get_ptr_to_state_writable(state, 0);
+      double* state_ptr = get_ptr_to_state_writable(state);
 
       for (int i = 0; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)
         state_ptr[i] = 0.0;
