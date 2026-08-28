@@ -153,9 +153,12 @@ namespace
         const auto elasticity_model_type =
             params.lung_tree.terminal_units.elasticity_model.elasticity_model_type.at(
                 element_id, "elasticity_model_type");
+        const auto recruitment_model_type =
+            params.lung_tree.terminal_units.recruitment_model.pressure_law_type.at(
+                element_id, "pressure_law_type");
         TerminalUnits::ModelRegistry::add_terminal_unit_with_model_selection(terminal_units,
             element_id, local_element_id, ref_length, params, rheological_model_type,
-            elasticity_model_type);
+            elasticity_model_type, recruitment_model_type);
       }
     }
 
