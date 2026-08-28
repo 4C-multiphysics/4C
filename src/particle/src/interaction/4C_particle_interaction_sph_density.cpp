@@ -160,7 +160,7 @@ void Particle::SPHDensityBase::sum_weighted_mass_particle_contribution() const
 
   // get pointers to particle states
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ParticleContainerBundleStatePtrs& denssum =
       particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::DensitySum);
 
@@ -336,7 +336,7 @@ void Particle::SPHDensityBase::sum_colorfield_particle_contribution() const
 
   // get pointers to particle states
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ConstParticleContainerBundleStatePtrs& dens =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
   ParticleContainerBundleStatePtrs& colorfield =
@@ -501,9 +501,9 @@ void Particle::SPHDensityBase::continuity_equation_particle_contribution() const
   ConstParticleContainerBundleStatePtrs& mod_vel =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::ModifiedVelocity);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ConstParticleContainerBundleStatePtrs& dens =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
   ParticleContainerBundleStatePtrs& densdot =

@@ -228,9 +228,9 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   std::set<ParticleType> types = {ParticleType::RigidPhase};
   ConstParticleContainerBundleStatePtrs& pos =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position, types);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Position, types);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity, types);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity, types);
   ParticleContainerBundleStatePtrs& force =
       particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::Force, types);
 

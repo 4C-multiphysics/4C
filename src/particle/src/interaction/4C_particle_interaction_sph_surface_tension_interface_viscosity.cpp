@@ -240,22 +240,22 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_bound
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& rad =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ConstParticleContainerBundleStatePtrs& dens =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Density);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
   ConstParticleContainerBundleStatePtrs& cfg =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::ColorfieldGradient);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::ColorfieldGradient);
   ConstParticleContainerBundleStatePtrs& temp =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Temperature);
   ConstParticleContainerBundleStatePtrs& bpress =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::BoundaryPressure);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::BoundaryPressure);
   ConstParticleContainerBundleStatePtrs& bvel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::BoundaryVelocity);
-  ParticleContainerBundleStatePtrs& acc = particlecontainerbundle_->get_ptrs_to_state_writable(
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::BoundaryVelocity);
+  ParticleContainerBundleStatePtrs& acc = particlecontainerbundle_->try_get_ptrs_to_state_writable(
       ParticleState::Acceleration, ParticleStatus::Owned);
 
   // iterate over relevant particle pairs

@@ -213,11 +213,11 @@ void Particle::SPHTemperature::energy_equation() const
 
   // get pointers to particle states
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ConstParticleContainerBundleStatePtrs& dens =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
   ConstParticleContainerBundleStatePtrs& temp =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Temperature);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Temperature);
   ParticleContainerBundleStatePtrs& tempdot =
       particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::TemperatureDot);
 
@@ -300,11 +300,11 @@ void Particle::SPHTemperature::temperature_gradient() const
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ConstParticleContainerBundleStatePtrs& dens =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
   ConstParticleContainerBundleStatePtrs& temp =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Temperature);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Temperature);
   ParticleContainerBundleStatePtrs& tempgrad =
       particlecontainerbundle_->try_get_ptrs_to_state_writable(
           ParticleState::TemperatureGradient, ParticleStatus::Owned);

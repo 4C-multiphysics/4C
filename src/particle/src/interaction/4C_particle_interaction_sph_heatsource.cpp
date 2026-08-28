@@ -205,7 +205,7 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
 
   // get pointers to particle states
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ConstParticleContainerBundleStatePtrs& dens =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
 
@@ -280,10 +280,11 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
 
   // get pointer to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
-  ConstParticleContainerBundleStatePtrs& pos = particlecontainerbundle_->get_ptrs_to_state(
+  ConstParticleContainerBundleStatePtrs& pos = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::Position, absorbingtypes_, ParticleStatus::Owned);
-  ParticleContainerBundleStatePtrs& tempdot = particlecontainerbundle_->get_ptrs_to_state_writable(
-      ParticleState::TemperatureDot, absorbingtypes_, ParticleStatus::Owned);
+  ParticleContainerBundleStatePtrs& tempdot =
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(
+          ParticleState::TemperatureDot, absorbingtypes_, ParticleStatus::Owned);
 
   // iterate over absorbing particle types
   for (const auto& type_i : absorbingtypes_)

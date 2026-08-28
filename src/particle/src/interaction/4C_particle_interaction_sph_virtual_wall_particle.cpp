@@ -151,15 +151,15 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& pos =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& rad =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
   ConstParticleContainerBundleStatePtrs& dens =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Density);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
   ConstParticleContainerBundleStatePtrs& press =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Pressure);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Pressure);
 
   // iterate over relevant particle-wall pairs
   for (const int particlewallpairindex : relindices)

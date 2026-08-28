@@ -184,12 +184,12 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_boundary_contribu
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
   ConstParticleContainerBundleStatePtrs& temp =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Temperature);
-  ParticleContainerBundleStatePtrs& acc = particlecontainerbundle_->get_ptrs_to_state_writable(
+  ParticleContainerBundleStatePtrs& acc = particlecontainerbundle_->try_get_ptrs_to_state_writable(
       ParticleState::Acceleration, ParticleStatus::Owned);
 
   // iterate over relevant particle pairs

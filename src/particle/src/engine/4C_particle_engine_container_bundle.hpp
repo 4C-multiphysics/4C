@@ -80,76 +80,6 @@ namespace Particle
       return (containers_[static_cast<int>(type)])[static_cast<int>(status)].get();
     };
 
-    //! \name access particle states of all containers
-    //! @{
-
-    /*!
-     * \brief get array of read-only pointers to state of a particle at index
-     *
-     * This array is indexed by particle type and status. If a particular combination of type and
-     * status is not found in the bundle, then the pointer is a nullptr.
-     *
-     * \note Throws an error in the debug version in case the requested state is not stored in the
-     *       particle container.
-     *
-     * \note The returned pointers may not be used to access memory without checking for a nullptr.
-     *
-     *
-     * \param[in] state         particle state
-     * \param[in] types_option  particle types, optional
-     * \param[in] status_option particle status, optional
-     *
-     * \return reference to array with pointers with read-only access to particle state
-     */
-    ConstParticleContainerBundleStatePtrs& get_ptrs_to_state(Particle::State state,
-        std::optional<std::set<Particle::Type>> types_option = std::nullopt,
-        std::optional<ParticleStatus> status_optional = std::nullopt) const
-    {
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-      int num_ptrs = 0;
-
-      const std::set<ParticleType> types = types_option.value_or(storedtypes_);
-      for (auto type : types)
-      {
-        const int type_idx = static_cast<int>(type);
-
-        num_ptrs +=
-            containers_[type_idx][static_cast<int>(Status::Owned)].get()->have_stored_state(state);
-        num_ptrs +=
-            containers_[type_idx][static_cast<int>(Status::Ghosted)].get()->have_stored_state(
-                state);
-      }
-      FOUR_C_ASSERT(num_ptrs > 0,
-          "container bundle contains no containers with particle state '{}'!",
-          enum_to_state_name(state));
-#endif
-
-      return try_get_ptrs_to_state(state);
-    }
-
-    /*!
-     * \brief get array of read-only pointers to state of a particle at index
-     *
-     * This array is indexed by particle type and status. If a particular combination of type and
-     * status is not found in the bundle, then the pointer is a nullptr.
-     *
-     * \note Throws an error in the debug version in case the requested state is not stored in the
-     *       particle container.
-     *
-     * \note The returned pointers may not be used to access memory without checking for a nullptr.
-     *
-     *
-     * \param[in] state  particle state
-     * \param[in] status particle status
-     *
-     * \return reference to array with pointers with read-only access to particle state
-     */
-    inline ConstParticleContainerBundleStatePtrs& get_ptrs_to_state(
-        Particle::State state, ParticleStatus status) const
-    {
-      return get_ptrs_to_state(state, std::nullopt, status);
-    };
-
     /*!
      * \brief conditionally get read-only pointer to state of a particle at index
      *
@@ -187,73 +117,6 @@ namespace Particle
         Particle::State state, ParticleStatus status) const
     {
       return try_get_ptrs_to_state(state, std::nullopt, status);
-    };
-
-    /*!
-     * \brief get writable pointer to state of a particle at index
-     *
-     * This array is indexed by particle type and status. If a particular combination of type and
-     * status is not found in the bundle, then the pointer is a nullptr.
-     *
-     * \note The returned pointers may not be used to access memory without checking for a nullptr.
-     *
-     * \note Throws an error in the debug version in case the requested state is not stored in the
-     *       particle container.
-     *
-     *
-     * \param[in] state         particle state
-     * \param[in] types_option  particle types, optional
-     * \param[in] status_option particle status, optional
-     *
-     * \return reference to array with pointers with writable access to particle state
-     */
-    ParticleContainerBundleStatePtrs& get_ptrs_to_state_writable(Particle::State state,
-        std::optional<std::set<Particle::Type>> types_option = std::nullopt,
-        std::optional<ParticleStatus> status_optional = std::nullopt)
-    {
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-      int num_ptrs = 0;
-
-      const std::set<ParticleType> types = types_option.value_or(storedtypes_);
-      for (auto type : types)
-      {
-        const int type_idx = static_cast<int>(type);
-
-        num_ptrs +=
-            containers_[type_idx][static_cast<int>(Status::Owned)].get()->have_stored_state(state);
-        num_ptrs +=
-            containers_[type_idx][static_cast<int>(Status::Ghosted)].get()->have_stored_state(
-                state);
-      }
-      FOUR_C_ASSERT(num_ptrs > 0,
-          "container bundle contains no containers with particle state '{}'!",
-          enum_to_state_name(state));
-#endif
-
-      return try_get_ptrs_to_state_writable(state);
-    }
-
-    /*!
-     * \brief get writable pointer to state of a particle at index
-     *
-     * This array is indexed by particle type and status. If a particular combination of type and
-     * status is not found in the bundle, then the pointer is a nullptr.
-     *
-     * \note The returned pointers may not be used to access memory without checking for a nullptr.
-     *
-     * \note Throws an error in the debug version in case the requested state is not stored in the
-     *       particle container.
-     *
-     *
-     * \param[in] state  particle state
-     * \param[in] status particle status
-     *
-     * \return reference to array with pointers with writable access to particle state
-     */
-    inline ParticleContainerBundleStatePtrs& get_ptrs_to_state_writable(
-        Particle::State state, ParticleStatus status)
-    {
-      return get_ptrs_to_state_writable(state, std::nullopt, status);
     };
 
     /*!
@@ -517,6 +380,9 @@ namespace Particle
   inline const double* bundle_state_ptrs_index(ConstParticleContainerBundleStatePtrs& ptrs,
       ParticleType type, ParticleStatus status, const int index, const int statedim = 1)
   {
+    FOUR_C_ASSERT(ptrs[static_cast<int>(type)][static_cast<int>(status)] != nullptr,
+        "Dereferencing null state pointer");
+
     return &ptrs[static_cast<int>(type)][static_cast<int>(status)][statedim * index];
   };
 
@@ -538,6 +404,9 @@ namespace Particle
   inline double* bundle_state_ptrs_index(ParticleContainerBundleStatePtrs& ptrs, ParticleType type,
       ParticleStatus status, const int index, const int statedim = 1)
   {
+    FOUR_C_ASSERT(ptrs[static_cast<int>(type)][static_cast<int>(status)] != nullptr,
+        "Dereferencing null state pointer");
+
     return &ptrs[static_cast<int>(type)][static_cast<int>(status)][statedim * index];
   };
 

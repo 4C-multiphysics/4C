@@ -396,22 +396,22 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& rad =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ConstParticleContainerBundleStatePtrs& dens =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Density);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
   ConstParticleContainerBundleStatePtrs& press =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Pressure);
-  ConstParticleContainerBundleStatePtrs& bpress =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::BoundaryPressure, boundarytypes_);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Pressure);
+  ConstParticleContainerBundleStatePtrs& bpress = particlecontainerbundle_->try_get_ptrs_to_state(
+      ParticleState::BoundaryPressure, boundarytypes_);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
-  ConstParticleContainerBundleStatePtrs& bvel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::BoundaryVelocity, boundarytypes_);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
+  ConstParticleContainerBundleStatePtrs& bvel = particlecontainerbundle_->try_get_ptrs_to_state(
+      ParticleState::BoundaryVelocity, boundarytypes_);
   ConstParticleContainerBundleStatePtrs& mod_vel =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::ModifiedVelocity);
-  ParticleContainerBundleStatePtrs& acc = particlecontainerbundle_->get_ptrs_to_state_writable(
+  ParticleContainerBundleStatePtrs& acc = particlecontainerbundle_->try_get_ptrs_to_state_writable(
       ParticleState::Acceleration, ParticleStatus::Owned);
   ParticleContainerBundleStatePtrs& mod_acc =
       particlecontainerbundle_->try_get_ptrs_to_state_writable(

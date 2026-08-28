@@ -129,9 +129,9 @@ void Particle::SPHNeighborPairs::evaluate_particle_pairs()
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& pos =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& rad =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
 
   // iterate over potential particle neighbors
   for (auto& potentialneighbors : particleengineinterface_->get_potential_particle_neighbors())
@@ -254,9 +254,9 @@ void Particle::SPHNeighborPairs::evaluate_particle_wall_pairs()
   // get pointers to particle states
   static int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& rad =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
   ConstParticleContainerBundleStatePtrs& pos =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Position);
 
   // iterate over potential wall neighbors
   for (const auto& potentialneighbors : particlewallinterface_->get_potential_wall_neighbors())

@@ -198,13 +198,13 @@ void Particle::SPHPeridynamic::init_peridynamic_bondlist()
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& pos =
-      particlecontainerbundle->get_ptrs_to_state(ParticleState::Position);
+      particlecontainerbundle->try_get_ptrs_to_state(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& pdbodyid =
-      particlecontainerbundle->get_ptrs_to_state(ParticleState::PDBodyId);
+      particlecontainerbundle->try_get_ptrs_to_state(ParticleState::PDBodyId);
   ParticleContainerBundleStatePtrs& initialconnectedbonds =
-      particlecontainerbundle->get_ptrs_to_state_writable(ParticleState::InitialConnectedBonds);
+      particlecontainerbundle->try_get_ptrs_to_state_writable(ParticleState::InitialConnectedBonds);
   ParticleContainerBundleStatePtrs& currentconnectedbonds =
-      particlecontainerbundle->get_ptrs_to_state_writable(ParticleState::CurrentConnectedBonds);
+      particlecontainerbundle->try_get_ptrs_to_state_writable(ParticleState::CurrentConnectedBonds);
 
   // iterate over potential particle neighbors
   for (const auto& potentialneighbors :
@@ -325,17 +325,17 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
   //  get pointer to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& ref_pos =
-      particlecontainerbundle->get_ptrs_to_state(ParticleState::ReferencePosition);
+      particlecontainerbundle->try_get_ptrs_to_state(ParticleState::ReferencePosition);
   ConstParticleContainerBundleStatePtrs& pos =
-      particlecontainerbundle->get_ptrs_to_state(ParticleState::Position);
+      particlecontainerbundle->try_get_ptrs_to_state(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& young =
-      particlecontainerbundle->get_ptrs_to_state(ParticleState::Young);
+      particlecontainerbundle->try_get_ptrs_to_state(ParticleState::Young);
   ConstParticleContainerBundleStatePtrs& critical_stretch =
-      particlecontainerbundle->get_ptrs_to_state(ParticleState::CriticalStretch);
+      particlecontainerbundle->try_get_ptrs_to_state(ParticleState::CriticalStretch);
   ParticleContainerBundleStatePtrs& force =
       particlecontainerbundle->try_get_ptrs_to_state_writable(ParticleState::Force);
   ParticleContainerBundleStatePtrs& currentconnectedbonds =
-      particlecontainerbundle->get_ptrs_to_state_writable(ParticleState::CurrentConnectedBonds);
+      particlecontainerbundle->try_get_ptrs_to_state_writable(ParticleState::CurrentConnectedBonds);
 
   size_t iter = 0;
   while (iter < bondlist_->size())
@@ -454,7 +454,7 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
 
   // get pointer to particle states
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle->get_ptrs_to_state(ParticleState::Velocity);
+      particlecontainerbundle->try_get_ptrs_to_state(ParticleState::Velocity);
 
   for (const auto& particlepair : pd_neighbor_pairs)
   {

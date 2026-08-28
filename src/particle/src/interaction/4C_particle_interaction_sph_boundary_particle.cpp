@@ -119,13 +119,13 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
   ConstParticleContainerBundleStatePtrs& acc =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Acceleration);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Acceleration);
   ConstParticleContainerBundleStatePtrs& dens =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Density);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
   ConstParticleContainerBundleStatePtrs& press =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Pressure);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Pressure);
 
   // iterate over relevant particle pairs
   for (const int particlepairindex : relindices)

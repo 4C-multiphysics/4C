@@ -329,11 +329,11 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
     // get pointers to particle states
     std::set<ParticleType> types = {openboundaryphase_, fluidphase_};
     ConstParticleContainerBundleStatePtrs& mass =
-        particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass, types);
+        particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass, types);
     ConstParticleContainerBundleStatePtrs& dens =
-        particlecontainerbundle_->get_ptrs_to_state(ParticleState::Density, types);
+        particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density, types);
     ConstParticleContainerBundleStatePtrs& press =
-        particlecontainerbundle_->get_ptrs_to_state(ParticleState::Pressure, types);
+        particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Pressure, types);
 
     // iterate over relevant particle pairs
     for (const int particlepairindex : relindices)

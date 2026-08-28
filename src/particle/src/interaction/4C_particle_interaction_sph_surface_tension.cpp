@@ -397,15 +397,15 @@ void Particle::SPHSurfaceTension::compute_wall_colorfield_and_wall_interface_nor
   // get pointer to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ConstParticleContainerBundleStatePtrs& dens =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Density);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
   ConstParticleContainerBundleStatePtrs& temp =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Temperature);
   ParticleContainerBundleStatePtrs& wallcf =
-      particlecontainerbundle_->get_ptrs_to_state_writable(ParticleState::WallColorfield);
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::WallColorfield);
   ParticleContainerBundleStatePtrs& wallifn =
-      particlecontainerbundle_->get_ptrs_to_state_writable(ParticleState::WallInterfaceNormal);
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::WallInterfaceNormal);
 
   // iterate over relevant particle pairs
   for (const int particlepairindex : relindices)
@@ -623,13 +623,13 @@ void Particle::SPHSurfaceTension::compute_curvature() const
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& rad =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ConstParticleContainerBundleStatePtrs& dens =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Density);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Density);
   ConstParticleContainerBundleStatePtrs& ifn =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::InterfaceNormal);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::InterfaceNormal);
   ConstParticleContainerBundleStatePtrs& temp =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Temperature);
 
@@ -814,17 +814,17 @@ void Particle::SPHSurfaceTension::compute_surface_tension_contribution() const
 
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
-  ConstParticleContainerBundleStatePtrs& dens = particlecontainerbundle_->get_ptrs_to_state(
+  ConstParticleContainerBundleStatePtrs& dens = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::Density, fluidtypes_, ParticleStatus::Owned);
-  ConstParticleContainerBundleStatePtrs& curv = particlecontainerbundle_->get_ptrs_to_state(
+  ConstParticleContainerBundleStatePtrs& curv = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::Curvature, fluidtypes_, ParticleStatus::Owned);
-  ConstParticleContainerBundleStatePtrs& cfg = particlecontainerbundle_->get_ptrs_to_state(
+  ConstParticleContainerBundleStatePtrs& cfg = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::ColorfieldGradient, fluidtypes_, ParticleStatus::Owned);
-  ConstParticleContainerBundleStatePtrs& ifn = particlecontainerbundle_->get_ptrs_to_state(
+  ConstParticleContainerBundleStatePtrs& ifn = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::InterfaceNormal, fluidtypes_, ParticleStatus::Owned);
   ConstParticleContainerBundleStatePtrs& temp = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::Temperature, fluidtypes_, ParticleStatus::Owned);
-  ParticleContainerBundleStatePtrs& acc = particlecontainerbundle_->get_ptrs_to_state_writable(
+  ParticleContainerBundleStatePtrs& acc = particlecontainerbundle_->try_get_ptrs_to_state_writable(
       ParticleState::Acceleration, fluidtypes_, ParticleStatus::Owned);
 
   // iterate over fluid particle types
@@ -888,17 +888,17 @@ void Particle::SPHSurfaceTension::compute_temp_grad_driven_contribution() const
 
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
-  ConstParticleContainerBundleStatePtrs& dens = particlecontainerbundle_->get_ptrs_to_state(
+  ConstParticleContainerBundleStatePtrs& dens = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::Density, fluidtypes_, ParticleStatus::Owned);
-  ConstParticleContainerBundleStatePtrs& cfg = particlecontainerbundle_->get_ptrs_to_state(
+  ConstParticleContainerBundleStatePtrs& cfg = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::ColorfieldGradient, fluidtypes_, ParticleStatus::Owned);
-  ConstParticleContainerBundleStatePtrs& ifn = particlecontainerbundle_->get_ptrs_to_state(
+  ConstParticleContainerBundleStatePtrs& ifn = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::InterfaceNormal, fluidtypes_, ParticleStatus::Owned);
-  ConstParticleContainerBundleStatePtrs& temp = particlecontainerbundle_->get_ptrs_to_state(
+  ConstParticleContainerBundleStatePtrs& temp = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::Temperature, fluidtypes_, ParticleStatus::Owned);
-  ConstParticleContainerBundleStatePtrs& tempgrad = particlecontainerbundle_->get_ptrs_to_state(
+  ConstParticleContainerBundleStatePtrs& tempgrad = particlecontainerbundle_->try_get_ptrs_to_state(
       ParticleState::TemperatureGradient, fluidtypes_, ParticleStatus::Owned);
-  ParticleContainerBundleStatePtrs& acc = particlecontainerbundle_->get_ptrs_to_state_writable(
+  ParticleContainerBundleStatePtrs& acc = particlecontainerbundle_->try_get_ptrs_to_state_writable(
       ParticleState::Acceleration, fluidtypes_, ParticleStatus::Owned);
 
   // iterate over fluid particle types

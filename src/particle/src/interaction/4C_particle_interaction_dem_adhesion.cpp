@@ -146,11 +146,11 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
   ConstParticleContainerBundleStatePtrs& rad =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
   ParticleContainerBundleStatePtrs& force =
-      particlecontainerbundle_->get_ptrs_to_state_writable(ParticleState::Force);
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::Force);
 
   // iterate over particle pairs
   for (const auto& particlepair : neighborpairs_->get_ref_to_particle_pair_adhesion_data())
@@ -287,15 +287,15 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& pos =
-      particlecontainerbundle_->get_ptrs_to_state(Particle::State::Position);
+      particlecontainerbundle_->try_get_ptrs_to_state(Particle::State::Position);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
   ConstParticleContainerBundleStatePtrs& rad =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ParticleContainerBundleStatePtrs& force =
-      particlecontainerbundle_->get_ptrs_to_state_writable(ParticleState::Force);
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::Force);
 
   // iterate over particle-wall pairs
   for (const auto& particlewallpair : particlewallpairdata)

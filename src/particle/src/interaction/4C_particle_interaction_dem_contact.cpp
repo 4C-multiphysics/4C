@@ -364,12 +364,11 @@ void Particle::DEMContact::evaluate_particle_contact()
   // get pointers to particle states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
   ConstParticleContainerBundleStatePtrs& rad =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
   ParticleContainerBundleStatePtrs& force =
-      particlecontainerbundle_->get_ptrs_to_state_writable(ParticleState::Force);
-
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::Force);
   ConstParticleContainerBundleStatePtrs& angvel =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::AngularVelocity);
   ParticleContainerBundleStatePtrs& moment =
@@ -617,15 +616,15 @@ void Particle::DEMContact::evaluate_particle_wall_contact()
   // get pointers to particle states
   static int statedim = Particle::enum_to_state_dim(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& pos =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Position);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Position);
   ConstParticleContainerBundleStatePtrs& vel =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Velocity);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
   ConstParticleContainerBundleStatePtrs& rad =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Radius);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
   ConstParticleContainerBundleStatePtrs& mass =
-      particlecontainerbundle_->get_ptrs_to_state(ParticleState::Mass);
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
   ParticleContainerBundleStatePtrs& force =
-      particlecontainerbundle_->get_ptrs_to_state_writable(ParticleState::Force);
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::Force);
 
   ConstParticleContainerBundleStatePtrs& angvel =
       particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::AngularVelocity);
