@@ -107,7 +107,7 @@ namespace ReducedLung::TerminalUnits::Rheology
    * @brief Build Jacobian evaluator callback for the concrete rheology variant.
    */
   JacobianEvaluator make_jacobian_evaluator(RheologicalModel& rheological_model,
-      Elasticity::ElasticPressureGradientEvaluator pressure_gradient_evaluator);
+      Elasticity::ElasticPressurePartialsEvaluator elastic_pressure_partials_evaluator);
 
   /**
    * @brief Build internal-state updater callback for the concrete rheology variant.

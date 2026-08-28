@@ -25,7 +25,7 @@ namespace ReducedLung::TerminalUnits::Rheology
     void evaluate_kelvin_voigt_residual(Core::LinAlg::Vector<double>& target,
         const KelvinVoigt& kelvin_voigt_model, const TerminalUnitData& data,
         const Core::LinAlg::Vector<double>& locally_relevant_dofs,
-        const std::vector<double>& elastic_pressure_p_el)
+        const std::vector<double>& elastic_pressure_p_el, const double dt)
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
@@ -74,16 +74,23 @@ namespace ReducedLung::TerminalUnits::Rheology
      */
     void evaluate_kelvin_voigt_jacobian(Core::LinAlg::SparseMatrix& target,
         const KelvinVoigt& kelvin_voigt_model, TerminalUnitData& data,
-        const std::vector<double>& elastic_pressure_grad_dp_el)
+        const Core::LinAlg::Vector<double>& locally_relevant_dofs,
+        const Elasticity::ElasticPressurePartialsView& elastic_pressure_partials, const double dt)
     {
       if (!target.filled())
       {
         for (size_t i = 0; i < data.number_of_elements(); i++)
         {
+          const auto& context = data.reference_volume_context[i];
+          const double q = locally_relevant_dofs.local_values_as_span()[data.lid_q[i]];
+          const double alpha = (-elastic_pressure_partials.dp_el_dv0[i] +
+                                   kelvin_voigt_model.viscosity_eta[i] * q * context.inv_v0_eff *
+                                       context.inv_v0_eff) *
+                               context.dv0_dp;
           std::array<int, 3> column_indices{data.lid_p1[i], data.lid_p2[i], data.lid_q[i]};
-          std::array<double, 3> values{1.0, -1.0,
-              -elastic_pressure_grad_dp_el[i] - kelvin_voigt_model.viscosity_eta[i] *
-                                                    data.reference_volume_context[i].inv_v0_eff};
+          std::array<double, 3> values{1.0 + alpha, -1.0 - alpha,
+              -elastic_pressure_partials.dp_el_dq[i] -
+                  kelvin_voigt_model.viscosity_eta[i] * context.inv_v0_eff};
           target.insert_my_values(data.local_row_id[i], 3, values.data(), column_indices.data());
         }
       }
@@ -91,10 +98,17 @@ namespace ReducedLung::TerminalUnits::Rheology
       {
         for (size_t i = 0; i < data.number_of_elements(); i++)
         {
-          const double grad_q =
-              -elastic_pressure_grad_dp_el[i] -
-              kelvin_voigt_model.viscosity_eta[i] * data.reference_volume_context[i].inv_v0_eff;
-          target.replace_my_values(data.local_row_id[i], 1, &grad_q, &data.lid_q[i]);
+          const auto& context = data.reference_volume_context[i];
+          const double q = locally_relevant_dofs.local_values_as_span()[data.lid_q[i]];
+          const double alpha = (-elastic_pressure_partials.dp_el_dv0[i] +
+                                   kelvin_voigt_model.viscosity_eta[i] * q * context.inv_v0_eff *
+                                       context.inv_v0_eff) *
+                               context.dv0_dp;
+          const std::array<int, 3> column_indices{data.lid_p1[i], data.lid_p2[i], data.lid_q[i]};
+          const std::array<double, 3> values{1.0 + alpha, -1.0 - alpha,
+              -elastic_pressure_partials.dp_el_dq[i] -
+                  kelvin_voigt_model.viscosity_eta[i] * context.inv_v0_eff};
+          target.replace_my_values(data.local_row_id[i], 3, values.data(), column_indices.data());
         }
       }
     }
@@ -104,21 +118,30 @@ namespace ReducedLung::TerminalUnits::Rheology
      */
     void evaluate_four_element_maxwell_jacobian(Core::LinAlg::SparseMatrix& target,
         const FourElementMaxwell& four_element_maxwell_model, TerminalUnitData& data,
-        const std::vector<double>& elastic_pressure_grad_dp_el, double dt)
+        const Core::LinAlg::Vector<double>& locally_relevant_dofs,
+        const Elasticity::ElasticPressurePartialsView& elastic_pressure_partials, double dt)
     {
+      const auto damping_factor = [&](const size_t i)
+      {
+        return four_element_maxwell_model.viscosity_eta[i] +
+               four_element_maxwell_model.elasticity_E_m[i] * dt *
+                   four_element_maxwell_model.viscosity_eta_m[i] /
+                   (four_element_maxwell_model.elasticity_E_m[i] * dt +
+                       four_element_maxwell_model.viscosity_eta_m[i]);
+      };
       if (!target.filled())
       {
         for (size_t i = 0; i < data.number_of_elements(); i++)
         {
+          const auto& context = data.reference_volume_context[i];
+          const double alpha =
+              (-elastic_pressure_partials.dp_el_dv0[i] +
+                  damping_factor(i) * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]] *
+                      context.inv_v0_eff * context.inv_v0_eff) *
+              context.dv0_dp;
           std::array<int, 3> column_indices{data.lid_p1[i], data.lid_p2[i], data.lid_q[i]};
-          std::array<double, 3> values{1.0, -1.0,
-              -elastic_pressure_grad_dp_el[i] -
-                  (four_element_maxwell_model.viscosity_eta[i] +
-                      four_element_maxwell_model.elasticity_E_m[i] * dt *
-                          four_element_maxwell_model.viscosity_eta_m[i] /
-                          (four_element_maxwell_model.elasticity_E_m[i] * dt +
-                              four_element_maxwell_model.viscosity_eta_m[i])) *
-                      data.reference_volume_context[i].inv_v0_eff};
+          std::array<double, 3> values{1.0 + alpha, -1.0 - alpha,
+              -elastic_pressure_partials.dp_el_dq[i] - damping_factor(i) * context.inv_v0_eff};
           target.insert_my_values(data.local_row_id[i], 3, values.data(), column_indices.data());
         }
       }
@@ -126,14 +149,16 @@ namespace ReducedLung::TerminalUnits::Rheology
       {
         for (size_t i = 0; i < data.number_of_elements(); i++)
         {
-          const double grad_q = -elastic_pressure_grad_dp_el[i] -
-                                (four_element_maxwell_model.viscosity_eta[i] +
-                                    four_element_maxwell_model.elasticity_E_m[i] * dt *
-                                        four_element_maxwell_model.viscosity_eta_m[i] /
-                                        (four_element_maxwell_model.elasticity_E_m[i] * dt +
-                                            four_element_maxwell_model.viscosity_eta_m[i])) *
-                                    data.reference_volume_context[i].inv_v0_eff;
-          target.replace_my_values(data.local_row_id[i], 1, &grad_q, &data.lid_q[i]);
+          const auto& context = data.reference_volume_context[i];
+          const double alpha =
+              (-elastic_pressure_partials.dp_el_dv0[i] +
+                  damping_factor(i) * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]] *
+                      context.inv_v0_eff * context.inv_v0_eff) *
+              context.dv0_dp;
+          const std::array<int, 3> column_indices{data.lid_p1[i], data.lid_p2[i], data.lid_q[i]};
+          const std::array<double, 3> values{1.0 + alpha, -1.0 - alpha,
+              -elastic_pressure_partials.dp_el_dq[i] - damping_factor(i) * context.inv_v0_eff};
+          target.replace_my_values(data.local_row_id[i], 3, values.data(), column_indices.data());
         }
       }
     }
@@ -175,7 +200,8 @@ namespace ReducedLung::TerminalUnits::Rheology
                        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
             {
               auto& pressure = pressure_evaluator(data, locally_relevant_dofs, dt);
-              evaluate_kelvin_voigt_residual(target, model, data, locally_relevant_dofs, pressure);
+              evaluate_kelvin_voigt_residual(
+                  target, model, data, locally_relevant_dofs, pressure, dt);
             };
           }
           else if constexpr (std::is_same_v<ModelType, FourElementMaxwell>)
@@ -201,7 +227,7 @@ namespace ReducedLung::TerminalUnits::Rheology
    * Resolve variant-based Jacobian evaluator.
    */
   JacobianEvaluator make_jacobian_evaluator(RheologicalModel& rheological_model,
-      Elasticity::ElasticPressureGradientEvaluator pressure_gradient_evaluator)
+      Elasticity::ElasticPressurePartialsEvaluator elastic_pressure_partials_evaluator)
   {
     return std::visit(
         [&](auto& model) -> JacobianEvaluator
@@ -209,24 +235,26 @@ namespace ReducedLung::TerminalUnits::Rheology
           using ModelType = std::decay_t<decltype(model)>;
           if constexpr (std::is_same_v<ModelType, KelvinVoigt>)
           {
-            return [&model, pressure_gradient_evaluator](TerminalUnitData& data,
+            return [&model, elastic_pressure_partials_evaluator](TerminalUnitData& data,
                        Core::LinAlg::SparseMatrix& target,
                        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
             {
-              auto& pressure_gradient =
-                  pressure_gradient_evaluator(data, locally_relevant_dofs, dt);
-              evaluate_kelvin_voigt_jacobian(target, model, data, pressure_gradient);
+              const auto elastic_pressure_partials =
+                  elastic_pressure_partials_evaluator(data, locally_relevant_dofs, dt);
+              evaluate_kelvin_voigt_jacobian(
+                  target, model, data, locally_relevant_dofs, elastic_pressure_partials, dt);
             };
           }
           else if constexpr (std::is_same_v<ModelType, FourElementMaxwell>)
           {
-            return [&model, pressure_gradient_evaluator](TerminalUnitData& data,
+            return [&model, elastic_pressure_partials_evaluator](TerminalUnitData& data,
                        Core::LinAlg::SparseMatrix& target,
                        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
             {
-              auto& pressure_gradient =
-                  pressure_gradient_evaluator(data, locally_relevant_dofs, dt);
-              evaluate_four_element_maxwell_jacobian(target, model, data, pressure_gradient, dt);
+              const auto elastic_pressure_partials =
+                  elastic_pressure_partials_evaluator(data, locally_relevant_dofs, dt);
+              evaluate_four_element_maxwell_jacobian(
+                  target, model, data, locally_relevant_dofs, elastic_pressure_partials, dt);
             };
           }
           else
@@ -288,13 +316,13 @@ namespace ReducedLung::TerminalUnits::Rheology
             {
               for (size_t i = 0; i < data.number_of_elements(); i++)
               {
+                const double inv_v0 = data.reference_volume_context[i].inv_v0_eff;
                 model.maxwell_pressure_p_m[i] *=
                     model.viscosity_eta_m[i] /
                     (model.elasticity_E_m[i] * dt + model.viscosity_eta_m[i]);
                 model.maxwell_pressure_p_m[i] +=
                     model.elasticity_E_m[i] * dt * model.viscosity_eta_m[i] /
-                    (model.elasticity_E_m[i] * dt + model.viscosity_eta_m[i]) *
-                    data.reference_volume_context[i].inv_v0_eff *
+                    (model.elasticity_E_m[i] * dt + model.viscosity_eta_m[i]) * inv_v0 *
                     locally_relevant_dofs.local_values_as_span()[data.lid_q[i]];
               }
             };

@@ -30,7 +30,8 @@ namespace ReducedLung::TerminalUnits
   {
     std::vector<double> elasticity_E;
     std::vector<double> elastic_pressure_p_el;
-    std::vector<double> elastic_pressure_grad_dp_el;
+    std::vector<double> dp_el_dq;
+    std::vector<double> dp_el_dv0;
   };
 
   /**
@@ -41,7 +42,8 @@ namespace ReducedLung::TerminalUnits
     std::vector<double> bulk_modulus_kappa;
     std::vector<double> nonlinear_stiffening_beta;
     std::vector<double> elastic_pressure_p_el;
-    std::vector<double> elastic_pressure_grad_dp_el;
+    std::vector<double> dp_el_dq;
+    std::vector<double> dp_el_dv0;
   };
 
   /**
@@ -102,10 +104,13 @@ namespace ReducedLung::TerminalUnits::Elasticity
   using ElasticPressureEvaluator = std::function<std::vector<double>&(
       TerminalUnitData&, const Core::LinAlg::Vector<double>&, double)>;
 
-  /**
-   * @brief Evaluates derivative of elastic pressure w.r.t. q for one model block.
-   */
-  using ElasticPressureGradientEvaluator = std::function<std::vector<double>&(
+  struct ElasticPressurePartialsView
+  {
+    std::vector<double>& dp_el_dq;
+    std::vector<double>& dp_el_dv0;
+  };
+
+  using ElasticPressurePartialsEvaluator = std::function<ElasticPressurePartialsView(
       TerminalUnitData&, const Core::LinAlg::Vector<double>&, double)>;
 
   /**
@@ -114,10 +119,7 @@ namespace ReducedLung::TerminalUnits::Elasticity
    */
   ElasticPressureEvaluator make_elastic_pressure_evaluator(ElasticityModel& elasticity_model);
 
-  /**
-   * @brief Build pressure-gradient evaluator callback for the concrete elasticity variant.
-   */
-  ElasticPressureGradientEvaluator make_elastic_pressure_gradient_evaluator(
+  ElasticPressurePartialsEvaluator make_elastic_pressure_partials_evaluator(
       ElasticityModel& elasticity_model);
 
   /**

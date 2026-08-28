@@ -166,13 +166,13 @@ namespace ReducedLung
       {
         auto elastic_pressure_evaluator =
             Elasticity::make_elastic_pressure_evaluator(model.elasticity_model);
-        auto elastic_pressure_gradient_evaluator =
-            Elasticity::make_elastic_pressure_gradient_evaluator(model.elasticity_model);
+        auto elastic_pressure_partials_evaluator =
+            Elasticity::make_elastic_pressure_partials_evaluator(model.elasticity_model);
 
         model.residual_evaluator =
             Rheology::make_residual_evaluator(model.rheological_model, elastic_pressure_evaluator);
         model.jacobian_evaluator = Rheology::make_jacobian_evaluator(
-            model.rheological_model, elastic_pressure_gradient_evaluator);
+            model.rheological_model, elastic_pressure_partials_evaluator);
         // Assembly reads the reference volume from TerminalUnitData::reference_volume_context, so
         // refreshing it is part of bringing the model block in sync with the dof vector. The
         // solver runs the state updaters whenever the dofs change, before any assembler.

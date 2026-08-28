@@ -29,6 +29,8 @@ namespace ReducedLung::TerminalUnits::Recruitment
   using TimeLawType = ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::TimeLawType;
   using HysteresisPath =
       ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::HysteresisPath;
+  using ReferenceVolumeLinearization = ReducedLungParameters::LungTree::TerminalUnits::
+      RecruitmentModel::ReferenceVolumeLinearization;
 
   /**
    * @brief Terminal units whose reference volume is the geometry-derived constant.
@@ -85,6 +87,9 @@ namespace ReducedLung::TerminalUnits::Recruitment
   {
     LinearPressureLaw pressure_law;
     TimeLaw time_law;
+
+    ///< Whether the reference volume derivative enters the Jacobian or is dropped.
+    std::vector<ReferenceVolumeLinearization> reference_volume_linearization;
 
     ///< Reference volume of the last converged time step.
     std::vector<double> v0_n;
@@ -145,10 +150,12 @@ namespace ReducedLung::TerminalUnits::Recruitment
       const RecruitmentModel& recruitment_model, size_t element_index);
 
   /**
-   * @brief Effective reference volume of one element.
+   * @brief Effective reference volume of one element and its pressure derivatives.
    *
-   * Frozen within a Newton step at the last converged value; advanced by
-   * update_recruitment_state().
+   * Under the frozen linearization the reference volume stays at the last converged value and the
+   * derivatives vanish; under the coupled one it follows the recruitment law within the Newton
+   * step, exactly as update_recruitment_state() will advance it. Blocks without a recruitment law
+   * always return the constant geometry-derived reference volume.
    */
   ReferenceVolumeContext evaluate_recruitment_context(const TerminalUnitData& data,
       const RecruitmentModel& recruitment_model,

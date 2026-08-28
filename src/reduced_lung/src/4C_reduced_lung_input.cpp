@@ -278,6 +278,14 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                   .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
                           RecruitmentModel::time_law_type),
               }),
+          input_field<ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::
+                  ReferenceVolumeLinearization>("reference_volume_linearization",
+              {
+                  .description = "Linearization mode for recruitment reference-volume "
+                                 "sensitivities.",
+                  .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                          RecruitmentModel::reference_volume_linearization),
+              }),
           group<ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::LinearPressure>(
               "linear_pressure",
               {

@@ -150,8 +150,16 @@ namespace ReducedLung
             Closing,
           };
 
+          enum class ReferenceVolumeLinearization : std::uint8_t
+          {
+            Frozen,
+            Coupled,
+          };
+
           Core::IO::InputField<PressureLawType> pressure_law_type{PressureLawType::None};
           Core::IO::InputField<TimeLawType> time_law_type{TimeLawType::None};
+          Core::IO::InputField<ReferenceVolumeLinearization> reference_volume_linearization{
+              ReferenceVolumeLinearization::Frozen};
 
           struct LinearPressure
           {

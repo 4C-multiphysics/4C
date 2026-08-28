@@ -43,6 +43,8 @@ namespace
   using TimeLawType = ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::TimeLawType;
   using HysteresisPath =
       ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::HysteresisPath;
+  using ReferenceVolumeLinearization = ReducedLungParameters::LungTree::TerminalUnits::
+      RecruitmentModel::ReferenceVolumeLinearization;
   using TerminalUnits::Recruitment::LinearPressureRecruitment;
   using TerminalUnits::Recruitment::NoRecruitment;
 
@@ -59,6 +61,8 @@ namespace
     std::array<double, 3> ogden_beta;
     RecruitmentModelType recruitment_model_type = RecruitmentModelType::None;
     TimeLawType time_law_type = TimeLawType::None;
+    ReferenceVolumeLinearization reference_volume_linearization =
+        ReferenceVolumeLinearization::Frozen;
     std::array<double, 3> dofs = {1.0, 1.0, 1.0};
     std::array<double, 3> recruitment_initial_v0 = {1.2, 1.3, 1.4};
     std::array<double, 3> recruitment_tau = {0.5, 0.6, 0.7};
@@ -79,6 +83,8 @@ namespace
 
   RecruitmentFixtureData make_single_recruitment_data(const PressureLawType pressure_law_type,
       const TimeLawType time_law_type = TimeLawType::None,
+      const ReferenceVolumeLinearization reference_volume_linearization =
+          ReferenceVolumeLinearization::Coupled,
       const HysteresisPath active_path = HysteresisPath::Opening)
   {
     RecruitmentFixtureData fixture;
@@ -107,6 +113,7 @@ namespace
     recruitment_model.pressure_law.epsilon_v0_switch = {0.05};
     recruitment_model.time_law.type = {time_law_type};
     recruitment_model.time_law.tau = {0.5};
+    recruitment_model.reference_volume_linearization = {reference_volume_linearization};
     recruitment_model.v0_n = {1.2};
     recruitment_model.v0_target = {1.2};
     fixture.recruitment_model = std::move(recruitment_model);
@@ -159,6 +166,9 @@ namespace
         Core::IO::InputField<PressureLawType>(model_case.recruitment_model_type);
     params.lung_tree.terminal_units.recruitment_model.time_law_type =
         Core::IO::InputField<TimeLawType>(model_case.time_law_type);
+    params.lung_tree.terminal_units.recruitment_model.reference_volume_linearization =
+        Core::IO::InputField<ReferenceVolumeLinearization>(
+            model_case.reference_volume_linearization);
     params.lung_tree.terminal_units.recruitment_model.linear_pressure.v0_min =
         Core::IO::InputField<double>(1.0);
     params.lung_tree.terminal_units.recruitment_model.linear_pressure.v0_max =
@@ -185,6 +195,72 @@ namespace
   {
   };
 
+  TEST(TerminalUnitRecruitmentTests, ReferenceVolumeContextLinearPressureOpeningPath)
+  {
+    auto fixture = make_single_recruitment_data(PressureLawType::LinearPressure);
+    constexpr double dt = 0.1;
+
+    auto below = make_recruitment_dofs(-0.1, 0.0);
+    auto context = TerminalUnits::Recruitment::evaluate_recruitment_context(
+        fixture.data, fixture.recruitment_model, below, 0, dt);
+    EXPECT_DOUBLE_EQ(context.v0_eff, 1.0);
+    EXPECT_DOUBLE_EQ(context.dv0_dp, 0.0);
+
+    auto at_lower_boundary = make_recruitment_dofs(0.0, 0.0);
+    context = TerminalUnits::Recruitment::evaluate_recruitment_context(
+        fixture.data, fixture.recruitment_model, at_lower_boundary, 0, dt);
+    EXPECT_DOUBLE_EQ(context.v0_eff, 1.0);
+    EXPECT_DOUBLE_EQ(context.dv0_dp, 0.0);
+
+    auto inside = make_recruitment_dofs(0.4, 0.0);
+    context = TerminalUnits::Recruitment::evaluate_recruitment_context(
+        fixture.data, fixture.recruitment_model, inside, 0, dt);
+    EXPECT_DOUBLE_EQ(context.v0_eff, 1.4);
+    EXPECT_DOUBLE_EQ(context.dv0_dp, 1.0);
+    EXPECT_DOUBLE_EQ(context.inv_v0_eff, 1.0 / 1.4);
+
+    auto at_upper_boundary = make_recruitment_dofs(1.0, 0.0);
+    context = TerminalUnits::Recruitment::evaluate_recruitment_context(
+        fixture.data, fixture.recruitment_model, at_upper_boundary, 0, dt);
+    EXPECT_DOUBLE_EQ(context.v0_eff, 2.0);
+    EXPECT_DOUBLE_EQ(context.dv0_dp, 0.0);
+
+    auto above = make_recruitment_dofs(1.1, 0.0);
+    context = TerminalUnits::Recruitment::evaluate_recruitment_context(
+        fixture.data, fixture.recruitment_model, above, 0, dt);
+    EXPECT_DOUBLE_EQ(context.v0_eff, 2.0);
+    EXPECT_DOUBLE_EQ(context.dv0_dp, 0.0);
+  }
+
+  TEST(TerminalUnitRecruitmentTests, ReferenceVolumeContextLinearPressureClosingPath)
+  {
+    auto fixture = make_single_recruitment_data(PressureLawType::LinearPressure, TimeLawType::None,
+        ReferenceVolumeLinearization::Coupled, HysteresisPath::Closing);
+    auto dofs = make_recruitment_dofs(0.3, 0.0);
+
+    const auto context = TerminalUnits::Recruitment::evaluate_recruitment_context(
+        fixture.data, fixture.recruitment_model, dofs, 0, 0.1);
+
+    EXPECT_DOUBLE_EQ(context.v0_eff, 1.5);
+    EXPECT_DOUBLE_EQ(context.dv0_dp, 1.0);
+  }
+
+  TEST(TerminalUnitRecruitmentTests, ReferenceVolumeContextExponentialTimeLawScalesDerivative)
+  {
+    auto fixture = make_single_recruitment_data(
+        PressureLawType::LinearPressure, TimeLawType::ExponentialRelaxation);
+    auto dofs = make_recruitment_dofs(0.4, 0.0);
+    constexpr double dt = 0.1;
+    const double relaxation =
+        std::exp(-dt / linear_pressure(fixture.recruitment_model).time_law.tau[0]);
+
+    const auto context = TerminalUnits::Recruitment::evaluate_recruitment_context(
+        fixture.data, fixture.recruitment_model, dofs, 0, dt);
+
+    EXPECT_NEAR(context.v0_eff, relaxation * 1.2 + (1.0 - relaxation) * 1.4, 1e-14);
+    EXPECT_NEAR(context.dv0_dp, 1.0 - relaxation, 1e-14);
+  }
+
   TEST(TerminalUnitRecruitmentTests, ReferenceVolumeContextNoneUsesGeometryVolume)
   {
     auto fixture = make_single_recruitment_data(PressureLawType::None);
@@ -194,6 +270,7 @@ namespace
         fixture.data, fixture.recruitment_model, dofs, 0, 0.1);
 
     EXPECT_DOUBLE_EQ(context.v0_eff, 4.0);
+    EXPECT_DOUBLE_EQ(context.dv0_dp, 0.0);
   }
 
   TEST(TerminalUnitRecruitmentTests, EndOfStepUpdatesLinearPressureStateAndTarget)
@@ -225,6 +302,46 @@ namespace
         linear_pressure(fixture.recruitment_model).v0_n[0], 1.4 + (1.2 - 1.4) * relaxation, 1e-14);
   }
 
+  // The coupled Jacobian linearizes the very reference volume the end-of-step update will store,
+  // so both must come out of one formulation of the recruitment law.
+  TEST(TerminalUnitRecruitmentTests, CoupledContextMatchesTheAdvancedState)
+  {
+    for (const auto time_law : {TimeLawType::None, TimeLawType::ExponentialRelaxation})
+    {
+      auto fixture = make_single_recruitment_data(PressureLawType::LinearPressure, time_law);
+      auto dofs = make_recruitment_dofs(0.4, 0.0);
+      constexpr double dt = 0.1;
+
+      const auto context = TerminalUnits::Recruitment::evaluate_recruitment_context(
+          fixture.data, fixture.recruitment_model, dofs, 0, dt);
+      TerminalUnits::Recruitment::update_recruitment_state(
+          fixture.data, fixture.recruitment_model, dofs, dt);
+
+      EXPECT_DOUBLE_EQ(context.v0_eff, linear_pressure(fixture.recruitment_model).v0_n[0]);
+    }
+  }
+
+  // The linearization mode is a Newton detail: it must not change the state that is advanced.
+  TEST(TerminalUnitRecruitmentTests, LinearizationModeDoesNotChangeTheAdvancedState)
+  {
+    auto frozen = make_single_recruitment_data(PressureLawType::LinearPressure,
+        TimeLawType::ExponentialRelaxation, ReferenceVolumeLinearization::Frozen);
+    auto coupled = make_single_recruitment_data(PressureLawType::LinearPressure,
+        TimeLawType::ExponentialRelaxation, ReferenceVolumeLinearization::Coupled);
+    auto dofs = make_recruitment_dofs(0.4, 0.0);
+    constexpr double dt = 0.1;
+
+    TerminalUnits::Recruitment::update_recruitment_state(
+        frozen.data, frozen.recruitment_model, dofs, dt);
+    TerminalUnits::Recruitment::update_recruitment_state(
+        coupled.data, coupled.recruitment_model, dofs, dt);
+
+    EXPECT_DOUBLE_EQ(linear_pressure(frozen.recruitment_model).v0_n[0],
+        linear_pressure(coupled.recruitment_model).v0_n[0]);
+    EXPECT_DOUBLE_EQ(linear_pressure(frozen.recruitment_model).v0_target[0],
+        linear_pressure(coupled.recruitment_model).v0_target[0]);
+  }
+
   TEST(TerminalUnitRecruitmentTests, PathSwitchingOnlyHappensAtEndOfStep)
   {
     auto fixture = make_single_recruitment_data(PressureLawType::LinearPressure);
@@ -245,8 +362,8 @@ namespace
   // fully derecruited element must reopen rather than stay on the closing branch for good.
   TEST(TerminalUnitRecruitmentTests, FullDerecruitmentSwitchesBackToTheOpeningPath)
   {
-    auto fixture = make_single_recruitment_data(
-        PressureLawType::LinearPressure, TimeLawType::None, HysteresisPath::Closing);
+    auto fixture = make_single_recruitment_data(PressureLawType::LinearPressure, TimeLawType::None,
+        ReferenceVolumeLinearization::Coupled, HysteresisPath::Closing);
     // Below p_closing_min the closing branch derecruits the element all the way to v0_min.
     auto dofs = make_recruitment_dofs(-0.3, 0.0);
 
@@ -514,8 +631,32 @@ namespace
         9, dof_values.data(), std::array<int, 9>{0, 1, 2, 3, 4, 5, 6, 7, 8}.data());
     export_to(dofs, locally_relevant_dofs);
 
+    if (model_case.reference_volume_linearization == ReferenceVolumeLinearization::Coupled)
+    {
+      for (size_t i = 0; i < model.data.number_of_elements(); ++i)
+      {
+        locally_relevant_dofs.get_values()[model.data.lid_p1[i]] = model_case.dofs[0];
+        locally_relevant_dofs.get_values()[model.data.lid_p2[i]] = model_case.dofs[1];
+        locally_relevant_dofs.get_values()[model.data.lid_q[i]] = model_case.dofs[2];
+      }
+    }
+
     double dt = 1e-1;         // Dummy time step size
     const double eps = 1e-6;  // Perturbation parameter for the FD approximation
+
+    if (model_case.reference_volume_linearization == ReferenceVolumeLinearization::Coupled)
+    {
+      for (size_t i = 0; i < model.data.number_of_elements(); ++i)
+      {
+        EXPECT_TRUE(std::holds_alternative<LinearPressureRecruitment>(model.recruitment_model));
+        EXPECT_EQ(linear_pressure(model.recruitment_model).reference_volume_linearization[i],
+            ReferenceVolumeLinearization::Coupled);
+        EXPECT_GT(TerminalUnits::Recruitment::evaluate_recruitment_context(
+                      model.data, model.recruitment_model, locally_relevant_dofs, i, dt)
+                      .dv0_dp,
+            0.0);
+      }
+    }
 
     TerminalUnits::create_evaluators(terminal_units);
 
@@ -605,7 +746,7 @@ namespace
               .linear_elasticity_e = {1.0, 1.0, 0.0},
               .ogden_kappa = {0.0, 1.0, 1.0},
               .ogden_beta = {1.0, 6.4, -3.0}},
-          TerminalUnitModelCase{.name = "KelvinVoigt_Linear_LinearPressure",
+          TerminalUnitModelCase{.name = "KelvinVoigt_Linear_LinearPressure_Coupled",
               .rheological_model_type = RheologicalModelType::KelvinVoigt,
               .elasticity_model_type = ElasticityModelType::Linear,
               .kelvin_voigt_eta = {0.5, 1.0, 1.5},
@@ -615,8 +756,9 @@ namespace
               .ogden_kappa = {1.0, 1.0, 1.0},
               .ogden_beta = {2.0, 2.0, 2.0},
               .recruitment_model_type = RecruitmentModelType::LinearPressure,
+              .reference_volume_linearization = ReferenceVolumeLinearization::Coupled,
               .dofs = {0.55, 0.15, 0.2}},
-          TerminalUnitModelCase{.name = "KelvinVoigt_Ogden_LinearPressure",
+          TerminalUnitModelCase{.name = "KelvinVoigt_Ogden_LinearPressure_Coupled",
               .rheological_model_type = RheologicalModelType::KelvinVoigt,
               .elasticity_model_type = ElasticityModelType::Ogden,
               .kelvin_voigt_eta = {0.5, 1.0, 1.5},
@@ -626,8 +768,9 @@ namespace
               .ogden_kappa = {1.1, 1.2, 1.3},
               .ogden_beta = {2.0, 2.5, 3.0},
               .recruitment_model_type = RecruitmentModelType::LinearPressure,
+              .reference_volume_linearization = ReferenceVolumeLinearization::Coupled,
               .dofs = {0.55, 0.15, 0.2}},
-          TerminalUnitModelCase{.name = "KelvinVoigt_Linear_LinearPressure_Exponential",
+          TerminalUnitModelCase{.name = "KelvinVoigt_Linear_LinearPressure_Exponential_Coupled",
               .rheological_model_type = RheologicalModelType::KelvinVoigt,
               .elasticity_model_type = ElasticityModelType::Linear,
               .kelvin_voigt_eta = {0.5, 1.0, 1.5},
@@ -638,8 +781,9 @@ namespace
               .ogden_beta = {2.0, 2.0, 2.0},
               .recruitment_model_type = RecruitmentModelType::LinearPressure,
               .time_law_type = TimeLawType::ExponentialRelaxation,
+              .reference_volume_linearization = ReferenceVolumeLinearization::Coupled,
               .dofs = {0.55, 0.15, 0.2}},
-          TerminalUnitModelCase{.name = "FourElementMaxwell_Linear_LinearPressure",
+          TerminalUnitModelCase{.name = "FourElementMaxwell_Linear_LinearPressure_Coupled",
               .rheological_model_type = RheologicalModelType::FourElementMaxwell,
               .elasticity_model_type = ElasticityModelType::Linear,
               .kelvin_voigt_eta = {0.5, 1.0, 1.5},
@@ -649,6 +793,7 @@ namespace
               .ogden_kappa = {1.0, 1.0, 1.0},
               .ogden_beta = {2.0, 2.0, 2.0},
               .recruitment_model_type = RecruitmentModelType::LinearPressure,
+              .reference_volume_linearization = ReferenceVolumeLinearization::Coupled,
               .dofs = {0.55, 0.15, 0.2},
               .check_completed_jacobian_update = true}),
       [](const testing::TestParamInfo<TerminalUnitModelCase>& info) { return info.param.name; });
