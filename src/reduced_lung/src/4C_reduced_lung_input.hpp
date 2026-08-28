@@ -130,6 +130,47 @@ namespace ReducedLung
       {
         std::vector<int> element_blocks;
 
+        struct RecruitmentModel
+        {
+          enum class PressureLawType : std::uint8_t
+          {
+            None,
+            LinearPressure,
+          };
+
+          enum class TimeLawType : std::uint8_t
+          {
+            None,
+            ExponentialRelaxation,
+          };
+
+          enum class HysteresisPath : std::uint8_t
+          {
+            Opening,
+            Closing,
+          };
+
+          Core::IO::InputField<PressureLawType> pressure_law_type{PressureLawType::None};
+          Core::IO::InputField<TimeLawType> time_law_type{TimeLawType::None};
+
+          struct LinearPressure
+          {
+            Core::IO::InputField<double> v0_min;
+            Core::IO::InputField<double> v0_max;
+            Core::IO::InputField<double> p_closing_min;
+            Core::IO::InputField<double> p_opening_min;
+            Core::IO::InputField<double> delta_p_minmax;
+            Core::IO::InputField<double> epsilon_v0_switch;
+            Core::IO::InputField<double> initial_v0;
+            Core::IO::InputField<HysteresisPath> initial_path;
+          } linear_pressure;
+
+          struct ExponentialRelaxation
+          {
+            Core::IO::InputField<double> tau;
+          } exponential_relaxation;
+        } recruitment_model;
+
         struct RheologicalModel
         {
           /**
