@@ -156,22 +156,18 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_contribu
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    double* force_i = force[type_i_idx][status_i_idx]
-                          ? &force[type_i_idx][status_i_idx][particle_i * statedim]
-                          : nullptr;
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    double* force_i =
+        Particle::bundle_state_ptrs_index(force, nullptr, type_i, status_i, particle_i, statedim);
 
     // get pointers to particle states
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* vel_j = &vel[type_j_idx][status_j_idx][particle_j * statedim];
+    const double* vel_j =
+        Particle::bundle_state_ptrs_index(vel, type_j, status_j, particle_j, statedim);
     double* force_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      force_j = force[type_j_idx][status_j_idx]
-                    ? &force[type_j_idx][status_j_idx][particle_j * statedim]
-                    : nullptr;
+      force_j =
+          Particle::bundle_state_ptrs_index(force, nullptr, type_j, status_j, particle_j, statedim);
 
     // compute normal gap and rate of normal gap
     const double gap = particlepair.absdist_ - initialparticlespacing;
@@ -253,13 +249,12 @@ void Particle::SPHRigidParticleContactElastic::elastic_contact_particle_wall_con
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    double* force_i = force[type_i_idx][status_i_idx]
-                          ? &force[type_i_idx][status_i_idx][particle_i * statedim]
-                          : nullptr;
+    const double* pos_i =
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    double* force_i =
+        Particle::bundle_state_ptrs_index(force, nullptr, type_i, status_i, particle_i, statedim);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;

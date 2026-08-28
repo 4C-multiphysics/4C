@@ -511,6 +511,47 @@ namespace Particle
         states_;
   };
 
+  /**
+   *  \brief index into particle container bundle pointers
+   */
+  inline const double* bundle_state_ptrs_index(ConstParticleContainerBundleStatePtrs& ptrs,
+      ParticleType type, ParticleStatus status, const int index, const int statedim = 1)
+  {
+    return &ptrs[static_cast<int>(type)][static_cast<int>(status)][statedim * index];
+  };
+
+  /**
+   *  \brief index into particle container bundle pointers
+   */
+  inline const double* bundle_state_ptrs_index(ConstParticleContainerBundleStatePtrs& ptrs,
+      const double* fallback, ParticleType type, ParticleStatus status, const int index,
+      const int statedim = 1)
+  {
+    return ptrs[static_cast<int>(type)][static_cast<int>(status)]
+               ? &ptrs[static_cast<int>(type)][static_cast<int>(status)][statedim * index]
+               : fallback;
+  };
+
+  /**
+   *  \brief index into particle container bundle pointers
+   */
+  inline double* bundle_state_ptrs_index(ParticleContainerBundleStatePtrs& ptrs, ParticleType type,
+      ParticleStatus status, const int index, const int statedim = 1)
+  {
+    return &ptrs[static_cast<int>(type)][static_cast<int>(status)][statedim * index];
+  };
+
+  /**
+   *  \brief index into particle container bundle pointers
+   */
+  inline double* bundle_state_ptrs_index(ParticleContainerBundleStatePtrs& ptrs, double* fallback,
+      ParticleType type, ParticleStatus status, const int index, const int statedim = 1)
+  {
+    return ptrs[static_cast<int>(type)][static_cast<int>(status)]
+               ? &ptrs[static_cast<int>(type)][static_cast<int>(status)][statedim * index]
+               : fallback;
+  };
+
 }  // namespace Particle
 
 /*---------------------------------------------------------------------------*/

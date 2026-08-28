@@ -162,27 +162,27 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_contr
     const Mat::PAR::ParticleMaterialSPHFluid* material_j = fluidmaterial_[static_cast<int>(type_j)];
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* dens_i = &dens[type_i_idx][status_i_idx][particle_i];
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* cfg_i = &cfg[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* dens_i = Particle::bundle_state_ptrs_index(dens, type_i, status_i, particle_i);
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    const double* cfg_i =
+        Particle::bundle_state_ptrs_index(cfg, type_i, status_i, particle_i, statedim);
     const double* temp_i =
-        temp[type_i_idx][status_i_idx] ? &temp[type_i_idx][status_i_idx][particle_i] : nullptr;
-    double* acc_i = &acc[type_i_idx][status_i_idx][particle_i * statedim];
+        Particle::bundle_state_ptrs_index(temp, nullptr, type_i, status_i, particle_i);
+    double* acc_i = Particle::bundle_state_ptrs_index(acc, type_i, status_i, particle_i, statedim);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* rad_j = &rad[type_j_idx][status_j_idx][particle_j];
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
-    const double* dens_j = &dens[type_j_idx][status_j_idx][particle_j];
-    const double* vel_j = &vel[type_j_idx][status_j_idx][particle_j * statedim];
-    const double* cfg_j = &cfg[type_j_idx][status_j_idx][particle_j * statedim];
+    const double* rad_j = Particle::bundle_state_ptrs_index(rad, type_j, status_j, particle_j);
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
+    const double* dens_j = Particle::bundle_state_ptrs_index(dens, type_j, status_j, particle_j);
+    const double* vel_j =
+        Particle::bundle_state_ptrs_index(vel, type_j, status_j, particle_j, statedim);
+    const double* cfg_j =
+        Particle::bundle_state_ptrs_index(cfg, type_j, status_j, particle_j, statedim);
     const double* temp_j =
-        temp[type_j_idx][status_j_idx] ? &temp[type_j_idx][status_j_idx][particle_j] : nullptr;
-    double* acc_j = &acc[type_j_idx][status_j_idx][particle_j * statedim];
+        Particle::bundle_state_ptrs_index(temp, nullptr, type_j, status_j, particle_j);
+    double* acc_j = Particle::bundle_state_ptrs_index(acc, type_j, status_j, particle_j, statedim);
 
     // get smoothing length
     const double h_i = kernel_->smoothing_length(rad_i[0]);
@@ -302,26 +302,25 @@ void Particle::SPHInterfaceViscosity::compute_interface_viscosity_particle_bound
         equationofstatebundle_->get_ptr_to_specific_equation_of_state(type_i);
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* dens_i = &dens[type_i_idx][status_i_idx][particle_i];
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* cfg_i = &cfg[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* dens_i = Particle::bundle_state_ptrs_index(dens, type_i, status_i, particle_i);
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    const double* cfg_i =
+        Particle::bundle_state_ptrs_index(cfg, type_i, status_i, particle_i, statedim);
     const double* temp_i =
-        temp[type_i_idx][status_i_idx] ? &temp[type_i_idx][status_i_idx][particle_i] : nullptr;
+        Particle::bundle_state_ptrs_index(temp, nullptr, type_i, status_i, particle_i);
 
     double* acc_i = nullptr;
     if (status_i == ParticleStatus::Owned)
-      acc_i = &acc[type_i_idx][status_i_idx][particle_i * statedim];
+      acc_i = Particle::bundle_state_ptrs_index(acc, type_i, status_i, particle_i, statedim);
 
     // get pointers to boundary particle states
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
-    const double* press_j = &bpress[type_j_idx][status_j_idx][particle_j];
-    const double* vel_j = &bvel[type_j_idx][status_j_idx][particle_j * statedim];
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
+    const double* press_j = Particle::bundle_state_ptrs_index(bpress, type_j, status_j, particle_j);
+    const double* vel_j =
+        Particle::bundle_state_ptrs_index(bvel, type_j, status_j, particle_j, statedim);
 
     double temp_dens(0.0);
     temp_dens = equationofstate_i->pressure_to_density(press_j[0], material_i->initDensity_);

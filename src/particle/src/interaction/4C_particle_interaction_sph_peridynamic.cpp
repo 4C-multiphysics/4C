@@ -232,19 +232,23 @@ void Particle::SPHPeridynamic::init_peridynamic_bondlist()
 
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* pdbodyid_i = &pdbodyid[type_i_idx][status_i_idx][particle_i];
-    double* initialconnectedbonds_i = &initialconnectedbonds[type_i_idx][status_i_idx][particle_i];
-    double* currentconnectedbonds_i = &currentconnectedbonds[type_i_idx][status_i_idx][particle_i];
+    const double* pos_i =
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
+    const double* pdbodyid_i =
+        Particle::bundle_state_ptrs_index(pdbodyid, type_i, status_i, particle_i);
+    double* initialconnectedbonds_i =
+        Particle::bundle_state_ptrs_index(initialconnectedbonds, type_i, status_i, particle_i);
+    double* currentconnectedbonds_i =
+        Particle::bundle_state_ptrs_index(currentconnectedbonds, type_i, status_i, particle_i);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* pos_j = &pos[type_j_idx][status_j_idx][particle_j * statedim];
-    const double* pdbodyid_j = &pdbodyid[type_j_idx][status_j_idx][particle_j];
-    double* initialconnectedbonds_j = &initialconnectedbonds[type_j_idx][status_j_idx][particle_j];
-    double* currentconnectedbonds_j = &currentconnectedbonds[type_j_idx][status_j_idx][particle_j];
+    const double* pos_j =
+        Particle::bundle_state_ptrs_index(pos, type_j, status_j, particle_j, statedim);
+    const double* pdbodyid_j =
+        Particle::bundle_state_ptrs_index(pdbodyid, type_j, status_j, particle_j);
+    double* initialconnectedbonds_j =
+        Particle::bundle_state_ptrs_index(initialconnectedbonds, type_j, status_j, particle_j);
+    double* currentconnectedbonds_j =
+        Particle::bundle_state_ptrs_index(currentconnectedbonds, type_j, status_j, particle_j);
 
     // vector from particle i to j
     double r_ji[3];
@@ -350,27 +354,27 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
     std::tie(type_j, status_j, particle_j, globalid_j) = particlepair.second;
 
     //  get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* ref_pos_i = &ref_pos[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* young_i = &young[type_i_idx][status_i_idx][particle_i];
-    double* force_i = force[type_i_idx][status_i_idx]
-                          ? &force[type_i_idx][status_i_idx][particle_i * statedim]
-                          : nullptr;
-    const double* critical_stretch_i = &critical_stretch[type_i_idx][status_i_idx][particle_i];
+    const double* ref_pos_i =
+        Particle::bundle_state_ptrs_index(ref_pos, type_i, status_i, particle_i, statedim);
+    const double* pos_i =
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
+    const double* young_i = Particle::bundle_state_ptrs_index(young, type_i, status_i, particle_i);
+    double* force_i =
+        Particle::bundle_state_ptrs_index(force, nullptr, type_i, status_i, particle_i, statedim);
+    const double* critical_stretch_i =
+        Particle::bundle_state_ptrs_index(critical_stretch, type_i, status_i, particle_i);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* ref_pos_j = &ref_pos[type_j_idx][status_j_idx][particle_j * statedim];
-    const double* pos_j = &pos[type_j_idx][status_j_idx][particle_j * statedim];
-    const double* young_j = &young[type_j_idx][status_j_idx][particle_j];
+    const double* ref_pos_j =
+        Particle::bundle_state_ptrs_index(ref_pos, type_j, status_j, particle_j, statedim);
+    const double* pos_j =
+        Particle::bundle_state_ptrs_index(pos, type_j, status_j, particle_j, statedim);
+    const double* young_j = Particle::bundle_state_ptrs_index(young, type_j, status_j, particle_j);
     double* force_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      force_j = force[type_j_idx][status_j_idx]
-                    ? &force[type_j_idx][status_j_idx][particle_j * statedim]
-                    : nullptr;
-    const double* critical_stretch_j = &critical_stretch[type_j_idx][status_j_idx][particle_j];
+      force_j =
+          Particle::bundle_state_ptrs_index(force, nullptr, type_j, status_j, particle_j, statedim);
+    const double* critical_stretch_j =
+        Particle::bundle_state_ptrs_index(critical_stretch, type_j, status_j, particle_j);
 
     // calculate the bond between two particles
     double xi[3];
@@ -431,9 +435,9 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
     else
     {
       double* currentconnectedbonds_i =
-          &currentconnectedbonds[type_i_idx][status_i_idx][particle_i];
+          Particle::bundle_state_ptrs_index(currentconnectedbonds, type_i, status_i, particle_i);
       double* currentconnectedbonds_j =
-          &currentconnectedbonds[type_j_idx][status_j_idx][particle_j];
+          Particle::bundle_state_ptrs_index(currentconnectedbonds, type_j, status_j, particle_j);
 
       currentconnectedbonds_i[0] -= 1.0;
       currentconnectedbonds_j[0] -= 1.0;
@@ -466,21 +470,17 @@ void Particle::SPHPeridynamic::compute_interaction_forces() const
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    double* force_i = force[type_i_idx][status_i_idx]
-                          ? &force[type_i_idx][status_i_idx][particle_i * statedim]
-                          : nullptr;
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    double* force_i =
+        Particle::bundle_state_ptrs_index(force, nullptr, type_i, status_i, particle_i, statedim);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* vel_j = &vel[type_j_idx][status_j_idx][particle_j * statedim];
+    const double* vel_j =
+        Particle::bundle_state_ptrs_index(vel, type_j, status_j, particle_j, statedim);
     double* force_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      force_j = force[type_j_idx][status_j_idx]
-                    ? &force[type_j_idx][status_j_idx][particle_j * statedim]
-                    : nullptr;
+      force_j =
+          Particle::bundle_state_ptrs_index(force, nullptr, type_j, status_j, particle_j, statedim);
 
     // compute normal gap and rate of normal gap
     const double gap = particlepair.gap_;

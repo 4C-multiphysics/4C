@@ -263,44 +263,38 @@ void Particle::SPHMomentum::momentum_equation_particle_contribution() const
     const Mat::PAR::ParticleMaterialSPHFluid* material_j = fluidmaterial_[static_cast<int>(type_j)];
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* dens_i = &dens[type_i_idx][status_i_idx][particle_i];
-    const double* press_i = &press[type_i_idx][status_i_idx][particle_i];
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* mod_vel_i = mod_vel[type_i_idx][status_i_idx]
-                                  ? &mod_vel[type_i_idx][status_i_idx][particle_i * statedim]
-                                  : nullptr;
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* dens_i = Particle::bundle_state_ptrs_index(dens, type_i, status_i, particle_i);
+    const double* press_i = Particle::bundle_state_ptrs_index(press, type_i, status_i, particle_i);
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    const double* mod_vel_i =
+        Particle::bundle_state_ptrs_index(mod_vel, nullptr, type_i, status_i, particle_i, statedim);
     double* acc_i = nullptr;
     if (intfluidtypes_.contains(type_i))
-      acc_i = acc[type_i_idx][status_i_idx] ? &acc[type_i_idx][status_i_idx][particle_i * statedim]
-                                            : nullptr;
-    double* mod_acc_i = mod_acc[type_i_idx][status_i_idx]
-                            ? &mod_acc[type_i_idx][status_i_idx][particle_i * statedim]
-                            : nullptr;
+      acc_i =
+          Particle::bundle_state_ptrs_index(acc, nullptr, type_i, status_i, particle_i, statedim);
+    double* mod_acc_i =
+        Particle::bundle_state_ptrs_index(mod_acc, nullptr, type_i, status_i, particle_i, statedim);
 
     // get pointer to particle states
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* rad_j = &rad[type_j_idx][status_j_idx][particle_j];
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
-    const double* dens_j = &dens[type_j_idx][status_j_idx][particle_j];
-    const double* press_j = &press[type_j_idx][status_j_idx][particle_j];
-    const double* vel_j = &vel[type_j_idx][status_j_idx][particle_j * statedim];
-    const double* mod_vel_j = mod_vel[type_j_idx][status_j_idx]
-                                  ? &mod_vel[type_j_idx][status_j_idx][particle_j * statedim]
-                                  : nullptr;
+    const double* rad_j = Particle::bundle_state_ptrs_index(rad, type_j, status_j, particle_j);
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
+    const double* dens_j = Particle::bundle_state_ptrs_index(dens, type_j, status_j, particle_j);
+    const double* press_j = Particle::bundle_state_ptrs_index(press, type_j, status_j, particle_j);
+    const double* vel_j =
+        Particle::bundle_state_ptrs_index(vel, type_j, status_j, particle_j, statedim);
+    const double* mod_vel_j =
+        Particle::bundle_state_ptrs_index(mod_vel, nullptr, type_j, status_j, particle_j, statedim);
     double* acc_j = nullptr;
     if (intfluidtypes_.contains(type_j) and status_j == ParticleStatus::Owned)
-      acc_j = acc[type_j_idx][status_j_idx] ? &acc[type_j_idx][status_j_idx][particle_j * statedim]
-                                            : nullptr;
+      acc_j =
+          Particle::bundle_state_ptrs_index(acc, nullptr, type_j, status_j, particle_j, statedim);
     double* mod_acc_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      mod_acc_j = mod_acc[type_j_idx][status_j_idx]
-                      ? &mod_acc[type_j_idx][status_j_idx][particle_j * statedim]
-                      : nullptr;
+      mod_acc_j = Particle::bundle_state_ptrs_index(
+          mod_acc, nullptr, type_j, status_j, particle_j, statedim);
 
     // evaluate specific coefficient
     double speccoeff_ij(0.0);
@@ -470,31 +464,27 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
         equationofstatebundle_->get_ptr_to_specific_equation_of_state(type_i);
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* dens_i = &dens[type_i_idx][status_i_idx][particle_i];
-    const double* press_i = &press[type_i_idx][status_i_idx][particle_i];
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* mod_vel_i = mod_vel[type_i_idx][status_i_idx]
-                                  ? &mod_vel[type_i_idx][status_i_idx][particle_i * statedim]
-                                  : nullptr;
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* dens_i = Particle::bundle_state_ptrs_index(dens, type_i, status_i, particle_i);
+    const double* press_i = Particle::bundle_state_ptrs_index(press, type_i, status_i, particle_i);
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    const double* mod_vel_i =
+        Particle::bundle_state_ptrs_index(mod_vel, nullptr, type_i, status_i, particle_i, statedim);
     double* acc_i = nullptr;
     if (status_i == ParticleStatus::Owned)
-      acc_i = &acc[type_i_idx][status_i_idx][particle_i * statedim];
+      acc_i = Particle::bundle_state_ptrs_index(acc, type_i, status_i, particle_i, statedim);
     double* mod_acc_i = nullptr;
     if (status_i == ParticleStatus::Owned)
-      mod_acc_i = mod_acc[type_i_idx][status_i_idx]
-                      ? &mod_acc[type_i_idx][status_i_idx][particle_i * statedim]
-                      : nullptr;
+      mod_acc_i = Particle::bundle_state_ptrs_index(
+          mod_acc, nullptr, type_i, status_i, particle_i, statedim);
 
     // get pointer to boundary particle states
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* mass_j = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* press_j = &bpress[type_j_idx][status_j_idx][particle_j];
-    const double* vel_j = &bvel[type_j_idx][status_j_idx][particle_j * statedim];
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* press_j = Particle::bundle_state_ptrs_index(bpress, type_j, status_j, particle_j);
+    const double* vel_j =
+        Particle::bundle_state_ptrs_index(bvel, type_j, status_j, particle_j, statedim);
 
     double temp_dens(0.0);
     temp_dens = equationofstate_i->pressure_to_density(press_j[0], material_i->initDensity_);
@@ -502,9 +492,8 @@ void Particle::SPHMomentum::momentum_equation_particle_boundary_contribution() c
 
     double* force_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      force_j = force[type_j_idx][status_j_idx]
-                    ? &force[type_j_idx][status_j_idx][particle_j * statedim]
-                    : nullptr;
+      force_j =
+          Particle::bundle_state_ptrs_index(force, nullptr, type_j, status_j, particle_j, statedim);
 
     // contribution from neighboring boundary particle j
     double acc_ij[3] = {0.0, 0.0, 0.0};
@@ -681,21 +670,19 @@ void Particle::SPHMomentum::momentum_equation_particle_wall_contribution() const
         equationofstatebundle_->get_ptr_to_specific_equation_of_state(type_i);
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* dens_i = &dens[type_i_idx][status_i_idx][particle_i];
-    const double* press_i = &press[type_i_idx][status_i_idx][particle_i];
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* mod_vel_i = mod_vel[type_i_idx][status_i_idx]
-                                  ? &mod_vel[type_i_idx][status_i_idx][particle_i * statedim]
-                                  : nullptr;
-    double* acc_i = &acc[type_i_idx][status_i_idx][particle_i * statedim];
-    double* mod_acc_i = mod_acc[type_i_idx][status_i_idx]
-                            ? &mod_acc[type_i_idx][status_i_idx][particle_i * statedim]
-                            : nullptr;
+    const double* pos_i =
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* dens_i = Particle::bundle_state_ptrs_index(dens, type_i, status_i, particle_i);
+    const double* press_i = Particle::bundle_state_ptrs_index(press, type_i, status_i, particle_i);
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    const double* mod_vel_i =
+        Particle::bundle_state_ptrs_index(mod_vel, nullptr, type_i, status_i, particle_i, statedim);
+    double* acc_i = Particle::bundle_state_ptrs_index(acc, type_i, status_i, particle_i, statedim);
+    double* mod_acc_i =
+        Particle::bundle_state_ptrs_index(mod_acc, nullptr, type_i, status_i, particle_i, statedim);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;
@@ -783,7 +770,8 @@ void Particle::SPHMomentum::momentum_equation_particle_wall_contribution() const
         ParticleUtils::vec_sub(r_kl_weighted, r_jk);
 
         // get pointer to virtual particle states
-        const double* mass_k = &mass[type_i_idx][status_i_idx][particle_i];
+        const double* mass_k =
+            Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
 
         const double temp_press_k = weightedpressure[particlewallpairindex] +
                                     ParticleUtils::vec_dot(r_kl_weighted,

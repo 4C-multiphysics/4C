@@ -122,23 +122,21 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_contribution() co
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
     const double* temp_i =
-        temp[type_i_idx][status_i_idx] ? &temp[type_i_idx][status_i_idx][particle_i] : nullptr;
-    double* acc_i = &acc[type_i_idx][status_i_idx][particle_i * statedim];
+        Particle::bundle_state_ptrs_index(temp, nullptr, type_i, status_i, particle_i);
+    double* acc_i = Particle::bundle_state_ptrs_index(acc, type_i, status_i, particle_i, statedim);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
-    const double* vel_j = &vel[type_j_idx][status_j_idx][particle_j * statedim];
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
+    const double* vel_j =
+        Particle::bundle_state_ptrs_index(vel, type_j, status_j, particle_j, statedim);
     const double* temp_j =
-        temp[type_j_idx][status_j_idx] ? &temp[type_j_idx][status_j_idx][particle_j] : nullptr;
+        Particle::bundle_state_ptrs_index(temp, nullptr, type_j, status_j, particle_j);
     double* acc_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      acc_j = &acc[type_j_idx][status_j_idx][particle_j * statedim];
+      acc_j = Particle::bundle_state_ptrs_index(acc, type_j, status_j, particle_j, statedim);
 
     // evaluate transition factor above reference temperature
     double tempfac_i = 0.0;
@@ -228,23 +226,21 @@ void Particle::SPHBarrierForce::compute_barrier_force_particle_boundary_contribu
     if (swapparticles) ParticleUtils::vec_scale(e_ij, -1.0);
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
     const double* temp_i =
-        temp[type_i_idx][status_i_idx] ? &temp[type_i_idx][status_i_idx][particle_i] : nullptr;
+        Particle::bundle_state_ptrs_index(temp, nullptr, type_i, status_i, particle_i);
 
     double* acc_i = nullptr;
     if (status_i == ParticleStatus::Owned)
-      acc_i = &acc[type_i_idx][status_i_idx][particle_i * statedim];
+      acc_i = Particle::bundle_state_ptrs_index(acc, type_i, status_i, particle_i, statedim);
 
     // get pointer to boundary particle states
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* vel_j = &vel[type_j_idx][status_j_idx][particle_j * statedim];
+    const double* vel_j =
+        Particle::bundle_state_ptrs_index(vel, type_j, status_j, particle_j, statedim);
     const double* temp_j =
-        temp[type_j_idx][status_j_idx] ? &temp[type_j_idx][status_j_idx][particle_j] : nullptr;
+        Particle::bundle_state_ptrs_index(temp, nullptr, type_j, status_j, particle_j);
 
     // evaluate transition factor above reference temperature
     double tempfac_i = 0.0;

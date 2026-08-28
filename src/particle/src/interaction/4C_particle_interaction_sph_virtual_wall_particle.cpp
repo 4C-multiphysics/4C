@@ -173,10 +173,9 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* rad_j = &rad[type_i_idx][status_i_idx][particle_i];
+    const double* pos_i =
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
+    const double* rad_j = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;
@@ -253,12 +252,13 @@ void Particle::SPHVirtualWallParticle::init_states_at_wall_contact_points(
       if (not allfluidtypes_.contains(type_k)) continue;
 
       // get pointers to particle states
-      const int type_k_idx = static_cast<int>(type_k);
-      const int status_k_idx = static_cast<int>(status_k);
-      const double* pos_k = &pos[type_k_idx][status_k_idx][particle_k * statedim];
-      const double* vel_k = &vel[type_k_idx][status_k_idx][particle_k * statedim];
-      const double* dens_k = &dens[type_k_idx][status_k_idx][particle_k];
-      const double* press_k = &press[type_k_idx][status_k_idx][particle_k];
+      const double* pos_k =
+          Particle::bundle_state_ptrs_index(pos, type_k, status_k, particle_k, statedim);
+      const double* vel_k =
+          Particle::bundle_state_ptrs_index(vel, type_k, status_k, particle_k, statedim);
+      const double* dens_k = Particle::bundle_state_ptrs_index(dens, type_k, status_k, particle_k);
+      const double* press_k =
+          Particle::bundle_state_ptrs_index(press, type_k, status_k, particle_k);
 
       // vector from particle k to wall contact point j
       double r_jk[3];

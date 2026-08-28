@@ -179,20 +179,14 @@ void Particle::SPHDensityBase::sum_weighted_mass_particle_contribution() const
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    double* denssum_i = denssum[type_i_idx][status_i_idx]
-                            ? &denssum[type_i_idx][status_i_idx][particle_i]
-                            : nullptr;
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    double* denssum_i =
+        Particle::bundle_state_ptrs_index(denssum, nullptr, type_i, status_i, particle_i);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
     double* denssum_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      denssum_j = denssum[type_j_idx][status_j_idx] ? &denssum[type_j_idx][status_j_idx][particle_j]
-                                                    : nullptr;
+      denssum_j = Particle::bundle_state_ptrs_index(denssum, nullptr, type_j, status_j, particle_j);
 
     // sum contribution of neighboring particle j
     if (denssum_i) denssum_i[0] += particlepair.Wij_ * mass_i[0];
@@ -232,11 +226,9 @@ void Particle::SPHDensityBase::sum_weighted_mass_particle_wall_contribution() co
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    double* denssum_i = &denssum[type_i_idx][status_i_idx][particle_i];
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    double* denssum_i = Particle::bundle_state_ptrs_index(denssum, type_i, status_i, particle_i);
 
     // compute vector from wall contact point j to particle i
     double r_ij[3];
@@ -372,27 +364,19 @@ void Particle::SPHDensityBase::sum_colorfield_particle_contribution() const
         particlematerial_->get_ptr_to_particle_mat_parameter(type_j);
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* dens_i = dens[type_i_idx][status_i_idx]
-                               ? &dens[type_i_idx][status_i_idx][particle_i]
-                               : &(material_j->initDensity_);
-    double* colorfield_i = colorfield[type_i_idx][status_i_idx]
-                               ? &colorfield[type_i_idx][status_i_idx][particle_i]
-                               : nullptr;
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* dens_i = Particle::bundle_state_ptrs_index(
+        dens, &(material_j->initDensity_), type_i, status_i, particle_i);
+    double* colorfield_i =
+        Particle::bundle_state_ptrs_index(colorfield, nullptr, type_i, status_i, particle_i);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
-    const double* dens_j = dens[type_j_idx][status_j_idx]
-                               ? &dens[type_j_idx][status_j_idx][particle_j]
-                               : &(material_i->initDensity_);
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
+    const double* dens_j = Particle::bundle_state_ptrs_index(
+        dens, &(material_i->initDensity_), type_j, status_j, particle_j);
     double* colorfield_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      colorfield_j = colorfield[type_j_idx][status_j_idx]
-                         ? &colorfield[type_j_idx][status_j_idx][particle_j]
-                         : nullptr;
+      colorfield_j =
+          Particle::bundle_state_ptrs_index(colorfield, nullptr, type_j, status_j, particle_j);
 
     // sum contribution of neighboring particle j
     if (colorfield_i) colorfield_i[0] += (particlepair.Wij_ / dens_j[0]) * mass_j[0];
@@ -435,13 +419,12 @@ void Particle::SPHDensityBase::sum_colorfield_particle_wall_contribution() const
         particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    double* colorfield_i = &colorfield[type_i_idx][status_i_idx][particle_i];
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    double* colorfield_i =
+        Particle::bundle_state_ptrs_index(colorfield, type_i, status_i, particle_i);
 
     // get pointer to virtual particle states
-    const double* mass_k = &mass[type_i_idx][status_i_idx][particle_i];
+    const double* mass_k = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
     const double* dens_k = &(material_i->initDensity_);
 
     // (current) volume of virtual particle k
@@ -549,32 +532,24 @@ void Particle::SPHDensityBase::continuity_equation_particle_contribution() const
         particlematerial_->get_ptr_to_particle_mat_parameter(type_j);
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* vel_i = mod_vel[type_i_idx][status_i_idx]
-                              ? &mod_vel[type_i_idx][status_i_idx][particle_i * statedim]
-                              : &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* dens_i = dens[type_i_idx][status_i_idx]
-                               ? &dens[type_i_idx][status_i_idx][particle_i]
-                               : &(material_i->initDensity_);
-    double* densdot_i = densdot[type_i_idx][status_i_idx]
-                            ? &densdot[type_i_idx][status_i_idx][particle_i]
-                            : nullptr;
+    const double* vel_i = Particle::bundle_state_ptrs_index(mod_vel,
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim), type_i,
+        status_i, particle_i, statedim);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* dens_i = Particle::bundle_state_ptrs_index(
+        dens, &(material_i->initDensity_), type_i, status_i, particle_i);
+    double* densdot_i =
+        Particle::bundle_state_ptrs_index(densdot, nullptr, type_i, status_i, particle_i);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* vel_j = mod_vel[type_j_idx][status_j_idx]
-                              ? &mod_vel[type_j_idx][status_j_idx][particle_j * statedim]
-                              : &vel[type_j_idx][status_j_idx][particle_j * statedim];
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
-    const double* dens_j = dens[type_j_idx][status_j_idx]
-                               ? &dens[type_j_idx][status_j_idx][particle_j]
-                               : &(material_j->initDensity_);
+    const double* vel_j = Particle::bundle_state_ptrs_index(mod_vel,
+        Particle::bundle_state_ptrs_index(vel, type_j, status_j, particle_j, statedim), type_j,
+        status_j, particle_j, statedim);
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
+    const double* dens_j = Particle::bundle_state_ptrs_index(
+        dens, &(material_j->initDensity_), type_j, status_j, particle_j);
     double* densdot_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      densdot_j = densdot[type_j_idx][status_j_idx] ? &densdot[type_j_idx][status_j_idx][particle_j]
-                                                    : nullptr;
+      densdot_j = Particle::bundle_state_ptrs_index(densdot, nullptr, type_j, status_j, particle_j);
 
     // relative velocity (use modified velocities in case of transport velocity formulation)
     double vel_ij[3];
@@ -638,14 +613,12 @@ void Particle::SPHDensityBase::continuity_equation_particle_wall_contribution() 
         particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* vel_i = mod_vel[type_i_idx][status_i_idx]
-                              ? &mod_vel[type_i_idx][status_i_idx][particle_i * statedim]
-                              : &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    const double* dens_i = &dens[type_i_idx][status_i_idx][particle_i];
-    double* densdot_i = &densdot[type_i_idx][status_i_idx][particle_i];
+    const double* vel_i = Particle::bundle_state_ptrs_index(mod_vel,
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim), type_i,
+        status_i, particle_i, statedim);
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* dens_i = Particle::bundle_state_ptrs_index(dens, type_i, status_i, particle_i);
+    double* densdot_i = Particle::bundle_state_ptrs_index(densdot, type_i, status_i, particle_i);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;
@@ -686,7 +659,7 @@ void Particle::SPHDensityBase::continuity_equation_particle_wall_contribution() 
     }
 
     // get pointer to virtual particle states
-    const double* mass_k = &mass[type_i_idx][status_i_idx][particle_i];
+    const double* mass_k = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
     const double* dens_k = &(material_i->initDensity_);
     const double* vel_k = vel_j.data();
 

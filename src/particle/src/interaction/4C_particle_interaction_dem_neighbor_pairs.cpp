@@ -92,17 +92,15 @@ void Particle::DEMNeighborPairs::evaluate_particle_pairs()
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
+    const double* pos_i =
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* pos_j = &pos[type_j_idx][status_j_idx][particle_j * statedim];
-    const double* rad_j = &rad[type_j_idx][status_j_idx][particle_j];
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
+    const double* pos_j =
+        Particle::bundle_state_ptrs_index(pos, type_j, status_j, particle_j, statedim);
+    const double* rad_j = Particle::bundle_state_ptrs_index(rad, type_j, status_j, particle_j);
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
 
     // vector from particle i to j
     double r_ji[3];
@@ -184,12 +182,11 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
 
     // get position of particle i
-    const Core::LinAlg::Matrix<3, 1> pos_i(&pos[type_i_idx][status_i_idx][particle_i * statedim]);
+    const Core::LinAlg::Matrix<3, 1> pos_i(
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim));
 
     // get pointer to column wall element
     Core::Elements::Element* ele = potentialneighbors.second;
@@ -282,9 +279,7 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs()
     std::tie(type_i, status_i, particle_i) = tuple_i;
 
     // get pointer to particle state
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
 
     // define tolerance dependent on the particle radius
     const double adaptedtol = 1.0e-7 * rad_i[0];
@@ -393,17 +388,15 @@ void Particle::DEMNeighborPairs::evaluate_particle_pairs_adhesion(const double& 
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
+    const double* pos_i =
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* pos_j = &pos[type_j_idx][status_j_idx][particle_j * statedim];
-    const double* rad_j = &rad[type_j_idx][status_j_idx][particle_j];
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
+    const double* pos_j =
+        Particle::bundle_state_ptrs_index(pos, type_j, status_j, particle_j, statedim);
+    const double* rad_j = Particle::bundle_state_ptrs_index(rad, type_j, status_j, particle_j);
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
 
     // vector from particle i to j
     double r_ji[3];
@@ -486,12 +479,11 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs_adhesion(
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
 
     // get position of particle i
-    const Core::LinAlg::Matrix<3, 1> pos_i(&pos[type_i_idx][status_i_idx][particle_i * statedim]);
+    const Core::LinAlg::Matrix<3, 1> pos_i(
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim));
 
     // get pointer to column wall element
     Core::Elements::Element* ele = potentialneighbors.second;
@@ -602,9 +594,7 @@ void Particle::DEMNeighborPairs::evaluate_particle_wall_pairs_adhesion(
     std::tie(type_i, status_i, particle_i) = tuple_i;
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
 
     // define tolerance dependent on the particle radius
     const double adaptedtol = 1.0e-7 * rad_i[0];

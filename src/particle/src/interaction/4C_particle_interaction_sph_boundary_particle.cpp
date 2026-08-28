@@ -148,11 +148,11 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
     if (boundarytypes_.contains(type_i))
     {
       // get pointer to particle states
-      const int type_j_idx = static_cast<int>(type_j);
-      const int status_j_idx = static_cast<int>(status_j);
-      const double* vel_j = &vel[type_j_idx][status_j_idx][particle_j * statedim];
-      const double* dens_j = &dens[type_j_idx][status_j_idx][particle_j];
-      const double* press_j = &press[type_j_idx][status_j_idx][particle_j];
+      const double* vel_j =
+          Particle::bundle_state_ptrs_index(vel, type_j, status_j, particle_j, statedim);
+      const double* dens_j = Particle::bundle_state_ptrs_index(dens, type_j, status_j, particle_j);
+      const double* press_j =
+          Particle::bundle_state_ptrs_index(press, type_j, status_j, particle_j);
 
       // sum contribution of neighboring particle j
       sumj_wij_[static_cast<int>(type_i)][particle_i] += particlepair.Wij_;
@@ -171,11 +171,11 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
     if (boundarytypes_.contains(type_j) and status_j == ParticleStatus::Owned)
     {
       // get pointer to particle states
-      const int type_i_idx = static_cast<int>(type_i);
-      const int status_i_idx = static_cast<int>(status_i);
-      const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-      const double* dens_i = &dens[type_i_idx][status_i_idx][particle_i];
-      const double* press_i = &press[type_i_idx][status_i_idx][particle_i];
+      const double* vel_i =
+          Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+      const double* dens_i = Particle::bundle_state_ptrs_index(dens, type_i, status_i, particle_i);
+      const double* press_i =
+          Particle::bundle_state_ptrs_index(press, type_i, status_i, particle_i);
 
       // sum contribution of neighboring particle i
       sumj_wij_[static_cast<int>(type_j)][particle_j] += particlepair.Wji_;
@@ -195,10 +195,9 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
   for (const auto& type_i : boundarytypes_)
   {
     // get container of owned particles
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(ParticleStatus::Owned);
+    ParticleStatus status_i = ParticleStatus::Owned;
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, ParticleStatus::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, status_i);
 
     // clear modified boundary particle states
     container_i->clear_state(ParticleState::BoundaryPressure);
@@ -216,8 +215,10 @@ void Particle::SPHBoundaryParticleAdami::init_boundary_particle_states(std::vect
       if (sumj_wij_[static_cast<int>(type_i)][particle_i] > 0.0)
       {
         // get pointers to particle states
-        const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-        const double* acc_i = &acc[type_i_idx][status_i_idx][particle_i * statedim];
+        const double* vel_i =
+            Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+        const double* acc_i =
+            Particle::bundle_state_ptrs_index(acc, type_i, status_i, particle_i, statedim);
         double* boundarypress_i = &boundarypress[particle_i];
         double* boundaryvel_i = &boundaryvel[particle_i * statedim];
 

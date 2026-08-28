@@ -247,28 +247,20 @@ void Particle::SPHTemperature::energy_equation() const
         thermomaterial_[static_cast<int>(type_j)];
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* dens_i = dens[type_i_idx][status_i_idx]
-                               ? &dens[type_i_idx][status_i_idx][particle_i]
-                               : &(basematerial_i->initDensity_);
-    const double* temp_i = &temp[type_i_idx][status_i_idx][particle_i];
-    double* tempdot_i = tempdot[type_i_idx][status_i_idx]
-                            ? &tempdot[type_i_idx][status_i_idx][particle_i]
-                            : nullptr;
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* dens_i = Particle::bundle_state_ptrs_index(
+        dens, &(basematerial_i->initDensity_), type_i, status_i, particle_i);
+    const double* temp_i = Particle::bundle_state_ptrs_index(temp, type_i, status_i, particle_i);
+    double* tempdot_i =
+        Particle::bundle_state_ptrs_index(tempdot, nullptr, type_i, status_i, particle_i);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
-    const double* dens_j = dens[type_j_idx][status_j_idx]
-                               ? &dens[type_j_idx][status_j_idx][particle_j]
-                               : &(basematerial_j->initDensity_);
-    const double* temp_j = &temp[type_j_idx][status_j_idx][particle_j];
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
+    const double* dens_j = Particle::bundle_state_ptrs_index(
+        dens, &(basematerial_j->initDensity_), type_j, status_j, particle_j);
+    const double* temp_j = Particle::bundle_state_ptrs_index(temp, type_j, status_j, particle_j);
     double* tempdot_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      tempdot_j = tempdot[type_j_idx][status_j_idx] ? &tempdot[type_j_idx][status_j_idx][particle_j]
-                                                    : nullptr;
+      tempdot_j = Particle::bundle_state_ptrs_index(tempdot, nullptr, type_j, status_j, particle_j);
 
     // thermal conductivities
     const double& k_i = thermomaterial_i->thermalConductivity_;
@@ -338,29 +330,21 @@ void Particle::SPHTemperature::temperature_gradient() const
         particlematerial_->get_ptr_to_particle_mat_parameter(type_j);
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    const double* dens_i = dens[type_i_idx][status_i_idx]
-                               ? &dens[type_i_idx][status_i_idx][particle_i]
-                               : &(basematerial_i->initDensity_);
-    const double* temp_i = &temp[type_i_idx][status_i_idx][particle_i];
-    double* tempgrad_i = tempgrad[type_i_idx][status_i_idx]
-                             ? &tempgrad[type_i_idx][status_i_idx][particle_i * statedim]
-                             : nullptr;
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    const double* dens_i = Particle::bundle_state_ptrs_index(
+        dens, &(basematerial_i->initDensity_), type_i, status_i, particle_i);
+    const double* temp_i = Particle::bundle_state_ptrs_index(temp, type_i, status_i, particle_i);
+    double* tempgrad_i = Particle::bundle_state_ptrs_index(
+        tempgrad, nullptr, type_i, status_i, particle_i, statedim);
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
-    const double* dens_j = dens[type_j_idx][status_j_idx]
-                               ? &dens[type_j_idx][status_j_idx][particle_j]
-                               : &(basematerial_j->initDensity_);
-    const double* temp_j = &temp[type_j_idx][status_j_idx][particle_j];
+    const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
+    const double* dens_j = Particle::bundle_state_ptrs_index(
+        dens, &(basematerial_j->initDensity_), type_j, status_j, particle_j);
+    const double* temp_j = Particle::bundle_state_ptrs_index(temp, type_j, status_j, particle_j);
     double* tempgrad_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      tempgrad_j = tempgrad[type_j_idx][status_j_idx]
-                       ? &tempgrad[type_j_idx][status_j_idx][particle_j * statedim]
-                       : nullptr;
+      tempgrad_j = Particle::bundle_state_ptrs_index(
+          tempgrad, nullptr, type_j, status_j, particle_j, statedim);
 
     const double temp_ji = temp_j[0] - temp_i[0];
 

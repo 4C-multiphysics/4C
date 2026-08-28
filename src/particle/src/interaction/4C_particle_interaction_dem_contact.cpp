@@ -401,35 +401,35 @@ void Particle::DEMContact::evaluate_particle_contact()
     const int* globalid_j = container_j->get_ptr_to_global_id(particle_j);
 
     // get pointers to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    double* force_i = &force[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    double* force_i =
+        Particle::bundle_state_ptrs_index(force, type_i, status_i, particle_i, statedim);
 
     const double* angvel_i = nullptr;
     double* moment_i = nullptr;
     if (contacttangential_ or contactrolling_)
     {
-      angvel_i = &angvel[type_i_idx][status_i_idx][particle_i * statedim];
-      moment_i = &moment[type_i_idx][status_i_idx][particle_i * statedim];
+      angvel_i = Particle::bundle_state_ptrs_index(angvel, type_i, status_i, particle_i, statedim);
+      moment_i = Particle::bundle_state_ptrs_index(moment, type_i, status_i, particle_i, statedim);
     }
 
-    const int type_j_idx = static_cast<int>(type_j);
-    const int status_j_idx = static_cast<int>(status_j);
-    const double* vel_j = &vel[type_j_idx][status_j_idx][particle_j * statedim];
-    const double* rad_j = &rad[type_j_idx][status_j_idx][particle_j];
+    const double* vel_j =
+        Particle::bundle_state_ptrs_index(vel, type_j, status_j, particle_j, statedim);
+    const double* rad_j = Particle::bundle_state_ptrs_index(rad, type_j, status_j, particle_j);
     double* force_j = nullptr;
     if (status_j == ParticleStatus::Owned)
-      force_j = &force[type_j_idx][status_j_idx][particle_j * statedim];
+      force_j = Particle::bundle_state_ptrs_index(force, type_j, status_j, particle_j, statedim);
 
     const double* angvel_j = nullptr;
     double* moment_j = nullptr;
     if (contacttangential_ or contactrolling_)
     {
-      angvel_j = &angvel[type_j_idx][status_j_idx][particle_j * statedim];
+      angvel_j = Particle::bundle_state_ptrs_index(angvel, type_j, status_j, particle_j, statedim);
       if (status_j == ParticleStatus::Owned)
-        moment_j = &moment[type_j_idx][status_j_idx][particle_j * statedim];
+        moment_j =
+            Particle::bundle_state_ptrs_index(moment, type_j, status_j, particle_j, statedim);
     }
 
     // compute vectors from particle i and j to contact point c
@@ -649,20 +649,21 @@ void Particle::DEMContact::evaluate_particle_wall_contact()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const int type_i_idx = static_cast<int>(type_i);
-    const int status_i_idx = static_cast<int>(status_i);
-    const double* pos_i = &pos[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* vel_i = &vel[type_i_idx][status_i_idx][particle_i * statedim];
-    const double* rad_i = &rad[type_i_idx][status_i_idx][particle_i];
-    const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-    double* force_i = &force[type_i_idx][status_i_idx][particle_i * statedim];
+    const double* pos_i =
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    double* force_i =
+        Particle::bundle_state_ptrs_index(force, type_i, status_i, particle_i, statedim);
 
     const double* angvel_i = nullptr;
     double* moment_i = nullptr;
     if (contacttangential_ or contactrolling_)
     {
-      angvel_i = &angvel[type_i_idx][status_i_idx][particle_i * statedim];
-      moment_i = &moment[type_i_idx][status_i_idx][particle_i * statedim];
+      angvel_i = Particle::bundle_state_ptrs_index(angvel, type_i, status_i, particle_i, statedim);
+      moment_i = Particle::bundle_state_ptrs_index(moment, type_i, status_i, particle_i, statedim);
     }
 
     // get pointer to column wall element

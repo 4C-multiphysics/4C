@@ -353,18 +353,16 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
       std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
       // get pointer to particle states
-      const int type_i_idx = static_cast<int>(type_i);
-      const int status_i_idx = static_cast<int>(status_i);
-      const double* mass_i = &mass[type_i_idx][status_i_idx][particle_i];
-      const double* dens_i = &dens[type_i_idx][status_i_idx][particle_i];
-      const double* press_i = &press[type_i_idx][status_i_idx][particle_i];
+      const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+      const double* dens_i = Particle::bundle_state_ptrs_index(dens, type_i, status_i, particle_i);
+      const double* press_i =
+          Particle::bundle_state_ptrs_index(press, type_i, status_i, particle_i);
 
       // get pointer to particle states
-      const int type_j_idx = static_cast<int>(type_j);
-      const int status_j_idx = static_cast<int>(status_j);
-      const double* mass_j = &mass[type_j_idx][status_j_idx][particle_j];
-      const double* dens_j = &dens[type_j_idx][status_j_idx][particle_j];
-      const double* press_j = &press[type_j_idx][status_j_idx][particle_j];
+      const double* mass_j = Particle::bundle_state_ptrs_index(mass, type_j, status_j, particle_j);
+      const double* dens_j = Particle::bundle_state_ptrs_index(dens, type_j, status_j, particle_j);
+      const double* press_j =
+          Particle::bundle_state_ptrs_index(press, type_j, status_j, particle_j);
 
       // evaluate contribution of neighboring particle j
       if (type_i == openboundaryphase_)
