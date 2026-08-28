@@ -15,6 +15,7 @@
 #include "4C_reduced_lung_input.hpp"
 
 #include <functional>
+#include <limits>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -26,6 +27,28 @@ namespace ReducedLung
 
 namespace ReducedLung::TerminalUnits
 {
+  /**
+   * @brief Effective reference volume of one terminal-unit element.
+   *
+   * Terminal-unit physics needs both the reference volume and its reciprocal, so both are kept
+   * together and computed once per element rather than at every call site.
+   */
+  struct ReferenceVolumeContext
+  {
+    ///< Effective reference volume.
+    double v0_eff = std::numeric_limits<double>::quiet_NaN();
+    ///< Reciprocal of the effective reference volume, cached because assembly mostly needs it.
+    double inv_v0_eff = std::numeric_limits<double>::quiet_NaN();
+  };
+
+  /**
+   * @brief Assemble a reference volume context from the reference volume.
+   */
+  [[nodiscard]] inline ReferenceVolumeContext make_reference_volume_context(const double v0_eff)
+  {
+    return {.v0_eff = v0_eff, .inv_v0_eff = 1.0 / v0_eff};
+  }
+
   /**
    * @brief Shared geometric, equation, and state data for a block of terminal units.
    *
@@ -53,10 +76,10 @@ namespace ReducedLung::TerminalUnits
     std::vector<int> lid_p2;
     ///< Local ids in the locally-relevant dof map for q.
     std::vector<int> lid_q;
-    ///< Current terminal-unit volumes.
+    ///< Current physical terminal-unit gas volumes.
     std::vector<double> volume_v;
-    ///< Reference terminal-unit volumes.
-    std::vector<double> reference_volume_v0;
+    ///< Effective reference volume of each element, consumed by elasticity and rheology.
+    std::vector<ReferenceVolumeContext> reference_volume_context;
 
     /**
      * @brief Number of terminal-unit elements in this model block.

@@ -80,7 +80,8 @@ namespace ReducedLung
       const double radius = ref_length;
       const double volume = (4.0 / 3.0) * std::numbers::pi * radius * radius * radius;
       model.data.volume_v.push_back(volume);
-      model.data.reference_volume_v0.push_back(volume);
+      model.data.reference_volume_context.push_back(
+          TerminalUnits::make_reference_volume_context(volume));
 
       TerminalUnits::Rheology::append_model_parameters(model.rheological_model, global_element_id,
           parameters.lung_tree.terminal_units.rheological_model);

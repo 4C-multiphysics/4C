@@ -28,10 +28,11 @@ namespace ReducedLung::TerminalUnits::Elasticity
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
+        const double inv_v0 = data.reference_volume_context[i].inv_v0_eff;
         linear_elastic_model.elastic_pressure_p_el[i] =
             linear_elastic_model.elasticity_E[i] *
-            ((data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]) /
-                    data.reference_volume_v0[i] -
+            ((data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]) *
+                    inv_v0 -
                 1);
       }
       return linear_elastic_model.elastic_pressure_p_el;
@@ -47,7 +48,7 @@ namespace ReducedLung::TerminalUnits::Elasticity
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
         const double v0_over_vi =
-            data.reference_volume_v0[i] /
+            data.reference_volume_context[i].v0_eff /
             (data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]);
         ogden_hyperelastic_model.elastic_pressure_p_el[i] =
             ogden_hyperelastic_model.bulk_modulus_kappa[i] /
@@ -66,7 +67,7 @@ namespace ReducedLung::TerminalUnits::Elasticity
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
         linear_elastic_model.elastic_pressure_grad_dp_el[i] =
-            linear_elastic_model.elasticity_E[i] * dt / data.reference_volume_v0[i];
+            linear_elastic_model.elasticity_E[i] * dt * data.reference_volume_context[i].inv_v0_eff;
       }
       return linear_elastic_model.elastic_pressure_grad_dp_el;
     }
@@ -80,13 +81,13 @@ namespace ReducedLung::TerminalUnits::Elasticity
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
+        const double v0 = data.reference_volume_context[i].v0_eff;
         const double v0_over_vi =
-            data.reference_volume_v0[i] /
+            v0 /
             (data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]);
         ogden_hyperelastic_model.elastic_pressure_grad_dp_el[i] =
             ogden_hyperelastic_model.bulk_modulus_kappa[i] * dt /
-            (ogden_hyperelastic_model.nonlinear_stiffening_beta[i] * data.reference_volume_v0[i]) *
-            v0_over_vi * v0_over_vi *
+            (ogden_hyperelastic_model.nonlinear_stiffening_beta[i] * v0) * v0_over_vi * v0_over_vi *
             ((ogden_hyperelastic_model.nonlinear_stiffening_beta[i] + 1) *
                     std::pow(v0_over_vi, ogden_hyperelastic_model.nonlinear_stiffening_beta[i]) -
                 1);

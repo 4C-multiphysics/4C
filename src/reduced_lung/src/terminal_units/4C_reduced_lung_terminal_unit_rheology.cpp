@@ -29,13 +29,13 @@ namespace ReducedLung::TerminalUnits::Rheology
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
+        const double inv_v0 = data.reference_volume_context[i].inv_v0_eff;
         const double kelvin_voigt_residual =
             (locally_relevant_dofs.local_values_as_span()[data.lid_p1[i]] -
                 locally_relevant_dofs.local_values_as_span()[data.lid_p2[i]] -
                 elastic_pressure_p_el[i] -
                 kelvin_voigt_model.viscosity_eta[i] *
-                    locally_relevant_dofs.local_values_as_span()[data.lid_q[i]] /
-                    data.reference_volume_v0[i]);
+                    locally_relevant_dofs.local_values_as_span()[data.lid_q[i]] * inv_v0);
         target.replace_local_value(data.local_row_id[i], kelvin_voigt_residual);
       }
     }
@@ -50,6 +50,7 @@ namespace ReducedLung::TerminalUnits::Rheology
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
+        const double inv_v0 = data.reference_volume_context[i].inv_v0_eff;
         const double four_element_maxwell_residual =
             (locally_relevant_dofs.local_values_as_span()[data.lid_p1[i]] -
                 locally_relevant_dofs.local_values_as_span()[data.lid_p2[i]] -
@@ -58,9 +59,8 @@ namespace ReducedLung::TerminalUnits::Rheology
                     (four_element_maxwell_model.elasticity_E_m[i] * dt *
                         four_element_maxwell_model.viscosity_eta_m[i]) /
                         (four_element_maxwell_model.elasticity_E_m[i] * dt +
-                            four_element_maxwell_model.viscosity_eta_m[i])) /
-                    data.reference_volume_v0[i] *
-                    locally_relevant_dofs.local_values_as_span()[data.lid_q[i]] -
+                            four_element_maxwell_model.viscosity_eta_m[i])) *
+                    inv_v0 * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]] -
                 four_element_maxwell_model.viscosity_eta_m[i] /
                     (four_element_maxwell_model.elasticity_E_m[i] * dt +
                         four_element_maxwell_model.viscosity_eta_m[i]) *
@@ -82,8 +82,8 @@ namespace ReducedLung::TerminalUnits::Rheology
         {
           std::array<int, 3> column_indices{data.lid_p1[i], data.lid_p2[i], data.lid_q[i]};
           std::array<double, 3> values{1.0, -1.0,
-              -elastic_pressure_grad_dp_el[i] -
-                  kelvin_voigt_model.viscosity_eta[i] / data.reference_volume_v0[i]};
+              -elastic_pressure_grad_dp_el[i] - kelvin_voigt_model.viscosity_eta[i] *
+                                                    data.reference_volume_context[i].inv_v0_eff};
           target.insert_my_values(data.local_row_id[i], 3, values.data(), column_indices.data());
         }
       }
@@ -91,8 +91,9 @@ namespace ReducedLung::TerminalUnits::Rheology
       {
         for (size_t i = 0; i < data.number_of_elements(); i++)
         {
-          const double grad_q = -elastic_pressure_grad_dp_el[i] -
-                                kelvin_voigt_model.viscosity_eta[i] / data.reference_volume_v0[i];
+          const double grad_q =
+              -elastic_pressure_grad_dp_el[i] -
+              kelvin_voigt_model.viscosity_eta[i] * data.reference_volume_context[i].inv_v0_eff;
           target.replace_my_values(data.local_row_id[i], 1, &grad_q, &data.lid_q[i]);
         }
       }
@@ -116,8 +117,8 @@ namespace ReducedLung::TerminalUnits::Rheology
                       four_element_maxwell_model.elasticity_E_m[i] * dt *
                           four_element_maxwell_model.viscosity_eta_m[i] /
                           (four_element_maxwell_model.elasticity_E_m[i] * dt +
-                              four_element_maxwell_model.viscosity_eta_m[i])) /
-                      data.reference_volume_v0[i]};
+                              four_element_maxwell_model.viscosity_eta_m[i])) *
+                      data.reference_volume_context[i].inv_v0_eff};
           target.insert_my_values(data.local_row_id[i], 3, values.data(), column_indices.data());
         }
       }
@@ -130,8 +131,8 @@ namespace ReducedLung::TerminalUnits::Rheology
                                     four_element_maxwell_model.elasticity_E_m[i] * dt *
                                         four_element_maxwell_model.viscosity_eta_m[i] /
                                         (four_element_maxwell_model.elasticity_E_m[i] * dt +
-                                            four_element_maxwell_model.viscosity_eta_m[i])) /
-                                    data.reference_volume_v0[i];
+                                            four_element_maxwell_model.viscosity_eta_m[i])) *
+                                    data.reference_volume_context[i].inv_v0_eff;
           target.replace_my_values(data.local_row_id[i], 1, &grad_q, &data.lid_q[i]);
         }
       }
@@ -292,8 +293,8 @@ namespace ReducedLung::TerminalUnits::Rheology
                     (model.elasticity_E_m[i] * dt + model.viscosity_eta_m[i]);
                 model.maxwell_pressure_p_m[i] +=
                     model.elasticity_E_m[i] * dt * model.viscosity_eta_m[i] /
-                    (model.elasticity_E_m[i] * dt + model.viscosity_eta_m[i]) /
-                    data.reference_volume_v0[i] *
+                    (model.elasticity_E_m[i] * dt + model.viscosity_eta_m[i]) *
+                    data.reference_volume_context[i].inv_v0_eff *
                     locally_relevant_dofs.local_values_as_span()[data.lid_q[i]];
               }
             };
