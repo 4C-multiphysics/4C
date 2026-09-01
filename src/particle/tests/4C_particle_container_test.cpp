@@ -319,6 +319,7 @@ namespace
       }
     }
     EXPECT_EQ(container_empty_->get_ptr_to_state(Particle::State::Velocity), nullptr);
+    EXPECT_EQ(container_empty_->get_ptr_to_state_writable(Particle::State::Velocity), nullptr);
   }
 
   TEST_F(ParticleContainerTest, TryGetPtrToState)
@@ -385,6 +386,7 @@ namespace
       }
     }
     EXPECT_EQ(container_empty_->try_get_ptr_to_state(Particle::State::Velocity), nullptr);
+    EXPECT_EQ(container_empty_->try_get_ptr_to_state_writable(Particle::State::Velocity), nullptr);
   }
 
   TEST_F(ParticleContainerTest, TryGetPtrToStateNotStored)
