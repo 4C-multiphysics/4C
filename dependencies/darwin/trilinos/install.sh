@@ -113,8 +113,8 @@ $CMAKE_COMMAND \
     -D ParMETIS_INCLUDE_DIRS:PATH="$DEP_DIR/parmetis/include" \
     -D ParMETIS_LIBRARY_DIRS:PATH="$DEP_DIR/parmetis/lib" \
   -D TPL_ENABLE_UMFPACK:BOOL=ON \
-    -D UMFPACK_INCLUDE_DIRS:FILEPATH="$DEP_DIR/suitesparse/include" \
-    -D UMFPACK_LIBRARY_DIRS:FILEPATH="$DEP_DIR/suitesparse/lib" \
+    -D UMFPACK_INCLUDE_DIRS:FILEPATH="$BREW_DIR/include/suitesparse" \
+    -D UMFPACK_LIBRARY_DIRS:FILEPATH="$BREW_DIR/lib" \
   -D TPL_ENABLE_SuperLUDist:BOOL=ON \
     -D SuperLUDist_INCLUDE_DIRS:PATH="$DEP_DIR/superlu_dist/include" \
     -D SuperLUDist_LIBRARY_DIRS:PATH="$DEP_DIR/superlu_dist/lib" \

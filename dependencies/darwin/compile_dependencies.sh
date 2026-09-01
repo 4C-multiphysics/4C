@@ -19,10 +19,6 @@ export CMAKE_POLICY_VERSION_MINIMUM=3.5
 cd dependencies/current/backtrace
 sh install.sh $DEP_DIR/libbacktrace
 #
-cd ..
-cd suitesparse
-sh install.sh $DEP_DIR/suitesparse
-#
 cd ../../darwin
 cd parmetis
 sh install.sh $DEP_DIR/parmetis
