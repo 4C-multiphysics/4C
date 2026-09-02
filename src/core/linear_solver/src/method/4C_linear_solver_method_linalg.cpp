@@ -237,40 +237,14 @@ int Core::LinAlg::Solver::solve(std::shared_ptr<Core::LinAlg::SparseOperator> ma
 
 /*------------------------------------------------------------------------------------------------*
  *------------------------------------------------------------------------------------------------*/
-Teuchos::ParameterList translate_four_c_to_ifpack(const Teuchos::ParameterList& inparams)
+Teuchos::ParameterList set_preconditioner_config(const Teuchos::ParameterList& inparams)
 {
-  Teuchos::ParameterList ifpacklist;
+  Teuchos::ParameterList preconditioner_list;
 
   auto xmlfile = inparams.get<std::optional<std::filesystem::path>>("PRECONDITIONER_XML_FILE");
-  if (xmlfile) ifpacklist.set("PRECONDITIONER_XML_FILE", xmlfile->string());
+  if (xmlfile) preconditioner_list.set("PRECONDITIONER_XML_FILE", xmlfile->string());
 
-  return ifpacklist;
-}
-
-/*------------------------------------------------------------------------------------------------*
- *------------------------------------------------------------------------------------------------*/
-Teuchos::ParameterList translate_four_c_to_muelu(
-    const Teuchos::ParameterList& inparams, Teuchos::ParameterList* azlist)
-{
-  Teuchos::ParameterList muelulist;
-
-  auto xmlfile = inparams.get<std::optional<std::filesystem::path>>("PRECONDITIONER_XML_FILE");
-  if (xmlfile) muelulist.set("PRECONDITIONER_XML_FILE", xmlfile->string());
-
-  return muelulist;
-}
-
-/*------------------------------------------------------------------------------------------------*
- *------------------------------------------------------------------------------------------------*/
-Teuchos::ParameterList translate_four_c_to_teko(
-    const Teuchos::ParameterList& inparams, Teuchos::ParameterList* azlist)
-{
-  Teuchos::ParameterList tekolist;
-
-  auto xmlfile = inparams.get<std::optional<std::filesystem::path>>("PRECONDITIONER_XML_FILE");
-  if (xmlfile) tekolist.set("PRECONDITIONER_XML_FILE", xmlfile->string());
-
-  return tekolist;
+  return preconditioner_list;
 }
 
 /*------------------------------------------------------------------------------------------------*
@@ -369,18 +343,18 @@ Teuchos::ParameterList translate_four_c_to_belos(const Teuchos::ParameterList& i
   if (azprectype == Core::LinearSolver::PreconditionerType::ilu)
   {
     Teuchos::ParameterList& ifpacklist = outparams.sublist("IFPACK Parameters");
-    ifpacklist = translate_four_c_to_ifpack(inparams);
+    ifpacklist = set_preconditioner_config(inparams);
   }
   // set parameters for multigrid if used
   if (azprectype == Core::LinearSolver::PreconditionerType::multigrid_muelu)
   {
     Teuchos::ParameterList& muelulist = outparams.sublist("MueLu Parameters");
-    muelulist = translate_four_c_to_muelu(inparams, &beloslist);
+    muelulist = set_preconditioner_config(inparams);
   }
   if (azprectype == Core::LinearSolver::PreconditionerType::block_teko)
   {
     Teuchos::ParameterList& tekolist = outparams.sublist("Teko Parameters");
-    tekolist = translate_four_c_to_teko(inparams, &beloslist);
+    tekolist = set_preconditioner_config(inparams);
   }
   if (azprectype == Core::LinearSolver::PreconditionerType::multigrid_nxn)
   {
