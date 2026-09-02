@@ -11,12 +11,8 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-/*---------------------------------------------------------------------------*
- | definitions                                                               |
- *---------------------------------------------------------------------------*/
-void Particle::ParticleGhostEntry::pack(Particle::Type type, int globalid, int bingid,
-    int ownedindex, const Core::Communication::PackBuffer& prepacked_states,
-    std::vector<char>& sendbuffer)
+void Particle::ParticleGhostEntry::pack(ParticleType type, int globalid, int bingid, int ownedindex,
+    const Core::Communication::PackBuffer& prepacked_states, std::vector<char>& sendbuffer)
 {
   // pack type, global id, bin id and owned index header
   Core::Communication::PackBuffer header;
@@ -38,7 +34,7 @@ Particle::ParticleGhostEntry Particle::ParticleGhostEntry::unpack(
   // unpack particle type
   int type_idx;
   extract_from_pack(buffer, type_idx);
-  entry.type = static_cast<Particle::Type>(type_idx);
+  entry.type = static_cast<ParticleType>(type_idx);
 
   // unpack global id, bin id and owned index
   extract_from_pack(buffer, entry.globalid);

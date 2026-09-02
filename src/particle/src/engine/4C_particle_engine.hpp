@@ -666,12 +666,11 @@ namespace Particle
      * ParticleObject creation.
      *
      *
-     * \param[in]  sdata         send buffers indexed by target processor rank
-     * \param[out] directghosting direct ghosting information
+     * \param[in] sdata send buffers indexed by target processor rank
+     * \return directghosting direct ghosting information
      */
-    void communicate_and_insert_ghost_particles(const std::map<int, std::vector<char>>& sdata,
-        std::map<int, std::map<Particle::Type, std::map<int, std::pair<int, int>>>>&
-            directghosting);
+    std::map<int, std::map<Particle::Type, std::map<int, std::pair<int, int>>>>
+    communicate_and_insert_ghost_particles(const std::map<int, std::vector<char>>& sdata);
 
     /*!
      * \brief remove particles from containers

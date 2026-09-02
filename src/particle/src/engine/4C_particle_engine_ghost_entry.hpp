@@ -8,9 +8,6 @@
 #ifndef FOUR_C_PARTICLE_ENGINE_GHOST_ENTRY_HPP
 #define FOUR_C_PARTICLE_ENGINE_GHOST_ENTRY_HPP
 
-/*---------------------------------------------------------------------------*
- | headers                                                                   |
- *---------------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
 #include "4C_particle_engine_typedefs.hpp"
@@ -19,18 +16,13 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-/*---------------------------------------------------------------------------*
- | forward declarations                                                      |
- *---------------------------------------------------------------------------*/
+// Forwards declarations
 namespace Core::Communication
 {
   class PackBuffer;
   class UnpackBuffer;
 }  // namespace Core::Communication
 
-/*---------------------------------------------------------------------------*
- | class declarations                                                        |
- *---------------------------------------------------------------------------*/
 namespace Particle
 {
   /*!
@@ -45,7 +37,7 @@ namespace Particle
   struct ParticleGhostEntry
   {
     //! particle type
-    Particle::Type type;
+    ParticleType type;
 
     //! global id of the particle
     int globalid;
@@ -74,7 +66,7 @@ namespace Particle
      * \param[in]  prepacked_states pre-packed particle states
      * \param[out] sendbuffer       send buffer of the target processor to append to
      */
-    static void pack(Particle::Type type, int globalid, int bingid, int ownedindex,
+    static void pack(ParticleType type, int globalid, int bingid, int ownedindex,
         const Core::Communication::PackBuffer& prepacked_states, std::vector<char>& sendbuffer);
 
     /*!

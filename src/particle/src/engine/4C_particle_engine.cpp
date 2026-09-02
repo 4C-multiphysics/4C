@@ -332,8 +332,6 @@ void Particle::ParticleEngine::ghost_particles()
 {
   TEUCHOS_FUNC_TIME_MONITOR("Particle::ParticleEngine::GhostParticles");
 
-  std::map<int, std::map<Particle::Type, std::map<int, std::pair<int, int>>>> directghosting;
-
   // clear all containers of ghosted particles
   particlecontainerbundle_->clear_all_containers_of_specific_status(Status::Ghosted);
 
@@ -341,7 +339,7 @@ void Particle::ParticleEngine::ghost_particles()
   const auto sdata = pack_particles_to_be_ghosted();
 
   // communicate ghost data using cached comm graph and insert into containers (no Allreduce)
-  communicate_and_insert_ghost_particles(sdata, directghosting);
+  const auto directghosting = communicate_and_insert_ghost_particles(sdata);
 
   // communicate and build map for direct ghosting
   communicate_direct_ghosting_map(directghosting);
@@ -1920,10 +1918,12 @@ void Particle::ParticleEngine::insert_owned_particles(
   invalidate_particle_safety_flags();
 }
 
-void Particle::ParticleEngine::communicate_and_insert_ghost_particles(
-    const std::map<int, std::vector<char>>& sdata,
-    std::map<int, std::map<Particle::Type, std::map<int, std::pair<int, int>>>>& directghosting)
+std::map<int, std::map<Particle::Type, std::map<int, std::pair<int, int>>>>
+Particle::ParticleEngine::communicate_and_insert_ghost_particles(
+    const std::map<int, std::vector<char>>& sdata)
 {
+  std::map<int, std::map<Particle::Type, std::map<int, std::pair<int, int>>>> directghosting;
+
   // communicate ghost particle data using the cached comm graph derived from bin ghosting
   // topology (no MPI_Allreduce)
   const std::map<int, std::vector<char>> rdata =
@@ -1950,6 +1950,8 @@ void Particle::ParticleEngine::communicate_and_insert_ghost_particles(
       container->add_particle(ghostedindex, entry.globalid, entry.states);
 
       // add index relating (owned and ghosted) particles to col bins
+      FOUR_C_ASSERT_ALWAYS(entry.bingid >= 0,
+          "received ghosted particle contains no information about its bin gid!");
       particlestobins_[binning_->bincolmap_->lid(entry.bingid)].push_back(
           std::make_pair(entry.type, ghostedindex));
 
@@ -1966,6 +1968,8 @@ void Particle::ParticleEngine::communicate_and_insert_ghost_particles(
   validparticleneighbors_ = false;
   validglobalidtolocalindex_ = false;
   validdirectghosting_ = false;
+
+  return directghosting;
 }
 
 void Particle::ParticleEngine::remove_particles_from_containers(
