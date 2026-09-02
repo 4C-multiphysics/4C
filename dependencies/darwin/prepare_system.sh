@@ -24,6 +24,7 @@ sudo ln -sf $(brew --prefix gcc@14)/bin/gfortran-14 /opt/homebrew/bin/gfortran
 brew install jpeg-turbo
 ls -l /opt/homebrew/lib/libjpeg.dylib
 brew install openmpi hdf5 llvm boost cln metis netcdf lld scalapack fftw vtk gmsh
+brew install suite-sparse
 echo "DYLD_LIBRARY_PATH=/opt/homebrew/lib:${DYLD_LIBRARY_PATH}" >> $GITHUB_ENV
 echo "HOME=$HOME" >> $GITHUB_ENV
 
