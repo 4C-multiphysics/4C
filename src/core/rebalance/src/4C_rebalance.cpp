@@ -48,7 +48,7 @@ do_rebalance_discretization(const Core::LinAlg::Graph& graph,
     case Core::Rebalance::RebalanceType::multijagged:
     {
       if (!Core::Communication::my_mpi_rank(comm))
-        std::cout << "Redistributing using recursive coordinate bisection .........\n";
+        std::cout << "Redistributing using spatial coordinates .........\n";
 
       rebalanceParams.set("algorithm", "multijagged");
       rebalanceParams.set("debug_level", "no_status");
