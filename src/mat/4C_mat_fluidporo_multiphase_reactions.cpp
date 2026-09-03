@@ -23,14 +23,9 @@ FOUR_C_NAMESPACE_OPEN
 Mat::PAR::FluidPoroMultiPhaseReactions::FluidPoroMultiPhaseReactions(
     const Core::Mat::PAR::Parameter::Data& matdata)
     : FluidPoroMultiPhase(matdata),
-      numreac_((matdata.parameters.get<int>("NUMREAC"))),
+      numreac_(static_cast<int>(matdata.parameters.get<std::vector<int>>("REACIDS").size())),
       reacids_((matdata.parameters.get<std::vector<int>>("REACIDS")))
 {
-  // check if sizes fit
-  if (numreac_ != (int)reacids_.size())
-    FOUR_C_THROW("number of materials {} does not fit to size of material vector {}", nummat_,
-        reacids_.size());
-
   if (numreac_ < 1)
     FOUR_C_THROW("if you don't have reactions, use MAT_matlist instead of MAT_matlist_reactions!");
 
