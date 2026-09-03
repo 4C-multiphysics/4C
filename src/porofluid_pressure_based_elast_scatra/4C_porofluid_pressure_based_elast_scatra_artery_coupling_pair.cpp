@@ -1201,7 +1201,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
 template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
 double PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
     dis_type_homogenized, dim>::apply_mesh_movement(const bool first_call,
-    const std::shared_ptr<Core::FE::Discretization> homogenized_dis)
+    Core::FE::Discretization* homogenized_dis)
 {
   // nodal displacement values for ALE
   Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_> ele_disp_np;

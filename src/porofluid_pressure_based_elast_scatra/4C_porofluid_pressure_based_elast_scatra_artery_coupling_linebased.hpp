@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_nonconforming.hpp"
+#include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_segments.hpp"
 
 
 FOUR_C_NAMESPACE_OPEN
@@ -53,23 +54,11 @@ namespace PoroPressureBased
     //! pre-evaluate the coupling pairs and delete duplicates
     void pre_evaluate_coupling_pairs();
 
-    //! fill the length not changed by deformation and initialize the current length
-    void fill_unaffected_artery_length();
-
     //! fill the integrated diameter not changed by varying blood vessel diameter
     void fill_unaffected_integrated_diameter() const;
 
     //! calculate the volume fraction occupied by blood vessels
     void calculate_blood_vessel_volume_fraction();
-
-    //! create the GID to segment vector
-    void create_gid_to_segment_vector();
-
-    //! fill the GID to segment vector
-    void fill_gid_to_segment_vector(
-        const std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>>&
-            coupled_ele_pairs,
-        std::map<int, std::vector<double>>& gid_to_segment_length) const;
 
     //! set the artery diameter in column-based vector
     void fill_artery_ele_diam_col();
@@ -138,18 +127,6 @@ namespace PoroPressureBased
     //! get the segment length
     std::vector<double> get_ele_segment_length(int artery_ele_gid) override;
 
-    //! check for duplicate segments
-    bool is_duplicate_segment(
-        const std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>>&
-            coupled_ele_pairs,
-        const PorofluidElastScatraArteryCouplingPairBase& possible_duplicate);
-
-    //! check if segments are identical
-    bool is_identical_segment(
-        const std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>>&
-            coupled_ele_pairs,
-        const int& ele1_gid, const double& etaA, const double& etaB, int& ele_pair_id);
-
     //! set flag if variable diameter has to be calculated
     void set_flag_variable_diameter() override;
 
@@ -159,14 +136,15 @@ namespace PoroPressureBased
     //! print out the coupling method
     void print_coupling_method() const override;
 
+    //! bundle the members the shared segment-length helpers operate on
+    ArterySegmentContext segment_context();
+
     //! maximum number of segments per artery element
     int max_num_segments_per_artery_element_;
 
-    //! lengths of artery elements unaffected by deformation
-    std::shared_ptr<Core::LinAlg::FEVector<double>> unaffected_artery_segment_lengths_;
-
-    //! lengths of artery elements in current configuration
-    std::shared_ptr<Core::LinAlg::FEVector<double>> current_artery_segment_lengths_;
+    //! lengths of artery segments unaffected by deformation and in current configuration (not set
+    //! for a pure porofluid problem)
+    std::optional<ArterySegmentLengths> artery_segment_lengths_;
 
     //! diameters of artery elements integrated over the length of the elements (row format
     //! and FE vector due to non-local assembly)
@@ -185,9 +163,10 @@ namespace PoroPressureBased
     //! volume fraction of blood vessels (for output)
     std::shared_ptr<Core::LinAlg::Vector<double>> blood_vessel_volfrac_;
 
-    //! gid to segment: stores [GID; [eta_a eta_b]_1, [eta_a eta_b]_2, ..., [eta_a eta_b]_n]
+    //! gid to segment boundaries: stores [GID; [eta_a eta_b]_1, [eta_a eta_b]_2, ...,
+    //! [eta_a eta_b]_n]
     //!  of artery elements in column format, i.e. fully overlapping
-    std::map<int, std::vector<double>> gid_to_segment_;
+    std::map<int, std::vector<double>> gid_to_segment_boundaries_;
 
     //! gid to segment length: stores [GID; seglength_1, seglength_2, ..., seglength_n]
     //!  of artery elements in column format, i.e., fully overlapping (only used for

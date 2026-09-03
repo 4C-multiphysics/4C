@@ -15,6 +15,7 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_mat_cnst_1d_art.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_pair.hpp"
+#include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_segments.hpp"
 #include "4C_porofluid_pressure_based_utils.hpp"
 #include "4C_structure_new_input.hpp"
 
@@ -58,12 +59,14 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::se
   // pre-evaluate the pairs
   pre_evaluate_coupling_pairs();
 
-  // create the GID to segment vector
-  create_gid_to_segment_vector();
+  // create the GID to segment boundaries map
+  create_gid_to_segment_boundaries(
+      segment_context(), coupled_ele_pairs_, gid_to_segment_boundaries_);
 
   // fill length of artery elements that are not changed by deformation of the underlying 2D/3D mesh
   // (basically protruding artery elements or segments)
-  fill_unaffected_artery_length();
+  artery_segment_lengths_ = fill_unaffected_artery_length(
+      segment_context(), coupled_ele_pairs_, gid_to_segment_boundaries_, gid_to_segment_length_);
 
   // fill unaffected integrated diameter (basically protruding artery elements or segments)
   if (homogenized_dis_->name() == "porofluid" && has_variable_diameter_)
@@ -176,228 +179,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
   // pre-evaluate
   for (const auto& coupled_ele_pair : coupled_ele_pairs_) coupled_ele_pair->pre_evaluate(nullptr);
 
-  // delete the inactive and duplicated pairs
-  std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>> active_coupled_ele_pairs;
-  for (auto& coupled_ele_pair : coupled_ele_pairs_)
-  {
-    const int homogenized_ele_gid = coupled_ele_pair->homogenized_ele_gid();
-    const Core::Elements::Element* homogenized_ele =
-        homogenized_dis_->g_element(homogenized_ele_gid);
-
-    if (coupled_ele_pair->is_active() &&
-        !is_duplicate_segment(active_coupled_ele_pairs, *coupled_ele_pair) &&
-        homogenized_ele->owner() == my_mpi_rank_)
-      active_coupled_ele_pairs.push_back(coupled_ele_pair);
-  }
-
-  // the following case takes care of the special case where the 1D element lies exactly in
-  // between two 2D/3D-elements which are owned by different processors
-
-  // fill the GID-to-segment vector
-  std::map<int, std::vector<double>> gid_to_segment_length;
-  fill_gid_to_segment_vector(active_coupled_ele_pairs, gid_to_segment_length);
-
-  // dummy map to collect duplicates in form [ele2gid, eta_a, eta_b, ... ];
-  std::map<int, std::vector<double>> duplicates;
-
-  // loop over all artery elements
-  for (int i = 0; i < artery_dis_->element_col_map()->num_my_elements(); ++i)
-  {
-    if (const int artery_ele_gid = artery_dis_->element_col_map()->gid(i);
-        gid_to_segment_length[artery_ele_gid].size() > 0)  // check if element projects
-    {
-      // compare all segment with each other if it might be identical
-      for (int iseg = 0; std::cmp_less(iseg, gid_to_segment_length[artery_ele_gid].size() / 2);
-          iseg++)
-      {
-        const double eta_a = gid_to_segment_length[artery_ele_gid][2 * iseg];
-        const double eta_b = gid_to_segment_length[artery_ele_gid][2 * iseg + 1];
-        for (int jseg = iseg + 1;
-            std::cmp_less(jseg, gid_to_segment_length[artery_ele_gid].size() / 2); jseg++)
-        {
-          const double eta_a_jseg = gid_to_segment_length[artery_ele_gid][2 * jseg];
-          const double eta_b_jseg = gid_to_segment_length[artery_ele_gid][2 * jseg + 1];
-          // identical segment found
-          if (fabs(eta_a - eta_a_jseg) < 1.0e-9 && fabs(eta_b - eta_b_jseg) < 1.0e-9)
-          {
-            // we need this to get the GID of the second element
-            int id = -1;
-            if (is_identical_segment(active_coupled_ele_pairs, artery_ele_gid, eta_a, eta_b, id))
-            {
-              const int ele2_gid = active_coupled_ele_pairs[id]->homogenized_ele_gid();
-              duplicates[artery_ele_gid].push_back((ele2_gid));
-              duplicates[artery_ele_gid].push_back(eta_a);
-              duplicates[artery_ele_gid].push_back(eta_b);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // communicate the map to all procs
-  std::vector<int> mpi_ranks(Core::Communication::num_mpi_ranks(get_comm()));
-  for (int i = 0; i < Core::Communication::num_mpi_ranks(get_comm()); ++i) mpi_ranks[i] = i;
-  Core::LinAlg::gather<double>(
-      duplicates, duplicates, static_cast<int>(mpi_ranks.size()), mpi_ranks.data(), get_comm());
-
-  // remove duplicate (the one where the 2D/3D element has the large ID)
-  for (auto& duplicate : duplicates)
-  {
-    const int artery_ele_gid = duplicate.first;
-    std::vector<double> current_duplicates = duplicate.second;
-    // should always be a multiple of six because we should always find exactly two/four, etc.
-    // duplicates
-    if (current_duplicates.size() % 6 != 0)
-      FOUR_C_THROW(
-          "duplicate vector has size {}, should be multiple of six", current_duplicates.size());
-    // compare the possible duplicates
-    for (int idupl = 0; std::cmp_less(idupl, (current_duplicates.size() / 3)); idupl++)
-    {
-      const double eta_a = current_duplicates[3 * idupl + 1];
-      const double eta_b = current_duplicates[3 * idupl + 2];
-      for (int jdupl = idupl + 1; std::cmp_less(jdupl, (current_duplicates.size() / 3)); jdupl++)
-      {
-        const double eta_a_jdupl = current_duplicates[3 * jdupl + 1];
-        const double eta_b_jdupl = current_duplicates[3 * jdupl + 2];
-        // duplicate found
-        if (fabs(eta_a - eta_a_jdupl) < 1.0e-9 && fabs(eta_b - eta_b_jdupl) < 1.0e-9)
-        {
-          const int ele_i = static_cast<int>(current_duplicates[3 * idupl]);
-          const int ele_j = static_cast<int>(current_duplicates[3 * jdupl]);
-          const int ele_to_be_erased = std::max(ele_i, ele_j);
-          int id = -1;
-          // delete the duplicate with the larger ele2_gid
-          if (is_identical_segment(active_coupled_ele_pairs, artery_ele_gid, eta_a, eta_b, id))
-          {
-            if (active_coupled_ele_pairs[id]->homogenized_ele_gid() == ele_to_be_erased)
-            {
-              active_coupled_ele_pairs.erase(active_coupled_ele_pairs.begin() + id);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // overwrite the coupling pairs
-  coupled_ele_pairs_ = active_coupled_ele_pairs;
-
-  // output
-  int total_num_active_pairs = 0;
-  int num_active_pairs = static_cast<int>(coupled_ele_pairs_.size());
-  total_num_active_pairs = Core::Communication::sum_all(num_active_pairs, get_comm());
-  if (my_mpi_rank_ == 0)
-  {
-    std::cout << "Only " << total_num_active_pairs
-              << " Artery-to-PoroMultiphaseScatra coupling pairs (segments) are active" << '\n';
-  }
-}
-
-/*------------------------------------------------------------------------*
- *------------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
-    fill_unaffected_artery_length()
-{
-  // no need to do this for a pure porofluid problem
-  if (pure_porofluid_problem_)
-  {
-    for (int i = 0; i < artery_dis_->element_col_map()->num_my_elements(); ++i)
-    {
-      const int artery_ele_gid = artery_dis_->element_col_map()->gid(i);
-      Core::Elements::Element* artery_element = artery_dis_->g_element(artery_ele_gid);
-
-      // TODO: this will not work for higher order artery elements
-      const double initial_length = get_max_nodal_distance(artery_element, *artery_dis_);
-      const int num_segments = static_cast<int>(gid_to_segment_[artery_ele_gid].size() / 2);
-      gid_to_segment_length_[artery_ele_gid].resize(num_segments);
-      for (int iseg = 0; iseg < num_segments; iseg++)
-      {
-        const double etaA = gid_to_segment_[artery_ele_gid][2 * iseg];
-        const double etaB = gid_to_segment_[artery_ele_gid][2 * iseg + 1];
-        gid_to_segment_length_[artery_ele_gid][iseg] = initial_length * (etaB - etaA) / 2.0;
-
-        // return also id -> index in coupled_ele_pairs_ of this segment
-        // and set iseg as the segment id of the coupling pairs
-        if (int id = -1; is_identical_segment(coupled_ele_pairs_, artery_ele_gid, etaA, etaB, id))
-          coupled_ele_pairs_[id]->set_segment_id(iseg);
-      }
-    }
-
-    return;
-  }
-
-  // The unaffected length is the length of 1D elements not changed by deformation,
-  // basically if these elements protrude.
-  // For each element, this length is computed as: ele_length - sum_segments seg_length.
-  // If the above quantity is bigger than zero, a 1D element protrudes.
-
-  // initialize the unaffected and current lengths
-  unaffected_artery_segment_lengths_ =
-      std::make_shared<Core::LinAlg::FEVector<double>>(*artery_dis_->dof_row_map(1), true);
-  current_artery_segment_lengths_ =
-      std::make_shared<Core::LinAlg::FEVector<double>>(*artery_dis_->dof_row_map(1));
-
-  // set segment ID on coupling pairs and fill the unaffected artery length
-  for (int iele = 0; iele < artery_dis_->element_col_map()->num_my_elements(); ++iele)
-  {
-    const int artery_ele_gid = artery_dis_->element_col_map()->gid(iele);
-    Core::Elements::Element* current_element = artery_dis_->g_element(artery_ele_gid);
-
-    // TODO: this will not work for higher order artery elements
-    const double initial_length = get_max_nodal_distance(current_element, *artery_dis_);
-
-    std::vector<double> segment_boundaries = gid_to_segment_[artery_ele_gid];
-    for (unsigned int iseg = 0; iseg < segment_boundaries.size() / 2; iseg++)
-    {
-      // get EtaA and etaB and calculate initial length
-      const double etaA = segment_boundaries[iseg * 2];
-      const double etaB = segment_boundaries[iseg * 2 + 1];
-      const double segment_length = initial_length * (etaB - etaA) / 2.0;
-
-      // since we use an FE vector
-      if (current_element->owner() == my_mpi_rank_)
-      {
-        // build the location array
-        std::vector<int> segment_length_dofs = artery_dis_->dof(1, current_element);
-        unaffected_artery_segment_lengths_->sum_into_global_values(
-            1, &segment_length_dofs[iseg], &segment_length);
-      }
-
-      // return also id -> index in coupled_ele_pairs_ of this segment
-      // and set iseg as the segment id of the coupling pairs
-      if (int id = -1; is_identical_segment(coupled_ele_pairs_, artery_ele_gid, etaA, etaB, id))
-        coupled_ele_pairs_[id]->set_segment_id(static_cast<int>(iseg));
-    }
-  }
-
-  unaffected_artery_segment_lengths_->complete();
-
-  // subtract the segment lengths only if we evaluate in current configuration
-  if (!evaluate_in_ref_config_)
-  {
-    for (const auto& coupled_ele_pair : coupled_ele_pairs_)
-    {
-      // get the initial lengths
-      double initial_segment_length = coupled_ele_pair->apply_mesh_movement(true, homogenized_dis_);
-      initial_segment_length *= -1.0;
-
-      const int artery_ele_gid = coupled_ele_pair->artery_ele_gid();
-      const Core::Elements::Element* current_element = artery_dis_->g_element(artery_ele_gid);
-
-      std::vector<int> segment_length_dofs = artery_dis_->dof(1, current_element);
-      const int segment_id = coupled_ele_pair->get_segment_id();
-
-      unaffected_artery_segment_lengths_->sum_into_global_values(
-          1, &segment_length_dofs[segment_id], &(initial_segment_length));
-    }
-    unaffected_artery_segment_lengths_->complete();
-  }
-  // the current length is simply the unaffected length
-  else
-  {
-    current_artery_segment_lengths_->update(1.0, *unaffected_artery_segment_lengths_, 0.0);
-  }
+  // drop inactive / non-owned / duplicate pairs and resolve cross-processor duplicate segments
+  filter_coupling_pairs_and_resolve_cross_proc_duplicates(segment_context(), coupled_ele_pairs_);
 }
 
 /*----------------------------------------------------------------------*
@@ -427,7 +210,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
   for (const auto& coupled_ele_pair : coupled_ele_pairs_)
   {
     // get the initial lengths
-    double initial_segment_length = coupled_ele_pair->apply_mesh_movement(true, homogenized_dis_);
+    double initial_segment_length =
+        coupled_ele_pair->apply_mesh_movement(true, homogenized_dis_.get());
     initial_segment_length *= -1.0;
 
     const int artery_ele_gid = coupled_ele_pair->artery_ele_gid();
@@ -517,124 +301,6 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
     artery_elements_diameters_col_ =
         std::make_shared<Core::LinAlg::Vector<double>>(*artery_dis_->element_col_map(), true);
   }
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
-    create_gid_to_segment_vector()
-{
-  // fill the GID-to-segment vector
-  fill_gid_to_segment_vector(coupled_ele_pairs_, gid_to_segment_);
-
-  // sort and take care of special cases
-  for (int i = 0; i < artery_dis_->element_col_map()->num_my_elements(); ++i)
-  {
-    if (const int artery_ele_gid = artery_dis_->element_col_map()->gid(i);
-        gid_to_segment_[artery_ele_gid].size() > 0)  // check if element projects
-    {
-      std::ranges::sort(
-          gid_to_segment_[artery_ele_gid].begin(), gid_to_segment_[artery_ele_gid].end());
-      const int end = static_cast<int>(gid_to_segment_[artery_ele_gid].size());
-
-      // the end of the element lies outside the domain
-      if (const double value_at_end = gid_to_segment_[artery_ele_gid][end - 1];
-          fabs(value_at_end - 1.0) > 1.0e-9)
-      {
-        gid_to_segment_[artery_ele_gid].push_back(value_at_end);
-        gid_to_segment_[artery_ele_gid].push_back(1.0);
-      }
-
-      // the beginning of the element lies outside the domain
-      if (const double value_at_beginning = gid_to_segment_[artery_ele_gid][0];
-          fabs(value_at_beginning + 1.0) > 1.0e-9)
-      {
-        gid_to_segment_[artery_ele_gid].insert(
-            gid_to_segment_[artery_ele_gid].begin(), value_at_beginning);
-        gid_to_segment_[artery_ele_gid].insert(gid_to_segment_[artery_ele_gid].begin(), -1.0);
-      }
-    }
-    // this element does not project
-    else
-    {
-      gid_to_segment_[artery_ele_gid].push_back(-1.0);
-      gid_to_segment_[artery_ele_gid].push_back(1.0);
-    }
-  }
-
-  // safety checks
-  for (int i = 0; i < artery_dis_->element_col_map()->num_my_elements(); ++i)
-  {
-    // 1) check if the artery element has more than MAXNUMSEGPERARTELE segments
-    const int artery_ele_gid = artery_dis_->element_col_map()->gid(i);
-    if (static_cast<int>(gid_to_segment_[artery_ele_gid].size()) >
-        2 * max_num_segments_per_artery_element_)
-    {
-      FOUR_C_THROW(
-          "Artery element {} has {} segments, which is more than the maximum allowed number of "
-          "{} "
-          "segments per artery element, increase MAXNUMSEGPERARTELE",
-          artery_ele_gid, static_cast<int>(gid_to_segment_[artery_ele_gid].size() / 2),
-          max_num_segments_per_artery_element_);
-    }
-    // 2) check if the segment has been overlooked
-    for (int iseg = 0; iseg < static_cast<int>(gid_to_segment_[artery_ele_gid].size() / 2) - 1;
-        iseg++)
-    {
-      if (fabs(gid_to_segment_[artery_ele_gid][2 * iseg + 1] -
-               gid_to_segment_[artery_ele_gid][2 * iseg + 2]) > 1.0e-9)
-      {
-        std::cout << "Problem with segments of artery-element " << artery_ele_gid << ":" << '\n';
-        for (int jseg = 0; std::cmp_less(jseg, gid_to_segment_[artery_ele_gid].size() / 2); jseg++)
-        {
-          std::cout << "[" << gid_to_segment_[artery_ele_gid][2 * jseg] << ", "
-                    << gid_to_segment_[artery_ele_gid][2 * jseg + 1] << "]" << '\n';
-        }
-        FOUR_C_THROW(
-            "artery element {} has probably not found all possible segments", artery_ele_gid);
-      }
-    }
-  }
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
-    fill_gid_to_segment_vector(
-        const std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>>&
-            coupled_ele_pairs,
-        std::map<int, std::vector<double>>& gid_to_segment_length) const
-{
-  // fill the GID-to-segment vector
-  for (const auto& coupled_ele_pair : coupled_ele_pairs)
-  {
-    const int artery_ele_gid = coupled_ele_pair->artery_ele_gid();
-    const int homogenized_ele_gid = coupled_ele_pair->homogenized_ele_gid();
-
-    const Core::Elements::Element* homogenized_ele =
-        homogenized_dis_->g_element(homogenized_ele_gid);
-
-    const double etaA = coupled_ele_pair->eta_start();
-    const double etaB = coupled_ele_pair->eta_end();
-
-    if (homogenized_ele->owner() == my_mpi_rank_)
-    {
-      gid_to_segment_length[artery_ele_gid].push_back(etaA);
-      gid_to_segment_length[artery_ele_gid].push_back(etaB);
-    }
-    else
-    {
-      FOUR_C_THROW(
-          "Something went wrong here, pair in coupling ele pairs where continuous-discretization "
-          "element is not owned by this proc.");
-    }
-  }
-
-  // communicate it to all procs
-  std::vector<int> all_procs(Core::Communication::num_mpi_ranks(get_comm()));
-  for (int i = 0; i < Core::Communication::num_mpi_ranks(get_comm()); ++i) all_procs[i] = i;
-  Core::LinAlg::gather<double>(gid_to_segment_length, gid_to_segment_length,
-      static_cast<int>(all_procs.size()), all_procs.data(), get_comm());
 }
 
 /*----------------------------------------------------------------------*
@@ -967,112 +633,42 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::apply_mesh_movement()
+{
+  // in a pure porofluid problem the length vectors are never created and not needed
+
+  if (!artery_segment_lengths_)
+  {
+    FOUR_C_ASSERT_ALWAYS(pure_porofluid_problem_,
+        "vector with artery segment lengths is never created although we are NOT in a pure "
+        "porofluid problem type!");
+  }
+
+
+  apply_mesh_movement_for_pairs(segment_context(), coupled_ele_pairs_,
+      *artery_segment_lengths_->unaffected, *artery_segment_lengths_->current);
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 std::vector<double>
 PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::get_ele_segment_length(
     const int artery_ele_gid)
 {
-  if (pure_porofluid_problem_) return gid_to_segment_length_[artery_ele_gid];
-
-  // safety checks
-  if (!artery_dis_->has_state(1, "curr_seg_lengths"))
-    FOUR_C_THROW("cannot get state curr_seg_lengths");
-
-  // build the location array
-  const Core::Elements::Element* current_element = artery_dis_->g_element(artery_ele_gid);
-  const std::vector<int> segment_length_dof = artery_dis_->dof(1, current_element);
-
-  const std::shared_ptr<const Core::LinAlg::Vector<double>> current_segment_lengths =
-      artery_dis_->get_state(1, "curr_seg_lengths");
-
-  std::vector<double> segment_lengths =
-      Core::FE::extract_values(*current_segment_lengths, segment_length_dof);
-
-  return segment_lengths;
+  return get_ele_segment_lengths(segment_context(), gid_to_segment_length_, artery_ele_gid);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::is_duplicate_segment(
-    const std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>>&
-        coupled_ele_pairs,
-    const PorofluidElastScatraArteryCouplingPairBase& possible_duplicate)
+PoroPressureBased::ArterySegmentContext
+PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::segment_context()
 {
-  // we have to sort out duplicate segments, these might occur if the artery element
-  // lies exactly between two different 2D/3D-elements
-
-  const double eta_a = possible_duplicate.eta_start();
-  const double eta_b = possible_duplicate.eta_end();
-  const int ele1_gid = possible_duplicate.artery_ele_gid();
-  int ele_pair_id = -1;
-
-  return is_identical_segment(coupled_ele_pairs, ele1_gid, eta_a, eta_b, ele_pair_id);
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-bool PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::is_identical_segment(
-    const std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>>&
-        coupled_ele_pairs,
-    const int& ele1_gid, const double& etaA, const double& etaB, int& ele_pair_id)
-{
-  for (unsigned i = 0; i < coupled_ele_pairs.size(); i++)
-  {
-    // first check if ele1-Gid is identical
-    if (ele1_gid == coupled_ele_pairs[i]->artery_ele_gid())
-    {
-      // check if the integration segment is the same
-      if (fabs(etaA - coupled_ele_pairs[i]->eta_start()) < 1.0e-9 &&
-          fabs(etaB - coupled_ele_pairs[i]->eta_end()) < 1.0e-9)
-      {
-        if constexpr (projection_output) std::cout << "found duplicate integration segment" << '\n';
-        ele_pair_id = static_cast<int>(i);
-        return true;
-      }
-    }
-  }
-
-  ele_pair_id = -1;
-  return false;
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::apply_mesh_movement()
-{
-  // no need to do this
-  if (pure_porofluid_problem_) return;
-
-  // only if we evaluate in current configuration
-  if (!evaluate_in_ref_config_)
-  {
-    // safety
-    if (!homogenized_dis_->has_state(1, "dispnp")) FOUR_C_THROW("cannot get displacement state");
-
-    // update with unaffected length
-    current_artery_segment_lengths_->update(1.0, *unaffected_artery_segment_lengths_, 0.0);
-
-    // apply movement on pairs and fill gid-to-segment-length and current_seg_lengths_artery_
-    for (const auto& coupled_ele_pair : coupled_ele_pairs_)
-    {
-      const double new_segment_length =
-          coupled_ele_pair->apply_mesh_movement(false, homogenized_dis_);
-      const int artery_ele_gid = coupled_ele_pair->artery_ele_gid();
-      const int segment_id = coupled_ele_pair->get_segment_id();
-
-      const Core::Elements::Element* artery_element = artery_dis_->g_element(artery_ele_gid);
-      // build the location array
-      std::vector<int> segment_length_dofs = artery_dis_->dof(1, artery_element);
-
-      current_artery_segment_lengths_->sum_into_global_values(
-          1, &segment_length_dofs[segment_id], &(new_segment_length));
-    }
-
-    current_artery_segment_lengths_->complete();
-  }
-
-  // set state on artery discretization
-  artery_dis_->set_state(
-      1, "curr_seg_lengths", Core::LinAlg::Vector<double>(*current_artery_segment_lengths_));
+  return ArterySegmentContext{.artery_dis = artery_dis_.get(),
+      .homogenized_dis = homogenized_dis_.get(),
+      .my_mpi_rank = my_mpi_rank_,
+      .max_num_segments_per_artery_element = max_num_segments_per_artery_element_,
+      .pure_porofluid_problem = pure_porofluid_problem_,
+      .evaluate_in_ref_config = evaluate_in_ref_config_};
 }
 
 /*----------------------------------------------------------------------*
