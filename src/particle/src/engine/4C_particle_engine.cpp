@@ -20,6 +20,7 @@
 #include "4C_particle_engine_communication_utils.hpp"
 #include "4C_particle_engine_container.hpp"
 #include "4C_particle_engine_container_bundle.hpp"
+#include "4C_particle_engine_ghost_entry.hpp"
 #include "4C_particle_engine_object.hpp"
 #include "4C_particle_engine_refresh_entry.hpp"
 #include "4C_particle_engine_runtime_vtp_writer.hpp"
@@ -331,22 +332,14 @@ void Particle::ParticleEngine::ghost_particles()
 {
   TEUCHOS_FUNC_TIME_MONITOR("Particle::ParticleEngine::GhostParticles");
 
-  std::vector<std::vector<ParticleObjShrdPtr>> particlestosend(
-      Core::Communication::num_mpi_ranks(comm_));
-  std::vector<std::vector<std::pair<int, ParticleObjShrdPtr>>> particlestoinsert(typevectorsize_);
-  std::map<int, std::map<Particle::Type, std::map<int, std::pair<int, int>>>> directghosting;
-
   // clear all containers of ghosted particles
   particlecontainerbundle_->clear_all_containers_of_specific_status(Status::Ghosted);
 
-  // determine particles that need to be ghosted
-  determine_particles_to_be_ghosted(particlestosend);
+  // pack particles to be ghosted directly into send buffers (bypasses ParticleObject)
+  const auto sdata = pack_particles_to_be_ghosted();
 
-  // communicate particles
-  communicate_particles(particlestosend, particlestoinsert);
-
-  // insert ghosted particles received from other processors
-  insert_ghosted_particles(particlestoinsert, directghosting);
+  // communicate ghost data using cached comm graph and insert into containers (no Allreduce)
+  const auto directghosting = communicate_and_insert_ghost_particles(sdata);
 
   // communicate and build map for direct ghosting
   communicate_direct_ghosting_map(directghosting);
@@ -1200,6 +1193,17 @@ void Particle::ParticleEngine::determine_ghosting_dependent_maps_and_sets()
       }
     }
   }
+
+  // cache procs to send/receive ghost particle data to/from, derived directly from the bin
+  // ghosting topology determined above (avoids MPI_Allreduce during ghost_particles())
+  cached_procs_send_ghost_particles_to_.clear();
+  for (const auto& it : binning_->thisbinsghostedby_)
+    for (int proc : it.second) cached_procs_send_ghost_particles_to_.insert(proc);
+
+  cached_procs_receive_ghost_particles_from_.clear();
+  for (int gid : binning_->ghostedbins_)
+    cached_procs_receive_ghost_particles_from_.insert(
+        binning_->binstrategy_->bin_discret()->g_element(gid)->owner());
 }
 
 void Particle::ParticleEngine::relate_half_neighboring_bins_to_owned_bins()
@@ -1546,11 +1550,12 @@ void Particle::ParticleEngine::determine_particles_to_be_transferred(
   }
 }
 
-void Particle::ParticleEngine::determine_particles_to_be_ghosted(
-    std::vector<std::vector<ParticleObjShrdPtr>>& particlestosend) const
+std::map<int, std::vector<char>> Particle::ParticleEngine::pack_particles_to_be_ghosted() const
 {
   // safety check
   if (not validownedparticles_) FOUR_C_THROW("invalid relation of owned particles to bins!");
+
+  std::map<int, std::vector<char>> sdata;
 
   // iterate over this processors bins being ghosted by other processors
   for (const auto& targetIt : binning_->thisbinsghostedby_)
@@ -1581,15 +1586,18 @@ void Particle::ParticleEngine::determine_particles_to_be_ghosted(
       ParticleStates states;
       container->get_particle(ownedindex, globalid, states);
 
-      // iterate over target processors
+      // pre-pack states once, reused for all target processors of this particle
+      Core::Communication::PackBuffer statesdata;
+      add_to_pack(statesdata, states);
+
+      // iterate over target processors and append packed ghost entry
       for (int sendtoproc : targetIt.second)
-      {
-        // append particle to be send
-        particlestosend[sendtoproc].emplace_back(
-            std::make_shared<ParticleObject>(type, globalid, states, ghostedbin, ownedindex));
-      }
+        ParticleGhostEntry::pack(
+            type, globalid, ghostedbin, ownedindex, statesdata, sdata[sendtoproc]);
     }
   }
+
+  return sdata;
 }
 
 std::map<int, std::vector<char>> Particle::ParticleEngine::pack_particles_to_be_refreshed() const
@@ -1791,9 +1799,12 @@ void Particle::ParticleEngine::communicate_direct_ghosting_map(
     std::swap(sdata[p.first], data());
   }
 
-  // communicate data via non-buffered send from proc to proc
+  // communicate data using the cached ghost particle comm graph (no MPI_Allreduce): send
+  // acknowledgements to the procs we received ghost particles from and receive acknowledgements
+  // from the procs we sent ghost particles to
   const std::map<int, std::vector<char>> rdata =
-      ParticleUtils::immediate_recv_blocking_send(comm_, sdata);
+      ParticleUtils::immediate_send_recv_known_procs(comm_, sdata,
+          cached_procs_receive_ghost_particles_from_, cached_procs_send_ghost_particles_to_);
 
   // init receiving map
   std::map<Particle::Type, std::map<int, std::pair<int, int>>> receiveddirectghosting;
@@ -1907,58 +1918,48 @@ void Particle::ParticleEngine::insert_owned_particles(
   invalidate_particle_safety_flags();
 }
 
-void Particle::ParticleEngine::insert_ghosted_particles(
-    std::vector<std::vector<std::pair<int, ParticleObjShrdPtr>>>& particlestoinsert,
-    std::map<int, std::map<Particle::Type, std::map<int, std::pair<int, int>>>>& directghosting)
+std::map<int, std::map<Particle::Type, std::map<int, std::pair<int, int>>>>
+Particle::ParticleEngine::communicate_and_insert_ghost_particles(
+    const std::map<int, std::vector<char>>& sdata)
 {
-  // iterate over particle types
-  for (const auto& type : particlecontainerbundle_->get_particle_types())
+  std::map<int, std::map<Particle::Type, std::map<int, std::pair<int, int>>>> directghosting;
+
+  // communicate ghost particle data using the cached comm graph derived from bin ghosting
+  // topology (no MPI_Allreduce)
+  const std::map<int, std::vector<char>> rdata =
+      ParticleUtils::immediate_send_recv_known_procs(comm_, sdata,
+          cached_procs_send_ghost_particles_to_, cached_procs_receive_ghost_particles_from_);
+
+  // unpack received data directly into ghosted particle containers
+  for (const auto& [msgsource, rmsg] : rdata)
   {
-    // check for particles of current type
-    if (particlestoinsert[static_cast<int>(type)].empty()) continue;
+    const int sendingproc = msgsource;
 
-    // get container of ghosted particles of current particle type
-    ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type, Status::Ghosted);
-
-    // iterate over particle objects pairs
-    for (const auto& objectpair : particlestoinsert[static_cast<int>(type)])
+    Core::Communication::UnpackBuffer buffer(rmsg);
+    while (!buffer.at_end())
     {
-      // get owner of sending processor
-      int sendingproc = objectpair.first;
+      // unpack ghost entry packed by ParticleGhostEntry::pack()
+      ParticleGhostEntry entry = ParticleGhostEntry::unpack(buffer);
 
-      // get particle object
-      ParticleObjShrdPtr particleobject = objectpair.second;
-
-      // get global id of particle
-      int globalid = particleobject->return_particle_global_id();
-
-      // get states of particle
-      const ParticleStates& states = particleobject->return_particle_states();
-
-      // get bin of particle
-      const int gidofbin = particleobject->return_bin_gid();
-      if (gidofbin < 0)
-        FOUR_C_THROW("received ghosted particle contains no information about its bin gid!");
+      // get container of ghosted particles of current particle type
+      ParticleContainer* container =
+          particlecontainerbundle_->get_specific_container(entry.type, Status::Ghosted);
 
       // add particle to container of ghosted particles
       int ghostedindex(0);
-      container->add_particle(ghostedindex, globalid, states);
+      container->add_particle(ghostedindex, entry.globalid, entry.states);
 
       // add index relating (owned and ghosted) particles to col bins
-      particlestobins_[binning_->bincolmap_->lid(gidofbin)].push_back(
-          std::make_pair(type, ghostedindex));
-
-      // get local index of particle in container of owned particles of sending processor
-      int ownedindex = particleobject->return_container_index();
+      FOUR_C_ASSERT_ALWAYS(entry.bingid >= 0,
+          "received ghosted particle contains no information about its bin gid!");
+      particlestobins_[binning_->bincolmap_->lid(entry.bingid)].push_back(
+          std::make_pair(entry.type, ghostedindex));
 
       // insert necessary information being communicated to other processors for direct ghosting
-      (((directghosting[sendingproc])[type])[ownedindex]) = std::make_pair(myrank_, ghostedindex);
+      (((directghosting[sendingproc])[entry.type])[entry.ownedindex]) =
+          std::make_pair(myrank_, ghostedindex);
     }
   }
-
-  // clear after all particles are inserted
-  particlestoinsert.clear();
 
   // validate flag denoting valid relation of ghosted particles to bins
   validghostedparticles_ = true;
@@ -1967,6 +1968,8 @@ void Particle::ParticleEngine::insert_ghosted_particles(
   validparticleneighbors_ = false;
   validglobalidtolocalindex_ = false;
   validdirectghosting_ = false;
+
+  return directghosting;
 }
 
 void Particle::ParticleEngine::remove_particles_from_containers(
