@@ -10,8 +10,12 @@
 #include "4C_config.hpp"
 
 #include "4C_fem_general_element.hpp"
+#include "4C_fem_general_element_integration.hpp"
+#include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 
+#include <array>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -23,6 +27,60 @@ namespace Core::FE
 
 namespace Discret::Elements
 {
+  template <Core::FE::CellType celltype>
+    requires(Core::FE::dim<celltype> == 1)
+  /*!
+   * @brief Add pressure normal to a plane solid boundary.
+   *
+   * The pressure is multiplied by the parent solid's reference thickness. If requested, this
+   * function also assembles the consistent negative load linearization used by the structural
+   * residual.
+   */
+  void add_normal_pressure_load(const Core::Elements::ShapeFunctionsAndDerivatives<celltype>& shape,
+      const Core::LinAlg::Matrix<Core::FE::num_nodes(celltype), 2>& current_coordinates,
+      const double pressure_times_weight, const double reference_thickness,
+      const int num_dof_per_node, Core::LinAlg::SerialDenseVector& force,
+      Core::LinAlg::SerialDenseMatrix* load_linearization)
+  {
+    double radial_derivative = 0.0;
+    double axial_derivative = 0.0;
+    for (int node = 0; node < Core::FE::num_nodes(celltype); ++node)
+    {
+      radial_derivative += shape.derivatives(0, node) * current_coordinates(node, 0);
+      axial_derivative += shape.derivatives(0, node) * current_coordinates(node, 1);
+    }
+
+    const std::array<double, 2> normal_measure{
+        reference_thickness * axial_derivative, -reference_thickness * radial_derivative};
+    for (int node = 0; node < Core::FE::num_nodes(celltype); ++node)
+      for (int component = 0; component < 2; ++component)
+        force[node * num_dof_per_node + component] +=
+            shape.values(node) * pressure_times_weight * normal_measure[component];
+
+    if (load_linearization == nullptr) return;
+
+    for (int force_node = 0; force_node < Core::FE::num_nodes(celltype); ++force_node)
+      for (int coordinate_node = 0; coordinate_node < Core::FE::num_nodes(celltype);
+          ++coordinate_node)
+      {
+        const double factor = shape.values(force_node) * pressure_times_weight *
+                              reference_thickness * shape.derivatives(0, coordinate_node);
+        (*load_linearization)(
+            force_node* num_dof_per_node, coordinate_node* num_dof_per_node + 1) -= factor;
+        (*load_linearization)(
+            force_node* num_dof_per_node + 1, coordinate_node * num_dof_per_node) += factor;
+      }
+  }
+
+  /*!
+   * @brief Evaluate pseudo-orthopressure or follower orthopressure on a plane solid boundary line.
+   */
+  void evaluate_normal_pressure_by_element(Core::Elements::Element& element,
+      const Core::FE::Discretization& discretization, const Core::Conditions::Condition& condition,
+      const std::vector<int>& dof_index_array, Core::LinAlg::SerialDenseVector& force,
+      Core::LinAlg::SerialDenseMatrix* load_linearization, double total_time,
+      double reference_thickness);
+
   /*!
    * @brief Evaluates a Neumann condition @p condition for the element @p element.
    *

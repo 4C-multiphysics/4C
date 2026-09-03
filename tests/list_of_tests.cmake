@@ -2033,6 +2033,7 @@ __four_c_test_vtk(BASED_ON ${current} PVD_RESULT xxx-structure.pvd PVD_REFERENCE
 four_c_test(TEST_FILE solid_ele_quad4_stvk_plane_strain.4C.yaml NP 2 RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 1)
 __four_c_test_vtk(BASED_ON ${current} PVD_RESULT xxx-structure.pvd PVD_REFERENCE ref/solid_ele_quad4_stvk_plane_strain-structure.pvd TOLERANCE 1e-08)
+four_c_test(TEST_FILE solid_ele_quad9_plane_strain_orthopressure.4C.yaml)
 four_c_test(TEST_FILE solid_ele_quad4_stvk_plane_strain_eas.4C.yaml NP 2 RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 1)
 four_c_test(TEST_FILE solid_material_prestress_iterative_spring_dashpot.4C.yaml NP 2 RETURN_AS current)

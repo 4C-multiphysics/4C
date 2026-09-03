@@ -188,6 +188,12 @@ namespace Discret::Elements
              solid_ele_property_.element_technology == ElementTechnology::shell_eas_ans;
     }
 
+    [[nodiscard]] double reference_thickness() const
+      requires(dim == 2)
+    {
+      return solid_ele_property_.reference_thickness;
+    }
+
     void vis_names(std::map<std::string, int>& names) const override;
 
     void set_integration_rule(const Core::FE::GaussIntegration& integration_rule);
