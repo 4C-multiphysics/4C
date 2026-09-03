@@ -105,8 +105,8 @@ void Particle::TemperatureBoundaryConditionHandler::evaluate_temperature_boundar
         Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(functid);
 
     // get pointer to particle states
-    const double* refpos = container->get_ptr_to_state(Particle::State::ReferencePosition, 0);
-    double* temp = container->get_ptr_to_state_writable(Particle::State::Temperature, 0);
+    const double* refpos = container->get_ptr_to_state(Particle::State::ReferencePosition);
+    double* temp = container->get_ptr_to_state_writable(Particle::State::Temperature);
 
     // get particle state dimension
     int statedim = container->get_state_dim(Particle::State::Position);

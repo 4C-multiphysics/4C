@@ -264,7 +264,7 @@ double Particle::ParticleContainer::get_min_value_of_state(Particle::State state
 
   if (particlestored_ <= 0) return 0.0;
 
-  const double* state_ptr = get_ptr_to_state(state, 0);
+  const double* state_ptr = get_ptr_to_state(state);
   double min = state_ptr[0];
 
   for (int i = 1; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)
@@ -280,7 +280,7 @@ double Particle::ParticleContainer::get_max_value_of_state(Particle::State state
 
   if (particlestored_ <= 0) return 0.0;
 
-  const double* state_ptr = get_ptr_to_state(state, 0);
+  const double* state_ptr = get_ptr_to_state(state);
   double max = state_ptr[0];
 
   for (int i = 1; i < (particlestored_ * statedim_[static_cast<int>(state)]); ++i)

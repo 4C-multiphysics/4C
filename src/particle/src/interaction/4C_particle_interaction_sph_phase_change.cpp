@@ -154,7 +154,7 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_below_to_above_pha
   if (particlestored <= 0) return;
 
   // get pointer to particle state
-  const double* state = container->get_ptr_to_state(transitionstate_, 0);
+  const double* state = container->get_ptr_to_state(transitionstate_);
 
   // get material for particle types
   const Mat::PAR::ParticleMaterialBase* material_source =
@@ -239,7 +239,7 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_above_to_below_pha
   if (particlestored <= 0) return;
 
   // get pointer to particle state
-  const double* state = container->get_ptr_to_state(transitionstate_, 0);
+  const double* state = container->get_ptr_to_state(transitionstate_);
 
   // get material for particle types
   const Mat::PAR::ParticleMaterialBase* material_source =

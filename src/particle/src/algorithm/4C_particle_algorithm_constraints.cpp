@@ -45,11 +45,11 @@ void Particle::ConstraintsProjectionBase::apply(
     if (n_particle_stored <= 0) continue;
 
     // get pointer to particle velocity and acceleration
-    double* vel = container->get_ptr_to_state_writable(Particle::State::Velocity, 0);
-    double* acc = container->get_ptr_to_state_writable(Particle::State::Acceleration, 0);
-    double* modvel = container->try_get_ptr_to_state_writable(Particle::State::ModifiedVelocity, 0);
+    double* vel = container->get_ptr_to_state_writable(Particle::State::Velocity);
+    double* acc = container->get_ptr_to_state_writable(Particle::State::Acceleration);
+    double* modvel = container->try_get_ptr_to_state_writable(Particle::State::ModifiedVelocity);
     double* modacc =
-        container->try_get_ptr_to_state_writable(Particle::State::ModifiedAcceleration, 0);
+        container->try_get_ptr_to_state_writable(Particle::State::ModifiedAcceleration);
 
     // get particle state dimension
     const int pos_state_dim = container->get_state_dim(Particle::State::Position);
@@ -105,10 +105,10 @@ void Particle::ConstraintsProjectionBase::check_particles(
     if (n_particle_stored <= 0) continue;
 
     // get pointer to particle position
-    const double* pos = container->get_ptr_to_state(Particle::State::Position, 0);
+    const double* pos = container->get_ptr_to_state(Particle::State::Position);
 
     // get pointer to particle radius
-    const double* rad = container->get_ptr_to_state(Particle::State::Radius, 0);
+    const double* rad = container->get_ptr_to_state(Particle::State::Radius);
 
     // get particle state dimension
     const int pos_state_dim = container->get_state_dim(Particle::State::Position);
@@ -145,8 +145,8 @@ int Particle::ConstraintsProjection2D::calc_primary_axis_local(
     if (n_particle_stored < 3) continue;
 
     // get pointer to particle position and radius
-    const double* pos = container->get_ptr_to_state(Particle::State::Position, 0);
-    const double* rad = container->get_ptr_to_state(Particle::State::Radius, 0);
+    const double* pos = container->get_ptr_to_state(Particle::State::Position);
+    const double* rad = container->get_ptr_to_state(Particle::State::Radius);
 
     // get particle state dimension
     const int pos_state_dim = container->get_state_dim(Particle::State::Position);
@@ -271,7 +271,7 @@ int Particle::ConstraintsProjection1D::calc_primary_axis_local(
     if (n_particle_stored < 2) continue;
 
     // get pointer to particle position
-    const double* pos = container->get_ptr_to_state(Particle::State::Position, 0);
+    const double* pos = container->get_ptr_to_state(Particle::State::Position);
 
     // get particle state dimension
     const int pos_state_dim = container->get_state_dim(Particle::State::Position);

@@ -121,8 +121,7 @@ void Particle::ParticleRuntimeVtpWriter::set_particle_positions_and_states()
         std::string statename = enum_to_state_name(state);
 
         // get pointer to particle state
-        const double* state_ptr =
-            (particlestored > 0) ? container->get_ptr_to_state(state, 0) : nullptr;
+        const double* state_ptr = container->get_ptr_to_state(state);
 
         if (state == State::Position)
         {
