@@ -9,20 +9,190 @@
 
 #include "4C_mat_inelastic_defgrad_factors_service.hpp"
 
+#include "4C_comm_pack_helpers.hpp"
+#include "4C_fem_general_largerotations.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_fixedsizematrix_generators.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_four_tensor_generators.hpp"
+#include "4C_linalg_utils_quaternion_interpolation.hpp"
+#include "4C_linalg_utils_scalar_interpolation.hpp"
+#include "4C_linalg_utils_tensor_interpolation.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <string>
 #include <tuple>
+#include <vector>
 
 
 FOUR_C_NAMESPACE_OPEN
 
 using namespace Mat::InelasticDefgradTransvIsotropElastViscoplastUtils;
+namespace AEI =
+    Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::AdaptiveEstimateInterpolation;
+
+
+namespace
+{
+
+  // elastic and plastic predictor locations
+  constexpr double ELASTIC_PREDICTOR_LOCATION = 0.0;
+  constexpr double PLASTIC_PREDICTOR_LOCATION = 1.0;
+  const std::vector ELASTIC_AND_PLASTIC_PREDICTOR_LOCATIONS{
+      Core::LinAlg::diagonal_matrix<1>(ELASTIC_PREDICTOR_LOCATION),
+      Core::LinAlg::diagonal_matrix<1>(PLASTIC_PREDICTOR_LOCATION),
+  };
+
+  const auto UNIT_QUATERNION =
+      make_matrix(Core::LinAlg::Tensor<double, 4, 1>({0.0, 0.0, 0.0, 1.0}));
+
+  // creates the eigenvalue interpolator used for the Adaptive Estimate Interpolation
+  Core::LinAlg::ScalarInterpolator<1> create_eigenvalue_interpolator()
+  {
+    Core::LinAlg::ScalarInterpolationType interp_type =
+        Core::LinAlg::ScalarInterpolationType::logarithmic_weighted_average;
+    Core::LinAlg::ScalarInterpolationWeightingFunction weight_func =
+        Core::LinAlg::ScalarInterpolationWeightingFunction::inverse_distance;
+    Core::LinAlg::ScalarInterpolationParams interp_params;
+
+    return {interp_type, weight_func, interp_params};
+  }
+  const auto EIGENVAL_INTERPOLATOR_AEI = create_eigenvalue_interpolator();
+
+  // given the diagonal eigenvalue tensors of the elastic deformation gradients associated with the
+  // elastic and plastic predictors and an interpolation location between them, interpolate the
+  // eigenvalues using the defined eigenvalue interpolator
+  std::vector<double> interpolate_eigenvalues(
+      const Core::LinAlg::Matrix<3, 3>& eigenvalues_elastic_predictor,
+      const Core::LinAlg::Matrix<3, 3>& eigenvalues_plastic_predictor,
+      const Core::LinAlg::Matrix<1, 1>& interpolation_location_1x1_matrix)
+  {
+    const std::vector<std::vector<double>> scalar_interp_eigenval = {
+        {eigenvalues_elastic_predictor(0, 0), eigenvalues_elastic_predictor(1, 1),
+            eigenvalues_elastic_predictor(2, 2)},
+        {eigenvalues_plastic_predictor(0, 0), eigenvalues_plastic_predictor(1, 1),
+            eigenvalues_plastic_predictor(2, 2)}};
+
+    return EIGENVAL_INTERPOLATOR_AEI.get_interpolated_scalar(scalar_interp_eigenval,
+        ELASTIC_AND_PLASTIC_PREDICTOR_LOCATIONS, interpolation_location_1x1_matrix);
+  }
+
+
+  // Adaptive Estimate Interpolation: compute the elastic deformation gradient, using the
+  // interpolated eigenvalues and the relative rotation contributions (quaternions) with respect to
+  // the elastic deformation gradient within the elastic predictor
+  Core::LinAlg::Matrix<3, 3> compute_elastic_defgrad_wrt_elastic_predictor(
+      const std::vector<double>& interpolated_eigenvalues,
+      const Core::LinAlg::Matrix<3, 3>& eigenvector_rotation_elastic_predictor,
+      const Core::LinAlg::Matrix<4, 1>& interpolated_rel_eigenvector_rotation_quaternion,
+      const Core::LinAlg::Matrix<3, 3>& rotation_elastic_predictor,
+      const Core::LinAlg::Matrix<4, 1>& interpolated_rel_rotation_quaternion)
+  {
+    Core::LinAlg::Matrix<3, 3> out{Core::LinAlg::Initialization::zero};
+
+    // construct diagonal interpolated eigenvalue matrix
+    Core::LinAlg::Matrix<3, 3> eigenval_matrix{Core::LinAlg::Initialization::zero};
+    for (unsigned int i = 0; i < 3; ++i)
+    {
+      eigenval_matrix(i, i) = interpolated_eigenvalues[i];
+    }
+
+    // construct interpolated eigenvector matrix from its relative contribution with respect to the
+    // eigenvector matrix from the elastic predictor:
+    // \f$ \boldsymbol{Q}_{\boldsymbol{F}_{\mathrm{e,interp}}} =
+    // \boldsymbol{Q}_{\boldsymbol{F}_{\mathrm{e}}^{(\mathrm{E})}}
+    // \boldsymbol{Q}_{\boldsymbol{F}_{\mathrm{e,interp}},\mathrm{rel}} \f$
+    // (the relative quaternion is transformed into an equivalent relative rotation matrix)
+    Core::LinAlg::Matrix<3, 3> rel_interp_eigenvect_matrix{Core::LinAlg::Initialization::zero};
+    Core::LargeRotations::quaterniontotriad(
+        interpolated_rel_eigenvector_rotation_quaternion, rel_interp_eigenvect_matrix);
+    Core::LinAlg::Matrix<3, 3> interp_eigenvect_matrix{Core::LinAlg::Initialization::zero};
+    interp_eigenvect_matrix.multiply_nn(
+        1.0, eigenvector_rotation_elastic_predictor, rel_interp_eigenvect_matrix, 0.0);
+
+
+    // construct interpolated rotation matrix from its relative contribution with respect to the
+    // rotation matrix from the elastic predictor:
+    // \f$ \boldsymbol{R}_{\boldsymbol{F}_{\mathrm{e,interp}}} =
+    // \boldsymbol{R}_{\boldsymbol{F}_{\mathrm{e}}^{(\mathrm{E})}}
+    // \boldsymbol{R}_{\boldsymbol{F}_{\mathrm{e,interp}},\mathrm{rel}} \f$
+    // (the relative quaternion is transformed into an equivalent relative rotation matrix)
+    Core::LinAlg::Matrix<3, 3> rel_interp_rot_matrix{Core::LinAlg::Initialization::zero};
+    Core::LargeRotations::quaterniontotriad(
+        interpolated_rel_rotation_quaternion, rel_interp_rot_matrix);
+    Core::LinAlg::Matrix<3, 3> interp_rot_matrix{Core::LinAlg::Initialization::zero};
+    interp_rot_matrix.multiply_nn(1.0, rotation_elastic_predictor, rel_interp_rot_matrix, 0.0);
+
+
+    // multiply contributions to construct the final tensor
+    Core::LinAlg::Matrix<3, 3> LQ{Core::LinAlg::Initialization::zero};
+    LQ.multiply(1.0, eigenval_matrix, interp_eigenvect_matrix, 0.0);
+    Core::LinAlg::Matrix<3, 3> QTLQ{Core::LinAlg::Initialization::zero};
+    QTLQ.multiply_tn(1.0, interp_eigenvect_matrix, LQ, 0.0);
+    out.multiply(1.0, interp_rot_matrix, QTLQ, 0.0);
+
+    return out;
+  }
+
+
+  // precondition matrix: absolute values smaller than a set tolerance are set to 0.0
+  Core::LinAlg::Matrix<3, 3> precondition_matrix(
+      const Core::LinAlg::Matrix<3, 3>& matrix, const double tol)
+  {
+    Core::LinAlg::Matrix<3, 3> out_matrix{matrix};
+
+    for (unsigned i = 0; i < 3; ++i)
+    {
+      for (unsigned j = 0; j < 3; ++j)
+      {
+        if (std::abs(matrix(i, j)) < tol)
+        {
+          out_matrix(i, j) = 0.0;
+        }
+      }
+    }
+    return out_matrix;
+  }
+
+
+  //! calculates the starting point for the Adaptive Estimate Interpolation based on the equivalent
+  //! stress of the previous solution between its both predictors
+  double calculate_equiv_stress_starting_point(
+      const AEI::InputEquivStressStartingPoint& input_equiv_stress_starting_point)
+  {
+    // set to elastic predictor if the stress of the elastic predictor is numerically 0.0 ->
+    // this is theoretically
+    // possible for viscoplastic laws without yield surfaces, which may exhibit plastic flow
+    // even in this case; however, the determination of the starting point requires dividing
+    // over this stress value, which will not be possible in this specific case.
+    // Same goes for the case where the elastic predictor and the plastic predictor are
+    // associated with effectively the same stress value (e.g., during stress relaxation) -> set
+    // starting point as elastic predictor in these particular cases
+    if (input_equiv_stress_starting_point.equiv_stress_elast_pred <= 1.0e-12 ||
+        std::abs(input_equiv_stress_starting_point.equiv_stress_plast_pred -
+                 input_equiv_stress_starting_point.equiv_stress_elast_pred) /
+                input_equiv_stress_starting_point.equiv_stress_elast_pred <
+            1.0e-8)
+    {
+      return ELASTIC_PREDICTOR_LOCATION;
+    }
+
+
+    // compute starting point based on the equivalent stress: we clamp between the elastic and
+    // plastic predictors because in some special cases such as stress relaxation, the starting
+    // point may be slightly out of this interval (machine precision)
+    return std::clamp((input_equiv_stress_starting_point.equiv_stress_solution -
+                          input_equiv_stress_starting_point.equiv_stress_elast_pred) /
+                          (input_equiv_stress_starting_point.equiv_stress_plast_pred -
+                              input_equiv_stress_starting_point.equiv_stress_elast_pred),
+        ELASTIC_PREDICTOR_LOCATION, PLASTIC_PREDICTOR_LOCATION);
+  }
+
+}  // namespace
 
 
 void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ThermoMechanicalCouplingCache::resize(
@@ -94,7 +264,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ConstNonMatTensors::Cons
   // set constant non-material tensors
 
   // 3x3 identity
-  id3x3.update(1.0, unit3x3, 0.0);
+  id3x3 = unit3x3;
 
   // Voigt stress form of 3x3 identity
   Core::LinAlg::Voigt::VoigtUtils<Core::LinAlg::Voigt::NotationType::stress>::matrix_to_vector(
@@ -597,18 +767,471 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager:
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
-Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationDeformationTensors::
-    LocalIntegrationDeformationTensors(
-        const Core::LinAlg::Matrix<3, 3>& F, const Core::LinAlg::Matrix<3, 3>& last_iFp)
+Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput::
+    LocalIntegrationInput(const Config& cfg)
 {
-  defgrad = F;
+  defgrad = cfg.defgrad;
   inv_defgrad.invert(defgrad);
   right_cg.multiply_tn(1.0, defgrad, defgrad, 0.0);
-  elastic_predictor_inverse_plastic_defgrad = last_iFp;
+  elastic_predictor_inverse_plastic_defgrad = cfg.last_inv_inelastic_defgrad;
   elastic_predictor_elastic_defgrad.multiply(
       1.0, defgrad, elastic_predictor_inverse_plastic_defgrad, 0.0);
+  temperature = cfg.temperature;
+  last_plastic_strain = cfg.last_plastic_strain;
+  step = cfg.step;
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::PredictorInterpolator::construct_prelim_plastic_pred(
+    const Core::LinAlg::Matrix<3, 3>& elastic_defgrad_elastic_pred,
+    const double elastic_predictor_zero_component_threshold,
+    const PlasticPredictorConstructionParams& plastic_predictor_construction_params)
+{
+  // get (preconditioned) elastic deformation gradient to be considered as elastic predictor
+  const auto precond_elastic_defgrad_elastic_pred =
+      precondition_matrix(elastic_defgrad_elastic_pred, elastic_predictor_zero_component_threshold);
+
+  //  perform polar-spectral decomposition of elastic defgrad within elastic predictor
+  Core::LinAlg::Matrix<3, 3> material_stretch_elast_pred{Core::LinAlg::Initialization::zero};
+  Core::LinAlg::Matrix<3, 3> eigenval_elast_pred_temp{
+      Core::LinAlg::Initialization::zero};  // needed here for the function call, but we will grab
+                                            // the ordered eigenvalues from the spectral pairs
+  std::array<std::pair<double, Core::LinAlg::Matrix<3, 1>>, 3> spectral_pairs_elast_pred;
+  Core::LinAlg::matrix_3x3_polar_decomposition(precond_elastic_defgrad_elastic_pred,
+      rot_elast_pred_, material_stretch_elast_pred, eigenval_elast_pred_temp,
+      spectral_pairs_elast_pred);
+  for (int i = 0; i < 3; ++i)
+  {
+    FOUR_C_ASSERT_ALWAYS(spectral_pairs_elast_pred[i].first >= 1.0e-8,
+        "The eigenvalue {} of the elastic deformation gradient within the elastic predictor is {}, "
+        "such that its logarithm can not be computed!",
+        i, spectral_pairs_elast_pred[i].first);
+    eigenval_elast_pred_(i, i) = spectral_pairs_elast_pred[i].first;
+    for (int j = 0; j < 3; ++j)
+    {
+      eigenvect_rot_elast_pred_(i, j) = spectral_pairs_elast_pred[i].second(j);
+    }
+  }
+
+  // -->  construct a preliminary plastic predictor based on the parameter specifications
+
+  // elastic stretch eigenvectors
+  switch (plastic_predictor_construction_params.elastic_stretch_eigenvect_type)
+  {
+    case AEI::PrelimPlasticPredictor::ElasticStretchEigenvectType::from_elastic_predictor:
+    {
+      rel_eigenvect_rot_plast_pred_ = UNIT_QUATERNION;
+      break;
+    }
+    default:
+    {
+      // other eigenvector rotation types not yet enabled; in case of multiple eigenvalues, a
+      // canonicalization approach for the related eigenvectors must be first implemented for the
+      // spectral decomposition to avoid artificial rotation contributions
+      FOUR_C_THROW(
+          "Elastic stretch eigenvector type {} not yet enabled for the preliminary plastic "
+          "predictor",
+          EnumTools::enum_name(
+              plastic_predictor_construction_params.elastic_stretch_eigenvect_type));
+    }
+  }
+
+  // elastic rotation
+  switch (plastic_predictor_construction_params.elastic_rotation_type)
+  {
+    case AEI::PrelimPlasticPredictor::ElasticRotationType::from_elastic_predictor:
+    {
+      rel_rot_plast_pred_ = UNIT_QUATERNION;
+      break;
+    }
+    default:
+    {
+      // same as in the case of the elastic stretch eigenvectors
+      FOUR_C_THROW("Elastic rotation type {} not yet enabled for the plastic predictor!",
+          EnumTools::enum_name(plastic_predictor_construction_params.elastic_rotation_type));
+    }
+  }
+
+  // elastic stretch eigenvalues
+  const double detF = precond_elastic_defgrad_elastic_pred.determinant();
+  switch (plastic_predictor_construction_params.elastic_stretch_eigenval_type)
+  {
+    case AEI::PrelimPlasticPredictor::ElasticStretchEigenvalType::scale_unit:
+    {
+      eigenval_plast_pred_ = Core::LinAlg::diagonal_matrix<3>(std::cbrt(detF));
+
+      break;
+    }
+    default:
+    {
+      FOUR_C_THROW("Elastic stretch eigenvalue type {} not yet enabled for the plastic predictor",
+          EnumTools::enum_name(
+              plastic_predictor_construction_params.elastic_stretch_eigenval_type));
+    }
+  }
 }
 
 
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::PredictorInterpolator::interpolate_elastic_defgrad_contributions(const double interp_loc,
+    Core::LinAlg::Matrix<4, 1>& interp_rel_rot_quat, std::vector<double>& interp_eigenval,
+    Core::LinAlg::Matrix<4, 1>& interp_rel_eigenvect_rot_quat) const
+{
+  // consistency checks
+  FOUR_C_ASSERT(
+      ELASTIC_PREDICTOR_LOCATION <= interp_loc && interp_loc <= PLASTIC_PREDICTOR_LOCATION,
+      "Interpolation is constrained to the interval between the elastic and the plastic "
+      "predictors! The current plastic predictor location "
+      "{} is out of these bounds: [{}, {}]",
+      interp_loc, ELASTIC_PREDICTOR_LOCATION, PLASTIC_PREDICTOR_LOCATION);
+
+  // auxiliaries
+  Core::LinAlg::Matrix<1, 1> matrix_interp_loc{Core::LinAlg::Initialization::zero};
+  matrix_interp_loc(0) = interp_loc;
+
+  // --> interpolate eigenvalues
+  interp_eigenval =
+      interpolate_eigenvalues(eigenval_elast_pred_, eigenval_plast_pred_, matrix_interp_loc);
+
+  // interpolate quaternions
+  interp_rel_eigenvect_rot_quat = Core::LinAlg::spherical_linear_interpolation(
+      UNIT_QUATERNION, rel_eigenvect_rot_plast_pred_, interp_loc);
+  interp_rel_rot_quat = Core::LinAlg::spherical_linear_interpolation(
+      UNIT_QUATERNION, rel_rot_plast_pred_, interp_loc);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+Core::LinAlg::Matrix<3, 3> AEI::PredictorInterpolator::interpolate_elastic_defgrad(
+    const double interp_loc) const
+{
+  // consistency checks
+  FOUR_C_ASSERT(
+      ELASTIC_PREDICTOR_LOCATION <= interp_loc && interp_loc <= PLASTIC_PREDICTOR_LOCATION,
+      "Interpolation is constrained to the interval between the elastic and the plastic "
+      "predictors! The current plastic predictor location "
+      "{} is out of these bounds: [{}, {}]",
+      interp_loc, ELASTIC_PREDICTOR_LOCATION, PLASTIC_PREDICTOR_LOCATION);
+
+  // interpolate contributions
+  Core::LinAlg::Matrix<4, 1> interp_rel_rot_quat{Core::LinAlg::Initialization::zero};
+  std::vector<double> interp_eigenval;
+  Core::LinAlg::Matrix<4, 1> interp_rel_eigenvect_rot_quat{Core::LinAlg::Initialization::zero};
+  interpolate_elastic_defgrad_contributions(
+      interp_loc, interp_rel_rot_quat, interp_eigenval, interp_rel_eigenvect_rot_quat);
+
+  return compute_elastic_defgrad_wrt_elastic_predictor(interp_eigenval, eigenvect_rot_elast_pred_,
+      interp_rel_eigenvect_rot_quat, rot_elast_pred_, interp_rel_rot_quat);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::PredictorInterpolator::update_plastic_predictor_after_construction_algo(
+    const double plastic_pred_loc)
+{
+  // consistency checks
+  FOUR_C_ASSERT(ELASTIC_PREDICTOR_LOCATION <= plastic_pred_loc &&
+                    plastic_pred_loc <= PLASTIC_PREDICTOR_LOCATION,
+      "Interpolation constrained to the interval between the elastic and the plastic "
+      "predictors! The current plastic predictor location "
+      "{} is out of these bounds: [{}, {}]",
+      plastic_pred_loc, ELASTIC_PREDICTOR_LOCATION, PLASTIC_PREDICTOR_LOCATION);
+
+  // set all quantities relevant for the plastic predictor
+  std::vector<double> interp_eigenval;
+  interpolate_elastic_defgrad_contributions(
+      plastic_pred_loc, rel_rot_plast_pred_, interp_eigenval, rel_eigenvect_rot_plast_pred_);
+  for (unsigned int i = 0; i < 3; ++i)
+  {
+    eigenval_plast_pred_(i, i) = interp_eigenval[i];
+  }
+}
+
+AEI::InterpolationPointContainer::InterpolationPointContainer(
+    const EstimateInterpolationParams& estimate_interpolation_params)
+{
+  // set starting points for both constant starting points and the strategy based on the
+  // equivalent stress history (starting point will evolve for the latter based on the material
+  // evaluation of the subsequent timesteps)
+  switch (estimate_interpolation_params.starting_point_type)
+  {
+    case AEI::StartingPointType::constant:
+    case AEI::StartingPointType::equiv_stress_history:
+    {
+      starting_point = estimate_interpolation_params.user_set_starting_point;
+      break;
+    }
+    default:
+    {
+      FOUR_C_THROW(
+          "Interpolation point container initialization not supported for starting point type {}",
+          EnumTools::enum_name(estimate_interpolation_params.starting_point_type));
+    }
+  }
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::InterpolationPointContainer::reset_bounds_and_current_interp_point()
+{
+  current_interp_point = starting_point;
+  lower_interp_bound = ELASTIC_PREDICTOR_LOCATION;
+  upper_interp_bound = PLASTIC_PREDICTOR_LOCATION;
+}
+
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+AEI::AEIManager::AEIManager(const AEI::AEIParams& aei_params) : params_(aei_params)
+{
+  // initialize class variables
+  num_plastic_pred_construct_iters_ = 0;
+  num_estimate_interp_iters_ = 0;
+  num_reestimations_ = 0;
+  interpolation_point_containers_.resize(
+      1, InterpolationPointContainer(aei_params.estimate_interpolation));
+  predictor_interpolators_.resize(1);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::AEIManager::resize(const unsigned int num_gp)
+{
+  FOUR_C_ASSERT(!resize_called_,
+      "You already called resize for the adaptive estimate interpolation manager! You attempt to "
+      "set it to {}",
+      num_gp);
+
+  interpolation_point_containers_.resize(num_gp, interpolation_point_containers_[0]);
+  predictor_interpolators_.resize(num_gp, predictor_interpolators_[0]);
+
+  resize_called_ = true;
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::AEIManager::reset_and_construct_prelim_plastic_pred(
+    const unsigned int gp, const LocalIntegrationInput& local_integration_input)
+{
+  // reset tracking variables
+  num_plastic_pred_construct_iters_ = 0;
+  num_estimate_interp_iters_ = 0;
+  num_reestimations_ = 0;
+  interpolation_point_containers_[gp].reset_bounds_and_current_interp_point();
+
+  // construct the preliminary predictor
+  predictor_interpolators_[gp].construct_prelim_plastic_pred(
+      local_integration_input.elastic_predictor_elastic_defgrad,
+      params_.elastic_predictor_zero_component_threshold, params_.plastic_predictor_construction);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::AEIManager::pack(Core::Communication::PackBuffer& data) const
+{
+  // pack number of Gauss points
+  Core::Communication::add_to_pack(data, interpolation_point_containers_.size());
+
+  // pack starting points
+  for (const auto& interp_point_container : interpolation_point_containers_)
+  {
+    Core::Communication::add_to_pack(data, interp_point_container.starting_point);
+  }
+  Core::Communication::add_to_pack(data, resize_called_);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::AEIManager::unpack(Core::Communication::UnpackBuffer& buffer)
+{
+  // unpack number of Gauss points
+  std::size_t num_gp;
+  Core::Communication::extract_from_pack(buffer, num_gp);
+
+  // create interpolation point containers and predictor interpolators according to the number of
+  // Gauss points; for the interpolation point containers, also extract the respective starting
+  // point from the buffer
+  interpolation_point_containers_.resize(
+      num_gp, InterpolationPointContainer(params_.estimate_interpolation));
+  predictor_interpolators_.resize(num_gp);
+  for (unsigned int gp = 0; gp < num_gp; ++gp)
+  {
+    Core::Communication::extract_from_pack(
+        buffer, interpolation_point_containers_[gp].starting_point);
+  }
+  Core::Communication::extract_from_pack(buffer, resize_called_);
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+Core::LinAlg::Matrix<3, 3> AEI::AEIManager::interpolate_inverse_inelastic_defgrad(
+    const unsigned int gp, const Core::LinAlg::Matrix<3, 3>& inv_defgrad) const
+{
+  Core::LinAlg::Matrix<3, 3> interp_elastic_defgrad =
+      predictor_interpolators_[gp].interpolate_elastic_defgrad(
+          interpolation_point_containers_[gp].current_interp_point);
+
+  Core::LinAlg::Matrix<3, 3> inv_inelastic_defgrad{Core::LinAlg::Initialization::zero};
+  inv_inelastic_defgrad.multiply(1.0, inv_defgrad, interp_elastic_defgrad);
+
+  return inv_inelastic_defgrad;
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+Core::LinAlg::Matrix<3, 3> AEI::AEIManager::get_inverse_inelastic_defgrad_plastic_pred(
+    const unsigned int gp, const Core::LinAlg::Matrix<3, 3>& inv_defgrad) const
+{
+  // the plastic predictor lies at the location 1.0
+  Core::LinAlg::Matrix<3, 3> interp_elastic_defgrad =
+      predictor_interpolators_[gp].interpolate_elastic_defgrad(1.0);
+
+  Core::LinAlg::Matrix<3, 3> inv_inelastic_defgrad{Core::LinAlg::Initialization::zero};
+  inv_inelastic_defgrad.multiply(1.0, inv_defgrad, interp_elastic_defgrad);
+
+  return inv_inelastic_defgrad;
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::AEIManager::update_plastic_predictor_after_construction_algo(const unsigned int gp)
+{
+  // update the plastic predictor quantities
+  predictor_interpolators_[gp].update_plastic_predictor_after_construction_algo(
+      interpolation_point_containers_[gp].current_interp_point);
+
+  // reset the interpolation point container
+  interpolation_point_containers_[gp].reset_bounds_and_current_interp_point();
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::AEIManager::adapt_interpolation_interval(
+    const unsigned int gp, const InterpolationIntervalShift& interval_shift)
+{
+  switch (interval_shift)
+  {
+    case InterpolationIntervalShift::towards_elastic_pred:
+    {
+      interpolation_point_containers_[gp].upper_interp_bound =
+          interpolation_point_containers_[gp].current_interp_point;
+      break;
+    }
+    case InterpolationIntervalShift::towards_plastic_pred:
+    {
+      interpolation_point_containers_[gp].lower_interp_bound =
+          interpolation_point_containers_[gp].current_interp_point;
+      break;
+    }
+    default:
+    {
+      FOUR_C_THROW(
+          "You should not be here in the interpolation routine! The shift direction {} is not "
+          "supported!",
+          EnumTools::enum_name(interval_shift));
+    }
+  }
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::AEIManager::set_current_interp_point(
+    const unsigned int gp, const CurrentInterpPointPreset preset)
+{
+  FOUR_C_ASSERT(gp < interpolation_point_containers_.size(), "GP index out of range");
+  switch (preset)
+  {
+    case CurrentInterpPointPreset::plastic_pred_construct_update:
+    {
+      interpolation_point_containers_[gp].current_interp_point =
+          interpolation_point_containers_[gp].lower_interp_bound +
+          params_.plastic_predictor_construction.interval_scanning_param *
+              (interpolation_point_containers_[gp].upper_interp_bound -
+                  interpolation_point_containers_[gp].lower_interp_bound);
+      return;
+    }
+    case CurrentInterpPointPreset::estimate_interpolation_update:
+    {
+      interpolation_point_containers_[gp].current_interp_point =
+          interpolation_point_containers_[gp].lower_interp_bound +
+          params_.estimate_interpolation.interval_scanning_param *
+              (interpolation_point_containers_[gp].upper_interp_bound -
+                  interpolation_point_containers_[gp].lower_interp_bound);
+      return;
+    }
+    case CurrentInterpPointPreset::lower_interp_bound:
+    {
+      interpolation_point_containers_[gp].current_interp_point =
+          interpolation_point_containers_[gp].lower_interp_bound;
+      return;
+    }
+    case CurrentInterpPointPreset::upper_interp_bound:
+    {
+      interpolation_point_containers_[gp].current_interp_point =
+          interpolation_point_containers_[gp].upper_interp_bound;
+      return;
+    }
+    case CurrentInterpPointPreset::elastic_predictor:
+    {
+      interpolation_point_containers_[gp].current_interp_point = ELASTIC_PREDICTOR_LOCATION;
+      return;
+    }
+    case CurrentInterpPointPreset::plastic_predictor:
+    {
+      interpolation_point_containers_[gp].current_interp_point = PLASTIC_PREDICTOR_LOCATION;
+      return;
+    }
+    case CurrentInterpPointPreset::starting_point:
+    {
+      interpolation_point_containers_[gp].current_interp_point =
+          interpolation_point_containers_[gp].starting_point;
+      return;
+    }
+    case CurrentInterpPointPreset::intermediate_point:
+    {
+      interpolation_point_containers_[gp].current_interp_point =
+          interpolation_point_containers_[gp].lower_interp_bound +
+          params_.reestimation.interval_scanning_param *
+              (interpolation_point_containers_[gp].current_interp_point -
+                  interpolation_point_containers_[gp].lower_interp_bound);
+      return;
+    }
+    default:
+      FOUR_C_THROW(
+          "Unsupported current interpolation point preset {}", EnumTools::enum_name(preset));
+  }
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::AEIManager::set_user_starting_point(const unsigned gp)
+{
+  FOUR_C_ASSERT(gp < interpolation_point_containers_.size(), "GP index out of range");
+  FOUR_C_ASSERT_ALWAYS(
+      params_.estimate_interpolation.starting_point_type == AEI::StartingPointType::constant,
+      "Setter should only be called for user-set starting points, not for {}",
+      EnumTools::enum_name(params_.estimate_interpolation.starting_point_type));
+
+
+  interpolation_point_containers_[gp].starting_point =
+      params_.estimate_interpolation.user_set_starting_point;
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void AEI::AEIManager::set_stress_based_starting_point(
+    const unsigned gp, InputEquivStressStartingPoint input_equiv_stress_starting_point)
+{
+  FOUR_C_ASSERT(gp < interpolation_point_containers_.size(), "GP index out of range");
+  FOUR_C_ASSERT_ALWAYS(params_.estimate_interpolation.starting_point_type ==
+                           AEI::StartingPointType::equiv_stress_history,
+      "Setter should only be called for stress-based starting points, not for {}",
+      EnumTools::enum_name(params_.estimate_interpolation.starting_point_type));
+
+  interpolation_point_containers_[gp].starting_point =
+      calculate_equiv_stress_starting_point(input_equiv_stress_starting_point);
+}
 
 FOUR_C_NAMESPACE_CLOSE
