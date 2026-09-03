@@ -483,7 +483,21 @@ def one_of_to_md(one_of: One_Of, path_prefix: str = ""):
 
 def set_missing_description(description):
     if check_if_set(description):
-        return "*" + description + "*"
+        # CommonMark emphasis (*...*) cannot span a blank line, so a description
+        # consisting of multiple paragraphs (e.g. containing a display math block)
+        # must not be wrapped as a single italic span. Instead, italicize each
+        # paragraph separately and leave display math blocks ($$...$$) unwrapped.
+        paragraphs = description.split("\n\n")
+        if len(paragraphs) == 1:
+            return "*" + description + "*"
+
+        wrapped_paragraphs = []
+        for paragraph in paragraphs:
+            if paragraph.strip().startswith("$$") and paragraph.strip().endswith("$$"):
+                wrapped_paragraphs.append(paragraph)
+            else:
+                wrapped_paragraphs.append("*" + paragraph + "*")
+        return "\n\n".join(wrapped_paragraphs)
     else:
         return DESCRIPTION_MISSING
 
