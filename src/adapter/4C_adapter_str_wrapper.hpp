@@ -284,9 +284,9 @@ namespace Adapter
     /// integrate from t1 to t2
     void integrate() override { structure_->integrate(); }
 
-    Solid::StepStatus perform_error_action(Solid::StepStatus solve_status) override
+    Solid::StepAction perform_error_action(Solid::StepStatus step_status) override
     {
-      return structure_->perform_error_action(solve_status);
+      return structure_->perform_error_action(step_status);
     }
 
     /// tests if there are more time steps to do
@@ -364,6 +364,8 @@ namespace Adapter
 
     /// output results to screen
     void print_step() override { structure_->print_step(); }
+
+    void finalize_successful_step() override { structure_->finalize_successful_step(); }
 
     /// read restart information for given time step
     void read_restart(const int step) override { structure_->read_restart(step); }

@@ -15,6 +15,9 @@
 #include "4C_fem_condition.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_structure_timint.hpp"
+#include "4C_timestepping_time_step_control.hpp"
+
+#include <deque>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -112,6 +115,10 @@ namespace Solid
 
     */
     void setup() override;
+
+    Solid::StepAction perform_error_action(Solid::StepStatus solve_status) override;
+
+    void finalize_successful_step() override;
 
 
     //! Resize \p TimIntMStep<T> multi-step quantities
@@ -582,10 +589,6 @@ namespace Solid
     //! Linear structure solve with just an interface load
     std::shared_ptr<Core::LinAlg::Vector<double>> solve_relaxation_linear() override;
 
-    //! check, if according to divercont flag time step size can be increased
-    void check_for_time_step_increase(Solid::StepStatus& status);
-
-
     /*! \brief Prepare system for solving with Newton's method
      *
      *  Blank DOFs with Dirichlet BCs in the residual. By default
@@ -701,6 +704,15 @@ namespace Solid
     //@}
 
    protected:
+    //! Reduce the time-step size and reset state so the current step can be retried.
+    void prepare_retry_with_reduced_time_step();
+
+    //! Update time-step control history and set the time-step size for the next step.
+    void time_step_control_after_successful_step();
+
+    //! Apply a changed time-step size and refresh all dependent time-integration state.
+    void set_new_time_step_size(double new_dt);
+
     //! @name Output to file or screen
     //@{
 
@@ -775,6 +787,15 @@ namespace Solid
     Solid::VectorNorm iternorm_;  //!< vector norm to check with
     int itermax_;                 //!< maximally permitted iterations
     int itermin_;                 //!< minimally requested iterations
+
+    /// settings for time-step control
+    TimeStepping::TimeStepControlSettings time_step_control_settings_;
+
+    //! Number of accepted steps since the current time-step size was selected.
+    size_t num_steps_at_current_dt_ = 0;
+
+    //! Nonlinear iteration counts from the recent accepted steps used for time-step recovery.
+    std::deque<size_t> number_of_nonlinear_iterations_per_step_;
 
     double toldisi_;        //!< tolerance residual displacements
     double tolfres_;        //!< tolerance force residual

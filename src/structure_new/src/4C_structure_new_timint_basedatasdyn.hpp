@@ -13,6 +13,7 @@
 #include "4C_rebalance.hpp"
 #include "4C_solver_nonlin_nox_enum_lists.hpp"
 #include "4C_structure_new_input.hpp"
+#include "4C_timestepping_time_step_control.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
@@ -233,13 +234,13 @@ namespace Solid
         return mid_time_energy_type_;
       }
 
-      /// Returns number of times you want to halve your timestep in case nonlinear solver
-      /// diverges
-      int get_max_div_con_refine_level() const
+
+      /// Returns the time-step control settings
+      [[nodiscard]] const TimeStepping::TimeStepControlSettings& time_step_control_settings() const
       {
         check_init_setup();
-        return maxdivconrefinementlevel_;
-      };
+        return time_step_control_settings_;
+      }
 
       /// Returns nox parameters
       const Teuchos::ParameterList& get_nox_params() const
@@ -360,29 +361,6 @@ namespace Solid
         return nox_normtype_;
       }
 
-      /// Return random factor for timestep in case nonlinear solver diverges
-      double get_random_time_step_factor() const
-      {
-        check_init_setup();
-        return rand_tsfac_;
-      }
-
-
-      /// Return level of refinement in case of divercontype_ == adapt_step
-      int get_div_con_refine_level() const
-      {
-        check_init_setup();
-        return divconrefinementlevel_;
-      }
-
-
-      /// Return number of fine steps in case of in case of divercontype_ == adapt_step
-      int get_div_con_num_fine_step() const
-      {
-        check_init_setup();
-        return divconnumfinestep_;
-      }
-
       /// @name Get residual and increment related parameters
       ///@{
       /// Returns the combination type of the two quantities
@@ -441,26 +419,6 @@ namespace Solid
         timemax_ = new_timemax;
       };
 
-      /// Set random factor for timestep in case nonlinear solver diverges
-      void set_random_time_step_factor(double new_rand_tsfac)
-      {
-        check_init_setup();
-        rand_tsfac_ = new_rand_tsfac;
-      }
-
-      /// Set level of refinement in case of divercontype_ == adapt_step
-      void set_div_con_refine_level(int new_divconrefinementlevel)
-      {
-        check_init_setup();
-        divconrefinementlevel_ = new_divconrefinementlevel;
-      }
-
-      /// Return number of fine steps in case of in case of divercontype_ == adapt_step
-      void set_div_con_num_fine_step(int new_divconnumfinestep)
-      {
-        check_init_setup();
-        divconnumfinestep_ = new_divconnumfinestep;
-      }
       ///@}
 
       /// @name Get mutable NOX parameters (read and write access)
@@ -662,8 +620,8 @@ namespace Solid
       /// mid-time energy type
       Solid::MidAverageEnum mid_time_energy_type_;
 
-      /// how often you want to half your timestep until you give up
-      int maxdivconrefinementlevel_;
+      /// settings for time-step control
+      TimeStepping::TimeStepControlSettings time_step_control_settings_;
 
       /// nox parameters list
       std::shared_ptr<Teuchos::ParameterList> noxparams_;
@@ -803,17 +761,6 @@ namespace Solid
       /// type of combination of the displacement and the 0D cardiovascular model dof increment
       /// test
       Solid::BinaryOp normcombo_disp_constr_incr_;
-
-      /// random factor for modifying time-step size in case this way of continuing non-linear
-      /// iteration was chosen
-      double rand_tsfac_;
-
-      /// number of refinement level in case of divercontype_ == adapt_step
-      int divconrefinementlevel_;
-
-      /// number of converged time steps on current refinement level in case of divercontype_ ==
-      /// adapt_step
-      int divconnumfinestep_;
 
       ///@}
 

@@ -284,7 +284,7 @@ void EHL::Monolithic::newton_full()
     print_newton_conv();
   }
   else if (Teuchos::getIntegralValue<Solid::DivContAct>(sdyn_, "DIVERCONT") ==
-           Solid::divcont_continue)
+           Solid::DivContAct::ignore)
     ;
   else if (iter_ >= itermax_)
     FOUR_C_THROW("Newton unconverged in {} iterations", iter_);

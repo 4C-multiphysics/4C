@@ -276,7 +276,7 @@ namespace Adapter
     );
 
     /// Perform adaptive-loop error action once the nonlinear iteration fails
-    Solid::StepStatus perform_error_action(const Solid::DivContAct& action, double& stepsizenew);
+    Solid::StepAction perform_error_action(const Solid::DivContAct& action, double& stepsizenew);
   };
 
 }  // namespace Adapter

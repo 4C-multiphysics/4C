@@ -31,7 +31,13 @@ namespace Solid
     nonlinear_solver_failed,  //< nonlinear solver did not converge
     linear_solver_failed,     //< linear solver did not converge
     evaluation_failed,        //< evaluation of the residual or jacobian failed
-    fail_repeat               //< step failed and should be repeated
+  };
+
+  /// Time-loop action selected from the current step status.
+  enum class StepAction : std::int8_t
+  {
+    accept_step,  ///< accept the current step and continue normally
+    retry_step,   ///< repeat the current step
   };
 }  // namespace Solid
 
@@ -323,20 +329,20 @@ namespace Adapter
     virtual void integrate() = 0;
 
     /**
-    @brief Transforms the step status.
+    @brief Converts the step status into a step action.
 
-    A successful step status is returned directly as is.
-    If this function returns fail_repeat, it also is responsible for resetting the current step and
+    A successful step status is directly converted into accept_step.
+    If this function returns retry_step, it also is responsible for resetting the current step and
     preparing the next step for retry.
 
     @param step_status The status of the last solid evaluation or solve call.
     @return The action to take in the time loop.
      */
-    virtual Solid::StepStatus perform_error_action(Solid::StepStatus step_status)
+    virtual Solid::StepAction perform_error_action(Solid::StepStatus step_status)
     {
       // This base implementation only accepts successful steps and rejects all other statuses.
       // Derived classes may override this to implement retry mechanisms.
-      if (step_status == Solid::StepStatus::no_errors) return Solid::StepStatus::no_errors;
+      if (step_status == Solid::StepStatus::no_errors) return Solid::StepAction::accept_step;
       FOUR_C_THROW("Structural solve failed.");
     }
 
@@ -423,6 +429,13 @@ namespace Adapter
 
     /// output results to screen
     virtual void print_step() = 0;
+
+    /** \brief Finalize an accepted time step after update and output have been completed.
+     *
+     *  Derived methods may extend this hook with algorithm-specific work that belongs after
+     *  accepting and writing a step, such as dynamic rebalancing or time-step control updates.
+     */
+    virtual void finalize_successful_step() { print_step(); }
 
     /// read restart information for given time step
     void read_restart(const int step) override = 0;

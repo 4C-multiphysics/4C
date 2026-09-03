@@ -531,7 +531,8 @@ void TSI::Monolithic::newton_full()
   // test whether max iterations was hit
   if (iter_ >= itermax_ and not converged())
   {
-    if (Teuchos::getIntegralValue<Solid::DivContAct>(sdyn_, "DIVERCONT") == Solid::divcont_continue)
+    if (Teuchos::getIntegralValue<Solid::DivContAct>(sdyn_, "DIVERCONT") ==
+        Solid::DivContAct::ignore)
       ;  // do nothing
     else
       FOUR_C_THROW("Newton unconverged in {} iterations", iter_);

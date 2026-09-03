@@ -13,6 +13,7 @@
 #include "4C_global_data.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_structure_new_utils.hpp"
+#include "4C_timestepping_time_step_control.hpp"
 #include "4C_utils_shared_ptr_from_ref.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
@@ -46,9 +47,8 @@ Solid::TimeInt::BaseDataSDyn::BaseDataSDyn()
       prestresstype_(Solid::PreStress::none),
       predtype_(Solid::pred_vague),
       nlnsolvertype_(Solid::soltech_vague),
-      divergenceaction_(Solid::divcont_stop),
+      divergenceaction_(Solid::DivContAct::stop),
       mid_time_energy_type_(Solid::midavg_vague),
-      maxdivconrefinementlevel_(-1),
       noxparams_(nullptr),
       ptc_delta_init_(0.0),
       linsolvers_(nullptr),
@@ -85,9 +85,6 @@ Solid::TimeInt::BaseDataSDyn::BaseDataSDyn()
       normcombo_disp_cardvasc0d_incr_(Solid::bop_and),
       normcombo_fres_constr_res_(Solid::bop_and),
       normcombo_disp_constr_incr_(Solid::bop_and),
-      rand_tsfac_(1.0),
-      divconrefinementlevel_(0),
-      divconnumfinestep_(0),
       sdynparams_ptr_(nullptr)
 {
   // empty constructor
@@ -182,9 +179,11 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
     divergenceaction_ = Teuchos::getIntegralValue<Solid::DivContAct>(sdynparams, "DIVERCONT");
     mid_time_energy_type_ =
         Teuchos::getIntegralValue<Solid::MidAverageEnum>(sdynparams, "MIDTIME_ENERGY_TYPE");
-    maxdivconrefinementlevel_ = sdynparams.get<int>("MAXDIVCONREFINEMENTLEVEL");
     noxparams_ = std::make_shared<Teuchos::ParameterList>(xparams.sublist("NOX"));
     ptc_delta_init_ = sdynparams.get<double>("PTCDT");
+    time_step_control_settings_ = TimeStepping::TimeStepControlSettings(
+        sdynparams.get<TimeStepping::TimeStepControlSettings::InputParameters>("TIMESTEP CONTROL"),
+        sdynparams.get<double>("TIMESTEP"), itermax_);
   }
   // ---------------------------------------------------------------------------
   // initialize linear solver variables

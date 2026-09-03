@@ -99,6 +99,8 @@ namespace Solid
        *  have to be reset. */
       void reset_step() override;
 
+      void finalize_successful_step() override;
+
       /// things that should be done after the actual time loop is finished
       void post_time_loop() override;
 
@@ -407,58 +409,6 @@ namespace Solid
       {
         check_init_setup();
         return datasdyn_->get_divergence_action();
-      }
-
-      //! Get number of times you want to halve your timestep in case nonlinear solver diverges
-      [[nodiscard]] virtual int get_max_div_con_refine_level() const
-      {
-        check_init_setup();
-        return datasdyn_->get_max_div_con_refine_level();
-      }
-
-      //! Get random factor for time step adaption
-      [[nodiscard]] virtual double get_random_time_step_factor() const
-      {
-        check_init_setup();
-        return datasdyn_->get_random_time_step_factor();
-      }
-
-      //! Set random factor for time step adaption
-      virtual double set_random_time_step_factor(double rand_tsfac)
-      {
-        check_init_setup();
-        datasdyn_->set_random_time_step_factor(rand_tsfac);
-        return datasdyn_->get_random_time_step_factor();
-      }
-
-      //! Get current refinement level for time step adaption
-      [[nodiscard]] virtual int get_div_con_refine_level() const
-      {
-        check_init_setup();
-        return datasdyn_->get_div_con_refine_level();
-      }
-
-      //! Set refinement level for time step adaption
-      virtual int set_div_con_refine_level(int divconrefinementlevel)
-      {
-        check_init_setup();
-        datasdyn_->set_div_con_refine_level(divconrefinementlevel);
-        return datasdyn_->get_div_con_refine_level();
-      }
-
-      //! Get step of current refinement level for time step adaption
-      [[nodiscard]] virtual int get_div_con_num_fine_step() const
-      {
-        check_init_setup();
-        return datasdyn_->get_div_con_num_fine_step();
-      }
-
-      //! Set step of current refinement level for time step adaption
-      virtual int set_div_con_num_fine_step(int divconnumfinestep)
-      {
-        check_init_setup();
-        datasdyn_->set_div_con_num_fine_step(divconnumfinestep);
-        return datasdyn_->get_div_con_num_fine_step();
       }
 
       /// set evaluation action

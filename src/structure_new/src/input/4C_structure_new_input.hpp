@@ -13,6 +13,7 @@
 
 #include "4C_io_input_spec.hpp"
 
+#include <cstdint>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -176,20 +177,13 @@ namespace Solid
 
 
   /// Handling of non-converged nonlinear solver
-  enum DivContAct
+  enum class DivContAct : std::uint8_t
   {
-    divcont_stop,             ///< abort simulation
-    divcont_continue,         ///< continue nevertheless
-    divcont_repeat_step,      ///< repeat time step
-    divcont_halve_step,       ///< halve time step and carry on with simulation
-    divcont_adapt_step,       ///< adapt (halve or double) time step and carry on with simulation
-    divcont_rand_adapt_step,  ///< adapt randomly time step and carry on with simulation
-    divcont_rand_adapt_step_ele_err,  ///< adapt randomly time step and carry on with simulation,
-                                      ///< including acceptance of element errors in form of
-                                      ///< negative Jacobian determinant
-    divcont_repeat_simulation,        ///< repeat the whole simulation
-    divcont_adapt_penaltycontact,     ///< slightly adapt the penalty contact parameter if timestep
-                                      ///< doesn't converge
+    stop,                  ///< abort simulation
+    ignore,                ///< continue nevertheless
+    adapt_step,            ///< adapt (halve or double) time step and carry on with simulation
+    adapt_penaltycontact,  ///< slightly adapt the penalty contact parameter if timestep
+                           ///< doesn't converge
   };
 
   /// type of norm to check for convergence

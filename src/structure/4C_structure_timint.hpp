@@ -253,8 +253,6 @@ namespace Solid
       return timen_ <= timemax_ + 1.0e-8 * (*dt_)[0] and stepn_ <= stepmax_;
     }
 
-    Solid::StepStatus perform_error_action(Solid::StepStatus solve_status) override;
-
     //! Do time integration of single step
     virtual void integrate_step() = 0;
 
@@ -962,10 +960,6 @@ namespace Solid
                                                            //!< boundary conditions
 
     Solid::DivContAct divcontype_;  //!< what to do when nonlinear solution fails
-    int divconrefinementlevel_;     //!< number of refinement level in case of divercontype_ ==
-                                    //!< adapt_step
-    int divconnumfinestep_;         //!< number of converged time steps on current refinement level
-                                    //!< in case of divercontype_ == adapt_step
 
     //! structural dynamic parameter list
     Teuchos::ParameterList sdynparams_;
@@ -1047,8 +1041,6 @@ namespace Solid
     int stepmax_;                                            //!< final step \f$N\f$
     int step_;                                               //!< time step index \f$n\f$
     int stepn_;                                              //!< time step index \f$n+1\f$
-    double rand_tsfac_;      //!< random factor for modifying time-step size in case this way of
-                             //!< continuing non-linear iteration was chosen
     bool firstoutputofrun_;  //!< flag whether this output step is the first one (restarted or not)
     bool lumpmass_;          //!< flag for lumping the mass matrix, default: false
     //@}

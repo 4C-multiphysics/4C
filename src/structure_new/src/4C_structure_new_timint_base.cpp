@@ -233,6 +233,13 @@ void Solid::TimeInt::Base::reset_step()
   int_ptr_->reset_step_state();
 }
 
+void Solid::TimeInt::Base::finalize_successful_step()
+{
+  Adapter::StructureNew::finalize_successful_step();
+
+  if (should_perform_dynamic_rebalance()) perform_dynamic_rebalance();
+}
+
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 bool Solid::TimeInt::Base::not_finished() const

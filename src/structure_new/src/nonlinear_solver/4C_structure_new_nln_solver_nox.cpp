@@ -201,11 +201,6 @@ Solid::StepStatus Solid::Nln::SOLVER::Nox::solve()
   // solve the non-linear step
   ::NOX::StatusTest::StatusType finalstatus = nlnsolver_->solve();
 
-  // Check if we do something special if the non-linear solver fails,
-  // otherwise an error is thrown.
-  if (data_sdyn().get_divergence_action() == Solid::divcont_stop)
-    problem_->check_final_status(finalstatus);
-
   return convert_final_status(finalstatus);
 }
 

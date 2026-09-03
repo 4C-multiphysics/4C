@@ -1,0 +1,96 @@
+TITLE:
+  - "Tests that time-step control decreases the time step to match the maximum time exactly."
+  - "Simulation end time: 1.0"
+  - "Initial time step: 0.6 (no adaptation specified)"
+  - "For step 2, the time step is reduced to 0.4."
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 0.6
+  NUMSTEP: 10
+  MAXTIME: 1
+  TOLDISP: 1e-03
+  TOLRES: 1e-06
+  MAXITER: 10
+  DIVERCONT: "adapt_step"
+  LINEAR_SOLVER: 1
+  TIMESTEP CONTROL:
+    REDUCE_TO_MAXTIME: true
+STRUCT NOX/Printing:
+  Outer Iteration: false
+  Outer Iteration StatusTest: false
+  Inner Iteration: false
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_ElastHyper:
+      NUMMAT: 1
+      MATIDS: [10]
+      DENS: 0.1
+  - MAT: 10
+    ELAST_CoupNeoHooke:
+      YOUNG: 10
+      NUE: 0.25
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [0.01, 0, 0]
+    FUNCT: [1, 0, 0]
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
+  - "NODE 3 DSURFACE 1"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 5 DSURFACE 2"
+  - "NODE 6 DSURFACE 2"
+  - "NODE 7 DSURFACE 2"
+  - "NODE 8 DSURFACE 2"
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 0.0 1.0 0.0"
+  - "NODE 3 COORD 0.0 0.0 1.0"
+  - "NODE 4 COORD 0.0 1.0 1.0"
+  - "NODE 5 COORD 1.0 0.0 0.0"
+  - "NODE 6 COORD 1.0 1.0 0.0"
+  - "NODE 7 COORD 1.0 0.0 1.0"
+  - "NODE 8 COORD 1.0 1.0 1.0"
+STRUCTURE ELEMENTS:
+  - "1 SOLID HEX8 1 5 6 2 3 7 8 4 MAT 1 KINEM nonlinear"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "num_iter_step_1"
+      VALUE: 2
+      TOLERANCE: 1e-14
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "num_iter_step_2"
+      VALUE: 1
+      TOLERANCE: 1e-14
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "time_step_size"
+      VALUE: 0.4
+      TOLERANCE: 1e-14
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "total_time"
+      VALUE: 1
+      TOLERANCE: 1e-14
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "total_num_steps"
+      VALUE: 2
+      TOLERANCE: 1e-14

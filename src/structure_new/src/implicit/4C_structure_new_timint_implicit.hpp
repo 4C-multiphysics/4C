@@ -15,6 +15,9 @@
 #include "4C_structure_new_nln_solver_generic.hpp"
 #include "4C_structure_new_timint_implicitbase.hpp"  // base class
 
+#include <cstddef>
+#include <deque>
+
 FOUR_C_NAMESPACE_OPEN
 
 // forward declarations ...
@@ -89,10 +92,9 @@ namespace Solid
         return nlnsolver_ptr_;
       };
 
-      Solid::StepStatus perform_error_action(Solid::StepStatus solve_status) override;
+      Solid::StepAction perform_error_action(Solid::StepStatus solve_status) override;
 
-      //! check, if according to divercont flag time step size can be increased
-      void check_for_time_step_increase(Solid::StepStatus& status);
+      void finalize_successful_step() override;
 
       //! returns pointer to generic implicit object
       std::shared_ptr<Solid::IMPLICIT::Generic> impl_int_ptr()
@@ -196,6 +198,15 @@ namespace Solid
       ///@}
 
      private:
+      //! Reduce the time-step size and reset state so the current step can be retried.
+      void prepare_retry_with_reduced_time_step();
+
+      //! Update time-step control history and set the time-step size for the next step.
+      void time_step_control_after_successful_step();
+
+      //! Apply a changed time-step size and refresh all dependent time-integration state.
+      void set_new_time_step_size(double new_dt);
+
       //! ptr to the implicit time integrator object
       std::shared_ptr<Solid::IMPLICIT::Generic> implint_ptr_;
 
@@ -207,6 +218,12 @@ namespace Solid
 
       //! ptr to the nox group object
       std::shared_ptr<::NOX::Abstract::Group> grp_ptr_;
+
+      //! Number of accepted steps since the current time-step size was selected.
+      size_t num_steps_at_current_dt_ = 0;
+
+      //! Nonlinear iteration counts from the recent accepted steps used for time-step recovery.
+      std::deque<size_t> number_of_nonlinear_iterations_per_step_;
     };
   }  // namespace TimeInt
 }  // namespace Solid

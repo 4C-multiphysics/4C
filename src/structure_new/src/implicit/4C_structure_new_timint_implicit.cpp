@@ -25,6 +25,7 @@
 #include "4C_structure_new_timint_base.hpp"
 #include "4C_structure_new_timint_noxinterface.hpp"
 #include "4C_structure_new_utils.hpp"
+#include "4C_timestepping_time_step_control.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -138,12 +139,12 @@ void Solid::TimeInt::Implicit::integrate_step()
 Solid::StepStatus Solid::TimeInt::Implicit::solve()
 {
   check_init_setup();
+
   throw_if_state_not_in_sync_with_nox_group();
   // reset the non-linear solver
   nln_solver().reset();
   // solve the non-linear problem
-  Solid::StepStatus solve_status = nln_solver().solve();
-  return perform_error_action(solve_status);
+  return nln_solver().solve();
 }
 
 /*----------------------------------------------------------------------------*
@@ -222,232 +223,142 @@ const ::NOX::Abstract::Group& Solid::TimeInt::Implicit::get_solution_group() con
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Solid::StepStatus Solid::TimeInt::Implicit::perform_error_action(Solid::StepStatus solve_status)
+Solid::StepAction Solid::TimeInt::Implicit::perform_error_action(Solid::StepStatus solve_status)
 {
   check_init_setup();
 
-  if (solve_status == Solid::StepStatus::no_errors)
+  const bool write_cout = (data_global_state().get_my_rank() == 0);
+
+  switch (solve_status)
   {
-    // Only relevant, if the input parameter DIVERCONT is used and set to divcontype_ == adapt_step:
-    // In this case, the time step size is halved as consequence of a non-converging nonlinear
-    // solver. After a prescribed number of converged time steps, the time step is doubled again.
-    // The following methods checks, if the time step size can be increased again.
-    check_for_time_step_increase(solve_status);
-    return Solid::StepStatus::no_errors;
-  }
-  // get ID of actual processor in parallel
-  const int& myrank = data_global_state().get_my_rank();
-
-  // what to do when nonlinear solver does not converge
-  switch (get_divergence_action())
-  {
-    case Solid::divcont_stop:
+    case StepStatus::no_errors:
+      return StepAction::accept_step;
+    case StepStatus::nonlinear_solver_failed:
     {
-      // write restart output of last converged step before stopping
-      output(true);
-
-      // we should not get here, FOUR_C_THROW for safety
-      FOUR_C_THROW("Nonlinear solver did not converge! ");
-      break;
-    }
-    case Solid::divcont_continue:
-    {
-      if (myrank == 0)
+      if (write_cout) std::cout << "Nonlinear solver did not converge!\n";
+      const auto divergence_action = get_divergence_action();
+      switch (divergence_action)
       {
-        Core::IO::cout
-            << "\n WARNING: You are continuing your simulation although the nonlinear solver\n"
-               " did not converge in the current time step.\n"
-            << Core::IO::endl;
+        case DivContAct::adapt_step:
+        {
+          prepare_retry_with_reduced_time_step();
+          return StepAction::retry_step;
+        }
+        case DivContAct::ignore:
+        {
+          if (write_cout) std::cout << "WARNING: Nonlinear solver non-convergence is ignored.\n";
+          return StepAction::accept_step;
+        }
+        case DivContAct::stop:
+        {
+          output(true);
+          FOUR_C_THROW("Abort due to DIVERCONT: {}.", divergence_action);
+        }
+        case DivContAct::adapt_penaltycontact:
+        {
+          FOUR_C_THROW(
+              "The option DIVERCONT: {} is not implemented in the new solid time integration.",
+              divergence_action);
+        }
+        default:
+        {
+          FOUR_C_THROW("Inconsistent divergence action.");
+        }
       }
-      return Solid::StepStatus::no_errors;
-      break;
     }
-    case Solid::divcont_repeat_step:
+    case StepStatus::linear_solver_failed:
     {
-      if (myrank == 0)
-        Core::IO::cout << "Nonlinear solver failed to converge repeat time step" << Core::IO::endl;
-
-      // reset step (e.g. quantities on element level or model specific stuff)
-      reset_step();
-
-      return Solid::StepStatus::fail_repeat;
-      break;
+      FOUR_C_THROW("Linear solver did not converge!");
     }
-    case Solid::divcont_halve_step:
+    case StepStatus::evaluation_failed:
     {
-      if (myrank == 0)
-      {
-        Core::IO::cout << "Nonlinear solver failed to converge at time t= " << get_time_np()
-                       << ". Divide timestep in half. " << "Old time step: " << get_delta_time()
-                       << Core::IO::endl
-                       << "New time step: " << 0.5 * get_delta_time() << Core::IO::endl
-                       << Core::IO::endl;
-      }
-
-      // halve the time step size
-      set_delta_time(get_delta_time() * 0.5);
-      // update the number of max time steps if it does not exceed the largest possible value for
-      // the type int
-      if ((get_step_end() - get_step_np() + 1) > std::numeric_limits<int>::max() - get_step_end())
-        FOUR_C_THROW(" Your updated step number exceeds largest possible value for type int");
-      int endstep = get_step_end() + (get_step_end() - get_step_np()) + 1;
-      set_step_end(endstep);
-      // reset timen_ because it is set in the constructor
-      set_time_np(get_time_n() + get_delta_time());
-      // reset step (e.g. quantities on element level or model specific stuff)
-      reset_step();
-
-      integrator().update_constant_state_contributions();
-
-      return Solid::StepStatus::fail_repeat;
-      break;
-    }
-    case Solid::divcont_adapt_step:
-    {
-      if (myrank == 0)
-      {
-        Core::IO::cout << "Nonlinear solver failed to converge at time t= " << get_time_np()
-                       << ". Divide timestep in half. " << "Old time step: " << get_delta_time()
-                       << Core::IO::endl
-                       << "New time step: " << 0.5 * get_delta_time() << Core::IO::endl
-                       << Core::IO::endl;
-      }
-
-      // halve the time step size
-      set_delta_time(get_delta_time() * 0.5);
-      // update the number of max time steps if it does not exceed the largest possible value for
-      // the type int
-      if ((get_step_end() - get_step_np() + 1) > std::numeric_limits<int>::max() - get_step_end())
-        FOUR_C_THROW(" Your updated step number exceeds largest possible value for type int");
-      int endstep = get_step_end() + (get_step_end() - get_step_np()) + 1;
-      set_step_end(endstep);
-      // reset timen_ because it is set in the constructor
-      set_time_np(get_time_n() + get_delta_time());
-
-      set_div_con_refine_level(get_div_con_refine_level() + 1);
-      set_div_con_num_fine_step(0);
-
-      if (get_div_con_refine_level() == get_max_div_con_refine_level())
-        FOUR_C_THROW(
-            "Maximal divercont refinement level reached. Adapt your time basic time step size!");
-
-      // reset step (e.g. quantities on element level or model specific stuff)
-      reset_step();
-
-      integrator().update_constant_state_contributions();
-
-      return Solid::StepStatus::fail_repeat;
-      break;
-    }
-    case Solid::divcont_rand_adapt_step:
-    case Solid::divcont_rand_adapt_step_ele_err:
-    {
-      // generate random number between 0.51 and 1.99 (as mean value of random
-      // numbers generated on all processors), alternating values larger
-      // and smaller than 1.0
-      double proc_randnum_get = ((double)rand() / (double)RAND_MAX);
-      double proc_randnum = proc_randnum_get;
-      double randnum = 1.0;
-      MPI_Comm comm = discretization()->get_comm();
-      randnum = Core::Communication::sum_all(proc_randnum, comm);
-      const double numproc = Core::Communication::num_mpi_ranks(comm);
-      randnum /= numproc;
-      if (get_random_time_step_factor() > 1.0)
-        set_random_time_step_factor(randnum * 0.49 + 0.51);
-      else if (get_random_time_step_factor() < 1.0)
-        set_random_time_step_factor(randnum * 0.99 + 1.0);
-      else
-        set_random_time_step_factor(randnum * 1.48 + 0.51);
-
-      if (myrank == 0)
-      {
-        Core::IO::cout << "Nonlinear solver failed to converge: modifying time-step size by random "
-                          "number between 0.51 and 1.99 -> here: "
-                       << get_random_time_step_factor() << " !" << Core::IO::endl;
-      }
-      // multiply time-step size by random number
-      set_delta_time(get_delta_time() * get_random_time_step_factor());
-      // update maximum number of time steps
-      int endstep = (1.0 / get_random_time_step_factor()) * get_step_end() +
-                    (1.0 - (1.0 / get_random_time_step_factor())) * get_step_np() + 1;
-      if (endstep > std::numeric_limits<int>::max())
-        FOUR_C_THROW(" Your updated step number exceeds largest possible value for type int");
-      set_step_end(endstep);
-      // reset timen_ because it is set in the constructor
-      set_time_np(get_time_n() + get_delta_time());
-      // reset step (e.g. quantities on element level or model specific stuff)
-      reset_step();
-
-      integrator().update_constant_state_contributions();
-
-      return Solid::StepStatus::fail_repeat;
-      break;
-    }
-    case Solid::divcont_adapt_penaltycontact:
-    {
-      // adapt penalty and search parameter
-      FOUR_C_THROW("Not yet implemented for new structure time integration");
-      break;
-    }
-    case Solid::divcont_repeat_simulation:
-    {
-      if (solve_status == Solid::StepStatus::nonlinear_solver_failed and myrank == 0)
-      {
-        Core::IO::cout << "Nonlinear solver failed to converge and DIVERCONT = "
-                          "repeat_simulation, hence leaving structural time integration "
-                       << Core::IO::endl;
-      }
-      else if (solve_status == Solid::StepStatus::evaluation_failed and myrank == 0)
-      {
-        Core::IO::cout
-            << "Element failure in form of a negative Jacobian determinant and DIVERCONT = "
-               "repeat_simulation, hence leaving structural time integration "
-            << Core::IO::endl;
-      }
-      return solve_status;  // so that time loop will be aborted
-      break;
+      FOUR_C_THROW("Evaluation of the residual or jacobian failed!");
     }
     default:
       FOUR_C_THROW("Inconsistent step status.");
   }
 }  // PerformErrorAction()
 
-void Solid::TimeInt::Implicit::check_for_time_step_increase(Solid::StepStatus& status)
+void Solid::TimeInt::Implicit::prepare_retry_with_reduced_time_step()
 {
   check_init_setup();
 
-  const int maxnumfinestep = 4;
+  const double new_dt = TimeStepping::compute_reduced_time_step(
+      get_delta_time(), get_data_sdyn().time_step_control_settings());
 
-  if (get_divergence_action() != Solid::divcont_adapt_step)
-    return;
-  else if (status == Solid::StepStatus::no_errors and get_div_con_refine_level() != 0)
+  if (get_data_global_state().get_my_rank() == 0)
   {
-    set_div_con_num_fine_step(get_div_con_num_fine_step() + 1);
-
-    if (get_div_con_num_fine_step() == maxnumfinestep)
-    {
-      // increase the step size if the remaining number of steps is a even number
-      if (((get_step_end() - get_step_np()) % 2) == 0 and get_step_end() != get_step_np())
-      {
-        if (data_global_state().get_my_rank() == 0)
-          Core::IO::cout << "Nonlinear solver successful. Double timestep size!" << Core::IO::endl;
-
-        set_div_con_refine_level(get_div_con_refine_level() - 1);
-        set_div_con_num_fine_step(0);
-
-        set_step_end(get_step_end() - (get_step_end() - get_step_np()) / 2);
-
-        // double the time step size
-        set_delta_time(get_delta_time() * 2.0);
-      }
-      else  // otherwise we have to wait one more time step until the step size can be increased
-      {
-        set_div_con_num_fine_step(get_div_con_num_fine_step() - 1);
-      }
-    }
-    return;
+    std::cout << "Retrying the current time-step with a reduced time-step size.\n";
   }
-}  // check_for_time_step_increase()
+  set_new_time_step_size(new_dt);
+
+  reset_step();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::TimeInt::Implicit::finalize_successful_step()
+{
+  ImplicitBase::finalize_successful_step();
+
+  time_step_control_after_successful_step();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::TimeInt::Implicit::time_step_control_after_successful_step()
+{
+  check_init_setup();
+
+  const auto& settings = get_data_sdyn().time_step_control_settings();
+
+  num_steps_at_current_dt_++;
+  number_of_nonlinear_iterations_per_step_.emplace_back(nln_solver().get_num_nln_iterations());
+  if (number_of_nonlinear_iterations_per_step_.size() > settings.steps_to_increase)
+  {
+    number_of_nonlinear_iterations_per_step_.pop_front();
+  }
+
+  const double new_dt = TimeStepping::compute_time_step_after_successful_step(get_delta_time(),
+      settings, num_steps_at_current_dt_, number_of_nonlinear_iterations_per_step_,
+      get_time_end() - get_time_n(), get_step_end() - get_step_n());
+
+  if (std::abs(new_dt - get_delta_time()) > std::numeric_limits<double>::epsilon())
+  {
+    if (get_data_global_state().get_my_rank() == 0)
+    {
+      std::cout << "Updating the time-step size for the next step:\n";
+    }
+    set_new_time_step_size(new_dt);
+  }
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::TimeInt::Implicit::set_new_time_step_size(const double new_dt)
+{
+  check_init_setup();
+
+  const double old_dt = get_delta_time();
+
+  FOUR_C_ASSERT(new_dt > 0.0, "Time-step size must be positive.");
+  FOUR_C_ASSERT(std::abs(new_dt - old_dt) > std::numeric_limits<double>::epsilon(),
+      "New time-step size must be different from the current time-step size.");
+
+  set_delta_time(new_dt);
+  set_time_np(get_time_n() + get_delta_time());
+
+  num_steps_at_current_dt_ = 0;
+
+  integrator().update_constant_state_contributions();
+
+  if (data_global_state().get_my_rank() == 0)
+  {
+    std::cout << "Old time-step size: " << old_dt << "\n"
+              << "New time-step size: " << new_dt << "\n"
+              << std::string(72, '*') << "\n";
+  }
+}
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/

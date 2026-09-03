@@ -33,12 +33,17 @@
 #include "4C_solid_ele.hpp"
 #include "4C_structure_aux.hpp"
 #include "4C_structure_timint.hpp"
+#include "4C_timestepping_time_step_control.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 
+#include <cmath>
+#include <iostream>
+#include <limits>
 #include <sstream>
+#include <string>
 #ifdef FOUR_C_ENABLE_FE_TRAPPING
 #include <cfenv>
 #endif
@@ -66,6 +71,10 @@ Solid::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& timeparams,
       iternorm_(Teuchos::getIntegralValue<Solid::VectorNorm>(sdynparams, "ITERNORM")),
       itermax_(sdynparams.get<int>("MAXITER")),
       itermin_(sdynparams.get<int>("MINITER")),
+      time_step_control_settings_(TimeStepping::TimeStepControlSettings(
+          sdynparams.get<TimeStepping::TimeStepControlSettings::InputParameters>(
+              "TIMESTEP CONTROL"),
+          timeparams.get<double>("TIMESTEP"), itermax_)),
       toldisi_(sdynparams.get<double>("TOLDISP")),
       tolfres_(sdynparams.get<double>("TOLRES")),
       tolpfres_(sdynparams.get<double>("TOLINCO")),
@@ -108,6 +117,135 @@ Solid::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& timeparams,
   // redistribution of elements. Only then call the setup to this class. This will call the setup to
   // all classes in the inheritance hierarchy. This way, this class may also override a method that
   // is called during setup() in a base class. general variable verifications:
+}
+
+Solid::StepAction Solid::TimIntImpl::perform_error_action(Solid::StepStatus solve_status)
+{
+  const bool write_cout = (myrank_ == 0);
+
+  switch (solve_status)
+  {
+    case StepStatus::no_errors:
+      return StepAction::accept_step;
+    case StepStatus::nonlinear_solver_failed:
+    {
+      if (write_cout) std::cout << "Nonlinear solver did not converge!\n";
+      const auto divergence_action = divcontype_;
+      switch (divergence_action)
+      {
+        case DivContAct::adapt_step:
+        {
+          prepare_retry_with_reduced_time_step();
+          return StepAction::retry_step;
+        }
+        case DivContAct::ignore:
+        {
+          if (write_cout) std::cout << "WARNING: Nonlinear solver non-convergence is ignored.\n";
+          return StepAction::accept_step;
+        }
+        case DivContAct::stop:
+        {
+          output(true);
+          FOUR_C_THROW("Abort due to DIVERCONT: {}.", divergence_action);
+        }
+        case DivContAct::adapt_penaltycontact:
+        {
+          if (have_contact_meshtying())
+          {
+            if (write_cout) std::cout << "Adapting penalty parameter.\n";
+            cmtbridge_->get_strategy().modify_penalty();
+            reset_step();
+            return StepAction::retry_step;
+          }
+          else
+          {
+            FOUR_C_THROW("Abort due to DIVERCONT: {}, but no penalty formulation available.",
+                divergence_action);
+          }
+        }
+        default:
+        {
+          FOUR_C_THROW("Inconsistent divergence action.");
+        }
+      }
+    }
+    case StepStatus::linear_solver_failed:
+    {
+      FOUR_C_THROW("Linear solver did not converge!");
+    }
+    case StepStatus::evaluation_failed:
+    {
+      FOUR_C_THROW("Evaluation of the residual or jacobian failed!");
+    }
+    default:
+      FOUR_C_THROW("Inconsistent step status.");
+  }
+}
+
+void Solid::TimIntImpl::finalize_successful_step()
+{
+  Adapter::Structure::finalize_successful_step();
+
+  time_step_control_after_successful_step();
+}
+
+void Solid::TimIntImpl::time_step_control_after_successful_step()
+{
+  num_steps_at_current_dt_++;
+  number_of_nonlinear_iterations_per_step_.emplace_back(iter_);
+  if (number_of_nonlinear_iterations_per_step_.size() >
+      time_step_control_settings_.steps_to_increase)
+  {
+    number_of_nonlinear_iterations_per_step_.pop_front();
+  }
+
+  const double new_dt = TimeStepping::compute_time_step_after_successful_step((*dt_)[0],
+      time_step_control_settings_, num_steps_at_current_dt_,
+      number_of_nonlinear_iterations_per_step_, timemax_ - (*time_)[0], stepmax_ - step_);
+
+  if (std::abs(new_dt - (*dt_)[0]) > std::numeric_limits<double>::epsilon())
+  {
+    if (myrank_ == 0)
+    {
+      std::cout << "Updating the time-step size for the next step:\n";
+    }
+    set_new_time_step_size(new_dt);
+  }
+}
+
+void Solid::TimIntImpl::prepare_retry_with_reduced_time_step()
+{
+  const double new_dt =
+      TimeStepping::compute_reduced_time_step((*dt_)[0], time_step_control_settings_);
+
+  if (myrank_ == 0)
+  {
+    std::cout << "Retrying the current time-step with a reduced time-step size.\n";
+  }
+  set_new_time_step_size(new_dt);
+
+  reset_step();
+}
+
+void Solid::TimIntImpl::set_new_time_step_size(const double new_dt)
+{
+  const double old_dt = (*dt_)[0];
+
+  FOUR_C_ASSERT(new_dt > 0.0, "Time-step size must be positive.");
+  FOUR_C_ASSERT(std::abs(new_dt - old_dt) > std::numeric_limits<double>::epsilon(),
+      "New time-step size must be different from the current time-step size.");
+
+  (*dt_)[0] = new_dt;
+  timen_ = (*time_)[0] + (*dt_)[0];
+
+  num_steps_at_current_dt_ = 0;
+
+  if (myrank_ == 0)
+  {
+    std::cout << "Old time-step size: " << old_dt << "\n"
+              << "New time-step size: " << new_dt << "\n"
+              << std::string(72, '*') << "\n";
+  }
 }
 
 /*----------------------------------------------------------------------------------------------*
@@ -1250,12 +1388,6 @@ Solid::StepStatus Solid::TimIntImpl::solve()
       FOUR_C_THROW("Unexpected nonlinear solver return code {}.", nonlin_error);
   }
 
-  // Only relevant, if the input parameter DIVERCONT is used and set to divcontype_ == adapt_step:
-  // In this case, the time step size is halved as consequence of a non-converging nonlinear solver.
-  // After a prescribed number of converged time steps, the time step is doubled again. The
-  // following methods checks, if the time step size can be increased again.
-  check_for_time_step_increase(status);
-
   return status;
 }
 /*----------------------------------------------------------------------*/
@@ -1520,19 +1652,14 @@ int Solid::TimIntImpl::newton_full_error_check(int linerror)
   }
   // do we have a problem in the linear solver
   // only check if we want to do something fancy other wise we ignore the error in the linear solver
-  else if (linerror and
-           (divcontype_ == Solid::divcont_halve_step or divcontype_ == Solid::divcont_adapt_step or
-               divcontype_ == Solid::divcont_rand_adapt_step or
-               divcontype_ == Solid::divcont_rand_adapt_step_ele_err or
-               divcontype_ == Solid::divcont_repeat_step or
-               divcontype_ == Solid::divcont_repeat_simulation or
-               divcontype_ == Solid::divcont_adapt_penaltycontact))
+  else if (linerror and (divcontype_ == Solid::DivContAct::adapt_step or
+                            divcontype_ == Solid::DivContAct::adapt_penaltycontact))
   {
     return linerror;
   }
   else
   {
-    if ((iter_ >= itermax_) and (divcontype_ == Solid::divcont_stop))
+    if ((iter_ >= itermax_) and (divcontype_ == Solid::DivContAct::stop))
     {
       // write restart output of last converged step before stopping
       output(true);
@@ -1540,20 +1667,15 @@ int Solid::TimIntImpl::newton_full_error_check(int linerror)
       FOUR_C_THROW("Newton unconverged in {} iterations", iter_);
       return 1;
     }
-    else if ((iter_ >= itermax_) and (divcontype_ == Solid::divcont_continue))
+    else if ((iter_ >= itermax_) and (divcontype_ == Solid::DivContAct::ignore))
     {
       if (myrank_ == 0)
         Core::IO::cout << "Newton unconverged in " << iter_ << " iterations, continuing"
                        << Core::IO::endl;
       return 0;
     }
-    else if ((iter_ >= itermax_) and (divcontype_ == Solid::divcont_halve_step or
-                                         divcontype_ == Solid::divcont_adapt_step or
-                                         divcontype_ == Solid::divcont_rand_adapt_step or
-                                         divcontype_ == Solid::divcont_rand_adapt_step_ele_err or
-                                         divcontype_ == Solid::divcont_repeat_step or
-                                         divcontype_ == Solid::divcont_repeat_simulation or
-                                         divcontype_ == Solid::divcont_adapt_penaltycontact))
+    else if ((iter_ >= itermax_) and (divcontype_ == Solid::DivContAct::adapt_step or
+                                         divcontype_ == Solid::DivContAct::adapt_penaltycontact))
     {
       if (myrank_ == 0)
         Core::IO::cout << "Newton unconverged in " << iter_ << " iterations " << Core::IO::endl;
@@ -1569,13 +1691,8 @@ int Solid::TimIntImpl::newton_full_error_check(int linerror)
 int Solid::TimIntImpl::lin_solve_error_check(int linerror)
 {
   // we only care about problems in the linear solver if we have a fancy divcont action
-  if (linerror and
-      (divcontype_ == Solid::divcont_halve_step or divcontype_ == Solid::divcont_adapt_step or
-          divcontype_ == Solid::divcont_rand_adapt_step or
-          divcontype_ == Solid::divcont_rand_adapt_step_ele_err or
-          divcontype_ == Solid::divcont_repeat_step or
-          divcontype_ == Solid::divcont_repeat_simulation or
-          divcontype_ == Solid::divcont_adapt_penaltycontact))
+  if (linerror and (divcontype_ == Solid::DivContAct::adapt_step or
+                       divcontype_ == Solid::DivContAct::adapt_penaltycontact))
   {
     if (myrank_ == 0) Core::IO::cout << "Linear solver is having trouble " << Core::IO::endl;
     return 2;
@@ -2324,19 +2441,14 @@ int Solid::TimIntImpl::uzawa_linear_newton_full_error_check(int linerror)
   // now some error checks
   // do we have a problem in the linear solver
   // only check if we want to do something fancy other wise we ignore the error in the linear solver
-  if (linerror and
-      (divcontype_ == Solid::divcont_halve_step or divcontype_ == Solid::divcont_adapt_step or
-          divcontype_ == Solid::divcont_rand_adapt_step or
-          divcontype_ == Solid::divcont_rand_adapt_step_ele_err or
-          divcontype_ == Solid::divcont_repeat_step or
-          divcontype_ == Solid::divcont_repeat_simulation or
-          divcontype_ == Solid::divcont_adapt_penaltycontact))
+  if (linerror and (divcontype_ == Solid::DivContAct::adapt_step or
+                       divcontype_ == Solid::DivContAct::adapt_penaltycontact))
   {
     return linerror;
   }
   else
   {
-    if ((iter_ >= itermax_) and (divcontype_ == Solid::divcont_stop))
+    if ((iter_ >= itermax_) and (divcontype_ == Solid::DivContAct::stop))
     {
       // write restart output of last converged step before stopping
       output(true);
@@ -2344,7 +2456,7 @@ int Solid::TimIntImpl::uzawa_linear_newton_full_error_check(int linerror)
       FOUR_C_THROW("Newton unconverged in {} iterations", iter_);
       return 1;
     }
-    else if ((iter_ >= itermax_) and (divcontype_ == Solid::divcont_continue))
+    else if ((iter_ >= itermax_) and (divcontype_ == Solid::DivContAct::ignore))
     {
       if (myrank_ == 0)
         Core::IO::cout << "Newton unconverged in " << iter_ << " iterations, continuing"
@@ -2352,13 +2464,8 @@ int Solid::TimIntImpl::uzawa_linear_newton_full_error_check(int linerror)
       if (conman_->have_monitor()) conman_->compute_monitor_values(disn_);
       return 0;
     }
-    else if ((iter_ >= itermax_) and (divcontype_ == Solid::divcont_halve_step or
-                                         divcontype_ == Solid::divcont_adapt_step or
-                                         divcontype_ == Solid::divcont_rand_adapt_step or
-                                         divcontype_ == Solid::divcont_rand_adapt_step_ele_err or
-                                         divcontype_ == Solid::divcont_repeat_step or
-                                         divcontype_ == Solid::divcont_repeat_simulation or
-                                         divcontype_ == Solid::divcont_adapt_penaltycontact))
+    else if ((iter_ >= itermax_) and (divcontype_ == Solid::DivContAct::adapt_step or
+                                         divcontype_ == Solid::DivContAct::adapt_penaltycontact))
     {
       if (myrank_ == 0)
         Core::IO::cout << "Newton unconverged in " << iter_ << " iterations " << Core::IO::endl;
@@ -3711,44 +3818,6 @@ int Solid::TimIntImpl::cmt_windk_constr_nonlinear_solve()
   }
 
   return 0;
-}
-
-/*-----------------------------------------------------------------------------*
- * check, if according to divercont flag                             meier 01/15
- * time step size can be increased
- *-----------------------------------------------------------------------------*/
-void Solid::TimIntImpl::check_for_time_step_increase(Solid::StepStatus& status)
-{
-  const int maxnumfinestep = 4;
-
-  if (divcontype_ != Solid::divcont_adapt_step)
-    return;
-  else if (status == Solid::StepStatus::no_errors and divconrefinementlevel_ != 0)
-  {
-    divconnumfinestep_++;
-
-    if (divconnumfinestep_ == maxnumfinestep)
-    {
-      // increase the step size if the remaining number of steps is a even number
-      if (((stepmax_ - stepn_) % 2) == 0 and stepmax_ != stepn_)
-      {
-        Core::IO::cout << "Nonlinear solver successful. Double timestep size!" << Core::IO::endl;
-
-        divconrefinementlevel_--;
-        divconnumfinestep_ = 0;
-
-        stepmax_ = stepmax_ - (stepmax_ - stepn_) / 2;
-
-        // double the time step size
-        (*dt_)[0] = (*dt_)[0] * 2;
-      }
-      else  // otherwise we have to wait one more time step until the step size can be increased
-      {
-        divconnumfinestep_--;
-      }
-    }
-    return;
-  }
 }
 
 FOUR_C_NAMESPACE_CLOSE

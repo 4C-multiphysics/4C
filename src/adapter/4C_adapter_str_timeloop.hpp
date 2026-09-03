@@ -14,10 +14,6 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-namespace Global
-{
-  class Problem;
-}  // namespace Global
 
 namespace Adapter
 {
@@ -35,7 +31,7 @@ namespace Adapter
   {
    public:
     /// constructor
-    StructureTimeLoop(Global::Problem& problem, std::shared_ptr<Structure> structure);
+    StructureTimeLoop(std::shared_ptr<Structure> structure);
 
     /// actual time loop
     void integrate() override;
@@ -45,10 +41,6 @@ namespace Adapter
 
     /// wrapper for things that should be done after solving the update
     void post_update() override {};
-
-   private:
-    /// explicit global problem context
-    Global::Problem& problem_;
   };
 
 }  // namespace Adapter

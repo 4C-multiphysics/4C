@@ -80,8 +80,6 @@ Solid::TimInt::TimInt(const Teuchos::ParameterList& timeparams,
       solveradaptolbetter_(sdynparams.get<double>("ADAPTCONV_BETTER")),
       dbcmaps_(std::make_shared<Core::LinAlg::MapExtractor>()),
       divcontype_(Teuchos::getIntegralValue<Solid::DivContAct>(sdynparams, "DIVERCONT")),
-      divconrefinementlevel_(0),
-      divconnumfinestep_(0),
       sdynparams_(sdynparams),
       output_(output),
       printscreen_(ioparams.get<int>("STDOUTEVERY")),
@@ -117,7 +115,6 @@ Solid::TimInt::TimInt(const Teuchos::ParameterList& timeparams,
       stepmax_(timeparams.get<int>("NUMSTEP")),
       step_(0),
       stepn_(0),
-      rand_tsfac_(1.0),
       firstoutputofrun_(true),
       lumpmass_(sdynparams.get<bool>("LUMPMASS")),
       zeros_(nullptr),
@@ -2358,161 +2355,6 @@ void Solid::TimInt::apply_force_internal(const double time, const double dt,
   discret_->evaluate(p, nullptr, nullptr, fint, nullptr, nullptr);
 
   discret_->clear_state();
-}
-
-/*----------------------------------------------------------------------*/
-Solid::StepStatus Solid::TimInt::perform_error_action(Solid::StepStatus solve_status)
-{
-  if (solve_status == Solid::StepStatus::no_errors) return Solid::StepStatus::no_errors;
-
-  // what to do when nonlinear solver does not converge
-  switch (divcontype_)
-  {
-    case Solid::divcont_stop:
-    {
-      // write restart output of last converged step before stopping
-      output(true);
-
-      // we should not get here, FOUR_C_THROW for safety
-      FOUR_C_THROW("Nonlinear solver did not converge! ");
-    }
-    case Solid::divcont_continue:
-    {
-      // we should not get here, FOUR_C_THROW for safety
-      FOUR_C_THROW("Nonlinear solver did not converge! ");
-    }
-    case Solid::divcont_repeat_step:
-    {
-      Core::IO::cout << "Nonlinear solver failed to converge repeat time step" << Core::IO::endl;
-
-      // reset step (e.g. quantities on element level)
-      reset_step();
-
-      return Solid::StepStatus::fail_repeat;
-    }
-    case Solid::divcont_halve_step:
-    {
-      Core::IO::cout << "Nonlinear solver failed to converge at time t= " << timen_
-                     << ". Divide timestep in half. "
-                     << "Old time step: " << (*dt_)[0] << Core::IO::endl
-                     << "New time step: " << 0.5 * (*dt_)[0] << Core::IO::endl
-                     << Core::IO::endl;
-
-      // halve the time step size
-      (*dt_)[0] = (*dt_)[0] * 0.5;
-      // update the number of max time steps
-      stepmax_ = stepmax_ + (stepmax_ - stepn_) + 1;
-      // reset timen_ because it is set in the constructor
-      timen_ = (*time_)[0] + (*dt_)[0];
-      // reset step (e.g. quantities on element level)
-      reset_step();
-
-      return Solid::StepStatus::fail_repeat;
-    }
-    case Solid::divcont_adapt_step:
-    {
-      // maximal possible refinementlevel
-      const int maxdivconrefinementlevel = 10;
-      const int maxstepmax = 1000000;
-      Core::IO::cout << "Nonlinear solver failed to converge at time t= " << timen_
-                     << ". Divide timestep in half. "
-                     << "Old time step: " << (*dt_)[0] << Core::IO::endl
-                     << "New time step: " << 0.5 * (*dt_)[0] << Core::IO::endl
-                     << Core::IO::endl;
-
-      // halve the time step size
-      (*dt_)[0] = (*dt_)[0] * 0.5;
-
-      // update the number of max time steps
-      stepmax_ = stepmax_ + (stepmax_ - stepn_) + 1;
-      // reset timen_ because it is set in the constructor
-      timen_ = (*time_)[0] + (*dt_)[0];
-
-      divconrefinementlevel_++;
-      divconnumfinestep_ = 0;
-
-      if (divconrefinementlevel_ == maxdivconrefinementlevel)
-        FOUR_C_THROW(
-            "Maximal divercont refinement level reached. Adapt your time basic time step size!");
-
-      if (stepmax_ > maxstepmax) FOUR_C_THROW("Upper level for stepmax_ reached!");
-
-      // reset step (e.g. quantities on element level)
-      reset_step();
-
-      return Solid::StepStatus::fail_repeat;
-    }
-    case Solid::divcont_rand_adapt_step:
-    case Solid::divcont_rand_adapt_step_ele_err:
-    {
-      // generate random number between 0.51 and 1.99 (as mean value of random
-      // numbers generated on all processors), alternating values larger
-      // and smaller than 1.0
-      double proc_randnum_get = ((double)rand() / (double)RAND_MAX);
-      double proc_randnum = proc_randnum_get;
-      double randnum = 1.0;
-      randnum = Core::Communication::sum_all(proc_randnum, discret_->get_comm());
-      const double numproc = Core::Communication::num_mpi_ranks(discret_->get_comm());
-      randnum /= numproc;
-      if (rand_tsfac_ > 1.0)
-        rand_tsfac_ = randnum * 0.49 + 0.51;
-      else if (rand_tsfac_ < 1.0)
-        rand_tsfac_ = randnum * 0.99 + 1.0;
-      else
-        rand_tsfac_ = randnum * 1.48 + 0.51;
-      if (myrank_ == 0)
-      {
-        Core::IO::cout << "Nonlinear solver failed to converge: modifying time-step size by random "
-                          "number between 0.51 and 1.99 -> here: "
-                       << rand_tsfac_ << " !" << Core::IO::endl;
-      }
-      // multiply time-step size by random number
-      (*dt_)[0] = (*dt_)[0] * rand_tsfac_;
-      // update maximum number of time steps
-      stepmax_ = (1.0 / rand_tsfac_) * stepmax_ + (1.0 - (1.0 / rand_tsfac_)) * stepn_ + 1;
-      // reset timen_ because it is set in the constructor
-      timen_ = (*time_)[0] + (*dt_)[0];
-      // reset step (e.g. quantities on element level)
-      reset_step();
-
-      return Solid::StepStatus::fail_repeat;
-    }
-    case Solid::divcont_adapt_penaltycontact:
-    {
-      // adapt penalty and search parameter
-      if (have_contact_meshtying())
-      {
-        cmtbridge_->get_strategy().modify_penalty();
-      }
-      return Solid::StepStatus::fail_repeat;
-    }
-    case Solid::divcont_repeat_simulation:
-    {
-      if (solve_status == Solid::StepStatus::nonlinear_solver_failed)
-      {
-        Core::IO::cout << "Nonlinear solver failed to converge and DIVERCONT = "
-                          "repeat_simulation, hence leaving structural time integration "
-                       << Core::IO::endl;
-      }
-      else if (solve_status == Solid::StepStatus::linear_solver_failed)
-      {
-        Core::IO::cout << "Linear solver failed and DIVERCONT = "
-                          "repeat_simulation, hence leaving structural time integration "
-                       << Core::IO::endl;
-      }
-      else if (solve_status == Solid::StepStatus::evaluation_failed)
-      {
-        Core::IO::cout
-            << "Element failure in form of a negative Jacobian determinant and DIVERCONT = "
-               "repeat_simulation, hence leaving structural time integration "
-            << Core::IO::endl;
-      }
-      return solve_status;
-    }
-    default:
-      FOUR_C_THROW("Unknown DIVER_CONT case");
-      break;
-  }
 }
 
 /*----------------------------------------------------------------------*/

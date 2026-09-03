@@ -330,7 +330,7 @@ void Adapter::StructureBaseAlgorithm::create_tim_int(const Teuchos::ParameterLis
       default:
       {
         /// wrap time loop for pure structure problems
-        structure_ = (std::make_shared<StructureTimeLoop>(problem_, tmpstr));
+        structure_ = (std::make_shared<StructureTimeLoop>(tmpstr));
       }
       break;
     }

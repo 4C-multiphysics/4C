@@ -876,7 +876,7 @@ void Adapter::StructureBaseAlgorithmNew::create_wrapper(
     }
     default:
       /// wrap time loop for pure structure problems
-      str_wrapper_ = (std::make_shared<StructureTimeLoop>(problem_, ti_strategy));
+      str_wrapper_ = (std::make_shared<StructureTimeLoop>(ti_strategy));
       break;
   }
 }
