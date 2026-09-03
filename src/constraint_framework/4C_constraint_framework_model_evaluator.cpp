@@ -317,7 +317,15 @@ void Solid::ModelEvaluator::Constraint::determine_energy()
  *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluator::Constraint::reset_step_state()
 {
-  FOUR_C_THROW("This function is not implemented");
+  check_init_setup();
+
+  for (auto& some_iter : sub_model_vec_ptr_)
+  {
+    some_iter->reset();
+  }
+
+  constraint_stiff_ptr_->zero();
+  constraint_force_ptr_->put_scalar(0.0);
 }
 
 /*----------------------------------------------------------------------------*

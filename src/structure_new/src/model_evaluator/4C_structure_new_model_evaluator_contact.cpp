@@ -601,7 +601,9 @@ void Solid::ModelEvaluator::Contact::reset_step_state()
 {
   check_init_setup();
 
-  FOUR_C_THROW("Not yet implemented");
+  strategy().reset_step_state(global_state().get_dis_n());
+
+  post_update_step_state();
 }
 
 /*----------------------------------------------------------------------*
