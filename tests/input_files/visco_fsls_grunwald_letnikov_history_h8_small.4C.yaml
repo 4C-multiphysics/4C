@@ -1,5 +1,5 @@
 TITLE:
-  - "Small FSLS history/regression test on one HEX8 element."
+  - "Small FSLS Grunwald-Letnikov-scheme history/regression test on one HEX8 element."
 PROBLEM SIZE:
   ELEMENTS: 1
   NODES: 8

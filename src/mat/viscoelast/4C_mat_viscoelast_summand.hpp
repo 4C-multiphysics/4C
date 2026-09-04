@@ -29,6 +29,10 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Mat::ViscoElast
 {
+  /// Forward declaration to avoid a circular include with 4C_mat_viscoelast_fsls.hpp, whose
+  /// Fsls class derives from Summand.
+  enum class FslsSolveKind;
+
   /**
    * \brief Base class for parameter-backed visco summands used by Mat::ViscoElastHyper.
    *
@@ -87,7 +91,7 @@ namespace Mat::ViscoElast
 
     /// Read FSLS-like scalar parameters from a concrete summand.
     virtual void read_material_parameters_visco(
-        double& tau, double& beta, double& alpha, std::string& solve);
+        double& tau, double& beta, double& alpha, FslsSolveKind& solve);
 
     /// Read generalized Maxwell top-level parameters from a concrete summand.
     virtual void read_material_parameters(

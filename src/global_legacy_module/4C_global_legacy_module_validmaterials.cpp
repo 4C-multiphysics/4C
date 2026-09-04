@@ -22,6 +22,7 @@
 #include "4C_mat_plasticdruckerprager.hpp"
 #include "4C_mat_scatra_growth_remodel.hpp"
 #include "4C_mat_scatra_nonlocal_stimulus.hpp"
+#include "4C_mat_viscoelast_fsls.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
 #include "4C_structure_new_input.hpp"
 
@@ -2447,11 +2448,21 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*--------------------------------------------------------------------*/
   // viscos contribution to visohyperelastic material according to FSLS-Model
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+
     known_materials[Core::Materials::mes_fsls] = group("VISCO_FSLS",
         {
-            parameter<double>("TAU", {.description = "relaxation parameter"}),
-            parameter<double>("ALPHA", {.description = "fractional order derivative"}),
-            parameter<double>("BETA", {.description = "emphasis of viscous to elastic part"}),
+            parameter<double>(
+                "TAU", {.description = "relaxation parameter", .validator = positive<double>()}),
+            parameter<double>("ALPHA", {.description = "fractional order derivative",
+                                           .validator = in_range(0.0, excl(1.0))}),
+            parameter<double>("BETA", {.description = "emphasis of viscous to elastic part",
+                                          .validator = positive_or_zero<double>()}),
+            parameter<Mat::ViscoElast::FslsSolveKind>("SOLVE",
+                {.description = "Time discretization of the fractional derivative: "
+                                "grunwald_letnikov (default, full-history convolution) or l1 "
+                                "(uniform-grid L1 scheme, closed-form affine update)",
+                    .default_value = Mat::ViscoElast::FslsSolveKind::grunwald_letnikov}),
         },
         {.description = "Fractional standard linear solid visco summand"});
   }

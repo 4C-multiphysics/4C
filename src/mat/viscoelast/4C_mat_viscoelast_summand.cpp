@@ -54,7 +54,7 @@ void Mat::ViscoElast::Summand::add_coefficients_visco_modified(
 }
 
 void Mat::ViscoElast::Summand::read_material_parameters_visco(
-    double& tau, double& beta, double& alpha, std::string& solve)
+    double& tau, double& beta, double& alpha, FslsSolveKind& solve)
 {
 }
 
