@@ -1,0 +1,91 @@
+name: Report nightly test failure
+description: >
+  Create or update a GitHub issue when a nightly test fails. The calling
+  workflow/job must grant `permissions: issues: write` for this to work.
+
+inputs:
+  title:
+    description: Title of the failure issue
+    required: true
+
+  body:
+    description: Initial body of the failure issue
+    required: true
+
+  labels:
+    description: Comma-separated list of issue labels
+    required: true
+
+outputs:
+  issue-number:
+    description: Number of the created or updated issue
+    value: ${{ steps.report.outputs.issue-number }}
+
+runs:
+  using: composite
+  steps:
+    - name: Create or update issue
+      id: report
+      uses: actions/github-script@v7
+      env:
+        ISSUE_TITLE: ${{ inputs.title }}
+        ISSUE_BODY: ${{ inputs.body }}
+        ISSUE_LABELS: ${{ inputs.labels }}
+      with:
+        script: |
+          const title = process.env.ISSUE_TITLE;
+          const body = process.env.ISSUE_BODY;
+          const labels = process.env.ISSUE_LABELS.split(",").map((label) => label.trim());
+
+          const runUrl =
+            `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+          const { data: existingIssues } = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: "open",
+            labels: labels.join(","),
+            per_page: 100,
+          });
+
+          const existing = existingIssues.find((issue) => issue.title === title);
+
+          const timestamp = new Date().toISOString();
+
+          const note = [
+            `- \`${timestamp}\`: failed run [#${context.runNumber}](${runUrl}) `,
+            `(commit ${context.sha.substring(0, 8)}, ref \`${context.ref}\`)`,
+          ].join("");
+
+          if (existing) {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: existing.number,
+              body: note,
+            });
+
+            core.info(`Added a comment to existing issue #${existing.number}`);
+            core.setOutput("issue-number", existing.number);
+          } else {
+            const issueBody = [
+              body,
+              "",
+              note,
+              "",
+              "This issue is filed/updated automatically. Please close it once the underlying problem is fixed; " +
+                "a new one will be filed automatically if it fails again.",
+            ].join("\n");
+
+            const created = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body: issueBody,
+              labels,
+            });
+
+            core.info(`Filed new issue #${created.data.number}`);
+            core.setOutput("issue-number", created.data.number);
+          }
+

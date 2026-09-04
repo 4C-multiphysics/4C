@@ -1,0 +1,192 @@
+name: Spack build test
+
+# Builds the latest official 4C release with Spack
+# (https://packages.spack.io/package.html?name=4c-multiphysics) and runs a
+# smoke test against it
+on:
+  schedule:
+    # Weekly, avoiding the top of the hour as recommended by GitHub
+    - cron: "17 5 * * 0"
+      timezone: "Europe/Berlin"
+  workflow_dispatch:
+  # Also run for PRs that change this workflow.
+  pull_request:
+    paths:
+      - ".github/workflows/spack.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  spack-build:
+    name: Build and test 4C (${{ matrix.os.name }}, ${{ matrix.variant.name }})
+    runs-on: ${{ matrix.os.name }}
+    # deal.II and the "full" variant build many extra dependencies from source
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          # gcc@14 hits an internal compiler error on 4C's tensor templates;
+          # pin the compiler per OS to one that is known to work.
+          - name: ubuntu-24.04
+            compiler: gcc@13
+            compiler_bin: /usr/bin/g++-13
+          - name: ubuntu-26.04
+            compiler: gcc@15
+            compiler_bin: /usr/bin/g++-15
+        # add macOS support as soon as 4C (and an updated spack repo entry) support it
+        variant:
+          # Optional Spack variants (see `spack info 4c-multiphysics`).
+          - name: minimal
+            spec_args: ""
+          - name: full
+            spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
+          - name: dealii
+            spec_args: "+dealii"
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Set up Spack
+        uses: spack/setup-spack@v3
+        with:
+          # Pinned release for reproducibility. Bump periodically
+          spack_ref: v1.2.2
+          # `4c-multiphysics` is not part of any tagged spack-packages release
+          # yet, so pin to a `develop` commit that contains it instead.
+          # Pinned to the commit that added the 4C package (eaed8e6): a later
+          # commit (6c4f647) removed trilinos@16.2.1, which the package
+          # requires but was not yet updated so far, breaking concretization.
+          # TODO: switch `packages_ref` to a release tag (e.g. v2026.09.0) once
+          # one ships a `4c-multiphysics` package that no longer needs this.
+          packages_ref: eaed8e6d6c80bf7fcaeea0de4b00e19256bb846f
+          buildcache: true
+          color: true
+
+      - name: Find compilers
+        run: |
+          # Register only this one compiler: a broad `spack compiler find`
+          # also picks up system clang/LLVM and registers it as an external
+          # `libllvm`, which then breaks mesa (missing llvm-config).
+          spack compiler find ${{ matrix.os.compiler_bin }}
+
+      - name: Determine the latest 4C release known to Spack
+        id: version
+        run: |
+          # `spack versions --safe` prints a column-aligned, indented table
+          # (via colify), so tokenize on whitespace before filtering.
+          # 4C uses calendar versioning (YYYY.MINOR.PATCH), which also
+          # excludes non-release tokens such as "main".
+          LATEST_VERSION=$(spack --color=never versions --safe 4c-multiphysics \
+            | tr -s '[:space:]' '\n' \
+            | grep -E '^[0-9]{4}\.[0-9]+\.[0-9]+$' \
+            | sort --version-sort --reverse | head -n1)
+          if [ -z "$LATEST_VERSION" ]; then
+            echo "Could not determine the latest 4C release from Spack." >&2
+            exit 1
+          fi
+          echo "Latest 4C release known to Spack: $LATEST_VERSION"
+          echo "version=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+          echo "### Spack build test" >> "$GITHUB_STEP_SUMMARY"
+          echo "- OS: \`${{ matrix.os.name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Variant: \`${{ matrix.variant.name }}\` (\`${{ matrix.variant.spec_args }}\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 4C version: \`$LATEST_VERSION\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Show the concretized spec
+        run: spack spec -l "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.variant.spec_args
+          }} %${{ matrix.os.compiler }}"
+
+      - name: Install 4C
+        run: |
+          spack install --fail-fast --verbose "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.variant.spec_args }} %${{ matrix.os.compiler }}"
+          spack find --long --variants 4c-multiphysics
+
+      - name: Checkout tutorial input files matching the installed release
+        uses: actions/checkout@v7
+        with:
+          ref: v${{ steps.version.outputs.version }}
+          sparse-checkout: |
+            tests/tutorials/poisson
+          sparse-checkout-cone-mode: false
+          path: 4C-src
+
+      - name: Smoke test - run 4C on a tutorial input file
+        shell: spack-bash {0}
+        run: |
+          spack load 4c-multiphysics
+
+          mkdir -p "$GITHUB_WORKSPACE/spack_smoke_test"
+          cd "$GITHUB_WORKSPACE/spack_smoke_test"
+          # 4C prints its version banner at the start of every run.
+          4C "$GITHUB_WORKSPACE/4C-src/tests/tutorials/poisson/tutorial_poisson_thermo.4C.yaml" spack_smoke_test_output
+
+          # Verify output was actually produced, not just a zero exit code.
+          if ! ls spack_smoke_test_output*.vtu >/dev/null 2>&1 && \
+             ! ls spack_smoke_test_output*.pvd >/dev/null 2>&1; then
+            echo "No output files were produced by the smoke test run." >&2
+            exit 1
+          fi
+
+      - name: Collect Spack build logs on failure
+        if: failure()
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/spack_build_logs"
+          # Build logs live under Spack's stage root, not the install prefix
+          # (which may not exist on failure). `cp --parents` keeps each
+          # package's stage subdirectory to avoid name clashes.
+          STAGE_DIR="$(spack location --stages 2>/dev/null || true)"
+          if [ -n "$STAGE_DIR" ] && [ -d "$STAGE_DIR" ]; then
+            (cd "$STAGE_DIR" && find . -name "*.txt" -exec cp --parents {} "$GITHUB_WORKSPACE/spack_build_logs/" \;)
+          else
+            echo "Spack stage directory not found; no build logs to collect." >&2
+          fi
+          spack debug report > "$GITHUB_WORKSPACE/spack_build_logs/spack_debug_report.txt" 2>&1 || true
+
+      - name: Upload smoke test output
+        if: success() || failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: spack_smoke_test_output-${{ matrix.os.name }}-${{ matrix.variant.name }}
+          path: |
+            ${{ github.workspace }}/spack_smoke_test
+            ${{ github.workspace }}/spack_build_logs
+          retention-days: 7
+
+  report-failure:
+    name: File an issue on failure
+    needs: spack-build
+    # Only file issues for unattended (scheduled) runs
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github
+      - name: Report failure
+        uses: ./.github/actions/report_nightly_test_failure
+        with:
+          title: "Scheduled Spack build test is failing"
+          body: >
+            The scheduled **Spack build test** workflow failed.
+
+            This workflow builds the latest official 4C release via the
+            [`4c-multiphysics` Spack package](https://packages.spack.io/package.html?name=4c-multiphysics)
+            across several OS/variant combinations and runs a smoke test against the result.
+
+            A failure here typically indicates one of:
+
+            - The `4c-multiphysics` Spack package (or one of its dependencies) needs to be updated for
+            the latest 4C release.
+
+            - A regression in 4C's build system that only shows up outside of the in-repo Docker-based
+            CI.
+
+            - A transient upstream Spack/buildcache issue.
+          labels: "github_actions,type: bug report"
