@@ -28,10 +28,11 @@ namespace ReducedLung::TerminalUnits::Elasticity
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
+        const double inv_v0 = data.reference_volume_context[i].inv_v0_eff;
         linear_elastic_model.elastic_pressure_p_el[i] =
             linear_elastic_model.elasticity_E[i] *
-            ((data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]) /
-                    data.reference_volume_v0[i] -
+            ((data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]) *
+                    inv_v0 -
                 1);
       }
       return linear_elastic_model.elastic_pressure_p_el;
@@ -46,8 +47,9 @@ namespace ReducedLung::TerminalUnits::Elasticity
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
+        const double v0 = data.reference_volume_context[i].v0_eff;
         const double v0_over_vi =
-            data.reference_volume_v0[i] /
+            v0 /
             (data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]);
         ogden_hyperelastic_model.elastic_pressure_p_el[i] =
             ogden_hyperelastic_model.bulk_modulus_kappa[i] /
@@ -58,40 +60,54 @@ namespace ReducedLung::TerminalUnits::Elasticity
     }
 
     /**
-     * Compute d(p_el)/dq for the linear elasticity model.
+     * Compute d(p_el)/dq and d(p_el)/dV0 for the linear elasticity model.
      */
-    std::vector<double>& linear_elastic_pressure_gradient(
-        LinearElasticity& linear_elastic_model, TerminalUnitData& data, double dt)
+    ElasticPressurePartialsView linear_elastic_pressure_partials(
+        LinearElasticity& linear_elastic_model, TerminalUnitData& data,
+        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
-        linear_elastic_model.elastic_pressure_grad_dp_el[i] =
-            linear_elastic_model.elasticity_E[i] * dt / data.reference_volume_v0[i];
+        const auto& context = data.reference_volume_context[i];
+        linear_elastic_model.dp_el_dq[i] =
+            linear_elastic_model.elasticity_E[i] * dt * context.inv_v0_eff;
+        linear_elastic_model.dp_el_dv0[i] =
+            -linear_elastic_model.elasticity_E[i] *
+            (data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]) *
+            context.inv_v0_eff * context.inv_v0_eff;
       }
-      return linear_elastic_model.elastic_pressure_grad_dp_el;
+      return {
+          .dp_el_dq = linear_elastic_model.dp_el_dq, .dp_el_dv0 = linear_elastic_model.dp_el_dv0};
     }
 
     /**
-     * Compute d(p_el)/dq for the Ogden elasticity model.
+     * Compute d(p_el)/dq and d(p_el)/dV0 for the Ogden elasticity model.
      */
-    std::vector<double>& ogden_hyperelastic_pressure_gradient(
+    ElasticPressurePartialsView ogden_hyperelastic_pressure_partials(
         OgdenHyperelasticity& ogden_hyperelastic_model, TerminalUnitData& data,
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
-        const double v0_over_vi =
-            data.reference_volume_v0[i] /
-            (data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]);
-        ogden_hyperelastic_model.elastic_pressure_grad_dp_el[i] =
+        const auto& context = data.reference_volume_context[i];
+        const double v0 = context.v0_eff;
+        const double current_volume =
+            data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]];
+        const double v0_over_vi = v0 / current_volume;
+        ogden_hyperelastic_model.dp_el_dq[i] =
             ogden_hyperelastic_model.bulk_modulus_kappa[i] * dt /
-            (ogden_hyperelastic_model.nonlinear_stiffening_beta[i] * data.reference_volume_v0[i]) *
-            v0_over_vi * v0_over_vi *
+            (ogden_hyperelastic_model.nonlinear_stiffening_beta[i] * v0) * v0_over_vi * v0_over_vi *
             ((ogden_hyperelastic_model.nonlinear_stiffening_beta[i] + 1) *
                     std::pow(v0_over_vi, ogden_hyperelastic_model.nonlinear_stiffening_beta[i]) -
                 1);
+        ogden_hyperelastic_model.dp_el_dv0[i] =
+            ogden_hyperelastic_model.bulk_modulus_kappa[i] /
+            (ogden_hyperelastic_model.nonlinear_stiffening_beta[i] * current_volume) *
+            (1.0 - (ogden_hyperelastic_model.nonlinear_stiffening_beta[i] + 1.0) *
+                       std::pow(v0_over_vi, ogden_hyperelastic_model.nonlinear_stiffening_beta[i]));
       }
-      return ogden_hyperelastic_model.elastic_pressure_grad_dp_el;
+      return {.dp_el_dq = ogden_hyperelastic_model.dp_el_dq,
+          .dp_el_dv0 = ogden_hyperelastic_model.dp_el_dv0};
     }
 
     template <typename Model>
@@ -143,30 +159,27 @@ namespace ReducedLung::TerminalUnits::Elasticity
         elasticity_model);
   }
 
-  /**
-   * Resolve variant-based pressure-gradient evaluator.
-   */
-  ElasticPressureGradientEvaluator make_elastic_pressure_gradient_evaluator(
+  ElasticPressurePartialsEvaluator make_elastic_pressure_partials_evaluator(
       ElasticityModel& elasticity_model)
   {
     return std::visit(
-        [&](auto& model) -> ElasticPressureGradientEvaluator
+        [&](auto& model) -> ElasticPressurePartialsEvaluator
         {
           using ModelType = std::decay_t<decltype(model)>;
           if constexpr (std::is_same_v<ModelType, LinearElasticity>)
           {
             return [&model](TerminalUnitData& data,
-                       const Core::LinAlg::Vector<double>& /*locally_relevant_dofs*/,
-                       double dt) -> std::vector<double>&
-            { return linear_elastic_pressure_gradient(model, data, dt); };
+                       const Core::LinAlg::Vector<double>& locally_relevant_dofs,
+                       double dt) -> ElasticPressurePartialsView
+            { return linear_elastic_pressure_partials(model, data, locally_relevant_dofs, dt); };
           }
           else if constexpr (std::is_same_v<ModelType, OgdenHyperelasticity>)
           {
             return [&model](TerminalUnitData& data,
                        const Core::LinAlg::Vector<double>& locally_relevant_dofs,
-                       double dt) -> std::vector<double>&
+                       double dt) -> ElasticPressurePartialsView
             {
-              return ogden_hyperelastic_pressure_gradient(model, data, locally_relevant_dofs, dt);
+              return ogden_hyperelastic_pressure_partials(model, data, locally_relevant_dofs, dt);
             };
           }
           else
@@ -207,7 +220,8 @@ namespace ReducedLung::TerminalUnits::Elasticity
             model.elasticity_E.push_back(
                 parameters.linear.elasticity_e.at(global_element_id, "elasticity_e"));
             model.elastic_pressure_p_el.push_back(0.0);
-            model.elastic_pressure_grad_dp_el.push_back(0.0);
+            model.dp_el_dq.push_back(0.0);
+            model.dp_el_dv0.push_back(0.0);
           }
           else if constexpr (std::is_same_v<ModelType, OgdenHyperelasticity>)
           {
@@ -216,7 +230,8 @@ namespace ReducedLung::TerminalUnits::Elasticity
             model.nonlinear_stiffening_beta.push_back(parameters.ogden.ogden_parameter_beta.at(
                 global_element_id, "ogden_parameter_beta"));
             model.elastic_pressure_p_el.push_back(0.0);
-            model.elastic_pressure_grad_dp_el.push_back(0.0);
+            model.dp_el_dq.push_back(0.0);
+            model.dp_el_dv0.push_back(0.0);
           }
           else
           {

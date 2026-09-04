@@ -257,6 +257,100 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
           .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::elasticity_model),
       });
 
+
+  Core::IO::InputSpec recruitment_model_spec_terminal_units = group<
+      ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel>("recruitment_model",
+      {
+          input_field<
+              ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::PressureLawType>(
+              "pressure_law_type",
+              {
+                  .description = "Pressure law driving the recruitment reference volume; "
+                                 "None keeps it at the geometry-derived constant.",
+                  .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                          RecruitmentModel::pressure_law_type),
+              }),
+          input_field<
+              ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::TimeLawType>(
+              "time_law_type",
+              {
+                  .description = "Time law for recruitment reference-volume evolution.",
+                  .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                          RecruitmentModel::time_law_type),
+              }),
+          input_field<ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::
+                  ReferenceVolumeLinearization>("reference_volume_linearization",
+              {
+                  .description = "Linearization mode for recruitment reference-volume "
+                                 "sensitivities.",
+                  .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                          RecruitmentModel::reference_volume_linearization),
+              }),
+          group<ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::LinearPressure>(
+              "linear_pressure",
+              {
+                  input_field<double>("v0_min",
+                      {.description = "Minimal reference volume V0.",
+                          .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                                  RecruitmentModel::LinearPressure::v0_min)}),
+                  input_field<double>("v0_max",
+                      {.description = "Maximal reference volume V0.",
+                          .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                                  RecruitmentModel::LinearPressure::v0_max)}),
+                  input_field<double>("p_closing_min",
+                      {.description = "Minimal critical pressure on closing path.",
+                          .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                                  RecruitmentModel::LinearPressure::p_closing_min)}),
+                  input_field<double>("p_opening_min",
+                      {.description = "Minimal critical pressure on opening path.",
+                          .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                                  RecruitmentModel::LinearPressure::p_opening_min)}),
+                  input_field<double>("delta_p_minmax",
+                      {.description = "Pressure span between min and max critical pressure.",
+                          .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                                  RecruitmentModel::LinearPressure::delta_p_minmax)}),
+                  input_field<double>("epsilon_v0_switch",
+                      {.description = "Tolerance for full open/closed state switching.",
+                          .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                                  RecruitmentModel::LinearPressure::epsilon_v0_switch)}),
+                  input_field<double>("initial_v0",
+                      {.description = "Initial reference volume V0 at simulation start.",
+                          .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                                  RecruitmentModel::LinearPressure::initial_v0)}),
+                  input_field<ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::
+                          HysteresisPath>("initial_path",
+                      {.description = "Initial hysteresis path (Opening or Closing).",
+                          .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                                  RecruitmentModel::LinearPressure::initial_path)}),
+              },
+              {
+                  .description = "Linear pressure law parameters for recruitment target volume.",
+                  .required = false,
+                  .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                          RecruitmentModel::linear_pressure),
+              }),
+          group<ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::
+                  ExponentialRelaxation>("exponential_relaxation",
+              {
+                  input_field<double>("tau",
+                      {.description = "Time constant for exponential recruitment "
+                                      "reference-volume relaxation.",
+                          .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                                  RecruitmentModel::ExponentialRelaxation::tau)}),
+              },
+              {
+                  .description = "Exponential relaxation time-law parameters for recruitment.",
+                  .required = false,
+                  .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::
+                          RecruitmentModel::exponential_relaxation),
+              }),
+      },
+      {
+          .description = "Recruitment model of the terminal unit.",
+          .required = false,
+          .store = in_struct(&ReducedLungParameters::LungTree::TerminalUnits::recruitment_model),
+      });
+
   Core::IO::InputSpec geometry_spec = group<ReducedLungParameters::Geometry>("geometry",
       {
           parameter<std::filesystem::path>("file",
@@ -547,7 +641,8 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                                    &ReducedLungParameters::LungTree::TerminalUnits::element_blocks),
                            }),
                           rheological_model_spec_terminal_unit,
-                          elasticity_model_spec_terminal_units},
+                          elasticity_model_spec_terminal_units,
+                          recruitment_model_spec_terminal_units},
                       {
                           .description = "Terminal units.",
                           .store = in_struct(&ReducedLungParameters::LungTree::terminal_units),

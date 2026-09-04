@@ -14,7 +14,7 @@
 
 #include <functional>
 #include <map>
-#include <utility>
+#include <tuple>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -33,6 +33,12 @@ namespace ReducedLung::TerminalUnits::ModelRegistry
       ReducedLungParameters::LungTree::TerminalUnits::ElasticityModel::ElasticityModelType;
 
   /**
+   * @brief Recruitment selection enum used as registry key component.
+   */
+  using RecruitmentModelType =
+      ReducedLungParameters::LungTree::TerminalUnits::RecruitmentModel::PressureLawType;
+
+  /**
    * @brief Factory callback that appends one terminal-unit element to the proper model block.
    */
   using TerminalUnitFactory =
@@ -40,9 +46,10 @@ namespace ReducedLung::TerminalUnits::ModelRegistry
           int local_element_id, double ref_length, const ReducedLungParameters& parameters)>;
 
   /**
-   * @brief Composite registry key: (rheology type, elasticity type).
+   * @brief Composite registry key: (rheology type, elasticity type, recruitment type).
    */
-  using TerminalUnitModelKey = std::pair<RheologicalModelType, ElasticityModelType>;
+  using TerminalUnitModelKey =
+      std::tuple<RheologicalModelType, ElasticityModelType, RecruitmentModelType>;
 
   /**
    * @brief Mapping from model key to concrete terminal-unit element factory.
@@ -59,11 +66,12 @@ namespace ReducedLung::TerminalUnits::ModelRegistry
    * @param parameters Reduced-lung input parameters.
    * @param rheological_model_type Selected rheology model type.
    * @param elasticity_model_type Selected elasticity model type.
+   * @param recruitment_model_type Selected recruitment model type.
    */
   void add_terminal_unit_with_model_selection(TerminalUnitContainer& terminal_units,
       int global_element_id, int local_element_id, double ref_length,
       const ReducedLungParameters& parameters, RheologicalModelType rheological_model_type,
-      ElasticityModelType elasticity_model_type);
+      ElasticityModelType elasticity_model_type, RecruitmentModelType recruitment_model_type);
 }  // namespace ReducedLung::TerminalUnits::ModelRegistry
 
 FOUR_C_NAMESPACE_CLOSE

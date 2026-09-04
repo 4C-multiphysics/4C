@@ -13,6 +13,7 @@
 #include "4C_linalg_map.hpp"
 #include "4C_reduced_lung_terminal_unit_common.hpp"
 #include "4C_reduced_lung_terminal_unit_elasticity.hpp"
+#include "4C_reduced_lung_terminal_unit_recruitment.hpp"
 #include "4C_reduced_lung_terminal_unit_rheology.hpp"
 
 #include <vector>
@@ -29,6 +30,7 @@ namespace ReducedLung::TerminalUnits
     TerminalUnitData data;
     RheologicalModel rheological_model;
     ElasticityModel elasticity_model;
+    Recruitment::RecruitmentModel recruitment_model;
     ResidualEvaluator residual_evaluator;
     JacobianEvaluator jacobian_evaluator;
     InternalStateUpdater internal_state_updater;
@@ -75,6 +77,18 @@ namespace ReducedLung::TerminalUnits
    */
   void assign_local_dof_ids(
       const Core::LinAlg::Map& locally_relevant_dof_map, TerminalUnitContainer& terminal_units);
+
+  /**
+   * @brief Refresh the reference volume context of all elements in one model block.
+   *
+   * The reference volume is constant for terminal units without an active recruitment law; for all
+   * others it is produced by the configured recruitment law. Elasticity and rheology consume the
+   * result through TerminalUnitData::reference_volume_context without needing to know which of the
+   * two cases applies.
+   */
+  void refresh_reference_volume_contexts(TerminalUnitData& data,
+      const Recruitment::RecruitmentModel& recruitment_model,
+      const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt);
 
   /**
    * @brief Synchronize model-internal state from converged dofs.

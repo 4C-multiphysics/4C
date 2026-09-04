@@ -1,0 +1,82 @@
+TITLE:
+  - "3 terminal units with mixed recruitment models"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Reduced_Lung"
+reduced_dimensional_lung:
+  air_properties:
+    density: 1.176e-06
+    dynamic_viscosity: 1.79105e-05
+  dynamics:
+    linear_solver: 1
+    number_of_steps: 3
+    restart_every: 1
+    results_every: 1
+    time_increment: 1
+    output_verbosity: high
+  geometry:
+    file: "vtu/reduced_lung_terminal_unit_recruitment_mixed.vtu"
+  lung_tree:
+    airways: # These values won't be used since there are no airways in the model
+      radius:
+        constant: 1.0
+      flow_model:
+        resistance_type:
+          constant: Linear
+        include_inertia:
+          constant: false
+      wall_model_type:
+        constant: Rigid
+    terminal_units:
+      element_blocks: [2]
+      rheological_model:
+        rheological_model_type:
+          constant: KelvinVoigt
+        kelvin_voigt:
+          viscosity_kelvin_voigt_eta:
+            constant: 0.0
+      elasticity_model:
+        elasticity_model_type:
+          constant: Linear
+        linear:
+          elasticity_e:
+            constant: 1.0
+      recruitment_model:
+        pressure_law_type:
+          from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+        time_law_type:
+          from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+        reference_volume_linearization:
+          from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+        linear_pressure:
+          v0_min:
+            from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+          v0_max:
+            from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+          p_closing_min:
+            from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+          p_opening_min:
+            from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+          delta_p_minmax:
+            from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+          epsilon_v0_switch:
+            from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+          initial_v0:
+            from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+          initial_path:
+            from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+        exponential_relaxation:
+          tau:
+            from_file: "reduced_lung_terminal_unit_recruitment_mixed_fields.json"
+  boundary_conditions:
+    pressure:
+      - id: 1
+        function_id: 1
+      - id: 2
+        function_id: 2
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Reduced_lung_solver"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "t"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_TIME: "0"
