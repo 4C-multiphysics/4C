@@ -30,7 +30,6 @@ SOLVER 1:
   AZTOL: 1e-14
   AZOUTPUT: 50
   AZREUSE: 1
-  AZSUB: 1000
   NAME: "Fluid_Solver"
 MATERIALS:
   - MAT: 1
