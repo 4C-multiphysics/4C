@@ -92,8 +92,8 @@ void Particle::InitialFieldHandler::set_initial_fields()
           Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(functid);
 
       // get pointer to particle states
-      const double* pos = container->get_ptr_to_state(Particle::State::Position, 0);
-      double* state = container->get_ptr_to_state_writable(particleState, 0);
+      const double* pos = container->get_ptr_to_state(Particle::State::Position);
+      double* state = container->get_ptr_to_state_writable(particleState);
 
       // get particle state dimensions
       int posstatedim = container->get_state_dim(Particle::State::Position);

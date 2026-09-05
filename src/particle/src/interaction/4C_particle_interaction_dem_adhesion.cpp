@@ -143,17 +143,26 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
   DEMHistoryPairAdhesionData& adhesionhistorydata =
       historypairs_->get_ref_to_particle_adhesion_history_data();
 
+  // get pointers to particle states
+  const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& vel =
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
+  ConstParticleContainerBundleStatePtrs& rad =
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
+  ParticleContainerBundleStatePtrs& force =
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::Force);
+
   // iterate over particle pairs
   for (const auto& particlepair : neighborpairs_->get_ref_to_particle_pair_adhesion_data())
   {
     // access values of local index tuples of particle i and j
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlepair.tuple_i_;
 
-    Particle::Type type_j;
-    Particle::Status status_j;
+    ParticleType type_j;
+    ParticleStatus status_j;
     int particle_j;
     std::tie(type_j, status_j, particle_j) = particlepair.tuple_j_;
 
@@ -168,16 +177,19 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
     const int* globalid_j = container_j->get_ptr_to_global_id(particle_j);
 
-    // get pointer to particle states
-    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
-    double* force_i = container_i->get_ptr_to_state_writable(Particle::State::Force, particle_i);
+    // get pointers to particle states
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    double* force_i =
+        Particle::bundle_state_ptrs_index(force, type_i, status_i, particle_i, statedim);
 
-    const double* vel_j = container_j->get_ptr_to_state(Particle::State::Velocity, particle_j);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
+    const double* vel_j =
+        Particle::bundle_state_ptrs_index(vel, type_j, status_j, particle_j, statedim);
+    const double* rad_j = Particle::bundle_state_ptrs_index(rad, type_j, status_j, particle_j);
     double* force_j = nullptr;
-    if (status_j == Particle::Status::Owned)
-      force_j = container_j->get_ptr_to_state_writable(Particle::State::Force, particle_j);
+    if (status_j == ParticleStatus::Owned)
+      force_j = Particle::bundle_state_ptrs_index(force, type_j, status_j, particle_j, statedim);
 
     // relative velocity in contact point c between particle i and j (neglecting angular velocity)
     double vel_rel[3];
@@ -210,7 +222,7 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
         vel_rel_normal, particlepair.m_eff_, adhesionhistory_ij.adhesion_force_);
 
     // copy history from interaction pair ij to ji
-    if (status_j == Particle::Status::Owned)
+    if (status_j == ParticleStatus::Owned)
     {
       // get reference to touched adhesion history
       TouchedDEMHistoryPairAdhesion& touchedadhesionhistory_ji =
@@ -272,12 +284,25 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
     surfaceenergy.reserve(numparticlewallpairs);
   }
 
+  // get pointers to particle states
+  const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& pos =
+      particlecontainerbundle_->try_get_ptrs_to_state(Particle::State::Position);
+  ConstParticleContainerBundleStatePtrs& vel =
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Velocity);
+  ConstParticleContainerBundleStatePtrs& rad =
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
+  ConstParticleContainerBundleStatePtrs& mass =
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Mass);
+  ParticleContainerBundleStatePtrs& force =
+      particlecontainerbundle_->try_get_ptrs_to_state_writable(ParticleState::Force);
+
   // iterate over particle-wall pairs
   for (const auto& particlewallpair : particlewallpairdata)
   {
     // access values of local index tuple of particle i
-    Particle::Type type_i;
-    Particle::Status status_i;
+    ParticleType type_i;
+    ParticleStatus status_i;
     int particle_i;
     std::tie(type_i, status_i, particle_i) = particlewallpair.tuple_i_;
 
@@ -289,11 +314,14 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
-    const double* vel_i = container_i->get_ptr_to_state(Particle::State::Velocity, particle_i);
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
-    const double* mass_i = container_i->get_ptr_to_state(Particle::State::Mass, particle_i);
-    double* force_i = container_i->get_ptr_to_state_writable(Particle::State::Force, particle_i);
+    const double* pos_i =
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
+    const double* vel_i =
+        Particle::bundle_state_ptrs_index(vel, type_i, status_i, particle_i, statedim);
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* mass_i = Particle::bundle_state_ptrs_index(mass, type_i, status_i, particle_i);
+    double* force_i =
+        Particle::bundle_state_ptrs_index(force, type_i, status_i, particle_i, statedim);
 
     // get pointer to column wall element
     Core::Elements::Element* ele = particlewallpair.ele_;

@@ -195,13 +195,10 @@ void Particle::ParticleResultTest::test_special(
             "state '{}' not found in container!", Particle::enum_to_state_name(particleState));
 
       // get pointer to particle state
-      const double* state = container->get_ptr_to_state(particleState, 0);
-
-      // get particle state dimension
-      int statedim = container->get_state_dim(particleState);
+      const double* state = container->get_ptr_to_state(particleState, index);
 
       // get actual result
-      actresult = state[statedim * index + dim];
+      actresult = state[dim];
 
       // compare values
       const int err = compare_values(actresult, "SPECIAL", result_container);

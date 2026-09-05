@@ -20,7 +20,7 @@ Particle::ParticleContainerBundle::ParticleContainerBundle()
 }
 
 void Particle::ParticleContainerBundle::setup(
-    const std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes)
+    const std::map<ParticleType, std::set<ParticleState>>& particlestatestotypes)
 {
   std::shared_ptr<ParticleContainer> container;
 
@@ -34,7 +34,7 @@ void Particle::ParticleContainerBundle::setup(
   for (const auto& typeIt : particlestatestotypes)
   {
     // get particle type
-    Particle::Type type = typeIt.first;
+    ParticleType type = typeIt.first;
 
     // insert particle type into set of stored containers
     storedtypes_.insert(type);
@@ -43,7 +43,7 @@ void Particle::ParticleContainerBundle::setup(
     (containers_[static_cast<int>(type)]).resize(2);
 
     // set of particle state enums of current particle type (equal for owned and ghosted particles)
-    const std::set<Particle::State>& stateset = typeIt.second;
+    const std::set<ParticleState>& stateset = typeIt.second;
 
     // initial size of particle container
     int initialsize = 1;
@@ -61,6 +61,75 @@ void Particle::ParticleContainerBundle::setup(
     // set container of ghosted particles
     (containers_[static_cast<int>(type)])[static_cast<int>(Status::Ghosted)] = container;
   }
+}
+
+Particle::ConstParticleContainerBundleStatePtrs&
+Particle::ParticleContainerBundle::try_get_ptrs_to_state(ParticleState state,
+    std::optional<std::set<ParticleType>> types_option,
+    std::optional<ParticleStatus> status_optional) const
+{
+  const int state_idx = static_cast<int>(state);
+  const std::set<ParticleType> types = types_option.value_or(storedtypes_);
+  bool is_owned = true, is_ghosted = true;
+  if (status_optional.has_value())
+  {
+    if (status_optional.value() == Status::Owned) is_ghosted = false;
+    if (status_optional.value() == Status::Ghosted) is_owned = false;
+  }
+
+  // clear old pointers
+  std::memset(&conststates_[state_idx], 0, sizeof(ConstParticleContainerBundleStatePtrs));
+
+  // and fill with new pointers
+  for (auto type : types)
+  {
+    const int type_idx = static_cast<int>(type);
+
+    if (is_owned)
+      conststates_[state_idx][type_idx][static_cast<int>(Status::Owned)] =
+          containers_[type_idx][static_cast<int>(Status::Owned)].get()->try_get_ptr_to_state(state);
+    if (is_ghosted)
+      conststates_[state_idx][type_idx][static_cast<int>(Status::Ghosted)] =
+          containers_[type_idx][static_cast<int>(Status::Ghosted)].get()->try_get_ptr_to_state(
+              state);
+  }
+  return conststates_[state_idx];
+}
+
+Particle::ParticleContainerBundleStatePtrs&
+Particle::ParticleContainerBundle::try_get_ptrs_to_state_writable(ParticleState state,
+    std::optional<std::set<ParticleType>> types_option,
+    std::optional<ParticleStatus> status_optional)
+{
+  const int state_idx = static_cast<int>(state);
+  const std::set<ParticleType> types = types_option.value_or(storedtypes_);
+  bool is_owned = true, is_ghosted = true;
+  if (status_optional.has_value())
+  {
+    if (status_optional.value() == Status::Owned) is_ghosted = false;
+    if (status_optional.value() == Status::Ghosted) is_owned = false;
+  }
+
+  // clear old pointers
+  std::memset(&states_[state_idx], 0, sizeof(ParticleContainerBundleStatePtrs));
+
+  // and fill with new pointers
+  for (auto type : types)
+  {
+    const int type_idx = static_cast<int>(type);
+
+    if (is_owned)
+      states_[state_idx][type_idx][static_cast<int>(Status::Owned)] =
+          containers_[type_idx][static_cast<int>(Status::Owned)]
+              .get()
+              ->try_get_ptr_to_state_writable(state);
+    if (is_ghosted)
+      states_[state_idx][type_idx][static_cast<int>(Status::Ghosted)] =
+          containers_[type_idx][static_cast<int>(Status::Ghosted)]
+              .get()
+              ->try_get_ptr_to_state_writable(state);
+  }
+  return states_[state_idx];
 }
 
 void Particle::ParticleContainerBundle::get_packed_particle_objects_of_all_containers(
