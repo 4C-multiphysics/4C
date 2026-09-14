@@ -70,8 +70,11 @@ void Particle::SPHHeatLossEvaporation::evaluate_evaporation_induced_heat_loss() 
   Particle::ParticleContainer* container_i =
       particlecontainerbundle_->get_specific_container(evaporatingphase_, ParticleStatus::Owned);
 
+  // get material properties
   const Mat::PAR::ParticleMaterialThermo* thermomaterial_i =
       thermomaterial_[static_cast<int>(evaporatingphase_)];
+  const double thermalCapacity = thermomaterial_i->thermalCapacity_;
+  const double invThermalCapacity = thermomaterial_i->invThermalCapacity_;
 
   // get pointers to states
   const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
@@ -104,13 +107,11 @@ void Particle::SPHHeatLossEvaporation::evaluate_evaporation_induced_heat_loss() 
     const double m_dot_i = heatloss_pfac_ * recoil_press_i * std::sqrt(heatloss_tfac_ / temp_i[0]);
 
     // evaluate specific enthalpy
-    const double specificenthalpy_i =
-        thermomaterial_i->thermalCapacity_ * (temp_i[0] - enthalpyreftemp_);
+    const double specificenthalpy_i = thermalCapacity * (temp_i[0] - enthalpyreftemp_);
 
     // add contribution of heat loss
     tempdot_i[0] -= ParticleUtils::vec_norm_two(cfg_i) * m_dot_i *
-                    (latentheat_ + specificenthalpy_i) * thermomaterial_i->invThermalCapacity_ /
-                    dens_i[0];
+                    (latentheat_ + specificenthalpy_i) * invThermalCapacity / dens_i[0];
   }
 }
 

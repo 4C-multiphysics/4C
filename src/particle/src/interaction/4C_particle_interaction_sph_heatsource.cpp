@@ -129,15 +129,20 @@ void Particle::SPHHeatSourceVolume::evaluate_heat_source(const double& evaltime)
     const Mat::PAR::ParticleMaterialBase* basematerial_i =
         particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
 
+    // get material properties
     const Mat::PAR::ParticleMaterialThermo* thermomaterial_i =
         thermomaterial_[static_cast<int>(type_i)];
+    const double thermalAbsorptivity = thermomaterial_i->thermalAbsorptivity_;
+    const double invThermalCapacity = thermomaterial_i->invThermalCapacity_;
+
+    const double initDensity = basematerial_i->initDensity_;
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
     {
       // get pointers to particle states
       const double* dens_i =
-          Particle::bundle_state_ptrs_index(dens, &(basematerial_i->initDensity_), type_i, status_i, particle_i);
+          Particle::bundle_state_ptrs_index(dens, &initDensity, type_i, status_i, particle_i);
       const double* pos_i =
           Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
       double* tempdot_i = Particle::bundle_state_ptrs_index(tempdot, type_i, status_i, particle_i);
@@ -146,8 +151,7 @@ void Particle::SPHHeatSourceVolume::evaluate_heat_source(const double& evaltime)
       funct = function.evaluate_time_derivative(std::span(pos_i, 3), evaltime, 0, 0);
 
       // add contribution of heat source
-      tempdot_i[0] += thermomaterial_i->thermalAbsorptivity_ * funct[0] *
-                      thermomaterial_i->invThermalCapacity_ / dens_i[0];
+      tempdot_i[0] += thermalAbsorptivity * funct[0] * invThermalCapacity / dens_i[0];
     }
   }
 }
@@ -305,8 +309,12 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
     const Mat::PAR::ParticleMaterialBase* basematerial_i =
         particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
 
+    // get material properties
     const Mat::PAR::ParticleMaterialThermo* thermomaterial_i =
         thermomaterial_[static_cast<int>(type_i)];
+    const double initDensity = basematerial_i->initDensity_;
+    const double thermalAbsorptivity = thermomaterial_i->thermalAbsorptivity_;
+    const double invThermalCapacity = thermomaterial_i->invThermalCapacity_;
 
     // iterate over particles in container
     for (int particle_i = 0; particle_i < container_i->particles_stored(); ++particle_i)
@@ -328,8 +336,8 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
       if (f_i_proj < 0.0) continue;
 
       // get pointer to particle states
-      const double* dens_i = Particle::bundle_state_ptrs_index(
-          dens, &(basematerial_i->initDensity_), type_i, status_i, particle_i);
+      const double* dens_i =
+          Particle::bundle_state_ptrs_index(dens, &initDensity, type_i, status_i, particle_i);
       const double* pos_i =
           Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
       double* tempdot_i = Particle::bundle_state_ptrs_index(tempdot, type_i, status_i, particle_i);
@@ -338,8 +346,7 @@ void Particle::SPHHeatSourceSurface::evaluate_heat_source(const double& evaltime
       funct = function.evaluate_time_derivative(std::span(pos_i, 3), evaltime, 0, 0);
 
       // add contribution of heat source
-      tempdot_i[0] += f_i_proj * thermomaterial_i->thermalAbsorptivity_ * funct[0] *
-                      thermomaterial_i->invThermalCapacity_ / dens_i[0];
+      tempdot_i[0] += f_i_proj * thermalAbsorptivity * funct[0] * invThermalCapacity / dens_i[0];
     }
   }
 }

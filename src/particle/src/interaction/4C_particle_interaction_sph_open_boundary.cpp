@@ -308,6 +308,7 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
   // get material for current particle type
   const Mat::PAR::ParticleMaterialBase* material_k =
       particlematerial_->get_ptr_to_particle_mat_parameter(openboundaryphase_);
+  const double initDensity = material_k->initDensity_;
 
   // get equation of state for current particle type
   const Particle::SPHEquationOfStateBase* equationofstate_k =
@@ -406,7 +407,7 @@ void Particle::SPHOpenBoundaryDirichlet::interpolate_open_boundary_states()
                        : 0.0;
 
       // compute density
-      dens_k[0] = equationofstate_k->pressure_to_density(press_k[0], material_k->initDensity_);
+      dens_k[0] = equationofstate_k->pressure_to_density(press_k[0], initDensity);
     }
   }
 
@@ -468,6 +469,7 @@ void Particle::SPHOpenBoundaryNeumann::prescribe_open_boundary_states(const doub
   // get material for current particle type
   const Mat::PAR::ParticleMaterialBase* material_i =
       particlematerial_->get_ptr_to_particle_mat_parameter(openboundaryphase_);
+  const double initDensity = material_i->initDensity_;
 
   // get equation of state for current particle type
   const Particle::SPHEquationOfStateBase* equationofstate_i =
@@ -534,7 +536,7 @@ void Particle::SPHOpenBoundaryNeumann::prescribe_open_boundary_states(const doub
     double* dens_i = &dens[particle_i];
 
     // compute density
-    dens_i[0] = equationofstate_i->pressure_to_density(press_i[0], material_i->initDensity_);
+    dens_i[0] = equationofstate_i->pressure_to_density(press_i[0], initDensity);
   }
 }
 
