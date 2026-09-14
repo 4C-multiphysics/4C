@@ -161,6 +161,8 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_below_to_above_pha
       particlematerial_->get_ptr_to_particle_mat_parameter(type_source);
   const Mat::PAR::ParticleMaterialBase* material_target =
       particlematerial_->get_ptr_to_particle_mat_parameter(type_target);
+  const double initDensity_source = material_source->initDensity_;
+  const double initDensity_target = material_target->initDensity_;
 
   // get equation of state of target particle type
   const Particle::SPHEquationOfStateBase* equationofstate_target;
@@ -181,11 +183,10 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_below_to_above_pha
       // add density and pressure state for boundary or rigid particles
       if (isboundaryrigid_source and (not isboundaryrigid_target))
       {
-        particlestates[static_cast<int>(ParticleState::Density)].assign(
-            1, material_source->initDensity_);
+        particlestates[static_cast<int>(ParticleState::Density)].assign(1, initDensity_source);
 
-        const double press = equationofstate_target->density_to_pressure(
-            material_source->initDensity_, material_target->initDensity_);
+        const double press =
+            equationofstate_target->density_to_pressure(initDensity_source, initDensity_target);
 
         particlestates[static_cast<int>(ParticleState::Pressure)].assign(1, press);
       }
@@ -246,6 +247,8 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_above_to_below_pha
       particlematerial_->get_ptr_to_particle_mat_parameter(type_source);
   const Mat::PAR::ParticleMaterialBase* material_target =
       particlematerial_->get_ptr_to_particle_mat_parameter(type_target);
+  const double initDensity_source = material_source->initDensity_;
+  const double initDensity_target = material_target->initDensity_;
 
   // get equation of state of target particle type
   const Particle::SPHEquationOfStateBase* equationofstate_target;
@@ -266,11 +269,10 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_above_to_below_pha
       // add density and pressure state for boundary or rigid particles
       if (isboundaryrigid_source and (not isboundaryrigid_target))
       {
-        particlestates[static_cast<int>(ParticleState::Density)].assign(
-            1, material_source->initDensity_);
+        particlestates[static_cast<int>(ParticleState::Density)].assign(1, initDensity_source);
 
-        const double press = equationofstate_target->density_to_pressure(
-            material_source->initDensity_, material_target->initDensity_);
+        const double press =
+            equationofstate_target->density_to_pressure(initDensity_source, initDensity_target);
 
         particlestates[static_cast<int>(ParticleState::Pressure)].assign(1, press);
       }

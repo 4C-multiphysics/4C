@@ -968,6 +968,7 @@ void Particle::SPHDensityPredictCorrect::correct_density() const
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* material =
         particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
+    const double initDensity = material->initDensity_;
 
     // get equation of state for current particle type
     const Particle::SPHEquationOfStateBase* equationofstate =
@@ -993,7 +994,7 @@ void Particle::SPHDensityPredictCorrect::correct_density() const
         if (densitycorrection_->compute_density_bc())
         {
           double press_bc = 0.0;
-          dens_bc = equationofstate->pressure_to_density(press_bc, material->initDensity_);
+          dens_bc = equationofstate->pressure_to_density(press_bc, initDensity);
         }
 
         // set corrected density of free surface particles
