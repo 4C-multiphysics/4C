@@ -83,6 +83,7 @@ void Particle::SPHPressure::compute_pressure() const
     // get material for current particle type
     const Mat::PAR::ParticleMaterialBase* material =
         particlematerial_->get_ptr_to_particle_mat_parameter(type_i);
+    const double initDensity = material->initDensity_;
 
     // get equation of state for current particle type
     const Particle::SPHEquationOfStateBase* equationofstate =
@@ -94,7 +95,7 @@ void Particle::SPHPressure::compute_pressure() const
       const double* dens_i = Particle::bundle_state_ptrs_index(dens, type_i, status_i, particle_i);
       double* press_i = Particle::bundle_state_ptrs_index(press, type_i, status_i, particle_i);
 
-      press_i[0] = equationofstate->density_to_pressure(dens_i[0], material->initDensity_);
+      press_i[0] = equationofstate->density_to_pressure(dens_i[0], initDensity);
     }
   }
 
