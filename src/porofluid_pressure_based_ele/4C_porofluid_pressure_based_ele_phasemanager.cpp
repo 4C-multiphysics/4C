@@ -1292,11 +1292,12 @@ void Discret::Elements::PoroFluidManager::PhaseManagerReaction::evaluate_gp_stat
             multiphasemat, ireac);
 
     // evaluate the reaction
+    int element_id = phasemanager_->element()->id();
     singlephasemat.evaluate_reaction(reacterms_, reactermsderivspressure_,
         reactermsderivssaturation_, reactermsderivsporosity_, reactermsderivsvolfrac_,
         reactermsderivsvolfracpressure_, reactermsderivsscalar_, phasemanager_->pressure(),
         phasemanager_->saturation(), phasemanager_->porosity(), volfrac, volfracpressure,
-        *varmanager.scalarnp());
+        *varmanager.scalarnp(), element_id);
   }
 
   for (int jdof = 0; jdof < totalnumdof; jdof++)

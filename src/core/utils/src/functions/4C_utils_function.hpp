@@ -14,6 +14,7 @@
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_functionvariables.hpp"
 #include "4C_utils_symbolic_expression.fwd.hpp"
+#include "4C_io_input_field.hpp"
 
 #include <memory>
 #include <numbers>
@@ -283,7 +284,7 @@ namespace Core::Utils
   {
    public:
     SymbolicFunctionOfAnything(
-        const std::string& component, std::vector<std::pair<std::string, double>> constants);
+        const std::string& component, std::vector<std::pair<std::string, Core::IO::InputField<double>>> constants);
 
 
     double evaluate(const std::vector<std::pair<std::string, double>>& variables,
@@ -295,6 +296,18 @@ namespace Core::Utils
         const std::vector<std::pair<std::string, double>>& variables,
         const std::vector<std::pair<std::string, double>>& constants,
         const std::size_t component) const override;
+
+    // CASE OF SPATIALLY VARYING MATERIAL PROPERTIES DEFINED WITH INPUT FIELDS
+    double evaluate(const std::vector<std::pair<std::string, double>>& variables,
+        const std::vector<std::pair<std::string, double>>& constants, //global constants!
+        const std::size_t component,
+        int element_id) const;
+
+    std::vector<double> evaluate_derivative(
+        const std::vector<std::pair<std::string, double>>& variables,
+        const std::vector<std::pair<std::string, double>>& constants, //global constants!
+        const std::size_t component,
+        int element_id) const; 
 
     /// return the number of components
     [[nodiscard]] std::size_t number_components() const override { return (expr_.size()); }
@@ -309,8 +322,8 @@ namespace Core::Utils
     std::vector<std::vector<std::shared_ptr<FunctionVariable>>> variables_;
 
    private:
-    //! constants from input
-    std::vector<std::pair<std::string, ValueType>> constants_from_input_;
+    //! constants from input defined as inputfields
+    std::vector<std::pair<std::string, Core::IO::InputField<double>>> parameter_fields_;
   };
 
   /// try to create SymbolicFunctionOfAnything from a given line definition
