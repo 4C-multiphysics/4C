@@ -732,7 +732,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     if (discretization.name() == "porofluid" or discretization.name() == "structure")
     {
       structmat->compute_surf_porosity(params, pressint(0, 0), J, ele->surface_number(), gpid,
-          porosityint, &dphi_dp, &dphi_dJ, &dphi_dJdp, &dphi_dJJ, &dphi_dpp, false);
+          porosityint, &dphi_dp, &dphi_dJ, &dphi_dJdp, &dphi_dJJ, &dphi_dpp, false, ele->id());
     }
     else
       porosityint = 1.0;
@@ -3084,7 +3084,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::compute_porosity_at_g
       nullptr,  // dphi_dJdp not needed
       nullptr,  // dphi_dJJ not needed
       nullptr,  // dphi_dpp not needed
-      save);
+      save,
+      ele->id());
 }
 
 template <Core::FE::CellType distype>

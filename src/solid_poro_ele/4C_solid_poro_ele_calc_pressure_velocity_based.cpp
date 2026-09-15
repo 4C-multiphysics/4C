@@ -340,12 +340,12 @@ Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
 template <Core::FE::CellType celltype, Discret::Elements::PorosityFormulation porosity_formulation>
 void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
     porosity_formulation>::poro_setup(Mat::StructPoro& porostructmat,
-    const Core::IO::InputParameterContainer& container)
+    const Core::IO::InputParameterContainer& container, int eleGID)
 {
   // attention: Make sure to use the same gauss integration rule as in the solid elements in case
   // you use a material, in which the fluid terms are dependent on solid history terms
   porostructmat.poro_setup(
-      gauss_integration_.num_points(), read_fibers(container), read_coordinate_system(container));
+      gauss_integration_.num_points(), read_fibers(container), read_coordinate_system(container), eleGID);
 }
 
 template <Core::FE::CellType celltype, Discret::Elements::PorosityFormulation porosity_formulation>
@@ -390,6 +390,7 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
           const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
           const JacobianMapping<celltype>& jacobian_mapping, double integration_factor, int gp)
       {
+        int eleGID = ele.id();
         const SpatialMaterialMapping<celltype> spatial_material_mapping =
             evaluate_spatial_material_mapping<celltype>(
                 jacobian_mapping, nodal_coordinates, 1.0, kinematictype);
@@ -563,7 +564,7 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
           double W = 0.0;
 
           porostructmat.constitutive_derivatives(
-              params, fluid_press, volchange, porosity, &dW_dp, &dW_dphi, &dW_dJ, nullptr, &W);
+              params, fluid_press, volchange, porosity, &dW_dp, &dW_dphi, &dW_dJ, nullptr, &W, eleGID);
 
           if (matrix_views.porosity_force_vector)
           {
@@ -664,6 +665,7 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
           const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
           const JacobianMapping<celltype>& jacobian_mapping, double integration_factor, int gp)
       {
+        int eleGID = ele.id();
         const SpatialMaterialMapping<celltype> spatial_material_mapping =
             evaluate_spatial_material_mapping<celltype>(
                 jacobian_mapping, nodal_coordinates, 1.0, kinematictype);
@@ -757,7 +759,7 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
 
           double dW_dp = 0.0;
           porostructmat.constitutive_derivatives(
-              params, fluid_press, volchange, porosity, &dW_dp, nullptr, nullptr, nullptr, nullptr);
+              params, fluid_press, volchange, porosity, &dW_dp, nullptr, nullptr, nullptr, nullptr, eleGID);
 
 
           matrix_views.K_porosity_pressure->multiply_nt(integration_factor * dW_dp,

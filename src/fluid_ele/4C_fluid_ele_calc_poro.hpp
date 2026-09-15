@@ -173,6 +173,7 @@ namespace Discret
           \param material         (i) fluid material
           \param isale            (i) ALE flag
           \param intpoints        (i) Gaussian integration points
+          \param ele             (i) element pointer
        */
       int evaluate(Teuchos::ParameterList& params, const Core::LinAlg::Matrix<nsd_, nen_>& ebofoaf,
           Core::LinAlg::Matrix<(nsd_ + 1) * nen_, (nsd_ + 1) * nen_>& elemat1,
@@ -197,7 +198,8 @@ namespace Discret
           const Core::LinAlg::Matrix<nen_, 1>* eporositydot,
           const Core::LinAlg::Matrix<nen_, 1>* eporositydotn,
           std::shared_ptr<Core::Mat::Material> mat, bool isale,
-          const Core::FE::GaussIntegration& intpoints);
+          const Core::FE::GaussIntegration& intpoints,
+          Discret::Elements::Fluid* ele);
 
       /*!
           \brief evaluate function for Fluid element for porous flow
@@ -225,6 +227,7 @@ namespace Discret
               \param mat              (i) fluid material
               \param isale            (i) ALE flag
               \param intpoints        (i) Gaussian integration points
+              \param ele              (i) element pointer
        */
       int evaluate_od(Teuchos::ParameterList& params,
           const Core::LinAlg::Matrix<nsd_, nen_>& ebofoaf,
@@ -248,7 +251,8 @@ namespace Discret
           const Core::LinAlg::Matrix<nen_, 1>& echist,
           const Core::LinAlg::Matrix<nen_, 1>* eporositynp,
           std::shared_ptr<Core::Mat::Material> mat, bool isale,
-          const Core::FE::GaussIntegration& intpoints);
+          const Core::FE::GaussIntegration& intpoints,
+          Discret::Elements::Fluid* ele);
 
       /*!
         \brief calculate element matrix and rhs for porous flow
@@ -278,6 +282,7 @@ namespace Discret
         \param material         (i) fluid material
         \param isale            (i) ALE flag
         \param intpoints        (i) Gaussian integration points
+        \param ele              (i) element pointer
 
        */
       void sysmat(Teuchos::ParameterList& params, const Core::LinAlg::Matrix<nsd_, nen_>& ebofoaf,
@@ -303,7 +308,8 @@ namespace Discret
           Core::LinAlg::Matrix<(nsd_ + 1) * nen_, (nsd_ + 1) * nen_>& estif,
           Core::LinAlg::Matrix<(nsd_ + 1) * nen_, 1>& eforce,
           std::shared_ptr<const Core::Mat::Material> material, bool isale,
-          const Core::FE::GaussIntegration& intpoints);
+          const Core::FE::GaussIntegration& intpoints,
+          Discret::Elements::Fluid* ele);
 
       /*!
         \brief calculate off diagonal element matrix and rhs for porous flow
@@ -329,6 +335,7 @@ namespace Discret
         \param material         (i) fluid material
         \param isale            (i) ALE flag
         \param intpoints        (i) Gaussian integration points
+        \param ele              (i) element pointer
        */
       void sysmat_od(Teuchos::ParameterList& params,
           const Core::LinAlg::Matrix<nsd_, nen_>& ebofoaf,
@@ -352,7 +359,8 @@ namespace Discret
           Core::LinAlg::Matrix<(nsd_ + 1) * nen_, nsd_ * nen_>& ecoupl,
           Core::LinAlg::Matrix<(nsd_ + 1) * nen_, 1>& eforce,
           std::shared_ptr<const Core::Mat::Material> material, bool isale,
-          const Core::FE::GaussIntegration& intpoints);
+          const Core::FE::GaussIntegration& intpoints,
+          Discret::Elements::Fluid* ele);
 
       /*!
         \brief linearisation of momentum equation in the case of mesh motion 3-D for Poroelasticity
@@ -593,11 +601,12 @@ namespace Discret
         \param dphi_dJJ     (o) second derivative of porosity gradient w.r.t. jacobian determinant
         \param dphi_dpp     (o) second derivative of porosity gradient w.r.t. fluid pressure
         \param save         (i) flag for saving porosity within structure material
+        \param eleGID       (i) element global ID
        */
       virtual void compute_porosity(Teuchos::ParameterList& params, const double& press,
           const double& J, const int& gp, const Core::LinAlg::Matrix<nen_, 1>& shapfct,
           const Core::LinAlg::Matrix<nen_, 1>* myporosity, double& porosity, double* dphi_dp,
-          double* dphi_dJ, double* dphi_dJdp, double* dphi_dJJ, double* dphi_dpp, bool save);
+          double* dphi_dJ, double* dphi_dJdp, double* dphi_dJJ, double* dphi_dpp, bool save, int eleGID);
 
       /*!
        \brief evaluate pressure equation (i.e. continuity equation for standard poro elements)
@@ -681,6 +690,7 @@ namespace Discret
         \param velforce           (o) element rhs vector for fluid velocity
         \param material           (i) fluid material
         \param intpoints          (i) Gaussian integration points
+        \param ele                (i) element pointer
        */
       void gauss_point_loop(Teuchos::ParameterList& params,
           const Core::LinAlg::Matrix<nsd_, nen_>& ebofoaf,
@@ -709,7 +719,8 @@ namespace Discret
           Core::LinAlg::Matrix<nen_, nen_>& ppmat, Core::LinAlg::Matrix<nen_, 1>& preforce,
           Core::LinAlg::Matrix<nsd_, nen_>& velforce,
           std::shared_ptr<const Core::Mat::Material> material,
-          const Core::FE::GaussIntegration& intpoints);
+          const Core::FE::GaussIntegration& intpoints,
+          Discret::Elements::Fluid* ele);
 
       /*!
         \brief Gauss point loop for evaluation of off-diagonal terms
@@ -733,6 +744,7 @@ namespace Discret
         \param ecoupl_p           (o) coupling element matrix for fluid pressure
         \param material           (i) fluid material
         \param intpoints          (i) Gaussian integration points
+        \param ele                (i) element pointer
        */
       void gauss_point_loop_od(Teuchos::ParameterList& params,
           const Core::LinAlg::Matrix<nsd_, nen_>& ebofoaf,
@@ -757,7 +769,8 @@ namespace Discret
           Core::LinAlg::Matrix<nen_ * nsd_, nen_ * nsd_>& ecoupl_u,
           Core::LinAlg::Matrix<nen_, nen_ * nsd_>& ecoupl_p,
           std::shared_ptr<const Core::Mat::Material> material,
-          const Core::FE::GaussIntegration& intpoints);
+          const Core::FE::GaussIntegration& intpoints,
+          Discret::Elements::Fluid* ele);
 
       /*!
         \brief Evaluation of gauss point values (diagonal terms)
@@ -881,6 +894,7 @@ namespace Discret
         \param lin_resM_Dus    (i) linearization of residual of momentum equation w.r.t. structural
                                    dofs
         \param ecoupl_u        (o) coupling element matrix of continuity equation
+        \param eleGID          (i) element global ID
        */
       virtual void fill_matrix_conti_od(const double& timefacfacpre, const double& dphi_dp,
           const double& dphi_dJ, const double& dphi_dJJ, const double& dphi_dJdp,
@@ -890,7 +904,9 @@ namespace Discret
           const Core::LinAlg::Matrix<nsd_, nen_>& egridv,
           const Core::LinAlg::Matrix<nsd_, nen_ * nsd_>& lin_resM_Dus,
           const Core::LinAlg::Matrix<nsd_, nen_ * nsd_>& lin_resM_Dus_gridvel,
-          Core::LinAlg::Matrix<nen_, nen_ * nsd_>& ecoupl_p);
+          Core::LinAlg::Matrix<nen_, nen_ * nsd_>& ecoupl_p,
+          int eleGID
+        );
 
       //! computation of material derivatives
       double setup_material_derivatives();
@@ -933,7 +949,7 @@ namespace Discret
           const Core::LinAlg::Matrix<nsd_, nsd_>& defgrd,
           const Core::LinAlg::Matrix<nsd_, nen_>& edispnp,
           const Core::LinAlg::Matrix<nsd_, nen_>& edispn,
-          const Core::LinAlg::Matrix<nsd_ * nsd_, nsd_>& F_X, int gp, bool computeLinOD);
+          const Core::LinAlg::Matrix<nsd_ * nsd_, nsd_>& F_X, int gp, bool computeLinOD, int eleGID);
 
       virtual int compute_volume(Teuchos::ParameterList& params,  //!< parameters
           Discret::Elements::Fluid* ele,                          //!< current fluid element
