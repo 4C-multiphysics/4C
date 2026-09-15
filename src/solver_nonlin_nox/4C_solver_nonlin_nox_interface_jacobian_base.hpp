@@ -30,7 +30,7 @@ namespace NOX
         /*! Compute Jacobian given the specified input vector x.
          * Returns true if computation was successful.
          */
-        virtual bool compute_jacobian(
+        [[nodiscard]] virtual bool compute_jacobian(
             const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac) = 0;
       };
     }  // namespace Interface

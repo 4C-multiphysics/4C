@@ -41,7 +41,7 @@ namespace NOX
         /*! \brief Compute RHS and Jacobian at once.
          *
          *  \return TRUE if computation was successful. */
-        virtual bool compute_f_and_jacobian(const Core::LinAlg::Vector<double>& x,
+        [[nodiscard]] virtual bool compute_f_and_jacobian(const Core::LinAlg::Vector<double>& x,
             Core::LinAlg::Vector<double>& rhs, Core::LinAlg::SparseOperator& jac) = 0;
 
         virtual Teuchos::RCP<Core::LinAlg::SparseMatrix>

@@ -13,6 +13,7 @@
 #include "4C_io_control.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <NOX_Abstract_Group.H>
 #include <NOX_Abstract_Vector.H>
@@ -112,7 +113,8 @@ bool FSI::Nonlinear::AitkenRelaxation::compute(::NOX::Abstract::Group& grp, doub
   // Calculate F anew here. This results in another FSI loop. However
   // the group will store the result, so it will be reused until the
   // group's x is changed again. We do not waste anything.
-  grp.computeF();
+  const auto status = grp.computeF();
+  FOUR_C_ASSERT_ALWAYS(status == ::NOX::Abstract::Group::ReturnType::Ok, "Failed to compute F");
 
   // is this reasonable at this point?
   double checkOrthogonality = fabs(grp.getF().innerProduct(dir));

@@ -42,12 +42,12 @@ namespace NOX
               const NOX::Nln::StatusTest::QuantityType qtype);
 
           //! Test the line search stopping criterion
-          NOX::Nln::Inner::StatusTest::StatusType check_status(const Interface::Required& interface,
-              const ::NOX::Solver::Generic& solver, const ::NOX::Abstract::Group& grp,
-              ::NOX::StatusTest::CheckType checkType) override;
+          [[nodiscard]] NOX::Nln::Inner::StatusTest::StatusType check_status(
+              const Interface::Required& interface, const ::NOX::Solver::Generic& solver,
+              const ::NOX::Abstract::Group& grp, ::NOX::StatusTest::CheckType checkType) override;
 
           //! Return the result of the most recent checkStatus call
-          NOX::Nln::Inner::StatusTest::StatusType get_status() const override;
+          [[nodiscard]] NOX::Nln::Inner::StatusTest::StatusType get_status() const override;
 
           ///! Output formatted description of stopping test to output stream.
           std::ostream& print(std::ostream& stream, int indent = 0) const override;

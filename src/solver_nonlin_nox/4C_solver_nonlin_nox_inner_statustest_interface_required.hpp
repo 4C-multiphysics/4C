@@ -44,7 +44,7 @@ namespace NOX
             virtual const ::NOX::MeritFunction::Generic& get_merit_function() const = 0;
 
             //! Execute the inner status test
-            virtual NOX::Nln::Inner::StatusTest::StatusType check_inner_status(
+            [[nodiscard]] virtual NOX::Nln::Inner::StatusTest::StatusType check_inner_status(
                 const ::NOX::Solver::Generic& solver, const ::NOX::Abstract::Group& grp,
                 ::NOX::StatusTest::CheckType checkType) const = 0;
           };  // class Required

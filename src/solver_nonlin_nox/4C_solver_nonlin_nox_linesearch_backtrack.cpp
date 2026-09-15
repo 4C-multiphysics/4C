@@ -41,7 +41,7 @@ NOX::Nln::LineSearch::Backtrack::Backtrack(const Teuchos::RCP<::NOX::GlobalData>
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool NOX::Nln::LineSearch::Backtrack::reset(
+void NOX::Nln::LineSearch::Backtrack::reset(
     const Teuchos::RCP<::NOX::GlobalData>& gd, Teuchos::ParameterList& params)
 {
   Teuchos::ParameterList& p = params.sublist("Backtrack");
@@ -70,8 +70,6 @@ bool NOX::Nln::LineSearch::Backtrack::reset(
   fp_except_.shall_be_caught_ = p.get("Allow Exceptions", false);
 
   prePostOperatorPtr_ = Teuchos::make_rcp<PrePostOperator>(params);
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*

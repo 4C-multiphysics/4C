@@ -42,7 +42,7 @@ namespace NOX
             Teuchos::ParameterList& params);
 
         /// hard reset
-        bool reset(const Teuchos::RCP<::NOX::GlobalData>& gd, Teuchos::ParameterList& params);
+        void reset(const Teuchos::RCP<::NOX::GlobalData>& gd, Teuchos::ParameterList& params);
 
         /// weak reset
         void reset();
@@ -50,7 +50,7 @@ namespace NOX
         bool compute(::NOX::Abstract::Group& newgrp, double& step,
             const ::NOX::Abstract::Vector& dir, const ::NOX::Solver::Generic& s) override;
 
-        NOX::Nln::Inner::StatusTest::StatusType check_inner_status(
+        [[nodiscard]] NOX::Nln::Inner::StatusTest::StatusType check_inner_status(
             const ::NOX::Solver::Generic& solver, const ::NOX::Abstract::Group& grp,
             ::NOX::StatusTest::CheckType checkType) const override;
 

@@ -17,6 +17,7 @@
 #include "4C_structure_new_nln_solver_generic.hpp"
 #include "4C_structure_new_timint_basedataglobalstate.hpp"
 #include "4C_structure_new_timint_implicit.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_ParameterList.hpp>
 
@@ -140,14 +141,18 @@ Solid::ModelEvaluator::PartitionedFSI::solve_relaxation_linear(
   // ---------------------------------------------------------------------------
   // Compute F and jacobian
   // ---------------------------------------------------------------------------
-  grp_ptr->computeJacobian();
+  const auto jacobian_status = grp_ptr->computeJacobian();
+  FOUR_C_ASSERT_ALWAYS(jacobian_status == ::NOX::Abstract::Group::ReturnType::Ok,
+      "Failed to compute Jacobian for partitioned FSI structure model evaluator.");
 
   // overwrite F with boundary force
   interface_force_np_ptr_->scale(-(ti_impl->tim_int_param()));
   ti_impl->dbc_ptr()->apply_dirichlet_to_rhs(*interface_force_np_ptr_);
   Teuchos::RCP<NOX::Nln::Vector> nox_force =
       Teuchos::make_rcp<NOX::Nln::Vector>(interface_force_np_ptr_);
-  grp_ptr->set_f(nox_force);
+  const auto residual_status = grp_ptr->set_f(nox_force);
+  FOUR_C_ASSERT_ALWAYS(residual_status == ::NOX::Abstract::Group::ReturnType::Ok,
+      "Failed to set residual for partitioned FSI structure model evaluator.");
 
   // ---------------------------------------------------------------------------
   // Check if we are using a Newton direction
@@ -171,7 +176,9 @@ Solid::ModelEvaluator::PartitionedFSI::solve_relaxation_linear(
   // solve the linear system of equations and update the current state
   // ---------------------------------------------------------------------------
   // compute the Newton direction
-  grp_ptr->computeNewton(p);
+  const auto newton_status = grp_ptr->computeNewton(p);
+  FOUR_C_ASSERT_ALWAYS(newton_status == ::NOX::Abstract::Group::ReturnType::Ok,
+      "Failed to compute Newton direction for partitioned FSI structure model evaluator.");
 
   // get the increment from the previous solution step
   const auto& increment = dynamic_cast<const NOX::Nln::Vector&>(grp_ptr->getNewton());

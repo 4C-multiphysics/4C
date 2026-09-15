@@ -41,27 +41,27 @@ namespace NOX
       /**
        * \brief Applies Jacobian to the given input vector and puts the answer in the result.
        */
-      virtual bool apply_jacobian(
+      [[nodiscard]] virtual bool apply_jacobian(
           const NOX::Nln::Vector& input, NOX::Nln::Vector& result) const = 0;
 
       /**
        * \brief Applies Jacobian-Transpose to the given input vector and puts the answer in the
        *  result.
        */
-      virtual bool apply_jacobian_transpose(
+      [[nodiscard]] virtual bool apply_jacobian_transpose(
           const NOX::Nln::Vector& input, NOX::Nln::Vector& result) const = 0;
 
       /**
        * \brief Applies the inverse of the Jacobian matrix to the given input vector and puts the
        * answer in result.
        */
-      virtual bool apply_jacobian_inverse(Teuchos::ParameterList& params,
+      [[nodiscard]] virtual bool apply_jacobian_inverse(Teuchos::ParameterList& params,
           const NOX::Nln::Vector& input, NOX::Nln::Vector& result) = 0;
 
       /**
        * \brief Evaluates the Jacobian based on the solution vector x.
        */
-      virtual bool compute_jacobian(const NOX::Nln::Vector& x) = 0;
+      [[nodiscard]] virtual bool compute_jacobian(const NOX::Nln::Vector& x) = 0;
 
       /**
        * \brief Return Jacobian operator
