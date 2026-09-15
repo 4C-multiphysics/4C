@@ -380,6 +380,31 @@ std::vector<double> Core::Utils::FunctionOfSpaceTime::evaluate_time_derivative(
   FOUR_C_THROW("The evaluation of the time derivative is not implemented for this function");
 }
 
+// Case with spatially varying material properties (inputfield)
+double Core::Utils::FunctionOfSpaceTime::evaluate(
+    std::span<const double> x, double t, std::size_t component, int eleGID) const
+{
+  FOUR_C_THROW("The evaluation with 4 arguments is not implemented for this function");
+}
+
+void Core::Utils::FunctionOfSpaceTime::evaluate_vector(
+    std::span<const double> x, double t, std::span<double> values, int eleGID) const
+{
+  for (std::size_t i = 0; i < number_components(); ++i) values[i] = evaluate(x, t, i, eleGID);
+}
+
+std::vector<double> Core::Utils::FunctionOfSpaceTime::evaluate_spatial_derivative(
+    std::span<const double> x, double t, std::size_t component, int eleGID) const
+{
+  FOUR_C_THROW("The evaluation of the derivative (with 4 arguments) is not implemented for this function");
+}
+
+std::vector<double> Core::Utils::FunctionOfSpaceTime::evaluate_time_derivative(
+    std::span<const double> x, double t, unsigned deg, std::size_t component, int eleGID) const
+{
+  FOUR_C_THROW("The evaluation of the time derivative (with 4 arguments) is not implemented for this function");
+}
+
 Core::Utils::SymbolicFunctionOfSpaceTime::SymbolicFunctionOfSpaceTime(
     const std::vector<std::string>& expressions,
     std::vector<std::shared_ptr<FunctionVariable>> variables)

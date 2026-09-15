@@ -6764,7 +6764,7 @@ double Discret::Elements::FluidEleCalcPoro<distype>::compute_effective_stiffness
     {
       std::shared_ptr<Mat::StVenantKirchhoff> stvmat =
           std::dynamic_pointer_cast<Mat::StVenantKirchhoff>(curmat);
-      effective_stiffness = stvmat->shear_mod();
+      effective_stiffness = stvmat->shear_mod(Base::eid_);
       break;
     }
     case Core::Materials::m_elasthyper:
