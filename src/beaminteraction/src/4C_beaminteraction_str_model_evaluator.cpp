@@ -36,6 +36,7 @@
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
+#include "4C_linear_solver_method_linalg.hpp"
 #include "4C_rebalance_graph_based.hpp"
 #include "4C_rebalance_print.hpp"
 #include "4C_rigidsphere.hpp"
@@ -878,6 +879,13 @@ bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::assemble_jacobian(
             (*me_vec_ptr_)[0]);
 
     beam_contact_model->assemble_stiff(jac);
+
+    auto kappa_inv = beam_contact_model->get_penalty_kappa_inverse();
+    auto structure_solver = tim_int().get_data_sdyn().get_lin_solvers().at(Solid::model_structure);
+
+    structure_solver->params()
+        .sublist("Teko Parameters")
+        .set<std::shared_ptr<Core::LinAlg::Vector<double>>>("scaling vector", kappa_inv);
   }
 
   // no need to keep it
