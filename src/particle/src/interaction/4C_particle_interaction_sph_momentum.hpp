@@ -78,7 +78,7 @@ namespace Particle
 
     //! insert momentum evaluation dependent states
     void insert_particle_states_of_particle_types(
-        std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const;
+        std::map<ParticleType, std::set<ParticleState>>& particlestatestotypes) const;
 
     //! add momentum contribution to acceleration field
     void add_acceleration_contribution() const;
@@ -151,16 +151,16 @@ namespace Particle
     const double reduced_dimension_scale_factor_;
 
     //! set of all fluid particle types
-    std::set<Particle::Type> allfluidtypes_;
+    std::set<ParticleType> allfluidtypes_;
 
     //! set of integrated fluid particle types
-    std::set<Particle::Type> intfluidtypes_;
+    std::set<ParticleType> intfluidtypes_;
 
     //! set of pure fluid particle types
-    std::set<Particle::Type> purefluidtypes_;
+    std::set<ParticleType> purefluidtypes_;
 
     //! set of boundary particle types
-    std::set<Particle::Type> boundarytypes_;
+    std::set<ParticleType> boundarytypes_;
   };
 
 }  // namespace Particle

@@ -115,6 +115,15 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
   // recreate list of hash keys for pd bond pairs
   setup_peridynamic_pair_hashes();
 
+  // get pointers to particle states
+  const int statedim = Particle::enum_to_state_dim(ParticleState::Position);
+  ConstParticleContainerBundleStatePtrs& pos =
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Position);
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  ConstParticleContainerBundleStatePtrs& rad =
+      particlecontainerbundle_->try_get_ptrs_to_state(ParticleState::Radius);
+#endif
+
   // iterate over potential particle neighbors
   for (auto& potentialneighbors : particleengineinterface_->get_potential_particle_neighbors())
   {
@@ -130,12 +139,11 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
 
     // filter rigid phase and boundary phase to find close pairs which interact in peridynamic or
     // DEM way
-    if ((type_i != Particle::Type::PDPhase and type_i != Particle::Type::BoundaryPhase) or
-        (type_j != Particle::Type::PDPhase and type_j != Particle::Type::BoundaryPhase))
+    if ((type_i != ParticleType::PDPhase and type_i != ParticleType::BoundaryPhase) or
+        (type_j != ParticleType::PDPhase and type_j != ParticleType::BoundaryPhase))
       continue;
 
-    if (type_i == Particle::Type::BoundaryPhase and type_j == Particle::Type::BoundaryPhase)
-      continue;
+    if (type_i == ParticleType::BoundaryPhase and type_j == ParticleType::BoundaryPhase) continue;
 
     // get corresponding particle containers
     Particle::ParticleContainer* container_i =
@@ -171,8 +179,10 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
 
     // all close and non-bonded particle pairs are considered as potential colliding partners
     // undergoing short range force interaction
-    const double* pos_i = container_i->get_ptr_to_state(Particle::State::Position, particle_i);
-    const double* pos_j = container_j->get_ptr_to_state(Particle::State::Position, particle_j);
+    const double* pos_i =
+        Particle::bundle_state_ptrs_index(pos, type_i, status_i, particle_i, statedim);
+    const double* pos_j =
+        Particle::bundle_state_ptrs_index(pos, type_j, status_j, particle_j, statedim);
 
     // vector from particle i to j
     double r_ji[3];
@@ -184,8 +194,8 @@ void Particle::PDNeighborPairs::evaluate_particle_pairs()
     const double absdist = ParticleUtils::vec_norm_two(r_ji);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
-    const double* rad_j = container_j->get_ptr_to_state(Particle::State::Radius, particle_j);
+    const double* rad_i = Particle::bundle_state_ptrs_index(rad, type_i, status_i, particle_i);
+    const double* rad_j = Particle::bundle_state_ptrs_index(rad, type_j, status_j, particle_j);
 
     if (absdist < (1.0e-10 * rad_i[0]) or absdist < (1.0e-10 * rad_j[0]))
       FOUR_C_THROW("absolute distance {} between particles close to zero!", absdist);
@@ -309,11 +319,11 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
     const int* globalid_i = container_i->get_ptr_to_global_id(particle_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(ParticleState::Radius, particle_i);
 
     // get position of particle i
     const Core::LinAlg::Matrix<3, 1> pos_i(
-        container_i->get_ptr_to_state(Particle::State::Position, particle_i));
+        container_i->get_ptr_to_state(ParticleState::Position, particle_i));
 
     // get pointer to column wall element
     Core::Elements::Element* ele = potentialneighbors.second;
@@ -410,7 +420,7 @@ void Particle::PDNeighborPairs::evaluate_particle_wall_pairs()
         particlecontainerbundle_->get_specific_container(type_i, status_i);
 
     // get pointer to particle states
-    const double* rad_i = container_i->get_ptr_to_state(Particle::State::Radius, particle_i);
+    const double* rad_i = container_i->get_ptr_to_state(ParticleState::Radius, particle_i);
 
     // define tolerance dependent on the particle radius
     const double adaptedtol = 1.0e-7 * rad_i[0];
