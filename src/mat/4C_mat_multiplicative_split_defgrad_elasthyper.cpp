@@ -43,28 +43,13 @@ FOUR_C_NAMESPACE_OPEN
 Mat::PAR::MultiplicativeSplitDefgradElastHyper::MultiplicativeSplitDefgradElastHyper(
     const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
-      nummat_elast_(matdata.parameters.get<int>("NUMMATEL")),
       matids_elast_(matdata.parameters.get<std::vector<int>>("MATIDSEL")),
-      numfac_inel_(matdata.parameters.get<int>("NUMFACINEL")),
       inel_defgradfacids_(matdata.parameters.get<std::vector<int>>("INELDEFGRADFACIDS")),
       density_(matdata.parameters.get<double>("DENS")),
       ref_temperature_(matdata.parameters.get<double>("REF_TEMPERATURE")),
       thermal_expansion_coefficient_(
           matdata.parameters.get<double>("THERMAL_EXPANSION_COEFFICIENT"))
 {
-  // check if sizes fit
-  if (nummat_elast_ != static_cast<int>(matids_elast_.size()))
-    FOUR_C_THROW(
-        "number of elastic materials {} does not fit to size of elastic material ID vector {}",
-        nummat_elast_, matids_elast_.size());
-
-  if (numfac_inel_ != static_cast<int>(inel_defgradfacids_.size()))
-  {
-    FOUR_C_THROW(
-        "number of inelastic deformation gradient factors {} does not fit to size of inelastic "
-        "deformation gradient ID vector {}",
-        numfac_inel_, inel_defgradfacids_.size());
-  }
 }
 
 std::shared_ptr<Core::Mat::Material>

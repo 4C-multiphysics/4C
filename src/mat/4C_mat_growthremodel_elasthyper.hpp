@@ -50,15 +50,6 @@ namespace Mat
       /// @name material parameters
       //@{
 
-      /// length of remodelfiber material list
-      const int nummat_remodelfiber_;
-
-      /// length of 3d elastin matrix material list
-      const int nummat_elastiniso_;
-
-      /// length of membrane elastin matrix material list
-      const int nummat_elastinmem_;
-
       /// the list of remodelfiber material IDs
       const std::vector<int> matids_remodelfiber_;
 

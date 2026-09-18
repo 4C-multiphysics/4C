@@ -20,15 +20,10 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*/
 Mat::PAR::MatList::MatList(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
-      nummat_(matdata.parameters.get<int>("NUMMAT")),
+      nummat_(static_cast<int>(matdata.parameters.get<std::vector<int>>("MATIDS").size())),
       matids_(matdata.parameters.get<std::vector<int>>("MATIDS")),
       local_((matdata.parameters.get<bool>("LOCAL")))
 {
-  // check if sizes fit
-  if (nummat_ != (int)matids_.size())
-    FOUR_C_THROW("number of materials {} does not fit to size of material vector {}", nummat_,
-        matids_.size());
-
   if (not local_)
   {
     // make sure the referenced materials in material list have quick access parameters

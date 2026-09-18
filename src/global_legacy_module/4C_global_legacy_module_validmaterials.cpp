@@ -40,12 +40,6 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   using namespace Core::IO::InputSpecBuilders;
   std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> known_materials;
 
-  const auto size_from_optional_count = [](const std::string& count_parameter_name)
-  {
-    return [count_parameter_name](const Core::IO::InputParameterContainer& container)
-    { return container.get<std::optional<int>>(count_parameter_name).value_or(0); };
-  };
-
   /*----------------------------------------------------------------------*/
   // Newtonian fluid
   {
@@ -1016,9 +1010,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<bool>("LOCAL",
                 {.description =
                         "individual materials allocated per element or only at global scope"}),
-            parameter<int>("NUMMAT", {.description = "number of materials in list"}),
-            parameter<std::vector<int>>("MATIDS",
-                {.description = "the list material IDs", .size = from_parameter<int>("NUMMAT")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials in list (deprecated and ignored: the number "
+                                "is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("MATIDS", {.description = "the list material IDs"}),
         },
         {.description = "list/collection of materials, i.e. material IDs"});
   }
@@ -1031,13 +1027,17 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<bool>("LOCAL",
                 {.description =
                         "individual materials allocated per element or only at global scope"}),
-            parameter<int>("NUMMAT", {.description = "number of materials in list"}),
-            parameter<std::vector<int>>("MATIDS",
-                {.description = "the list material IDs", .size = from_parameter<int>("NUMMAT")}),
-            parameter<int>("NUMREAC", {.description = "number of reactions for these elements"}),
-            parameter<std::vector<int>>("REACIDS", {.description = "advanced reaction list",
-                                                       .default_value = std::vector{0},
-                                                       .size = from_parameter<int>("NUMREAC")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials in list (deprecated and ignored: the number "
+                                "is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("MATIDS", {.description = "the list material IDs"}),
+            parameter<int>("NUMREAC",
+                {.description = "number of reactions for these elements (deprecated and ignored: "
+                                "the number is always determined from the length of 'REACIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("REACIDS",
+                {.description = "advanced reaction list", .default_value = std::vector{0}}),
         },
         {.description = "list/collection of materials, i.e. material IDs and list of reactions"});
   }
@@ -1050,13 +1050,17 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<bool>("LOCAL",
                 {.description =
                         "individual materials allocated per element or only at global scope"}),
-            parameter<int>("NUMMAT", {.description = "number of materials in list"}),
-            parameter<std::vector<int>>("MATIDS",
-                {.description = "the list material IDs", .size = from_parameter<int>("NUMMAT")}),
-            parameter<int>("NUMPAIR", {.description = "number of pairs for these elements"}),
-            parameter<std::vector<int>>("PAIRIDS", {.description = "chemotaxis pairs list",
-                                                       .default_value = std::vector{0},
-                                                       .size = from_parameter<int>("NUMPAIR")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials in list (deprecated and ignored: the number "
+                                "is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("MATIDS", {.description = "the list material IDs"}),
+            parameter<int>("NUMPAIR",
+                {.description = "number of pairs for these elements (deprecated and ignored: the "
+                                "number is always determined from the length of 'PAIRIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("PAIRIDS",
+                {.description = "chemotaxis pairs list", .default_value = std::vector{0}}),
         },
         {.description =
                 "list/collection of materials, i.e. material IDs and list of chemotactic pairs"});
@@ -1070,17 +1074,23 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<bool>("LOCAL",
                 {.description =
                         "individual materials allocated per element or only at global scope"}),
-            parameter<int>("NUMMAT", {.description = "number of materials in list"}),
-            parameter<std::vector<int>>("MATIDS",
-                {.description = "the list material IDs", .size = from_parameter<int>("NUMMAT")}),
-            parameter<int>("NUMPAIR", {.description = "number of pairs for these elements"}),
-            parameter<std::vector<int>>("PAIRIDS", {.description = "chemotaxis pairs list",
-                                                       .default_value = std::vector{0},
-                                                       .size = from_parameter<int>("NUMPAIR")}),
-            parameter<int>("NUMREAC", {.description = "number of reactions for these elements"}),
-            parameter<std::vector<int>>("REACIDS", {.description = "advanced reaction list",
-                                                       .default_value = std::vector{0},
-                                                       .size = from_parameter<int>("NUMREAC")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials in list (deprecated and ignored: the number "
+                                "is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("MATIDS", {.description = "the list material IDs"}),
+            parameter<int>("NUMPAIR",
+                {.description = "number of pairs for these elements (deprecated and ignored: the "
+                                "number is always determined from the length of 'PAIRIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("PAIRIDS",
+                {.description = "chemotaxis pairs list", .default_value = std::vector{0}}),
+            parameter<int>("NUMREAC",
+                {.description = "number of reactions for these elements (deprecated and ignored: "
+                                "the number is always determined from the length of 'REACIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("REACIDS",
+                {.description = "advanced reaction list", .default_value = std::vector{0}}),
         },
         {.description = "list/collection of materials, i.e. material IDs and list of "
                         "reactive/chemotactic pairs"});
@@ -1115,9 +1125,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                     .default_value = false}),
             parameter<double>("EPSILON", {.description = "phase porosity"}),
             parameter<double>("TORTUOSITY", {.description = "inverse (!) of phase tortuosity"}),
-            parameter<int>("NUMMAT", {.description = "number of materials in electrolyte"}),
-            parameter<std::vector<int>>("MATIDS",
-                {.description = "the list phasel IDs", .size = from_parameter<int>("NUMMAT")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials in electrolyte (deprecated and ignored: the "
+                                "number is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("MATIDS", {.description = "the list phasel IDs"}),
         },
         {.description = "material parameters for ion species in electrolyte solution"});
   }
@@ -1167,9 +1179,10 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {
             parameter<int>("YOUNGNUM",
                 {.description = "number of Young's modulus in list (if 1 Young is const, "
-                                "if >1 Young is temperature) dependent"}),
-            parameter<std::vector<double>>("YOUNG",
-                {.description = "Young's modulus", .size = from_parameter<int>("YOUNGNUM")}),
+                                "if >1 Young is temperature) dependent (deprecated and ignored: "
+                                "the number is always determined from the length of 'YOUNG')",
+                    .default_value = -1}),
+            parameter<std::vector<double>>("YOUNG", {.description = "Young's modulus"}),
             parameter<double>("NUE", {.description = "Poisson's ratio"}),
             parameter<double>("DENS", {.description = "mass density"}),
             parameter<double>(
@@ -1234,15 +1247,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("ISOHARD", {.description = "isotropic hardening modulus"}),
             parameter<double>("KINHARD", {.description = "kinematic hardening modulus"}),
             parameter<int>("SAMPLENUM",
-                {.description =
-                        "number of stress-strain pairs for multi-linear isotropic hardening"}),
+                {.description = "number of stress-strain pairs for multi-linear isotropic "
+                                "hardening (deprecated and ignored: the number is always "
+                                "determined from the length of 'SIGMA_Y')",
+                    .default_value = -1}),
             parameter<std::vector<double>>(
                 "SIGMA_Y", {.description = "yield stress values at specific plastic strains. The "
-                                           "value at zero plastic strain is still given in YIELD",
-                               .size = from_parameter<int>("SAMPLENUM")}),
+                                           "value at zero plastic strain is still given in YIELD"}),
             parameter<std::vector<double>>(
-                "EPSBAR_P", {.description = "accumulated plastic strain corresponding to SIGMA_Y",
-                                .size = from_parameter<int>("SAMPLENUM")}),
+                "EPSBAR_P", {.description = "accumulated plastic strain corresponding to SIGMA_Y"}),
             parameter<double>("TOL", {.description = "tolerance for local Newton iteration"}),
         },
         {.description = "Thermo-elastic St.Venant Kirchhoff / plastic von Mises material with "
@@ -1473,9 +1486,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<std::string>(
                 "KIND", {.description = "kind of Robinson material: Butler, Arya, "
                                         "Arya_NarloyZ (default), Arya_CrMoSteel"}),
-            parameter<int>("YOUNGNUM", {.description = "number of Young's modulus in list"}),
-            parameter<std::vector<double>>("YOUNG",
-                {.description = "Young's modulus", .size = from_parameter<int>("YOUNGNUM")}),
+            parameter<int>("YOUNGNUM",
+                {.description = "number of Young's modulus in list (deprecated and ignored: the "
+                                "number is always determined from the length of 'YOUNG')",
+                    .default_value = -1}),
+            parameter<std::vector<double>>("YOUNG", {.description = "Young's modulus"}),
             parameter<double>("NUE", {.description = "Poisson's ratio"}),
             parameter<double>("DENS", {.description = "mass density"}),
             parameter<double>(
@@ -1509,12 +1524,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("YOUNG", {.description = "Young's modulus"}),
             parameter<double>("NUE", {.description = "Poisson's ratio"}),
             parameter<double>("DENS", {.description = "mass density"}),
-            parameter<int>("SAMPLENUM", {.description = "number of stress-strain pairs in list"}),
-            parameter<std::vector<double>>("SIGMA_Y",
-                {.description = "yield stress", .size = from_parameter<int>("SAMPLENUM")}),
+            parameter<int>("SAMPLENUM",
+                {.description = "number of stress-strain pairs in list (deprecated and ignored: "
+                                "the number is always determined from the length of 'SIGMA_Y')",
+                    .default_value = -1}),
+            parameter<std::vector<double>>("SIGMA_Y", {.description = "yield stress"}),
             parameter<std::vector<double>>(
-                "EPSBAR_P", {.description = "accumulated plastic strain corresponding to SIGMA_Y",
-                                .size = from_parameter<int>("SAMPLENUM")}),
+                "EPSBAR_P", {.description = "accumulated plastic strain corresponding to SIGMA_Y"}),
             parameter<double>("DAMDEN", {.description = "denominator of damage evaluations law"}),
             parameter<double>("DAMEXP", {.description = "exponent of damage evaluations law"}),
             parameter<double>("DAMTHRESHOLD", {.description = "damage threshold"}),
@@ -1607,9 +1623,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::m_elasthyper] = group("MAT_ElastHyper",
         {
-            parameter<int>("NUMMAT", {.description = "number of materials/potentials in list"}),
-            parameter<std::vector<int>>("MATIDS", {.description = "the list material/potential IDs",
-                                                      .size = from_parameter<int>("NUMMAT")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials/potentials in list (deprecated and ignored: "
+                                "the number is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>(
+                "MATIDS", {.description = "the list material/potential IDs"}),
             parameter<double>("DENS", {.description = "material mass density"}),
             parameter<int>("POLYCONVEX",
                 {.description = "1.0 if polyconvexity of system is checked", .default_value = 0}),
@@ -1622,26 +1641,32 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::m_viscoelasthyper] = group("MAT_ViscoElastHyper",
         {
-            parameter<int>("NUMMAT", {.description = "number of materials/potentials in list"}),
-            parameter<std::vector<int>>("MATIDS", {.description = "the list material/potential IDs",
-                                                      .size = from_parameter<int>("NUMMAT")}),
-            parameter<std::optional<int>>(
-                "NUMELAST", {.description = "explicit number of purely elastic summands"}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials/potentials in list (deprecated and ignored: "
+                                "the number is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>(
+                "MATIDS", {.description = "the list material/potential IDs"}),
+            parameter<int>("NUMELAST",
+                {.description = "explicit number of purely elastic summands (deprecated and "
+                                "ignored: the number is always determined from the length of "
+                                "'ELAST_MATIDS')",
+                    .default_value = -1}),
             parameter<std::optional<std::vector<int>>>(
-                "ELAST_MATIDS", {.description = "explicit purely elastic summand IDs",
-                                    .size = size_from_optional_count("NUMELAST")}),
-            parameter<std::optional<int>>(
-                "NUMVISCO", {.description = "explicit number of visco summands"}),
+                "ELAST_MATIDS", {.description = "explicit purely elastic summand IDs"}),
+            parameter<int>("NUMVISCO",
+                {.description = "explicit number of visco summands (deprecated and ignored: the "
+                                "number is always determined from the length of 'VISCO_MATIDS')",
+                    .default_value = -1}),
             parameter<std::optional<std::vector<int>>>(
-                "VISCO_MATIDS", {.description = "explicit visco summand IDs",
-                                    .size = size_from_optional_count("NUMVISCO")}),
+                "VISCO_MATIDS", {.description = "explicit visco summand IDs"}),
             parameter<double>("DENS", {.description = "material mass density"}),
             parameter<int>("POLYCONVEX",
                 {.description = "1.0 if polyconvexity of system is checked", .default_value = 0}),
         },
-        {.description = "Viscohyperelastic material. Uses NUMMAT/MATIDS as the complete summand "
-                        "list and supports explicit elastic/visco splits with NUMELAST/"
-                        "ELAST_MATIDS and NUMVISCO/VISCO_MATIDS."});
+        {.description = "Viscohyperelastic material. Uses MATIDS as the complete summand "
+                        "list and supports explicit elastic/visco splits with "
+                        "ELAST_MATIDS and VISCO_MATIDS."});
   }
 
   /*----------------------------------------------------------------------*/
@@ -1649,9 +1674,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::m_plelasthyper] = group("MAT_PlasticElastHyper",
         {
-            parameter<int>("NUMMAT", {.description = "number of materials/potentials in list"}),
-            parameter<std::vector<int>>("MATIDS", {.description = "the list material/potential IDs",
-                                                      .size = from_parameter<int>("NUMMAT")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials/potentials in list (deprecated and ignored: "
+                                "the number is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>(
+                "MATIDS", {.description = "the list material/potential IDs"}),
             parameter<double>("DENS", {.description = "material mass density"}),
             parameter<double>("INITYIELD", {.description = "initial yield stress"}),
             parameter<int>("POLYCONVEX",
@@ -1724,9 +1752,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::m_plelasthyperVCU] = group("MAT_PlasticElastHyperVCU",
         {
-            parameter<int>("NUMMAT", {.description = "number of materials/potentials in list"}),
-            parameter<std::vector<int>>("MATIDS", {.description = "the list material/potential IDs",
-                                                      .size = from_parameter<int>("NUMMAT")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials/potentials in list (deprecated and ignored: "
+                                "the number is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>(
+                "MATIDS", {.description = "the list material/potential IDs"}),
             parameter<double>("DENS", {.description = "material mass density"}),
             parameter<double>("INITYIELD", {.description = "initial yield stress"}),
             parameter<double>("ISOHARD",
@@ -2068,18 +2099,25 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_remodelfiber] = group("ELAST_RemodelFiber",
         {
-            parameter<int>("NUMMAT", {.description = "number of materials/potentials in list"}),
-            parameter<std::vector<int>>("MATIDS", {.description = "the list material/potential IDs",
-                                                      .size = from_parameter<int>("NUMMAT")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials/potentials in list (deprecated and ignored: "
+                                "the number is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>(
+                "MATIDS", {.description = "the list material/potential IDs"}),
             parameter<double>(
                 "TDECAY", {.description = "decay time of Poisson (degradation) process"}),
             parameter<double>("GROWTHFAC",
                 {.description = "time constant for collagen growth", .default_value = 0.0}),
-            parameter<std::vector<double>>(
-                "COLMASSFRAC", {.description = "initial mass fraction of first collagen fiber "
-                                               "family in constraint mixture",
-                                   .default_value = std::vector{0.0},
-                                   .size = from_parameter<int>("NUMMAT")}),
+            parameter<std::vector<double>>("COLMASSFRAC",
+                {.description = "initial mass fraction of first collagen fiber "
+                                "family in constraint mixture",
+                    .default_value = std::vector{0.0},
+                    .size =
+                        [](const Core::IO::InputParameterContainer& container)
+                    {
+                      return static_cast<int>(container.get<std::vector<int>>("MATIDS").size());
+                    }}),
             parameter<double>("DEPOSITIONSTRETCH", {.description = "deposition stretch"}),
         },
         {.description = "General fiber material for remodeling"});
@@ -2472,9 +2510,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_generalizedmaxwell] = group("VISCO_GeneralizedMaxwell",
         {
-            parameter<int>("NUMBRANCH", {.description = "number of viscoelastic branches"}),
-            parameter<std::vector<int>>("MATIDS",
-                {.description = "the list material IDs", .size = from_parameter<int>("NUMBRANCH")}),
+            parameter<int>("NUMBRANCH",
+                {.description = "number of viscoelastic branches (deprecated and ignored: the "
+                                "number is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("MATIDS", {.description = "the list material IDs"}),
             parameter<std::string>("SOLVE",
                 {.description = "Solution for evolution equation: OneStepTheta (default) or "
                                 "ExponentialTimeDiscretization (convolution integral)",
@@ -2597,9 +2637,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::m_membrane_elasthyper] = group("MAT_Membrane_ElastHyper",
         {
-            parameter<int>("NUMMAT", {.description = "number of materials/potentials in list"}),
-            parameter<std::vector<int>>("MATIDS", {.description = "the list material/potential IDs",
-                                                      .size = from_parameter<int>("NUMMAT")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials/potentials in list (deprecated and ignored: "
+                                "the number is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>(
+                "MATIDS", {.description = "the list material/potential IDs"}),
             parameter<double>("DENS", {.description = "material mass density"}),
             parameter<int>("POLYCONVEX",
                 {.description = "1.0 if polyconvexity of system is checked", .default_value = 0}),
@@ -2634,24 +2677,29 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
     known_materials[Core::Materials::m_growthremodel_elasthyper] = group(
         "MAT_GrowthRemodel_ElastHyper",
         {
-            parameter<int>("NUMMATRF", {.description = "number of remodelfiber materials in list"}),
+            parameter<int>("NUMMATRF",
+                {.description = "number of remodelfiber materials in list (deprecated and ignored: "
+                                "the number is always determined from the length of 'MATIDSRF')",
+                    .default_value = -1}),
             parameter<int>("NUMMATEL3D",
-                {.description = "number of 3d elastin matrix materials/potentials in list",
-                    .default_value = 0}),
+                {.description = "number of 3d elastin matrix materials/potentials in list "
+                                "(deprecated and ignored: the number is always determined from the "
+                                "length of 'MATIDSEL3D')",
+                    .default_value = -1}),
             parameter<int>("NUMMATEL2D",
-                {.description = "number of 2d elastin matrix materials/potentials in list"}),
+                {.description = "number of 2d elastin matrix materials/potentials in list "
+                                "(deprecated and ignored: the number is always determined from the "
+                                "length of 'MATIDSEL2D')",
+                    .default_value = -1}),
             parameter<std::vector<int>>(
                 "MATIDSRF", {.description = "the list remodelfiber material IDs",
-                                .default_value = std::vector{0},
-                                .size = from_parameter<int>("NUMMATRF")}),
+                                .default_value = std::vector<int>{}}),
             parameter<std::vector<int>>(
                 "MATIDSEL3D", {.description = "the list 3d elastin matrix material/potential IDs",
-                                  .default_value = std::vector{-1},
-                                  .size = from_parameter<int>("NUMMATEL3D")}),
+                                  .default_value = std::vector<int>{}}),
             parameter<std::vector<int>>(
                 "MATIDSEL2D", {.description = "the list 2d elastin matrix material/potential IDs",
-                                  .default_value = std::vector{0},
-                                  .size = from_parameter<int>("NUMMATEL2D")}),
+                                  .default_value = std::vector<int>{}}),
             parameter<int>(
                 "MATIDELPENALTY", {.description = "penalty material ID", .default_value = -1}),
             parameter<double>("ELMASSFRAC",
@@ -2695,18 +2743,22 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
     known_materials[Core::Materials::m_multiplicative_split_defgrad_elasthyper] =
         group("MAT_MultiplicativeSplitDefgradElastHyper",
             {
-                parameter<int>(
-                    "NUMMATEL", {.description = "number of elastic materials/potentials in list"}),
+                parameter<int>("NUMMATEL",
+                    {.description = "number of elastic materials/potentials in list (deprecated "
+                                    "and ignored: the number is always determined from the length "
+                                    "of 'MATIDSEL')",
+                        .default_value = -1}),
                 parameter<std::vector<int>>(
                     "MATIDSEL", {.description = "the list of elastic material/potential IDs",
-                                    .default_value = std::vector{-1},
-                                    .size = from_parameter<int>("NUMMATEL")}),
+                                    .default_value = std::vector<int>{}}),
                 parameter<int>("NUMFACINEL",
-                    {.description = "number of factors of inelastic deformation gradient"}),
+                    {.description = "number of factors of inelastic deformation gradient "
+                                    "(deprecated and ignored: the number is always determined from "
+                                    "the length of 'INELDEFGRADFACIDS')",
+                        .default_value = -1}),
                 parameter<std::vector<int>>("INELDEFGRADFACIDS",
                     {.description = "the list of inelastic deformation gradient factor IDs",
-                        .default_value = std::vector{0},
-                        .size = from_parameter<int>("NUMFACINEL")}),
+                        .default_value = std::vector<int>{}}),
                 parameter<double>("DENS", {.description = "material mass density"}),
                 parameter<double>("REF_TEMPERATURE",
                     {.description = "reference temperature for thermoelastic expansion.",
@@ -3387,9 +3439,11 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description =
                         "individual materials allocated per element or only at global scope"}),
             parameter<double>("PERMEABILITY", {.description = "permeability of medium"}),
-            parameter<int>("NUMMAT", {.description = "number of materials in list"}),
-            parameter<std::vector<int>>("MATIDS",
-                {.description = "the list material IDs", .size = from_parameter<int>("NUMMAT")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials in list (deprecated and ignored: the number "
+                                "is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("MATIDS", {.description = "the list material IDs"}),
             parameter<int>(
                 "NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE", {.description = "number of fluid phases"}),
         },
@@ -3406,15 +3460,19 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description =
                         "individual materials allocated per element or only at global scope"}),
             parameter<double>("PERMEABILITY", {.description = "permeability of medium"}),
-            parameter<int>("NUMMAT", {.description = "number of materials in list"}),
-            parameter<std::vector<int>>("MATIDS",
-                {.description = "the list material IDs", .size = from_parameter<int>("NUMMAT")}),
+            parameter<int>("NUMMAT",
+                {.description = "number of materials in list (deprecated and ignored: the number "
+                                "is always determined from the length of 'MATIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("MATIDS", {.description = "the list material IDs"}),
             parameter<int>(
                 "NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE", {.description = "number of fluid phases"}),
-            parameter<int>("NUMREAC", {.description = "number of reactions for these elements"}),
-            parameter<std::vector<int>>("REACIDS", {.description = "advanced reaction list",
-                                                       .default_value = std::vector{0},
-                                                       .size = from_parameter<int>("NUMREAC")}),
+            parameter<int>("NUMREAC",
+                {.description = "number of reactions for these elements (deprecated and ignored: "
+                                "the number is always determined from the length of 'REACIDS')",
+                    .default_value = -1}),
+            parameter<std::vector<int>>("REACIDS",
+                {.description = "advanced reaction list", .default_value = std::vector{0}}),
         },
         {.description = "multi phase flow in deformable porous media and list of reactions"});
   }
@@ -4232,10 +4290,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
     known_materials[Core::Materials::mix_elasthyper_damage] =
         group("MIX_Constituent_ElastHyper_Damage",
             {
-                parameter<int>("NUMMAT", {.description = "number of summands"}),
+                parameter<int>("NUMMAT",
+                    {.description = "number of summands (deprecated and ignored: the number is "
+                                    "always determined from the length of 'MATIDS')",
+                        .default_value = -1}),
                 parameter<std::vector<int>>(
-                    "MATIDS", {.description = "list material IDs of the membrane summands",
-                                  .size = from_parameter<int>("NUMMAT")}),
+                    "MATIDS", {.description = "list material IDs of the membrane summands"}),
                 parameter<int>(
                     "PRESTRESS_STRATEGY", {.description = "Material id of the prestress strategy "
                                                           "(optional, by default no prestretch)",
@@ -4257,14 +4317,18 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "MEMBRANE_NORMAL",
                 {.description =
                         "A unit vector field pointing in the direction of the membrane normal."}),
-            parameter<int>("NUMMAT", {.description = "number of summands"}),
+            parameter<int>(
+                "NUMMAT", {.description = "number of summands (deprecated and ignored: the number "
+                                          "is always determined from the length of 'MATIDS')",
+                              .default_value = -1}),
             parameter<std::vector<int>>(
-                "MATIDS", {.description = "list material IDs of the membrane summands",
-                              .size = from_parameter<int>("NUMMAT")}),
-            parameter<int>("MEMBRANENUMMAT", {.description = "number of summands"}),
+                "MATIDS", {.description = "list material IDs of the membrane summands"}),
+            parameter<int>("MEMBRANENUMMAT",
+                {.description = "number of summands (deprecated and ignored: the number is always "
+                                "determined from the length of 'MEMBRANEMATIDS')",
+                    .default_value = -1}),
             parameter<std::vector<int>>(
-                "MEMBRANEMATIDS", {.description = "list material IDs of the membrane summands",
-                                      .size = from_parameter<int>("MEMBRANENUMMAT")}),
+                "MEMBRANEMATIDS", {.description = "list material IDs of the membrane summands"}),
             parameter<int>(
                 "PRESTRESS_STRATEGY", {.description = "Material id of the prestress strategy "
                                                       "(optional, by default no prestretch)",
@@ -4331,7 +4395,7 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                           "using a restart of the simulation."}),
         },
         {.description =
-                "General material wrapper enabling iterative pretressing for any material"});
+                "General material wrapper enabling iterative prestressing for any material"});
   }
 
   /*----------------------------------------------------------------------*/
