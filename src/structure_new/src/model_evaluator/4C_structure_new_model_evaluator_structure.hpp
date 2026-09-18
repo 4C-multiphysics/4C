@@ -111,7 +111,7 @@ namespace Solid
       void run_post_iterate(const ::NOX::Solver::Generic& solver) override;
 
       //! derived
-      void predict(const Solid::PredEnum& pred_type) override;
+      void predict() override;
 
       //! derived
       void update_step_state(const double& timefac_n) override;

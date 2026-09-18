@@ -259,7 +259,7 @@ namespace MultiScale
     double time_;
     double timen_;
 
-    Solid::PredEnum pred_;  //!< predictor
+    Solid::PredictorType pred_;  //!< predictor
 
     bool isadapttol_;
     double adaptolbetter_;

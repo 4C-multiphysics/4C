@@ -164,7 +164,6 @@ Solid::ModelEvaluator::Data::Data()
       issetup_(false),
       isntmaps_filled_(false),
       ele_action_(Core::Elements::none),
-      predict_type_(Solid::pred_vague),
       total_time_(-1.0),
       delta_time_(-1.0),
       step_length_(-1.0),
@@ -476,19 +475,6 @@ void Solid::ModelEvaluator::Data::reset_my_norms(const bool& isdefaultstep)
     std::map<NOX::Nln::StatusTest::QuantityType, std::size_t>::iterator dit;
     for (dit = my_dof_number_.begin(); dit != my_dof_number_.end(); ++dit) dit->second = 0;
   }
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Data::is_predictor_state() const
-{
-  check_init_setup();
-
-  const Solid::IMPLICIT::Generic* impl_ptr =
-      dynamic_cast<const Solid::IMPLICIT::Generic*>(&tim_int().integrator());
-
-  if (not impl_ptr) return false;
-  return impl_ptr->is_predictor_state();
 }
 
 /*----------------------------------------------------------------------------*

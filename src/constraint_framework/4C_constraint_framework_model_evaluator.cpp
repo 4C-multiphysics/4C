@@ -274,10 +274,6 @@ void Solid::ModelEvaluator::Constraint::read_restart(Core::IO::DiscretizationRea
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluator::Constraint::predict(const Solid::PredEnum& pred_type) {}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluator::Constraint::update_step_state(const double& timefac_n)
 {
   if (constraint_force_ptr_)

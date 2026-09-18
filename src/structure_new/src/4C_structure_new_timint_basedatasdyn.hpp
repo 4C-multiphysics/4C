@@ -206,7 +206,7 @@ namespace Solid
       };
 
       /// Returns predictor type
-      Solid::PredEnum get_predictor_type() const
+      Solid::PredictorType get_predictor_type() const
       {
         check_init_setup();
         return predtype_;
@@ -609,7 +609,7 @@ namespace Solid
       Solid::PreStress prestresstype_;
 
       /// type of the predictor
-      Solid::PredEnum predtype_;
+      Solid::PredictorType predtype_;
 
       /// type of nonlinear solver
       Solid::NonlinSolTech nlnsolvertype_;

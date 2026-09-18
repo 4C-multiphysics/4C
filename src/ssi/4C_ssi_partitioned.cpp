@@ -39,8 +39,8 @@ void SSI::SSIPart::init(MPI_Comm comm, const Teuchos::ParameterList& globaltimep
       comm, globaltimeparams, scatraparams, structparams, struct_disname, scatra_disname, isAle);
 
   // safety check
-  if (ssi_interface_meshtying() and Teuchos::getIntegralValue<Solid::PredEnum>(
-                                        structparams, "PREDICT") != Solid::PredEnum::pred_tangdis)
+  if (ssi_interface_meshtying() and Teuchos::getIntegralValue<Solid::PredictorType>(
+                                        structparams, "PREDICT") != Solid::PredictorType::tangdis)
   {
     FOUR_C_THROW(
         "Must have TangDis predictor for structural field in partitioned scalar-structure "

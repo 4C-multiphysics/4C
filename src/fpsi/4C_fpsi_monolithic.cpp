@@ -239,8 +239,8 @@ FPSI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& fpsidy
   }
 
   // Check for valid predictors
-  if (Teuchos::getIntegralValue<Solid::PredEnum>(sdynparams, "PREDICT") !=
-      Solid::PredEnum::pred_constdis)
+  if (Teuchos::getIntegralValue<Solid::PredictorType>(sdynparams, "PREDICT") !=
+      Solid::PredictorType::constdis)
     FOUR_C_THROW(
         "No Structural Predictor for FPSI implemented at the moment, choose <PREDICT = ConstDis> "
         "in you input file! \n --> Or feel free to add the missing terms coming from the "
