@@ -633,10 +633,16 @@ int Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_linear
     {
       dofPos = 1;
     }
+    else if (dofStr == "dispz")
+    {
+      dofPos = 2;
+    }
     else
     {
       FOUR_C_THROW(
-          "Linear coupled equations (MPCs) are only implemented for 2D (dispx or dispy DOFs)");
+          "No dof specified for node {} in linear coupled equation (MPC) condition. Set ADD to "
+          "dispx, dispy or dispz.",
+          node->id());
     }
     auto dofID = discret_ptr_->dof(node)[dofPos];
 

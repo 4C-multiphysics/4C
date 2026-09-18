@@ -104,15 +104,17 @@ void Constraints::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
   /*----------------------------------------------------------------------*/
   Core::Conditions::ConditionDefinition linear_ce("DESIGN POINT COUPLED DOF EQUATION CONDITIONS",
       "PointLinearCoupledEquation",
-      "definition of the term of a linear couple equation coupling different degrees of "
-      "freedom in "
-      "2d",
+      "One term of a linear constraint sum_i c_i * dof_i = 0. Terms with the same EQUATION id "
+      "form one equation.",
       Core::Conditions::PointLinearCoupledEquation, false, Core::Conditions::geometry_type_point);
 
-  linear_ce.add_component(parameter<int>("EQUATION", {.description = "EQUATION"}));
-  linear_ce.add_component(deprecated_selection<std::string>("ADD", {"dispx", "dispy", "undefined"},
-      {.description = "degrees of freedom", .default_value = "undefined"}));
-  linear_ce.add_component(parameter<double>("COEFFICIENT"));
+  linear_ce.add_component(
+      parameter<int>("EQUATION", {.description = "Id of the equation this term belongs to"}));
+  linear_ce.add_component(
+      deprecated_selection<std::string>("ADD", {"dispx", "dispy", "dispz", "undefined"},
+          {.description = "Dof of this node entering the equation", .default_value = "undefined"}));
+  linear_ce.add_component(parameter<double>(
+      "COEFFICIENT", {.description = "Coefficient c_i of this term", .default_value = 1.0}));
 
   condlist.push_back(linear_ce);
 }
