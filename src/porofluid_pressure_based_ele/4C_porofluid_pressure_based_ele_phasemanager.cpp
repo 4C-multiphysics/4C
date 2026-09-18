@@ -328,7 +328,8 @@ void Discret::Elements::PoroFluidManager::PhaseManagerCore::setup(
       std::static_pointer_cast<Mat::StructPoro>(ele_->material(1));
 
   invbulkmodulussolid_ = structmat->inv_bulk_modulus();
-  soliddensity_ = structmat->density_solid_phase();
+  int eleGID = ele->id();
+  soliddensity_ = structmat->density_solid_phase(eleGID);
 
   for (int iphase = 0; iphase < numfluidphases_; iphase++)
   {
@@ -1292,11 +1293,12 @@ void Discret::Elements::PoroFluidManager::PhaseManagerReaction::evaluate_gp_stat
             multiphasemat, ireac);
 
     // evaluate the reaction
+    int element_id = phasemanager_->element()->id();
     singlephasemat.evaluate_reaction(reacterms_, reactermsderivspressure_,
         reactermsderivssaturation_, reactermsderivsporosity_, reactermsderivsvolfrac_,
         reactermsderivsvolfracpressure_, reactermsderivsscalar_, phasemanager_->pressure(),
         phasemanager_->saturation(), phasemanager_->porosity(), volfrac, volfracpressure,
-        *varmanager.scalarnp());
+        *varmanager.scalarnp(), element_id);
   }
 
   for (int jdof = 0; jdof < totalnumdof; jdof++)
