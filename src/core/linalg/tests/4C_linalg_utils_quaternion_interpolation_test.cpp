@@ -7,9 +7,10 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_linalg_utils_quaternion_interpolation.hpp"
+
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
-#include "4C_linalg_utlis_quaternion_interpolation.hpp"
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_utils_exceptions.hpp"
 

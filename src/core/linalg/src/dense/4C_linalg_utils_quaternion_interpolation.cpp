@@ -7,7 +7,7 @@
 
 #include "4C_config.hpp"
 
-#include "4C_linalg_utlis_quaternion_interpolation.hpp"
+#include "4C_linalg_utils_quaternion_interpolation.hpp"
 
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
