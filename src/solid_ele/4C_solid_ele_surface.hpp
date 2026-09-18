@@ -110,6 +110,12 @@ namespace Discret::Elements
 
     [[nodiscard]] int num_line() const override;
 
+    /*!
+     * @brief Evaluate a Neumann condition on a solid surface.
+     *
+     * @note Spatially varying pressure functions are evaluated at quadrature-point coordinates. For
+     * follower orthopressure, their spatial derivatives are not included in the load linearization.
+     */
     int evaluate_neumann(Teuchos::ParameterList& params, Core::FE::Discretization& discretization,
         const Core::Conditions::Condition& condition, std::vector<int>& lm,
         Core::LinAlg::SerialDenseVector& elevec1,

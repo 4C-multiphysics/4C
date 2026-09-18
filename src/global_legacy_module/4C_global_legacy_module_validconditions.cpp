@@ -147,11 +147,14 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
         "FUNCT", {.description = "function ids", .size = from_parameter<int>("NUMDOF")}));
     cond.add_component(deprecated_selection<std::string>("TYPE",
         {"Live", "Dead", "pseudo_orthopressure", "orthopressure", "PressureGrad"},
-        {.description = "`Live/Dead`: stress vector components (`Dead` is not avail. for solids), "
-                        "`[pseudo_]orthopressure`: pressure normal to surface (only 1 component); "
-                        "for `orthopressure` in a structural analysis one has to provide "
-                        "`LOADLIN:true` in the `STRUCTURAL DYNAMIC` section, `PressureGrad`: "
-                        "prescribed pressure gradient in fluids",
+        {.description =
+                "`Live/Dead`: stress vector components (`Dead` is not avail. for solids), "
+                "`[pseudo_]orthopressure`: pressure normal to surface (only 1 component); "
+                "for `orthopressure` in a structural analysis one has to provide "
+                "`LOADLIN:true` in the `STRUCTURAL DYNAMIC` section. For solids, spatially "
+                "varying pressure functions are evaluated at quadrature-point coordinates, "
+                "but their spatial derivatives are not included in the `orthopressure` load "
+                "linearization. `PressureGrad`: prescribed pressure gradient in fluids",
             .default_value = "Live"}));
 
     condlist.emplace_back(cond);

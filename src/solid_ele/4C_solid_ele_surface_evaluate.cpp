@@ -77,13 +77,21 @@ int Discret::Elements::SolidSurface::evaluate_neumann(Teuchos::ParameterList& pa
   };
 
   Configuration config = config_none;
+  const int numdim = 3;
 
+  // get values and switches from the condition
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto* spa_func = condition.parameters().get_if<std::vector<std::optional<int>>>("FUNCT");
   // get type of condition
   const auto& type = condition.parameters().get<std::string>("TYPE");
   if (type == "Live")
   {
     ltype = neum_live;
     config = config_material;
+    // ensure that at least as many curves/functs as dofs are available
+    if (int(onoff.size()) < numdim)
+      FOUR_C_THROW("Fewer functions or curves defined than the element has dofs.");
   }
   else if (type == "pseudo_orthopressure")
   {
@@ -104,11 +112,6 @@ int Discret::Elements::SolidSurface::evaluate_neumann(Teuchos::ParameterList& pa
     FOUR_C_THROW("Unknown type of SurfaceNeumann condition");
   }
 
-  // get values and switches from the condition
-  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto val = condition.parameters().get<std::vector<double>>("VAL");
-  const auto* spa_func = condition.parameters().get_if<std::vector<std::optional<int>>>("FUNCT");
-
   /*
   **    TIME CURVE BUSINESS
   */
@@ -118,12 +121,6 @@ int Discret::Elements::SolidSurface::evaluate_neumann(Teuchos::ParameterList& pa
     time = parent_element()->params_interface_ptr()->get_total_time();
   else
     time = params.get("total time", -1.0);
-
-  const int numdim = 3;
-
-  // ensure that at least as many curves/functs as dofs are available
-  if (int(onoff.size()) < numdim)
-    FOUR_C_THROW("Fewer functions or curves defined than the element has dofs.");
 
   // element geometry update
   const int numnode = num_node();
@@ -320,8 +317,6 @@ int Discret::Elements::SolidSurface::evaluate_neumann(Teuchos::ParameterList& pa
       case neum_orthopressure:
       {
         if (onoff[0] != 1) FOUR_C_THROW("orthopressure on 1st dof only!");
-        for (int checkdof = 1; checkdof < 3; ++checkdof)
-          if (onoff[checkdof] != 0) FOUR_C_THROW("orthopressure on 1st dof only!");
         double ortho_value = val[0];
         // if (!ortho_value) FOUR_C_THROW("no orthopressure value given!"); // in case of coupling
         // with redairways, there is a zero orthoval in the beginning!!!!
