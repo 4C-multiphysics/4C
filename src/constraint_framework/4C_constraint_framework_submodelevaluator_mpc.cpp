@@ -25,7 +25,6 @@
 #include "4C_structure_new_timint_implicit.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -204,7 +203,7 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::check_input
 
   Core::IO::cout(Core::IO::verbose)
       << "There are " << point_linear_coupled_equation_conditions_.size()
-      << " linear coupled equations" << Core::IO::endl;
+      << " explicitly defined linear coupled equation conditions" << Core::IO::endl;
 
   Core::IO::cout(Core::IO::verbose)
       << "The geometric search tolerance is set to: " << node_search_toler_ << Core::IO::endl;
@@ -292,6 +291,7 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
 {
   std::vector<std::vector<Core::Nodes::Node*>> PBCs;
   std::vector<Core::Nodes::Node*> PBC;
+  std::map<std::string, std::size_t> boundary_node_pair_counts;
   {
     Core::IO::cout(Core::IO::verbose)
         << "\nCreating Node Pairs for Periodic Boundary Conditions" << Core::IO::endl
@@ -393,7 +393,7 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
 
             // Search all points on negative side in bvh of positive side
             const auto [indices, offsets] = bvh_side_pos.query(bounding_volumes_neg);
-            Core::IO::cout(Core::IO::verbose)
+            Core::IO::cout(Core::IO::debug)
                 << " Identified Periodic Node Pairs: " << surf.first << "-boundary (node-id)"
                 << Core::IO::endl
                 << "+--------------------------------------------------------------------+"
@@ -419,7 +419,7 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
                     surf.first.c_str(), xm_id);
               }
 
-              std::cout << "first is:" << indices(i) << std::endl;
+              Core::IO::cout(Core::IO::debug) << "first is:" << indices(i) << Core::IO::endl;
               // The order matters, because of sign (1) - (2) = (3) - (4)
               PBC.push_back(discret_ptr_->g_node(indices(i)));                     // + side
               PBC.push_back(discret_ptr_->g_node(bounding_volumes_neg[i].first));  // - side
@@ -428,11 +428,11 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
               PBCs.push_back(PBC);
               PBC.clear();
 
-              Core::IO::cout(Core::IO::verbose)
-                  << bounding_volumes_neg[i].first << "," << indices(i) << ","
-                  << rveCornerNodeIdMap[surf.second] << "," << rveCornerNodeIdMap["N1"]
-                  << Core::IO::endl;
+              Core::IO::cout(Core::IO::debug) << bounding_volumes_neg[i].first << "," << indices(i)
+                                              << "," << rveCornerNodeIdMap[surf.second] << ","
+                                              << rveCornerNodeIdMap["N1"] << Core::IO::endl;
             }
+            boundary_node_pair_counts[surf.first] = bounding_volumes_neg.size();
           }
         }
         break;
@@ -490,6 +490,17 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
     default:
       FOUR_C_THROW("No ref def type defined");
   }
+  if (!boundary_node_pair_counts.empty())
+  {
+    Core::IO::cout(Core::IO::verbose) << "Periodic boundary-node pairs:";
+    const char* separator = " ";
+    for (const auto& [direction, count] : boundary_node_pair_counts)
+    {
+      Core::IO::cout(Core::IO::verbose) << separator << direction << "=" << count;
+      separator = ", ";
+    }
+    Core::IO::cout(Core::IO::verbose) << Core::IO::endl;
+  }
 
   // Ensure no constraint is enforced twice:
   int indx = 0;
@@ -543,6 +554,8 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
   {
     PBCs.erase(PBCs.begin() + id);
   }
+  Core::IO::cout(Core::IO::verbose)
+      << "Unique periodic relations after duplicate removal: " << PBCs.size() << Core::IO::endl;
   Core::IO::cout(Core::IO::debug) << "All Node Pairs found. Following Nodes are coupled:"
                                   << Core::IO::endl;
 
@@ -583,9 +596,7 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
     Core::IO::cout(Core::IO::debug) << "\n";
   }
   Core::IO::cout(Core::IO::verbose)
-      << Core::IO::endl
-      << "Total number of node pairs created for periodic boundary conditions: "
-      << constraint_equations_.size() << Core::IO::endl;
+      << "Total periodic constraint equations: " << constraint_equations_.size() << Core::IO::endl;
 }
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
@@ -836,13 +847,16 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::
       {
         const auto& boundary = conditionLine->parameters().get<std::string>("EDGE");
 
-        // Print the Edge Condition
-        Core::IO::cout(Core::IO::verbose) << "EDGE: " << boundary.c_str() << " Node IDs: ";
+        Core::IO::cout(Core::IO::verbose)
+            << "EDGE: " << boundary << " contains " << conditionLine->get_nodes()->size()
+            << " nodes" << Core::IO::endl;
+
+        Core::IO::cout(Core::IO::debug) << "EDGE: " << boundary << " Node IDs: ";
         for (auto nodeId : *conditionLine->get_nodes())
         {
-          Core::IO::cout(Core::IO::verbose) << nodeId << " ";
+          Core::IO::cout(Core::IO::debug) << nodeId << " ";
         }
-        Core::IO::cout(Core::IO::verbose) << Core::IO::endl;
+        Core::IO::cout(Core::IO::debug) << Core::IO::endl;
 
         // Create EdgeNodeMap
         rveBoundaryNodeIdMap[boundary.c_str()] = conditionLine->get_nodes();
