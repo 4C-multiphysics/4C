@@ -10,6 +10,7 @@
     <PPointData>
       <PDataArray type="Float64" Name="displacement" NumberOfComponents="3" format="ascii"/>
       <PDataArray type="Float64" Name="lambda" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="lambda_postprocessed" NumberOfComponents="3" format="ascii"/>
       <PDataArray type="Int32" Name="uid_0_pair_beam_id" format="ascii"/>
       <PDataArray type="Int32" Name="uid_1_pair_solid_id" format="ascii"/>
     </PPointData>

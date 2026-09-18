@@ -109,6 +109,11 @@ namespace BeamInteraction
      */
     bool get_write_unique_ids_flag() const { return write_unique_ids_; }
 
+    /**
+     * \brief Return the postprocess lambda output flag.
+     */
+    bool get_postprocess_lambda_flag() const { return post_process_lambda_; }
+
    protected:
     /**
      * \brief Checks the init and setup status.
@@ -167,6 +172,9 @@ namespace BeamInteraction
 
     //! Flag whether or not to write unique cell and point data IDs.
     bool write_unique_ids_;
+
+    //! Flag whether or not to postprocess lambda for dual Lagrange Multipliers.
+    bool post_process_lambda_;
   };
 
 }  // namespace BeamInteraction
