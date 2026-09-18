@@ -1,0 +1,63 @@
+{% set anisotropic_file = "elasthyper_isoanisoexpo_DispersedTransverselyIsotropic_ost_h8.4C.yaml" %}
+{% set anisotropic = load_input_file(anisotropic_file) %}
+
+.. _hyperelastic-anisotropic:
+
+Anisotropic, fiber, and active hyperelastic summands
+====================================================
+
+Anisotropic summands are normally combined with an isotropic matrix. Depending on the model,
+fiber information comes from element fibers or nodal fibers. The distribution of fibers can be
+controlled by the structural tensor, which is supplied by the ``ELAST_StructuralTensor`` helper,
+its evolution can be controlled by the ``ELAST_AnisoActiveStress_Evolution`` helper.
+The strain-energy formulation of each summand is documented in the Input Parameter Reference.
+Follow the linked parameter reference for the exact formulation, required IDs, and fiber strategies.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Summand or helper
+     - Model
+   * - :ref:`ELAST_CoupAnisoExpo <MATERIALS_ELAST_CoupAnisoExpo>`
+     - Exponential reinforcement for one fiber.
+   * - :ref:`ELAST_CoupAnisoExpoShear <MATERIALS_ELAST_CoupAnisoExpoShear>`
+     - Exponential shear coupling between two fibers.
+   * - :ref:`ELAST_CoupAnisoExpoTwoCoup <MATERIALS_ELAST_CoupAnisoExpoTwoCoup>`
+     - Exponential coupling of two fiber families.
+   * - :ref:`ELAST_CoupAnisoNeoHooke <MATERIALS_ELAST_CoupAnisoNeoHooke>`
+     - Neo-Hookean reinforcement for one fiber.
+   * - :ref:`ELAST_CoupAnisoNeoHooke_VarProp <MATERIALS_ELAST_CoupAnisoNeoHooke_VarProp>`
+     - Neo-Hookean response for one fiber with variable properties.
+   * - :ref:`ELAST_CoupAnisoPow <MATERIALS_ELAST_CoupAnisoPow>`
+     - Power-law energy for one fiber.
+   * - :ref:`ELAST_CoupAnisoExpoActive <MATERIALS_ELAST_CoupAnisoExpoActive>`
+     - Exponential law for one fiber with active response.
+   * - :ref:`ELAST_IsoAnisoExpo <MATERIALS_ELAST_IsoAnisoExpo>`
+     - Combined isotropic-anisotropic exponential response for one fiber.
+   * - :ref:`ELAST_CoupTransverselyIsotropic
+       <MATERIALS_ELAST_CoupTransverselyIsotropic>`
+     - General transversely isotropic coupling for one fiber.
+   * - :ref:`ELAST_RemodelFiber <MATERIALS_ELAST_RemodelFiber>`
+     - Remodeling contribution for a variable number of fibers.
+
+       No single fixed potential; it combines the referenced exponential fiber potentials with
+       evolving remodeling and growth histories.
+   * - :ref:`ELAST_AnisoActiveStress_Evolution
+       <MATERIALS_ELAST_AnisoActiveStress_Evolution>`
+     - Active-stress evolution law for one fiber.
+
+       No stored-energy potential; it supplies the evolving active stress.
+   * - :ref:`ELAST_StructuralTensor <MATERIALS_ELAST_StructuralTensor>`
+     - Structural-tensor strategy for one fiber, that is, the distribution of the fiber in a specific direction;
+       referenced by anisotropic summands.
+
+       This is not a potential; it supplies the structural tensor used by the anisotropic summands above.
+
+Example
+-------
+
+The following dispersed transversely isotropic composition is taken from
+``{{ anisotropic_file }}``:
+
+{{ section_dump(anisotropic, "MATERIALS") }}

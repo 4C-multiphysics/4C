@@ -1,0 +1,59 @@
+.. _material-directions:
+
+Anisotropy: Material directions
+================================
+
+For anisotropic materials, it is necessary to define the material directions with respect to the
+global coordinate system.
+In |FOURC|, the coordinate directions in such materials can be defined in several ways, but the
+definition depends on the material in use. For a number of materials, the directions are defined
+on element or on node level. For others, the directions are given in the material definition by fiber direction fields.
+In the hyperelastic framework, the distribution of fibers around the main axes can be defined by a
+structural tensor.
+
+Here, we describe the input methods on element level.
+For a native |FOURC| mesh, append consecutive ``FIBER1``, and, where
+required, ``FIBER2``, and ``FIBER3`` vectors to each entry in ``STRUCTURE ELEMENTS``:
+
+.. code-block:: yaml
+
+   STRUCTURE ELEMENTS:
+     - "1 SOLID HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM nonlinear FIBER1 1.0 0.0 0.0 FIBER2 0.0 1.0 0.0"
+
+The vectors are expressed in the Cartesian reference coordinate system and are normalized when
+read. They must be nonzero and numbered without gaps: if ``FIBER1`` is absent, or ``FIBER2`` is
+missing after ``FIBER1``, subsequent vectors are ignored. Fiber vectors are not automatically
+orthogonalized. Materials that require an orthogonal or right-handed basis check this requirement
+themselves.
+
+For an external mesh, the same element parameters can be assigned to every element in an element
+block selected by ``ID`` or ``NAME`` in ``STRUCTURE GEOMETRY``:
+
+.. code-block:: yaml
+
+   STRUCTURE GEOMETRY:
+     FILE: mesh.vtu
+     ELEMENT_BLOCKS:
+       - NAME: anisotropic_solid
+         SOLID:
+           HEX8:
+             MAT: 1
+             KINEM: nonlinear
+             FIBER1: [1.0, 0.0, 0.0]
+             FIBER2: [0.0, 1.0, 0.0]
+
+This applies the specified directions to the complete block. No per-element input currently
+available for fiber assignment through ``STRUCTURE GEOMETRY``.
+
+For the definition on node level, see the `FNODE` definition in :ref:`nodedefinition`.
+
+As an alternative, solid elements accept cylindrical coordinate-system vectors ``RAD``, ``AXI``,
+and ``CIR``. All three must be given together.
+Some specialized materials only support one of these input methods; the direction requirements
+and restrictions for each anisotropic material or summand are documented alongside its
+parameters in the Input Parameter Reference.
+
+``MAT_ElastHyper`` and ``MAT_ViscoElastHyper`` do not impose a direction count themselves; their
+requirements are determined by the selected summands. A ``STR_TENS_ID`` controls the
+structural-tensor strategy for several anisotropic summands but does not replace the underlying
+mean fiber direction.
