@@ -473,8 +473,7 @@ void Mortar::Utils::create_volume_ghosting(const Core::FE::Discretization& dis_s
     }
 
     // re-build element column map
-    Core::LinAlg::Map newelecolmap(
-        -1, (int)rdata.size(), rdata.data(), 0, voldis[disidx]->get_comm());
+    Core::LinAlg::Map newelecolmap(-1, std::span<const int>(rdata), 0, voldis[disidx]->get_comm());
     rdata.clear();
 
     // redistribute the volume discretization according to the

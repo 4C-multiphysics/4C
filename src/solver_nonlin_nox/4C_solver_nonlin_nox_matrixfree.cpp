@@ -211,8 +211,8 @@ std::shared_ptr<const Core::LinAlg::Map> NOX::Nln::MatrixFree::build_map(
   {
     map = std::make_shared<const Core::LinAlg::Map>(
         cloneVector.get_linalg_vector().get_map().num_global_points(),
-        cloneVector.get_linalg_vector().get_map().num_my_points(),
-        cloneVector.get_linalg_vector().get_map().my_global_elements(),
+        std::span<const int>(cloneVector.get_linalg_vector().get_map().my_global_elements(),
+            cloneVector.get_linalg_vector().get_map().num_my_points()),
         cloneVector.get_linalg_vector().get_map().index_base(),
         cloneVector.get_linalg_vector().get_map().get_comm());
   }

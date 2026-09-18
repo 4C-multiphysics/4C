@@ -71,7 +71,7 @@ namespace
     // build node coordinates based on the node row map of first partial discretization
     {
       std::array<int, 4> nodeList{0, 2, 4, 10};  // GID list of first 4 elements
-      Core::LinAlg::Map node_row_map(-1, nodeList.size(), nodeList.data(), 0, comm_);
+      Core::LinAlg::Map node_row_map(-1, std::span<const int>(nodeList), 0, comm_);
       std::shared_ptr<Core::LinAlg::MultiVector<double>> nodal_test_coordinates =
           extract_node_coordinates(*test_discretization_, node_row_map);
 

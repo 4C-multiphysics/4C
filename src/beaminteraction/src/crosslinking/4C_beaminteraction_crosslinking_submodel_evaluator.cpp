@@ -1462,7 +1462,7 @@ void BeamInteraction::SubmodelEvaluator::Crosslinking::read_restart(
 
   // build dummy map according to read data on myrank
   Core::LinAlg::Map dummy_cl_map(
-      -1, read_node_ids.size(), read_node_ids.data(), 0, bin_discret().get_comm());
+      -1, std::span<const int>(read_node_ids), 0, bin_discret().get_comm());
 
   // build exporter object
   std::shared_ptr<Core::Communication::Exporter> exporter =
@@ -1513,7 +1513,7 @@ void BeamInteraction::SubmodelEvaluator::Crosslinking::read_restart(
 
   // build dummy map according to read data on myrank
   std::shared_ptr<Core::LinAlg::Map> dummy_beam_map = std::make_shared<Core::LinAlg::Map>(
-      -1, read_ele_ids.size(), read_ele_ids.data(), 0, discret().get_comm());
+      -1, std::span<const int>(read_ele_ids), 0, discret().get_comm());
 
   // build exporter object
   exporter = std::make_shared<Core::Communication::Exporter>(

@@ -679,7 +679,7 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::extend_ghosting()
   // build auxiliary bin col map
   std::vector<int> auxgids(colbins.begin(), colbins.end());
   std::shared_ptr<Core::LinAlg::Map> auxmap = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(auxgids.size()), auxgids.data(), 0, bindis_->get_comm());
+      -1, std::span<const int>(auxgids), 0, bindis_->get_comm());
 
   std::shared_ptr<Core::LinAlg::Map> ia_elecolmap = binstrategy_->extend_element_col_map(
       ia_state_ptr_->get_bin_to_row_ele_map(), ia_state_ptr_->get_bin_to_row_ele_map(),

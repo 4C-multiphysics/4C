@@ -291,7 +291,7 @@ namespace
       my_elements = {0, 2, 4, 6, 8};
     else
       my_elements = {1, 3, 5, 7, 9};
-    Core::LinAlg::Map new_map(10, my_elements.size(), my_elements.data(), 0, comm_);
+    Core::LinAlg::Map new_map(10, std::span<const int>(my_elements), 0, comm_);
 
     // Before replacement, all maps are the same.
     EXPECT_TRUE(a.get_map().same_as(b.get_map()));

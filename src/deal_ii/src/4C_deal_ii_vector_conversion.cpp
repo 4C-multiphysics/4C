@@ -96,8 +96,9 @@ Core::LinAlg::Map DealiiWrappers::create_dealii_to_four_c_map(
     my_gids[i] = four_c_gid;
   }
 
-  Core::LinAlg::Map dealii_to_four_c_map(dof_handler.n_dofs(), locally_owned_dofs.n_elements(),
-      my_gids.data(), 0, context.get_discretization().get_comm());
+  Core::LinAlg::Map dealii_to_four_c_map(dof_handler.n_dofs(),
+      std::span<const int>(my_gids.data(), locally_owned_dofs.n_elements()), 0,
+      context.get_discretization().get_comm());
 
   return dealii_to_four_c_map;
 }
