@@ -169,6 +169,8 @@ namespace BeamInteraction
       get_lagrange_multiplier_assembly_manager() const;
 
 
+      std::shared_ptr<Core::LinAlg::Vector<double>> get_penalty_kappa_inverse() const;
+
       /**
        * \brief Return the geometry pairs in this submodel evaluator.
        */
