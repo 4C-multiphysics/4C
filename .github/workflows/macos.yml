@@ -21,7 +21,9 @@ jobs:
         id: brew-versions
         run: |
           # Generate a key of all brew libraries
-          echo "hash=$(brew list --versions | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
+          bver=$(brew list --versions)
+          echo "$bver"
+          echo "hash=$(echo "$bver" | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Restore dependencies cache
         id: cache-deps
         uses: actions/cache/restore@v6
@@ -73,7 +75,9 @@ jobs:
         id: brew-versions
         run: |
           # Generate a key of all brew libraries
-          echo "hash=$(brew list --versions | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
+          bver=$(brew list --versions)
+          echo "$bver"
+          echo "hash=$(echo "$bver" | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Check if the hash differs from the hash in the build job
         if: steps.brew-versions.outputs.hash != needs.build.outputs.brew-version-hash
         run: |
@@ -84,6 +88,8 @@ jobs:
             echo "The system libraries installed in the test job have a different version than the ones used in the build job to build the dependencies and 4C."
             echo ""
             echo "This should rarely happen. A re-run of the workflow should solve this problem."
+            echo "Brew version hash of build job: ${{ needs.build.outputs.brew-version-hash }}"
+            echo "Brew version hash of test job: ${{ steps.brew-versions.outputs.hash }}"
           } >> $GITHUB_STEP_SUMMARY
           exit 1
       - name: Restore dependencies cache
