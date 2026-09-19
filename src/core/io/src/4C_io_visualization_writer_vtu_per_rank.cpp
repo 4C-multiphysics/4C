@@ -36,8 +36,18 @@ void Core::IO::VisualizationWriterVtuPerRank::initialize_time_step(
 {
   vtu_writer_.reset_time_and_time_step(visualization_time, visualization_step);
 
-  vtu_writer_.initialize_vtk_file_streams_for_new_geometry_and_or_time_step();
-  vtu_writer_.write_vtk_headers();
+  vtu_writer_.initialize_current_time_step_output_file_name();
+
+  rank_file_.open(vtu_writer_.output_file_name_this_processor());
+
+  if (Core::Communication::my_mpi_rank(comm_) == 0)
+  {
+    master_file_.open(vtu_writer_.output_file_name_master());
+
+    vtu_writer_.append_master_file_and_time_to_collection_file_mid_section_content();
+  }
+
+  vtu_writer_.write_vtk_headers(rank_file_, master_file_);
 }
 
 /**
@@ -46,7 +56,7 @@ void Core::IO::VisualizationWriterVtuPerRank::initialize_time_step(
 void Core::IO::VisualizationWriterVtuPerRank::write_field_data_to_disk(
     const std::map<std::string, visualization_vector_type_variant>& field_data_map)
 {
-  vtu_writer_.write_vtk_field_data_and_or_time_and_or_cycle(field_data_map);
+  vtu_writer_.write_vtk_field_data_and_or_time_and_or_cycle(rank_file_, field_data_map);
 }
 
 /**
@@ -59,8 +69,8 @@ void Core::IO::VisualizationWriterVtuPerRank::write_geometry_to_disk(
     const std::vector<Core::IO::index_type>& face_connectivity,
     const std::vector<Core::IO::index_type>& face_offset)
 {
-  vtu_writer_.write_geometry_unstructured_grid(point_coordinates, point_cell_connectivity,
-      cell_offset, cell_types, face_connectivity, face_offset);
+  vtu_writer_.write_geometry_unstructured_grid(rank_file_, master_file_, point_coordinates,
+      point_cell_connectivity, cell_offset, cell_types, face_connectivity, face_offset);
 }
 
 /**
@@ -70,7 +80,8 @@ void Core::IO::VisualizationWriterVtuPerRank::write_point_data_vector_to_disk(
     const visualization_vector_type_variant& data, unsigned int num_components_per_point,
     const std::string& name)
 {
-  vtu_writer_.write_point_data_vector(data, num_components_per_point, name);
+  vtu_writer_.write_point_data_vector(
+      rank_file_, master_file_, data, num_components_per_point, name);
 }
 
 /**
@@ -80,7 +91,8 @@ void Core::IO::VisualizationWriterVtuPerRank::write_cell_data_vector_to_disk(
     const visualization_vector_type_variant& data, unsigned int num_components_per_point,
     const std::string& name)
 {
-  vtu_writer_.write_cell_data_vector(data, num_components_per_point, name);
+  vtu_writer_.write_cell_data_vector(
+      rank_file_, master_file_, data, num_components_per_point, name);
 }
 
 /**
@@ -88,7 +100,11 @@ void Core::IO::VisualizationWriterVtuPerRank::write_cell_data_vector_to_disk(
  */
 void Core::IO::VisualizationWriterVtuPerRank::finalize_time_step()
 {
-  vtu_writer_.write_vtk_footers();
+  vtu_writer_.write_vtk_footers(rank_file_, master_file_);
+
+  rank_file_.close();
+
+  if (Core::Communication::my_mpi_rank(comm_) == 0) master_file_.close();
 
   // Write a collection file summarizing all previously written files
   vtu_writer_.write_vtk_collection_file_for_all_written_master_files(

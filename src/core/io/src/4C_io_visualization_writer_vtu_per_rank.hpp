@@ -13,6 +13,8 @@
 #include "4C_io_visualization_writer_base.hpp"
 #include "4C_io_vtu_writer.hpp"
 
+#include <fstream>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO
@@ -71,9 +73,15 @@ namespace Core::IO
      */
     void finalize_time_step() override;
 
-    //! At the moment, simply point to the "old" vtu writer here, the functionality of this
-    //! object will be implemented in this class in the future
+    //! VtuWriter used for the VTU/PVTU format serialization
     VtuWriter vtu_writer_;
+
+   private:
+    //! Output stream for the file of this processor (one .vtu per rank)
+    std::ofstream rank_file_;
+
+    //! Output stream for the parallel (master) file (only proc 0, .pvtu)
+    std::ofstream master_file_;
   };
 }  // namespace Core::IO
 

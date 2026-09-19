@@ -133,24 +133,6 @@ class VtkWriterBase
    */
   void reset_time_and_time_step(double time, unsigned int timestepnumber);
 
-  /** \brief initialize the required file streams for processor individual file and master file
-   *
-   */
-  void initialize_vtk_file_streams_for_new_geometry_and_or_time_step();
-
-  //! write prologue of all required vtk files
-  void write_vtk_headers();
-
-  //! write given field data, including time and cycle for vtk file.
-  void write_vtk_field_data_and_or_time_and_or_cycle(
-      const std::map<std::string, Core::IO::visualization_vector_type_variant>& field_data_map);
-
-  //! write field data for time and cycle for vtk file.
-  void write_vtk_time_and_or_cycle();
-
-  //! write epilogue of all required vtk files
-  void write_vtk_footers();
-
   //! write a VTK collection file that summarizes paths to all written files (e.g. for all time
   //! steps) note: this only includes files written during the 'lifetime' of this writer object
   void write_vtk_collection_file_for_all_written_master_files(
@@ -158,11 +140,6 @@ class VtkWriterBase
 
 
  protected:
-  //! write a data vector as DataArray to corresponding vtk files
-  // Todo template <typename T>
-  void write_data_array(const Core::IO::visualization_vector_type_variant& data,
-      const int num_components, const std::string& name);
-
   //! generate the part of the filename that expresses the processor ID
   const std::string& get_part_of_file_name_indicating_processor_id(unsigned int processor_id) const;
 
@@ -189,46 +166,16 @@ class VtkWriterBase
   //! throw error if file stream not ready to write into
   void throw_error_if_invalid_file_stream(const std::ostream& ostream) const;
 
- private:
-  //! write prologue of the VTK master file (handled by proc 0)
-  void write_vtk_header_master_file(const std::string& byteorder);
-
-  //! write prologue of the VTK file on this processor
-  void write_vtk_header_this_processor(const std::string& byteorder);
-
-  //! write field data array to the VTK file on this processor
-  template <typename T>
-  void write_field_data_array(const std::string& name, const std::vector<T>& field_data);
-
-  //! write the required information about the DataArray to master file
-  // Todo template <typename T>
-  void write_data_array_master_file(
-      const int num_components, const std::string& name, const std::string& data_type_name);
-
-  //! write the data array to this processor's file
-  template <typename T>
-  void write_data_array_this_processor(
-      const std::vector<T>& data, const int num_components, const std::string& name);
-
-
-  //! write epilogue of of the VTK master file (handled by proc 0)
-  void write_vtk_footer_master_file();
-
-  //! write epilogue of the VTK file on this processor
-  void write_vtk_footer_this_processor();
-
-
-  //! initialize the individual vtk file stream on each processor
-  void initialize_vtk_file_stream_this_processor();
-
-  //! initialize the vtk 'master file' stream (handled by proc 0)
-  void initialize_vtk_master_file_stream();
-
   //! append current master file name and time to collection file content
   void append_master_file_and_time_to_collection_file_mid_section_content(
       const std::string& master_file_name, const std::string& master_file_directory_name,
       double time);
 
+  //! determine the name of the subdirectory by extracting the part after the last '/'
+  //! in the full path of the vtk working directory
+  std::string determine_vtk_subdirectory_name_from_full_vtk_working_path() const;
+
+ private:
   //! write a VTK collection file that summarizes paths to all the given files
   void write_vtk_collection_file_for_given_list_of_master_files(
       const std::string& collectionfilename,
@@ -251,10 +198,6 @@ class VtkWriterBase
   //! write the footer into a given VTK collection file stream
   void write_footer_into_given_vtk_collection_file_stream(
       std::ofstream& collectionfilestream) const;
-
-  //! determine the name of the subdirectory by extracting the part after the last '/'
-  //! in the full path of the vtk working directory
-  std::string determine_vtk_subdirectory_name_from_full_vtk_working_path() const;
 
   //! write given master file and time value into given collection file stream
   inline void write_master_file_and_time_value_into_given_vtk_collection_file_stream(
@@ -301,12 +244,6 @@ class VtkWriterBase
 
   // current phase
   Phase currentPhase_;
-
-  //! Output stream for current processor-specific file
-  std::ofstream currentout_;
-
-  //! Output stream for current master file (only proc 0)
-  std::ofstream currentmasterout_;
 
   //! stream for midsection of the vtk collection file ('.pvd')
   //! containing [time value and filename] of all yet written master files
