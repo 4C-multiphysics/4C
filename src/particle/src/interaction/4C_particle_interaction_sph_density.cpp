@@ -94,36 +94,19 @@ void Particle::SPHDensityBase::set_current_step_size(const double currentstepsiz
 
 void Particle::SPHDensityBase::sum_weighted_mass() const
 {
-  // clear density sum state
-  clear_density_sum_state();
+  // set weighted mass self contribution
+  set_weighted_mass_self_contribution();
 
-  // sum weighted mass (self contribution)
-  sum_weighted_mass_self_contribution();
-
-  // sum weighted mass (particle contribution)
+  // sum weighted mass particle contribution
   sum_weighted_mass_particle_contribution();
 
-  // sum weighted mass (particle-wall contribution)
+  // sum weighted mass particle-wall contribution
   if (virtualwallparticle_) sum_weighted_mass_particle_wall_contribution();
 }
 
-void Particle::SPHDensityBase::clear_density_sum_state() const
+void Particle::SPHDensityBase::set_weighted_mass_self_contribution() const
 {
-  // iterate over fluid particle types
-  for (const auto& type_i : fluidtypes_)
-  {
-    // get container of owned particles of current particle type
-    Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, ParticleStatus::Owned);
-
-    // clear density sum state
-    container_i->clear_state(ParticleState::DensitySum);
-  }
-}
-
-void Particle::SPHDensityBase::sum_weighted_mass_self_contribution() const
-{
-  TEUCHOS_FUNC_TIME_MONITOR("Particle::SPHDensityBase::sum_weighted_mass_self_contribution");
+  TEUCHOS_FUNC_TIME_MONITOR("Particle::SPHDensityBase::set_weighted_mass_self_contribution");
 
   // get pointers to particle states
   ConstParticleContainerBundleStatePtrs& rad = particlecontainerbundle_->try_get_ptrs_to_state(
@@ -153,8 +136,8 @@ void Particle::SPHDensityBase::sum_weighted_mass_self_contribution() const
       // evaluate kernel
       const double Wii = kernel_->w0(rad_i[0]);
 
-      // add self contribution
-      denssum_i[0] += Wii * mass_i[0];
+      // set self contribution
+      denssum_i[0] = Wii * mass_i[0];
     }
   }
 }
@@ -276,36 +259,19 @@ void Particle::SPHDensityBase::sum_weighted_mass_particle_wall_contribution() co
 
 void Particle::SPHDensityBase::sum_colorfield() const
 {
-  // clear colorfield state
-  clear_colorfield_state();
+  // set colorfield self contribution
+  set_colorfield_self_contribution();
 
-  // sum colorfield (self contribution)
-  sum_colorfield_self_contribution();
-
-  // sum colorfield (particle contribution)
+  // sum colorfield particle contribution
   sum_colorfield_particle_contribution();
 
-  // sum colorfield (particle-wall contribution)
+  // sum colorfield particle-wall contribution
   if (virtualwallparticle_) sum_colorfield_particle_wall_contribution();
 }
 
-void Particle::SPHDensityBase::clear_colorfield_state() const
+void Particle::SPHDensityBase::set_colorfield_self_contribution() const
 {
-  // iterate over fluid particle types
-  for (const auto& type_i : fluidtypes_)
-  {
-    // get container of owned particles of current particle type
-    Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_i, ParticleStatus::Owned);
-
-    // clear colorfield state
-    container_i->clear_state(ParticleState::Colorfield);
-  }
-}
-
-void Particle::SPHDensityBase::sum_colorfield_self_contribution() const
-{
-  TEUCHOS_FUNC_TIME_MONITOR("Particle::SPHDensityBase::sum_colorfield_self_contribution");
+  TEUCHOS_FUNC_TIME_MONITOR("Particle::SPHDensityBase::set_colorfield_self_contribution");
 
   // get pointerss to particle states
   ConstParticleContainerBundleStatePtrs& rad = particlecontainerbundle_->try_get_ptrs_to_state(
@@ -339,8 +305,8 @@ void Particle::SPHDensityBase::sum_colorfield_self_contribution() const
       // evaluate kernel
       const double Wii = kernel_->w0(rad_i[0]);
 
-      // add self contribution
-      colorfield_i[0] += (Wii / dens_i[0]) * mass_i[0];
+      // set self contribution
+      colorfield_i[0] = (Wii / dens_i[0]) * mass_i[0];
     }
   }
 }
