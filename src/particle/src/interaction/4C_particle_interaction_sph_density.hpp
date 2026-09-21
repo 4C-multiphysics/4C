@@ -74,11 +74,8 @@ namespace Particle
     //! evaluate sum of weighted mass
     virtual void sum_weighted_mass() const final;
 
-    //! clear density sum state
-    virtual void clear_density_sum_state() const final;
-
     //! sum weighted mass (self contribution)
-    virtual void sum_weighted_mass_self_contribution() const final;
+    virtual void set_weighted_mass_self_contribution() const final;
 
     //! sum weighted mass (particle contribution)
     virtual void sum_weighted_mass_particle_contribution() const final;
@@ -89,11 +86,8 @@ namespace Particle
     //! evaluate sum of colorfield
     virtual void sum_colorfield() const final;
 
-    //! clear colorfield state
-    virtual void clear_colorfield_state() const final;
-
     //! sum colorfield (self contribution)
-    virtual void sum_colorfield_self_contribution() const final;
+    virtual void set_colorfield_self_contribution() const final;
 
     //! sum colorfield (particle contribution)
     virtual void sum_colorfield_particle_contribution() const final;

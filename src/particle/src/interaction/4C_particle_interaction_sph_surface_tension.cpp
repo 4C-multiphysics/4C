@@ -656,9 +656,6 @@ void Particle::SPHSurfaceTension::compute_curvature() const
     Particle::ParticleContainer* container_i =
         particlecontainerbundle_->get_specific_container(type_i, status_i);
 
-    // clear curvature state
-    container_i->clear_state(ParticleState::Curvature);
-
     // get number of particles stored in container
     const int particlestored = container_i->particles_stored();
 
