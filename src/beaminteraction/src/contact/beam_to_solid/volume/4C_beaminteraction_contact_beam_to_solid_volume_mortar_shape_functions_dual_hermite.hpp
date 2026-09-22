@@ -99,12 +99,13 @@ namespace GeometryPair
         GeometryPair::EvaluateShapeFunction<Beam>::evaluate(
             N_primal, eta, beam_shape_function_data);
 
+        const std::array<double, n_shape> hermite_scaling{
+            1.0, 1.0 / mortar_data.ref_length_, 1.0, 1.0 / mortar_data.ref_length_};
+
         for (unsigned int j = 0; j < n_shape; ++j)
         {
-          // D_jj = integral N_j J d eta
-          D(j, j) += N_primal(j) * integration_factor;
+          D(j, j) += hermite_scaling[j] * N_primal(j) * integration_factor;
 
-          // M_jk = integral N_j N_k J d eta
           for (unsigned int k = 0; k < n_shape; ++k)
           {
             M(j, k) += N_primal(j) * N_primal(k) * integration_factor;
