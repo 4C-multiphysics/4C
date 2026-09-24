@@ -59,7 +59,6 @@ SOLVER 2:
   AZTOL: 1e-06
   AZOUTPUT: 5
   AZREUSE: 8
-  AZSUB: 25
   NAME: "L2-projection solver for fluxes/pressure gradient"
 MATERIALS:
   - MAT: 1
