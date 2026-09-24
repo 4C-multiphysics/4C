@@ -61,38 +61,23 @@ Mat::PAR::ViscoElastHyper::ViscoElastHyper(const Core::Mat::PAR::Parameter::Data
 Mat::PAR::ViscoElastHyper::SummandSplit Mat::PAR::ViscoElastHyper::parse_summand_split(
     const Core::Mat::PAR::Parameter::Data& matdata)
 {
-  const auto& numelast = matdata.parameters.get<std::optional<int>>("NUMELAST");
   const auto& elast_matids =
       matdata.parameters.get<std::optional<std::vector<int>>>("ELAST_MATIDS");
-  const auto& numvisco = matdata.parameters.get<std::optional<int>>("NUMVISCO");
   const auto& visco_matids =
       matdata.parameters.get<std::optional<std::vector<int>>>("VISCO_MATIDS");
 
-  const bool has_split_field = numelast.has_value() || elast_matids.has_value() ||
-                               numvisco.has_value() || visco_matids.has_value();
-  const bool has_complete_split = numelast.has_value() && elast_matids.has_value() &&
-                                  numvisco.has_value() && visco_matids.has_value();
+  const bool has_split_field = elast_matids.has_value() || visco_matids.has_value();
+  const bool has_complete_split = elast_matids.has_value() && visco_matids.has_value();
 
   FOUR_C_ASSERT_ALWAYS(!has_split_field || has_complete_split,
-      "Split MAT_ViscoElastHyper input requires NUMELAST, ELAST_MATIDS, NUMVISCO and "
-      "VISCO_MATIDS together (MAT {}).",
+      "Split MAT_ViscoElastHyper input requires ELAST_MATIDS and VISCO_MATIDS together (MAT {}).",
       matdata.id);
 
   if (has_complete_split)
   {
-    FOUR_C_ASSERT_ALWAYS(*numelast >= 0,
-        "Invalid MAT_ViscoElastHyper setup (MAT {}): NUMELAST={} must be non-negative.", matdata.id,
-        *numelast);
-    FOUR_C_ASSERT_ALWAYS(*numvisco >= 0,
-        "Invalid MAT_ViscoElastHyper setup (MAT {}): NUMVISCO={} must be non-negative.", matdata.id,
-        *numvisco);
-
     SummandSplit split;
-    split.numelast = *numelast;
     split.elast_matids = *elast_matids;
-    split.numvisco = *numvisco;
     split.visco_matids = *visco_matids;
-    split.uses_legacy_matids = false;
     return split;
   }
 
@@ -107,7 +92,6 @@ Mat::PAR::ViscoElastHyper::SummandSplit Mat::PAR::ViscoElastHyper::parse_summand
       matdata.id);
 
   SummandSplit split;
-  split.uses_legacy_matids = true;
 
   const std::vector<int>& matids = matdata.parameters.get<std::vector<int>>("MATIDS");
   const int probinst = Global::Problem::instance()->materials()->get_read_from_problem();
@@ -121,8 +105,6 @@ Mat::PAR::ViscoElastHyper::SummandSplit Mat::PAR::ViscoElastHyper::parse_summand
       split.elast_matids.push_back(summand_mat_id);
   }
 
-  split.numelast = static_cast<int>(split.elast_matids.size());
-  split.numvisco = static_cast<int>(split.visco_matids.size());
   return split;
 }
 
@@ -130,26 +112,9 @@ Mat::PAR::ViscoElastHyper::SummandSplit Mat::PAR::ViscoElastHyper::parse_summand
 Mat::PAR::ViscoElastHyper::ViscoElastHyper(
     const Core::Mat::PAR::Parameter::Data& matdata, const SummandSplit& summand_split)
     : Mat::PAR::ElastHyper(matdata),
-      numelast_(summand_split.numelast),
       elast_matids_(summand_split.elast_matids),
-      numvisco_(summand_split.numvisco),
-      visco_matids_(summand_split.visco_matids),
-      uses_legacy_matids_(summand_split.uses_legacy_matids)
+      visco_matids_(summand_split.visco_matids)
 {
-  FOUR_C_ASSERT_ALWAYS(numelast_ == static_cast<int>(elast_matids_.size()),
-      "Invalid MAT_ViscoElastHyper setup (MAT {}): NUMELAST={} but ELAST_MATIDS has size {}.", id(),
-      numelast_, elast_matids_.size());
-
-  FOUR_C_ASSERT_ALWAYS(numvisco_ == static_cast<int>(visco_matids_.size()),
-      "Invalid MAT_ViscoElastHyper setup (MAT {}): NUMVISCO={} but VISCO_MATIDS has size {}.", id(),
-      numvisco_, visco_matids_.size());
-
-  FOUR_C_ASSERT_ALWAYS(!uses_legacy_matids_ ||
-                           static_cast<int>(elast_matids_.size() + visco_matids_.size()) == nummat_,
-      "Invalid MAT_ViscoElastHyper automatic partitioning (MAT {}): NUMMAT={} but partitioned "
-      "ELAST_MATIDS({}) + VISCO_MATIDS({}) do not match.",
-      id(), nummat_, elast_matids_.size(), visco_matids_.size());
-
   // polyconvexity check is just implemented for isotropic hyperlastic materials
   if (polyconvex_)
     FOUR_C_THROW(

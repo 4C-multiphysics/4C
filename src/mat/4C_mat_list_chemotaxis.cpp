@@ -22,14 +22,9 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------*/
 Mat::PAR::MatListChemotaxis::MatListChemotaxis(const Core::Mat::PAR::Parameter::Data& matdata)
     : MatList(matdata),
-      numpair_((matdata.parameters.get<int>("NUMPAIR"))),
+      numpair_(static_cast<int>(matdata.parameters.get<std::vector<int>>("PAIRIDS").size())),
       pairids_((matdata.parameters.get<std::vector<int>>("PAIRIDS")))
 {
-  // check if sizes fit
-  if (numpair_ != (int)pairids_.size())
-    FOUR_C_THROW("number of materials {} does not fit to size of material vector {}", nummat_,
-        pairids_.size());
-
   if (numpair_ < 1)
     FOUR_C_THROW(
         "If you don't have chemotactic pairs, use MAT_matlist instead of MAT_matlist_chemotaxis!");
