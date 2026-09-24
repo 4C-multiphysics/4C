@@ -27,6 +27,7 @@
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_terminal_unit_model_registry.hpp"
+#include "4C_reduced_lung_tree_linear_solver.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <algorithm>
@@ -47,12 +48,13 @@ namespace ReducedLung
   using namespace TerminalUnits;
   using namespace Airways;
 
-  NoxAssemblyPipeline create_default_nox_assembly_pipeline(AirwayContainer& airways,
-      TerminalUnitContainer& terminal_units, Junctions::ConnectionData& connections,
-      Junctions::BifurcationData& bifurcations,
-      BoundaryConditions::BoundaryConditionContainer& boundary_conditions)
+  NonlinearSolverAssemblyPipeline create_default_nonlinear_solver_assembly_pipeline(
+      AirwayContainer& airways, TerminalUnitContainer& terminal_units,
+      Junctions::ConnectionData& connections, Junctions::BifurcationData& bifurcations,
+      BoundaryConditions::BoundaryConditionContainer& boundary_conditions,
+      bool include_sparse_jacobian_assemblers)
   {
-    NoxAssemblyPipeline pipeline;
+    NonlinearSolverAssemblyPipeline pipeline;
 
     pipeline.residual_assemblers.emplace_back(
         [&airways](Core::LinAlg::Vector<double>& residual,
@@ -87,31 +89,69 @@ namespace ReducedLung
               residual, boundary_conditions, locally_relevant_dofs, current_time);
         });
 
-    pipeline.jacobian_assemblers.emplace_back(
-        [&airways](Core::LinAlg::SparseMatrix& jacobian,
-            const Core::LinAlg::Vector<double>& locally_relevant_dofs, double /*current_time*/,
-            double time_step_size_dt)
-        { Airways::update_jacobian(jacobian, airways, locally_relevant_dofs, time_step_size_dt); });
-    pipeline.jacobian_assemblers.emplace_back(
-        [&terminal_units](Core::LinAlg::SparseMatrix& jacobian,
+    if (include_sparse_jacobian_assemblers)
+    {
+      pipeline.jacobian_assemblers.emplace_back(
+          [&airways](Core::LinAlg::SparseMatrix& jacobian,
+              const Core::LinAlg::Vector<double>& locally_relevant_dofs, double /*current_time*/,
+              double time_step_size_dt)
+          {
+            Airways::update_jacobian(jacobian, airways, locally_relevant_dofs, time_step_size_dt);
+          });
+      pipeline.jacobian_assemblers.emplace_back(
+          [&terminal_units](Core::LinAlg::SparseMatrix& jacobian,
+              const Core::LinAlg::Vector<double>& locally_relevant_dofs, double /*current_time*/,
+              double time_step_size_dt)
+          {
+            TerminalUnits::update_jacobian(
+                jacobian, terminal_units, locally_relevant_dofs, time_step_size_dt);
+          });
+      pipeline.jacobian_assemblers.emplace_back(
+          [&connections, &bifurcations](Core::LinAlg::SparseMatrix& jacobian,
+              const Core::LinAlg::Vector<double>& /*locally_relevant_dofs*/,
+              double /*current_time*/, double /*time_step_size_dt*/)
+          { Junctions::update_jacobian(jacobian, connections, bifurcations); });
+      pipeline.jacobian_assemblers.emplace_back(
+          [&boundary_conditions](Core::LinAlg::SparseMatrix& jacobian,
+              const Core::LinAlg::Vector<double>& locally_relevant_dofs, double current_time,
+              double /*time_step_size_dt*/)
+          {
+            BoundaryConditions::update_jacobian(
+                jacobian, boundary_conditions, locally_relevant_dofs, current_time);
+          });
+    }
+
+    /* Static tree-linearization callbacks assemble state-independent structured coefficients. */
+    pipeline.tree_linearization_static_assemblers.emplace_back(
+        [&airways](TreeNewtonLinearSolver& target)
+        { Airways::update_static_tree_linearization(target, airways); });
+    pipeline.tree_linearization_static_assemblers.emplace_back(
+        [&terminal_units](TreeNewtonLinearSolver& target)
+        { TerminalUnits::update_static_tree_linearization(target, terminal_units); });
+    pipeline.tree_linearization_static_assemblers.emplace_back(
+        [&connections, &bifurcations](TreeNewtonLinearSolver& target)
+        { Junctions::update_tree_linearization(target, connections, bifurcations); });
+    pipeline.tree_linearization_static_assemblers.emplace_back(
+        [&boundary_conditions](TreeNewtonLinearSolver& target)
+        { BoundaryConditions::update_tree_linearization(target, boundary_conditions); });
+
+    /* State-dependent tree-linearization callbacks refresh element coefficients each Newton step.
+     */
+    pipeline.tree_linearization_assemblers.emplace_back(
+        [&airways](TreeNewtonLinearSolver& target,
             const Core::LinAlg::Vector<double>& locally_relevant_dofs, double /*current_time*/,
             double time_step_size_dt)
         {
-          TerminalUnits::update_jacobian(
-              jacobian, terminal_units, locally_relevant_dofs, time_step_size_dt);
+          Airways::update_tree_linearization(
+              target, airways, locally_relevant_dofs, time_step_size_dt);
         });
-    pipeline.jacobian_assemblers.emplace_back(
-        [&connections, &bifurcations](Core::LinAlg::SparseMatrix& jacobian,
-            const Core::LinAlg::Vector<double>& /*locally_relevant_dofs*/, double /*current_time*/,
-            double /*time_step_size_dt*/)
-        { Junctions::update_jacobian(jacobian, connections, bifurcations); });
-    pipeline.jacobian_assemblers.emplace_back(
-        [&boundary_conditions](Core::LinAlg::SparseMatrix& jacobian,
-            const Core::LinAlg::Vector<double>& locally_relevant_dofs, double current_time,
-            double /*time_step_size_dt*/)
+    pipeline.tree_linearization_assemblers.emplace_back(
+        [&terminal_units](TreeNewtonLinearSolver& target,
+            const Core::LinAlg::Vector<double>& locally_relevant_dofs, double /*current_time*/,
+            double time_step_size_dt)
         {
-          BoundaryConditions::update_jacobian(
-              jacobian, boundary_conditions, locally_relevant_dofs, current_time);
+          TerminalUnits::update_tree_linearization(
+              target, terminal_units, locally_relevant_dofs, time_step_size_dt);
         });
 
     pipeline.state_updaters.emplace_back(
@@ -214,15 +254,26 @@ namespace ReducedLung
       assemble_jacobian(*jac_matrix, locally_relevant_dofs_, current_time_, dt_);
     }
 
-    if (!jac_matrix->filled()) jac_matrix->complete();
+    if (!jac_matrix->filled())
+    {
+      jac_matrix->complete();
+    }
 
     return true;
   }
 
   void NoxSolver::sync_state_from_x(const Core::LinAlg::Vector<double>& x)
   {
-    Core::LinAlg::export_to(x, dofs_);
-    Core::LinAlg::export_to(dofs_, locally_relevant_dofs_);
+    if (Core::Communication::num_mpi_ranks(x.get_comm()) == 1)
+    {
+      dofs_.update(1.0, x, 0.0);
+      locally_relevant_dofs_.update(1.0, x, 0.0);
+    }
+    else
+    {
+      Core::LinAlg::export_to(x, dofs_);
+      Core::LinAlg::export_to(dofs_, locally_relevant_dofs_);
+    }
 
     for (const auto& update_state : assembly_pipeline_.state_updaters)
     {

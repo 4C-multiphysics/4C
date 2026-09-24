@@ -19,6 +19,8 @@
 
 #include <array>
 #include <cmath>
+#include <map>
+#include <numbers>
 #include <unordered_map>
 #include <vector>
 
@@ -207,6 +209,49 @@ namespace
         make_elementwise_double_field(model_case.recruitment_tau);
 
     return params;
+  }
+
+  TerminalUnitModel make_three_element_terminal_unit_model()
+  {
+    TerminalUnitModel model;
+    model.data.global_element_id = {0, 1, 2};
+    model.data.local_element_id = {0, 1, 2};
+    model.data.local_row_id = {0, 1, 2};
+    model.data.gid_p1 = {0, 1, 2};
+    model.data.gid_p2 = {3, 4, 5};
+    model.data.gid_q = {6, 7, 8};
+    model.data.lid_p1 = {0, 1, 2};
+    model.data.lid_p2 = {3, 4, 5};
+    model.data.lid_q = {6, 7, 8};
+    model.data.volume_v = {0.8, 1.1, 1.4};
+    model.data.reference_volume_context = {make_reference_volume_context(1.0, 0.0),
+        make_reference_volume_context(1.2, 0.0), make_reference_volume_context(1.5, 0.0)};
+    return model;
+  }
+
+  double expected_linear_pressure(const LinearElasticity& elasticity, const TerminalUnitData& data,
+      double q, double dt, size_t i)
+  {
+    return elasticity.elasticity_E[i] *
+           ((data.volume_v[i] + dt * q) * data.reference_volume_context[i].inv_v0_eff - 1.0);
+  }
+
+  double expected_ogden_pressure(const OgdenHyperelasticity& elasticity,
+      const TerminalUnitData& data, double q, double dt, size_t i)
+  {
+    const double v0_over_vi = data.reference_volume_context[i].v0_eff / (data.volume_v[i] + dt * q);
+    return elasticity.bulk_modulus_kappa[i] / elasticity.nonlinear_stiffening_beta[i] * v0_over_vi *
+           (1.0 - std::pow(v0_over_vi, elasticity.nonlinear_stiffening_beta[i]));
+  }
+
+  void fill_terminal_unit_test_dofs(
+      const Map& dof_map, const Map& col_map, Vector<double>& locally_relevant_dofs)
+  {
+    Vector<double> dofs(dof_map, true);
+    dofs.replace_local_values(9,
+        std::array<double, 9>{2.0, 2.5, 3.0, 1.2, 1.1, 0.9, 0.2, -0.1, 0.3}.data(),
+        std::array<int, 9>{0, 1, 2, 3, 4, 5, 6, 7, 8}.data());
+    export_to(dofs, locally_relevant_dofs);
   }
 
   class TerminalUnitRegistryAndJacobianTest : public testing::TestWithParam<TerminalUnitModelCase>
@@ -624,6 +669,171 @@ namespace
     EXPECT_DOUBLE_EQ(
         recruitment_collector.vectors.at("volume").local_values_as_span()[0], current_volume);
     EXPECT_DOUBLE_EQ(recruitment_collector.vectors.at("v_0").local_values_as_span()[0], 1.2);
+  }
+
+  TEST(TerminalUnitResidualTests, LinearFourElementMaxwellResidualMatchesGenericPath)
+  {
+    TerminalUnitContainer terminal_units;
+    auto model = make_three_element_terminal_unit_model();
+    model.elasticity_model = LinearElasticity{.elasticity_E = std::vector<double>{2.0, 3.0, 4.0},
+        .elastic_pressure_p_el = std::vector<double>(3, 0.0),
+        .dp_el_dq = std::vector<double>(3, 0.0),
+        .dp_el_dv0 = std::vector<double>(3, 0.0)};
+    model.rheological_model =
+        FourElementMaxwell{.viscosity_eta = std::vector<double>{0.5, 1.0, 1.5},
+            .elasticity_E_m = std::vector<double>{10.0, 20.0, 30.0},
+            .viscosity_eta_m = std::vector<double>{2.5, 3.5, 4.5},
+            .maxwell_pressure_p_m = std::vector<double>{0.1, -0.2, 0.3},
+            .tree_linearization_grad_q = std::vector<double>(3, 0.0)};
+    terminal_units.models.push_back(model);
+
+    Airways::AirwayContainer airways;
+    const std::map<int, int> global_dof_per_ele = {{0, 3}, {1, 3}, {2, 3}};
+    const std::map<int, int> first_global_dof_of_ele = {{0, 0}, {1, 3}, {2, 6}};
+    const auto dof_map = create_domain_map(MPI_COMM_WORLD, airways, terminal_units);
+    const auto row_map = create_row_map(MPI_COMM_WORLD, airways, terminal_units, {}, {}, {});
+    const auto col_map = create_column_map(MPI_COMM_WORLD, airways, terminal_units,
+        global_dof_per_ele, first_global_dof_of_ele, {}, {}, {});
+
+    Vector<double> locally_relevant_dofs(col_map, true);
+    fill_terminal_unit_test_dofs(dof_map, col_map, locally_relevant_dofs);
+
+    TerminalUnits::create_evaluators(terminal_units);
+    auto& optimized_model = terminal_units.models.front();
+    const double dt = 0.2;
+    Vector<double> residual(row_map, true);
+    optimized_model.residual_evaluator(optimized_model.data, residual, locally_relevant_dofs, dt);
+
+    const auto residual_values = residual.local_values_as_span();
+    const auto dof_values = locally_relevant_dofs.local_values_as_span();
+    auto& elasticity = std::get<LinearElasticity>(optimized_model.elasticity_model);
+    const auto& rheology = std::get<FourElementMaxwell>(optimized_model.rheological_model);
+    for (size_t i = 0; i < optimized_model.data.number_of_elements(); ++i)
+    {
+      const double q = dof_values[optimized_model.data.lid_q[i]];
+      const double pressure = expected_linear_pressure(elasticity, optimized_model.data, q, dt, i);
+      const double denominator = rheology.elasticity_E_m[i] * dt + rheology.viscosity_eta_m[i];
+      const double branch_viscosity =
+          rheology.elasticity_E_m[i] * dt * rheology.viscosity_eta_m[i] / denominator;
+      const double expected =
+          dof_values[optimized_model.data.lid_p1[i]] - dof_values[optimized_model.data.lid_p2[i]] -
+          pressure -
+          (rheology.viscosity_eta[i] + branch_viscosity) *
+              optimized_model.data.reference_volume_context[i].inv_v0_eff * q -
+          rheology.viscosity_eta_m[i] / denominator * rheology.maxwell_pressure_p_m[i];
+      EXPECT_NEAR(residual_values[optimized_model.data.local_row_id[i]], expected, 1e-14);
+      EXPECT_NEAR(elasticity.elastic_pressure_p_el[i], pressure, 1e-14);
+    }
+  }
+
+  TEST(TerminalUnitResidualTests, OgdenKelvinVoigtResidualMatchesGenericPath)
+  {
+    for (const auto& viscosity :
+        {std::array<double, 3>{0.5, 1.0, 1.5}, std::array<double, 3>{0.0, 0.0, 0.0}})
+    {
+      TerminalUnitContainer terminal_units;
+      auto model = make_three_element_terminal_unit_model();
+      model.elasticity_model =
+          OgdenHyperelasticity{.bulk_modulus_kappa = std::vector<double>{1.2, 1.5, 2.0},
+              .nonlinear_stiffening_beta = std::vector<double>{2.0, 3.0, 4.0},
+              .elastic_pressure_p_el = std::vector<double>(3, 0.0),
+              .dp_el_dq = std::vector<double>(3, 0.0),
+              .dp_el_dv0 = std::vector<double>(3, 0.0)};
+      model.rheological_model = KelvinVoigt{
+          .viscosity_eta = std::vector<double>{viscosity[0], viscosity[1], viscosity[2]},
+          .tree_linearization_grad_q = std::vector<double>(3, 0.0)};
+      terminal_units.models.push_back(model);
+
+      Airways::AirwayContainer airways;
+      const std::map<int, int> global_dof_per_ele = {{0, 3}, {1, 3}, {2, 3}};
+      const std::map<int, int> first_global_dof_of_ele = {{0, 0}, {1, 3}, {2, 6}};
+      const auto dof_map = create_domain_map(MPI_COMM_WORLD, airways, terminal_units);
+      const auto row_map = create_row_map(MPI_COMM_WORLD, airways, terminal_units, {}, {}, {});
+      const auto col_map = create_column_map(MPI_COMM_WORLD, airways, terminal_units,
+          global_dof_per_ele, first_global_dof_of_ele, {}, {}, {});
+
+      Vector<double> locally_relevant_dofs(col_map, true);
+      fill_terminal_unit_test_dofs(dof_map, col_map, locally_relevant_dofs);
+
+      TerminalUnits::create_evaluators(terminal_units);
+      auto& optimized_model = terminal_units.models.front();
+      const double dt = 0.2;
+      Vector<double> residual(row_map, true);
+      optimized_model.residual_evaluator(optimized_model.data, residual, locally_relevant_dofs, dt);
+
+      const auto residual_values = residual.local_values_as_span();
+      const auto dof_values = locally_relevant_dofs.local_values_as_span();
+      auto& elasticity = std::get<OgdenHyperelasticity>(optimized_model.elasticity_model);
+      const auto& rheology = std::get<KelvinVoigt>(optimized_model.rheological_model);
+      for (size_t i = 0; i < optimized_model.data.number_of_elements(); ++i)
+      {
+        const double q = dof_values[optimized_model.data.lid_q[i]];
+        const double pressure = expected_ogden_pressure(elasticity, optimized_model.data, q, dt, i);
+        const double expected = dof_values[optimized_model.data.lid_p1[i]] -
+                                dof_values[optimized_model.data.lid_p2[i]] - pressure -
+                                rheology.viscosity_eta[i] * q *
+                                    optimized_model.data.reference_volume_context[i].inv_v0_eff;
+        EXPECT_NEAR(residual_values[optimized_model.data.local_row_id[i]], expected, 1e-14);
+        EXPECT_NEAR(elasticity.elastic_pressure_p_el[i], pressure, 1e-14);
+      }
+    }
+  }
+
+  TEST(TerminalUnitResidualTests, OgdenFourElementMaxwellResidualMatchesGenericPath)
+  {
+    TerminalUnitContainer terminal_units;
+    auto model = make_three_element_terminal_unit_model();
+    model.elasticity_model =
+        OgdenHyperelasticity{.bulk_modulus_kappa = std::vector<double>{1.2, 1.5, 2.0},
+            .nonlinear_stiffening_beta = std::vector<double>{2.0, 3.0, 4.0},
+            .elastic_pressure_p_el = std::vector<double>(3, 0.0),
+            .dp_el_dq = std::vector<double>(3, 0.0),
+            .dp_el_dv0 = std::vector<double>(3, 0.0)};
+    model.rheological_model =
+        FourElementMaxwell{.viscosity_eta = std::vector<double>{0.5, 1.0, 1.5},
+            .elasticity_E_m = std::vector<double>{10.0, 20.0, 30.0},
+            .viscosity_eta_m = std::vector<double>{2.5, 3.5, 4.5},
+            .maxwell_pressure_p_m = std::vector<double>{0.1, -0.2, 0.3},
+            .tree_linearization_grad_q = std::vector<double>(3, 0.0)};
+    terminal_units.models.push_back(model);
+
+    Airways::AirwayContainer airways;
+    const std::map<int, int> global_dof_per_ele = {{0, 3}, {1, 3}, {2, 3}};
+    const std::map<int, int> first_global_dof_of_ele = {{0, 0}, {1, 3}, {2, 6}};
+    const auto dof_map = create_domain_map(MPI_COMM_WORLD, airways, terminal_units);
+    const auto row_map = create_row_map(MPI_COMM_WORLD, airways, terminal_units, {}, {}, {});
+    const auto col_map = create_column_map(MPI_COMM_WORLD, airways, terminal_units,
+        global_dof_per_ele, first_global_dof_of_ele, {}, {}, {});
+
+    Vector<double> locally_relevant_dofs(col_map, true);
+    fill_terminal_unit_test_dofs(dof_map, col_map, locally_relevant_dofs);
+
+    TerminalUnits::create_evaluators(terminal_units);
+    auto& optimized_model = terminal_units.models.front();
+    const double dt = 0.2;
+    Vector<double> residual(row_map, true);
+    optimized_model.residual_evaluator(optimized_model.data, residual, locally_relevant_dofs, dt);
+
+    const auto residual_values = residual.local_values_as_span();
+    const auto dof_values = locally_relevant_dofs.local_values_as_span();
+    auto& elasticity = std::get<OgdenHyperelasticity>(optimized_model.elasticity_model);
+    const auto& rheology = std::get<FourElementMaxwell>(optimized_model.rheological_model);
+    for (size_t i = 0; i < optimized_model.data.number_of_elements(); ++i)
+    {
+      const double q = dof_values[optimized_model.data.lid_q[i]];
+      const double pressure = expected_ogden_pressure(elasticity, optimized_model.data, q, dt, i);
+      const double denominator = rheology.elasticity_E_m[i] * dt + rheology.viscosity_eta_m[i];
+      const double branch_viscosity =
+          rheology.elasticity_E_m[i] * dt * rheology.viscosity_eta_m[i] / denominator;
+      const double expected =
+          dof_values[optimized_model.data.lid_p1[i]] - dof_values[optimized_model.data.lid_p2[i]] -
+          pressure -
+          (rheology.viscosity_eta[i] + branch_viscosity) *
+              optimized_model.data.reference_volume_context[i].inv_v0_eff * q -
+          rheology.viscosity_eta_m[i] / denominator * rheology.maxwell_pressure_p_m[i];
+      EXPECT_NEAR(residual_values[optimized_model.data.local_row_id[i]], expected, 1e-14);
+      EXPECT_NEAR(elasticity.elastic_pressure_p_el[i], pressure, 1e-14);
+    }
   }
 
   // Tests model registration + analytic Jacobian by comparing against FD residual derivatives.
