@@ -9,6 +9,7 @@
 
 #include "4C_reduced_lung_airways_flow_resistance.hpp"
 #include "4C_reduced_lung_airways_wall_mechanics.hpp"
+#include "4C_reduced_lung_tree_linear_solver.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -20,6 +21,23 @@ namespace ReducedLung::Airways
     for (auto& model : airways.models)
     {
       model.jacobian_evaluator(model.data, jac, locally_relevant_dofs, dt);
+    }
+  }
+
+  void update_static_tree_linearization(TreeNewtonLinearSolver& target, AirwayContainer& airways)
+  {
+    for (auto& model : airways.models)
+    {
+      model.static_tree_linearization_evaluator(model.data, target);
+    }
+  }
+
+  void update_tree_linearization(TreeNewtonLinearSolver& target, AirwayContainer& airways,
+      const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
+  {
+    for (auto& model : airways.models)
+    {
+      model.tree_linearization_evaluator(model.data, target, locally_relevant_dofs, dt);
     }
   }
 
@@ -110,6 +128,10 @@ namespace ReducedLung::Airways
           WallMechanics::make_residual_evaluator(model.wall_model, model.flow_model);
       model.jacobian_evaluator =
           WallMechanics::make_jacobian_evaluator(model.wall_model, model.flow_model);
+      model.static_tree_linearization_evaluator =
+          WallMechanics::make_static_tree_linearization_evaluator(model.wall_model);
+      model.tree_linearization_evaluator =
+          WallMechanics::make_tree_linearization_evaluator(model.wall_model, model.flow_model);
       model.internal_state_updater = WallMechanics::make_internal_state_updater(
           model.wall_model, FlowResistance::make_internal_state_updater(model.flow_model));
       model.end_of_timestep_routine = WallMechanics::make_end_of_timestep_routine(model.wall_model);

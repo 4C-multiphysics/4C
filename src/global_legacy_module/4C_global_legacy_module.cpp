@@ -423,6 +423,14 @@ namespace
                 parameter<double>("TOLERANCE"),
                 parameter<std::optional<std::string>>("NAME"),
             }),
+        group("REDUCED_LUNG",
+            {
+                parameter<int>("ELEMENT"),
+                parameter<std::string>("QUANTITY"),
+                parameter<double>("VALUE"),
+                parameter<double>("TOLERANCE"),
+                parameter<std::optional<std::string>>("NAME"),
+            }),
         group("ARTNET",
             {
                 parameter<std::string>("DIS"),

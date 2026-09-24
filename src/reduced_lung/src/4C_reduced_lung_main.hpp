@@ -20,7 +20,14 @@ namespace Global
 
 namespace ReducedLung
 {
+  /**
+   * @brief Run the reduced-lung simulation for an explicit 4C problem instance.
+   */
   void reduced_lung_main(Global::Problem& problem);
+
+  /**
+   * @brief Run the reduced-lung simulation for the global 4C problem instance.
+   */
   void reduced_lung_main();
 }  // namespace ReducedLung
 

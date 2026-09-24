@@ -104,6 +104,11 @@ namespace ReducedLung::TerminalUnits::Elasticity
   using ElasticPressureEvaluator = std::function<std::vector<double>&(
       TerminalUnitData&, const Core::LinAlg::Vector<double>&, double)>;
 
+  /**
+   * @brief Model-owned elastic-pressure partial derivatives for one terminal-unit block.
+   *
+   * The view avoids allocating temporary vectors during rheology assembly.
+   */
   struct ElasticPressurePartialsView
   {
     std::vector<double>& dp_el_dq;

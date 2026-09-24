@@ -126,6 +126,24 @@ namespace ReducedLung::Airways::WallMechanics
   JacobianEvaluator make_jacobian_evaluator(WallModel& wall_model, FlowModel& flow_model);
 
   /**
+   * @brief Build static structured tree-linearization row-pattern evaluator for a wall model.
+   *
+   * The callback appends wall-model-specific row entries once so later dynamic assembly can replace
+   * only the flow-dependent coefficients.
+   */
+  StaticTreeLinearizationEvaluator make_static_tree_linearization_evaluator(WallModel& wall_model);
+
+  /**
+   * @brief Build dynamic structured tree-linearization evaluator callback for a wall/flow-model
+   * pair.
+   *
+   * The callback evaluates resistance, inertia, and wall derivatives into reusable scratch buffers
+   * and writes them through TreeNewtonLinearSolver.
+   */
+  TreeLinearizationEvaluator make_tree_linearization_evaluator(
+      WallModel& wall_model, FlowModel& flow_model);
+
+  /**
    * @brief Build internal-state updater callback for the concrete wall-model variant.
    */
   InternalStateUpdater make_internal_state_updater(
