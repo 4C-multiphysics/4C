@@ -8,11 +8,11 @@
 #include "4C_beaminteraction_contact_beam_to_solid_volume_meshtying_pair_mortar.hpp"
 
 #include "4C_beaminteraction_contact_beam_to_solid_mortar_manager.hpp"
-#include "4C_beaminteraction_contact_beam_to_solid_mortar_shape_functions_dual_hermite.hpp"
 #include "4C_beaminteraction_contact_beam_to_solid_utils.hpp"
 #include "4C_beaminteraction_contact_beam_to_solid_visualization_output_writer_base.hpp"
 #include "4C_beaminteraction_contact_beam_to_solid_visualization_output_writer_visualization.hpp"
 #include "4C_beaminteraction_contact_beam_to_solid_volume_meshtying_visualization_output_params.hpp"
+#include "4C_beaminteraction_contact_beam_to_solid_volume_mortar_shape_functions_dual_hermite.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_geometry_pair_element.hpp"
 #include "4C_geometry_pair_element_evaluation_functions.hpp"
@@ -334,6 +334,8 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid, Mortar>:
       N_solid.clear();
       GeometryPair::ShapeFunctionData<Mortar> shape_function_data;
       GeometryPair::SetShapeFunctionData<Mortar>::set(shape_function_data, this->element1());
+      GeometryPair::SetBeamDependentShapeFunctionData<Mortar>::template set<Beam>(
+          shape_function_data, this->ele1posref_, this->ele1pos_.shape_function_data_);
       GeometryPair::EvaluateShapeFunction<Mortar>::evaluate(
           N_mortar, projected_gauss_point.get_eta(), shape_function_data);
       GeometryPair::EvaluateShapeFunction<Beam>::evaluate(
