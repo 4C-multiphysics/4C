@@ -120,7 +120,7 @@ void Core::Rebalance::ghost_discretization_on_all_procs(Core::FE::Discretization
   Core::LinAlg::gather<int>(sdata, rdata, (int)allproc.size(), allproc.data(), com);
 
   // build new node column map (on ALL processors)
-  Core::LinAlg::Map newnodecolmap(-1, (int)rdata.size(), rdata.data(), 0, com);
+  Core::LinAlg::Map newnodecolmap(-1, std::span<const int>(rdata), 0, com);
   sdata.clear();
   rdata.clear();
 
@@ -138,7 +138,7 @@ void Core::Rebalance::ghost_discretization_on_all_procs(Core::FE::Discretization
   Core::LinAlg::gather<int>(sdata, rdata, (int)allproc.size(), allproc.data(), com);
 
   // build new element column map (on ALL processors)
-  Core::LinAlg::Map newelecolmap(-1, (int)rdata.size(), rdata.data(), 0, com);
+  Core::LinAlg::Map newelecolmap(-1, std::span<const int>(rdata), 0, com);
   sdata.clear();
   rdata.clear();
   allproc.clear();
@@ -202,11 +202,11 @@ void Core::Rebalance::match_element_distribution_of_matching_discretizations(
 
     // construct rebalanced element row map
     Core::LinAlg::Map rebalanced_elerowmap(
-        -1, rebalance_rowelegid_vec.size(), rebalance_rowelegid_vec.data(), 0, com);
+        -1, std::span<const int>(rebalance_rowelegid_vec), 0, com);
 
     // construct rebalanced element col map
     Core::LinAlg::Map rebalanced_elecolmap(
-        -1, rebalance_colelegid_vec.size(), rebalance_colelegid_vec.data(), 0, com);
+        -1, std::span<const int>(rebalance_colelegid_vec), 0, com);
 
     ////////////////////////////////////////
     // MATCH NODES
@@ -221,11 +221,11 @@ void Core::Rebalance::match_element_distribution_of_matching_discretizations(
 
     // construct rebalanced node row map
     Core::LinAlg::Map rebalanced_noderowmap(
-        -1, rebalance_nodegid_vec.size(), rebalance_nodegid_vec.data(), 0, com);
+        -1, std::span<const int>(rebalance_nodegid_vec), 0, com);
 
     // construct rebalanced node col map
     Core::LinAlg::Map rebalanced_nodecolmap(
-        -1, rebalance_colnodegid_vec.size(), rebalance_colnodegid_vec.data(), 0, com);
+        -1, std::span<const int>(rebalance_colnodegid_vec), 0, com);
 
     ////////////////////////////////////////
     // REBALANCE
@@ -403,11 +403,11 @@ void Core::Rebalance::match_element_distribution_of_matching_conditioned_element
 
     // construct rebalanced element row map
     Core::LinAlg::Map rebalanced_elerowmap(
-        -1, rebalance_rowelegid_vec.size(), rebalance_rowelegid_vec.data(), 0, com);
+        -1, std::span<const int>(rebalance_rowelegid_vec), 0, com);
 
     // construct rebalanced element col map
     Core::LinAlg::Map rebalanced_elecolmap(
-        -1, rebalance_colelegid_vec.size(), rebalance_colelegid_vec.data(), 0, com);
+        -1, std::span<const int>(rebalance_colelegid_vec), 0, com);
 
 
     ////////////////////////////////////////
@@ -497,11 +497,11 @@ void Core::Rebalance::match_element_distribution_of_matching_conditioned_element
 
     // construct rebalanced node row map
     Core::LinAlg::Map rebalanced_noderowmap(
-        -1, rebalance_rownodegid_vec.size(), rebalance_rownodegid_vec.data(), 0, com);
+        -1, std::span<const int>(rebalance_rownodegid_vec), 0, com);
 
     // construct rebalanced node col map
     Core::LinAlg::Map rebalanced_nodecolmap(
-        -1, rebalance_colnodegid_vec.size(), rebalance_colnodegid_vec.data(), 0, com);
+        -1, std::span<const int>(rebalance_colnodegid_vec), 0, com);
 
 
     ////////////////////////////////////////
@@ -577,7 +577,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::Rebalance::compute_node_col_map(
 
   // now reconstruct the extended colmap
   std::shared_ptr<Core::LinAlg::Map> newcolnodemap = std::make_shared<Core::LinAlg::Map>(
-      -1, mycolnodes.size(), mycolnodes.data(), 0, sourcedis.get_comm());
+      -1, std::span<const int>(mycolnodes), 0, sourcedis.get_comm());
   return newcolnodemap;
 }  // Core::Rebalance::ComputeNodeColMap
 

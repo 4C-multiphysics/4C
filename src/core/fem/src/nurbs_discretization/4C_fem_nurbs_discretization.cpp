@@ -183,9 +183,9 @@ void Core::FE::DbcNurbs::do_dirichlet_condition(const Teuchos::ParameterList& pa
       nummyelements = dbcgidsv.size();
       myglobalelements = dbcgidsv.data();
     }
-    std::shared_ptr<Core::LinAlg::Map> dbcmap =
-        std::make_shared<Core::LinAlg::Map>(-1, nummyelements, myglobalelements,
-            discret.dof_row_map()->index_base(), discret.dof_row_map()->get_comm());
+    std::shared_ptr<Core::LinAlg::Map> dbcmap = std::make_shared<Core::LinAlg::Map>(-1,
+        std::span<const int>(myglobalelements, nummyelements), discret.dof_row_map()->index_base(),
+        discret.dof_row_map()->get_comm());
     // build the map extractor of Dirichlet-conditioned and free DOFs
     auxdbcmapextractor = Core::LinAlg::MapExtractor(*(discret.dof_row_map()), dbcmap);
   }
@@ -204,7 +204,8 @@ void Core::FE::DbcNurbs::do_dirichlet_condition(const Teuchos::ParameterList& pa
       nummyelements = dbcgidsv.size();
       myglobalelements = dbcgidsv.data();
     }
-    dbccolmap = std::make_shared<Core::LinAlg::Map>(-1, nummyelements, myglobalelements,
+    dbccolmap = std::make_shared<Core::LinAlg::Map>(-1,
+        std::span<const int>(myglobalelements, nummyelements),
         nurbs_dis.dof_col_map()->index_base(), discret.dof_row_map()->get_comm());
   }
 

@@ -1559,7 +1559,7 @@ void CONTACT::SelfBinaryTree::search_contact()
     int gid = elements_->gid(i);
     if (contactpairs_.find(gid) != contactpairs_.end()) locdata.push_back(gid);
   }
-  Core::LinAlg::Map mymap(-1, (int)locdata.size(), locdata.data(), 0, get_comm());
+  Core::LinAlg::Map mymap(-1, std::span<const int>(locdata), 0, get_comm());
   std::shared_ptr<Core::LinAlg::Map> redmap = Core::LinAlg::allreduce_e_map(mymap);
   Core::Communication::Exporter ex(mymap, *redmap, get_comm());
   ex.do_export(contactpairs_);
