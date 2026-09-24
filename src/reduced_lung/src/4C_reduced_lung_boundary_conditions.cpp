@@ -14,6 +14,7 @@
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
+#include "4C_reduced_lung_tree_linearization.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_function_manager.hpp"
 #include "4C_utils_function_of_time.hpp"
@@ -60,11 +61,14 @@ namespace ReducedLung
           Core::LinAlg::Vector<double>& rhs, const Core::LinAlg::Vector<double>& dofs,
           const ValueAt& bc_value_at)
       {
+        auto residual_values = rhs.local_values_as_span();
+        const auto dof_values = dofs.local_values_as_span();
+        const auto& local_dof_id = model.data.local_dof_id;
+        const auto& local_equation_id = model.data.local_equation_id;
         for (size_t i = 0; i < model.data.size(); ++i)
         {
-          const int local_dof_id = model.data.local_dof_id[i];
-          const double res = dofs.local_values_as_span()[local_dof_id] - bc_value_at(i);
-          rhs.replace_local_value(model.data.local_equation_id[i], res);
+          const double res = dof_values[local_dof_id[i]] - bc_value_at(i);
+          residual_values[static_cast<std::size_t>(local_equation_id[i])] = res;
         }
       }
 
@@ -548,6 +552,19 @@ namespace ReducedLung
 
       boundary_conditions.total_terminal_unit_volume =
           compute_total_terminal_unit_volume(terminal_units, comm);
+    }
+
+    void update_tree_linearization(TreeCoefficientAssemblyTarget& target,
+        const BoundaryConditionContainer& boundary_conditions)
+    {
+      /* Boundary constraints contribute constant identity rows to the structured linearization. */
+      for (const auto& model : boundary_conditions.models)
+      {
+        for (size_t i = 0; i < model.data.size(); ++i)
+        {
+          target.append_value(model.data.local_equation_id[i], model.data.local_dof_id[i], 1.0);
+        }
+      }
     }
   }  // namespace BoundaryConditions
 }  // namespace ReducedLung

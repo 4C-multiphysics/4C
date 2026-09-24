@@ -7,14 +7,16 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_reduced_lung_newton_solver.hpp"
+
 #include "4C_fem_discretization.hpp"
 #include "4C_linear_solver_method.hpp"
 #include "4C_rebalance.hpp"
 #include "4C_reduced_lung_boundary_conditions.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_junctions.hpp"
+#include "4C_reduced_lung_newton_linear_solver.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
-#include "4C_solver_nonlin_nox_adapter.hpp"
 #include "4C_utils_function_manager.hpp"
 #include "4C_utils_function_of_time.hpp"
 
@@ -23,13 +25,13 @@
 
 #include <any>
 #include <array>
+#include <cmath>
 #include <map>
+#include <memory>
+#include <numbers>
 #include <unordered_map>
 #include <vector>
 
-// Test for the NOX solver of the reduced lung model. The test simulates a single terminal unit with
-// an Ogden elasticity model and verifies that the computed volume matches the analytical solution
-// V(t)=1+t for the given parameters.
 namespace
 {
   using namespace FourC;
@@ -103,15 +105,16 @@ namespace
     return function_manager;
   }
 
-  TEST(ReducedLungNoxSolverTest, SingleTerminalUnitOgdenMatchesAnalyticalVolume)
+  TEST(ReducedLungNewtonSolverTest, SingleTerminalUnitOgdenMatchesAnalyticalVolume)
   {
+    const double radius = std::cbrt(3.0 / (4.0 * std::numbers::pi));
     const double dt = 0.4;
     const int steps = 5;
     const auto params = make_single_tu_parameters(dt, steps);
 
-    Core::FE::Discretization discretization("reduced_lung_nox_test", MPI_COMM_WORLD, 3);
+    Core::FE::Discretization discretization("reduced_lung_newton_test", MPI_COMM_WORLD, 3);
     Core::Rebalance::RebalanceParameters rebalance_parameters;
-    const std::vector<std::array<double, 3>> node_coordinates{{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}};
+    const std::vector<std::array<double, 3>> node_coordinates{{0.0, 0.0, 0.0}, {radius, 0.0, 0.0}};
     const std::vector<std::array<int, 2>> element_nodes{{0, 1}};
     build_discretization_from_nodes_and_elements(
         discretization, node_coordinates, element_nodes, rebalance_parameters);
@@ -176,10 +179,7 @@ namespace
     Core::LinAlg::Vector<double> dofs(locally_owned_dof_map, true);
     Core::LinAlg::Vector<double> locally_relevant_dofs(locally_relevant_dof_map, true);
     Core::LinAlg::Vector<double> x(row_map, true);
-    Core::LinAlg::SparseMatrix sysmat(row_map, locally_relevant_dof_map, 3);
-
-    TerminalUnits::update_internal_state_vectors(terminal_units, locally_relevant_dofs, dt);
-    Airways::update_internal_state_vectors(airways, locally_relevant_dofs, dt);
+    Core::LinAlg::SparseMatrix sysmat(row_map, locally_relevant_dof_map, 4);
 
     Teuchos::ParameterList solver_params;
     solver_params.set("SOLVER", Core::LinearSolver::SolverType::UMFPACK);
@@ -189,20 +189,24 @@ namespace
 
     const auto assembly_pipeline = create_default_reduced_lung_assembly_pipeline(
         airways, terminal_units, connections, bifurcations, boundary_conditions);
-
-    const NoxSolverContext nox_solver_context{
+    auto linear_solver = std::make_shared<SparseNewtonLinearSolver>(SparseNewtonLinearSolverContext{
         .comm = MPI_COMM_WORLD,
-        .dynamics = params.dynamics,
         .linear_solver_parameters = solver_params,
         .solver_params_callback = get_solver_params,
+        .correction_map = row_map,
+        .jacobian = sysmat,
+    });
+
+    const NewtonSolverContext newton_solver_context{
+        .dynamics = params.dynamics,
+        .linear_solver = linear_solver,
         .assembly_pipeline = assembly_pipeline,
         .dofs = dofs,
         .locally_relevant_dofs = locally_relevant_dofs,
         .x = x,
-        .jacobian = sysmat,
     };
 
-    auto nox_solver = NoxSolver(nox_solver_context);
+    auto newton_solver = NewtonSolver(newton_solver_context);
 
     const int owns_terminal_unit = terminal_units.models.empty() ? 0 : 1;
     int owner_count = 0;
@@ -220,7 +224,7 @@ namespace
     for (int n = 1; n <= steps; ++n)
     {
       const double current_time = n * dt;
-      nox_solver.solve(current_time);
+      newton_solver.solve(current_time);
 
       TerminalUnits::end_of_timestep_routine(terminal_units, locally_relevant_dofs, dt);
       Airways::end_of_timestep_routine(airways, locally_relevant_dofs, dt);

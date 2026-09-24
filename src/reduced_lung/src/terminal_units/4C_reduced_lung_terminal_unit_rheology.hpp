@@ -29,6 +29,8 @@ namespace ReducedLung::TerminalUnits
   struct KelvinVoigt
   {
     std::vector<double> viscosity_eta;
+    std::vector<double>
+        tree_linearization_grad_q;  ///< Reusable q-coefficient scratch for structured assembly.
   };
 
   /**
@@ -43,6 +45,8 @@ namespace ReducedLung::TerminalUnits
     std::vector<double> elasticity_E_m;
     std::vector<double> viscosity_eta_m;
     std::vector<double> maxwell_pressure_p_m;
+    std::vector<double>
+        tree_linearization_grad_q;  ///< Reusable q-coefficient scratch for structured assembly.
   };
 
   /**
@@ -100,13 +104,32 @@ namespace ReducedLung::TerminalUnits::Rheology
   /**
    * @brief Build residual evaluator callback for the concrete rheology variant.
    */
-  ResidualEvaluator make_residual_evaluator(
-      RheologicalModel& rheological_model, Elasticity::ElasticPressureEvaluator pressure_evaluator);
+  ResidualEvaluator make_residual_evaluator(RheologicalModel& rheological_model,
+      ElasticityModel& elasticity_model, Elasticity::ElasticPressureEvaluator pressure_evaluator,
+      const TerminalUnitData& data);
 
   /**
    * @brief Build Jacobian evaluator callback for the concrete rheology variant.
    */
   JacobianEvaluator make_jacobian_evaluator(RheologicalModel& rheological_model,
+      Elasticity::ElasticPressurePartialsEvaluator elastic_pressure_partials_evaluator);
+
+  /**
+   * @brief Build static structured tree-linearization row-pattern evaluator.
+   *
+   * The callback appends the terminal-unit p1, p2, and q entries once so dynamic assembly can
+   * replace their values without changing the row pattern.
+   */
+  StaticTreeLinearizationEvaluator make_static_tree_linearization_evaluator(
+      RheologicalModel& rheological_model);
+
+  /**
+   * @brief Build dynamic structured tree-linearization evaluator for the concrete rheology variant.
+   *
+   * The callback combines elastic-pressure partials, recruitment derivatives, and rheology terms
+   * before writing p1, p2, and q coefficients through TreeCoefficientAssemblyTarget.
+   */
+  TreeLinearizationEvaluator make_tree_linearization_evaluator(RheologicalModel& rheological_model,
       Elasticity::ElasticPressurePartialsEvaluator elastic_pressure_partials_evaluator);
 
   /**

@@ -31,6 +31,9 @@ namespace Core::LinAlg
 
 namespace ReducedLung
 {
+  class TreeCoefficientAssemblyTarget;
+  class TreeLinearization;
+
   namespace Junctions
   {
     /**
@@ -40,12 +43,15 @@ namespace ReducedLung
      */
     struct ConnectionData
     {
+      /**
+       * @brief Dof ordering for connection equations and structured coefficient assembly.
+       */
       enum DofNumbering
       {
-        p_out_parent = 0,
-        p_in_child = 1,
-        q_out_parent = 2,
-        q_in_child = 3
+        p_out_parent = 0,  ///< Outlet pressure of the parent element.
+        p_in_child = 1,    ///< Inlet pressure of the child element.
+        q_out_parent = 2,  ///< Outlet flow of the parent element.
+        q_in_child = 3     ///< Inlet flow of the child element.
       };
 
       std::vector<int> first_global_equation_id;
@@ -54,7 +60,13 @@ namespace ReducedLung
       std::vector<int> global_parent_element_id;
       std::vector<int> global_child_element_id;
       std::vector<std::array<int, 4>> global_dof_ids;
-      std::vector<std::array<int, 4>> local_dof_ids;
+      std::vector<std::array<int, 4>> local_dof_ids;  ///< Local dof ids in DofNumbering order.
+
+      std::vector<int> first_row;         ///< First local row of each connection equation pair.
+      std::vector<int> p_out_parent_lid;  ///< Cached local id for parent outlet pressure.
+      std::vector<int> p_in_child_lid;    ///< Cached local id for child inlet pressure.
+      std::vector<int> q_out_parent_lid;  ///< Cached local id for parent outlet flow.
+      std::vector<int> q_in_child_lid;    ///< Cached local id for child inlet flow.
 
       [[nodiscard]] size_t size() const { return global_parent_element_id.size(); }
       void clear();
@@ -71,14 +83,17 @@ namespace ReducedLung
      */
     struct BifurcationData
     {
+      /**
+       * @brief Dof ordering for bifurcation equations and structured coefficient assembly.
+       */
       enum DofNumbering
       {
-        p_out_parent = 0,
-        p_in_child_1 = 1,
-        p_in_child_2 = 2,
-        q_out_parent = 3,
-        q_in_child_1 = 4,
-        q_in_child_2 = 5
+        p_out_parent = 0,  ///< Outlet pressure of the parent element.
+        p_in_child_1 = 1,  ///< Inlet pressure of the first child element.
+        p_in_child_2 = 2,  ///< Inlet pressure of the second child element.
+        q_out_parent = 3,  ///< Outlet flow of the parent element.
+        q_in_child_1 = 4,  ///< Inlet flow of the first child element.
+        q_in_child_2 = 5   ///< Inlet flow of the second child element.
       };
 
       std::vector<int> first_global_equation_id;
@@ -88,7 +103,15 @@ namespace ReducedLung
       std::vector<int> global_child_1_element_id;
       std::vector<int> global_child_2_element_id;
       std::vector<std::array<int, 6>> global_dof_ids;
-      std::vector<std::array<int, 6>> local_dof_ids;
+      std::vector<std::array<int, 6>> local_dof_ids;  ///< Local dof ids in DofNumbering order.
+
+      std::vector<int> first_row;         ///< First local row of each bifurcation equation triple.
+      std::vector<int> p_out_parent_lid;  ///< Cached local id for parent outlet pressure.
+      std::vector<int> p_in_child_1_lid;  ///< Cached local id for first child inlet pressure.
+      std::vector<int> p_in_child_2_lid;  ///< Cached local id for second child inlet pressure.
+      std::vector<int> q_out_parent_lid;  ///< Cached local id for parent outlet flow.
+      std::vector<int> q_in_child_1_lid;  ///< Cached local id for first child inlet flow.
+      std::vector<int> q_in_child_2_lid;  ///< Cached local id for second child inlet flow.
 
       [[nodiscard]] size_t size() const { return global_parent_element_id.size(); }
       void clear();
@@ -116,6 +139,9 @@ namespace ReducedLung
     void assign_junction_global_equation_ids(const Core::LinAlg::Map& row_map,
         ConnectionData& connections, BifurcationData& bifurcations);
 
+    /**
+     * @brief Assign local dof ids and cache named dof handles for junction assembly.
+     */
     void assign_junction_local_dof_ids(const Core::LinAlg::Map& locally_relevant_dof_map,
         ConnectionData& connections, BifurcationData& bifurcations);
 
@@ -125,6 +151,12 @@ namespace ReducedLung
 
     void update_jacobian(Core::LinAlg::SparseMatrix& sysmat, const ConnectionData& connections,
         const BifurcationData& bifurcations);
+
+    /**
+     * @brief Assemble connection and bifurcation coefficients into structured tree storage.
+     */
+    void update_tree_linearization(TreeCoefficientAssemblyTarget& target,
+        const ConnectionData& connections, const BifurcationData& bifurcations);
   }  // namespace Junctions
 }  // namespace ReducedLung
 

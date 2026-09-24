@@ -13,6 +13,7 @@
 #include "4C_reduced_lung_terminal_unit_elasticity.hpp"
 #include "4C_reduced_lung_terminal_unit_recruitment.hpp"
 #include "4C_reduced_lung_terminal_unit_rheology.hpp"
+#include "4C_reduced_lung_tree_linearization.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -42,6 +43,25 @@ namespace ReducedLung
       for (auto& model : terminal_units.models)
       {
         model.jacobian_evaluator(model.data, jac, locally_relevant_dofs, dt);
+      }
+    }
+
+    void update_static_tree_linearization(
+        TreeCoefficientAssemblyTarget& target, TerminalUnitContainer& terminal_units)
+    {
+      for (auto& model : terminal_units.models)
+      {
+        model.static_tree_linearization_evaluator(model.data, target);
+      }
+    }
+
+    void update_tree_linearization(TreeCoefficientAssemblyTarget& target,
+        TerminalUnitContainer& terminal_units,
+        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
+    {
+      for (auto& model : terminal_units.models)
+      {
+        model.tree_linearization_evaluator(model.data, target, locally_relevant_dofs, dt);
       }
     }
 
@@ -147,9 +167,13 @@ namespace ReducedLung
         auto elastic_pressure_partials_evaluator =
             Elasticity::make_elastic_pressure_partials_evaluator(model.elasticity_model);
 
-        model.residual_evaluator =
-            Rheology::make_residual_evaluator(model.rheological_model, elastic_pressure_evaluator);
+        model.residual_evaluator = Rheology::make_residual_evaluator(model.rheological_model,
+            model.elasticity_model, elastic_pressure_evaluator, model.data);
         model.jacobian_evaluator = Rheology::make_jacobian_evaluator(
+            model.rheological_model, elastic_pressure_partials_evaluator);
+        model.static_tree_linearization_evaluator =
+            Rheology::make_static_tree_linearization_evaluator(model.rheological_model);
+        model.tree_linearization_evaluator = Rheology::make_tree_linearization_evaluator(
             model.rheological_model, elastic_pressure_partials_evaluator);
         // Assembly reads the reference volume from TerminalUnitData::reference_volume_context, so
         // refreshing it is part of bringing the model block in sync with the dof vector. The

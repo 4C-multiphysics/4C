@@ -22,7 +22,9 @@ FOUR_C_NAMESPACE_OPEN
 namespace ReducedLung
 {
   struct RuntimeOutputCollector;
-}
+  class TreeCoefficientAssemblyTarget;
+  class TreeLinearization;
+}  // namespace ReducedLung
 
 namespace ReducedLung::TerminalUnits
 {
@@ -102,6 +104,25 @@ namespace ReducedLung::TerminalUnits
   using JacobianEvaluator = std::function<void(TerminalUnitData& model_data,
       Core::LinAlg::SparseMatrix& target_matrix,
       const Core::LinAlg::Vector<double>& locally_relevant_dof_vector, double time_step_size_dt)>;
+
+  /**
+   * @brief Callback type for state-dependent structured tree coefficient assembly.
+   *
+   * Implementations may write either to generic TreeLinearization storage or directly to a
+   * TreeNewtonLinearSolver coefficient target.
+   */
+  using TreeLinearizationEvaluator = std::function<void(TerminalUnitData& model_data,
+      TreeCoefficientAssemblyTarget& target,
+      const Core::LinAlg::Vector<double>& locally_relevant_dof_vector, double time_step_size_dt)>;
+
+  /**
+   * @brief Callback type for one-time structured tree coefficient pattern assembly.
+   *
+   * Static callbacks append the coefficient pattern and placeholders that are replaced by
+   * TreeLinearizationEvaluator during Newton iterations.
+   */
+  using StaticTreeLinearizationEvaluator =
+      std::function<void(TerminalUnitData& model_data, TreeCoefficientAssemblyTarget& target)>;
 
   ///< Callback type for nonlinear-iteration internal state synchronization.
   using InternalStateUpdater = std::function<void(TerminalUnitData& model_data,

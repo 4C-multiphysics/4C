@@ -18,6 +18,8 @@
 // needed for export_to
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 
+#include <array>
+#include <span>
 #include <unordered_map>
 
 
@@ -71,9 +73,315 @@ namespace
     model.internal_state_updater = WallMechanics::make_internal_state_updater(
         model.wall_model, FlowResistance::make_internal_state_updater(model.flow_model));
     model.residual_evaluator =
-        WallMechanics::make_residual_evaluator(model.wall_model, model.flow_model);
+        WallMechanics::make_residual_evaluator(model.wall_model, model.flow_model, model.data);
     model.jacobian_evaluator =
         WallMechanics::make_jacobian_evaluator(model.wall_model, model.flow_model);
+  }
+
+  void check_rigid_residual_matches_generic(AirwayModel& model, const Map& row_map,
+      const Vector<double>& locally_relevant_dofs, double dt)
+  {
+    assign_model_evaluators(model);
+
+    Vector<double> optimized_residual(row_map, true);
+    model.residual_evaluator(model.data, optimized_residual, locally_relevant_dofs, dt);
+
+    auto resistance_evaluator =
+        FlowResistance::make_flow_resistance_evaluator_rigid(model.flow_model);
+    auto inertia_evaluator = FlowResistance::make_inertia_evaluator(model.flow_model);
+    std::vector<double> resistance(model.data.number_of_elements());
+    std::vector<double> inertia(model.data.number_of_elements());
+    resistance_evaluator(model.data, locally_relevant_dofs, model.data.ref_area,
+        std::span<double>(resistance.data(), resistance.size()));
+    inertia_evaluator(
+        model.data, model.data.ref_area, std::span<double>(inertia.data(), inertia.size()));
+
+    const auto residual_values = optimized_residual.local_values_as_span();
+    const auto dof_values = locally_relevant_dofs.local_values_as_span();
+    for (size_t i = 0; i < model.data.number_of_elements(); ++i)
+    {
+      const double q1 = dof_values[model.data.lid_q1[i]];
+      const double expected = dof_values[model.data.lid_p1[i]] - dof_values[model.data.lid_p2[i]] -
+                              resistance[i] * q1 - inertia[i] / dt * (q1 - model.data.q1_n[i]);
+      EXPECT_NEAR(residual_values[model.data.local_row_id[i]], expected, 1e-14);
+    }
+  }
+
+  void check_kelvin_voigt_residual_matches_generic(AirwayModel& model, const Map& row_map,
+      const Vector<double>& locally_relevant_dofs, double dt)
+  {
+    assign_model_evaluators(model);
+
+    auto& wall_model = std::get<KelvinVoigtWall>(model.wall_model);
+    Vector<double> optimized_residual(row_map, true);
+    model.residual_evaluator(model.data, optimized_residual, locally_relevant_dofs, dt);
+
+    auto resistance_evaluator =
+        FlowResistance::make_flow_resistance_evaluator_kelvin_voigt(model.flow_model);
+    auto inertia_evaluator = FlowResistance::make_inertia_evaluator(model.flow_model);
+    std::vector<double> resistance(model.data.number_of_elements());
+    std::vector<double> inertia(model.data.number_of_elements());
+    resistance_evaluator(model.data, locally_relevant_dofs, wall_model.area,
+        std::span<double>(resistance.data(), resistance.size()));
+    inertia_evaluator(
+        model.data, wall_model.area, std::span<double>(inertia.data(), inertia.size()));
+
+    const auto residual_values = optimized_residual.local_values_as_span();
+    const auto dof_values = locally_relevant_dofs.local_values_as_span();
+    for (size_t i = 0; i < model.data.number_of_elements(); ++i)
+    {
+      const double p1 = dof_values[model.data.lid_p1[i]];
+      const double p2 = dof_values[model.data.lid_p2[i]];
+      const double q1 = dof_values[model.data.lid_q1[i]];
+      const double q2 = dof_values[model.data.lid_q2[i]];
+      const double expected_momentum =
+          p1 - p2 - (0.5 * resistance[i] + inertia[i] / (2.0 * dt)) * (q1 + q2) +
+          inertia[i] / (2.0 * dt) * (model.data.q1_n[i] + model.data.q2_n[i]);
+      const double expected_mass =
+          p1 + p2 - model.data.p1_n[i] - model.data.p2_n[i] -
+          2.0 * (wall_model.viscous_resistance_Rvisc[i] + dt / wall_model.compliance_C[i]) *
+              (q1 - q2) +
+          2.0 * wall_model.viscous_resistance_Rvisc[i] * (model.data.q1_n[i] - model.data.q2_n[i]);
+
+      EXPECT_NEAR(residual_values[model.data.local_row_id[i]], expected_momentum, 1e-14);
+      EXPECT_NEAR(residual_values[model.data.local_row_id[i] + 1], expected_mass, 1e-14);
+    }
+  }
+
+  TEST(AirwayTests, RigidLinearInertiaResidualMatchesGenericPath)
+  {
+    AirwayContainer airways;
+    AirwayModel model;
+
+    model.data.global_element_id = {0, 1, 2};
+    model.data.local_element_id = {0, 1, 2};
+    model.data.local_row_id = {0, 1, 2};
+    model.data.gid_p1 = {0, 1, 2};
+    model.data.gid_p2 = {3, 4, 5};
+    model.data.gid_q1 = {6, 7, 8};
+    model.data.gid_q2 = {6, 7, 8};
+    model.data.lid_p1 = {0, 1, 2};
+    model.data.lid_p2 = {3, 4, 5};
+    model.data.lid_q1 = {6, 7, 8};
+    model.data.lid_q2 = {6, 7, 8};
+    model.data.ref_length = {1.0, 1.3, 0.7};
+    model.data.ref_area = {0.5, 0.4, 0.3};
+    model.data.n_state_equations = 1;
+    model.data.air_properties.dynamic_viscosity = 1.79105e-05;
+    model.data.air_properties.density = 1.176e-06;
+    model.data.q1_n = {1.0, -0.5, 0.2};
+    model.data.q2_n = {0.0, 0.0, 0.0};
+    model.flow_model = LinearResistive{.has_inertia = std::vector<bool>{true, false, true}};
+    model.wall_model = RigidWall{};
+    airways.models.push_back(model);
+
+    const auto dof_map =
+        create_domain_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{});
+    const auto row_map =
+        create_row_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{}, {}, {}, {});
+    const auto col_map =
+        create_column_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{},
+            {{0, 3}, {1, 3}, {2, 3}}, {{0, 0}, {1, 3}, {2, 6}}, {}, {}, {});
+
+    Vector<double> dofs(dof_map, true);
+    Vector<double> locally_relevant_dofs(col_map, true);
+    dofs.replace_local_values(9,
+        std::array<double, 9>{2.0, 2.5, 3.0, 1.2, 1.1, 0.9, 10.0, -3.0, 4.5}.data(),
+        std::array<int, 9>{0, 1, 2, 3, 4, 5, 6, 7, 8}.data());
+    export_to(dofs, locally_relevant_dofs);
+
+    assign_model_evaluators(model);
+
+    const double dt = 0.2;
+    Vector<double> optimized_residual(row_map, true);
+    model.residual_evaluator(model.data, optimized_residual, locally_relevant_dofs, dt);
+
+    auto resistance_evaluator =
+        FlowResistance::make_flow_resistance_evaluator_rigid(model.flow_model);
+    auto inertia_evaluator = FlowResistance::make_inertia_evaluator(model.flow_model);
+    std::vector<double> resistance(model.data.number_of_elements());
+    std::vector<double> inertia(model.data.number_of_elements());
+    resistance_evaluator(model.data, locally_relevant_dofs, model.data.ref_area,
+        std::span<double>(resistance.data(), resistance.size()));
+    inertia_evaluator(
+        model.data, model.data.ref_area, std::span<double>(inertia.data(), inertia.size()));
+
+    const auto residual_values = optimized_residual.local_values_as_span();
+    const auto dof_values = locally_relevant_dofs.local_values_as_span();
+    for (size_t i = 0; i < model.data.number_of_elements(); ++i)
+    {
+      const double q1 = dof_values[model.data.lid_q1[i]];
+      const double expected = dof_values[model.data.lid_p1[i]] - dof_values[model.data.lid_p2[i]] -
+                              resistance[i] * q1 - inertia[i] / dt * (q1 - model.data.q1_n[i]);
+      EXPECT_NEAR(residual_values[model.data.local_row_id[i]], expected, 1e-14);
+    }
+  }
+
+  TEST(AirwayTests, RigidNonlinearResidualMatchesGenericPath)
+  {
+    AirwayContainer airways;
+    AirwayModel model;
+
+    model.data.global_element_id = {0, 1, 2};
+    model.data.local_element_id = {0, 1, 2};
+    model.data.local_row_id = {0, 1, 2};
+    model.data.gid_p1 = {0, 1, 2};
+    model.data.gid_p2 = {3, 4, 5};
+    model.data.gid_q1 = {6, 7, 8};
+    model.data.gid_q2 = {6, 7, 8};
+    model.data.lid_p1 = {0, 1, 2};
+    model.data.lid_p2 = {3, 4, 5};
+    model.data.lid_q1 = {6, 7, 8};
+    model.data.lid_q2 = {6, 7, 8};
+    model.data.ref_length = {1.0, 1.3, 0.7};
+    model.data.ref_area = {0.5, 0.4, 0.3};
+    model.data.n_state_equations = 1;
+    model.data.air_properties.dynamic_viscosity = 1.79105e-05;
+    model.data.air_properties.density = 1.176e-06;
+    model.data.q1_n = {1.0, -0.5, 0.2};
+    model.data.q2_n = {0.0, 0.0, 0.0};
+    model.flow_model =
+        NonLinearResistive{.turbulence_factor_gamma = std::vector<double>{0.6, 0.4, 0.2},
+            .has_inertia = std::vector<bool>{true, false, true},
+            .k_turb = std::vector<double>{1.2, 1.5, 2.0}};
+    model.wall_model = RigidWall{};
+    airways.models.push_back(model);
+
+    const auto dof_map =
+        create_domain_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{});
+    const auto row_map =
+        create_row_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{}, {}, {}, {});
+    const auto col_map =
+        create_column_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{},
+            {{0, 3}, {1, 3}, {2, 3}}, {{0, 0}, {1, 3}, {2, 6}}, {}, {}, {});
+
+    Vector<double> dofs(dof_map, true);
+    Vector<double> locally_relevant_dofs(col_map, true);
+    dofs.replace_local_values(9,
+        std::array<double, 9>{2.0, 2.5, 3.0, 1.2, 1.1, 0.9, 10.0, -3.0, 4.5}.data(),
+        std::array<int, 9>{0, 1, 2, 3, 4, 5, 6, 7, 8}.data());
+    export_to(dofs, locally_relevant_dofs);
+
+    check_rigid_residual_matches_generic(model, row_map, locally_relevant_dofs, 0.2);
+  }
+
+  TEST(AirwayTests, KelvinVoigtWallLinearResidualMatchesGenericPath)
+  {
+    AirwayContainer airways;
+    AirwayModel model;
+
+    model.data.global_element_id = {0, 1, 2};
+    model.data.local_element_id = {0, 1, 2};
+    model.data.local_row_id = {0, 2, 4};
+    model.data.gid_p1 = {0, 1, 2};
+    model.data.gid_p2 = {3, 4, 5};
+    model.data.gid_q1 = {6, 7, 8};
+    model.data.gid_q2 = {9, 10, 11};
+    model.data.lid_p1 = {0, 1, 2};
+    model.data.lid_p2 = {3, 4, 5};
+    model.data.lid_q1 = {6, 7, 8};
+    model.data.lid_q2 = {9, 10, 11};
+    model.data.ref_length = {1.0, 1.3, 0.7};
+    model.data.ref_area = {0.5, 0.4, 0.3};
+    model.data.n_state_equations = 2;
+    model.data.air_properties.dynamic_viscosity = 1.79105e-05;
+    model.data.air_properties.density = 1.176e-06;
+    model.data.q1_n = {1.0, -0.5, 0.2};
+    model.data.q2_n = {0.8, -0.2, -0.1};
+    model.data.p1_n = {1.9, 2.4, 2.8};
+    model.data.p2_n = {1.1, 1.0, 0.7};
+    model.flow_model = LinearResistive{.has_inertia = std::vector<bool>{true, false, true}};
+    model.wall_model = KelvinVoigtWall{.wall_poisson_ratio = std::vector<double>{0.3, 0.3, 0.3},
+        .wall_elasticity = std::vector<double>{50000.0, 51000.0, 52000.0},
+        .wall_thickness = std::vector<double>{0.001, 0.001, 0.001},
+        .viscous_time_constant = std::vector<double>{0.01, 0.01, 0.01},
+        .viscous_phase_shift = std::vector<double>{0.0, 0.0, 0.0},
+        .area_n = std::vector<double>{0.5, 0.4, 0.3},
+        .area = std::vector<double>{0.52, 0.43, 0.31},
+        .viscous_resistance_Rvisc = std::vector<double>{0.11, 0.12, 0.13},
+        .compliance_C = std::vector<double>{0.7, 0.8, 0.9},
+        .gamma_w = std::vector<double>{1.0, 1.0, 1.0},
+        .beta_w = std::vector<double>{1.0, 1.0, 1.0}};
+    airways.models.push_back(model);
+
+    const auto dof_map =
+        create_domain_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{});
+    const auto row_map =
+        create_row_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{}, {}, {}, {});
+    const auto col_map =
+        create_column_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{},
+            {{0, 4}, {1, 4}, {2, 4}}, {{0, 0}, {1, 4}, {2, 8}}, {}, {}, {});
+
+    Vector<double> dofs(dof_map, true);
+    Vector<double> locally_relevant_dofs(col_map, true);
+    dofs.replace_local_values(12,
+        std::array<double, 12>{2.0, 2.5, 3.0, 1.2, 1.1, 0.9, 10.0, -3.0, 4.5, 8.0, -2.0, 5.0}
+            .data(),
+        std::array<int, 12>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}.data());
+    export_to(dofs, locally_relevant_dofs);
+
+    check_kelvin_voigt_residual_matches_generic(model, row_map, locally_relevant_dofs, 0.2);
+  }
+
+  TEST(AirwayTests, KelvinVoigtWallNonlinearResidualMatchesGenericPath)
+  {
+    AirwayContainer airways;
+    AirwayModel model;
+
+    model.data.global_element_id = {0, 1, 2};
+    model.data.local_element_id = {0, 1, 2};
+    model.data.local_row_id = {0, 2, 4};
+    model.data.gid_p1 = {0, 1, 2};
+    model.data.gid_p2 = {3, 4, 5};
+    model.data.gid_q1 = {6, 7, 8};
+    model.data.gid_q2 = {9, 10, 11};
+    model.data.lid_p1 = {0, 1, 2};
+    model.data.lid_p2 = {3, 4, 5};
+    model.data.lid_q1 = {6, 7, 8};
+    model.data.lid_q2 = {9, 10, 11};
+    model.data.ref_length = {1.0, 1.3, 0.7};
+    model.data.ref_area = {0.5, 0.4, 0.3};
+    model.data.n_state_equations = 2;
+    model.data.air_properties.dynamic_viscosity = 1.79105e-05;
+    model.data.air_properties.density = 1.176e-06;
+    model.data.q1_n = {1.0, -0.5, 0.2};
+    model.data.q2_n = {0.8, -0.2, -0.1};
+    model.data.p1_n = {1.9, 2.4, 2.8};
+    model.data.p2_n = {1.1, 1.0, 0.7};
+    model.flow_model =
+        NonLinearResistive{.turbulence_factor_gamma = std::vector<double>{0.6, 0.4, 0.2},
+            .has_inertia = std::vector<bool>{true, false, true},
+            .k_turb = std::vector<double>{1.2, 1.5, 2.0}};
+    model.wall_model = KelvinVoigtWall{.wall_poisson_ratio = std::vector<double>{0.3, 0.3, 0.3},
+        .wall_elasticity = std::vector<double>{50000.0, 51000.0, 52000.0},
+        .wall_thickness = std::vector<double>{0.001, 0.001, 0.001},
+        .viscous_time_constant = std::vector<double>{0.01, 0.01, 0.01},
+        .viscous_phase_shift = std::vector<double>{0.0, 0.0, 0.0},
+        .area_n = std::vector<double>{0.5, 0.4, 0.3},
+        .area = std::vector<double>{0.52, 0.43, 0.31},
+        .viscous_resistance_Rvisc = std::vector<double>{0.11, 0.12, 0.13},
+        .compliance_C = std::vector<double>{0.7, 0.8, 0.9},
+        .gamma_w = std::vector<double>{1.0, 1.0, 1.0},
+        .beta_w = std::vector<double>{1.0, 1.0, 1.0}};
+    airways.models.push_back(model);
+
+    const auto dof_map =
+        create_domain_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{});
+    const auto row_map =
+        create_row_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{}, {}, {}, {});
+    const auto col_map =
+        create_column_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{},
+            {{0, 4}, {1, 4}, {2, 4}}, {{0, 0}, {1, 4}, {2, 8}}, {}, {}, {});
+
+    Vector<double> dofs(dof_map, true);
+    Vector<double> locally_relevant_dofs(col_map, true);
+    dofs.replace_local_values(12,
+        std::array<double, 12>{2.0, 2.5, 3.0, 1.2, 1.1, 0.9, 10.0, -3.0, 4.5, 8.0, -2.0, 5.0}
+            .data(),
+        std::array<int, 12>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}.data());
+    export_to(dofs, locally_relevant_dofs);
+
+    check_kelvin_voigt_residual_matches_generic(model, row_map, locally_relevant_dofs, 0.2);
   }
 
   TEST(AirwayTests, JacobianVsFiniteDifferenceRigidWall)
