@@ -22,8 +22,8 @@ jobs:
   spack-build:
     name: Build and test 4C (${{ matrix.os.name }}, ${{ matrix.variant.name }})
     runs-on: ${{ matrix.os.name }}
-    # Only the "minimal" variant is currently enabled. The "deal.II" and
-    # "extended" variants require a Spack PR that has not landed yet.
+    # The "deal.II" and "extended" variants build many extra dependencies
+    # from source.
     timeout-minutes: 360
     strategy:
       fail-fast: false
@@ -42,16 +42,16 @@ jobs:
           # Optional Spack variants (see `spack info 4c-multiphysics`).
           - name: minimal
             spec_args: ""
-            # - name: extended
-            #   spec_args: >-
-            #     +vtk
-            #     +gmsh
-            #     +mirco
-            #     +arborx
-            #     +fftw
-            #     +backtrace
-            # - name: dealii
-            #   spec_args: "+dealii"
+          - name: extended
+            spec_args: >-
+              +vtk
+              +gmsh
+              +mirco
+              +arborx
+              +fftw
+              +backtrace
+          - name: dealii
+            spec_args: "+dealii"
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@v2
@@ -65,12 +65,11 @@ jobs:
           spack_ref: v1.2.2
           # `4c-multiphysics` is not part of any tagged spack-packages release
           # yet, so pin to a `develop` commit that contains it instead.
-          # Pin to the merge commit of the PR that enables Python support for
-          # 4C. The workflow passes --deprecated because this package version
-          # still requires trilinos@16.2.1.
+          # Pin to the merge commit of Spack PR #6252, which adds the v2026.3
+          # 4C package version and updates its TPL dependencies.
           # TODO: switch `packages_ref` to a release tag (e.g. v2026.09.0) once
           # one ships a `4c-multiphysics` package that no longer needs this.
-          packages_ref: 20a56c500d0ade1a27a087ad36eea990d952020a
+          packages_ref: b21d87c38e972c9a97cd16674464716cc0a39eef
           buildcache: true
           color: true
 
@@ -104,12 +103,12 @@ jobs:
           echo "- 4C version: \`$LATEST_VERSION\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Show the concretized spec
-        run: spack spec --deprecated -l "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.variant.spec_args
+        run: spack spec -l "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.variant.spec_args
           }} %${{ matrix.os.compiler }}"
 
       - name: Install 4C
         run: |
-          spack install --deprecated --fail-fast --verbose "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.variant.spec_args }} %${{ matrix.os.compiler }}"
+          spack install --fail-fast --verbose "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.variant.spec_args }} %${{ matrix.os.compiler }}"
           spack find --long --variants 4c-multiphysics
 
       - name: Checkout tutorial input files matching the installed release
