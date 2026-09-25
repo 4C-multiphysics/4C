@@ -32,7 +32,7 @@ namespace LowMach
   {
    public:
     /// constructor
-    Algorithm(MPI_Comm comm, const Teuchos::ParameterList& prbdyn,
+    Algorithm(Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& prbdyn,
         const Teuchos::ParameterList& solverparams);
 
 

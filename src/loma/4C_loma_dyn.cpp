@@ -28,21 +28,18 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*/
 // entry point for LOMA in discretization management module
 /*----------------------------------------------------------------------*/
-void loma_dyn(int restart)
+void loma_dyn(Global::Problem& problem, int restart)
 {
   // create a communicator
-  MPI_Comm comm = Global::Problem::instance()->get_dis("fluid")->get_comm();
+  MPI_Comm comm = problem.get_dis("fluid")->get_comm();
 
   // print warning to screen
   if (Core::Communication::my_mpi_rank(comm) == 0)
     std::cout << "You are now about to enter the module for low-Mach-number flow!" << std::endl;
 
-  // define abbreviation
-  Global::Problem* problem = Global::Problem::instance();
-
   // access fluid and (typically empty) scatra discretization
-  std::shared_ptr<Core::FE::Discretization> fluiddis = problem->get_dis("fluid");
-  std::shared_ptr<Core::FE::Discretization> scatradis = problem->get_dis("scatra");
+  std::shared_ptr<Core::FE::Discretization> fluiddis = problem.get_dis("fluid");
+  std::shared_ptr<Core::FE::Discretization> scatradis = problem.get_dis("scatra");
 
   // ensure that all dofs are assigned in the right order such that
   // dof numbers are created with fluid dof < scatra/elch dof
@@ -50,13 +47,13 @@ void loma_dyn(int restart)
   scatradis->fill_complete();
 
   // access problem-specific parameter list for LOMA
-  const Teuchos::ParameterList& lomacontrol = problem->loma_control_params();
+  const Teuchos::ParameterList& lomacontrol = problem.loma_control_params();
 
   // access parameter list for scatra
-  const Teuchos::ParameterList& scatradyn = problem->scalar_transport_dynamic_params();
+  const Teuchos::ParameterList& scatradyn = problem.scalar_transport_dynamic_params();
 
   // access parameter list for fluid
-  const Teuchos::ParameterList& fdyn = problem->fluid_dynamic_params();
+  const Teuchos::ParameterList& fdyn = problem.fluid_dynamic_params();
 
   // identify type of velocity field
   const auto veltype = Teuchos::getIntegralValue<ScaTra::VelocityField>(scatradyn, "VELOCITYFIELD");
@@ -79,13 +76,13 @@ void loma_dyn(int restart)
             "TRANSPORT DYNAMIC to a valid number!");
 
       // create instance of scalar transport basis algorithm (no fluid discretization)
-      Adapter::ScaTraBaseAlgorithm scatraonly(*Global::Problem::instance(), lomacontrol, scatradyn,
-          Global::Problem::instance()->solver_params(linsolvernumber));
+      Adapter::ScaTraBaseAlgorithm scatraonly(
+          problem, lomacontrol, scatradyn, problem.solver_params(linsolvernumber));
 
       // add proxy of velocity related degrees of freedom to scatra discretization
       std::shared_ptr<Core::DOFSets::DofSetInterface> dofsetaux =
           std::make_shared<Core::DOFSets::DofSetPredefinedDoFNumber>(
-              Global::Problem::instance()->n_dim() + 1, 0, 0, true);
+              problem.n_dim() + 1, 0, 0, true);
       if (scatradis->add_dof_set(dofsetaux) != 1)
         FOUR_C_THROW("Scatra discretization has illegal number of dofsets!");
       scatraonly.scatra_field()->set_number_of_dof_set_velocity(1);
@@ -112,8 +109,8 @@ void loma_dyn(int restart)
       (scatraonly.scatra_field())->time_loop();
 
       // perform result test if required
-      problem->add_field_test(scatraonly.create_scatra_field_test());
-      problem->test_all(comm);
+      problem.add_field_test(scatraonly.create_scatra_field_test());
+      problem.test_all(comm);
 
       break;
     }
@@ -134,7 +131,7 @@ void loma_dyn(int restart)
       {
         // fill scatra discretization by cloning fluid discretization
         Core::FE::clone_discretization<ScaTra::ScatraFluidCloneStrategy>(
-            *fluiddis, *scatradis, Global::Problem::instance()->cloning_material_map());
+            *fluiddis, *scatradis, problem.cloning_material_map());
 
         // set implementation type of cloned scatra elements to loma
         for (int i = 0; i < scatradis->num_my_col_elements(); ++i)
@@ -158,8 +155,7 @@ void loma_dyn(int restart)
             "TRANSPORT DYNAMIC to a valid number!");
 
       // create a LowMach::Algorithm instance
-      LowMach::Algorithm loma(
-          comm, lomacontrol, Global::Problem::instance()->solver_params(linsolvernumber));
+      LowMach::Algorithm loma(problem, comm, lomacontrol, problem.solver_params(linsolvernumber));
 
       // add proxy of fluid transport degrees of freedom to scatra discretization
       if (scatradis->add_dof_set(fluiddis->get_dof_set_proxy()) != 1)
@@ -186,9 +182,9 @@ void loma_dyn(int restart)
       loma.time_loop();
 
       // perform result test if required
-      problem->add_field_test(loma.fluid_field()->create_field_test());
-      problem->add_field_test(loma.create_scatra_field_test());
-      problem->test_all(comm);
+      problem.add_field_test(loma.fluid_field()->create_field_test());
+      problem.add_field_test(loma.create_scatra_field_test());
+      problem.test_all(comm);
 
       break;
     }

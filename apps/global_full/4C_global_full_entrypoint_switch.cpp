@@ -117,7 +117,7 @@ void entrypoint_switch()
       break;
 
     case Core::ProblemType::loma:
-      loma_dyn(restart);
+      loma_dyn(problem, restart);
       break;
 
     case Core::ProblemType::elch:
