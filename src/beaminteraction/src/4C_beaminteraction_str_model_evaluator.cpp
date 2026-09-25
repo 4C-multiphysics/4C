@@ -36,6 +36,7 @@
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
+#include "4C_linear_solver_method_linalg.hpp"
 #include "4C_rebalance_graph_based.hpp"
 #include "4C_rebalance_print.hpp"
 #include "4C_rigidsphere.hpp"
@@ -878,6 +879,33 @@ bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::assemble_jacobian(
             (*me_vec_ptr_)[0]);
 
     beam_contact_model->assemble_stiff(jac);
+
+    auto kappa_inv = beam_contact_model->get_penalty_kappa_inverse();
+    auto structure_solver = tim_int().get_data_sdyn().get_lin_solvers().at(Solid::model_structure);
+
+    auto& teko_parameters = structure_solver->params().sublist("Teko Parameters");
+    teko_parameters.set<std::shared_ptr<Core::LinAlg::Vector<double>>>("scaling vector", kappa_inv);
+
+    auto reorder_maps =
+        teko_parameters.get<std::vector<std::shared_ptr<const Core::LinAlg::Map>>>("reorder: maps");
+    auto lambda_map = beam_contact_model->get_lagrange_map();
+
+    if (reorder_maps.size() == 2)
+    {
+      reorder_maps.emplace_back(lambda_map);
+    }
+    else if (reorder_maps.size() == 3)
+    {
+      reorder_maps[2] = lambda_map;
+    }
+    else
+    {
+      FOUR_C_THROW("Expected two or three beam-interaction reorder maps, but received {}.",
+          reorder_maps.size());
+    }
+
+    teko_parameters.set<std::vector<std::shared_ptr<const Core::LinAlg::Map>>>(
+        "reorder: maps", reorder_maps);
   }
 
   // no need to keep it

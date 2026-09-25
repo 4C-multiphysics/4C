@@ -290,6 +290,14 @@ BeamInteraction::SubmodelEvaluator::BeamContact::get_lagrange_multiplier_assembl
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+std::shared_ptr<Core::LinAlg::Vector<double>>
+BeamInteraction::SubmodelEvaluator::BeamContact::get_penalty_kappa_inverse() const
+{
+  return get_lagrange_multiplier_assembly_manager()->get_mortar_manager()->penalty_invert_kappa();
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 void BeamInteraction::SubmodelEvaluator::BeamContact::post_setup()
 {
   check_init_setup();

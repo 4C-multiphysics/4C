@@ -53,6 +53,12 @@ void Core::LinearSolver::TekoPreconditioner::setup(
   auto comm = Core::Communication::to_teuchos_comm<int>(matrix.get_comm());
   Teuchos::updateParametersFromXmlFileAndBroadcast(xmlFileName, Teuchos::Ptr(&tekoParams), *comm);
 
+  if (tekolist_.sublist("Teko Parameters").isParameter("scaling vector"))
+  {
+    auto scaling_matrix = tekolist_.sublist("Teko Parameters")
+                              .get<std::shared_ptr<Core::LinAlg::Vector<double>>>("scaling vector");
+  }
+
   auto A = std::dynamic_pointer_cast<Core::LinAlg::BlockSparseMatrixBase>(
       Core::Utils::shared_ptr_from_ref(matrix));
 

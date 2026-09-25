@@ -235,6 +235,16 @@ namespace BeamInteraction
     }
 
     /**
+     * \brief invert the scaling vector \ref kappa_ vector.
+     *
+     * The inversion is performed with accounting for non active Lagrange multipliers. Furthermore,
+     * the inverted matrix is scaled with the the corresponding penalty parameter.
+     *
+     * @return Inverted kappa_ vector.
+     */
+    std::shared_ptr<Core::LinAlg::Vector<double>> penalty_invert_kappa() const;
+
+    /**
      * \brief Get the global vector of Lagrange multipliers.
      * @return Global vector of Lagrange multipliers.
      */
@@ -357,16 +367,6 @@ namespace BeamInteraction
         std::shared_ptr<Core::LinAlg::Vector<double>>,
         std::shared_ptr<Core::LinAlg::Vector<double>>>
     get_penalty_regularization(const bool compute_linearization = false) const;
-
-    /**
-     * \brief invert the scaling vector \ref kappa_ vector.
-     *
-     * The inversion is performed with accounting for non active Lagrange multipliers. Furthermore,
-     * the inverted matrix is scaled with the the corresponding penalty parameter.
-     *
-     * @return Inverted kappa_ vector.
-     */
-    std::shared_ptr<Core::LinAlg::Vector<double>> penalty_invert_kappa() const;
 
    protected:
     //! Flag if setup was called.
