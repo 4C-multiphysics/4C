@@ -517,10 +517,10 @@ void Solid::ModelEvaluatorManager::post_setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluatorManager::predict(const Solid::PredEnum& pred_type) const
+void Solid::ModelEvaluatorManager::predict() const
 {
   check_init_setup();
-  for (const auto& me_iter : *me_vec_ptr_) me_iter->predict(pred_type);
+  for (const auto& me_iter : *me_vec_ptr_) me_iter->predict();
 }
 
 /*----------------------------------------------------------------------------*

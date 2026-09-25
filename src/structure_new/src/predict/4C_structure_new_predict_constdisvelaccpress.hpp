@@ -30,6 +30,12 @@ namespace Solid
       //! do the class specific predictor step
       void compute(::NOX::Abstract::Group& grp) override;
 
+      void reset_state() override
+      {
+        Generic::reset_state();
+        if (tangdis_ptr_) tangdis_ptr_->reset_state();
+      }
+
      private:
       std::shared_ptr<Solid::Predict::Generic> tangdis_ptr_;
     };  // class ConstDisVelAccPress

@@ -40,6 +40,8 @@ namespace Solid
       //! do the class specific predictor step
       void compute(::NOX::Abstract::Group& grp) override;
 
+      void reset_state() override;
+
       //! return the dbc increment
       const Core::LinAlg::Vector<double>& get_dbc_incr() const;
 

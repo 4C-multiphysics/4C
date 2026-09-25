@@ -360,9 +360,10 @@ void Solid::TimIntStatics::update_step_state()
 {
   // calculate pseudo velocity and acceleration for predictor and/or binning
   // of the contact interface before updates
-  if (pred_ == Solid::pred_constvel || pred_ == Solid::pred_constacc || have_contact_meshtying())
+  if (pred_ == Solid::PredictorType::constvel || pred_ == Solid::PredictorType::constacc ||
+      have_contact_meshtying())
     veln_->update(1. / (*(*dt_)(0)), *disn_, -1. / (*(*dt_)(0)), *(*dis_)(0), 0.);
-  if (pred_ == Solid::pred_constacc)
+  if (pred_ == Solid::PredictorType::constacc)
     accn_->update(1. / (*(*dt_)(0)), *veln_, -1. / (*(*dt_)(0)), *(*vel_)(0), 0.);
 
   // update state

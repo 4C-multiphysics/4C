@@ -77,7 +77,7 @@ MultiScale::MicroStatic::MicroStatic(const int microdisnum, const double V0)
           Global::Problem::instance()->io_params(), "VERBOSITY"));
   compute_null_space_if_necessary(*discret_, solver_->params());
 
-  auto pred = Teuchos::getIntegralValue<Solid::PredEnum>(sdyn_micro, "PREDICT");
+  auto pred = Teuchos::getIntegralValue<Solid::PredictorType>(sdyn_micro, "PREDICT");
   pred_ = pred;
   combdisifres_ = Teuchos::getIntegralValue<Solid::BinaryOp>(sdyn_micro, "NORMCOMBI_RESFDISP");
   normtypedisi_ = Teuchos::getIntegralValue<Solid::ConvNorm>(sdyn_micro, "NORM_DISP");
@@ -290,9 +290,9 @@ MultiScale::MicroStatic::MicroStatic(const int microdisnum, const double V0)
 
 void MultiScale::MicroStatic::predictor(const Core::LinAlg::Matrix<3, 3>* defgrd)
 {
-  if (pred_ == Solid::pred_constdis)
+  if (pred_ == Solid::PredictorType::constdis)
     predict_const_dis(defgrd);
-  else if (pred_ == Solid::pred_tangdis)
+  else if (pred_ == Solid::PredictorType::tangdis)
     predict_tang_dis(defgrd);
   else
     FOUR_C_THROW("requested predictor not implemented on the micro-scale");
@@ -520,7 +520,7 @@ void MultiScale::MicroStatic::full_newton()
   // if TangDis-Predictor is employed, the number of iterations needs
   // to be increased by one, since it involves already one solution of
   // the non-linear system!
-  if (pred_ == Solid::pred_tangdis) numiter_++;
+  if (pred_ == Solid::PredictorType::tangdis) numiter_++;
 
   // store norms of old displacements and maximum of norms of
   // internal, external and inertial forces (needed for relative convergence

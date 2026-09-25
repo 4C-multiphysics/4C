@@ -45,7 +45,7 @@ Solid::TimeInt::BaseDataSDyn::BaseDataSDyn()
       itermax_(-1),
       loadlin_(false),
       prestresstype_(Solid::PreStress::none),
-      predtype_(Solid::pred_vague),
+      predtype_(Solid::PredictorType::constdis),
       nlnsolvertype_(Solid::soltech_vague),
       divergenceaction_(Solid::DivContAct::stop),
       mid_time_energy_type_(Solid::midavg_vague),
@@ -174,7 +174,7 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
         Global::Problem::instance()->structural_dynamic_params(), "PRESTRESS");
     prestress_displacement_tolerance_ = sdynparams.get<double>("PRESTRESSTOLDISP");
     prestress_min_number_of_load_steps_ = sdynparams.get<int>("PRESTRESSMINLOADSTEPS");
-    predtype_ = Teuchos::getIntegralValue<Solid::PredEnum>(sdynparams, "PREDICT");
+    predtype_ = Teuchos::getIntegralValue<Solid::PredictorType>(sdynparams, "PREDICT");
     nlnsolvertype_ = Teuchos::getIntegralValue<Solid::NonlinSolTech>(sdynparams, "NLNSOL");
     divergenceaction_ = Teuchos::getIntegralValue<Solid::DivContAct>(sdynparams, "DIVERCONT");
     mid_time_energy_type_ =

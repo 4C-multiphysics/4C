@@ -72,7 +72,7 @@ namespace Solid::ModelEvaluator
 
     void post_evaluate() override {}
 
-    void predict(const Solid::PredEnum& pred_type) override {}
+    void predict() override {}
 
     void pre_evaluate() override {}
 

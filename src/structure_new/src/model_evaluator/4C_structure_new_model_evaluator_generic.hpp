@@ -264,7 +264,7 @@ namespace Solid
 
       /*! \brief predict the values for DoFs that are defined in
        *         the respective model evaluators, e.g. condensed variables.*/
-      virtual void predict(const Solid::PredEnum& pred_type) = 0;
+      virtual void predict() = 0;
 
       /*! \brief Recover condensed solution variables, meant to be called by run_post_compute_x
        */

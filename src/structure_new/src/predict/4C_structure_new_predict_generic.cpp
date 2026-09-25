@@ -21,7 +21,7 @@ FOUR_C_NAMESPACE_OPEN
 Solid::Predict::Generic::Generic()
     : isinit_(false),
       issetup_(false),
-      type_(Solid::pred_vague),
+      type_(Solid::PredictorType::constdis),
       implint_ptr_(nullptr),
       dbc_ptr_(nullptr),
       noxparams_ptr_(nullptr)
@@ -31,7 +31,7 @@ Solid::Predict::Generic::Generic()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::Predict::Generic::init(const Solid::PredEnum& type,
+void Solid::Predict::Generic::init(const Solid::PredictorType& type,
     const std::shared_ptr<Solid::IMPLICIT::Generic>& implint_ptr,
     const std::shared_ptr<Solid::Dbc>& dbc_ptr,
     const std::shared_ptr<Solid::TimeInt::BaseDataGlobalState>& gstate_ptr,
@@ -65,8 +65,7 @@ void Solid::Predict::Generic::pre_predict(::NOX::Abstract::Group& grp)
 void Solid::Predict::Generic::predict(::NOX::Abstract::Group& grp)
 {
   check_init_setup();
-  bool& ispredict = gstate_ptr_->is_predict();
-  ispredict = true;
+  gstate_ptr_->is_predict() = true;
 
   // pre-process the prediction step
   pre_predict(grp);
@@ -77,7 +76,16 @@ void Solid::Predict::Generic::predict(::NOX::Abstract::Group& grp)
   // post-process the prediction step
   post_predict(grp);
 
-  ispredict = false;
+  reset_state();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::Predict::Generic::reset_state()
+{
+  check_init_setup();
+  gstate_ptr_->is_predict() = false;
+  implint_ptr_->set_is_predictor_state(false);
 }
 
 /*----------------------------------------------------------------------------*

@@ -77,6 +77,8 @@ namespace Solid
       //! Prepare time step
       void prepare_time_step() override;
 
+      void reset_step() override;
+
       //! @name Accessors
       //! @{
       //! return the predictor

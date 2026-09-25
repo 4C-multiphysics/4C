@@ -71,7 +71,7 @@ namespace Solid
 
       void post_setup() override;
 
-      void predict(const Solid::PredEnum& pred_type) override {};
+      void predict() override {};
 
       void run_pre_compute_x(const Core::LinAlg::Vector<double>& xold,
           Core::LinAlg::Vector<double>& dir_mutable, const NOX::Nln::Group& curr_grp) override {};

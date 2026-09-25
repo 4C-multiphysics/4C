@@ -747,7 +747,7 @@ namespace Solid
 
     //! @name General purpose algorithm parameters
     //@{
-    Solid::PredEnum pred_;  //!< predictor
+    Solid::PredictorType pred_;  //!< predictor
     //@}
 
     //! @name Iterative solution technique

@@ -126,7 +126,7 @@ namespace Solid
       void output_step_state(Core::IO::DiscretizationWriter& iowriter) const override {}
 
       //! [derived]
-      void predict(const Solid::PredEnum& pred_type) override { return; };
+      void predict() override {};
 
       //! [derived]
       void reset_step_state() override { return; };
