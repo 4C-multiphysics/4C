@@ -8,8 +8,10 @@ on:
     paths:
       - '.github/workflows/docker.yml'
       - 'dependencies/current/**'
+      - 'dependencies/oldest_supported/**'
       - 'dependencies/testing/**'
       - 'docker/dependencies/**'
+      - 'docker/oldest_supported/**'
 
 env:
   REGISTRY: ghcr.io
