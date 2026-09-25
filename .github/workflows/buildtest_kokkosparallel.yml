@@ -16,7 +16,7 @@ jobs:
   kokkosopenmp_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:02bfab2a
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:156ec01a
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -44,7 +44,7 @@ jobs:
     needs: kokkosopenmp_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:02bfab2a
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:156ec01a
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -78,7 +78,7 @@ jobs:
     if: ${{ false }}
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:02bfab2a
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:156ec01a
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
