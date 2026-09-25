@@ -24,7 +24,8 @@ namespace ScaTra
   {
    public:
     /// constructor
-    ScaTraAlgorithm(MPI_Comm comm,                  ///< communicator
+    ScaTraAlgorithm(Global::Problem& problem,       ///< global problem
+        MPI_Comm comm,                              ///< communicator
         const Teuchos::ParameterList& scatradyn,    ///< scatra parameter list
         const Teuchos::ParameterList& fdyn,         ///< fluid parameter list
         const std::string scatra_disname,           ///< scatra discretization name

@@ -26,10 +26,11 @@ namespace ElCh
   {
    public:
     /// constructor
-    MovingBoundaryAlgorithm(MPI_Comm comm,          ///< communicator
-        const Teuchos::ParameterList& elchcontrol,  ///< elch parameter list
-        const Teuchos::ParameterList& scatradyn,    ///< scatra parameter list
-        const Teuchos::ParameterList& solverparams  ///< solver parameter list
+    MovingBoundaryAlgorithm(Global::Problem& problem,  ///< global problem
+        MPI_Comm comm,                                 ///< communicator
+        const Teuchos::ParameterList& elchcontrol,     ///< elch parameter list
+        const Teuchos::ParameterList& scatradyn,       ///< scatra parameter list
+        const Teuchos::ParameterList& solverparams     ///< solver parameter list
     );
 
 

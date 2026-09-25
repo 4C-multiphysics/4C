@@ -221,7 +221,7 @@ void scatra_dyn(int restart)
       }
 
       // create a scalar transport algorithm instance
-      ScaTra::ScaTraAlgorithm algo(comm, scatradyn, fdyn, "scatra",
+      ScaTra::ScaTraAlgorithm algo(*Global::Problem::instance(), comm, scatradyn, fdyn, "scatra",
           Global::Problem::instance()->solver_params(linsolvernumber));
 
       // create scatra elements by cloning from fluid dis in matching case
