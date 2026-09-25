@@ -1584,6 +1584,41 @@ four_c_test(TEST_FILE reduced_lung_aw_bifurcation_no_flow.4C.yaml REQUIRED_DEPEN
 four_c_test(TEST_FILE reduced_lung_aw_bifurcation_no_flow.4C.yaml NP 2 REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE reduced_lung_aw_bifurcation_flow.4C.yaml REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE reduced_lung_aw_bifurcation_flow.4C.yaml NP 2 REQUIRED_DEPENDENCIES VTK)
+four_c_test(TEST_FILE reduced_lung_aw_bifurcation_flow_newton_sparse.4C.yaml REQUIRED_DEPENDENCIES VTK)
+four_c_test(TEST_FILE reduced_lung_aw_bifurcation_flow_newton_tree.4C.yaml REQUIRED_DEPENDENCIES VTK)
+set(newtontree_mpi_rejection_test reduced_lung_aw_bifurcation_flow_newton_tree_mpi_rejection.4C.yaml-p2)
+set(newtontree_mpi_rejection_input
+    ${PROJECT_SOURCE_DIR}/tests/input_files/reduced_lung_aw_bifurcation_flow_newton_tree.4C.yaml
+)
+set(newtontree_mpi_rejection_directory
+    ${PROJECT_BINARY_DIR}/framework_test_output/${newtontree_mpi_rejection_test}
+)
+set(newtontree_mpi_rejection_log ${newtontree_mpi_rejection_directory}/newtontree_mpi_rejection.log)
+set(newtontree_mpi_rejection_message
+    "Reduced lung NewtonTree is serial-only, but the run uses 2 MPI ranks"
+)
+set(newtontree_mpi_rejection_command
+    "mkdir -p ${newtontree_mpi_rejection_directory} \
+     && ${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np 2 $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> ${newtontree_mpi_rejection_input} ${newtontree_mpi_rejection_directory}/xxx > ${newtontree_mpi_rejection_log} 2>&1; \
+     status=$?; \
+     if [ $status -eq 0 ]; then cat ${newtontree_mpi_rejection_log}; exit 1; fi; \
+     if grep -Fq '${newtontree_mpi_rejection_message}' ${newtontree_mpi_rejection_log}; then cat ${newtontree_mpi_rejection_log}; exit 0; fi; \
+     cat ${newtontree_mpi_rejection_log}; exit 1"
+)
+_add_test_with_options(
+        NAME_OF_TEST
+        ${newtontree_mpi_rejection_test}
+        TEST_COMMAND
+        "${newtontree_mpi_rejection_command}"
+        TOTAL_PROCS
+        2
+        INPUT_FILE
+        "${newtontree_mpi_rejection_input}"
+        OUTPUT_DIR
+        "${newtontree_mpi_rejection_directory}"
+        REQUIRED_DEPENDENCIES
+        VTK
+)
 four_c_test(TEST_FILE reduced_lung_3_aw_2_tu.4C.yaml REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE reduced_lung_3_aw_2_tu.4C.yaml NP 3 REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE reduced_lung_3_aw_2_tu_pleural_pressure.4C.yaml REQUIRED_DEPENDENCIES VTK)
@@ -1593,6 +1628,8 @@ four_c_test(
 four_c_test(TEST_FILE reduced_lung_3_aw_2_tu_4elemax_and_kv.4C.yaml REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE reduced_lung_3_aw_2_tu_4elemax_and_kv.4C.yaml NP 3 REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE reduced_lung_terminal_unit.4C.yaml REQUIRED_DEPENDENCIES VTK)
+four_c_test(TEST_FILE reduced_lung_terminal_unit_newton_sparse.4C.yaml REQUIRED_DEPENDENCIES VTK)
+four_c_test(TEST_FILE reduced_lung_terminal_unit_newton_tree.4C.yaml REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE reduced_lung_terminal_unit_recruitment_pressure_only.4C.yaml REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE reduced_lung_terminal_unit_recruitment_pressure_time.4C.yaml REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE reduced_lung_terminal_unit_recruitment_mixed.4C.yaml REQUIRED_DEPENDENCIES VTK)

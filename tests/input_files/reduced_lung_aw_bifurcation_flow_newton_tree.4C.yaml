@@ -1,8 +1,6 @@
 TITLE:
-  - "3 resistive airways forming a bifurcation, 2 attached terminal units."
-  - "Both terminal units have linear elasticity, but they have different rheological models:"
-  - "one is a 4-element maxwell model, the other a Kelvin-Voigt model."
-  - "Tests if two different TU models work in parallel."
+  - "3 resistive airways forming a bifurcation with given pressure bc."
+  - "NewtonTree runtime workflow variant."
 PROBLEM TYPE:
   PROBLEMTYPE: "Reduced_Lung"
 reduced_dimensional_lung:
@@ -11,12 +9,13 @@ reduced_dimensional_lung:
     dynamic_viscosity: 1.79105e-05
   dynamics:
     linear_solver: 1
+    nonlinear_solver: NewtonTree
     number_of_steps: 1
     restart_every: 1
     results_every: 1
     time_increment: 1
   geometry:
-    file: "vtu/reduced_lung_3_aw_2_tu.vtu"
+    file: "vtu/reduced_lung_aw_bifurcation.vtu"
   lung_tree:
     airways:
       element_blocks: [1]
@@ -30,19 +29,11 @@ reduced_dimensional_lung:
       wall_model_type:
         constant: Rigid
     terminal_units:
-      element_blocks: [2]
       v0:
-        from_mesh: "v0"
+        constant: 1.0
       rheological_model:
         rheological_model_type:
-          from_file: "reduced_lung_3_aw_2_tu_4elemax_and_kv.json"
-        4_element_maxwell:
-          elasticity_maxwell_e_m:
-            constant: 1.0
-          viscosity_maxwell_eta_m:
-            constant: 0.1
-          viscosity_kelvin_voigt_eta:
-            constant: 0.01
+          constant: KelvinVoigt
         kelvin_voigt:
           viscosity_kelvin_voigt_eta:
             constant: 0.0
@@ -65,3 +56,9 @@ FUNCT1:
   - SYMBOLIC_FUNCTION_OF_TIME: "t"
 FUNCT2:
   - SYMBOLIC_FUNCTION_OF_TIME: "0"
+RESULT DESCRIPTION:
+  - REDUCED_LUNG:
+      ELEMENT: 1
+      QUANTITY: "q_in"
+      VALUE: 33851.90503402932
+      TOLERANCE: 1e-6

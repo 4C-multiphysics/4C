@@ -33,6 +33,10 @@ namespace ReducedLung::TerminalUnits
     RecruitmentModel recruitment_model;
     ResidualEvaluator residual_evaluator;
     JacobianEvaluator jacobian_evaluator;
+    StaticTreeLinearizationEvaluator
+        static_tree_linearization_evaluator;  ///< One-time structured coefficient pattern callback.
+    TreeLinearizationEvaluator
+        tree_linearization_evaluator;  ///< Dynamic structured coefficient refresh callback.
     InternalStateUpdater internal_state_updater;
     EndOfTimestepRoutine end_of_timestep_routine;
     OutputEvaluator output_evaluator;
@@ -57,6 +61,25 @@ namespace ReducedLung::TerminalUnits
    * @brief Assemble terminal-unit Jacobian contributions for all local model blocks.
    */
   void update_jacobian(Core::LinAlg::SparseMatrix& jac, TerminalUnitContainer& terminal_units,
+      const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt);
+
+  /**
+   * @brief Assemble static terminal-unit structured tree-linearization row patterns.
+   *
+   * Appends p1, p2, and q placeholders consumed by the direct and generic structured tree assembly
+   * paths.
+   */
+  void update_static_tree_linearization(
+      TreeCoefficientAssemblyTarget& target, TerminalUnitContainer& terminal_units);
+
+  /**
+   * @brief Update dynamic terminal-unit structured tree-linearization coefficients.
+   *
+   * Replaces all three coefficients in the row pattern. Coupled recruitment makes the pressure
+   * coefficients state-dependent as well as the q coefficient.
+   */
+  void update_tree_linearization(TreeCoefficientAssemblyTarget& target,
+      TerminalUnitContainer& terminal_units,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt);
 
   /**

@@ -566,6 +566,15 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                                          "dimensional lung simulation.",
                           .store = in_struct(&ReducedLungParameters::Dynamics::linear_solver),
                       }),
+                  parameter<ReducedLungParameters::NonlinearSolverType>("nonlinear_solver",
+                      {
+                          .description = "Nonlinear solver workflow: Nox uses the legacy NOX "
+                                         "solver, NewtonSparse uses the custom Newton solver with "
+                                         "generic sparse linear solves, and NewtonTree uses the "
+                                         "serial structured-tree linear solver.",
+                          .default_value = ReducedLungParameters::NonlinearSolverType::Nox,
+                          .store = in_struct(&ReducedLungParameters::Dynamics::nonlinear_solver),
+                      }),
                   parameter<int>("max_nonlinear_iterations",
                       {
                           .description = "Maximum number of nonlinear iterations.",

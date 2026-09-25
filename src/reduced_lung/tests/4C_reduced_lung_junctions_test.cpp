@@ -55,14 +55,48 @@ namespace
     }
   }
 
+  void set_connection_first_row(ConnectionData& connections, size_t index, int first_row)
+  {
+    connections.first_local_equation_id[index] = first_row;
+    connections.first_row[index] = first_row;
+  }
+
+  void set_connection_local_dofs(
+      ConnectionData& connections, size_t index, const std::array<int, 4>& local_dof_ids)
+  {
+    connections.local_dof_ids[index] = local_dof_ids;
+    connections.p_out_parent_lid[index] = local_dof_ids[ConnectionData::p_out_parent];
+    connections.p_in_child_lid[index] = local_dof_ids[ConnectionData::p_in_child];
+    connections.q_out_parent_lid[index] = local_dof_ids[ConnectionData::q_out_parent];
+    connections.q_in_child_lid[index] = local_dof_ids[ConnectionData::q_in_child];
+  }
+
+  void set_bifurcation_first_row(BifurcationData& bifurcations, size_t index, int first_row)
+  {
+    bifurcations.first_local_equation_id[index] = first_row;
+    bifurcations.first_row[index] = first_row;
+  }
+
+  void set_bifurcation_local_dofs(
+      BifurcationData& bifurcations, size_t index, const std::array<int, 6>& local_dof_ids)
+  {
+    bifurcations.local_dof_ids[index] = local_dof_ids;
+    bifurcations.p_out_parent_lid[index] = local_dof_ids[BifurcationData::p_out_parent];
+    bifurcations.p_in_child_1_lid[index] = local_dof_ids[BifurcationData::p_in_child_1];
+    bifurcations.p_in_child_2_lid[index] = local_dof_ids[BifurcationData::p_in_child_2];
+    bifurcations.q_out_parent_lid[index] = local_dof_ids[BifurcationData::q_out_parent];
+    bifurcations.q_in_child_1_lid[index] = local_dof_ids[BifurcationData::q_in_child_1];
+    bifurcations.q_in_child_2_lid[index] = local_dof_ids[BifurcationData::q_in_child_2];
+  }
+
   TEST(JunctionsTests, ConnectionResidualAssembly)
   {
     ConnectionData connections;
     BifurcationData bifurcations;
 
     connections.add_connection(0, 0, 1, {0, 1, 2, 3});
-    connections.first_local_equation_id[0] = 0;
-    connections.local_dof_ids[0] = {0, 1, 2, 3};
+    set_connection_first_row(connections, 0, 0);
+    set_connection_local_dofs(connections, 0, {0, 1, 2, 3});
 
     Core::LinAlg::Map row_map(-1, 2, 0, MPI_COMM_WORLD);
     Core::LinAlg::Map col_map(-1, 4, 0, MPI_COMM_WORLD);
@@ -86,8 +120,8 @@ namespace
     BifurcationData bifurcations;
 
     bifurcations.add_bifurcation(0, 0, 1, 2, {0, 1, 2, 3, 4, 5});
-    bifurcations.first_local_equation_id[0] = 0;
-    bifurcations.local_dof_ids[0] = {0, 1, 2, 3, 4, 5};
+    set_bifurcation_first_row(bifurcations, 0, 0);
+    set_bifurcation_local_dofs(bifurcations, 0, {0, 1, 2, 3, 4, 5});
 
     Core::LinAlg::Map row_map(-1, 3, 0, MPI_COMM_WORLD);
     Core::LinAlg::Map col_map(-1, 6, 0, MPI_COMM_WORLD);
@@ -106,6 +140,61 @@ namespace
     EXPECT_DOUBLE_EQ(rhs.local_values_as_span()[0], 10.0 - 7.0);
     EXPECT_DOUBLE_EQ(rhs.local_values_as_span()[1], 10.0 - 6.0);
     EXPECT_DOUBLE_EQ(rhs.local_values_as_span()[2], 8.0 - 3.0 - 4.0);
+  }
+
+  TEST(JunctionsTests, JunctionSoAResidualMatchesGenericPath)
+  {
+    ConnectionData connections;
+    BifurcationData bifurcations;
+
+    connections.add_connection(0, 0, 1, {0, 1, 2, 3});
+    connections.add_connection(1, 1, 2, {4, 5, 6, 7});
+    bifurcations.add_bifurcation(0, 2, 3, 4, {8, 9, 10, 11, 12, 13});
+    set_connection_first_row(connections, 0, 0);
+    set_connection_first_row(connections, 1, 2);
+    set_bifurcation_first_row(bifurcations, 0, 4);
+    set_connection_local_dofs(connections, 0, {0, 1, 2, 3});
+    set_connection_local_dofs(connections, 1, {4, 5, 6, 7});
+    set_bifurcation_local_dofs(bifurcations, 0, {8, 9, 10, 11, 12, 13});
+
+    Core::LinAlg::Map row_map(-1, 7, 0, MPI_COMM_WORLD);
+    Core::LinAlg::Map col_map(-1, 14, 0, MPI_COMM_WORLD);
+    Core::LinAlg::Vector<double> rhs(row_map, true);
+    Core::LinAlg::Vector<double> locally_relevant_dofs(col_map, true);
+
+    for (int i = 0; i < 14; ++i)
+    {
+      locally_relevant_dofs.get_values()[i] = 1.5 * static_cast<double>(i) - 2.0;
+    }
+
+    update_residual_vector(rhs, connections, bifurcations, locally_relevant_dofs);
+
+    const auto dof_values = locally_relevant_dofs.local_values_as_span();
+    const auto residual_values = rhs.local_values_as_span();
+    for (size_t i = 0; i < connections.size(); ++i)
+    {
+      const auto& local_dof_ids = connections.local_dof_ids[i];
+      const int row = connections.first_local_equation_id[i];
+      EXPECT_DOUBLE_EQ(
+          residual_values[row], dof_values[local_dof_ids[ConnectionData::p_out_parent]] -
+                                    dof_values[local_dof_ids[ConnectionData::p_in_child]]);
+      EXPECT_DOUBLE_EQ(
+          residual_values[row + 1], dof_values[local_dof_ids[ConnectionData::q_out_parent]] -
+                                        dof_values[local_dof_ids[ConnectionData::q_in_child]]);
+    }
+
+    const auto& local_dof_ids = bifurcations.local_dof_ids[0];
+    const int row = bifurcations.first_local_equation_id[0];
+    EXPECT_DOUBLE_EQ(
+        residual_values[row], dof_values[local_dof_ids[BifurcationData::p_out_parent]] -
+                                  dof_values[local_dof_ids[BifurcationData::p_in_child_1]]);
+    EXPECT_DOUBLE_EQ(
+        residual_values[row + 1], dof_values[local_dof_ids[BifurcationData::p_out_parent]] -
+                                      dof_values[local_dof_ids[BifurcationData::p_in_child_2]]);
+    EXPECT_DOUBLE_EQ(
+        residual_values[row + 2], dof_values[local_dof_ids[BifurcationData::q_out_parent]] -
+                                      dof_values[local_dof_ids[BifurcationData::q_in_child_1]] -
+                                      dof_values[local_dof_ids[BifurcationData::q_in_child_2]]);
   }
 
   TEST(JunctionsTests, ConnectionJacobianAssembledOnce)
@@ -192,7 +281,17 @@ namespace
     assign_junction_local_dof_ids(col_map, connections, bifurcations);
 
     EXPECT_EQ(connections.local_dof_ids[0], (std::array<int, 4>{0, 1, 2, 3}));
+    EXPECT_EQ(connections.p_out_parent_lid[0], 0);
+    EXPECT_EQ(connections.p_in_child_lid[0], 1);
+    EXPECT_EQ(connections.q_out_parent_lid[0], 2);
+    EXPECT_EQ(connections.q_in_child_lid[0], 3);
     EXPECT_EQ(bifurcations.local_dof_ids[0], (std::array<int, 6>{0, 1, 4, 2, 3, 5}));
+    EXPECT_EQ(bifurcations.p_out_parent_lid[0], 0);
+    EXPECT_EQ(bifurcations.p_in_child_1_lid[0], 1);
+    EXPECT_EQ(bifurcations.p_in_child_2_lid[0], 4);
+    EXPECT_EQ(bifurcations.q_out_parent_lid[0], 2);
+    EXPECT_EQ(bifurcations.q_in_child_1_lid[0], 3);
+    EXPECT_EQ(bifurcations.q_in_child_2_lid[0], 5);
   }
 
   TEST(JunctionsTests, CreateConnection)

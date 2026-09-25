@@ -30,6 +30,10 @@ namespace ReducedLung::Airways
     WallModel wall_model;
     ResidualEvaluator residual_evaluator;
     JacobianEvaluator jacobian_evaluator;
+    StaticTreeLinearizationEvaluator
+        static_tree_linearization_evaluator;  ///< One-time structured coefficient pattern callback.
+    TreeLinearizationEvaluator
+        tree_linearization_evaluator;  ///< Dynamic structured coefficient refresh callback.
     InternalStateUpdater internal_state_updater;
     EndOfTimestepRoutine end_of_timestep_routine;
     OutputEvaluator output_evaluator;
@@ -53,6 +57,24 @@ namespace ReducedLung::Airways
    * @brief Assemble airway Jacobian contributions for all local model blocks.
    */
   void update_jacobian(Core::LinAlg::SparseMatrix& jac, AirwayContainer& airways,
+      const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt);
+
+  /**
+   * @brief Assemble static airway structured tree-linearization row patterns.
+   *
+   * Appends the coefficient row patterns consumed by the direct and generic structured tree
+   * assembly paths.
+   */
+  void update_static_tree_linearization(
+      TreeCoefficientAssemblyTarget& target, AirwayContainer& airways);
+
+  /**
+   * @brief Update dynamic airway structured tree-linearization coefficients for all local blocks.
+   *
+   * Replaces only the flow-dependent coefficients in the row patterns created by
+   * update_static_tree_linearization().
+   */
+  void update_tree_linearization(TreeCoefficientAssemblyTarget& target, AirwayContainer& airways,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt);
 
   /**

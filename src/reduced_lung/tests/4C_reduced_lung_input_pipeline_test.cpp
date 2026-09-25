@@ -205,4 +205,21 @@ namespace
       EXPECT_EQ(kelvin_voigt.viscosity_eta, (std::vector<double>{0.0, 0.0}));
     }
   }
+
+  TEST(ReducedLungInputPipelineTest, NonlinearSolverDefaultsToNox)
+  {
+    const ReducedLungParameters::Dynamics dynamics{};
+    EXPECT_EQ(dynamics.nonlinear_solver, ReducedLungParameters::NonlinearSolverType::Nox);
+  }
+
+  TEST(ReducedLungInputPipelineTest, NewtonNonlinearSolversAreExplicitOptInValues)
+  {
+    ReducedLungParameters::Dynamics dynamics{};
+
+    dynamics.nonlinear_solver = ReducedLungParameters::NonlinearSolverType::NewtonSparse;
+    EXPECT_EQ(dynamics.nonlinear_solver, ReducedLungParameters::NonlinearSolverType::NewtonSparse);
+
+    dynamics.nonlinear_solver = ReducedLungParameters::NonlinearSolverType::NewtonTree;
+    EXPECT_EQ(dynamics.nonlinear_solver, ReducedLungParameters::NonlinearSolverType::NewtonTree);
+  }
 }  // namespace

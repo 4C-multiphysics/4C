@@ -1,0 +1,93 @@
+TITLE:
+  - "1 terminal unit with coupled linear-pressure recruitment"
+  - "NewtonTree runtime workflow variant."
+PROBLEM TYPE:
+  PROBLEMTYPE: "Reduced_Lung"
+reduced_dimensional_lung:
+  air_properties:
+    density: 1.176e-06
+    dynamic_viscosity: 1.79105e-05
+  dynamics:
+    linear_solver: 1
+    nonlinear_solver: NewtonTree
+    number_of_steps: 70
+    restart_every: 1
+    results_every: 1
+    time_increment: 0.1
+    output_verbosity: high
+  geometry:
+    file: "vtu/reduced_lung_terminal_unit.vtu"
+  lung_tree:
+    airways:
+      radius:
+        constant: 1.0
+      flow_model:
+        resistance_type:
+          constant: Linear
+        include_inertia:
+          constant: false
+      wall_model_type:
+        constant: Rigid
+    terminal_units:
+      element_blocks: [2]
+      v0:
+        constant: 0.41
+      rheological_model:
+        rheological_model_type:
+          constant: KelvinVoigt
+        kelvin_voigt:
+          viscosity_kelvin_voigt_eta:
+            constant: 0.0
+      elasticity_model:
+        elasticity_model_type:
+          constant: Linear
+        linear:
+          elasticity_e:
+            constant: 1.0
+      recruitment_model:
+        pressure_law_type:
+          constant: LinearPressure
+        time_law_type:
+          constant: None
+        reference_volume_linearization:
+          constant: Coupled
+        linear_pressure:
+          v0_min:
+            constant: 0.41
+          v0_max:
+            constant: 4.1887902047863905
+          p_closing_min:
+            constant: -0.1
+          p_opening_min:
+            constant: 0.8
+          delta_p_minmax:
+            constant: 0.4
+          epsilon_v0_switch:
+            constant: 0.05
+          initial_path:
+            constant: Opening
+  boundary_conditions:
+    pressure:
+      - id: 1
+        function_id: 1
+      - id: 2
+        function_id: 2
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Reduced_lung_solver"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "1*a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: linearinterpolation
+    NUMPOINTS: 5
+    TIMES: [0.0, 1.5, 3.0, 5.0, 7.0]
+    VALUES: [0.0, 1.5, 1.5, 0.0, 0.0]
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_TIME: "0"
+RESULT DESCRIPTION:
+  - REDUCED_LUNG:
+      ELEMENT: 1
+      QUANTITY: "volume"
+      VALUE: 1.354697551196479
+      TOLERANCE: 1e-10

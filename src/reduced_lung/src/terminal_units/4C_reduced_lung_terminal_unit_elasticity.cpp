@@ -87,27 +87,30 @@ namespace ReducedLung::TerminalUnits::Elasticity
         OgdenHyperelasticity& ogden_hyperelastic_model, TerminalUnitData& data,
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
     {
+      /* Fill model-owned gradient storage directly for structured tree coefficient assembly. */
+      const auto dof_values = locally_relevant_dofs.local_values_as_span();
+      const auto& lid_q = data.lid_q;
+      const auto& volume = data.volume_v;
+      const auto& reference_volume = data.reference_volume_context;
+      const auto& bulk_modulus = ogden_hyperelastic_model.bulk_modulus_kappa;
+      const auto& nonlinear_stiffening = ogden_hyperelastic_model.nonlinear_stiffening_beta;
+      auto& dp_el_dq = ogden_hyperelastic_model.dp_el_dq;
+      auto& dp_el_dv0 = ogden_hyperelastic_model.dp_el_dv0;
+
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
-        const auto& context = data.reference_volume_context[i];
-        const double v0 = context.v0_eff;
-        const double current_volume =
-            data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]];
+        const double v0 = reference_volume[i].v0_eff;
+        const double current_volume = volume[i] + dt * dof_values[lid_q[i]];
         const double v0_over_vi = v0 / current_volume;
-        ogden_hyperelastic_model.dp_el_dq[i] =
-            ogden_hyperelastic_model.bulk_modulus_kappa[i] * dt /
-            (ogden_hyperelastic_model.nonlinear_stiffening_beta[i] * v0) * v0_over_vi * v0_over_vi *
-            ((ogden_hyperelastic_model.nonlinear_stiffening_beta[i] + 1) *
-                    std::pow(v0_over_vi, ogden_hyperelastic_model.nonlinear_stiffening_beta[i]) -
-                1);
-        ogden_hyperelastic_model.dp_el_dv0[i] =
-            ogden_hyperelastic_model.bulk_modulus_kappa[i] /
-            (ogden_hyperelastic_model.nonlinear_stiffening_beta[i] * current_volume) *
-            (1.0 - (ogden_hyperelastic_model.nonlinear_stiffening_beta[i] + 1.0) *
-                       std::pow(v0_over_vi, ogden_hyperelastic_model.nonlinear_stiffening_beta[i]));
+        const double beta = nonlinear_stiffening[i];
+        const double v0_over_vi_squared = v0_over_vi * v0_over_vi;
+        const double v0_over_vi_to_beta = std::pow(v0_over_vi, beta);
+        dp_el_dq[i] = bulk_modulus[i] * dt / (beta * v0) * v0_over_vi_squared *
+                      ((beta + 1.0) * v0_over_vi_to_beta - 1.0);
+        dp_el_dv0[i] =
+            bulk_modulus[i] / (beta * current_volume) * (1.0 - (beta + 1.0) * v0_over_vi_to_beta);
       }
-      return {.dp_el_dq = ogden_hyperelastic_model.dp_el_dq,
-          .dp_el_dv0 = ogden_hyperelastic_model.dp_el_dv0};
+      return {.dp_el_dq = dp_el_dq, .dp_el_dv0 = dp_el_dv0};
     }
 
     template <typename Model>

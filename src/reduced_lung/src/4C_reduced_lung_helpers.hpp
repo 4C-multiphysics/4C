@@ -61,13 +61,16 @@ namespace Core::Rebalance
 
 namespace ReducedLung
 {
+  class TreeCoefficientAssemblyTarget;
+  class TreeLinearization;
+
   /**
-   * @brief Ordered callback registry for NOX residual/Jacobian/state assembly.
+   * @brief Ordered callback registry for reduced-lung residual/Jacobian/state assembly.
    *
-   * The pipeline decouples @ref NoxSolver from concrete reduced-lung model blocks. Additional
+   * The pipeline decouples solver workflows from concrete reduced-lung model blocks. Additional
    * model families can register callbacks without changing solver internals.
    */
-  struct NoxAssemblyPipeline
+  struct ReducedLungAssemblyPipeline
   {
     using ResidualAssembler = std::function<void(Core::LinAlg::Vector<double>& residual,
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double current_time,
@@ -77,12 +80,85 @@ namespace ReducedLung
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double current_time,
         double time_step_size_dt)>;
 
+    /**
+     * @brief Assemble state-dependent coefficients into the structured tree linearization.
+     */
+    using TreeLinearizationAssembler = std::function<void(TreeCoefficientAssemblyTarget& target,
+        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double current_time,
+        double time_step_size_dt)>;
+
+    /**
+     * @brief Assemble state-independent coefficients into the structured tree linearization.
+     */
+    using StaticTreeLinearizationAssembler =
+        std::function<void(TreeCoefficientAssemblyTarget& target)>;
+
+    /**
+     * @brief Reserve generic tree-linearization row capacities for validation/reference assembly.
+     *
+     * Direct production assembly writes into solver-owned storage and does not invoke these
+     * callbacks.
+     */
+    using TreeLinearizationCapacityInitializer =
+        std::function<void(TreeLinearization& linearization)>;
+
+    /**
+     * @brief Model-family phase used to attribute residual and tree-linearization assembly work.
+     */
+    enum class TreeLinearizationAssemblyPhase
+    {
+      Airways,             ///< Airway element contribution.
+      TerminalUnits,       ///< Terminal-unit element contribution.
+      Junctions,           ///< Connection and bifurcation contribution.
+      BoundaryConditions,  ///< Boundary-condition contribution.
+      Other,               ///< Contribution not covered by a dedicated phase.
+    };
+
+    /**
+     * @brief Tree-linearization callback tagged with its model-family phase.
+     */
+    struct NamedTreeLinearizationAssembler
+    {
+      TreeLinearizationAssemblyPhase phase =
+          TreeLinearizationAssemblyPhase::Other;  ///< Assembly phase for profiling.
+      TreeLinearizationAssembler callback;        ///< Coefficient assembly callback.
+    };
+
+    /**
+     * @brief Residual callback tagged with its model-family phase.
+     */
+    struct NamedResidualAssembler
+    {
+      TreeLinearizationAssemblyPhase phase =
+          TreeLinearizationAssemblyPhase::Other;  ///< Assembly phase for profiling.
+      ResidualAssembler callback;                 ///< Residual assembly callback.
+    };
+
+    /**
+     * @brief Static tree-linearization callback tagged with its model-family phase.
+     */
+    struct NamedStaticTreeLinearizationAssembler
+    {
+      TreeLinearizationAssemblyPhase phase =
+          TreeLinearizationAssemblyPhase::Other;  ///< Assembly phase for profiling.
+      StaticTreeLinearizationAssembler callback;  ///< State-independent coefficient callback.
+    };
+
     using StateUpdater = std::function<void(
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double time_step_size_dt)>;
 
-    std::vector<ResidualAssembler> residual_assemblers;
-    std::vector<JacobianAssembler> jacobian_assemblers;
-    std::vector<StateUpdater> state_updaters;
+    std::vector<ResidualAssembler> residual_assemblers;  ///< Residual callbacks for all workflows.
+    std::vector<NamedResidualAssembler>
+        named_residual_assemblers;  ///< Phase-tagged residual callbacks for profiling.
+    std::vector<JacobianAssembler> jacobian_assemblers;  ///< Sparse Jacobian callbacks.
+    std::vector<TreeLinearizationCapacityInitializer>
+        tree_linearization_capacity_initializers;  ///< Generic validation-storage capacities.
+    std::vector<NamedStaticTreeLinearizationAssembler>
+        tree_linearization_static_assemblers;  ///< Static structured coefficient callbacks.
+    std::vector<NamedTreeLinearizationAssembler>
+        tree_linearization_assemblers;  ///< State-dependent structured coefficient callbacks.
+    std::vector<StateUpdater>
+        state_updaters;  ///< End-of-solve model state synchronization callbacks.
   };
 
   /**
@@ -95,11 +171,11 @@ namespace ReducedLung
     const Teuchos::ParameterList& linear_solver_parameters;  ///< Linear solver configuration.
     std::function<const Teuchos::ParameterList&(int)>
         solver_params_callback;  ///< Callback for nested/ID-based solver parameters.
-    const NoxAssemblyPipeline& assembly_pipeline;         ///< Ordered model assembly callbacks.
-    Core::LinAlg::Vector<double>& dofs;                   ///< Owned dof vector.
-    Core::LinAlg::Vector<double>& locally_relevant_dofs;  ///< Ghosted dof vector.
-    Core::LinAlg::Vector<double>& x;                      ///< NOX solution vector.
-    Core::LinAlg::SparseOperator& jacobian;               ///< NOX Jacobian operator.
+    const ReducedLungAssemblyPipeline& assembly_pipeline;  ///< Ordered model assembly callbacks.
+    Core::LinAlg::Vector<double>& dofs;                    ///< Owned dof vector.
+    Core::LinAlg::Vector<double>& locally_relevant_dofs;   ///< Ghosted dof vector.
+    Core::LinAlg::Vector<double>& x;                       ///< NOX solution vector.
+    Core::LinAlg::SparseOperator& jacobian;                ///< NOX Jacobian operator.
   };
 
   /**
@@ -129,14 +205,19 @@ namespace ReducedLung
   };
 
   /**
-   * @brief Create the default reduced-lung NOX assembly pipeline.
+   * @brief Create the default reduced-lung assembly pipeline.
    *
-   * Registers airway, terminal-unit, junction, and boundary-condition contributions.
+   * Registers airway, terminal-unit, junction, and boundary-condition contributions for residual,
+   * sparse Jacobian, structured tree-linearization, and state-update assembly.
+   *
+   * @param include_sparse_jacobian_assemblers Register callbacks needed by NOX and NewtonSparse.
+   * Production NewtonTree disables these callbacks because it assembles structured coefficients.
    */
-  NoxAssemblyPipeline create_default_nox_assembly_pipeline(Airways::AirwayContainer& airways,
-      TerminalUnits::TerminalUnitContainer& terminal_units, Junctions::ConnectionData& connections,
-      Junctions::BifurcationData& bifurcations,
-      BoundaryConditions::BoundaryConditionContainer& boundary_conditions);
+  ReducedLungAssemblyPipeline create_default_reduced_lung_assembly_pipeline(
+      Airways::AirwayContainer& airways, TerminalUnits::TerminalUnitContainer& terminal_units,
+      Junctions::ConnectionData& connections, Junctions::BifurcationData& bifurcations,
+      BoundaryConditions::BoundaryConditionContainer& boundary_conditions,
+      bool include_sparse_jacobian_assemblers = true);
 
   /**
    * @brief NOX solver for reduced lung simulations.
@@ -187,7 +268,7 @@ namespace ReducedLung
     Core::LinAlg::Vector<double>& x_solution_;
     Core::LinAlg::Vector<double>& dofs_;
     Core::LinAlg::Vector<double>& locally_relevant_dofs_;
-    NoxAssemblyPipeline assembly_pipeline_;
+    ReducedLungAssemblyPipeline assembly_pipeline_;
 
     // Time integration parameters
     double dt_;
