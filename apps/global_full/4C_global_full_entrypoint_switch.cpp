@@ -121,7 +121,7 @@ void entrypoint_switch()
       break;
 
     case Core::ProblemType::elch:
-      elch_dyn(restart);
+      elch_dyn(problem, restart);
       break;
 
     case Core::ProblemType::art_net:

@@ -17,14 +17,14 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-ScaTra::ScaTraAlgorithm::ScaTraAlgorithm(MPI_Comm comm,  ///< communicator
-    const Teuchos::ParameterList& scatradyn,             ///< scatra parameter list
-    const Teuchos::ParameterList& fdyn,                  ///< fluid parameter list
-    const std::string scatra_disname,                    ///< scatra discretization name
-    const Teuchos::ParameterList& solverparams           ///< solver parameter list
+ScaTra::ScaTraAlgorithm::ScaTraAlgorithm(Global::Problem& problem,  ///< global problem
+    MPI_Comm comm,                                                  ///< communicator
+    const Teuchos::ParameterList& scatradyn,                        ///< scatra parameter list
+    const Teuchos::ParameterList& fdyn,                             ///< fluid parameter list
+    const std::string scatra_disname,                               ///< scatra discretization name
+    const Teuchos::ParameterList& solverparams                      ///< solver parameter list
     )
-    : ScaTraFluidCouplingAlgorithm(
-          *Global::Problem::instance(), comm, scatradyn, false, scatra_disname, solverparams),
+    : ScaTraFluidCouplingAlgorithm(problem, comm, scatradyn, false, scatra_disname, solverparams),
       natconv_(scatradyn.get<bool>("NATURAL_CONVECTION")),
       natconvitmax_(scatradyn.sublist("NONLINEAR").get<int>("ITEMAX_OUTER")),
       natconvittol_(scatradyn.sublist("NONLINEAR").get<double>("CONVTOL_OUTER")),
@@ -569,8 +569,9 @@ void ScaTra::ScaTraAlgorithm::read_inflow_restart(int restart)
 /*----------------------------------------------------------------------*/
 void ScaTra::ScaTraAlgorithm::test_results()
 {
-  Global::Problem::instance()->add_field_test(fluid_field()->create_field_test());
-  Global::Problem::instance()->add_field_test(create_scatra_field_test());
-  Global::Problem::instance()->test_all(get_comm());
+  auto& problem = AlgorithmBase::problem();
+  problem.add_field_test(fluid_field()->create_field_test());
+  problem.add_field_test(create_scatra_field_test());
+  problem.test_all(get_comm());
 }
 FOUR_C_NAMESPACE_CLOSE

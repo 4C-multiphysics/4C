@@ -26,21 +26,18 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void elch_dyn(int restart)
+void elch_dyn(Global::Problem& problem, int restart)
 {
-  // pointer to problem
-  auto* problem = Global::Problem::instance();
-
   // access the communicator
-  const auto& comm = problem->get_dis("fluid")->get_comm();
+  const auto& comm = problem.get_dis("fluid")->get_comm();
 
   // print ELCH-Logo to screen
   if (Core::Communication::my_mpi_rank(comm) == 0) printlogo();
 
   // access the fluid discretization
-  auto fluiddis = problem->get_dis("fluid");
+  auto fluiddis = problem.get_dis("fluid");
   // access the scatra discretization
-  auto scatradis = problem->get_dis("scatra");
+  auto scatradis = problem.get_dis("scatra");
 
   // ensure that all dofs are assigned in the right order; this creates dof numbers with
   //       fluid dof < scatra/elch dof
@@ -48,10 +45,10 @@ void elch_dyn(int restart)
   scatradis->fill_complete();
 
   // access the problem-specific parameter list
-  const auto& elchcontrol = problem->elch_control_params();
+  const auto& elchcontrol = problem.elch_control_params();
 
   // access the scalar transport parameter list
-  const auto& scatradyn = problem->scalar_transport_dynamic_params();
+  const auto& scatradyn = problem.scalar_transport_dynamic_params();
   const auto veltype = Teuchos::getIntegralValue<ScaTra::VelocityField>(scatradyn, "VELOCITYFIELD");
 
   // choose algorithm depending on velocity field type
@@ -74,12 +71,12 @@ void elch_dyn(int restart)
       }
 
       // create instance of scalar transport basis algorithm (empty fluid discretization)
-      Adapter::ScaTraBaseAlgorithm scatraonly(*Global::Problem::instance(), scatradyn, scatradyn,
-          Global::Problem::instance()->solver_params(linsolvernumber));
+      Adapter::ScaTraBaseAlgorithm scatraonly(
+          problem, scatradyn, scatradyn, problem.solver_params(linsolvernumber));
 
       // add proxy of velocity related degrees of freedom to scatra discretization
       auto dofsetaux = std::make_shared<Core::DOFSets::DofSetPredefinedDoFNumber>(
-          Global::Problem::instance()->n_dim() + 1, 0, 0, true);
+          problem.n_dim() + 1, 0, 0, true);
       if (scatradis->add_dof_set(dofsetaux) != 1)
         FOUR_C_THROW("Scatra discretization has illegal number of dofsets!");
       scatraonly.scatra_field()->set_number_of_dof_set_velocity(1);
@@ -129,7 +126,7 @@ void elch_dyn(int restart)
       {
         // fill scatra discretization by cloning fluid discretization
         Core::FE::clone_discretization<ScaTra::ScatraFluidCloneStrategy>(
-            *fluiddis, *scatradis, Global::Problem::instance()->cloning_material_map());
+            *fluiddis, *scatradis, problem.cloning_material_map());
         scatradis->fill_complete();
         // determine implementation type of cloned scatra elements
         ScaTra::ImplType impltype = ScaTra::impltype_undefined;
@@ -152,9 +149,9 @@ void elch_dyn(int restart)
       }
 
       // support for turbulent flow statistics
-      const auto& fdyn = (problem->fluid_dynamic_params());
+      const auto& fdyn = (problem.fluid_dynamic_params());
 
-      std::shared_ptr<Core::FE::Discretization> aledis = problem->get_dis("ale");
+      std::shared_ptr<Core::FE::Discretization> aledis = problem.get_dis("ale");
       if (!aledis->filled()) aledis->fill_complete(Core::FE::OptionsFillComplete::none());
       // is ALE needed or not?
       const auto withale =
@@ -167,7 +164,7 @@ void elch_dyn(int restart)
         {
           // clone ALE discretization from fluid discretization
           Core::FE::clone_discretization<ALE::Utils::AleCloneStrategy>(
-              *fluiddis, *aledis, Global::Problem::instance()->cloning_material_map());
+              *fluiddis, *aledis, problem.cloning_material_map());
 
           aledis->fill_complete({
               .assign_degrees_of_freedom = true,
@@ -194,7 +191,7 @@ void elch_dyn(int restart)
         // create an ElCh::MovingBoundaryAlgorithm instance
         // NOTE: elch reads time parameters from scatra dynamic section!
         ElCh::MovingBoundaryAlgorithm elch(
-            comm, elchcontrol, scatradyn, problem->solver_params(linsolvernumber));
+            problem, comm, elchcontrol, scatradyn, problem.solver_params(linsolvernumber));
 
         // add proxy of fluid degrees of freedom to scatra discretization
         if (scatradis->add_dof_set(fluiddis->get_dof_set_proxy()) != 1)
@@ -241,7 +238,7 @@ void elch_dyn(int restart)
         // create an ElCh::Algorithm instance
         // NOTE: elch reads time parameters from scatra dynamic section!
         ElCh::Algorithm elch(
-            comm, elchcontrol, scatradyn, fdyn, problem->solver_params(linsolvernumber));
+            problem, comm, elchcontrol, scatradyn, fdyn, problem.solver_params(linsolvernumber));
 
         // add proxy of fluid degrees of freedom to scatra discretization
         if (scatradis->add_dof_set(fluiddis->get_dof_set_proxy()) != 1)

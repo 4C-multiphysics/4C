@@ -21,11 +21,10 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-ElCh::MovingBoundaryAlgorithm::MovingBoundaryAlgorithm(MPI_Comm comm,
+ElCh::MovingBoundaryAlgorithm::MovingBoundaryAlgorithm(Global::Problem& problem, MPI_Comm comm,
     const Teuchos::ParameterList& elchcontrol, const Teuchos::ParameterList& scatradyn,
     const Teuchos::ParameterList& solverparams)
-    : ScaTraFluidAleCouplingAlgorithm(
-          *Global::Problem::instance(), comm, scatradyn, "FSICoupling", solverparams),
+    : ScaTraFluidAleCouplingAlgorithm(problem, comm, scatradyn, "FSICoupling", solverparams),
       pseudotransient_(false),
       molarvolume_(elchcontrol.get<double>("MOLARVOLUME")),
       idispn_(nullptr),
@@ -387,7 +386,7 @@ void ElCh::MovingBoundaryAlgorithm::read_restart(int step)
 
   // finally read isdispn which was written to the fluid restart data
   Core::IO::DiscretizationReader reader(
-      *fluid_field()->discretization(), Global::Problem::instance()->input_control_file(), step);
+      *fluid_field()->discretization(), AlgorithmBase::problem().input_control_file(), step);
   reader.read_vector(idispn_, "idispn");
   // read same result into vector isdispnp_ as a 'good guess'
   reader.read_vector(idispnp_, "idispn");
@@ -397,10 +396,10 @@ void ElCh::MovingBoundaryAlgorithm::read_restart(int step)
 /*----------------------------------------------------------------------*/
 void ElCh::MovingBoundaryAlgorithm::test_results()
 {
-  auto* problem = Global::Problem::instance();
-  problem->add_field_test(fluid_field()->create_field_test());
-  problem->add_field_test(ale_field()->create_field_test());
-  problem->add_field_test(scatra_field()->create_scatra_field_test());
-  problem->test_all(scatra_field()->discretization()->get_comm());
+  auto& problem = AlgorithmBase::problem();
+  problem.add_field_test(fluid_field()->create_field_test());
+  problem.add_field_test(ale_field()->create_field_test());
+  problem.add_field_test(scatra_field()->create_scatra_field_test());
+  problem.test_all(scatra_field()->discretization()->get_comm());
 }
 FOUR_C_NAMESPACE_CLOSE
