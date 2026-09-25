@@ -126,7 +126,10 @@ namespace Mat
     /// Initialize internal variables
     void setup(int numgp,  ///< number of Gauss points
         const Discret::Elements::Fibers& fibers,
-        const std::optional<Discret::Elements::CoordinateSystem>& coord_system) override;
+        const std::optional<Discret::Elements::CoordinateSystem>& coord_system,
+        int eleGID) override;
+
+    void post_setup(const Teuchos::ParameterList& params, const int eleGID) override;
 
     /// Return quick accessible material parameter data
     Core::Mat::PAR::Parameter* parameter() const override { return params_; }
@@ -156,7 +159,8 @@ namespace Mat
    protected:
     void reaction(const double porosity, const double J,
         std::shared_ptr<std::vector<double>> scalars,
-        const Teuchos::ParameterList& params) override;
+        const Teuchos::ParameterList& params,
+        int eleGID) override;
 
     /// reference porosity at time step n
     double refporosity_old_;

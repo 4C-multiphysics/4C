@@ -365,9 +365,15 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
             "Artery"},
         {.description = "init field"}));
 
-    // for initial vector fields, use the COMPONENT option of our functions
-    cond.add_component(parameter<int>("FUNCT"));
-
+    // The initial field can be set either by a function ID or by an input field (scalar or vector - point or cell-based)
+    cond.add_component(one_of({
+        parameter<int>("FUNCT", {.description = "ID of the function for initial field"}),
+        input_field<double>("POINT_SCALAR_INPUT_FIELD", {.description = "Scalar input field for initial field (basis: points)"}),
+        input_field<double>("CELL_SCALAR_INPUT_FIELD", {.description = "Scalar input field for initial field (basis: cells)"}),
+        input_field<std::vector<double>>("POINT_VECTOR_INPUT_FIELD", {.description = "Vector input field (basis: points)"}),
+        input_field<std::vector<double>>("CELL_VECTOR_INPUT_FIELD", {.description = "Vector input field (basis: cells)"}),
+        }));
+        
     condlist.emplace_back(cond);
   };
 

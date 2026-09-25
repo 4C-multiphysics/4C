@@ -63,7 +63,7 @@ namespace Mat
           std::vector<std::vector<double>>& reacderivsscalar, const std::vector<double>& pressure,
           const std::vector<double>& saturation, const double& porosity,
           const std::vector<double>& volfracs, const std::vector<double>& volfracpressures,
-          const std::vector<double>& scalar);
+          const std::vector<double>& scalar, int element_id);
 
       /// Check sizes of vectors
       void check_sizes(std::vector<double>& reacval,
@@ -127,7 +127,7 @@ namespace Mat
           std::vector<std::vector<double>>& reacderivsscalar, const std::vector<double>& pressure,
           const std::vector<double>& saturation, const double& porosity,
           const std::vector<double>& volfracs, const std::vector<double>& volfracpressures,
-          const std::vector<double>& scalar);
+          const std::vector<double>& scalar, int element_id);
 
       /// flag if initialize() has been called
       bool isinit_;
@@ -247,7 +247,7 @@ namespace Mat
         std::vector<std::vector<double>>& reacderivsscalar, const std::vector<double>& pressure,
         const std::vector<double>& saturation, const double& porosity,
         const std::vector<double>& volfracs, const std::vector<double>& volfracpressures,
-        const std::vector<double>& scalar);
+        const std::vector<double>& scalar, int element_id);
 
     /// return whether phase 'phasenum' is involved in this reaction
     bool is_reactive(int phasenum) const { return params_->scale_.at(phasenum) != 0; };

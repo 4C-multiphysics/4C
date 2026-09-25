@@ -152,7 +152,8 @@ namespace Discret
           const Core::LinAlg::Matrix<nen_, 1>& escaaf,
           const Core::LinAlg::Matrix<nen_, 1>* eporositynp,
           std::shared_ptr<Core::Mat::Material> mat, bool isale,
-          const Core::FE::GaussIntegration& intpoints);
+          const Core::FE::GaussIntegration& intpoints,
+          Discret::Elements::Fluid* ele);
 
       /*!
         \brief calculate off diagonal element matrix and rhs for porous flow
@@ -195,7 +196,8 @@ namespace Discret
           Core::LinAlg::Matrix<(nsd_ + 1) * nen_, (nsd_ + 1) * nen_>& ecoupl,
           Core::LinAlg::Matrix<(nsd_ + 1) * nen_, 1>& eforce,
           std::shared_ptr<const Core::Mat::Material> material, bool isale,
-          const Core::FE::GaussIntegration& intpoints);
+          const Core::FE::GaussIntegration& intpoints,
+          Discret::Elements::Fluid* ele);
 
       /*!
         \brief Gauss point loop for evaluation of off-diagonal terms
@@ -244,7 +246,8 @@ namespace Discret
           Core::LinAlg::Matrix<nen_ * nsd_, nen_>& ecouplp1_u,
           Core::LinAlg::Matrix<nen_, nen_>& ecouplp1_p,
           std::shared_ptr<const Core::Mat::Material> material,
-          const Core::FE::GaussIntegration& intpoints);
+          const Core::FE::GaussIntegration& intpoints,
+          Discret::Elements::Fluid* ele);
 
       /*!
        \brief evaluate pressure equation (i.e. continuity equation for standard poro elements)
@@ -293,12 +296,13 @@ namespace Discret
         jacobian determinant \param dphi_dJJ       (o) second derivative of porosity gradient w.r.t.
         jacobian determinant \param dphi_dpp       (o) second derivative of porosity gradient w.r.t.
         fluid pressure \param save           (i) flag for saving porosity within structure material
+        \param eleGID         (i) element global id
       */
       void compute_porosity(Teuchos::ParameterList& params, const double& press, const double& J,
           const int& gp, const Core::LinAlg::Matrix<nen_, 1>& shapfct,
           const Core::LinAlg::Matrix<nen_, 1>* myporosity, double& porosity, double* dphi_dp,
           double* dphi_dJ, double* dphi_dJdp, double* dphi_dJJ, double* dphi_dpp,
-          bool save) override;
+          bool save, int eleGID) override;
 
       /*!
         \brief Compute spatial gradient of porosity

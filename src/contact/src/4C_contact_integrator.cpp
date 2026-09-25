@@ -12530,7 +12530,8 @@ void inline CONTACT::Integrator::gp_ncoup_deriv(Mortar::Element& source_elem,
         nullptr,    // dphi_dJdp not needed
         nullptr,    // dphi_dJJ not needed
         nullptr,    // dphi_dpp not needed
-        false);
+        false,
+        source_elem.id());
   }
 
   ////////////////////////////////!!!Calculate target side Porosity!!!////////////////////////////
@@ -12572,7 +12573,9 @@ void inline CONTACT::Integrator::gp_ncoup_deriv(Mortar::Element& source_elem,
         nullptr,    // dphi_dJdp not needed
         nullptr,    // dphi_dJJ not needed
         nullptr,    // dphi_dpp not needed
-        false);
+        false,
+        source_elem.id()
+      );
   }
   ////////////////////////////////!!!Calculate Porosity done!!!////////////////////////////
   // build normal coupling term at current GP

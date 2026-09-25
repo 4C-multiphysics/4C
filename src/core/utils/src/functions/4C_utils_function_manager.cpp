@@ -122,11 +122,13 @@ void Core::Utils::add_valid_builtin_functions(Core::Utils::FunctionManager& func
 
       all_of({
           parameter<std::string>("VARFUNCTION"),
-          parameter<std::optional<int>>("NUMCONSTANTS"),
-          parameter<std::map<std::string, double>>("CONSTANTS",
-              {.default_value = std::map<std::string, double>{},
-                  .size = [](const IO::InputParameterContainer& container)
-                  { return container.get<std::optional<int>>("NUMCONSTANTS").value_or(0); }}),
+          list(
+            "PARAMETERS",
+            all_of({
+                parameter<std::string>("NAME"),
+                input_field<double>("value"),
+            }),
+            {.required = false}),
       }),
   });
 

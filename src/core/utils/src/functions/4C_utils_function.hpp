@@ -14,6 +14,7 @@
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_functionvariables.hpp"
 #include "4C_utils_symbolic_expression.fwd.hpp"
+#include "4C_io_input_field.hpp"
 
 #include <memory>
 #include <numbers>
@@ -91,6 +92,72 @@ namespace Core::Utils
      */
     virtual std::vector<double> evaluate_time_derivative(
         std::span<const double> x, double t, unsigned deg, std::size_t component) const;
+
+    // CASE OF SPATIALLY VARYING MATERIAL PROPERTIES DEFINED WITH INPUT FIELDS
+    /*!
+     * @brief Evaluation of time and space dependent function
+     *
+     * Evaluate the specified component of the function at the specified position and point in
+     * time.
+     *
+     * @param x  (i) The point in 3-dimensional space in which the function will be evaluated
+     * @param t  (i) The point in time in which the function will be evaluated
+     * @param component (i) For vector-valued functions, index defines the function-component
+     *                      which should be evaluated
+     * @param eleGID (i) Element global ID for element-specific function evaluation
+                     (spatially varying material properties defined with input fields)
+     * @return function value
+     */
+    virtual double evaluate(std::span<const double> x, double t, std::size_t component, int eleGID) const;
+
+    /*!
+     * @brief Vector-valued evaluation of time and space dependent function
+     *
+     * Evaluate the function at the specified position and point in time and return the vector of
+     * all components.
+     *
+     * @param x the point in 3-dimensional space in which the function will be evaluated
+     * @param t the point in time in which the function will be evaluated
+     * @param values function values
+     * @param eleGID (i) Element global ID for element-specific function evaluation
+                     (spatially varying material properties defined with input fields)
+     */
+    virtual void evaluate_vector(
+        std::span<const double> x, double t, std::span<double> values, int eleGID) const;
+
+
+    /*!
+     * \brief Evaluation of first spatial derivative of time and space dependent function
+     *
+     * \param x  (i) The point in 3-dimensional space in which the function will be evaluated
+     * \param t  (i) The point in time in which the function will be evaluated
+     * @param component (i) For vector-valued functions, index defines the function-component
+     *                      which should be evaluated
+     * @param eleGID (i) Element global ID for element-specific function evaluation
+                     (spatially varying material properties defined with input fields)
+     * \return first spatial derivative of function
+     */
+    virtual std::vector<double> evaluate_spatial_derivative(
+        std::span<const double> x, double t, std::size_t component, int eleGID) const;
+
+    /*!
+     * \brief Evaluation of time derivatives and value of the time and space dependent function
+     *
+     * Evaluate the specified component of the function at the specified position and point in
+     * time and calculate the time derivative(s) up to degree @p deg.
+     *
+     * @param x  (i) The point in 3-dimensional space in which the function will be evaluated
+     * @param t  (i) The point in time in which the function will be evaluated
+     * @param deg   (i) maximum time derivative degree
+     * @param component (i) For vector-valued functions, index defines the function-component
+     *                      which should be evaluated
+     * @param eleGID (i) Element global ID for element-specific function evaluation
+                     (spatially varying material properties defined with input fields)
+     * @return vector containing value and time derivative(s)
+     */
+    virtual std::vector<double> evaluate_time_derivative(
+        std::span<const double> x, double t, unsigned deg, std::size_t component, int eleGID) const;
+
 
     /// Return number of components of function
     [[nodiscard]] virtual std::size_t number_components() const = 0;
@@ -217,7 +284,7 @@ namespace Core::Utils
   {
    public:
     SymbolicFunctionOfAnything(
-        const std::string& component, std::vector<std::pair<std::string, double>> constants);
+        const std::string& component, std::vector<std::pair<std::string, Core::IO::InputField<double>>> constants);
 
 
     double evaluate(const std::vector<std::pair<std::string, double>>& variables,
@@ -229,6 +296,18 @@ namespace Core::Utils
         const std::vector<std::pair<std::string, double>>& variables,
         const std::vector<std::pair<std::string, double>>& constants,
         const std::size_t component) const override;
+
+    // CASE OF SPATIALLY VARYING MATERIAL PROPERTIES DEFINED WITH INPUT FIELDS
+    double evaluate(const std::vector<std::pair<std::string, double>>& variables,
+        const std::vector<std::pair<std::string, double>>& constants, //global constants!
+        const std::size_t component,
+        int element_id) const;
+
+    std::vector<double> evaluate_derivative(
+        const std::vector<std::pair<std::string, double>>& variables,
+        const std::vector<std::pair<std::string, double>>& constants, //global constants!
+        const std::size_t component,
+        int element_id) const; 
 
     /// return the number of components
     [[nodiscard]] std::size_t number_components() const override { return (expr_.size()); }
@@ -243,8 +322,8 @@ namespace Core::Utils
     std::vector<std::vector<std::shared_ptr<FunctionVariable>>> variables_;
 
    private:
-    //! constants from input
-    std::vector<std::pair<std::string, ValueType>> constants_from_input_;
+    //! constants from input defined as inputfields
+    std::vector<std::pair<std::string, Core::IO::InputField<double>>> parameter_fields_;
   };
 
   /// try to create SymbolicFunctionOfAnything from a given line definition
