@@ -1,0 +1,69 @@
+{% set split_file = "elasthyper_isoogden.4C.yaml" %}
+{% set split = load_input_file(split_file) %}
+
+.. _hyperelastic-isochoric-volumetric:
+
+Isochoric and volumetric hyperelastic summands
+==============================================
+
+Split hyperelasticity represents distortional and volumetric response separately. Combine at
+least one isochoric contribution with one suitable volumetric contribution. The strain-energy
+formulation of each summand is documented in the Input Parameter Reference.
+
+Isochoric summands
+------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
+
+   * - Summand
+     - Model
+   * - :ref:`ELAST_IsoNeoHooke <MATERIALS_ELAST_IsoNeoHooke>`
+     - Isochoric Neo-Hookean elasticity.
+   * - :ref:`ELAST_IsoMooneyRivlin <MATERIALS_ELAST_IsoMooneyRivlin>`
+     - Isochoric Mooney--Rivlin elasticity.
+   * - :ref:`ELAST_IsoOgden <MATERIALS_ELAST_IsoOgden>`
+     - Isochoric Ogden elasticity.
+   * - :ref:`ELAST_IsoYeoh <MATERIALS_ELAST_IsoYeoh>`
+     - Isochoric Yeoh elasticity.
+   * - :ref:`ELAST_IsoVarga <MATERIALS_ELAST_IsoVarga>`
+     - Isochoric Varga elasticity.
+   * - :ref:`ELAST_Iso1Pow <MATERIALS_ELAST_Iso1Pow>`
+     - One-term isochoric power law.
+   * - :ref:`ELAST_Iso2Pow <MATERIALS_ELAST_Iso2Pow>`
+     - Two-term isochoric power law.
+   * - :ref:`ELAST_IsoExpoPow <MATERIALS_ELAST_IsoExpoPow>`
+     - Isochoric exponential-power energy.
+   * - :ref:`ELAST_IsoMuscle_Blemker <MATERIALS_ELAST_IsoMuscle_Blemker>`
+     - Passive isochoric muscle response.
+
+       No scalar potential is evaluated; passive and time-dependent active stresses are assembled
+       from the piecewise muscle force laws.
+   * - :ref:`ELAST_IsoTestMaterial <MATERIALS_ELAST_IsoTestMaterial>`
+     - Test material intended for verification rather than production modeling.
+
+Volumetric summands
+-------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
+
+   * - Summand
+     - Model
+   * - :ref:`ELAST_VolPenalty <MATERIALS_ELAST_VolPenalty>`
+     - Volumetric penalty energy.
+   * - :ref:`ELAST_VolOgden <MATERIALS_ELAST_VolOgden>`
+     - Ogden-type volumetric energy.
+   * - :ref:`ELAST_VolPow <MATERIALS_ELAST_VolPow>`
+     - Power-law volumetric energy.
+   * - :ref:`ELAST_VolSussmanBathe <MATERIALS_ELAST_VolSussmanBathe>`
+     - Sussman--Bathe volumetric energy.
+
+Example
+-------
+
+The following split Ogden definition is taken from ``{{ split_file }}``:
+
+{{ section_dump(split, "MATERIALS") }}
