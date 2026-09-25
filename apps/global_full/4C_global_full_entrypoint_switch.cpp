@@ -117,7 +117,7 @@ void entrypoint_switch()
       break;
 
     case Core::ProblemType::loma:
-      loma_dyn(restart);
+      loma_dyn(problem, restart);
       break;
 
     case Core::ProblemType::elch:
@@ -170,11 +170,11 @@ void entrypoint_switch()
       break;
 
     case Core::ProblemType::pasi:
-      pasi_dyn();
+      pasi_dyn(problem);
       break;
 
     case Core::ProblemType::level_set:
-      levelset_dyn(restart);
+      levelset_dyn(problem, restart);
       break;
 
     case Core::ProblemType::np_support:

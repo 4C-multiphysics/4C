@@ -102,7 +102,7 @@ void LevelSet::LevelSetAlgorithm::capture_interface(
   double volplus = 0.0;
   double surf = 0.0;
   // reconstruct interface and calculate volumes, etc ...
-  ScaTra::LevelSet::Intersection intersect;
+  ScaTra::LevelSet::Intersection intersect(nsd_);
   intersect.capture_zero_level_set(*phinp_, *discret_, volminus, volplus, surf, interface);
 
   // do mass conservation check

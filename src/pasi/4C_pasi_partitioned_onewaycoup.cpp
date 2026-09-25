@@ -16,8 +16,9 @@ FOUR_C_NAMESPACE_OPEN
 /*---------------------------------------------------------------------------*
  | definitions                                                               |
  *---------------------------------------------------------------------------*/
-PaSI::PasiPartOneWayCoup::PasiPartOneWayCoup(MPI_Comm comm, const Teuchos::ParameterList& params)
-    : PartitionedAlgo(comm, params)
+PaSI::PasiPartOneWayCoup::PasiPartOneWayCoup(
+    Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& params)
+    : PartitionedAlgo(problem, comm, params)
 {
   // empty constructor
 }

@@ -12,9 +12,18 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-/*! entry point for the solution of low-Mach-number flow problems */
-void loma_dyn(int restart /* do we have to perform a restart?  */
-);
+namespace Global
+{
+  class Problem;
+}  // namespace Global
+
+/*!
+ * \brief Entry point for the solution of low-Mach-number flow problems
+ *
+ * \param problem  global problem providing parameters, discretizations and solvers
+ * \param restart  restart step (0 if no restart is performed)
+ */
+void loma_dyn(Global::Problem& problem, int restart);
 
 
 FOUR_C_NAMESPACE_CLOSE

@@ -17,7 +17,6 @@
 #include "4C_fem_geometry_element_volume.hpp"
 #include "4C_fem_geometry_integrationcell.hpp"
 #include "4C_fem_geometry_position_array.hpp"
-#include "4C_global_data.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_scatra_ele_parameter_std.hpp"
 #include "4C_utils_enum.hpp"
@@ -26,8 +25,13 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-ScaTra::LevelSet::Intersection::Intersection()
-    : check_lsv_(false), desired_positions_(0), volumeplus_(0.0), volumeminus_(0.0), surface_(0.0)
+ScaTra::LevelSet::Intersection::Intersection(unsigned probdim)
+    : check_lsv_(false),
+      desired_positions_(0),
+      volumeplus_(0.0),
+      volumeminus_(0.0),
+      surface_(0.0),
+      probdim_(probdim)
 {
   desired_positions_.reserve(2);
 }
@@ -292,7 +296,6 @@ void ScaTra::LevelSet::Intersection::prepare_cut(const Core::Elements::Element* 
 {
   const Core::FE::CellType distype = ele->shape();
   unsigned numnode = Core::FE::get_number_of_element_nodes(distype);
-  const unsigned probdim = Global::Problem::instance()->n_dim();
 
   xyze.shape(3, numnode);
   switch (distype)
@@ -307,7 +310,7 @@ void ScaTra::LevelSet::Intersection::prepare_cut(const Core::Elements::Element* 
       Core::Geo::fill_initial_position_array<Core::FE::CellType::hex27, 3>(ele, xyze);
       break;
     case Core::FE::CellType::line2:
-      switch (probdim)
+      switch (probdim_)
       {
         case 2:
           Core::Geo::fill_initial_position_array<Core::FE::CellType::line2, 2>(ele, xyze);
@@ -316,7 +319,7 @@ void ScaTra::LevelSet::Intersection::prepare_cut(const Core::Elements::Element* 
           Core::Geo::fill_initial_position_array<Core::FE::CellType::line2, 3>(ele, xyze);
           break;
         default:
-          FOUR_C_THROW("Unsupported problem dimension! (probdim = {})", probdim);
+          FOUR_C_THROW("Unsupported problem dimension! (probdim = {})", probdim_);
       }
       break;
     default:

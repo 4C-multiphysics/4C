@@ -62,7 +62,8 @@ namespace PaSI
      * \param[in] comm   communicator
      * \param[in] params particle structure interaction parameter list
      */
-    explicit PartitionedAlgo(MPI_Comm comm, const Teuchos::ParameterList& params);
+    explicit PartitionedAlgo(
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& params);
 
     /*!
      * \brief init pasi algorithm

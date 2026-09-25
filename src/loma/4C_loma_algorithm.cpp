@@ -26,10 +26,9 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-LowMach::Algorithm::Algorithm(
-    MPI_Comm comm, const Teuchos::ParameterList& prbdyn, const Teuchos::ParameterList& solverparams)
-    : ScaTraFluidCouplingAlgorithm(
-          *Global::Problem::instance(), comm, prbdyn, false, "scatra", solverparams),
+LowMach::Algorithm::Algorithm(Global::Problem& problem, MPI_Comm comm,
+    const Teuchos::ParameterList& prbdyn, const Teuchos::ParameterList& solverparams)
+    : ScaTraFluidCouplingAlgorithm(problem, comm, prbdyn, false, "scatra", solverparams),
       monolithic_(false),
       lomadbcmap_(nullptr),
       lomaincrement_(nullptr),
@@ -77,7 +76,7 @@ void LowMach::Algorithm::init()
   consthermpress_ = probdyn_.get<std::string>("CONSTHERMPRESS");
 
   // flag for special flow and start of sampling period from fluid parameter list
-  const Teuchos::ParameterList& fluiddyn = Global::Problem::instance()->fluid_dynamic_params();
+  const Teuchos::ParameterList& fluiddyn = AlgorithmBase::problem().fluid_dynamic_params();
   special_flow_ = fluiddyn.sublist("TURBULENCE MODEL").get<std::string>("CANONICAL_FLOW");
   samstart_ = fluiddyn.sublist("TURBULENCE MODEL").get<int>("SAMPLING_START");
 
@@ -119,7 +118,7 @@ void LowMach::Algorithm::setup()
   // call setup() in base class
   Adapter::ScaTraFluidCouplingAlgorithm::setup();
 
-  const Teuchos::ParameterList& fluiddyn = Global::Problem::instance()->fluid_dynamic_params();
+  const Teuchos::ParameterList& fluiddyn = AlgorithmBase::problem().fluid_dynamic_params();
 
   // preparatives for monolithic solver
   if (monolithic_)
@@ -175,7 +174,7 @@ void LowMach::Algorithm::setup()
     // create loma solver
     // get solver parameter list of linear LOMA solver
     const Teuchos::ParameterList& lomasolverparams =
-        Global::Problem::instance()->solver_params(linsolvernumber);
+        AlgorithmBase::problem().solver_params(linsolvernumber);
 
     const auto solvertype =
         Teuchos::getIntegralValue<Core::LinearSolver::SolverType>(lomasolverparams, "SOLVER");
@@ -197,8 +196,8 @@ void LowMach::Algorithm::setup()
     // use loma solver object
     lomasolver_ = std::make_shared<Core::LinAlg::Solver>(lomasolverparams,
         fluid_field()->discretization()->get_comm(),
-        Global::Problem::instance()->solver_params_callback(),
-        Global::Problem::instance()->io_params().get<Core::IO::Verbositylevel>("VERBOSITY"));
+        AlgorithmBase::problem().solver_params_callback(),
+        AlgorithmBase::problem().io_params().get<Core::IO::Verbositylevel>("VERBOSITY"));
 
     // todo extract ScalarTransportFluidSolver
     const int fluidsolver = fluiddyn.get<int>("LINEAR_SOLVER");
@@ -209,15 +208,15 @@ void LowMach::Algorithm::setup()
           "(Inverse1 block) within BGS2x2 preconditioner.");
 
     lomasolver_->put_solver_params_to_sub_params("Inverse1",
-        Global::Problem::instance()->solver_params(fluidsolver),
-        Global::Problem::instance()->solver_params_callback(),
-        Global::Problem::instance()->io_params().get<Core::IO::Verbositylevel>("VERBOSITY"),
+        AlgorithmBase::problem().solver_params(fluidsolver),
+        AlgorithmBase::problem().solver_params_callback(),
+        AlgorithmBase::problem().io_params().get<Core::IO::Verbositylevel>("VERBOSITY"),
         get_comm());
 
 
     // get linear solver id from SCALAR TRANSPORT DYNAMIC
     const Teuchos::ParameterList& scatradyn =
-        Global::Problem::instance()->scalar_transport_dynamic_params();
+        AlgorithmBase::problem().scalar_transport_dynamic_params();
     const int scalartransportsolvernumber = scatradyn.get<int>("LINEAR_SOLVER");
     if (scalartransportsolvernumber == (-1))
       FOUR_C_THROW(
@@ -226,9 +225,9 @@ void LowMach::Algorithm::setup()
           "(Inverse2 block) within BGS2x2 preconditioner.");
 
     lomasolver_->put_solver_params_to_sub_params("Inverse2",
-        Global::Problem::instance()->solver_params(scalartransportsolvernumber),
-        Global::Problem::instance()->solver_params_callback(),
-        Global::Problem::instance()->io_params().get<Core::IO::Verbositylevel>("VERBOSITY"),
+        AlgorithmBase::problem().solver_params(scalartransportsolvernumber),
+        AlgorithmBase::problem().solver_params_callback(),
+        AlgorithmBase::problem().io_params().get<Core::IO::Verbositylevel>("VERBOSITY"),
         get_comm());
 
     Core::LinearSolver::Parameters::compute_solver_parameters(

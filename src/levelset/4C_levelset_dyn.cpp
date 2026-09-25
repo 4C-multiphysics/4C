@@ -27,13 +27,10 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  * Main control routine for level set problems
  *----------------------------------------------------------------------*/
-void levelset_dyn(int restart)
+void levelset_dyn(Global::Problem& problem, int restart)
 {
-  // define abbreviation
-  Global::Problem* problem = Global::Problem::instance();
-
   // access the scatra discretization
-  std::shared_ptr<Core::FE::Discretization> scatradis = problem->get_dis("scatra");
+  std::shared_ptr<Core::FE::Discretization> scatradis = problem.get_dis("scatra");
 
   // access the communicator
   MPI_Comm comm = scatradis->get_comm();
@@ -43,10 +40,10 @@ void levelset_dyn(int restart)
     std::cout << "You are now about to enter the module for level-set problems!" << std::endl;
 
   // access the level-set-specific parameter list
-  const Teuchos::ParameterList& levelsetcontrol = problem->level_set_control();
+  const Teuchos::ParameterList& levelsetcontrol = problem.level_set_control();
 
   // access the scatra-specific parameter list
-  const Teuchos::ParameterList& scatradyn = problem->scalar_transport_dynamic_params();
+  const Teuchos::ParameterList& scatradyn = problem.scalar_transport_dynamic_params();
 
   // check velocity field
   const auto veltype = Teuchos::getIntegralValue<ScaTra::VelocityField>(scatradyn, "VELOCITYFIELD");
@@ -65,12 +62,11 @@ void levelset_dyn(int restart)
   // create instance of scalar transport basis algorithm (empty fluid discretization)
   std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatrabase =
       std::make_shared<Adapter::ScaTraBaseAlgorithm>(
-          *problem, levelsetcontrol, scatradyn, problem->solver_params(linsolvernumber));
+          problem, levelsetcontrol, scatradyn, problem.solver_params(linsolvernumber));
 
   // add proxy of velocity related degrees of freedom to scatra discretization
   std::shared_ptr<Core::DOFSets::DofSetInterface> dofsetaux =
-      std::make_shared<Core::DOFSets::DofSetPredefinedDoFNumber>(
-          Global::Problem::instance()->n_dim() + 1, 0, 0, true);
+      std::make_shared<Core::DOFSets::DofSetPredefinedDoFNumber>(problem.n_dim() + 1, 0, 0, true);
   if (scatradis->add_dof_set(dofsetaux) != 1)
     FOUR_C_THROW("Scatra discretization has illegal number of dofsets!");
   scatrabase->scatra_field()->set_number_of_dof_set_velocity(1);

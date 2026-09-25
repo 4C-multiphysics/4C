@@ -12,11 +12,17 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+namespace Global
+{
+  class Problem;
+}  // namespace Global
+
 /*!
  * \brief control routine for particle structure interaction
  *
+ * \param problem  global problem providing parameters, discretizations and solvers
  */
-void pasi_dyn();
+void pasi_dyn(Global::Problem& problem);
 
 /*---------------------------------------------------------------------------*/
 FOUR_C_NAMESPACE_CLOSE
