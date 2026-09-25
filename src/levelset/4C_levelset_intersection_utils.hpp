@@ -49,7 +49,7 @@ namespace ScaTra
     {
      public:
       /// constructor
-      Intersection();
+      explicit Intersection(unsigned probdim);
 
       /// destructor
       virtual ~Intersection() = default;
@@ -189,6 +189,9 @@ namespace ScaTra
 
       /// accumulated value of the boundary cell surfaces
       double surface_;
+
+      /// problem dimension
+      const unsigned probdim_;
     };  // class intersection
 
     /*----------------------------------------------------------------------------*/

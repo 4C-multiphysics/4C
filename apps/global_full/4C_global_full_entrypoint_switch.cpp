@@ -174,7 +174,7 @@ void entrypoint_switch()
       break;
 
     case Core::ProblemType::level_set:
-      levelset_dyn(restart);
+      levelset_dyn(problem, restart);
       break;
 
     case Core::ProblemType::np_support:
