@@ -24,8 +24,9 @@ FOUR_C_NAMESPACE_OPEN
 /*---------------------------------------------------------------------------*
  | definitions                                                               |
  *---------------------------------------------------------------------------*/
-PaSI::PasiPartTwoWayCoup::PasiPartTwoWayCoup(MPI_Comm comm, const Teuchos::ParameterList& params)
-    : PartitionedAlgo(comm, params),
+PaSI::PasiPartTwoWayCoup::PasiPartTwoWayCoup(
+    Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& params)
+    : PartitionedAlgo(problem, comm, params),
       itmax_(params.get<int>("ITEMAX")),
       convtolrelativedisp_(params.get<double>("CONVTOLRELATIVEDISP")),
       convtolscaleddisp_(params.get<double>("CONVTOLSCALEDDISP")),
@@ -87,7 +88,7 @@ void PaSI::PasiPartTwoWayCoup::read_restart(int restartstep)
   PaSI::PartitionedAlgo::read_restart(restartstep);
 
   Core::IO::DiscretizationReader reader(*structurefield_->discretization(),
-      Global::Problem::instance()->input_control_file(), restartstep);
+      AlgorithmBase::problem().input_control_file(), restartstep);
   if (restartstep != reader.read_int("step"))
     FOUR_C_THROW("Time step on file not equal to given step");
 
@@ -477,8 +478,8 @@ void PaSI::PasiPartTwoWayCoup::save_particle_states()
 }
 
 PaSI::PasiPartTwoWayCoupDispRelax::PasiPartTwoWayCoupDispRelax(
-    MPI_Comm comm, const Teuchos::ParameterList& params)
-    : PasiPartTwoWayCoup(comm, params), omega_(params.get<double>("STARTOMEGA"))
+    Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& params)
+    : PasiPartTwoWayCoup(problem, comm, params), omega_(params.get<double>("STARTOMEGA"))
 {
   // empty constructor
 }
@@ -594,8 +595,8 @@ void PaSI::PasiPartTwoWayCoupDispRelax::perform_relaxation_interface_states()
 }
 
 PaSI::PasiPartTwoWayCoupDispRelaxAitken::PasiPartTwoWayCoupDispRelaxAitken(
-    MPI_Comm comm, const Teuchos::ParameterList& params)
-    : PasiPartTwoWayCoupDispRelax(comm, params),
+    Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& params)
+    : PasiPartTwoWayCoupDispRelax(problem, comm, params),
       maxomega_(params.get<double>("MAXOMEGA")),
       minomega_(params.get<double>("MINOMEGA"))
 {
@@ -618,7 +619,7 @@ void PaSI::PasiPartTwoWayCoupDispRelaxAitken::read_restart(int restartstep)
   PaSI::PasiPartTwoWayCoupDispRelax::read_restart(restartstep);
 
   Core::IO::DiscretizationReader reader(*structurefield_->discretization(),
-      Global::Problem::instance()->input_control_file(), restartstep);
+      AlgorithmBase::problem().input_control_file(), restartstep);
   if (restartstep != reader.read_int("step"))
     FOUR_C_THROW("Time step on file not equal to given step");
 

@@ -40,7 +40,8 @@ namespace PaSI
      * \param[in] comm   communicator
      * \param[in] params particle structure interaction parameter list
      */
-    explicit PasiPartTwoWayCoup(MPI_Comm comm, const Teuchos::ParameterList& params);
+    explicit PasiPartTwoWayCoup(
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& params);
 
     /*!
      * \brief init pasi algorithm
@@ -209,7 +210,8 @@ namespace PaSI
      * \param[in] comm   communicator
      * \param[in] params particle structure interaction parameter list
      */
-    explicit PasiPartTwoWayCoupDispRelax(MPI_Comm comm, const Teuchos::ParameterList& params);
+    explicit PasiPartTwoWayCoupDispRelax(
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& params);
 
     /*!
      * \brief init pasi algorithm
@@ -280,7 +282,8 @@ namespace PaSI
      * \param[in] comm   communicator
      * \param[in] params particle structure interaction parameter list
      */
-    PasiPartTwoWayCoupDispRelaxAitken(MPI_Comm comm, const Teuchos::ParameterList& params);
+    PasiPartTwoWayCoupDispRelaxAitken(
+        Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& params);
 
     /*!
      * \brief init pasi algorithm

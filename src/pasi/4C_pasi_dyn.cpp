@@ -24,24 +24,21 @@ FOUR_C_NAMESPACE_OPEN
 /*---------------------------------------------------------------------------*
  | definitions                                                               |
  *---------------------------------------------------------------------------*/
-void pasi_dyn()
+void pasi_dyn(Global::Problem& problem)
 {
-  // get pointer to global problem
-  Global::Problem* problem = Global::Problem::instance();
-
   // create a communicator
-  MPI_Comm comm = problem->get_dis("structure")->get_comm();
+  MPI_Comm comm = problem.get_dis("structure")->get_comm();
 
   // print pasi logo to screen
   if (Core::Communication::my_mpi_rank(comm) == 0) PaSI::logo();
 
   // get parameter list
-  const Teuchos::ParameterList& params = problem->pasi_dynamic_params();
+  const Teuchos::ParameterList& params = problem.pasi_dynamic_params();
 
   // modification of time parameters of subproblems
   PaSI::change_time_parameter(comm, params,
-      const_cast<Teuchos::ParameterList&>(problem->particle_params()),
-      const_cast<Teuchos::ParameterList&>(problem->structural_dynamic_params()));
+      const_cast<Teuchos::ParameterList&>(problem.particle_params()),
+      const_cast<Teuchos::ParameterList&>(problem.structural_dynamic_params()));
 
   // create particle structure interaction algorithm
   std::shared_ptr<PaSI::PartitionedAlgo> algo = nullptr;
@@ -55,22 +52,22 @@ void pasi_dyn()
   {
     case PaSI::partitioned_onewaycoup:
     {
-      algo = std::make_shared<PaSI::PasiPartOneWayCoup>(comm, params);
+      algo = std::make_shared<PaSI::PasiPartOneWayCoup>(problem, comm, params);
       break;
     }
     case PaSI::partitioned_twowaycoup:
     {
-      algo = std::make_shared<PaSI::PasiPartTwoWayCoup>(comm, params);
+      algo = std::make_shared<PaSI::PasiPartTwoWayCoup>(problem, comm, params);
       break;
     }
     case PaSI::partitioned_twowaycoup_disprelax:
     {
-      algo = std::make_shared<PaSI::PasiPartTwoWayCoupDispRelax>(comm, params);
+      algo = std::make_shared<PaSI::PasiPartTwoWayCoupDispRelax>(problem, comm, params);
       break;
     }
     case PaSI::partitioned_twowaycoup_disprelaxaitken:
     {
-      algo = std::make_shared<PaSI::PasiPartTwoWayCoupDispRelaxAitken>(comm, params);
+      algo = std::make_shared<PaSI::PasiPartTwoWayCoupDispRelaxAitken>(problem, comm, params);
       break;
     }
     default:
@@ -84,7 +81,7 @@ void pasi_dyn()
   algo->init();
 
   // read restart information
-  const int restart = problem->restart();
+  const int restart = problem.restart();
   if (restart)
   {
     algo->read_restart(restart);

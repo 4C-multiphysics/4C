@@ -170,7 +170,7 @@ void entrypoint_switch()
       break;
 
     case Core::ProblemType::pasi:
-      pasi_dyn();
+      pasi_dyn(problem);
       break;
 
     case Core::ProblemType::level_set:

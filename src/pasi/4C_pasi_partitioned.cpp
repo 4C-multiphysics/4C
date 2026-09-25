@@ -29,8 +29,9 @@ FOUR_C_NAMESPACE_OPEN
 /*---------------------------------------------------------------------------*
  | definitions                                                               |
  *---------------------------------------------------------------------------*/
-PaSI::PartitionedAlgo::PartitionedAlgo(MPI_Comm comm, const Teuchos::ParameterList& params)
-    : AlgorithmBase(*Global::Problem::instance(), comm, params), isinit_(false), issetup_(false)
+PaSI::PartitionedAlgo::PartitionedAlgo(
+    Global::Problem& problem, MPI_Comm comm, const Teuchos::ParameterList& params)
+    : AlgorithmBase(problem, comm, params), isinit_(false), issetup_(false)
 {
   // empty constructor
 }
@@ -101,10 +102,10 @@ void PaSI::PartitionedAlgo::read_restart(int restartstep)
 void PaSI::PartitionedAlgo::test_results(MPI_Comm comm)
 {
   // get instance of global problem
-  Global::Problem* problem = Global::Problem::instance();
+  auto& problem = AlgorithmBase::problem();
 
   // add structure field specific result test object
-  problem->add_field_test(structurefield_->create_field_test());
+  problem.add_field_test(structurefield_->create_field_test());
 
   // create particle field specific result test objects
   std::vector<std::shared_ptr<Core::Utils::ResultTest>> allresulttests =
@@ -112,10 +113,10 @@ void PaSI::PartitionedAlgo::test_results(MPI_Comm comm)
 
   // add particle field specific result test objects
   for (auto& resulttest : allresulttests)
-    if (resulttest) problem->add_field_test(resulttest);
+    if (resulttest) problem.add_field_test(resulttest);
 
   // perform all tests
-  problem->test_all(comm);
+  problem.test_all(comm);
 }
 
 void PaSI::PartitionedAlgo::prepare_time_step(bool printheader)
@@ -248,20 +249,20 @@ void PaSI::PartitionedAlgo::particle_output()
 void PaSI::PartitionedAlgo::init_structure_field()
 {
   // get instance of global problem
-  Global::Problem* problem = Global::Problem::instance();
+  auto& problem = AlgorithmBase::problem();
 
   // get parameter list
-  const Teuchos::ParameterList& params = problem->structural_dynamic_params();
+  const Teuchos::ParameterList& params = problem.structural_dynamic_params();
 
   // access the structural discretization
-  std::shared_ptr<Core::FE::Discretization> structdis = problem->get_dis("structure");
+  std::shared_ptr<Core::FE::Discretization> structdis = problem.get_dis("structure");
 
   // build structure
   if (Teuchos::getIntegralValue<Solid::IntegrationStrategy>(params, "INT_STRATEGY") ==
       Solid::IntegrationStrategy::int_standard)
   {
     // create and init structure base algorithm
-    struct_adapterbase_ptr_ = Adapter::build_structure_algorithm(*problem, params);
+    struct_adapterbase_ptr_ = Adapter::build_structure_algorithm(problem, params);
     struct_adapterbase_ptr_->init(params, const_cast<Teuchos::ParameterList&>(params), structdis);
   }
   else if (Teuchos::getIntegralValue<Solid::IntegrationStrategy>(params, "INT_STRATEGY") ==
@@ -281,13 +282,13 @@ void PaSI::PartitionedAlgo::init_structure_field()
 void PaSI::PartitionedAlgo::init_particle_algorithm()
 {
   // get instance of global problem
-  Global::Problem* problem = Global::Problem::instance();
+  auto& problem = AlgorithmBase::problem();
 
   // get parameter list
-  const Teuchos::ParameterList& params = problem->particle_params();
+  const Teuchos::ParameterList& params = problem.particle_params();
 
   // reference to vector of initial particles
-  std::vector<Particle::ParticleObjShrdPtr>& initialparticles = problem->particles();
+  std::vector<Particle::ParticleObjShrdPtr>& initialparticles = problem.particles();
 
   // create and init particle algorithm
   particlealgorithm_ = std::make_shared<Particle::ParticleAlgorithm>(get_comm(), params);
