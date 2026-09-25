@@ -169,21 +169,21 @@ namespace CONTACT
      * @param[in] dis Current displacement field
      * @return Boolean flag indicating successful evaluation
      */
-    bool evaluate_force(const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
+    void evaluate_force(const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
 
     /*! \brief Evaluate stiffness term
      *
      * @param[in] dis Current displacement field
      * @return Boolean flag indicating successful evaluation
      */
-    bool evaluate_stiff(const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
+    void evaluate_stiff(const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
 
     /*! \brief Evaluate residual and stiffness matrix
      *
      * @param[in] dis Current displacement field
      * @return Boolean flag indicating successful evaluation
      */
-    bool evaluate_force_stiff(
+    void evaluate_force_stiff(
         const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
 
     //! Return the desired right-hand-side block pointer (read-only) [derived]

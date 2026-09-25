@@ -33,26 +33,25 @@ namespace Solid
       void setup() override;
 
       //! Apply the right hand side only (derived)
-      bool apply_force(
+      void apply_force(
           const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f) override;
 
       //! \brief Apply the stiffness only (derived)
-      bool apply_stiff(
+      void apply_stiff(
           const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac) override;
 
       //! \brief Apply force and stiff at once (derived)
-      bool apply_force_stiff(const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
+      void apply_force_stiff(const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
           Core::LinAlg::SparseOperator& jac) override;
 
       /*! \brief (derived)
        *
        */
-      bool apply_correction_system(const NOX::Nln::CorrectionType type,
+      void apply_correction_system(const NOX::Nln::CorrectionType type,
           const std::vector<Solid::ModelType>& constraint_models,
           const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
           Core::LinAlg::SparseOperator& jac) override
       {
-        return false;
       }
 
       /*! \brief Calculate characteristic/reference norms for forces (derived)
@@ -68,7 +67,7 @@ namespace Solid
           std::shared_ptr<Core::LinAlg::SparseMatrix>& scalingMatrixOpPtr) override;
 
       //! Assemble the right hand side
-      bool assemble_force(Core::LinAlg::Vector<double>& f,
+      void assemble_force(Core::LinAlg::Vector<double>& f,
           const std::vector<Solid::ModelType>* without_these_models = nullptr) const override;
 
       //! @name Monolithic update routines

@@ -749,7 +749,7 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::reset(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::evaluate_force()
+void Solid::ModelEvaluator::BeamInteractionModelEvaluator::evaluate_force()
 {
   check_init_setup();
 
@@ -764,13 +764,11 @@ bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::evaluate_force()
 
   // transformation from ia_discret to problem discret
   transform_force();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::evaluate_stiff()
+void Solid::ModelEvaluator::BeamInteractionModelEvaluator::evaluate_stiff()
 {
   check_init_setup();
 
@@ -785,13 +783,11 @@ bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::evaluate_stiff()
   transform_stiff();
 
   if (not stiff_beaminteraction_->filled()) stiff_beaminteraction_->complete();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::evaluate_force_stiff()
+void Solid::ModelEvaluator::BeamInteractionModelEvaluator::evaluate_force_stiff()
 {
   check_init_setup();
 
@@ -811,8 +807,6 @@ bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::evaluate_force_stiff(
   transform_force_stiff();
 
   if (not stiff_beaminteraction_->filled()) stiff_beaminteraction_->complete();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
@@ -842,7 +836,7 @@ bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::have_lagrange_dofs() 
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::assemble_force(
+void Solid::ModelEvaluator::BeamInteractionModelEvaluator::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   check_init_setup();
@@ -857,13 +851,11 @@ bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::assemble_force(
 
     beam_contact_model->assemble_force(f);
   }
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::assemble_jacobian(
+void Solid::ModelEvaluator::BeamInteractionModelEvaluator::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   check_init_setup();
@@ -883,8 +875,6 @@ bool Solid::ModelEvaluator::BeamInteractionModelEvaluator::assemble_jacobian(
   // no need to keep it
   stiff_beaminteraction_->zero();
   ia_state_ptr_->get_stiff()->zero();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*

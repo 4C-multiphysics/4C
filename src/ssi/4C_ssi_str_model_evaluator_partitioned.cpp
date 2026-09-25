@@ -32,7 +32,7 @@ Solid::ModelEvaluator::PartitionedSSI::PartitionedSSI(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::PartitionedSSI::assemble_jacobian(
+void Solid::ModelEvaluator::PartitionedSSI::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   // perform structural meshtying
@@ -109,8 +109,6 @@ bool Solid::ModelEvaluator::PartitionedSSI::assemble_jacobian(
     // replace old Jacobian by new one
     jac_sparse.assign(Core::LinAlg::DataAccess::Share, jac_new);
   }
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
@@ -149,7 +147,7 @@ void Solid::ModelEvaluator::PartitionedSSI::setup()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::PartitionedSSI::assemble_force(
+void Solid::ModelEvaluator::PartitionedSSI::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   // perform structural meshtying
@@ -167,8 +165,6 @@ bool Solid::ModelEvaluator::PartitionedSSI::assemble_force(
       coupling_map_extractor->put_scalar(f, 1, 0.0);
     }
   }
-
-  return true;
 }
 
 FOUR_C_NAMESPACE_CLOSE

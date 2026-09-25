@@ -78,7 +78,7 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
       discret_ptr->dof_row_map()->max_all_gid() + 1);
 }
 
-bool Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::evaluate_force_stiff(
+void Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::evaluate_force_stiff(
     const Core::LinAlg::Vector<double>& displacement_vector,
     std::shared_ptr<Solid::TimeInt::BaseDataGlobalState>& global_state_ptr,
     std::shared_ptr<Core::LinAlg::SparseMatrix> me_stiff_ptr,
@@ -88,8 +88,6 @@ bool Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::evaluate_for
   mortar_manager_->evaluate_global_coupling_contributions(displacement_vector);
   mortar_manager_->add_global_force_stiffness_penalty_contributions(
       *global_state_ptr, me_stiff_ptr, me_force_ptr);
-
-  return true;
 }
 
 void Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::runtime_output_step_state(

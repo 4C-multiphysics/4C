@@ -43,7 +43,7 @@ namespace Constraints::SubmodelEvaluator
 
     /*! Evaluate the current right-hand-side vector and tangential stiffness matrix at \f$t_{n+1}\f$
      */
-    bool evaluate_force_stiff(const Core::LinAlg::Vector<double>& displacement_vector,
+    void evaluate_force_stiff(const Core::LinAlg::Vector<double>& displacement_vector,
         std::shared_ptr<Solid::TimeInt::BaseDataGlobalState>& global_state_ptr,
         std::shared_ptr<Core::LinAlg::SparseMatrix> me_stiff_ptr,
         std::shared_ptr<Core::LinAlg::Vector<double>> me_force_ptr) override;

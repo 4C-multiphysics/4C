@@ -147,26 +147,26 @@ namespace Solid
        *
 
        *  */
-      virtual bool evaluate_force() = 0;
+      virtual void evaluate_force() = 0;
 
       /*! \brief Evaluate the initial right hand side (overload if needed for specific model)
        *
 
        *  */
-      virtual bool evaluate_initial_force() { return evaluate_force(); };
+      virtual void evaluate_initial_force() { evaluate_force(); };
 
       /*! \brief Evaluate the current tangential stiffness matrix at \f$t_{n+1}\f$
        *
 
        *  */
-      virtual bool evaluate_stiff() = 0;
+      virtual void evaluate_stiff() = 0;
 
       /*! \brief Evaluate the current right-hand-side vector and tangential stiffness matrix at
        * \f$t_{n+1}\f$
        *
 
        *  */
-      virtual bool evaluate_force_stiff() = 0;
+      virtual void evaluate_force_stiff() = 0;
 
       /** \brief evaluate the right hand side for the cheap second order correction step
        *
@@ -174,7 +174,7 @@ namespace Solid
        *  models.
        *
        *  */
-      virtual bool evaluate_cheap_soc_rhs() { return true; };
+      virtual void evaluate_cheap_soc_rhs() {};
 
       /*! \brief Perform actions just before the evaluate() call
        *
@@ -218,11 +218,10 @@ namespace Solid
        *
        * To scale the old state of the previous time step, see update_step_state.
        *
-       * \return Boolean to indicate success (true) or error (false)
        *
 
        */
-      virtual bool assemble_force(
+      virtual void assemble_force(
           Core::LinAlg::Vector<double>& f, const double& timefac_np) const = 0;
 
       /*! \brief Assemble the jacobian
@@ -231,16 +230,12 @@ namespace Solid
        * \param[in] timefac_np Time factor of the underlying structural time integrator for the new
        *                        state at \f$t_{n+1}\f$.
        *
-       * \return Boolean to indicate success (true) or error (false)
        */
-      virtual bool assemble_jacobian(
+      virtual void assemble_jacobian(
           Core::LinAlg::SparseOperator& jac, const double& timefac_np) const = 0;
 
-      virtual bool assemble_cheap_soc_rhs(
-          Core::LinAlg::Vector<double>& f, const double& timefac_np) const
-      {
-        return true;
-      };
+      virtual void assemble_cheap_soc_rhs(
+          Core::LinAlg::Vector<double>& f, const double& timefac_np) const {};
 
       /*! \brief write model specific restart
        *

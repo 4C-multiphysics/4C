@@ -168,7 +168,7 @@ void Solid::ModelEvaluator::Meshtying::setup()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Meshtying::assemble_force(
+void Solid::ModelEvaluator::Meshtying::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   std::shared_ptr<const Core::LinAlg::Vector<double>> block_vec_ptr = nullptr;
@@ -186,7 +186,7 @@ bool Solid::ModelEvaluator::Meshtying::assemble_force(
     // --- displ. - block ---------------------------------------------------
     block_vec_ptr = strategy().get_rhs_block_ptr(CONTACT::VecBlockType::displ);
     // if there are no active contact contributions, we can skip this...
-    if (!block_vec_ptr) return true;
+    if (!block_vec_ptr) return;
 
     Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *block_vec_ptr);
   }
@@ -195,21 +195,18 @@ bool Solid::ModelEvaluator::Meshtying::assemble_force(
     // --- displ. - block ---------------------------------------------------
     block_vec_ptr = strategy().get_rhs_block_ptr(CONTACT::VecBlockType::displ);
     // if there are no active contact contributions, we can skip this...
-    if (!block_vec_ptr) return true;
+    if (!block_vec_ptr) return;
 
     Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *block_vec_ptr);
   }
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Meshtying::assemble_jacobian(
+void Solid::ModelEvaluator::Meshtying::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> block_ptr = nullptr;
-  int err = 0;
   // ---------------------------------------------------------------------
   // Penalty / gpts / Nitsche system: no additional/condensed dofs
   // ---------------------------------------------------------------------
@@ -218,7 +215,7 @@ bool Solid::ModelEvaluator::Meshtying::assemble_jacobian(
       strategy().is_penalty())
   {
     block_ptr = strategy().get_matrix_block_ptr(CONTACT::MatBlockType::displ_displ);
-    if (strategy().is_penalty() && block_ptr == nullptr) return true;
+    if (strategy().is_penalty() && block_ptr == nullptr) return;
     std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd = global_state().extract_displ_block(jac);
     Core::LinAlg::matrix_add(*block_ptr, false, timefac_np, *jac_dd, 1.0);
   }
@@ -282,8 +279,6 @@ bool Solid::ModelEvaluator::Meshtying::assemble_jacobian(
       block_ptr = nullptr;
     }
   }
-
-  return (err == 0);
 }
 
 /*----------------------------------------------------------------------*
@@ -368,23 +363,23 @@ void Solid::ModelEvaluator::Meshtying::run_post_apply_jacobian_inverse(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Meshtying::evaluate_force()
+void Solid::ModelEvaluator::Meshtying::evaluate_force()
 {
-  return strategy().evaluate_force(global_state().get_dis_np());
+  strategy().evaluate_force(global_state().get_dis_np());
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Meshtying::evaluate_force_stiff()
+void Solid::ModelEvaluator::Meshtying::evaluate_force_stiff()
 {
-  return strategy().evaluate_force_stiff(global_state().get_dis_np());
+  strategy().evaluate_force_stiff(global_state().get_dis_np());
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Meshtying::evaluate_stiff()
+void Solid::ModelEvaluator::Meshtying::evaluate_stiff()
 {
-  return strategy().evaluate_stiff(global_state().get_dis_np());
+  strategy().evaluate_stiff(global_state().get_dis_np());
 }
 
 /*----------------------------------------------------------------------------*

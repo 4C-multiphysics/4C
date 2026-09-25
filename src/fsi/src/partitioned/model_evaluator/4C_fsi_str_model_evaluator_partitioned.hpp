@@ -50,13 +50,13 @@ namespace Solid
       void reset(const Core::LinAlg::Vector<double>& x) override { return; };
 
       //! [derived]
-      bool evaluate_force() override { return true; };
+      void evaluate_force() override {};
 
       //! [derived]
-      bool evaluate_stiff() override { return true; };
+      void evaluate_stiff() override {};
 
       //! [derived] not needed in partitioned scheme
-      bool evaluate_force_stiff() override { return true; };
+      void evaluate_force_stiff() override {};
 
       //! derived
       void pre_evaluate() override { return; };
@@ -65,14 +65,11 @@ namespace Solid
       void post_evaluate() override { return; };
 
       //! derived
-      bool assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
+      void assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
 
       //! Assemble the jacobian at \f$t_{n+1}\f$ not needed in partitioned scheme
-      bool assemble_jacobian(
-          Core::LinAlg::SparseOperator& jac, const double& timefac_np) const override
-      {
-        return true;
-      };
+      void assemble_jacobian(
+          Core::LinAlg::SparseOperator& jac, const double& timefac_np) const override {};
 
       //! [derived]
       void write_restart(

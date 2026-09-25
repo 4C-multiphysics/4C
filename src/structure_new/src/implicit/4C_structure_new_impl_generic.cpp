@@ -128,7 +128,7 @@ void Solid::IMPLICIT::Generic::print_jacobian_in_matlab_format(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::Generic::apply_correction_system(const NOX::Nln::CorrectionType type,
+void Solid::IMPLICIT::Generic::apply_correction_system(const NOX::Nln::CorrectionType type,
     const std::vector<Solid::ModelType>& constraint_models, const Core::LinAlg::Vector<double>& x,
     Core::LinAlg::Vector<double>& f, Core::LinAlg::SparseOperator& jac)
 {
@@ -136,7 +136,6 @@ bool Solid::IMPLICIT::Generic::apply_correction_system(const NOX::Nln::Correctio
 
   reset_eval_params();
 
-  bool ok = false;
   switch (type)
   {
     case NOX::Nln::CorrectionType::soc_full:
@@ -144,12 +143,12 @@ bool Solid::IMPLICIT::Generic::apply_correction_system(const NOX::Nln::Correctio
       // Do a standard full step.
       /* Note that there is a difference, since we tagged this evaluation by
        * setting it to a non-default step. */
-      ok = apply_force_stiff(x, f, jac);
+      apply_force_stiff(x, f, jac);
       break;
     }
     case NOX::Nln::CorrectionType::soc_cheap:
     {
-      ok = model_eval().apply_cheap_soc_rhs(type, constraint_models, x, f, 1.0);
+      model_eval().apply_cheap_soc_rhs(type, constraint_models, x, f, 1.0);
       if (not jac.filled()) FOUR_C_THROW("The jacobian is supposed to be filled at this point!");
 
       break;
@@ -163,11 +162,7 @@ bool Solid::IMPLICIT::Generic::apply_correction_system(const NOX::Nln::Correctio
     }
   }
 
-  if (not ok) return false;
-
   if (not jac.filled()) jac.complete();
-
-  return ok;
 }
 
 

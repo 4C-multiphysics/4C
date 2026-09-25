@@ -49,13 +49,13 @@ namespace Solid
       Solid::ModelType type() const override { return Solid::model_browniandyn; }
 
       //! derived
-      bool evaluate_force() override;
+      void evaluate_force() override;
 
       //! derived
-      bool evaluate_stiff() override;
+      void evaluate_stiff() override;
 
       //! derived
-      bool evaluate_force_stiff() override;
+      void evaluate_force_stiff() override;
 
       //! derived
       void pre_evaluate() override { return; };
@@ -64,10 +64,10 @@ namespace Solid
       void post_evaluate() override { /* currently unused */ };
 
       //! derived
-      bool assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
+      void assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
 
       //! derived
-      bool assemble_jacobian(
+      void assemble_jacobian(
           Core::LinAlg::SparseOperator& jac, const double& timefac_np) const override;
 
       //! derived
@@ -130,16 +130,16 @@ namespace Solid
 
      private:
       //! apply brownian (stochastic and damping forces)
-      bool apply_force_brownian();
+      void apply_force_brownian();
 
       //! apply brownian specific neumann conditions
-      bool apply_force_external();
+      void apply_force_external();
 
       //! apply brownian (stochastic and damping forces)
-      bool apply_force_stiff_brownian();
+      void apply_force_stiff_brownian();
 
       //! apply brownian specific neumann conditions
-      bool apply_force_stiff_external();
+      void apply_force_stiff_external();
 
       //! evaluate brownian specific neumann conditions
       void evaluate_neumann_brownian_dyn(std::shared_ptr<Core::LinAlg::Vector<double>> eval_vec,

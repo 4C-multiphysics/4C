@@ -68,45 +68,43 @@ void Solid::IMPLICIT::Statics::set_state(const Core::LinAlg::Vector<double>& x)
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::Statics::apply_force(
+void Solid::IMPLICIT::Statics::apply_force(
     const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f)
 {
   check_init_setup();
   reset_eval_params();
-  return model_eval().apply_force(x, f, 1.0);
+  model_eval().apply_force(x, f, 1.0);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::Statics::apply_stiff(
+void Solid::IMPLICIT::Statics::apply_stiff(
     const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac)
 {
   check_init_setup();
   reset_eval_params();
-  bool ok = model_eval().apply_stiff(x, jac, 1.0);
+  model_eval().apply_stiff(x, jac, 1.0);
   jac.complete();
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::Statics::apply_force_stiff(const Core::LinAlg::Vector<double>& x,
+void Solid::IMPLICIT::Statics::apply_force_stiff(const Core::LinAlg::Vector<double>& x,
     Core::LinAlg::Vector<double>& f, Core::LinAlg::SparseOperator& jac)
 {
   check_init_setup();
   reset_eval_params();
-  bool ok = model_eval().apply_force_stiff(x, f, jac, 1.0);
+  model_eval().apply_force_stiff(x, f, jac, 1.0);
   jac.complete();
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::Statics::assemble_force(Core::LinAlg::Vector<double>& f,
+void Solid::IMPLICIT::Statics::assemble_force(Core::LinAlg::Vector<double>& f,
     const std::vector<Solid::ModelType>* without_these_models) const
 {
   check_init_setup();
-  return model_eval().assemble_force(1.0, f, without_these_models);
+  model_eval().assemble_force(1.0, f, without_these_models);
 }
 
 /*----------------------------------------------------------------------------*

@@ -172,7 +172,7 @@ void Solid::ModelEvaluator::Cardiovascular0D::reset(const Core::LinAlg::Vector<d
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Cardiovascular0D::evaluate_force()
+void Solid::ModelEvaluator::Cardiovascular0D::evaluate_force()
 {
   check_init_setup();
 
@@ -183,13 +183,11 @@ bool Solid::ModelEvaluator::Cardiovascular0D::evaluate_force()
   // only forces are evaluated!
   cardvasc0dman_->evaluate_force_stiff(
       time_np, disnp_ptr_, fstructcardio_np_ptr_, nullptr, pcardvasc0d);
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Cardiovascular0D::evaluate_stiff()
+void Solid::ModelEvaluator::Cardiovascular0D::evaluate_stiff()
 {
   check_init_setup();
 
@@ -202,13 +200,11 @@ bool Solid::ModelEvaluator::Cardiovascular0D::evaluate_stiff()
       time_np, disnp_ptr_, nullptr, stiff_cardio_ptr_, pcardvasc0d);
 
   if (not stiff_cardio_ptr_->filled()) stiff_cardio_ptr_->complete();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Cardiovascular0D::evaluate_force_stiff()
+void Solid::ModelEvaluator::Cardiovascular0D::evaluate_force_stiff()
 {
   check_init_setup();
 
@@ -220,13 +216,11 @@ bool Solid::ModelEvaluator::Cardiovascular0D::evaluate_force_stiff()
       time_np, disnp_ptr_, fstructcardio_np_ptr_, stiff_cardio_ptr_, pcardvasc0d);
 
   if (not stiff_cardio_ptr_->filled()) stiff_cardio_ptr_->complete();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Cardiovascular0D::assemble_force(
+void Solid::ModelEvaluator::Cardiovascular0D::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   std::shared_ptr<const Core::LinAlg::Vector<double>> block_vec_ptr = nullptr;
@@ -244,13 +238,11 @@ bool Solid::ModelEvaluator::Cardiovascular0D::assemble_force(
         "are present!");
 
   Core::LinAlg::assemble_my_vector(1.0, f, 1.0, *block_vec_ptr);
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Cardiovascular0D::assemble_jacobian(
+void Solid::ModelEvaluator::Cardiovascular0D::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> block_ptr = nullptr;
@@ -280,8 +272,6 @@ bool Solid::ModelEvaluator::Cardiovascular0D::assemble_jacobian(
   global_state().assign_model_block(jac, *block_ptr, type(), MatBlockType::lm_lm);
   // reset the block pointer, just to be on the safe side
   block_ptr = nullptr;
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*

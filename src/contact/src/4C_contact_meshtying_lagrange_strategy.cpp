@@ -999,7 +999,7 @@ void CONTACT::MtLagrangeStrategy::recover(std::shared_ptr<Core::LinAlg::Vector<d
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool CONTACT::MtLagrangeStrategy::evaluate_force(
+void CONTACT::MtLagrangeStrategy::evaluate_force(
     const std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
 {
   if (!f_) f_ = std::make_shared<Core::LinAlg::Vector<double>>(*problem_dofs());
@@ -1020,16 +1020,14 @@ bool CONTACT::MtLagrangeStrategy::evaluate_force(
     Core::LinAlg::export_to(fm, fmexp);
     f_->update(-1.0, fmexp, 1.0);
   }
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool CONTACT::MtLagrangeStrategy::evaluate_stiff(
+void CONTACT::MtLagrangeStrategy::evaluate_stiff(
     const std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
 {
-  if (dm_matrix_ && dm_matrix_t_ && lm_diag_matrix_) return true;
+  if (dm_matrix_ && dm_matrix_t_ && lm_diag_matrix_) return;
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> constrmt =
       std::make_shared<Core::LinAlg::SparseMatrix>(*gdisprowmap_, 100, false, true);
@@ -1072,19 +1070,15 @@ bool CONTACT::MtLagrangeStrategy::evaluate_stiff(
     Core::LinAlg::matrix_add(*trafo_, false, 1.0, *systrafo_, 1.0);
     systrafo_->complete();
   }
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool CONTACT::MtLagrangeStrategy::evaluate_force_stiff(
+void CONTACT::MtLagrangeStrategy::evaluate_force_stiff(
     const std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
 {
-  bool successForce = evaluate_force(dis);
-  bool successStiff = evaluate_stiff(dis);
-
-  return (successForce && successStiff);
+  evaluate_force(dis);
+  evaluate_stiff(dis);
 }
 
 /*----------------------------------------------------------------------*

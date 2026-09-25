@@ -248,7 +248,7 @@ void Solid::IMPLICIT::GenAlpha::update_constant_state_contributions()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::GenAlpha::apply_force(
+void Solid::IMPLICIT::GenAlpha::apply_force(
     const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f)
 {
   check_init_setup();
@@ -258,12 +258,12 @@ bool Solid::IMPLICIT::GenAlpha::apply_force(
   // ---------------------------------------------------------------------------
   // set the time step dependent parameters for the element evaluation
   reset_eval_params();
-  return model_eval().apply_force(x, f, 1.0 - get_int_param());
+  model_eval().apply_force(x, f, 1.0 - get_int_param());
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::GenAlpha::apply_stiff(
+void Solid::IMPLICIT::GenAlpha::apply_stiff(
     const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac)
 {
   check_init_setup();
@@ -273,18 +273,13 @@ bool Solid::IMPLICIT::GenAlpha::apply_stiff(
   // ---------------------------------------------------------------------------
   // set the time step dependent parameters for the element evaluation
   reset_eval_params();
-  const bool ok = model_eval().apply_stiff(x, jac, 1.0 - get_int_param());
-
-  if (not ok) return ok;
-
+  model_eval().apply_stiff(x, jac, 1.0 - get_int_param());
   jac.complete();
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::GenAlpha::apply_force_stiff(const Core::LinAlg::Vector<double>& x,
+void Solid::IMPLICIT::GenAlpha::apply_force_stiff(const Core::LinAlg::Vector<double>& x,
     Core::LinAlg::Vector<double>& f, Core::LinAlg::SparseOperator& jac)
 {
   check_init_setup();
@@ -293,35 +288,30 @@ bool Solid::IMPLICIT::GenAlpha::apply_force_stiff(const Core::LinAlg::Vector<dou
   // ---------------------------------------------------------------------------
   // set the time step dependent parameters for the element evaluation
   reset_eval_params();
-  const bool ok = model_eval().apply_force_stiff(x, f, jac, 1.0 - get_int_param());
-
-  if (not ok) return ok;
-
+  model_eval().apply_force_stiff(x, f, jac, 1.0 - get_int_param());
   jac.complete();
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::GenAlpha::assemble_force(Core::LinAlg::Vector<double>& f,
+void Solid::IMPLICIT::GenAlpha::assemble_force(Core::LinAlg::Vector<double>& f,
     const std::vector<Solid::ModelType>* without_these_models) const
 {
   check_init_setup();
 
   // set the time step dependent parameters for the assembly
-  return model_eval().assemble_force(1.0 - get_int_param(), f, without_these_models);
+  model_eval().assemble_force(1.0 - get_int_param(), f, without_these_models);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::GenAlpha::assemble_jac(Core::LinAlg::SparseOperator& jac,
+void Solid::IMPLICIT::GenAlpha::assemble_jac(Core::LinAlg::SparseOperator& jac,
     const std::vector<Solid::ModelType>* without_these_models) const
 {
   check_init_setup();
 
   // set the time step dependent parameters for the assembly
-  return model_eval().assemble_jacobian(1.0 - get_int_param(), jac, without_these_models);
+  model_eval().assemble_jacobian(1.0 - get_int_param(), jac, without_these_models);
 }
 
 

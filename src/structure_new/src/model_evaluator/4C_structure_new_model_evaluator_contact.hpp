@@ -50,13 +50,13 @@ namespace Solid
       void reset(const Core::LinAlg::Vector<double>& x) override;
 
       //! [derived]
-      bool evaluate_force() override;
+      void evaluate_force() override;
 
       //! [derived]
-      bool evaluate_stiff() override;
+      void evaluate_stiff() override;
 
       //! [derived]
-      bool evaluate_force_stiff() override;
+      void evaluate_force_stiff() override;
 
       //! [derived]
       void pre_evaluate() override;
@@ -68,10 +68,10 @@ namespace Solid
       void remove_condensed_contributions_from_rhs(Core::LinAlg::Vector<double>& rhs) override;
 
       //! [derived]
-      bool assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
+      void assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
 
       //! Assemble the jacobian at \f$t_{n+1}\f$
-      bool assemble_jacobian(
+      void assemble_jacobian(
           Core::LinAlg::SparseOperator& jac, const double& timefac_np) const override;
 
       //! [derived]
@@ -144,10 +144,10 @@ namespace Solid
       get_last_time_step_solution_ptr() const override;
 
       //! [derived]
-      bool evaluate_cheap_soc_rhs() override;
+      void evaluate_cheap_soc_rhs() override;
 
       //! [derived]
-      bool assemble_cheap_soc_rhs(
+      void assemble_cheap_soc_rhs(
           Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
 
       //! @}

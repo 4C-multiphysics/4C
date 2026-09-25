@@ -132,30 +132,26 @@ void Solid::ModelEvaluator::BrownianDyn::reset(const Core::LinAlg::Vector<double
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BrownianDyn::evaluate_force()
+void Solid::ModelEvaluator::BrownianDyn::evaluate_force()
 {
   check_init_setup();
-  bool ok = true;
   // ---------------------------------------
   // (1) EXTERNAL FORCES
   // ---------------------------------------
-  ok = apply_force_external();
+  apply_force_external();
 
   // ---------------------------------------
   // (2) INTERNAL FORCES
   // ---------------------------------------
   // ordinary internal force
-  ok = (ok ? apply_force_brownian() : false);
-
-  return ok;
+  apply_force_brownian();
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BrownianDyn::evaluate_stiff()
+void Solid::ModelEvaluator::BrownianDyn::evaluate_stiff()
 {
   check_init_setup();
-  bool ok = true;
 
   /* We use the same routines as for the apply_force_stiff case, but we
    * do not update the global force vector, which is used for the
@@ -176,16 +172,13 @@ bool Solid::ModelEvaluator::BrownianDyn::evaluate_stiff()
   apply_force_stiff_brownian();
 
   if (not stiff_brownian_ptr_->filled()) stiff_brownian_ptr_->complete();
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BrownianDyn::evaluate_force_stiff()
+void Solid::ModelEvaluator::BrownianDyn::evaluate_force_stiff()
 {
   check_init_setup();
-  bool ok = true;
 
   // -------------------------------------------------------------------------
   // (1) EXTRERNAL FORCES and STIFFNESS ENTRIES
@@ -197,13 +190,11 @@ bool Solid::ModelEvaluator::BrownianDyn::evaluate_force_stiff()
   apply_force_stiff_brownian();
 
   if (not stiff_brownian_ptr_->filled()) stiff_brownian_ptr_->complete();
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BrownianDyn::assemble_force(
+void Solid::ModelEvaluator::BrownianDyn::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   check_init_setup();
@@ -222,13 +213,11 @@ bool Solid::ModelEvaluator::BrownianDyn::assemble_force(
   // -------------------------------------------------------------------------
   Core::LinAlg::assemble_my_vector(1.0, f, -timefac_np, *f_ext_np_ptr_);
   Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *f_brown_np_ptr_);
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BrownianDyn::assemble_jacobian(
+void Solid::ModelEvaluator::BrownianDyn::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   check_init_setup();
@@ -237,16 +226,13 @@ bool Solid::ModelEvaluator::BrownianDyn::assemble_jacobian(
   Core::LinAlg::matrix_add(*stiff_brownian_ptr_, false, timefac_np, *jac_dd_ptr, 1.0);
   // no need to keep it
   stiff_brownian_ptr_->zero();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BrownianDyn::apply_force_external()
+void Solid::ModelEvaluator::BrownianDyn::apply_force_external()
 {
   check_init_setup();
-  bool ok = true;
   // -------------------------------------------------------------------------
   // Set to default value  as it is unnecessary for the
   // evaluate_neumann routine.
@@ -261,16 +247,13 @@ bool Solid::ModelEvaluator::BrownianDyn::apply_force_external()
   // Evaluate brownian specific neumann conditions
   // -------------------------------------------------------------------------
   evaluate_neumann_brownian_dyn(f_ext_np_ptr_, nullptr);
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BrownianDyn::apply_force_brownian()
+void Solid::ModelEvaluator::BrownianDyn::apply_force_brownian()
 {
   check_init_setup();
-  bool ok = true;
   // -------------------------------------------------------------------------
   // currently a fixed number of matrix and vector pointers are supported
   // set default matrices and vectors
@@ -296,19 +279,16 @@ bool Solid::ModelEvaluator::BrownianDyn::apply_force_brownian()
   // Evaluate Browian (stochastic and damping forces)
   // -------------------------------------------------------------------------
   evaluate_brownian(eval_mat.data(), eval_vec.data());
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BrownianDyn::apply_force_stiff_external()
+void Solid::ModelEvaluator::BrownianDyn::apply_force_stiff_external()
 {
   /* so far brownian specific neumann loads need no linearization,
    therefore apply_force_stiff_external is equal to apply_force_external*/
 
   check_init_setup();
-  bool ok = true;
   // -------------------------------------------------------------------------
   // Set to default value, as it is unnecessary for the
   // evaluate_neumann routine.
@@ -323,16 +303,13 @@ bool Solid::ModelEvaluator::BrownianDyn::apply_force_stiff_external()
   // Evaluate brownian specific neumann conditions
   // -------------------------------------------------------------------------
   evaluate_neumann_brownian_dyn(f_ext_np_ptr_, nullptr);
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::BrownianDyn::apply_force_stiff_brownian()
+void Solid::ModelEvaluator::BrownianDyn::apply_force_stiff_brownian()
 {
   check_init_setup();
-  bool ok = true;
   // -------------------------------------------------------------------------
   // currently a fixed number of matrix and vector pointers are supported
   // set default matrices and vectors
@@ -358,8 +335,6 @@ bool Solid::ModelEvaluator::BrownianDyn::apply_force_stiff_brownian()
   // -------------------------------------------------------------------------
   // Evaluate brownian (stochastic and damping) forces
   evaluate_brownian(eval_mat.data(), eval_vec.data());
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*

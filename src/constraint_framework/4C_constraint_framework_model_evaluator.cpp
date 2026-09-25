@@ -182,7 +182,7 @@ void Solid::ModelEvaluator::Constraint::reset(const Core::LinAlg::Vector<double>
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Constraint::evaluate_force()
+void Solid::ModelEvaluator::Constraint::evaluate_force()
 {
   pre_evaluate();
   for (auto& some_iter : sub_model_vec_ptr_)
@@ -190,13 +190,11 @@ bool Solid::ModelEvaluator::Constraint::evaluate_force()
     some_iter->evaluate_force_stiff(
         *global_state().get_dis_np().get(), global_state_ptr(), nullptr, constraint_force_ptr_);
   }
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Constraint::evaluate_stiff()
+void Solid::ModelEvaluator::Constraint::evaluate_stiff()
 {
   pre_evaluate();
 
@@ -207,12 +205,11 @@ bool Solid::ModelEvaluator::Constraint::evaluate_stiff()
         *global_state().get_dis_np().get(), global_state_ptr(), constraint_stiff_ptr_, nullptr);
   }
   if (not constraint_stiff_ptr_->filled()) constraint_stiff_ptr_->complete();
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Constraint::evaluate_force_stiff()
+void Solid::ModelEvaluator::Constraint::evaluate_force_stiff()
 {
   pre_evaluate();
 
@@ -223,8 +220,6 @@ bool Solid::ModelEvaluator::Constraint::evaluate_force_stiff()
         constraint_stiff_ptr_, constraint_force_ptr_);
   }
   if (not constraint_stiff_ptr_->filled()) constraint_stiff_ptr_->complete();
-
-  return true;
 }
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
@@ -237,17 +232,16 @@ void Solid::ModelEvaluator::Constraint::pre_evaluate()
 }
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Constraint::assemble_force(
+void Solid::ModelEvaluator::Constraint::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *constraint_force_ptr_);
   constraint_force_ptr_->put_scalar(0.0);
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Constraint::assemble_jacobian(
+void Solid::ModelEvaluator::Constraint::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr = global_state().extract_displ_block(jac);
@@ -255,7 +249,6 @@ bool Solid::ModelEvaluator::Constraint::assemble_jacobian(
   Core::LinAlg::matrix_add(*constraint_stiff_ptr_, false, timefac_np, *jac_dd_ptr, 1.0);
 
   constraint_stiff_ptr_->zero();
-  return true;
 }
 
 /*----------------------------------------------------------------------------*

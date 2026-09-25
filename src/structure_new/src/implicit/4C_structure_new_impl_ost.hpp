@@ -41,19 +41,19 @@ namespace Solid
       void set_state(const Core::LinAlg::Vector<double>& x) override;
 
       //! Apply the rhs only (derived)
-      bool apply_force(
+      void apply_force(
           const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f) override;
 
       //! Apply the stiffness only (derived)
-      bool apply_stiff(
+      void apply_stiff(
           const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac) override;
 
       //! Apply force and stiff at once (derived)
-      bool apply_force_stiff(const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
+      void apply_force_stiff(const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
           Core::LinAlg::SparseOperator& jac) override;
 
       //! (derived)
-      bool assemble_force(Core::LinAlg::Vector<double>& f,
+      void assemble_force(Core::LinAlg::Vector<double>& f,
           const std::vector<Solid::ModelType>* without_these_models = nullptr) const override;
 
       //! (derived)

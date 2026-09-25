@@ -87,7 +87,7 @@ bool Solid::TimeInt::NoxInterface::compute_f(const Core::LinAlg::Vector<double>&
 {
   check_init_setup();
 
-  if (not int_ptr_->apply_force(x, f)) return false;
+  int_ptr_->apply_force(x, f);
 
   /* Apply the DBC on the right hand side, since we need the Dirichlet free
    * right hand side inside NOX for the convergence check, etc.               */
@@ -103,7 +103,7 @@ bool Solid::TimeInt::NoxInterface::compute_jacobian(
 {
   check_init_setup();
 
-  if (not int_ptr_->apply_stiff(x, jac)) return false;
+  int_ptr_->apply_stiff(x, jac);
 
   /* We do not consider the jacobian DBC at this point. The Dirichlet conditions
    * are applied inside the NOX::Nln::LinearSystem::apply_jacobian_inverse()
@@ -120,7 +120,7 @@ bool Solid::TimeInt::NoxInterface::compute_f_and_jacobian(const Core::LinAlg::Ve
 {
   check_init_setup();
 
-  if (not int_ptr_->apply_force_stiff(x, rhs, jac)) return false;
+  int_ptr_->apply_force_stiff(x, rhs, jac);
 
   /* Apply the DBC on the right hand side, since we need the Dirichlet free
    * right hand side inside NOX for the convergence check, etc.               */

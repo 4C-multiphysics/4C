@@ -72,10 +72,10 @@ namespace Solid
       void remove_condensed_contributions_from_rhs(Core::LinAlg::Vector<double>& rhs) override;
 
       //! [derived]
-      bool assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
+      void assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
 
       //! Assemble the jacobian at \f$t_{n+1}\f$
-      bool assemble_jacobian(
+      void assemble_jacobian(
           Core::LinAlg::SparseOperator& jac, const double& timefac_np) const override;
 
       //! [derived]
@@ -176,13 +176,13 @@ namespace Solid
       void evaluate_weighted_gap_gradient_error();
 
       //! [derived]
-      bool evaluate_force() override;
+      void evaluate_force() override;
 
       //! [derived]
-      bool evaluate_stiff() override;
+      void evaluate_stiff() override;
 
       //! [derived]
-      bool evaluate_force_stiff() override;
+      void evaluate_force_stiff() override;
 
       /*!
       \brief Apply results of mesh initialization to the underlying problem discretization

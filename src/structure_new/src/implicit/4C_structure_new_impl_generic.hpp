@@ -42,7 +42,7 @@ namespace Solid
       void setup() override;
 
       //! derived
-      bool apply_correction_system(const NOX::Nln::CorrectionType type,
+      void apply_correction_system(const NOX::Nln::CorrectionType type,
           const std::vector<Solid::ModelType>& constraint_models,
           const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
           Core::LinAlg::SparseOperator& jac) override;
@@ -50,13 +50,6 @@ namespace Solid
       //! derived
       void remove_condensed_contributions_from_rhs(
           Core::LinAlg::Vector<double>& rhs) const override;
-
-      //! derived
-      bool assemble_jac(Core::LinAlg::SparseOperator& jac,
-          const std::vector<Solid::ModelType>* without_these_models = nullptr) const override
-      {
-        return false;
-      };
 
       /*! \brief Calculate characteristic/reference norms for forces
        *

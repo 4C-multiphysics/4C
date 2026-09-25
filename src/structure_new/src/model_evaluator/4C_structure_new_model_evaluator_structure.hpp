@@ -58,13 +58,13 @@ namespace Solid
       void reset(const Core::LinAlg::Vector<double>& x) override;
 
       //! derived
-      bool evaluate_force() override;
+      void evaluate_force() override;
 
       //! derived
-      bool evaluate_stiff() override;
+      void evaluate_stiff() override;
 
       //! derived
-      bool evaluate_force_stiff() override;
+      void evaluate_force_stiff() override;
 
       //! derived
       void pre_evaluate() override {};
@@ -79,13 +79,13 @@ namespace Solid
        *
 
       *  */
-      bool initialize_inertia_and_damping();
+      void initialize_inertia_and_damping();
 
       //! derived
-      bool assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
+      void assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
 
       //! derived
-      bool assemble_jacobian(
+      void assemble_jacobian(
           Core::LinAlg::SparseOperator& jac, const double& timefac_np) const override;
 
       //! derived
@@ -186,16 +186,16 @@ namespace Solid
 
      private:
       //! apply the internal force contributions
-      bool apply_force_internal();
+      void apply_force_internal();
 
       //! apply the external force contributions
-      bool apply_force_external();
+      void apply_force_external();
 
       //! apply the internal force contributions and the evaluate the structural stiffness terms
-      bool apply_force_stiff_internal();
+      void apply_force_stiff_internal();
 
       //! apply the external force contributions and evaluate possible linearization contributions
-      bool apply_force_stiff_external();
+      void apply_force_stiff_external();
 
       /** \brief Run before apply_force_stiff_external is executed
        *
@@ -206,8 +206,7 @@ namespace Solid
        *  skipped. Otherwise FALSE will be returned.
        *
        *  */
-      bool pre_apply_force_stiff_external(
-          Core::LinAlg::Vector<double>& fextnp, Core::LinAlg::SparseMatrix& stiff) const;
+      bool pre_apply_force_stiff_external(Core::LinAlg::Vector<double>& fextnp) const;
 
       //! Set the params_interface in the parameter list and call the other evaluate_neumann routine
       void evaluate_neumann(Core::LinAlg::Vector<double>& eval_vec,

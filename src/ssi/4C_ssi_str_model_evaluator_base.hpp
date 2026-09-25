@@ -20,26 +20,22 @@ namespace Solid::ModelEvaluator
   class BaseSSI : public Generic
   {
    public:
-    bool assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override
-    {
-      return true;
-    }
+    void assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override {}
 
-    bool assemble_jacobian(
+    void assemble_jacobian(
         Core::LinAlg::SparseOperator& jac, const double& timefac_np) const override
     {
-      return true;
     }
 
     void determine_energy() override {}
 
     void determine_stress_strain() override;
 
-    bool evaluate_force() override { return true; }
+    void evaluate_force() override {}
 
-    bool evaluate_force_stiff() override { return true; }
+    void evaluate_force_stiff() override {}
 
-    bool evaluate_stiff() override { return true; }
+    void evaluate_stiff() override {}
 
     [[nodiscard]] std::shared_ptr<const Core::LinAlg::Map> get_block_dof_row_map_ptr()
         const override;

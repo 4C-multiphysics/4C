@@ -129,7 +129,7 @@ namespace Solid
     virtual void add_visco_mass_contributions(Core::LinAlg::SparseOperator& jac) const = 0;
 
     //! Apply the right hand side only
-    virtual bool apply_force(
+    virtual void apply_force(
         const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f) = 0;
 
     /*! \brief Apply the stiffness only
@@ -137,7 +137,7 @@ namespace Solid
      * Normally this one is unnecessary, since it makes more sense
      * to evaluate the stiffness and right hand side at once, because of
      * the lower computational overhead. */
-    virtual bool apply_stiff(
+    virtual void apply_stiff(
         const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac) = 0;
 
     /*! \brief Apply force and stiff at once
@@ -145,13 +145,13 @@ namespace Solid
      *  Only one loop over all elements. Especially in the contact case,
      *  the difference between this call and first call apply_force and
      *  then apply_stiff is mentionable because of the projection operations. */
-    virtual bool apply_force_stiff(const Core::LinAlg::Vector<double>& x,
+    virtual void apply_force_stiff(const Core::LinAlg::Vector<double>& x,
         Core::LinAlg::Vector<double>& f, Core::LinAlg::SparseOperator& jac) = 0;
 
     /*! \brief Modify the right hand side and Jacobian corresponding to the requested correction
      * action of one (or several) second order constraint (SOC) model(s)
      */
-    virtual bool apply_correction_system(const NOX::Nln::CorrectionType type,
+    virtual void apply_correction_system(const NOX::Nln::CorrectionType type,
         const std::vector<Solid::ModelType>& constraint_models,
         const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
         Core::LinAlg::SparseOperator& jac) = 0;
@@ -177,15 +177,12 @@ namespace Solid
         std::shared_ptr<Core::LinAlg::SparseMatrix>& scalingMatrixOpPtr) = 0;
 
     //! Assemble the right hand side
-    virtual bool assemble_force(Core::LinAlg::Vector<double>& f,
+    virtual void assemble_force(Core::LinAlg::Vector<double>& f,
         const std::vector<Solid::ModelType>* without_these_models = nullptr) const = 0;
 
     //! Assemble Jacobian
-    virtual bool assemble_jac(Core::LinAlg::SparseOperator& jac,
-        const std::vector<Solid::ModelType>* without_these_models = nullptr) const
-    {
-      return false;
-    };
+    virtual void assemble_jac(Core::LinAlg::SparseOperator& jac,
+        const std::vector<Solid::ModelType>* without_these_models = nullptr) const {};
 
     //! Create backup state
     void create_backup_state(const Core::LinAlg::Vector<double>& dir);

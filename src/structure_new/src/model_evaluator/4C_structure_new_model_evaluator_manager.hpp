@@ -113,9 +113,9 @@ namespace Solid
     //! @name General evaluate routines
     //!@{
 
-    bool initialize_inertia_and_damping();
+    void initialize_inertia_and_damping();
 
-    bool apply_initial_force(
+    void apply_initial_force(
         const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f);
 
     /*! \brie Apply force
@@ -124,9 +124,8 @@ namespace Solid
      * @param[in/out] f Residual vector (empty on input, filled on output)
      * @param[in] timefac_np Time integration factor for the current contribution at \f$t_{n+1}\f$
      *
-     * @return Boolean flag to indicate success (true) or failure (false)
      */
-    bool apply_force(const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
+    void apply_force(const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
         const double& timefac_np) const;
 
     /*! \brief Apply stiffness
@@ -135,9 +134,8 @@ namespace Solid
      * @param[in/out] jac Jacobian matrix (empty on input, filled on output)
      * @param[in] timefac_np Time integration factor for the current contribution at \f$t_{n+1}\f$
      *
-     * @return Boolean flag to indicate success (true) or failure (false)
      */
-    bool apply_stiff(const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac,
+    void apply_stiff(const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac,
         const double& timefac_np) const;
 
     /*! \brief Apply model specific stiff
@@ -147,9 +145,8 @@ namespace Solid
      * @param[in/out] jac Jacobian matrix (empty on input, filled on output)
      * @param[in] timefac_np Time integration factor for the current contribution at \f$t_{n+1}\f$
      *
-     * @return Boolean flag to indicate success (true) or failure (false)
      */
-    bool apply_stiff(const Solid::ModelType& mt, const Core::LinAlg::Vector<double>& x,
+    void apply_stiff(const Solid::ModelType& mt, const Core::LinAlg::Vector<double>& x,
         Core::LinAlg::SparseOperator& jac, const double& timefac_np) const;
 
     /*! \brief Apply force and stiffness
@@ -159,9 +156,8 @@ namespace Solid
      * @param[in/out] jac Jacobian matrix (empty on input, filled on output)
      * @param[in] timefac_np Time integration factor for the current contribution at \f$t_{n+1}\f$
      *
-     * @return Boolean flag to indicate success (true) or failure (false)
      */
-    bool apply_force_stiff(const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
+    void apply_force_stiff(const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
         Core::LinAlg::SparseOperator& jac, const double& timefac_np) const;
 
     /*! \brief Compute cheap second order correction right hand side
@@ -174,9 +170,8 @@ namespace Solid
      * @param[in/out] f Residual vector (empty on input, filled on output)
      * @param[in] timefac_np Time integration factor for the current contribution at \f$t_{n+1}\f$
      *
-     * @return Boolean flag to indicate success (true) or failure (false)
      */
-    bool apply_cheap_soc_rhs(const NOX::Nln::CorrectionType type,
+    void apply_cheap_soc_rhs(const NOX::Nln::CorrectionType type,
         const std::vector<Solid::ModelType>& constraint_models,
         const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f,
         const double& timefac_np) const;
@@ -208,10 +203,9 @@ namespace Solid
      *  \param f                   (out) : force vector which is going to be assembled.
      *  \param without_these_models (in) : Assemble all models, except the models in this
      *                                     vector (optional)
-     *  \return Boolean flag to indicate success (true) or failure (false)
      *
      *  */
-    bool assemble_force(const double timefac_np, Core::LinAlg::Vector<double>& f,
+    void assemble_force(const double timefac_np, Core::LinAlg::Vector<double>& f,
         const std::vector<Solid::ModelType>* without_these_models) const;
 
 
@@ -223,36 +217,25 @@ namespace Solid
      *  \param without_these_models (in) : Assemble all models, except the models in this
      *                                     vector (optional)
      *
-     *  \return Boolean flag to indicate success (true) or failure (false)
      *
      *  */
-    bool assemble_jacobian(const double timefac_np, Core::LinAlg::SparseOperator& jac,
+    void assemble_jacobian(const double timefac_np, Core::LinAlg::SparseOperator& jac,
         const std::vector<Solid::ModelType>* without_these_models) const;
 
     /** \brief Assembly of all force contributions
      *
      *  \param timefac_np (in) : time integration factor for the current contribution \f$t_{n+1}\f$
      *  \param f         (out) : force vector which is going to be assembled.
-     *
-     *  \return Boolean flag to indicate success (true) or failure (false)
-     *
-     *  */
-    inline bool assemble_force(const double timefac_np, Core::LinAlg::Vector<double>& f) const
-    {
-      return assemble_force(*me_vec_ptr_, timefac_np, f);
-    }
+     */
+    void assemble_force(const double timefac_np, Core::LinAlg::Vector<double>& f) const;
 
     /** \brief Assembly of all Jacobian contributions
      *
      *  \param timefac_np (in) : time integration factor for the current contribution \f$t_{n+1}\f$
      *  \param jac        (out) : jacobian which is going to be assembled.
      *
-     *  \return Boolean flag to indicate success (true) or failure (false)
      */
-    inline bool assemble_jacobian(const double timefac_np, Core::LinAlg::SparseOperator& jac) const
-    {
-      return assemble_jacobian(*me_vec_ptr_, timefac_np, jac);
-    }
+    void assemble_jacobian(const double timefac_np, Core::LinAlg::SparseOperator& jac) const;
 
     /** \brief Assembly of a sub-set of force contributions
      *
@@ -260,16 +243,10 @@ namespace Solid
      *  \param timefac_np (in) : time integration factor for the current contribution \f$t_{n+1}\f$
      *  \param f         (out) : force vector which is going to be assembled.
      *
-     *  \return Boolean flag to indicate success (true) or failure (false)
      *
      *  */
-    inline bool assemble_force(
-        const Vector& me_vec, const double timefac_np, Core::LinAlg::Vector<double>& f) const
-    {
-      bool ok = true;
-      assemble_force(ok, me_vec, timefac_np, f);
-      return ok;
-    }
+    void assemble_force(
+        const Vector& me_vec, const double timefac_np, Core::LinAlg::Vector<double>& f) const;
 
     /*! brief Assemble element contributions to global PTC scaling operator
      *
@@ -289,13 +266,8 @@ namespace Solid
      *  \param jac       (out) : jacobian which is going to be assembled.
      *
      *  */
-    inline bool assemble_jacobian(
-        const Vector& me_vec, const double timefac_np, Core::LinAlg::SparseOperator& jac) const
-    {
-      bool ok = true;
-      assemble_jacobian(ok, me_vec, timefac_np, jac);
-      return ok;
-    }
+    void assemble_jacobian(
+        const Vector& me_vec, const double timefac_np, Core::LinAlg::SparseOperator& jac) const;
 
     //!@}
 
@@ -459,44 +431,20 @@ namespace Solid
     std::shared_ptr<Solid::ModelEvaluatorManager::Vector> transform_to_vector(
         const Solid::ModelEvaluatorManager::Map& model_map) const;
 
-    /** \brief Assembly of all force contributions
-     *
-     *  \note There is also a PUBLIC alternative.
-     *
-     *  \param ok     (in/out) : flag indicating whether anything went wrong or not
-     *  \param me_vec     (in) : vector of all models which are going to be assembled
-     *  \param timefac_np (in) : time integration factor for the current contribution \f$t_{n+1}\f$
-     *  \param f         (out) : force vector which is going to be assembled.
-     *
-     *  */
-    void assemble_force(bool& ok, const Vector& me_vec, const double timefac_np,
-        Core::LinAlg::Vector<double>& f) const;
+    void assemble_cheap_soc_rhs(
+        const Vector& me_vec, const double timefac_np, Core::LinAlg::Vector<double>& f) const;
 
-    /** \brief Assembly of all jacobian contributions
-     *
-     *  \param ok     (in/out) : flag indicating whether anything went wrong or not
-     *  \param me_vec     (in) : vector of all models which are going to be assembled
-     *  \param timefac_np (in) : time integration factor for the current contribution \f$t_{n+1}\f$
-     *  \param f         (out) : jacobian matrix object which is going to be assembled.
-     *
-     *  */
-    void assemble_jacobian(bool& ok, const Vector& me_vec, const double timefac_np,
-        Core::LinAlg::SparseOperator& jac) const;
+    void evaluate_force(const Vector& me_vec) const;
 
-    void assemble_cheap_soc_rhs(bool& ok, const Vector& me_vec, const double timefac_np,
-        Core::LinAlg::Vector<double>& f) const;
+    void evaluate_stiff(const Vector& me_vec) const;
 
-    void evaluate_force(bool& ok, const Vector& me_vec) const;
+    void evaluate_force_stiff(const Vector& me_vec) const;
 
-    void evaluate_stiff(bool& ok, const Vector& me_vec) const;
+    void evaluate_cheap_soc_rhs(const Vector& me_vec) const;
 
-    void evaluate_force_stiff(bool& ok, const Vector& me_vec) const;
+    void post_evaluate(const Vector& me_vec) const;
 
-    void evaluate_cheap_soc_rhs(bool& ok, const Vector& me_vec) const;
-
-    void post_evaluate(bool ok, const Vector& me_vec) const;
-
-    void pre_evaluate(bool ok, const Vector& me_vec) const;
+    void pre_evaluate(const Vector& me_vec) const;
 
     /** \brief split the internally stored model vector and get the set without
      *  the specified models */

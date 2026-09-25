@@ -219,8 +219,7 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
   eval_data().set_total_time(gstate_ptr_->get_time_n());
 
   // initialize the mass matrix and the Rayleigh damping matrix (optional)
-  if (not model_eval().initialize_inertia_and_damping())
-    FOUR_C_THROW("initialize_inertia_and_damping failed!");
+  model_eval().initialize_inertia_and_damping();
 
   /* If we are restarting the simulation, we do not have to calculate a
    * consistent acceleration, since we get it anyway from the restart file.
@@ -236,8 +235,7 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
   }
 
   // build the entire initial right-hand-side
-  if (not model_eval().apply_initial_force(*disnp_ptr, rhs_full))
-    FOUR_C_THROW("apply_initial_force failed!");
+  model_eval().apply_initial_force(*disnp_ptr, rhs_full);
 
   // ---------------------------------------------------------------------------
   // build a NOX::Nln::Solid::LinearSystem

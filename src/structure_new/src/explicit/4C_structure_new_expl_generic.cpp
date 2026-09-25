@@ -59,7 +59,7 @@ void Solid::EXPLICIT::Generic::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::EXPLICIT::Generic::apply_force(
+void Solid::EXPLICIT::Generic::apply_force(
     const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f)
 {
   check_init_setup();
@@ -69,13 +69,12 @@ bool Solid::EXPLICIT::Generic::apply_force(
   // ---------------------------------------------------------------------------
   // set the time step dependent parameters for the element evaluation
   reset_eval_params();
-  bool ok = model_eval().apply_force(x, f, 1.0);
-  return ok;
+  model_eval().apply_force(x, f, 1.0);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::EXPLICIT::Generic::apply_stiff(
+void Solid::EXPLICIT::Generic::apply_stiff(
     const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac)
 {
   check_init_setup();
@@ -85,18 +84,13 @@ bool Solid::EXPLICIT::Generic::apply_stiff(
   // ---------------------------------------------------------------------------
   // set the time step dependent parameters for the element evaluation
   reset_eval_params();
-  const bool ok = model_eval().apply_stiff(x, jac, 1.0);
-
-  if (not ok) return ok;
-
+  model_eval().apply_stiff(x, jac, 1.0);
   jac.complete();
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::EXPLICIT::Generic::apply_force_stiff(const Core::LinAlg::Vector<double>& x,
+void Solid::EXPLICIT::Generic::apply_force_stiff(const Core::LinAlg::Vector<double>& x,
     Core::LinAlg::Vector<double>& f, Core::LinAlg::SparseOperator& jac)
 {
   check_init_setup();
@@ -105,13 +99,8 @@ bool Solid::EXPLICIT::Generic::apply_force_stiff(const Core::LinAlg::Vector<doub
   // ---------------------------------------------------------------------------
   // set the time step dependent parameters for the element evaluation
   reset_eval_params();
-  const bool ok = model_eval().apply_force_stiff(x, f, jac, 1.0);
-
-  if (not ok) return ok;
-
+  model_eval().apply_force_stiff(x, f, jac, 1.0);
   jac.complete();
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
@@ -133,11 +122,10 @@ void Solid::EXPLICIT::Generic::compute_jacobian_contributions_from_element_level
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::EXPLICIT::Generic::assemble_force(Core::LinAlg::Vector<double>& f,
+void Solid::EXPLICIT::Generic::assemble_force(Core::LinAlg::Vector<double>& f,
     const std::vector<Solid::ModelType>* without_these_models) const
 {
   FOUR_C_THROW("{} is not yet implemented", __FUNCTION__);
-  return false;
 }
 
 /*----------------------------------------------------------------------------*

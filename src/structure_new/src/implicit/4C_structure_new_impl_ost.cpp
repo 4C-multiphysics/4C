@@ -204,7 +204,7 @@ void Solid::IMPLICIT::OneStepTheta::update_constant_state_contributions()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::OneStepTheta::apply_force(
+void Solid::IMPLICIT::OneStepTheta::apply_force(
     const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f)
 {
   check_init_setup();
@@ -214,12 +214,12 @@ bool Solid::IMPLICIT::OneStepTheta::apply_force(
   // ---------------------------------------------------------------------------
   // set the time step dependent parameters for the element evaluation
   reset_eval_params();
-  return model_eval().apply_force(x, f, theta_);
+  model_eval().apply_force(x, f, theta_);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::OneStepTheta::apply_stiff(
+void Solid::IMPLICIT::OneStepTheta::apply_stiff(
     const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac)
 {
   check_init_setup();
@@ -229,18 +229,13 @@ bool Solid::IMPLICIT::OneStepTheta::apply_stiff(
   // ---------------------------------------------------------------------------
   // set the time step dependent parameters for the element evaluation
   reset_eval_params();
-  const bool ok = model_eval().apply_stiff(x, jac, theta_);
-
-  if (not ok) return ok;
-
+  model_eval().apply_stiff(x, jac, theta_);
   jac.complete();
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::OneStepTheta::apply_force_stiff(const Core::LinAlg::Vector<double>& x,
+void Solid::IMPLICIT::OneStepTheta::apply_force_stiff(const Core::LinAlg::Vector<double>& x,
     Core::LinAlg::Vector<double>& f, Core::LinAlg::SparseOperator& jac)
 {
   check_init_setup();
@@ -249,21 +244,16 @@ bool Solid::IMPLICIT::OneStepTheta::apply_force_stiff(const Core::LinAlg::Vector
   // ---------------------------------------------------------------------------
   // set the time step dependent parameters for the element evaluation
   reset_eval_params();
-  const bool ok = model_eval().apply_force_stiff(x, f, jac, theta_);
-
-  if (not ok) return ok;
-
+  model_eval().apply_force_stiff(x, f, jac, theta_);
   jac.complete();
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::OneStepTheta::assemble_force(Core::LinAlg::Vector<double>& f,
+void Solid::IMPLICIT::OneStepTheta::assemble_force(Core::LinAlg::Vector<double>& f,
     const std::vector<Solid::ModelType>* without_these_models) const
 {
-  return model_eval().assemble_force(theta_, f, without_these_models);
+  model_eval().assemble_force(theta_, f, without_these_models);
 }
 
 /*----------------------------------------------------------------------------*

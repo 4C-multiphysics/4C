@@ -561,13 +561,13 @@ namespace CONTACT
     { /* do nothing */ }
 
     //! evaluate force terms
-    virtual bool evaluate_force(const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) = 0;
+    virtual void evaluate_force(const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) = 0;
 
     //! evaluate stiffness terms
-    virtual bool evaluate_stiff(const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) = 0;
+    virtual void evaluate_stiff(const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) = 0;
 
     //! evaluate force and stiffness terms
-    virtual bool evaluate_force_stiff(
+    virtual void evaluate_force_stiff(
         const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) = 0;
 
     //! after applying Newton increment

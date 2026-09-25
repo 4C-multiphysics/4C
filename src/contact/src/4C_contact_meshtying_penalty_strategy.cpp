@@ -420,32 +420,27 @@ void CONTACT::MtPenaltyStrategy::update_uzawa_augmented_lagrange()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool CONTACT::MtPenaltyStrategy::evaluate_force(
+void CONTACT::MtPenaltyStrategy::evaluate_force(
     const std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
 {
   if (!force_) force_ = std::make_shared<Core::LinAlg::Vector<double>>(*problem_dofs());
   stiff_->multiply(false, *dis, *force_);
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool CONTACT::MtPenaltyStrategy::evaluate_stiff(
+void CONTACT::MtPenaltyStrategy::evaluate_stiff(
     const std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
 {
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool CONTACT::MtPenaltyStrategy::evaluate_force_stiff(
+void CONTACT::MtPenaltyStrategy::evaluate_force_stiff(
     const std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
 {
-  bool successForce = evaluate_force(dis);
-  bool successStiff = evaluate_stiff(dis);
-
-  return (successForce && successStiff);
+  evaluate_force(dis);
+  evaluate_stiff(dis);
 }
 
 /*----------------------------------------------------------------------------*

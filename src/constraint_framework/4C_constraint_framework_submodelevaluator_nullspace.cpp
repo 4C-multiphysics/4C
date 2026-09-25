@@ -111,7 +111,7 @@ Constraints::SubmodelEvaluator::NullspaceConstraintManager::NullspaceConstraintM
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Constraints::SubmodelEvaluator::NullspaceConstraintManager::evaluate_force_stiff(
+void Constraints::SubmodelEvaluator::NullspaceConstraintManager::evaluate_force_stiff(
     const Core::LinAlg::Vector<double>& displacement_vector,
     std::shared_ptr<Solid::TimeInt::BaseDataGlobalState>& global_state_ptr,
     std::shared_ptr<Core::LinAlg::SparseMatrix> me_stiff_ptr,
@@ -123,8 +123,6 @@ bool Constraints::SubmodelEvaluator::NullspaceConstraintManager::evaluate_force_
       *jacobian, *Q_dL_, Solid::model_constraints, Solid::MatBlockType::displ_lm);
   global_state_ptr->assign_model_block(
       *jacobian, *Q_Ld_, Solid::model_constraints, Solid::MatBlockType::lm_displ);
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*

@@ -78,11 +78,10 @@ Solid::ModelEvaluator::PartitionedFSI::get_last_time_step_solution_ptr() const
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::PartitionedFSI::assemble_force(
+void Solid::ModelEvaluator::PartitionedFSI::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   Core::LinAlg::assemble_my_vector(1.0, f, -timefac_np, *interface_force_np_ptr_);
-  return true;
 }
 
 /*----------------------------------------------------------------------*

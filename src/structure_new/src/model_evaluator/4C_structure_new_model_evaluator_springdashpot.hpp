@@ -42,20 +42,20 @@ namespace Solid
       [[nodiscard]] Solid::ModelType type() const override { return Solid::model_springdashpot; }
       void reset(const Core::LinAlg::Vector<double>& x) override;
 
-      bool evaluate_force() override;
+      void evaluate_force() override;
 
-      bool evaluate_stiff() override;
+      void evaluate_stiff() override;
 
-      bool evaluate_force_stiff() override;
+      void evaluate_force_stiff() override;
 
       void pre_evaluate() override {}
 
       void post_evaluate() override {}
 
-      bool assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
+      void assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
 
       //! Assemble the jacobian at \f$t_{n+1}\f$
-      bool assemble_jacobian(
+      void assemble_jacobian(
           Core::LinAlg::SparseOperator& jac, const double& timefac_np) const override;
 
       void write_restart(

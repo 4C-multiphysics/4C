@@ -191,30 +191,26 @@ void Solid::ModelEvaluator::Structure::reset(const Core::LinAlg::Vector<double>&
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Structure::evaluate_force()
+void Solid::ModelEvaluator::Structure::evaluate_force()
 {
   check_init_setup();
-  bool ok = true;
   // ---------------------------------------
   // (1) EXTERNAL FORCES
   // ---------------------------------------
-  ok = apply_force_external();
+  apply_force_external();
 
   // ---------------------------------------
   // (2) INTERNAL FORCES
   // ---------------------------------------
   // ordinary internal force
-  ok = (ok ? apply_force_internal() : false);
-
-  return ok;
+  apply_force_internal();
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Structure::evaluate_stiff()
+void Solid::ModelEvaluator::Structure::evaluate_stiff()
 {
   check_init_setup();
-  bool ok = true;
 
   /* We use the same routines as for the apply_force_stiff case, but we
    * do not update the global force vector, which is used for the
@@ -227,27 +223,24 @@ bool Solid::ModelEvaluator::Structure::evaluate_stiff()
   // ---------------------------------------------------------------------
   // (1) EXTRERNAL FORCES and STIFFNESS ENTRIES
   // ---------------------------------------------------------------------
-  ok = apply_force_stiff_external();
+  apply_force_stiff_external();
 
   // ---------------------------------------------------------------------
   // (2) INTERNAL FORCES and STIFFNESS ENTRIES
   // ---------------------------------------------------------------------
   // ordinary internal force
-  ok = (ok ? apply_force_stiff_internal() : false);
+  apply_force_stiff_internal();
 
   // *********** time measurement ***********
   *dt_ele_ptr_ += global_state().get_timer()->wallTime() - dtcpu;
   // *********** time measurement ***********
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Structure::evaluate_force_stiff()
+void Solid::ModelEvaluator::Structure::evaluate_force_stiff()
 {
   check_init_setup();
-  bool ok = true;
 
   // *********** time measurement ***********
   double dtcpu = global_state().get_timer()->wallTime();
@@ -255,25 +248,22 @@ bool Solid::ModelEvaluator::Structure::evaluate_force_stiff()
   // ---------------------------------------------------------------------
   // (1) EXTRERNAL FORCES and STIFFNESS ENTRIES
   // ---------------------------------------------------------------------
-  ok = apply_force_stiff_external();
+  apply_force_stiff_external();
 
   // ---------------------------------------------------------------------
   // (2) INTERNAL FORCES and STIFFNESS ENTRIES
   // ---------------------------------------------------------------------
   // ordinary internal force
-  ok = (ok ? apply_force_stiff_internal() : false);
+  apply_force_stiff_internal();
 
   // *********** time measurement ***********
   *dt_ele_ptr_ += global_state().get_timer()->wallTime() - dtcpu;
   // *********** time measurement ***********
-
-  // that's it
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Structure::assemble_force(
+void Solid::ModelEvaluator::Structure::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   Core::LinAlg::assemble_my_vector(1.0, f, -timefac_np, fext_np());
@@ -287,13 +277,11 @@ bool Solid::ModelEvaluator::Structure::assemble_force(
 
   // add the visco and mass contributions
   integrator().add_visco_mass_contributions(f);
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Structure::assemble_jacobian(
+void Solid::ModelEvaluator::Structure::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   stiff().scale(timefac_np);
@@ -301,13 +289,11 @@ bool Solid::ModelEvaluator::Structure::assemble_jacobian(
 
   // add the visco and mass contributions
   integrator().add_visco_mass_contributions(jac);
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Structure::initialize_inertia_and_damping()
+void Solid::ModelEvaluator::Structure::initialize_inertia_and_damping()
 {
   check_init_setup();
 
@@ -339,14 +325,11 @@ bool Solid::ModelEvaluator::Structure::initialize_inertia_and_damping()
 
   // assemble the rayleigh damping matrix
   rayleigh_damping_matrix();
-
-  // if we reach this point, no errors have occurred, hence return true
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Structure::apply_force_internal()
+void Solid::ModelEvaluator::Structure::apply_force_internal()
 {
   check_init_setup();
 
@@ -371,14 +354,11 @@ bool Solid::ModelEvaluator::Structure::apply_force_internal()
 
   // evaluate inertia and visco forces
   inertial_and_viscous_forces();
-
-  // if we reach this point, no errors have occurred, hence return true
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Structure::apply_force_external()
+void Solid::ModelEvaluator::Structure::apply_force_external()
 {
   check_init_setup();
 
@@ -392,18 +372,16 @@ bool Solid::ModelEvaluator::Structure::apply_force_external()
     discret().set_state(0, "velocity", *global_state().get_vel_n());
   discret().set_state(0, "displacement new", *global_state().get_dis_np());
   evaluate_neumann(*global_state().get_fext_np(), nullptr);
-
-  // if we reach this point, no errors have occurred, hence return true
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Structure::apply_force_stiff_external()
+void Solid::ModelEvaluator::Structure::apply_force_stiff_external()
 {
   check_init_setup();
 
-  if (pre_apply_force_stiff_external(fext_np(), *stiff_ptr_)) return true;
+  // check if pre_apply_force_stiff_external returns true, in which case early return is possible
+  if (pre_apply_force_stiff_external(fext_np())) return;
 
   // set vector values needed by elements
   discret().clear_state();
@@ -423,15 +401,12 @@ bool Solid::ModelEvaluator::Structure::apply_force_stiff_external()
      * matrix. */
     evaluate_neumann(*global_state().get_fext_np(), Core::Utils::shared_ptr_from_ref(*stiff_ptr_));
   }
-
-  // if we reach this point, no errors have occurred, hence return true
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 bool Solid::ModelEvaluator::Structure::pre_apply_force_stiff_external(
-    Core::LinAlg::Vector<double>& fextnp, Core::LinAlg::SparseMatrix& stiff) const
+    Core::LinAlg::Vector<double>& fextnp) const
 {
   check_init_setup();
 
@@ -443,7 +418,7 @@ bool Solid::ModelEvaluator::Structure::pre_apply_force_stiff_external(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Structure::apply_force_stiff_internal()
+void Solid::ModelEvaluator::Structure::apply_force_stiff_internal()
 {
   check_init_setup();
   // currently a fixed number of matrix and vector pointers are supported
@@ -471,9 +446,6 @@ bool Solid::ModelEvaluator::Structure::apply_force_stiff_internal()
 
   // evaluate inertial and viscous forces
   inertial_and_viscous_forces();
-
-  // if we reach this point, no errors have occurred, hence return true
-  return true;
 }
 
 /*----------------------------------------------------------------------------*

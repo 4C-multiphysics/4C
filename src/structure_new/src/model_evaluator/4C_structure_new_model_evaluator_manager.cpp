@@ -111,7 +111,7 @@ void Solid::ModelEvaluatorManager::setup_multi_map_extractor()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluatorManager::initialize_inertia_and_damping()
+void Solid::ModelEvaluatorManager::initialize_inertia_and_damping()
 {
   check_init_setup();
 
@@ -121,12 +121,12 @@ bool Solid::ModelEvaluatorManager::initialize_inertia_and_damping()
 
   str_model.reset(*gstate_ptr_->get_dis_np());
 
-  return str_model.initialize_inertia_and_damping();
+  str_model.initialize_inertia_and_damping();
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluatorManager::assemble_force(const double timefac_np,
+void Solid::ModelEvaluatorManager::assemble_force(const double timefac_np,
     Core::LinAlg::Vector<double>& f,
     const std::vector<Solid::ModelType>* without_these_models) const
 {
@@ -136,24 +136,28 @@ bool Solid::ModelEvaluatorManager::assemble_force(const double timefac_np,
   partial_me_vec.reserve(me_vec_ptr_->size());
   split_model_vector(partial_me_vec, *without_these_models);
 
-  return assemble_force(partial_me_vec, timefac_np, f);
+  assemble_force(partial_me_vec, timefac_np, f);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluatorManager::assemble_force(
-    bool& ok, const Vector& me_vec, const double timefac_np, Core::LinAlg::Vector<double>& f) const
+    const double timefac_np, Core::LinAlg::Vector<double>& f) const
 {
-  if (not ok) return;
-
-  for (const auto& cit : me_vec)
-    // if one model evaluator failed, skip the remaining ones and return false
-    ok = (ok ? cit->assemble_force(f, timefac_np) : false);
+  assemble_force(*me_vec_ptr_, timefac_np, f);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluatorManager::assemble_jacobian(const double timefac_np,
+void Solid::ModelEvaluatorManager::assemble_force(
+    const Vector& me_vec, const double timefac_np, Core::LinAlg::Vector<double>& f) const
+{
+  for (const auto& cit : me_vec) cit->assemble_force(f, timefac_np);
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluatorManager::assemble_jacobian(const double timefac_np,
     Core::LinAlg::SparseOperator& jac,
     const std::vector<Solid::ModelType>* without_these_models) const
 {
@@ -162,19 +166,23 @@ bool Solid::ModelEvaluatorManager::assemble_jacobian(const double timefac_np,
   Vector partial_me_vec;
   split_model_vector(partial_me_vec, *without_these_models);
 
-  return assemble_jacobian(partial_me_vec, timefac_np, jac);
+  assemble_jacobian(partial_me_vec, timefac_np, jac);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluatorManager::assemble_jacobian(bool& ok, const Vector& me_vec,
+void Solid::ModelEvaluatorManager::assemble_jacobian(
     const double timefac_np, Core::LinAlg::SparseOperator& jac) const
 {
-  if (not ok) return;
+  assemble_jacobian(*me_vec_ptr_, timefac_np, jac);
+}
 
-  for (const auto& cit : me_vec)
-    // if one model evaluator failed, skip the remaining ones and return false
-    ok = (ok ? cit->assemble_jacobian(jac, timefac_np) : false);
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluatorManager::assemble_jacobian(
+    const Vector& me_vec, const double timefac_np, Core::LinAlg::SparseOperator& jac) const
+{
+  for (const auto& cit : me_vec) cit->assemble_jacobian(jac, timefac_np);
 }
 
 /*----------------------------------------------------------------------------*
@@ -189,74 +197,58 @@ void Solid::ModelEvaluatorManager::assemble_jacobian_contributions_from_element_
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluatorManager::evaluate_force(bool& ok, const Vector& me_vec) const
+void Solid::ModelEvaluatorManager::evaluate_force(const Vector& me_vec) const
 {
-  if (not ok) return;
+  pre_evaluate(me_vec);
 
-  pre_evaluate(ok, me_vec);
+  for (const auto& cit : me_vec) cit->evaluate_force();
 
-  for (const auto& cit : me_vec)
-    // if one model evaluator failed, skip the remaining ones and return false
-    ok = (ok ? cit->evaluate_force() : false);
-
-  post_evaluate(ok, me_vec);
+  post_evaluate(me_vec);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluatorManager::evaluate_stiff(bool& ok, const Vector& me_vec) const
+void Solid::ModelEvaluatorManager::evaluate_stiff(const Vector& me_vec) const
 {
-  if (not ok) return;
+  pre_evaluate(me_vec);
 
-  pre_evaluate(ok, me_vec);
+  for (const auto& cit : me_vec) cit->evaluate_stiff();
 
-  for (const auto& cit : me_vec)
-    // if one model evaluator failed, skip the remaining ones and return false
-    ok = (ok ? cit->evaluate_stiff() : false);
-
-  post_evaluate(ok, me_vec);
+  post_evaluate(me_vec);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluatorManager::evaluate_force_stiff(bool& ok, const Vector& me_vec) const
+void Solid::ModelEvaluatorManager::evaluate_force_stiff(const Vector& me_vec) const
 {
-  if (not ok) return;
+  pre_evaluate(me_vec);
 
-  pre_evaluate(ok, me_vec);
+  for (const auto& cit : me_vec) cit->evaluate_force_stiff();
 
-
-  for (const auto& cit : me_vec)
-    // if one model evaluator failed, skip the remaining ones and return false
-    ok = (ok ? cit->evaluate_force_stiff() : false);
-
-  post_evaluate(ok, me_vec);
+  post_evaluate(me_vec);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluatorManager::pre_evaluate(bool ok, const Vector& me_vec) const
+void Solid::ModelEvaluatorManager::pre_evaluate(const Vector& me_vec) const
 {
   for (const auto& me : me_vec) me->pre_evaluate();
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluatorManager::post_evaluate(bool ok, const Vector& me_vec) const
+void Solid::ModelEvaluatorManager::post_evaluate(const Vector& me_vec) const
 {
-  if (not ok) return;
-
   for (const auto& cit : me_vec) cit->post_evaluate();
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluatorManager::apply_initial_force(
+void Solid::ModelEvaluatorManager::apply_initial_force(
     const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& f)
 {
   check_init_setup();
 
-  bool ok = true;
   // initialize right hand side to zero
   f.put_scalar(0.0);
 
@@ -269,15 +261,16 @@ bool Solid::ModelEvaluatorManager::apply_initial_force(
   // evaluate all terms
   // ---------------------------------------------------------------------------
   for (const auto& me_iter : *me_vec_ptr_)
-    // if one model evaluator failed, skip the remaining ones and return false
-    ok = (ok ? me_iter->evaluate_initial_force() : false);
+  {
+    me_iter->evaluate_initial_force();
+  }
 
-  post_evaluate(ok, *me_vec_ptr_);
+  post_evaluate(*me_vec_ptr_);
 
   // ---------------------------------------------------------------------------
   // put everything together, including mass and viscous contributions
   // ---------------------------------------------------------------------------
-  assemble_force(ok, *me_vec_ptr_, 1.0, f);
+  assemble_force(*me_vec_ptr_, 1.0, f);
 
   // ---------------------------------------------------------------------------
   // subtract mass and viscous contributions from initial force vector
@@ -285,8 +278,6 @@ bool Solid::ModelEvaluatorManager::apply_initial_force(
   f.scale(-1.);
   int_ptr_->add_visco_mass_contributions(f);
   f.scale(-1.);
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------------*
@@ -316,11 +307,10 @@ void Solid::ModelEvaluatorManager::reset_states(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluatorManager::apply_force(const Core::LinAlg::Vector<double>& x,
+void Solid::ModelEvaluatorManager::apply_force(const Core::LinAlg::Vector<double>& x,
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   check_init_setup();
-  bool ok = true;
   // initialize right hand side to zero
   f.put_scalar(0.0);
 
@@ -333,23 +323,20 @@ bool Solid::ModelEvaluatorManager::apply_force(const Core::LinAlg::Vector<double
   // ---------------------------------------------------------------------------
   // evaluate all terms
   // ---------------------------------------------------------------------------
-  evaluate_force(ok, *me_vec_ptr_);
+  evaluate_force(*me_vec_ptr_);
 
   // ---------------------------------------------------------------------------
   // put everything together
   // ---------------------------------------------------------------------------
-  assemble_force(ok, *me_vec_ptr_, timefac_np, f);
-
-  return ok;
+  assemble_force(*me_vec_ptr_, timefac_np, f);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluatorManager::apply_stiff(const Core::LinAlg::Vector<double>& x,
+void Solid::ModelEvaluatorManager::apply_stiff(const Core::LinAlg::Vector<double>& x,
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   check_init_setup();
-  bool ok = true;
   // initialize stiffness matrix to zero
   jac.zero();
 
@@ -362,24 +349,21 @@ bool Solid::ModelEvaluatorManager::apply_stiff(const Core::LinAlg::Vector<double
   // ---------------------------------------------------------------------------
   // evaluate all terms
   // ---------------------------------------------------------------------------
-  evaluate_stiff(ok, *me_vec_ptr_);
+  evaluate_stiff(*me_vec_ptr_);
 
   // ---------------------------------------------------------------------------
   // put everything together
   // ---------------------------------------------------------------------------
-  assemble_jacobian(ok, *me_vec_ptr_, timefac_np, jac);
-
-  return ok;
+  assemble_jacobian(*me_vec_ptr_, timefac_np, jac);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluatorManager::apply_stiff(const Solid::ModelType& mt,
+void Solid::ModelEvaluatorManager::apply_stiff(const Solid::ModelType& mt,
     const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac,
     const double& timefac_np) const
 {
   check_init_setup();
-  bool ok = true;
   std::shared_ptr<Solid::ModelEvaluator::Generic> model_ptr = me_map_ptr_->at(mt);
   const Vector me_vec(1, model_ptr);
 
@@ -393,25 +377,22 @@ bool Solid::ModelEvaluatorManager::apply_stiff(const Solid::ModelType& mt,
   // ---------------------------------------------------------------------------
   // evaluate all terms
   // ---------------------------------------------------------------------------
-  evaluate_stiff(ok, me_vec);
+  evaluate_stiff(me_vec);
 
   // ---------------------------------------------------------------------------
   // put everything together
   // ---------------------------------------------------------------------------
-  assemble_jacobian(ok, me_vec, timefac_np, jac);
-
-  return ok;
+  assemble_jacobian(me_vec, timefac_np, jac);
 }
 
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluatorManager::apply_force_stiff(const Core::LinAlg::Vector<double>& x,
+void Solid::ModelEvaluatorManager::apply_force_stiff(const Core::LinAlg::Vector<double>& x,
     Core::LinAlg::Vector<double>& f, Core::LinAlg::SparseOperator& jac,
     const double& timefac_np) const
 {
   check_init_setup();
-  bool ok = true;
   // initialize stiffness matrix and right hand side to zero
   f.put_scalar(0.0);
   jac.zero();
@@ -425,20 +406,18 @@ bool Solid::ModelEvaluatorManager::apply_force_stiff(const Core::LinAlg::Vector<
   // ---------------------------------------------------------------------------
   // evaluate all terms
   // ---------------------------------------------------------------------------
-  evaluate_force_stiff(ok, *me_vec_ptr_);
+  evaluate_force_stiff(*me_vec_ptr_);
 
   // ---------------------------------------------------------------------------
   // put everything together
   // ---------------------------------------------------------------------------
-  assemble_force(ok, *me_vec_ptr_, timefac_np, f);
-  assemble_jacobian(ok, *me_vec_ptr_, timefac_np, jac);
-
-  return ok;
+  assemble_force(*me_vec_ptr_, timefac_np, f);
+  assemble_jacobian(*me_vec_ptr_, timefac_np, jac);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluatorManager::apply_cheap_soc_rhs(const NOX::Nln::CorrectionType type,
+void Solid::ModelEvaluatorManager::apply_cheap_soc_rhs(const NOX::Nln::CorrectionType type,
     const std::vector<Solid::ModelType>& constraint_models, const Core::LinAlg::Vector<double>& x,
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
@@ -447,7 +426,6 @@ bool Solid::ModelEvaluatorManager::apply_cheap_soc_rhs(const NOX::Nln::Correctio
   Vector constraint_me_vec;
   extract_model_vector(constraint_me_vec, constraint_models);
 
-  bool ok = true;
   // initialize right hand side to zero
   f.put_scalar(0.0);
 
@@ -460,39 +438,29 @@ bool Solid::ModelEvaluatorManager::apply_cheap_soc_rhs(const NOX::Nln::Correctio
   // ---------------------------------------------------------------------------
   // evaluate all rhs terms of the constraint models
   // ---------------------------------------------------------------------------
-  evaluate_cheap_soc_rhs(ok, constraint_me_vec);
+  evaluate_cheap_soc_rhs(constraint_me_vec);
 
   // ---------------------------------------------------------------------------
   // put everything together
   // ---------------------------------------------------------------------------
-  assemble_cheap_soc_rhs(ok, constraint_me_vec, timefac_np, f);
-
-  return ok;
+  assemble_cheap_soc_rhs(constraint_me_vec, timefac_np, f);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluatorManager::evaluate_cheap_soc_rhs(bool& ok, const Vector& me_vec) const
+void Solid::ModelEvaluatorManager::evaluate_cheap_soc_rhs(const Vector& me_vec) const
 {
-  if (not ok) return;
+  for (const auto& cit : me_vec) cit->evaluate_cheap_soc_rhs();
 
-  for (const auto& cit : me_vec)
-    // if one model evaluator failed, skip the remaining ones and return false
-    ok = (ok ? cit->evaluate_cheap_soc_rhs() : false);
-
-  post_evaluate(ok, me_vec);
+  post_evaluate(me_vec);
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluatorManager::assemble_cheap_soc_rhs(
-    bool& ok, const Vector& me_vec, const double timefac_np, Core::LinAlg::Vector<double>& f) const
+    const Vector& me_vec, const double timefac_np, Core::LinAlg::Vector<double>& f) const
 {
-  if (not ok) return;
-
-  for (const auto& cit : me_vec)
-    // if one model evaluator failed, skip the remaining ones and return false
-    ok = (ok ? cit->assemble_cheap_soc_rhs(f, timefac_np) : false);
+  for (const auto& cit : me_vec) cit->assemble_cheap_soc_rhs(f, timefac_np);
 }
 
 /*----------------------------------------------------------------------------*

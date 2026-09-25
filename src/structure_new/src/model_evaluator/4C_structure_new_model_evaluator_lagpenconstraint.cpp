@@ -91,7 +91,7 @@ void Solid::ModelEvaluator::LagPenConstraint::reset(const Core::LinAlg::Vector<d
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::LagPenConstraint::evaluate_force()
+void Solid::ModelEvaluator::LagPenConstraint::evaluate_force()
 {
   check_init_setup();
 
@@ -101,13 +101,11 @@ bool Solid::ModelEvaluator::LagPenConstraint::evaluate_force()
 
   // only forces are evaluated!
   constrman_->evaluate_force_stiff(time_np, disn, disnp_ptr_, fstrconstr_np_ptr_, nullptr, pcon);
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::LagPenConstraint::evaluate_stiff()
+void Solid::ModelEvaluator::LagPenConstraint::evaluate_stiff()
 {
   check_init_setup();
 
@@ -119,13 +117,11 @@ bool Solid::ModelEvaluator::LagPenConstraint::evaluate_stiff()
   constrman_->evaluate_force_stiff(time_np, disn, disnp_ptr_, nullptr, stiff_constr_ptr_, pcon);
 
   if (not stiff_constr_ptr_->filled()) stiff_constr_ptr_->complete();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::LagPenConstraint::evaluate_force_stiff()
+void Solid::ModelEvaluator::LagPenConstraint::evaluate_force_stiff()
 {
   check_init_setup();
 
@@ -137,14 +133,12 @@ bool Solid::ModelEvaluator::LagPenConstraint::evaluate_force_stiff()
       time_np, disn, disnp_ptr_, fstrconstr_np_ptr_, stiff_constr_ptr_, pcon);
 
   if (not stiff_constr_ptr_->filled()) stiff_constr_ptr_->complete();
-
-  return true;
 }
 
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::LagPenConstraint::assemble_force(
+void Solid::ModelEvaluator::LagPenConstraint::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   std::shared_ptr<const Core::LinAlg::Vector<double>> block_vec_ptr = nullptr;
@@ -164,14 +158,12 @@ bool Solid::ModelEvaluator::LagPenConstraint::assemble_force(
 
     Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *block_vec_ptr);
   }
-
-  return true;
 }
 
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::LagPenConstraint::assemble_jacobian(
+void Solid::ModelEvaluator::LagPenConstraint::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> block_ptr = nullptr;
@@ -199,8 +191,6 @@ bool Solid::ModelEvaluator::LagPenConstraint::assemble_jacobian(
     // reset the block pointer, just to be on the safe side
     block_ptr = nullptr;
   }
-
-  return true;
 }
 
 

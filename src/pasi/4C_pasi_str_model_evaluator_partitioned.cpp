@@ -57,12 +57,10 @@ Solid::ModelEvaluator::PartitionedPASI::get_last_time_step_solution_ptr() const
   return global_state().get_dis_n();
 }
 
-bool Solid::ModelEvaluator::PartitionedPASI::assemble_force(
+void Solid::ModelEvaluator::PartitionedPASI::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   Core::LinAlg::assemble_my_vector(1.0, f, -timefac_np, *interface_force_np_ptr_);
-
-  return true;
 }
 
 void Solid::ModelEvaluator::PartitionedPASI::update_step_state(const double& timefac_n) { return; }

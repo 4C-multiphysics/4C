@@ -159,43 +159,34 @@ void Solid::ModelEvaluator::Contact::reset(const Core::LinAlg::Vector<double>& x
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Contact::evaluate_force()
+void Solid::ModelEvaluator::Contact::evaluate_force()
 {
   check_init_setup();
-  bool ok = true;
   // --- evaluate contact contributions ---------------------------------
   eval_contact().set_action_type(Mortar::eval_force);
   eval_data().set_model_evaluator(this);
   strategy().evaluate(eval_data().contact());
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Contact::evaluate_stiff()
+void Solid::ModelEvaluator::Contact::evaluate_stiff()
 {
   check_init_setup();
-  bool ok = true;
   // --- evaluate contact contributions ---------------------------------
   eval_contact().set_action_type(Mortar::eval_force_stiff);
   eval_data().set_model_evaluator(this);
   strategy().evaluate(eval_data().contact());
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Contact::evaluate_force_stiff()
+void Solid::ModelEvaluator::Contact::evaluate_force_stiff()
 {
   check_init_setup();
-  bool ok = true;
   // --- evaluate contact contributions ---------------------------------
   eval_contact().set_action_type(Mortar::eval_force_stiff);
   strategy().evaluate(eval_data().contact());
-
-  return ok;
 }
 
 /*----------------------------------------------------------------------*
@@ -218,7 +209,7 @@ void Solid::ModelEvaluator::Contact::post_evaluate()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Contact::assemble_force(
+void Solid::ModelEvaluator::Contact::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   std::shared_ptr<const Core::LinAlg::Vector<double>> block_vec_ptr = nullptr;
@@ -230,7 +221,7 @@ bool Solid::ModelEvaluator::Contact::assemble_force(
     block_vec_ptr = strategy().get_rhs_block_ptr(CONTACT::VecBlockType::displ);
 
     // if there are no active contact contributions, we can skip this...
-    if (!block_vec_ptr) return true;
+    if (!block_vec_ptr) return;
 
     Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *block_vec_ptr);
   }
@@ -239,27 +230,24 @@ bool Solid::ModelEvaluator::Contact::assemble_force(
     // --- displ. - block ---------------------------------------------------
     block_vec_ptr = strategy().get_rhs_block_ptr(CONTACT::VecBlockType::displ);
     // if there are no active contact contributions, we can skip this...
-    if (!block_vec_ptr) return true;
+    if (!block_vec_ptr) return;
     Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *block_vec_ptr);
 
     // --- constr. - block --------------------------------------------------
     block_vec_ptr = strategy().get_rhs_block_ptr(CONTACT::VecBlockType::constraint);
-    if (!block_vec_ptr) return true;
+    if (!block_vec_ptr) return;
     Core::LinAlg::Vector<double> tmp(f.get_map());
     Core::LinAlg::export_to(*block_vec_ptr, tmp);
     f.update(1., tmp, 1.);
   }
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Contact::assemble_jacobian(
+void Solid::ModelEvaluator::Contact::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> block_ptr = nullptr;
-  int err = 0;
   // ---------------------------------------------------------------------
   // Penalty / gpts / Nitsche system: no additional/condensed dofs
   // ---------------------------------------------------------------------
@@ -269,7 +257,7 @@ bool Solid::ModelEvaluator::Contact::assemble_jacobian(
   {
     block_ptr =
         strategy().get_matrix_block_ptr(CONTACT::MatBlockType::displ_displ, &eval_contact());
-    if (strategy().is_penalty() && block_ptr == nullptr) return true;
+    if (strategy().is_penalty() && block_ptr == nullptr) return;
     std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd = global_state().extract_displ_block(jac);
     Core::LinAlg::matrix_add(*block_ptr, false, timefac_np, *jac_dd, 1.0);
   }
@@ -344,8 +332,6 @@ bool Solid::ModelEvaluator::Contact::assemble_jacobian(
     // reset the block pointer, just to be on the safe side
     block_ptr = nullptr;
   }
-
-  return (err == 0);
 }
 
 /*----------------------------------------------------------------------*
@@ -859,9 +845,7 @@ Solid::ModelEvaluator::Contact::get_aux_displ_jacobian() const
   g.push_back(Solid::ModelType::model_contact);
 
   std::shared_ptr<Core::LinAlg::SparseOperator> jacaux = global_state().create_aux_jacobian();
-  bool ok = integrator().assemble_jac(*jacaux, &g);
-
-  if (!ok) FOUR_C_THROW("ERROR: create_aux_jacobian went wrong!");
+  integrator().assemble_jac(*jacaux, &g);
 
   return jacaux;
 }
@@ -879,7 +863,7 @@ void Solid::ModelEvaluator::Contact::evaluate_weighted_gap_gradient_error()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Contact::evaluate_cheap_soc_rhs()
+void Solid::ModelEvaluator::Contact::evaluate_cheap_soc_rhs()
 {
   check_init_setup();
 
@@ -887,16 +871,14 @@ bool Solid::ModelEvaluator::Contact::evaluate_cheap_soc_rhs()
   eval_data().set_model_evaluator(this);
 
   strategy().evaluate(eval_data().contact());
-
-  return true;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Contact::assemble_cheap_soc_rhs(
+void Solid::ModelEvaluator::Contact::assemble_cheap_soc_rhs(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
-  return assemble_force(f, timefac_np);
+  assemble_force(f, timefac_np);
 }
 
 /*----------------------------------------------------------------------------*

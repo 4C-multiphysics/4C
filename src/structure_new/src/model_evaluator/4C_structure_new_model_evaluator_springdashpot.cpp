@@ -94,7 +94,7 @@ void Solid::ModelEvaluator::SpringDashpot::reset(const Core::LinAlg::Vector<doub
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::SpringDashpot::evaluate_force()
+void Solid::ModelEvaluator::SpringDashpot::evaluate_force()
 {
   check_init_setup();
 
@@ -119,13 +119,11 @@ bool Solid::ModelEvaluator::SpringDashpot::evaluate_force()
       spring->evaluate_force(*fspring_np_ptr_, disnp_ptr_, *velnp_ptr_, springdashpotparams);
     }
   }
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::SpringDashpot::evaluate_stiff()
+void Solid::ModelEvaluator::SpringDashpot::evaluate_stiff()
 {
   check_init_setup();
 
@@ -162,13 +160,11 @@ bool Solid::ModelEvaluator::SpringDashpot::evaluate_stiff()
   }
 
   if (not stiff_spring_ptr_->filled()) stiff_spring_ptr_->complete();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::SpringDashpot::evaluate_force_stiff()
+void Solid::ModelEvaluator::SpringDashpot::evaluate_force_stiff()
 {
   check_init_setup();
 
@@ -206,30 +202,25 @@ bool Solid::ModelEvaluator::SpringDashpot::evaluate_force_stiff()
   }
 
   if (not stiff_spring_ptr_->filled()) stiff_spring_ptr_->complete();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::SpringDashpot::assemble_force(
+void Solid::ModelEvaluator::SpringDashpot::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *fspring_np_ptr_);
-  return true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::SpringDashpot::assemble_jacobian(
+void Solid::ModelEvaluator::SpringDashpot::assemble_jacobian(
     Core::LinAlg::SparseOperator& jac, const double& timefac_np) const
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr = global_state().extract_displ_block(jac);
   Core::LinAlg::matrix_add(*stiff_spring_ptr_, false, timefac_np, *jac_dd_ptr, 1.0);
   // no need to keep it
   stiff_spring_ptr_->zero();
-  // nothing to do
-  return true;
 }
 
 /*----------------------------------------------------------------------*

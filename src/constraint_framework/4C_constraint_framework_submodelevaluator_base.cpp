@@ -30,7 +30,7 @@ Constraints::SubmodelEvaluator::ConstraintBase::ConstraintBase()
       constraint_parameter_list, "CONSTRAINT_ENFORCEMENT");
 }
 
-bool Constraints::SubmodelEvaluator::ConstraintBase::evaluate_force_stiff(
+void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_force_stiff(
     const Core::LinAlg::Vector<double>& displacement_vector,
     std::shared_ptr<Solid::TimeInt::BaseDataGlobalState>& global_state_ptr,
     std::shared_ptr<Core::LinAlg::SparseMatrix> me_stiff_ptr,
@@ -61,7 +61,6 @@ bool Constraints::SubmodelEvaluator::ConstraintBase::evaluate_force_stiff(
     Q_Ld_->multiply(true, *constraint_residual_, r_pen);
     Core::LinAlg::assemble_my_vector(1.0, *me_force_ptr, penalty_parameter_, r_pen);
   }
-  return true;
 }
 
 void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_coupling_terms(
