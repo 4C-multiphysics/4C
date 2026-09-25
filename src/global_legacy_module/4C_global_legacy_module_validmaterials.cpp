@@ -1166,8 +1166,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                        "[nu12, nu23, nu13]."}),
             parameter<double>("DENS", {.description = "mass density"}),
         },
-        {.description = "St.Venant--Kirchhoff material with orthotropy. Direction requirements: "
-                        "none; its three orthotropic axes are fixed to the Cartesian reference "
+        {.description = "St.Venant--Kirchhoff material with orthotropy. "
+                        "Note that its three orthotropic axes are fixed to the Cartesian reference "
                         "axes and cannot be rotated through material or fiber input."});
   }
 
@@ -1300,7 +1300,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "EF", {.description = "GTN stabilization parameter ef for damage coalescence",
                           .default_value = 0.0}),
         },
-        {.description = "elastic St.Venant Kirchhoff / plastic GTN for porous metal plasticity."
+        {.description = "elastic St.Venant Kirchhoff / plastic Gurson-Tvergaard-Needleman (GTN) "
+                        "model for porous metal plasticity."
                         "It uses an associated yield function of the form\n\n"
                         "$$\n"
                         "\\Phi = \\left( \\frac{Q}{R^{(3)}} \\right)^2 + "
@@ -1324,9 +1325,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                         "$$\n"
                         "\\dot{f}_\\text{nucl} = \\frac{f_N}{s_N \\sqrt{2\\pi}} "
                         "\\exp \\left\\{ -\\frac{1}{2} "
-                        "\\left[ \\frac{\\overline{\\varepsilon}^{pl} - \\epsilon_N}{s_N} "
+                        "\\left[ \\frac{\\overline{\\varepsilon}^\\text{pl} - \\epsilon_N}{s_N} "
                         "\\right]^2 \\right\\} "
-                        "\\dot{\\overline{\\varepsilon}}^{pl}\n"
+                        "\\dot{\\overline{\\varepsilon}}^\\text{pl}\n"
                         "$$"});
   }
 
@@ -1868,11 +1869,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_couplogneohooke] = group("ELAST_CoupLogNeoHooke",
         {
-            parameter<std::string>(
-                "MODE", {.description = "parameter set: YN (Young's modulus and Poisson's ration; "
-                                        "default) or Lame (mue and lambda)"}),
-            parameter<double>("C1", {.description = "E or mue"}),
-            parameter<double>("C2", {.description = "nue or lambda"}),
+            parameter<std::string>("MODE",
+                {.description =
+                        "parameter set: YN (Young's modulus $E$ and Poisson's ration $\\nu$ ; "
+                        "default) or Lame ($\\mu$ and $\\lambda$)"}),
+            parameter<double>("C1", {.description = "E or $\\mu$"}),
+            parameter<double>("C2", {.description = "$\\nu$ or $\\lambda$"}),
         },
         {.description = "Logarithmic neo-Hooke material acc. to Bonet and Wood. The strain energy "
                         "is computed as\n\n"
@@ -1881,7 +1883,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                         "\\frac{\\lambda}{2}(\\ln J)^2\n"
                         "$$\n\n"
                         "with $I_1$ the first invariant of the right Cauchy-Green deformation "
-                        "tensor and $J$ the determinant of the deformation gradient."});
+                        "tensor and $J$ the determinant of the deformation gradient."
+                        "If $E, \\, \\nu$ are used, the Lame constants are computed as $\\mu = "
+                        "E/(2(1+\\nu))$ and $\\lambda = E\\nu/((1+\\nu)(1-2\\nu))$"});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1898,8 +1902,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                         "\\Psi = \\mu\\,\\mathrm{tr}(\\mathbf{E}^2) + "
                         "\\frac{\\lambda}{2}(\\mathrm{tr}\\,\\mathbf{E})^2\n"
                         "$$\n\n"
-                        "with $\\mathbf{E}$ the Green-Lagrange strain tensor and $\\mu$, "
-                        "$\\lambda$ the Lame constants."});
+                        "with $\\mathbf{E}$ the Green-Lagrange strain tensor, "
+                        "the Lame constants are $\\mu = E/(2(1+\\nu))$ and $\\lambda = "
+                        "E\\nu/((1+\\nu)(1-2\\nu))$."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -1975,9 +1980,12 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_coupmooneyrivlin] = group("ELAST_CoupMooneyRivlin",
         {
-            parameter<double>("C1", {.description = "material constant", .default_value = 0.0}),
-            parameter<double>("C2", {.description = "material constant", .default_value = 0.0}),
-            parameter<double>("C3", {.description = "material constant", .default_value = 0.0}),
+            parameter<double>(
+                "C1", {.description = "material constant $c_1$", .default_value = 0.0}),
+            parameter<double>(
+                "C2", {.description = "material constant $c_2$", .default_value = 0.0}),
+            parameter<double>(
+                "C3", {.description = "material constant $c_3$", .default_value = 0.0}),
         },
         {.description = "Mooney-Rivlin material acc. to Holzapfel. The strain energy is computed "
                         "as\n\n"
@@ -1993,9 +2001,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_coupblatzko] = group("ELAST_CoupBlatzKo",
         {
-            parameter<double>("MUE", {.description = "Shear modulus"}),
-            parameter<double>("NUE", {.description = "Poisson's ratio"}),
-            parameter<double>("F", {.description = "interpolation parameter"}),
+            parameter<double>("MUE", {.description = "Shear modulus $\\mu$"}),
+            parameter<double>("NUE", {.description = "Poisson's ratio $\\nu$"}),
+            parameter<double>("F", {.description = "interpolation parameter $f$"}),
         },
         {.description = "Blatz and Ko material acc. to Holzapfel. The strain energy is computed "
                         "as\n\n"
@@ -2013,7 +2021,7 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_isoneohooke] = group("ELAST_IsoNeoHooke",
         {
-            input_field<double>("MUE", {.description = "Shear modulus"}),
+            input_field<double>("MUE", {.description = "Shear modulus $\\mu$"}),
         },
         {.description = "Isochoric part of neo-Hooke material acc. to Holzapfel. The strain "
                         "energy is computed as\n\n"
@@ -2029,8 +2037,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_isoogden] = group("ELAST_IsoOgden",
         {
-            parameter<double>("MUE", {.description = "Shear modulus"}),
-            parameter<double>("ALPHA", {.description = "Nonlinearity parameter"}),
+            parameter<double>("MUE", {.description = "Shear modulus $\\mu$"}),
+            parameter<double>("ALPHA", {.description = "Nonlinearity parameter $\\alpha$"}),
         },
         {.description = "Isochoric part of the one-term Ogden material. The strain energy is "
                         "computed as\n\n"
@@ -2047,9 +2055,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_isoyeoh] = group("ELAST_IsoYeoh",
         {
-            parameter<double>("C1", {.description = "Linear modulus"}),
-            parameter<double>("C2", {.description = "Quadratic modulus"}),
-            parameter<double>("C3", {.description = "Cubic modulus"}),
+            parameter<double>("C1", {.description = "Linear modulus $c_1$"}),
+            parameter<double>("C2", {.description = "Quadratic modulus $c_2$"}),
+            parameter<double>("C3", {.description = "Cubic modulus $c_3$"}),
         },
         {.description = "Isochoric part of Yeoh material acc. to Holzapfel. The strain energy is "
                         "computed as\n\n"
@@ -2065,8 +2073,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_iso1pow] = group("ELAST_Iso1Pow",
         {
-            parameter<double>("C", {.description = "material parameter"}),
-            parameter<int>("D", {.description = "exponent"}),
+            parameter<double>("C", {.description = "material parameter $c$"}),
+            parameter<int>("D", {.description = "exponent $d$"}),
         },
         {.description = "Isochoric part of general power material. The strain energy is computed "
                         "as\n\n"
@@ -2082,8 +2090,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_iso2pow] = group("ELAST_Iso2Pow",
         {
-            parameter<double>("C", {.description = "material parameter"}),
-            parameter<int>("D", {.description = "exponent"}),
+            parameter<double>("C", {.description = "material parameter $c$"}),
+            parameter<int>("D", {.description = "exponent $d$"}),
         },
         {.description = "Isochoric part of general power material. The strain energy is computed "
                         "as\n\n"
@@ -2099,8 +2107,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_coup1pow] = group("ELAST_Coup1Pow",
         {
-            parameter<double>("C", {.description = "material parameter"}),
-            parameter<int>("D", {.description = "exponent"}),
+            parameter<double>("C", {.description = "material parameter $c$"}),
+            parameter<int>("D", {.description = "exponent $d$"}),
         },
         {.description = "Part of general power material. The strain energy is computed as\n\n"
                         "$$\n"
@@ -2115,8 +2123,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_coup2pow] = group("ELAST_Coup2Pow",
         {
-            parameter<double>("C", {.description = "material parameter"}),
-            parameter<int>("D", {.description = "exponent"}),
+            parameter<double>("C", {.description = "material parameter $c$"}),
+            parameter<int>("D", {.description = "exponent $d$"}),
         },
         {.description = "Part of general power material. The strain energy is computed as\n\n"
                         "$$\n"
@@ -2131,8 +2139,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_coup3pow] = group("ELAST_Coup3Pow",
         {
-            parameter<double>("C", {.description = "material parameter"}),
-            parameter<int>("D", {.description = "exponent"}),
+            parameter<double>("C", {.description = "material parameter $c$"}),
+            parameter<int>("D", {.description = "exponent $d$"}),
         },
         {.description = "Part of general power material. The strain energy is computed as\n\n"
                         "$$\n"
@@ -2147,9 +2155,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_coup13apow] = group("ELAST_Coup13aPow",
         {
-            parameter<double>("C", {.description = "material parameter"}),
-            parameter<int>("D", {.description = "exponent of all"}),
-            parameter<double>("A", {.description = "negative exponent of I3"}),
+            parameter<double>("C", {.description = "material parameter $c$"}),
+            parameter<int>("D", {.description = "exponent $d$"}),
+            parameter<double>("A", {.description = "negative exponent of $I_3$"}),
         },
         {.description =
                 "Hyperelastic potential summand for multiplicative coupled invariants I1 and I3. "
@@ -2164,9 +2172,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_isoexpopow] = group("ELAST_IsoExpoPow",
         {
-            parameter<double>("K1", {.description = "material parameter"}),
-            parameter<double>("K2", {.description = "material parameter"}),
-            parameter<int>("C", {.description = "exponent"}),
+            parameter<double>("K1", {.description = "material parameter $k_1$"}),
+            parameter<double>("K2", {.description = "material parameter $k_2$"}),
+            parameter<int>("C", {.description = "exponent $c$"}),
         },
         {.description = "Isochoric part of exponential material acc. to Holzapfel. The strain "
                         "energy is computed as\n\n"
@@ -2183,8 +2191,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_isomooneyrivlin] = group("ELAST_IsoMooneyRivlin",
         {
-            parameter<double>("C1", {.description = "Linear modulus for first invariant"}),
-            parameter<double>("C2", {.description = "Linear modulus for second invariant"}),
+            parameter<double>("C1", {.description = "Linear modulus for first invariant $c_1$"}),
+            parameter<double>("C2", {.description = "Linear modulus for second invariant $c_2$"}),
         },
         {.description = "Isochoric part of Mooney-Rivlin material acc. to Holzapfel. The strain "
                         "energy is computed as\n\n"
@@ -2241,8 +2249,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_isotestmaterial] = group("ELAST_IsoTestMaterial",
         {
-            parameter<double>("C1", {.description = "Modulus for first invariant"}),
-            parameter<double>("C2", {.description = "Modulus for second invariant"}),
+            parameter<double>("C1", {.description = "Modulus for first invariant $c_1$"}),
+            parameter<double>("C2", {.description = "Modulus for second invariant $c_2$"}),
         },
         {.description = "Test material to test elasthyper-toolbox. The strain energy is computed "
                         "as\n\n"
@@ -2293,7 +2301,7 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                         "$$\n"
                         "\\Psi = \\frac{\\kappa}{2}(J-1)^2\n"
                         "$$\n\n"
-                        "with $J$ the determinant of the deformation gradient."});
+                        "with $J$ being the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2301,15 +2309,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_volpenalty] = group("ELAST_VolPenalty",
         {
-            parameter<double>("EPSILON", {.description = "penalty parameter"}),
-            parameter<double>("GAMMA", {.description = "penalty parameter"}),
+            parameter<double>("EPSILON", {.description = "penalty parameter $\\epsilon$"}),
+            parameter<double>("GAMMA", {.description = "penalty parameter $\\gamma$"}),
         },
         {.description = "Penalty formulation for the volumetric part. The strain energy is "
                         "computed as\n\n"
                         "$$\n"
                         "\\Psi = \\epsilon\\left(J^{\\gamma} + J^{-\\gamma} - 2\\right)\n"
                         "$$\n\n"
-                        "with $J$ the determinant of the deformation gradient."});
+                        "with $J$ being the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2317,17 +2325,18 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_vologden] = group("ELAST_VolOgden",
         {
-            parameter<double>("KAPPA", {.description = "dilatation modulus"}),
-            parameter<double>("BETA", {.description = "empiric constant"}),
+            parameter<double>("KAPPA", {.description = "dilatation modulus $\\kappa$"}),
+            parameter<double>("BETA", {.description = "empiric constant $\\beta$"}),
         },
-        {.description = "Ogden formulation for the volumetric part. The strain energy is computed "
-                        "as\n\n"
-                        "$$\n"
-                        "\\Psi = \\frac{\\kappa}{\\beta^2}\\left[\\beta \\ln(J) + "
-                        "J^{-\\beta} - 1\\right]\n"
-                        "$$\n\n"
-                        "with $J$ the determinant of the deformation gradient; for $\\beta=0$, "
-                        "$\\Psi = \\frac{\\kappa}{2}(\\ln J)^2$."});
+        {.description =
+                "Ogden formulation for the volumetric part. The strain energy is computed "
+                "as\n\n"
+                "$$\n"
+                "\\Psi = \\frac{\\kappa}{\\beta^2}\\left[\\beta \\ln(J) + "
+                "J^{-\\beta} - 1\\right]\n"
+                "$$\n\n"
+                "with $J$ being the determinant of the deformation gradient; for $\\beta=0$, "
+                "$\\Psi = \\frac{\\kappa}{2}(\\ln J)^2$."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2335,15 +2344,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   {
     known_materials[Core::Materials::mes_volpow] = group("ELAST_VolPow",
         {
-            parameter<double>("A", {.description = "prefactor of power law"}),
-            parameter<double>("EXPON", {.description = "exponent of power law"}),
+            parameter<double>("A", {.description = "prefactor of power law $a$"}),
+            parameter<double>("EXPON", {.description = "exponent of power law $n$"}),
         },
         {.description = "Power law formulation for the volumetric part. The strain energy is "
                         "computed as\n\n"
                         "$$\n"
                         "\\Psi = \\frac{a}{n-1} J^{1-n} + a J\n"
                         "$$\n\n"
-                        "with $n$ = EXPON and $J$ the determinant of the deformation gradient."});
+                        "with $J$ being the determinant of the deformation gradient."});
   }
 
   /*--------------------------------------------------------------------*/
@@ -2708,24 +2717,64 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                              .default_value = "none"}),
 
             parameter<double>("C1",
-                {.description = "constant 1 for distribution function", .default_value = 1.0}),
-            parameter<double>("C2",
-                {.description = "constant 2 for distribution function", .default_value = 0.0}),
-            parameter<double>("C3",
-                {.description = "constant 3 for distribution function", .default_value = 0.0}),
-            parameter<double>("C4",
-                {.description = "constant 4 for distribution function", .default_value = 1e16}),
+                {.description = "von Mises-Fisher concentration $c_1$, or Bingham coefficient "
+                                "$c_1$ multiplying $X_1$, or dispersed-transverse-isotropy "
+                                "parameter $c_1$",
+                    .default_value = 1.0}),
+            parameter<double>("C2", {.description = "Bingham coefficient $c_2$ multiplying $X_2$",
+                                        .default_value = 0.0}),
+            parameter<double>("C3", {.description = "Bingham coefficient $c_3$ multiplying $X_3$",
+                                        .default_value = 0.0}),
+            parameter<double>("C4", {.description = "nonzero Bingham normalization divisor $c_4$",
+                                        .default_value = 1e16}),
         },
         {.description =
                 "Structural tensor strategy in anisotropic materials. No potential is "
-                "evaluated; it supplies the structural tensor $\\mathbf{A}$, for example\n\n"
+                "evaluated; it supplies the second-order tensor $\\mathbf{A}$.\n\n"
+                "`STRATEGY=Standard` uses\n\n"
                 "$$\n"
                 "\\mathbf{A} = \\mathbf{a} \\otimes \\mathbf{a}\n"
                 "$$\n\n"
-                "for the Standard strategy, with $\\mathbf{a}$ the fiber direction and "
-                "$\\otimes$ the dyadic product. Direction requirements: 1 direction, "
-                "defining the mean fiber direction the structural tensor is built from; "
-                "this is a helper rather than an independent strain-energy term."});
+                "with $\\mathbf{a}$ the fiber direction, no further parameters needed.\n\n"
+                "`STRATEGY=ByDistributionFunction` computes\n\n"
+                "$$\n"
+                "\\mathbf{A} = \\int_{S^2} \\rho(\\mathbf{m})\\,"
+                "\\mathbf{m}\\otimes\\mathbf{m}\\,\\mathrm{d}S,\n"
+                "\\qquad\n"
+                "\\mathbf{m}(\\theta,\\phi) = "
+                "\\begin{bmatrix}\\sin\\theta\\cos\\phi & \\sin\\theta\\sin\\phi & "
+                "\\cos\\theta\\end{bmatrix}^{\\mathsf{T}}.\n"
+                "$$\n\n"
+                "Here $\\theta$ is the polar angle measured from the $\\mathbf{e}_3$ axis, and "
+                "$\\phi$ is the azimuthal angle measured around $\\mathbf{e}_3$ from the "
+                "$\\mathbf{e}_1$ axis.\n\n"
+                "`DISTR=vonMisesFisher`:\n\n"
+                "$$\n"
+                "\\rho(\\mathbf{m}) = \\frac{c_1}{4\\pi\\sinh(c_1)}"
+                "\\exp\\!\\left(c_1\\,\\mathbf{a}\\cdot\\mathbf{m}\\right),\n"
+                "\\qquad 0 < c_1 \\leq 500,\n"
+                "$$\n\n"
+                "where $c_1$ controls the concentration around the mean direction "
+                "$\\mathbf{a}$.\n\n"
+                "`DISTR=Bingham`:\n\n"
+                "$$\n"
+                "\\rho(\\theta,\\phi) = \\frac{1}{c_4}"
+                "\\exp\\!\\left(c_1X_1+c_2X_2+c_3X_3\\right),\n"
+                "$$\n\n"
+                "with\n\n"
+                "$$\n"
+                "X_1 = \\sin^2\\theta\\cos^2\\phi,\\quad "
+                "X_2 = \\sin^2\\theta\\sin^2\\phi\\,\\frac{K^2}{1+K^2},\\quad "
+                "X_3 = \\cos^2\\theta,\\quad "
+                "K = \\frac{\\sin\\theta\\cos\\phi}{\\cos\\theta}.\n"
+                "$$\n\n"
+                "`STRATEGY=DispersedTransverselyIsotropic` strategy instead uses\n\n"
+                "$$\n"
+                "\\mathbf{A} = c_1\\mathbf{I} + (1-3c_1)"
+                "\\mathbf{a}\\otimes\\mathbf{a},\n"
+                "$$\n\n"
+                "Direction requirements: 1 direction defining the mean fiber direction "
+                "$\\mathbf{a}$."});
   }
 
   /*--------------------------------------------------------------------*/

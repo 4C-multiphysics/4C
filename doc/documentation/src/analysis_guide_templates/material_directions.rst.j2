@@ -42,7 +42,7 @@ block selected by ``ID`` or ``NAME`` in ``STRUCTURE GEOMETRY``:
              FIBER1: [1.0, 0.0, 0.0]
              FIBER2: [0.0, 1.0, 0.0]
 
-This applies the specified directions to the complete block. No per-element input currently
+This applies the specified directions to the complete block. No per-element input is currently
 available for fiber assignment through ``STRUCTURE GEOMETRY``.
 
 For the definition on node level, see the `FNODE` definition in :ref:`nodedefinition`.
@@ -53,7 +53,8 @@ Some specialized materials only support one of these input methods; the directio
 and restrictions for each anisotropic material or summand are documented alongside its
 parameters in the Input Parameter Reference.
 
-``MAT_ElastHyper`` and ``MAT_ViscoElastHyper`` do not impose a direction count themselves; their
-requirements are determined by the selected summands. A ``STR_TENS_ID`` controls the
-structural-tensor strategy for several anisotropic summands but does not replace the underlying
-mean fiber direction.
+Note that ``MAT_ElastHyper`` and ``MAT_ViscoElastHyper`` do not impose any direction count
+(1, 2 or 3 fiber directions) themselves;
+their requirements are determined by the selected summands.
+A structural-tensor strategy can be entered to define a distribution function for the fibers,
+see :ref:`ELAST_StructuralTensor <MATERIALS_ELAST_StructuralTensor>`.
