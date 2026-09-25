@@ -4,16 +4,16 @@
 -->
 <VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
   <Collection>
-    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00000.pvtu"/>
-    <DataSet timestep="2.00000000000000e-02" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00001.pvtu"/>
-    <DataSet timestep="4.00000000000000e-02" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00002.pvtu"/>
-    <DataSet timestep="6.00000000000000e-02" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00003.pvtu"/>
-    <DataSet timestep="8.00000000000000e-02" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00004.pvtu"/>
-    <DataSet timestep="1.00000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00005.pvtu"/>
-    <DataSet timestep="1.20000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00006.pvtu"/>
-    <DataSet timestep="1.40000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00007.pvtu"/>
-    <DataSet timestep="1.60000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00008.pvtu"/>
-    <DataSet timestep="1.80000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00009.pvtu"/>
-    <DataSet timestep="2.00000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00010.pvtu"/>
+    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00000.vtu"/>
+    <DataSet timestep="2.00000000000000e-02" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00001.vtu"/>
+    <DataSet timestep="4.00000000000000e-02" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00002.vtu"/>
+    <DataSet timestep="6.00000000000000e-02" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00003.vtu"/>
+    <DataSet timestep="8.00000000000000e-02" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00004.vtu"/>
+    <DataSet timestep="1.00000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00005.vtu"/>
+    <DataSet timestep="1.20000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00006.vtu"/>
+    <DataSet timestep="1.40000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00007.vtu"/>
+    <DataSet timestep="1.60000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00008.vtu"/>
+    <DataSet timestep="1.80000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00009.vtu"/>
+    <DataSet timestep="2.00000000000000e-01" group="" part="0" file="contact3D_pwlin_penalty_hex27_new_struct-vtk-files/structure-contact-00010.vtu"/>
   </Collection>
 </VTKFile>

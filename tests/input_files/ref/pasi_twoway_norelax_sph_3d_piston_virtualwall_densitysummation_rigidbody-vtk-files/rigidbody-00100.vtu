@@ -1,0 +1,87 @@
+<?xml version="1.0" ?> 
+<!-- 
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="UnstructuredGrid" version="0.1" compressor="vtkZLibDataCompressor" byte_order="LittleEndian">
+  <UnstructuredGrid>
+    <FieldData>
+      <DataArray type="Float64" Name="TIME" NumberOfTuples="1" format="ascii">
+2.500000000000002e-01 
+      </DataArray>
+    </FieldData>
+
+    <Piece NumberOfPoints="1" NumberOfCells="0" >
+      <Points>
+        <DataArray type="Float64" NumberOfComponents="3" format="ascii">
+-3.736853281403237e-17 -1.053644865990237e-16 1.197167290907433e+00
+        </DataArray>
+      </Points>
+
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="ascii">
+
+        </DataArray>
+        <DataArray type="Int32" Name="offsets" format="ascii">
+
+        </DataArray>
+        <DataArray type="UInt8" Name="types" format="ascii">
+
+        </DataArray>
+      </Cells>
+
+  <PointData>
+        <DataArray type="Float64" Name="acceleration" NumberOfComponents="3" format="ascii">
+-4.411347589300393e-14 2.627835015561739e-15 -6.356012211490335e-02
+        </DataArray>
+        <DataArray type="Float64" Name="angular acceleration" NumberOfComponents="3" format="ascii">
+8.193784534896473e-14 -1.457203663640480e-14 2.951284387689614e-14
+        </DataArray>
+        <DataArray type="Float64" Name="angular velocity" NumberOfComponents="3" format="ascii">
+2.588763615801605e-15 -3.312562846749526e-15 -1.208079347340433e-15
+        </DataArray>
+        <DataArray type="Float64" Name="force" NumberOfComponents="3" format="ascii">
+-3.529078071440317e-15 2.102268012449393e-16 -5.084809769192272e-03
+        </DataArray>
+        <DataArray type="Int32" Name="globalid" format="ascii">
+0
+        </DataArray>
+        <DataArray type="Float64" Name="mass" format="ascii">
+8.000000000000006e-02
+        </DataArray>
+        <DataArray type="Int32" Name="owner" format="ascii">
+0
+        </DataArray>
+        <DataArray type="Float64" Name="torque" NumberOfComponents="3" format="ascii">
+2.231288070975168e-16 -3.968179951296946e-17 6.266010930608412e-17
+        </DataArray>
+        <DataArray type="Float64" Name="velocity" NumberOfComponents="3" format="ascii">
+4.819909563894868e-16 -1.051121591898062e-15 -5.663474243509226e-02
+        </DataArray>
+      </PointData>
+
+    </Piece>
+    <Piece NumberOfPoints="0" NumberOfCells="0">
+      <Points>
+        <DataArray type="Float64" NumberOfComponents="3" format="ascii"/>
+      </Points>
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="ascii"/>
+        <DataArray type="Int32" Name="offsets" format="ascii"/>
+        <DataArray type="UInt8" Name="types" format="ascii"/>
+      </Cells>
+      <PointData>
+        <DataArray type="Float64" Name="acceleration" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="angular acceleration" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="angular velocity" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="force" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Int32" Name="globalid" format="ascii"/>
+        <DataArray type="Float64" Name="mass" format="ascii"/>
+        <DataArray type="Int32" Name="owner" format="ascii"/>
+        <DataArray type="Float64" Name="torque" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="velocity" NumberOfComponents="3" format="ascii"/>
+      </PointData>
+      <CellData>
+      </CellData>
+    </Piece>
+  </UnstructuredGrid>
+</VTKFile>

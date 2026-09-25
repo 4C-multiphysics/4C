@@ -4,8 +4,8 @@
 -->
 <VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
   <Collection>
-    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="elch_3D_tet4_s2i_butlervolmer_plating_monolithic_reg_none-vtk-files/scatra-00000.pvtu"/>
-    <DataSet timestep="2.50000000000000e+01" group="" part="0" file="elch_3D_tet4_s2i_butlervolmer_plating_monolithic_reg_none-vtk-files/scatra-00025.pvtu"/>
-    <DataSet timestep="3.50000000000000e+01" group="" part="0" file="elch_3D_tet4_s2i_butlervolmer_plating_monolithic_reg_none-vtk-files/scatra-00035.pvtu"/>
+    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="elch_3D_tet4_s2i_butlervolmer_plating_monolithic_reg_none-vtk-files/scatra-00000.vtu"/>
+    <DataSet timestep="2.50000000000000e+01" group="" part="0" file="elch_3D_tet4_s2i_butlervolmer_plating_monolithic_reg_none-vtk-files/scatra-00025.vtu"/>
+    <DataSet timestep="3.50000000000000e+01" group="" part="0" file="elch_3D_tet4_s2i_butlervolmer_plating_monolithic_reg_none-vtk-files/scatra-00035.vtu"/>
   </Collection>
 </VTKFile>

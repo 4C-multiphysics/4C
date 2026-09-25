@@ -243,9 +243,9 @@ To do so, append `|tee <path-to-output-file-dir>/tutorial_solid.txt` to the afor
 The results are written in `VTK` format as defined in the input file.
 You will find the following file and directory structure in the output directory (`<path-to-output-file-dir>`) defined for the execution of 4C:
 - `tutorial_solid.pvd`: This ParaView Data file contains the information on where the actual VTK data is stored. When used with e.g. ParaView, only this file needs to be opened to load the complete simulation output data for visualization.
-- `tutorial_solid-vtk-files`: This is the directory containing the actual output files. Two different file types are created:
-  - `*.pvtu`: For each time step, one `pvtu` file is created that contains the link to the `vtu` files of each processor that was included in the calculation
-  - `*.vtu`: Every processor writes the processor-local output data to a specific file, the so-called `vtu` file for each time step. This is the file that contains the actual data.
+- `tutorial_solid-vtk-files`: This is the directory containing the actual output files. We support two different output writers (vtu_collective [default], vtu_per_rank) leading to different output files that are created:
+  - 'vtu_collective': For each time step, only one `vtu` file is created that contains the actual output data of each processor that was included in the calculation. This leads to significantly less output files which eases working with them, at the cost that writing the output is a bit slower.
+  - 'vtu_per_rank': For each time step, one `pvtu` file is created that contains the link to the `vtu` files of each processor that was included in the calculation. Every processor writes the processor-local output data to a specific file, the so-called `vtu` file for each time step. This is the file that contains the actual data.
 
 When opening the result data with e.g. ParaView, the following steps are necessary:
 

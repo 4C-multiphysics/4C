@@ -4,10 +4,10 @@
 -->
 <VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
   <Collection>
-    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="pasi_twoway_norelax_sph_3d_piston_virtualwall_densitysummation_rigidbody-vtk-files/rigidbody-00000.pvtu"/>
-    <DataSet timestep="6.25000000000000e-02" group="" part="0" file="pasi_twoway_norelax_sph_3d_piston_virtualwall_densitysummation_rigidbody-vtk-files/rigidbody-00025.pvtu"/>
-    <DataSet timestep="1.25000000000000e-01" group="" part="0" file="pasi_twoway_norelax_sph_3d_piston_virtualwall_densitysummation_rigidbody-vtk-files/rigidbody-00050.pvtu"/>
-    <DataSet timestep="1.87500000000000e-01" group="" part="0" file="pasi_twoway_norelax_sph_3d_piston_virtualwall_densitysummation_rigidbody-vtk-files/rigidbody-00075.pvtu"/>
-    <DataSet timestep="2.50000000000000e-01" group="" part="0" file="pasi_twoway_norelax_sph_3d_piston_virtualwall_densitysummation_rigidbody-vtk-files/rigidbody-00100.pvtu"/>
+    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="pasi_twoway_norelax_sph_3d_piston_virtualwall_densitysummation_rigidbody-vtk-files/rigidbody-00000.vtu"/>
+    <DataSet timestep="6.25000000000000e-02" group="" part="0" file="pasi_twoway_norelax_sph_3d_piston_virtualwall_densitysummation_rigidbody-vtk-files/rigidbody-00025.vtu"/>
+    <DataSet timestep="1.25000000000000e-01" group="" part="0" file="pasi_twoway_norelax_sph_3d_piston_virtualwall_densitysummation_rigidbody-vtk-files/rigidbody-00050.vtu"/>
+    <DataSet timestep="1.87500000000000e-01" group="" part="0" file="pasi_twoway_norelax_sph_3d_piston_virtualwall_densitysummation_rigidbody-vtk-files/rigidbody-00075.vtu"/>
+    <DataSet timestep="2.50000000000000e-01" group="" part="0" file="pasi_twoway_norelax_sph_3d_piston_virtualwall_densitysummation_rigidbody-vtk-files/rigidbody-00100.vtu"/>
   </Collection>
 </VTKFile>

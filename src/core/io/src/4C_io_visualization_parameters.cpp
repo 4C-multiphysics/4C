@@ -55,15 +55,8 @@ Core::IO::VisualizationParameters Core::IO::visualization_parameters_factory(
   parameters.restart_from_name_ = output_control.restart_name();
 
   // Type of output writer
-  const auto output_writer =
+  parameters.writer_ =
       Teuchos::getIntegralValue<OutputWriter>(visualization_output_parameter_list, "OUTPUT_WRITER");
-  if (output_writer == OutputWriter::none)
-  {
-    FOUR_C_THROW(
-        "The visualization writer has to be set in the input file under IO/RUNTIME VTK "
-        "OUTPUT/OUTPUT_WRITER");
-  }
-  parameters.writer_ = output_writer;
 
   return parameters;
 }
