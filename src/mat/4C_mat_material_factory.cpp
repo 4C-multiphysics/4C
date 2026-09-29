@@ -10,7 +10,6 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
 #include "4C_legacy_enum_definitions_materials.hpp"
-#include "4C_mat_aaaneohooke.hpp"
 #include "4C_mat_beam3r_plasticity.hpp"
 #include "4C_mat_beam_elasthyper_parameter.hpp"
 #include "4C_mat_carreauyasuda.hpp"
@@ -289,10 +288,6 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     case Core::Materials::m_viscoanisotropic:
     {
       return make_parameter_impl<Mat::PAR::ViscoAnisotropic>(id, type, input_data);
-    }
-    case Core::Materials::m_aaaneohooke:
-    {
-      return make_parameter_impl<Mat::PAR::AAAneohooke>(id, type, input_data);
     }
     case Core::Materials::m_lubrication:
     {

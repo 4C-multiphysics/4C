@@ -23,7 +23,6 @@ namespace Core::Materials
     m_0d_maxwell_acinus_exponential,        ///< 0D acinar Maxwell Exponential material
     m_0d_maxwell_acinus_neohookean,         ///< 0D acinar Maxwell NeoHookean material
     m_0d_maxwell_acinus_ogden,              ///< 0D acinar Maxwell Ogden material
-    m_aaaneohooke,                ///< quasi Neo-Hooke material for aneurysmatic artery wall
     m_beam_elast_hyper_generic,   ///< material law for a beam: hyperelastic stored energy function
     m_beam_reissner_elast_hyper,  ///< material parameters for a Simo-Reissner beam: hyperelastic
                                   ///< stored energy function

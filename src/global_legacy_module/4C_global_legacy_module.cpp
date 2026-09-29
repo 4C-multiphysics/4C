@@ -44,7 +44,6 @@
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_lubrication_ele.hpp"
-#include "4C_mat_aaaneohooke.hpp"
 #include "4C_mat_beam_elasthyper.hpp"
 #include "4C_mat_carreauyasuda.hpp"
 #include "4C_mat_cnst_1d_art.hpp"
@@ -201,7 +200,6 @@ namespace
       << Discret::Elements::PoroFluidMultiPhaseType::instance().name() << " "
       << Discret::Elements::TransportType::instance().name() << " "
       << Thermo::ElementType::instance().name() << " " << Mat::Cnst1dArtType::instance().name()
-      << " " << Mat::AAAneohookeType::instance().name() << " "
       << Mat::CarreauYasudaType::instance().name() << " "
       << Mat::ConstraintMixtureType::instance().name() << " "
       << Mat::ConstraintMixtureHistoryType::instance().name() << " "

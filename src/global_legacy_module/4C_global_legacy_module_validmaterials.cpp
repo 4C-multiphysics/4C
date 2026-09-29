@@ -1529,19 +1529,6 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {.description = "elasto-plastic von Mises material with ductile damage"});
   }
 
-  /*--------------------------------------------------------------------*/
-  // aneurysm wall material according to Raghavan and Vorp [2000]
-  {
-    known_materials[Core::Materials::m_aaaneohooke] = group("MAT_Struct_AAANeoHooke",
-        {
-            parameter<double>("YOUNG", {.description = "Young's modulus"}),
-            parameter<double>("BETA", {.description = "2nd parameter"}),
-            parameter<double>("NUE", {.description = "Poisson's ratio"}),
-            parameter<double>("DENS", {.description = "mass density"}),
-        },
-        {.description = "aneurysm wall material according to Raghavan and Vorp [2000]"});
-  }
-
 
   /*----------------------------------------------------------------------*/
   // Visco-elastic Neo-Hookean material law
