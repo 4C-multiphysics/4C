@@ -10,7 +10,7 @@ Parameter Reference.
 
 .. list-table::
    :header-rows: 1
-   :widths: 35 65
+   :widths: 40 60
 
    * - Summand
      - Model

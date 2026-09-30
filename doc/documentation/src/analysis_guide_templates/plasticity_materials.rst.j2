@@ -14,8 +14,6 @@
 {% set plastic_log = load_input_file(plastic_log_file) %}
 {% set thermo_plastic_hyper_file = "plastic_necking_fbar_thrplast.4C.yaml" %}
 {% set thermo_plastic_hyper = load_input_file(thermo_plastic_hyper_file) %}
-{% set plastic_hyper_vcu_file = "plastic_necking_fbar_vcu.4C.yaml" %}
-{% set plastic_hyper_vcu = load_input_file(plastic_hyper_vcu_file) %}
 {% set viscoplastic_file = "mat_viscoplastic_no_yield_surface_1hex8.4C.yaml" %}
 {% set viscoplastic = load_input_file(viscoplastic_file) %}
 {% set multiplicative_viscoplastic_file = "mat_iso_viscoplast_refJC_log_timint.4C.yaml" %}
@@ -66,12 +64,6 @@ Overview
    * - :ref:`MAT_Struct_ThermoPlasticHyperElast <plasticity-thermo-hyper>`
      - Nonlinear
      - Thermomechanically coupled finite-strain von Mises plasticity.
-   * - :ref:`MAT_PlasticElastHyper <plasticity-elast-hyper>`
-     - Nonlinear
-     - Finite-strain plasticity with selectable hyperelastic potentials.
-   * - :ref:`MAT_PlasticElastHyperVCU <plasticity-elast-hyper-vcu>`
-     - Nonlinear
-     - Variational-update variant of ``MAT_PlasticElastHyper``.
    * - :ref:`MAT_Struct_Viscoplastic_No_Yield_Surface <plasticity-no-yield>`
      - Nonlinear
      - Thermally activated finite-strain viscoplasticity.
@@ -369,71 +361,6 @@ Output
 ~~~~~~
 
 Element visualization provides ``accumulatedstrain``, ``mechdiss``, and ``thrplheating``.
-
-.. _plasticity-elast-hyper:
-
-``MAT_PlasticElastHyper``
--------------------------
-
-Formulation
-~~~~~~~~~~~
-
-This general finite-strain framework combines one or more hyperelastic potentials with a
-multiplicative plastic update. It supports isotropic von Mises or anisotropic Hill yielding,
-linear and saturating isotropic hardening, kinematic hardening, optional Perzyna rate dependence,
-plastic spin, thermal expansion, thermal softening, and conversion of plastic work into heat.
-
-Input
-~~~~~
-
-The material requires ``KINEM: nonlinear``. ``NUMMAT`` and ``MATIDS`` reference the
-hyperelastic potentials; those materials must be defined separately. ``DENS`` and ``INITYIELD``
-set density and initial yield stress. ``ISOHARD``, ``EXPISOHARD``, ``INFYIELD``, and ``KINHARD``
-define hardening. ``VISC``, ``RATE_DEPENDENCY``, and ``VISC_SOFT`` control Perzyna
-viscoplasticity. ``PL_SPIN_CHI`` controls plastic spin. Nonzero ``rY_11``, ``rY_22``, ``rY_33``,
-``rY_12``, ``rY_23``, and ``rY_13`` define directional Hill yield ratios. ``CTE``, ``INITTEMP``,
-``YIELDSOFT``, ``HARDSOFT``, and ``TAYLOR_QUINNEY`` control thermomechanical coupling.
-
-See :ref:`MAT_PlasticElastHyper in the Input Parameter Reference
-<MATERIALS_MAT_PlasticElastHyper>` for the complete schema. No regression input in the current
-test suite uses this material directly.
-
-Output
-~~~~~~
-
-Gauss-point and element output is available as ``accumulated_plastic_strain``,
-``plastic_strain_incr``, ``plastic_zone``, and ``kinematic_plastic_strain``. For element
-visualization, accumulated plastic strain is named ``accumulatedstrain``.
-
-.. _plasticity-elast-hyper-vcu:
-
-``MAT_PlasticElastHyperVCU``
-----------------------------
-
-Formulation
-~~~~~~~~~~~
-
-This material provides a variational constitutive-update variant of
-``MAT_PlasticElastHyper``. It uses the same selectable hyperelastic potentials and the same
-finite-strain yield, hardening, viscosity, anisotropy, plastic-spin, and thermal options.
-
-Input
-~~~~~
-
-The material requires ``KINEM: nonlinear`` and uses the same input parameters as
-``MAT_PlasticElastHyper``. ``NUMMAT`` and ``MATIDS`` reference separately defined hyperelastic
-potentials.
-
-See :ref:`MAT_PlasticElastHyperVCU in the Input Parameter Reference
-<MATERIALS_MAT_PlasticElastHyperVCU>` for the complete schema. The following definition is taken
-from ``{{ plastic_hyper_vcu_file }}``:
-
-{{ section_dump(plastic_hyper_vcu, "MATERIALS") }}
-
-Output
-~~~~~~
-
-Element visualization provides ``accumulatedstrain``.
 
 .. _plasticity-no-yield:
 

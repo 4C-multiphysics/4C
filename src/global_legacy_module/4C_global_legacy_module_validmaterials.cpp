@@ -3004,31 +3004,62 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*----------------------------------------------------------------------*/
   // multiplicative split of deformation gradient in elastic and inelastic parts
   {
-    known_materials[Core::Materials::m_multiplicative_split_defgrad_elasthyper] =
-        group("MAT_MultiplicativeSplitDefgradElastHyper",
-            {
-                parameter<int>(
-                    "NUMMATEL", {.description = "number of elastic materials/potentials in list"}),
-                parameter<std::vector<int>>(
-                    "MATIDSEL", {.description = "the list of elastic material/potential IDs",
-                                    .default_value = std::vector{-1},
-                                    .size = from_parameter<int>("NUMMATEL")}),
-                parameter<int>("NUMFACINEL",
-                    {.description = "number of factors of inelastic deformation gradient"}),
-                parameter<std::vector<int>>("INELDEFGRADFACIDS",
-                    {.description = "the list of inelastic deformation gradient factor IDs",
-                        .default_value = std::vector{0},
-                        .size = from_parameter<int>("NUMFACINEL")}),
-                parameter<double>("DENS", {.description = "material mass density"}),
-                parameter<double>("REF_TEMPERATURE",
-                    {.description = "reference temperature for thermoelastic expansion.",
-                        .default_value = 0.0,
-                        .validator = Validators::positive_or_zero<double>()}),
-                parameter<double>("THERMAL_EXPANSION_COEFFICIENT",
-                    {.description = "coefficient of thermal expansion $\\alpha_T$",
-                        .default_value = 0.0}),
-            },
-            {.description = "multiplicative split of deformation gradient"});
+    known_materials[Core::Materials::m_multiplicative_split_defgrad_elasthyper] = group(
+        "MAT_MultiplicativeSplitDefgradElastHyper",
+        {
+            parameter<int>(
+                "NUMMATEL", {.description = "number of elastic materials/potentials in list"}),
+            parameter<std::vector<int>>(
+                "MATIDSEL", {.description = "the list of elastic material/potential IDs",
+                                .default_value = std::vector{-1},
+                                .size = from_parameter<int>("NUMMATEL")}),
+            parameter<int>("NUMFACINEL",
+                {.description = "number of factors of inelastic deformation gradient"}),
+            parameter<std::vector<int>>("INELDEFGRADFACIDS",
+                {.description = "the list of inelastic deformation gradient factor IDs",
+                    .default_value = std::vector{0},
+                    .size = from_parameter<int>("NUMFACINEL")}),
+            parameter<double>("DENS", {.description = "material mass density"}),
+            parameter<double>("REF_TEMPERATURE",
+                {.description = "reference temperature for thermoelastic expansion.",
+                    .default_value = 0.0,
+                    .validator = Validators::positive_or_zero<double>()}),
+            parameter<double>("THERMAL_EXPANSION_COEFFICIENT",
+                {.description = "coefficient of thermal expansion $\\alpha_T$",
+                    .default_value = 0.0}),
+        },
+        {.description =
+                "This material is used to model the kinematic assumption of a _multiplicative "
+                "split_ of the "
+                "deformation gradient into an elastic part $\\mathbf{F}_\\mathrm{e}$ and an "
+                "inelastic part $\\mathbf{F}_\\mathrm{in}$,"
+                "which can be used to model phenomena such as scalar/anisotropic growth and "
+                "viscoplasticity. The split is given by\n\n"
+                "$$\n\\mathbf{F} = \\mathbf{F}_\\mathrm{e} \\cdot \\mathbf{F}_\\mathrm{in}\n$$\n\n"
+                "Only the elastic part results in stresses according to a _hyperelastic_ potential "
+                "$\\Psi_\\mathrm{e}$ "
+                "given additively by the summands specified in `MATIDSEL`. All `ELAST_*` materials "
+                "from the "
+                "The elastic part can be chosen from the elastic summands of the hyperelastic "
+                "framework, "
+                "denoted as `ELAST_<specific-summand>`."
+                "This assumption gives rise to the total second Piola-Kirchhoff stress "
+                "$\\mathbf{S}$ being:\n\n"
+                "$$\n\\mathbf{S} = 2 \\det\\left(\\mathbf{F}_\\mathrm{in}\\right) "
+                "\\mathbf{F}_\\mathrm{in}^{-1} \\frac{\\partial \\Psi_\\mathrm{e}}{\\partial "
+                "\\mathbf{C}_\\mathrm{e}} \\cdot \\mathbf{F}_\\mathrm{in}^{-\\top}\n$$\n\n"
+                "where $\\mathbf{C}_\\mathrm{e} = \\mathbf{F}_\\mathrm{e}^\\top \\cdot "
+                "\\mathbf{F}_\\mathrm{e}$"
+                "is the elastic right Cauchy-Green tensor.\n\n"
+                "The inelastic deformation itself can be split _multiplicatively_ into individual "
+                "contributions, specified in the `INELDEFGRADFACIDS` list. "
+                "Each factor develops independently according to its own evolution law "
+                "(see the descriptions for the `MAT_InelasticDefgrad_<specific-summand>` models "
+                "for details). "
+                "Since the multiplicative split of the inelastic deformation is not generally "
+                "commutative, the order of `INELDEFGRADFACIDS` is important "
+                "(particularly for complex inelastic deformation factors, such as viscoplastic "
+                "behavior)."});
   }
 
   /*----------------------------------------------------------------------*/
