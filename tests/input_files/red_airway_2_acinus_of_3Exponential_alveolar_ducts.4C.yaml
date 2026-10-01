@@ -14,10 +14,6 @@ REDUCED DIMENSIONAL AIRWAYS DYNAMIC:
   LINEAR_SOLVER: 1
 SOLVER 1:
   SOLVER: "UMFPACK"
-  AZSOLVE: "CG"
-  PRECONDITIONER_XML_FILE: "xml/preconditioner/ifpack.xml"
-  AZSUB: 25
-  NAME: "Reduced_dimensional_Airways_Solver"
 MATERIALS:
   - MAT: 1
     MAT_fluid:
