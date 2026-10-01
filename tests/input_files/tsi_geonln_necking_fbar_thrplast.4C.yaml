@@ -641,7 +641,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 82
       QUANTITY: "dispx"
-      VALUE: -0.08057243604590322
+      VALUE: -0.08057243233007202
       TOLERANCE: 1e-09
       NAME: "ux_neck"
   - STRUCTURE:
