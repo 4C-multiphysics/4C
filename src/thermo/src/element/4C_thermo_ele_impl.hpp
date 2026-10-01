@@ -288,17 +288,21 @@ namespace Discret
           const Core::LinAlg::Matrix<nsd_, nsd_>& defgrd_inv  //!< inverse of F
       ) const;
 
-      //! build derivatives of right Cauchy-Green deformation tensor C
-      //! build the inverse of C^{-1} and the time derivative C'
-      void calculate_cauchy_greens(
-          Core::LinAlg::Matrix<6, 1>& Cratevct,            //!< right Cauchy-Green rate vector
-          Core::LinAlg::Matrix<6, 1>& Cinvvct,             //!< inverse of right Cauchy-Green vector
-          Core::LinAlg::Matrix<nsd_, nsd_>& Cinv,          //!< inverse right Cauchy-Green tensor
-          const Core::LinAlg::Matrix<nsd_, nsd_>* defgrd,  //!< deformation gradient tensor
-          const Core::LinAlg::Matrix<nsd_, nsd_>* defgrdrate,  //!< velocity gradient tensor
-          const Core::LinAlg::Matrix<nsd_, nsd_>*
-              invdefgrd  //!< inverse deformation gradient tensor
-      ) const;
+      /*!
+       * @brief Compute the rate and the inverse of the right Cauchy-Green tensor
+       *
+       * @param[out] Cratevct \f$\dot{\mathbf{C}}\f$ in strain-like Voigt notation
+       * @param[out] Cinvvct \f$\mathbf{C}^{-1}\f$ in stress-like Voigt notation
+       * @param[out] Cinv \f$\mathbf{C}^{-1}\f$ as matrix
+       * @param[in] defgrd deformation gradient \f$\mathbf{F}\f$
+       * @param[in] defgrdrate time derivative of the deformation gradient \f$\dot{\mathbf{F}}\f$
+       * @param[in] invdefgrd inverse deformation gradient \f$\mathbf{F}^{-1}\f$
+       */
+      void calculate_cauchy_greens(Core::LinAlg::Matrix<6, 1>& Cratevct,
+          Core::LinAlg::Matrix<6, 1>& Cinvvct, Core::LinAlg::Matrix<nsd_, nsd_>& Cinv,
+          const Core::LinAlg::Matrix<nsd_, nsd_>* defgrd,
+          const Core::LinAlg::Matrix<nsd_, nsd_>* defgrdrate,
+          const Core::LinAlg::Matrix<nsd_, nsd_>* invdefgrd) const;
 
       /// @}
 

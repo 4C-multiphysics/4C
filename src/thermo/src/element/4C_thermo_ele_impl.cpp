@@ -1130,6 +1130,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
 
   // thermal material tangent
   Core::LinAlg::SymmetricTensor<double, 3, 3> ctemp_t{};
+  // thermal material tangent in stress-like Voigt notation
   Core::LinAlg::Matrix<6, 1> ctemp = Core::LinAlg::make_stress_like_voigt_view(ctemp_t);
   // get scalar-valued element temperature
   // build the product of the shapefunctions and element temperatures T = N . T
@@ -1187,17 +1188,12 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
     // inverse of deformation gradient
     invdefgrd.invert(defgrd);
 
-    // ----------- derivatives of right Cauchy-Green deformation tensor C
-    // build the rate of C: C'= F^T . F' + (F')^T . F
-    // OR: C' = F^T . F' if applied to symmetric tensor
-    // save C' as rate vector Crate
-    // C' = { C11', C22', C33', C12', C23', C31' }
+    /// \f$\dot{\mathbf{C}}\f$ in strain-like Voigt notation
     Core::LinAlg::Matrix<6, 1> Cratevct(Core::LinAlg::Initialization::uninitialized);
     // build the inverse C: C^{-1} = F^{-1} . F^{-T}
     Core::LinAlg::Matrix<nsd_, nsd_> Cinv(Core::LinAlg::Initialization::uninitialized);
-    // Cinvvct: C^{-1} in Voight-/vector notation
-    // C^{-1} = { C11^{-1}, C22^{-1}, C33^{-1}, C12^{-1}, C23^{-1}, C31^{-1} }
     Core::LinAlg::SymmetricTensor<double, 3, 3> Cinv_t{};
+    /// \f$\mathbf{C}^{-1}\f$ in stress-like Voigt notation
     Core::LinAlg::Matrix<6, 1> Cinvvct = Core::LinAlg::make_stress_like_voigt_view(Cinv_t);
     calculate_cauchy_greens(Cratevct, Cinvvct, Cinv, &defgrd, &defgrdrate, &invdefgrd);
 
@@ -1222,7 +1218,10 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
       // scalar product: dctemp_dTCdot = dC_T/dT : 1/2 C'
       double dctemp_dTCdot = 0.0;
       for (int i = 0; i < 6; ++i)
-        dctemp_dTCdot += dctemp_dT(i, 0) * (1 / 2.0) * Cratevct(i, 0);  // (6x1)(6x1)
+      {
+        // (6x1 stress-like) . (6x1 strain-like)
+        dctemp_dTCdot += dctemp_dT(i, 0) * (1 / 2.0) * Cratevct(i, 0);
+      }
 
       Core::LinAlg::Matrix<nen_, 1> Ndctemp_dTCratevct(Core::LinAlg::Initialization::uninitialized);
       Ndctemp_dTCratevct.update(dctemp_dTCdot, funct_);
@@ -1244,10 +1243,6 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
     {
       std::shared_ptr<Mat::ThermoPlasticHyperElast> thermoplhyperelast =
           std::dynamic_pointer_cast<Mat::ThermoPlasticHyperElast>(structmat);
-
-      // insert matrices into parameter list which are only required for thrplasthyperelast
-      params.set<Core::LinAlg::Matrix<nsd_, nsd_>>("defgrd", defgrd);
-      params.set<Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1>>("Cinv_vct", Cinvvct);
 
       // ------------ (non-dissipative) thermoelastic and -plastic heating term
       // H_ep := H_e + H_p = T . dsigma/dT . E' + T . dkappa/dT . astrain^p'
@@ -1279,6 +1274,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
 
     // --------------------------------------------- terms for r_T / k_TT
     // scalar product: ctempcdot = C_T : 1/2 C'
+    // (6x1 stress-like) . (6x1 strain-like)
     double ctempCdot = 0.0;
     for (int i = 0; i < 6; ++i) ctempCdot += ctemp(i, 0) * (1 / 2.0) * Cratevct(i, 0);
 
@@ -1530,17 +1526,14 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
     // ------- derivatives of right Cauchy-Green deformation tensor C
 
     // build the rate of C: C'= F^T . F' + (F')^T . F
-    // save C' as rate vector Crate
-    // C' = { C11', C22', C33', C12', C23', C31 }
+    /// \f$\dot{\mathbf{C}}\f$ in strain-like Voigt notation
     Core::LinAlg::Matrix<6, 1> Cratevct(Core::LinAlg::Initialization::uninitialized);
     // build the inverse C: C^{-1} = F^{-1} . F^{-T}
     Core::LinAlg::Matrix<nsd_, nsd_> Cinv(Core::LinAlg::Initialization::uninitialized);
-    // Cinvvct: C^{-1} in Voight-/vector notation
-    // C^{-1} = { C11^{-1}, C22^{-1}, C33^{-1}, C12^{-1}, C23^{-1}, C31^{-1} }
     Core::LinAlg::SymmetricTensor<double, 3, 3> Cinv_t{};
+    /// \f$\mathbf{C}^{-1}\f$ in stress-like Voigt notation
     Core::LinAlg::Matrix<6, 1> Cinvvct = Core::LinAlg::make_stress_like_voigt_view(Cinv_t);
-    // calculation is done in calculate_cauchy_greens, return C', C^{-1} in vector
-    // notation, NO Voigt-notation
+    // calculation is done in calculate_cauchy_greens
     calculate_cauchy_greens(Cratevct, Cinvvct, Cinv, &defgrd, &defgrdrate, &invdefgrd);
 
     // ------------------------------------ calculate linearisation of C'
@@ -1705,6 +1698,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
       dC_T_dd.multiply(fac_He_dJ, Cinvvct, dJ_dd);
       dC_T_dd.update(fac_He_dCinv, dCinv_dd, 1.0);
       // dC_T_dd : 1/2 C'
+      // (1x6 strain-like) . (6x24 stress-like)
       Core::LinAlg::Matrix<1, nsd_ * nen_ * numdofpernode_> dC_T_ddCdot(
           Core::LinAlg::Initialization::uninitialized);  // (1x24)
       dC_T_ddCdot.multiply_tn(0.5, Cratevct, dC_T_dd);
@@ -2969,13 +2963,10 @@ void Discret::Elements::TemperImpl<distype>::calculate_linearisation_of_jacobian
 
 template <Core::FE::CellType distype>
 void Discret::Elements::TemperImpl<distype>::calculate_cauchy_greens(
-    Core::LinAlg::Matrix<6, 1>& Cratevct,                // (io) C' in vector notation
-    Core::LinAlg::Matrix<6, 1>& Cinvvct,                 // (io) C^{-1} in vector notation
-    Core::LinAlg::Matrix<nsd_, nsd_>& Cinv,              // (io) C^{-1} in tensor notation
-    const Core::LinAlg::Matrix<nsd_, nsd_>* defgrd,      // (i) deformation gradient
-    const Core::LinAlg::Matrix<nsd_, nsd_>* defgrdrate,  // (i) rate of deformation gradient
-    const Core::LinAlg::Matrix<nsd_, nsd_>* invdefgrd    // (i) inverse of deformation gradient
-) const
+    Core::LinAlg::Matrix<6, 1>& Cratevct, Core::LinAlg::Matrix<6, 1>& Cinvvct,
+    Core::LinAlg::Matrix<nsd_, nsd_>& Cinv, const Core::LinAlg::Matrix<nsd_, nsd_>* defgrd,
+    const Core::LinAlg::Matrix<nsd_, nsd_>* defgrdrate,
+    const Core::LinAlg::Matrix<nsd_, nsd_>* invdefgrd) const
 {
   // calculate the rate of the right Cauchy-Green deformation gradient C'
   // rate of right Cauchy-Green tensor C' = F^T . F' + (F')^T . F
@@ -2983,55 +2974,18 @@ void Discret::Elements::TemperImpl<distype>::calculate_cauchy_greens(
   Core::LinAlg::Matrix<nsd_, nsd_> Crate(Core::LinAlg::Initialization::uninitialized);
   Crate.multiply_tn((*defgrd), (*defgrdrate));
   Crate.multiply_tn(1.0, (*defgrdrate), (*defgrd), 1.0);
-  // Or alternative use: C' = 2 . (F^T . F') when applied to symmetric tensor
 
-  // copy to matrix notation
-  // rate vector Crate C'
-  // C' = { C11', C22', C33', C12', C23', C31' }
-  if constexpr (nsd_ == 1)
-  {
-    Cratevct(0) = Crate(0, 0);
-  }
-  else if constexpr (nsd_ == 2)
-  {
-    Cratevct(0) = Crate(0, 0);
-    Cratevct(1) = Crate(1, 1);
-    Cratevct(2) = Crate(0, 1);
-  }
-  else if constexpr (nsd_ == 3)
-  {
-    Cratevct(0) = Crate(0, 0);
-    Cratevct(1) = Crate(1, 1);
-    Cratevct(2) = Crate(2, 2);
-    Cratevct(3) = Crate(0, 1);
-    Cratevct(4) = Crate(1, 2);
-    Cratevct(5) = Crate(2, 0);
-  }
-
-  // build the inverse of the right Cauchy-Green deformation gradient C^{-1}
-  // C^{-1} = F^{-1} . F^{-T}
+  // Build the inverse right Cauchy-Green tensor C^{-1} = F^{-1} F^{-T}.
   Cinv.multiply_nt((*invdefgrd), (*invdefgrd));
-  // Cinvvct: C^{-1} in Voigt-/vector notation
-  // C^{-1} = { C11^{-1}, C22^{-1}, C33^{-1}, C12^{-1}, C23^{-1}, C31^{-1} }
 
-  if constexpr (nsd_ == 1)
+  if constexpr (nsd_ == 3)
   {
-    Cinvvct(0) = Cinv(0, 0);
+    Core::LinAlg::Voigt::Strains::matrix_to_vector(Crate, Cratevct);
+    Core::LinAlg::Voigt::Stresses::matrix_to_vector(Cinv, Cinvvct);
   }
-  else if constexpr (nsd_ == 2)
+  else
   {
-    Cinvvct(0) = Cinv(0, 0);
-    Cinvvct(1) = Cinv(1, 1);
-    Cinvvct(2) = Cinv(0, 1);
-  }
-  else if constexpr (nsd_ == 3)
-  {
-    Cinvvct(0) = Cinv(0, 0);
-    Cinvvct(1) = Cinv(1, 1);
-    Cinvvct(2) = Cinv(2, 2);
-    Cinvvct(3) = Cinv(0, 1);
-    Cinvvct(4) = Cinv(1, 2);
-    Cinvvct(5) = Cinv(2, 0);
+    FOUR_C_THROW("TSI kinematics are only implemented in 3D.");
   }
 }
 
