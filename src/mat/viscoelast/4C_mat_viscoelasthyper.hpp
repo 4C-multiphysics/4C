@@ -52,9 +52,9 @@ namespace Mat
      * \brief Parameter object for Mat::ViscoElastHyper.
      *
      * The material is assembled from two ordered summand sets: purely elastic summands and
-     * viscoelastic summands. The explicit split fields `NUMELAST`/`ELAST_MATIDS` and
-     * `NUMVISCO`/`VISCO_MATIDS` define these sets directly. If those fields are omitted, the
-     * material list from `NUMMAT`/`MATIDS` is partitioned by material type during parameter
+     * viscoelastic summands. The explicit split fields `ELAST_MATIDS` and
+     * `VISCO_MATIDS` define these sets directly. If those fields are omitted, the
+     * material list from `MATIDS` is partitioned by material type during parameter
      * construction.
      *
      * The split is stored as immutable parameter data because the material object uses it to build
@@ -68,16 +68,10 @@ namespace Mat
       /// Result of parsing the current material input into elastic and visco summand sets.
       struct SummandSplit
       {
-        /// Number of elastic summands declared by the input split.
-        int numelast = 0;
         /// Material IDs of elastic summands, evaluated before visco contributions.
         std::vector<int> elast_matids;
-        /// Number of visco summands declared by the input split.
-        int numvisco = 0;
         /// Material IDs of visco summands that activate model contributions.
         std::vector<int> visco_matids;
-        /// True if the split was derived from the complete `MATIDS` list by material type.
-        bool uses_legacy_matids = true;
       };
 
       /// Parse the input parameters into explicit elastic and visco summand sets.
@@ -86,26 +80,17 @@ namespace Mat
           const Core::Mat::PAR::Parameter::Data& matdata, const SummandSplit& summand_split);
 
      public:
-      /// Construct and validate the split between elastic and visco summands.
+      /// Construct the split between elastic and visco summands.
       ViscoElastHyper(const Core::Mat::PAR::Parameter::Data& matdata);
 
       /// create material instance of matching type with my parameters
       std::shared_ptr<Core::Mat::Material> create_material() override;
 
-      /// Number of elastic summands used by this material.
-      const int numelast_;
-
       /// Material IDs of elastic summands used by this material.
       const std::vector<int> elast_matids_;
 
-      /// Number of visco summands used by this material.
-      const int numvisco_;
-
       /// Material IDs of visco summands used by this material.
       const std::vector<int> visco_matids_;
-
-      /// True if the summand split was derived from the complete `MATIDS` list by material type.
-      const bool uses_legacy_matids_;
 
       //@}
 

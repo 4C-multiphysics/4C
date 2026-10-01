@@ -20,18 +20,13 @@ FOUR_C_NAMESPACE_OPEN
 
 Mat::Elastic::PAR::RemodelFiber::RemodelFiber(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
-      nummat_(matdata.parameters.get<int>("NUMMAT")),
+      nummat_(static_cast<int>(matdata.parameters.get<std::vector<int>>("MATIDS").size())),
       matids_(matdata.parameters.get<std::vector<int>>("MATIDS")),
       t_decay_(matdata.parameters.get<double>("TDECAY")),
       k_growth_(matdata.parameters.get<double>("GROWTHFAC")),
       init_w_col_(matdata.parameters.get<std::vector<double>>("COLMASSFRAC")),
       G_(matdata.parameters.get<double>("DEPOSITIONSTRETCH"))
 {
-  // check if sizes fit
-  if (nummat_ != (int)matids_.size())
-    FOUR_C_THROW("number of materials {} does not fit to size of material vector {}", nummat_,
-        matids_.size());
-
   // check decay time validity
   if (t_decay_ <= 0.) FOUR_C_THROW("decay time must be positive");
 }

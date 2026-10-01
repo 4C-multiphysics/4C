@@ -35,6 +35,10 @@ Mat::PAR::ThermoPlasticLinElast::ThermoPlasticLinElast(
       strainbar_p_ref_((matdata.parameters.get<std::vector<double>>("EPSBAR_P"))),
       abstol_(matdata.parameters.get<double>("TOL"))
 {
+  FOUR_C_ASSERT_ALWAYS(sigma_y_.size() == strainbar_p_ref_.size(),
+      "Invalid MAT_Struct_ThermoPlasticLinElast setup (MAT {}): SIGMA_Y has {} entries but "
+      "EPSBAR_P has {} entries. Both have to provide the same number of samples.",
+      matdata.id, sigma_y_.size(), strainbar_p_ref_.size());
 }
 
 

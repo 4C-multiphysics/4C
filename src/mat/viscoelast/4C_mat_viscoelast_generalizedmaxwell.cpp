@@ -29,19 +29,13 @@ namespace Mat::ViscoElast
 
   PAR::GeneralizedMaxwell::GeneralizedMaxwell(const Core::Mat::PAR::Parameter::Data& matdata)
       : Parameter(matdata),
-        numbranch_(matdata.parameters.get<int>("NUMBRANCH")),
+        numbranch_(static_cast<int>(matdata.parameters.get<std::vector<int>>("MATIDS").size())),
         matids_(matdata.parameters.get<std::vector<int>>("MATIDS")),
         solve_(matdata.parameters.get<std::string>("SOLVE"))
   {
     FOUR_C_ASSERT_ALWAYS(numbranch_ > 0,
-        "Invalid NUMBRANCH={} in VISCO_GeneralizedMaxwell (MAT {}). NUMBRANCH has to be "
-        "positive.",
-        numbranch_, matdata.id);
-
-    FOUR_C_ASSERT_ALWAYS(static_cast<int>(matids_.size()) == numbranch_,
-        "Invalid VISCO_GeneralizedMaxwell branch declaration in MAT {}: NUMBRANCH={} but "
-        "MATIDS has size {}.",
-        matdata.id, numbranch_, matids_.size());
+        "Invalid VISCO_GeneralizedMaxwell branch declaration in MAT {}: MATIDS must not be empty.",
+        matdata.id);
 
     for (int branch_index = 0; branch_index < numbranch_; ++branch_index)
     {
@@ -61,15 +55,6 @@ namespace Mat::ViscoElast
   GeneralizedMaxwell::GeneralizedMaxwell(PAR::GeneralizedMaxwell* params)
       : params_(params), branchespotsum_(0), branchtau_(0), internalpotsum_(0)
   {
-    FOUR_C_ASSERT_ALWAYS(params_->numbranch_ > 0,
-        "Invalid VISCO_GeneralizedMaxwell setup for MAT {}: NUMBRANCH={} is not positive.",
-        params_->id(), params_->numbranch_);
-
-    FOUR_C_ASSERT_ALWAYS(static_cast<int>(params_->matids_.size()) == params_->numbranch_,
-        "Invalid VISCO_GeneralizedMaxwell setup for MAT {}: NUMBRANCH={} but MATIDS has size "
-        "{}.",
-        params_->id(), params_->numbranch_, params_->matids_.size());
-
     // Integration-boundary access: branch material validation currently depends on the global
     // material bundle and remains outside constitutive evaluate/update hot paths.
     FOUR_C_ASSERT_ALWAYS(Global::Problem::instance()->materials() != nullptr,
@@ -401,20 +386,13 @@ namespace Mat::ViscoElast
         point.visco_mat_id);
 
     FOUR_C_ASSERT_ALWAYS(generalized_maxwell_numbranch_value > 0,
-        "Invalid VISCO_GeneralizedMaxwell setup in MAT_ViscoElastHyper (MAT {}): NUMBRANCH={} "
-        "is not positive.",
+        "Invalid VISCO_GeneralizedMaxwell setup in MAT_ViscoElastHyper (MAT {}): number of "
+        "branches {} is not positive.",
         point.visco_mat_id, generalized_maxwell_numbranch_value);
 
     FOUR_C_ASSERT_ALWAYS(generalized_maxwell_matids != nullptr,
         "Failed to read MATIDS for VISCO_GeneralizedMaxwell in MAT_ViscoElastHyper (MAT {}).",
         point.visco_mat_id);
-
-    FOUR_C_ASSERT_ALWAYS(generalized_maxwell_matids->size() ==
-                             static_cast<unsigned int>(generalized_maxwell_numbranch_value),
-        "Invalid VISCO_GeneralizedMaxwell setup in MAT_ViscoElastHyper (MAT {}): NUMBRANCH={} "
-        "but MATIDS has size {}.",
-        point.visco_mat_id, generalized_maxwell_numbranch_value,
-        generalized_maxwell_matids->size());
 
     const auto& branchespotsum = generalized_maxwell->get_branchespotsum();
     const auto& branchtau = generalized_maxwell->get_branchtaus();
