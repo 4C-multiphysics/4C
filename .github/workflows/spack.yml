@@ -1,8 +1,9 @@
 name: Spack build test
 
-# Builds the latest official 4C release with Spack
-# (https://packages.spack.io/package.html?name=4c-multiphysics) and runs a
-# smoke test against it
+# Builds and smoke-tests configurable 4C versions with Spack. By default, the
+# workflow tests the latest release available in the pinned Spack repository;
+# individual matrix entries can select another version, such as `main`.
+# See https://packages.spack.io/package.html?name=4c-multiphysics.
 on:
   schedule:
     # Weekly, avoiding the top of the hour as recommended by GitHub
@@ -20,38 +21,60 @@ concurrency:
 
 jobs:
   spack-build:
-    name: Build and test 4C (${{ matrix.os.name }}, ${{ matrix.variant.name }})
-    runs-on: ${{ matrix.os.name }}
+    name: Build and test 4C (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
     # Only the "minimal" variant is currently enabled. The "deal.II" and
     # "extended" variants require a Spack PR that has not landed yet.
     timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
-        os:
-          # gcc@14 hits an internal compiler error on 4C's tensor templates;
-          # pin the compiler per OS to one that is known to work.
-          - name: ubuntu-24.04
-            compiler: gcc@13
-            compiler_bin: /usr/bin/g++-13
-          - name: ubuntu-26.04
-            compiler: gcc@15
-            compiler_bin: /usr/bin/g++-15
-        # add macOS support as soon as 4C (and an updated spack repo entry) support it
-        variant:
-          # Optional Spack variants (see `spack info 4c-multiphysics`).
-          - name: minimal
+        include:
+          # Add each supported OS, variant, and version combination explicitly.
+          - name: macOS arm64, 4C main, minimal
+            os: macos-26
+            compiler: apple-clang@21.0.0
+            compiler_bin: /usr/bin/clang++
+            variant: minimal
             spec_args: ""
-            # - name: extended
-            #   spec_args: >-
-            #     +vtk
-            #     +gmsh
-            #     +mirco
-            #     +arborx
-            #     +fftw
-            #     +backtrace
-            # - name: dealii
+            version: main
+            # Additional Ubuntu configurations are disabled while testing the
+            # macOS runner.
+            # - name: Ubuntu 24.04, 4C v2026.2, minimal
+            #   os: ubuntu-24.04
+            #   compiler: gcc@13
+            #   compiler_bin: /usr/bin/g++-13
+            #   variant: minimal
+            #   spec_args: ""
+            #   version: "2026.2"
+            # - name: Ubuntu 24.04, latest release, minimal
+            #   os: ubuntu-24.04
+            #   compiler: gcc@13
+            #   compiler_bin: /usr/bin/g++-13
+            #   variant: minimal
+            #   spec_args: ""
+            #   version: latest-release
+            # - name: Ubuntu 24.04, latest release, extended
+            #   os: ubuntu-24.04
+            #   compiler: gcc@13
+            #   compiler_bin: /usr/bin/g++-13
+            #   variant: extended
+            #   spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
+            #   version: latest-release
+            # - name: Ubuntu 26.04, latest release, minimal
+            #   os: ubuntu-26.04
+            #   compiler: gcc@15
+            #   compiler_bin: /usr/bin/g++-15
+            #   variant: minimal
+            #   spec_args: ""
+            #   version: latest-release
+            # - name: Ubuntu 26.04, latest release, dealii
+            #   os: ubuntu-26.04
+            #   compiler: gcc@15
+            #   compiler_bin: /usr/bin/g++-15
+            #   variant: dealii
             #   spec_args: "+dealii"
+            #   version: latest-release
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@v2
@@ -65,12 +88,11 @@ jobs:
           spack_ref: v1.2.2
           # `4c-multiphysics` is not part of any tagged spack-packages release
           # yet, so pin to a `develop` commit that contains it instead.
-          # Pin to the merge commit of the PR that enables Python support for
-          # 4C. The workflow passes --deprecated because this package version
-          # still requires trilinos@16.2.1.
+          # Pin to the merge commit of Spack PR #6252, which adds the current
+          # 4C package version and Darwin support for 4C main.
           # TODO: switch `packages_ref` to a release tag (e.g. v2026.09.0) once
           # one ships a `4c-multiphysics` package that no longer needs this.
-          packages_ref: 20a56c500d0ade1a27a087ad36eea990d952020a
+          packages_ref: b21d87c38e972c9a97cd16674464716cc0a39eef
           buildcache: true
           color: true
 
@@ -79,43 +101,47 @@ jobs:
           # Register only this one compiler: a broad `spack compiler find`
           # also picks up system clang/LLVM and registers it as an external
           # `libllvm`, which then breaks mesa (missing llvm-config).
-          spack compiler find ${{ matrix.os.compiler_bin }}
+          spack compiler find ${{ matrix.compiler_bin }}
 
-      - name: Determine the latest 4C release known to Spack
+      - name: Determine the 4C version to test
         id: version
         run: |
-          # `spack versions --safe` prints a column-aligned, indented table
-          # (via colify), so tokenize on whitespace before filtering.
-          # 4C uses calendar versioning (YYYY.MINOR.PATCH), which also
-          # excludes non-release tokens such as "main".
-          LATEST_VERSION=$(spack --color=never versions --safe 4c-multiphysics \
-            | tr -s '[:space:]' '\n' \
-            | grep -E '^[0-9]{4}\.[0-9]+\.[0-9]+$' \
-            | sort --version-sort --reverse | head -n1)
-          if [ -z "$LATEST_VERSION" ]; then
-            echo "Could not determine the latest 4C release from Spack." >&2
-            exit 1
+          if [ "${{ matrix.version }}" = "latest-release" ]; then
+            # `spack versions --safe` prints a column-aligned, indented table
+            # (via colify), so tokenize on whitespace before filtering.
+            VERSION=$(spack --color=never versions --safe 4c-multiphysics \
+              | tr -s '[:space:]' '\n' \
+              | grep -E '^[0-9]{4}\.[0-9]+\.[0-9]+$' \
+              | sort --version-sort --reverse | head -n1)
+            if [ -z "$VERSION" ]; then
+              echo "Could not determine the latest 4C release from Spack." >&2
+              exit 1
+            fi
+          else
+            # Explicit versions, such as `main` or `2026.2`, are used as-is.
+            VERSION=${{ matrix.version }}
           fi
-          echo "Latest 4C release known to Spack: $LATEST_VERSION"
-          echo "version=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+          echo "4C version to test: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "### Spack build test" >> "$GITHUB_STEP_SUMMARY"
-          echo "- OS: \`${{ matrix.os.name }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Variant: \`${{ matrix.variant.name }}\` (\`${{ matrix.variant.spec_args }}\`)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- 4C version: \`$LATEST_VERSION\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- OS: \`${{ matrix.os }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Variant: \`${{ matrix.variant }}\` (\`${{ matrix.spec_args }}\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 4C version: \`$VERSION\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Show the concretized spec
-        run: spack spec --deprecated -l "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.variant.spec_args
-          }} %${{ matrix.os.compiler }}"
+        run: spack spec -l "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.spec_args
+          }} %${{ matrix.compiler }}"
 
       - name: Install 4C
         run: |
-          spack install --deprecated --fail-fast --verbose "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.variant.spec_args }} %${{ matrix.os.compiler }}"
+          spack install --fail-fast --verbose "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.spec_args }} %${{ matrix.compiler }}"
           spack find --long --variants 4c-multiphysics
 
-      - name: Checkout tutorial input files matching the installed release
+      - name: Checkout tutorial input files matching the tested version
         uses: actions/checkout@v7
         with:
-          ref: v${{ steps.version.outputs.version }}
+          ref: ${{ steps.version.outputs.version == 'main' && 'main' || format('v{0}', steps.version.outputs.version)
+            }}
           sparse-checkout: |
             tests/tutorials/poisson
           sparse-checkout-cone-mode: false
@@ -157,7 +183,8 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v7
         with:
-          name: spack_smoke_test_output-${{ matrix.os.name }}-${{ matrix.variant.name }}
+          name: spack_smoke_test_output-${{ matrix.os }}-${{ matrix.variant }}-${{ steps.version.outputs.version
+            }}
           path: |
             ${{ github.workspace }}/spack_smoke_test
             ${{ github.workspace }}/spack_build_logs
@@ -183,7 +210,7 @@ jobs:
           body: >
             The scheduled **Spack build test** workflow failed.
 
-            This workflow builds the latest official 4C release via the
+            This workflow builds the configured 4C version via the
             [`4c-multiphysics` Spack package](https://packages.spack.io/package.html?name=4c-multiphysics)
             across several OS/variant combinations and runs a smoke test against the result.
 
