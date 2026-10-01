@@ -14,6 +14,7 @@ uncomplete = "uncomplete" # used in the context of the uncomplete() call fo a sp
 Comput = "Comput" # abbreviation Comput. for Computational / Computing (typo fix cannot contain .)
 Equil = "Equil" # "Equilibration" (used to pre-order a linear system)
 LOCA = "LOCA" # Trilinos/NOX package name
+WRONLY = "WRONLY" # POSIX open flag (O_WRONLY) / MPI_MODE_WRONLY constant
 
 # German words we want to keep as is.
 Interaktion = "Interaktion"
