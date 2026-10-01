@@ -1002,7 +1002,7 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
 
     // build noderowmap for new distribution of nodes
     newrownodemap = std::make_shared<Core::LinAlg::Map>(discret_->num_global_nodes(),
-        nodesonthisproc.size(), nodesonthisproc.data(), 0, discret_->get_comm());
+        std::span<const int>(nodesonthisproc), 0, discret_->get_comm());
 
     // create nodal graph of problem, according to old RowNodeMap
     std::shared_ptr<Core::LinAlg::Graph> oldnodegraph = discret_->build_node_graph();
@@ -1022,8 +1022,9 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
 
     std::shared_ptr<Core::LinAlg::Map> newcolnodemap;
 
-    newcolnodemap = std::make_shared<Core::LinAlg::Map>(
-        -1, cntmp.num_my_elements(), cntmp.my_global_elements(), 0, discret_->get_comm());
+    newcolnodemap = std::make_shared<Core::LinAlg::Map>(-1,
+        std::span<const int>(cntmp.my_global_elements(), cntmp.num_my_elements()), 0,
+        discret_->get_comm());
 
     //----------------------------------------------------------------------
     //       GHOSTED NODES NEED INFORMATION ON THEIR COUPLED NODES
@@ -1092,7 +1093,7 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
       {
         // now reconstruct the extended colmap
         newcolnodemap = std::make_shared<Core::LinAlg::Map>(
-            -1, mycolnodes.size(), mycolnodes.data(), 0, discret_->get_comm());
+            -1, std::span<const int>(mycolnodes), 0, discret_->get_comm());
 
         *allcoupledcolnodes_ = (*allcoupledrownodes_);
 
@@ -1133,7 +1134,7 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
 
       // now reconstruct the extended colmap
       newcolnodemap = std::make_shared<Core::LinAlg::Map>(
-          -1, mycolnodes.size(), mycolnodes.data(), 0, discret_->get_comm());
+          -1, std::span<const int>(mycolnodes), 0, discret_->get_comm());
 
       *allcoupledcolnodes_ = (*allcoupledrownodes_);
 
@@ -1306,7 +1307,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   // get rowmap of the graph  (from blockmap -> map)
   const Core::LinAlg::Map& graph_row_map = node_graph.row_map();
   const Core::LinAlg::Map graph_rowmap(graph_row_map.num_global_elements(),
-      graph_row_map.num_my_elements(), graph_row_map.my_global_elements(), 0,
+      std::span<const int>(graph_row_map.my_global_elements(), graph_row_map.num_my_elements()), 0,
       node_graph.get_comm());
 
   // 3. set graph edge weights
@@ -1357,10 +1358,14 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   auto newnodegraph =
       Core::Rebalance::rebalance_graph(node_graph, paramlist, node_weights, edge_weights);
 
-  const Core::LinAlg::Map newnoderowmap(-1, newnodegraph->row_map().num_my_elements(),
-      newnodegraph->row_map().my_global_elements(), 0, discret_->get_comm());
-  const Core::LinAlg::Map newnodecolmap(-1, newnodegraph->col_map().num_my_elements(),
-      newnodegraph->col_map().my_global_elements(), 0, discret_->get_comm());
+  const Core::LinAlg::Map newnoderowmap(-1,
+      std::span<const int>(
+          newnodegraph->row_map().my_global_elements(), newnodegraph->row_map().num_my_elements()),
+      0, discret_->get_comm());
+  const Core::LinAlg::Map newnodecolmap(-1,
+      std::span<const int>(
+          newnodegraph->col_map().my_global_elements(), newnodegraph->col_map().num_my_elements()),
+      0, discret_->get_comm());
 
   discret_->redistribute({newnoderowmap, newnodecolmap},
       {.fill_complete = FE::OptionsFillComplete{.assign_degrees_of_freedom = false}});

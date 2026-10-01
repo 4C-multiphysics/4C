@@ -164,8 +164,8 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_nodal_l2_pr
   }
 
   // build node row map which does not include source pbc nodes
-  Core::LinAlg::Map noderowmap(-1, static_cast<int>(reducednoderowmap.size()),
-      reducednoderowmap.data(), 0, fullnoderowmap->get_comm());
+  Core::LinAlg::Map noderowmap(
+      -1, std::span<const int>(reducednoderowmap), 0, fullnoderowmap->get_comm());
 
   auto nodevec = evaluate_and_solve_nodal_l2_projection(dis, noderowmap, statename, numvec, params,
       solverparams, get_solver_params, *fullnoderowmap, source_to_target_colnodesmap);

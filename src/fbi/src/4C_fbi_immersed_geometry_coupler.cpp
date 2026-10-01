@@ -143,8 +143,7 @@ void FBI::FBIGeometryCoupler::extend_beam_ghosting(Core::FE::Discretization& dis
       sdata, rdata, (int)allproc.size(), allproc.data(), discretization.get_comm());
 
   // build completely overlapping map of nodes (on ALL processors)
-  Core::LinAlg::Map newnodecolmap(
-      -1, (int)rdata.size(), rdata.data(), 0, discretization.get_comm());
+  Core::LinAlg::Map newnodecolmap(-1, std::span<const int>(rdata), 0, discretization.get_comm());
   sdata.clear();
   rdata.clear();
 
@@ -159,7 +158,7 @@ void FBI::FBIGeometryCoupler::extend_beam_ghosting(Core::FE::Discretization& dis
       sdata, rdata, (int)allproc.size(), allproc.data(), discretization.get_comm());
 
   // build complete overlapping map of elements (on ALL processors)
-  Core::LinAlg::Map newelecolmap(-1, (int)rdata.size(), rdata.data(), 0, discretization.get_comm());
+  Core::LinAlg::Map newelecolmap(-1, std::span<const int>(rdata), 0, discretization.get_comm());
   sdata.clear();
   rdata.clear();
   allproc.clear();
@@ -253,7 +252,7 @@ void FBI::FBIGeometryCoupler::prepare_pair_creation(
 
   // build overlapping column map of the elements
   Core::LinAlg::Map newelecolmap(
-      -1, (int)element_recvdata.size(), element_recvdata.data(), 0, discretizations[1]->get_comm());
+      -1, std::span<const int>(element_recvdata), 0, discretizations[1]->get_comm());
 
 
   if (!newelecolmap.same_as(*elecolmap))
@@ -289,7 +288,7 @@ void FBI::FBIGeometryCoupler::prepare_pair_creation(
 
     // build complete overlapping map of elements (on ALL processors)
     Core::LinAlg::Map newnodecolmap(
-        -1, (int)node_recvdata.size(), node_recvdata.data(), 0, discretizations[1]->get_comm());
+        -1, std::span<const int>(node_recvdata), 0, discretizations[1]->get_comm());
 
     // export nodes and elements
     discretizations[1]->export_column_nodes(newnodecolmap);

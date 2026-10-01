@@ -592,8 +592,8 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::split_map(
   myaugids.resize(count);
   int gcount;
   gcount = Core::Communication::sum_all(count, Comm);
-  std::shared_ptr<Core::LinAlg::Map> Aunknown =
-      std::make_shared<Core::LinAlg::Map>(gcount, count, myaugids.data(), 0, Comm);
+  std::shared_ptr<Core::LinAlg::Map> Aunknown = std::make_shared<Core::LinAlg::Map>(
+      gcount, std::span<const int>(myaugids.data(), count), 0, Comm);
 
   return Aunknown;
 }
@@ -641,8 +641,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::merge_map(
   // sort merged map
   sort(mygids.begin(), mygids.end());
 
-  return std::make_shared<Core::LinAlg::Map>(
-      -1, (int)mygids.size(), mygids.data(), 0, map1.get_comm());
+  return std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(mygids), 0, map1.get_comm());
 }
 
 /*----------------------------------------------------------------------*
@@ -693,8 +692,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::intersect_map(
   // sort merged map
   sort(mygids.begin(), mygids.end());
 
-  return std::make_shared<Core::LinAlg::Map>(
-      -1, (int)mygids.size(), mygids.data(), 0, map1.get_comm());
+  return std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(mygids), 0, map1.get_comm());
 }
 
 /*----------------------------------------------------------------------*

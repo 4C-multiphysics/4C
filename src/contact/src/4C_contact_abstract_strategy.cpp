@@ -826,8 +826,7 @@ std::shared_ptr<Core::LinAlg::Map> CONTACT::AbstractStrategy::create_determinist
 
     my_lm_gids[slid] = interface_lmgid;
   }
-  return std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(my_lm_gids.size()), my_lm_gids.data(), 0, get_comm());
+  return std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(my_lm_gids), 0, get_comm());
 }
 
 

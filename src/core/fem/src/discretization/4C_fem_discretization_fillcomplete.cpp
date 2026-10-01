@@ -173,7 +173,8 @@ static void make_map_and_local_pointers(MPI_Comm comm,
 
   if (count != num_entities) FOUR_C_THROW("Mismatch in no. of nodes");
 
-  map = std::make_unique<Core::LinAlg::Map>(-1, num_entities, local_ids.data(), 0, comm);
+  map = std::make_unique<Core::LinAlg::Map>(
+      -1, std::span<const int>(local_ids.data(), num_entities), 0, comm);
 }
 
 

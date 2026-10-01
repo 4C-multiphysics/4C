@@ -742,12 +742,10 @@ void ScaTra::ScaTraTimIntElchSCL::setup_coupling()
         glob_macro_micro_coupled_node_gids, glob_macro_slave_node_master_node_gids);
 
   // setup maps for coupled nodes
-  Core::LinAlg::Map master_node_map(
-      -1, static_cast<int>(my_macro_node_gids.size()), my_macro_node_gids.data(), 0, comm);
-  Core::LinAlg::Map slave_node_map(
-      -1, static_cast<int>(my_micro_node_gids.size()), my_micro_node_gids.data(), 0, comm);
-  Core::LinAlg::Map perm_slave_node_map(-1, static_cast<int>(my_micro_permuted_node_gids.size()),
-      my_micro_permuted_node_gids.data(), 0, comm);
+  Core::LinAlg::Map master_node_map(-1, std::span<const int>(my_macro_node_gids), 0, comm);
+  Core::LinAlg::Map slave_node_map(-1, std::span<const int>(my_micro_node_gids), 0, comm);
+  Core::LinAlg::Map perm_slave_node_map(
+      -1, std::span<const int>(my_micro_permuted_node_gids), 0, comm);
 
   // setup coupling adapter between micro (slave) and macro (master) for all dof of the nodes
   Coupling::Adapter::Coupling macro_micro_coupling_adapter_temp;
@@ -796,14 +794,14 @@ void ScaTra::ScaTraTimIntElchSCL::setup_coupling()
     }
   }
 
-  auto source_dof_map = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(my_slave_dofs.size()), my_slave_dofs.data(), 0, comm);
-  auto permuted_source_dof_map = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(my_perm_slave_dofs.size()), my_perm_slave_dofs.data(), 0, comm);
-  auto target_dof_map = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(my_master_dofs.size()), my_master_dofs.data(), 0, comm);
-  auto permuted_target_dof_map = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(my_perm_master_dofs.size()), my_perm_master_dofs.data(), 0, comm);
+  auto source_dof_map =
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(my_slave_dofs), 0, comm);
+  auto permuted_source_dof_map =
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(my_perm_slave_dofs), 0, comm);
+  auto target_dof_map =
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(my_master_dofs), 0, comm);
+  auto permuted_target_dof_map =
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(my_perm_master_dofs), 0, comm);
 
 
   macro_micro_coupling_adapter_ = std::make_shared<Coupling::Adapter::Coupling>();
@@ -1068,11 +1066,11 @@ void ScaTra::ScaTraTimIntElchSCL::redistribute_micro_discretization()
   if (myPID > 0) my_col_nodes.emplace_back(my_row_nodes[0] - 1);
   if (myPID < num_proc - 1) my_col_nodes.emplace_back(my_row_nodes.back() + 1);
 
-  Core::LinAlg::Map new_node_row_map(num_nodes, static_cast<int>(my_row_nodes.size()),
-      my_row_nodes.data(), 0, micro_dis->get_comm());
+  Core::LinAlg::Map new_node_row_map(
+      num_nodes, std::span<const int>(my_row_nodes), 0, micro_dis->get_comm());
 
   Core::LinAlg::Map new_node_col_map(
-      -1, static_cast<int>(my_col_nodes.size()), my_col_nodes.data(), 0, micro_dis->get_comm());
+      -1, std::span<const int>(my_col_nodes), 0, micro_dis->get_comm());
 
   micro_dis->redistribute({new_node_row_map, new_node_col_map});
 }

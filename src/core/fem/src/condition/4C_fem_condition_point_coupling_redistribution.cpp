@@ -215,8 +215,8 @@ void redistribute(const std::vector<int>& rank_to_hold_condition,
 
   //--------------------------------------------------
   // build new row node map
-  Core::LinAlg::Map new_row_node_map(discret.num_global_nodes(), new_row_nodes.size(),
-      new_row_nodes.data(), 0, discret.get_comm());
+  Core::LinAlg::Map new_row_node_map(
+      discret.num_global_nodes(), std::span<const int>(new_row_nodes), 0, discret.get_comm());
 
   // create nodal graph of problem, according to old row node map
   std::shared_ptr<Core::LinAlg::Graph> old_node_graph = discret.build_node_graph();
@@ -234,8 +234,10 @@ void redistribute(const std::vector<int>& rank_to_hold_condition,
 
   // build node col map for new distribution of nodes
   const Core::LinAlg::Map new_col_node_block_map = node_graph.col_map();
-  const Core::LinAlg::Map new_col_node_map(-1, new_col_node_block_map.num_my_elements(),
-      new_col_node_block_map.my_global_elements(), 0, discret.get_comm());
+  const Core::LinAlg::Map new_col_node_map(-1,
+      std::span<const int>(
+          new_col_node_block_map.my_global_elements(), new_col_node_block_map.num_my_elements()),
+      0, discret.get_comm());
 
   // rearrange node/element distribution according to target layout (accept extended ghosting)
   discret.redistribute(

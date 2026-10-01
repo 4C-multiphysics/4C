@@ -90,7 +90,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::FE::DiscretizationCreatorBase::create_m
   gidset.clear();
 
   std::shared_ptr<Core::LinAlg::Map> map = std::make_shared<Core::LinAlg::Map>(
-      -1, targetgidvec.size(), targetgidvec.data(), 0, targetdis.get_comm());
+      -1, std::span<const int>(targetgidvec), 0, targetdis.get_comm());
   targetgidvec.clear();
 
   return map;

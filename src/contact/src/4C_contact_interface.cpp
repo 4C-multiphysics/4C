@@ -280,17 +280,17 @@ void CONTACT::Interface::update_target_source_sets()
     }
 
     sdofVertexRowmap_ =
-        std::make_shared<Core::LinAlg::Map>(-1, (int)sVr.size(), sVr.data(), 0, get_comm());
+        std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(sVr), 0, get_comm());
     sdofVertexColmap_ =
-        std::make_shared<Core::LinAlg::Map>(-1, (int)sVc.size(), sVc.data(), 0, get_comm());
+        std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(sVc), 0, get_comm());
     sdofEdgeRowmap_ =
-        std::make_shared<Core::LinAlg::Map>(-1, (int)sEr.size(), sEr.data(), 0, get_comm());
+        std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(sEr), 0, get_comm());
     sdofEdgeColmap_ =
-        std::make_shared<Core::LinAlg::Map>(-1, (int)sEc.size(), sEc.data(), 0, get_comm());
+        std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(sEc), 0, get_comm());
     sdofSurfRowmap_ =
-        std::make_shared<Core::LinAlg::Map>(-1, (int)sSr.size(), sSr.data(), 0, get_comm());
+        std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(sSr), 0, get_comm());
     sdofSurfColmap_ =
-        std::make_shared<Core::LinAlg::Map>(-1, (int)sSc.size(), sSc.data(), 0, get_comm());
+        std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(sSc), 0, get_comm());
   }
 }
 
@@ -533,7 +533,7 @@ void CONTACT::Interface::extend_interface_ghosting_safely(const double meanVeloc
       Core::LinAlg::gather<int>(sdata, rdata, (int)allproc.size(), allproc.data(), get_comm());
 
       // build completely overlapping map of nodes (on ALL processors)
-      Core::LinAlg::Map newnodecolmap(-1, (int)rdata.size(), rdata.data(), 0, get_comm());
+      Core::LinAlg::Map newnodecolmap(-1, std::span<const int>(rdata), 0, get_comm());
       sdata.clear();
       rdata.clear();
 
@@ -547,7 +547,7 @@ void CONTACT::Interface::extend_interface_ghosting_safely(const double meanVeloc
       Core::LinAlg::gather<int>(sdata, rdata, (int)allproc.size(), allproc.data(), get_comm());
 
       // build complete overlapping map of elements (on ALL processors)
-      Core::LinAlg::Map newelecolmap(-1, (int)rdata.size(), rdata.data(), 0, get_comm());
+      Core::LinAlg::Map newelecolmap(-1, std::span<const int>(rdata), 0, get_comm());
       sdata.clear();
       rdata.clear();
       allproc.clear();
@@ -599,7 +599,7 @@ void CONTACT::Interface::extend_interface_ghosting_safely(const double meanVeloc
       }
 
       // build new node column map (on ALL processors)
-      Core::LinAlg::Map newnodecolmap(-1, (int)rdata.size(), rdata.data(), 0, get_comm());
+      Core::LinAlg::Map newnodecolmap(-1, std::span<const int>(rdata), 0, get_comm());
       sdata.clear();
       rdata.clear();
 
@@ -631,7 +631,7 @@ void CONTACT::Interface::extend_interface_ghosting_safely(const double meanVeloc
       }
 
       // build new element column map (on ALL processors)
-      Core::LinAlg::Map newelecolmap(-1, (int)rdata.size(), rdata.data(), 0, get_comm());
+      Core::LinAlg::Map newelecolmap(-1, std::span<const int>(rdata), 0, get_comm());
       sdata.clear();
       rdata.clear();
       allproc.clear();
@@ -690,7 +690,7 @@ void CONTACT::Interface::extend_interface_ghosting_safely(const double meanVeloc
       }
 
       std::vector<int> colnodes(nodes.begin(), nodes.end());
-      Core::LinAlg::Map nodecolmap(-1, (int)colnodes.size(), colnodes.data(), 0, get_comm());
+      Core::LinAlg::Map nodecolmap(-1, std::span<const int>(colnodes), 0, get_comm());
 
       discret().export_column_nodes(nodecolmap);
       break;
@@ -767,9 +767,9 @@ void CONTACT::Interface::redistribute()
 
   // we need an arbitrary preliminary element row map
   Core::LinAlg::Map sourceCloseRowEles(
-      -1, (int)closeele.size(), closeele.data(), 0, Interface::get_comm());
+      -1, std::span<const int>(closeele), 0, Interface::get_comm());
   Core::LinAlg::Map sourceNonCloseRowEles(
-      -1, (int)noncloseele.size(), noncloseele.data(), 0, Interface::get_comm());
+      -1, std::span<const int>(noncloseele), 0, Interface::get_comm());
   Core::LinAlg::Map targetRowEles(*target_row_elements());
 
   // check for consistency
@@ -995,7 +995,7 @@ void CONTACT::Interface::redistribute()
     mygids.resize(count);
     sort(mygids.begin(), mygids.end());
     srownodes = std::make_shared<Core::LinAlg::Map>(
-        -1, (int)mygids.size(), mygids.data(), 0, sourceCloseRowNodes->get_comm());
+        -1, std::span<const int>(mygids), 0, sourceCloseRowNodes->get_comm());
   }
 
   // merge interface node row map from source and target parts
@@ -1028,8 +1028,9 @@ void CONTACT::Interface::redistribute()
   // get column map from the graph -> build source node column map
   const Core::LinAlg::Map& bcol = outgraph->col_map();
   std::shared_ptr<Core::LinAlg::Map> scolnodes =
-      std::make_shared<Core::LinAlg::Map>(bcol.num_global_elements(), bcol.num_my_elements(),
-          bcol.my_global_elements(), 0, Interface::get_comm());
+      std::make_shared<Core::LinAlg::Map>(bcol.num_global_elements(),
+          std::span<const int>(bcol.my_global_elements(), bcol.num_my_elements()), 0,
+          Interface::get_comm());
 
   // trash new graph
   outgraph = nullptr;
@@ -7408,8 +7409,10 @@ bool CONTACT::Interface::split_active_dofs()
     FOUR_C_THROW("split_active_dofs: Splitting went wrong!");
 
   // create Nmap and Tmap objects
-  activen_ = std::make_shared<Core::LinAlg::Map>(gcountN, countN, myNgids.data(), 0, get_comm());
-  activet_ = std::make_shared<Core::LinAlg::Map>(gcountT, countT, myTgids.data(), 0, get_comm());
+  activen_ = std::make_shared<Core::LinAlg::Map>(
+      gcountN, std::span<const int>(myNgids.data(), countN), 0, get_comm());
+  activet_ = std::make_shared<Core::LinAlg::Map>(
+      gcountT, std::span<const int>(myTgids.data(), countT), 0, get_comm());
 
   // *******************************************************************
   // FRICTION - EXTRACTING TANGENTIAL DOFS FROM SLIP DOFS
@@ -7468,7 +7471,7 @@ bool CONTACT::Interface::split_active_dofs()
 
   // create Tslipmap objects
   slipt_ = std::make_shared<Core::LinAlg::Map>(
-      gcountslipT, countslipT, myslipTgids.data(), 0, get_comm());
+      gcountslipT, std::span<const int>(myslipTgids.data(), countslipT), 0, get_comm());
 
   return true;
 }
@@ -7552,8 +7555,7 @@ void CONTACT::Interface::update_self_contact_lag_mult_set(
     lmdofs.push_back(ref_lmgids[ref_lid]);
   }
 
-  lmdofmap_ = std::make_shared<Core::LinAlg::Map>(
-      -1, static_cast<int>(lmdofs.size()), lmdofs.data(), 0, get_comm());
+  lmdofmap_ = std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(lmdofs), 0, get_comm());
 }
 
 /*----------------------------------------------------------------------------*
