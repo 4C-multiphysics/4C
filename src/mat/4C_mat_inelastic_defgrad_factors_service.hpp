@@ -12,6 +12,7 @@
 
 #include "4C_comm_utils.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
 #include "4C_mat_multiplicative_split_defgrad_elasthyper_service.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -782,7 +783,7 @@ namespace Mat
      * +\frac{\partial \dot{\varepsilon}_\mathrm{p}}{\partial \bar{\sigma}}
      * \frac{\mathrm{d}\bar{\sigma}}{\mathrm{d}\mathbf{C}}\f]
      */
-    Core::LinAlg::Matrix<1, 6> compute_taylor_quinney_wrt_cauchygreen(
+    Core::LinAlg::SymmetricTensor<double, 3, 3> compute_taylor_quinney_wrt_cauchygreen(
         const double taylor_quinney_coefficient, const ThermoMechanicalCouplingState& state,
         const ThermoMechanicalCouplingStateDerivatives& state_derivatives,
         const HistoryVariablesDerivativesWrtCauchyGreen& history_variables_derivatives);
