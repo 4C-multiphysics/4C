@@ -940,6 +940,9 @@ void SSI::Utils::SSIMeshTying::setup_mesh_tying_handlers(const Core::FE::Discret
   for (const auto& key : num_assigned_slave_to_master_nodes | std::views::keys)
     created_adapters.insert(std::make_pair(key, 0));
 
+  // utilized node matching tolerance; gets scaled internally in the utilized octree to account for
+  // the underlying mesh scale
+  const double node_matching_tolerance = 1.0e-8;
   for (int iadapter = 0; iadapter < glob_max_adapters; ++iadapter)
   {
     // create vectors of master and slave nodes for this coupling adapter
@@ -971,7 +974,7 @@ void SSI::Utils::SSIMeshTying::setup_mesh_tying_handlers(const Core::FE::Discret
         static_cast<int>(static_cast<double>(dis.dof_row_map()->num_global_elements()) /
                          static_cast<double>(dis.node_row_map()->num_global_elements()));
     coupling_adapter->setup_coupling(
-        dis, dis, inodegidvec_master, inodegidvec_slave, num_dofs, true, 1.0e-8);
+        dis, dis, inodegidvec_master, inodegidvec_slave, num_dofs, true, node_matching_tolerance);
 
     // setup multimap extractor for each coupling adapter
     auto slave_map = coupling_adapter->source_dof_map();
@@ -1002,7 +1005,7 @@ void SSI::Utils::SSIMeshTying::setup_mesh_tying_handlers(const Core::FE::Discret
 
       slave_slave_transformation->setup_coupling(dis, dis, inodegidvec_slave,
           my_coupled_original_slave_gids, SSI::Utils::problem_from_instance()->n_dim(), true,
-          1.0e-8);
+          node_matching_tolerance);
     }
 
     // combine coupling adapters and multimap extractor to mesh tying object

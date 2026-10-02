@@ -1979,6 +1979,10 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
     // nodes
     case S2I::coupling_matching_nodes:
     {
+      // utilized node matching tolerance; gets scaled internally in the utilized octree to account
+      // for the underlying mesh scale
+      const double node_matching_octree_tolerance = 1.0e-8;
+
       // overwrite IDs of master-side scatra-scatra interface coupling conditions with the value -1
       // to prevent them from being evaluated when calling evaluate_condition on the discretization
       // TODO: this is somewhat unclean, because changing the conditions, makes calling
@@ -2039,7 +2043,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
 
         icoup_->setup_coupling(*(scatratimint_->discretization()),
             *(scatratimint_->discretization()), imasternodegidvec_cond, islavenodegidvec_cond,
-            num_dof_per_condition, true, 1.0e-8);
+            num_dof_per_condition, true, node_matching_octree_tolerance);
       }
       else
       {
@@ -2080,7 +2084,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
 
         icoup_->setup_coupling(*(scatratimint_->discretization()),
             *(scatratimint_->discretization()), imasternodegidvec, islavenodegidvec,
-            num_dof_per_condition, true, 1.0e-8);
+            num_dof_per_condition, true, node_matching_octree_tolerance);
       }
 
       // generate interior and interface maps
