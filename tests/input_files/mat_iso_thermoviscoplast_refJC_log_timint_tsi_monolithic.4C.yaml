@@ -47,7 +47,7 @@ TSI DYNAMIC/MONOLITHIC:
   LINEAR_SOLVER: 1
   MERGE_TSI_BLOCK_MATRIX: true
   TOLINC: 1e-08
-  CONVTOL: 1e-08
+  CONVTOL: 1e-06
   NORM_RESF: Abs
 SOLVER 1:
   SOLVER: UMFPACK
@@ -75,13 +75,11 @@ MATERIALS:
       LOCAL_NEWTON:
         CONV_CHECK: residual_and_increment_ratio
         MAX_ITER: 100
-        RES_TOL: 1e-8
-        INCR_TOL: 1e-8
+        RES_TOL: 1e-12
+        INCR_TOL: 1e-12
         MAX_EXCEEDANCE_FACT_RES_TOL: 10
         MAX_EXCEEDANCE_FACT_INCR_TOL: 10
         DIVER_CONT: stop
-      ADAPTIVE_ESTIMATE_INTERPOLATION:
-        USE_ADAPTIVE_ESTIMATE_INTERPOLATION: false
   - MAT: 4
     MAT_ViscoplasticLawReformulatedJohnsonCook:
       STRAIN_RATE_PREFAC: 1 # [1/s]
@@ -134,98 +132,98 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 4
       QUANTITY: "dispy"
-      VALUE: -0.00394895027488
-      TOLERANCE: 1e-14
+      VALUE: -0.00394895027651433
+      TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 5
       QUANTITY: "dispx"
-      VALUE: -0.00394895027488
-      TOLERANCE: 1e-14
+      VALUE: -0.0039489502765132
+      TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 8
       QUANTITY: "dispx"
-      VALUE: -0.00394895027488
-      TOLERANCE: 1e-14
+      VALUE: -0.00394895027651327
+      TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 8
       QUANTITY: "dispy"
-      VALUE: -0.00394895027488
-      TOLERANCE: 1e-14
+      VALUE: -0.00394895027651228
+      TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 8
       QUANTITY: "dispz"
       VALUE: 0.010050167084167949
-      TOLERANCE: 1e-14
+      TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 6
       QUANTITY: "dispx"
-      VALUE: -0.00394895027488
-      TOLERANCE: 1e-14
+      VALUE: -0.00394895027651763
+      TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 4
       QUANTITY: "stress_zz"
-      VALUE: 977.652620618
+      VALUE: 977.652620597572
       TOLERANCE: 1e-8
   - STRUCTURE:
       DIS: "structure"
       NODE: 8
       QUANTITY: "stress_zz"
-      VALUE: 977.652620618
+      VALUE: 977.652620596595
       TOLERANCE: 1e-8
   - THERMAL:
       DIS: thermo
       NODE: 1
       QUANTITY: temp
-      VALUE: 294.095019277192
-      TOLERANCE: 1e-11
+      VALUE: 294.095019179785
+      TOLERANCE: 1e-9
   - THERMAL:
       DIS: thermo
       NODE: 2
       QUANTITY: temp
-      VALUE: 294.095019277192
-      TOLERANCE: 1e-11
+      VALUE: 294.095019179777
+      TOLERANCE: 1e-9
   - THERMAL:
       DIS: thermo
       NODE: 3
       QUANTITY: temp
-      VALUE: 294.095019277192
-      TOLERANCE: 1e-11
+      VALUE: 294.095019179785
+      TOLERANCE: 1e-9
   - THERMAL:
       DIS: thermo
       NODE: 4
       QUANTITY: temp
-      VALUE: 294.095019277192
-      TOLERANCE: 1e-11
+      VALUE: 294.095019179773
+      TOLERANCE: 1e-9
   - THERMAL:
       DIS: thermo
       NODE: 5
       QUANTITY: temp
-      VALUE: 294.095019277192
-      TOLERANCE: 1e-11
+      VALUE: 294.095019179781
+      TOLERANCE: 1e-9
   - THERMAL:
       DIS: thermo
       NODE: 6
       QUANTITY: temp
-      VALUE: 294.095019277192
-      TOLERANCE: 1e-11
+      VALUE: 294.095019179782
+      TOLERANCE: 1e-9
   - THERMAL:
       DIS: thermo
       NODE: 7
       QUANTITY: temp
-      VALUE: 294.095019277192
-      TOLERANCE: 1e-11
+      VALUE: 294.095019179774
+      TOLERANCE: 1e-9
   - THERMAL:
       DIS: thermo
       NODE: 8
       QUANTITY: temp
-      VALUE: 294.095019277192
-      TOLERANCE: 1e-10
+      VALUE: 294.095019179777
+      TOLERANCE: 1e-9
 DESIGN POINT DIRICH CONDITIONS:
   - E: 1
     NUMDOF: 3

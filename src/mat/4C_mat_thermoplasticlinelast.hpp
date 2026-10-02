@@ -241,9 +241,6 @@ namespace Mat
     //! check if history variables are already initialised
     bool initialized() const { return (isinit_ and (!strainplcurr_.empty())); }
 
-    void stress_temperature_modulus_and_deriv(Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-        Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp) override;
-
     Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_d_stress_d_scalar(
         const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
@@ -310,17 +307,6 @@ namespace Mat
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress  // flow vector
     );
 
-    //! return mechanical dissipation term due to kinematic hardening
-    //! \f$ D_{\rm mech,kin}\f$
-    double mechanical_kinematic_dissipation(int gp) const { return dmech_.at(gp); }
-
-    //! return linearisation of mechanical dissipation w.r.t. displacements
-    //! \f$ k_Td += \dfrac{\partial D_{\rm mech}}{\partial d_{n+1}}\f$
-    Core::LinAlg::Matrix<6, 1> dissipation_linearised_for_coupl_cond(int gp) const
-    {
-      return Core::LinAlg::make_strain_like_voigt_matrix(dmech_d_.at(gp));
-    }
-
     //@}
 
     /// Return names of visualization data
@@ -338,14 +324,18 @@ namespace Mat
     bool evaluate_output_data(
         const std::string& name, Core::LinAlg::SerialDenseMatrix& data) const override;
 
-    void reinit(double temperature, unsigned gp) override;
+   protected:
+    [[nodiscard]] StressTemperatureModulus evaluate_stress_temperature_modulus(double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context, int gp,
+        int eleGID) override;
+
+    [[nodiscard]] AdditionalHeatSource evaluate_additional_heat_source(const double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context,
+        const int gp, const int eleGID) override;
 
    private:
     //! my material parameters
     Mat::PAR::ThermoPlasticLinElast* params_;
-
-    //! current temperature (set by Reinit())
-    double current_temperature_{};
 
     //! plastic history vector
     //! old plastic strain at t_n

@@ -16,6 +16,7 @@
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_four_tensor_generators.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_utils_quaternion_interpolation.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
 #include "4C_linalg_utils_tensor_interpolation.hpp"
@@ -529,7 +530,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::TimeStepQuantities:
       Core::LinAlg::Matrix<3, 3>{Core::LinAlg::Initialization::zero});
 }
 
-Core::LinAlg::Matrix<1, 6>
+Core::LinAlg::SymmetricTensor<double, 3, 3>
 Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::compute_taylor_quinney_wrt_cauchygreen(
     const double taylor_quinney_coefficient, const ThermoMechanicalCouplingState& state,
     const ThermoMechanicalCouplingStateDerivatives& state_derivatives,
@@ -546,12 +547,12 @@ Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::compute_taylor_quinney_w
   total_dpsr_dC.update(
       state_derivatives.plastic_strain_rate_derivs.deriv_equiv_stress, total_dequiv_stress_dC, 1.0);
 
-  Core::LinAlg::Matrix<1, 6> dR_TQ_dCV{Core::LinAlg::Initialization::zero};
-  dR_TQ_dCV.update(
+  Core::LinAlg::Matrix<6, 1> dR_TQ_dCV{Core::LinAlg::Initialization::zero};
+  dR_TQ_dCV.update_t(
       taylor_quinney_coefficient * state.plastic_strain_rate, total_dequiv_stress_dC, 0.0);
-  dR_TQ_dCV.update(taylor_quinney_coefficient * state.equiv_stress, total_dpsr_dC, 1.0);
+  dR_TQ_dCV.update_t(taylor_quinney_coefficient * state.equiv_stress, total_dpsr_dC, 1.0);
 
-  return dR_TQ_dCV;
+  return Core::LinAlg::make_symmetric_tensor_from_stress_like_voigt_matrix(dR_TQ_dCV);
 }
 
 double
