@@ -63,11 +63,11 @@ void CONTACT::TSIInterface::assemble_lin_stick(Core::LinAlg::SparseMatrix& linst
       interface_params().get<double>("FRCOEFF");  // the friction coefficient from the input
   double cn = interface_params().get<double>("SEMI_SMOOTH_CN");
 
+  const bool use_frictionless_first = interface_params().get<bool>("FRLESS_FIRST");
+
   // some things that are not implemented
   bool gp_slip = interface_params().get<bool>("GP_SLIP_INCR");
-  bool frilessfirst = interface_params().get<bool>("FRLESS_FIRST");
-  if (gp_slip || frilessfirst)
-    FOUR_C_THROW("this fancy option for the contact algorithm is not implemented for TSI");
+  FOUR_C_ASSERT_ALWAYS(not gp_slip, "GP_SLIP_INCR is not implemented for TSI contact");
 
   // consistent equation is:
   // mu(d,T)*(z_n-c_n*g)ut = 0
@@ -83,6 +83,12 @@ void CONTACT::TSIInterface::assemble_lin_stick(Core::LinAlg::SparseMatrix& linst
 
     if (cnode->Owner() != Core::Communication::my_mpi_rank(Comm()))
       FOUR_C_THROW("AssembleLinStick: Node ownership inconsistency!");
+
+    // If newly active nodes are considered frictionless, the base class has already assembled
+    // the frictionless tangential constraint (of zero tangential traction).
+    // That constraint does not depend on the friction coefficient, hence, no temperature
+    // linearization is required.
+    if (use_frictionless_first and not cnode->data().active_old()) continue;
 
     const Core::LinAlg::Matrix<3, 1> n(cnode->MoData().n(), true);
     const Core::LinAlg::Matrix<3, 1> lm(cnode->MoData().lm(), true);
@@ -186,11 +192,11 @@ void CONTACT::TSIInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linsli
   double ct_input = interface_params().get<double>("SEMI_SMOOTH_CT");
   double cn_input = interface_params().get<double>("SEMI_SMOOTH_CN");
 
+  const bool use_frictionless_first = interface_params().get<bool>("FRLESS_FIRST");
+
   // some things that are not implemented
   const bool gp_slip = interface_params().get<bool>("GP_SLIP_INCR");
-  const bool frilessfirst = interface_params().get<bool>("FRLESS_FIRST");
-  if (gp_slip || frilessfirst)
-    FOUR_C_THROW("this fancy option for the contact algorithm is not implemented for TSI");
+  FOUR_C_ASSERT_ALWAYS(not gp_slip, "GP_SLIP_INCR is not implemented for TSI contact");
 
   // consistent equation is:
   // || z_t^tr || z_t - \mu (z_n -c_n*wgap) z_t^tr = 0
@@ -206,6 +212,12 @@ void CONTACT::TSIInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linsli
 
     if (cnode->owner() != Core::Communication::my_mpi_rank(get_comm()))
       FOUR_C_THROW("AssembleLinStick: Node ownership inconsistency!");
+
+    // If newly active nodes are considered frictionless, the base class has already assembled
+    // the frictionless tangential constraint (of zero tangential traction).
+    // That constraint does not depend on the friction coefficient, hence, no temperature
+    // linearization is required.
+    if (use_frictionless_first and not cnode->data().active_old()) continue;
 
     const Core::LinAlg::Matrix<3, 1> n(cnode->mo_data().n(), true);
     const Core::LinAlg::Matrix<3, 1> lm(cnode->mo_data().lm(), true);
@@ -394,6 +406,7 @@ void CONTACT::TSIInterface::assemble_lin_dm_x(Core::LinAlg::SparseMatrix* linD_X
   if (!friction_ && mode == LinDM_Diss) return;
 
   const double dt = interface_params().get<double>("TIMESTEP");
+  const bool use_frictionless_first = interface_params().get<bool>("FRLESS_FIRST");
 
   // loop over all LM source nodes (row map)
   for (int j = 0; j < node_rowmap->num_my_elements(); ++j)
@@ -416,6 +429,10 @@ void CONTACT::TSIInterface::assemble_lin_dm_x(Core::LinAlg::SparseMatrix* linD_X
         break;
       case LinDM_Diss:
       {
+        // If newly active nodes are considered frictionless,
+        // their dissipation is zero, so skip them.
+        if (use_frictionless_first and not cnode->data().active_old()) continue;
+
         CONTACT::FriNode* frnode = dynamic_cast<CONTACT::FriNode*>(cnode);
         if (frnode == nullptr)
           lm = 0.;
@@ -561,6 +578,7 @@ void CONTACT::TSIInterface::assemble_dm_lin_diss(Core::LinAlg::SparseMatrix* d_L
   using _cip = Core::Gen::Pairedvector<int, double>::const_iterator;
 
   const double dt = interface_params().get<double>("TIMESTEP");
+  const bool use_frictionless_first = interface_params().get<bool>("FRLESS_FIRST");
 
   // loop over all LM source nodes (row map)
   for (int j = 0; j < activenodes_->num_my_elements(); ++j)
@@ -572,6 +590,9 @@ void CONTACT::TSIInterface::assemble_dm_lin_diss(Core::LinAlg::SparseMatrix* d_L
     FriNode* fnode = dynamic_cast<FriNode*>(cnode);
     // if this is not a friction node, there is no dissipation so go to the next one
     if (fnode == nullptr) continue;
+    // If newly active nodes are considered frictionless,
+    // their dissipation and its derivatives are zero, so skip them.
+    if (use_frictionless_first and not cnode->data().active_old()) continue;
 
     // get nodal normal
     const Core::LinAlg::Matrix<3, 1> n(cnode->mo_data().n(), true);
