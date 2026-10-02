@@ -11,6 +11,9 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -70,6 +73,41 @@ Core::Nodes::Node::adjacent_elements() const
   return FE::ConstNodeRef(discretization_, lid_).adjacent_elements();
 }
 
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+double Core::Nodes::Node::minimum_distance_to_adjacent_nodes() const
+{
+  FOUR_C_ASSERT_ALWAYS(discretization_ && not adjacent_elements().empty() > 0,
+      "This method should not be called for isolated nodes");
+
+  double minimum_squared_distance = std::numeric_limits<double>::infinity();
+  for (const auto& element : adjacent_elements())
+  {
+    for (const auto& adjacent_node : element.nodes())
+    {
+      if (id_ == adjacent_node.global_id()) continue;
+      const std::span<const double> adjacent_node_coords = adjacent_node.x();
+      FOUR_C_ASSERT_ALWAYS(adjacent_node_coords.size() == x_.size(),
+          "Dimensions of node with global id {} and adjacent node with global id {} "
+          "are {} and {}! They should "
+          "match! ",
+          id_, adjacent_node.global_id(), x_.size(), adjacent_node_coords.size());
+
+      double squared_distance = 0.0;
+      for (std::size_t dim = 0; dim < x_.size(); ++dim)
+      {
+        const double difference = x_[dim] - adjacent_node_coords[dim];
+        squared_distance += difference * difference;
+      }
+      minimum_squared_distance = std::min(minimum_squared_distance, squared_distance);
+    }
+  }
+  FOUR_C_ASSERT(std::isfinite(minimum_squared_distance),
+      "Minimum squared distance to adjacent nodes is infinite for node with global id {} of "
+      "discretization {}",
+      id_, discretization_->name());
+  return std::sqrt(minimum_squared_distance);
+}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/

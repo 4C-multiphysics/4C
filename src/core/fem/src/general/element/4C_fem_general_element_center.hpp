@@ -26,6 +26,7 @@ namespace Core::FE
   std::vector<double> element_center_refe_coords(const Core::Elements::Element& ele);
 }  // namespace Core::FE
 
-#endif
 
 FOUR_C_NAMESPACE_CLOSE
+
+#endif

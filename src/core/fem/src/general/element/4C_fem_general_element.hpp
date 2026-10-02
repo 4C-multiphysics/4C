@@ -22,6 +22,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <variant>
 
 FOUR_C_NAMESPACE_OPEN
@@ -257,7 +258,7 @@ namespace Core::Elements
     /*!
     \brief Return number of nodes to this element
     */
-    int num_node() const { return nodeid_.size(); }
+    int num_node() const { return nodeids_.size(); }
 
     /*!
      * \brief Return number of points forming the geometry of this element
@@ -266,7 +267,7 @@ namespace Core::Elements
      * discretization where the integration cell (i.e. the "element") is not
      * formed by the nodes and many more nodes can have influence.
      */
-    int num_point() const { return nodeid_.size(); }
+    int num_point() const { return nodeids_.size(); }
 
     /*!
     \brief Return number of lines to this element
@@ -296,8 +297,8 @@ namespace Core::Elements
     */
     const int* node_ids() const
     {
-      if (nodeid_.size())
-        return nodeid_.data();
+      if (nodeids_.size())
+        return nodeids_.data();
       else
         return nullptr;
     }
@@ -316,8 +317,8 @@ namespace Core::Elements
     */
     Core::Nodes::Node** nodes()
     {
-      if (node_.size())
-        return node_.data();
+      if (nodes_.size())
+        return nodes_.data();
       else
         return nullptr;
     }
@@ -336,8 +337,8 @@ namespace Core::Elements
     */
     const Core::Nodes::Node* const* nodes() const
     {
-      if (node_.size())
-        return (const Core::Nodes::Node* const*)(node_.data());
+      if (nodes_.size())
+        return (const Core::Nodes::Node* const*)(nodes_.data());
       else
         return nullptr;
     }
@@ -408,7 +409,7 @@ might become invalid after a redistribution of the discretization.
     \brief Get vector of std::shared_ptrs to the faces of this element (as opposed to the Lines or
     Surfaces)
     */
-    std::shared_ptr<FaceElement>* faces() { return face_.empty() ? nullptr : face_.data(); }
+    std::shared_ptr<FaceElement>* faces() { return faces_.empty() ? nullptr : faces_.data(); }
 
     /*!
     \brief Get vector of std::shared_ptrs to the faces of this element (as opposed to the Lines or
@@ -416,7 +417,7 @@ might become invalid after a redistribution of the discretization.
     */
     std::shared_ptr<FaceElement> const* faces() const
     {
-      return face_.empty() ? nullptr : face_.data();
+      return faces_.empty() ? nullptr : faces_.data();
     }
 
     /*!
@@ -1157,6 +1158,15 @@ might become invalid after a redistribution of the discretization.
     const FE::Discretization* discretization() const { return discretization_; }
     FE::Discretization* discretization() { return discretization_; }
 
+
+    /// Get minimum distance between the centroid of this element and the centroids of the
+    /// (eventual) adjacent elements in the spatial configuration;  nullopt if there are no adjacent
+    /// elements
+    [[nodiscard]] std::optional<double> minimum_centroid_distance_to_adjacent_elements() const;
+
+    /// is this a meshfree bin?
+    [[nodiscard]] virtual bool is_meshfree_bin() const { return false; }
+
    private:
     //! \brief A unique global element id
     int id_;
@@ -1171,14 +1181,14 @@ might become invalid after a redistribution of the discretization.
     int owner_;
 
     //! \brief List of my nodal ids, length num_node()
-    std::vector<int> nodeid_;
+    std::vector<int> nodeids_;
 
     //! \brief Pointers to adjacent nodes in element local ordering
-    std::vector<Core::Nodes::Node*> node_;
+    std::vector<Core::Nodes::Node*> nodes_;
 
     //! \brief List of my faces, length NumFace(). Only filled if face elements are created, when
     //! using DiscretizationFaces
-    std::vector<std::shared_ptr<FaceElement>> face_;
+    std::vector<std::shared_ptr<FaceElement>> faces_;
 
     //! vector of material objects of element
     std::vector<std::shared_ptr<Core::Mat::Material>> mat_;

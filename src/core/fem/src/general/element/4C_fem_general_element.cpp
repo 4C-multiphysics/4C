@@ -11,6 +11,7 @@
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_condition.hpp"
 #include "4C_fem_discretization.hpp"
+#include "4C_fem_general_element_center.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_geometric_search_bounding_volume.hpp"
 #include "4C_geometric_search_input.hpp"
@@ -20,7 +21,11 @@
 
 #include <Shards_BasicTopologies.hpp>
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <limits>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -137,9 +142,9 @@ Core::Elements::Element::Element(const Element& old)
       eval_time_(old.eval_time_),
       lid_(old.lid_),
       owner_(old.owner_),
-      nodeid_(old.nodeid_),
-      node_(old.node_),
-      face_(old.face_),
+      nodeids_(old.nodeids_),
+      nodes_(old.nodes_),
+      faces_(old.faces_),
       mat_(1, nullptr)
 {
   if (!old.mat_.empty())
@@ -193,9 +198,9 @@ bool Core::Elements::Element::read_element(const std::string& eletype, Core::FE:
  *----------------------------------------------------------------------*/
 void Core::Elements::Element::set_node_ids(const int nnode, const int* nodes)
 {
-  nodeid_.resize(nnode);
-  for (int i = 0; i < nnode; ++i) nodeid_[i] = nodes[i];
-  node_.resize(0);
+  nodeids_.resize(nnode);
+  for (int i = 0; i < nnode; ++i) nodeids_[i] = nodes[i];
+  nodes_.resize(0);
 }
 
 
@@ -203,9 +208,9 @@ void Core::Elements::Element::set_node_ids(const int nnode, const int* nodes)
 /*----------------------------------------------------------------------*/
 void Core::Elements::Element::set_node_ids_one_based_index(std::span<const int> node_ids)
 {
-  nodeid_ = std::vector<int>(node_ids.begin(), node_ids.end());
-  for (int& i : nodeid_) i -= 1;
-  node_.resize(0);
+  nodeids_ = std::vector<int>(node_ids.begin(), node_ids.end());
+  for (int& i : nodeids_) i -= 1;
+  nodes_.resize(0);
 }
 
 /*----------------------------------------------------------------------*/
@@ -254,7 +259,7 @@ void Core::Elements::Element::pack(Core::Communication::PackBuffer& data) const
   // add owner
   add_to_pack(data, owner_);
   // add vector nodeid_
-  add_to_pack(data, nodeid_);
+  add_to_pack(data, nodeids_);
   // add material
   if (mat_[0] != nullptr)
   {
@@ -282,7 +287,7 @@ void Core::Elements::Element::unpack(Core::Communication::UnpackBuffer& buffer)
   // owner_
   extract_from_pack(buffer, owner_);
   // nodeid_
-  extract_from_pack(buffer, nodeid_);
+  extract_from_pack(buffer, nodeids_);
   // mat_
   bool have_mat;
   extract_from_pack(buffer, have_mat);
@@ -300,8 +305,8 @@ void Core::Elements::Element::unpack(Core::Communication::UnpackBuffer& buffer)
   }
 
   // node_, face_, parent_target_, parent_source_ are NOT communicated
-  node_.resize(0);
-  face_.clear();
+  nodes_.resize(0);
+  faces_.clear();
 }
 
 
@@ -314,7 +319,7 @@ bool Core::Elements::Element::build_nodal_pointers(
 {
   int nnode = num_node();
   const int* nodeids = node_ids();
-  node_.resize(nnode);
+  nodes_.resize(nnode);
   for (int i = 0; i < nnode; ++i)
   {
     std::map<int, std::shared_ptr<Core::Nodes::Node>>::const_iterator curr = nodes.find(nodeids[i]);
@@ -322,7 +327,7 @@ bool Core::Elements::Element::build_nodal_pointers(
     if (curr == nodes.end())
       FOUR_C_THROW("Element {} cannot find node {}", id(), nodeids[i]);
     else
-      node_[i] = curr->second.get();
+      nodes_[i] = curr->second.get();
   }
   return true;
 }
@@ -333,8 +338,8 @@ bool Core::Elements::Element::build_nodal_pointers(
  *----------------------------------------------------------------------*/
 bool Core::Elements::Element::build_nodal_pointers(Core::Nodes::Node** nodes)
 {
-  node_.resize(num_node());
-  for (int i = 0; i < num_node(); ++i) node_[i] = nodes[i];
+  nodes_.resize(num_node());
+  for (int i = 0; i < num_node(); ++i) nodes_[i] = nodes[i];
   return true;
 }
 
@@ -452,8 +457,8 @@ void Core::Elements::Element::location_vector(const Core::FE::Discretization& di
     {
       for (int i = 0; i < num_face(); ++i)
       {
-        const int owner = face_[i]->owner();
-        std::vector<int> dof = dis.dof(dofset, face_[i].get());
+        const int owner = faces_[i]->owner();
+        std::vector<int> dof = dis.dof(dofset, faces_[i].get());
         if (!dof.empty()) lmstride.push_back(dof.size());
         for (int j : dof)
         {
@@ -526,8 +531,8 @@ void Core::Elements::Element::location_vector(
     {
       for (int i = 0; i < num_face(); ++i)
       {
-        const int owner = face_[i]->owner();
-        std::vector<int> dof = dis.dof(dofset, face_[i].get());
+        const int owner = faces_[i]->owner();
+        std::vector<int> dof = dis.dof(dofset, faces_[i].get());
         if (!dof.empty()) lmstride.push_back(dof.size());
         for (int j : dof)
         {
@@ -595,8 +600,8 @@ void Core::Elements::Element::location_vector(const Core::FE::Discretization& di
   {
     for (int i = 0; i < num_face(); ++i)
     {
-      const int owner = face_[i]->owner();
-      std::vector<int> dof = dis.dof(0, face_[i].get());
+      const int owner = faces_[i]->owner();
+      std::vector<int> dof = dis.dof(0, faces_[i].get());
       if (!dof.empty()) lmstride.push_back(dof.size());
       for (int j : dof)
       {
@@ -647,9 +652,9 @@ void Core::Elements::Element::set_face(
     const int faceindex, Core::Elements::FaceElement* faceelement)
 {
   const int nface = num_face();
-  if (face_.empty()) face_.resize(nface, nullptr);
+  if (faces_.empty()) faces_.resize(nface, nullptr);
   FOUR_C_ASSERT(faceindex < num_face(), "there is no face with the given index");
-  face_[faceindex] = Core::Utils::shared_ptr_from_ref<Core::Elements::FaceElement>(*faceelement);
+  faces_[faceindex] = Core::Utils::shared_ptr_from_ref<Core::Elements::FaceElement>(*faceelement);
 }
 
 int Core::Elements::Element::evaluate_with_timing(Teuchos::ParameterList& params,
@@ -828,6 +833,63 @@ void Core::Elements::Element::get_bounding_volume(
   }
 
   bounding_volumes.emplace_back(this->id(), bounding_box);
+}
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+std::optional<double> Core::Elements::Element::minimum_centroid_distance_to_adjacent_elements()
+    const
+{
+  FOUR_C_ASSERT_ALWAYS(not is_meshfree_bin(),
+      "Function call is currently not supported for meshfree bins as the centroid computation "
+      "relies on the connectivity which is not updated in the meshfree case");
+  FOUR_C_ASSERT_ALWAYS(not nodes_.empty(),
+      "The discretization has to be fill-complete to determine minimum centroid distances between "
+      "adjacent "
+      "elements");
+
+  // compute centroid of this element
+  const std::vector<double> element_centroid = FE::element_center_refe_coords(*this);
+
+  // loop through element nodes and find the adjacent elements through them; only evaluate the
+  // centroid distance if it has not already been evaluated
+  std::unordered_set<int> evaluated_adjacent_element_ids;
+  double min_squared_centroid_distance = std::numeric_limits<double>::infinity();
+  for (const Core::Nodes::Node* node : nodes_)
+  {
+    for (const FE::ConstElementRef node_adjacent_element : node->adjacent_elements())
+    {
+      const int adjacent_element_gid = node_adjacent_element.global_id();
+      if (adjacent_element_gid == id_ ||
+          !evaluated_adjacent_element_ids.insert(adjacent_element_gid)
+              .second)  // nothing to do if the element is either the current element or has already
+                        // been evaluated
+        continue;
+
+
+      // evaluate centroid distance
+      const std::vector<double> adjacent_element_centroid =
+          FE::element_center_refe_coords(*node_adjacent_element.user_element());
+      FOUR_C_ASSERT(adjacent_element_centroid.size() == element_centroid.size(),
+          "Centroid sizes for element with global id {} and adjacent element with global id {} "
+          "are {} and {}! They should "
+          "match! ",
+          id_, adjacent_element_gid, element_centroid.size(), adjacent_element_centroid.size());
+      double current_squared_centroid_distance = 0.0;
+      for (std::size_t d = 0; d < element_centroid.size(); ++d)
+      {
+        const double difference = (element_centroid[d] - adjacent_element_centroid[d]);
+        current_squared_centroid_distance += difference * difference;
+      }
+      if (current_squared_centroid_distance < min_squared_centroid_distance)
+        min_squared_centroid_distance = current_squared_centroid_distance;
+    }
+  }
+
+  return std::isfinite(min_squared_centroid_distance)
+             ? std::make_optional(std::sqrt(min_squared_centroid_distance))
+             : std::nullopt;
 }
 
 /*----------------------------------------------------------------------*
