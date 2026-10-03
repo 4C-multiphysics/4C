@@ -61,7 +61,7 @@ namespace Discret
           SolidPoroOffDiagonalBlockMatrices<porosity_formulation>& off_diagonal_block_matrices);
 
       void poro_setup(
-          Mat::StructPoro& porostructmat, const Core::IO::InputParameterContainer& container);
+          Mat::StructPoro& porostructmat, const Core::IO::InputParameterContainer& container, int eleGID);
 
      private:
       /// static values for matrix sizes

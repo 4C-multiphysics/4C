@@ -13,6 +13,7 @@
 #include "4C_comm_parobjectfactory.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_material_parameter_base.hpp"
+#include "4C_io_input_field.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -45,7 +46,7 @@ namespace Mat
       int poro_law_ID_;
 
       //! initial porosity
-      double init_porosity_;
+      Core::IO::InputField<double> init_porosity_;
 
       //!@}
 
@@ -170,7 +171,7 @@ namespace Mat
     double porosity_av() const;
 
     //! return initial porosity
-    double init_porosity() const { return params_->init_porosity_; }
+    double init_porosity(int eleGID) const { return params_->init_porosity_.at(eleGID); }
 
     //! return time derivative of reference porosity (only nonzero with reaction)
     virtual double ref_porosity_time_deriv() const { return 0.0; }
@@ -188,7 +189,8 @@ namespace Mat
             dphi_dJdp,  //!< (o) derivative of porosity w.r.t. pressure and jacobian at gauss point
         double* dphi_dJJ,  //!< (o) second derivative of porosity w.r.t. jacobian at gauss point
         double* dphi_dpp,  //!< (o) second derivative of porosity w.r.t. pressure at gauss point
-        bool save = true);
+        bool save=true,
+        int eleGID=0);  //!< (i) element global ID, by default 0 if we don't iterate over the elements
 
     //! compute current porosity and save it
     void compute_porosity(const Teuchos::ParameterList& params,  //!< (i) element parameter list
@@ -196,7 +198,8 @@ namespace Mat
         double J,          //!< (i) determinant of jacobian at gauss point
         int gp,            //!< (i) number of current gauss point
         double& porosity,  //!< (o) porosity at gauss point
-        bool save = true);
+        bool save=true,
+        int eleGID=0);  //!< (i) element global ID, by default 0 if we don't iterate over the elements
 
     //! compute current surface porosity and save it
     void compute_surf_porosity(
@@ -212,7 +215,8 @@ namespace Mat
             dphi_dJdp,  //!< (o) derivative of porosity w.r.t. pressure and jacobian at gauss point
         double* dphi_dJJ,  //!< (o) second derivative of porosity w.r.t. jacobian at gauss point
         double* dphi_dpp,  //!< (o) second derivative of porosity w.r.t. pressure at gauss point
-        bool save = true);
+        bool save=true,
+        int eleGID=0);  //!< (i) element global ID, by default 0 if we don't iterate over the elements
 
     //! compute current surface porosity and save it
     void compute_surf_porosity(
@@ -222,7 +226,8 @@ namespace Mat
         const int surfnum,                     //!< (i) number of surface
         int gp,                                //!< (i) number of current gauss point
         double& porosity,                      //!< (o) porosity at gauss point
-        bool save = true);
+        bool save=true,
+        int eleGID=0);  //!< (i) element global ID, by default 0 if we don't iterate over the elements
 
     //! return copy of this material object
     std::shared_ptr<Core::Mat::Material> clone() const override
@@ -233,7 +238,7 @@ namespace Mat
     //! Initialize internal variables
     virtual void poro_setup(int numgp,  //!< number of Gauss points
         const Discret::Elements::Fibers& fibers,
-        const std::optional<Discret::Elements::CoordinateSystem>& coord_system);
+        const std::optional<Discret::Elements::CoordinateSystem>& coord_system, int eleGID);
 
     //! evaluate constitutive relation for porosity and compute derivatives
     virtual void constitutive_derivatives(
@@ -245,7 +250,8 @@ namespace Mat
         double* dW_dphi,                       //!< (o) derivative of potential w.r.t. porosity
         double* dW_dJ,                         //!< (o) derivative of potential w.r.t. jacobian
         double* dW_dphiref,  //!< (o) derivative of potential w.r.t. reference porosity
-        double* W            //!< (o) inner potential
+        double* W,            //!< (o) inner potential
+        int eleGID            //< (i) element global ID
     );
 
     //! evaluate constitutive relation for porosity and compute derivatives using reference porosity
@@ -299,8 +305,8 @@ namespace Mat
     //!@}
 
     //! Return material density (if provided by the specific material)
-    double density() const override;
-    virtual double density_solid_phase() const;
+    double density(int eleGID) const override;
+    virtual double density_solid_phase(int eleGID) const;
 
     //! @name Handling of Gauss point data. Here, the poro material just calls the underlying
     //! material
@@ -311,6 +317,14 @@ namespace Mat
       // setup the underlying material
       // Note: poro material itself is setup when calling poro_setup()
       mat_->setup(numgp, fibers, coord_system);
+    }
+
+    // Overload used for structporo_reaction with element_id
+    virtual void setup(int numgp, const Discret::Elements::Fibers& fibers,
+              const std::optional<FourC::Discret::Elements::CoordinateSystem>& coord_system, 
+              int eleGID)
+    {
+        mat_->setup(numgp, fibers, coord_system); 
     }
 
     void post_setup(const Teuchos::ParameterList& params, const int eleGID) override;
@@ -384,6 +398,21 @@ namespace Mat
 
     //! flag indicating initialization of attributes
     bool is_initialized_;
+
+    //! number of gauss points (set in poro_setup)
+    int numgp_{0};
+
+    //! whether element-wise initial porosity values were read from the input field
+    bool porosity_values_initialized_{false};
+
+    //! initial/reference porosity of this element (set in post_setup)
+    double reference_porosity_{0.0};
+
+    //! read INITPOROSITY from the (possibly mesh-based) input field into GP storage
+    void initialize_porosity_values(int eleGID);
+
+    //! reference porosity for this material instance (element-local after post_setup)
+    [[nodiscard]] double reference_porosity(int eleGID) const;
   };
 
 }  // namespace Mat
