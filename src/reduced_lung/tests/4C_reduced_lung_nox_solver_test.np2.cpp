@@ -187,7 +187,7 @@ namespace
     const auto get_solver_params = [&](int) -> const Teuchos::ParameterList&
     { return solver_params; };
 
-    const auto assembly_pipeline = create_default_nox_assembly_pipeline(
+    const auto assembly_pipeline = create_default_nonlinear_solver_assembly_pipeline(
         airways, terminal_units, connections, bifurcations, boundary_conditions);
 
     const NoxSolverContext nox_solver_context{

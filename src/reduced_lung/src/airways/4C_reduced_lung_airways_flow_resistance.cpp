@@ -12,6 +12,7 @@
 
 #include <cmath>
 #include <numbers>
+#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -23,17 +24,38 @@ namespace ReducedLung::Airways::FlowResistance
   {
     struct ComputePoiseuilleResistance
     {
-      std::vector<double> operator()(const AirwayData& data, const std::vector<double>& area) const
+      void operator()(
+          const AirwayData& data, const std::vector<double>& area, std::span<double> result) const
       {
-        std::vector<double> poiseuille(data.number_of_elements());
+        FOUR_C_ASSERT_ALWAYS(area.size() == data.number_of_elements(),
+            "Airway area vector has {} entries but expected {}.", area.size(),
+            data.number_of_elements());
+        FOUR_C_ASSERT_ALWAYS(result.size() == data.number_of_elements(),
+            "Poiseuille resistance output has {} entries but expected {}.", result.size(),
+            data.number_of_elements());
+
+        const double resistance_factor =
+            8.0 * std::numbers::pi * data.air_properties.dynamic_viscosity;
         for (size_t i = 0; i < data.number_of_elements(); ++i)
         {
-          poiseuille[i] = 8 * std::numbers::pi * data.air_properties.dynamic_viscosity *
-                          data.ref_length[i] / (area[i] * area[i]);
+          const double area_i = area[i];
+          result[i] = resistance_factor * data.ref_length[i] / (area_i * area_i);
         }
-        return poiseuille;
       }
     };
+
+    double evaluate_poiseuille_resistance(
+        const AirwayData& data, const std::vector<double>& area, size_t i)
+    {
+      return 8 * std::numbers::pi * data.air_properties.dynamic_viscosity * data.ref_length[i] /
+             (area[i] * area[i]);
+    }
+
+    void assert_output_size(std::span<double> output, size_t expected_size, const char* name)
+    {
+      FOUR_C_ASSERT_ALWAYS(output.size() == expected_size,
+          "{} output has {} entries but expected {}.", name, output.size(), expected_size);
+    }
 
     template <typename Model>
     InertiaEvaluator make_inertia_evaluator_impl(const Model& model)
@@ -42,182 +64,196 @@ namespace ReducedLung::Airways::FlowResistance
       static_assert(std::is_same_v<std::remove_reference_t<HasInertiaT>, std::vector<bool>>,
           "Model must have member 'has_inertia' of type std::vector<bool>");
 
-      return [&model](const AirwayData& data, const std::vector<double>& area)
+      return [&model](
+                 const AirwayData& data, const std::vector<double>& area, std::span<double> inertia)
       {
-        std::vector<double> inertia(data.number_of_elements(), 0.0);
+        FOUR_C_ASSERT_ALWAYS(area.size() == data.number_of_elements(),
+            "Airway area vector has {} entries but expected {}.", area.size(),
+            data.number_of_elements());
+        assert_output_size(inertia, data.number_of_elements(), "Inertia");
+
         for (size_t i = 0; i < data.number_of_elements(); ++i)
         {
+          inertia[i] = 0.0;
           if (i < model.has_inertia.size() && model.has_inertia[i])
           {
             inertia[i] = data.air_properties.density * data.ref_length[i] / area[i];
           }
         }
-        return inertia;
       };
     }
 
-    std::vector<double> evaluate_nonlinear_flow_resistance_derivative_rigid(
-        const NonLinearResistive& model, const AirwayData& data,
-        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
+    void evaluate_nonlinear_flow_resistance_derivative_rigid(const NonLinearResistive& model,
+        const AirwayData& data, const Core::LinAlg::Vector<double>& locally_relevant_dofs,
+        double dt, std::span<double> resistance_derivative)
     {
-      auto poiseuille_resistance = ComputePoiseuilleResistance{}(data, data.ref_area);
-      std::vector<double> resistance_derivative(data.number_of_elements());
+      /* Fill caller-owned scratch directly; these values become rigid-airway q coefficients. */
+      (void)dt;
+      assert_output_size(
+          resistance_derivative, data.number_of_elements(), "Rigid flow-resistance derivative");
+      const auto dof_values = locally_relevant_dofs.local_values_as_span();
+      const double dynamic_viscosity = data.air_properties.dynamic_viscosity;
+      const double density = data.air_properties.density;
+      const double poiseuille_factor = 8.0 * std::numbers::pi * dynamic_viscosity;
+      const double turbulence_factor_base = density / (std::numbers::pi * dynamic_viscosity);
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
-        double R = poiseuille_resistance[i] * model.k_turb[i];
+        const double ref_length = data.ref_length[i];
+        const double ref_area = data.ref_area[i];
+        const double k_turb = model.k_turb[i];
+        const double q1 = dof_values[data.lid_q1[i]];
+        const double poiseuille_resistance = poiseuille_factor * ref_length / (ref_area * ref_area);
+        const double R = poiseuille_resistance * k_turb;
 
         double dk_dq1;
-        if (model.k_turb[i] > 1.0)
+        if (k_turb > 1.0)
         {
-          dk_dq1 =
-              model.turbulence_factor_gamma[i] *
-              std::sqrt(data.air_properties.density /
-                        (M_PI * data.air_properties.dynamic_viscosity * data.ref_length[i])) *
-              1 / std::sqrt(std::abs(locally_relevant_dofs.local_values_as_span()[data.lid_q1[i]]));
+          dk_dq1 = model.turbulence_factor_gamma[i] *
+                   std::sqrt(turbulence_factor_base / ref_length) / std::sqrt(std::abs(q1));
         }
         else
         {
           dk_dq1 = 0.0;
         }
-        resistance_derivative[i] =
-            (poiseuille_resistance[i] * dk_dq1) *
-                locally_relevant_dofs.local_values_as_span()[data.lid_q1[i]] +
-            R;
+        resistance_derivative[i] = (poiseuille_resistance * dk_dq1) * q1 + R;
       }
-      return resistance_derivative;
     }
 
-    std::pair<std::vector<double>, std::vector<double>>
-    evaluate_linear_flow_resistance_derivative_kelvin_voigt(const LinearResistive& model,
+    void evaluate_linear_flow_resistance_derivative_kelvin_voigt(const LinearResistive& model,
         const AirwayData& data, const Core::LinAlg::Vector<double>& dofs,
-        const std::vector<double>& area, double dt)
+        const std::vector<double>& area, double dt, std::span<double> resistance_derivative_q1,
+        std::span<double> resistance_derivative_q2)
     {
-      auto poiseuille_resistance = ComputePoiseuilleResistance{}(data, area);
-      std::vector<double> resistance_derivative_q1(data.number_of_elements());
-      std::vector<double> resistance_derivative_q2(data.number_of_elements());
+      /* Kelvin-Voigt derivatives are produced in q1/q2 batches for structured replacement. */
+      (void)model;
+      FOUR_C_ASSERT_ALWAYS(area.size() == data.number_of_elements(),
+          "Airway area vector has {} entries but expected {}.", area.size(),
+          data.number_of_elements());
+      assert_output_size(resistance_derivative_q1, data.number_of_elements(),
+          "Kelvin-Voigt q1 flow-resistance derivative");
+      assert_output_size(resistance_derivative_q2, data.number_of_elements(),
+          "Kelvin-Voigt q2 flow-resistance derivative");
+      const auto dof_values = dofs.local_values_as_span();
+      const double dynamic_viscosity = data.air_properties.dynamic_viscosity;
+      const double poiseuille_factor = 8.0 * std::numbers::pi * dynamic_viscosity;
+      const double poiseuille_area_derivative_factor = -16.0 * std::numbers::pi * dynamic_viscosity;
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
-        double dRp_da = -16 * M_PI * data.air_properties.dynamic_viscosity * data.ref_length[i] /
-                        (area[i] * area[i] * area[i]);
-        double da_dq1 = dt / data.ref_length[i];
-        double da_dq2 = -dt / data.ref_length[i];
-        resistance_derivative_q1[i] =
-            -0.5 * (dRp_da * da_dq1 *
-                           (dofs.local_values_as_span()[data.lid_q1[i]] +
-                               dofs.local_values_as_span()[data.lid_q2[i]]) +
-                       poiseuille_resistance[i]);
-        resistance_derivative_q2[i] =
-            -0.5 * (dRp_da * da_dq2 *
-                           (dofs.local_values_as_span()[data.lid_q1[i]] +
-                               dofs.local_values_as_span()[data.lid_q2[i]]) +
-                       poiseuille_resistance[i]);
+        const double ref_length = data.ref_length[i];
+        const double area_i = area[i];
+        const double area_squared = area_i * area_i;
+        const double area_cubed = area_squared * area_i;
+        const double poiseuille_resistance = poiseuille_factor * ref_length / area_squared;
+        const double dRp_da = poiseuille_area_derivative_factor * ref_length / area_cubed;
+        const double da_dq1 = dt / ref_length;
+        const double da_dq2 = -dt / ref_length;
+        const double q_sum = dof_values[data.lid_q1[i]] + dof_values[data.lid_q2[i]];
+        resistance_derivative_q1[i] = -0.5 * (dRp_da * da_dq1 * q_sum + poiseuille_resistance);
+        resistance_derivative_q2[i] = -0.5 * (dRp_da * da_dq2 * q_sum + poiseuille_resistance);
       }
-      return {resistance_derivative_q1, resistance_derivative_q2};
     }
 
-    std::pair<std::vector<double>, std::vector<double>>
-    evaluate_nonlinear_flow_resistance_derivative_kelvin_voigt(const NonLinearResistive& model,
+    void evaluate_nonlinear_flow_resistance_derivative_kelvin_voigt(const NonLinearResistive& model,
         const AirwayData& data, const Core::LinAlg::Vector<double>& dofs,
-        const std::vector<double>& area, double dt)
+        const std::vector<double>& area, double dt, std::span<double> resistance_derivative_q1,
+        std::span<double> resistance_derivative_q2)
     {
-      auto poiseuille_resistance = ComputePoiseuilleResistance{}(data, area);
-      std::vector<double> resistance_derivative_q1(data.number_of_elements());
-      std::vector<double> resistance_derivative_q2(data.number_of_elements());
+      FOUR_C_ASSERT_ALWAYS(area.size() == data.number_of_elements(),
+          "Airway area vector has {} entries but expected {}.", area.size(),
+          data.number_of_elements());
+      assert_output_size(resistance_derivative_q1, data.number_of_elements(),
+          "Kelvin-Voigt q1 flow-resistance derivative");
+      assert_output_size(resistance_derivative_q2, data.number_of_elements(),
+          "Kelvin-Voigt q2 flow-resistance derivative");
+      const auto dof_values = dofs.local_values_as_span();
+      const double dynamic_viscosity = data.air_properties.dynamic_viscosity;
+      const double density = data.air_properties.density;
+      const double poiseuille_factor = 8.0 * std::numbers::pi * dynamic_viscosity;
+      const double poiseuille_area_derivative_factor = -16.0 * std::numbers::pi * dynamic_viscosity;
+      const double turbulence_factor_base = density / (2.0 * std::numbers::pi * dynamic_viscosity);
       for (size_t i = 0; i < data.number_of_elements(); i++)
       {
-        double dRp_da = -16 * M_PI * data.air_properties.dynamic_viscosity * data.ref_length[i] /
-                        (area[i] * area[i] * area[i]);
-        double da_dq1 = dt / data.ref_length[i];
-        double da_dq2 = -dt / data.ref_length[i];
+        const double ref_length = data.ref_length[i];
+        const double area_i = area[i];
+        const double area_squared = area_i * area_i;
+        const double area_cubed = area_squared * area_i;
+        const double k_turb = model.k_turb[i];
+        const double q1 = dof_values[data.lid_q1[i]];
+        const double q2 = dof_values[data.lid_q2[i]];
+        const double q_sum = q1 + q2;
+        const double q_difference = q2 - q1;
+        const double poiseuille_resistance = poiseuille_factor * ref_length / area_squared;
+        const double dRp_da = poiseuille_area_derivative_factor * ref_length / area_cubed;
+        const double da_dq1 = dt / ref_length;
+        const double da_dq2 = -dt / ref_length;
         double dk_dq1;
-        if (model.k_turb[i] > 1.0)
+        if (k_turb > 1.0)
         {
-          dk_dq1 =
-              model.turbulence_factor_gamma[i] *
-              std::sqrt(data.air_properties.density /
-                        (2 * M_PI * data.air_properties.dynamic_viscosity * data.ref_length[i])) *
-              (dofs.local_values_as_span()[data.lid_q1[i]] +
-                  dofs.local_values_as_span()[data.lid_q2[i]]) /
-              (std::abs(dofs.local_values_as_span()[data.lid_q1[i]] +
-                        dofs.local_values_as_span()[data.lid_q2[i]]) *
-                  std::sqrt(std::abs(dofs.local_values_as_span()[data.lid_q1[i]] +
-                                     dofs.local_values_as_span()[data.lid_q2[i]])));
+          const double abs_q_sum = std::abs(q_sum);
+          dk_dq1 = model.turbulence_factor_gamma[i] *
+                   std::sqrt(turbulence_factor_base / ref_length) * q_sum /
+                   (abs_q_sum * std::sqrt(abs_q_sum));
         }
         else
         {
           dk_dq1 = 0.0;
         }
-        double dk_dq2 = dk_dq1;
-        double dalpha_dk = -4.0 / ((4.0 * model.k_turb[i] - 1.0) * (4.0 * model.k_turb[i] - 1.0));
-        double alpha = 4.0 * model.k_turb[i] / (4.0 * model.k_turb[i] - 1.0);
-
-        double resistance = poiseuille_resistance[i] * model.k_turb[i] +
-                            2 * data.air_properties.density * alpha / (area[i] * area[i]) *
-                                (dofs.local_values_as_span()[data.lid_q2[i]] -
-                                    dofs.local_values_as_span()[data.lid_q1[i]]);
+        const double dk_dq2 = dk_dq1;
+        const double alpha_denominator = 4.0 * k_turb - 1.0;
+        const double dalpha_dk = -4.0 / (alpha_denominator * alpha_denominator);
+        const double alpha = 4.0 * k_turb / alpha_denominator;
+        const double density_alpha_over_area_squared = density * alpha / area_squared;
+        const double density_q_difference_over_area_squared = density * q_difference / area_squared;
+        const double resistance =
+            poiseuille_resistance * k_turb + 2.0 * density_alpha_over_area_squared * q_difference;
         resistance_derivative_q1[i] =
-            -0.5 *
-            ((dRp_da * da_dq1 * model.k_turb[i] + poiseuille_resistance[i] * dk_dq1 +
-                 2 * data.air_properties.density *
-                     (dofs.local_values_as_span()[data.lid_q2[i]] -
-                         dofs.local_values_as_span()[data.lid_q1[i]]) /
-                     (area[i] * area[i]) * dalpha_dk * dk_dq1 -
-                 2 * data.air_properties.density * alpha / (area[i] * area[i]) -
-                 4 * data.air_properties.density * alpha / (area[i] * area[i] * area[i]) * da_dq1 *
-                     (dofs.local_values_as_span()[data.lid_q2[i]] -
-                         dofs.local_values_as_span()[data.lid_q1[i]])) *
-                    (dofs.local_values_as_span()[data.lid_q1[i]] +
-                        dofs.local_values_as_span()[data.lid_q2[i]]) +
-                resistance);
+            -0.5 * ((dRp_da * da_dq1 * k_turb + poiseuille_resistance * dk_dq1 +
+                        2.0 * density_q_difference_over_area_squared * dalpha_dk * dk_dq1 -
+                        2.0 * density_alpha_over_area_squared -
+                        4.0 * density * alpha / area_cubed * da_dq1 * q_difference) *
+                           q_sum +
+                       resistance);
         resistance_derivative_q2[i] =
-            -0.5 *
-            ((dRp_da * da_dq2 * model.k_turb[i] + poiseuille_resistance[i] * dk_dq2 +
-                 2 * data.air_properties.density *
-                     (dofs.local_values_as_span()[data.lid_q2[i]] -
-                         dofs.local_values_as_span()[data.lid_q1[i]]) /
-                     (area[i] * area[i]) * dalpha_dk * dk_dq2 +
-                 2 * data.air_properties.density * alpha / (area[i] * area[i]) -
-                 4 * data.air_properties.density * alpha / (area[i] * area[i] * area[i]) * da_dq2 *
-                     (dofs.local_values_as_span()[data.lid_q2[i]] -
-                         dofs.local_values_as_span()[data.lid_q1[i]])) *
-                    (dofs.local_values_as_span()[data.lid_q1[i]] +
-                        dofs.local_values_as_span()[data.lid_q2[i]]) +
-                resistance);
+            -0.5 * ((dRp_da * da_dq2 * k_turb + poiseuille_resistance * dk_dq2 +
+                        2.0 * density_q_difference_over_area_squared * dalpha_dk * dk_dq2 +
+                        2.0 * density_alpha_over_area_squared -
+                        4.0 * density * alpha / area_cubed * da_dq2 * q_difference) *
+                           q_sum +
+                       resistance);
       }
-      return {resistance_derivative_q1, resistance_derivative_q2};
     }
 
-    std::pair<std::vector<double>, std::vector<double>> evaluate_inertia_derivative_kelvin_voigt(
-        const std::vector<bool>& has_inertia, const AirwayData& data,
-        const Core::LinAlg::Vector<double>& locally_relevant_dofs, const KelvinVoigtWall& wall,
-        double dt)
+    void evaluate_inertia_derivative_kelvin_voigt(const std::vector<bool>& has_inertia,
+        const AirwayData& data, const Core::LinAlg::Vector<double>& locally_relevant_dofs,
+        const KelvinVoigtWall& wall, double dt, std::span<double> inertia_q1,
+        std::span<double> inertia_q2)
     {
-      std::vector<double> inertia_q1(data.number_of_elements(), 0.0);
-      std::vector<double> inertia_q2(data.number_of_elements(), 0.0);
+      assert_output_size(
+          inertia_q1, data.number_of_elements(), "Kelvin-Voigt q1 inertia derivative");
+      assert_output_size(
+          inertia_q2, data.number_of_elements(), "Kelvin-Voigt q2 inertia derivative");
+      const auto dof_values = locally_relevant_dofs.local_values_as_span();
+      const double density = data.air_properties.density;
+      const double inertia_factor = -0.5 / dt;
       for (size_t i = 0; i < data.number_of_elements(); ++i)
       {
+        inertia_q1[i] = 0.0;
+        inertia_q2[i] = 0.0;
         if (i < has_inertia.size() && has_inertia[i])
         {
-          double dI_da =
-              -data.air_properties.density * data.ref_length[i] / (wall.area[i] * wall.area[i]);
-          double da_dq1 = dt / data.ref_length[i];
-          double da_dq2 = -dt / data.ref_length[i];
-          inertia_q1[i] = -0.5 / dt *
-                          (data.air_properties.density * data.ref_length[i] / wall.area[i] +
-                              dI_da * da_dq1 *
-                                  (locally_relevant_dofs.local_values_as_span()[data.lid_q1[i]] +
-                                      locally_relevant_dofs.local_values_as_span()[data.lid_q2[i]] -
-                                      data.q1_n[i] - data.q2_n[i]));
-
-          inertia_q2[i] = -0.5 / dt *
-                          (data.air_properties.density * data.ref_length[i] / wall.area[i] +
-                              dI_da * da_dq2 *
-                                  (locally_relevant_dofs.local_values_as_span()[data.lid_q1[i]] +
-                                      locally_relevant_dofs.local_values_as_span()[data.lid_q2[i]] -
-                                      data.q1_n[i] - data.q2_n[i]));
+          const double ref_length = data.ref_length[i];
+          const double area_i = wall.area[i];
+          const double area_squared = area_i * area_i;
+          const double dI_da = -density * ref_length / area_squared;
+          const double da_dq1 = dt / ref_length;
+          const double da_dq2 = -dt / ref_length;
+          const double inertia = density * ref_length / area_i;
+          const double q_history_difference =
+              dof_values[data.lid_q1[i]] + dof_values[data.lid_q2[i]] - data.q1_n[i] - data.q2_n[i];
+          inertia_q1[i] = inertia_factor * (inertia + dI_da * da_dq1 * q_history_difference);
+          inertia_q2[i] = inertia_factor * (inertia + dI_da * da_dq2 * q_history_difference);
         }
       }
-      return {inertia_q1, inertia_q2};
     }
 
     template <typename Model>
@@ -229,10 +265,11 @@ namespace ReducedLung::Airways::FlowResistance
           "Model must have member 'has_inertia' of type std::vector<bool>");
 
       KelvinVoigtWall* wall = &kelvin_voigt_wall_model;
-      return [wall, &model](
-                 const AirwayData& data, const Core::LinAlg::Vector<double>& dofs, double dt)
+      return [wall, &model](const AirwayData& data, const Core::LinAlg::Vector<double>& dofs,
+                 double dt, std::span<double> inertia_q1, std::span<double> inertia_q2)
       {
-        return evaluate_inertia_derivative_kelvin_voigt(model.has_inertia, data, dofs, *wall, dt);
+        evaluate_inertia_derivative_kelvin_voigt(
+            model.has_inertia, data, dofs, *wall, dt, inertia_q1, inertia_q2);
       };
     }
   }  // namespace
@@ -252,21 +289,22 @@ namespace ReducedLung::Airways::FlowResistance
           if constexpr (std::is_same_v<ModelType, LinearResistive>)
           {
             return [](const AirwayData& data, const Core::LinAlg::Vector<double>&,
-                       const std::vector<double>& area)
-            { return ComputePoiseuilleResistance{}(data, area); };
+                       const std::vector<double>& area, std::span<double> resistance)
+            { ComputePoiseuilleResistance{}(data, area, resistance); };
           }
           else if constexpr (std::is_same_v<ModelType, NonLinearResistive>)
           {
             return [&model](const AirwayData& data, const Core::LinAlg::Vector<double>&,
-                       const std::vector<double>& area)
+                       const std::vector<double>& area, std::span<double> resistance)
             {
-              auto poiseuille = ComputePoiseuilleResistance{}(data, area);
-              std::vector<double> resistance(data.number_of_elements());
-              for (size_t i = 0; i < resistance.size(); ++i)
+              FOUR_C_ASSERT_ALWAYS(area.size() == data.number_of_elements(),
+                  "Airway area vector has {} entries but expected {}.", area.size(),
+                  data.number_of_elements());
+              assert_output_size(resistance, data.number_of_elements(), "Flow resistance");
+              for (size_t i = 0; i < data.number_of_elements(); ++i)
               {
-                resistance[i] = poiseuille[i] * model.k_turb[i];
+                resistance[i] = evaluate_poiseuille_resistance(data, area, i) * model.k_turb[i];
               }
-              return resistance;
             };
           }
           else
@@ -286,25 +324,26 @@ namespace ReducedLung::Airways::FlowResistance
           if constexpr (std::is_same_v<ModelType, LinearResistive>)
           {
             return [](const AirwayData& data, const Core::LinAlg::Vector<double>&,
-                       const std::vector<double>& area)
-            { return ComputePoiseuilleResistance{}(data, area); };
+                       const std::vector<double>& area, std::span<double> resistance)
+            { ComputePoiseuilleResistance{}(data, area, resistance); };
           }
           else if constexpr (std::is_same_v<ModelType, NonLinearResistive>)
           {
             return [&model](const AirwayData& data, const Core::LinAlg::Vector<double>& dofs,
-                       const std::vector<double>& area)
+                       const std::vector<double>& area, std::span<double> resistance)
             {
-              auto poiseuille = ComputePoiseuilleResistance{}(data, area);
-              std::vector<double> resistance(area.size());
-              for (size_t i = 0; i < resistance.size(); ++i)
+              FOUR_C_ASSERT_ALWAYS(area.size() == data.number_of_elements(),
+                  "Airway area vector has {} entries but expected {}.", area.size(),
+                  data.number_of_elements());
+              assert_output_size(resistance, data.number_of_elements(), "Flow resistance");
+              for (size_t i = 0; i < data.number_of_elements(); ++i)
               {
                 const double alpha = 4.0 * model.k_turb[i] / (4.0 * model.k_turb[i] - 1.0);
-                resistance[i] = poiseuille[i] * model.k_turb[i] +
+                resistance[i] = evaluate_poiseuille_resistance(data, area, i) * model.k_turb[i] +
                                 2 * data.air_properties.density * alpha / (area[i] * area[i]) *
                                     (dofs.local_values_as_span()[data.lid_q2[i]] -
                                         dofs.local_values_as_span()[data.lid_q1[i]]);
               }
-              return resistance;
             };
           }
           else
@@ -324,14 +363,18 @@ namespace ReducedLung::Airways::FlowResistance
           using ModelType = std::decay_t<decltype(model)>;
           if constexpr (std::is_same_v<ModelType, LinearResistive>)
           {
-            return [](const AirwayData& data, const Core::LinAlg::Vector<double>&, double)
-            { return ComputePoiseuilleResistance{}(data, data.ref_area); };
+            return [](const AirwayData& data, const Core::LinAlg::Vector<double>&, double,
+                       std::span<double> resistance_derivative)
+            { ComputePoiseuilleResistance{}(data, data.ref_area, resistance_derivative); };
           }
           else if constexpr (std::is_same_v<ModelType, NonLinearResistive>)
           {
-            return [&model](
-                       const AirwayData& data, const Core::LinAlg::Vector<double>& dofs, double dt)
-            { return evaluate_nonlinear_flow_resistance_derivative_rigid(model, data, dofs, dt); };
+            return [&model](const AirwayData& data, const Core::LinAlg::Vector<double>& dofs,
+                       double dt, std::span<double> resistance_derivative)
+            {
+              evaluate_nonlinear_flow_resistance_derivative_rigid(
+                  model, data, dofs, dt, resistance_derivative);
+            };
           }
           else
           {
@@ -352,20 +395,22 @@ namespace ReducedLung::Airways::FlowResistance
           using ModelType = std::decay_t<decltype(model)>;
           if constexpr (std::is_same_v<ModelType, LinearResistive>)
           {
-            return [wall, &model](
-                       const AirwayData& data, const Core::LinAlg::Vector<double>& dofs, double dt)
+            return [wall, &model](const AirwayData& data, const Core::LinAlg::Vector<double>& dofs,
+                       double dt, std::span<double> resistance_derivative_q1,
+                       std::span<double> resistance_derivative_q2)
             {
-              return evaluate_linear_flow_resistance_derivative_kelvin_voigt(
-                  model, data, dofs, wall->area, dt);
+              evaluate_linear_flow_resistance_derivative_kelvin_voigt(model, data, dofs, wall->area,
+                  dt, resistance_derivative_q1, resistance_derivative_q2);
             };
           }
           else if constexpr (std::is_same_v<ModelType, NonLinearResistive>)
           {
-            return [wall, &model](
-                       const AirwayData& data, const Core::LinAlg::Vector<double>& dofs, double dt)
+            return [wall, &model](const AirwayData& data, const Core::LinAlg::Vector<double>& dofs,
+                       double dt, std::span<double> resistance_derivative_q1,
+                       std::span<double> resistance_derivative_q2)
             {
-              return evaluate_nonlinear_flow_resistance_derivative_kelvin_voigt(
-                  model, data, dofs, wall->area, dt);
+              evaluate_nonlinear_flow_resistance_derivative_kelvin_voigt(model, data, dofs,
+                  wall->area, dt, resistance_derivative_q1, resistance_derivative_q2);
             };
           }
           else
