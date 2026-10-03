@@ -8,6 +8,7 @@
 #include "4C_solver_nonlin_nox_matrixfree.hpp"
 
 #include "4C_linear_solver_thyra_utils.hpp"
+#include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -82,8 +83,9 @@ void NOX::Nln::MatrixFree::ThyraModelWrapper::evalModelImpl(
   const Teuchos::RCP<Epetra_Vector> f_out_epetra =
       Core::LinearSolver::Utils::get_epetra_vector_from_thyra(*map_, f_out);
 
-  model_->compute_f(Core::LinAlg::Vector<double>(*x_in_epetra), Core::LinAlg::View(*f_out_epetra),
-      NOX::Nln::FillType::Residual);
+  const auto success = model_->compute_f(Core::LinAlg::Vector<double>(*x_in_epetra),
+      Core::LinAlg::View(*f_out_epetra), NOX::Nln::FillType::Residual);
+  FOUR_C_ASSERT_ALWAYS(success, "Failed to compute residual");
 }
 
 // Implementation of NOX::Nln::MatrixFree::SparseOperatorWrapper

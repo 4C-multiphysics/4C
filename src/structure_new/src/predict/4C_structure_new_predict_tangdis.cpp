@@ -84,8 +84,10 @@ void Solid::Predict::TangDis::compute(::NOX::Abstract::Group& grp)
   // Dirichlet boundary conditions.
   // ---------------------------------------------------------------------------
   apply_linear_reaction_forces_ = true;
-  grp_ptr->compute_f_and_jacobian();
+  const auto status = grp_ptr->compute_f_and_jacobian();
   apply_linear_reaction_forces_ = false;
+  FOUR_C_ASSERT_ALWAYS(status == ::NOX::Abstract::Group::ReturnType::Ok,
+      "Failed to compute residual and Jacobian for the tangential displacement predictor.");
 
   // ---------------------------------------------------------------------------
   // Check if we are using a Newton direction
@@ -112,7 +114,9 @@ void Solid::Predict::TangDis::compute(::NOX::Abstract::Group& grp)
   // solve the linear system of equations and update the current state
   // ---------------------------------------------------------------------------
   // compute the Newton direction
-  grp_ptr->computeNewton(p);
+  const auto newton_status = grp_ptr->computeNewton(p);
+  FOUR_C_ASSERT_ALWAYS(newton_status == ::NOX::Abstract::Group::ReturnType::Ok,
+      "Failed to compute Newton direction");
   // reset isValid flags
   grp_ptr->computeX(*grp_ptr, grp_ptr->getNewton(), 1.0);
   // add the DBC values to the current state vector

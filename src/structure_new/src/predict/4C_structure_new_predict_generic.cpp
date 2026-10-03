@@ -13,6 +13,7 @@
 #include "4C_structure_new_impl_generic.hpp"
 #include "4C_structure_new_model_evaluator_manager.hpp"
 #include "4C_structure_new_timint_base.hpp"
+#include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -99,8 +100,10 @@ void Solid::Predict::Generic::post_predict(::NOX::Abstract::Group& grp)
   FOUR_C_ASSERT(nlngrp_ptr != nullptr, "Group cast failed!");
   // evaluate the right hand side and the jacobian
   implint_ptr_->set_is_predictor_state(true);
-  nlngrp_ptr->compute_f_and_jacobian();
+  const auto status = nlngrp_ptr->compute_f_and_jacobian();
   implint_ptr_->set_is_predictor_state(false);
+  FOUR_C_ASSERT_ALWAYS(
+      status == ::NOX::Abstract::Group::ReturnType::Ok, "Failed to compute residual and Jacobian");
 }
 
 /*----------------------------------------------------------------------------*
