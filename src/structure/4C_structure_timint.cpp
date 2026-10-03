@@ -2307,7 +2307,8 @@ void Solid::TimInt::nonlinear_mass_sanity_check(
   }
 
   if (have_nonlinear_mass() == Solid::MassLin::ml_rotations and
-      Teuchos::getIntegralValue<Solid::PredEnum>(*sdynparams, "PREDICT") != Solid::pred_constdis)
+      Teuchos::getIntegralValue<Solid::PredictorType>(*sdynparams, "PREDICT") !=
+          Solid::PredictorType::constdis)
   {
     FOUR_C_THROW(
         "Only constant displacement consistent velocity and acceleration "

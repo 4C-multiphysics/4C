@@ -78,7 +78,7 @@ namespace Solid
       void read_restart(Core::IO::DiscretizationReader& ioreader) override;
 
       //! [derived]
-      void predict(const Solid::PredEnum& pred_type) override { return; };
+      void predict() override {};
 
       //! derived
       void run_pre_compute_x(const Core::LinAlg::Vector<double>& xold,

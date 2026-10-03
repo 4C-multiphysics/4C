@@ -32,6 +32,7 @@
 #include "4C_mortar_strategy_base.hpp"
 #include "4C_solid_ele.hpp"
 #include "4C_structure_aux.hpp"
+#include "4C_structure_new_input.hpp"
 #include "4C_structure_timint.hpp"
 #include "4C_timestepping_time_step_control.hpp"
 #include "4C_utils_enum.hpp"
@@ -59,7 +60,7 @@ Solid::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& timeparams,
     std::shared_ptr<Core::LinAlg::Solver> contactsolver,
     std::shared_ptr<Core::IO::DiscretizationWriter> output)
     : TimInt(timeparams, ioparams, sdynparams, xparams, actdis, solver, contactsolver, output),
-      pred_(Teuchos::getIntegralValue<Solid::PredEnum>(sdynparams, "PREDICT")),
+      pred_(Teuchos::getIntegralValue<Solid::PredictorType>(sdynparams, "PREDICT")),
       itertype_(Teuchos::getIntegralValue<Solid::NonlinSolTech>(sdynparams, "NLNSOL")),
       normtypedisi_(Teuchos::getIntegralValue<Solid::ConvNorm>(sdynparams, "NORM_DISP")),
       normtypefres_(Teuchos::getIntegralValue<Solid::ConvNorm>(sdynparams, "NORM_RESF")),
@@ -453,31 +454,32 @@ void Solid::TimIntImpl::predict()
   // set iteration step to 0 (predictor)
   iter_ = 0;
   // choose predictor
-  if ((pred_ == Solid::pred_constdis) or (pred_ == Solid::pred_constdispres))
+  if ((pred_ == Solid::PredictorType::constdis) or (pred_ == Solid::PredictorType::constdispres))
   {
     predict_const_dis_consist_vel_acc();
     normdisi_ = 1.0e6;
     normpres_ = 1.0e6;
   }
-  else if (pred_ == Solid::pred_constvel)
+  else if (pred_ == Solid::PredictorType::constvel)
   {
     predict_const_vel_consist_acc();
     normdisi_ = 1.0e6;
     normpres_ = 1.0e6;
   }
-  else if (pred_ == Solid::pred_constacc)
+  else if (pred_ == Solid::PredictorType::constacc)
   {
     predict_const_acc();
     normdisi_ = 1.0e6;
     normpres_ = 1.0e6;
   }
-  else if ((pred_ == Solid::pred_constdisvelacc) or (pred_ == Solid::pred_constdisvelaccpres))
+  else if ((pred_ == Solid::PredictorType::constdisvelacc) or
+           (pred_ == Solid::PredictorType::constdisvelaccpres))
   {
     predict_const_dis_vel_acc();
     normdisi_ = 1.0e6;
     normpres_ = 1.0e6;
   }
-  else if (pred_ == Solid::pred_tangdis)
+  else if (pred_ == Solid::PredictorType::tangdis)
   {
     predict_tang_dis_consist_vel_acc();
     // normdisi_ has been set
@@ -490,7 +492,8 @@ void Solid::TimIntImpl::predict()
   // zerofy pressure DOFs and time-derivatives
   if (pressure_ != nullptr)
   {
-    if ((pred_ != Solid::pred_constdispres) and (pred_ != Solid::pred_constdisvelaccpres))
+    if ((pred_ != Solid::PredictorType::constdispres) and
+        (pred_ != Solid::PredictorType::constdisvelaccpres))
     {
       pressure_->insert_cond_vector(*pressure_->extract_cond_vector(*zeros_), *disn_);
     }
@@ -515,7 +518,7 @@ void Solid::TimIntImpl::predict()
   // compute residual forces fres_ and stiffness stiff_
   // If we use a tangential predictor, the contact status could have been changed in contrast
   // to a constant predictor. Thus the contact status has to be reevaluated! (hiermeier 22.01.2014)
-  if (pred_ == Solid::pred_tangdis) params.set<bool>("predict", false);
+  if (pred_ == Solid::PredictorType::tangdis) params.set<bool>("predict", false);
 
   // compute residual forces fres_ and stiffness stiff_
   evaluate_force_stiff_residual(params);
@@ -1770,10 +1773,10 @@ int Solid::TimIntImpl::newton_ls()
       merit_fct[0] = merit_fct[1];
 
     // Check if pred_constdis is used. If yes, the first step is not controlled.
-    if (pred_ == Solid::pred_constdis or pred_ == Solid::pred_constdisvelacc)
+    if (pred_ == Solid::PredictorType::constdis or pred_ == Solid::PredictorType::constdisvelacc)
       fscontrol = 1;
-    else if ((pred_ == Solid::pred_tangdis || pred_ == Solid::pred_constacc ||
-                 pred_ == Solid::pred_constvel) ||
+    else if ((pred_ == Solid::PredictorType::tangdis || pred_ == Solid::PredictorType::constacc ||
+                 pred_ == Solid::PredictorType::constvel) ||
              (iter_ > 1))
       fscontrol = 0;
     else

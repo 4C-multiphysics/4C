@@ -627,7 +627,7 @@ void Solid::Predict::PythonWrapper::compute(::NOX::Abstract::Group& grp)
   // Compute new disnp_ptr, velnp_ptr, accnp_ptr via call to python script
   python_implementation_->compute(global_state_ptr());
 
-  impl_int().model_eval().predict(get_type());
+  impl_int().model_eval().predict();
 }
 
 

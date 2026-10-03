@@ -164,7 +164,6 @@ Solid::ModelEvaluator::Data::Data()
       issetup_(false),
       isntmaps_filled_(false),
       ele_action_(Core::Elements::none),
-      predict_type_(Solid::pred_vague),
       total_time_(-1.0),
       delta_time_(-1.0),
       step_length_(-1.0),
@@ -480,19 +479,6 @@ void Solid::ModelEvaluator::Data::reset_my_norms(const bool& isdefaultstep)
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Data::is_predictor_state() const
-{
-  check_init_setup();
-
-  const Solid::IMPLICIT::Generic* impl_ptr =
-      dynamic_cast<const Solid::IMPLICIT::Generic*>(&tim_int().integrator());
-
-  if (not impl_ptr) return false;
-  return impl_ptr->is_predictor_state();
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
 Solid::DampKind Solid::ModelEvaluator::Data::get_damping_type() const
 {
   check_init_setup();
@@ -670,7 +656,7 @@ void Solid::ModelEvaluator::Data::add_contribution_to_energy_type(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Solid::ModelEvaluator::Data::is_predictor() const { return global_state().is_predict(); }
+bool Solid::ModelEvaluator::Data::is_predictor() const { return global_state().is_predictor(); }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/

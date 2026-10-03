@@ -53,7 +53,7 @@ Solid::TimeInt::BaseDataGlobalState::BaseDataGlobalState()
       stepn_(0),
       stepnp_(0),
       restartstep_(0),
-      ispredict_(false),
+      is_predictor_(false),
       disnp_(nullptr),
       velnp_(nullptr),
       accnp_(nullptr),

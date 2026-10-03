@@ -152,18 +152,6 @@ namespace Solid
         return timintfactor_vel_;
       }
 
-      //! get the predictor type of the structural time integration
-      [[nodiscard]] Solid::PredEnum get_predictor_type() const override
-      {
-        check_init_setup();
-        return predict_type_;
-      }
-
-
-
-      //! is the current state the predictor state?
-      bool is_predictor_state() const;
-
       //! mutable access to the stress data vector
       std::shared_ptr<std::vector<char>>& stress_data_ptr() override;
 
@@ -430,12 +418,6 @@ namespace Solid
       inline void set_tim_int_factor_vel(const double timintfactor_vel)
       {
         timintfactor_vel_ = timintfactor_vel;
-      }
-
-      //! set the predictor type of the structural time integration
-      inline void set_predictor_type(const Solid::PredEnum predictor_type)
-      {
-        predict_type_ = predictor_type;
       }
 
       //! set stress data vector
@@ -775,9 +757,6 @@ namespace Solid
       //! Current action type
       Core::Elements::ActionType ele_action_;
 
-      //! Current predictor type
-      Solid::PredEnum predict_type_;
-
       //! total time for the evaluation
       double total_time_;
 
@@ -1051,19 +1030,6 @@ namespace Solid
         return str_data_ptr_->is_predictor();
       };
 
-      /*! \brief Get the current active predictor type
-       *
-       * If no predictor is active, \c pred_vague will be returned.
-       *
-       * @return Type of predictor
-       *
-       * */
-      [[nodiscard]] Solid::PredEnum get_predictor_type() const override
-      {
-        check_init();
-        return str_data_ptr_->get_predictor_type();
-      }
-
       //! get the current step length [derived]
       [[nodiscard]] inline double get_step_length() const override
       {
@@ -1077,13 +1043,6 @@ namespace Solid
         check_init();
         return str_data_ptr_->is_default_step();
       };
-
-      //! is the current state the predictor state?
-      inline bool is_predictor_state() const override
-      {
-        check_init();
-        return str_data_ptr_->is_predictor_state();
-      }
 
       //! get the current time step [derived]
       [[nodiscard]] inline double get_delta_time() const override

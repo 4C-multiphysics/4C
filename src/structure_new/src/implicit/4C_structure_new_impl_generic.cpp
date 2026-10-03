@@ -23,13 +23,6 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Solid::IMPLICIT::Generic::Generic() : ispredictor_state_(false)
-{
-  // empty constructor
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
 void Solid::IMPLICIT::Generic::setup()
 {
   check_init();
@@ -61,17 +54,6 @@ void Solid::IMPLICIT::Generic::setup()
   // No issetup_ = true, since the setup() functions of the derived classes
   // have to be called and finished first!
 }
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-void Solid::IMPLICIT::Generic::set_is_predictor_state(const bool ispredictor_state)
-{
-  ispredictor_state_ = ispredictor_state;
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-bool Solid::IMPLICIT::Generic::is_predictor_state() const { return ispredictor_state_; }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/

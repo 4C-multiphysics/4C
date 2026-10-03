@@ -394,10 +394,10 @@ namespace Solid
       };
 
       /// returns the prediction indicator
-      const bool& is_predict() const
+      [[nodiscard]] bool is_predictor() const
       {
         check_init_setup();
-        return ispredict_;
+        return is_predictor_;
       };
       ///@}
 
@@ -683,10 +683,10 @@ namespace Solid
       };
 
       /// Return the prediction indicator
-      bool& is_predict()
+      bool& is_predictor()
       {
         check_init_setup();
-        return ispredict_;
+        return is_predictor_;
       }
       ///@}
 
@@ -945,7 +945,7 @@ namespace Solid
       std::vector<std::pair<int, int>> nln_iter_numbers_;
 
       /// A new time step started and we predict the new solution
-      bool ispredict_;
+      bool is_predictor_;
       ///@}
 
       /// @name Global state vectors

@@ -82,7 +82,7 @@ namespace Solid
       void read_restart(Core::IO::DiscretizationReader& ioreader) override;
 
       //! [derived]
-      void predict(const Solid::PredEnum& pred_type) override {};
+      void predict() override {};
 
       //! recover condensed Lagrange multipliers
       void run_post_compute_x(const Core::LinAlg::Vector<double>& xold,

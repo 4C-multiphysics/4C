@@ -21,29 +21,27 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Solid
 {
-  std::string pred_enum_string(const PredEnum name)
+  std::string pred_enum_string(const PredictorType name)
   {
     switch (name)
     {
-      case pred_vague:
-        return "Vague";
-      case pred_constdis:
+      case PredictorType::constdis:
         return "ConstDis";
-      case pred_constvel:
+      case PredictorType::constvel:
         return "ConstVel";
-      case pred_constacc:
+      case PredictorType::constacc:
         return "ConstAcc";
-      case pred_constdisvelacc:
+      case PredictorType::constdisvelacc:
         return "ConstDisVelAcc";
-      case pred_tangdis:
+      case PredictorType::tangdis:
         return "TangDis";
-      case pred_tangdis_constfext:
+      case PredictorType::tangdis_constfext:
         return "TangDisConstFext";
-      case pred_constdispres:
+      case PredictorType::constdispres:
         return "ConstDisPres";
-      case pred_constdisvelaccpres:
+      case PredictorType::constdisvelaccpres:
         return "ConstDisVelAccPres";
-      case pred_python_wrapper:
+      case PredictorType::python_wrapper:
         return "PythonWrapper";
       default:
         FOUR_C_THROW("Cannot make std::string for predictor {}", name);
@@ -333,14 +331,16 @@ namespace Solid
 
             // Since predictor "none" would be misleading, the usage of no predictor is called
             // vague.
-            deprecated_selection<Solid::PredEnum>("PREDICT",
-                {{"Vague", pred_vague}, {"ConstDis", pred_constdis}, {"ConstVel", pred_constvel},
-                    {"ConstAcc", pred_constacc}, {"ConstDisVelAcc", pred_constdisvelacc},
-                    {"TangDis", pred_tangdis}, {"TangDisConstFext", pred_tangdis_constfext},
-                    {"ConstDisPres", pred_constdispres},
-                    {"ConstDisVelAccPres", pred_constdisvelaccpres},
-                    {"PythonWrapper", pred_python_wrapper}},
-                {.description = "Type of predictor", .default_value = pred_constdis}),
+            deprecated_selection<Solid::PredictorType>("PREDICT",
+                {{"ConstDis", PredictorType::constdis}, {"ConstVel", PredictorType::constvel},
+                    {"ConstAcc", PredictorType::constacc},
+                    {"ConstDisVelAcc", PredictorType::constdisvelacc},
+                    {"TangDis", PredictorType::tangdis},
+                    {"TangDisConstFext", PredictorType::tangdis_constfext},
+                    {"ConstDisPres", PredictorType::constdispres},
+                    {"ConstDisVelAccPres", PredictorType::constdisvelaccpres},
+                    {"PythonWrapper", PredictorType::python_wrapper}},
+                {.description = "Type of predictor", .default_value = PredictorType::constdis}),
 
             // File providing the python implementation of the predictor
             parameter<std::filesystem::path>("PYTHON_PREDICTOR_FILE",

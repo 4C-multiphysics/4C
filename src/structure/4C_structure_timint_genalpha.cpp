@@ -354,7 +354,7 @@ void Solid::TimIntGenAlpha::evaluate_force_stiff_residual(Teuchos::ParameterList
   }
   else
   {
-    if (pred_ != Solid::pred_constdis)
+    if (pred_ != Solid::PredictorType::constdis)
     {
       FOUR_C_THROW(
           "Only the predictor predict_const_dis_consist_vel_acc() allowed for dynamic beam3r "

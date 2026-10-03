@@ -192,9 +192,8 @@ namespace Solid
 
     /*! \brief predict all internal variables in model evaluators
      *
-     * @param[in] pred_type Type of predictor to be applied
      */
-    void predict(const Solid::PredEnum& pred_type) const;
+    void predict() const;
 
     /** \brief Assembly of all force contributions
      *

@@ -62,9 +62,6 @@ namespace Solid
       //! return the damping type
       virtual Solid::DampKind get_damping_type() const = 0;
 
-      //! return the predictor type
-      virtual Solid::PredEnum get_predictor_type() const = 0;
-
       //! @name General time integration parameters
       //! @{
       virtual double get_tim_int_factor_disp() const = 0;

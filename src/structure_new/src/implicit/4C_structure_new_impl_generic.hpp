@@ -35,9 +35,6 @@ namespace Solid
     class Generic : public Integrator
     {
      public:
-      //! constructor
-      Generic();
-
       //! Setup (has to be implemented by the derived classes)
       void setup() override;
 
@@ -124,14 +121,18 @@ namespace Solid
           Core::LinAlg::Vector<double>& velnp, Core::LinAlg::Vector<double>& accnp) const = 0;
       //!@}
 
-      /*! \brief Set the predictor state flag
+      /**
+       * @brief This function can be called with \p is_allowed set to false to prevent an upcoming
+       * evaluation from setting a new state in the set_state() routines. After the evaluation,
+       * state setting should be re-enabled by calling this function with \p is_allowed set to true.
        *
-       * \param[in] ispredictor_state Predictor state flag
+       * This is useful for example in during the predictor evaluation, where we want to keep the
+       * state set by the predictor and dont overwrite it with consistently computed velocities and
+       * accelerations.
+       *
+       * @param is_allowed Whether or not state setting is allowed.
        */
-      void set_is_predictor_state(const bool ispredictor_state);
-
-      //! Get the predictor state flag
-      bool is_predictor_state() const;
+      void allow_state_setting(const bool is_allowed) { is_state_setting_allowed_ = is_allowed; }
 
       //! compute the scaling operator for element based scaling using PTC
       void compute_jacobian_contributions_from_element_level_for_ptc(
@@ -178,16 +179,8 @@ namespace Solid
       //! reset the time step dependent parameters for the element evaluation [derived]
       void reset_eval_params() override;
 
-     private:
-      /*! \brief Flag indicating if the current state is the predictor state.
-       *
-       *  In the evaluation of the predictor state the set_state() routine is
-       *  not allowed to calculate the consistent velocities and accelerations
-       *  as usual. This is due to the fact, that the predictor might lead to
-       *  velocities and accelerations that are not consistently computed from
-       *  the displacements based on the time integration scheme. Instead we
-       *  leave the predictor state untouched during the first evaluation. */
-      bool ispredictor_state_;
+      /// whether or not setting a new state is allowed.
+      bool is_state_setting_allowed_ = true;
 
     };  // namespace IMPLICIT
   }  // namespace IMPLICIT

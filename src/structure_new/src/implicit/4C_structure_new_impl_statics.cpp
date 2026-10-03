@@ -60,7 +60,7 @@ void Solid::IMPLICIT::Statics::post_setup()
 void Solid::IMPLICIT::Statics::set_state(const Core::LinAlg::Vector<double>& x)
 {
   check_init_setup();
-  if (is_predictor_state()) return;
+  if (not is_state_setting_allowed_) return;
 
   std::shared_ptr<Core::LinAlg::Vector<double>> disnp_ptr = global_state().extract_displ_entries(x);
   global_state().get_dis_np()->scale(1.0, *disnp_ptr);
@@ -183,14 +183,14 @@ void Solid::IMPLICIT::Statics::pre_update()
   // get the time step size
   const double dt = global_state().get_delta_time()[0];
 
-  const Solid::PredEnum& pred_type = impl_ptr->predictor().get_type();
+  const Solid::PredictorType& pred_type = impl_ptr->predictor().get_type();
   std::shared_ptr<Core::LinAlg::Vector<double>>& accnp_ptr = global_state().get_acc_np();
   std::shared_ptr<Core::LinAlg::Vector<double>>& velnp_ptr = global_state().get_vel_np();
 
   switch (pred_type)
   {
     // case: constant acceleration
-    case Solid::pred_constacc:
+    case Solid::PredictorType::constacc:
     {
       // read-only access
       std::shared_ptr<const Core::LinAlg::Vector<double>> veln_ptr = global_state().get_vel_n();
@@ -200,7 +200,7 @@ void Solid::IMPLICIT::Statics::pre_update()
       [[fallthrough]];
     }
     // case: constant acceleration OR constant velocity
-    case Solid::pred_constvel:
+    case Solid::PredictorType::constvel:
     {
       // read-only access
       std::shared_ptr<const Core::LinAlg::Vector<double>> disn_ptr = global_state().get_dis_n();
