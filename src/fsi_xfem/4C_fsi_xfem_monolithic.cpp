@@ -1979,10 +1979,52 @@ void FSI::MonolithicXFEM::permute_fluid_dofs_backward(Core::LinAlg::Vector<doubl
   }
 }
 
+/*----------------------------------------------------------------------
+ ----------------------------------------------------------------------*/
+void FSI::MonolithicXFEM::rebase_solver_parameters_to_block_maps()
+{
+  // The nullspace and coordinates of the block inverses are computed on the field discretization
+  // maps, but the Teko/MueLu preconditioners operate on the block row maps of the (assembled)
+  // system matrix. These may be subsets of (or differently owned than) the field maps, so rebase
+  // both onto the actual block maps.
+  std::vector<std::pair<int, std::shared_ptr<const Core::FE::Discretization>>> field_blocks = {
+      {structp_block_, structure_poro()->discretization()},
+      {fluid_block_, fluid_field()->discretization()},
+  };
 
+  if (structure_poro()->is_poro())
+    field_blocks.emplace_back(fluidp_block_, structure_poro()->fluid_field()->discretization());
+  if (have_ale())
+    field_blocks.emplace_back(ale_i_block_, ale_field()->write_access_discretization());
+
+  for (const auto& [block, dis] : field_blocks)
+  {
+    const std::string inverse = "Inverse" + std::to_string(block + 1);
+    if (dis == nullptr || !solver_->params().isSublist(inverse)) continue;
+
+    Teuchos::ParameterList& inverse_list = solver_->params().sublist(inverse);
+
+    // Only multigrid-preconditioned block inverses use a nullspace and coordinates.
+    // Direct-solver and IFPACK(-type) blocks need neither. Skip them so that we do not throw in
+    // case the block inverse parameter list does not contain a nullspace.
+    if (!inverse_list.isSublist("Belos Parameters") || inverse_list.isSublist("IFPACK Parameters"))
+      continue;
+
+    // 'create_linear_solver' deposits the nullspace and coordinates on the inverse list itself,
+    // but the preconditioners (and 'fix_null_space'/'fix_coordinates') expect them inside the
+    // "MueLu Parameters" sublist (for MueLu blocks) or on the list itself (for Teko blocks).
+    // Put them into the correct place before rebasing them onto the block maps.
+    Core::FE::compute_null_space_if_necessary(*dis, inverse_list);
+
+    const auto newmap = Core::LinAlg::Map(systemmatrix_->matrix(block, block).row_map());
+
+    Core::LinearSolver::Parameters::fix_null_space(
+        inverse, *dis->dof_row_map(), newmap, inverse_list);
+    Core::LinearSolver::Parameters::fix_coordinates(inverse, newmap, inverse_list);
+  }
+}
 
 /*----------------------------------------------------------------------*
- | create linear solver                            schott/wiesner 10/14 |
  *----------------------------------------------------------------------*/
 void FSI::MonolithicXFEM::create_linear_solver()
 {
@@ -2219,6 +2261,8 @@ void FSI::MonolithicXFEM::linear_solve()
 
     compute_null_space_if_necessary(
         *fluid_field()->discretization(), solver_->params().sublist("Inverse2"), true);
+
+    rebase_solver_parameters_to_block_maps();
 
     // solve the problem, work is done here!
     solver_params.refactor = true;

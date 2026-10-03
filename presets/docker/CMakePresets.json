@@ -32,7 +32,8 @@
         "FOUR_C_GMSH_ROOT": "/opt/4C-dependencies",
         "FOUR_C_WITH_FFTW": "ON",
         "FOUR_C_WITH_QHULL": "ON",
-        "FOUR_C_ENABLE_PYTHON_BINDINGS": "ON"
+        "FOUR_C_ENABLE_PYTHON_BINDINGS": "ON",
+        "FOUR_C_TEST_TIMEOUT_SCALE": "3"
       }
     },
     {

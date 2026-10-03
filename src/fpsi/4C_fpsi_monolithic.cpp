@@ -719,6 +719,8 @@ void FPSI::Monolithic::create_linear_solver()
         Core::LinAlg::Map(systemmatrix_->matrix(structure_block_, structure_block_).row_map());
     Core::LinearSolver::Parameters::fix_null_space(
         inv.data(), oldmap, newmap, solver_->params().sublist("Inverse1"));
+    Core::LinearSolver::Parameters::fix_coordinates(
+        inv, newmap, solver_->params().sublist("Inverse1"));
   }
   // fixing length of Inverse2 nullspace (solver/preconditioner ML)
   {
@@ -728,6 +730,8 @@ void FPSI::Monolithic::create_linear_solver()
         Core::LinAlg::Map(systemmatrix_->matrix(porofluid_block_, porofluid_block_).row_map());
     Core::LinearSolver::Parameters::fix_null_space(
         inv.data(), oldmap, newmap, solver_->params().sublist("Inverse2"));
+    Core::LinearSolver::Parameters::fix_coordinates(
+        inv, newmap, solver_->params().sublist("Inverse2"));
   }
   // fixing length of Inverse3 nullspace (solver/preconditioner ML)
   {
@@ -737,6 +741,8 @@ void FPSI::Monolithic::create_linear_solver()
         Core::LinAlg::Map(systemmatrix_->matrix(fluid_block_, fluid_block_).row_map());
     Core::LinearSolver::Parameters::fix_null_space(
         inv.data(), oldmap, newmap, solver_->params().sublist("Inverse3"));
+    Core::LinearSolver::Parameters::fix_coordinates(
+        inv, newmap, solver_->params().sublist("Inverse3"));
   }
   // fixing length of Inverse4 nullspace (solver/preconditioner ML)
   {
@@ -746,6 +752,8 @@ void FPSI::Monolithic::create_linear_solver()
         Core::LinAlg::Map(systemmatrix_->matrix(ale_i_block_, ale_i_block_).row_map());
     Core::LinearSolver::Parameters::fix_null_space(
         inv.data(), oldmap, newmap, solver_->params().sublist("Inverse4"));
+    Core::LinearSolver::Parameters::fix_coordinates(
+        inv, newmap, solver_->params().sublist("Inverse4"));
   }
 }
 

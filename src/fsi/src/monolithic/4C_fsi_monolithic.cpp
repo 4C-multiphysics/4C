@@ -1167,6 +1167,9 @@ std::shared_ptr<NOX::Nln::LinearSystemBase> FSI::BlockMonolithic::create_linear_
           *structure_field()->discretization()->dof_row_map(),
           Core::LinAlg::Map(system_matrix()->matrix(0, 0).row_map()),
           solver->params().sublist("Inverse1"));
+      Core::LinearSolver::Parameters::fix_coordinates("Structure",
+          Core::LinAlg::Map(system_matrix()->matrix(0, 0).row_map()),
+          solver->params().sublist("Inverse1"));
 
       solver->put_solver_params_to_sub_params("Inverse2", fsisolverparams,
           problem.solver_params_callback(),
@@ -1178,6 +1181,9 @@ std::shared_ptr<NOX::Nln::LinearSystemBase> FSI::BlockMonolithic::create_linear_
           *fluid_field()->discretization()->dof_row_map(),
           Core::LinAlg::Map(system_matrix()->matrix(1, 1).row_map()),
           solver->params().sublist("Inverse2"));
+      Core::LinearSolver::Parameters::fix_coordinates("Fluid",
+          Core::LinAlg::Map(system_matrix()->matrix(1, 1).row_map()),
+          solver->params().sublist("Inverse2"));
 
       solver->put_solver_params_to_sub_params("Inverse3", fsisolverparams,
           problem.solver_params_callback(),
@@ -1187,6 +1193,9 @@ std::shared_ptr<NOX::Nln::LinearSystemBase> FSI::BlockMonolithic::create_linear_
           *ale_field()->discretization(), solver->params().sublist("Inverse3"));
       Core::LinearSolver::Parameters::fix_null_space("Ale",
           *ale_field()->discretization()->dof_row_map(),
+          Core::LinAlg::Map(system_matrix()->matrix(2, 2).row_map()),
+          solver->params().sublist("Inverse3"));
+      Core::LinearSolver::Parameters::fix_coordinates("Ale",
           Core::LinAlg::Map(system_matrix()->matrix(2, 2).row_map()),
           solver->params().sublist("Inverse3"));
 

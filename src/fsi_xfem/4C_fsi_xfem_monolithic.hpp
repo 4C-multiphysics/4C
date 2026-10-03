@@ -253,6 +253,10 @@ namespace FSI
     void unscale_solution(Core::LinAlg::BlockSparseMatrixBase& mat, Core::LinAlg::Vector<double>& x,
         Core::LinAlg::Vector<double>& b);
 
+    //! rebase nullspace and coordinates of the block inverses onto the actual block row maps of
+    //! the system matrix
+    void rebase_solver_parameters_to_block_maps();
+
     //! create combined Dirichlet boundary condition map, map containing the dofs with Dirichlet BC
     std::shared_ptr<Core::LinAlg::Map> combined_dbc_map();
 

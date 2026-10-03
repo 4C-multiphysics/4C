@@ -13,6 +13,10 @@
 #include "4C_fem_general_utils_bspline.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_tensor.hpp"
+
+#include <optional>
+#include <type_traits>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -3831,6 +3835,40 @@ namespace Core::FE::Nurbs
   }
 
 
+  namespace Internal
+  {
+    /*!
+     * \brief Number of parameter coordinates offered by @p T that is known at compile time.
+     *
+     * Returns std::nullopt for containers whose number of entries is not part of the type, e.g.
+     * Core::LinAlg::Matrix or Core::LinAlg::SerialDenseVector. For those, the number of parameter
+     * coordinates can only be checked at runtime.
+     */
+    template <typename T>
+    consteval std::optional<std::size_t> static_num_coords()
+    {
+      if constexpr (Core::LinAlg::is_tensor<T>)
+        return std::remove_cvref_t<T>::template extent<0>();
+      else
+        return std::nullopt;
+    }
+
+    /*!
+     * \brief Whether the parameter coordinate container @p T can hold @p dim coordinates.
+     *
+     * Only instantiates the dimension-specific shape function kernels for dimensions that the
+     * container can actually hold. Since Core::FE::get_dimension() is evaluated at runtime, all
+     * branches of a switch on it are instantiated. Without this guard, kernels for the wrong
+     * dimension are instantiated for containers of insufficient size, which reads out of bounds.
+     */
+    template <std::size_t dim, typename T>
+    consteval bool has_enough_coords()
+    {
+      constexpr std::optional<std::size_t> num_coords = static_num_coords<T>();
+      return !num_coords.has_value() || *num_coords >= dim;
+    }
+  }  // namespace Internal
+
   //! Evaluate basis functions, first and second derivatives of nurbs basis functions.
   template <class VF, class MD, class MSD, class UV, class WG>
   bool nurbs_get_funct_deriv_deriv2(VF& nurbs_shape_funct, MD& nurbs_shape_deriv,
@@ -3842,18 +3880,40 @@ namespace Core::FE::Nurbs
     {
       case 3:
       {
-        return Core::FE::Nurbs::nurbs_get_3d_funct_deriv_deriv2(
-            nurbs_shape_funct, nurbs_shape_deriv, nurbs_shape_deriv2, uv, knots, weights, distype);
+        if constexpr (Internal::has_enough_coords<3, UV>())
+        {
+          return Core::FE::Nurbs::nurbs_get_3d_funct_deriv_deriv2(nurbs_shape_funct,
+              nurbs_shape_deriv, nurbs_shape_deriv2, uv, knots, weights, distype);
+        }
+        else
+        {
+          FOUR_C_THROW("The parameter coordinate container is too small for a 3D nurbs element.");
+        }
       }
       case 2:
       {
-        return Core::FE::Nurbs::nurbs_get_2d_funct_deriv_deriv2(
-            nurbs_shape_funct, nurbs_shape_deriv, nurbs_shape_deriv2, uv, knots, weights, distype);
+        if constexpr (Internal::has_enough_coords<2, UV>())
+        {
+          return Core::FE::Nurbs::nurbs_get_2d_funct_deriv_deriv2(nurbs_shape_funct,
+              nurbs_shape_deriv, nurbs_shape_deriv2, uv, knots, weights, distype);
+        }
+        else
+        {
+          FOUR_C_THROW("The parameter coordinate container is too small for a 2D nurbs element.");
+        }
       }
       case 1:
       {
-        return Core::FE::Nurbs::nurbs_get_1d_funct_deriv_deriv2(nurbs_shape_funct,
-            nurbs_shape_deriv, nurbs_shape_deriv2, uv(0), knots[0], weights, distype);
+        if constexpr (Internal::has_enough_coords<1, UV>())
+        {
+          return Core::FE::Nurbs::nurbs_get_1d_funct_deriv_deriv2(nurbs_shape_funct,
+              nurbs_shape_deriv, nurbs_shape_deriv2, uv(0), knots[0], weights, distype);
+        }
+        else
+        {
+          FOUR_C_THROW(
+              "The parameter coordinate container holds no coordinate for a 1D nurbs element.");
+        }
       }
       default:
         FOUR_C_THROW("dimension of the element is not correct");
@@ -3870,18 +3930,40 @@ namespace Core::FE::Nurbs
     {
       case 3:
       {
-        return Core::FE::Nurbs::nurbs_get_3d_funct_deriv(
-            nurbs_shape_funct, nurbs_shape_deriv, uv, knots, weights, distype);
+        if constexpr (Internal::has_enough_coords<3, UV>())
+        {
+          return Core::FE::Nurbs::nurbs_get_3d_funct_deriv(
+              nurbs_shape_funct, nurbs_shape_deriv, uv, knots, weights, distype);
+        }
+        else
+        {
+          FOUR_C_THROW("The parameter coordinate container is too small for a 3D nurbs element.");
+        }
       }
       case 2:
       {
-        return Core::FE::Nurbs::nurbs_get_2d_funct_deriv(
-            nurbs_shape_funct, nurbs_shape_deriv, uv, knots, weights, distype);
+        if constexpr (Internal::has_enough_coords<2, UV>())
+        {
+          return Core::FE::Nurbs::nurbs_get_2d_funct_deriv(
+              nurbs_shape_funct, nurbs_shape_deriv, uv, knots, weights, distype);
+        }
+        else
+        {
+          FOUR_C_THROW("The parameter coordinate container is too small for a 2D nurbs element.");
+        }
       }
       case 1:
       {
-        return Core::FE::Nurbs::nurbs_get_1d_funct_deriv(
-            nurbs_shape_funct, nurbs_shape_deriv, uv(0), knots[0], weights, distype);
+        if constexpr (Internal::has_enough_coords<1, UV>())
+        {
+          return Core::FE::Nurbs::nurbs_get_1d_funct_deriv(
+              nurbs_shape_funct, nurbs_shape_deriv, uv(0), knots[0], weights, distype);
+        }
+        else
+        {
+          FOUR_C_THROW(
+              "The parameter coordinate container holds no coordinate for a 1D nurbs element.");
+        }
       }
       default:
         FOUR_C_THROW("dimension of the element is not correct");
@@ -3898,16 +3980,40 @@ namespace Core::FE::Nurbs
     {
       case 3:
       {
-        return Core::FE::Nurbs::nurbs_get_3d_funct(nurbs_shape_funct, uv, knots, weights, distype);
+        if constexpr (Internal::has_enough_coords<3, UV>())
+        {
+          return Core::FE::Nurbs::nurbs_get_3d_funct(
+              nurbs_shape_funct, uv, knots, weights, distype);
+        }
+        else
+        {
+          FOUR_C_THROW("The parameter coordinate container is too small for a 3D nurbs element.");
+        }
       }
       case 2:
       {
-        return Core::FE::Nurbs::nurbs_get_2d_funct(nurbs_shape_funct, uv, knots, weights, distype);
+        if constexpr (Internal::has_enough_coords<2, UV>())
+        {
+          return Core::FE::Nurbs::nurbs_get_2d_funct(
+              nurbs_shape_funct, uv, knots, weights, distype);
+        }
+        else
+        {
+          FOUR_C_THROW("The parameter coordinate container is too small for a 2D nurbs element.");
+        }
       }
       case 1:
       {
-        return Core::FE::Nurbs::nurbs_get_1d_funct(
-            nurbs_shape_funct, uv(0), knots[0], weights, distype);
+        if constexpr (Internal::has_enough_coords<1, UV>())
+        {
+          return Core::FE::Nurbs::nurbs_get_1d_funct(
+              nurbs_shape_funct, uv(0), knots[0], weights, distype);
+        }
+        else
+        {
+          FOUR_C_THROW(
+              "The parameter coordinate container holds no coordinate for a 1D nurbs element.");
+        }
       }
       default:
         FOUR_C_THROW("dimension of the element is not correct");

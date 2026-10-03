@@ -71,7 +71,7 @@ void Core::LinearSolver::MueLuPreconditioner::setup(
     pmatrix_ =
         Core::LinearSolver::Utils::create_thyra_linear_op(*A_crs, Core::LinAlg::DataAccess::Copy);
 
-    const Teuchos::ParameterList& inverseList = muelulist_.sublist("MueLu Parameters");
+    Teuchos::ParameterList& inverseList = muelulist_.sublist("MueLu Parameters");
     const int number_of_equations = inverseList.get<int>("PDE equations");
 
     const auto epetra_map = A_crs->row_map().get_epetra_block_map();
@@ -80,6 +80,12 @@ void Core::LinearSolver::MueLuPreconditioner::setup(
 
     Teuchos::RCP<Xpetra::MultiVector<SC, LO, GO, NO>> nullspace =
         Core::LinearSolver::Parameters::extract_nullspace_from_parameterlist(*row_map, inverseList);
+
+    // The coordinates may originally have been computed on a map that differs from  the row map of
+    // the operator the MueLu preconditioner is built for. Re-base them onto the nodal map MueLu
+    // derives from the operator row map to avoid length mismatches.
+    if (inverseList.isParameter("Coordinates"))
+      Core::LinearSolver::Parameters::fix_coordinates("MueLu", A_crs->row_map(), inverseList);
 
     Teuchos::RCP<Xpetra::MultiVector<SC, LO, GO, NO>> coordinates =
         Teuchos::make_rcp<EpetraMultiVector>(Teuchos::rcpFromRef(

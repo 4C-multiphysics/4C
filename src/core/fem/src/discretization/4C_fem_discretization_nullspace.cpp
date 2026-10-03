@@ -131,17 +131,20 @@ namespace Core::FE
           adjacent_elements[0].user_element()->element_type().compute_null_space(
               *actnode, x0, number_of_dofs);
 
+      // Extract the full data array once. Note that the dofs of the node are indexed by their
+      // absolute (possibly non-contiguous) local id in the map, so we write directly into the
+      // underlying array instead of using a bounded window view of the subvector.
+      double** arrayOfPointers;
+      nullspace->extract_view(&arrayOfPointers);
+
       for (int dim = 0; dim < dimns; ++dim)
       {
-        double** arrayOfPointers;
-        nullspace->extract_view(&arrayOfPointers);
         double* data = arrayOfPointers[dim];
-        Teuchos::ArrayRCP<double> dataVector(data, dofmap.lid(dofs[0]), number_of_dofs, false);
 
         for (int j = 0; j < number_of_dofs; ++j)
         {
           const int lid = dofmap.lid(dofs[j]);
-          dataVector[lid] = nodalNullspace(j, dim);
+          data[lid] = nodalNullspace(j, dim);
         }
       }
     }

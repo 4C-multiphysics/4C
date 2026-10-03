@@ -49,8 +49,25 @@ namespace Core::LinearSolver
      * \param newmap (in): row map of nullspace upon exit
      * \param solveparams (in): parameterlist including nullspace vector
      */
-    static void fix_null_space(std::string field, const Core::LinAlg::Map& oldmap,
+    static void fix_null_space(const std::string& field, const Core::LinAlg::Map& oldmap,
         const Core::LinAlg::Map& newmap, Teuchos::ParameterList& solveparams);
+
+    /*!
+     * \brief Fix the coordinates to match the map of a preconditioner block
+     *
+     * The coordinates are looked for in the parameter list together with the number of
+     * equations per node ("PDE equations"). If found, the nodal map consistent with the given
+     * block (dof) map is derived as it is done by MueLu's coordinate handling and the
+     * coordinates are rebuilt on this map. This is required whenever the block matrix row map
+     * handed to a Teko/MueLu preconditioner is a subset of (or differently owned than) the map
+     * the coordinates were originally computed on.
+     *
+     * \param field (in): field name (just used for output)
+     * \param newmap (in): row map of the matrix block the coordinates should match
+     * \param solveparams (in): parameter list including coordinates vector and "PDE equations"
+     */
+    static void fix_coordinates(const std::string& field, const Core::LinAlg::Map& newmap,
+        Teuchos::ParameterList& solveparams);
 
     /*!
      * \brief Extract nullspace from parameter list and convert to Xpetra::MultiVector
