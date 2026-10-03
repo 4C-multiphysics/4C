@@ -204,21 +204,25 @@ namespace Core::LinAlg
     void reciprocal_multiply(double ScalarAB, const Epetra_MultiVector& A,
         const Epetra_MultiVector& B, double ScalarThis);
 
-    //! Imports an Epetra_DistObject using the Core::LinAlg::Import object.
-    void import(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
-        Core::LinAlg::CombineMode CombineMode);
+    //! Imports from an Epetra_SrcDistObject to this object using a Core::LinAlg::Import object
+    //! and a specified combine mode
+    void import(const Epetra_SrcDistObject& source_object, const Core::LinAlg::Import& importer,
+        Core::LinAlg::CombineMode combine_mode);
 
-    //! Imports an Epetra_DistObject using the Core::LinAlg::Export object.
-    void import(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
-        Core::LinAlg::CombineMode CombineMode);
+    //! Imports from an Epetra_SrcDistObject to this object using a Core::LinAlg::Export object
+    //! and a specified combine mode
+    void import(const Epetra_SrcDistObject& source_object, const Core::LinAlg::Export& exporter,
+        Core::LinAlg::CombineMode combine_mode);
 
-    //! Exports an Epetra_DistObject using the Epetra_Import object.
-    void export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
-        Core::LinAlg::CombineMode CombineMode);
+    //! Exports to this object from an Epetra_SrcDistObject object using a Core::LinAlg::Import
+    //! object and a specified combine mode
+    void export_to(const Epetra_SrcDistObject& source_object, const Core::LinAlg::Import& importer,
+        Core::LinAlg::CombineMode combine_mode);
 
-    //! Exports an Epetra_DistObject using the Epetra_Import object.
-    void export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
-        Core::LinAlg::CombineMode CombineMode);
+    //! Exports to this object from an Epetra_SrcDistObject object using a Core::LinAlg::Export
+    //! object and a specified combine mode
+    void export_to(const Epetra_SrcDistObject& source_object, const Core::LinAlg::Export& exporter,
+        Core::LinAlg::CombineMode combine_mode);
 
     /**
      * View a given Epetra_Vector object under our own Vector wrapper.
@@ -289,20 +293,20 @@ namespace Core::LinAlg
 
 
     //! Imports an Vector using the Core::LinAlg::Import object.
-    void import(const Vector& A, const Core::LinAlg::Import& Importer,
-        Core::LinAlg::CombineMode CombineMode);
+    void import(const Vector& source_object, const Core::LinAlg::Import& importer,
+        Core::LinAlg::CombineMode combine_mode);
 
     //! Imports an Vector using the Core::LinAlg::Export object.
-    void import(const Vector& A, const Core::LinAlg::Export& Exporter,
-        Core::LinAlg::CombineMode CombineMode);
+    void import(const Vector& source_object, const Core::LinAlg::Export& exporter,
+        Core::LinAlg::CombineMode combine_mode);
 
     //! Exports an Vector using the Core::LinAlg::Import object.
-    void export_to(const Vector& A, const Core::LinAlg::Import& Importer,
-        Core::LinAlg::CombineMode CombineMode);
+    void export_to(const Vector& source_object, const Core::LinAlg::Import& importer,
+        Core::LinAlg::CombineMode combine_mode);
 
     //! Exports an Vector using the Core::LinAlg::Export object.
-    void export_to(const Vector& A, const Core::LinAlg::Export& Exporter,
-        Core::LinAlg::CombineMode CombineMode);
+    void export_to(const Vector& source_object, const Core::LinAlg::Export& exporter,
+        Core::LinAlg::CombineMode combine_mode);
 
     [[nodiscard]] MPI_Comm get_comm() const;
 

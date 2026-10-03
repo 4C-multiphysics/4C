@@ -28,9 +28,9 @@ Core::LinAlg::Import::Import::Import(const Map& target_map, const Map& source_ma
 const Epetra_Import& Core::LinAlg::Import::Import::get_epetra_import() const { return *import_; }
 
 //! Standard constructor
-Core::LinAlg::Export::Export::Export(const Map& target_map, const Map& source_map)
+Core::LinAlg::Export::Export::Export(const Map& source_map, const Map& target_map)
     : export_(Utils::make_owner<Epetra_Export>(
-          target_map.get_epetra_block_map(), source_map.get_epetra_block_map()))
+          source_map.get_epetra_block_map(), target_map.get_epetra_block_map()))
 {
 }
 
