@@ -159,6 +159,10 @@ namespace Core::Nodes
     [[nodiscard]] FE::IteratorRange<FE::DiscretizationIterator<FE::ConstElementRef>>
     adjacent_elements() const;
 
+
+    /// Get minimum distance to the nodes contained in the adjacent elements
+    [[nodiscard]] double minimum_distance_to_adjacent_nodes() const;
+
     /*!
     \brief Print this node
     */

@@ -92,14 +92,14 @@ namespace Core::FE::MeshFree
      * \warning It is your own responsibility to make sure that there will not
      *          be any double entries! (This would be disastrous!)
      *
-     * Adds entry at the end of nodeid_ and node_ pointers
+     * Adds entry at the end of nodeids_ and nodes_ pointers
      *///                                                  (public) ghamm 11/12
     /*------------------------------------------------------------------------*/
     virtual void add_node(Core::Nodes::Node* nodeptr  //!< (in): pointer to node to be added
     )
     {
-      Element::nodeid_.push_back(nodeptr->id());
-      Element::node_.push_back(nodeptr);
+      Element::nodeids_.push_back(nodeptr->id());
+      Element::nodes_.push_back(nodeptr);
       return;
     }
 
@@ -110,15 +110,15 @@ namespace Core::FE::MeshFree
      * \warning It is your own responsibility to make sure that there will not
      *          be any double entries! (This would be disastrous!)
      *
-     * Adds entry at the end of nodeid_ and node_ pointers
+     * Adds entry at the end of nodeids_ and nodes_ pointers
      *///                                                  (public) ghamm 11/12
     /*------------------------------------------------------------------------*/
     virtual void add_node(const int gid,  //!< (in): global id of node to be added
         Core::Nodes::Node* nodeptr        //!< (in): pointer to node to be added
     )
     {
-      Element::nodeid_.push_back(gid);
-      Element::node_.push_back(nodeptr);
+      Element::nodeids_.push_back(gid);
+      Element::nodes_.push_back(nodeptr);
     }
 
     /*------------------------------------------------------------------------*/
@@ -126,7 +126,7 @@ namespace Core::FE::MeshFree
      * \brief Delete a node from the meshfree bin
      *
      * Searches for position of node with specified gid and deletes entry in
-     * vectors node_ and nodeid_
+     * vectors nodes_ and nodeids_
      *///                                                  (public) ghamm 11/12
     /*------------------------------------------------------------------------*/
     virtual void delete_node(int gid  //!< (in): global id of node to be deleted
@@ -139,9 +139,11 @@ namespace Core::FE::MeshFree
     /*------------------------------------------------------------------------*/
     virtual inline void delete_nodes()
     {
-      Element::nodeid_.clear();
-      Element::node_.clear();
+      Element::nodeids_.clear();
+      Element::nodes_.clear();
     }
+
+    [[nodiscard]] bool is_meshfree_bin() const override { return true; }
 
    private:
   };  // class MeshfreeBin

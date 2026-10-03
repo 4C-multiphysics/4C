@@ -34,12 +34,12 @@ Core::FE::MeshFree::MeshfreeBin<Element>::MeshfreeBin(
 template <typename Element>
 void Core::FE::MeshFree::MeshfreeBin<Element>::delete_node(int gid)
 {
-  for (unsigned int i = 0; i < Element::nodeid_.size(); i++)
+  for (unsigned int i = 0; i < Element::nodeids_.size(); i++)
   {
-    if (Element::nodeid_[i] == gid)
+    if (Element::nodeids_[i] == gid)
     {
-      Element::nodeid_.erase(Element::nodeid_.begin() + i);
-      Element::node_.erase(Element::node_.begin() + i);
+      Element::nodeids_.erase(Element::nodeids_.begin() + i);
+      Element::nodes_.erase(Element::nodes_.begin() + i);
       return;
     }
   }
