@@ -95,17 +95,19 @@ namespace NOX
       void reset_pre_post_operator(Teuchos::ParameterList& p);
 
       //! Evaluate the Jacobian
-      bool compute_jacobian(const NOX::Nln::Vector& x) override;
+      [[nodiscard]] bool compute_jacobian(const NOX::Nln::Vector& x) override;
 
       //! Evaluate the Jacobian and the right hand side based on the solution vector x at once.
-      virtual bool compute_f_and_jacobian(const NOX::Nln::Vector& x, NOX::Nln::Vector& rhs);
+      [[nodiscard]] virtual bool compute_f_and_jacobian(
+          const NOX::Nln::Vector& x, NOX::Nln::Vector& rhs);
 
-      bool apply_jacobian(const NOX::Nln::Vector& input, NOX::Nln::Vector& result) const override;
-
-      bool apply_jacobian_transpose(
+      [[nodiscard]] bool apply_jacobian(
           const NOX::Nln::Vector& input, NOX::Nln::Vector& result) const override;
 
-      bool apply_jacobian_inverse(Teuchos::ParameterList& linearSolverParams,
+      [[nodiscard]] bool apply_jacobian_transpose(
+          const NOX::Nln::Vector& input, NOX::Nln::Vector& result) const override;
+
+      [[nodiscard]] bool apply_jacobian_inverse(Teuchos::ParameterList& linearSolverParams,
           const NOX::Nln::Vector& input, NOX::Nln::Vector& result) override;
 
       //! adjust the pseudo time step (using a least squares approximation)

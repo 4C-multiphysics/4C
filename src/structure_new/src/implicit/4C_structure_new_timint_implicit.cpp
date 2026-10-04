@@ -210,7 +210,9 @@ void Solid::TimeInt::Implicit::evaluate()
   grp_ptr->setX(grp_ptr->getX());
 
   // compute the rhs vector and the stiffness matrix
-  grp_ptr->compute_f_and_jacobian();
+  const auto status = grp_ptr->compute_f_and_jacobian();
+  FOUR_C_ASSERT_ALWAYS(
+      status == ::NOX::Abstract::Group::ReturnType::Ok, "Failed to compute residual and Jacobian");
 }
 
 /*----------------------------------------------------------------------------*

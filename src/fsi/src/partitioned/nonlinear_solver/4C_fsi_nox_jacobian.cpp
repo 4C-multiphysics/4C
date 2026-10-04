@@ -10,6 +10,7 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_utils_exceptions.hpp"
 #include "4C_utils_shared_ptr_from_ref.hpp"
 
 #include <NOX_Abstract_Group.H>
@@ -157,13 +158,16 @@ void FSI::Nonlinear::FSIMatrixFree::multiply(bool TransA,
 
   if (!useGroupForComputeF)
   {
-    interface->compute_f(
+    const bool success = interface->compute_f(
         perturbX.get_linalg_vector(), perturbY.get_linalg_vector(), NOX::Nln::FillType::User);
+    FOUR_C_ASSERT_ALWAYS(success, "FSIMatrixFree::apply(): compute_f failed");
   }
   else
   {
     groupPtr->setX(perturbX);
-    groupPtr->computeF();
+    const auto status = groupPtr->computeF();
+    FOUR_C_ASSERT_ALWAYS(status == ::NOX::Abstract::Group::ReturnType::Ok,
+        "FSIMatrixFree::apply(): computeF failed");
     perturbY = groupPtr->getF();
   }
 

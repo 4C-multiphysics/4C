@@ -40,7 +40,7 @@ namespace NOX
 
         //! Compute the function, f, given the specified input vector x.  Returns true if
         //! computation was successful.
-        virtual bool compute_f(const Core::LinAlg::Vector<double>& x,
+        [[nodiscard]] virtual bool compute_f(const Core::LinAlg::Vector<double>& x,
             Core::LinAlg::Vector<double>& f, FillType fill_flag) = 0;
       };
     }  // namespace Interface

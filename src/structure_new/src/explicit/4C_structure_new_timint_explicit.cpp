@@ -11,6 +11,7 @@
 #include "4C_solver_nonlin_nox_linearsystem.hpp"
 #include "4C_structure_new_nln_solver_factory.hpp"
 #include "4C_structure_new_timint_noxinterface.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <NOX_Abstract_Group.H>
 
@@ -118,7 +119,9 @@ void Solid::TimeInt::Explicit::evaluate()
   grp_ptr->setX(grp_ptr->getX());
 
   // compute the rhs vector and the stiffness matrix
-  grp_ptr->compute_f_and_jacobian();
+  const auto status = grp_ptr->compute_f_and_jacobian();
+  FOUR_C_ASSERT_ALWAYS(
+      status == ::NOX::Abstract::Group::ReturnType::Ok, "Failed to compute residual and Jacobian");
 }
 
 /*----------------------------------------------------------------------------*

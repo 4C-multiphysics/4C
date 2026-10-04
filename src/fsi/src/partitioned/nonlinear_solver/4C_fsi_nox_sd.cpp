@@ -14,6 +14,7 @@
 #include "4C_solver_nonlin_nox_group.hpp"
 #include "4C_solver_nonlin_nox_interface_required_base.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <NOX_Abstract_Group.H>
 #include <NOX_Abstract_Vector.H>
@@ -71,7 +72,8 @@ bool FSI::Nonlinear::SDRelaxation::compute(::NOX::Abstract::Group& newgrp, doubl
   utils_->out() << "          RELAX = " << std::setw(5) << step << "\n";
 
   newgrp.computeX(oldgrp, dir, step);
-  newgrp.computeF();
+  const auto status = newgrp.computeF();
+  FOUR_C_ASSERT_ALWAYS(status == ::NOX::Abstract::Group::ReturnType::Ok, "Failed to compute F");
 
   double checkOrthogonality = fabs(newgrp.getF().innerProduct(dir));
 
@@ -117,7 +119,9 @@ bool FSI::Nonlinear::SDRelaxation::compute(::NOX::Abstract::Group& newgrp, doubl
   // we do not want the group to remember this solution
   // and we want to set our own flag
   // this tells computeF to do a SD relaxation calculation
-  interface.compute_f(edir.get_linalg_vector(), evec.get_linalg_vector(), NOX::Nln::FillType::User);
+  const bool success = interface.compute_f(
+      edir.get_linalg_vector(), evec.get_linalg_vector(), NOX::Nln::FillType::User);
+  FOUR_C_ASSERT_ALWAYS(success, "SDRelaxation::compute_directional_derivative(): compute_f failed");
 
   return *vec_ptr_;
 }
