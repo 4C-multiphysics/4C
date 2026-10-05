@@ -1,0 +1,121 @@
+TITLE:
+  - "Single HEX8 with GTN material under uniaxial tension with constant time-step size."
+
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 0.5
+  NUMSTEP: 10
+  MAXTIME: 5
+  LINEAR_SOLVER: 1
+  PREDICT: TangDis
+
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_PlasticGTN:
+      YOUNG: 200000.0
+      NUE: 0.3
+      DENS: 7.85e-3
+      YIELD: 450.0
+      ISOHARD: 0.0
+      HARDENING_FUNC: 1
+      TOL: 1.0e-8
+      MAXITER: 100
+      F0: 0.005
+      FN: 0.005
+      EN: 0.15
+      SN: 0.15
+      FC: 1.0
+      KAPPA: 4.0
+      EF: 0.005
+      K1: 1.5
+      K2: 1.0
+      K3: 2.25
+
+FUNCT1:
+  - VARFUNCTION: "450.0 + 300.0*(1.0 - exp(-15.0*epsp))"
+
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.05*t"
+
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: total_time
+      VALUE: 5.0
+      TOLERANCE: 1e-15
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: total_num_steps
+      VALUE: 10
+      TOLERANCE: 1e-16
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: time_step_size
+      VALUE: 0.5
+      TOLERANCE: 1e-16
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "reactz"
+      VALUE: -182.435810190736902
+      TOLERANCE: 1e-10
+
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [0, 0, 0]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [0, 1, 0]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [0, 0, 0]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [0, 0, 0]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0.0, 0.0, 1]
+    FUNCT: [0, 0, 2]
+
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
+  - "NODE 3 DSURFACE 1"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 1 DSURFACE 2"
+  - "NODE 2 DSURFACE 2"
+  - "NODE 5 DSURFACE 2"
+  - "NODE 6 DSURFACE 2"
+  - "NODE 2 DSURFACE 3"
+  - "NODE 3 DSURFACE 3"
+  - "NODE 6 DSURFACE 3"
+  - "NODE 7 DSURFACE 3"
+  - "NODE 1 DSURFACE 4"
+  - "NODE 4 DSURFACE 4"
+  - "NODE 5 DSURFACE 4"
+  - "NODE 8 DSURFACE 4"
+
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 1.0"
+  - "NODE 2 COORD 0.0 0.0 0.0"
+  - "NODE 3 COORD 0.0 1.0 0.0"
+  - "NODE 4 COORD 0.0 1.0 1.0"
+  - "NODE 5 COORD 1.0 0.0 1.0"
+  - "NODE 6 COORD 1.0 0.0 0.0"
+  - "NODE 7 COORD 1.0 1.0 0.0"
+  - "NODE 8 COORD 1.0 1.0 1.0"
+
+STRUCTURE ELEMENTS:
+  - "1 SOLID HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM linear"
