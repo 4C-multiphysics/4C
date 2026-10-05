@@ -35,19 +35,20 @@ namespace Core::Mat::StepReduction
    * @param detailed_reason Optionally, a longer diagnostic error message that is printed instead of
    * \p reason in case the time-step request is invalid. If not given, \p reason is used.
    */
-  [[noreturn]] void request(
+  [[noreturn]] void request_or_throw_error(
       const std::string& reason, const std::optional<std::string>& detailed_reason = std::nullopt);
 
   /*!
    * \brief Run \p evaluation and synchronize rank-local material step-reduction requests.
    *
    * If called inside an enabled \ref run_and_detect_synchronized_request(), this function allows
-   * material code to make valid \ref request() calls inside \p evaluation. If at least one rank
-   * does so, the request is synchronized over \p comm and signaled to the enclosing
+   * material code to make valid \ref request_or_throw_error() calls inside \p evaluation. If at
+   * least one rank does so, the request is synchronized over \p comm and signaled to the enclosing
    * \ref run_and_detect_synchronized_request() call.
    *
    * Calling this function outside an enabled \ref run_and_detect_synchronized_request() call is
-   * valid but does not enable valid \ref request() calls and will not enter a collective.
+   * valid but does not enable valid \ref request_or_throw_error() calls and will not enter a
+   * collective.
    *
    * @note Use this around the smallest evaluation region that may call material code and is
    * entered by every rank in \p comm.
@@ -56,7 +57,7 @@ namespace Core::Mat::StepReduction
    * propagate unchanged.
    *
    * @warning Inside an enabled \ref run_and_detect_synchronized_request(), this function ends with
-   * an MPI collective. A rank that calls \ref request() leaves \p evaluation early
+   * an MPI collective. A rank that calls \ref request_or_throw_error() leaves \p evaluation early
    * and continues directly with that collective. To avoid deadlocks:
    * - \p evaluation must not contain an MPI collective itself, since
    *   requesting ranks might skip it.

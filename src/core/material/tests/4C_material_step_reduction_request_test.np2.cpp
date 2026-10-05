@@ -25,7 +25,7 @@ namespace
 
   void request_reduction_on_rank_1(const std::string& reason)
   {
-    if (Core::Communication::my_mpi_rank(MPI_COMM_WORLD) == 1) request(reason);
+    if (Core::Communication::my_mpi_rank(MPI_COMM_WORLD) == 1) request_or_throw_error(reason);
   }
 
   void synchronize_without_request()
@@ -62,8 +62,12 @@ namespace
 
   TEST(MaterialStepReductionRequest, RequestOnEveryRankIsDetected)
   {
-    const bool request_detected = run_and_detect_synchronized_request(true, []
-        { run_and_synchronize_requests(MPI_COMM_WORLD, [] { request("all ranks requested."); }); });
+    const bool request_detected = run_and_detect_synchronized_request(true,
+        []
+        {
+          run_and_synchronize_requests(
+              MPI_COMM_WORLD, [] { request_or_throw_error("all ranks requested."); });
+        });
 
     EXPECT_TRUE(request_detected);
   }
@@ -83,8 +87,8 @@ namespace
 
   TEST(MaterialStepReductionRequest, RequestOutsideSynchronizationRegionThrows)
   {
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(std::ignore = run_and_detect_synchronized_request(
-                                         true, [] { request("all ranks requested."); }),
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(std::ignore = run_and_detect_synchronized_request(true,
+                                         [] { request_or_throw_error("all ranks requested."); }),
         Core::Exception,
         "A material requested step reduction in an evaluation path that does not support "
         "it.\nRun the synchronized element/material evaluation through "
@@ -95,7 +99,10 @@ namespace
   TEST(MaterialStepReductionRequest, RequestOutsideDetectionRegionThrows)
   {
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        { run_and_synchronize_requests(MPI_COMM_WORLD, [] { request("all ranks requested."); }); },
+        {
+          run_and_synchronize_requests(
+              MPI_COMM_WORLD, [] { request_or_throw_error("all ranks requested."); });
+        },
         Core::Exception,
         "A material requested step reduction but the calling algorithm does not support it.\n"
         "Run the operation through "
@@ -108,12 +115,12 @@ namespace
 
   TEST(MaterialStepReductionRequest, RequestInDisabledDetectionRegionThrows)
   {
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        std::ignore = run_and_detect_synchronized_request(false,
-            []
-            {
-              run_and_synchronize_requests(MPI_COMM_WORLD, [] { request("all ranks requested."); });
-            }),
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(std::ignore = run_and_detect_synchronized_request(false,
+                                         []
+                                         {
+                                           run_and_synchronize_requests(MPI_COMM_WORLD, []
+                                               { request_or_throw_error("all ranks requested."); });
+                                         }),
         Core::Exception,
         "A material requested step reduction, but the calling algorithm disabled handling of these "
         "requests.\nReason:\nall ranks requested.");
@@ -124,7 +131,7 @@ namespace
             []
             {
               run_and_synchronize_requests(MPI_COMM_WORLD,
-                  [] { request("short reason.", "detailed reason on all ranks."); });
+                  [] { request_or_throw_error("short reason.", "detailed reason on all ranks."); });
             }),
         Core::Exception, "Reason:\ndetailed reason on all ranks.");
   }

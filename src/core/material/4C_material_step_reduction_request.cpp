@@ -114,7 +114,7 @@ namespace
 
 }  // namespace
 
-void Core::Mat::StepReduction::request(
+void Core::Mat::StepReduction::request_or_throw_error(
     const std::string& reason, const std::optional<std::string>& detailed_reason)
 {
   FOUR_C_ASSERT_ALWAYS(request_synchronization_active,

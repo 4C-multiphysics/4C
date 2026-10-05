@@ -27,10 +27,11 @@ namespace Solid
   /// Status of the current solid time-step.
   enum class StepStatus : std::int8_t
   {
-    no_errors,                //< no errors occurred so far
-    nonlinear_solver_failed,  //< nonlinear solver did not converge
-    linear_solver_failed,     //< linear solver did not converge
-    evaluation_failed,        //< evaluation of the residual or jacobian failed
+    no_errors,                      //< no errors occurred so far
+    nonlinear_solver_failed,        //< nonlinear solver did not converge
+    linear_solver_failed,           //< linear solver did not converge
+    evaluation_failed,              //< evaluation of the residual or jacobian failed
+    time_step_reduction_requested,  //< evaluation failed with a request for a smaller time step
   };
 
   /// Time-loop action selected from the current step status.
@@ -351,6 +352,26 @@ namespace Adapter
 
     /// start new time step
     void prepare_time_step() override = 0;
+
+    /**
+    @brief Start a new time step and report whether preparation succeeded.
+
+    Unsuccessful preparation may occur for example during evaluation of the residual or jacobian in
+    a predictor call.
+
+    If callers use this method instead of the throwing alternative, they must check the returned
+    StepStatus and handle non-success
+
+    @return The status of the preparation.
+     */
+    [[nodiscard]] virtual Solid::StepStatus prepare_time_step_with_status()
+    {
+      // This base implementation calls the throwing version prepare_time_step() and
+      // returns success. Derived methods may override to catch errors during prepare_time_step()
+      // and convert them into a different step status.
+      prepare_time_step();
+      return Solid::StepStatus::no_errors;
+    }
 
     /// set time step size
     virtual void set_dt(const double dtnew) = 0;
