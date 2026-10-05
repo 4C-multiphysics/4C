@@ -125,10 +125,9 @@ namespace Mat
     /// one
     constexpr double thermo_mechanical_state_equality_tolerance = 1.0e-12;
 
-    /// enum class for error types in InelasticDefgradTransvIsotropElastViscoplast, used for
-    /// triggering different procedures (e.g. Reinterpolation,
-    /// substepping, line search) during the
-    /// Local Newton Loop
+    /// enum class for error types in InelasticDefgradTransvIsotropElastViscoplast, used to
+    /// indicate recoverable failures which hence might trigger different procedures (e.g.
+    /// Reinterpolation, substepping, line search, global time-step reduction)
     enum class ErrorType
     {
       no_errors,                ///< no errors
@@ -829,16 +828,17 @@ namespace Mat
                                      ///< solution
     };
 
-
     /// enum: strategy in dealing with divergence of the Local Newton Loop
     enum class LocalNewtonDiverCont
     {
-      stop,          ///< stop the simulation entirely
-      continue_sim,  ///<  continue the simulation, and display warning in regards to the current
-                     ///<  state within the Local Newton Loop
+      stop_and_request_step_reduction,  ///< stop the evaluation and request a smaller global step.
+      continue_sim,  ///< ignore the divergence and display warning in regards to the current
+                     ///<  state within the Local Newton Loop.
       continue_sim_with_safeguard  ///< continue the simulation only if the convergence tolerances
                                    ///< are not exceeded excessively, as specified with specific
-                                   ///< exceedance factors for the tolerances
+                                   ///< exceedance factors for the tolerances. If the
+                                   ///< convergence tolerances are exceeded beyond the specified
+                                   ///< exceedance factors, a smaller global step is requested.
     };
 
     /// enum: quantities relevant for convergence checking within the Local Newton Loop
