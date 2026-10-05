@@ -66,7 +66,7 @@ void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_force_stiff(
 void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_coupling_terms(
     Solid::TimeInt::BaseDataGlobalState& gstate)
 {
-  // each rank holds exactly the constraint equations it owns; their row ids define the map
+  // each rank created its own constraint equations; their ids are the rows of Q_Ld it assembles
   std::vector<int> my_row_gids;
   for (const auto& mpc : constraint_equations_)
     for (int i = 0; i < mpc->get_number_of_constraint_equation_objects(); ++i)

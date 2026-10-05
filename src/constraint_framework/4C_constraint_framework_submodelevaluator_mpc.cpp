@@ -42,7 +42,7 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace
 {
-  //! Print node ids in right-aligned columns, wrapped to about the width of the separator line
+  // Print node ids in right-aligned columns, wrapped to about the width of the separator line
   void print_node_ids_debug(const std::vector<int>& node_ids)
   {
     const std::string prefix = "  Node IDs: ";
@@ -77,8 +77,9 @@ namespace
     int ref_base_gid;
   };
 
-  //! Suspend floating point exception trapping while in scope. ArborX may raise benign floating
-  //! point exceptions on ranks whose local search input is empty.
+  // Turns floating point exceptions off while this object exists and restores them afterwards.
+  // Needed for the ArborX search: a rank without local boundary nodes is empty, which triggers a
+  // harmless 0/0.
   class SuspendFloatingPointTrapping
   {
    public:
@@ -539,7 +540,7 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
           add_owned_node_dofs(plus_gid);
       const auto node_dofs = Core::Communication::all_reduce(local_node_dofs, comm);
 
-      // global row offset of this rank's constraint block
+      // every equation needs a unique global id: start counting where the lower ranks stop
       int num_local_constraints = static_cast<int>(pbc_node_sets.size()) * num_dim;
       std::vector<int> num_constraints_per_rank(Core::Communication::num_mpi_ranks(comm), 0);
       Core::Communication::gather_all(

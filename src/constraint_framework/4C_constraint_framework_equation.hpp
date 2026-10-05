@@ -26,9 +26,10 @@ namespace Constraints::SubmodelEvaluator
     //! Constructor
     ConstraintEquationBase() = default;
 
-    /*! \brief Assemble this equation's terms into the coupling matrix \f$Q_{Ld}\f$
+    /*! \brief Assemble the coefficients of the constraint equation into its row of \f$Q_{Ld}\f$
      *
-     * @param [in,out] Q_Ld coupling-stiffness matrix
+     * @param [in,out] Q_Ld coupling-stiffness matrix \f$Q_{Ld}\f$ (rows: constraint equations,
+     * columns: dofs)
      */
     virtual void evaluate_equation(Core::LinAlg::SparseMatrix& Q_Ld) = 0;
 
