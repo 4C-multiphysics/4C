@@ -26,12 +26,16 @@ namespace Constraints::SubmodelEvaluator
     //! Constructor
     ConstraintEquationBase() = default;
 
-    /*! \brief Assemble the coefficients of the constraint equation into its row of \f$Q_{Ld}\f$
+    /*! \brief Assemble the coefficients of the constraint equation into \f$Q_{dL}\f$ and
+     * \f$Q_{Ld}\f$
      *
+     * @param [in,out] Q_dL coupling-stiffness matrix \f$Q_{dL}\f$ (rows: dofs, columns: constraint
+     * equations)
      * @param [in,out] Q_Ld coupling-stiffness matrix \f$Q_{Ld}\f$ (rows: constraint equations,
      * columns: dofs)
      */
-    virtual void evaluate_equation(Core::LinAlg::SparseMatrix& Q_Ld) = 0;
+    virtual void evaluate_equation(
+        Core::LinAlg::SparseMatrix& Q_dL, Core::LinAlg::SparseMatrix& Q_Ld) = 0;
 
     /*! \brief Return the number of constraints the object contains
      *
@@ -75,7 +79,8 @@ namespace Constraints::SubmodelEvaluator
     LinearCoupledEquation(int id, const std::vector<int>& dofs, std::vector<double> coefficients);
 
     //! derived
-    void evaluate_equation(Core::LinAlg::SparseMatrix& Q_Ld) override;
+    void evaluate_equation(
+        Core::LinAlg::SparseMatrix& Q_dL, Core::LinAlg::SparseMatrix& Q_Ld) override;
 
    private:
     //! Struct with Term data: Coef, RowID, DofID

@@ -78,17 +78,18 @@ void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_coupling_terms(
   // initialise all global coupling objects
   constraint_residual_ = std::make_shared<Core::LinAlg::Vector<double>>(*n_condition_map_, true);
   Q_Ld_ = std::make_shared<Core::LinAlg::SparseMatrix>(*n_condition_map_, 4);
+  // FE matrix: the equations assemble into dof rows that may be owned by another rank
+  Q_dL_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      stiff_ptr_->row_map(), 4, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
   Q_dd_ = std::make_shared<Core::LinAlg::SparseMatrix>(stiff_ptr_->row_map(), 0);
   Q_dd_->zero();
 
   std::shared_ptr<const Core::LinAlg::Vector<double>> dis_np = gstate.get_dis_np();
-  for (const auto& obj : constraint_equations_) obj->evaluate_equation(*Q_Ld_);
+  for (const auto& obj : constraint_equations_) obj->evaluate_equation(*Q_dL_, *Q_Ld_);
 
   Q_dd_->complete();
   Q_Ld_->complete(stiff_ptr_->domain_map(), *n_condition_map_);
-
-  // Q_dL = Q_Ld^T
-  Q_dL_ = Core::LinAlg::matrix_transpose(*Q_Ld_);
+  Q_dL_->complete(*n_condition_map_, stiff_ptr_->domain_map());
 
   // constraint residual r_L = Q_Ld * d
   Q_Ld_->multiply(false, *dis_np, *constraint_residual_);

@@ -15,13 +15,14 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void Constraints::SubmodelEvaluator::LinearCoupledEquation::evaluate_equation(
-    Core::LinAlg::SparseMatrix& Q_Ld)
+    Core::LinAlg::SparseMatrix& Q_dL, Core::LinAlg::SparseMatrix& Q_Ld)
 {
   for (const auto& [coefficient, row_id, dof_id] : equation_data_)
   {
     FOUR_C_ASSERT(Q_Ld.row_map().my_gid(row_id),
         "Constraint equation row {} is not owned by this rank.", row_id);
     Q_Ld.assemble(coefficient, row_id, dof_id);
+    Q_dL.fe_assemble(coefficient, dof_id, row_id);
   }
 }
 /*----------------------------------------------------------------------------*
