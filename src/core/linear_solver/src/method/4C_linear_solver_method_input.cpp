@@ -77,6 +77,12 @@ namespace Core::LinearSolver
         parameter<std::optional<std::filesystem::path>>(
             "SOLVER_XML_FILE", {.description = "xml file defining any iterative solver"}),
 
+        parameter<std::optional<bool>>("IS_CONTIGUOUS",
+            {.description = "Direct solvers only: pass 'IsContiguous' to Amesos2. If true, the "
+                            "GIDs of the (serial) matrix must be exactly [0, N) in LID order, "
+                            "otherwise the solve fails or is wrong. If unset, Amesos2 is told "
+                            "'false'."}),
+
         // user-given name of solver block (just for beauty)
         parameter<std::string>("NAME",
             {.description = "User specified name for solver block", .default_value = "No_name"}),

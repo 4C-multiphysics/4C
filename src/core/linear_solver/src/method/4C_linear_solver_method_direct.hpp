@@ -24,7 +24,8 @@ namespace Core::LinearSolver
   class DirectSolver : public SolverTypeBase
   {
    public:
-    explicit DirectSolver(Core::LinearSolver::SolverType solvertype);
+    explicit DirectSolver(
+        Core::LinearSolver::SolverType solvertype, const Teuchos::ParameterList& params);
 
     /*! \brief Setup the solver object
      *
@@ -45,6 +46,9 @@ namespace Core::LinearSolver
    private:
     //! type/implementation of Amesos solver to be used
     const Core::LinearSolver::SolverType solvertype_;
+
+    //! value of the Amesos2 parameter "IsContiguous"
+    const bool is_contiguous_;
 
     //! flag indicating whether a valid factorization is stored
     bool factored_;

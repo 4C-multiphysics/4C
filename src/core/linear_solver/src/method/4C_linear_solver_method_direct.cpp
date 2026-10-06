@@ -23,6 +23,7 @@ FOUR_C_NAMESPACE_OPEN
 //----------------------------------------------------------------------------------
 Core::LinearSolver::DirectSolver::DirectSolver(Core::LinearSolver::SolverType solvertype)
     : solvertype_(solvertype),
+      is_contiguous_(params.isParameter("IsContiguous") && params.get<bool>("IsContiguous")),
       factored_(false),
       solver_(nullptr),
       created_matrix_(nullptr),
@@ -82,21 +83,21 @@ void Core::LinearSolver::DirectSolver::setup(std::shared_ptr<Core::LinAlg::Spars
       {
         solver_type = "KLU2";
         auto& klu_params = params.sublist(solver_type);
-        klu_params.set("IsContiguous", false, "Are GIDs Contiguous");
+        klu_params.set("IsContiguous", is_contiguous_, "Are GIDs Contiguous");
         break;
       }
       case SolverType::MUMPS:
       {
         solver_type = "MUMPS";
         auto& mumps_params = params.sublist(solver_type);
-        mumps_params.set("IsContiguous", false, "Are GIDs Contiguous");
+        mumps_params.set("IsContiguous", is_contiguous_, "Are GIDs Contiguous");
         break;
       }
       case SolverType::UMFPACK:
       {
         solver_type = "Umfpack";
         auto& umfpack_params = params.sublist(solver_type);
-        umfpack_params.set("IsContiguous", false, "Are GIDs Contiguous");
+        umfpack_params.set("IsContiguous", is_contiguous_, "Are GIDs Contiguous");
         break;
       }
       case SolverType::Superlu:
@@ -106,7 +107,7 @@ void Core::LinearSolver::DirectSolver::setup(std::shared_ptr<Core::LinAlg::Spars
         superludist_params.set("Equil", true, "Whether to equilibrate the system before solve");
         superludist_params.set("RowPerm", "LargeDiag_MC64", "Row ordering");
         superludist_params.set("ReplaceTinyPivot", true, "Replace tiny pivot");
-        superludist_params.set("IsContiguous", false, "Are GIDs Contiguous");
+        superludist_params.set("IsContiguous", is_contiguous_, "Are GIDs Contiguous");
         break;
       }
       default:
