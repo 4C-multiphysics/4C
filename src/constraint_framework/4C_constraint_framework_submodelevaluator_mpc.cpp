@@ -28,15 +28,10 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <numeric>
 #include <set>
 #include <string>
 #include <vector>
-
-#ifdef FOUR_C_ENABLE_FE_TRAPPING
-#include <cfenv>
-#endif
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -75,35 +70,6 @@ namespace
     int minus_gid;
     int ref_end_gid;
     int ref_base_gid;
-  };
-
-  // Turns floating point exceptions off while this object exists and restores them afterwards.
-  // Needed for the ArborX search: a rank without local boundary nodes is empty, which triggers a
-  // harmless 0/0.
-  class SuspendFloatingPointTrapping
-  {
-   public:
-    SuspendFloatingPointTrapping()
-    {
-#ifdef FOUR_C_ENABLE_FE_TRAPPING
-      fedisableexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW);
-#endif
-    }
-    ~SuspendFloatingPointTrapping()
-    {
-#ifdef FOUR_C_ENABLE_FE_TRAPPING
-      feclearexcept(FE_ALL_EXCEPT);
-      fedisableexcept(FE_ALL_EXCEPT);
-      feenableexcept(previously_enabled_excepts_);
-#endif
-    }
-    SuspendFloatingPointTrapping(const SuspendFloatingPointTrapping&) = delete;
-    SuspendFloatingPointTrapping& operator=(const SuspendFloatingPointTrapping&) = delete;
-
-#ifdef FOUR_C_ENABLE_FE_TRAPPING
-   private:
-    const int previously_enabled_excepts_ = fegetexcept();
-#endif
   };
 }  // namespace
 
@@ -461,12 +427,8 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
           positive_nodes.emplace_back(plus_gid, bounding_volume);
         }
 
-        std::vector<Core::GeometricSearch::GlobalCollisionSearchResult> matches;
-        {
-          SuspendFloatingPointTrapping suspend_fpe;
-          matches = Core::GeometricSearch::global_collision_search(
-              positive_nodes, shifted_negative_nodes, comm);
-        }
+        const auto matches = Core::GeometricSearch::global_collision_search(
+            positive_nodes, shifted_negative_nodes, comm);
 
         std::map<int, std::vector<int>> positive_partners;
         for (const auto& match : matches)
