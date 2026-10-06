@@ -353,7 +353,12 @@ void Adapter::StructureTimeAda::output(bool forced_writerestart)
   std::shared_ptr<Core::IO::DiscretizationWriter> output_ptr = dataio.get_output_ptr();
 
   StructureWrapper::output(forced_writerestart);
-  output_ptr->write_double("next_delta_time", stepsize_);
+
+  if (not output_ptr->is_written(
+          "next_delta_time"))  // only write this value if the structure has set a new output
+                               // control file for the current timestep, i.e., if this value has not
+                               // already been written
+    output_ptr->write_double("next_delta_time", stepsize_);
 }
 
 /*----------------------------------------------------------------------*/
