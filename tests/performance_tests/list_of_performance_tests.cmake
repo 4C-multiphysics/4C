@@ -65,6 +65,8 @@ four_c_performance_test(
   1
   NP_FULL
   1
+  TIMEOUT_FULL
+  6000
   REQUIRED_DEPENDENCIES
   VTK
   )
