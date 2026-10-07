@@ -79,7 +79,7 @@
       ],
       "cacheVariables": {
         "FOUR_C_ENABLE_ADDRESS_SANITIZER": "ON",
-        "FOUR_C_TEST_TIMEOUT_SCALE": "10",
+        "FOUR_C_TEST_TIMEOUT_SCALE": "15",
         "FOUR_C_ENABLE_PYTHON_BINDINGS": "OFF"
       }
     },
