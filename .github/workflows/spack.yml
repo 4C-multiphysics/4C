@@ -63,14 +63,11 @@ jobs:
         with:
           # Pinned release for reproducibility. Bump periodically
           spack_ref: v1.2.2
-          # `4c-multiphysics` is not part of any tagged spack-packages release
-          # yet, so pin to a `develop` commit that contains it instead.
-          # Pin to the merge commit of Spack PR #6252, which adds the v2026.3
-          # 4C package version and updates its TPL dependencies.
-          # TODO: switch `packages_ref` to a release tag (e.g. v2026.09.0) once
-          # one ships a `4c-multiphysics` package that no longer needs this.
-          packages_ref: b21d87c38e972c9a97cd16674464716cc0a39eef
-          buildcache: true
+          # Test the package implementation from PR #6479 in the fork.
+          packages_repository: georghammerl/spack-packages
+          packages_ref: d39ef1fb9f8c74e22c4091e89b4d0f7a11a73d46
+          # Do not let an existing binary hide changes to the package recipe.
+          buildcache: false
           color: true
 
       - name: Find compilers
