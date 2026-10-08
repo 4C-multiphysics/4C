@@ -15,11 +15,15 @@
 #include "4C_io_control.hpp"
 #include "4C_io_hdf.hpp"
 #include "4C_io_legacy_types.hpp"
+#include "4C_linalg_multi_vector.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
+#include "4C_linalg_vector.hpp"
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -71,6 +75,16 @@ namespace Core::IO
 
     /// destructor
     ~DiscretizationReader() = default;
+
+    /*!
+     * @brief Verifies whether reader contains a particular vector / multivector
+     *
+     * @param[in] name Name of vector / multivector
+     * @param[in] num_multivector_columns Number of multivector columns; optional layer of
+     * verification for matching number of columns
+     */
+    [[nodiscard]] bool has_vector(const std::string& name,
+        const std::optional<unsigned int> num_multivector_columns = std::nullopt) const;
 
     /**
      * \brief read in and return vector
@@ -287,13 +301,6 @@ namespace Core::IO
     void write_vector(const std::string name, const std::vector<char>& vec,
         const Core::LinAlg::Map& elemap, VectorType vt = dofvector);
 
-    //! write new mesh and result file next time it is possible
-    void create_new_result_and_mesh_file()
-    {
-      resultfile_changed_ = -1;
-      meshfile_changed_ = -1;
-    };
-
     bool have_result_or_mesh_file_changed()
     {
       return resultfile_changed_ == -1 or meshfile_changed_ == -1;
@@ -344,6 +351,12 @@ namespace Core::IO
     /// access discretization
     [[nodiscard]] const Core::FE::Discretization& get_discretization() const;
 
+    //! Return whether an item with a given name has already been written in the current step
+    [[nodiscard]] bool is_written(const std::string& name) const
+    {
+      return written_names_in_current_step_.contains(name);
+    }
+
    protected:
     /// access the MPI_Comm object
     [[nodiscard]] MPI_Comm get_comm() const;
@@ -388,6 +401,9 @@ namespace Core::IO
     bool binio_;
 
     Core::FE::ShapeFunctionType spatial_approx_;
+
+    //! tracking of item names already written in the current step
+    std::unordered_set<std::string> written_names_in_current_step_;
   };
 
 }  // namespace Core::IO
