@@ -58,6 +58,12 @@ namespace Core::LinearSolver
     //! an abstract Amesos2 solver that can be any of the concrete implementations
     Teuchos::RCP<Amesos2::Solver<Epetra_CrsMatrix, Epetra_MultiVector>> solver_;
 
+    //! identity of the Epetra matrix the Amesos2 solver was created on (non-owning)
+    const Epetra_CrsMatrix* created_matrix_;
+
+    //! identity of the Epetra right-hand side the Amesos2 solver was created on (non-owning)
+    const Epetra_MultiVector* created_rhs_;
+
     /*! \brief A projector applied before solving the linear systems
      *
      * Instead of solving Ax=b a projected system of the form P'APu=P'b is solved.

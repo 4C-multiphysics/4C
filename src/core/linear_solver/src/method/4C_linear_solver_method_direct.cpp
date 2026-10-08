@@ -22,7 +22,12 @@ FOUR_C_NAMESPACE_OPEN
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
 Core::LinearSolver::DirectSolver::DirectSolver(Core::LinearSolver::SolverType solvertype)
-    : solvertype_(solvertype), factored_(false), solver_(nullptr), projector_(nullptr)
+    : solvertype_(solvertype),
+      factored_(false),
+      solver_(nullptr),
+      created_matrix_(nullptr),
+      created_rhs_(nullptr),
+      projector_(nullptr)
 {
 }
 
@@ -65,7 +70,8 @@ void Core::LinearSolver::DirectSolver::setup(std::shared_ptr<Core::LinAlg::Spars
   a_ = crsA;
 
   // 3. create linear solver
-  if (reset or refactor or not is_factored())
+  if (reset or refactor or not is_factored() or created_matrix_ != &a_->epetra_matrix() or
+      created_rhs_ != &b_->get_epetra_multi_vector())
   {
     std::string solver_type;
     Teuchos::ParameterList params("Amesos2");
@@ -117,6 +123,9 @@ void Core::LinearSolver::DirectSolver::setup(std::shared_ptr<Core::LinAlg::Spars
     solver_->setB(Teuchos::rcpFromRef(b_->get_epetra_multi_vector()));
 
     solver_->setParameters(Teuchos::make_rcp<Teuchos::ParameterList>(std::move(params)));
+
+    created_matrix_ = &a_->epetra_matrix();
+    created_rhs_ = &b_->get_epetra_multi_vector();
 
     factored_ = false;
   }
