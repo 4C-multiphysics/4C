@@ -273,7 +273,7 @@ void Core::IO::DiscretizationReader::read_char_vector(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationReader::read_redundant_double_vector(
+void Core::IO::DiscretizationReader::read_double_vector_on_first_rank(
     std::shared_ptr<std::vector<double>>& doublevec, const std::string name)
 {
   int length;
@@ -302,7 +302,7 @@ void Core::IO::DiscretizationReader::read_redundant_double_vector(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationReader::read_redundant_int_vector(
+void Core::IO::DiscretizationReader::read_int_vector_on_first_rank(
     std::shared_ptr<std::vector<int>>& intvec, const std::string name)
 {
   int length;
@@ -1250,8 +1250,8 @@ void Core::IO::DiscretizationWriter::write_char_data(
 /*----------------------------------------------------------------------*/
 /* write a stl vector of doubles from proc0                             */
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationWriter::write_redundant_double_vector(
-    const std::string name, std::vector<double>& doublevec)
+void Core::IO::DiscretizationWriter::write_double_vector_on_first_rank(
+    const std::string name, const std::vector<double>& doublevec)
 {
   if (binio_)
   {
@@ -1298,8 +1298,8 @@ void Core::IO::DiscretizationWriter::write_redundant_double_vector(
 /*----------------------------------------------------------------------*/
 /* write a stl set of integers from proc0                             */
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationWriter::write_redundant_int_vector(
-    const std::string name, std::vector<int>& vectorint)
+void Core::IO::DiscretizationWriter::write_int_vector_on_first_rank(
+    const std::string name, const std::vector<int>& vectorint)
 {
   if (binio_)
   {
