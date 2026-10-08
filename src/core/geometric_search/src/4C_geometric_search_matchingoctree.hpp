@@ -89,12 +89,12 @@ namespace Core::GeometricSearch
     \param   actdis         (i) discretisation
     \param   target_node_ids   (i) list of target entity ids
     \param   maxnodeperleaf  (i) parameter for octree
-    \param   tol            (i) tolerance for octree
+    \param   tol            (i) tolerance for octree; gets scaled internally to account for
+    the underlying mesh object matched, see \ref tolerance_scaling_factor()
 
     \return void  */
     virtual int init(const Core::FE::Discretization& actdis,
-        const std::vector<int>& target_node_ids, const int maxnodeperleaf = 150,
-        const double tol = 1e-08);
+        const std::vector<int>& target_node_ids, const int maxnodeperleaf, const double tol);
 
     //! setup this class
     virtual int setup();
@@ -130,9 +130,6 @@ namespace Core::GeometricSearch
     virtual void calc_point_coordinate(
         const Core::FE::Discretization* dis, const int id, double* coord) = 0;
 
-    //! calc unique coordinate of entity
-    virtual void calc_point_coordinate(Core::Communication::ParObject* entity, double* coord) = 0;
-
     //! check if entity is on calling proc
     virtual bool check_have_entity(const Core::FE::Discretization* dis, const int id) = 0;
 
@@ -149,6 +146,11 @@ namespace Core::GeometricSearch
     //! create an octree element
     virtual std::shared_ptr<OctreeElement> create_octree_element(std::vector<int>& nodeidstoadd,
         Core::LinAlg::SerialDenseMatrix& boundingboxtoadd, int layer) = 0;
+
+    //! scaling factor for the octree tolerance used for bounding boxes and matching distances;
+    //! employed here to account for the underlying discretization scale, i.e., the distances
+    //! between nodes and elements
+    [[nodiscard]] virtual double tolerance_scaling_factor() const = 0;
 
     //@}
 
@@ -291,8 +293,7 @@ namespace Core::GeometricSearch
     void calc_point_coordinate(
         const Core::FE::Discretization* dis, const int id, double* coord) override;
 
-    //! calc unique coordinate of Node
-    void calc_point_coordinate(Core::Communication::ParObject* entity, double* coord) override;
+    [[nodiscard]] double tolerance_scaling_factor() const override;
 
     //! check if node with gid = id is on calling proc
     bool check_have_entity(const Core::FE::Discretization* dis, const int id) override;
@@ -326,8 +327,7 @@ namespace Core::GeometricSearch
     void calc_point_coordinate(
         const Core::FE::Discretization* dis, const int id, double* coord) override;
 
-    //! calc unique coordinate of entity
-    void calc_point_coordinate(Core::Communication::ParObject* entity, double* coord) override;
+    [[nodiscard]] double tolerance_scaling_factor() const override;
 
     //! check if element with gid = id is on calling proc
     bool check_have_entity(const Core::FE::Discretization* dis, const int id) override;

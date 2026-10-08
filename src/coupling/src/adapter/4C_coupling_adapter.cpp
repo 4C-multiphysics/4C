@@ -18,6 +18,37 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+namespace
+{
+  // verify that two maps are simply permutations of each other -> we verify that all global
+  // elements are matched exactly once
+  bool is_permuted_map(const Core::LinAlg::Map& map, const Core::LinAlg::Map& permuted_map)
+  {
+    if (map.num_global_elements() != permuted_map.num_global_elements())
+    {
+      return false;
+    }
+
+    Core::LinAlg::Vector<int> permuted_map_gid_counts(permuted_map);
+    permuted_map_gid_counts.put_value(1);
+
+    Core::LinAlg::Vector<int> map_gid_counts(map);
+    map_gid_counts.put_value(0);
+
+    Core::LinAlg::Export exporter(permuted_map, map);
+    map_gid_counts.export_to(permuted_map_gid_counts, exporter, Core::LinAlg::CombineMode::add);
+
+    for (int i = 0; i < map_gid_counts.local_length(); ++i)
+    {
+      if (map_gid_counts.get_local_values()[i] != 1)
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+}  // namespace
+
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 Coupling::Adapter::Coupling::Coupling()
@@ -71,7 +102,7 @@ void Coupling::Adapter::Coupling::setup_condition_coupling(
         "got {} target nodes but {} source nodes for coupling", target_count, source_count);
 
   setup_coupling(target_dis, source_dis, target_nodes, source_nodes, target_dofs, source_dofs,
-      matchall, 1.0e-3, target_dofset_number, source_dofset_number);
+      matchall, std::nullopt, target_dofset_number, source_dofset_number);
 
   // test for completeness
   if (static_cast<int>(target_nodes.size()) * numdof != target_dof_map_->num_my_elements())
@@ -122,13 +153,13 @@ void Coupling::Adapter::Coupling::setup_condition_coupling(
 void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& target_dis,
     const Core::FE::Discretization& source_dis, const std::vector<int>& target_nodes,
     const std::vector<int>& source_nodes, const std::vector<int>& target_dofs,
-    const std::vector<int>& source_dofs, const bool matchall, const double tolerance,
+    const std::vector<int>& source_dofs, const bool matchall, const std::optional<double> tolerance,
     const int target_dofset_number, const int source_dofset_number)
 {
   std::vector<int> patched_target_nodes(target_nodes);
   std::vector<int> permuted_source_nodes;
   match_nodes(target_dis, source_dis, patched_target_nodes, permuted_source_nodes, source_nodes,
-      matchall, tolerance);
+      matchall, tolerance ? tolerance.value() : node_matching_tolerance_);
 
   // maps in original distribution
 
@@ -141,6 +172,11 @@ void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization&
   std::shared_ptr<Core::LinAlg::Map> permuted_source_node_map = std::make_shared<Core::LinAlg::Map>(
       -1, permuted_source_nodes.size(), permuted_source_nodes.data(), 0, source_dis.get_comm());
 
+  // verify that the permuted source node map is really just a permutation of the source node map
+  FOUR_C_ASSERT_ALWAYS(is_permuted_map(*source_node_map, *permuted_source_node_map),
+      "Source node map does not match its permuted counterpart! Probably, the chosen node matching "
+      "tolerance leads to some source nodes being lost along the way.");
+
   finish_coupling(target_dis, source_dis, target_node_map, source_node_map,
       permuted_source_node_map, target_dofs, source_dofs, target_dofset_number,
       source_dofset_number);
@@ -151,7 +187,8 @@ void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization&
 void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& target_dis,
     const Core::FE::Discretization& source_dis, const std::vector<int>& target_nodes,
     const std::vector<int>& source_nodes, const int numdof, const bool matchall,
-    const double tolerance, const int target_dofset_number, const int source_dofset_number)
+    const std::optional<double> tolerance, const int target_dofset_number,
+    const int source_dofset_number)
 {
   setup_coupling(target_dis, source_dis, target_nodes, source_nodes,
       build_dof_vector_from_num_dof(numdof), build_dof_vector_from_num_dof(numdof), matchall,
@@ -183,7 +220,8 @@ void Coupling::Adapter::Coupling::setup_coupling(
 void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization& target_dis,
     const Core::FE::Discretization& source_dis, const Core::LinAlg::Map& target_nodes,
     const Core::LinAlg::Map& source_nodes, const int numdof, const bool matchall,
-    const double tolerance, const int target_dofset_number, const int source_dofset_number)
+    const std::optional<double> tolerance, const int target_dofset_number,
+    const int source_dofset_number)
 {
   if (target_nodes.num_global_elements() != source_nodes.num_global_elements() and matchall)
     FOUR_C_THROW("got {} target nodes but {} source nodes for coupling",
@@ -195,9 +233,8 @@ void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization&
       source_nodes.my_global_elements() + source_nodes.num_my_elements());
   std::vector<int> permuted_source_nodes;
 
-  match_nodes(
-      target_dis, source_dis, target_vect, permuted_source_nodes, source_vect, matchall, tolerance);
-
+  match_nodes(target_dis, source_dis, target_vect, permuted_source_nodes, source_vect, matchall,
+      tolerance ? tolerance.value() : node_matching_tolerance_);
   // maps in original distribution
 
   std::shared_ptr<Core::LinAlg::Map> target_node_map = std::make_shared<Core::LinAlg::Map>(
@@ -208,6 +245,12 @@ void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization&
 
   std::shared_ptr<Core::LinAlg::Map> permuted_source_node_map = std::make_shared<Core::LinAlg::Map>(
       -1, permuted_source_nodes.size(), permuted_source_nodes.data(), 0, source_dis.get_comm());
+
+  // verify that the permuted source node map is really just a permutation of the source node map
+  FOUR_C_ASSERT_ALWAYS(is_permuted_map(*source_node_map, *permuted_source_node_map),
+      "Source node map does not match its permuted counterpart! Probably, the chosen node matching "
+      "tolerance leads to some source nodes being lost along the way.");
+
 
   finish_coupling(target_dis, source_dis, target_node_map, source_node_map,
       permuted_source_node_map, build_dof_vector_from_num_dof(numdof),
@@ -274,7 +317,8 @@ void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization&
     const Core::FE::Discretization& source_dis,
     const std::vector<std::vector<int>>& target_nodes_vec,
     const std::vector<std::vector<int>>& source_nodes_vec, const int numdof, const bool matchall,
-    const double tolerance, const int target_dofset_number, const int source_dofset_number)
+    const std::optional<double> tolerance, const int target_dofset_number,
+    const int source_dofset_number)
 {
   // vectors with target and source node maps (from input) for every coupling condition
   // Permuted source node map for each coupling conditions from match_nodes()
@@ -290,7 +334,7 @@ void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization&
     std::vector<int> permuted_source_nodes;
 
     match_nodes(target_dis, source_dis, target_nodes, permuted_source_nodes, source_nodes, matchall,
-        tolerance);
+        tolerance ? tolerance.value() : node_matching_tolerance_);
 
     target_node_map_cond.push_back(std::make_shared<Core::LinAlg::Map>(
         -1, target_nodes.size(), target_nodes.data(), 0, target_dis.get_comm()));
@@ -298,6 +342,12 @@ void Coupling::Adapter::Coupling::setup_coupling(const Core::FE::Discretization&
         -1, source_nodes.size(), source_nodes.data(), 0, source_dis.get_comm()));
     permuted_source_node_map_cond.push_back(std::make_shared<Core::LinAlg::Map>(
         -1, permuted_source_nodes.size(), permuted_source_nodes.data(), 0, source_dis.get_comm()));
+    // verify that the permuted source node map is really just a permutation of the source node map
+    FOUR_C_ASSERT_ALWAYS(
+        is_permuted_map(*source_node_map_cond.back(), *permuted_source_node_map_cond.back()),
+        "Source node map does not match its permuted counterpart! Probably, the chosen node "
+        "matching "
+        "tolerance leads to some source nodes being lost along the way.");
   }
 
   // merge maps for all conditions, but keep order (= keep assignment of permuted source node map
@@ -527,8 +577,12 @@ void Coupling::Adapter::Coupling::build_dof_maps(const Core::FE::Discretization&
 
   for (int i = 0; i < permnumnode; ++i)
   {
-    const std::vector<int>& dof = dofs[permnodes[i]];
-    copy(dof.begin(), dof.end(), back_inserter(dofmapvec));
+    const auto dof_it = dofs.find(permnodes[i]);
+    if (dof_it == dofs.end() || dof_it->second.size() != coupled_dofs.size())
+    {
+      FOUR_C_THROW("Missing or incomplete DOF data for permuted node {}", permnodes[i]);
+    }
+    copy(dof_it->second.begin(), dof_it->second.end(), back_inserter(dofmapvec));
   }
 
   dofs.clear();
