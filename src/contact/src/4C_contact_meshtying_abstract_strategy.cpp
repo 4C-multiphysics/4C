@@ -775,14 +775,14 @@ void CONTACT::MtAbstractStrategy::update(std::shared_ptr<const Core::LinAlg::Vec
  |  read restart information for meshtying                    popp 03/08|
  *----------------------------------------------------------------------*/
 void CONTACT::MtAbstractStrategy::do_read_restart(
-    Core::IO::DiscretizationReader& reader, std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
+    Core::IO::DiscretizationReader& reader, const Core::LinAlg::Vector<double>& disp_n)
 {
   // check whether this is a restart with meshtying of a previously
   // non-meshtying simulation run
   const bool restartwithmeshtying = params().get<bool>("RESTART_WITH_MESHTYING");
 
   // set displacement state
-  set_state(Mortar::state_new_displacement, *dis);
+  set_state(Mortar::state_new_displacement, disp_n);
 
   // read restart information on Lagrange multipliers
   z_ = std::make_shared<Core::LinAlg::Vector<double>>(*gsdofrowmap_);

@@ -260,8 +260,8 @@ namespace Mortar
     virtual std::shared_ptr<const Core::LinAlg::Vector<double>> contact_tangential_force()
         const = 0;
     virtual std::shared_ptr<const Core::LinAlg::SparseMatrix> d_matrix() const = 0;
-    virtual void do_read_restart(Core::IO::DiscretizationReader& reader,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> dis) = 0;
+    virtual void do_read_restart(
+        Core::IO::DiscretizationReader& reader, const Core::LinAlg::Vector<double>& disp_n) = 0;
     virtual void do_write_restart(
         std::map<std::string, std::shared_ptr<Core::LinAlg::Vector<double>>>& restart_vectors,
         bool forcedrestart = false) const = 0;

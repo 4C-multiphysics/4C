@@ -16,6 +16,7 @@
 #include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_mat_so3_material.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_Time.hpp>
 
@@ -73,8 +74,7 @@ void CONTACT::NitscheStrategy::apply_force_stiff_cmt(
  |  read restart information for contact                     seitz 10/16|
  *----------------------------------------------------------------------*/
 void CONTACT::NitscheStrategy::do_read_restart(Core::IO::DiscretizationReader& reader,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-    std::shared_ptr<CONTACT::ParamsInterface> cparams_ptr)
+    const Core::LinAlg::Vector<double>& disp_n, const CONTACT::ParamsInterface* cparams_ptr)
 {
   // check whether this is a restart with contact of a previously
   // non-contact simulation run (if yes, we have to be careful not
@@ -85,8 +85,8 @@ void CONTACT::NitscheStrategy::do_read_restart(Core::IO::DiscretizationReader& r
   if (restartwithcontact) FOUR_C_THROW("not supported for nitsche contact");
 
   // set restart displacement state
-  set_state(Mortar::state_new_displacement, *dis);
-  set_state(Mortar::state_old_displacement, *dis);
+  set_state(Mortar::state_new_displacement, disp_n);
+  set_state(Mortar::state_old_displacement, disp_n);
 
   // Evaluation for all interfaces
   for (const auto& interface : interface_) interface->initialize();
@@ -101,7 +101,7 @@ void CONTACT::NitscheStrategy::do_read_restart(Core::IO::DiscretizationReader& r
     store_to_old(Mortar::StrategyBase::n_old);
   }
 
-
+  FOUR_C_ASSERT_ALWAYS(cparams_ptr, "You must provide the contact parameters");
   save_time_step_size_and_total_time(cparams_ptr->get_delta_time(), cparams_ptr->get_total_time());
 
 

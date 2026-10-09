@@ -1278,7 +1278,7 @@ void CONTACT::Manager::read_restart(Core::IO::DiscretizationReader& reader,
 
   // this is contact, thus we need the displacement state for restart
   // let strategy object do all the work
-  get_strategy().do_read_restart(reader, dis);
+  get_strategy().do_read_restart(reader, *dis);
 
   return;
 }

@@ -50,9 +50,8 @@ CONTACT::LagrangeStrategyPoro::LagrangeStrategyPoro(
 /*----------------------------------------------------------------------*
  |  read restart information for contact                      ager 12/16|
  *----------------------------------------------------------------------*/
-void CONTACT::LagrangeStrategyPoro::do_read_restart(Core::IO::DiscretizationReader& reader,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-    std::shared_ptr<CONTACT::ParamsInterface> cparams_ptr)
+void CONTACT::LagrangeStrategyPoro::do_read_restart(
+    Core::IO::DiscretizationReader& reader, const Core::LinAlg::Vector<double>& dis)
 {
   std::shared_ptr<Core::FE::Discretization> discret =
       Global::Problem::instance()->get_dis("structure");
@@ -62,11 +61,11 @@ void CONTACT::LagrangeStrategyPoro::do_read_restart(Core::IO::DiscretizationRead
       std::make_shared<Core::LinAlg::Vector<double>>(*discret->dof_col_map(), true);
   // it's clear that we get some zeros here ... but poroelast monolithic fixes this a little bit
   // later by doing the same thing with correct displacements again :-)
-  Core::LinAlg::export_to(*dis, *global);
+  Core::LinAlg::export_to(dis, *global);
   set_parent_state(Mortar::StateType::state_new_displacement, *global, *discret);
 
   // Call (nearly absolute)Base Class
-  CONTACT::AbstractStrategy::do_read_restart(reader, dis, cparams_ptr);
+  CONTACT::AbstractStrategy::do_read_restart(reader, dis);
 }
 
 /*----------------------------------------------------------------------*

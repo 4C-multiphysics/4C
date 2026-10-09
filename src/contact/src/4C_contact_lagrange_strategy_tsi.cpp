@@ -1067,9 +1067,8 @@ void CONTACT::LagrangeStrategyTsi::do_write_restart(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void CONTACT::LagrangeStrategyTsi::do_read_restart(Core::IO::DiscretizationReader& reader,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-    std::shared_ptr<CONTACT::ParamsInterface> cparams_ptr)
+void CONTACT::LagrangeStrategyTsi::do_read_restart(
+    Core::IO::DiscretizationReader& reader, const Core::LinAlg::Vector<double>& dis)
 {
   const bool restartwithcontact = params().get<bool>("RESTART_WITH_CONTACT");
 

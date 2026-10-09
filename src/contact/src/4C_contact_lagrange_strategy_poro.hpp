@@ -39,8 +39,7 @@ namespace CONTACT
     //! @name Evaluation methods
 
     void do_read_restart(Core::IO::DiscretizationReader& reader,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-        std::shared_ptr<CONTACT::ParamsInterface> cparams_ptr) override;
+        const Core::LinAlg::Vector<double>& disp_n) override;
 
     /*! \brief Setup this strategy object (maps, vectors, etc.)
 

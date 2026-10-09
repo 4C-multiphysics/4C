@@ -369,7 +369,8 @@ void Solid::ModelEvaluator::Contact::read_restart(Core::IO::DiscretizationReader
 {
   eval_contact().set_action_type(Mortar::eval_force_stiff);
   // reader strategy specific stuff
-  strategy().do_read_restart(ioreader, global_state().get_dis_n(), eval_data().contact_ptr());
+  strategy().do_read_restart(
+      ioreader, *global_state().get_dis_n(), eval_data().contact_ptr().get());
 }
 
 /*----------------------------------------------------------------------*
