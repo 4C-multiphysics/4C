@@ -245,7 +245,7 @@ int Mat::MatListReactions::reac_id(const unsigned index) const
  *----------------------------------------------------------------------*/
 double Mat::MatListReactions::calc_rea_body_force_term(const int k,
     const std::vector<double>& phinp, const double* gpcoord, const double time,
-    const double scale) const
+    const double scale, int element_id) const
 {
   // set time and space coordinates
   std::vector<std::pair<std::string, double>> constants;
@@ -262,7 +262,7 @@ double Mat::MatListReactions::calc_rea_body_force_term(const int k,
     const std::shared_ptr<const Mat::ScatraReactionMat> reacmat =
         std::static_pointer_cast<const Mat::ScatraReactionMat>(material_by_id(reacid));
 
-    bodyforcetermK += reacmat->calc_rea_body_force_term(k, phinp, constants, scale);
+    bodyforcetermK += reacmat->calc_rea_body_force_term(k, phinp, constants, scale, element_id);
   }
 
   return bodyforcetermK;
@@ -273,7 +273,7 @@ double Mat::MatListReactions::calc_rea_body_force_term(const int k,
  *----------------------------------------------------------------------*/
 void Mat::MatListReactions::calc_rea_body_force_deriv_matrix(const int k,
     std::vector<double>& derivs, const std::vector<double>& phinp, const double* gpcoord,
-    const double time, const double scale) const
+    const double time, const double scale, int element_id) const
 {
   std::vector<std::pair<std::string, double>> constants;
   constants.emplace_back("t", time);
@@ -287,7 +287,7 @@ void Mat::MatListReactions::calc_rea_body_force_deriv_matrix(const int k,
     const std::shared_ptr<const ScatraReactionMat> reacmat =
         std::static_pointer_cast<const ScatraReactionMat>(material_by_id(reacid));
 
-    reacmat->calc_rea_body_force_deriv_matrix(k, derivs, phinp, constants, scale);
+    reacmat->calc_rea_body_force_deriv_matrix(k, derivs, phinp, constants, scale, element_id);
   }
 }
 
@@ -296,7 +296,7 @@ void Mat::MatListReactions::calc_rea_body_force_deriv_matrix(const int k,
  *----------------------------------------------------------------------*/
 double Mat::MatListReactions::calc_rea_body_force_term(const int k,
     const std::vector<double>& phinp, const std::vector<std::pair<std::string, double>>& constants,
-    const double* gpcoord, const double time, const double scale) const
+    const double* gpcoord, const double time, const double scale, int element_id) const
 {
   std::vector constants_mod(constants);
   constants_mod.emplace_back("t", time);
@@ -312,7 +312,7 @@ double Mat::MatListReactions::calc_rea_body_force_term(const int k,
     const std::shared_ptr<const ScatraReactionMat> reacmat =
         std::static_pointer_cast<const ScatraReactionMat>(material_by_id(reacid));
 
-    bodyforcetermK += reacmat->calc_rea_body_force_term(k, phinp, constants_mod, scale);
+    bodyforcetermK += reacmat->calc_rea_body_force_term(k, phinp, constants_mod, scale, element_id);
   }
 
   return bodyforcetermK;
@@ -324,7 +324,7 @@ double Mat::MatListReactions::calc_rea_body_force_term(const int k,
 void Mat::MatListReactions::calc_rea_body_force_deriv_matrix(const int k,
     std::vector<double>& derivs, const std::vector<double>& phinp,
     const std::vector<std::pair<std::string, double>>& constants, const double* gpcoord,
-    const double time, const double scale) const
+    const double time, const double scale, int element_id) const
 {
   std::vector constants_mod(constants);
   constants_mod.emplace_back("t", time);
@@ -338,7 +338,7 @@ void Mat::MatListReactions::calc_rea_body_force_deriv_matrix(const int k,
     const std::shared_ptr<const ScatraReactionMat> reacmat =
         std::static_pointer_cast<const ScatraReactionMat>(material_by_id(reacid));
 
-    reacmat->calc_rea_body_force_deriv_matrix(k, derivs, phinp, constants_mod, scale);
+    reacmat->calc_rea_body_force_deriv_matrix(k, derivs, phinp, constants_mod, scale, element_id);
   }
 }
 
@@ -366,7 +366,7 @@ void Mat::MatListReactions::calc_rea_body_force_deriv_matrix_add_variables(const
     std::vector<double>& derivs, const std::vector<double>& phinp,
     const std::vector<std::pair<std::string, double>>& variables,
     const std::vector<std::pair<std::string, double>>& constants, const double* gpcoord,
-    const double time, const double scale) const
+    const double time, const double scale, int element_id) const
 {
   std::vector constants_mod(constants);
 
@@ -387,7 +387,7 @@ void Mat::MatListReactions::calc_rea_body_force_deriv_matrix_add_variables(const
         std::static_pointer_cast<const ScatraReactionMat>(material_by_id(reacid));
 
     reacmat->calc_rea_body_force_deriv_matrix_add_variables(
-        k, derivs, variables, constants_mod, scale);
+        k, derivs, variables, constants_mod, scale, element_id);
   }
 }
 

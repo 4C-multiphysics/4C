@@ -111,22 +111,22 @@ void Mat::PAR::FluidPoroSingleReaction::evaluate_function(std::vector<double>& r
     std::vector<std::vector<double>>& reacderivsscalar, const std::vector<double>& pressure,
     const std::vector<double>& saturation, const double& porosity,
     const std::vector<double>& volfracs, const std::vector<double>& volfracpressures,
-    const std::vector<double>& scalar)
+    const std::vector<double>& scalar, int element_id)
 {
   switch (Global::Problem::instance()->n_dim())
   {
     case 1:
       return evaluate_function_internal<1>(reacval, reacderivspressure, reacderivssaturation,
           reacderivsporosity, reacderivsvolfrac, reacderivsvolfracpressure, reacderivsscalar,
-          pressure, saturation, porosity, volfracs, volfracpressures, scalar);
+          pressure, saturation, porosity, volfracs, volfracpressures, scalar, element_id);
     case 2:
       return evaluate_function_internal<2>(reacval, reacderivspressure, reacderivssaturation,
           reacderivsporosity, reacderivsvolfrac, reacderivsvolfracpressure, reacderivsscalar,
-          pressure, saturation, porosity, volfracs, volfracpressures, scalar);
+          pressure, saturation, porosity, volfracs, volfracpressures, scalar, element_id);
     case 3:
       return evaluate_function_internal<3>(reacval, reacderivspressure, reacderivssaturation,
           reacderivsporosity, reacderivsvolfrac, reacderivsvolfracpressure, reacderivsscalar,
-          pressure, saturation, porosity, volfracs, volfracpressures, scalar);
+          pressure, saturation, porosity, volfracs, volfracpressures, scalar, element_id);
     default:
       FOUR_C_THROW("Unsupported dimension {}.", Global::Problem::instance()->n_dim());
   }
@@ -144,7 +144,7 @@ void Mat::PAR::FluidPoroSingleReaction::evaluate_function_internal(std::vector<d
     std::vector<std::vector<double>>& reacderivsscalar, const std::vector<double>& pressure,
     const std::vector<double>& saturation, const double& porosity,
     const std::vector<double>& volfracs, const std::vector<double>& volfracpressures,
-    const std::vector<double>& scalar)
+    const std::vector<double>& scalar, int element_id)
 {
   // safety check if sizes fit
   check_sizes(reacval, reacderivspressure, reacderivssaturation, reacderivsporosity,
@@ -181,14 +181,15 @@ void Mat::PAR::FluidPoroSingleReaction::evaluate_function_internal(std::vector<d
     variables.push_back(
         std::pair<std::string, double>(volfracpressurenames_[k], volfracpressures[k]));
 
-  // evaluate the reaction term
-  double curval = Global::Problem::instance()
-                      ->function_by_id<Core::Utils::FunctionOfAnything>(functID_)
-                      .evaluate(variables, constants, 0);
-  // evaluate derivatives
-  std::vector<double> curderivs(Global::Problem::instance()
-          ->function_by_id<Core::Utils::FunctionOfAnything>(functID_)
-          .evaluate_derivative(variables, constants, 0));
+  // evaluate the reaction term & derivatives
+  const auto& func_base = Global::Problem::instance()
+                            ->function_by_id<Core::Utils::FunctionOfAnything>(functID_);
+  
+  const auto* func_sym = dynamic_cast<const Core::Utils::SymbolicFunctionOfAnything*>(&func_base);
+
+  double curval = func_sym->evaluate(variables, constants, 0, element_id);
+  
+  std::vector<double> curderivs = func_sym->evaluate_derivative(variables, constants, 0, element_id);
 
   // fill the output vector
   for (int k = 0; k < totalnummultiphasedof_; k++)
@@ -449,11 +450,11 @@ void Mat::FluidPoroSingleReaction::evaluate_reaction(std::vector<double>& reacva
     std::vector<std::vector<double>>& reacderivsscalar, const std::vector<double>& pressure,
     const std::vector<double>& saturation, const double& porosity,
     const std::vector<double>& volfracs, const std::vector<double>& volfracpressures,
-    const std::vector<double>& scalar)
+    const std::vector<double>& scalar, int element_id)
 {
   params_->evaluate_function(reacval, reacderivspressure, reacderivssaturation, reacderivsporosity,
       reacderivsvolfrac, reacderivsvolfracpressure, reacderivsscalar, pressure, saturation,
-      porosity, volfracs, volfracpressures, scalar);
+      porosity, volfracs, volfracpressures, scalar, element_id);
 
   return;
 }

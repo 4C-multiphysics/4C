@@ -1492,8 +1492,9 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::g
 
 
     // calculate reaction coefficient
+    int eleGID = master_ele->id();
     reacoeff_ = actmat->compute_reaction_coeff() *
-                dynamic_cast<Mat::PAR::FluidPoro*>(actmat->parameter())->initial_porosity_;
+                dynamic_cast<Mat::PAR::FluidPoro*>(actmat->parameter())->initial_porosity_.at(eleGID);
   }
   else if (material->material_type() == Core::Materials::m_matlist)
   {

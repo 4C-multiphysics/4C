@@ -190,7 +190,7 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate(Discret::Elements::
   int result = Base::evaluate(params, ebofoaf, elemat_1, elevec_1, evelaf, epreaf, evelnp, eveln,
       eprenp, epren, emhist, echist, epressnp_timederiv, epressam_timederiv, epressn_timederiv,
       eaccam, edispnp, edispn, egridv, egridvn, escaaf, &eporositynp, &eporositydot, &eporositydotn,
-      mat, ele->is_ale(), intpoints);
+      mat, ele->is_ale(), intpoints, ele);
 
   return result;
 }
@@ -200,7 +200,7 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::compute_porosity(
     Teuchos::ParameterList& params, const double& press, const double& J, const int& gp,
     const Core::LinAlg::Matrix<nen_, 1>& shapfct, const Core::LinAlg::Matrix<nen_, 1>* myporosity,
     double& porosity, double* dphi_dp, double* dphi_dJ, double* dphi_dJdp, double* dphi_dJJ,
-    double* dphi_dpp, bool save)
+    double* dphi_dpp, bool save, int eleGID)
 {
   if (myporosity == nullptr)
     FOUR_C_THROW("no porosity values given!!");
@@ -407,7 +407,7 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate_od(Discret::Element
   int result =
       evaluate_od(params, ebofoaf, elemat_1, elevec_1, evelaf, epreaf, evelnp, eveln, eprenp, epren,
           emhist, echist, epressnp_timederiv, epressam_timederiv, epressn_timederiv, eaccam,
-          edispnp, edispn, egridv, egridvn, escaaf, &eporositynp, mat, ele->is_ale(), intpoints);
+          edispnp, edispn, egridv, egridvn, escaaf, &eporositynp, mat, ele->is_ale(), intpoints, ele);
 
   return result;
 }
@@ -428,7 +428,7 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate_od(Teuchos::Paramet
     const Core::LinAlg::Matrix<nsd_, nen_>& edispn, const Core::LinAlg::Matrix<nsd_, nen_>& egridv,
     const Core::LinAlg::Matrix<nsd_, nen_>& egridvn, const Core::LinAlg::Matrix<nen_, 1>& escaaf,
     const Core::LinAlg::Matrix<nen_, 1>* eporositynp, std::shared_ptr<Core::Mat::Material> mat,
-    bool isale, const Core::FE::GaussIntegration& intpoints)
+    bool isale, const Core::FE::GaussIntegration& intpoints, Discret::Elements::Fluid* ele)
 {
   // flag for higher order elements
   Base::is_higher_order_ele_ = IsHigherOrder<distype>::ishigherorder;
@@ -442,7 +442,7 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate_od(Teuchos::Paramet
   // ---------------------------------------------------------------------
   sysmat_od(params, ebofoaf, evelaf, evelnp, eveln, epreaf, eprenp, epren, emhist, echist,
       epressnp_timederiv, epressam_timederiv, epressn_timederiv, eaccam, edispnp, edispn, egridv,
-      egridvn, escaaf, eporositynp, elemat1, elevec1, mat, isale, intpoints);
+      egridvn, escaaf, eporositynp, elemat1, elevec1, mat, isale, intpoints, ele);
 
   return 0;
 }
@@ -464,7 +464,7 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::sysmat_od(Teuchos::Paramete
     Core::LinAlg::Matrix<(nsd_ + 1) * nen_, (nsd_ + 1) * nen_>& ecoupl,
     Core::LinAlg::Matrix<(nsd_ + 1) * nen_, 1>& eforce,
     std::shared_ptr<const Core::Mat::Material> material, bool isale,
-    const Core::FE::GaussIntegration& intpoints)
+    const Core::FE::GaussIntegration& intpoints, Discret::Elements::Fluid* ele)
 {
   //------------------------------------------------------------------------
   //  preliminary definitions and evaluations
@@ -505,7 +505,7 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::sysmat_od(Teuchos::Paramete
   gauss_point_loop_p1_od(params, ebofoaf, evelaf, evelnp, eveln, epreaf, eprenp, epren, emhist,
       echist, epressnp_timederiv, epressam_timederiv, epressn_timederiv, eaccam, edispnp, edispn,
       egridv, egridvn, escaaf, eporositynp, eforce, ecoupl_u, ecoupl_p, ecouplp1_u, ecouplp1_p,
-      material, intpoints);
+      material, intpoints, ele);
   //------------------------------------------------------------------------
   //  end loop over integration points
   //------------------------------------------------------------------------
@@ -605,7 +605,8 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
     Core::LinAlg::Matrix<nen_ * nsd_, nen_>& ecouplp1_u,
     Core::LinAlg::Matrix<nen_, nen_>& ecouplp1_p,
     std::shared_ptr<const Core::Mat::Material> material,
-    const Core::FE::GaussIntegration& intpoints)
+    const Core::FE::GaussIntegration& intpoints,
+    Discret::Elements::Fluid* ele)
 {
   // definition of velocity-based momentum residual vectors
   static Core::LinAlg::Matrix<nsd_, nen_ * nsd_> lin_resM_Dus(Core::LinAlg::Initialization::zero);
@@ -656,6 +657,7 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
     double dphi_dJdp = 0.0;
     double dphi_dJJ = 0.0;
     Base::porosity_ = 0.0;
+    int eleGID = ele->id();
 
     // compute scalar at n+alpha_F or n+1
     const double scalaraf = Base::funct_.dot(escaaf);
@@ -663,7 +665,7 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
     compute_porosity(params, Base::press_, volchange, *(iquad), Base::funct_, eporositynp,
         Base::porosity_, &dphi_dp, &dphi_dJ, &dphi_dJdp, &dphi_dJJ,
         nullptr,  // dphi_dpp not needed
-        false);
+        false, eleGID);
 
     double refporositydot = Base::struct_mat_->ref_porosity_time_deriv();
 
@@ -735,7 +737,7 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
     // compute strong residual of mixture (structural) equation
     if (Base::porofldpara_->stab_biot() and (not Base::porofldpara_->is_stationary_conti()) and
         Base::struct_mat_->poro_law_type() != Core::Materials::m_poro_law_constant)
-      Base::compute_mixture_strong_residual(params, defgrd, edispnp, edispn, F_X, *iquad, true);
+      Base::compute_mixture_strong_residual(params, defgrd, edispnp, edispn, F_X, *iquad, true, eleGID);
 
     //----------------------------------------------------------------------
     // set time-integration factors for left- and right-hand side
@@ -753,7 +755,7 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
     // 2) coupling terms in continuity equation
 
     Base::fill_matrix_conti_od(timefacfacpre, dphi_dp, dphi_dJ, dphi_dJJ, dphi_dJdp, refporositydot,
-        dgradphi_dus, dphi_dus, dJ_dus, egridv, lin_resM_Dus, lin_resM_Dus_gridvel, ecoupl_p);
+        dgradphi_dus, dphi_dus, dJ_dus, egridv, lin_resM_Dus, lin_resM_Dus_gridvel, ecoupl_p, eleGID);
 
     //*************************************************************************************************************
     // 3) additionale terms due to p1 approach (derivatives w.r.t. porosity)

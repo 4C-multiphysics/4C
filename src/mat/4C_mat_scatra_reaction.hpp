@@ -371,7 +371,8 @@ namespace Mat
         const std::vector<double>& phinp,    //!< scalar values at t_(n+1)
         const double time,                   //!< current time
         const double* gpcoord,               //!< Gauss-point coordinates
-        const double scale                   //!< scaling factor for reference concentrations
+        const double scale,                   //!< scaling factor for reference concentrations
+        int element_id                        //!< current element id
     ) const;
 
     void calc_perm_influence_deriv(const int k,  //!< current scalar id
@@ -379,7 +380,8 @@ namespace Mat
         const std::vector<double>& phinp,        //!< scalar values at t_(n+1)
         const double time,                       //!< current time
         const double* gpcoord,                   //!< Gauss-point coordinates
-        const double scale                       //!< scaling factor for reference concentrations
+        const double scale,                       //!< scaling factor for reference concentrations
+        int element_id                            //!< current element id
     ) const;
 
    protected:
@@ -428,7 +430,8 @@ namespace Mat
         const std::vector<std::pair<std::string, double>>&
             constants,  //!< vector containing values which are independent of the scalars
         const double
-            scale_phi  //!< scaling factor for scalar values (used for reference concentrations)
+            scale_phi,  //!< scaling factor for scalar values (used for reference concentrations)
+        int element_id   //!< current element id
     ) const;
 
     /// calculate advanced reaction term derivatives
@@ -438,7 +441,8 @@ namespace Mat
         const std::vector<std::pair<std::string, double>>&
             constants,  //!< vector containing values which are independent of the scalars
         const double
-            scale_phi  //!< scaling factor for scalar values (used for reference concentrations)
+            scale_phi,  //!< scaling factor for scalar values (used for reference concentrations)
+        int element_id   //!< current element id
     ) const;
 
     /// calculate advanced reaction term derivatives after additional variables of the specified
@@ -448,7 +452,8 @@ namespace Mat
         const std::vector<std::pair<std::string, double>>& variables,  //!< variables
         const std::vector<std::pair<std::string, double>>&
             constants,    //!< constants (including the scalar values phinp)
-        double scale_phi  //!< scaling factor for scalar values (used for reference concentrations)
+        double scale_phi,  //!< scaling factor for scalar values (used for reference concentrations)
+        int element_id   //!< current element id
     ) const;
 
     /// add variables to the by-function reaction
@@ -464,7 +469,8 @@ namespace Mat
             constants,      //!< vector containing values which are independent of the scalars
         double scale_reac,  //!< scaling factor for reaction term (= reaction coefficient *
                             //!< stoichometry)
-        double scale_phi  //!< scaling factor for scalar values (used for reference concentrations)
+        double scale_phi,  //!< scaling factor for scalar values (used for reference concentrations)
+        int element_id     //!< current element id
     ) const;
 
     /// helper for calculating advanced reaction term derivatives
@@ -475,7 +481,8 @@ namespace Mat
             constants,      //!< vector containing values which are independent of the scalars
         double scale_reac,  //!< scaling factor for reaction term (= reaction coefficient *
                             //!< stoichometry)
-        double scale_phi  //!< scaling factor for scalar values (used for reference concentrations)
+        double scale_phi,  //!< scaling factor for scalar values (used for reference concentrations)
+        int element_id     //!< current element id
     ) const;
 
     /// helper for calculating advanced reaction term derivatives
@@ -486,7 +493,8 @@ namespace Mat
             constants,      //!< constants (including the scalar values phinp)
         double scale_reac,  //!< scaling factor for reaction term (= reaction coefficient *
                             //!< stoichometry)
-        double scale_phi  //!< scaling factor for scalar values (used for reference concentrations)
+        double scale_phi,  //!< scaling factor for scalar values (used for reference concentrations)
+        int element_id     //!< current element id
     ) const;
 
    private:

@@ -404,9 +404,12 @@ void PoroElast::Utils::PoroMaterialStrategy::assign_material2_to1(
   if (fluid != nullptr)
   {
     // Copy Initial Porosity from StructPoro Material to FluidPoro Material
+    int eleGID = ele1->id();
+    auto struct_mat = std::static_pointer_cast<Mat::StructPoro>(ele1->material());
+    Core::IO::InputField<double> init_porosity_{struct_mat->init_porosity(eleGID)};
+
     static_cast<Mat::PAR::FluidPoro*>(fluid->material()->parameter())
-        ->set_initial_porosity(
-            std::static_pointer_cast<Mat::StructPoro>(ele1->material())->init_porosity());
+        ->set_initial_porosity(init_porosity_, eleGID);
   }
   else
   {
