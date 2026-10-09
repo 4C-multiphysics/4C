@@ -132,7 +132,7 @@ void Wear::LagrangeStrategyWear::setup_wear(bool redistributed, bool init)
   int offset_if = 0;
 
   // merge interface maps to global maps
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // ****************************************************
     // for wear as own variable
@@ -140,40 +140,42 @@ void Wear::LagrangeStrategyWear::setup_wear(bool redistributed, bool init)
     if (wearprimvar_)
     {
       // build wear dof map
-      interface_[i]->update_w_sets(offset_if, maxdofwear_, wearbothpv_);
+      interface->update_w_sets(offset_if, maxdofwear_, wearbothpv_);
 
       // merge interface source wear dof maps to global source wear dof map
-      gwdofrowmap_ = Core::LinAlg::merge_map(gwdofrowmap_, interface_[i]->w_dofs());
+      gwdofrowmap_ = Core::LinAlg::merge_map(gwdofrowmap_, interface->w_dofs());
       offset_if = gwdofrowmap_->num_global_elements();
       if (offset_if < 0) offset_if = 0;
 
       // merge interface target wear dof maps to global source wear dof map
       if (wearbothpv_)
       {
-        gwmdofrowmap_ = Core::LinAlg::merge_map(gwmdofrowmap_, interface_[i]->wm_dofs());
+        gwmdofrowmap_ = Core::LinAlg::merge_map(gwmdofrowmap_, interface->wm_dofs());
         offset_if = gwmdofrowmap_->num_global_elements();
         if (offset_if < 0) offset_if = 0;
       }
 
       // sourcenode normal part (first entry)
-      interface_[i]->split_source_dofs();
-      gsdofnrowmap_ = Core::LinAlg::merge_map(gsdofnrowmap_, interface_[i]->sn_dofs());
+      interface->split_source_dofs();
+      gsdofnrowmap_ = Core::LinAlg::merge_map(gsdofnrowmap_, interface->sn_dofs());
 
       // targetnode normal part (first entry)
       if (wearbothpv_)
       {
-        interface_[i]->split_target_dofs();
-        gmdofnrowmap_ = Core::LinAlg::merge_map(gmdofnrowmap_, interface_[i]->mn_dofs());
+        interface->split_target_dofs();
+        gmdofnrowmap_ = Core::LinAlg::merge_map(gmdofnrowmap_, interface->mn_dofs());
 
-        interface_[i]->build_active_set_target();
-        gmslipn_ = Core::LinAlg::merge_map(gmslipn_, interface_[i]->slip_target_n_dofs(), false);
+        interface->build_active_set_target();
+        gmslipn_ = Core::LinAlg::merge_map(gmslipn_, interface->slip_target_n_dofs(), false);
       }
 
       // initialize nodal wcurr for integrator (mod. gap)
-      for (int j = 0; j < (int)interface_[i]->source_row_nodes()->num_my_elements(); ++j)
+      const auto source_row_node_gids =
+          std::span(interface->source_row_nodes()->my_global_elements(),
+              interface->source_row_nodes()->num_global_elements());
+      for (const int gid : source_row_node_gids)
       {
-        int gid = interface_[i]->source_row_nodes()->gid(j);
-        Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+        Core::Nodes::Node* node = interface->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
         CONTACT::FriNode* cnode = dynamic_cast<CONTACT::FriNode*>(node);
 
@@ -182,10 +184,12 @@ void Wear::LagrangeStrategyWear::setup_wear(bool redistributed, bool init)
 
       if (wearbothpv_)
       {
-        for (int j = 0; j < (int)interface_[i]->target_col_nodes()->num_my_elements(); ++j)
+        const auto target_col_node_gids =
+            std::span(interface->target_col_nodes()->my_global_elements(),
+                interface->target_col_nodes()->num_global_elements());
+        for (const auto gid : target_col_node_gids)
         {
-          int gid = interface_[i]->target_col_nodes()->gid(j);
-          Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+          Core::Nodes::Node* node = interface->discret().g_node(gid);
           if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
           CONTACT::FriNode* cnode = dynamic_cast<CONTACT::FriNode*>(node);
 
@@ -200,9 +204,8 @@ void Wear::LagrangeStrategyWear::setup_wear(bool redistributed, bool init)
         wearprimvar_ == false)
     {
       gminvolvednodes_ =
-          Core::LinAlg::merge_map(gminvolvednodes_, interface_[i]->involved_nodes(), false);
-      gminvolveddofs_ =
-          Core::LinAlg::merge_map(gminvolveddofs_, interface_[i]->involved_dofs(), false);
+          Core::LinAlg::merge_map(gminvolvednodes_, interface->involved_nodes(), false);
+      gminvolveddofs_ = Core::LinAlg::merge_map(gminvolveddofs_, interface->involved_dofs(), false);
     }
   }
 
@@ -393,7 +396,7 @@ void Wear::LagrangeStrategyWear::assemble_mortar()
   CONTACT::AbstractStrategy::assemble_mortar();
 
   // for all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     //************************************************************
     // only assemble D2 for both-sided wear --> unweights the
@@ -401,11 +404,11 @@ void Wear::LagrangeStrategyWear::assemble_mortar()
     // --> based on weak dirichlet bc!
     if (Teuchos::getIntegralValue<Wear::WearSide>(params(), "WEAR_SIDE") == Wear::wear_both and
         !wearprimvar_)
-      interface_[i]->assemble_d2(*d2matrix_);
+      interface->assemble_d2(*d2matrix_);
 
     //************************************************************
     // assemble wear vector
-    if (!wearprimvar_) interface_[i]->assemble_wear(*wearvector_);
+    if (!wearprimvar_) interface->assemble_wear(*wearvector_);
   }  // end interface loop
 
   // *********************************************************************************
@@ -434,12 +437,12 @@ void Wear::LagrangeStrategyWear::assemble_mortar()
       wgap_->update(1.0, *wearvector_, 1.0);
 
       // update all gap function entries for source nodes!
-      for (int i = 0; i < (int)interface_.size(); ++i)
+      for (const auto& interface : interface_)
       {
-        for (int j = 0; j < (int)interface_[i]->source_row_nodes()->num_my_elements(); ++j)
+        for (int j = 0; j < (int)interface->source_row_nodes()->num_my_elements(); ++j)
         {
-          int gid = interface_[i]->source_row_nodes()->gid(j);
-          Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+          int gid = interface->source_row_nodes()->gid(j);
+          Core::Nodes::Node* node = interface->discret().g_node(gid);
           if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
           CONTACT::FriNode* cnode = dynamic_cast<CONTACT::FriNode*>(node);
 
@@ -2692,22 +2695,21 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
   /* and global matrix linslip with derivatives of slip nodes           */
   /* and inactive right-hand side with old lagrange multipliers (incr)  */
   /**********************************************************************/
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->assemble_tn(tmatrix_, nullptr);
-    interface_[i]->assemble_s(*smatrix_);
-    interface_[i]->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
-    interface_[i]->assemble_lin_stick(*linstickLM_, *linstickDIS_, *linstickRHS_);
-    interface_[i]->assemble_lin_slip(*linslipLM_, *linslipDIS_, *linslipRHS_);
-    if (systype != CONTACT::SystemType::condensed)
-      interface_[i]->assemble_inactiverhs(*inactiverhs_);
+    interface->assemble_tn(tmatrix_, nullptr);
+    interface->assemble_s(*smatrix_);
+    interface->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
+    interface->assemble_lin_stick(*linstickLM_, *linstickDIS_, *linstickRHS_);
+    interface->assemble_lin_slip(*linslipLM_, *linslipDIS_, *linslipRHS_);
+    if (systype != CONTACT::SystemType::condensed) interface->assemble_inactiverhs(*inactiverhs_);
 
     //***************************************************
     // Assemble lin. for implicit internal state wear algorithm
     if (wearimpl_ and !wearprimvar_)
     {  // assemble wear-specific matrices
-      interface_[i]->assemble_lin_w_lm(*wlinmatrix_);
-      interface_[i]->assemble_lin_w_lm_sl(*wlinmatrixsl_);
+      interface->assemble_lin_w_lm(*wlinmatrix_);
+      interface->assemble_lin_w_lm_sl(*wlinmatrixsl_);
 
 #ifdef CONSISTENTSTICK
       interface_[i]->AssembleLinWLmSt(*wlinmatrixst_);
@@ -2719,31 +2721,31 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     if (wearimpl_ and wearprimvar_)
     {
       // blocks for w-lines
-      interface_[i]->assemble_te(*twmatrix_, *ematrix_);
-      interface_[i]->assemble_lin_t_d(*lintdis_);
-      interface_[i]->assemble_lin_t_lm(*lintlm_);
-      interface_[i]->assemble_lin_e_d(*linedis_);
+      interface->assemble_te(*twmatrix_, *ematrix_);
+      interface->assemble_lin_t_d(*lintdis_);
+      interface->assemble_lin_t_lm(*lintlm_);
+      interface->assemble_lin_e_d(*linedis_);
 
       // blocks for z-lines
-      interface_[i]->assemble_lin_g_w(*smatrixW_);
-      interface_[i]->assemble_lin_slip_w(*linslip_w_);
+      interface->assemble_lin_g_w(*smatrixW_);
+      interface->assemble_lin_slip_w(*linslip_w_);
 
       // w-line rhs
-      interface_[i]->assemble_inactive_wear_rhs(*inactive_wear_rhs_);
-      interface_[i]->assemble_wear_cond_rhs(*wear_cond_rhs_);
+      interface->assemble_inactive_wear_rhs(*inactive_wear_rhs_);
+      interface->assemble_wear_cond_rhs(*wear_cond_rhs_);
 
       // for both-sided discrete wear
       if (wearbothpv_)
       {
         // blocks for w-lines
-        interface_[i]->assemble_te_target(*twmatrix_m_, *ematrix_m_);
-        interface_[i]->assemble_lin_t_d_target(*lintdis_m_);
-        interface_[i]->assemble_lin_t_lm_target(*lintlm_m_);
-        interface_[i]->assemble_lin_e_d_target(*linedis_m_);
+        interface->assemble_te_target(*twmatrix_m_, *ematrix_m_);
+        interface->assemble_lin_t_d_target(*lintdis_m_);
+        interface->assemble_lin_t_lm_target(*lintlm_m_);
+        interface->assemble_lin_e_d_target(*linedis_m_);
 
         // w-line rhs
-        interface_[i]->assemble_inactive_wear_rhs_target(*inactive_wear_rhs_m_);
-        interface_[i]->assemble_wear_cond_rhs_target(*wear_cond_rhs_m_);
+        interface->assemble_inactive_wear_rhs_target(*inactive_wear_rhs_m_);
+        interface->assemble_wear_cond_rhs_target(*wear_cond_rhs_m_);
       }
     }
   }  // end interface loop
@@ -4127,14 +4129,14 @@ void Wear::LagrangeStrategyWear::output_wear()
 
     // multiply the wear with its normal direction and store in wear_vector
     // loop over all interfaces
-    for (int i = 0; i < (int)interface_.size(); ++i)
+    for (const auto& interface : interface_)
     {
       // FIRST: get the wear values and the normal directions for the interface
       // loop over all source row nodes on the current interface
-      for (int j = 0; j < interface_[i]->source_row_nodes()->num_my_elements(); ++j)
+      for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
       {
-        int gid = interface_[i]->source_row_nodes()->gid(j);
-        Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+        int gid = interface->source_row_nodes()->gid(j);
+        Core::Nodes::Node* node = interface->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
         CONTACT::FriNode* frinode = dynamic_cast<CONTACT::FriNode*>(node);
 
@@ -4336,13 +4338,13 @@ void Wear::LagrangeStrategyWear::do_write_restart(
   }
 
   // loop over all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // loop over all source nodes on the current interface
-    for (int j = 0; j < interface_[i]->source_row_nodes()->num_my_elements(); ++j)
+    for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
     {
-      int gid = interface_[i]->source_row_nodes()->gid(j);
-      Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+      int gid = interface->source_row_nodes()->gid(j);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
       CONTACT::Node* cnode = dynamic_cast<CONTACT::Node*>(node);
       int dof = (activetoggle->get_map()).lid(gid);
@@ -4623,9 +4625,9 @@ bool Wear::LagrangeStrategyWear::redistribute_contact(
   if (!parallel_redistribution_status() || Core::Communication::num_mpi_ranks(get_comm()) == 1)
     return false;
 
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->is_redistributed() = false;
+    interface->is_redistributed() = false;
   }
 
   // decide whether redistribution should be applied or not
@@ -4654,11 +4656,11 @@ bool Wear::LagrangeStrategyWear::redistribute_contact(
     else
     {
       // compute average balance factors of last time step
-      for (int k = 0; k < (int)unbalanceEvaluationTime_.size(); ++k)
-        taverage += unbalanceEvaluationTime_[k];
+      for (const auto unbalance_eval_time : unbalanceEvaluationTime_)
+        taverage += unbalance_eval_time;
       taverage /= (int)unbalanceEvaluationTime_.size();
-      for (int k = 0; k < (int)unbalanceNumSourceElements_.size(); ++k)
-        eaverage += unbalanceNumSourceElements_[k];
+      for (const auto unbalance_num_source_elements : unbalanceNumSourceElements_)
+        eaverage += unbalance_num_source_elements;
       eaverage /= (int)unbalanceNumSourceElements_.size();
 
       // delete balance factors of last time step
@@ -4686,11 +4688,11 @@ bool Wear::LagrangeStrategyWear::redistribute_contact(
     else
     {
       // compute average balance factors of last time step
-      for (int k = 0; k < (int)unbalanceEvaluationTime_.size(); ++k)
-        taverage += unbalanceEvaluationTime_[k];
+      for (const auto unbalance_eval_time : unbalanceEvaluationTime_)
+        taverage += unbalance_eval_time;
       taverage /= (int)unbalanceEvaluationTime_.size();
-      for (int k = 0; k < (int)unbalanceNumSourceElements_.size(); ++k)
-        eaverage += unbalanceNumSourceElements_[k];
+      for (const auto unbalance_num_source_elements : unbalanceNumSourceElements_)
+        eaverage += unbalance_num_source_elements;
       eaverage /= (int)unbalanceNumSourceElements_.size();
 
       // delete balance factors of last time step
@@ -4738,25 +4740,25 @@ bool Wear::LagrangeStrategyWear::redistribute_contact(
   set_state(Mortar::state_old_displacement, *dis);
 
   // parallel redistribution of all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // redistribute optimally among procs
-    interface_[i]->redistribute();
+    interface->redistribute();
 
     // call fill complete again
-    interface_[i]->fill_complete(Global::Problem::instance()->discretization_map(),
+    interface->fill_complete(Global::Problem::instance()->discretization_map(),
         Global::Problem::instance()->binning_strategy_params(),
         Global::Problem::instance()->output_control_file(),
         Global::Problem::instance()->spatial_approximation_type(), true, maxdof_);
 
     // print new parallel distribution
-    interface_[i]->print_parallel_distribution();
+    interface->print_parallel_distribution();
 
     // re-create binary search tree
-    interface_[i]->create_search_tree();
+    interface->create_search_tree();
 
     // set bool for redistribution
-    interface_[i]->is_redistributed() = true;
+    interface->is_redistributed() = true;
   }
 
   // re-setup strategy with redistributed=TRUE, init=FALSE
@@ -4840,17 +4842,17 @@ void Wear::LagrangeStrategyWear::do_read_restart(
 
   // store restart information on active set and slip set
   // into nodes, therefore first loop over all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // loop over all source nodes on the current interface
-    for (int j = 0; j < (interface_[i]->source_row_nodes())->num_my_elements(); ++j)
+    for (int j = 0; j < (interface->source_row_nodes())->num_my_elements(); ++j)
     {
-      int gid = (interface_[i]->source_row_nodes())->gid(j);
+      int gid = (interface->source_row_nodes())->gid(j);
       int dof = (activetoggle->get_map()).lid(gid);
 
       if (activetoggle->local_values_as_span()[dof] == 1)
       {
-        Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+        Core::Nodes::Node* node = interface->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
         CONTACT::Node* cnode = dynamic_cast<CONTACT::Node*>(node);
 
@@ -4919,18 +4921,18 @@ void Wear::LagrangeStrategyWear::do_read_restart(
 
   // update active sets of all interfaces
   // (these maps are NOT allowed to be overlapping !!!)
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->build_active_set();
-    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface_[i]->active_nodes(), false);
-    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface_[i]->active_dofs(), false);
-    gactiven_ = Core::LinAlg::merge_map(gactiven_, interface_[i]->active_n_dofs(), false);
-    gactivet_ = Core::LinAlg::merge_map(gactivet_, interface_[i]->active_t_dofs(), false);
+    interface->build_active_set();
+    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface->active_nodes(), false);
+    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface->active_dofs(), false);
+    gactiven_ = Core::LinAlg::merge_map(gactiven_, interface->active_n_dofs(), false);
+    gactivet_ = Core::LinAlg::merge_map(gactivet_, interface->active_t_dofs(), false);
     if (friction_)
     {
-      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface_[i]->slip_nodes(), false);
-      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interface_[i]->slip_dofs(), false);
-      gslipt_ = Core::LinAlg::merge_map(gslipt_, interface_[i]->slip_t_dofs(), false);
+      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface->slip_nodes(), false);
+      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interface->slip_dofs(), false);
+      gslipt_ = Core::LinAlg::merge_map(gslipt_, interface->slip_t_dofs(), false);
     }
   }
 
@@ -4977,26 +4979,24 @@ void Wear::LagrangeStrategyWear::update_active_set_semi_smooth(const bool firstS
 
   // update active sets of all interfaces
   // (these maps are NOT allowed to be overlapping !!!)
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // for both-sided wear
     if (Teuchos::getIntegralValue<Wear::WearSide>(scontact_, "WEAR_SIDE") == Wear::wear_both and
         wearprimvar_ == false)
     {
       gminvolvednodes_ =
-          Core::LinAlg::merge_map(gminvolvednodes_, interface_[i]->involved_nodes(), false);
-      gminvolveddofs_ =
-          Core::LinAlg::merge_map(gminvolveddofs_, interface_[i]->involved_dofs(), false);
+          Core::LinAlg::merge_map(gminvolvednodes_, interface->involved_nodes(), false);
+      gminvolveddofs_ = Core::LinAlg::merge_map(gminvolveddofs_, interface->involved_dofs(), false);
     }
 
     if (wearprimvar_ and wearbothpv_)
     {
-      interface_[i]->build_active_set_target();
-      gmslipn_ = Core::LinAlg::merge_map(gmslipn_, interface_[i]->slip_target_n_dofs(), false);
-      gmslipnodes_ =
-          Core::LinAlg::merge_map(gmslipnodes_, interface_[i]->slip_target_nodes(), false);
+      interface->build_active_set_target();
+      gmslipn_ = Core::LinAlg::merge_map(gmslipn_, interface->slip_target_n_dofs(), false);
+      gmslipnodes_ = Core::LinAlg::merge_map(gmslipnodes_, interface->slip_target_nodes(), false);
       gmactivenodes_ =
-          Core::LinAlg::merge_map(gmactivenodes_, interface_[i]->active_target_nodes(), false);
+          Core::LinAlg::merge_map(gmactivenodes_, interface->active_target_nodes(), false);
     }
   }  // end interface loop
 
@@ -5027,12 +5027,12 @@ void Wear::LagrangeStrategyWear::update_wear_discret_iterate(bool store)
   else
   {
     // loop over all interfaces
-    for (int i = 0; i < (int)interface_.size(); ++i)
+    for (const auto& interface : interface_)
     {
-      for (int j = 0; j < (int)interface_[i]->source_col_nodes()->num_my_elements(); ++j)
+      for (int j = 0; j < (int)interface->source_col_nodes()->num_my_elements(); ++j)
       {
-        int gid = interface_[i]->source_col_nodes()->gid(j);
-        Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+        int gid = interface->source_col_nodes()->gid(j);
+        Core::Nodes::Node* node = interface->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
         CONTACT::FriNode* cnode = dynamic_cast<CONTACT::FriNode*>(node);
 
@@ -5044,12 +5044,12 @@ void Wear::LagrangeStrategyWear::update_wear_discret_iterate(bool store)
       if (wearbothpv_)
       {
         const std::shared_ptr<Core::LinAlg::Map> targetnodes =
-            Core::LinAlg::allreduce_e_map(*(interface_[i]->target_row_nodes()));
+            Core::LinAlg::allreduce_e_map(*(interface->target_row_nodes()));
 
         for (int j = 0; j < (int)targetnodes->num_my_elements(); ++j)
         {
           int gid = targetnodes->gid(j);
-          Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+          Core::Nodes::Node* node = interface->discret().g_node(gid);
           if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
           CONTACT::FriNode* cnode = dynamic_cast<CONTACT::FriNode*>(node);
 
@@ -5096,7 +5096,7 @@ void Wear::LagrangeStrategyWear::update(std::shared_ptr<const Core::LinAlg::Vect
 void Wear::LagrangeStrategyWear::store_nodal_quantities(Mortar::StrategyBase::QuantityType type)
 {
   // loop over all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // get global quantity to be stored in nodes
     std::shared_ptr<const Core::LinAlg::Vector<double>> vectorglobal = nullptr;
@@ -5133,13 +5133,13 @@ void Wear::LagrangeStrategyWear::store_nodal_quantities(Mortar::StrategyBase::Qu
     if (type == Mortar::StrategyBase::wupdate or type == Mortar::StrategyBase::wold or
         type == Mortar::StrategyBase::wupdateT)
     {
-      sdofmap = interface_[i]->source_col_dofs();
-      snodemap = interface_[i]->source_col_nodes();
+      sdofmap = interface->source_col_dofs();
+      snodemap = interface->source_col_nodes();
     }
     else
     {
-      sdofmap = interface_[i]->source_row_dofs();
-      snodemap = interface_[i]->source_row_nodes();
+      sdofmap = interface->source_row_dofs();
+      snodemap = interface->source_row_nodes();
     }
 
     // target side wear
@@ -5148,7 +5148,7 @@ void Wear::LagrangeStrategyWear::store_nodal_quantities(Mortar::StrategyBase::Qu
     {
       // export global quantity to current interface source dof map (column or row)
       const std::shared_ptr<Core::LinAlg::Map> targetdofs =
-          Core::LinAlg::allreduce_e_map(*(interface_[i]->target_row_dofs()));
+          Core::LinAlg::allreduce_e_map(*(interface->target_row_dofs()));
       vectorinterface = std::make_shared<Core::LinAlg::Vector<double>>(*targetdofs);
 
       if (vectorglobal != nullptr)  // necessary for case "activeold" and wear
@@ -5165,13 +5165,13 @@ void Wear::LagrangeStrategyWear::store_nodal_quantities(Mortar::StrategyBase::Qu
 
     // target specific
     const std::shared_ptr<Core::LinAlg::Map> targetnodes =
-        Core::LinAlg::allreduce_e_map(*(interface_[i]->target_row_nodes()));
+        Core::LinAlg::allreduce_e_map(*(interface->target_row_nodes()));
     if (type == Mortar::StrategyBase::wmupdate)
     {
       for (int j = 0; j < targetnodes->num_my_elements(); ++j)
       {
         int gid = targetnodes->gid(j);
-        Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+        Core::Nodes::Node* node = interface->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
         CONTACT::FriNode* fnode = dynamic_cast<CONTACT::FriNode*>(node);
 
@@ -5186,7 +5186,7 @@ void Wear::LagrangeStrategyWear::store_nodal_quantities(Mortar::StrategyBase::Qu
       for (int j = 0; j < targetnodes->num_my_elements(); ++j)
       {
         int gid = targetnodes->gid(j);
-        Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+        Core::Nodes::Node* node = interface->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
         CONTACT::FriNode* fnode = dynamic_cast<CONTACT::FriNode*>(node);
 
@@ -5202,7 +5202,7 @@ void Wear::LagrangeStrategyWear::store_nodal_quantities(Mortar::StrategyBase::Qu
       for (int j = 0; j < snodemap->num_my_elements(); ++j)
       {
         int gid = snodemap->gid(j);
-        Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+        Core::Nodes::Node* node = interface->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
         CONTACT::Node* cnode = dynamic_cast<CONTACT::Node*>(node);
 

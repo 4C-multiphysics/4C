@@ -51,9 +51,9 @@ void CONTACT::LagrangeStrategyTsi::set_state(
   {
     case Mortar::state_temperature:
     {
-      for (int j = 0; j < (int)interface_.size(); ++j)
+      for (const auto& interface : interface_)
       {
-        Core::FE::Discretization& idiscr = interface_[j]->discret();
+        Core::FE::Discretization& idiscr = interface->discret();
         Core::LinAlg::Vector<double> global(*idiscr.dof_col_map(), false);
         Core::LinAlg::export_to(vec, global);
 
@@ -72,9 +72,9 @@ void CONTACT::LagrangeStrategyTsi::set_state(
     }
     case Mortar::state_thermo_lagrange_multiplier:
     {
-      for (int j = 0; j < (int)interface_.size(); ++j)
+      for (const auto& interface : interface_)
       {
-        Core::FE::Discretization& idiscr = interface_[j]->discret();
+        Core::FE::Discretization& idiscr = interface->discret();
 
         Core::LinAlg::Vector<double> global(*idiscr.dof_col_map(), false);
         Core::LinAlg::export_to(vec, global);
@@ -112,7 +112,7 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
   // set the new displacements
   set_state(Mortar::state_new_displacement, *dis);
 
-  for (unsigned i = 0; i < interface_.size(); ++i) interface_[i]->initialize();
+  for (const auto& interface : interface_) interface->initialize();
 
   // set new temperatures
   std::shared_ptr<Core::LinAlg::Vector<double>> temp2 = coupST->source_to_target(*temp);
@@ -201,14 +201,14 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
       *thermo_m_dofs, 100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // stick / slip linearization
-  for (unsigned i = 0; i < interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    CONTACT::TSIInterface* tsi_interface = dynamic_cast<CONTACT::TSIInterface*>(&(*interface_[i]));
+    CONTACT::TSIInterface* tsi_interface = dynamic_cast<CONTACT::TSIInterface*>(&(*interface));
     if (!tsi_interface) FOUR_C_THROW("in TSI contact, this should be a TSIInterface!");
 
     // linearized normal contact
-    interface_[i]->assemble_s(s);
-    interface_[i]->assemble_g(*g_all);
+    interface->assemble_s(s);
+    interface->assemble_g(*g_all);
 
     // linearized tangential contact (friction)
     if (friction_)
@@ -229,10 +229,10 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
     tsi_interface->assemble_dm_lin_diss(nullptr, &m_LinDissDISP, nullptr, &m_LinDissContactLM, 1.);
 
     tsi_interface->assemble_lin_dm(linDcontactLM, linMcontactLM);
-    tsi_interface->assemble_lin_dm_x(nullptr, &linMdiss, 1., CONTACT::TSIInterface::LinDM_Diss,
-        interface_[i]->source_row_nodes());
+    tsi_interface->assemble_lin_dm_x(
+        nullptr, &linMdiss, 1., CONTACT::TSIInterface::LinDM_Diss, interface->source_row_nodes());
     tsi_interface->assemble_lin_dm_x(&linDThermoLM, &linMThermoLM, 1.,
-        CONTACT::TSIInterface::LinDM_ThermoLM, interface_[i]->source_row_nodes());
+        CONTACT::TSIInterface::LinDM_ThermoLM, interface->source_row_nodes());
   }
 
   // complete all those linearizations
@@ -919,10 +919,10 @@ void CONTACT::LagrangeStrategyTsi::store_nodal_quantities(
       vectorglobal = coupST.source_to_target(tmp);
       std::shared_ptr<const Core::LinAlg::Map> sdofmap, snodemap;
       // loop over all interfaces
-      for (int i = 0; i < (int)interface_.size(); ++i)
+      for (const auto& interface : interface_)
       {
-        sdofmap = interface_[i]->source_col_dofs();
-        snodemap = interface_[i]->source_col_nodes();
+        sdofmap = interface->source_col_dofs();
+        snodemap = interface->source_col_nodes();
         std::shared_ptr<Core::LinAlg::Vector<double>> vectorinterface = nullptr;
         vectorinterface = std::make_shared<Core::LinAlg::Vector<double>>(*sdofmap);
         if (vectorglobal != nullptr) Core::LinAlg::export_to(*vectorglobal, *vectorinterface);
@@ -931,7 +931,7 @@ void CONTACT::LagrangeStrategyTsi::store_nodal_quantities(
         for (int j = 0; j < snodemap->num_my_elements(); ++j)
         {
           int gid = snodemap->gid(j);
-          Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+          Core::Nodes::Node* node = interface->discret().g_node(gid);
           if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
           Node* cnode = dynamic_cast<Node*>(node);
 
@@ -1000,8 +1000,8 @@ void CONTACT::LagrangeStrategyTsi::update(std::shared_ptr<const Core::LinAlg::Ve
 
   Core::LinAlg::SparseMatrix m_LinDissContactLM(
       *gtdofrowmap_, 100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
-  for (unsigned i = 0; i < interface_.size(); ++i)
-    dynamic_cast<CONTACT::TSIInterface*>(&(*interface_[i]))
+  for (const auto& interface : interface_)
+    dynamic_cast<CONTACT::TSIInterface*>(&(*interface))
         ->assemble_dm_lin_diss(nullptr, nullptr, nullptr, &m_LinDissContactLM, 1.);
   m_LinDissContactLM.complete(*gactivedofs_, *gtdofrowmap_);
   Core::LinAlg::Vector<double> z_act(*gactivedofs_);

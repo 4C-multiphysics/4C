@@ -186,20 +186,20 @@ void CONTACT::LagrangeStrategyPoro::poro_initialize(
   //  (3)                                                          //
   //      Assemble Matrices                                        //
   //                                                               //
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     if (no_penetration_ && (is_in_contact() || was_in_contact() || was_in_contact_last_time_step()))
     {
-      interface_[i]->assemble_normal_coupling(*NCoup_);
+      interface->assemble_normal_coupling(*NCoup_);
 
-      interface_[i]->assemble_normal_coupling_linearisation(*NCoup_lindisp_, coupfs);
-      interface_[i]->assemble_normal_coupling_linearisation(*NCoup_linvel_, coupfs, true);
+      interface->assemble_normal_coupling_linearisation(*NCoup_lindisp_, coupfs);
+      interface->assemble_normal_coupling_linearisation(*NCoup_linvel_, coupfs, true);
 
-      interface_[i]->assemble_tn(Tangential_, nullptr);
-      interface_[i]->assemble_t_nderiv(linTangentiallambda_, nullptr,
+      interface->assemble_tn(Tangential_, nullptr);
+      interface->assemble_t_nderiv(linTangentiallambda_, nullptr,
           true);  // use lambda(n +1) for tangential condition!!!
 
-      interface_[i]->assemble_lin_dm(*porolindmatrix_, *porolinmmatrix_, true);
+      interface->assemble_lin_dm(*porolindmatrix_, *porolinmmatrix_, true);
     }
   }
 
@@ -1273,10 +1273,10 @@ void CONTACT::LagrangeStrategyPoro::set_state(
     case Mortar::state_fpressure:
     {
       // set state on interfaces
-      for (int i = 0; i < (int)interface_.size(); ++i)
+      for (const auto& interface : interface_)
       {
         // interface_[i]->set_state(statename, vec);
-        Core::FE::Discretization& idiscret_ = interface_[i]->discret();
+        Core::FE::Discretization& idiscret_ = interface->discret();
 
         switch (statetype)
         {
@@ -1400,17 +1400,17 @@ void CONTACT::LagrangeStrategyPoro::set_parent_state(const Mortar::StateType& st
     Core::LinAlg::export_to(vec, global);
 
     // set state on interfaces
-    for (int i = 0; i < (int)interface_.size(); ++i)
+    for (const auto& interface : interface_)
     {
-      Core::FE::Discretization& idiscret_ = interface_[i]->discret();
+      Core::FE::Discretization& idiscret_ = interface->discret();
 
       if (porosource_)
       {
-        for (int j = 0; j < interface_[i]->source_col_elements()->num_my_elements();
+        for (int j = 0; j < interface->source_col_elements()->num_my_elements();
             ++j)  // will just work for onesided poro contact as the porosity is just on source
                   // side!!!
         {
-          int gid = interface_[i]->source_col_elements()->gid(j);
+          int gid = interface->source_col_elements()->gid(j);
 
           Mortar::Element* ele = dynamic_cast<Mortar::Element*>(idiscret_.g_element(gid));
 
@@ -1429,9 +1429,9 @@ void CONTACT::LagrangeStrategyPoro::set_parent_state(const Mortar::StateType& st
       }
       if (porotarget_)  // add target parent element displacements
       {
-        for (int j = 0; j < interface_[i]->target_col_elements()->num_my_elements(); ++j)
+        for (int j = 0; j < interface->target_col_elements()->num_my_elements(); ++j)
         {
-          int gid = interface_[i]->target_col_elements()->gid(j);
+          int gid = interface->target_col_elements()->gid(j);
 
           Mortar::Element* target_elem = dynamic_cast<Mortar::Element*>(idiscret_.g_element(gid));
 
@@ -1486,9 +1486,9 @@ void CONTACT::LagrangeStrategyPoro::poro_mt_prepare_fluid_coupling()
   mmatrix_->zero();
 
   // Assemble D and M matrices
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->assemble_dm(*dmatrix_, *mmatrix_);
+    interface->assemble_dm(*dmatrix_, *mmatrix_);
   }
 
   // complete D and M matrices

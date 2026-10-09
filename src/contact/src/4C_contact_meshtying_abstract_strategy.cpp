@@ -83,18 +83,18 @@ void CONTACT::MtAbstractStrategy::redistribute_meshtying()
     const double t_start = Teuchos::Time::wallTime();
 
     // do some more stuff with interfaces
-    for (int i = 0; i < (int)interface_.size(); ++i)
+    for (const auto& interface : interface_)
     {
       // print parallel distribution
       if (Core::Communication::my_mpi_rank(get_comm()) == 0)
         std::cout << "\nInterface parallel distribution before rebalancing:" << std::endl;
-      interface_[i]->print_parallel_distribution();
+      interface->print_parallel_distribution();
 
       // redistribute optimally among all procs
-      interface_[i]->redistribute();
+      interface->redistribute();
 
       // call fill complete again
-      interface_[i]->fill_complete(Global::Problem::instance()->discretization_map(),
+      interface->fill_complete(Global::Problem::instance()->discretization_map(),
           Global::Problem::instance()->binning_strategy_params(),
           Global::Problem::instance()->output_control_file(),
           Global::Problem::instance()->spatial_approximation_type(), true, maxdof_);
@@ -102,7 +102,7 @@ void CONTACT::MtAbstractStrategy::redistribute_meshtying()
       // print parallel distribution again
       if (Core::Communication::my_mpi_rank(get_comm()) == 0)
         std::cout << "Interface parallel distribution after rebalancing:" << std::endl;
-      interface_[i]->print_parallel_distribution();
+      interface->print_parallel_distribution();
     }
 
     // re-setup strategy with flag redistributed=TRUE
@@ -118,7 +118,7 @@ void CONTACT::MtAbstractStrategy::redistribute_meshtying()
   else
   {
     // No parallel redistribution to be performed. Just print the current distribution to screen.
-    for (int i = 0; i < (int)interface_.size(); ++i) interface_[i]->print_parallel_distribution();
+    for (const auto& interface : interface_) interface->print_parallel_distribution();
   }
 
   return;
@@ -152,27 +152,27 @@ void CONTACT::MtAbstractStrategy::setup(bool redistributed)
   int offset_if = 0;
 
   // merge interface maps to global maps
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->create_search_tree();
+    interface->create_search_tree();
 
     // build Lagrange multiplier dof map
-    interface_[i]->update_lag_mult_sets(offset_if);
+    interface->update_lag_mult_sets(offset_if);
 
     // merge interface Lagrange multiplier dof maps to global LM dof map
-    glmdofrowmap_ = Core::LinAlg::merge_map(glmdofrowmap_, interface_[i]->lag_mult_dofs());
+    glmdofrowmap_ = Core::LinAlg::merge_map(glmdofrowmap_, interface->lag_mult_dofs());
     offset_if = glmdofrowmap_->num_global_elements();
     if (offset_if < 0) offset_if = 0;
 
     // merge interface target, source maps to global target, source map
-    gsdofrowmap_ = Core::LinAlg::merge_map(gsdofrowmap_, interface_[i]->source_row_dofs());
-    gtdofrowmap_ = Core::LinAlg::merge_map(gtdofrowmap_, interface_[i]->target_row_dofs());
-    gsnoderowmap_ = Core::LinAlg::merge_map(gsnoderowmap_, interface_[i]->source_row_nodes());
-    gtnoderowmap_ = Core::LinAlg::merge_map(gtnoderowmap_, interface_[i]->target_row_nodes());
+    gsdofrowmap_ = Core::LinAlg::merge_map(gsdofrowmap_, interface->source_row_dofs());
+    gtdofrowmap_ = Core::LinAlg::merge_map(gtdofrowmap_, interface->target_row_dofs());
+    gsnoderowmap_ = Core::LinAlg::merge_map(gsnoderowmap_, interface->source_row_nodes());
+    gtnoderowmap_ = Core::LinAlg::merge_map(gtnoderowmap_, interface->target_row_nodes());
 
     // store initial element col map for binning strategy
     initial_elecolmap_.push_back(
-        std::make_shared<Core::LinAlg::Map>(*interface_[i]->discret().element_col_map()));
+        std::make_shared<Core::LinAlg::Map>(*interface->discret().element_col_map()));
   }
 
   // setup global non-source-or-target dof map
@@ -219,8 +219,8 @@ void CONTACT::MtAbstractStrategy::setup(bool redistributed)
   auto lagmultquad = Teuchos::getIntegralValue<Mortar::LagMultQuad>(params(), "LM_QUAD");
   if (shapefcn == Mortar::shape_dual &&
       (n_dim() == 3 || (n_dim() == 2 && lagmultquad == Mortar::lagmult_lin)))
-    for (int i = 0; i < (int)interface_.size(); ++i)
-      dualquadsourcetrafo_ += (interface_[i]->quadsource() && !(interface_[i]->is_nurbs()));
+    for (const auto& interface : interface_)
+      dualquadsourcetrafo_ += (interface->quadsource() && !(interface->is_nurbs()));
 
   //----------------------------------------------------------------------
   // COMPUTE TRAFO MATRIX AND ITS INVERSE
@@ -245,15 +245,13 @@ void CONTACT::MtAbstractStrategy::setup(bool redistributed)
     std::set<int> donebefore;
 
     // for all interfaces
-    for (int i = 0; i < (int)interface_.size(); ++i)
-      interface_[i]->assemble_trafo(*trafo_, *invtrafo_, donebefore);
+    for (const auto& interface : interface_)
+      interface->assemble_trafo(*trafo_, *invtrafo_, donebefore);
 
     // fill_complete() transformation matrices
     trafo_->complete();
     invtrafo_->complete();
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -286,7 +284,7 @@ void CONTACT::MtAbstractStrategy::set_state(
     case Mortar::state_old_displacement:
     {
       // set state on interfaces
-      for (int i = 0; i < (int)interface_.size(); ++i) interface_[i]->set_state(statetype, vec);
+      for (const auto& interface : interface_) interface->set_state(statetype, vec);
       break;
     }
     default:
@@ -310,13 +308,13 @@ void CONTACT::MtAbstractStrategy::mortar_coupling(
   // initialize and evaluate interfaces
   //********************************************************************
   // for all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // initialize / reset interfaces
-    interface_[i]->initialize();
+    interface->initialize();
 
     // evaluate interfaces
-    interface_[i]->evaluate();
+    interface->evaluate();
   }
 
   //********************************************************************
@@ -333,7 +331,7 @@ void CONTACT::MtAbstractStrategy::mortar_coupling(
   g_ = std::make_shared<Core::LinAlg::Vector<double>>(*gsdofrowmap_, true);
 
   // assemble D- and M-matrix on all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i) interface_[i]->assemble_dm(*dmatrix_, *mmatrix_);
+  for (const auto& interface : interface_) interface->assemble_dm(*dmatrix_, *mmatrix_);
 
   // fill_complete() global Mortar matrices
   dmatrix_->complete();
@@ -364,8 +362,7 @@ void CONTACT::MtAbstractStrategy::restrict_meshtying_zone()
   // Step 1: detect tied source nodes on all interfaces
   int localfounduntied = 0;
   int globalfounduntied = 0;
-  for (int i = 0; i < (int)interface_.size(); ++i)
-    interface_[i]->detect_tied_source_nodes(localfounduntied);
+  for (const auto& interface : interface_) interface->detect_tied_source_nodes(localfounduntied);
   globalfounduntied = Core::Communication::sum_all(localfounduntied, get_comm());
 
   // get out of here if the whole source surface is tied
@@ -392,7 +389,7 @@ void CONTACT::MtAbstractStrategy::restrict_meshtying_zone()
   // is only possible via a proper basis transformation.
   //**********************************************************************
   bool quadratic = false;
-  for (int i = 0; i < (int)interface_.size(); ++i) quadratic += interface_[i]->quadsource();
+  for (const auto& interface : interface_) quadratic += interface->quadsource();
   if (quadratic) FOUR_C_THROW("restrict_meshtying_zone only implemented for first-order elements");
 
   auto shapefcn = Teuchos::getIntegralValue<Mortar::ShapeFcn>(params(), "LM_SHAPEFCN");
@@ -404,7 +401,7 @@ void CONTACT::MtAbstractStrategy::restrict_meshtying_zone()
         "only implemented in combination with consistent boundary modification");
 
   // Step 2: restrict source node/dof sets of all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i) interface_[i]->restrict_source_sets();
+  for (const auto& interface : interface_) interface->restrict_source_sets();
 
   // Step 3: re-setup global maps and vectors with flag redistributed=FALSE
   // (this flag must be FALSE here, because the source set has been reduced and
@@ -491,20 +488,20 @@ void CONTACT::MtAbstractStrategy::mesh_initialization(
   //**********************************************************************
 
   // loop over all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // export Xsourcemod to column map for current interface
-    Core::LinAlg::Vector<double> Xsourcemodcol(*(interface_[i]->source_col_dofs()), false);
+    Core::LinAlg::Vector<double> Xsourcemodcol(*(interface->source_col_dofs()), false);
     Core::LinAlg::export_to(*Xsourcemod, Xsourcemodcol);
 
     // loop over all source column nodes on the current interface
-    for (int j = 0; j < interface_[i]->source_col_nodes()->num_my_elements(); ++j)
+    for (int j = 0; j < interface->source_col_nodes()->num_my_elements(); ++j)
     {
       // get global ID of current node
-      int gid = interface_[i]->source_col_nodes()->gid(j);
+      int gid = interface->source_col_nodes()->gid(j);
 
       // get the mortar node
-      Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
       Mortar::Node* mtnode = dynamic_cast<Mortar::Node*>(node);
 
@@ -603,7 +600,7 @@ void CONTACT::MtAbstractStrategy::evaluate(std::shared_ptr<Core::LinAlg::SparseO
 void CONTACT::MtAbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::QuantityType type)
 {
   // loop over all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // get global quantity to be stored in nodes
     std::shared_ptr<const Core::LinAlg::Vector<double>> vectorglobal = nullptr;
@@ -637,7 +634,7 @@ void CONTACT::MtAbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Q
     }  // switch
 
     // export global quantity to current interface source dof row map
-    std::shared_ptr<const Core::LinAlg::Map> sdofrowmap = interface_[i]->source_row_dofs();
+    std::shared_ptr<const Core::LinAlg::Map> sdofrowmap = interface->source_row_dofs();
     Core::LinAlg::Vector<double> vectorinterface(*sdofrowmap);
 
     if (vectorglobal != nullptr)
@@ -646,10 +643,10 @@ void CONTACT::MtAbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Q
       FOUR_C_THROW("store_nodal_quantities: Null vector handed in!");
 
     // loop over all source row nodes on the current interface
-    for (int j = 0; j < interface_[i]->source_row_nodes()->num_my_elements(); ++j)
+    for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
     {
-      int gid = interface_[i]->source_row_nodes()->gid(j);
-      Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+      int gid = interface->source_row_nodes()->gid(j);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
       Mortar::Node* mtnode = dynamic_cast<Mortar::Node*>(node);
 
@@ -716,13 +713,13 @@ void CONTACT::MtAbstractStrategy::store_dirichlet_status(
     std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmaps)
 {
   // loop over all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // loop over all source row nodes on the current interface
-    for (int j = 0; j < interface_[i]->source_row_nodes()->num_my_elements(); ++j)
+    for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
     {
-      int gid = interface_[i]->source_row_nodes()->gid(j);
-      Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+      int gid = interface->source_row_nodes()->gid(j);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
       Mortar::Node* mtnode = dynamic_cast<Mortar::Node*>(node);
 
@@ -815,9 +812,9 @@ void CONTACT::MtAbstractStrategy::print(std::ostream& os) const
        << "-------------------------------------------------------------\n";
   }
   Core::Communication::barrier(get_comm());
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    std::cout << *(interface_[i]);
+    std::cout << *interface;
   }
   Core::Communication::barrier(get_comm());
 
@@ -859,12 +856,12 @@ void CONTACT::MtAbstractStrategy::assemble_coords(
     // find this node in interface discretizations
     bool found = false;
     Core::Nodes::Node* node = nullptr;
-    for (int k = 0; k < (int)interface_.size(); ++k)
+    for (const auto& interface : interface_)
     {
-      found = interface_[k]->discret().have_global_node(gid);
+      found = interface->discret().have_global_node(gid);
       if (found)
       {
-        node = interface_[k]->discret().g_node(gid);
+        node = interface->discret().g_node(gid);
         break;
       }
     }

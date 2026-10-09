@@ -166,24 +166,24 @@ void CONTACT::PenaltyStrategy::evaluate_contact(
   bool isincontact = false;
   bool activesetchange = false;
 
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     bool localisincontact = false;
     bool localactivesetchange = false;
 
     // evaluate lagrange multipliers (regularized forces) in normal direction
     // and nodal derivz matrix values, store them in nodes
-    interface_[i]->assemble_reg_normal_forces(localisincontact, localactivesetchange);
+    interface->assemble_reg_normal_forces(localisincontact, localactivesetchange);
 
     // evaluate lagrange multipliers (regularized forces) in tangential direction
     auto soltype = Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(params(), "STRATEGY");
 
     if (friction_ and (soltype == CONTACT::SolvingStrategy::penalty or
                           soltype == CONTACT::SolvingStrategy::multiscale))
-      interface_[i]->assemble_reg_tangent_forces_penalty();
+      interface->assemble_reg_tangent_forces_penalty();
 
     if (friction_ and soltype == CONTACT::SolvingStrategy::uzawa)
-      interface_[i]->assemble_reg_tangent_forces_uzawa();
+      interface->assemble_reg_tangent_forces_uzawa();
 
     isincontact = isincontact || localisincontact;
     activesetchange = activesetchange || localactivesetchange;
@@ -218,12 +218,12 @@ void CONTACT::PenaltyStrategy::evaluate_contact(
 
   // update active sets of all interfaces
   // (these maps are NOT allowed to be overlapping !!!)
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->build_active_set();
-    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface_[i]->active_nodes(), false);
-    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface_[i]->active_dofs(), false);
-    gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface_[i]->slip_nodes(), false);
+    interface->build_active_set();
+    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface->active_nodes(), false);
+    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface->active_dofs(), false);
+    gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface->slip_nodes(), false);
   }
 
   // check if contact contributions are present,
@@ -235,14 +235,14 @@ void CONTACT::PenaltyStrategy::evaluate_contact(
   kteff->un_complete();
 
   // assemble contact quantities on all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // assemble global lagrangian multiplier vector
-    interface_[i]->assemble_lm(*z_);
+    interface->assemble_lm(*z_);
     // assemble global derivatives of lagrangian multipliers
-    interface_[i]->assemble_lin_z(*linzmatrix_);
+    interface->assemble_lin_z(*linzmatrix_);
     // assemble global derivatives of mortar D and M matrices
-    interface_[i]->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
+    interface->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
   }
 
   // fill_complete() global matrices LinD, LinM, LinZ
@@ -430,13 +430,11 @@ void CONTACT::PenaltyStrategy::reset_penalty()
   params().set<double>("PENALTYPARAMTAN", initial_penalty_tan());
 
   // reset penalty parameter in all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->interface_params().set<double>("PENALTYPARAM", initial_penalty());
-    interface_[i]->interface_params().set<double>("PENALTYPARAMTAN", initial_penalty_tan());
+    interface->interface_params().set<double>("PENALTYPARAM", initial_penalty());
+    interface->interface_params().set<double>("PENALTYPARAMTAN", initial_penalty_tan());
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -453,13 +451,11 @@ void CONTACT::PenaltyStrategy::modify_penalty()
   params().set<double>("PENALTYPARAMTAN", pennew);
 
   // modify penalty parameter in all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->interface_params().set<double>("PENALTYPARAM", pennew);
-    interface_[i]->interface_params().set<double>("PENALTYPARAMTAN", pennew);
+    interface->interface_params().set<double>("PENALTYPARAM", pennew);
+    interface->interface_params().set<double>("PENALTYPARAMTAN", pennew);
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -533,17 +529,16 @@ void CONTACT::PenaltyStrategy::initialize_uzawa(
       *gtdofrowmap_, 100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // reset nodal derivZ values
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    for (int j = 0; j < interface_[i]->source_col_nodes_bound()->num_my_elements(); ++j)
+    for (int j = 0; j < interface->source_col_nodes_bound()->num_my_elements(); ++j)
     {
-      int gid = interface_[i]->source_col_nodes_bound()->gid(j);
-      Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+      int gid = interface->source_col_nodes_bound()->gid(j);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
       Node* cnode = dynamic_cast<Node*>(node);
 
-      for (int k = 0; k < (int)((cnode->data().get_deriv_z()).size()); ++k)
-        (cnode->data().get_deriv_z())[k].clear();
+      for (auto& deriv_z_component : cnode->data().get_deriv_z()) deriv_z_component.clear();
       (cnode->data().get_deriv_z()).resize(0);
     }
   }
@@ -610,8 +605,7 @@ void CONTACT::PenaltyStrategy::update_constraint_norm(int uzawaiter)
     // Evaluate norm in tangential direction for frictional contact
     if (friction_)
     {
-      for (int i = 0; i < (int)interface_.size(); ++i)
-        interface_[i]->evaluate_tangent_norm(cnormtan);
+      for (const auto& interface : interface_) interface->evaluate_tangent_norm(cnormtan);
 
       cnormtan = sqrt(cnormtan);
     }
@@ -635,11 +629,11 @@ void CONTACT::PenaltyStrategy::update_constraint_norm(int uzawaiter)
         params().set<double>("PENALTYPARAM", 10 * ppcurr);
 
         // update penalty parameter in all interfaces
-        for (int i = 0; i < (int)interface_.size(); ++i)
+        for (const auto& interface : interface_)
         {
-          double ippcurr = interface_[i]->interface_params().get<double>("PENALTYPARAM");
+          double ippcurr = interface->interface_params().get<double>("PENALTYPARAM");
           if (ippcurr != ppcurr) FOUR_C_THROW("Something wrong with penalty parameter");
-          interface_[i]->interface_params().set<double>("PENALTYPARAM", 10 * ippcurr);
+          interface->interface_params().set<double>("PENALTYPARAM", 10 * ippcurr);
         }
         // in the case of frictional contact, the tangential penalty
         // parameter is also dated up when this is done for the normal one
@@ -651,11 +645,11 @@ void CONTACT::PenaltyStrategy::update_constraint_norm(int uzawaiter)
           params().set<double>("PENALTYPARAMTAN", 10 * ppcurrtan);
 
           // update penalty parameter in all interfaces
-          for (int i = 0; i < (int)interface_.size(); ++i)
+          for (const auto& interface : interface_)
           {
-            double ippcurrtan = interface_[i]->interface_params().get<double>("PENALTYPARAMTAN");
+            double ippcurrtan = interface->interface_params().get<double>("PENALTYPARAMTAN");
             if (ippcurrtan != ppcurrtan) FOUR_C_THROW("Something wrong with penalty parameter");
-            interface_[i]->interface_params().set<double>("PENALTYPARAMTAN", 10 * ippcurrtan);
+            interface->interface_params().set<double>("PENALTYPARAMTAN", 10 * ippcurrtan);
           }
         }
       }
@@ -757,24 +751,24 @@ void CONTACT::PenaltyStrategy::assemble()
   bool isincontact = false;
   bool activesetchange = false;
 
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     bool localisincontact = false;
     bool localactivesetchange = false;
 
     // evaluate lagrange multipliers (regularized forces) in normal direction
     // and nodal derivz matrix values, store them in nodes
-    interface_[i]->assemble_reg_normal_forces(localisincontact, localactivesetchange);
+    interface->assemble_reg_normal_forces(localisincontact, localactivesetchange);
 
     // evaluate lagrange multipliers (regularized forces) in tangential direction
     auto soltype = Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(params(), "STRATEGY");
 
     if (friction_ and (soltype == CONTACT::SolvingStrategy::penalty or
                           soltype == CONTACT::SolvingStrategy::multiscale))
-      interface_[i]->assemble_reg_tangent_forces_penalty();
+      interface->assemble_reg_tangent_forces_penalty();
 
     if (friction_ and soltype == CONTACT::SolvingStrategy::uzawa)
-      interface_[i]->assemble_reg_tangent_forces_uzawa();
+      interface->assemble_reg_tangent_forces_uzawa();
 
     isincontact = isincontact || localisincontact;
     activesetchange = activesetchange || localactivesetchange;
@@ -809,12 +803,12 @@ void CONTACT::PenaltyStrategy::assemble()
 
   // update active sets of all interfaces
   // (these maps are NOT allowed to be overlapping !!!)
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->build_active_set();
-    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface_[i]->active_nodes(), false);
-    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface_[i]->active_dofs(), false);
-    gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface_[i]->slip_nodes(), false);
+    interface->build_active_set();
+    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface->active_nodes(), false);
+    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface->active_dofs(), false);
+    gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface->slip_nodes(), false);
   }
 
   // check if contact contributions are present,
@@ -822,14 +816,14 @@ void CONTACT::PenaltyStrategy::assemble()
   if (!is_in_contact() && !was_in_contact() && !was_in_contact_last_time_step()) return;
 
   // assemble contact quantities on all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // assemble global lagrangian multiplier vector
-    interface_[i]->assemble_lm(*z_);
+    interface->assemble_lm(*z_);
     // assemble global derivatives of lagrangian multipliers
-    interface_[i]->assemble_lin_z(*linzmatrix_);
+    interface->assemble_lin_z(*linzmatrix_);
     // assemble global derivatives of mortar D and M matrices
-    interface_[i]->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
+    interface->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
   }
 
   // fill_complete() global matrices LinD, LinM, LinZ
