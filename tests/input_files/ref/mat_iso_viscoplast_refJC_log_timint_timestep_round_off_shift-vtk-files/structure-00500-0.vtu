@@ -1,0 +1,57 @@
+<?xml version="1.0" ?> 
+<!-- 
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="UnstructuredGrid" version="0.1" compressor="vtkZLibDataCompressor" byte_order="LittleEndian">
+  <UnstructuredGrid>
+    <FieldData>
+      <DataArray type="Float64" Name="TIME" NumberOfTuples="1" format="ascii">
+5.000000000000003e-01 
+      </DataArray>
+    </FieldData>
+
+    <Piece NumberOfPoints="8" NumberOfCells="1" >
+      <Points>
+        <DataArray type="Float64" NumberOfComponents="3" format="binary">
+AQAAAMAAAADAAAAAKwAAAA==eAFjYACBB/vBFIK2R+Ojy8P4uNTBxNFpdH0weZg4jIaJw2hc4vYAmrwg6Q==
+        </DataArray>
+      </Points>
+
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="binary">
+AQAAACAAAAAgAAAAHQAAAA==eAFjYGBgYARiJiBmBmIWIGYFYjYgZgdiAAFwAB0=
+
+        </DataArray>
+        <DataArray type="Int32" Name="offsets" format="binary">
+AQAAAAQAAAAEAAAADAAAAA==eAHjYGBgAAAAJAAJ
+
+        </DataArray>
+        <DataArray type="UInt8" Name="types" format="binary">
+AQAAAAEAAAABAAAACQAAAA==eAHjAQAADQAN
+
+        </DataArray>
+      </Cells>
+
+  <PointData>
+        <DataArray type="Float64" Name="displacement" NumberOfComponents="3" format="binary">
+AQAAAMAAAADAAAAAPwAAAA==eAFjYEAFNrw2MsGHntijimLy4h937SnTP7MfXYbxKUQcZk7LE1R1MPFsHPqdoOql0fSlQvkaUBpmDgA75DBt
+        </DataArray>
+        <DataArray type="Float64" Name="nodal_LOG_strains_xyz" NumberOfComponents="6" format="binary">
+AQAAAIABAACAAQAADQEAAA==eAFzyZl79vXV8/t/QWkOBhB4YD9nUzHPqj+H9iS4fTmduc5nT8N0jjTmqAl7tmZB1K+A0sxQ9Zp/UxZ0Su+xSaiEqHdZUz59a32JzZdsiPrbUPWsUPVHN8zdsbjr/Z6NaTuvbH/wZs+UaVuy5Bvr9/yDqj8FdQ/M/PCCVy4Rjz7a3ISq70idenvVtdk2KlB1S6D6YOZ3J1oXuj+9atOQ0v9rSmKMTdl75w0zNzzeA3PHMah6mPlhIPPXfdnzoBSi/tyV7NWmro/3XIKqmwKlWaDuX9VZuC8r5N8elm02zglx8/b0/dibGBW9aQ8f1D2H0NRrbfiZ6t70ySZgI0T9kRyL9A/iW/cAALy30dg=
+        </DataArray>
+        <DataArray type="Float64" Name="nodal_cauchy_stresses_xyz" NumberOfComponents="6" format="binary">
+AQAAAIABAACAAQAAbAEAAA==eAHzPai+ddNiLbv0zG+ms89o2TW8VLi9XWWyg0gAz8vJWUm23vmd336WRe+1463uu7u3de/W8+8/SR7V33dmggPvpwCDfTwlEPWWlQ5Buc0de6ekQtQLbTXJKImvt7244Pvcr6EGdtqXPa6c9jCwc/kKUT/jlseUCxN32Sr67G29pLbUlmUvq4uOfdteX48M2/iJmvue/JxzjytWc9+sBoj6sK17kmVOLdgr7w9R/2GC5t8EpRm229auirb8prmvVGeZ75pv6vveQdU//LDpmfby47Y7S5S2iSkV2nI08b36dr95r1Hetb4OZQO7H/Gf7Tdu1LcT/AIx/9izq006gof2HsqHqC/5F32kXqV+7wTH67PlhfX3fWP+v/BcmO6+lnKI+kn7NfzPlszaaz0xdEuVyMK9hfKzghkqjtj6di3QXuSpaZcQf7PMeJqa3aMnEPUqsYfk6hMO2TJOgqg3ELkle4XhoC0A5uG5fA==
+        </DataArray>
+  </PointData>
+  <CellData>
+        <DataArray type="Float64" Name="element_LOG_strains_xyz" NumberOfComponents="6" format="binary">
+AQAAADAAAAAwAAAAMQAAAA==eAHbkT337Our5/fvh9LMDCDwwP7ffyBoP7nnMOPJZUvPnN2jEZSipn3+6B4A0uYckg==
+        </DataArray>
+        <DataArray type="Float64" Name="element_cauchy_stresses_xyz" NumberOfComponents="6" format="binary">
+AQAAADAAAAAwAAAAOwAAAA==eAEBMADP/84SU5T4A8Q9WhmMZG3Nwj2atCDbtySTQPC4b4S5f5w92PveYYtrZT1YmzcVlECiPUrvF58=
+        </DataArray>
+      </CellData>
+
+    </Piece>
+  </UnstructuredGrid>
+</VTKFile>
