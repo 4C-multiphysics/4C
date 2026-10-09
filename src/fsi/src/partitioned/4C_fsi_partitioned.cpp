@@ -26,6 +26,7 @@
 #include "4C_fsi_nox_sd.hpp"
 #include "4C_fsi_utils.hpp"
 #include "4C_global_data.hpp"
+#include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_solver_nonlin_nox_group_base.hpp"
 #include "4C_solver_nonlin_nox_matrixfree.hpp"
@@ -848,9 +849,12 @@ void FSI::Partitioned::output()
       auto aitkenfactory =
           Teuchos::rcp_dynamic_cast<FSI::Nonlinear::AitkenFactory>(linesearchfactory);
 
-      // write aitken relaxation parameter
-      mb_fluid_field()->fluid_field()->disc_writer()->write_double(
-          "omega", aitkenfactory->get_aitken()->get_omega());
+      // write aitken relaxation parameter (if it has not already been written for the current
+      // timestep)
+      Core::IO::DiscretizationWriter& mb_fluid_discr_writer =
+          *(mb_fluid_field()->fluid_field()->disc_writer());
+      if (not mb_fluid_discr_writer.is_written("omega"))
+        mb_fluid_discr_writer.write_double("omega", aitkenfactory->get_aitken()->get_omega());
 
       break;
     }

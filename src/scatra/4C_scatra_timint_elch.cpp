@@ -854,8 +854,8 @@ void ScaTra::ScaTraTimIntElch::read_restart_problem_specific(
       // reconstruct map from two vectors (ID of condition [key], volume [value])
       auto conditionid_vec = std::make_shared<std::vector<int>>();
       auto electrodeinitvol_vec = std::make_shared<std::vector<double>>();
-      reader.read_redundant_int_vector(conditionid_vec, "electrodeconditionids");
-      reader.read_redundant_double_vector(electrodeinitvol_vec, "electrodeinitvols");
+      reader.read_int_vector_on_first_rank(conditionid_vec, "electrodeconditionids");
+      reader.read_double_vector_on_first_rank(electrodeinitvol_vec, "electrodeinitvols");
       if (conditionid_vec->size() != electrodeinitvol_vec->size())
         FOUR_C_THROW("something went wrong with reading initial volumes of electrodes");
       electrodeinitvols_.clear();
@@ -1571,8 +1571,8 @@ void ScaTra::ScaTraTimIntElch::write_restart() const
         conditionid_vec.push_back(electrodeinitvol.first);
         electrodeinitvol_vec.push_back(electrodeinitvol.second);
       }
-      output_->write_redundant_int_vector("electrodeconditionids", conditionid_vec);
-      output_->write_redundant_double_vector("electrodeinitvols", electrodeinitvol_vec);
+      output_->write_int_vector_on_first_rank("electrodeconditionids", conditionid_vec);
+      output_->write_double_vector_on_first_rank("electrodeinitvols", electrodeinitvol_vec);
     }
   }
 

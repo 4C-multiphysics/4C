@@ -775,7 +775,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::write_restart(
 
   // write the flowrates of the previous period
   stream1 << ds_condname << "_flowrates" << condnum;
-  output.write_redundant_double_vector(stream1.str(), *flowrates_);
+  output.write_double_vector_on_first_rank(stream1.str(), *flowrates_);
 
   // write the time step
   stream2 << ds_condname << "_dt" << condnum;
@@ -818,7 +818,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::read_restart(
   stream1 << ds_condname << "_flowrates" << condnum;
 
   // read in flowrates
-  reader.read_redundant_double_vector(flowrates_, stream1.str());
+  reader.read_double_vector_on_first_rank(flowrates_, stream1.str());
 
   // read in the flowrates' position
   flowratespos_ = 0;

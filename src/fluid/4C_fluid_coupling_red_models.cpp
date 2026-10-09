@@ -804,9 +804,12 @@ void FLD::Utils::FluidCouplingBc::write_restart(
   output.write_vector(stream.str(), couplingbc_);
 
 
-  // write time steps size
-  output.write_double("dta_3D", dt_f3_);
-  output.write_double("reduced_D_dta", dt_rm_);
+  // write time steps size if this has not been written yet
+  if (not output.is_written("dta_3D"))
+  {
+    output.write_double("dta_3D", dt_f3_);
+    output.write_double("reduced_D_dta", dt_rm_);
+  }
 }
 
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//

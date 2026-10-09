@@ -622,11 +622,6 @@ void Arteries::ArtNetExplicitTimeInt::collect_runtime_output_data(bool CoupledTo
 
   visualization_writer_->append_result_data_vector_with_context(
       *Wbo_, Core::IO::OutputEntity::node, {"backward_speed0"});
-
-  if (CoupledTo3D)
-  {
-    output_.write_int("Actual_RedD_step", step);
-  }
 }
 
 void Arteries::ArtNetExplicitTimeInt::output_restart(bool CoupledTo3D, int step)

@@ -18,6 +18,8 @@
 #include "4C_utils_exceptions.hpp"
 
 #include <algorithm>
+#include <optional>
+#include <string>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -38,6 +40,28 @@ Core::IO::DiscretizationReader::DiscretizationReader(
 int Core::IO::DiscretizationReader::has_int(std::string name)
 {
   return restart_step_[name].is_a<int>();
+}
+
+
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+bool Core::IO::DiscretizationReader::has_vector(
+    const std::string& name, const std::optional<unsigned int> num_multivector_columns) const
+{
+  const ControlFileEntry entry = restart_step_[name];
+  if (not entry.is_valid()) return false;
+
+  bool has_matching_num_multivector_columns = true;
+  if (num_multivector_columns)
+  {
+    const int entry_num_columns = entry["columns"].as<int>().value_or(1);
+    has_matching_num_multivector_columns =
+        (static_cast<int>(num_multivector_columns.value()) == entry_num_columns);
+  }
+
+  return entry["ids"].as<std::string>().has_value() &&
+         restart_step_[name]["values"].as<std::string>().has_value() &&
+         has_matching_num_multivector_columns;
 }
 
 
@@ -83,11 +107,11 @@ void Core::IO::DiscretizationReader::read_vector(
 std::shared_ptr<Core::LinAlg::MultiVector<double>>
 Core::IO::DiscretizationReader::read_multi_vector(const std::string name)
 {
+  FOUR_C_ASSERT_ALWAYS(
+      has_vector(name), "No valid vector / multivector with name {} was found!", name);
+
   auto id_path = restart_step_[name]["ids"].as<std::string>();
   auto value_path = restart_step_[name]["values"].as<std::string>();
-  FOUR_C_ASSERT(id_path, "no 'ids' entry for vector '{}'", name);
-  FOUR_C_ASSERT(id_path, "no 'values' entry for vector '{}'", name);
-
   auto columns_entry = restart_step_[name]["columns"].as<int>();
   const int columns = columns_entry ? *columns_entry : 1;
 
@@ -124,10 +148,10 @@ void Core::IO::DiscretizationReader::read_multi_vector(
 void Core::IO::DiscretizationReader::read_map_data_of_char_vector(
     std::map<int, std::vector<char>>& mapdata, std::string name) const
 {
+  FOUR_C_ASSERT_ALWAYS(
+      has_vector(name), "No valid vector / multivector with name {} was found!", name);
   auto id_path = restart_step_[name]["ids"].as<std::string>();
   auto value_path = restart_step_[name]["values"].as<std::string>();
-  FOUR_C_ASSERT(id_path, "no 'ids' entry for vector '{}'", name);
-  FOUR_C_ASSERT(id_path, "no 'values' entry for vector '{}'", name);
 
   auto columns_entry = restart_step_[name]["columns"].as<int>();
   const int columns = columns_entry ? *columns_entry : 1;
@@ -249,7 +273,7 @@ void Core::IO::DiscretizationReader::read_char_vector(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationReader::read_redundant_double_vector(
+void Core::IO::DiscretizationReader::read_double_vector_on_first_rank(
     std::shared_ptr<std::vector<double>>& doublevec, const std::string name)
 {
   int length;
@@ -278,7 +302,7 @@ void Core::IO::DiscretizationReader::read_redundant_double_vector(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationReader::read_redundant_int_vector(
+void Core::IO::DiscretizationReader::read_int_vector_on_first_rank(
     std::shared_ptr<std::vector<int>>& intvec, const std::string name)
 {
   int length;
@@ -403,6 +427,7 @@ Core::IO::DiscretizationWriter::DiscretizationWriter(Core::FE::Discretization& d
       spatial_approx_(shape_function_type)
 {
   binio_ = output_.write_binary_output();
+  written_names_in_current_step_.clear();
 }
 
 /*----------------------------------------------------------------------*/
@@ -526,11 +551,14 @@ void Core::IO::DiscretizationWriter::new_step(const int step, const double time)
     if (not have_result_or_mesh_file_changed())
     {
       // do not perform the step if already called
-      if (step_ == step and fabs(time_ - time) < 1e-14)
+      if (step == step_)
       {
         return;
       }
     }
+    // clear written names
+    written_names_in_current_step_.clear();
+
 
     step_ = step;
     time_ = time;
@@ -600,6 +628,9 @@ void Core::IO::DiscretizationWriter::write_double(const std::string name, const 
 {
   if (binio_)
   {
+    const auto [_, is_new_item] = written_names_in_current_step_.insert(name);
+    FOUR_C_ASSERT_ALWAYS(is_new_item, "Item {} already written; use unique item names", name);
+
     if (Core::Communication::my_mpi_rank(get_comm()) == 0)
     {
       output_.control_file().write(name, value);
@@ -614,6 +645,9 @@ void Core::IO::DiscretizationWriter::write_int(const std::string name, const int
 {
   if (binio_)
   {
+    const auto [_, is_new_item] = written_names_in_current_step_.insert(name);
+    FOUR_C_ASSERT_ALWAYS(is_new_item, "Item {} already written; use unique item names", name);
+
     if (Core::Communication::my_mpi_rank(get_comm()) == 0)
     {
       output_.control_file().write(name, value);
@@ -626,6 +660,7 @@ void Core::IO::DiscretizationWriter::write_int(const std::string name, const int
 void Core::IO::DiscretizationWriter::write_vector(const std::string name,
     std::shared_ptr<const Core::LinAlg::Vector<double>> vec, IO::VectorType vt)
 {
+  // no insertion of the written name here, but in the function called below
   write_multi_vector(name, *vec, vt);
 }
 
@@ -634,6 +669,9 @@ void Core::IO::DiscretizationWriter::write_multi_vector(
 {
   if (binio_)
   {
+    const auto [_, is_new_item] = written_names_in_current_step_.insert(name);
+    FOUR_C_ASSERT_ALWAYS(is_new_item, "Item {} already written; use unique item names", name);
+
     std::string valuename = name + ".values";
     const double* data = vec.get_values();
     const hsize_t size = vec.local_length() * vec.num_vectors();
@@ -759,6 +797,9 @@ void Core::IO::DiscretizationWriter::write_vector(const std::string name,
 {
   if (binio_)
   {
+    const auto [_, is_new_item] = written_names_in_current_step_.insert(name);
+    FOUR_C_ASSERT_ALWAYS(is_new_item, "Item {} already written; use unique item names", name);
+
     std::string valuename = name + ".values";
     const hsize_t size = vec.size();
     const char* data = vec.data();
@@ -1165,6 +1206,9 @@ void Core::IO::DiscretizationWriter::write_char_data(
 {
   if (binio_)
   {
+    const auto [_, is_new_item] = written_names_in_current_step_.insert(name);
+    FOUR_C_ASSERT_ALWAYS(is_new_item, "Item {} already written; use unique item names", name);
+
     // only proc0 writes the vector entities to the binary data
     // an appropriate name has to be provided
     std::string valuename = name + ".values";
@@ -1206,11 +1250,14 @@ void Core::IO::DiscretizationWriter::write_char_data(
 /*----------------------------------------------------------------------*/
 /* write a stl vector of doubles from proc0                             */
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationWriter::write_redundant_double_vector(
-    const std::string name, std::vector<double>& doublevec)
+void Core::IO::DiscretizationWriter::write_double_vector_on_first_rank(
+    const std::string name, const std::vector<double>& doublevec)
 {
   if (binio_)
   {
+    const auto [_, is_new_item] = written_names_in_current_step_.insert(name);
+    FOUR_C_ASSERT_ALWAYS(is_new_item, "Item {} already written; use unique item names", name);
+
     if (Core::Communication::my_mpi_rank(get_comm()) == 0)
     {
       // only proc0 writes the vector entities to the binary data
@@ -1251,11 +1298,14 @@ void Core::IO::DiscretizationWriter::write_redundant_double_vector(
 /*----------------------------------------------------------------------*/
 /* write a stl set of integers from proc0                             */
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationWriter::write_redundant_int_vector(
-    const std::string name, std::vector<int>& vectorint)
+void Core::IO::DiscretizationWriter::write_int_vector_on_first_rank(
+    const std::string name, const std::vector<int>& vectorint)
 {
   if (binio_)
   {
+    const auto [_, is_new_item] = written_names_in_current_step_.insert(name);
+    FOUR_C_ASSERT_ALWAYS(is_new_item, "Item {} already written; use unique item names", name);
+
     if (Core::Communication::my_mpi_rank(get_comm()) == 0)
     {
       // only proc0 writes the entities to the binary data
