@@ -5086,6 +5086,18 @@ void CONTACT::LagrangeStrategy::update(std::shared_ptr<const Core::LinAlg::Vecto
   if (fconservation_ == nullptr) return;
 }
 
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void CONTACT::LagrangeStrategy::predict_relative_movement()
+{
+  // With FRLESS_FIRST, nodes that came into contact in the last time step were treated as
+  // frictionless and have no jump data. Hence, evaluate the relative movement here.
+  // TODO: Evaluate the relative movement here independently of FRLESS_FIRST, such that the jump
+  // data corresponds to the predicted state and not to the converged state of the previous time
+  // step (i.e. its slip increment).
+  if (friction_ and params().get<bool>("FRLESS_FIRST")) evaluate_relative_movement();
+}
+
 void CONTACT::LagrangeStrategy::condense_friction(
     std::shared_ptr<Core::LinAlg::SparseMatrix> kteff, Core::LinAlg::Vector<double>& rhs)
 {

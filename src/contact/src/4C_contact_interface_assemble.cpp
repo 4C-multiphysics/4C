@@ -276,8 +276,11 @@ void CONTACT::Interface::assemble_reg_tangent_forces_penalty()
 
     if (cnode->active() == false)
     {
-      // do nothing
       cnode->fri_data().slip() = false;
+
+      // A node that comes into contact again must not start from its traction of a previous
+      // contact period
+      for (int i = 0; i < numdof; i++) cnode->fri_data().traction()[i] = 0.0;
     }
     else if (cnode->active() == true &&
              ((abs(maxtantrac) - magnitude >= 0) or ftype == CONTACT::FrictionType::stick))
