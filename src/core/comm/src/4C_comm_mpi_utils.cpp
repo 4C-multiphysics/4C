@@ -19,6 +19,13 @@ MPI_Comm Core::Communication::unpack_epetra_comm(const Epetra_Comm& comm)
   return mpi_comm.Comm();
 }
 
+bool Core::Communication::same_mpi_comm(const MPI_Comm& mpi_comm_a, const MPI_Comm& mpi_comm_b)
+{
+  int result = -1;
+  MPI_Comm_compare(mpi_comm_a, mpi_comm_b, &result);
+  return result == MPI_IDENT || result == MPI_CONGRUENT;
+}
+
 const Epetra_Comm& Core::Communication::as_epetra_comm(MPI_Comm comm)
 {
   static auto epetra_comm_cache = Core::Utils::make_singleton_map<MPI_Comm>(
