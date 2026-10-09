@@ -36,6 +36,11 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingBaseAlgorithm::
   if (artery_dis_->num_global_nodes() == 0)
     FOUR_C_THROW("artery discretization does not seem to have any nodes");
 
+  int comm_comparison = MPI_UNEQUAL;
+  MPI_Comm_compare(artery_dis->get_comm(), homogenized_dis->get_comm(), &comm_comparison);
+  FOUR_C_ASSERT_ALWAYS(comm_comparison == MPI_IDENT || comm_comparison == MPI_CONGRUENT,
+      "Artery and homogenized discretization should use the same communicator!");
+
   // get the actual coupled DOFs
   // 1) 1D artery discretization
   int dof_value;

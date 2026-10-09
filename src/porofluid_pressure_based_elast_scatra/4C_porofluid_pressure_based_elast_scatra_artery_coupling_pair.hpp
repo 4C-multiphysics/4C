@@ -157,7 +157,7 @@ namespace PoroPressureBased
 
     //! apply mesh movement to the artery element
     virtual double apply_mesh_movement(
-        bool first_call, std::shared_ptr<Core::FE::Discretization> homogenized_dis) = 0;
+        bool first_call, Core::FE::Discretization* homogenized_dis) = 0;
 
     //! set segment id
     virtual void set_segment_id(const int& segment_id) = 0;
@@ -265,8 +265,7 @@ namespace PoroPressureBased
     int num_gp() const override { return num_gp_; };
 
     //! apply mesh movement to the artery element
-    double apply_mesh_movement(
-        bool first_call, std::shared_ptr<Core::FE::Discretization> homogenized_dis) override;
+    double apply_mesh_movement(bool first_call, Core::FE::Discretization* homogenized_dis) override;
 
     //! set segment id
     void set_segment_id(const int& segment_id) override;
