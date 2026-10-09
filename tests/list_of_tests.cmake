@@ -1521,6 +1521,7 @@ four_c_test(TEST_FILE porofluid_pressure_based_elast_scatra_3D_hex8_linebased_ar
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 3 RESTART_STEP 4)
 four_c_test(TEST_FILE porofluid_pressure_based_elast_scatra_3D_hex8_linebased_artery_coupling_part_network.4C.yaml NP 3)
 four_c_test(TEST_FILE porofluid_pressure_based_elast_scatra_3D_hex8_mono_FD.4C.yaml)
+four_c_test(TEST_FILE porofluid_pressure_based_elast_scatra_3D_hex8_mono_FD_assume_contiguous.4C.yaml)
 four_c_test(TEST_FILE porofluid_pressure_based_elast_scatra_3D_hex8_mono_tumor.4C.yaml NP 3 RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 3 RESTART_STEP 8)
 four_c_test(TEST_FILE porofluid_pressure_based_elast_scatra_3D_hex8_nodetopoint_artery_airway_coupling_mono_teko.4C.yaml NP 3)

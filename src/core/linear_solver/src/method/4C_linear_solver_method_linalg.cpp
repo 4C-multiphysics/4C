@@ -189,7 +189,7 @@ void Core::LinAlg::Solver::setup(std::shared_ptr<Core::LinAlg::SparseOperator> m
       case Core::LinearSolver::SolverType::UMFPACK:
       case Core::LinearSolver::SolverType::Superlu:
       {
-        solver_ = std::make_shared<Core::LinearSolver::DirectSolver>(solvertype);
+        solver_ = std::make_shared<Core::LinearSolver::DirectSolver>(solvertype, Solver::params());
         break;
       }
       default:
@@ -403,6 +403,13 @@ Teuchos::ParameterList Core::LinAlg::Solver::translate_solver_parameters(
       break;
     default:
       FOUR_C_THROW("Unsupported type of solver");
+  }
+
+  if (inparams.isParameter("ASSUME_CONTIGUOUS_DOF_IDS"))
+  {
+    if (const auto assume_contiguous_dof_ids =
+            inparams.get<std::optional<bool>>("ASSUME_CONTIGUOUS_DOF_IDS"))
+      outparams.set<bool>("assume_contiguous_dof_ids", *assume_contiguous_dof_ids);
   }
 
   return outparams;

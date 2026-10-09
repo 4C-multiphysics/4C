@@ -60,6 +60,7 @@ reduced_dimensional_lung:
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Reduced_lung_solver"
+  ASSUME_CONTIGUOUS_DOF_IDS: true
 FUNCT1:
   - SYMBOLIC_FUNCTION_OF_TIME: 1000*flow_ml_s
   - VARIABLE: 0
