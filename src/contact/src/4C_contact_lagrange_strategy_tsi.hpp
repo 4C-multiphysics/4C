@@ -162,8 +162,7 @@ namespace CONTACT
 
     */
     void do_read_restart(Core::IO::DiscretizationReader& reader,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-        std::shared_ptr<CONTACT::ParamsInterface> cparams_ptr) override;
+        const Core::LinAlg::Vector<double>& disp_n) override;
 
     void set_coupling(std::shared_ptr<Coupling::Adapter::Coupling> coupST)
     {

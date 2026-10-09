@@ -4778,7 +4778,7 @@ bool Wear::LagrangeStrategyWear::redistribute_contact(
  |  read restart information for contact                      popp 03/08|
  *----------------------------------------------------------------------*/
 void Wear::LagrangeStrategyWear::do_read_restart(
-    Core::IO::DiscretizationReader& reader, std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
+    Core::IO::DiscretizationReader& reader, const Core::LinAlg::Vector<double>& dis)
 {
   // check whether this is a restart with contact of a previously
   // non-contact simulation run (if yes, we have to be careful not
@@ -4788,8 +4788,8 @@ void Wear::LagrangeStrategyWear::do_read_restart(
   const bool restartwithcontact = params().get<bool>("RESTART_WITH_CONTACT");
 
   // set restart displacement state
-  set_state(Mortar::state_new_displacement, *dis);
-  set_state(Mortar::state_old_displacement, *dis);
+  set_state(Mortar::state_new_displacement, dis);
+  set_state(Mortar::state_old_displacement, dis);
 
   // evaluate interface and restart mortar quantities
   // in the case of SELF CONTACT, also re-setup target/source maps

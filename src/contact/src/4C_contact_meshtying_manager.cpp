@@ -658,7 +658,7 @@ void CONTACT::MtManager::read_restart(Core::IO::DiscretizationReader& reader,
 {
   // this is meshtying, thus we need zeros for restart
   // let strategy object do all the work
-  get_strategy().do_read_restart(reader, zero);
+  get_strategy().do_read_restart(reader, *zero);
 
   return;
 }

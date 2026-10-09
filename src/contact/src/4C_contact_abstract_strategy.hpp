@@ -856,24 +856,23 @@ namespace CONTACT
     \brief Read restart data from disk
 
     @param reader discretization reader to be used for reading the restart data
-    @param dis Displacement vector of the solid field
+    @param disp_n Displacement vector of the solid field
     */
-    void do_read_restart(Core::IO::DiscretizationReader& reader,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override
+    void do_read_restart(
+        Core::IO::DiscretizationReader& reader, const Core::LinAlg::Vector<double>& disp_n) override
     {
-      do_read_restart(reader, dis, nullptr);
+      do_read_restart(reader, disp_n, nullptr);
     };
 
     /*!
     \brief Read restart data from disk
 
     @param reader discretization reader to be used for reading the restart data
-    @param dis Displacement vector of the solid field
-    @param cparams_ptr ??
+    @param disp_n Displacement vector of the solid field
+    @param cparams_ptr Interface for contact parameter / data containers
     */
     virtual void do_read_restart(Core::IO::DiscretizationReader& reader,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-        std::shared_ptr<CONTACT::ParamsInterface> cparams_ptr);
+        const Core::LinAlg::Vector<double>& disp_n, const CONTACT::ParamsInterface* cparams_ptr);
 
     //!@}
 

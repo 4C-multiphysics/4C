@@ -327,7 +327,7 @@ namespace CONTACT
 
     */
     void do_read_restart(Core::IO::DiscretizationReader& reader,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
+        const Core::LinAlg::Vector<double>& disp_n) override;
 
     //@}
 
