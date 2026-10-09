@@ -1195,12 +1195,7 @@ namespace CONTACT
      and overlap detection, integration of the  Mortar terms D, M and of the
      weighted gap. Additionally, the linearizations of geometric quantities
      (delta_n, delta_t, delta_D, delta_M) are calculated. */
-    void initialize_and_evaluate_interface() override
-    {
-      initialize_and_evaluate_interface(nullptr);
-    };
-    virtual void initialize_and_evaluate_interface(
-        std::shared_ptr<CONTACT::ParamsInterface> cparams_ptr);
+    void initialize_and_evaluate_interface() override;
 
     /*! check the parallel distribution and initialize a possible
      *  redistribution */

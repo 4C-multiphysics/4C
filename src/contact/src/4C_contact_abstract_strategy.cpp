@@ -1079,8 +1079,7 @@ void CONTACT::AbstractStrategy::calc_mean_velocity_for_binning(
 /*----------------------------------------------------------------------*
  | initialize + evaluate interface for next Newton step       popp 11/09|
  *----------------------------------------------------------------------*/
-void CONTACT::AbstractStrategy::initialize_and_evaluate_interface(
-    std::shared_ptr<CONTACT::ParamsInterface> cparams_ptr)
+void CONTACT::AbstractStrategy::initialize_and_evaluate_interface()
 {
   // time measurement (on each processor)
   const double t_start = Teuchos::Time::wallTime();
@@ -2083,7 +2082,7 @@ void CONTACT::AbstractStrategy::do_read_restart(Core::IO::DiscretizationReader& 
   // evaluate interface and restart mortar quantities
   // in the case of SELF CONTACT, also re-setup target/source maps
   initialize_mortar();
-  initialize_and_evaluate_interface(cparams_ptr);
+  initialize_and_evaluate_interface();
   assemble_mortar();
 
   //----------------------------------------------------------------------
