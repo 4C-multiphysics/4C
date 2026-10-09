@@ -18,6 +18,7 @@
 #include <Epetra_BlockMap.h>
 #include <Epetra_LocalMap.h>
 #include <Epetra_Map.h>
+#include <Epetra_Util.h>
 #include <mpi.h>
 
 #include <memory>
@@ -70,6 +71,12 @@ namespace Core::LinAlg
     //! Print object to the output stream
     void print(std::ostream& os) const { wrapped().Print(os); }
 
+    //! create one-to-one map from this map
+    [[nodiscard]] Map create_one_to_one() const
+    {
+      return Map(Epetra_Util::Create_OneToOne_Map(get_epetra_map()));
+    }
+
     //! Returns a reference of the Epetra_Map if available.
     const Epetra_Map& get_epetra_map() const
     {
@@ -110,6 +117,12 @@ namespace Core::LinAlg
     {
       return wrapped().PointSameAs(Map.get_epetra_block_map());
     }
+
+
+    //! Verify whether this map is a superset for a given map, i.e., whether all global ids of the
+    //! given map are contained within this map exactly once (currently only enabled for element
+    //! size 1)
+    [[nodiscard]] bool contains_all_global_ids_of_map(const Map& map) const;
 
     //! Number of elements across all processors.
     int num_global_elements() const { return wrapped().NumGlobalElements(); }
@@ -176,6 +189,9 @@ namespace Core::LinAlg
 
     //! Returns true if map GIDs are 1-to-1.
     bool unique_gids(void) const { return wrapped().UniqueGIDs(); }
+
+    //! Returns true if the GIDs assigned to this processor are unique.
+    [[nodiscard]] bool unique_my_gids() const;
 
     //! Pointer to internal array containing list of global IDs assigned to the calling processor.
     int* my_global_elements(void) const { return wrapped().MyGlobalElements(); }

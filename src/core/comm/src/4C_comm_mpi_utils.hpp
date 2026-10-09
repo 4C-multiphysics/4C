@@ -73,6 +73,9 @@ namespace Core::Communication
    */
   MPI_Comm unpack_epetra_comm(const Epetra_Comm& comm);
 
+  /// verify whether two communicators are the same
+  bool same_mpi_comm(const MPI_Comm& mpi_comm_a, const MPI_Comm& mpi_comm_b);
+
   /**
    * Helper function during migration away from Epetra_Comm. Returns the MPI_Comm @p comm wrapped in
    * an Epetra_Comm object.
