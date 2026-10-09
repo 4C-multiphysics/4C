@@ -9,6 +9,7 @@
 
 #include "4C_reduced_lung_boundary_conditions.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_sparsematrix.hpp"
@@ -197,9 +198,7 @@ namespace
 
   void skip_if_parallel()
   {
-    int comm_size = 1;
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    if (comm_size != 1)
+    if (Core::Communication::num_mpi_ranks(MPI_COMM_WORLD) != 1)
     {
       GTEST_SKIP() << "Boundary condition creation tests require a serial communicator.";
     }

@@ -48,6 +48,8 @@ namespace Core::Utils
 
 namespace ReducedLung
 {
+  class TreeNewtonLinearSolver;
+
   namespace BoundaryConditions
   {
     /**
@@ -256,6 +258,15 @@ namespace ReducedLung
      */
     void refresh_total_terminal_unit_volume(BoundaryConditionContainer& boundary_conditions,
         const TerminalUnits::TerminalUnitContainer& terminal_units, MPI_Comm comm);
+
+    /**
+     * @brief Assemble boundary-condition structured tree-linearization contributions.
+     *
+     * Boundary conditions impose identity rows on constrained dofs; prescribed values enter only
+     * the residual, so the structured coefficients are state- and time-independent.
+     */
+    void update_tree_linearization(
+        TreeNewtonLinearSolver& target, const BoundaryConditionContainer& boundary_conditions);
   }  // namespace BoundaryConditions
 }  // namespace ReducedLung
 

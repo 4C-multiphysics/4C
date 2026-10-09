@@ -9,6 +9,7 @@
 
 #include "4C_reduced_lung_junctions.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_sparsematrix.hpp"
@@ -29,6 +30,14 @@ namespace
   using namespace FourC;
   using namespace FourC::Core::LinAlg;
   using namespace FourC::ReducedLung::Junctions;
+
+  void skip_if_parallel()
+  {
+    if (Core::Communication::num_mpi_ranks(MPI_COMM_WORLD) != 1)
+    {
+      GTEST_SKIP() << "Junction creation tests require a serial communicator.";
+    }
+  }
 
   void expect_row_entries(Core::LinAlg::SparseMatrix& mat, int row,
       std::initializer_list<std::pair<int, double>> expected)
@@ -55,14 +64,38 @@ namespace
     }
   }
 
+  void set_connection_first_row(ConnectionData& connections, size_t index, int first_row)
+  {
+    connections.first_local_equation_id[index] = first_row;
+    connections.first_row[index] = first_row;
+  }
+
+  void set_connection_local_dofs(
+      ConnectionData& connections, size_t index, const std::array<int, 4>& local_dof_ids)
+  {
+    connections.local_dof_ids[index] = local_dof_ids;
+  }
+
+  void set_bifurcation_first_row(BifurcationData& bifurcations, size_t index, int first_row)
+  {
+    bifurcations.first_local_equation_id[index] = first_row;
+    bifurcations.first_row[index] = first_row;
+  }
+
+  void set_bifurcation_local_dofs(
+      BifurcationData& bifurcations, size_t index, const std::array<int, 6>& local_dof_ids)
+  {
+    bifurcations.local_dof_ids[index] = local_dof_ids;
+  }
+
   TEST(JunctionsTests, ConnectionResidualAssembly)
   {
     ConnectionData connections;
     BifurcationData bifurcations;
 
     connections.add_connection(0, 0, 1, {0, 1, 2, 3});
-    connections.first_local_equation_id[0] = 0;
-    connections.local_dof_ids[0] = {0, 1, 2, 3};
+    set_connection_first_row(connections, 0, 0);
+    set_connection_local_dofs(connections, 0, {0, 1, 2, 3});
 
     Core::LinAlg::Map row_map(-1, 2, 0, MPI_COMM_WORLD);
     Core::LinAlg::Map col_map(-1, 4, 0, MPI_COMM_WORLD);
@@ -86,8 +119,8 @@ namespace
     BifurcationData bifurcations;
 
     bifurcations.add_bifurcation(0, 0, 1, 2, {0, 1, 2, 3, 4, 5});
-    bifurcations.first_local_equation_id[0] = 0;
-    bifurcations.local_dof_ids[0] = {0, 1, 2, 3, 4, 5};
+    set_bifurcation_first_row(bifurcations, 0, 0);
+    set_bifurcation_local_dofs(bifurcations, 0, {0, 1, 2, 3, 4, 5});
 
     Core::LinAlg::Map row_map(-1, 3, 0, MPI_COMM_WORLD);
     Core::LinAlg::Map col_map(-1, 6, 0, MPI_COMM_WORLD);
@@ -106,6 +139,61 @@ namespace
     EXPECT_DOUBLE_EQ(rhs.local_values_as_span()[0], 10.0 - 7.0);
     EXPECT_DOUBLE_EQ(rhs.local_values_as_span()[1], 10.0 - 6.0);
     EXPECT_DOUBLE_EQ(rhs.local_values_as_span()[2], 8.0 - 3.0 - 4.0);
+  }
+
+  TEST(JunctionsTests, JunctionResidualUsesLocalDofIds)
+  {
+    ConnectionData connections;
+    BifurcationData bifurcations;
+
+    connections.add_connection(0, 0, 1, {0, 1, 2, 3});
+    connections.add_connection(1, 1, 2, {4, 5, 6, 7});
+    bifurcations.add_bifurcation(0, 2, 3, 4, {8, 9, 10, 11, 12, 13});
+    set_connection_first_row(connections, 0, 0);
+    set_connection_first_row(connections, 1, 2);
+    set_bifurcation_first_row(bifurcations, 0, 4);
+    set_connection_local_dofs(connections, 0, {0, 1, 2, 3});
+    set_connection_local_dofs(connections, 1, {4, 5, 6, 7});
+    set_bifurcation_local_dofs(bifurcations, 0, {8, 9, 10, 11, 12, 13});
+
+    Core::LinAlg::Map row_map(-1, 7, 0, MPI_COMM_WORLD);
+    Core::LinAlg::Map col_map(-1, 14, 0, MPI_COMM_WORLD);
+    Core::LinAlg::Vector<double> rhs(row_map, true);
+    Core::LinAlg::Vector<double> locally_relevant_dofs(col_map, true);
+
+    for (int i = 0; i < 14; ++i)
+    {
+      locally_relevant_dofs.get_values()[i] = 1.5 * static_cast<double>(i) - 2.0;
+    }
+
+    update_residual_vector(rhs, connections, bifurcations, locally_relevant_dofs);
+
+    const auto dof_values = locally_relevant_dofs.local_values_as_span();
+    const auto residual_values = rhs.local_values_as_span();
+    for (size_t i = 0; i < connections.size(); ++i)
+    {
+      const auto& local_dof_ids = connections.local_dof_ids[i];
+      const int row = connections.first_local_equation_id[i];
+      EXPECT_DOUBLE_EQ(
+          residual_values[row], dof_values[local_dof_ids[ConnectionData::p_out_parent]] -
+                                    dof_values[local_dof_ids[ConnectionData::p_in_child]]);
+      EXPECT_DOUBLE_EQ(
+          residual_values[row + 1], dof_values[local_dof_ids[ConnectionData::q_out_parent]] -
+                                        dof_values[local_dof_ids[ConnectionData::q_in_child]]);
+    }
+
+    const auto& local_dof_ids = bifurcations.local_dof_ids[0];
+    const int row = bifurcations.first_local_equation_id[0];
+    EXPECT_DOUBLE_EQ(
+        residual_values[row], dof_values[local_dof_ids[BifurcationData::p_out_parent]] -
+                                  dof_values[local_dof_ids[BifurcationData::p_in_child_1]]);
+    EXPECT_DOUBLE_EQ(
+        residual_values[row + 1], dof_values[local_dof_ids[BifurcationData::p_out_parent]] -
+                                      dof_values[local_dof_ids[BifurcationData::p_in_child_2]]);
+    EXPECT_DOUBLE_EQ(
+        residual_values[row + 2], dof_values[local_dof_ids[BifurcationData::q_out_parent]] -
+                                      dof_values[local_dof_ids[BifurcationData::q_in_child_1]] -
+                                      dof_values[local_dof_ids[BifurcationData::q_in_child_2]]);
   }
 
   TEST(JunctionsTests, ConnectionJacobianAssembledOnce)
@@ -197,12 +285,7 @@ namespace
 
   TEST(JunctionsTests, CreateConnection)
   {
-    int comm_size = 1;
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    if (comm_size != 1)
-    {
-      GTEST_SKIP() << "Junction creation tests require a serial communicator.";
-    }
+    skip_if_parallel();
 
     auto dis = ReducedLung::TestUtils::make_chain_discretization("junctions_test", 2);
 
@@ -227,12 +310,7 @@ namespace
 
   TEST(JunctionsTests, CreateBifurcation)
   {
-    int comm_size = 1;
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    if (comm_size != 1)
-    {
-      GTEST_SKIP() << "Junction creation tests require a serial communicator.";
-    }
+    skip_if_parallel();
 
     auto dis = ReducedLung::TestUtils::make_bifurcation_discretization("junctions_test");
 
@@ -258,12 +336,7 @@ namespace
 
   TEST(JunctionsTests, CreateJunctionsMissingAdjacencyThrows)
   {
-    int comm_size = 1;
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    if (comm_size != 1)
-    {
-      GTEST_SKIP() << "Junction creation tests require a serial communicator.";
-    }
+    skip_if_parallel();
 
     auto dis = ReducedLung::TestUtils::make_chain_discretization("junctions_test", 2);
 
@@ -281,12 +354,7 @@ namespace
 
   TEST(JunctionsTests, CreateJunctionsDuplicateConnectionThrows)
   {
-    int comm_size = 1;
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    if (comm_size != 1)
-    {
-      GTEST_SKIP() << "Junction creation tests require a serial communicator.";
-    }
+    skip_if_parallel();
 
     auto dis = ReducedLung::TestUtils::make_line2_discretization(
         "junctions_test", {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {2.0, 0.0, 0.0}}, {{0, 1}, {2, 1}});
@@ -305,12 +373,7 @@ namespace
 
   TEST(JunctionsTests, CreateJunctionsTooManyElementsThrows)
   {
-    int comm_size = 1;
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    if (comm_size != 1)
-    {
-      GTEST_SKIP() << "Junction creation tests require a serial communicator.";
-    }
+    skip_if_parallel();
 
     auto dis = ReducedLung::TestUtils::make_chain_discretization("junctions_test", 2);
 
