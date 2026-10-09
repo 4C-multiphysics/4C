@@ -198,14 +198,14 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
   /* and global matrix linslip with derivatives of slip nodes           */
   /* and inactive right-hand side with old lagrange multipliers (incr)  */
   /**********************************************************************/
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->assemble_s(*smatrix_);
-    interface_[i]->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
-    interface_[i]->assemble_lin_stick(*linstickLM_, *linstickDIS_, *linstickRHS_);
-    interface_[i]->assemble_lin_slip(*linslipLM_, *linslipDIS_, *linslipRHS_);
+    interface->assemble_s(*smatrix_);
+    interface->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
+    interface->assemble_lin_stick(*linstickLM_, *linstickDIS_, *linstickRHS_);
+    interface->assemble_lin_slip(*linslipLM_, *linslipDIS_, *linslipRHS_);
     if (system_type() != CONTACT::SystemType::condensed)
-      interface_[i]->assemble_inactiverhs(*inactiverhs_);
+      interface->assemble_inactiverhs(*inactiverhs_);
   }
   if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
   {
@@ -1431,13 +1431,13 @@ void CONTACT::LagrangeStrategy::compute_contact_tractions()
     Core::LinAlg::Vector<double> force_over_dscale_tangential = *forcetangential_;
 
     // loop over all interfaces
-    for (int i = 0; i < (int)interface_.size(); ++i)
+    for (const auto& interface : interface_)
     {
       // loop over all source row nodes on the current interface
-      for (int j = 0; j < interface_[i]->source_row_nodes()->num_my_elements(); ++j)
+      for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
       {
-        int gid = interface_[i]->source_row_nodes()->gid(j);
-        Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+        int gid = interface->source_row_nodes()->gid(j);
+        Core::Nodes::Node* node = interface->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
         Node* cnode = dynamic_cast<Node*>(node);
 
@@ -1707,14 +1707,14 @@ void CONTACT::LagrangeStrategy::add_target_contributions(Core::LinAlg::SparseOpe
       true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // loop over interface and assemble force and stiffness
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // line to segment
-    interface_[i]->add_lts_forces_target(*fc);
-    interface_[i]->add_lts_stiffness_target(kc);
+    interface->add_lts_forces_target(*fc);
+    interface->add_lts_stiffness_target(kc);
     // node to segment
-    interface_[i]->add_nts_forces_target(*fc);
-    interface_[i]->add_nts_stiffness_target(kc);
+    interface->add_nts_forces_target(*fc);
+    interface->add_nts_stiffness_target(kc);
   }
 
   // force
@@ -1758,10 +1758,10 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions(Core::LinAlg::Spar
       true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // loop over interface and assemble force and stiffness
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->add_ltl_forces(*fc);
-    interface_[i]->add_ltl_stiffness(kc);
+    interface->add_ltl_forces(*fc);
+    interface->add_ltl_stiffness(kc);
   }
 
   // get info for conservation check
@@ -1808,10 +1808,10 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions_friction(
       true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // loop over interface and assemble force and stiffness
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->add_ltl_forces(*fc);
-    interface_[i]->add_ltl_stiffness(kc);
+    interface->add_ltl_forces(*fc);
+    interface->add_ltl_stiffness(kc);
   }
 
   // store normal forces
@@ -1819,10 +1819,10 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions_friction(
   fLTLn_->update(1.0, *fc, 0.0);
 
   // loop over interface and assemble force and stiffness
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->add_ltl_forces_friction(*fc);
-    interface_[i]->add_ltl_stiffness_friction(kc);
+    interface->add_ltl_forces_friction(*fc);
+    interface->add_ltl_stiffness_friction(kc);
   }
 
   // get info for conservation check
@@ -1931,17 +1931,17 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
   /* and inactive right-hand side with old lagrange multipliers (incr)  */
   /* and tangential right-hand side (incr)                              */
   /**********************************************************************/
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->assemble_tn(tmatrix_, nmatrix_);
-    interface_[i]->assemble_s(*smatrix_);
-    interface_[i]->assemble_t_nderiv(tderivmatrix_, nderivmatrix_);
-    interface_[i]->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
+    interface->assemble_tn(tmatrix_, nmatrix_);
+    interface->assemble_s(*smatrix_);
+    interface->assemble_t_nderiv(tderivmatrix_, nderivmatrix_);
+    interface->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
 
     if (system_type() != CONTACT::SystemType::condensed)
     {
-      interface_[i]->assemble_inactiverhs(*inactiverhs_);
-      interface_[i]->assemble_tangrhs(*tangrhs_);
+      interface->assemble_inactiverhs(*inactiverhs_);
+      interface->assemble_tangrhs(*tangrhs_);
     }
   }
   if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
@@ -3462,14 +3462,14 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_friction()
   /* and global matrix linslip with derivatives of slip nodes           */
   /* and inactive right-hand side with old lagrange multipliers (incr)  */
   /**********************************************************************/
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->assemble_s(*smatrix_);
-    interface_[i]->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
-    interface_[i]->assemble_lin_stick(*linstickLM_, *linstickDIS_, *linstickRHS_);
-    interface_[i]->assemble_lin_slip(*linslipLM_, *linslipDIS_, *linslipRHS_);
+    interface->assemble_s(*smatrix_);
+    interface->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
+    interface->assemble_lin_stick(*linstickLM_, *linstickDIS_, *linstickRHS_);
+    interface->assemble_lin_slip(*linslipLM_, *linslipDIS_, *linslipRHS_);
     if (system_type() != CONTACT::SystemType::condensed)
-      interface_[i]->assemble_inactiverhs(*inactiverhs_);
+      interface->assemble_inactiverhs(*inactiverhs_);
   }
   if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
   {
@@ -3716,17 +3716,17 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_frictionless()
   /* and inactive right-hand side with old lagrange multipliers (incr)  */
   /* and tangential right-hand side (incr)                              */
   /**********************************************************************/
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->assemble_tn(tmatrix_, nmatrix_);
-    interface_[i]->assemble_s(*smatrix_);
-    interface_[i]->assemble_t_nderiv(tderivmatrix_, nderivmatrix_);
-    interface_[i]->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
+    interface->assemble_tn(tmatrix_, nmatrix_);
+    interface->assemble_s(*smatrix_);
+    interface->assemble_t_nderiv(tderivmatrix_, nderivmatrix_);
+    interface->assemble_lin_dm(*lindmatrix_, *linmmatrix_);
 
     if (system_type() != CONTACT::SystemType::condensed)
     {
-      interface_[i]->assemble_inactiverhs(*inactiverhs_);
-      interface_[i]->assemble_tangrhs(*tangrhs_);
+      interface->assemble_inactiverhs(*inactiverhs_);
+      interface->assemble_tangrhs(*tangrhs_);
     }
   }
   if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
@@ -3964,12 +3964,12 @@ void CONTACT::LagrangeStrategy::assemble_contact_rhs()
   // if not we can skip this routine to speed things up
   if (!is_in_contact() && !was_in_contact() && !was_in_contact_last_time_step()) return;
 
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     if (system_type() != CONTACT::SystemType::condensed)
     {
-      interface_[i]->assemble_inactiverhs(*inactiverhs_);
-      if (!is_friction()) interface_[i]->assemble_tangrhs(*tangrhs_);
+      interface->assemble_inactiverhs(*inactiverhs_);
+      if (!is_friction()) interface->assemble_tangrhs(*tangrhs_);
     }
   }
 }
@@ -4567,13 +4567,13 @@ void CONTACT::LagrangeStrategy::update_active_set()
   activesetconv_ = true;
 
   // loop over all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
     // loop over all source nodes on the current interface
-    for (int j = 0; j < interface_[i]->source_row_nodes()->num_my_elements(); ++j)
+    for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
     {
-      int gid = interface_[i]->source_row_nodes()->gid(j);
-      Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+      int gid = interface->source_row_nodes()->gid(j);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
       Node* cnode = dynamic_cast<Node*>(node);
 
@@ -4643,11 +4643,11 @@ void CONTACT::LagrangeStrategy::update_active_set()
           if (ftype == CONTACT::FrictionType::tresca)
           {
             FriNode* frinode = dynamic_cast<FriNode*>(cnode);
-            const Core::LinAlg::Vector<double>& ct_ref = interface_[i]->ct_ref();
+            const Core::LinAlg::Vector<double>& ct_ref = interface->ct_ref();
             double ct = ct_ref.local_values_as_span()[ct_ref.get_map().lid(frinode->id())];
 
             // CAREFUL: friction bound is now interface-local (popp 08/2012)
-            double frbound = interface_[i]->interface_params().get<double>("FRBOUND");
+            double frbound = interface->interface_params().get<double>("FRBOUND");
 
             if (frinode->fri_data().slip() == false)
             {
@@ -4681,11 +4681,11 @@ void CONTACT::LagrangeStrategy::update_active_set()
           if (ftype == CONTACT::FrictionType::coulomb)
           {
             FriNode* frinode = dynamic_cast<FriNode*>(cnode);
-            const Core::LinAlg::Vector<double>& ct_ref = interface_[i]->ct_ref();
+            const Core::LinAlg::Vector<double>& ct_ref = interface->ct_ref();
             double ct = ct_ref.local_values_as_span()[ct_ref.get_map().lid(frinode->id())];
 
             // CAREFUL: friction coefficient is now interface-local (popp 08/2012)
-            double frcoeff = interface_[i]->interface_params().get<double>("FRCOEFF");
+            double frcoeff = interface->interface_params().get<double>("FRCOEFF");
 
             if (frinode->fri_data().slip() == false)
             {
@@ -4750,24 +4750,23 @@ void CONTACT::LagrangeStrategy::update_active_set()
 
   // update active sets of all interfaces
   // (these maps are NOT allowed to be overlapping !!!)
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->build_active_set();
-    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface_[i]->active_nodes(), false);
-    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface_[i]->active_dofs(), false);
+    interface->build_active_set();
+    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface->active_nodes(), false);
+    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface->active_dofs(), false);
 
-    ginactivenodes_ =
-        Core::LinAlg::merge_map(ginactivenodes_, interface_[i]->inactive_nodes(), false);
-    ginactivedofs_ = Core::LinAlg::merge_map(ginactivedofs_, interface_[i]->inactive_dofs(), false);
+    ginactivenodes_ = Core::LinAlg::merge_map(ginactivenodes_, interface->inactive_nodes(), false);
+    ginactivedofs_ = Core::LinAlg::merge_map(ginactivedofs_, interface->inactive_dofs(), false);
 
-    gactiven_ = Core::LinAlg::merge_map(gactiven_, interface_[i]->active_n_dofs(), false);
-    gactivet_ = Core::LinAlg::merge_map(gactivet_, interface_[i]->active_t_dofs(), false);
+    gactiven_ = Core::LinAlg::merge_map(gactiven_, interface->active_n_dofs(), false);
+    gactivet_ = Core::LinAlg::merge_map(gactivet_, interface->active_t_dofs(), false);
 
     if (friction_)
     {
-      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface_[i]->slip_nodes(), false);
-      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interface_[i]->slip_dofs(), false);
-      gslipt_ = Core::LinAlg::merge_map(gslipt_, interface_[i]->slip_t_dofs(), false);
+      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface->slip_nodes(), false);
+      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interface->slip_dofs(), false);
+      gslipt_ = Core::LinAlg::merge_map(gslipt_, interface->slip_t_dofs(), false);
     }
   }
 
@@ -4868,13 +4867,13 @@ void CONTACT::LagrangeStrategy::update_active_set_semi_smooth(const bool firstSt
   if (!semismooth)
   {
     // loop over all interfaces
-    for (int i = 0; i < (int)interface_.size(); ++i)
+    for (const auto& interface : interface_)
     {
       // loop over all source nodes on the current interface
-      for (int j = 0; j < interface_[i]->source_row_nodes()->num_my_elements(); ++j)
+      for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
       {
-        int gid = interface_[i]->source_row_nodes()->gid(j);
-        Core::Nodes::Node* node = interface_[i]->discret().g_node(gid);
+        int gid = interface->source_row_nodes()->gid(j);
+        Core::Nodes::Node* node = interface->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
         Node* cnode = dynamic_cast<Node*>(node);
 
@@ -4900,9 +4899,9 @@ void CONTACT::LagrangeStrategy::update_active_set_semi_smooth(const bool firstSt
   activesetconv_ = true;
 
   // loop over all interfaces
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    bool my_check = interface_[i]->update_active_set_semi_smooth();
+    bool my_check = interface->update_active_set_semi_smooth();
     activesetconv_ = activesetconv_ and my_check;
   }  // loop over all interfaces
 
@@ -4910,9 +4909,9 @@ void CONTACT::LagrangeStrategy::update_active_set_semi_smooth(const bool firstSt
   if (firstStepPredictor)
   {
     // loop over all interfaces
-    for (int i = 0; i < (int)interface_.size(); ++i)
+    for (const auto& interface : interface_)
     {
-      interface_[i]->update_active_set_initial_status();
+      interface->update_active_set_initial_status();
     }  // loop over all interfaces
   }
 
@@ -4963,22 +4962,21 @@ void CONTACT::LagrangeStrategy::update_active_set_semi_smooth(const bool firstSt
 
   // update active sets of all interfaces
   // (these maps are NOT allowed to be overlapping !!!)
-  for (int i = 0; i < (int)interface_.size(); ++i)
+  for (const auto& interface : interface_)
   {
-    interface_[i]->build_active_set();
-    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface_[i]->active_nodes(), false);
-    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface_[i]->active_dofs(), false);
-    ginactivenodes_ =
-        Core::LinAlg::merge_map(ginactivenodes_, interface_[i]->inactive_nodes(), false);
-    ginactivedofs_ = Core::LinAlg::merge_map(ginactivedofs_, interface_[i]->inactive_dofs(), false);
-    gactiven_ = Core::LinAlg::merge_map(gactiven_, interface_[i]->active_n_dofs(), false);
-    gactivet_ = Core::LinAlg::merge_map(gactivet_, interface_[i]->active_t_dofs(), false);
+    interface->build_active_set();
+    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface->active_nodes(), false);
+    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface->active_dofs(), false);
+    ginactivenodes_ = Core::LinAlg::merge_map(ginactivenodes_, interface->inactive_nodes(), false);
+    ginactivedofs_ = Core::LinAlg::merge_map(ginactivedofs_, interface->inactive_dofs(), false);
+    gactiven_ = Core::LinAlg::merge_map(gactiven_, interface->active_n_dofs(), false);
+    gactivet_ = Core::LinAlg::merge_map(gactivet_, interface->active_t_dofs(), false);
 
     if (friction_)
     {
-      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface_[i]->slip_nodes(), false);
-      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interface_[i]->slip_dofs(), false);
-      gslipt_ = Core::LinAlg::merge_map(gslipt_, interface_[i]->slip_t_dofs(), false);
+      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface->slip_nodes(), false);
+      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interface->slip_dofs(), false);
+      gslipt_ = Core::LinAlg::merge_map(gslipt_, interface->slip_t_dofs(), false);
     }
   }
 

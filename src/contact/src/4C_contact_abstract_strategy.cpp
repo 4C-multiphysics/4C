@@ -441,8 +441,8 @@ void CONTACT::AbstractStrategy::setup(bool redistributed, bool init)
     // set potential global self contact status
     // (this is TRUE if at least one contact interface is a self contact interface)
     bool selfcontact = false;
-    for (unsigned i = 0; i < interfaces().size(); ++i)
-      if (interfaces()[i]->self_contact()) selfcontact = true;
+    for (const auto& interface : interfaces())
+      if (interface->self_contact()) selfcontact = true;
 
     if (selfcontact) isselfcontact_ = true;
   }
@@ -489,14 +489,14 @@ void CONTACT::AbstractStrategy::setup(bool redistributed, bool init)
   int offset_if = 0;
 
   // merge interface maps to global maps
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
     // build Lagrange multiplier dof map
     if (is_self_contact())
     {
       if (redistributed) FOUR_C_THROW("SELF-CONTACT: Parallel redistribution is not supported!");
 
-      Interface& inter = *interfaces()[i];
+      Interface& inter = *interface;
       std::shared_ptr<const Core::LinAlg::Map> refdofrowmap = nullptr;
       if (inter.self_contact())
         refdofrowmap = Core::LinAlg::merge_map(inter.source_row_dofs(), inter.target_row_dofs());
@@ -504,7 +504,7 @@ void CONTACT::AbstractStrategy::setup(bool redistributed, bool init)
         refdofrowmap = inter.source_row_dofs();
 
       std::shared_ptr<Core::LinAlg::Map> selfcontact_lmmap =
-          interfaces()[i]->update_lag_mult_sets(offset_if, redistributed, *refdofrowmap);
+          interface->update_lag_mult_sets(offset_if, redistributed, *refdofrowmap);
 
       std::shared_ptr<Core::LinAlg::Map>& gsc_refdofmap_ptr =
           data().global_self_contact_ref_dof_row_map_ptr();
@@ -518,54 +518,50 @@ void CONTACT::AbstractStrategy::setup(bool redistributed, bool init)
     }
     else
     {
-      interfaces()[i]->update_lag_mult_sets(offset_if, redistributed);
-      const int loffset_interface = interfaces()[i]->lag_mult_dofs()->num_global_elements();
+      interface->update_lag_mult_sets(offset_if, redistributed);
+      const int loffset_interface = interface->lag_mult_dofs()->num_global_elements();
       if (loffset_interface > 0) offset_if += loffset_interface;
     }
 
     // merge interface target, source maps to global target, source map
-    gsnoderowmap_ =
-        Core::LinAlg::merge_map(source_row_nodes_ptr(), interfaces()[i]->source_row_nodes());
-    gtnoderowmap_ =
-        Core::LinAlg::merge_map(target_row_nodes_ptr(), interfaces()[i]->target_row_nodes());
+    gsnoderowmap_ = Core::LinAlg::merge_map(source_row_nodes_ptr(), interface->source_row_nodes());
+    gtnoderowmap_ = Core::LinAlg::merge_map(target_row_nodes_ptr(), interface->target_row_nodes());
     gsdofrowmap_ =
-        Core::LinAlg::merge_map(source_dof_row_map_ptr(true), interfaces()[i]->source_row_dofs());
-    gtdofrowmap_ = Core::LinAlg::merge_map(gtdofrowmap_, interfaces()[i]->target_row_dofs());
+        Core::LinAlg::merge_map(source_dof_row_map_ptr(true), interface->source_row_dofs());
+    gtdofrowmap_ = Core::LinAlg::merge_map(gtdofrowmap_, interface->target_row_dofs());
 
     // merge active sets and slip sets of all interfaces
     // (these maps are NOT allowed to be overlapping !!!)
-    interfaces()[i]->build_active_set(init);
-    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interfaces()[i]->active_nodes(), false);
-    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interfaces()[i]->active_dofs(), false);
+    interface->build_active_set(init);
+    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface->active_nodes(), false);
+    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface->active_dofs(), false);
 
-    ginactivenodes_ =
-        Core::LinAlg::merge_map(ginactivenodes_, interfaces()[i]->inactive_nodes(), false);
-    ginactivedofs_ =
-        Core::LinAlg::merge_map(ginactivedofs_, interfaces()[i]->inactive_dofs(), false);
+    ginactivenodes_ = Core::LinAlg::merge_map(ginactivenodes_, interface->inactive_nodes(), false);
+    ginactivedofs_ = Core::LinAlg::merge_map(ginactivedofs_, interface->inactive_dofs(), false);
 
-    gactiven_ = Core::LinAlg::merge_map(gactiven_, interfaces()[i]->active_n_dofs(), false);
-    gactivet_ = Core::LinAlg::merge_map(gactivet_, interfaces()[i]->active_t_dofs(), false);
+    gactiven_ = Core::LinAlg::merge_map(gactiven_, interface->active_n_dofs(), false);
+    gactivet_ = Core::LinAlg::merge_map(gactivet_, interface->active_t_dofs(), false);
 
     // store initial element col map for binning strategy
     initial_elecolmap_.push_back(
-        std::make_shared<Core::LinAlg::Map>(*interfaces()[i]->discret().element_col_map()));
+        std::make_shared<Core::LinAlg::Map>(*interface->discret().element_col_map()));
 
     // ****************************************************
     // friction
     // ****************************************************
     if (friction_)
     {
-      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interfaces()[i]->slip_nodes(), false);
-      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interfaces()[i]->slip_dofs(), false);
-      gslipt_ = Core::LinAlg::merge_map(gslipt_, interfaces()[i]->slip_t_dofs(), false);
+      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface->slip_nodes(), false);
+      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interface->slip_dofs(), false);
+      gslipt_ = Core::LinAlg::merge_map(gslipt_, interface->slip_t_dofs(), false);
     }
 
     // define maps for nonsmooth case
     if (params().get<bool>("NONSMOOTH_GEOMETRIES"))
     {
-      gsdofVertex_ = Core::LinAlg::merge_map(gsdofVertex_, interfaces()[i]->sdof_vertex_rowmap());
-      gsdofEdge_ = Core::LinAlg::merge_map(gsdofEdge_, interfaces()[i]->sdof_edge_rowmap());
-      gsdofSurf_ = Core::LinAlg::merge_map(gsdofSurf_, interfaces()[i]->sdof_surf_rowmap());
+      gsdofVertex_ = Core::LinAlg::merge_map(gsdofVertex_, interface->sdof_vertex_rowmap());
+      gsdofEdge_ = Core::LinAlg::merge_map(gsdofEdge_, interface->sdof_edge_rowmap());
+      gsdofSurf_ = Core::LinAlg::merge_map(gsdofSurf_, interface->sdof_surf_rowmap());
     }
   }
 
@@ -714,8 +710,7 @@ void CONTACT::AbstractStrategy::setup(bool redistributed, bool init)
   auto lagmultquad = Teuchos::getIntegralValue<Mortar::LagMultQuad>(params(), "LM_QUAD");
   if ((shapefcn == Mortar::shape_dual || shapefcn == Mortar::shape_petrovgalerkin) &&
       (n_dim() == 3 || (n_dim() == 2 && lagmultquad == Mortar::lagmult_lin)))
-    for (int i = 0; i < (int)interfaces().size(); ++i)
-      dualquadsourcetrafo_ += interfaces()[i]->quadsource();
+    for (const auto& interface : interfaces()) dualquadsourcetrafo_ += interface->quadsource();
 
   //----------------------------------------------------------------------
   // IF SO, COMPUTE TRAFO MATRIX AND ITS INVERSE
@@ -740,8 +735,8 @@ void CONTACT::AbstractStrategy::setup(bool redistributed, bool init)
     std::set<int> donebefore;
 
     // for all interfaces
-    for (int i = 0; i < (int)interfaces().size(); ++i)
-      interfaces()[i]->assemble_trafo(*trafo_, *invtrafo_, donebefore);
+    for (const auto& interface : interfaces())
+      interface->assemble_trafo(*trafo_, *invtrafo_, donebefore);
 
     // fill_complete() transformation matrices
     trafo_->complete();
@@ -771,8 +766,7 @@ void CONTACT::AbstractStrategy::setup(bool redistributed, bool init)
     // redistribution of source and target sides)
     if (parallel_redistribution_status())
     {
-      for (std::size_t i = 0; i < interfaces().size(); ++i)
-        interfaces()[i]->store_unredistributed_maps();
+      for (const auto& interface : interfaces()) interface->store_unredistributed_maps();
       if (lm_dof_row_map_ptr(true) != nullptr)
         non_redist_glmdofrowmap_ = std::make_shared<Core::LinAlg::Map>(lm_dof_row_map(true));
       non_redist_gsdofrowmap_ = std::make_shared<Core::LinAlg::Map>(source_dof_row_map(true));
@@ -963,7 +957,7 @@ void CONTACT::AbstractStrategy::set_state(
     case Mortar::state_old_displacement:
     {
       // set state on interfaces
-      for (int i = 0; i < (int)interfaces().size(); ++i) interfaces()[i]->set_state(statetype, vec);
+      for (const auto& interface : interfaces()) interface->set_state(statetype, vec);
       break;
     }
     default:
@@ -993,23 +987,21 @@ void CONTACT::AbstractStrategy::update_global_self_contact_state()
 
   // setup global source / target Core::LinAlg::Maps
   // (this is done by looping over all interfaces and merging)
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
     // build Lagrange multiplier dof map
-    interfaces()[i]->update_self_contact_lag_mult_set(global_self_contact_lm_map(), *gstdofrowmap_);
+    interface->update_self_contact_lag_mult_set(global_self_contact_lm_map(), *gstdofrowmap_);
 
     // merge interface Lagrange multiplier dof maps to global LM dof map
-    glmdofrowmap_ =
-        Core::LinAlg::merge_map(lm_dof_row_map_ptr(true), interfaces()[i]->lag_mult_dofs());
+    glmdofrowmap_ = Core::LinAlg::merge_map(lm_dof_row_map_ptr(true), interface->lag_mult_dofs());
     offset_if = lm_dof_row_map(true).num_global_elements();
     if (offset_if < 0) offset_if = 0;
 
     // merge interface target, source maps to global target, source map
-    gsnoderowmap_ =
-        Core::LinAlg::merge_map(source_row_nodes_ptr(), interfaces()[i]->source_row_nodes());
+    gsnoderowmap_ = Core::LinAlg::merge_map(source_row_nodes_ptr(), interface->source_row_nodes());
     gsdofrowmap_ =
-        Core::LinAlg::merge_map(source_dof_row_map_ptr(true), interfaces()[i]->source_row_dofs());
-    gtdofrowmap_ = Core::LinAlg::merge_map(gtdofrowmap_, interfaces()[i]->target_row_dofs());
+        Core::LinAlg::merge_map(source_dof_row_map_ptr(true), interface->source_row_dofs());
+    gtdofrowmap_ = Core::LinAlg::merge_map(gtdofrowmap_, interface->target_row_dofs());
   }
 
   std::shared_ptr<Core::LinAlg::Vector<double>> tmp_ptr =
@@ -1092,36 +1084,36 @@ void CONTACT::AbstractStrategy::initialize_and_evaluate_interface(
       mortarParallelRedistParams, "GHOSTING_STRATEGY");
 
   // Evaluation for all interfaces
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (auto& interface : interfaces())
   {
     // initialize / reset interfaces
-    interfaces()[i]->initialize();
+    interface->initialize();
 
     // store required integration time
-    inttime_ += interfaces()[i]->inttime();
+    inttime_ += interface->inttime();
 
     switch (extendghosting)
     {
       case Mortar::ExtendGhosting::roundrobin:
       {
         // first perform rrloop to detect the required ghosting
-        interfaces()[i]->round_robin_detect_ghosting();
+        interface->round_robin_detect_ghosting();
 
         // second step --> evaluate
-        interfaces()[i]->evaluate(0, step_, iter_);
+        interface->evaluate(0, step_, iter_);
         break;
       }
       case Mortar::ExtendGhosting::binning:
       {
         // required target elements are already ghosted (preparestepcontact) !!!
         // call evaluation
-        interfaces()[i]->evaluate(0, step_, iter_);
+        interface->evaluate(0, step_, iter_);
         break;
       }
       case Mortar::ExtendGhosting::redundant_all:
       case Mortar::ExtendGhosting::redundant_target:
       {
-        interfaces()[i]->evaluate(0, step_, iter_);
+        interface->evaluate(0, step_, iter_);
         break;
       }
     }
@@ -1210,7 +1202,7 @@ void CONTACT::AbstractStrategy::update_parallel_distribution_status(const double
   // of the "close" source interface section(s) on the global level,
   // i.e. restrict to procs that actually have to do some work
   int gnumloadele = 0;
-  for (int i = 0; i < (int)numloadele.size(); ++i) gnumloadele += numloadele[i];
+  for (const int num_load_ele_interface : numloadele) gnumloadele += num_load_ele_interface;
 
   // for non-loaded procs, set time measurement to values 0.0 / 1.0e12,
   // which do not affect the maximum and minimum identification
@@ -1335,11 +1327,11 @@ void CONTACT::AbstractStrategy::initialize_mortar()
 void CONTACT::AbstractStrategy::assemble_mortar()
 {
   // for all interfaces
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
     // assemble D-, M-matrix and g-vector, store them globally
-    interfaces()[i]->assemble_dm(*dmatrix_, *mmatrix_);
-    interfaces()[i]->assemble_g(*wgap_);
+    interface->assemble_dm(*dmatrix_, *mmatrix_);
+    interface->assemble_g(*wgap_);
 
 #ifdef CONTACTFDNORMAL
     // FD check of normal derivatives
@@ -1480,7 +1472,7 @@ void CONTACT::AbstractStrategy::evaluate_relative_movement()
   std::shared_ptr<Core::LinAlg::Vector<double>> xsmod =
       std::make_shared<Core::LinAlg::Vector<double>>(source_dof_row_map(true));
 
-  for (int i = 0; i < (int)interfaces().size(); ++i) interfaces()[i]->assemble_source_coord(xsmod);
+  for (const auto& interface : interfaces()) interface->assemble_source_coord(xsmod);
 
   // in case of 3D dual quadratic case, source coordinates xs are modified
   auto xs = Core::LinAlg::Vector<double>(*xsmod);
@@ -1500,8 +1492,8 @@ void CONTACT::AbstractStrategy::evaluate_relative_movement()
   // do the evaluation on the interface
   // loop over all source row nodes on the current interface
   if (not params().get<bool>("GP_SLIP_INCR"))
-    for (int i = 0; i < (int)interfaces().size(); ++i)
-      interfaces()[i]->evaluate_relative_movement(xsmod, dmatrixmod_, doldmod_);
+    for (const auto& interface : interfaces())
+      interface->evaluate_relative_movement(xsmod, dmatrixmod_, doldmod_);
 }
 
 /*----------------------------------------------------------------------*
@@ -1525,10 +1517,10 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::AbstractStrategy::evaluate_
     std::shared_ptr<Core::LinAlg::Vector<double>> dis)
 {
   // set displacement state and evaluate nodal normals
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
-    interfaces()[i]->set_state(Mortar::state_new_displacement, *dis);
-    interfaces()[i]->evaluate_nodal_normals();
+    interface->set_state(Mortar::state_new_displacement, *dis);
+    interface->evaluate_nodal_normals();
   }
 
   // create empty global matrix
@@ -1537,7 +1529,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::AbstractStrategy::evaluate_
       std::make_shared<Core::LinAlg::SparseMatrix>(source_row_nodes(), 3);
 
   // assemble nodal normals
-  for (int i = 0; i < (int)interfaces().size(); ++i) interfaces()[i]->assemble_normals(*normals);
+  for (const auto& interface : interfaces()) interface->assemble_normals(*normals);
 
   // complete global matrix
   // (rectangular: rows=source_nodes, cols=sdofs)
@@ -1552,7 +1544,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::AbstractStrategy::evaluate_
 void CONTACT::AbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::QuantityType type)
 {
   // loop over all interfaces
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
     // get global quantity to be stored in nodes
     std::shared_ptr<const Core::LinAlg::Vector<double>> vectorglobal = nullptr;
@@ -1592,13 +1584,13 @@ void CONTACT::AbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Qua
     std::shared_ptr<const Core::LinAlg::Map> sdofmap, snodemap;
     if (type == Mortar::StrategyBase::lmupdate or type == Mortar::StrategyBase::lmcurrent)
     {
-      sdofmap = interfaces()[i]->source_col_dofs();
-      snodemap = interfaces()[i]->source_col_nodes();
+      sdofmap = interface->source_col_dofs();
+      snodemap = interface->source_col_nodes();
     }
     else
     {
-      sdofmap = interfaces()[i]->source_row_dofs();
-      snodemap = interfaces()[i]->source_row_nodes();
+      sdofmap = interface->source_row_dofs();
+      snodemap = interface->source_row_nodes();
     }
 
     // export global quantity to current interface source dof map (column or row)
@@ -1611,7 +1603,7 @@ void CONTACT::AbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Qua
     for (int j = 0; j < snodemap->num_my_elements(); ++j)
     {
       int gid = snodemap->gid(j);
-      Core::Nodes::Node* node = interfaces()[i]->discret().g_node(gid);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
       Node* cnode = dynamic_cast<Node*>(node);
 
@@ -1692,13 +1684,13 @@ void CONTACT::AbstractStrategy::compute_contact_tractions()
 
 
   // loop over all interfaces
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
     // loop over all source row nodes on the current interface
-    for (int j = 0; j < interfaces()[i]->source_row_nodes()->num_my_elements(); ++j)
+    for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
     {
-      int gid = interfaces()[i]->source_row_nodes()->gid(j);
-      Core::Nodes::Node* node = interfaces()[i]->discret().g_node(gid);
+      int gid = interface->source_row_nodes()->gid(j);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
       Node* cnode = dynamic_cast<Node*>(node);
 
@@ -1752,13 +1744,13 @@ void CONTACT::AbstractStrategy::store_dirichlet_status(
     std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmaps)
 {
   // loop over all interfaces
-  for (unsigned i = 0; i < interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
     // loop over all source row nodes on the current interface
-    for (int j = 0; j < interfaces()[i]->source_row_nodes()->num_my_elements(); ++j)
+    for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
     {
-      int gid = interfaces()[i]->source_row_nodes()->gid(j);
-      Core::Nodes::Node* node = interfaces()[i]->discret().g_node(gid);
+      int gid = interface->source_row_nodes()->gid(j);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
       Node* cnode = dynamic_cast<Node*>(node);
 
@@ -1827,7 +1819,7 @@ void CONTACT::AbstractStrategy::store_dm(const std::string& state)
 void CONTACT::AbstractStrategy::store_to_old(Mortar::StrategyBase::QuantityType type)
 {
   // loop over all interfaces
-  for (int i = 0; i < (int)interfaces().size(); ++i) interfaces()[i]->store_to_old(type);
+  for (const auto& interface : interfaces()) interface->store_to_old(type);
 }
 
 /*----------------------------------------------------------------------*
@@ -2024,13 +2016,13 @@ void CONTACT::AbstractStrategy::do_write_restart(
   }
 
   // loop over all interfaces
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
     // loop over all source nodes on the current interface
-    for (int j = 0; j < interfaces()[i]->source_row_nodes()->num_my_elements(); ++j)
+    for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
     {
-      int gid = interfaces()[i]->source_row_nodes()->gid(j);
-      Core::Nodes::Node* node = interfaces()[i]->discret().g_node(gid);
+      int gid = interface->source_row_nodes()->gid(j);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
       Node* cnode = dynamic_cast<Node*>(node);
       int dof = (activetoggle->get_map()).lid(gid);
@@ -2119,17 +2111,17 @@ void CONTACT::AbstractStrategy::do_read_restart(Core::IO::DiscretizationReader& 
 
   // store restart information on active set and slip set
   // into nodes, therefore first loop over all interfaces
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
     // loop over all source nodes on the current interface
-    for (int j = 0; j < (interfaces()[i]->source_row_nodes())->num_my_elements(); ++j)
+    for (int j = 0; j < (interface->source_row_nodes())->num_my_elements(); ++j)
     {
-      int gid = (interfaces()[i]->source_row_nodes())->gid(j);
+      int gid = (interface->source_row_nodes())->gid(j);
       int dof = (activetoggle->get_map()).lid(gid);
 
       if (activetoggle->local_values_as_span()[dof] == 1)
       {
-        Core::Nodes::Node* node = interfaces()[i]->discret().g_node(gid);
+        Core::Nodes::Node* node = interface->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
         Node* cnode = dynamic_cast<Node*>(node);
 
@@ -2195,18 +2187,18 @@ void CONTACT::AbstractStrategy::do_read_restart(Core::IO::DiscretizationReader& 
 
   // update active sets of all interfaces
   // (these maps are NOT allowed to be overlapping !!!)
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
-    interfaces()[i]->build_active_set();
-    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interfaces()[i]->active_nodes(), false);
-    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interfaces()[i]->active_dofs(), false);
-    gactiven_ = Core::LinAlg::merge_map(gactiven_, interfaces()[i]->active_n_dofs(), false);
-    gactivet_ = Core::LinAlg::merge_map(gactivet_, interfaces()[i]->active_t_dofs(), false);
+    interface->build_active_set();
+    gactivenodes_ = Core::LinAlg::merge_map(gactivenodes_, interface->active_nodes(), false);
+    gactivedofs_ = Core::LinAlg::merge_map(gactivedofs_, interface->active_dofs(), false);
+    gactiven_ = Core::LinAlg::merge_map(gactiven_, interface->active_n_dofs(), false);
+    gactivet_ = Core::LinAlg::merge_map(gactivet_, interface->active_t_dofs(), false);
     if (friction_)
     {
-      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interfaces()[i]->slip_nodes(), false);
-      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interfaces()[i]->slip_dofs(), false);
-      gslipt_ = Core::LinAlg::merge_map(gslipt_, interfaces()[i]->slip_t_dofs(), false);
+      gslipnodes_ = Core::LinAlg::merge_map(gslipnodes_, interface->slip_nodes(), false);
+      gslipdofs_ = Core::LinAlg::merge_map(gslipdofs_, interface->slip_dofs(), false);
+      gslipt_ = Core::LinAlg::merge_map(gslipt_, interface->slip_t_dofs(), false);
     }
   }
 
@@ -2241,9 +2233,9 @@ void CONTACT::AbstractStrategy::print(std::ostream& os) const
        << "-------------------------------------------------------------\n";
   }
   Core::Communication::barrier(get_comm());
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
-    std::cout << *(interfaces()[i]);
+    std::cout << *(interface);
   }
   Core::Communication::barrier(get_comm());
 }
@@ -2534,13 +2526,13 @@ void CONTACT::AbstractStrategy::print_active_set() const
   bool nonsmooth = params().get<bool>("NONSMOOTH_GEOMETRIES");
 
   // loop over all interfaces
-  for (int i = 0; i < (int)interfaces().size(); ++i)
+  for (const auto& interface : interfaces())
   {
     // loop over all source nodes on the current interface
-    for (int j = 0; j < interfaces()[i]->source_row_nodes()->num_my_elements(); ++j)
+    for (int j = 0; j < interface->source_row_nodes()->num_my_elements(); ++j)
     {
-      int gid = interfaces()[i]->source_row_nodes()->gid(j);
-      Core::Nodes::Node* node = interfaces()[i]->discret().g_node(gid);
+      int gid = interface->source_row_nodes()->gid(j);
+      Core::Nodes::Node* node = interface->discret().g_node(gid);
       if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
 
       // increase active counters

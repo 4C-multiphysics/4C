@@ -472,9 +472,8 @@ void Mortar::STRATEGY::FactoryMT::build_interfaces(const Teuchos::ParameterList&
       // get all nodes and add them
       const std::vector<int>* nodeids = currentgroup[j]->get_nodes();
       if (!nodeids) FOUR_C_THROW("Condition does not have Node Ids");
-      for (int k = 0; k < (int)(*nodeids).size(); ++k)
+      for (const auto gid : *nodeids)
       {
-        int gid = (*nodeids)[k];
         // do only nodes that I have in my discretization
         if (!discret_ptr_->node_col_map()->my_gid(gid)) continue;
         Core::Nodes::Node* node = discret().g_node(gid);
@@ -491,37 +490,38 @@ void Mortar::STRATEGY::FactoryMT::build_interfaces(const Teuchos::ParameterList&
         }
 
         // get edge and corner information:
-        std::vector<const Core::Conditions::Condition*> contactcornercond;
-        discret().get_condition("mrtrcorner", contactcornercond);
-        for (unsigned j = 0; j < contactcornercond.size(); j++)
+        std::vector<const Core::Conditions::Condition*> contact_corner_conditions;
+        discret().get_condition("mrtrcorner", contact_corner_conditions);
+        for (const auto& contact_corner_cond : contact_corner_conditions)
         {
-          if (contactcornercond.at(j)->contains_node(node->id()))
+          if (contact_corner_cond->contains_node(node->id()))
           {
             mtnode->set_on_corner() = true;
           }
         }
-        std::vector<const Core::Conditions::Condition*> contactedgecond;
-        discret().get_condition("mrtredge", contactedgecond);
-        for (unsigned j = 0; j < contactedgecond.size(); j++)
+        std::vector<const Core::Conditions::Condition*> contact_edge_conditions;
+        discret().get_condition("mrtredge", contact_edge_conditions);
+        for (const auto& contact_edge_cond : contact_edge_conditions)
         {
-          if (contactedgecond.at(j)->contains_node(node->id()))
+          if (contact_edge_cond->contains_node(node->id()))
           {
             mtnode->set_on_edge() = true;
           }
         }
 
         // Check, if this node (and, in case, which dofs) are in the contact symmetry condition
-        std::vector<const Core::Conditions::Condition*> contactSymconditions;
-        discret().get_condition("mrtrsym", contactSymconditions);
+        std::vector<const Core::Conditions::Condition*> contact_sym_conditions;
+        discret().get_condition("mrtrsym", contact_sym_conditions);
 
-        for (unsigned j = 0; j < contactSymconditions.size(); j++)
-          if (contactSymconditions.at(j)->contains_node(node->id()))
+        for (const auto& contact_sym_cond : contact_sym_conditions)
+        {
+          if (contact_sym_cond->contains_node(node->id()))
           {
-            const auto& onoff =
-                contactSymconditions.at(j)->parameters().get<std::vector<int>>("ONOFF");
+            const auto& onoff = contact_sym_cond->parameters().get<std::vector<int>>("ONOFF");
             for (unsigned k = 0; k < onoff.size(); k++)
               if (onoff.at(k) == 1) mtnode->dbc_dofs()[k] = true;
           }
+        }
 
         // note that we do not have to worry about double entries
         // as the AddNode function can deal with this case!
