@@ -125,10 +125,9 @@ namespace Mat
     /// one
     constexpr double thermo_mechanical_state_equality_tolerance = 1.0e-12;
 
-    /// enum class for error types in InelasticDefgradTransvIsotropElastViscoplast, used for
-    /// triggering different procedures (e.g. Reinterpolation,
-    /// substepping, line search) during the
-    /// Local Newton Loop
+    /// enum class for error types in InelasticDefgradTransvIsotropElastViscoplast, used to
+    /// indicate recoverable failures which hence might trigger different procedures (e.g.
+    /// Reinterpolation, substepping, line search, global time-step reduction)
     enum class ErrorType
     {
       no_errors,                ///< no errors

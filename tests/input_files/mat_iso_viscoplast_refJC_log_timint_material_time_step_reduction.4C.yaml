@@ -1,0 +1,265 @@
+TITLE:
+  - "Similar to the mat_iso_viscoplast_refJC_log_timint.4C.yaml test, but with a larger initial"
+  - "time-step size and ALLOW_MATERIAL_TIME_STEP_REDUCTION enabled."
+  - "The mesh is partitioned such that all step reduction requests are rank-local."
+  - "Step 1: dt = 1e-4"
+  - "  -> predictor fails -> dt = 5e-5"
+  - "  -> step succeeds with dt = 5e-5"
+  - "Step 2: dt = 5e-5"
+  - "  -> predictor fails -> dt = 2.5e-5"
+  - "  -> nonlinear solve fails during 1st iteration -> dt = 1.25e-5"
+  - "  -> step succeeds with dt = 1.25e-5"
+  - "Step 3-5: dt = 1.25e-5"
+  - "  -> step succeeds with dt = 1.25e-5"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+# This forces the single element of this test to be completely owned by only one rank,
+# while the other rank has zero elements. All step reduction requests are thus rank-local.
+MESH PARTITIONING:
+  MIN_ELE_PER_PROC: 1
+IO:
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "LOG"
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  RESTARTEVERY: 30
+  TIMESTEP: 1e-04
+  NUMSTEP: 100000000
+  MAXTIME: 0.0001
+  TOLDISP: 1e-08
+  NEGLECTINERTIA: true
+  LINEAR_SOLVER: 1
+  ALLOW_MATERIAL_TIME_STEP_REDUCTION: true
+SOLVER 1:
+  SOLVER: "UMFPACK"
+MATERIALS:
+  - MAT: 1
+    MAT_MultiplicativeSplitDefgradElastHyper:
+      NUMMATEL: 1
+      MATIDSEL: [2]
+      NUMFACINEL: 1
+      INELDEFGRADFACIDS: [3]
+      DENS: 7830
+  - MAT: 2
+    ELAST_CoupNeoHooke:
+      YOUNG: 200000
+      NUE: 0.29
+  - MAT: 3
+    MAT_InelasticDefgradTransvIsotropElastViscoplast:
+      VISCOPLAST_LAW_ID: 4
+      FIBER_READER_ID: 5
+      MAT_BEHAVIOR: "isotropic"
+      TIME_INTEGRATION_HIST_VARS: logarithmic
+      LOCAL_NEWTON:
+        CONV_CHECK: residual_and_increment_ratio
+        MAX_ITER: 100
+        RES_TOL: 1e-8
+        INCR_TOL: 1e-8
+        MAX_EXCEEDANCE_FACT_RES_TOL: 10
+        MAX_EXCEEDANCE_FACT_INCR_TOL: 10
+        DIVER_CONT: stop
+      ERROR_REGISTRATION_SETTINGS:
+        REGISTER_PLASTIC_STRAIN_INCR_OVERFLOW: true
+        MAX_PLASTIC_STRAIN_INCR: 10686474581524.463
+        REGISTER_PLASTIC_STRAIN_DERIV_INCR_OVERFLOW: false
+        MAX_PLASTIC_STRAIN_DERIV_INCR: 10686474581524.463
+      ADAPTIVE_ESTIMATE_INTERPOLATION:
+        USE_ADAPTIVE_ESTIMATE_INTERPOLATION: false
+  - MAT: 4
+    MAT_ViscoplasticLawReformulatedJohnsonCook:
+      STRAIN_RATE_PREFAC: 1
+      STRAIN_RATE_EXP_FAC: 0.014
+      INIT_YIELD_STRENGTH: 792
+      ISOTROP_HARDEN_PREFAC: 510
+      ISOTROP_HARDEN_EXP: 0.26
+      REF_TEMPERATURE: 293.0
+      TEMPERATURE_SENS: 1.03
+      MELT_TEMPERATURE: 1000.0
+  - MAT: 5
+    ELAST_CoupTransverselyIsotropic:
+      ALPHA: 1
+      BETA: 1
+      GAMMA: 1
+      ANGLE: 0
+      STR_TENS_ID: 100
+  - MAT: 100
+    ELAST_StructuralTensor:
+      STRATEGY: "Standard"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 2
+    TIMES: [0, 1.6e+16]
+    DESCRIPTION: ["(exp(1.0e2*t)-1.0)"]
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 4
+      QUANTITY: "dispy"
+      VALUE: -0.003966237612
+      TOLERANCE: 4e-11
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispx"
+      VALUE: -0.003966237612
+      TOLERANCE: 4e-11
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispx"
+      VALUE: -0.003966237612
+      TOLERANCE: 4e-11
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispy"
+      VALUE: -0.003966237612
+      TOLERANCE: 4e-11
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispz"
+      VALUE: 0.010050167084167949
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispx"
+      VALUE: -0.003966237612
+      TOLERANCE: 4e-11
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 4
+      QUANTITY: "stress_zz"
+      VALUE: 978.416363079
+      TOLERANCE: 0.00098
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "stress_zz"
+      VALUE: 978.416363079
+      TOLERANCE: 0.00098
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "time_step_size"
+      VALUE: 1.250e-05
+      TOLERANCE: 1e-16
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "total_num_steps"
+      VALUE: 5
+      TOLERANCE: 1e-16
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "total_time"
+      VALUE: 1e-04
+      TOLERANCE: 1e-16
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 1]
+    FUNCT: [null, null, 1]
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 0, 1]
+    VAL: [0, 0, 1]
+    FUNCT: [null, null, 1]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 1]
+    FUNCT: [null, null, 1]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [1, 1, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [1, 0, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 5
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0, 0, 1]
+    FUNCT: [null, null, 1]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [0, 1, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+DNODE-NODE TOPOLOGY:
+  - "NODE 2 DNODE 1"
+  - "NODE 1 DNODE 2"
+DLINE-NODE TOPOLOGY:
+  - "NODE 1 DLINE 1"
+  - "NODE 4 DLINE 1"
+  - "NODE 1 DLINE 2"
+  - "NODE 5 DLINE 2"
+  - "NODE 1 DLINE 3"
+  - "NODE 2 DLINE 3"
+  - "NODE 2 DLINE 4"
+  - "NODE 3 DLINE 4"
+  - "NODE 2 DLINE 5"
+  - "NODE 6 DLINE 5"
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 5 DSURFACE 1"
+  - "NODE 8 DSURFACE 1"
+  - "NODE 2 DSURFACE 2"
+  - "NODE 3 DSURFACE 2"
+  - "NODE 6 DSURFACE 2"
+  - "NODE 7 DSURFACE 2"
+  - "NODE 1 DSURFACE 3"
+  - "NODE 2 DSURFACE 3"
+  - "NODE 3 DSURFACE 3"
+  - "NODE 4 DSURFACE 3"
+  - "NODE 1 DSURFACE 4"
+  - "NODE 2 DSURFACE 4"
+  - "NODE 5 DSURFACE 4"
+  - "NODE 6 DSURFACE 4"
+NODE COORDS:
+  - "NODE 1 COORD -5.0000000000000000e-01 -5.0000000000000000e-01 5.0000000000000000e-01"
+  - "NODE 2 COORD -5.0000000000000000e-01 -5.0000000000000000e-01 -5.0000000000000000e-01"
+  - "NODE 3 COORD -5.0000000000000000e-01 5.0000000000000000e-01 -5.0000000000000000e-01"
+  - "NODE 4 COORD -5.0000000000000000e-01 5.0000000000000000e-01 5.0000000000000000e-01"
+  - "NODE 5 COORD 5.0000000000000000e-01 -5.0000000000000000e-01 5.0000000000000000e-01"
+  - "NODE 6 COORD 5.0000000000000000e-01 -5.0000000000000000e-01 -5.0000000000000000e-01"
+  - "NODE 7 COORD 5.0000000000000000e-01 5.0000000000000000e-01 -5.0000000000000000e-01"
+  - "NODE 8 COORD 5.0000000000000000e-01 5.0000000000000000e-01 5.0000000000000000e-01"
+STRUCTURE ELEMENTS:
+  - "1 SOLID HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM nonlinear FIBER1 0 0 1.0"

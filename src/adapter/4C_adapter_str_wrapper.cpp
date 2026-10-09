@@ -12,10 +12,11 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Adapter::StructureNOXCorrectionWrapper::prepare_time_step()
+Solid::StepStatus Adapter::StructureNOXCorrectionWrapper::prepare_time_step_with_status()
 {
-  StructureWrapper::prepare_time_step();
+  const Solid::StepStatus prepare_status = StructureWrapper::prepare_time_step_with_status();
   if (disstepinc_ != nullptr) disstepinc_->put_scalar(0.);
+  return prepare_status;
 }
 
 

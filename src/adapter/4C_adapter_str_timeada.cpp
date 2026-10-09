@@ -16,6 +16,7 @@
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_structure_new_dbc.hpp"
 #include "4C_structure_new_timint_base.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
@@ -203,15 +204,24 @@ void Adapter::StructureTimeAda::integrate()
 
       const auto solve_status = solve();
 
-      if (solve_status != Solid::StepStatus::no_errors)
+      switch (solve_status)
       {
-        // if not converged, then we have to restart the step over
-        accepted = false;
+        case Solid::StepStatus::no_errors:
+          break;
+        case Solid::StepStatus::nonlinear_solver_failed:
+        {
+          // if not converged, then we have to restart the step over
+          accepted = false;
 
-        // get the divergence action
-        Solid::DivContAct div_action = stm_->data_sdyn().get_divergence_action();
+          // get the divergence action
+          Solid::DivContAct div_action = stm_->data_sdyn().get_divergence_action();
 
-        step_action = perform_error_action(div_action, stpsiznew);
+          step_action = perform_error_action(div_action, stpsiznew);
+          break;
+        }
+        default:
+          // other failures, e.g. material time-step reduction requests, are not supported
+          FOUR_C_THROW("Structural solve failed: {}", EnumTools::enum_name(solve_status));
       }
 
       if (step_action == Solid::StepAction::accept_step)

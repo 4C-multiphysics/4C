@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_adapter_str_structure.hpp"
+#include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -295,8 +296,17 @@ namespace Adapter
     /// set time step size
     void set_dt(const double dtnew) override { structure_->set_dt(dtnew); }
 
-    /// start new time step
-    void prepare_time_step() override { structure_->prepare_time_step(); }
+    void prepare_time_step() final
+    {
+      const Solid::StepStatus prepare_status = prepare_time_step_with_status();
+      FOUR_C_ASSERT_ALWAYS(
+          prepare_status == Solid::StepStatus::no_errors, "Preparing structural time step failed.");
+    }
+
+    [[nodiscard]] Solid::StepStatus prepare_time_step_with_status() override
+    {
+      return structure_->prepare_time_step_with_status();
+    }
 
     /// update displacement
     void update_state_incrementally(
@@ -512,7 +522,7 @@ namespace Adapter
     {
     }
 
-    void prepare_time_step() override;
+    [[nodiscard]] Solid::StepStatus prepare_time_step_with_status() override;
 
     //! evaluate() routine that can handle NOX step increments by computing the
     //! last iteration increment needed for structural evaluate() call
