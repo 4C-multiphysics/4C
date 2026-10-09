@@ -77,11 +77,15 @@ namespace Core::LinearSolver
         parameter<std::optional<std::filesystem::path>>(
             "SOLVER_XML_FILE", {.description = "xml file defining any iterative solver"}),
 
-        parameter<std::optional<bool>>("IS_CONTIGUOUS",
-            {.description = "Direct solvers only: pass 'IsContiguous' to Amesos2. If true, the "
-                            "GIDs of the (serial) matrix must be exactly [0, N) in LID order, "
-                            "otherwise the solve fails or is wrong. If unset, Amesos2 is told "
-                            "'false'."}),
+        parameter<std::optional<bool>>("ASSUME_CONTIGUOUS_DOF_IDS",
+            {.description =
+                    "Direct solvers only: pass 'IsContiguous' to Amesos2. If true, the "
+                    "GIDs of the (serial) matrix must be exactly [0, N) in LID order, "
+                    "otherwise the solve fails or is wrong. If unset, Amesos2 is told "
+                    "'false'. This is an expert setting. Dof numbering in FOURC follows "
+                    "the node ids, so gaps in the node numbering lead to gaps in the dof "
+                    "numbering, and this will cause the solver to fail or produce incorrect "
+                    "results if this option was enabled for such an inadmissible configuration."}),
 
         // user-given name of solver block (just for beauty)
         parameter<std::string>("NAME",

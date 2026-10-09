@@ -405,10 +405,11 @@ Teuchos::ParameterList Core::LinAlg::Solver::translate_solver_parameters(
       FOUR_C_THROW("Unsupported type of solver");
   }
 
-  if (inparams.isParameter("IS_CONTIGUOUS"))
+  if (inparams.isParameter("ASSUME_CONTIGUOUS_DOF_IDS"))
   {
-    if (const auto is_contiguous = inparams.get<std::optional<bool>>("IS_CONTIGUOUS"))
-      outparams.set<bool>("IsContiguous", *is_contiguous);
+    if (const auto assume_contiguous_dof_ids =
+            inparams.get<std::optional<bool>>("ASSUME_CONTIGUOUS_DOF_IDS"))
+      outparams.set<bool>("assume_contiguous_dof_ids", *assume_contiguous_dof_ids);
   }
 
   return outparams;
