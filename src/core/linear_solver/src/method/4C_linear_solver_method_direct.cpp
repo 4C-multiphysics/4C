@@ -21,7 +21,8 @@ FOUR_C_NAMESPACE_OPEN
 
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
-Core::LinearSolver::DirectSolver::DirectSolver(Core::LinearSolver::SolverType solvertype)
+Core::LinearSolver::DirectSolver::DirectSolver(
+    Core::LinearSolver::SolverType solvertype, const Teuchos::ParameterList& params)
     : solvertype_(solvertype),
       assume_contiguous_dof_ids_(params.isParameter("assume_contiguous_dof_ids") &&
                                  params.get<bool>("assume_contiguous_dof_ids")),
