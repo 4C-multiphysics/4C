@@ -1,0 +1,148 @@
+<?xml version="1.0" ?> 
+<!-- 
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="UnstructuredGrid" version="0.1" compressor="vtkZLibDataCompressor" byte_order="LittleEndian">
+  <UnstructuredGrid>
+    <FieldData>
+      <DataArray type="Float64" Name="TIME" NumberOfTuples="1" format="ascii">
+3.000000000000000e+00 
+      </DataArray>
+    </FieldData>
+
+    <Piece NumberOfPoints="0" NumberOfCells="0">
+      <Points>
+        <DataArray type="Float64" NumberOfComponents="3" format="ascii"/>
+      </Points>
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="ascii"/>
+        <DataArray type="Int32" Name="offsets" format="ascii"/>
+        <DataArray type="UInt8" Name="types" format="ascii"/>
+      </Cells>
+      <PointData>
+        <DataArray type="Float64" Name="displacement" NumberOfComponents="3" format="ascii"/>
+      </PointData>
+      <CellData>
+        <DataArray type="Float64" Name="axial_strain_GPs" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="cross_section_radius" format="ascii"/>
+        <DataArray type="Float64" Name="curvature_2_GPs" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="curvature_3_GPs" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Int32" Name="element_gid" format="ascii"/>
+        <DataArray type="Float64" Name="element_owner" format="ascii"/>
+        <DataArray type="Float64" Name="shear_strain_2_GPs" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="shear_strain_3_GPs" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="twist_GPs" NumberOfComponents="3" format="ascii"/>
+      </CellData>
+    </Piece>
+    <Piece NumberOfPoints="0" NumberOfCells="0">
+      <Points>
+        <DataArray type="Float64" NumberOfComponents="3" format="ascii"/>
+      </Points>
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="ascii"/>
+        <DataArray type="Int32" Name="offsets" format="ascii"/>
+        <DataArray type="UInt8" Name="types" format="ascii"/>
+      </Cells>
+      <PointData>
+        <DataArray type="Float64" Name="displacement" NumberOfComponents="3" format="ascii"/>
+      </PointData>
+      <CellData>
+        <DataArray type="Float64" Name="axial_strain_GPs" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="cross_section_radius" format="ascii"/>
+        <DataArray type="Float64" Name="curvature_2_GPs" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="curvature_3_GPs" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Int32" Name="element_gid" format="ascii"/>
+        <DataArray type="Float64" Name="element_owner" format="ascii"/>
+        <DataArray type="Float64" Name="shear_strain_2_GPs" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="shear_strain_3_GPs" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="twist_GPs" NumberOfComponents="3" format="ascii"/>
+      </CellData>
+    </Piece>
+    <Piece NumberOfPoints="12" NumberOfCells="2" >
+      <Points>
+        <DataArray type="Float64" NumberOfComponents="3" format="ascii">
+1.000000000000000e+00 6.499999999999999e-01 -2.800000000000000e+00
+8.494951917115916e-01 6.999226793952770e-01 -2.226990222470243e+00
+6.985179732157989e-01 8.209551548525756e-01 -1.664658419133777e+00
+5.474032806707079e-01 9.905439557836094e-01 -1.110204747246421e+00
+3.964860502344045e-01 1.186135611600093e+00 -5.608293640639938e-01
+2.461012180649750e-01 1.385176651713738e+00 -1.373242684231701e-02
+2.461012180649750e-01 1.385176651713738e+00 -1.373242684231701e-02
+9.609899415381831e-02 1.578504838784183e+00 5.331233446132393e-01
+-5.389591980485003e-02 1.771954860587972e+00 1.079924581216277e+00
+-2.038868500987196e-01 1.965468634212187e+00 1.626695151789437e+00
+-3.538771230154800e-01 2.158988076743909e+00 2.173458925155360e+00
+-5.038700648428206e-01 2.352455105270217e+00 2.720239770136684e+00
+        </DataArray>
+      </Points>
+
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="ascii">
+0 1 2 3 4 5 6 7 8 9 10 11 
+        </DataArray>
+        <DataArray type="Int32" Name="offsets" format="ascii">
+6 12 
+        </DataArray>
+        <DataArray type="UInt8" Name="types" format="ascii">
+4 4 
+        </DataArray>
+      </Cells>
+
+  <PointData>
+        <DataArray type="Float64" Name="displacement" NumberOfComponents="3" format="ascii">
+1.000000000000000e+00 -1.000000000000000e+00 0.000000000000000e+00
+9.994951917117312e-01 -9.500773206047227e-01 -6.990222470208085e-03
+9.985179732158687e-01 -8.290448451474240e-01 -2.465841913375932e-02
+9.974032806706380e-01 -6.594560442163903e-01 -5.020474724643886e-02
+9.964860502342650e-01 -4.638643883999074e-01 -8.082936406402991e-02
+9.961012180649750e-01 -2.648233482862616e-01 -1.137324268423170e-01
+9.961012180649750e-01 -2.648233482862616e-01 -1.137324268423170e-01
+9.960989941539579e-01 -7.149516121581700e-02 -1.468766553867249e-01
+9.961040801952197e-01 1.219548605879723e-01 -1.800754187837050e-01
+9.961131499012105e-01 3.154686342121875e-01 -2.133048482105806e-01
+9.961228769843804e-01 5.089880767439090e-01 -2.465410748446764e-01
+9.961299351571794e-01 7.024551052702175e-01 -2.797602298633164e-01
+        </DataArray>
+  </PointData>
+  <CellData>
+        <DataArray type="Float64" Name="axial_strain_GPs" NumberOfComponents="3" format="ascii">
+-1.094650087330229e-03 3.964569512220351e-04 5.091191563533215e-05
+5.091191563533215e-05 3.794470681439677e-06 -3.058701426028598e-06
+        </DataArray>
+        <DataArray type="Float64" Name="cross_section_radius" format="ascii">
+4.000000000000000e-01
+4.000000000000000e-01
+        </DataArray>
+        <DataArray type="Float64" Name="curvature_2_GPs" NumberOfComponents="3" format="ascii">
+-1.018060560717521e-02 -4.710649987756229e-03 7.601131277089509e-04
+-2.100086506394255e-05 -7.124099891187231e-06 6.752665280893047e-06
+        </DataArray>
+        <DataArray type="Float64" Name="curvature_3_GPs" NumberOfComponents="3" format="ascii">
+2.297249813581876e-01 1.095049493253272e-01 -1.071504595865641e-02
+7.691134387132968e-04 2.605980929179457e-04 -2.479172528774238e-04
+        </DataArray>
+        <DataArray type="Int32" Name="element_gid" format="ascii">
+16
+17
+        </DataArray>
+        <DataArray type="Float64" Name="element_owner" format="ascii">
+2.000000000000000e+00
+2.000000000000000e+00
+        </DataArray>
+        <DataArray type="Float64" Name="shear_strain_2_GPs" NumberOfComponents="3" format="ascii">
+1.143407848701339e-02 8.293476343990552e-03 4.276986787657422e-04
+4.276986787657422e-04 3.506657382945644e-05 -2.837325177657002e-05
+        </DataArray>
+        <DataArray type="Float64" Name="shear_strain_3_GPs" NumberOfComponents="3" format="ascii">
+5.537160543042652e-04 3.773771946391780e-04 -1.344317091978020e-06
+-1.344317091978020e-06 9.569241403162287e-07 -7.722372276364187e-07
+        </DataArray>
+        <DataArray type="Float64" Name="twist_GPs" NumberOfComponents="3" format="ascii">
+4.175790082669353e-06 -5.276904612453839e-06 4.231937916839213e-06
+-8.314118736171934e-13 1.040509866524451e-12 -8.321855845849434e-13
+        </DataArray>
+      </CellData>
+
+    </Piece>
+  </UnstructuredGrid>
+</VTKFile>

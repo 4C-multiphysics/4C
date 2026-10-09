@@ -12,6 +12,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 from vtk import vtkXMLPPolyDataReader
 from vtk import vtkXMLPUnstructuredGridReader
+from vtk import vtkXMLUnstructuredGridReader
 from vtk import vtkXMLGenericDataObjectReader
 from vtk.util import numpy_support as VN
 import argparse
@@ -22,6 +23,8 @@ from four_c_building_testing.vtk_data_compare import compare_vtk_data
 # we expect the following input:
 # link_to_python link_to_this_script input_pvd_file reference_pvd_file tolerance_for_data_comparison number_of_timesteps[optional] list_of_points_in_time[optional]
 # /home/user/anaconda3/envs/vtk-test/bin/python /home/user/sim/vtk-tests/python/vtk_compare.py /home/user/sim/vtk-tests/sohex8/xxx-structure.pvd /home/user/sim/vtk-tests/sohex8/sohex8fbar_cooks_nl_new_struc-structure.pvd 1e-8 3 10.0 35.0 100.0
+# Supports both vtu_per_rank output (.pvd + .pvtu master + per-rank .vtu files) and
+# vtu_collective output (.pvd + single shared multi-piece .vtu per time step).
 
 
 def compare_vtk(path1, path2, points_in_time, tol_float=1e-8, raise_error=True):
@@ -89,7 +92,8 @@ def compare_vtk(path1, path2, points_in_time, tol_float=1e-8, raise_error=True):
 
     def find_pvtk(pvdpath, points_in_time):
         """
-        Find list of pvtk files in proximity of given timesteps
+        Find list of master data files (.pvtu for vtu_per_rank, .vtu for vtu_collective)
+        referenced by the given .pvd file, filtered to the given points in time
         """
         mydata = ET.parse(pvdpath)
 
@@ -147,23 +151,31 @@ def compare_vtk(path1, path2, points_in_time, tol_float=1e-8, raise_error=True):
 
     def merge_vtk(pvtkpath):
         """
-        use suiting vtkXMLP* reader to read data and return output
+        Read a parallel master file (.pvtu, vtu_per_rank) or a single shared multi-piece file
+        (.vtu, vtu_collective) and return the merged unstructured grid
         """
 
-        # find all desired vtk files and check if they exist
-        vtkfiles = find_vtk_and_check(pvtkpath)
+        is_parallel_master = os.path.splitext(pvtkpath)[1] == ".pvtu"
 
-        dir = os.path.dirname(pvtkpath)
+        if is_parallel_master:
+            # find all desired vtk files and check if they exist
+            vtkfiles = find_vtk_and_check(pvtkpath)
+            type_probe_file = os.path.join(os.path.dirname(pvtkpath), vtkfiles[0])
+        else:
+            type_probe_file = pvtkpath
 
-        # examplarily read the first vtk file to get its type
-        reader = vtkXMLGenericDataObjectReader()
-        reader.SetFileName(os.path.join(dir, vtkfiles[0]))
-        reader.Update()
-        type = reader.GetOutput().GetDataObjectType()
+        # read the probe file once to determine its data type
+        type_reader = vtkXMLGenericDataObjectReader()
+        type_reader.SetFileName(type_probe_file)
+        type_reader.Update()
+        type = type_reader.GetOutput().GetDataObjectType()
 
-        # use the respective reader for both .vtk types used in 4C
+        # use the respective reader for the vtk types used in 4C
         if type == 4:
-            preader = vtkXMLPUnstructuredGridReader()
+            if is_parallel_master:
+                preader = vtkXMLPUnstructuredGridReader()
+            else:
+                preader = vtkXMLUnstructuredGridReader()
             preader.SetFileName(pvtkpath)
             preader.Update()
         else:
@@ -199,25 +211,33 @@ def compare_vtk(path1, path2, points_in_time, tol_float=1e-8, raise_error=True):
         dir1 = os.path.dirname(path1)
         dir2 = os.path.dirname(path2)
 
-        # create list of .pvtk files from .pvd file content
-        pvtkpaths1 = find_pvtk(pvdpath=path1, points_in_time=points_in_time)
-        pvtkpaths2 = find_pvtk(pvdpath=path2, points_in_time=points_in_time)
+        # create list of step files from .pvd file content (master .pvtu for vtu_per_rank,
+        # single shared multi-piece .vtu for vtu_collective)
+        stepfiles1 = find_pvtk(pvdpath=path1, points_in_time=points_in_time)
+        stepfiles2 = find_pvtk(pvdpath=path2, points_in_time=points_in_time)
 
         # Load the vtk files.
         data1array = []
         data2array = []
 
-        # pvtkpaths representing timestep files
-        for i in range(0, len(pvtkpaths1)):
-            compare_pvtk(
-                pvtkpath_comp=os.path.join(dir1, pvtkpaths1[i]),
-                pvtkpath_ref=os.path.join(dir2, pvtkpaths2[i]),
-            )
+        # For the parallel master layout (.pvtu), compare the master XML (minus <Piece> links).
+        # A collective .vtu has no separate master file, so this step is skipped. Only compare the
+        # XML structure when both step files are parallel masters; a mixed layout (.pvtu vs. .vtu)
+        # compares data via merge_vtk below.
+        for i in range(0, len(stepfiles1)):
+            if (
+                os.path.splitext(stepfiles1[i])[1] == ".pvtu"
+                and os.path.splitext(stepfiles2[i])[1] == ".pvtu"
+            ):
+                compare_pvtk(
+                    pvtkpath_comp=os.path.join(dir1, stepfiles1[i]),
+                    pvtkpath_ref=os.path.join(dir2, stepfiles2[i]),
+                )
 
-        for iter in enumerate(pvtkpaths1):
+        for iter in enumerate(stepfiles1):
             data1array.append(merge_vtk(os.path.join(dir1, iter[1])))
 
-        for iter in enumerate(pvtkpaths2):
+        for iter in enumerate(stepfiles2):
             data2array.append(merge_vtk(os.path.join(dir2, iter[1])))
 
         for i in range(0, len(data1array)):
@@ -233,7 +253,7 @@ def compare_vtk(path1, path2, points_in_time, tol_float=1e-8, raise_error=True):
 
 def cli():
     parser = argparse.ArgumentParser(
-        description="Compare two .pvd files and their linked .pvtk files. Only given points in time are compared. If no points in time are given, all are compared."
+        description="Compare two .pvd files and their linked .pvtu/.vtu data files. Supports both vtu_per_rank (.pvtu master + per-rank .vtu) and vtu_collective (.vtu) layouts. Only given points in time are compared. If no points in time are given, all are compared."
     )
     parser.add_argument(
         "vtk_result", help="Path to .pvd file of the result to be compared."

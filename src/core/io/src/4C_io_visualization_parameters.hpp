@@ -11,31 +11,35 @@
 
 #include "4C_config.hpp"
 
-#include "4C_io_vtk_writer_base.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
+#include <cstdint>
 #include <string>
-#include <tuple>
+#include <utility>
 
 FOUR_C_NAMESPACE_OPEN
+
+namespace LibB64
+{
+  enum class CompressionLevel;
+}
 
 namespace Core::IO
 {
   class OutputControl;
 
   /// data format for written numeric data
-  enum class OutputDataFormat
+  enum class OutputDataFormat : std::uint8_t
   {
-    binary,
     ascii,
-    vague
+    binary
   };
 
-  // Specify the output writer that shall be used
-  enum class OutputWriter
+  /// Specify the output writer that shall be used
+  enum class OutputWriter : std::uint8_t
   {
-    none,
-    vtu_per_rank  // Write one file per time step per rank in the vtu format
+    vtu_collective,  ///< Write one shared file per time step for all ranks via MPI-IO
+    vtu_per_rank     ///< Write one file per time step per rank in the vtu format
   };
 
   /**
@@ -108,8 +112,8 @@ namespace Core::IO
    * @param iteration_number (in) Number of nonlinear iteration
    */
   [[nodiscard]] std::pair<double, int> get_time_and_time_step_index_for_output(
-      const VisualizationParameters& visualization_parameters, const double time, const int step,
-      const int iteration_number = 0);
+      const VisualizationParameters& visualization_parameters, double time, int step,
+      int iteration_number = 0);
 }  // namespace Core::IO
 
 

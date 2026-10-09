@@ -7,6 +7,7 @@
 
 #include "4C_io_visualization_writer_factory.hpp"
 
+#include "4C_io_visualization_writer_vtu_collective.hpp"
 #include "4C_io_visualization_writer_vtu_per_rank.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -25,9 +26,12 @@ std::unique_ptr<Core::IO::VisualizationWriterBase> Core::IO::visualization_write
     return std::make_unique<VisualizationWriterVtuPerRank>(
         parameters, comm, visualization_data_name);
   }
-  else
+  if (parameters.writer_ == OutputWriter::vtu_collective)
   {
-    FOUR_C_THROW("You have to select a valid visualization writer in the input file");
+    return std::make_unique<VisualizationWriterVtuCollective>(
+        parameters, comm, visualization_data_name);
   }
+
+  FOUR_C_THROW("You have to select a valid visualization writer in the input file");
 }
 FOUR_C_NAMESPACE_CLOSE

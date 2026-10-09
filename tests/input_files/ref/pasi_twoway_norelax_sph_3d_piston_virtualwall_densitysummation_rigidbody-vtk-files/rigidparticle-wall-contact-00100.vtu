@@ -1,0 +1,68 @@
+<?xml version="1.0" ?> 
+<!-- 
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="UnstructuredGrid" version="0.1" compressor="vtkZLibDataCompressor" byte_order="LittleEndian">
+  <UnstructuredGrid>
+    <FieldData>
+      <DataArray type="Float64" Name="TIME" NumberOfTuples="1" format="ascii">
+2.500000000000002e-01 
+      </DataArray>
+    </FieldData>
+
+    <Piece NumberOfPoints="4" NumberOfCells="0" >
+      <Points>
+        <DataArray type="Float64" NumberOfComponents="3" format="ascii">
+-1.534242397268472e-01 -1.534242397268473e-01 9.518570440787637e-01
+1.534242397268472e-01 -1.534242397268473e-01 9.518570440787637e-01
+1.534242397268472e-01 1.534242397268472e-01 9.518570440787638e-01
+-1.534242397268472e-01 1.534242397268472e-01 9.518570440787638e-01
+        </DataArray>
+      </Points>
+
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="ascii">
+
+        </DataArray>
+        <DataArray type="Int32" Name="offsets" format="ascii">
+
+        </DataArray>
+        <DataArray type="UInt8" Name="types" format="ascii">
+
+        </DataArray>
+      </Cells>
+
+  <PointData>
+        <DataArray type="Float64" Name="contact force" NumberOfComponents="3" format="ascii">
+-3.108614420639287e-03 -3.108614420639312e-03 -4.113382763186804e-02
+3.108614420639311e-03 -3.108614420639311e-03 -4.113382763186802e-02
+3.108614420639377e-03 3.108614420639402e-03 -4.113382763186913e-02
+-3.108614420639376e-03 3.108614420639401e-03 -4.113382763186912e-02
+        </DataArray>
+        <DataArray type="Float64" Name="normal direction" NumberOfComponents="3" format="ascii">
+7.514522754908246e-02 7.514522754908307e-02 9.943371609032788e-01
+-7.514522754908307e-02 7.514522754908307e-02 9.943371609032788e-01
+-7.514522754908264e-02 -7.514522754908325e-02 9.943371609032788e-01
+7.514522754908264e-02 -7.514522754908325e-02 9.943371609032788e-01
+        </DataArray>
+      </PointData>
+
+    </Piece>
+    <Piece NumberOfPoints="0" NumberOfCells="0">
+      <Points>
+        <DataArray type="Float64" NumberOfComponents="3" format="ascii"/>
+      </Points>
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="ascii"/>
+        <DataArray type="Int32" Name="offsets" format="ascii"/>
+        <DataArray type="UInt8" Name="types" format="ascii"/>
+      </Cells>
+      <PointData>
+        <DataArray type="Float64" Name="contact force" NumberOfComponents="3" format="ascii"/>
+        <DataArray type="Float64" Name="normal direction" NumberOfComponents="3" format="ascii"/>
+      </PointData>
+      <CellData>
+      </CellData>
+    </Piece>
+  </UnstructuredGrid>
+</VTKFile>

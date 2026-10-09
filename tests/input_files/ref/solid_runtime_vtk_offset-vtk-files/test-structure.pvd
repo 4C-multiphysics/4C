@@ -4,7 +4,7 @@
 -->
 <VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
   <Collection>
-    <DataSet timestep="1.00000000000000e-01" group="" part="0" file="test-vtk-files/structure-000001.pvtu"/>
-    <DataSet timestep="3.00000000000000e-01" group="" part="0" file="test-vtk-files/structure-000003.pvtu"/>
+    <DataSet timestep="1.00000000000000e-01" group="" part="0" file="test-vtk-files/structure-00001.vtu"/>
+    <DataSet timestep="3.00000000000000e-01" group="" part="0" file="test-vtk-files/structure-00003.vtu"/>
   </Collection>
 </VTKFile>
