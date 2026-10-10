@@ -257,19 +257,19 @@ RESULT DESCRIPTION:
       DIS: "thermo"
       NODE: 239
       QUANTITY: "flux_boundary_1_x"
-      VALUE: 1.27304144082695022e-02
+      VALUE: 0.012730443285121868
       TOLERANCE: 1.3e-08
   - SCATRA:
       DIS: "thermo"
       NODE: 239
       QUANTITY: "flux_boundary_1_y"
-      VALUE: -9.15832588934251297e-03
+      VALUE: -0.009158346663499281
       TOLERANCE: 9.2e-09
   - SCATRA:
       DIS: "thermo"
       NODE: 239
       QUANTITY: "flux_boundary_1_z"
-      VALUE: 2.61063304908942849e-03
+      VALUE: 0.002610638970881345
       TOLERANCE: 2.6e-09
   - SCATRA:
       DIS: "scatra"
