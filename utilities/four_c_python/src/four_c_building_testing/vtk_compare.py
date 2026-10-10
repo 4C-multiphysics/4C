@@ -7,13 +7,10 @@
 
 # Import python modules.
 import os
-import sys
 import numpy as np
 import xml.etree.ElementTree as ET
-from vtk import vtkXMLPPolyDataReader
 from vtk import vtkXMLPUnstructuredGridReader
 from vtk import vtkXMLGenericDataObjectReader
-from vtk.util import numpy_support as VN
 import argparse
 
 # Import pure vtk data comparison.
@@ -24,7 +21,9 @@ from four_c_building_testing.vtk_data_compare import compare_vtk_data
 # /home/user/anaconda3/envs/vtk-test/bin/python /home/user/sim/vtk-tests/python/vtk_compare.py /home/user/sim/vtk-tests/sohex8/xxx-structure.pvd /home/user/sim/vtk-tests/sohex8/sohex8fbar_cooks_nl_new_struc-structure.pvd 1e-8 3 10.0 35.0 100.0
 
 
-def compare_vtk(path1, path2, points_in_time, tol_float=1e-8, raise_error=True):
+def compare_vtk(
+    path1, path2, points_in_time, tol_data_float, tol_time_float, raise_error=True
+):
     """
     Compare the vtk files at path1 and path2.
 
@@ -33,8 +32,11 @@ def compare_vtk(path1, path2, points_in_time, tol_float=1e-8, raise_error=True):
     raise_error: bool
         If true, then an error will be raised in case the files do not match. User can read it in verbose ctest.
         Otherwise False will be returned.
-    tol_float: float
-        If given, numbers will be considered equal if the difference between
+    tol_data_float: float
+        If given, numbers related to the compared data will be considered equal if the difference between
+        them is smaller than tol_float.
+    tol_time_float: float
+        If given, time instants will be considered equal if the difference between
         them is smaller than tol_float.
     timesteps: float list
         Only given timesteps will be compared. If empty all timesteps are compared.
@@ -72,16 +74,34 @@ def compare_vtk(path1, path2, points_in_time, tol_float=1e-8, raise_error=True):
                     f"Number of DataSets in Collections of PVD file differ! {num_datasets} != {num_datasets_ref}"
                 )
 
-        # remove file attrib to compare the rest
+            # (relative) comparison of timesteps, since restarts, for instance, may start at slightly shifted time instants depending on the platform
+            all_datasets_for_collection = collection.findall("DataSet")
+            all_datasets_for_ref_collection = collection_ref.findall("DataSet")
+            for dataset, dataset_ref in zip(
+                all_datasets_for_collection, all_datasets_for_ref_collection
+            ):
+                absolute_deviation = abs(
+                    float(dataset.attrib["timestep"])
+                    - float(dataset_ref.attrib["timestep"]),
+                )
+
+                if absolute_deviation > tol_time_float:
+                    raise ValueError(
+                        f"Non-matching timesteps {dataset.attrib['timestep']} and {dataset_ref.attrib['timestep']} for the dataset and the reference dataset! Absolute difference {absolute_deviation} larger than set tolerance {tol_time_float}"
+                    )
+
+        # remove file and timestep attrib to compare the rest
         for collection in comp_root.findall("Collection"):
             for dataset in collection.findall("DataSet"):
                 dataset.attrib.pop("file")
+                dataset.attrib.pop("timestep")
 
         for collection in ref_root.findall("Collection"):
             for dataset in collection.findall("DataSet"):
                 dataset.attrib.pop("file")
+                dataset.attrib.pop("timestep")
 
-        # Check that both etrees are the same except from file links
+        # Final check that both etrees are the same except from file links and timesteps
         if not (ET.tostring(comp_root) == ET.tostring(ref_root)):
             raise ValueError(
                 f"XML structures in PVD files differ!\n\n{ET.tostring(comp_root).decode()}\n\nvs.\n\n{ET.tostring(ref_root).decode()}"
@@ -221,7 +241,7 @@ def compare_vtk(path1, path2, points_in_time, tol_float=1e-8, raise_error=True):
             data2array.append(merge_vtk(os.path.join(dir2, iter[1])))
 
         for i in range(0, len(data1array)):
-            compare_vtk_data(data1array[i], data2array[i], tol_float=tol_float)
+            compare_vtk_data(data1array[i], data2array[i], tol_float=tol_data_float)
 
     except Exception as error:
         if raise_error:
@@ -243,7 +263,12 @@ def cli():
         help="Path to .pvd file of the reference to be compared against.",
     )
     parser.add_argument(
-        "tolerance", help="Tolerance for data comparison, e.g. 1e-8.", type=float
+        "--tolerance_data", help="Tolerance for data comparison, e.g. 1e-8.", type=float
+    )
+    parser.add_argument(
+        "--tolerance_time",
+        help="Tolerance for comparison of time instants, which can be shifted due to round-off, e.g., 1.0e-14",
+        type=float,
     )
     parser.add_argument(
         "--points_in_time",
@@ -257,13 +282,15 @@ def cli():
     # Read arguments.
     file_comp = args.vtk_result
     file_ref = args.vtk_reference
-    tolerance = args.tolerance
+    tolerance_data = args.tolerance_data
+    tolerance_time = args.tolerance_time
     points_in_time = args.points_in_time
     compare_vtk(
         path1=file_comp,
         path2=file_ref,
         points_in_time=points_in_time,
-        tol_float=tolerance,
+        tol_data_float=tolerance_data,
+        tol_time_float=tolerance_time,
     )
 
     print(

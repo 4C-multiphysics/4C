@@ -1322,7 +1322,8 @@ endfunction()
 #   BASED_ON:                      Reference to previous test for which the comparison is run
 #   PVD_RESULT_FILE:               Name of the .pvd file in the output directory of the previous test that references the .vtk files to compare
 #   PVD_REFERENCE_FILE:            Name of the .pvd reference file: if REFERENCE_TEST is specified, this file is in the output directory of that reference test; otherwise, the path of this reference file is in tests/input_files
-#   TOLERANCE:                     Difference the values may have
+#   TOLERANCE_DATA:                Absolute tolerance for comparing the vtk data
+#   TOLERANCE_TIME:                Absolute tolerance for comparing time instants which may be shifted due to round-off, default: 0.0
 #
 # optional parameters:
 #   REFERENCE_TEST:                Optional: Name of the fixture to be used as reference
@@ -1341,7 +1342,8 @@ function(__four_c_test_vtk)
       PVD_RESULT_FILE
       PVD_REFERENCE_FILE
       REFERENCE_TEST
-      TOLERANCE
+      TOLERANCE_DATA
+      TOLERANCE_TIME
       TIMEOUT
       )
   set(multiValueArgs TIME_STEPS LABELS REQUIRED_DEPENDENCIES)
@@ -1363,8 +1365,13 @@ function(__four_c_test_vtk)
     BASED_ON
     PVD_RESULT_FILE
     PVD_REFERENCE_FILE
-    TOLERANCE
+    TOLERANCE_DATA
     )
+
+  # set default comparison tolerance for time instants
+  if(NOT DEFINED _parsed_TOLERANCE_TIME)
+    set(_parsed_TOLERANCE_TIME 0.0)
+  endif()
 
   # get test directory of base test
   get_test_property(${_parsed_BASED_ON} _internal_OUTPUT_DIR test_directory)
@@ -1391,7 +1398,7 @@ function(__four_c_test_vtk)
   endif()
 
   set(test_command
-      "vtk-compare ${test_directory}/${_parsed_PVD_RESULT_FILE} ${reference_pvd} ${_parsed_TOLERANCE} --points_in_time ${merged_timesteps_to_compare}"
+      "vtk-compare ${test_directory}/${_parsed_PVD_RESULT_FILE} ${reference_pvd} --tolerance_data ${_parsed_TOLERANCE_DATA} --tolerance_time ${_parsed_TOLERANCE_TIME} --points_in_time ${merged_timesteps_to_compare}"
       )
 
   # Ensure that Python is listed as required dependency
