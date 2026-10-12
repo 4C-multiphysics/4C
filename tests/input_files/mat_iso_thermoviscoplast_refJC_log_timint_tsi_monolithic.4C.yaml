@@ -59,7 +59,7 @@ MATERIALS:
       NUMFACINEL: 1
       INELDEFGRADFACIDS: [3]
       DENS: 7830e-12 # [t/mm^3 = N*s^2/mm^4]
-      REF_TEMPERATURE: 293.0 # [K]
+      REF_TEMPERATURE_THERMAL_EXPANSION: 293.0 # [K]
       THERMAL_EXPANSION_COEFFICIENT: 11e-6 # [1/K]
   - MAT: 2
     ELAST_CoupNeoHooke:
@@ -68,6 +68,7 @@ MATERIALS:
   - MAT: 3
     MAT_InelasticDefgradTransvIsotropElastViscoplast:
       VISCOPLAST_LAW_ID: 4
+      REF_TEMPERATURE_VISCOPLAST_LAW: 293.0
       TAYLOR_QUINNEY_COEFFICIENT: 0.85 # [-]
       FIBER_READER_ID: 5
       MAT_BEHAVIOR: "isotropic"
@@ -89,7 +90,6 @@ MATERIALS:
       INIT_YIELD_STRENGTH: 792 # [N/mm^2]
       ISOTROP_HARDEN_PREFAC: 510 # [N/mm^2]
       ISOTROP_HARDEN_EXP: 0.26 # [-]
-      REF_TEMPERATURE: 293.0 # [K]
       TEMPERATURE_SENS: 1.03 # [-]
       MELT_TEMPERATURE: 1793 # [K]
   - MAT: 5
