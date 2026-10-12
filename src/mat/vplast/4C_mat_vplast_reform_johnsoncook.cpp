@@ -50,7 +50,7 @@ Mat::Viscoplastic::PAR::ReformulatedJohnsonCook::ReformulatedJohnsonCook(
  *--------------------------------------------------------------------*/
 Mat::Viscoplastic::ReformulatedJohnsonCook::ReformulatedJohnsonCook(
     Core::Mat::PAR::Parameter* params,
-    const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings
+    const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
         error_registration_settings)
     : Mat::Viscoplastic::Law(params, error_registration_settings),
       const_pars_(parameter()->strain_rate_pre_fac(), 1.0 / parameter()->strain_rate_exp_fac(),
@@ -63,7 +63,7 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::ReformulatedJohnsonCook(
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 void Mat::Viscoplastic::ReformulatedJohnsonCook::pre_evaluate(
-    const Teuchos::ParameterList& params, int gp)
+    const Teuchos::ParameterList& params, const unsigned int gp)
 {
   // call pre_evaluate of base class
   Mat::Viscoplastic::Law::pre_evaluate(params, gp);
@@ -107,7 +107,7 @@ void Mat::Viscoplastic::ReformulatedJohnsonCook::pre_evaluate(
  *--------------------------------------------------------------------*/
 double Mat::Viscoplastic::ReformulatedJohnsonCook::compute_flow_resistance(
     const double equiv_stress, const double equiv_plastic_strain,
-    Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
+    Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status) const
 {
   // extract yield strength from the plastic strain and the material parameters
   return (parameter()->init_yield_strength() * temperature_ratio_ +
@@ -193,7 +193,7 @@ double Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_plastic_strain_rate(
 Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::PlasticStrainRateDerivs
 Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_strain_rate(
     const double equiv_stress, const double equiv_plastic_strain, const double dt,
-    ViscoplastErrorType& err_status, const bool update_hist_var)
+    ViscoplastErrorType& err_status) const
 {
   // declare derivatives to be computed
   double deriv_equiv_stress{0.0};
@@ -319,19 +319,26 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
       .deriv_temperature = deriv_temperature};
 }
 
-void Mat::Viscoplastic::ReformulatedJohnsonCook::setup(const int numgp,
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void Mat::Viscoplastic::ReformulatedJohnsonCook::setup(const unsigned int numgp,
     const Discret::Elements::Fibers& fibers,
     const std::optional<Discret::Elements::CoordinateSystem>& coord_system)
 {
   time_step_quantities_.current_yield_strength_.resize(numgp, parameter()->init_yield_strength());
 }
 
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
 void Mat::Viscoplastic::ReformulatedJohnsonCook::register_output_data_names(
     std::unordered_map<std::string, int>& names_and_size) const
 {
   names_and_size["yield_strength"] = 1;
 }
 
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
 bool Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_output_data(
     const std::string& name, Core::LinAlg::SerialDenseMatrix& data) const
 {
@@ -348,6 +355,8 @@ bool Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_output_data(
   return false;
 }
 
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
 void Mat::Viscoplastic::ReformulatedJohnsonCook::pack_viscoplastic_law(
     Core::Communication::PackBuffer& data) const
 {

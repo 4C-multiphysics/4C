@@ -64,7 +64,7 @@ namespace Mat
      public:
       /// construct viscoplastic laws with specific material params and error registration settings
       explicit Law(Core::Mat::PAR::Parameter* params,
-          const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings
+          const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
               error_registration_settings);
       /// construct empty viscoplastic law
       Law();
@@ -81,7 +81,7 @@ namespace Mat
        * @return pointer to material that is defined by material ID
        */
       static std::shared_ptr<Law> factory(int matnum,
-          const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings
+          const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
               error_registration_settings);
 
       /// provide material type
@@ -101,9 +101,9 @@ namespace Mat
        * @param[in/out] err_status error status of the evaluation
        *
        */
-      virtual double compute_flow_resistance(const double equiv_stress,
-          const double equiv_plastic_strain,
-          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status) = 0;
+      [[nodiscard]] virtual double compute_flow_resistance(double equiv_stress,
+          double equiv_plastic_strain,
+          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status) const = 0;
 
 
       /*!
@@ -127,10 +127,9 @@ namespace Mat
        * @param[out] err_status Output variable: error due the term considered in @note?
        * @return Equivalent plastic strain rate \f$ \dot{\varepsilon}^{\text{p}} \f$
        */
-      virtual double evaluate_plastic_strain_rate(const double equiv_stress,
-          const double equiv_plastic_strain, const double dt,
-          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
-          const bool update_hist_var = true) = 0;
+      virtual double evaluate_plastic_strain_rate(double equiv_stress, double equiv_plastic_strain,
+          double dt, Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
+          bool update_hist_var = true) = 0;
 
       /*!
        * @brief Evaluate the derivatives of the equivalent plastic strain rate \f$
@@ -150,11 +149,12 @@ namespace Mat
        * @return Derivatives of the equivalent plastic strain rate w.r.t. the equivalent stress,
        *         plastic strain, and temperature.
        */
-      virtual InelasticDefgradTransvIsotropElastViscoplastUtils::PlasticStrainRateDerivs
-      evaluate_derivatives_of_plastic_strain_rate(const double equiv_stress,
-          const double equiv_plastic_strain, const double dt,
-          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
-          const bool update_hist_var = true) = 0;
+      [[nodiscard]] virtual InelasticDefgradTransvIsotropElastViscoplastUtils::
+          PlasticStrainRateDerivs
+          evaluate_derivatives_of_plastic_strain_rate(double equiv_stress,
+              double equiv_plastic_strain, double dt,
+              Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
+              const = 0;
 
       /// Return material parameters
       [[nodiscard]] virtual Core::Mat::PAR::Parameter* parameter() const { return params_; }
@@ -165,8 +165,8 @@ namespace Mat
        * @param[in] numgp Number of Gauss points
        * @param[in] container Input parameter Container
        */
-      virtual void setup(const int numgp, const Discret::Elements::Fibers& fibers,
-          const std::optional<Discret::Elements::CoordinateSystem>& coord_system) = 0;
+      virtual void setup(unsigned int numgp, const Discret::Elements::Fibers& fibers,
+          const std::optional<Discret::Elements::CoordinateSystem>& coord_system) {};
 
       /*!
        * @brief Pre-evaluation, intended to be used for stuff that has to be done only once per
@@ -175,7 +175,10 @@ namespace Mat
        * @param[in] params  Various parameters, such as e.g. the temperature in TSI simulations
        * @param[in] gp      Current Gauss point
        */
-      virtual void pre_evaluate(const Teuchos::ParameterList& params, int gp) { gp_ = gp; };
+      virtual void pre_evaluate(const Teuchos::ParameterList& params, unsigned int gp)
+      {
+        gp_ = gp;
+      };
 
       /*!
        * @brief Update history variables of the viscoplasticity law for next time step at a given
@@ -183,7 +186,7 @@ namespace Mat
        *
        * @param[in] gp Current Gauss point
        */
-      virtual void update(const unsigned int gp) = 0;
+      virtual void update(unsigned int gp) {};
 
       /*!
        * @brief Update the history variables for a specific GP after a converged substep
@@ -191,11 +194,11 @@ namespace Mat
        *
        * @param[in] gp      Gauss point
        */
-      virtual void update_gp_state_after_substep(const unsigned int gp) = 0;
+      virtual void update_gp_state_after_substep(unsigned int gp) {};
 
-      virtual void pack_viscoplastic_law(Core::Communication::PackBuffer& data) const = 0;
+      virtual void pack_viscoplastic_law(Core::Communication::PackBuffer& data) const {};
 
-      virtual void unpack_viscoplastic_law(Core::Communication::UnpackBuffer& buffer) = 0;
+      virtual void unpack_viscoplastic_law(Core::Communication::UnpackBuffer& buffer) {};
 
 
       /*!
@@ -260,7 +263,7 @@ namespace Mat
 
      protected:
       /// Gauss point index
-      int gp_;
+      unsigned int gp_;
 
       /// error registration settings for the plastic strain increments and the derivative
       /// increments
