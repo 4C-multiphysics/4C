@@ -235,14 +235,8 @@ namespace Mat
       /// \frac{T^{M-1}}{T_{\mathrm{melt}}^M - T_{\mathrm{ref}}^M} ) \f$
       double log_neg_temperature_ratio_deriv_;
 
-
-      //! struct containing quantities at different time points (i.e., "current" at \f[ t_{n+1} \f])
-      struct TimeStepQuantities
-      {
-        //! yield strength (for all Gauss points)
-        std::vector<double> current_yield_strength_;
-      };
-      TimeStepQuantities time_step_quantities_;
+      /// yield strength for all Gauss points
+      std::vector<double> current_yield_strength_;
     };
 
   }  // namespace Viscoplastic
