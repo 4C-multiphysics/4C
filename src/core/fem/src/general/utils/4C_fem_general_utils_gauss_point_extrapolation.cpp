@@ -436,6 +436,10 @@ void Core::FE::extrapolate_gp_quantity_to_nurbs_knots_and_assemble(
   assemble_extrapolated_nodal_values(global_data, nodal_quantity, ele, nodal_average);
 }
 
+template Core::LinAlg::SerialDenseMatrix
+Core::FE::evaluate_gauss_points_to_nodes_extrapolation_matrix<Core::FE::CellType::hex8,
+    Core::FE::GaussIntegration>(const Core::FE::GaussIntegration& intpoints);
+
 template void Core::FE::extrapolate_gp_quantity_to_nodes_and_assemble<Core::FE::CellType::hex8,
     Core::FE::IntegrationPoints3D>(const Core::Elements::Element& ele,
     const Core::LinAlg::SerialDenseMatrix& gp_data, Core::LinAlg::MultiVector<double>& global_data,
