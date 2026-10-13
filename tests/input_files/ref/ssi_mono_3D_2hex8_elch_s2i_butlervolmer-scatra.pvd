@@ -4,7 +4,7 @@
 -->
 <VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
   <Collection>
-    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="ssi_mono_3D_2hex8_elch_s2i_butlervolmer-vtk-files/scatra-00000.pvtu"/>
-    <DataSet timestep="1.00000000000000e+00" group="" part="0" file="ssi_mono_3D_2hex8_elch_s2i_butlervolmer-vtk-files/scatra-00010.pvtu"/>
+    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="ssi_mono_3D_2hex8_elch_s2i_butlervolmer-vtk-files/scatra-00000.vtu"/>
+    <DataSet timestep="1.00000000000000e+00" group="" part="0" file="ssi_mono_3D_2hex8_elch_s2i_butlervolmer-vtk-files/scatra-00010.vtu"/>
   </Collection>
 </VTKFile>
