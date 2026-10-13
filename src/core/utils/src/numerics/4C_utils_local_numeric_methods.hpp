@@ -11,6 +11,8 @@
 #include "4C_config.hpp"
 
 #include <functional>
+#include <initializer_list>
+#include <span>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -80,6 +82,45 @@ namespace Core::Utils
    */
   double second_derivative_central_differences(
       const double f_i_minus_1, const double f_i, const double f_i_plus_1, const double delta_x);
+
+
+  /// Status for the computation of the general, signed log-sum-exp operation \f$ \log(y) =
+  /// \log\left[\sum_{i=1}^{N} p_i \exp( x_i )\right] \f$
+  enum class SignedLogSumExpStatus
+  {
+    success,        ///< successful computation
+    zero_argument,  ///< argument \f$ \left[\sum_{i=1}^{N} p_i \exp( x_i )\right]\f$ is numerically
+                    ///< too close to 0.0 such that evaluating its logarithm leads to \f$ - \infty
+                    ///< \f$
+    overflow,       ///< computation leads to overflow due to high input prefactors
+  };
+
+  /// Result struct for the general, signed log-sum-exp operation \f$ \log(y) =
+  /// \log\left[\sum_{i=1}^{N} p_i \exp( x_i )\right] \f$
+  struct SignedLogSumExpResult
+  {
+    /// logarithm of the absolute value \f$ \log(\left| y \right|) \f$
+    double log_abs;
+
+    /// sign \f$ \mathrm{sign} y \f$; either -1.0 or 1.0
+    double sign;
+
+    /// status of the evaluation
+    SignedLogSumExpStatus eval_status;
+  };
+
+  /// Compute the general, signed log-sum-exp operation \f$ \log(y) =  \log\left[\sum_{i = 1}^{N}
+  /// p_i  \exp( x_i )\right] \f$ for given \p log_values \f$ x_i \f$ and \p prefactors \f$ p_i \f$.
+  /// Note that the function internally asserts that the given \p log_values and \p prefactors are
+  /// finite doubles; the calling procedure must ensure this requirement. Precision will be lost for
+  /// extremely high magnitude inputs. Also, the prefactors are not allowed to be under machine
+  /// precision in the current implementation.
+  SignedLogSumExpResult signed_log_sum_exp(
+      std::span<const double> log_values, std::span<const double> prefactors);
+
+  /// \overload Convenience function with initializer lists
+  SignedLogSumExpResult signed_log_sum_exp(
+      std::initializer_list<double> log_values, std::initializer_list<double> prefactors);
 
 }  // namespace Core::Utils
 
