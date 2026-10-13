@@ -196,6 +196,17 @@ namespace Mat
        */
       virtual void update_gp_state_after_substep(unsigned int gp) {};
 
+      /*!
+       * @brief Reset the history variables for a specific GP to the state before substepping.
+       * Specifically, it resets the substep history variables to the ones from the previous
+       * converged time instant: \f$ S_{n + \tilde{m}} \gets S_{n} \f$ for history variables $S_{n +
+       * \tilde{m}}$ and $S_{n}$ at the previous time instant in the current substep, and at the
+       * previous time instant in the current timestep, respectively.
+       *
+       * @param[in] gp Gauss point
+       */
+      virtual void reset_gp_substep_state(unsigned int gp) {};
+
       virtual void pack_viscoplastic_law(Core::Communication::PackBuffer& data) const {};
 
       virtual void unpack_viscoplastic_law(Core::Communication::UnpackBuffer& buffer) {};
