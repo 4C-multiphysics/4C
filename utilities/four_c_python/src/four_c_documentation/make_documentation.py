@@ -55,6 +55,8 @@ from four_c_metadata.metadata import (
 )
 from four_c_metadata.not_set import check_if_set
 
+# Small vertical gap (a fraction of a line) after a description
+DESCRIPTION_SPACER = '<div style="height:0.05em"></div>'
 DESCRIPTION_MISSING = '<span style="color:grey">*no description yet*</span>'
 TOO_MANY_TESTS_TO_SHOW = 200
 TESTS_TO_SHOW_IF_TOO_MANY = 20
@@ -154,7 +156,8 @@ def make_spec_description(
         + ")\\"
     )
 
-    description = set_missing_description(description) + "\n"
+    description = set_missing_description(description)  # + "\n"
+    description += DESCRIPTION_SPACER
 
     if collapsible_properties is not None:
         for k, v in collapsible_properties.items():
@@ -482,6 +485,7 @@ def one_of_to_md(one_of: One_Of, path_prefix: str = ""):
 
 
 def set_missing_description(description):
+    return description if check_if_set(description) else DESCRIPTION_MISSING
     if check_if_set(description):
         # CommonMark emphasis (*...*) cannot span a blank line, so a description
         # consisting of multiple paragraphs (e.g. containing a display math block)
