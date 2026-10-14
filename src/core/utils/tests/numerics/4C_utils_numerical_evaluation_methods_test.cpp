@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include "4C_utils_local_numeric_methods.hpp"
+#include "4C_utils_numerical_evaluation_methods.hpp"
 
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -64,6 +64,8 @@ namespace
 
   TEST(CoreUtilsTest, SignedLogSumExp)
   {
+    const double max_double = std::numeric_limits<double>::max();
+
     // consistency tests on vector sizes
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(std::ignore = Core::Utils::signed_log_sum_exp({}, {}),
         Core::Exception, "No values were given for this computation");
@@ -83,7 +85,6 @@ namespace
     EXPECT_EQ(lse_single_negative_double.eval_status, Core::Utils::SignedLogSumExpStatus::success);
     EXPECT_DOUBLE_EQ(lse_single_negative_double.log_abs, std::log(2.0));
     EXPECT_EQ(lse_single_negative_double.sign, -1.0);
-
 
     // different tests for two doubles
     const auto lse_diff_two_doubles =
@@ -133,18 +134,26 @@ namespace
     EXPECT_DOUBLE_EQ(lse_mixed_sum_of_four_doubles_negative.log_abs, std::log(2.0));
     EXPECT_EQ(lse_mixed_sum_of_four_doubles_negative.sign, -1.0);
 
-    // --> trigger different zero_argument / overflow cases
+    const auto lse_stable_even_for_max_prefactors = Core::Utils::signed_log_sum_exp(
+        {std::log(1.0), std::log(1.0), std::log(1.0)}, {max_double, max_double, -max_double});
+    EXPECT_EQ(lse_stable_even_for_max_prefactors.eval_status,
+        Core::Utils::SignedLogSumExpStatus::success);
+    EXPECT_DOUBLE_EQ(lse_stable_even_for_max_prefactors.log_abs, std::log(max_double));
+    EXPECT_EQ(lse_stable_even_for_max_prefactors.sign, 1.0);
+
+    // --> trigger different error / zero_argument / overflow cases
 
     // provided arguments must be evaluable
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(std::ignore = Core::Utils::signed_log_sum_exp(
-                                         {std::numeric_limits<double>::max() * 2}, {1.0}),
-        Core::Exception,
-        "Given log_value inf with index 0 is infinite! The calling procedure must deal with such "
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        std::ignore = Core::Utils::signed_log_sum_exp({max_double * 2}, {1.0}), Core::Exception,
+        "Given log_value inf with index 0 is non-finite! The calling procedure must deal with such "
         "cases itself!");
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(std::ignore = Core::Utils::signed_log_sum_exp(
-                                         {1.0}, {std::numeric_limits<double>::max() * 2}),
-        Core::Exception,
-        "Given prefactor inf with index 0 is infinite! The calling procedure must deal with such "
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        std::ignore = Core::Utils::signed_log_sum_exp({0.0, -1000.0}, {0.0, 1.0}), Core::Exception,
+        "Given prefactor 0 with index 0 has an absolute value smaller than precision epsilon");
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        std::ignore = Core::Utils::signed_log_sum_exp({1.0}, {max_double * 2}), Core::Exception,
+        "Given prefactor inf with index 0 is non-finite! The calling procedure must deal with such "
         "cases itself!");
 
     // zero_argument happening due to cancellation of the terms (reduced sum = 0)
@@ -157,9 +166,7 @@ namespace
         Core::Utils::SignedLogSumExpStatus::success);  // no complete cancellation!
 
     // overflow occurring through very high values
-    EXPECT_EQ(Core::Utils::signed_log_sum_exp(
-                  {std::numeric_limits<double>::max(), std::numeric_limits<double>::max()},
-                  {std::numeric_limits<double>::max(), std::numeric_limits<double>::max()})
+    EXPECT_EQ(Core::Utils::signed_log_sum_exp({max_double, max_double}, {max_double, max_double})
                   .eval_status,
         Core::Utils::SignedLogSumExpStatus::overflow);
   }

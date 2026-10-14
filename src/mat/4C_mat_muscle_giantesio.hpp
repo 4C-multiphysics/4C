@@ -15,7 +15,7 @@
 #include "4C_mat_fiber_interpolation.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_material_parameter_base.hpp"
-#include "4C_utils_local_numeric_methods.hpp"
+#include "4C_utils_numerical_evaluation_methods.hpp"
 
 #include <memory>
 

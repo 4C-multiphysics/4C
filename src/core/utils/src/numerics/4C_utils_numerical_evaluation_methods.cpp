@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_utils_local_numeric_methods.hpp"
+#include "4C_utils_numerical_evaluation_methods.hpp"
 
 #include "4C_utils_exceptions.hpp"
 
