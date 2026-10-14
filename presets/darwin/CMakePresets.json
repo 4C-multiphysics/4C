@@ -16,7 +16,7 @@
         "FOUR_C_TRILINOS_ROOT": "$env{HOME}/opt/trilinos",
         "FOUR_C_QHULL_ROOT": "$env{HOME}/opt/qhull",
         "FOUR_C_BUILD_SHARED_LIBS": "ON",
-        "FOUR_C_WITH_GOOGLETEST": "OFF",
+        "FOUR_C_WITH_GOOGLETEST": "ON",
         "FOUR_C_ENABLE_DOXYGEN": "OFF",
         "FOUR_C_ENABLE_DOCUMENTATION": "OFF",
         "FOUR_C_DOXYGEN_USE_LOCAL_MATHJAX": "OFF",
