@@ -41,8 +41,10 @@ def compare_vtk(path1, path2, points_in_time, tol_float=1e-8, raise_error=True):
     """
 
     # Check that both arguments are paths and .pvd files exist.
-    if not (os.path.isfile(path1) and os.path.isfile(path2)):
-        raise ValueError("The .pvd paths given are not OK!")
+    if not os.path.isfile(path1):
+        raise ValueError(f"File not found: {path1}")
+    if not os.path.isfile(path2):
+        raise ValueError(f"File not found: {path2}")
 
     def compare_pvd(path_comp, path_ref):
         """

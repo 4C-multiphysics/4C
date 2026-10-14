@@ -23,7 +23,7 @@ IO/RUNTIME VTK OUTPUT/STRUCTURE:
   STRESS_STRAIN: true
   OUTPUT_CONTACT: true
 STRUCTURAL DYNAMIC:
-  RESTARTEVERY: 10
+  RESTARTEVERY: 3
   TIMESTEP: 0.1
   NUMSTEP: 20
   MAXTIME: 8
@@ -100,6 +100,31 @@ RESULT DESCRIPTION:
       QUANTITY: "vely"
       VALUE: 0.04323144993741755
       TOLERANCE: 1e-06
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "num_iter_step_16"
+      VALUE: 2
+      TOLERANCE: 1e-20
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "num_iter_step_17"
+      VALUE: 3
+      TOLERANCE: 1e-20
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "num_iter_step_18"
+      VALUE: 6
+      TOLERANCE: 1e-20
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "num_iter_step_19"
+      VALUE: 4
+      TOLERANCE: 1e-20
+  - STRUCTURE:
+      SPECIAL: true
+      QUANTITY: "num_iter_step_20"
+      VALUE: 3
+      TOLERANCE: 1e-20
 DESIGN SURF NEUMANN CONDITIONS:
   - E: 1
     NUMDOF: 6

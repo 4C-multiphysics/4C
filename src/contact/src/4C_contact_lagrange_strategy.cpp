@@ -5084,6 +5084,13 @@ void CONTACT::LagrangeStrategy::update(std::shared_ptr<const Core::LinAlg::Vecto
   if (fconservation_ == nullptr) return;
 }
 
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void CONTACT::LagrangeStrategy::predict_relative_movement()
+{
+  if (friction_) evaluate_relative_movement();
+}
+
 void CONTACT::LagrangeStrategy::condense_friction(
     std::shared_ptr<Core::LinAlg::SparseMatrix> kteff, Core::LinAlg::Vector<double>& rhs)
 {

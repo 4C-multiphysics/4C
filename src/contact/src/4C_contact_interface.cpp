@@ -7126,7 +7126,7 @@ bool CONTACT::Interface::update_active_set_semi_smooth()
           if (not frinode->fri_data().slip())
           {
             // check (euclidean)-frbound <= 0
-            if (euclidean - frbound <= 0)
+            if (euclidean - frbound <= 1e-10)
             {
             }
             // do nothing (stick was correct)
@@ -7139,7 +7139,7 @@ bool CONTACT::Interface::update_active_set_semi_smooth()
           else
           {
             // check (euclidean)-frbound > 0
-            if (euclidean - frbound > 0)
+            if (euclidean - frbound > -1e-10)
             {
             }
             // do nothing (slip was correct)

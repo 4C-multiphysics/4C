@@ -1437,11 +1437,6 @@ void CONTACT::AbstractStrategy::evaluate_reference_state()
           Core::LinAlg::matrix_multiply(*dold_, false, *invtrafo_, false, false, false, true);
       doldmod_ = tempold;
     }
-
-    // evaluate relative movement
-    // needed because it is not called in the predictor of the
-    // lagrange multiplier strategy
-    evaluate_relative_movement();
   }
 
   // reset unbalance factors for redistribution
@@ -2207,11 +2202,6 @@ void CONTACT::AbstractStrategy::do_read_restart(Core::IO::DiscretizationReader& 
     wasincontact_ = true;
     wasincontactlts_ = true;
   }
-
-  // evaluate relative movement (jump)
-  // needed because it is not called in the predictor of the
-  // lagrange multiplier strategy
-  evaluate_relative_movement();
 
   // reset unbalance factors for redistribution
   // (during restart the interface has been evaluated once)

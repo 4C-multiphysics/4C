@@ -4944,11 +4944,6 @@ void Wear::LagrangeStrategyWear::do_read_restart(
     wasincontactlts_ = true;
   }
 
-  // evaluate relative movement (jump)
-  // needed because it is not called in the predictor of the
-  // lagrange multiplier strategy
-  evaluate_relative_movement();
-
   // reset unbalance factors for redistribution
   // (during restart the interface has been evaluated once)
   unbalanceEvaluationTime_.resize(0);
