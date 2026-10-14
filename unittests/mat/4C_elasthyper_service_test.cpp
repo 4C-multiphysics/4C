@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_io_input_parameter_container.templates.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_mat_elast_coupanisoexpo.hpp"

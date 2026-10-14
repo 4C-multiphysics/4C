@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_io_input_parameter_container.templates.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_linalg_tensor_generators.hpp"
