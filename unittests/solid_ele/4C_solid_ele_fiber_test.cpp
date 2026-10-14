@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_io_input_parameter_container.templates.hpp"
 #include "4C_solid_ele_fibers.hpp"
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_utils_exceptions.hpp"
