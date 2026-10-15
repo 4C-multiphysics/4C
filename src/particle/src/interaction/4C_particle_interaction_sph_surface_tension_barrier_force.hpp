@@ -68,16 +68,16 @@ namespace Particle
     std::shared_ptr<Particle::SPHNeighborPairs> neighborpairs_;
 
     //! liquid particle type
-    Particle::Type liquidtype_;
+    ParticleType liquidtype_;
 
     //! gas particle type
-    Particle::Type gastype_;
+    ParticleType gastype_;
 
     //! set of fluid particle types
-    std::set<Particle::Type> fluidtypes_;
+    std::set<ParticleType> fluidtypes_;
 
     //! set of boundary particle types
-    std::set<Particle::Type> boundarytypes_;
+    std::set<ParticleType> boundarytypes_;
 
     //! barrier force distance
     const double dist_;
