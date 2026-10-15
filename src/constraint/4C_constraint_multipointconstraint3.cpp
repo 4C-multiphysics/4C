@@ -316,14 +316,14 @@ Constraints::MPConstraint3::create_discretization_from_condition(
     std::vector<int> boundarynoderowvec(rownodeset.begin(), rownodeset.end());
     rownodeset.clear();
     Core::LinAlg::Map constraintnoderowmap(
-        -1, boundarynoderowvec.size(), boundarynoderowvec.data(), 0, newdis->get_comm());
+        -1, std::span<const int>(boundarynoderowvec), 0, newdis->get_comm());
     boundarynoderowvec.clear();
 
     // build overlapping node column map
     std::vector<int> constraintnodecolvec(colnodeset.begin(), colnodeset.end());
     colnodeset.clear();
     Core::LinAlg::Map constraintnodecolmap(
-        -1, constraintnodecolvec.size(), constraintnodecolvec.data(), 0, newdis->get_comm());
+        -1, std::span<const int>(constraintnodecolvec), 0, newdis->get_comm());
 
     constraintnodecolvec.clear();
     newdis->redistribute({constraintnoderowmap, constraintnodecolmap});

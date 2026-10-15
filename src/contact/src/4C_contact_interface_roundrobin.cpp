@@ -50,10 +50,10 @@ void CONTACT::Interface::round_robin_extend_ghosting(bool firstevaluation)
   }
 
   std::shared_ptr<Core::LinAlg::Map> currently_ghosted_elements =
-      std::make_shared<Core::LinAlg::Map>(-1, (int)element_GIDs_to_be_ghosted.size(),
-          element_GIDs_to_be_ghosted.data(), 0, get_comm());
+      std::make_shared<Core::LinAlg::Map>(
+          -1, std::span<const int>(element_GIDs_to_be_ghosted), 0, get_comm());
   std::shared_ptr<Core::LinAlg::Map> currently_ghosted_nodes = std::make_shared<Core::LinAlg::Map>(
-      -1, (int)node_GIDs_to_be_ghosted.size(), node_GIDs_to_be_ghosted.data(), 0, get_comm());
+      -1, std::span<const int>(node_GIDs_to_be_ghosted), 0, get_comm());
 
   if (firstevaluation)
   {
@@ -336,14 +336,14 @@ void CONTACT::Interface::round_robin_change_ownership()
 
   // create maps from sending
   std::shared_ptr<Core::LinAlg::Map> noderowmap =
-      std::make_shared<Core::LinAlg::Map>(-1, (int)nrow.size(), nrow.data(), 0, get_comm());
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(nrow), 0, get_comm());
   std::shared_ptr<Core::LinAlg::Map> nodecolmap =
-      std::make_shared<Core::LinAlg::Map>(-1, (int)ncol.size(), ncol.data(), 0, get_comm());
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(ncol), 0, get_comm());
 
   std::shared_ptr<Core::LinAlg::Map> elerowmap =
-      std::make_shared<Core::LinAlg::Map>(-1, (int)erow.size(), erow.data(), 0, get_comm());
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(erow), 0, get_comm());
   std::shared_ptr<Core::LinAlg::Map> elecolmap =
-      std::make_shared<Core::LinAlg::Map>(-1, (int)ecol.size(), ecol.data(), 0, get_comm());
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(ecol), 0, get_comm());
 
   // Merge s/m column maps for eles and nodes
   std::shared_ptr<Core::LinAlg::Map> colnodesfull = Core::LinAlg::merge_map(nodecolmap, SCN, true);

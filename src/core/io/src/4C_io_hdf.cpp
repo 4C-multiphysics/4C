@@ -344,7 +344,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::IO::HDFReader::read_res
   calculate_range(new_proc_num, my_id, start, end);
 
   std::shared_ptr<std::vector<int>> ids = read_int_data(id_path, start, end);
-  Core::LinAlg::Map map(-1, static_cast<int>(ids->size()), ids->data(), 0, Comm);
+  Core::LinAlg::Map map(-1, std::span<const int>(ids->data(), ids->size()), 0, Comm);
 
   std::shared_ptr<Core::LinAlg::MultiVector<double>> res =
       std::make_shared<Core::LinAlg::MultiVector<double>>(map, columns, false);
@@ -391,7 +391,7 @@ std::shared_ptr<std::vector<char>> Core::IO::HDFReader::read_result_data_vec_cha
 
   std::shared_ptr<std::vector<int>> ids = read_int_data(id_path, start, end);
   // cout << "size of ids:" << (*ids).size() << endl;
-  Core::LinAlg::Map map(-1, static_cast<int>(ids->size()), ids->data(), 0, Comm);
+  Core::LinAlg::Map map(-1, std::span<const int>(ids->data(), ids->size()), 0, Comm);
   elemap = std::make_shared<Core::LinAlg::Map>(map);
 
   std::shared_ptr<std::vector<char>> res = read_char_data(value_path, start, end);

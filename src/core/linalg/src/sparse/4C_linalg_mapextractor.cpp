@@ -117,7 +117,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::MultiMapExtractor::merge_maps_k
 
   // build combined map
   std::shared_ptr<Core::LinAlg::Map> fullmap =
-      std::make_shared<Core::LinAlg::Map>(-1, gids.size(), gids.data(), 0, maps[0]->get_comm());
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(gids), 0, maps[0]->get_comm());
   return fullmap;
 }
 

@@ -106,7 +106,7 @@ Constraints::SubmodelEvaluator::NullspaceConstraintManager::NullspaceConstraintM
   }
 
   dof_condition_map_ = std::make_shared<Core::LinAlg::Map>(
-      -1, cond_dof_gids.size(), cond_dof_gids.data(), 0, discret_ptr_->get_comm());
+      -1, std::span<const int>(cond_dof_gids), 0, discret_ptr_->get_comm());
 }
 
 /*----------------------------------------------------------------------------*

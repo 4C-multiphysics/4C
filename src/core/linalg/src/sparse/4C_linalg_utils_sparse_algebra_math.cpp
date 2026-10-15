@@ -468,8 +468,9 @@ Core::LinAlg::SparseMatrix Core::LinAlg::multiply_multi_vector_multi_vector(
   int glob_numnonzero = 0;
   glob_numnonzero = Core::Communication::sum_all(numnonzero, prod.get_comm());
 
-  Core::LinAlg::Map mv1map(mv1.get_map().num_global_elements(), mv1.get_map().num_my_elements(),
-      mv1.get_map().my_global_elements(), 0, mv1.get_map().get_comm());
+  Core::LinAlg::Map mv1map(mv1.get_map().num_global_elements(),
+      std::span<const int>(mv1.get_map().my_global_elements(), mv1.get_map().num_my_elements()), 0,
+      mv1.get_map().get_comm());
   // initialization of mat with map of mv1
   Core::LinAlg::SparseMatrix mat(mv1map, glob_numnonzero, false);
 
@@ -480,8 +481,9 @@ Core::LinAlg::SparseMatrix Core::LinAlg::multiply_multi_vector_multi_vector(
   const int nummyrows = mv1.local_length();
   const int numvals = mv2.global_length();
 
-  Core::LinAlg::Map mv2map(mv2.get_map().num_global_elements(), mv2.get_map().num_my_elements(),
-      mv2.get_map().my_global_elements(), 0, mv2.get_map().get_comm());
+  Core::LinAlg::Map mv2map(mv2.get_map().num_global_elements(),
+      std::span<const int>(mv2.get_map().my_global_elements(), mv2.get_map().num_my_elements()), 0,
+      mv2.get_map().get_comm());
 
   // fully redundant/overlapping map
   std::shared_ptr<Core::LinAlg::Map> redundant_map = Core::LinAlg::allreduce_e_map(mv2map);

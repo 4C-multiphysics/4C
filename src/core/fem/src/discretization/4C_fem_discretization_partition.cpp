@@ -471,8 +471,8 @@ Core::FE::Discretization::build_element_row_column(const Core::LinAlg::Map& node
   // allreduced nummyele must match the total no. of elements in this
   // discretization, otherwise we lost some
   // build the rowmap of elements
-  std::shared_ptr<Core::LinAlg::Map> elerowmap =
-      std::make_shared<Core::LinAlg::Map>(-1, nummyele, myele.data(), 0, get_comm());
+  std::shared_ptr<Core::LinAlg::Map> elerowmap = std::make_shared<Core::LinAlg::Map>(
+      -1, std::span<const int>(myele.data(), nummyele), 0, get_comm());
   if (!elerowmap->unique_gids()) FOUR_C_THROW("Element row map is not unique");
 
   // build elecolmap
@@ -480,7 +480,7 @@ Core::FE::Discretization::build_element_row_column(const Core::LinAlg::Map& node
   for (int i = 0; i < nummyele; ++i) elecol[i] = myele[i];
   for (int i = 0; i < nummyghostele; ++i) elecol[nummyele + i] = myghostele[i];
   std::shared_ptr<Core::LinAlg::Map> elecolmap = std::make_shared<Core::LinAlg::Map>(
-      -1, nummyghostele + nummyele, elecol.data(), 0, get_comm());
+      -1, std::span<const int>(elecol.data(), nummyghostele + nummyele), 0, get_comm());
 
   return {elerowmap, elecolmap};
 }
@@ -648,7 +648,7 @@ void Core::FE::Discretization::extended_ghosting(const Core::LinAlg::Map& elecol
   if (have_pbc) pbcdofset->set_coupled_nodes(pbcmapvec);
 
   std::vector<int> colnodes(nodes.begin(), nodes.end());
-  Core::LinAlg::Map nodecolmap(-1, (int)colnodes.size(), colnodes.data(), 0, get_comm());
+  Core::LinAlg::Map nodecolmap(-1, std::span<const int>(colnodes), 0, get_comm());
 
   // now ghost the nodes
   export_column_nodes(nodecolmap);
@@ -701,7 +701,7 @@ void Core::FE::Discretization::setup_ghosting(OptionsFillComplete options)
     entriesperrow.push_back(localgraph[i->first].size());
   }
 
-  Core::LinAlg::Map rownodes(-1, gids.size(), gids.data(), 0, comm_);
+  Core::LinAlg::Map rownodes(-1, std::span<const int>(gids), 0, comm_);
 
   // Construct FE graph. This graph allows processor off-rows to be inserted
   // as well. The communication issue is solved.
@@ -734,10 +734,10 @@ void Core::FE::Discretization::setup_ghosting(OptionsFillComplete options)
   // replace rownodes, colnodes with row and column maps from the graph
   const Core::LinAlg::Map& brow = graph->row_map();
   const Core::LinAlg::Map& bcol = graph->col_map();
-  Core::LinAlg::Map noderowmap(
-      brow.num_global_elements(), brow.num_my_elements(), brow.my_global_elements(), 0, comm_);
-  Core::LinAlg::Map nodecolmap(
-      bcol.num_global_elements(), bcol.num_my_elements(), bcol.my_global_elements(), 0, comm_);
+  Core::LinAlg::Map noderowmap(brow.num_global_elements(),
+      std::span<const int>(brow.my_global_elements(), brow.num_my_elements()), 0, comm_);
+  Core::LinAlg::Map nodecolmap(bcol.num_global_elements(),
+      std::span<const int>(bcol.my_global_elements(), bcol.num_my_elements()), 0, comm_);
 
   graph = nullptr;
 

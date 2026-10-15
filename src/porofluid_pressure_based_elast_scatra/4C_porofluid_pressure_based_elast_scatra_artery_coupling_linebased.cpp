@@ -153,8 +153,9 @@ std::shared_ptr<Core::LinAlg::Map> PoroPressureBased::
 
   // build map
   int num_dirichlet_values = static_cast<int>(dirichlet_dofs.size());
-  const auto dirichlet_map = std::make_shared<Core::LinAlg::Map>(
-      -1, num_dirichlet_values, dirichlet_dofs.data(), 0, artery_dis_->get_comm());
+  const auto dirichlet_map = std::make_shared<Core::LinAlg::Map>(-1,
+      std::span<const int>(dirichlet_dofs.data(), num_dirichlet_values), 0,
+      artery_dis_->get_comm());
 
   // build vector of maps
   std::vector<std::shared_ptr<const Core::LinAlg::Map>> condition_maps;

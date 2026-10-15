@@ -126,7 +126,7 @@ void BeamInteraction::BeamToFluidMeshtyingVtkOutputWriter::write_output_beam_to_
       if (BeamInteraction::Utils::is_beam_node(*current_node))
         for (unsigned int dim = 0; dim < 3; ++dim) gid_beam_dof.push_back(gid_node[dim]);
     }
-    Core::LinAlg::Map beam_dof_map(-1, gid_beam_dof.size(), gid_beam_dof.data(), 0,
+    Core::LinAlg::Map beam_dof_map(-1, std::span<const int>(gid_beam_dof), 0,
 
         couplingenforcer.get_structure()->get_discretization()->get_comm());
 
