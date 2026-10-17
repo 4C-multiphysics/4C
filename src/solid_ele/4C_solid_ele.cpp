@@ -27,6 +27,9 @@
 #include "4C_structure_new_input.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <utility>
+#include <vector>
+
 FOUR_C_NAMESPACE_OPEN
 
 using namespace Core::IO::InputSpecBuilders;
@@ -76,44 +79,32 @@ namespace
   }
 
   template <Core::FE::CellType celltype>
-    requires(Core::FE::dim<celltype> == 3)
+    requires(Core::FE::dim<celltype> == 2 || Core::FE::dim<celltype> == 3)
   auto get_default_input_spec()
   {
-    return all_of({parameter<int>("MAT"), get_kinem_type_input_spec(),
-        parameter<Discret::Elements::PrestressTechnology>(
-            "PRESTRESS_TECH", {.description = "The technology used for prestressing",
-                                  .default_value = Discret::Elements::PrestressTechnology::none}),
-        parameter<std::optional<std::vector<double>>>("RAD", {.size = 3}),
-        parameter<std::optional<std::vector<double>>>("AXI", {.size = 3}),
-        parameter<std::optional<std::vector<double>>>("CIR", {.size = 3}),
-        parameter<std::optional<std::vector<double>>>("FIBER1", {.size = 3}),
-        parameter<std::optional<std::vector<double>>>("FIBER2", {.size = 3}),
-        parameter<std::optional<std::vector<double>>>("FIBER3", {.size = 3}),
-        get_integration_rule_input_spec<celltype>()});
-  }
-
-  template <Core::FE::CellType celltype>
-    requires(Core::FE::dim<celltype> == 2)
-  auto get_default_input_spec()
-  {
-    return all_of({
+    constexpr auto dim = Core::FE::dim<celltype>;
+    std::vector<Core::IO::InputSpec> specs{
         parameter<int>("MAT"),
         get_kinem_type_input_spec(),
         parameter<Discret::Elements::PrestressTechnology>(
             "PRESTRESS_TECH", {.description = "The technology used for prestressing",
                                   .default_value = Discret::Elements::PrestressTechnology::none}),
-        parameter<std::optional<std::vector<double>>>("RAD", {.size = 2}),
-        parameter<std::optional<std::vector<double>>>("AXI", {.size = 2}),
-        parameter<std::optional<std::vector<double>>>("CIR", {.size = 2}),
-        parameter<std::optional<std::vector<double>>>("FIBER1", {.size = 2}),
-        parameter<std::optional<std::vector<double>>>("FIBER2", {.size = 2}),
-        parameter<std::optional<std::vector<double>>>("FIBER3", {.size = 2}),
+        parameter<std::optional<std::vector<double>>>("RAD", {.size = dim}),
+        parameter<std::optional<std::vector<double>>>("AXI", {.size = dim}),
+        parameter<std::optional<std::vector<double>>>("CIR", {.size = dim}),
+        parameter<std::optional<std::vector<double>>>("FIBER1", {.size = dim}),
+        parameter<std::optional<std::vector<double>>>("FIBER2", {.size = dim}),
+        parameter<std::optional<std::vector<double>>>("FIBER3", {.size = dim}),
         get_integration_rule_input_spec<celltype>(),
-        parameter<double>(
-            "THICKNESS", {.description = "Reference thickness of the 2D solid element"}),
-        parameter<Discret::Elements::PlaneAssumption>(
-            "PLANE_ASSUMPTION", {.description = "Plane assumption for the 2D solid element"}),
-    });
+    };
+    if constexpr (dim == 2)
+    {
+      specs.emplace_back(parameter<double>(
+          "THICKNESS", {.description = "Reference thickness of the 2D solid element"}));
+      specs.emplace_back(parameter<Discret::Elements::PlaneAssumption>(
+          "PLANE_ASSUMPTION", {.description = "Plane assumption for the 2D solid element"}));
+    }
+    return all_of(std::move(specs));
   }
 }  // namespace
 
