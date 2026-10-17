@@ -541,8 +541,9 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
     cond.add_component(
         parameter<int>("LAYER", {.description = "layer of periodic boundary condition"}));
     cond.add_component(parameter<double>("ANGLE", {.description = "angle of rotation"}));
-    cond.add_component(
-        parameter<double>("ABSTREETOL", {.description = "tolerance for nodematching in octree"}));
+    cond.add_component(parameter<double>("TREETOL",
+        {.description = "tolerance for node-matching in octree in terms of the "
+                        "characteristic mesh length, i.e., the minimum distance between nodes"}));
 
     condlist.emplace_back(cond);
   };

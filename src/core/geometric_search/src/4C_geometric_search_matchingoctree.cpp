@@ -11,7 +11,11 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
+#include "4C_fem_general_element_center.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_utils_exceptions.hpp"
+
+#include <limits>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -20,6 +24,7 @@ FOUR_C_NAMESPACE_OPEN
 Core::GeometricSearch::MatchingOctree::MatchingOctree()
     : discret_(nullptr),
       tol_(-1.0),
+      tol_in_mesh_length_unit_(-1.0),
       target_entity_ids_(nullptr),
       maxtreenodesperleaf_(-1),
       issetup_(false),
@@ -30,14 +35,15 @@ Core::GeometricSearch::MatchingOctree::MatchingOctree()
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 int Core::GeometricSearch::MatchingOctree::init(const Core::FE::Discretization& actdis,
-    const std::vector<int>& target_node_ids, const int maxnodeperleaf, const double tol)
+    const std::vector<int>& target_node_ids, const int maxnodeperleaf,
+    const double tolerance_in_mesh_length_unit)
 {
   set_is_setup(false);
 
   discret_ = &actdis;
   target_entity_ids_ = &target_node_ids;
   maxtreenodesperleaf_ = maxnodeperleaf;
-  tol_ = tol;
+  tol_in_mesh_length_unit_ = tolerance_in_mesh_length_unit;
 
   set_is_init(true);
   return 0;
@@ -51,12 +57,20 @@ int Core::GeometricSearch::MatchingOctree::setup()
 
   const unsigned int nummygids = target_entity_ids_->size();
 
-  // extract all target_nodes on this proc from the list target_node_ids
-  std::vector<int> target_nodesonthisproc;
-
   // construct octree if proc has target_nodes
   if (nummygids > 0)
   {
+    // validation loop for target entity ids
+    for (unsigned lid = 0; lid < nummygids; lid++)
+    {
+      FOUR_C_ASSERT_ALWAYS(check_have_entity(discret_, target_entity_ids_->at(lid)),
+          "MatchingOctree can only be constructed with entities,\n"
+          "which are either owned, or ghosted by calling proc.");
+    }
+
+    // scale absolute tolerance by the characteristic mesh length
+    tol_ = tol_in_mesh_length_unit_ * characteristic_mesh_length();
+
     // create initial bounding box for all nodes
     //
     //                 +-            -+
@@ -67,36 +81,30 @@ int Core::GeometricSearch::MatchingOctree::setup()
     //
     Core::LinAlg::SerialDenseMatrix initialboundingbox(3, 2);
     std::array<double, 3> pointcoord;
-    calc_point_coordinate(discret_, target_entity_ids_->at(0), pointcoord.data());
-    for (int dim = 0; dim < 3; dim++)
+    for (unsigned lid = 0; lid < nummygids; lid++)
     {
-      initialboundingbox(dim, 0) = pointcoord[dim] - tol_;
-      initialboundingbox(dim, 1) = pointcoord[dim] + tol_;
+      calc_point_coordinate(discret_, target_entity_ids_->at(lid), pointcoord.data());
 
-      // store coordinates of one point in target plane (later on, one
-      // coordinate of the target_node will be substituted by the coordinate
-      // of the target plane)
-      target_plane_coords_.push_back(pointcoord[dim]);
-    }
-
-    for (unsigned locn = 0; locn < nummygids; locn++)
-    {
-      // check if entity is on this proc
-      if (not check_have_entity(discret_, target_entity_ids_->at(locn)))
+      if (lid == 0)
       {
-        FOUR_C_THROW(
-            "MatchingOctree can only be constructed with entities,\n"
-            "which are either owned, or ghosted by calling proc.");
+        for (int dim = 0; dim < 3; dim++)
+        {
+          initialboundingbox(dim, 0) = pointcoord[dim] - tol_;
+          initialboundingbox(dim, 1) = pointcoord[dim] + tol_;
+
+          // store coordinates of one point in target plane (later on, one
+          // coordinate of the target_node will be substituted by the coordinate
+          // of the target plane)
+          target_plane_coords_.push_back(pointcoord[dim]);
+        }
       }
-
-      target_nodesonthisproc.push_back(target_entity_ids_->at(locn));
-
-      calc_point_coordinate(discret_, target_nodesonthisproc[locn], pointcoord.data());
-
-      for (int dim = 0; dim < 3; dim++)
+      else
       {
-        initialboundingbox(dim, 0) = std::min(initialboundingbox(dim, 0), pointcoord[dim] - tol_);
-        initialboundingbox(dim, 1) = std::max(initialboundingbox(dim, 1), pointcoord[dim] + tol_);
+        for (int dim = 0; dim < 3; dim++)
+        {
+          initialboundingbox(dim, 0) = std::min(initialboundingbox(dim, 0), pointcoord[dim] - tol_);
+          initialboundingbox(dim, 1) = std::max(initialboundingbox(dim, 1), pointcoord[dim] + tol_);
+        }
       }
     }
 
@@ -104,7 +112,7 @@ int Core::GeometricSearch::MatchingOctree::setup()
     // all other layers are generated down here by recursive calls
     int initlayer = 0;
 
-    octreeroot_ = create_octree_element(target_nodesonthisproc, initialboundingbox, initlayer);
+    octreeroot_ = create_octree_element(*target_entity_ids_, initialboundingbox, initlayer);
   }
 
   set_is_setup(true);
@@ -486,35 +494,37 @@ void Core::GeometricSearch::MatchingOctree::find_match(const Core::FE::Discretiz
       // proc
       if (not target_plane_coords_.empty())
       {
-        const auto& [id, pointcoord] = entity;
+        const auto& [source_id, source_point_coord] = entity;
 
         // get its coordinates
-        std::vector<double> x(pointcoord.begin(), pointcoord.end());
+        std::vector<double> x_source(source_point_coord.begin(), source_point_coord.end());
 
         //--------------------------------------------------------
         // 3) now search for closest target point on this proc
-        int gid;
-        double dist;
+        int target_id;
+        double target_source_dist;
 
-        // If x is not in the bounding box on this proc, its probably not
-        // matching a point in the box. We do nothing.
-        if (search_closest_entity_on_this_proc(x, gid, dist))
+        // If the source point is not in the bounding box on this proc, it's probably not
+        // matching a point in the target bounding box. We do nothing.
+        if (search_closest_entity_on_this_proc(x_source, target_id, target_source_dist))
         {
-          auto found = coupling.find(gid);
+          bool target_id_already_within_coupling = (coupling.contains(target_id));
 
-          // search for second point with same distance, if found gid is already in coupling
-          if (found != coupling.end())
+          // search for second point with same distance, if found target id is already within
+          // coupling
+          if (target_id_already_within_coupling)
           {
-            if (search_closest_entity_on_this_proc(x, gid, dist, true))
+            if (search_closest_entity_on_this_proc(x_source, target_id, target_source_dist, true))
             {
-              found = coupling.find(gid);
+              target_id_already_within_coupling = (coupling.contains(target_id));
             }
           }
 
           // we are interested in the closest match
-          if (found == coupling.end() or coupling[gid].second > dist)
+          if (not target_id_already_within_coupling or
+              coupling[target_id].second > target_source_dist)
           {
-            coupling[gid] = std::make_pair(id, dist);
+            coupling[target_id] = std::make_pair(source_id, target_source_dist);
           }
         }
       }
@@ -703,20 +713,22 @@ void Core::GeometricSearch::NodeMatchingOctree::calc_point_coordinate(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-//! calc unique coordinate of entity
-void Core::GeometricSearch::NodeMatchingOctree::calc_point_coordinate(
-    Core::Communication::ParObject* entity, double* coord)
+double Core::GeometricSearch::NodeMatchingOctree::characteristic_mesh_length() const
 {
-  auto* actnode = dynamic_cast<Core::Nodes::Node*>(entity);
-  if (actnode == nullptr) FOUR_C_THROW("dynamic_cast failed");
+  FOUR_C_ASSERT(discret_, "Discretization is not set for the node matching octree");
+  FOUR_C_ASSERT(target_entity_ids_ && not target_entity_ids_->empty(),
+      "Target node ids not set for the node matching octree");
 
-  const int dim = 3;
-
-  const auto x = actnode->x();
-  for (size_t idim = 0; idim < x.size(); idim++) coord[idim] = x[idim];
-  for (size_t idim = x.size(); idim < dim; idim++) coord[idim] = 0.0;
-
-}  // NodeMatchingOctree::calc_point_coordinate
+  double min_adjacent_node_distance = std::numeric_limits<double>::infinity();
+  for (int id : *target_entity_ids_)
+  {
+    Core::Nodes::Node* actnode = discret_->g_node(id);
+    FOUR_C_ASSERT(actnode, "Target node with global id {} not found", id);
+    min_adjacent_node_distance =
+        std::min(min_adjacent_node_distance, actnode->minimum_distance_to_adjacent_nodes());
+  }
+  return min_adjacent_node_distance;
+}
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
@@ -762,7 +774,8 @@ int Core::GeometricSearch::NodeMatchingOctree::check_valid_entity_type(
 /*----------------------------------------------------------------------*/
 std::shared_ptr<Core::GeometricSearch::OctreeElement>
 Core::GeometricSearch::NodeMatchingOctree::create_octree_element(
-    std::vector<int>& nodeidstoadd, Core::LinAlg::SerialDenseMatrix& boundingboxtoadd, int layer)
+    const std::vector<int>& nodeidstoadd, Core::LinAlg::SerialDenseMatrix& boundingboxtoadd,
+    int layer)
 {
   std::shared_ptr<Core::GeometricSearch::OctreeElement> newtreeelement =
       std::make_shared<OctreeNodalElement>();
@@ -786,40 +799,43 @@ Core::GeometricSearch::ElementMatchingOctree::ElementMatchingOctree()
 void Core::GeometricSearch::ElementMatchingOctree::calc_point_coordinate(
     const Core::FE::Discretization* dis, const int id, double* coord)
 {
-  Core::Elements::Element* actele = dis->g_element(id);
-
-  const int dim = 3;
-
-  for (int idim = 0; idim < dim; idim++) coord[idim] = 0.0;
-
-  for (auto node : actele->node_range())
-  {
-    const auto x = node.x();
-    for (size_t idim = 0; idim < x.size(); idim++) coord[idim] += x[idim];
-  }
+  const auto element_centroid = FE::element_center_refe_coords(*dis->g_element(id));
+  for (int idim = 0; idim < 3; idim++) coord[idim] = element_centroid[idim];
 }  // ElementMatchingOctree::calc_point_coordinate
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::GeometricSearch::ElementMatchingOctree::calc_point_coordinate(
-    Core::Communication::ParObject* entity, double* coord)
+double Core::GeometricSearch::ElementMatchingOctree::characteristic_mesh_length() const
 {
-  auto* actele = dynamic_cast<Core::Elements::Element*>(entity);
-  if (actele == nullptr) FOUR_C_THROW("dynamic_cast failed");
+  FOUR_C_ASSERT(discret_, "Discretization is not set for the element matching octree");
+  FOUR_C_ASSERT(target_entity_ids_, "Target element ids not set for the element matching octree");
 
-  Core::Nodes::Node** nodes = actele->nodes();
-  if (nodes == nullptr) FOUR_C_THROW("could not get pointer to nodes");
+  if (target_entity_ids_->empty()) return 1.0;
 
-  const int dim = 3;
-
-  for (int idim = 0; idim < dim; idim++) coord[idim] = 0.0;
-
-  for (auto node : actele->node_range())
+  double min_adjacent_element_distance = std::numeric_limits<double>::infinity();
+  for (int id : *target_entity_ids_)
   {
-    const auto x = node.x();
-    for (size_t idim = 0; idim < x.size(); idim++) coord[idim] += x[idim];
+    Core::Elements::Element* actele = discret_->g_element(id);
+    FOUR_C_ASSERT(actele, "Target element with id {} not found", id);
+    const std::optional<double> minimum_centroid_distance_to_neighbors =
+        actele->minimum_centroid_distance_to_adjacent_elements();
+    if (minimum_centroid_distance_to_neighbors)
+    {
+      min_adjacent_element_distance =
+          std::min(min_adjacent_element_distance, minimum_centroid_distance_to_neighbors.value());
+    }
+    else
+    {
+      min_adjacent_element_distance = std::min(min_adjacent_element_distance,
+          actele->nodes()[0]
+              ->minimum_distance_to_adjacent_nodes());  // take the minimum distance of the first
+                                                        // node to its adjacent nodes as an
+                                                        // alternative to the element centroid
+                                                        // distance
+    }
   }
-}  // ElementMatchingOctree::calc_point_coordinate
+  return min_adjacent_element_distance;
+}
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
@@ -846,11 +862,9 @@ void Core::GeometricSearch::ElementMatchingOctree::pack_entity(
   Entity e{};
   e.gid = actele->id();
 
-  for (auto node : actele->node_range())
-  {
-    const auto x = node.x();
-    for (size_t idim = 0; idim < x.size(); idim++) e.position[idim] += x[idim];
-  }
+  const auto element_centroid = FE::element_center_refe_coords(*actele);
+  for (int idim = 0; idim < 3; idim++) e.position[idim] = element_centroid[idim];
+
   add_to_pack(data, e);
 }
 
@@ -874,7 +888,8 @@ int Core::GeometricSearch::ElementMatchingOctree::check_valid_entity_type(
 /*----------------------------------------------------------------------*/
 std::shared_ptr<Core::GeometricSearch::OctreeElement>
 Core::GeometricSearch::ElementMatchingOctree::create_octree_element(
-    std::vector<int>& nodeidstoadd, Core::LinAlg::SerialDenseMatrix& boundingboxtoadd, int layer)
+    const std::vector<int>& nodeidstoadd, Core::LinAlg::SerialDenseMatrix& boundingboxtoadd,
+    int layer)
 {
   std::shared_ptr<Core::GeometricSearch::OctreeElement> newtreeelement =
       std::make_shared<OctreeElementElement>();
@@ -935,17 +950,8 @@ Core::GeometricSearch::OctreeElementElement::OctreeElementElement()
 void Core::GeometricSearch::OctreeElementElement::calc_point_coordinate(
     const Core::FE::Discretization* dis, const int id, double* coord)
 {
-  Core::Elements::Element* actele = dis->g_element(id);
-
-  const int dim = 3;
-
-  for (int idim = 0; idim < dim; idim++) coord[idim] = 0.0;
-
-  for (auto node : actele->node_range())
-  {
-    const auto x = node.x();
-    for (size_t idim = 0; idim < x.size(); idim++) coord[idim] += x[idim];
-  }
+  const auto element_centroid = FE::element_center_refe_coords(*dis->g_element(id));
+  for (int idim = 0; idim < 3; idim++) coord[idim] = element_centroid[idim];
 }  // OctreeElementElement::calc_point_coordinate
 
 /*----------------------------------------------------------------------*/
@@ -981,7 +987,7 @@ Core::GeometricSearch::OctreeElement::OctreeElement()
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 int Core::GeometricSearch::OctreeElement::init(const Core::FE::Discretization& actdis,
-    std::vector<int>& nodeidstoadd, const Core::LinAlg::SerialDenseMatrix& boundingboxtoadd,
+    const std::vector<int>& nodeidstoadd, const Core::LinAlg::SerialDenseMatrix& boundingboxtoadd,
     const int layer, const int maxnodeperleaf, const double tol)
 {
   set_is_setup(false);
@@ -1183,6 +1189,8 @@ void Core::GeometricSearch::OctreeElement::search_closest_node_in_leaf(const std
   std::vector<double> dx(3);
   std::array<double, 3> pointcoord;
 
+  const double distance_tolerance = 1.0e-2 * elesize;
+
   // the first node is the guess for the closest node
   calc_point_coordinate(discret_, nodeids_.at(0), pointcoord.data());
   for (int dim = 0; dim < 3; dim++)
@@ -1204,14 +1212,14 @@ void Core::GeometricSearch::OctreeElement::search_closest_node_in_leaf(const std
     }
     thisdist = sqrt(dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2]);
 
-    if (thisdist < (distofclosestpoint - 1e-02 * elesize))
+    if (thisdist < (distofclosestpoint - distance_tolerance))
     {
       distofclosestpoint = thisdist;
       idofclosestpoint = nodeids_.at(nn);
     }
     else
     {
-      if ((abs(thisdist - distofclosestpoint) < 1e-02 * elesize) && searchsecond)
+      if ((abs(thisdist - distofclosestpoint) < distance_tolerance) && searchsecond)
       {
         distofclosestpoint = thisdist;
         idofclosestpoint = nodeids_.at(nn);
