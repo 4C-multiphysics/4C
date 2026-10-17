@@ -62,7 +62,7 @@ docker run --interactive --tty ghcr.io/4c-multiphysics/4c:main
 /home/user/4C/build/4C ../tests/input_files/<some-input-file>.4C.yaml output_name
 ```
 
-See our [documentation](https://4c-multiphysics.github.io/4C/documentation/installation/installation.html) for more information on
+See our [documentation](https://4c-multiphysics.github.io/4C/documentation/installation/installation_overview.html) for more information on
 how to build 4C from source on your machine.
 Consult our [Tutorials](https://4c-multiphysics.github.io/4C/documentation/tutorials/tutorials.html) to get an overview of the
 general workflow in 4C.

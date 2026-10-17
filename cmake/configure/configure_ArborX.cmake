@@ -39,8 +39,8 @@ else() # Fetch ArborX from GIT repository
     )
   fetchcontent_makeavailable(arborx)
   set(FOUR_C_ARBORX_ROOT "${CMAKE_INSTALL_PREFIX}")
-
-  four_c_add_external_dependency(four_c_all_enabled_external_dependencies ArborX::ArborX)
 endif()
+
+four_c_add_external_dependency(four_c_all_enabled_external_dependencies ArborX::ArborX)
 
 four_c_remember_variable_for_install(FOUR_C_ARBORX_FIND_INSTALLED FOUR_C_ARBORX_ROOT)
