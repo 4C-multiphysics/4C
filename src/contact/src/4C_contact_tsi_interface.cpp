@@ -21,6 +21,8 @@
 #include "4C_mortar_input.hpp"
 #include "4C_mortar_node.hpp"
 
+#include <map>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
@@ -183,8 +185,6 @@ void CONTACT::TSIInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linsli
 
   double frcoeff_in =
       interface_params().get<double>("FRCOEFF");  // the friction coefficient from the input
-  double ct_input = interface_params().get<double>("SEMI_SMOOTH_CT");
-  double cn_input = interface_params().get<double>("SEMI_SMOOTH_CN");
 
   // some things that are not implemented
   const bool gp_slip = interface_params().get<bool>("GP_SLIP_INCR");
@@ -237,8 +237,9 @@ void CONTACT::TSIInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linsli
     std::map<int, double> dfrdT, dfrdD;
     cnode->deriv_fr_coeff_temp(frcoeff_in, dfrdT, dfrdD);
 
-    double cn = cn_input;
-    double ct = ct_input;
+    const int local_id = cnValues_->get_map().lid(gid);
+    const double cn = cnValues_->get_values()[local_id];
+    const double ct = ctValues_->get_values()[local_id];
 
     double fac = lm_n - cn * wgap;
     for (CI p = dfrdT.begin(); p != dfrdT.end(); ++p)
@@ -421,14 +422,21 @@ void CONTACT::TSIInterface::assemble_lin_dm_x(Core::LinAlg::SparseMatrix* linD_X
           lm = 0.;
         else
         {
-          double dval = 1.;
-          if (cnode->mo_data().get_d().size() == 0)
-            continue;
-          else
-            cnode->mo_data().get_d()[cnode->id()];
+          if (cnode->mo_data().get_d().size() == 0) continue;
+          /// Diagonal element of the D-matrix for the current source node \f$ D_{jj}\f$
+          const double dval = cnode->mo_data().get_d()[cnode->id()];
+          /// contact Lagrange multiplier \f$ \boldsymbol{\lambda}_c = - \mathbf{t}\f$
           const Core::LinAlg::Matrix<3, 1> lmc(cnode->mo_data().lm(), true);
+          /// normal vector \f$\mathbf{n}\f$
           const Core::LinAlg::Matrix<3, 1> n(cnode->mo_data().n(), true);
+          /// weighted relative slip increment (jump) \f$\Delta\tilde{\mathbf{u}}\f$
           const Core::LinAlg::Matrix<3, 1> jump(frnode->fri_data().jump(), true);
+          /// Dissipation due to friction (cf. https://mediatum.ub.tum.de/?id=1454145
+          /// equation 4.57):
+          /// \f[ \texttt{diss} = \mathbf{t}_\tau \cdot \mathbf{v}_\tau = \mathbf{t}
+          /// \cdot\left(\mathbf{I} - \mathbf{n}\otimes\mathbf{n}\right)\cdot \frac{\Delta\tilde
+          /// {\mathbf{u}}}{\Delta t D_{jj}} = \left(\mathbf{t}\cdot\Delta\tilde{\mathbf{u}} -
+          /// t_n\cdot\Delta\tilde{u}_n\right)\frac{1}{\Delta t D_{jj}}\f]
           double diss = (-lmc.dot(jump) + lmc.dot(n) * jump.dot(n)) / (dt * dval);
           lm = diss;
         }
@@ -606,17 +614,24 @@ void CONTACT::TSIInterface::assemble_dm_lin_diss(Core::LinAlg::SparseMatrix* d_L
       const std::vector<Core::Gen::Pairedvector<int, double>>& derivN = cnode->data().get_deriv_n();
 
       // calculate derivative of Dissipation *******************************
+      /// \f[\begin{aligned}\frac{\mathrm{d}}{\mathrm{d}u_k}\texttt{diss} &=
+      /// \frac{\mathrm{d}}{\mathrm{d}u_k}\left[\left(\mathbf{t} \cdot \Delta \tilde{\mathbf{u}} -
+      /// t_n \cdot \Delta \tilde{u}_n\right) \frac{1}{\Delta t D_{jj}} \right]\\&=
+      /// \left[\mathbf{t}_\tau \cdot  \frac{\mathrm{d}\Delta \tilde{\mathbf{u}}}{\mathrm{d}u_k}-
+      /// \left(t_n\Delta\tilde{\mathbf{u}} + \Delta \tilde{u}_n\mathbf{t}\right)\cdot
+      /// \frac{\mathrm{d}\mathbf{n}}{\mathrm{d}u_k}\right] \frac{1}{\Delta t D_{jj}} -
+      /// \left(\mathbf{t} \cdot \Delta \tilde{\mathbf{u}} - t_n \cdot \Delta \tilde{u}_n\right)
+      /// \frac{1}{\Delta t D_{jj}^2}\frac{\mathrm{d}D_{jj}}{\mathrm{d}u_k} \end{aligned}\f]
       std::map<int, double> derivDiss;
       for (int i = 0; i < 3; ++i)
       {
-        for (_cim p = derivJump[i].begin(); p != derivJump[i].end(); ++p)
-          derivDiss[p->first] -= ((lm(i) - lm_n * n(i)) * p->second) / (dt * dval);
-        for (_cip p = derivN[i].begin(); p != derivN[i].end(); ++p)
-          derivDiss[p->first] += ((lm_n * jump(i) + jump_n * lm(i)) * p->second) / (dt * dval);
-        for (_cim p = derivD.begin(); p != derivD.end(); ++p)
-          derivDiss[p->first] +=
-              (-lm.dot(jump) + lm.dot(n) * jump.dot(n)) / (dt * dval * dval) * (-p->second);
+        for (const auto& [k, jump_wrt_uk] : derivJump[i])
+          derivDiss[k] -= ((lm_t(i)) * jump_wrt_uk) / (dt * dval);
+        for (const auto& [k, n_wrt_uk] : derivN[i])
+          derivDiss[k] += ((lm_n * jump(i) + jump_n * lm(i)) * n_wrt_uk) / (dt * dval);
       }
+      for (const auto& [k, dval_wrt_uk] : derivD)
+        derivDiss[k] += (lm.dot(jump) - lm.dot(n) * jump.dot(n)) / (dt * dval * dval) * dval_wrt_uk;
 
       // put everything together*******************************************
       /**************************************************** D-matrix ******/
