@@ -1073,7 +1073,7 @@ void Discret::Elements::Ale2::call_mat_geo_nonl(
     {
       const Mat::StVenantKirchhoff* actmat =
           static_cast<const Mat::StVenantKirchhoff*>(material.get());
-      double ym = actmat->youngs();
+      double ym = actmat->youngs(id());
       double pv = actmat->poisson_ratio();
 
       /*----------- material-tangente - plane strain, rotational symmetry ---*/

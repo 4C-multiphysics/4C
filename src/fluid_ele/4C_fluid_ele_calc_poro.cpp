@@ -300,7 +300,7 @@ int Discret::Elements::FluidEleCalcPoro<distype>::evaluate(Discret::Elements::Fl
   int result = evaluate(params, ebofoaf, elemat_1, elevec_1, evelaf, epreaf, evelnp, eveln, eprenp,
       epren, emhist, echist, epressnp_timederiv, epressam_timederiv, epressn_timederiv, eaccam,
       edispnp, edispn, egridv, egridvn, escaaf, nullptr, nullptr, nullptr, mat, ele->is_ale(),
-      intpoints);
+      intpoints, ele);
 
   return result;
 }
@@ -453,7 +453,7 @@ int Discret::Elements::FluidEleCalcPoro<distype>::evaluate_od(Discret::Elements:
   // call inner evaluate (does not know about element or discretization object)
   return evaluate_od(params, ebofoaf, elemat_1, elevec_1, evelaf, epreaf, evelnp, eveln, eprenp,
       epren, epressnp_timederiv, epressam_timederiv, epressn_timederiv, eaccam, edispnp, edispn,
-      egridv, egridvn, escaaf, emhist, echist, nullptr, mat, ele->is_ale(), intpoints);
+      egridv, egridvn, escaaf, emhist, echist, nullptr, mat, ele->is_ale(), intpoints, ele);
 }
 
 template <Core::FE::CellType distype>
@@ -474,7 +474,8 @@ int Discret::Elements::FluidEleCalcPoro<distype>::evaluate(Teuchos::ParameterLis
     const Core::LinAlg::Matrix<nen_, 1>* eporositynp,
     const Core::LinAlg::Matrix<nen_, 1>* eporositydot,
     const Core::LinAlg::Matrix<nen_, 1>* eporositydotn, std::shared_ptr<Core::Mat::Material> mat,
-    bool isale, const Core::FE::GaussIntegration& intpoints)
+    bool isale, const Core::FE::GaussIntegration& intpoints,
+    Discret::Elements::Fluid* ele)
 {
   // flag for higher order elements
   Base::is_higher_order_ele_ = IsHigherOrder<distype>::ishigherorder;
@@ -488,7 +489,7 @@ int Discret::Elements::FluidEleCalcPoro<distype>::evaluate(Teuchos::ParameterLis
   // ---------------------------------------------------------------------
   sysmat(params, ebofoaf, evelaf, evelnp, eveln, epreaf, eprenp, epren, eaccam, emhist, echist,
       epressnp_timederiv, epressam_timederiv, epressn_timederiv, edispnp, edispn, egridv, egridvn,
-      escaaf, eporositynp, eporositydot, eporositydotn, elemat1, elevec1, mat, isale, intpoints);
+      escaaf, eporositynp, eporositydot, eporositydotn, elemat1, elevec1, mat, isale, intpoints, ele);
 
   return 0;
 }
@@ -509,7 +510,8 @@ int Discret::Elements::FluidEleCalcPoro<distype>::evaluate_od(Teuchos::Parameter
     const Core::LinAlg::Matrix<nsd_, nen_>& egridvn, const Core::LinAlg::Matrix<nen_, 1>& escaaf,
     const Core::LinAlg::Matrix<nsd_, nen_>& emhist, const Core::LinAlg::Matrix<nen_, 1>& echist,
     const Core::LinAlg::Matrix<nen_, 1>* eporositynp, std::shared_ptr<Core::Mat::Material> mat,
-    bool isale, const Core::FE::GaussIntegration& intpoints)
+    bool isale, const Core::FE::GaussIntegration& intpoints,
+    Discret::Elements::Fluid* ele)
 {
   // flag for higher order elements
   Base::is_higher_order_ele_ = IsHigherOrder<distype>::ishigherorder;
@@ -527,7 +529,7 @@ int Discret::Elements::FluidEleCalcPoro<distype>::evaluate_od(Teuchos::Parameter
   // ---------------------------------------------------------------------
   sysmat_od(params, ebofoaf, evelaf, evelnp, eveln, epreaf, eprenp, epren, eaccam,
       epressnp_timederiv, epressam_timederiv, epressn_timederiv, edispnp, edispn, egridv, egridvn,
-      escaaf, emhist, echist, eporositynp, elemat1, elevec1, mat, isale, intpoints);
+      escaaf, emhist, echist, eporositynp, elemat1, elevec1, mat, isale, intpoints, ele);
 
   return 0;
 }
@@ -550,7 +552,9 @@ void Discret::Elements::FluidEleCalcPoro<distype>::sysmat(Teuchos::ParameterList
     Core::LinAlg::Matrix<(nsd_ + 1) * nen_, (nsd_ + 1) * nen_>& estif,
     Core::LinAlg::Matrix<(nsd_ + 1) * nen_, 1>& eforce,
     std::shared_ptr<const Core::Mat::Material> material, bool isale,
-    const Core::FE::GaussIntegration& intpoints)
+    const Core::FE::GaussIntegration& intpoints,
+    Discret::Elements::Fluid* ele
+  )
 {
   //------------------------------------------------------------------------
   //  preliminary definitions and evaluations
@@ -594,7 +598,7 @@ void Discret::Elements::FluidEleCalcPoro<distype>::sysmat(Teuchos::ParameterList
   gauss_point_loop(params, ebofoaf, evelaf, evelnp, eveln, epreaf, eprenp, epren,
       epressnp_timederiv, epressam_timederiv, epressn_timederiv, eaccam, edispnp, edispn, egridv,
       egridvn, escaaf, emhist, echist, eporositynp, eporositydot, eporositydotn, estif_u, estif_p_v,
-      estif_q_u, ppmat, preforce, velforce, material, intpoints);
+      estif_q_u, ppmat, preforce, velforce, material, intpoints, ele);
 
   //------------------------------------------------------------------------
   //  end loop over integration points
@@ -705,7 +709,8 @@ void Discret::Elements::FluidEleCalcPoro<distype>::sysmat_od(Teuchos::ParameterL
     Core::LinAlg::Matrix<(nsd_ + 1) * nen_, nsd_ * nen_>& ecoupl,
     Core::LinAlg::Matrix<(nsd_ + 1) * nen_, 1>& eforce,
     std::shared_ptr<const Core::Mat::Material> material, bool isale,
-    const Core::FE::GaussIntegration& intpoints)
+    const Core::FE::GaussIntegration& intpoints,
+    Discret::Elements::Fluid* ele)
 {
   //------------------------------------------------------------------------
   //  preliminary definitions and evaluations
@@ -746,7 +751,7 @@ void Discret::Elements::FluidEleCalcPoro<distype>::sysmat_od(Teuchos::ParameterL
   gauss_point_loop_od(params, ebofoaf, evelaf, evelnp, eveln, epreaf, eprenp, epren,
       epressnp_timederiv, epressam_timederiv, epressn_timederiv, eaccam, edispnp, edispn, egridv,
       egridvn, escaaf, emhist, echist, eporositynp, eforce, ecoupl_u, ecoupl_p, material,
-      intpoints);
+      intpoints, ele);
   //------------------------------------------------------------------------
   //  end loop over integration points
   //------------------------------------------------------------------------
@@ -1104,7 +1109,8 @@ void Discret::Elements::FluidEleCalcPoro<distype>::gauss_point_loop(Teuchos::Par
     Core::LinAlg::Matrix<nen_, nen_ * nsd_>& estif_q_u, Core::LinAlg::Matrix<nen_, nen_>& ppmat,
     Core::LinAlg::Matrix<nen_, 1>& preforce, Core::LinAlg::Matrix<nsd_, nen_>& velforce,
     std::shared_ptr<const Core::Mat::Material> material,
-    const Core::FE::GaussIntegration& intpoints)
+    const Core::FE::GaussIntegration& intpoints,
+    Discret::Elements::Fluid* ele)
 {
   // definition of velocity-based momentum residual vectors
   static Core::LinAlg::Matrix<nsd_ * nsd_, nen_> lin_resM_Du(Core::LinAlg::Initialization::zero);
@@ -1148,6 +1154,7 @@ void Discret::Elements::FluidEleCalcPoro<distype>::gauss_point_loop(Teuchos::Par
     double dphi_dJdp = 0.0;
     double dphi_dpp = 0.0;
     porosity_ = 0.0;
+    int eleGID = ele-> id(); // set element id
 
     // compute scalar at n+alpha_F or n+1
     std::shared_ptr<std::vector<double>> scalars = std::make_shared<std::vector<double>>(0);
@@ -1158,7 +1165,7 @@ void Discret::Elements::FluidEleCalcPoro<distype>::gauss_point_loop(Teuchos::Par
     compute_porosity(params, press_, volchange, *(iquad), Base::funct_, eporositynp, porosity_,
         &dphi_dp, &dphi_dJ, &dphi_dJdp,
         nullptr,  // dphi_dJJ not needed
-        &dphi_dpp, false);
+        &dphi_dpp, false, eleGID);
 
     //--linearization of porosity gradient w.r.t. pressure at gausspoint
     // d(grad(phi))/dp = dphi/(dJdp)* dJ/dx + d^2phi/(dp)^2 * dp/dx + dphi/dp* N,x
@@ -1223,7 +1230,7 @@ void Discret::Elements::FluidEleCalcPoro<distype>::gauss_point_loop(Teuchos::Par
     // compute strong residual of mixture (structural) equation
     if (porofldpara_->stab_biot() and (not porofldpara_->is_stationary_conti()) and
         struct_mat_->poro_law_type() != Core::Materials::m_poro_law_constant)
-      compute_mixture_strong_residual(params, defgrd, edispnp, edispn, F_X, *iquad, false);
+      compute_mixture_strong_residual(params, defgrd, edispnp, edispn, F_X, *iquad, false, eleGID);
 
     //----------------------------------------------------------------------
     // set time-integration factors for left- and right-hand side
@@ -1617,7 +1624,8 @@ void Discret::Elements::FluidEleCalcPoro<distype>::gauss_point_loop_od(
     Core::LinAlg::Matrix<nen_ * nsd_, nen_ * nsd_>& ecoupl_u,
     Core::LinAlg::Matrix<nen_, nen_ * nsd_>& ecoupl_p,
     std::shared_ptr<const Core::Mat::Material> material,
-    const Core::FE::GaussIntegration& intpoints)
+    const Core::FE::GaussIntegration& intpoints,
+    Discret::Elements::Fluid* ele)
 {
   // definition of velocity-based momentum residual vectors
   static Core::LinAlg::Matrix<nsd_, nen_ * nsd_> lin_resM_Dus(Core::LinAlg::Initialization::zero);
@@ -1673,11 +1681,12 @@ void Discret::Elements::FluidEleCalcPoro<distype>::gauss_point_loop_od(
     double dphi_dJdp = 0.0;
     double dphi_dJJ = 0.0;
     porosity_ = 0.0;
+    int eleGID = ele-> id(); // set element id
 
     compute_porosity(params, press_, volchange, *(iquad), Base::funct_, eporositynp, porosity_,
         &dphi_dp, &dphi_dJ, &dphi_dJdp, &dphi_dJJ,
         nullptr,  // dphi_dpp not needed
-        false);
+        false, eleGID);
 
     double refporositydot = struct_mat_->ref_porosity_time_deriv();
 
@@ -1748,7 +1757,7 @@ void Discret::Elements::FluidEleCalcPoro<distype>::gauss_point_loop_od(
     // compute strong residual of mixture (structural) equation
     if (porofldpara_->stab_biot() and (not porofldpara_->is_stationary_conti()) and
         struct_mat_->poro_law_type() != Core::Materials::m_poro_law_constant)
-      compute_mixture_strong_residual(params, defgrd, edispnp, edispn, F_X, *iquad, true);
+      compute_mixture_strong_residual(params, defgrd, edispnp, edispn, F_X, *iquad, true, eleGID);
 
     //----------------------------------------------------------------------
     // set time-integration factors for left- and right-hand side
@@ -1767,7 +1776,7 @@ void Discret::Elements::FluidEleCalcPoro<distype>::gauss_point_loop_od(
     // 2) coupling terms in continuity equation
 
     fill_matrix_conti_od(timefacfacpre, dphi_dp, dphi_dJ, dphi_dJJ, dphi_dJdp, refporositydot,
-        dgradphi_dus, dphi_dus, dJ_dus, egridv, lin_resM_Dus, lin_resM_Dus_gridvel, ecoupl_p);
+        dgradphi_dus, dphi_dus, dJ_dus, egridv, lin_resM_Dus, lin_resM_Dus_gridvel, ecoupl_p, eleGID);
   }
 }
 
@@ -1984,7 +1993,8 @@ void Discret::Elements::FluidEleCalcPoro<distype>::fill_matrix_conti_od(const do
     const Core::LinAlg::Matrix<nsd_, nen_>& egridv,
     const Core::LinAlg::Matrix<nsd_, nen_ * nsd_>& lin_resM_Dus,
     const Core::LinAlg::Matrix<nsd_, nen_ * nsd_>& lin_resM_Dus_gridvel,
-    Core::LinAlg::Matrix<nen_, nen_ * nsd_>& ecoupl_p)
+    Core::LinAlg::Matrix<nen_, nen_ * nsd_>& ecoupl_p,
+    int eleGID)
 {
   if (!porofldpara_->is_stationary_conti())
   {
@@ -2232,9 +2242,9 @@ void Discret::Elements::FluidEleCalcPoro<distype>::fill_matrix_conti_od(const do
     double fac_dens2 = 0.0;
 
     const double timefactor = Base::fldparatimint_->dt() * Base::fldparatimint_->theta();
-    fac_dens = tau_struct_ * Base::fac_ / J_ * struct_mat_->density() / timefactor;
+    fac_dens = tau_struct_ * Base::fac_ / J_ * struct_mat_->density(eleGID) / timefactor;
     fac_dens2 =
-        -tau_struct_ * Base::fac_ / (J_ * J_) * struct_mat_->density() / Base::fldparatimint_->dt();
+        -tau_struct_ * Base::fac_ / (J_ * J_) * struct_mat_->density(eleGID) / Base::fldparatimint_->dt();
 
     for (int ui = 0; ui < nen_; ++ui)
     {
@@ -4852,10 +4862,10 @@ void Discret::Elements::FluidEleCalcPoro<distype>::compute_porosity(Teuchos::Par
     const double& press, const double& J, const int& gp,
     const Core::LinAlg::Matrix<nen_, 1>& shapfct, const Core::LinAlg::Matrix<nen_, 1>* myporosity,
     double& porosity, double* dphi_dp, double* dphi_dJ, double* dphi_dJdp, double* dphi_dJJ,
-    double* dphi_dpp, bool save)
+    double* dphi_dpp, bool save, int eleGID)
 {
   struct_mat_->compute_porosity(
-      params, press, J, gp, porosity, dphi_dp, dphi_dJ, dphi_dJdp, dphi_dJJ, dphi_dpp, save);
+      params, press, J, gp, porosity, dphi_dp, dphi_dJ, dphi_dJdp, dphi_dJJ, dphi_dpp, save, eleGID);
 }
 
 template <Core::FE::CellType distype>
@@ -6196,7 +6206,7 @@ int Discret::Elements::FluidEleCalcPoro<distype>::compute_volume(Teuchos::Parame
     // params.set<double>("scalar",scalaraf);
 
     compute_porosity(params, press_, J_, *(iquad), Base::funct_, nullptr, porosity_, nullptr,
-        nullptr, nullptr, nullptr, nullptr, false);
+        nullptr, nullptr, nullptr, nullptr, false, Base::eid_);
 
     elevec1(0) += porosity_ * Base::fac_;
   }
@@ -6442,9 +6452,9 @@ template <Core::FE::CellType distype>
 void Discret::Elements::FluidEleCalcPoro<distype>::compute_mixture_strong_residual(
     Teuchos::ParameterList& params, const Core::LinAlg::Matrix<nsd_, nsd_>& defgrd,
     const Core::LinAlg::Matrix<nsd_, nen_>& edispnp, const Core::LinAlg::Matrix<nsd_, nen_>& edispn,
-    const Core::LinAlg::Matrix<nsd_ * nsd_, nsd_>& F_X, const int gp, const bool computeLinOD)
+    const Core::LinAlg::Matrix<nsd_ * nsd_, nsd_>& F_X, const int gp, const bool computeLinOD, int eleGID)
 {
-  const double dens_struct = struct_mat_->density();
+  const double dens_struct = struct_mat_->density(eleGID);
   mixres_.clear();
 
   if (not Base::fldparatimint_->is_stationary())
@@ -6764,7 +6774,7 @@ double Discret::Elements::FluidEleCalcPoro<distype>::compute_effective_stiffness
     {
       std::shared_ptr<Mat::StVenantKirchhoff> stvmat =
           std::dynamic_pointer_cast<Mat::StVenantKirchhoff>(curmat);
-      effective_stiffness = stvmat->shear_mod();
+      effective_stiffness = stvmat->shear_mod(Base::eid_);
       break;
     }
     case Core::Materials::m_elasthyper:
