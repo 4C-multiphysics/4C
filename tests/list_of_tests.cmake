@@ -902,6 +902,8 @@ four_c_test(TEST_FILE mat_elasthyper_coupanisoexpoactive.4C.yaml NP 2 RETURN_AS 
 __four_c_test_restart(BASED_ON ${current} TEST_FILE mat_elasthyper_coupanisoexpoactive_restart.4C.yaml NP 2 RESTART_STEP 1)
 four_c_test(TEST_FILE mat_gtn_patch_test.4C.yaml NP 2 RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 2)
+four_c_test(TEST_FILE mat_gtn_single_hex8_time_step_constant.4C.yaml)
+four_c_test(TEST_FILE mat_gtn_single_hex8_time_step_reduction.4C.yaml NP 2)
 four_c_test(TEST_FILE mat_gtn_solid_necking_bar_h8.4C.yaml NP 2 RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 2)
 four_c_test(TEST_FILE mat_gtn_solid_necking_bar_with_f0_h8.4C.yaml NP 2 RETURN_AS current)
