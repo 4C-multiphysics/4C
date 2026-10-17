@@ -40,9 +40,23 @@ namespace Core::GeometricSearch
     using memory_space = Kokkos::HostSpace;
     Kokkos::DefaultExecutionSpace execution_space{};
 
+    // A rank that owns no primitives would hand ArborX an empty local tree. Its invalid bounding
+    // box then trips a floating point exception when ArborX builds the tree over all ranks.
+    // To avoid this, such a rank passes one dummy primitive, which is removed from the results.
+    constexpr int dummy_gid = -1;
+    std::vector<std::pair<int, BoundingVolume>> dummy_primitives;
+    if (primitives.empty())
+    {
+      BoundingVolume dummy_volume;
+      dummy_volume.add_point(
+          Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+      dummy_primitives.emplace_back(dummy_gid, dummy_volume);
+    }
+    const auto& tree_primitives = primitives.empty() ? dummy_primitives : primitives;
+
     // Build tree structure containing all primitives.
     ArborX::DistributedTree distributed_tree{
-        comm, execution_space, BoundingVolumeVectorPlaceholder<PrimitivesTag>{primitives}};
+        comm, execution_space, BoundingVolumeVectorPlaceholder<PrimitivesTag>{tree_primitives}};
 
     Kokkos::View<Kokkos::pair<int, int>*, memory_space> indices_ranks_full("indices_ranks_full", 0);
     Kokkos::View<int*, memory_space> offset_full("offset_full", 0);
@@ -69,6 +83,7 @@ namespace Core::GeometricSearch
       const int gid_predicate = predicates[i_offset].first;
       for (int j = offset_full[i_offset]; j < offset_full[i_offset + 1]; j++)
       {
+        if (indices_ranks_full[j].first == dummy_gid) continue;
         pairs.emplace_back(GlobalCollisionSearchResult{.lid_predicate = static_cast<int>(i_offset),
             .gid_predicate = gid_predicate,
             .gid_primitive = indices_ranks_full[j].first,
