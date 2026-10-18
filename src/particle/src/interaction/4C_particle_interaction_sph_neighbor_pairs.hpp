@@ -71,16 +71,16 @@ namespace Particle
 
     //! get relevant particle pair indices for disjoint combination of particle types
     void get_relevant_particle_pair_indices_for_disjoint_combination(
-        const std::set<Particle::Type>& types_a, const std::set<Particle::Type>& types_b,
+        const std::set<ParticleType>& types_a, const std::set<ParticleType>& types_b,
         std::vector<int>& relindices) const;
 
     //! get relevant particle pair indices for equal combination of particle types
     void get_relevant_particle_pair_indices_for_equal_combination(
-        const std::set<Particle::Type>& types_a, std::vector<int>& relindices) const;
+        const std::set<ParticleType>& types_a, std::vector<int>& relindices) const;
 
     //! get relevant particle wall pair indices for specific particle types
     void get_relevant_particle_wall_pair_indices(
-        const std::set<Particle::Type>& types_a, std::vector<int>& relindices) const;
+        const std::set<ParticleType>& types_a, std::vector<int>& relindices) const;
 
     //! evaluate neighbor pairs
     void evaluate_neighbor_pairs();

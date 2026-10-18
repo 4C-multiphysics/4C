@@ -44,7 +44,7 @@ namespace Particle
 
     //! return pointer to specific equation of state
     inline const Particle::SPHEquationOfStateBase* get_ptr_to_specific_equation_of_state(
-        Particle::Type type_i) const
+        ParticleType type_i) const
     {
       return phasetypetoequationofstate_[static_cast<int>(type_i)].get();
     };
@@ -57,7 +57,7 @@ namespace Particle
     std::vector<std::unique_ptr<Particle::SPHEquationOfStateBase>> phasetypetoequationofstate_;
 
     //! set of particle types of stored equation of state handlers
-    std::set<Particle::Type> storedtypes_;
+    std::set<ParticleType> storedtypes_;
   };
 
 }  // namespace Particle
