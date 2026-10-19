@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_reduced_lung_helpers.hpp"
+#include "4C_reduced_lung_nonlinear_solver.hpp"
 
 #include <memory>
 
@@ -48,7 +49,7 @@ namespace ReducedLung
    * pipeline, but owns the nonlinear iteration loop and delegates correction solves to
    * @ref TreeNewtonLinearSolver.
    */
-  class TreeNewtonSolver
+  class TreeNewtonSolver final : public NonlinearSolver
   {
    public:
     /**
@@ -83,7 +84,7 @@ namespace ReducedLung
     /**
      * @brief Destroy the tree Newton solver.
      */
-    ~TreeNewtonSolver() = default;
+    ~TreeNewtonSolver() override = default;
 
     /**
      * @brief Solve the nonlinear system at the given physical time.
@@ -91,14 +92,7 @@ namespace ReducedLung
      * @param time Current physical time for time-dependent boundary conditions.
      * @return Number of Newton corrections applied.
      */
-    unsigned int solve(double time);
-
-    /**
-     * @brief Final residual norm from the most recent nonlinear solve.
-     *
-     * @return Euclidean norm of the last assembled residual.
-     */
-    [[nodiscard]] double last_residual_norm() const { return last_residual_norm_; }
+    unsigned int solve(double time) override;
 
    private:
     /**
@@ -138,7 +132,6 @@ namespace ReducedLung
 
     double dt_;
     double current_time_;
-    double last_residual_norm_ = 0.0;
     unsigned int max_nonlinear_iterations_;
     double nonlinear_residual_tolerance_;
     double nonlinear_increment_tolerance_;

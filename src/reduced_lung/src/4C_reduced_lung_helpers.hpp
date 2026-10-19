@@ -16,6 +16,7 @@
 #include "4C_reduced_lung_airways.hpp"
 #include "4C_reduced_lung_boundary_conditions.hpp"
 #include "4C_reduced_lung_junctions.hpp"
+#include "4C_reduced_lung_nonlinear_solver.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_solver_nonlin_nox_adapter.hpp"
 
@@ -169,7 +170,7 @@ namespace ReducedLung
    * Encapsulates all NOX setup, callbacks, and time management for reduced lung physics.
    * Provides a simple interface: construct once, then call solve(time) in each timestep.
    */
-  class NoxSolver
+  class NoxSolver final : public NonlinearSolver
   {
    public:
     /**
@@ -185,7 +186,7 @@ namespace ReducedLung
     NoxSolver& operator=(const NoxSolver&) = delete;
     NoxSolver(NoxSolver&&) = delete;
     NoxSolver& operator=(NoxSolver&&) = delete;
-    ~NoxSolver() = default;
+    ~NoxSolver() override = default;
 
     /**
      * @brief Solve nonlinear system at given physical time.
@@ -197,7 +198,7 @@ namespace ReducedLung
      * @param time Current physical time for time-dependent BCs.
      * @return Number of nonlinear iterations performed.
      */
-    unsigned int solve(double time);
+    unsigned int solve(double time) override;
 
    private:
     // Callback implementations for NOX
@@ -367,6 +368,11 @@ namespace ReducedLung
    */
   void print_instantiated_object_counts(const MPI_Comm& comm, int n_airways, int n_terminal_units,
       int n_connections, int n_bifurcations, int n_boundary_conditions);
+
+  /**
+   * @brief Print the compact convergence summary of the tree nonlinear solvers on rank 0.
+   */
+  void print_tree_solver_summary(const MPI_Comm& comm, unsigned int iterations, double res_norm);
 
   /*!
    * @brief Create the map with the locally owned dofs spanning the computation domain that

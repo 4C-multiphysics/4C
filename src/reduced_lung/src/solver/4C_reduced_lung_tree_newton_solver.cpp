@@ -93,13 +93,13 @@ namespace ReducedLung
     {
       sync_state_from_x(x_solution_);
       const double residual_norm = assemble_residual_for_current_state();
-      last_residual_norm_ = residual_norm;
       const bool residual_converged = residual_norm <= nonlinear_residual_tolerance_;
 
       // The residual is the authoritative convergence check. A large first correction is expected
       // when advancing in time, even for linear systems.
       if (residual_converged)
       {
+        print_tree_solver_summary(x_solution_.get_comm(), iteration, residual_norm);
         return iteration;
       }
 
