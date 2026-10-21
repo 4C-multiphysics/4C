@@ -105,25 +105,6 @@ void Mat::Viscoplastic::ReformulatedJohnsonCook::pre_evaluate(
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
-double Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_stress_ratio(
-    const double equiv_stress, const double equiv_plastic_strain)
-{
-  // extract yield strength from the plastic strain and the material parameters
-  InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType yield_strength_err_status{
-      InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors};
-  const double yield_strength =
-      compute_flow_resistance(equiv_stress, equiv_plastic_strain, yield_strength_err_status);
-  FOUR_C_ASSERT_ALWAYS(yield_strength_err_status ==
-                           InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors,
-      "Something went wrong when evaluating the yield stress: error = {}",
-      EnumTools::enum_name(yield_strength_err_status));
-
-  return equiv_stress / yield_strength;
-}
-
-
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
 double Mat::Viscoplastic::ReformulatedJohnsonCook::compute_flow_resistance(
     const double equiv_stress, const double equiv_plastic_strain,
     Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
@@ -179,8 +160,11 @@ double Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_plastic_strain_rate(
 
 
   // stress ratio
-  double stress_ratio = evaluate_stress_ratio(equiv_stress, equiv_plastic_strain);
-
+  const double yield_stress =
+      compute_flow_resistance(equiv_stress, equiv_plastic_strain, err_status);
+  FOUR_C_ASSERT_ALWAYS(err_status == ViscoplastErrorType::no_errors,
+      "We assume that the flow resistance computation will be successful");
+  double stress_ratio = equiv_stress / yield_stress;
   // then we check the yield condition
   if (stress_ratio >= 1.0)
   {
@@ -263,7 +247,12 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
   // computation of derivatives
 
   // then we check the yield condition
-  if (evaluate_stress_ratio(equiv_stress, equiv_plastic_strain) >= 1.0)
+  const double yield_stress =
+      compute_flow_resistance(equiv_stress, equiv_plastic_strain, err_status);
+  FOUR_C_ASSERT_ALWAYS(err_status == ViscoplastErrorType::no_errors,
+      "We assume that the flow resistance computation will be successful");
+  double stress_ratio = equiv_stress / yield_stress;
+  if (stress_ratio >= 1.0)
   {
     // compute first the logarithms of our derivatives (try to avoid overflow!)
     double log_deriv_sigma = const_pars_.log_p_e +

@@ -92,21 +92,6 @@ namespace Mat
       [[nodiscard]] virtual bool uses_yield_surface() const = 0;
 
       /*!
-       * @brief Evaluate the ratio of the equivalent stress \f$ \overline{\sigma} \f$ to the yield
-       * stress \f$ \sigma_{\text{Y}} \f$ (or for flow rules without yield surface: ratio of the
-       * equivalent stress \f$ \overline{\sigma} \f$ to the flow resistance \f$ S \f$)
-       *
-       * @param[in] equiv_stress Equivalent stress \f$ \overline{\sigma}  \f$
-       * @param[in] equiv_plastic_strain Equivalent plastic strain \f$ \varepsilon^{\text{p}}\f$
-       * @return Stress ratio: \f$ \frac{\overline{\sigma}}{\sigma_{\text{Y}}} \f$ (for flow rules
-       * with yield surface) or \f$ \frac{\overline{\sigma}}{S} \f$ (for flow rules
-       * without yield surface)
-       */
-      virtual double evaluate_stress_ratio(
-          const double equiv_stress, const double equiv_plastic_strain) = 0;
-
-
-      /*!
        * @brief Evaluates the yield stress, or more generally the flow resistance (to accommodate
        * viscoplastic laws with and without yield surfaces in a common framework)
        *

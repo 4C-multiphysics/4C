@@ -121,9 +121,6 @@ namespace Mat
 
       [[nodiscard]] bool uses_yield_surface() const override { return true; }
 
-      double evaluate_stress_ratio(
-          const double equiv_stress, const double equiv_plastic_strain) override;
-
       double compute_flow_resistance(const double equiv_stress, const double equiv_plastic_strain,
           Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status) override;
 

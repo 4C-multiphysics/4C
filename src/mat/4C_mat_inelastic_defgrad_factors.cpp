@@ -4750,8 +4750,12 @@ bool Mat::InelasticDefgradTransvIsotropElastViscoplast::exhibits_plastic_flow(
 
   if (viscoplastic_law_->uses_yield_surface())
   {
-    return (
-        viscoplastic_law_->evaluate_stress_ratio(curr_equiv_stress, last_plastic_strain) >= 1.0);
+    auto err_status = ViscoplastUtils::ErrorType::no_errors;
+    const double yield_stress = viscoplastic_law_->compute_flow_resistance(
+        curr_equiv_stress, last_plastic_strain, err_status);
+    FOUR_C_ASSERT_ALWAYS(err_status == ViscoplastUtils::ErrorType::no_errors,
+        "It is currently assumed that this computation will not fail");
+    return (curr_equiv_stress / yield_stress) >= 1.0;
   }
   else
   {

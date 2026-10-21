@@ -122,8 +122,12 @@ namespace
     stress_ratio_reformulated_JC_solution_ = 1.1556126603348709;
 
     // compute solution from the viscoplasticity law
-    double stress_ratio_reformulated_JC =
-        vplast_law_reformulated_JC_->evaluate_stress_ratio(equiv_stress_, equiv_plastic_strain_);
+    auto err_status = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors;
+    const double yield_stress = vplast_law_reformulated_JC_->compute_flow_resistance(
+        equiv_stress_, equiv_plastic_strain_, err_status);
+    ASSERT_EQ(
+        err_status, Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors);
+    double stress_ratio_reformulated_JC = equiv_stress_ / yield_stress;
 
     // compare solutions
     EXPECT_NEAR(stress_ratio_reformulated_JC_solution_, stress_ratio_reformulated_JC, 1.0e-8);
