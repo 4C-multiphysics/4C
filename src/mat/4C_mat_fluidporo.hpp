@@ -15,6 +15,7 @@
 #include "4C_mat_material_factory.hpp"
 #include "4C_material_base.hpp"
 #include "4C_material_parameter_base.hpp"
+#include "4C_io_input_field.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -54,7 +55,7 @@ namespace Mat
 
       //! set initial porosity from structural material and calculate
       //! permeability_correction_factor_
-      void set_initial_porosity(double initial_porosity);
+      void set_initial_porosity(Core::IO::InputField<double> initial_porosity, int eleGID);
 
       //! @name material parameters
       //!@{
@@ -78,7 +79,7 @@ namespace Mat
       //! a correction factor to ensure the permeability set in the input file
       double permeability_correction_factor_;
       //! initial porosity
-      double initial_porosity_;
+      Core::IO::InputField<double> initial_porosity_;
 
       //! create material instance of matching type with my parameters
       std::shared_ptr<Core::Mat::Material> create_material() override;

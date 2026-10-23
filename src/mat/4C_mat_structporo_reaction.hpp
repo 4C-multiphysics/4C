@@ -130,7 +130,9 @@ namespace Mat
             dphi_dJdp,  ///< (o) derivative of porosity w.r.t. pressure and jacobian at gauss point
         double* dphi_dJJ,  ///< (o) second derivative of porosity w.r.t. jacobian at gauss point
         double* dphi_dpp,  ///< (o) second derivative of porosity w.r.t. pressure at gauss point
-        bool save = true) override;
+        bool save,
+        int eleGID        /// (i) element global ID
+      ) override;
 
     //! evaluate constitutive relation for porosity and compute derivatives
     void constitutive_derivatives(const Teuchos::ParameterList& params,  ///< (i) parameter list
@@ -141,8 +143,9 @@ namespace Mat
         double* dW_dphi,     ///< (o) derivative of potential w.r.t. porosity
         double* dW_dJ,       ///< (o) derivative of potential w.r.t. jacobian
         double* dW_dphiref,  ///< (o) derivative of potential w.r.t. reference porosity
-        double* W            ///< (o) inner potential
-        ) override;
+        double* W,            ///< (o) inner potential
+        int eleGID           /// (i) element global ID
+      ) override;
 
     /// return copy of this material object
     std::shared_ptr<Core::Mat::Material> clone() const override
@@ -153,7 +156,9 @@ namespace Mat
     /// Initialize internal variables
     void setup(int numgp,  ///< number of Gauss points
         const Discret::Elements::Fibers& fibers,
-        const std::optional<Discret::Elements::CoordinateSystem>& coord_system) override;
+        const std::optional<Discret::Elements::CoordinateSystem>& coord_system, int eleGID) override;
+    
+    void post_setup(const Teuchos::ParameterList& params, const int eleGID) override;
 
     /// Return quick accessible material parameter data
     Core::Mat::PAR::Parameter* parameter() const override { return params_; }
@@ -185,7 +190,7 @@ namespace Mat
 
    protected:
     virtual void reaction(const double porosity, const double J,
-        std::shared_ptr<std::vector<double>> scalars, const Teuchos::ParameterList& params);
+        std::shared_ptr<std::vector<double>> scalars, const Teuchos::ParameterList& params, int eleGID);
 
     /// my material parameters
     Mat::PAR::StructPoroReaction* params_;
