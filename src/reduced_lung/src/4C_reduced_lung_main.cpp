@@ -29,6 +29,7 @@
 #include "4C_reduced_lung_tree_linear_solver.hpp"
 #include "4C_reduced_lung_tree_metadata.hpp"
 #include "4C_reduced_lung_tree_newton_solver.hpp"
+#include "4C_reduced_lung_tree_nox_solver.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
@@ -108,6 +109,8 @@ namespace ReducedLung
           return "NOX";
         case SolverType::NewtonTree:
           return "NewtonTree";
+        case SolverType::NewtonTreeNox:
+          return "NewtonTreeNox";
       }
 
       return "Unknown";
@@ -324,6 +327,7 @@ namespace ReducedLung
             build_nox_solver();
             break;
           case ReducedLungParameters::NonlinearSolverType::NewtonTree:
+          case ReducedLungParameters::NonlinearSolverType::NewtonTreeNox:
             build_tree_newton_solver_with_tree_linear_solver();
             break;
           default:
@@ -402,6 +406,23 @@ namespace ReducedLung
         FOUR_C_ASSERT_ALWAYS(tree_newton_linear_solver_ != nullptr,
             "Reduced lung NewtonTree solver requires a tree Newton linear solver.");
 
+        if (context_.parameters.dynamics.nonlinear_solver ==
+            ReducedLungParameters::NonlinearSolverType::NewtonTreeNox)
+        {
+          const TreeNoxSolverContext tree_nox_solver_context{
+              .comm = comm_,
+              .dynamics = context_.parameters.dynamics,
+              .tree_linear_solver = tree_newton_linear_solver_,
+              .assembly_pipeline = assembly_pipeline_,
+              .dofs = *dofs_,
+              .locally_relevant_dofs = *locally_relevant_dofs_,
+              .x = *x_,
+          };
+          tree_nox_solver_ =
+              std::make_unique<TreeNoxSolver>(tree_nox_solver_context, current_time_);
+          return;
+        }
+
         const TreeNewtonSolverContext tree_newton_solver_context{
             .dynamics = context_.parameters.dynamics,
             .tree_linear_solver = tree_newton_linear_solver_,
@@ -420,7 +441,8 @@ namespace ReducedLung
        */
       void solve_timestep(int step)
       {
-        FOUR_C_ASSERT_ALWAYS(nox_solver_ != nullptr || tree_newton_solver_ != nullptr,
+        FOUR_C_ASSERT_ALWAYS(
+            nox_solver_ != nullptr || tree_newton_solver_ != nullptr || tree_nox_solver_ != nullptr,
             "Reduced lung solver must be initialized before time integration.");
         FOUR_C_ASSERT_ALWAYS(locally_relevant_dofs_ != nullptr,
             "Reduced lung locally relevant dof vector must be initialized before time "
@@ -442,12 +464,16 @@ namespace ReducedLung
         }
         else
         {
-          const unsigned int iterations = tree_newton_solver_->solve(current_time_);
+          const unsigned int iterations = tree_nox_solver_ != nullptr
+                                              ? tree_nox_solver_->solve(current_time_)
+                                              : tree_newton_solver_->solve(current_time_);
           if (Core::Communication::my_mpi_rank(comm_) == 0)
           {
             std::ostringstream residual_norm;
             residual_norm << std::scientific << std::setprecision(2)
-                          << tree_newton_solver_->last_residual_norm();
+                          << (tree_nox_solver_ != nullptr
+                                     ? tree_nox_solver_->last_residual_norm()
+                                     : tree_newton_solver_->last_residual_norm());
             std::cout << "Timestep " << step << "/" << n_timesteps_
                       << " | Newton iters: " << iterations << " | ||F||: " << residual_norm.str()
                       << "\n"
@@ -523,6 +549,7 @@ namespace ReducedLung
 
       std::unique_ptr<NoxSolver> nox_solver_;
       std::unique_ptr<TreeNewtonSolver> tree_newton_solver_;
+      std::unique_ptr<TreeNoxSolver> tree_nox_solver_;
       std::shared_ptr<TreeNewtonLinearSolver> tree_newton_linear_solver_;
       std::optional<ReducedLungTreeMetadata> tree_metadata_;
       const double dt_;
