@@ -29,7 +29,14 @@ void Adapter::StructureTimeLoop::integrate()
   while (not_finished())
   {
     // call the predictor
-    prepare_time_step();
+    const Solid::StepStatus prepare_status = prepare_time_step_with_status();
+    switch (perform_error_action(prepare_status))
+    {
+      case Solid::StepAction::retry_step:
+        continue;
+      case Solid::StepAction::accept_step:
+        break;  // do nothing
+    }
 
     // integrate time step, i.e. do corrector steps
     // after this step we hold disn_, etc

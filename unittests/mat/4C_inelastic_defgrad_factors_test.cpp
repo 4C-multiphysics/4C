@@ -24,17 +24,20 @@
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_mat_vplast_reform_johnsoncook.hpp"
+#include "4C_material_step_reduction_request.hpp"
 #include "4C_solid_ele_fibers.hpp"
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
+#include <mpi.h>
 #include <Teuchos_ParameterList.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <exception>
+#include <functional>
 #include <memory>
 #include <numbers>
 #include <optional>
@@ -68,7 +71,7 @@ namespace
         .res_tol = 1.0e-8,
         .incr_tol = 1.0e-8,
         .conv_check = ViscoplastUtils::LocalNewtonConvCheck::residual_and_increment_ratio,
-        .diver_cont = ViscoplastUtils::LocalNewtonDiverCont::stop,
+        .diver_cont = ViscoplastUtils::LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 100,
         .max_exceedance_fact_res_tol = 1.0e1,
         .max_exceedance_fact_incr_tol = 1.0e1,
@@ -302,7 +305,7 @@ namespace
         .res_tol = 1.0e-14,
         .incr_tol = 1.0e-14,
         .conv_check = ViscoplastUtils::LocalNewtonConvCheck::residual_and_increment_ratio,
-        .diver_cont = ViscoplastUtils::LocalNewtonDiverCont::stop,
+        .diver_cont = ViscoplastUtils::LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 100,
         .max_exceedance_fact_res_tol = 1.0e1,
         .max_exceedance_fact_incr_tol = 1.0e1,
@@ -341,6 +344,21 @@ namespace
     Core::LinAlg::Voigt::Stresses::matrix_to_vector(iCM, comparison.iCV);
 
     return comparison;
+  }
+
+  /// Run @p evaluation with enabled material step-reduction requests and expect it to request a
+  /// step reduction whose printed reason contains @p reason_substring.
+  void expect_step_reduction_request_with_message(
+      const std::function<void()>& evaluation, const std::string& reason_substring)
+  {
+    testing::internal::CaptureStdout();
+    const bool request_detected = Core::Mat::StepReduction::run_and_detect_synchronized_request(
+        true, [&]
+        { Core::Mat::StepReduction::run_and_synchronize_requests(MPI_COMM_WORLD, evaluation); });
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(request_detected);
+    EXPECT_THAT(output, testing::HasSubstr(reason_substring));
   }
 
 
@@ -1830,7 +1848,7 @@ namespace
         .conv_check = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
             LocalNewtonConvCheck::residual_and_increment_ratio,
         .diver_cont = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
-            LocalNewtonDiverCont::stop,
+            LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 0,
         .max_exceedance_fact_res_tol = 1.0e1,
         .max_exceedance_fact_incr_tol = 1.0e1,
@@ -1857,9 +1875,8 @@ namespace
     Core::LinAlg::Matrix<3, 3> iFin_other(unit_3x3);
 
     Core::LinAlg::Matrix<3, 3> iFin_result(Core::LinAlg::Initialization::zero);
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        material->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin_result),
-        Core::Exception,
+    expect_step_reduction_request_with_message([&]
+        { material->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin_result); },
         "Error in InelasticDefgradTransvIsotropElastViscoplast: Local Newton Loop did not converge "
         "for the given loop settings!");
   }
@@ -1990,9 +2007,9 @@ namespace
     Core::LinAlg::Matrix<3, 3> iFin_other(unit_3x3);
 
     Core::LinAlg::Matrix<3, 3> iFin_result(Core::LinAlg::Initialization::zero);
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        material->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin_result),
-        Core::Exception, "by more than the set exceedance tolerance");
+    expect_step_reduction_request_with_message([&]
+        { material->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin_result); },
+        "by more than the set exceedance tolerance");
   }
 
 
@@ -2004,7 +2021,7 @@ namespace
         .conv_check = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
             LocalNewtonConvCheck::residual,
         .diver_cont = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
-            LocalNewtonDiverCont::stop,
+            LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 2,
         .max_exceedance_fact_res_tol = 0.0,
         .max_exceedance_fact_incr_tol = 0.0,
@@ -2029,9 +2046,8 @@ namespace
     Core::LinAlg::Matrix<3, 3> iFin_other(unit_3x3);
 
     Core::LinAlg::Matrix<3, 3> iFin_result(Core::LinAlg::Initialization::zero);
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        material->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin_result),
-        Core::Exception,
+    expect_step_reduction_request_with_message([&]
+        { material->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin_result); },
         "Error in InelasticDefgradTransvIsotropElastViscoplast: Local Newton Loop did not converge "
         "for the given loop settings!");
   }
@@ -2044,7 +2060,7 @@ namespace
         .conv_check = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
             LocalNewtonConvCheck::residual,
         .diver_cont = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
-            LocalNewtonDiverCont::stop,
+            LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 2,
         .max_exceedance_fact_res_tol = 0.0,
         .max_exceedance_fact_incr_tol = 0.0,
@@ -2083,7 +2099,7 @@ namespace
         .conv_check = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
             LocalNewtonConvCheck::increment_ratio,
         .diver_cont = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
-            LocalNewtonDiverCont::stop,
+            LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 2,
         .max_exceedance_fact_res_tol = 0.0,
         .max_exceedance_fact_incr_tol = 0.0,
@@ -2108,9 +2124,8 @@ namespace
     Core::LinAlg::Matrix<3, 3> iFin_other(unit_3x3);
 
     Core::LinAlg::Matrix<3, 3> iFin_result(Core::LinAlg::Initialization::zero);
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        material->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin_result),
-        Core::Exception,
+    expect_step_reduction_request_with_message([&]
+        { material->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin_result); },
         "Error in InelasticDefgradTransvIsotropElastViscoplast: Local Newton Loop did not converge "
         "for the given loop settings!");
   }
@@ -2123,7 +2138,7 @@ namespace
         .conv_check = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
             LocalNewtonConvCheck::increment_ratio,
         .diver_cont = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
-            LocalNewtonDiverCont::stop,
+            LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 2,
         .max_exceedance_fact_res_tol = 0.0,
         .max_exceedance_fact_incr_tol = 0.0,
@@ -2173,7 +2188,7 @@ namespace
         .conv_check = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
             LocalNewtonConvCheck::residual_and_increment_ratio,
         .diver_cont = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
-            LocalNewtonDiverCont::stop,
+            LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 2,
         .max_exceedance_fact_res_tol = 0.0,
         .max_exceedance_fact_incr_tol = 0.0,
@@ -2198,9 +2213,8 @@ namespace
     Core::LinAlg::Matrix<3, 3> iFin_other(unit_3x3);
 
     Core::LinAlg::Matrix<3, 3> iFin_result(Core::LinAlg::Initialization::zero);
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        material->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin_result),
-        Core::Exception,
+    expect_step_reduction_request_with_message([&]
+        { material->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin_result); },
         "Error in InelasticDefgradTransvIsotropElastViscoplast: Local Newton Loop did not converge "
         "for the given loop settings!");
   }
@@ -2213,7 +2227,7 @@ namespace
         .conv_check = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
             LocalNewtonConvCheck::residual_and_increment_ratio,
         .diver_cont = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
-            LocalNewtonDiverCont::stop,
+            LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 2,
         .max_exceedance_fact_res_tol = 0.0,
         .max_exceedance_fact_incr_tol = 0.0,
@@ -2266,7 +2280,7 @@ namespace
         .conv_check = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
             LocalNewtonConvCheck::residual_and_increment_ratio,
         .diver_cont = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
-            LocalNewtonDiverCont::stop,
+            LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 50,
         .max_exceedance_fact_res_tol = 0.0,
         .max_exceedance_fact_incr_tol = 0.0,
@@ -2307,9 +2321,8 @@ namespace
     Core::LinAlg::Matrix<3, 3> iFin_result(Core::LinAlg::Initialization::zero);
 
     // the one-step formulation fails to converge
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        material_one_step->evaluate_inverse_inelastic_def_grad(&FM, iFin_other, iFin_result),
-        Core::Exception,
+    expect_step_reduction_request_with_message([&]
+        { material_one_step->evaluate_inverse_inelastic_def_grad(&FM, iFin_other, iFin_result); },
         "Local Newton evaluation has failed and there is no evaluation management strategy");
 
 
@@ -2335,8 +2348,8 @@ namespace
         .incr_tol = 1.0e-8,
         .conv_check = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonConvCheck::
             residual_and_increment_ratio,
-        .diver_cont =
-            Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonDiverCont::stop,
+        .diver_cont = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonDiverCont::
+            stop_and_request_step_reduction,
         .max_iter = 100,
         .max_exceedance_fact_res_tol = 0.0,
         .max_exceedance_fact_incr_tol = 0.0,
@@ -2377,9 +2390,11 @@ namespace
             .material;
     // the use of the elastic predictor fails to converge
     material_elastic_pred->pre_evaluate(params_list, context, 0, 0);
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        material_elastic_pred->evaluate_inverse_inelastic_def_grad(&FM, iFin_other, iFin_result),
-        Core::Exception,
+    expect_step_reduction_request_with_message(
+        [&]
+        {
+          material_elastic_pred->evaluate_inverse_inelastic_def_grad(&FM, iFin_other, iFin_result);
+        },
         "Local Newton evaluation has failed and there is no evaluation management strategy");
 
     // setup the material using the AEI with hardening integration + reestimation
@@ -2415,9 +2430,13 @@ namespace
     FOUR_C_EXPECT_NEAR(iFin_result, iFin_result_ref, 1.0e-10);
 
     material_aei_no_reestim->pre_evaluate(params_list, context, 0, 0);
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        material_aei_no_reestim->evaluate_inverse_inelastic_def_grad(&FM, iFin_other, iFin_result),
-        Core::Exception, "The re-estimation procedure has failed!");
+    expect_step_reduction_request_with_message(
+        [&]
+        {
+          material_aei_no_reestim->evaluate_inverse_inelastic_def_grad(
+              &FM, iFin_other, iFin_result);
+        },
+        "The re-estimation procedure has failed!");
   }
 
   /// Tests two challenging local integration scenarios using the Adaptive Estimate Interpolation
@@ -2434,8 +2453,8 @@ namespace
         .incr_tol = 1.0e-8,
         .conv_check = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonConvCheck::
             residual_and_increment_ratio,
-        .diver_cont =
-            Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonDiverCont::stop,
+        .diver_cont = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonDiverCont::
+            stop_and_request_step_reduction,
         .max_iter = 50,
         .max_exceedance_fact_res_tol = 0.0,
         .max_exceedance_fact_incr_tol = 0.0,
@@ -2516,10 +2535,13 @@ namespace
     FOUR_C_EXPECT_NEAR(iFin_result, iFin_result_ref, 1.0e-10);
 
     material_aei_fixed_hardening->pre_evaluate(params_list, context, 0, 0);
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        material_aei_fixed_hardening->evaluate_inverse_inelastic_def_grad(
-            &FM, iFin_other, iFin_result),
-        Core::Exception, "The re-estimation procedure has failed!");
+    expect_step_reduction_request_with_message(
+        [&]
+        {
+          material_aei_fixed_hardening->evaluate_inverse_inelastic_def_grad(
+              &FM, iFin_other, iFin_result);
+        },
+        "The re-estimation procedure has failed!");
   }
 
 
@@ -2534,8 +2556,8 @@ namespace
         .incr_tol = 1.0e-8,
         .conv_check = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonConvCheck::
             residual_and_increment_ratio,
-        .diver_cont =
-            Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonDiverCont::stop,
+        .diver_cont = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonDiverCont::
+            stop_and_request_step_reduction,
         .max_iter = 50,
         .max_exceedance_fact_res_tol = 0.0,
         .max_exceedance_fact_incr_tol = 0.0,
@@ -2596,10 +2618,13 @@ namespace
     iFin_result_ref(2, 2) = 1.76355271195;
 
     material_aei_no_substepping->pre_evaluate(params_list, context, 0, 0);
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        material_aei_no_substepping->evaluate_inverse_inelastic_def_grad(
-            &FM, iFin_other, iFin_result),
-        Core::Exception, "The re-estimation procedure has failed!");
+    expect_step_reduction_request_with_message(
+        [&]
+        {
+          material_aei_no_substepping->evaluate_inverse_inelastic_def_grad(
+              &FM, iFin_other, iFin_result);
+        },
+        "The re-estimation procedure has failed!");
 
     material_aei_with_substepping->pre_evaluate(params_list, context, 0, 0);
     material_aei_with_substepping->evaluate_inverse_inelastic_def_grad(
@@ -2940,7 +2965,7 @@ namespace
         .conv_check = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
             LocalNewtonConvCheck::residual_and_increment_ratio,
         .diver_cont = FourC::Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::
-            LocalNewtonDiverCont::stop,
+            LocalNewtonDiverCont::stop_and_request_step_reduction,
         .max_iter = 50,
         .max_exceedance_fact_res_tol = 1.0e1,
         .max_exceedance_fact_incr_tol = 1.0e1,

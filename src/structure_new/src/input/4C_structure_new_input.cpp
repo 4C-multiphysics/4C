@@ -284,6 +284,12 @@ namespace Solid
                                 "the non-convergence and continues anyway.",
                     .default_value = DivContAct::stop}),
 
+            parameter<bool>("ALLOW_MATERIAL_TIME_STEP_REDUCTION",
+                {.description =
+                        "Reduce the time-step size according to the time_step_control "
+                        "settings when a material requests step reduction during evaluation",
+                    .default_value = false}),
+
             deprecated_selection<Solid::NonlinSolTech>("NLNSOL",
                 {
                     {"vague", soltech_vague},

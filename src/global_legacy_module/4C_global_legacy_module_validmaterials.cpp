@@ -2846,7 +2846,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                         }),
                     parameter<ViscoplastUtils::LocalNewtonDiverCont>("DIVER_CONT",
                         {.description = "strategy to deal with divergence in the Local Newton Loop",
-                            .default_value = ViscoplastUtils::LocalNewtonDiverCont::stop,
+                            .default_value = ViscoplastUtils::LocalNewtonDiverCont::
+                                stop_and_request_step_reduction,
                             .store = in_struct(&ViscoplastUtils::LocalNewtonParams::diver_cont)
 
                         })

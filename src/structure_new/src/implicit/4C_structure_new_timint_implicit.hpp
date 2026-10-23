@@ -77,6 +77,8 @@ namespace Solid
       //! Prepare time step
       void prepare_time_step() override;
 
+      [[nodiscard]] Solid::StepStatus prepare_time_step_with_status() override;
+
       void reset_step() override;
 
       //! @name Accessors
