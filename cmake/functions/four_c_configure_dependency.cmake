@@ -38,13 +38,13 @@ macro(_propagate_internal_version_to_parent_scope _package_name_sanitized)
 endmacro()
 
 # This function checks for the existence of a file dependencies/supported_version/${_package_name}.txt and reports
-# whether the given hash is supported.
-function(four_c_check_dependency_version _package_name _package_name_sanitized _sha)
+# whether the given Git revision or release version is supported.
+function(four_c_check_dependency_version _package_name _package_name_sanitized _version_identifier)
   # First check if we have a user-overridden version.
   if(DEFINED "FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION")
     message(
       STATUS
-        "You specified to treat your version of ${_package_name} (hash ${_sha}) as internally numbered version "
+        "You specified to treat your version of ${_package_name} (identifier ${_version_identifier}) as internally numbered version "
         "${FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION}."
       )
     string(
@@ -103,12 +103,12 @@ function(four_c_check_dependency_version _package_name _package_name_sanitized _
         set(_latest_version ${_supported_internal_version})
       endif()
 
-      # Check if the hash matches the beginning of the first element as we might have a short _sha.
-      string(FIND ${_supported_sha} ${_sha} _sha_position)
-      if(${_sha_position} EQUAL 0)
+      # The identifier can be a Git revision, which may be abbreviated, or a release version.
+      string(FIND ${_supported_sha} ${_version_identifier} _sha_position)
+      if(${_sha_position} EQUAL 0 OR _supported_external_version STREQUAL _version_identifier)
         message(
           STATUS
-            "Identified 4C-internal version ${_supported_internal_version} of ${_package_name} (hash ${_sha}, package's own version name: ${_supported_external_version})."
+            "Identified 4C-internal version ${_supported_internal_version} of ${_package_name} (identifier ${_version_identifier}, package's own version name: ${_supported_external_version})."
           )
         if(${_index} EQUAL 0)
           message(STATUS "This is the latest supported version of ${_package_name}.")
@@ -132,7 +132,10 @@ function(four_c_check_dependency_version _package_name _package_name_sanitized _
       math(EXPR _index "${_index} + 1")
     endforeach()
     message(STATUS "")
-    message(STATUS "Could not identify your version of ${_package_name} with hash ${_sha}.")
+    message(
+      STATUS
+        "Could not identify your version of ${_package_name} with identifier ${_version_identifier}."
+      )
     message(STATUS "Supported versions are:")
     foreach(_supported_version ${_supported_versions})
       separate_arguments(_supported_version_split UNIX_COMMAND ${_supported_version})
