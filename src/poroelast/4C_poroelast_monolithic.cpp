@@ -34,6 +34,7 @@
 #include "4C_structure_aux.hpp"
 #include "4C_structure_new_model_evaluator_contact.hpp"
 #include "4C_utils_enum.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_Time.hpp>
 #include <Teuchos_TimeMonitor.hpp>
@@ -104,43 +105,7 @@ PoroElast::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& t
       Teuchos::getIntegralValue<Core::LinAlg::EquilibrationMethod>(poroparams, "EQUILIBRATION");
 
   strmethodname_ = Teuchos::getIntegralValue<Solid::DynamicType>(sdynparams, "DYNAMICTYPE");
-  no_penetration_ = false;
-  nit_contact_ = false;
-  // if inpar is set to nopenetration for contact!!! to be done!
-  // clean up as soon as old time integration is unused!
-  if (oldstructimint_)
-  {
-    if (structure_field()->meshtying_contact_bridge() != nullptr)
-    {
-      if (structure_field()->meshtying_contact_bridge()->have_contact())
-      {
-        auto* poro_lagrange_strategy = dynamic_cast<CONTACT::LagrangeStrategyPoro*>(
-            &structure_field()->meshtying_contact_bridge()->contact_manager()->get_strategy());
-        if (poro_lagrange_strategy)
-          no_penetration_ = poro_lagrange_strategy->has_poro_no_penetration();
-        else
-        {
-          auto* co_nitsche_strategy = dynamic_cast<CONTACT::NitscheStrategyPoro*>(
-              &structure_field()->meshtying_contact_bridge()->contact_manager()->get_strategy());
-          if (co_nitsche_strategy)
-          {
-            nit_contact_ = true;
-            no_penetration_ = co_nitsche_strategy->has_poro_no_penetration();
-          }
-        }
-      }
-    }
-  }
   blockrowdofmap_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
-
-  // contact no penetration constraint not yet works for non-matching structure and fluid
-  // discretizations
-  if (no_penetration_ and (not matchinggrid_))
-  {
-    FOUR_C_THROW(
-        "The contact no penetration constraint does not yet work for non-matching "
-        "discretizations!");
-  }
 }
 
 void PoroElast::Monolithic::do_time_step()
@@ -398,32 +363,6 @@ void PoroElast::Monolithic::extract_field_vectors(
 
 void PoroElast::Monolithic::setup_system()
 {
-  // new timint with nitsche contact. For old timint this is in the constructor but for new it has
-  // to be after poroalgo->read_restart(restart);
-  if ((!oldstructimint_) && structure_field()->have_model(Solid::model_contact))
-  {
-    auto& model_evaluator_contact = dynamic_cast<Solid::ModelEvaluator::Contact&>(
-        structure_field()->model_evaluator(Solid::model_contact));
-
-    std::shared_ptr<CONTACT::NitscheStrategyPoro> contact_strategy_nitsche_poro =
-        std::dynamic_pointer_cast<CONTACT::NitscheStrategyPoro>(
-            model_evaluator_contact.strategy_ptr());
-
-    if (contact_strategy_nitsche_poro != nullptr)
-    {
-      nit_contact_ = true;
-      no_penetration_ = contact_strategy_nitsche_poro->has_poro_no_penetration();
-    }
-  }
-
-  if (no_penetration_ && not(strmethodname_ == Solid::DynamicType::OneStepTheta))
-  {
-    FOUR_C_THROW(
-        "Porous contact with no penetration is only implemented for OneStepTheta. Please set "
-        "DYNAMICTYPE to OneStepTheta.");
-  }
-
-
   {
     // -------------------------------------------------------------create combined map
     std::vector<std::shared_ptr<const Core::LinAlg::Map>> vecSpaces;
@@ -472,6 +411,62 @@ void PoroElast::Monolithic::setup_system()
 
   setup_equilibration();
 }  // SetupSystem()
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void PoroElast::Monolithic::setup_poro_contact_flags()
+{
+  // initialize contact flags and adapt afterwards
+  nit_contact_ = false;
+  no_penetration_ = false;
+
+  // old time integration (clean-up after it's gone!)
+  if (oldstructimint_ && structure_field()->meshtying_contact_bridge() != nullptr &&
+      structure_field()->meshtying_contact_bridge()->have_contact())
+  {
+    auto* poro_lagrange_strategy = dynamic_cast<CONTACT::LagrangeStrategyPoro*>(
+        &structure_field()->meshtying_contact_bridge()->contact_manager()->get_strategy());
+    if (poro_lagrange_strategy)
+      no_penetration_ = poro_lagrange_strategy->has_poro_no_penetration();
+    else
+    {
+      auto* co_nitsche_strategy = dynamic_cast<CONTACT::NitscheStrategyPoro*>(
+          &structure_field()->meshtying_contact_bridge()->contact_manager()->get_strategy());
+      if (co_nitsche_strategy)
+      {
+        nit_contact_ = true;
+        no_penetration_ = co_nitsche_strategy->has_poro_no_penetration();
+      }
+    }
+  }
+  // new time integration with Nitsche contact
+  else if ((!oldstructimint_) && structure_field()->have_model(Solid::model_contact))
+  {
+    auto& model_evaluator_contact = dynamic_cast<Solid::ModelEvaluator::Contact&>(
+        structure_field()->model_evaluator(Solid::model_contact));
+
+    std::shared_ptr<CONTACT::NitscheStrategyPoro> contact_strategy_nitsche_poro =
+        std::dynamic_pointer_cast<CONTACT::NitscheStrategyPoro>(
+            model_evaluator_contact.strategy_ptr());
+
+    if (contact_strategy_nitsche_poro != nullptr)
+    {
+      nit_contact_ = true;
+      no_penetration_ = contact_strategy_nitsche_poro->has_poro_no_penetration();
+    }
+  }
+
+  // perform consistency checks for no-penetration constraint
+  if (no_penetration_)
+  {
+    FOUR_C_ASSERT_ALWAYS(strmethodname_ == Solid::DynamicType::OneStepTheta,
+        "Porous contact with no penetration is only implemented for OneStepTheta. Please set "
+        "DYNAMICTYPE to OneStepTheta.");
+    FOUR_C_ASSERT_ALWAYS(matchinggrid_,
+        "The contact no penetration constraint does not yet work for non-matching "
+        "discretizations!");
+  }
+}
 
 void PoroElast::Monolithic::setup_equilibration()
 {
@@ -2025,9 +2020,21 @@ void PoroElast::Monolithic::read_restart(const int step)
   // call base class
   PoroElast::PoroBase::read_restart(step);
 
+  // setup flags for poro-contact
+  setup_poro_contact_flags();
+
   // set states for porous contact
   // apply current velocity of fluid to ContactManager if contact problem
   if (no_penetration_) set_poro_contact_states();
 }
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void PoroElast::Monolithic::post_setup()
+{
+  PoroBase::post_setup();
+  setup_poro_contact_flags();
+}
+
 
 FOUR_C_NAMESPACE_CLOSE
