@@ -8,7 +8,9 @@
 #include "4C_porofluid_pressure_based_elast_scatra_function.hpp"
 
 #include "4C_global_data.hpp"
+#include "4C_io_input_spec.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_io_input_spec_validators.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_utils.hpp"
 #include "4C_utils_function_manager.hpp"
 
@@ -270,23 +272,48 @@ void PoroPressureBased::add_valid_poro_functions(Core::Utils::FunctionManager& f
           deprecated_selection<std::string>(
               "POROMULTIPHASESCATRA_FUNCTION", {"LUNG_OXYGEN_EXCHANGE_LAW"}),
           group("PARAMS",
-              {parameter<double>("rho_oxy"), parameter<double>("DiffAdVTLC"),
-                  parameter<double>("alpha_oxy"), parameter<double>("rho_air"),
-                  parameter<double>("rho_bl"), parameter<double>("n"), parameter<double>("P_oB50"),
-                  parameter<double>("NC_Hb"), parameter<double>("P_atmospheric"),
-                  parameter<double>("volfrac_blood_ref")}),
+              {parameter<double>("rho_oxy", {.validator = Validators::positive<double>()}),
+                  parameter<double>("DiffAdVTLC", {.validator = Validators::positive<double>()}),
+                  parameter<double>("alpha_oxy", {.validator = Validators::positive<double>()}),
+                  parameter<double>("rho_air", {.validator = Validators::positive<double>()}),
+                  parameter<double>("rho_bl", {.validator = Validators::positive<double>()}),
+                  parameter<double>(
+                      "n", {.description =
+                                   "Too high values of the exponent can lead to overflow depending "
+                                   "on the pressure and the units used in your problem type!"
+                                   "Physiological limit for oxygen in blood is set.",
+                               .validator = Validators::in_range(Validators::incl(1.0), 6.0)}),
+                  parameter<double>("P_oB50", {.validator = Validators::positive<double>()}),
+                  parameter<double>("NC_Hb"),
+                  parameter<double>("P_atmospheric", {.validator = Validators::positive<double>()}),
+                  parameter<double>(
+                      "volfrac_blood_ref", {.validator = Validators::positive<double>()})}),
       }),
       all_of({
           deprecated_selection<std::string>(
               "POROMULTIPHASESCATRA_FUNCTION", {"LUNG_CARBONDIOXIDE_EXCHANGE_LAW"}),
           group("PARAMS",
-              {parameter<double>("rho_CO2"), parameter<double>("DiffsolAdVTLC"),
-                  parameter<double>("pH"), parameter<double>("rho_air"),
-                  parameter<double>("rho_bl"), parameter<double>("rho_oxy"), parameter<double>("n"),
-                  parameter<double>("P_oB50"), parameter<double>("C_Hb"),
-                  parameter<double>("NC_Hb"), parameter<double>("alpha_oxy"),
-                  parameter<double>("P_atmospheric"), parameter<double>("ScalingFormmHg"),
-                  parameter<double>("volfrac_blood_ref")}),
+              {parameter<double>("rho_CO2", {.validator = Validators::positive<double>()}),
+                  parameter<double>("DiffsolAdVTLC", {.validator = Validators::positive<double>()}),
+                  parameter<double>("pH", {.validator = Validators::positive<double>()}),
+                  parameter<double>("rho_air", {.validator = Validators::positive<double>()}),
+                  parameter<double>("rho_bl", {.validator = Validators::positive<double>()}),
+                  parameter<double>("rho_oxy", {.validator = Validators::positive<double>()}),
+                  parameter<double>(
+                      "n", {.description =
+                                   "Too high values of the exponent can lead to overflow depending "
+                                   "on the pressure and the units used in your problem type! "
+                                   "Physiological limit for oxygen in blood is set.",
+                               .validator = Validators::in_range(Validators::incl(1.0), 6.0)}),
+                  parameter<double>("P_oB50", {.validator = Validators::positive<double>()}),
+                  parameter<double>("C_Hb", {.validator = Validators::positive<double>()}),
+                  parameter<double>("NC_Hb", {.validator = Validators::positive<double>()}),
+                  parameter<double>("alpha_oxy", {.validator = Validators::positive<double>()}),
+                  parameter<double>("P_atmospheric", {.validator = Validators::positive<double>()}),
+                  parameter<double>(
+                      "ScalingFormmHg", {.validator = Validators::positive<double>()}),
+                  parameter<double>(
+                      "volfrac_blood_ref", {.validator = Validators::positive<double>()})}),
       }),
   });
 

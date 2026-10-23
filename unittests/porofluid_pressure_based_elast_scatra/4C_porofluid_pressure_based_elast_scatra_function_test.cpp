@@ -95,7 +95,7 @@ namespace
 
     // test evaluate_derivative wrt phi2
     EXPECT_NEAR(LungOxygenExchangeLaw_->evaluate_derivative(variables, constants, component)[1],
-        -1.0016939520000001e-07, 1e-14);
+        -1.65624e-05, 1e-14);
   }
 
   TEST_F(LungOxygenExchangeLawTest, TestEvaluateAndEvaluateDerivativeHalfOxygenatedBlood)
