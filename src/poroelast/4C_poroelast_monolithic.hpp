@@ -241,6 +241,8 @@ namespace PoroElast
     //! read restart data
     void read_restart(const int step) override;
 
+    void post_setup() override;
+
    protected:
     //! Aitken
     void aitken();
@@ -338,6 +340,9 @@ namespace PoroElast
 
 
     //! @name poro-contact
+
+    //! setup flags associated with contact
+    void setup_poro_contact_flags();
 
     //! apply current velocity of fluid  to ContactManager if contact problem
     void set_poro_contact_states();

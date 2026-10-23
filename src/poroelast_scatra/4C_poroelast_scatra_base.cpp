@@ -86,11 +86,7 @@ PoroElastScaTra::PoroScatraBase::PoroScatraBase(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroElastScaTra::PoroScatraBase::post_setup()
-{
-  // call post_setup routine of the structure field
-  structure_field()->post_setup();
-}
+void PoroElastScaTra::PoroScatraBase::post_setup() { poro_->post_setup(); }
 
 
 /*----------------------------------------------------------------------*

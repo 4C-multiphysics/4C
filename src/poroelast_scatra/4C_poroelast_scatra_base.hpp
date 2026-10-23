@@ -78,7 +78,7 @@ namespace PoroElastScaTra
     /*!
      * @brief Perform all necessary tasks after initializing the
      * object. Currently, this only calls the post_setup routine of
-     * the structure field.
+     * the poro-elastic problem.
      */
     void post_setup();
 
