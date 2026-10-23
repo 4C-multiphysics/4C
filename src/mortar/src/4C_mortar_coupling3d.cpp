@@ -2476,7 +2476,8 @@ bool Mortar::Coupling3d::polygon_clipping_convex_hull(std::vector<Vertex>& poly1
     // - this yields the final clip polygon
     // - sanity of the generated output is checked
     //**********************************************************************
-    Mortar::sort_convex_hull_points(out, transformed, collconvexhull, respoly, tol);
+    for (int point_index : Mortar::sort_convex_hull_points(transformed, tol))
+      respoly.push_back(collconvexhull[point_index]);
   }
 
   // **********************************************************************

@@ -15,6 +15,7 @@
 #include "4C_mortar_coupling3d_classes.hpp"
 
 #include <memory>
+#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -30,30 +31,18 @@ namespace Mortar
 {
 
   /*!
-  \brief Sort vector in ascending order
+  \brief Compute the convex hull of a set of points in 2D
 
-  This routine is taken from Trilinos MOERTEL package.
+  Corners of the hull that form almost straight lines with their neighbors are removed.
 
-  \param dlist (in): vector to be sorted (unsorted on input, sorted on output)
-  \param N (in):     length of vector to be sorted
-  \param list2 (in): another vector which is sorted accordingly
+  \param coordinates (in): coordinates of the points. First index is the coordinate direction,
+  second index is the point number
+  \param clipping_tolerance (in): tolerance used for removing almost straight corners
+  \return indices of the points on the hull in clockwise order (less than three if the hull
+  degenerates to a line or a point)
   */
-  void sort(double* dlist, int N, int* list2);
-
-
-  /*!
-  \brief Convex hull points are sorted in order to obtain final clip polygon
-
-  \param out (in): bool to switch output on/off
-  \param transformed (in): coordinates of vertex objects transformed into auxiliary plane
-  \param collconvexhull (in): vector of vertex objects to be sorted
-  \param respoly (out): vector of vertex objects for result polygon
-  \param tol (in): clipping tolerance for close vertices detection
-  \return number of removed points from collconvexhull
-
-  */
-  int sort_convex_hull_points(bool out, Core::LinAlg::SerialDenseMatrix& transformed,
-      std::vector<Vertex>& collconvexhull, std::vector<Vertex>& respoly, double& tol);
+  std::vector<int> sort_convex_hull_points(
+      const Core::LinAlg::SerialDenseMatrix& coordinates, double clipping_tolerance);
 
   namespace Utils
   {
