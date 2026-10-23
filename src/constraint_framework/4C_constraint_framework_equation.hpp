@@ -26,19 +26,16 @@ namespace Constraints::SubmodelEvaluator
     //! Constructor
     ConstraintEquationBase() = default;
 
-    /*! \brief Add the penalty stiffness contribution to the constraint_vector and the
-     * coupling-stiffness
+    /*! \brief Assemble the coefficients of the constraint equation into \f$Q_{dL}\f$ and
+     * \f$Q_{Ld}\f$
      *
-     * @param [in]  \f$Q_{dd}\f$ coupling-stiffnes matrix
-     * @param [in]  \f$Q_{dL}\f$ coupling-stiffnes matrix
-     * @param [in]  \f$Q_{Ld}\f$ coupling-stiffnes matrix
-     * @param [in] constraint_vector constraint vector
-     * @param [in] displacements \f$D_{n+1}\f$
+     * @param [in,out] Q_dL coupling-stiffness matrix \f$Q_{dL}\f$ (rows: dofs, columns: constraint
+     * equations)
+     * @param [in,out] Q_Ld coupling-stiffness matrix \f$Q_{Ld}\f$ (rows: constraint equations,
+     * columns: dofs)
      */
-    virtual void evaluate_equation(Core::LinAlg::SparseMatrix& Q_dd,
-        Core::LinAlg::SparseMatrix& Q_dL, Core::LinAlg::SparseMatrix& Q_Ld,
-        Core::LinAlg::Vector<double>& constraint_vector,
-        const Core::LinAlg::Vector<double>& D_np1) = 0;
+    virtual void evaluate_equation(
+        Core::LinAlg::SparseMatrix& Q_dL, Core::LinAlg::SparseMatrix& Q_Ld) = 0;
 
     /*! \brief Return the number of constraints the object contains
      *
@@ -82,9 +79,8 @@ namespace Constraints::SubmodelEvaluator
     LinearCoupledEquation(int id, const std::vector<int>& dofs, std::vector<double> coefficients);
 
     //! derived
-    void evaluate_equation(Core::LinAlg::SparseMatrix& Q_dd, Core::LinAlg::SparseMatrix& Q_dL,
-        Core::LinAlg::SparseMatrix& Q_Ld, Core::LinAlg::Vector<double>& constraint_vector,
-        const Core::LinAlg::Vector<double>& D_np1) override;
+    void evaluate_equation(
+        Core::LinAlg::SparseMatrix& Q_dL, Core::LinAlg::SparseMatrix& Q_Ld) override;
 
    private:
     //! Struct with Term data: Coef, RowID, DofID
