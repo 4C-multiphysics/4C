@@ -182,7 +182,7 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_sources_to_targets_pr
 
     // map from global targetnodeids (on this proc) to global sourcenodeids
     // for a single condition
-    std::map<int, std::vector<int>> midtosid;
+    std::map<int, std::vector<int>> target_to_source_node_gids;
 
     // pointers to target and source condition
     const Core::Conditions::Condition* targetcond = nullptr;
@@ -230,8 +230,9 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_sources_to_targets_pr
           // possible angles of rotation for source plane for each pbc pair
           std::vector<double> rotangles(numpbcpairs_);
 
-          // absolute node matching tolerance for octree
-          double abs_tol = 0.0;
+          // node matching tolerance for octree expressed in terms of the characteristic mesh length
+          // (minimum distance between adjacent nodes)
+          double tol_in_mesh_length_unit = 0.0;
 
           // a toggle to indicate whether tolerance for octree was already set,
           // if so check if all values are equal
@@ -342,23 +343,24 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_sources_to_targets_pr
               }
 
 
-              // set tolerance for octree
-              const double tol = mysurfpbc->parameters().get<double>("ABSTREETOL");
+              // set tolerance for octree expressed in terms of the characteristic mesh scale
+              // (minimum distance between adjacent nodes)
+              const double tol = mysurfpbc->parameters().get<double>("TREETOL");
 
               if (!tol_set)
               {
-                abs_tol = tol;
+                tol_in_mesh_length_unit = tol;
 
                 tol_set = true;
               }
               else
               {
-                if (fabs(abs_tol - tol) > 1e-5)
+                if (fabs(tol_in_mesh_length_unit - tol) > 1e-5)
                 {
                   FOUR_C_THROW(
                       "none matching tolerances {:12.5e} neq {:12.5e} for nodmatching octree. All "
                       "values in direction {} have to match\n",
-                      abs_tol, tol, plane.c_str());
+                      tol_in_mesh_length_unit, tol, plane.c_str());
                 }
               }
             }  // end if i am the right condition in the right layer
@@ -428,23 +430,23 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_sources_to_targets_pr
 
           // clear map from global targetnodeids (on this proc) to global
           // sourcenodeids --- it belongs to this target source pair!!!
-          midtosid.clear();
+          target_to_source_node_gids.clear();
 
           if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_ &&
               pbcid == numpbcpairs_ - 1)
           {
-            std::cout << " creating layer " << nlayer << " of midtosid-map in " << plane
-                      << " direction ... ";
+            std::cout << " creating layer " << nlayer << " of target_to_source_node_gids-map in "
+                      << plane << " direction ... ";
             fflush(stdout);
           }
 
           // get map target on this proc -> source on some proc
-          create_node_coupling_for_single_pbc(
-              midtosid, targetnodeids, sourcenodeids, dofsforpbcplane, rotangles[0], abs_tol);
+          create_node_coupling_for_single_pbc(target_to_source_node_gids, targetnodeids,
+              sourcenodeids, dofsforpbcplane, rotangles[0], tol_in_mesh_length_unit);
 
           if (Core::Communication::num_mpi_ranks(discret_->get_comm()) == 1)
           {
-            if (targetnodeids.size() != midtosid.size())
+            if (targetnodeids.size() != target_to_source_node_gids.size())
             {
               // before throwing FOUR_C_THROW, print helpful information to screen
               for (size_t i = 0; i < targetnodeids.size(); i++)
@@ -452,7 +454,8 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_sources_to_targets_pr
                 int mid = targetnodeids[i];
                 bool found = false;
                 std::map<int, std::vector<int>>::iterator curr;
-                for (curr = midtosid.begin(); curr != midtosid.end(); ++curr)
+                for (curr = target_to_source_node_gids.begin();
+                    curr != target_to_source_node_gids.end(); ++curr)
                 {
                   if (curr->first == mid)
                   {
@@ -463,13 +466,13 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_sources_to_targets_pr
                 if (not found)
                 {
                   const auto& x = discret_->g_node(mid)->x();
-                  std::cout << "\ntarget node not found in midtosid list: " << mid
+                  std::cout << "\ntarget node not found in target_to_source_node_gids list: " << mid
                             << "  coord: x=" << x[0] << " y=" << x[1] << " z=" << x[2];
                 }
               }
               // now it is time for the   FOUR_C_THROW
-              FOUR_C_THROW("have {} targets in midtosid list, {} expected\n", midtosid.size(),
-                  targetnodeids.size());
+              FOUR_C_THROW("have {} targets in target_to_source_node_gids list, {} expected\n",
+                  target_to_source_node_gids.size(), targetnodeids.size());
             }
           }
 
@@ -487,7 +490,7 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_sources_to_targets_pr
           // of all previously processed periodic boundary conditions.
           // Redistribute the nodes (rownodes+ghosting)
           // Assign the same degrees of freedom to coupled nodes
-          add_connectivity(midtosid, num);
+          add_connectivity(target_to_source_node_gids, num);
 
           if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_ &&
               pbcid == numpbcpairs_ - 1)
@@ -524,9 +527,9 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_sources_to_targets_pr
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::Conditions::PeriodicBoundaryConditions::create_node_coupling_for_single_pbc(
-    std::map<int, std::vector<int>>& midtosid, const std::vector<int> targetnodeids,
-    const std::vector<int> sourcenodeids, const std::vector<int> dofsforpbcplane,
-    const double rotangle, const double abstol)
+    std::map<int, std::vector<int>>& target_to_source_node_gids,
+    const std::vector<int> targetnodeids, const std::vector<int> sourcenodeids,
+    const std::vector<int> dofsforpbcplane, const double rotangle, const double abstol)
 {
   // these are just parameter definitions for the octree search algorithm
   double tol = abstol;
@@ -550,7 +553,7 @@ void Core::Conditions::PeriodicBoundaryConditions::create_node_coupling_for_sing
   {
     // create map from gid targetnode -> gid corresponding sourcenode
     nodematchingoctree.create_global_entity_matching(
-        sourcenodeids, dofsforpbcplane, rotangle, midtosid);
+        sourcenodeids, dofsforpbcplane, rotangle, target_to_source_node_gids);
   }
 }
 
@@ -558,7 +561,7 @@ void Core::Conditions::PeriodicBoundaryConditions::create_node_coupling_for_sing
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
-    std::map<int, std::vector<int>>& midtosid, const int pbcid)
+    std::map<int, std::vector<int>>& target_to_source_node_gids, const int pbcid)
 {
   TEUCHOS_FUNC_TIME_MONITOR("Conditions::PeriodicBoundaryConditions::add_connectivity");
 
@@ -580,7 +583,8 @@ void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
     int sourceid;
     bool alreadyinlist;
 
-    for (iter = midtosid.begin(); iter != midtosid.end(); ++iter)
+    for (iter = target_to_source_node_gids.begin(); iter != target_to_source_node_gids.end();
+        ++iter)
     {
       // get id of targetnode and sourcenode
       targetid = iter->first;
@@ -614,7 +618,7 @@ void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
           }  // end if not in map
         }
       }
-    }  // end insert entries of midtosid into the allcoupledrownodes map
+    }  // end insert entries of target_to_source_node_gids into the allcoupledrownodes map
 
     //---------------------------------------------------------------
     //     COMPLETE MATCHING FOR NODES WITH MORE THAN ONE PBC
@@ -636,7 +640,8 @@ void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
         // -> 1) create a list of multiple target
         // Communicate multiple couplings for completion...
         std::map<int, std::vector<int>> multiplecouplings;
-        for (iter = midtosid.begin(); iter != midtosid.end(); ++iter)
+        for (iter = target_to_source_node_gids.begin(); iter != target_to_source_node_gids.end();
+            ++iter)
         {
           // get id of targetnode and the node itself
           targetid = iter->first;

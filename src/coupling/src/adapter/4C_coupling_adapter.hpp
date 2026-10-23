@@ -16,6 +16,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -116,11 +117,11 @@ namespace Coupling::Adapter
      *  in more target nodes that source nodes as long as there is one
      *  target node for each source node.
      *
-     *  We need some way to guess the tolerance for the octree. It must not be
-     *  too small, otherwise we won't find matching nodes. Too large a tolerance
-     *  will not hurt that much. It just means we will have to test more nodes.
-     *  (But it could hurt, if the geometry is very small. It should be
-     *   around the size of the smallest element)
+     *  We may specify the tolerance for the node matching octree, which is then scaled internally
+     * to account for the underlying mesh scale (optional with a specified default). Note that it
+     * must not be too small, otherwise we won't find matching nodes in some cases. Choosing it too
+     * large may also lead to problems during node matching, i.e., some source nodes may not find a
+     * match!
      *
      *  \param target_dis   (i) target side mesh
      *  \param source_dis    (i) source side mesh
@@ -135,7 +136,7 @@ namespace Coupling::Adapter
         const Core::FE::Discretization& source_dis, const std::vector<int>& target_nodes,
         const std::vector<int>& source_nodes, const std::vector<int>& target_dofs,
         const std::vector<int>& source_dofs, const bool matchall = true,
-        const double tolerance = 1.e-3, const int target_dofset_number = 0,
+        const std::optional<double> tolerance = std::nullopt, const int target_dofset_number = 0,
         const int source_dofset_number = 0);
 
     /*! \brief Setup coupling of given nodes
@@ -148,7 +149,7 @@ namespace Coupling::Adapter
     void setup_coupling(const Core::FE::Discretization& target_dis,
         const Core::FE::Discretization& source_dis, const std::vector<int>& target_nodes,
         const std::vector<int>& source_nodes, const int numdof, const bool matchall = true,
-        const double tolerance = 1.e-3, const int target_dofset_number = 0,
+        const std::optional<double> tolerance = std::nullopt, const int target_dofset_number = 0,
         const int source_dofset_number = 0);
 
     /*! \brief Setup coupling of given nodes
@@ -161,9 +162,11 @@ namespace Coupling::Adapter
      *  in more target nodes that source nodes as long as there is one
      *  target node for each source node.
      *
-     *  We need some way to guess the tolerance for the octree. It must not be
-     *  too small, otherwise we won't find matching nodes. Too large a tolerance
-     *  will not hurt that much. It just means we will have to test more nodes.
+     *  We may specify the tolerance for the node matching octree, which is then scaled internally
+     * to account for the underlying mesh scale (optional with a specified default). Note that it
+     * must not be too small, otherwise we won't find matching nodes in some cases. Choosing it too
+     * large may also lead to problems during node matching, i.e., some source nodes may not find a
+     * match!
      *
      *  \param target_dis   (i) target side mesh
      *  \param source_dis    (i) source side mesh
@@ -176,7 +179,7 @@ namespace Coupling::Adapter
     void setup_coupling(const Core::FE::Discretization& target_dis,
         const Core::FE::Discretization& source_dis, const Core::LinAlg::Map& target_nodes,
         const Core::LinAlg::Map& source_nodes, const int numdof, const bool matchall = true,
-        const double tolerance = 1.e-3, const int target_dofset_number = 0,
+        const std::optional<double> tolerance = std::nullopt, const int target_dofset_number = 0,
         const int source_dofset_number = 0);
 
     /*! \brief Setup coupling of given nodes and node maps
@@ -246,7 +249,7 @@ namespace Coupling::Adapter
         const Core::FE::Discretization& source_dis,
         const std::vector<std::vector<int>>& target_nodes_vec,
         const std::vector<std::vector<int>>& source_nodes_vec, const int numdof,
-        const bool matchall = true, const double tolerance = 1.0e-3,
+        const bool matchall = true, const std::optional<double> tolerance = std::nullopt,
         const int target_dofset_number = 0, const int source_dofset_number = 0);
 
     /*! Setup coupling based on dof maps. This can be used if no search is required anymore and
@@ -503,6 +506,14 @@ namespace Coupling::Adapter
     std::shared_ptr<Core::LinAlg::SparseMatrix> matmm_trans_;
     std::shared_ptr<Core::LinAlg::SparseMatrix> matsm_trans_;
 
+    //@}
+
+    //! @name Coupling parameters
+    //@{
+
+    //! default tolerance to use for node matching using the octree utilities in the unit of the
+    //! underlying mesh length
+    const double node_matching_tolerance_ = 1.0e-2;
     //@}
   };
 }  // namespace Coupling::Adapter

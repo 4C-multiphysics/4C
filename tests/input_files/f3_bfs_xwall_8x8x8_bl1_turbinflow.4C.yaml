@@ -197,42 +197,42 @@ DESIGN SURF PERIODIC BOUNDARY CONDITIONS:
     PLANE: "yz"
     LAYER: 1
     ANGLE: 0
-    ABSTREETOL: 1e-09
+    TREETOL: 1e-09
   - E: 7
     ID: 1
     MASTER_OR_SLAVE: "Slave"
     PLANE: "yz"
     LAYER: 1
     ANGLE: 0
-    ABSTREETOL: 1e-09
+    TREETOL: 1e-09
   - E: 8
     ID: 2
     MASTER_OR_SLAVE: "Master"
     PLANE: "xy"
     LAYER: 1
     ANGLE: 0
-    ABSTREETOL: 1e-09
+    TREETOL: 1e-09
   - E: 9
     ID: 2
     MASTER_OR_SLAVE: "Slave"
     PLANE: "xy"
     LAYER: 1
     ANGLE: 0
-    ABSTREETOL: 1e-09
+    TREETOL: 1e-09
   - E: 10
     ID: 3
     MASTER_OR_SLAVE: "Master"
     PLANE: "xy"
     LAYER: 1
     ANGLE: 0
-    ABSTREETOL: 1e-09
+    TREETOL: 1e-09
   - E: 11
     ID: 3
     MASTER_OR_SLAVE: "Slave"
     PLANE: "xy"
     LAYER: 1
     ANGLE: 0
-    ABSTREETOL: 1e-09
+    TREETOL: 1e-09
 DESIGN SURF TURBULENT INFLOW TRANSFER:
   - E: 7
     ID: 1

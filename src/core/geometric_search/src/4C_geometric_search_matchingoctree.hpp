@@ -77,24 +77,33 @@ namespace Core::GeometricSearch
     octree element would be split into two children (which could be leaves
     on their own)
 
-    If an entity id is associated with a child of an octree element, it is
-    checked whether its coordinate is inside the bounding box of the
-    octree element. This is done only with a tolerance tol to ensure that
-    each node is guaranteed to be owned by one of the children and could
-    be found later on. The same tolerance is used for finding the smallest
-    distance between two nodes. Thus, it should be of the order or magnitude
-    of the smallest element size.
+    The matching octree routines use a specified tolerance for various operations:
+    - Inflation of the bounding box of the octree root;
+    - Splitting of elements: when an octree element is split into two children, they overlap by 2 *
+    tolerance across the cut plane. This ensures that each entity lies inside at least one
+    octree leaf.
+    - Finding entity matches: used for assigning source <-> target entity matches based on distances
+    scaled using this tolerance (see implementation of \ref search_closest_entity_on_this_proc, \ref
+    find_match, \ref OctreeElement::search_closest_node_in_leaf)
+
+    Note that the input tolerance is specified in the underlying mesh length unit, i.e., it is
+ subsequently converted to an absolute tolerance using the characteristic mesh length of the
+ matching octree object (e.g., the minimum distance between nodes for node matching). The
+ characteristic mesh length is currently rank-local, but it should be fine for
+    matching entities on each rank. This procedure and the overall octree matching only currently
+ works if the nodes have adjacent elements; alternative fallbacks would be possible for isolated
+ nodes, such as characteristic length approximations based on the bounding box.
 
 
     \param   actdis         (i) discretisation
     \param   target_node_ids   (i) list of target entity ids
     \param   maxnodeperleaf  (i) parameter for octree
-    \param   tol            (i) tolerance for octree
-
+    \param   tolerance_in_mesh_length_unit            (i) tolerance for octree in the underlying
+ mesh length unit
     \return void  */
     virtual int init(const Core::FE::Discretization& actdis,
-        const std::vector<int>& target_node_ids, const int maxnodeperleaf = 150,
-        const double tol = 1e-08);
+        const std::vector<int>& target_node_ids, const int maxnodeperleaf,
+        const double tolerance_in_mesh_length_unit);
 
     //! setup this class
     virtual int setup();
@@ -130,9 +139,6 @@ namespace Core::GeometricSearch
     virtual void calc_point_coordinate(
         const Core::FE::Discretization* dis, const int id, double* coord) = 0;
 
-    //! calc unique coordinate of entity
-    virtual void calc_point_coordinate(Core::Communication::ParObject* entity, double* coord) = 0;
-
     //! check if entity is on calling proc
     virtual bool check_have_entity(const Core::FE::Discretization* dis, const int id) = 0;
 
@@ -147,8 +153,14 @@ namespace Core::GeometricSearch
     virtual int check_valid_entity_type(std::shared_ptr<Core::Communication::ParObject> o) = 0;
 
     //! create an octree element
-    virtual std::shared_ptr<OctreeElement> create_octree_element(std::vector<int>& nodeidstoadd,
-        Core::LinAlg::SerialDenseMatrix& boundingboxtoadd, int layer) = 0;
+    virtual std::shared_ptr<OctreeElement> create_octree_element(
+        const std::vector<int>& nodeidstoadd, Core::LinAlg::SerialDenseMatrix& boundingboxtoadd,
+        int layer) = 0;
+
+    //! characteristic mesh length: used to obtain the absolute octree tolerance from the given
+    //! tolerance in mesh length unit. Note that this is rank-local, but it should be fine for
+    //! matching entities on each rank.
+    [[nodiscard]] virtual double characteristic_mesh_length() const = 0;
 
     //@}
 
@@ -232,8 +244,11 @@ namespace Core::GeometricSearch
    protected:
     //! \brief all nodes in leaves are nodes of this discretization
     const Core::FE::Discretization* discret_;
-    //! \brief order of magnitude of smallest element size (used for tolerances)
+    //! \brief absolute tolerance used for several bounding box and matching functionalities
     double tol_;
+    /// tolerance used for several bounding box and matching functionalities, in terms of the
+    /// characteristic mesh length
+    double tol_in_mesh_length_unit_;
     //! \brief root of the local search tree
     std::shared_ptr<OctreeElement> octreeroot_;
     //! \brief coordinate of one point in the target plane
@@ -291,8 +306,7 @@ namespace Core::GeometricSearch
     void calc_point_coordinate(
         const Core::FE::Discretization* dis, const int id, double* coord) override;
 
-    //! calc unique coordinate of Node
-    void calc_point_coordinate(Core::Communication::ParObject* entity, double* coord) override;
+    [[nodiscard]] double characteristic_mesh_length() const override;
 
     //! check if node with gid = id is on calling proc
     bool check_have_entity(const Core::FE::Discretization* dis, const int id) override;
@@ -308,7 +322,7 @@ namespace Core::GeometricSearch
     int check_valid_entity_type(std::shared_ptr<Core::Communication::ParObject> o) override;
 
     //! create an octree element
-    std::shared_ptr<OctreeElement> create_octree_element(std::vector<int>& nodeidstoadd,
+    std::shared_ptr<OctreeElement> create_octree_element(const std::vector<int>& nodeidstoadd,
         Core::LinAlg::SerialDenseMatrix& boundingboxtoadd, int layer) override;
 
   };  // class NodeMatchingOctree
@@ -326,8 +340,7 @@ namespace Core::GeometricSearch
     void calc_point_coordinate(
         const Core::FE::Discretization* dis, const int id, double* coord) override;
 
-    //! calc unique coordinate of entity
-    void calc_point_coordinate(Core::Communication::ParObject* entity, double* coord) override;
+    [[nodiscard]] double characteristic_mesh_length() const override;
 
     //! check if element with gid = id is on calling proc
     bool check_have_entity(const Core::FE::Discretization* dis, const int id) override;
@@ -343,7 +356,7 @@ namespace Core::GeometricSearch
     int check_valid_entity_type(std::shared_ptr<Core::Communication::ParObject> o) override;
 
     //! create an octree element
-    std::shared_ptr<OctreeElement> create_octree_element(std::vector<int>& nodeidstoadd,
+    std::shared_ptr<OctreeElement> create_octree_element(const std::vector<int>& nodeidstoadd,
         Core::LinAlg::SerialDenseMatrix& boundingboxtoadd, int layer) override;
 
    private:
@@ -398,7 +411,7 @@ namespace Core::GeometricSearch
     \param  tol             (i) Tolerance for octree
 
     \return  int  */
-    virtual int init(const Core::FE::Discretization& actdis, std::vector<int>& nodeids,
+    virtual int init(const Core::FE::Discretization& actdis, const std::vector<int>& nodeids,
         const Core::LinAlg::SerialDenseMatrix& boundingbox, const int layer,
         const int maxnodeperleaf, const double tol);
 

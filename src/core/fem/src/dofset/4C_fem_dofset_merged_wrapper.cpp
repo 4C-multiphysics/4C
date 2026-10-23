@@ -78,8 +78,11 @@ int Core::DOFSets::DofSetMergedWrapper::assign_degrees_of_freedom(
 
 
   // initialize search tree
+  const int max_nodes_per_octree_leaf = 150;
+  const double octree_tolerance =
+      1.0e-2;  // in the unit of the underlying mesh length (minimum distance between nodes)
   auto tree = Core::GeometricSearch::NodeMatchingOctree();
-  tree.init(*source_dis_, target_nodes, 150);
+  tree.init(*source_dis_, target_nodes, max_nodes_per_octree_leaf, octree_tolerance);
   tree.setup();
 
   // match target and source nodes using octtree
@@ -139,7 +142,7 @@ int Core::DOFSets::DofSetMergedWrapper::assign_degrees_of_freedom(
 
 
   // initialize search tree
-  tree.init(*source_dis_, target_nodes, 150);
+  tree.init(*source_dis_, target_nodes, max_nodes_per_octree_leaf, octree_tolerance);
   tree.setup();
 
   // match target and source nodes using octtree

@@ -359,7 +359,7 @@ The general case is used in a number of test files for various physics, see the 
 
 {{ section_dump(input_file6_content, "DESIGN SURF PERIODIC BOUNDARY CONDITIONS") }}
 
-Here, nodes at either side must be at equal plane coordinates within the tolerance given by `ABSTREETOL`.
+Here, nodes at either side must be at equal plane coordinates within the tolerance given by `TREETOL` expressed in terms of the characteristic mesh length, i.e., the minimum distance between adjacent nodes.
 The definition of `ANGLE` is used for rotational symmetry.
 For this case, the master must always be in the defined `PLANE`, and the slave is rotated by the given angle, while the same plane must be given.
 
