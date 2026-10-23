@@ -172,9 +172,9 @@ namespace CONTACT
     //@}
 
     // residual and increment norms
-    double mech_contact_res_;
-    double mech_contact_incr_;
-    double thermo_contact_incr_;
+    double mech_contact_res_ = 0.;
+    double mech_contact_incr_ = 0.;
+    double thermo_contact_incr_ = 0.;
 
    protected:
     // don't want = operator and cctor
