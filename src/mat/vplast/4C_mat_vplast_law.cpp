@@ -21,7 +21,7 @@ namespace ViscoplastUtils = Mat::InelasticDefgradTransvIsotropElastViscoplastUti
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 Mat::Viscoplastic::Law::Law(Core::Mat::PAR::Parameter* params,
-    const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings
+    const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
         error_registration_settings)
     : error_registration_settings_(error_registration_settings), params_(params)
 {
@@ -33,8 +33,8 @@ Mat::Viscoplastic::Law::Law() : error_registration_settings_(), params_(nullptr)
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
-std::shared_ptr<Mat::Viscoplastic::Law> Mat::Viscoplastic::Law::factory(int matnum,
-    const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings
+std::shared_ptr<Mat::Viscoplastic::Law> Mat::Viscoplastic::Law::factory(const int matnum,
+    const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
         error_registration_settings)
 {
   // for the sake of safety
@@ -120,7 +120,7 @@ std::optional<double> Mat::Viscoplastic::Law::integrate_plastic_strain(
     // strain
     plastic_strain_rate_derivs =
         evaluate_derivatives_of_plastic_strain_rate(input_integrate_plastic_strain.equiv_stress,
-            plastic_strain, input_integrate_plastic_strain.step, err_status, false);
+            plastic_strain, input_integrate_plastic_strain.step, err_status);
     deriv_plastic_strain_rate = plastic_strain_rate_derivs.deriv_plastic_strain;
 
     // return directly when encountering overflow error -> this will be handled by the estimate

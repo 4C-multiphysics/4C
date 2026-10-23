@@ -105,7 +105,7 @@ namespace Mat
     {
      public:
       explicit ReformulatedJohnsonCook(Core::Mat::PAR::Parameter* params,
-          const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings
+          const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
               error_registration_settings);
 
       [[nodiscard]] Mat::Viscoplastic::PAR::ReformulatedJohnsonCook* parameter() const override
@@ -121,32 +121,23 @@ namespace Mat
 
       [[nodiscard]] bool uses_yield_surface() const override { return true; }
 
-      double evaluate_stress_ratio(
-          const double equiv_stress, const double equiv_plastic_strain) override;
+      [[nodiscard]] double compute_flow_resistance(double equiv_stress, double equiv_plastic_strain,
+          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
+          const override;
 
-      double compute_flow_resistance(const double equiv_stress, const double equiv_plastic_strain,
-          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status) override;
+      double evaluate_plastic_strain_rate(double equiv_stress, double equiv_plastic_strain,
+          double dt, Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
+          bool update_hist_var) override;
 
-      double evaluate_plastic_strain_rate(const double equiv_stress,
-          const double equiv_plastic_strain, const double dt,
-          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
-          const bool update_hist_var) override;
+      [[nodiscard]] InelasticDefgradTransvIsotropElastViscoplastUtils::PlasticStrainRateDerivs
+      evaluate_derivatives_of_plastic_strain_rate(double equiv_stress, double equiv_plastic_strain,
+          double dt, Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
+          const override;
 
-      InelasticDefgradTransvIsotropElastViscoplastUtils::PlasticStrainRateDerivs
-      evaluate_derivatives_of_plastic_strain_rate(const double equiv_stress,
-          const double equiv_plastic_strain, const double dt,
-          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
-          const bool update_hist_var) override;
-
-      void setup(const int numgp, const Discret::Elements::Fibers& fibers,
+      void setup(unsigned int numgp, const Discret::Elements::Fibers& fibers,
           const std::optional<Discret::Elements::CoordinateSystem>& coord_system) override;
 
-
-      void pre_evaluate(const Teuchos::ParameterList& params, int gp) override;
-
-      void update(const unsigned int gp) override {};
-
-      void update_gp_state_after_substep(const unsigned int gp) override {};
+      void pre_evaluate(const Teuchos::ParameterList& params, unsigned int gp) override;
 
       void pack_viscoplastic_law(Core::Communication::PackBuffer& data) const override;
 
@@ -244,14 +235,8 @@ namespace Mat
       /// \frac{T^{M-1}}{T_{\mathrm{melt}}^M - T_{\mathrm{ref}}^M} ) \f$
       double log_neg_temperature_ratio_deriv_;
 
-
-      //! struct containing quantities at different time points (i.e., "current" at \f[ t_{n+1} \f])
-      struct TimeStepQuantities
-      {
-        //! yield strength (for all Gauss points)
-        std::vector<double> current_yield_strength_;
-      };
-      TimeStepQuantities time_step_quantities_;
+      /// yield strength for all Gauss points
+      std::vector<double> current_yield_strength_;
     };
 
   }  // namespace Viscoplastic

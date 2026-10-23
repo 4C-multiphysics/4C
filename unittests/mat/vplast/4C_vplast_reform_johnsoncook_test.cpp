@@ -35,7 +35,7 @@ namespace
   int make_unique_viscoplastic_law_id()
   {
     static int viscoplastic_law_id = 1;
-    return viscoplastic_law_id;
+    return viscoplastic_law_id++;
   }
 
 
@@ -122,8 +122,12 @@ namespace
     stress_ratio_reformulated_JC_solution_ = 1.1556126603348709;
 
     // compute solution from the viscoplasticity law
-    double stress_ratio_reformulated_JC =
-        vplast_law_reformulated_JC_->evaluate_stress_ratio(equiv_stress_, equiv_plastic_strain_);
+    auto err_status = Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors;
+    const double yield_stress = vplast_law_reformulated_JC_->compute_flow_resistance(
+        equiv_stress_, equiv_plastic_strain_, err_status);
+    ASSERT_EQ(
+        err_status, Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors);
+    double stress_ratio_reformulated_JC = equiv_stress_ / yield_stress;
 
     // compare solutions
     EXPECT_NEAR(stress_ratio_reformulated_JC_solution_, stress_ratio_reformulated_JC, 1.0e-8);
@@ -201,7 +205,7 @@ namespace
         deriv_plastic_strain_rate_reformulated_JC =
             ref_jc_register_both_with_set_incr.material
                 ->evaluate_derivatives_of_plastic_strain_rate(
-                    equiv_stress_, equiv_plastic_strain_, 1.0, err_status, false);
+                    equiv_stress_, equiv_plastic_strain_, 1.0, err_status);
 
     if (err_status != Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors)
       FOUR_C_THROW("Error encountered during testing of TestEvaluatePlasticStrainRateDerivatives");
@@ -226,7 +230,7 @@ namespace
             .max_plastic_strain_deriv_incr = 1.0e-16});
     deriv_plastic_strain_rate_reformulated_JC =
         ref_jc_register_both_with_zero_incr.material->evaluate_derivatives_of_plastic_strain_rate(
-            equiv_stress_, equiv_plastic_strain_, 1.0, err_status, false);
+            equiv_stress_, equiv_plastic_strain_, 1.0, err_status);
 
     EXPECT_EQ(err_status, Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::
                               failed_computation_flow_resistance_derivs);
@@ -240,7 +244,7 @@ namespace
             .max_plastic_strain_deriv_incr = 1.0e-16});
     deriv_plastic_strain_rate_reformulated_JC =
         ref_jc_register_none_with_zero_incr.material->evaluate_derivatives_of_plastic_strain_rate(
-            equiv_stress_, equiv_plastic_strain_, 1.0, err_status, false);
+            equiv_stress_, equiv_plastic_strain_, 1.0, err_status);
     EXPECT_EQ(
         err_status, Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors);
   }

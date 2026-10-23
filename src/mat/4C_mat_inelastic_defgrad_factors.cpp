@@ -2758,7 +2758,6 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_history_variables_wr
             time_step_quantities_.current_plastic_strain[gp_]);
 
     Core::LinAlg::Matrix<10, 10> jacMat(Core::LinAlg::Initialization::zero);
-    viscoplastic_law_->pre_evaluate(params_, gp_);  // set last_substep <- last_
     jacMat = evaluate_local_newton_jacobian(local_integration_input, current_sol, err_status);
     FOUR_C_ASSERT_ALWAYS(
         err_status == InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType::no_errors,
@@ -3089,7 +3088,6 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_history_variables_wr
             time_step_quantities_.current_plastic_strain[gp_]);
 
     Core::LinAlg::Matrix<10, 10> jacMat(Core::LinAlg::Initialization::zero);
-    viscoplastic_law_->pre_evaluate(params_, gp_);  // set last_substep <- last_
     jacMat = evaluate_local_newton_jacobian(local_integration_input, current_sol, err_status);
 
     // if we get singular Jacobian: throw exception -> go to FD-based linearization
@@ -3187,7 +3185,6 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::constitutive_update(
   // perform non-repeatable pre-evaluation tasks (non-repeatable: not
   // called in the redundant evaluate call, which is already handled -> direct return
   // without calling this function)
-  viscoplastic_law_->pre_evaluate(params_, gp_);
   is_plastic_gp_[gp_] = false;
 
   // set predictor: assume purely elastic behavior in this time step
@@ -3760,6 +3757,8 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::viscoplastic_correction(
     local_newton_manager_.update_after_local_newton(gp_);
   }
 
+  // reset the substep history variables to the values from the previous time instant $t_n$
+  viscoplastic_law_->reset_gp_substep_state(gp_);
 
   // return the obtained solution
   return sol.value();
@@ -4750,8 +4749,12 @@ bool Mat::InelasticDefgradTransvIsotropElastViscoplast::exhibits_plastic_flow(
 
   if (viscoplastic_law_->uses_yield_surface())
   {
-    return (
-        viscoplastic_law_->evaluate_stress_ratio(curr_equiv_stress, last_plastic_strain) >= 1.0);
+    auto err_status = ViscoplastUtils::ErrorType::no_errors;
+    const double yield_stress = viscoplastic_law_->compute_flow_resistance(
+        curr_equiv_stress, last_plastic_strain, err_status);
+    FOUR_C_ASSERT_ALWAYS(err_status == ViscoplastUtils::ErrorType::no_errors,
+        "It is currently assumed that this computation will not fail");
+    return (curr_equiv_stress / yield_stress) >= 1.0;
   }
   else
   {
