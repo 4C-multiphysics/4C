@@ -29,17 +29,21 @@ def compare_vtk(
 
     Args
     ----
-    raise_error: bool
-        If true, then an error will be raised in case the files do not match. User can read it in verbose ctest.
-        Otherwise False will be returned.
+    path1: string
+        Path to first .pvd file.
+    path2: string
+        Path to second .pvd file.
+    points_in_time: float list
+        Only given time points will be compared; the .pvd files are only required to contain the time points specified, but they do not have to fully match. If empty, the .pvd files must match along with the data at all time points.
     tol_data_float: float
         If given, numbers related to the compared data will be considered equal if the difference between
         them is smaller than tol_float.
     tol_time_float: float
         If given, time instants will be considered equal if the difference between
         them is smaller than tol_float.
-    timesteps: float list
-        Only given timesteps will be compared. If empty all timesteps are compared.
+    raise_error: bool
+        If true, then an error will be raised in case the files do not match. User can read it in verbose ctest.
+        Otherwise False will be returned.
     """
 
     # Check that both arguments are paths and .pvd files exist.
@@ -50,7 +54,12 @@ def compare_vtk(
 
     def compare_pvd(path_comp, path_ref):
         """
-        check content of pvd files, exclude file links
+        Check that given .pvd files match, excluding the file links.
+
+        Args
+        ---
+        path_comp: Path to the file to be compared against the reference vtk file.
+        path_ref: Path to the reference vtk file.
         """
         comp_data = ET.parse(path_comp)
         ref_data = ET.parse(path_ref)
@@ -216,7 +225,10 @@ def compare_vtk(
     # Perform all checks, catch errors.
     try:
         # compare content of .pvd files excluding filepaths
-        compare_pvd(path_comp=path1, path_ref=path2)
+        if (
+            not points_in_time
+        ):  # only perform the full pvd comparison if all timesteps should be matched
+            compare_pvd(path_comp=path1, path_ref=path2)
 
         dir1 = os.path.dirname(path1)
         dir2 = os.path.dirname(path2)
@@ -255,7 +267,7 @@ def compare_vtk(
 
 def cli():
     parser = argparse.ArgumentParser(
-        description="Compare two .pvd files and their linked .pvtk files. Only given points in time are compared. If no points in time are given, all are compared."
+        description="Compare two .pvd files and their linked .pvtk files. Only given points in time are compared; in this case, only the .pvtk files associated with the specified points in time are considered. If no points in time are given, the .pvd files and all linked .pvtk files are compared."
     )
     parser.add_argument(
         "vtk_result", help="Path to .pvd file of the result to be compared."
