@@ -35,7 +35,7 @@ namespace
   int make_unique_viscoplastic_law_id()
   {
     static int viscoplastic_law_id = 1;
-    return viscoplastic_law_id;
+    return viscoplastic_law_id++;
   }
 
 
