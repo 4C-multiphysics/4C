@@ -78,7 +78,7 @@ namespace TESTING::INTERNAL
           {
             const auto value1 = *(iter1 + i);
             const auto value2 = *(iter2 + i);
-            if (std::fabs(value1 - value2) > tolerance)
+            if (not(std::fabs(value1 - value2) <= tolerance))
             {
               ss << "[" << i << "]: " << value1 << " vs. " << value2 << std::endl;
             }
@@ -139,7 +139,7 @@ namespace TESTING::INTERNAL
           {
             for (unsigned j = 0; j < n; ++j)
             {
-              if (std::fabs(mat1(i, j) - mat2(i, j)) > tolerance)
+              if (not(std::fabs(mat1(i, j) - mat2(i, j)) <= tolerance))
               {
                 ss << "(" << i << "," << j << "): " << mat1(i, j) << " vs. " << mat2(i, j)
                    << std::endl;
@@ -178,7 +178,7 @@ namespace TESTING::INTERNAL
             for (unsigned j = 0; j < n; ++j)
             {
               const std::size_t arr_index = i * n + j;
-              if (std::fabs(mat(i, j) - array[arr_index]) > tolerance)
+              if (not(std::fabs(mat(i, j) - array[arr_index]) <= tolerance))
               {
                 ss << "(" << i << "," << j << ") vs. [" << arr_index << "]: " << mat(i, j)
                    << " vs. " << array[arr_index] << std::endl;
@@ -224,7 +224,7 @@ namespace TESTING::INTERNAL
           {
             for (int j = 0; j < mat1.numCols(); ++j)
             {
-              if (std::fabs(mat1(i, j) - mat2(i, j)) > tolerance)
+              if (not(std::fabs(mat1(i, j) - mat2(i, j)) <= tolerance))
               {
                 ss << "(" << i << "," << j << "): " << mat1(i, j) << " vs. " << mat2(i, j)
                    << std::endl;
@@ -265,7 +265,7 @@ namespace TESTING::INTERNAL
           ss << std::fixed << std::setprecision(precision_for_printing(tolerance));
           for (int i = 0; i < vec1.length(); ++i)
           {
-            if (std::fabs(vec1(i) - vec2(i)) > tolerance)
+            if (not(std::fabs(vec1(i) - vec2(i)) <= tolerance))
             {
               ss << "[" << i << "]: " << vec1(i) << " vs. " << vec2(i) << std::endl;
             }
@@ -324,7 +324,7 @@ namespace TESTING::INTERNAL
             const auto value2 =
                 std::apply([&t2](const auto&... index) { return t2(index...); }, item);
 
-            if (std::abs(value1 - value2) > tolerance)
+            if (not(std::abs(value1 - value2) <= tolerance))
             {
               ss << "(" << get_index_string(item) << "): " << value1 << " vs. " << value2
                  << std::endl;
