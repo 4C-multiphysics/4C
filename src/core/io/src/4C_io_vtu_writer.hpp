@@ -47,11 +47,36 @@ class VtuWriter : public VtkWriterBase
   //! full file name (path + base name + suffix) of the parallel (master) output file
   std::string output_file_name_master() const;
 
+  //! full file name (path + base name + suffix) of the shared output file, i.e., the file that is
+  //! written collectively by all processors via MPI-IO
+  std::string output_file_name_shared() const;
+
   //! append the current master file and time value to the pvd collection content (only proc 0)
   void append_master_file_and_time_to_collection_file_mid_section_content();
 
+  //! append the given master file and the time value to the pvd collection content (only proc 0)
+  void append_master_file_and_time_to_collection_file_mid_section_content(
+      const std::string& master_file_name);
+
   //! write the prologue of the vtk files into the given streams
   void write_vtk_headers(std::ostream& filestream, std::ostream& masterfilestream);
+
+  //! write the prologue of a single (shared) vtk file into the given stream
+  void write_vtk_file_header(std::ostream& filestream, const std::string& byteorder);
+
+  //! write the prologue of the parallel (master) vtk file into the given stream
+  void write_vtk_parallel_file_header(
+      std::ostream& masterfilestream, const std::string& byteorder) const;
+
+  //! write the epilogue of the current piece (closing data sections and the piece) into the given
+  //! streams
+  void write_vtk_piece_footer(std::ostream& filestream, std::ostream& masterfilestream);
+
+  //! write the epilogue of a single (shared) vtk file into the given stream
+  void write_vtk_file_footer(std::ostream& filestream) const;
+
+  //! write the epilogue of the parallel (master) vtk file into the given stream
+  void write_vtk_parallel_file_footer(std::ostream& masterfilestream) const;
 
   //! write the geometry defining this unstructured grid
   void write_geometry_unstructured_grid(std::ostream& filestream, std::ostream& masterfilestream,
@@ -110,14 +135,6 @@ class VtuWriter : public VtkWriterBase
   const std::string& writer_suffix() const override;
 
  private:
-  //! write prologue of the VTK master file (handled by proc 0)
-  void write_vtk_header_master_file(
-      std::ostream& masterfilestream, const std::string& byteorder) const;
-
-  //! write prologue of the VTK file on this processor
-  void write_vtk_header_this_processor(
-      std::ostream& filestream, const std::string& byteorder) const;
-
   //! write field data array into the given file stream
   template <typename T>
   void write_field_data_array(
@@ -132,12 +149,6 @@ class VtuWriter : public VtkWriterBase
   template <typename T>
   void write_data_array_this_processor(std::ostream& filestream, const std::vector<T>& data,
       const int num_components, const std::string& name);
-
-  //! write epilogue of of the VTK master file (handled by proc 0)
-  void write_vtk_footer_master_file(std::ostream& masterfilestream) const;
-
-  //! write epilogue of the VTK file on this processor
-  void write_vtk_footer_this_processor(std::ostream& filestream) const;
 };
 
 FOUR_C_NAMESPACE_CLOSE

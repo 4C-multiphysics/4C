@@ -9,6 +9,7 @@
 
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_io_visualization_parameters.hpp"
+#include "4C_io_vtk_writer_base.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -78,10 +79,10 @@ namespace Inpar
                       .default_value = 4}),
 
               // specify the actual visualization writer
-              parameter<Core::IO::OutputWriter>("OUTPUT_WRITER",
-                  {.description = "Specify which output writer shall be used to write the "
-                                  "visualization data to disk",
-                      .default_value = Core::IO::OutputWriter::vtu_per_rank})},
+              parameter<Core::IO::OutputWriter>(
+                  "OUTPUT_WRITER", {.description = "Specify which output writer shall be used to "
+                                                   "write the visualization data to disk.",
+                                       .default_value = Core::IO::OutputWriter::vtu_collective})},
           {.required = false});
       return spec;
     }

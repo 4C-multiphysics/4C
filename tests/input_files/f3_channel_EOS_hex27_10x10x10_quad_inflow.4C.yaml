@@ -2,6 +2,8 @@ TITLE:
   - "Test of Edge-based pressure stabilization (pEOS) for hex27 elements"
 PROBLEM TYPE:
   PROBLEMTYPE: "Fluid"
+IO/RUNTIME VTK OUTPUT:
+  OUTPUT_DATA_FORMAT: ascii
 IO/RUNTIME VTK OUTPUT/FLUID:
   OUTPUT_FLUID: true
   VELOCITY: true
