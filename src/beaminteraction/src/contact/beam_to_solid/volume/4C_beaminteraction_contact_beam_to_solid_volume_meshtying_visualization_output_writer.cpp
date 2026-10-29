@@ -87,6 +87,8 @@ BeamInteraction::BeamToSolidVolumeMeshtyingVisualizationOutputWriter::
       auto& visualization_data = visualization_writer->get_visualization_data();
       visualization_data.register_point_data<double>("displacement", 3);
       visualization_data.register_point_data<double>("lambda", 3);
+      if (output_params_ptr_->get_postprocess_lambda_flag())
+        visualization_data.register_point_data<double>("lambda_postprocessed", 3);
       if (write_unique_ids)
       {
         visualization_data.register_point_data<int>("uid_0_pair_beam_id", 1);
@@ -176,6 +178,7 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingVisualizationOutputWriter::
   // nodes.
   std::shared_ptr<BeamInteraction::BeamToSolidOutputWriterVisualization> visualization =
       output_writer_base_ptr_->get_visualization_writer("btsv-nodal-forces");
+  const bool postprocess_lambda = output_params_ptr_->get_postprocess_lambda_flag();
   if (visualization != nullptr)
     add_beam_interaction_nodal_forces(visualization, beam_contact->discret_ptr(),
         beam_contact->beam_interaction_data_state().get_dis_np()->as_multi_vector(),
@@ -207,6 +210,13 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingVisualizationOutputWriter::
       std::shared_ptr<Core::LinAlg::Vector<double>> lambda =
           indirect_assembly_manager->get_mortar_manager()->get_global_lambda_col();
       visualization_params.set<std::shared_ptr<Core::LinAlg::Vector<double>>>("lambda", lambda);
+      if (postprocess_lambda)
+      {
+        std::shared_ptr<Core::LinAlg::Vector<double>> lambda_postprocessed =
+            indirect_assembly_manager->get_mortar_manager()->get_global_lambda_col();
+        visualization_params.set<std::shared_ptr<Core::LinAlg::Vector<double>>>(
+            "lambda_postprocessed", lambda_postprocessed);
+      }
 
       // The pairs will need the mortar manager to extract their Lambda DOFs.
       visualization_params.set<std::shared_ptr<const BeamInteraction::BeamToSolidMortarManager>>(
