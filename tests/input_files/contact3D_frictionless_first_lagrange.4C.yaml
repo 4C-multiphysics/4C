@@ -1,0 +1,155 @@
+TITLE:
+  - "Two diagonally separated HEX8 elements establish frictionless contact in the first step and slide
+    with friction in the second step. The initial diagonal separation in the initial configuration and
+    contact initiation in a single step is chosen such that upon first contact, there are no old mortar
+    mappings available. If the first step was not frictionless, this would fail."
+
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+IO/MONITOR STRUCTURE DBC:
+  INTERVAL_STEPS: 1
+
+CONTACT DYNAMIC:
+  LINEAR_SOLVER: 1
+  FRICTION: "Coulomb"
+  FRLESS_FIRST: true
+  SEMI_SMOOTH_CN: 100
+  SEMI_SMOOTH_CT: 100000
+
+MORTAR COUPLING:
+  SEARCH_ALGORITHM: "BruteForce"
+  SEARCH_PARAM: 1
+
+MORTAR COUPLING/PARALLEL REDISTRIBUTION:
+  PARALLEL_REDIST: "None"
+
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  RESULTSEVERY: 1
+  TIMESTEP: 1
+  NUMSTEP: 2
+  MAXTIME: 2
+  MAXITER: 30
+  TOLDISP: 1e-10
+  TOLRES: 1e-10
+  LINEAR_SOLVER: 1
+
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Direct_Solver"
+
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 1000
+      NUE: 0.3
+      DENS: 0
+
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 3
+    TIMES: [0, 1, 2]
+    VALUES: [0, 1, 2]
+
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 3
+    TIMES: [0, 1, 2]
+    VALUES: [0, 0.06, 0.12]
+
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [-1, 0, -0.011]
+    FUNCT: [2, 0, 1]
+    TAG: monitor_reaction
+
+DESIGN SURF MORTAR CONTACT CONDITIONS 3D:
+  - E: 2
+    InterfaceID: 1
+    Side: "Slave"
+    FrCoeffOrBound: 0.4
+  - E: 3
+    InterfaceID: 1
+    Side: "Master"
+    FrCoeffOrBound: 0.4
+
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
+  - "NODE 3 DSURFACE 1"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 5 DSURFACE 2"
+  - "NODE 6 DSURFACE 2"
+  - "NODE 7 DSURFACE 2"
+  - "NODE 8 DSURFACE 2"
+  - "NODE 9 DSURFACE 3"
+  - "NODE 10 DSURFACE 3"
+  - "NODE 11 DSURFACE 3"
+  - "NODE 12 DSURFACE 3"
+  - "NODE 13 DSURFACE 4"
+  - "NODE 14 DSURFACE 4"
+  - "NODE 15 DSURFACE 4"
+  - "NODE 16 DSURFACE 4"
+
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 1.0 0.0 0.0"
+  - "NODE 3 COORD 1.0 1.0 0.0"
+  - "NODE 4 COORD 0.0 1.0 0.0"
+  - "NODE 5 COORD 0.0 0.0 1.0"
+  - "NODE 6 COORD 1.0 0.0 1.0"
+  - "NODE 7 COORD 1.0 1.0 1.0"
+  - "NODE 8 COORD 0.0 1.0 1.0"
+  - "NODE 9 COORD 1.01 0.0 1.01"
+  - "NODE 10 COORD 2.01 0.0 1.01"
+  - "NODE 11 COORD 2.01 1.0 1.01"
+  - "NODE 12 COORD 1.01 1.0 1.01"
+  - "NODE 13 COORD 1.01 0.0 2.01"
+  - "NODE 14 COORD 2.01 0.0 2.01"
+  - "NODE 15 COORD 2.01 1.0 2.01"
+  - "NODE 16 COORD 1.01 1.0 2.01"
+
+STRUCTURE ELEMENTS:
+  - "1 SOLID HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM nonlinear"
+  - "2 SOLID HEX8 9 10 11 12 13 14 15 16 MAT 1 KINEM nonlinear"
+
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispx"
+      VALUE: -3.46852954150515087e-04
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispy"
+      VALUE: -2.00086069029029137e-04
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispz"
+      VALUE: 2.69285204256526319e-04
+      TOLERANCE: 1e-10
