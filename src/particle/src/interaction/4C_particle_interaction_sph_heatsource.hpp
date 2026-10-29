@@ -85,10 +85,10 @@ namespace Particle
     const int heatsourcefctnumber_;
 
     //! set of absorbing particle types
-    std::set<Particle::Type> absorbingtypes_;
+    std::set<ParticleType> absorbingtypes_;
 
     //! set of non-absorbing particle types
-    std::set<Particle::Type> nonabsorbingtypes_;
+    std::set<ParticleType> nonabsorbingtypes_;
   };
 
   class SPHHeatSourceVolume : public SPHHeatSourceBase

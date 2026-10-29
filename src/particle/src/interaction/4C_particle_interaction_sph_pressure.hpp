@@ -65,7 +65,7 @@ namespace Particle
     Particle::StatesOfTypesToRefresh pressuretorefresh_;
 
     //! set of fluid particle types
-    std::set<Particle::Type> fluidtypes_;
+    std::set<ParticleType> fluidtypes_;
   };
 
 }  // namespace Particle
