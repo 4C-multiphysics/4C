@@ -132,7 +132,9 @@ namespace Discret::Elements
     //! Set advanced reaction terms and derivatives
     void set_advanced_reaction_terms(int scalar_id,                     //!< index of current scalar
         std::shared_ptr<Mat::MatListReactions> material_reaction_list,  //!< material reaction list
-        const double* gauss_point_coordinates  //!< current Gauss-point coordinates
+        const double* gauss_point_coordinates,  //!< current Gauss-point coordinates
+        const double scale,                     //!< scale factor for reaction body force (default is 1.0)
+        int element_id                          //!< current element id
         ) override;
 
     //! compute pore pressure

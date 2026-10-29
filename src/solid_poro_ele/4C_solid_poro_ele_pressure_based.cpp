@@ -300,8 +300,9 @@ bool Discret::Elements::SolidPoroPressureBased<dim>::read_element(const std::str
       [&](auto& solid) { solid->setup(struct_poro_material(), container); }, *solid_calc_variant_);
 
   // setup poro material
+  int eleGID = this->id();
   std::visit([&](auto& solidporopressurebased)
-      { solidporopressurebased->poro_setup(struct_poro_material(), container); },
+      { solidporopressurebased->poro_setup(struct_poro_material(), container, eleGID); },
       *solidporo_press_based_calc_variant_);
 
   return true;

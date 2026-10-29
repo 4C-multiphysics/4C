@@ -75,7 +75,7 @@ namespace Discret
           Teuchos::ParameterList& params, Core::LinAlg::SerialDenseMatrix& stiffness_matrix);
 
       void poro_setup(
-          Mat::StructPoro& porostructmat, const Core::IO::InputParameterContainer& container);
+          Mat::StructPoro& porostructmat, const Core::IO::InputParameterContainer& container, int eleGID);
 
      private:
       /// static values for matrix sizes

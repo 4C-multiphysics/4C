@@ -63,10 +63,15 @@ Mat::StructPoroReaction::StructPoroReaction(Mat::PAR::StructPoroReaction* params
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Mat::StructPoroReaction::setup(int numgp, const Discret::Elements::Fibers& fibers,
-    const std::optional<Discret::Elements::CoordinateSystem>& coord_system)
+    const std::optional<Discret::Elements::CoordinateSystem>& coord_system, int eleGID)
 {
   StructPoro::setup(numgp, fibers, coord_system);
-  refporosity_ = params_->init_porosity_;
+}
+
+void Mat::StructPoroReaction::post_setup(const Teuchos::ParameterList& params, const int eleGID)
+{
+  refporosity_ = params_->init_porosity_.at(eleGID);
+  StructPoro::post_setup(params, eleGID);
 }
 
 /*----------------------------------------------------------------------*/
@@ -123,7 +128,7 @@ void Mat::StructPoroReaction::unpack(Core::Communication::UnpackBuffer& buffer)
 /*----------------------------------------------------------------------*/
 void Mat::StructPoroReaction::compute_porosity(const Teuchos::ParameterList& params, double press,
     double J, int gp, double& porosity, double* dphi_dp, double* dphi_dJ, double* dphi_dJdp,
-    double* dphi_dJJ, double* dphi_dpp, bool save)
+    double* dphi_dJJ, double* dphi_dpp, bool save, int eleGID)
 {
   // evaluate change of reference porosity due to reaction
 
@@ -132,7 +137,7 @@ void Mat::StructPoroReaction::compute_porosity(const Teuchos::ParameterList& par
   {
     std::shared_ptr<std::vector<double>> scalars =
         params.get<std::shared_ptr<std::vector<double>>>("scalars");
-    reaction(porosity, J, scalars, params);
+    reaction(porosity, J, scalars, params, eleGID);
   }
 
   // call base class to compute porosity
@@ -144,7 +149,7 @@ void Mat::StructPoroReaction::compute_porosity(const Teuchos::ParameterList& par
  *----------------------------------------------------------------------*/
 void Mat::StructPoroReaction::constitutive_derivatives(const Teuchos::ParameterList& params,
     double press, double J, double porosity, double* dW_dp, double* dW_dphi, double* dW_dJ,
-    double* dW_dphiref, double* W)
+    double* dW_dphiref, double* W, int eleGID)
 {
   if (porosity == 0.0)
     FOUR_C_THROW(
@@ -158,7 +163,7 @@ void Mat::StructPoroReaction::constitutive_derivatives(const Teuchos::ParameterL
   {
     std::shared_ptr<std::vector<double>> scalars =
         params.get<std::shared_ptr<std::vector<double>>>("scalars");
-    reaction(porosity, J, scalars, params);
+    reaction(porosity, J, scalars, params, eleGID);
   }
 
   // call base class
@@ -171,7 +176,7 @@ void Mat::StructPoroReaction::constitutive_derivatives(const Teuchos::ParameterL
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Mat::StructPoroReaction::reaction(const double porosity, const double J,
-    std::shared_ptr<std::vector<double>> scalars, const Teuchos::ParameterList& params)
+    std::shared_ptr<std::vector<double>> scalars, const Teuchos::ParameterList& params, int eleGID)
 {
   if (params.isParameter("total time"))  // if time is set
   {
@@ -185,9 +190,11 @@ void Mat::StructPoroReaction::reaction(const double porosity, const double J,
     double tau = 200.0 * cnp;     ///(cnp+k); 20.0/(20*cnp+1.0)
     double limitporosity = 0.45;  // 0.8;
 
-    refporosity_ =
-        limitporosity - (limitporosity - params_->init_porosity_) * exp(-1.0 * time / tau);
-    refporositydot_ = (limitporosity - params_->init_porosity_) / tau * exp(-1.0 * time / tau);
+    refporosity_ = limitporosity -
+                   (limitporosity - params_->init_porosity_.at(eleGID)) *
+                       exp(-1.0 * time / tau);
+    refporositydot_ = (limitporosity - params_->init_porosity_.at(eleGID)) / tau *
+                      exp(-1.0 * time / tau);
   }
   else  //(time==-1.0) -> time not set (this happens during setup-> no reaction)
   {
@@ -208,8 +215,8 @@ void Mat::StructPoroReaction::evaluate(const Core::LinAlg::Tensor<double, 3, 3>*
   StructPoro::evaluate(defgrad, glstrain, params, context, stress, cmat, gp, eleGID);
 
   // scale stresses and cmat
-  stress *= (1.0 - refporosity_) / (1.0 - params_->init_porosity_);
-  cmat *= (1.0 - refporosity_) / (1.0 - params_->init_porosity_);
+  stress *= (1.0 - refporosity_) / (1.0 - params_->init_porosity_.at(eleGID));
+  cmat *= (1.0 - refporosity_) / (1.0 - params_->init_porosity_.at(eleGID));
 }
 
 /*----------------------------------------------------------------------*/
