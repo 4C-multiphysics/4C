@@ -22,6 +22,14 @@ inputs:
   base-image:
     description: Which image is the build based on
     required: true
+  trilinos-variant:
+    description: Which Trilinos install script to use (current, oldest_supported, trilinos_develop, ...)
+    required: false
+    default: 'current'
+  trilinos-enable-debug-assertions:
+    description: Whether to build Trilinos with debug assertions enabled (ON Trilinos debug assertions
+      enabled; OFF Trilinos debug assertions disabled)
+    required: false
 runs:
   using: composite
   steps:
@@ -51,6 +59,8 @@ runs:
         build-args: |
           DEPENDENCIES_HASH=${{ inputs.dependencies-hash }}
           BASE_IMAGE=${{ inputs.base-image }}
+          TRILINOS_VARIANT=${{ inputs.trilinos-variant }}
+          TRILINOS_ENABLE_DEBUG=${{ inputs.trilinos-enable-debug-assertions }}
         push: true
         tags: ${{ inputs.image-name }}:${{ inputs.dependencies-hash }}
         # tags: ${{ steps.meta.outputs.tags }}

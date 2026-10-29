@@ -27,49 +27,9 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      build-essential \
-      ffmpeg \
-      git \
-      libglu1-mesa \
-      python3 \
-      sudo \
-      unzip \
-      vim \
-      wget \
-      && \
-    apt-get update && apt-get install -y \
-      doxygen \
-      graphviz \
-      texinfo \
-      lcov \
-      libblas-dev \
-      libboost-all-dev \
-      libcln-dev \
-      libhdf5-dev \
-      libhdf5-openmpi-dev \
-      libnetcdf-dev \
-      libfftw3-dev \
-      lld \
-      python3-venv \
-      python-is-python3 \
-      liblapack-dev \
-      libopenmpi-dev \
-      libparmetis-dev \
-      libmetis-dev \
-      libsuitesparse-dev \
-      libmumps-dev \
-      libscalapack-mpi-dev \
-      libqhull-dev \
-      mpi-default-dev \
-      ninja-build \
-      libyaml-dev \
-      clang \
-      clang-tidy \
-      clang-tools \
-      libomp-dev \
-      libvtk9-dev \
-    && rm -rf /var/lib/apt/lists/*
+COPY dependencies/current/apt_packages_ubuntu24.04.txt /tmp/apt_packages.txt
+RUN apt-get update && xargs -a /tmp/apt_packages.txt apt-get install -y \
+  && rm -rf /var/lib/apt/lists/*
 
 # Create directory for dependencies
 ARG NPROCS=12

@@ -71,6 +71,17 @@
       }
     },
     {
+      "name": "docker_clang_assertions",
+      "displayName": "Release build with LLVM Clang and debug assertions",
+      "description": "Release build with LLVM Clang and debug assertions",
+      "inherits": [
+        "docker_clang"
+      ],
+      "cacheVariables": {
+        "FOUR_C_ENABLE_ASSERTIONS": "ON"
+      }
+    },
+    {
       "name": "docker_asan",
       "displayName": "ASAN build for Docker image",
       "description": "Build release version with address sanitizer on a Docker image",
@@ -101,12 +112,13 @@
     },
     {
       "name": "docker_coverage",
-      "displayName": "Coverage report for Docker image",
-      "description": "Build unoptimized version with coverage instrumentation on a Docker image",
+      "displayName": "Coverage report for Docker image with debug assertions enabled",
+      "description": "Build unoptimized version with coverage instrumentation on a Docker image with debug assertions enabled",
       "inherits": [
         ".docker_base"
       ],
       "cacheVariables": {
+        "FOUR_C_ENABLE_ASSERTIONS": "ON",
         "FOUR_C_ENABLE_COVERAGE": "ON",
         "FOUR_C_TEST_TIMEOUT_SCALE": "4",
         "CMAKE_CXX_COMPILER": "clang++",
@@ -132,8 +144,8 @@
     },
     {
       "name": "docker_no_optional_dependencies",
-      "displayName": "Build with all optional dependencies turned off",
-      "description": "Build with all optional dependencies turned off",
+      "displayName": "Build with all optional dependencies turned off and debug assertions enabled",
+      "description": "Build with all optional dependencies turned off and debug assertions enabled",
       "inherits": [
         ".docker_base"
       ],
@@ -155,12 +167,13 @@
     },
     {
       "name": "docker_kokkoscuda_clangcuda",
-      "displayName": "Release build for CUDA-enabled Kokkos",
-      "description": "Release build using clangcuda++ compiler wrapper for CUDA-enabled Kokkos",
+      "displayName": "Release build for CUDA-enabled Kokkos and debug assertions enabled",
+      "description": "Release build using clangcuda++ compiler wrapper for CUDA-enabled Kokkos and debug assertions enabled",
       "inherits": [
         ".docker_base"
       ],
       "cacheVariables": {
+        "FOUR_C_ENABLE_ASSERTIONS": "ON",
         "FOUR_C_CLANGCUDA": "ON",
         "FOUR_C_TRILINOS_ROOT": "/opt/4C-dependencies/tk_cuda",
         "FOUR_C_WITH_ARBORX": "OFF",
@@ -172,12 +185,13 @@
     },
     {
       "name": "docker_kokkosopenmp",
-      "displayName": "Release build for OpenMP-enabled Kokkos",
-      "description": "Release build for OpenMP-enabled Kokkos",
+      "displayName": "Release build for OpenMP-enabled Kokkos and debug assertions enabled",
+      "description": "Release build for OpenMP-enabled Kokkos and debug assertions enabled",
       "inherits": [
         ".docker_base"
       ],
       "cacheVariables": {
+        "FOUR_C_ENABLE_ASSERTIONS": "ON",
         "FOUR_C_TRILINOS_ROOT": "/opt/4C-dependencies/tk_openmp",
         "FOUR_C_DEAL_II_ROOT": "/opt/4C-dependencies/tk_openmp"
       }

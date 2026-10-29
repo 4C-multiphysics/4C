@@ -17,24 +17,24 @@ export CMAKE_POLICY_VERSION_MINIMUM=3.5
 
 # compiled the dependencies
 cd dependencies/current/backtrace
-sh install.sh $DEP_DIR/libbacktrace
+bash install.sh $DEP_DIR/libbacktrace
 #
 cd ../../darwin
 cd parmetis
-sh install.sh $DEP_DIR/parmetis
+bash install.sh $DEP_DIR/parmetis
 #
 cd ..
 cd qhull
-sh install.sh $DEP_DIR/qhull "-DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14"
+bash install.sh $DEP_DIR/qhull "-DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14"
 #
 cd ..
 cd superlu_dist
-sh install.sh $DEP_DIR/superlu_dist
+bash install.sh $DEP_DIR/superlu_dist
 #
 cd ..
 cd mumps
-sh install.sh $DEP_DIR/mumps
+bash install.sh $DEP_DIR/mumps
 #
 cd ..
 cd trilinos
-sh install.sh $DEP_DIR/trilinos $DEP_DIR
+bash install.sh $DEP_DIR/trilinos $DEP_DIR
