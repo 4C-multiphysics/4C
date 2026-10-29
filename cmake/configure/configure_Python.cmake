@@ -44,6 +44,63 @@ function(_execute_process)
   endif()
 endfunction()
 
+### Function to check for dependencies of the venv identifier
+function(_check_deps OUT_STATUS PYTHON_EXEC REQ_SPEC)
+  # Run inline Python script to inspect installed dependencies in the venv
+  execute_process(
+    COMMAND
+      "${PYTHON_EXEC}" -c [=[
+import sys, re
+from importlib.metadata import distribution, PackageNotFoundError
+from packaging.requirements import Requirement
+
+spec = sys.argv[1]
+match = re.match(r"^([^\[]+)(?:\[([^\]]+)\])?$", spec)
+if not match:
+    sys.exit(1)
+
+pkg_name, extras_str = match.groups()
+requested_extras = [e.strip() for e in extras_str.split(",")] if extras_str else []
+
+try:
+    dist = distribution(pkg_name)
+except PackageNotFoundError:
+    # Package itself is not installed yet
+    sys.exit(1)
+
+# If no extras were requested, the base package presence is enough
+if not requested_extras:
+    sys.exit(0)
+
+# Check dependencies tied to the requested extra(s)
+requires_list = dist.requires or []
+for req_str in requires_list:
+    req = Requirement(req_str)
+
+    # Check if this dependency belongs to any of the requested extras
+    for extra in requested_extras:
+        if req.marker and req.marker.evaluate({"extra": extra}):
+            try:
+                dep_dist = distribution(req.name)
+                # Verify version constraints if specified
+                if req.specifier and not req.specifier.contains(dep_dist.version, prereleases=True):
+                    sys.exit(1)
+            except PackageNotFoundError:
+                sys.exit(1)
+
+sys.exit(0) # Everything is satisfied
+]=] "${REQ_SPEC}"
+    RESULT_VARIABLE _STATUS
+    ERROR_QUIET
+    )
+
+  # Propagate the result back to the caller's variable
+  set(${OUT_STATUS}
+      ${_STATUS}
+      PARENT_SCOPE
+      )
+endfunction()
+
 ### Set up a virtual Python environment for building and testing 4C
 message(STATUS "Setting up virtual Python environment for building and testing 4C")
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
@@ -73,13 +130,36 @@ _execute_process(
   venv
   ${FOUR_C_PYTHON_VENV_BUILD}
   )
-_execute_process(
-  PROCESS_COMMAND
-  ${FOUR_C_PYTHON_VENV_BUILD}/bin/pip
-  install
-  -e
-  ${PROJECT_SOURCE_DIR}/utilities/four_c_python[build]
+
+find_program(
+  FOUR_C_VENV_PYTHON
+  NAMES python python3
+  PATHS "${FOUR_C_PYTHON_VENV_BUILD}/bin"
+  NO_DEFAULT_PATH
   )
+
+# Construct the pip flags based on whether dependencies are already satisfied
+_check_deps(DEPS_STATUS "${FOUR_C_VENV_PYTHON}" "four_c_python[build]")
+
+if(DEPS_STATUS EQUAL 0)
+  message(STATUS "four_c_python[build] dependencies already satisfied in venv.")
+else()
+  message(
+    STATUS
+      "four_c_python[build] missing dependencies detected. Attempting pip install (require Internet connection)."
+    )
+
+  # Execute pip install
+  _execute_process(
+    PROCESS_COMMAND
+    "${FOUR_C_VENV_PYTHON}"
+    -m
+    pip
+    install
+    -e
+    "${PROJECT_SOURCE_DIR}/utilities/four_c_python[build]"
+    )
+endif()
 
 # determine site-packages of build environment
 execute_process(
