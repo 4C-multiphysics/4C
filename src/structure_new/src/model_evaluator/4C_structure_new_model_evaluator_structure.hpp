@@ -520,7 +520,7 @@ namespace Solid
       double* dt_ele_ptr_;
 
       //! csv writer for per rank per timestep evaluation times
-      std::unique_ptr<Core::IO::RuntimeCsvWriter> runtime_csvwriter_rank_eval_times_;
+      std::unique_ptr<Core::IO::RuntimeCsvWriterWithTimeAndStep> runtime_csvwriter_rank_eval_times_;
 
       //! mass linearization type
       Solid::MassLin masslin_type_;

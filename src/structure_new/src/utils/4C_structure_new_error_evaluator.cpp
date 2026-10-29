@@ -55,7 +55,8 @@ void Solid::ErrorEvaluator::evaluate_error(const Parameters& error_evaluator_par
 
   // Write result to csv file
   const int csv_precision = 16;
-  Core::IO::RuntimeCsvWriter csv_writer(Core::Communication::my_mpi_rank(discretization.get_comm()),
+  Core::IO::RuntimeCsvWriterWithTimeAndStep csv_writer(
+      Core::Communication::my_mpi_rank(discretization.get_comm()),
       *Global::Problem::instance()->output_control_file(), "error_evaluation_analytical_reference");
   csv_writer.register_data_vector("reference_volume", 1, csv_precision);
   csv_writer.register_data_vector("displacement_integral", 1, csv_precision);

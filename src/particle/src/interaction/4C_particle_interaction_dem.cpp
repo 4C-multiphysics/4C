@@ -205,7 +205,7 @@ void Particle::ParticleInteractionDEM::setup_particle_interaction_writer()
     particleinteractionwriter_->register_specific_runtime_csv_writer("particle-energy");
 
     // get specific runtime csv writer
-    Core::IO::RuntimeCsvWriter* runtime_csv_writer =
+    Core::IO::RuntimeCsvWriterWithTimeAndStep* runtime_csv_writer =
         particleinteractionwriter_->get_specific_runtime_csv_writer("particle-energy");
 
     // register all data vectors
@@ -519,7 +519,7 @@ void Particle::ParticleInteractionDEM::evaluate_particle_energy() const
   }
 
   // get specific runtime csv writer
-  Core::IO::RuntimeCsvWriter* runtime_csv_writer =
+  Core::IO::RuntimeCsvWriterWithTimeAndStep* runtime_csv_writer =
       particleinteractionwriter_->get_specific_runtime_csv_writer("particle-energy");
 
   // append data vector

@@ -923,8 +923,7 @@ void SSI::SsiMono::timeloop()
     // output performance statistics associated with nonlinear solver into *.csv file if
     // applicable
     if (scatra_field()->scatra_parameter_list()->get<bool>("OUTPUTNONLINSOLVERSTATS"))
-      scatra_field()->output_nonlin_solver_stats(
-          iteration_count(), dtnonlinsolve, step(), get_comm());
+      scatra_field()->output_nonlin_solver_stats(iteration_count(), dtnonlinsolve, step());
 
     prepare_output();
 

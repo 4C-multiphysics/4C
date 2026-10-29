@@ -7,11 +7,16 @@
 
 #include "4C_io_runtime_csv_writer.hpp"
 
-#include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <charconv>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <ostream>
+#include <ranges>
+#include <sstream>
 #include <utility>
 
 FOUR_C_NAMESPACE_OPEN
@@ -27,291 +32,446 @@ namespace Core::IO
    public:
     virtual ~RuntimeCsvWriterImpl() = default;
 
-    //! register data vector
-    virtual void register_data_vector(
-        const std::string& dataname, unsigned int numcomponents, int precision) = 0;
+    //! register a column
+    virtual void register_column(const CsvColumn& column) = 0;
 
-    //! reset current time and time step number
-    virtual void reset_time_and_time_step(double time, unsigned int timestep) = 0;
+    //! set the values of a column
+    virtual void append_data_vector(const std::string& name, const std::vector<double>& values) = 0;
 
-    //! append data vector
-    virtual void append_data_vector(
-        const std::string& dataname, const std::vector<double>& datavalues) = 0;
-
-    //! write one line to csv file. Data must have been passed via AppendDataVector()
+    //! write one row with the currently collected values
     virtual void write_collected_data_to_file() = 0;
 
-    //! write @p data to file at @p time and @p timestep
-    virtual void write_data_to_file(double time, unsigned int timestep,
-        const std::map<std::string, std::vector<double>>& data) const = 0;
+    //! write one row built from the given values
+    virtual void write_data_to_file(const RuntimeCsvWriter::Data& data) = 0;
   };
 
-  //! This class does the writing to the file. It is created on proc 0.
-  class RuntimeCsvWriterProc0 : public RuntimeCsvWriterImpl
+  namespace
   {
-   public:
-    explicit RuntimeCsvWriterProc0(
-        const Core::IO::OutputControl& output_control, std::string outputname);
-
-    void register_data_vector(
-        const std::string& dataname, unsigned int numcomponents, int precision) override;
-
-    void reset_time_and_time_step(const double time, const unsigned int timestep) override
+    //! A registered column together with the values of the row that is currently being collected
+    struct ColumnState
     {
-      time_ = time;
-      timestep_ = timestep;
-    }
+      CsvColumn column;
+      std::vector<double> values;
+    };
 
-    void append_data_vector(
-        const std::string& dataname, const std::vector<double>& datavalues) override;
+    //! This class does the writing to the file. It is created on proc 0.
+    class RuntimeCsvWriterProc0 : public RuntimeCsvWriterImpl
+    {
+     public:
+      RuntimeCsvWriterProc0(const Core::IO::OutputControl& output_control,
+          const std::string& output_name, RuntimeCsvWriter::RestartPolicy restart_policy)
+          : output_file_(output_control.file_name() + "-" + output_name + ".csv"),
+            restart_file_(output_control.restart_name() + "-" + output_name + ".csv"),
+            restart_step_(output_control.restart_step()),
+            restart_policy_(std::move(restart_policy))
+      {
+      }
 
-    void write_collected_data_to_file() override;
+      void register_column(const CsvColumn& column) override;
 
-    void write_data_to_file(double time, unsigned int timestep,
-        const std::map<std::string, std::vector<double>>& data) const override;
+      void append_data_vector(const std::string& name, const std::vector<double>& values) override;
 
-   private:
-    void write_file_header() const;
+      void write_collected_data_to_file() override;
 
-    //! key: result name, entry: (data vector, precision)
-    std::map<std::string, std::pair<std::vector<double>, int>> data_vectors_;
+      void write_data_to_file(const RuntimeCsvWriter::Data& data) override;
 
-    //! full path to output file
-    std::string fullpathoutputfile_;
+     private:
+      //! Create the output file and, in case of a restart, take over the rows prior to the restart
+      void initialize_output_file();
 
-    //! output name
-    std::string outputname_;
+      //! Write the header of the file, which precedes the very first row
+      void write_file_header() const;
 
-    //! number of restart step
-    const int restart_step_;
+      //! All columns in the order in which they appear within a row
+      [[nodiscard]] std::vector<const ColumnState*> columns_in_row_order() const;
 
-    //! current time
-    double time_;
+      //! Write a single value with the formatting of its column
+      static void write_value(std::ostream& out, const CsvColumn& column, double value);
 
-    //! current time step
-    unsigned int timestep_;
-  };
+      //! All registered columns, keyed by name. The order of the map is the position of a column
+      //! that is not fixed.
+      std::map<std::string, ColumnState> columns_;
 
-  //! This class does intentionally nothing. It is created on all other procs except for proc 0.
-  class RuntimeCsvWriterOtherProcs : public RuntimeCsvWriterImpl
+      //! Names of the fixed columns in the order in which they were registered
+      std::vector<std::string> fixed_columns_;
+
+      //! Full path of the output file
+      std::string output_file_;
+
+      //! Full path of the file of the run we restart from
+      std::string restart_file_;
+
+      //! Step the run is restarted from
+      const int restart_step_;
+
+      //! Decides which of the rows of the restart file are taken over
+      const RuntimeCsvWriter::RestartPolicy restart_policy_;
+
+      //! Whether the output file was already set up
+      bool initialized_{false};
+
+      //! Whether the header was already written or taken over from a restart file
+      bool header_written_{false};
+
+      //! Whether we already complained about the absence of any column
+      bool warned_no_columns_{false};
+    };
+
+    //! This class does intentionally nothing. It is created on all other procs except for proc 0.
+    class RuntimeCsvWriterOtherProcs : public RuntimeCsvWriterImpl
+    {
+     public:
+      RuntimeCsvWriterOtherProcs() = default;
+
+      void register_column(const CsvColumn&) override {}
+
+      void append_data_vector(const std::string&, const std::vector<double>&) override {}
+
+      void write_collected_data_to_file() override {}
+
+      void write_data_to_file(const RuntimeCsvWriter::Data&) override {}
+    };
+  }  // namespace
+
+  void RuntimeCsvWriter::register_column(const CsvColumn& column) const
   {
-   public:
-    void register_data_vector(
-        const std::string& dataname, unsigned int numcomponents, int precision) override
-    {
-    }
-
-    void reset_time_and_time_step(const double time, const unsigned int timestep) override {}
-
-    void append_data_vector(
-        const std::string& dataname, const std::vector<double>& datavalues) override
-    {
-    }
-
-    void write_collected_data_to_file() override {}
-
-    void write_data_to_file(double time, unsigned int timestep,
-        const std::map<std::string, std::vector<double>>& data) const override
-    {
-    }
-  };
-
-  void RuntimeCsvWriter::register_data_vector(
-      const std::string& dataname, unsigned int numcomponents, int precision)
-  {
-    implementation_->register_data_vector(dataname, numcomponents, precision);
+    implementation_->register_column(column);
   }
 
-  void RuntimeCsvWriter::reset_time_and_time_step(double time, unsigned int timestep)
+  void RuntimeCsvWriter::register_data_vector(
+      const std::string& name, const unsigned int num_components, const int precision) const
   {
-    implementation_->reset_time_and_time_step(time, timestep);
+    register_column(CsvColumn{.name = name,
+        .num_components = num_components,
+        .format = CsvNumberFormat::Scientific,
+        .precision = precision,
+        .order = CsvColumnOrder::Sorted});
   }
 
   void RuntimeCsvWriter::append_data_vector(
-      const std::string& dataname, const std::vector<double>& datavalues)
+      const std::string& name, const std::vector<double>& values) const
   {
-    implementation_->append_data_vector(dataname, datavalues);
+    implementation_->append_data_vector(name, values);
   }
 
-  void RuntimeCsvWriter::write_collected_data_to_file()
+  void RuntimeCsvWriter::write_collected_data_to_file() const
   {
     implementation_->write_collected_data_to_file();
   }
 
-  void RuntimeCsvWriter::write_data_to_file(const double time, const unsigned int timestep,
-      const std::map<std::string, std::vector<double>>& data) const
+  void RuntimeCsvWriter::write_data_to_file(const Data& data) const
   {
-    implementation_->write_data_to_file(time, timestep, data);
+    implementation_->write_data_to_file(data);
   }
 
-  RuntimeCsvWriter::RuntimeCsvWriter(
-      int myrank, const Core::IO::OutputControl& output_control, std::string outputname)
+  RuntimeCsvWriter::RestartPolicy RuntimeCsvWriter::keep_rows_up_to_restart_step()
+  {
+    return [](std::string_view line, const int restart_step)
+    {
+      // the step is the first field of a row
+      const std::string_view first_field = line.substr(0, line.find(','));
+
+      int step{};
+      const auto [end, error] =
+          std::from_chars(first_field.data(), first_field.data() + first_field.size(), step);
+
+      if (error != std::errc{} or end != first_field.data() + first_field.size())
+      {
+        FOUR_C_THROW(
+            "row '{}' of the restart file does not start with an integer step, so it cannot be "
+            "matched against the restart step",
+            line);
+      }
+
+      return step <= restart_step;
+    };
+  }
+
+  RuntimeCsvWriter::RuntimeCsvWriter(const int myrank,
+      const Core::IO::OutputControl& output_control, const std::string& output_name,
+      RestartPolicy restart_policy)
   {
     if (myrank == 0)
     {
-      implementation_ =
-          std::make_unique<RuntimeCsvWriterProc0>(output_control, std::move(outputname));
+      implementation_ = std::make_unique<RuntimeCsvWriterProc0>(
+          output_control, output_name, std::move(restart_policy));
     }
     else
+    {
       implementation_ = std::make_unique<RuntimeCsvWriterOtherProcs>();
+    }
   }
 
   RuntimeCsvWriter::~RuntimeCsvWriter() = default;
 
-  RuntimeCsvWriterProc0::RuntimeCsvWriterProc0(
-      const Core::IO::OutputControl& output_control, std::string outputname)
-      : outputname_(std::move(outputname)),
-        restart_step_(output_control.restart_step()),
-        time_(0.0),
-        timestep_(-1)
+  void RuntimeCsvWriterProc0::register_column(const CsvColumn& column)
   {
-    // determine full path to output prefix
-    const std::string fullpathoutputprefix = output_control.file_name();
+    FOUR_C_ASSERT_ALWAYS(
+        !column.name.empty(), "a column of output file '{}' has an empty name", output_file_);
 
-    // set full path to output file
-    fullpathoutputfile_ = fullpathoutputprefix + "-" + outputname_ + ".csv";
+    FOUR_C_ASSERT_ALWAYS(!header_written_,
+        "column '{}' of output file '{}' was registered after the first row was written, but all "
+        "columns have to be registered up front",
+        column.name, output_file_);
 
-    // clear content
+    const auto [it, is_new] = columns_.try_emplace(column.name,
+        ColumnState{.column = column, .values = std::vector<double>(column.num_components, 0.0)});
+
+    if (is_new)
     {
-      std::ofstream outputfile(fullpathoutputfile_, std::ios_base::out | std::ios_base::trunc);
-      outputfile.close();
+      if (column.order == CsvColumnOrder::Fixed) fixed_columns_.push_back(column.name);
+      return;
     }
 
-    // in case of restart copy content of restart file to output file prior to restart time step
-    if (restart_step_)
+    // registering the same column again is a no-op, but only if it is described identically
+    const CsvColumn& registered = it->second.column;
+    if (registered.num_components != column.num_components or registered.format != column.format or
+        registered.precision != column.precision or registered.order != column.order)
     {
-      // determine full path to restart prefix
-      const std::string fullpathrestartprefix = output_control.restart_name();
-
-      // set full path to restart file
-      const std::string fullpathrestartfile = fullpathrestartprefix + "-" + outputname_ + ".csv";
-
-      std::ifstream restartfile(fullpathrestartfile, std::ios_base::out);
-
-      // check if file was found
-      if (not restartfile)
-        FOUR_C_THROW("restart file '{}' could not be found", fullpathrestartfile);
-
-      std::stringstream sectionpriorrestart;
-
-      // loop over lines of restart file
-      std::string line;
-      while (std::getline(restartfile, line))
-      {
-        std::istringstream sline(line);
-
-        // get first word of line
-        std::string word;
-        std::getline(sline, word, ',');
-
-        if (word == "step")
-        {
-          sectionpriorrestart << line << "\n";
-          continue;
-        }
-
-        // get time step of current line
-        const int timestep = std::stoi(word);
-
-        // append current line
-        if (timestep <= restart_step_) sectionpriorrestart << line << "\n";
-      }
-
-      restartfile.close();
-
-      // write to file
-      std::ofstream outputfile(fullpathoutputfile_, std::ios_base::app);
-      outputfile << sectionpriorrestart.str();
-      outputfile.close();
+      FOUR_C_THROW(
+          "column '{}' of output file '{}' is already registered as a column with {} components, "
+          "format {} and precision {}, so it cannot be registered as a column with {} components, "
+          "format {} and precision {}",
+          column.name, output_file_, registered.num_components, static_cast<int>(registered.format),
+          registered.precision, column.num_components, static_cast<int>(column.format),
+          column.precision);
     }
-  }
-
-  void RuntimeCsvWriterProc0::register_data_vector(
-      const std::string& dataname, const unsigned int numcomponents, const int precision)
-  {
-    data_vectors_[dataname] = {std::vector<double>(numcomponents, 0.0), precision};
-    if (!restart_step_) write_file_header();
   }
 
   void RuntimeCsvWriterProc0::append_data_vector(
-      const std::string& dataname, const std::vector<double>& datavalues)
+      const std::string& name, const std::vector<double>& values)
   {
-    FOUR_C_ASSERT(data_vectors_.contains(dataname), "data vector '{}' not registered!", dataname);
+    const auto column = columns_.find(name);
 
-    FOUR_C_ASSERT((data_vectors_[dataname].first).size() == datavalues.size(),
-        "size of data vector '{}' changed!", dataname);
+    FOUR_C_ASSERT_ALWAYS(column != columns_.end(),
+        "column '{}' of output file '{}' is not registered", name, output_file_);
 
-    data_vectors_[dataname].first = datavalues;
+    FOUR_C_ASSERT_ALWAYS(column->second.values.size() == values.size(),
+        "column '{}' of output file '{}' was registered with {} components, but {} values were "
+        "given",
+        name, output_file_, column->second.values.size(), values.size());
+
+    column->second.values = values;
+  }
+
+  void RuntimeCsvWriterProc0::write_data_to_file(const RuntimeCsvWriter::Data& data)
+  {
+    // every column that is not fixed must be given a value. The fixed ones carry over from their
+    // most recent append_data_vector() call, since the writer fills them itself.
+    std::string missing_columns;
+    for (const auto& [column_name, column_state] : columns_)
+    {
+      if (column_state.column.order == CsvColumnOrder::Fixed or data.contains(column_name))
+        continue;
+
+      if (not missing_columns.empty()) missing_columns += ", ";
+      missing_columns += column_name;
+    }
+
+    FOUR_C_ASSERT_ALWAYS(missing_columns.empty(),
+        "no data given for the column(s) [{}] of output file '{}'", missing_columns, output_file_);
+
+
+    for (const auto& data_name : data | std::views::keys)
+    {
+      if (not columns_.contains(data_name))
+      {
+        FOUR_C_THROW("column '{}' of output file '{}' is not registered", data_name, output_file_);
+      }
+    }
+
+    for (const auto& [data_name, data_values] : data) append_data_vector(data_name, data_values);
+
+    write_collected_data_to_file();
   }
 
   void RuntimeCsvWriterProc0::write_collected_data_to_file()
   {
-    if (data_vectors_.empty()) FOUR_C_THROW("no data vectors registered!");
+    initialize_output_file();
 
-    std::ofstream outputfile(fullpathoutputfile_, std::ios_base::app);
-    outputfile << timestep_ << "," << time_;
-
-    for (const auto& data : data_vectors_)
+    if (columns_.empty())
     {
-      const std::vector<double>& data_vector = (data.second).first;
-      const int precision = (data.second).second;
-
-      outputfile << std::setprecision(precision) << std::scientific;
-
-      for (const auto& data_vector_component : data_vector)
-        outputfile << "," << data_vector_component;
+      if (not warned_no_columns_)
+      {
+        std::cerr << "Warning: no columns are registered for output file '" << output_file_
+                  << "', so no data is written.\n";
+        warned_no_columns_ = true;
+      }
+      return;
     }
 
-    outputfile << "\n";
-    outputfile.close();
+    if (not header_written_)
+    {
+      write_file_header();
+      header_written_ = true;
+    }
+
+    std::stringstream row;
+    bool is_first = true;
+    for (const ColumnState* state : columns_in_row_order())
+    {
+      for (const double value : state->values)
+      {
+        if (not is_first) row << ",";
+        is_first = false;
+        write_value(row, state->column, value);
+      }
+    }
+
+    std::ofstream output_file(output_file_, std::ios_base::app);
+    output_file << row.str() << "\n";
+    output_file.close();
   }
 
-  void RuntimeCsvWriterProc0::write_data_to_file(const double time, const unsigned int timestep,
-      const std::map<std::string, std::vector<double>>& data) const
+  void RuntimeCsvWriterProc0::initialize_output_file()
   {
-    if (data_vectors_.empty()) FOUR_C_THROW("no data vectors registered!");
+    if (initialized_) return;
+    initialized_ = true;
 
-    std::ofstream outputfile(fullpathoutputfile_, std::ios_base::app);
-    outputfile << timestep << "," << time;
-
-    for (const auto& [data_name, data_vector] : data)
+    // clear content
     {
-      FOUR_C_ASSERT(
-          data_vectors_.contains(data_name), "data vector '{}' not registered!", data_name);
-
-      FOUR_C_ASSERT((data_vectors_.at(data_name).first).size() == data_vector.size(),
-          "size of data vector '{}' changed!", data_name);
-
-      const int precision = (data_vectors_.at(data_name).second);
-
-      outputfile << std::setprecision(precision) << std::scientific;
-
-      for (const auto& data_vector_component : data_vector)
-        outputfile << "," << data_vector_component;
+      std::ofstream output_file(output_file_, std::ios_base::out | std::ios_base::trunc);
+      output_file.close();
     }
 
-    outputfile << "\n";
-    outputfile.close();
+    // without a restart the header is written together with the first row
+    if (restart_step_ <= 0) return;
+
+    std::ifstream restart_file(restart_file_, std::ios_base::in);
+    if (not restart_file)
+    {
+      std::cerr << "Warning: restart file '" << restart_file_ << "' could not be found, so '"
+                << output_file_ << "' starts from scratch without the rows of the run we restart "
+                << "from.\n";
+      return;
+    }
+
+    std::ofstream output_file(output_file_, std::ios_base::app);
+
+    // the header of the restart file is the header of this run
+    std::string line;
+    if (std::getline(restart_file, line))
+    {
+      output_file << line << "\n";
+      header_written_ = true;
+    }
+
+    // keep the rows that are still current. Without a policy nothing tells which of them are
+    // still current, so only the header is taken over.
+    if (restart_policy_)
+    {
+      while (std::getline(restart_file, line))
+      {
+        if (line.empty()) continue;
+        if (restart_policy_(line, restart_step_)) output_file << line << "\n";
+      }
+    }
+    else
+    {
+      std::cerr
+          << "Warning: Core::IO::RuntimeCsvWriter has no policy to tell which rows of a restart "
+             "file are still current, so only its header is taken over. Supply a "
+             "RuntimeCsvWriter::RestartPolicy if the rows prior to the restart step shall be "
+             "kept.\n";
+    }
+
+    output_file.close();
+    restart_file.close();
+  }
+
+  std::vector<const ColumnState*> RuntimeCsvWriterProc0::columns_in_row_order() const
+  {
+    std::vector<const ColumnState*> row;
+    row.reserve(columns_.size());
+
+    // the fixed columns come first, in the order in which they were registered
+    for (const std::string& name : fixed_columns_) row.push_back(&columns_.at(name));
+
+    // the remaining columns follow in the order of the map, which is sorted by name
+    for (const auto& column_state : columns_ | std::views::values)
+    {
+      if (column_state.column.order != CsvColumnOrder::Fixed) row.push_back(&column_state);
+    }
+
+    return row;
+  }
+
+  void RuntimeCsvWriterProc0::write_value(
+      std::ostream& out, const CsvColumn& column, const double value)
+  {
+    switch (column.format)
+    {
+      case CsvNumberFormat::Integer:
+        out << std::fixed << std::setprecision(0) << value;
+        break;
+      case CsvNumberFormat::DefaultFloat:
+        out << std::defaultfloat << std::setprecision(column.precision) << value;
+        break;
+      case CsvNumberFormat::Scientific:
+        out << std::scientific << std::setprecision(column.precision) << value;
+        break;
+    }
   }
 
   void RuntimeCsvWriterProc0::write_file_header() const
   {
-    std::ofstream outputfile(fullpathoutputfile_, std::ios_base::trunc);
-    outputfile << "step,time";
+    std::ofstream output_file(output_file_, std::ios_base::trunc);
 
-    for (const auto& data : data_vectors_)
+    bool is_first = true;
+    for (const ColumnState* state : columns_in_row_order())
     {
-      const std::string& dataname = data.first;
-      const unsigned int numcomponents = ((data.second).first).size();
+      const CsvColumn& column = state->column;
 
-      if (numcomponents == 1)
-        outputfile << "," << dataname;
-      else
-        for (unsigned int i = 0; i < numcomponents; ++i) outputfile << "," << dataname << ":" << i;
+      for (unsigned int component = 0; component < column.num_components; ++component)
+      {
+        if (not is_first) output_file << ",";
+        is_first = false;
+
+        if (column.num_components == 1)
+          output_file << column.name;
+        else
+          output_file << column.name << ":" << component;
+      }
     }
 
-    outputfile << "\n";
-    outputfile.close();
+    output_file << "\n";
+    output_file.close();
+  }
+
+  RuntimeCsvWriterWithTimeAndStep::RuntimeCsvWriterWithTimeAndStep(const int myrank,
+      const Core::IO::OutputControl& output_control, const std::string& output_name)
+      : RuntimeCsvWriter(
+            myrank, output_control, output_name, RuntimeCsvWriter::keep_rows_up_to_restart_step())
+  {
+    register_column(CsvColumn{.name = "step",
+        .num_components = 1,
+        .format = CsvNumberFormat::Integer,
+        .precision = 0,
+        .order = CsvColumnOrder::Fixed});
+    register_column(CsvColumn{.name = "time",
+        .num_components = 1,
+        .format = CsvNumberFormat::DefaultFloat,
+        .precision = 6,
+        .order = CsvColumnOrder::Fixed});
+  }
+
+  void RuntimeCsvWriterWithTimeAndStep::reset_time_and_time_step(
+      const double time, const unsigned int timestep) const
+  {
+    append_data_vector("step", {static_cast<double>(timestep)});
+    append_data_vector("time", {time});
+  }
+
+  void RuntimeCsvWriterWithTimeAndStep::write_data_to_file(
+      const double time, const unsigned int timestep, const Data& data) const
+  {
+    FOUR_C_ASSERT(!data.contains("step") && !data.contains("time"),
+        "do not pass 'step' or 'time' in the data map to "
+        "RuntimeCsvWriterWithTimeAndStep::write_data_to_file(); they are set via the time and "
+        "timestep arguments");
+
+    reset_time_and_time_step(time, timestep);
+    RuntimeCsvWriter::write_data_to_file(data);
   }
 }  // namespace Core::IO
 

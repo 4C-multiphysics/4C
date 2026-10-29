@@ -485,7 +485,7 @@ namespace ScaTra
     std::shared_ptr<Core::LinAlg::Equilibration> equilibration_;
 
     //! output csv writer for interface flux for each slave side s2i condition
-    std::optional<Core::IO::RuntimeCsvWriter> runtime_csvwriter_;
+    std::optional<Core::IO::RuntimeCsvWriterWithTimeAndStep> runtime_csvwriter_;
 
     //! write integrated interface flux on slave side of s2i kintetics condition to csv file
     const bool output_interface_flux_;

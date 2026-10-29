@@ -28,7 +28,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Core::IO
 {
   class DiscretizationReader;
-  class RuntimeCsvWriter;
+  class RuntimeCsvWriterWithTimeAndStep;
 }  // namespace Core::IO
 
 /*---------------------------------------------------------------------------*
@@ -73,7 +73,8 @@ namespace Particle
     }
 
     //! get specific runtime csv writer
-    inline Core::IO::RuntimeCsvWriter* get_specific_runtime_csv_writer(const std::string& fieldname)
+    inline Core::IO::RuntimeCsvWriterWithTimeAndStep* get_specific_runtime_csv_writer(
+        const std::string& fieldname)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
       if (not runtime_csvwriters_.contains(fieldname))
@@ -101,7 +102,7 @@ namespace Particle
         runtime_visualization_managers_;
 
     //! holds all csv writer objects
-    std::unordered_map<std::string, std::shared_ptr<Core::IO::RuntimeCsvWriter>>
+    std::unordered_map<std::string, std::shared_ptr<Core::IO::RuntimeCsvWriterWithTimeAndStep>>
         runtime_csvwriters_;
   };
 

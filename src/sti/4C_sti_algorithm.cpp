@@ -283,7 +283,7 @@ void STI::Algorithm::time_loop()
     // output performance statistics associated with nonlinear solver into *.csv file if applicable
     if (fieldparameters_->get<bool>("OUTPUTNONLINSOLVERSTATS"))
       scatra_->scatra_field()->output_nonlin_solver_stats(
-          static_cast<int>(iter_), dtnonlinsolve, step(), get_comm());
+          static_cast<int>(iter_), dtnonlinsolve, step());
 
     // update scatra and thermo fields
     update();

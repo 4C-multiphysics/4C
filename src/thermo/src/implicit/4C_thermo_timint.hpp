@@ -402,7 +402,7 @@ namespace Thermo
       bool output_energy_state = false;
     };
 
-    std::optional<Core::IO::RuntimeCsvWriter> runtime_csv_writer_;
+    std::optional<Core::IO::RuntimeCsvWriterWithTimeAndStep> runtime_csv_writer_;
     OptionsThermoCSVRuntimeOutput runtime_csv_params_;
 
 

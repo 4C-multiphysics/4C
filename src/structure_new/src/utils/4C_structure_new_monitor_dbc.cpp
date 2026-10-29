@@ -249,10 +249,11 @@ void Solid::MonitorDbc::setup()
     {
       case IOMonitorStructureDBC::FileType::csv:
       {
-        dbc_monitor_csvwriter_.emplace_back(std::make_unique<Core::IO::RuntimeCsvWriter>(
-            Core::Communication::my_mpi_rank(get_comm()),
-            *Global::Problem::instance()->output_control_file(),
-            rcond.node_set_name() + "_monitor_dbc"));
+        dbc_monitor_csvwriter_.emplace_back(
+            std::make_unique<Core::IO::RuntimeCsvWriterWithTimeAndStep>(
+                Core::Communication::my_mpi_rank(get_comm()),
+                *Global::Problem::instance()->output_control_file(),
+                rcond.node_set_name() + "_monitor_dbc"));
         const int csv_precision = 16;
         dbc_monitor_csvwriter_.back()->register_data_vector("ref_area", 1, csv_precision);
         dbc_monitor_csvwriter_.back()->register_data_vector("curr_area", 1, csv_precision);
