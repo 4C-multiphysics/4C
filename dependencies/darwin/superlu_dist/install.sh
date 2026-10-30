@@ -16,8 +16,8 @@ set -e
 INSTALL_DIR="$1"
 # Number of procs for building (default 4)
 NPROCS=${NPROCS=4}
-VERSION="7.2.0"
-CHECKSUM="20b60bd8a3d88031c9ce6511ae9700b7a8dcf12e2fd704e74b1af762b3468b8c"
+VERSION="9.2.1"
+CHECKSUM="c80a1c2edaaa451ee9a54e005e5f3f56dc55cabe2b0a8d7acf5a1447a648157a"
 
 SUPERLU_TAR="superlu_dist-${VERSION}.tar.gz"
 

@@ -16,7 +16,7 @@ jobs:
   kokkosopenmp_fourc_assertions_trilinos_assertions_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:b44604ae
+      image: ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:a9a789e5
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -44,7 +44,7 @@ jobs:
     needs: kokkosopenmp_fourc_assertions_trilinos_assertions_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:b44604ae
+      image: ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:a9a789e5
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -76,7 +76,7 @@ jobs:
   kokkoscuda_fourc_assertions_trilinos_assertions_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:b44604ae
+      image: ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:a9a789e5
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
