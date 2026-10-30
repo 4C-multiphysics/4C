@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_REDUCED_LUNG_TREE_NOX_SOLVER_HPP
-#define FOUR_C_REDUCED_LUNG_TREE_NOX_SOLVER_HPP
+#ifndef FOUR_C_REDUCED_LUNG_NEWTON_TREE_HPP
+#define FOUR_C_REDUCED_LUNG_NEWTON_TREE_HPP
 
 #include "4C_config.hpp"
 
@@ -30,9 +30,9 @@ namespace ReducedLung
   class TreeNewtonLinearSolver;
 
   /**
-   * @brief Context bundling all objects required by @ref TreeNoxSolver.
+   * @brief Context bundling all objects required by @ref NewtonTree.
    */
-  struct TreeNoxSolverContext
+  struct NewtonTreeContext
   {
     MPI_Comm comm;                                    ///< MPI communicator used by NOX.
     const ReducedLungParameters::Dynamics& dynamics;  ///< Nonlinear/timestep solver parameters.
@@ -48,12 +48,12 @@ namespace ReducedLung
   /**
    * @brief NOX-driven Newton solver using the structured-tree linear solver for corrections.
    *
-   * PROTOTYPE: drives the reduced-lung tree linearization with NOX's line-search based Newton
-   * method instead of the custom loop in @ref TreeNewtonSolver. Like @ref TreeNewtonSolver it
-   * converges on the residual norm alone. It fails on a non-finite residual or on exceeding the
-   * maximum number of nonlinear iterations; the increment tolerance is not used.
+   * Drives the reduced-lung tree linearization with NOX's line-search based Newton method. The
+   * solver is serial-only and converges on the residual norm alone. It fails on a non-finite
+   * residual or on exceeding the maximum number of nonlinear iterations; the increment tolerance is
+   * not used.
    */
-  class TreeNoxSolver final : public NonlinearSolver
+  class NewtonTree final : public NonlinearSolver
   {
    public:
     /**
@@ -62,13 +62,13 @@ namespace ReducedLung
      * @param context Solver setup context.
      * @param initial_time Initial time for the simulation.
      */
-    TreeNoxSolver(const TreeNoxSolverContext& context, double initial_time = 0.0);
+    NewtonTree(const NewtonTreeContext& context, double initial_time = 0.0);
 
-    TreeNoxSolver(const TreeNoxSolver&) = delete;
-    TreeNoxSolver& operator=(const TreeNoxSolver&) = delete;
-    TreeNoxSolver(TreeNoxSolver&&) = delete;
-    TreeNoxSolver& operator=(TreeNoxSolver&&) = delete;
-    ~TreeNoxSolver() override;
+    NewtonTree(const NewtonTree&) = delete;
+    NewtonTree& operator=(const NewtonTree&) = delete;
+    NewtonTree(NewtonTree&&) = delete;
+    NewtonTree& operator=(NewtonTree&&) = delete;
+    ~NewtonTree() override;
 
     /**
      * @brief Solve the nonlinear system at the given physical time.

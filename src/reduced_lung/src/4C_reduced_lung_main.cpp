@@ -24,13 +24,12 @@
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_junctions.hpp"
+#include "4C_reduced_lung_newton_tree.hpp"
 #include "4C_reduced_lung_nonlinear_solver.hpp"
 #include "4C_reduced_lung_resulttest.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_tree_linear_solver.hpp"
 #include "4C_reduced_lung_tree_metadata.hpp"
-#include "4C_reduced_lung_tree_newton_solver.hpp"
-#include "4C_reduced_lung_tree_nox_solver.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
@@ -108,8 +107,6 @@ namespace ReducedLung
           return "NOX";
         case SolverType::NewtonTree:
           return "NewtonTree";
-        case SolverType::NewtonTreeNox:
-          return "NewtonTreeNox";
       }
 
       return "Unknown";
@@ -326,7 +323,6 @@ namespace ReducedLung
             build_nox_solver();
             break;
           case ReducedLungParameters::NonlinearSolverType::NewtonTree:
-          case ReducedLungParameters::NonlinearSolverType::NewtonTreeNox:
             build_tree_newton_solver_with_tree_linear_solver();
             break;
           default:
@@ -405,24 +401,8 @@ namespace ReducedLung
         FOUR_C_ASSERT_ALWAYS(tree_newton_linear_solver_ != nullptr,
             "Reduced lung NewtonTree solver requires a tree Newton linear solver.");
 
-        if (context_.parameters.dynamics.nonlinear_solver ==
-            ReducedLungParameters::NonlinearSolverType::NewtonTreeNox)
-        {
-          const TreeNoxSolverContext tree_nox_solver_context{
-              .comm = comm_,
-              .dynamics = context_.parameters.dynamics,
-              .tree_linear_solver = tree_newton_linear_solver_,
-              .assembly_pipeline = assembly_pipeline_,
-              .dofs = *dofs_,
-              .locally_relevant_dofs = *locally_relevant_dofs_,
-              .x = *x_,
-          };
-          nonlinear_solver_ =
-              std::make_unique<TreeNoxSolver>(tree_nox_solver_context, current_time_);
-          return;
-        }
-
-        const TreeNewtonSolverContext tree_newton_solver_context{
+        const NewtonTreeContext newton_tree_context{
+            .comm = comm_,
             .dynamics = context_.parameters.dynamics,
             .tree_linear_solver = tree_newton_linear_solver_,
             .assembly_pipeline = assembly_pipeline_,
@@ -430,9 +410,7 @@ namespace ReducedLung
             .locally_relevant_dofs = *locally_relevant_dofs_,
             .x = *x_,
         };
-
-        nonlinear_solver_ =
-            std::make_unique<TreeNewtonSolver>(tree_newton_solver_context, current_time_);
+        nonlinear_solver_ = std::make_unique<NewtonTree>(newton_tree_context, current_time_);
       }
 
       /**

@@ -33,7 +33,6 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <ranges>
@@ -713,16 +712,6 @@ namespace ReducedLung
                 << "\nBoundary Conditions:  |  " << n_total_boundary_conditions << "\n\n"
                 << std::flush;
       // clang-format on
-    }
-  }
-
-  void print_tree_solver_summary(const MPI_Comm& comm, unsigned int iterations, double res_norm)
-  {
-    if (Core::Communication::my_mpi_rank(comm) == 0)
-    {
-      std::cout << "Newton iters: " << iterations << " | ||F||: " << std::scientific
-                << std::setprecision(2) << res_norm << std::defaultfloat << "\n"
-                << std::flush;
     }
   }
 

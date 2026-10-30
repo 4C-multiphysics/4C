@@ -369,11 +369,6 @@ namespace ReducedLung
   void print_instantiated_object_counts(const MPI_Comm& comm, int n_airways, int n_terminal_units,
       int n_connections, int n_bifurcations, int n_boundary_conditions);
 
-  /**
-   * @brief Print the compact convergence summary of the tree nonlinear solvers on rank 0.
-   */
-  void print_tree_solver_summary(const MPI_Comm& comm, unsigned int iterations, double res_norm);
-
   /*!
    * @brief Create the map with the locally owned dofs spanning the computation domain that
    * are necessary for the solution vector.
