@@ -322,8 +322,7 @@ bool Mortar::Coupling3d::project_slave()
     snodeids[0] = mycnode->id();
 
     // store into vertex data structure
-    source_vertices().push_back(
-        Vertex(vertices, Vertex::source, snodeids, nullptr, nullptr, false, false, nullptr, -1.0));
+    source_vertices().emplace_back(vertices, Vertex::source, snodeids, nullptr);
 
     // std::cout << "->RealNode(S) " << mycnode->Id() << ": " << mycnode->xspatial()[0] << " " <<
     // mycnode->xspatial()[1] << " " << mycnode->xspatial()[2] << std::endl; std::cout <<
@@ -367,8 +366,7 @@ bool Mortar::Coupling3d::project_master()
     mnodeids[0] = mycnode->id();
 
     // store into vertex data structure
-    target_vertices().push_back(Vertex(
-        vertices, Vertex::projtarget, mnodeids, nullptr, nullptr, false, false, nullptr, -1.0));
+    target_vertices().emplace_back(vertices, Vertex::projtarget, mnodeids, nullptr);
 
     // std::cout << "->RealNode(M) " << mycnode->Id() << ": " << mycnode->xspatial()[0] << " " <<
     // mycnode->xspatial()[1] << " " << mycnode->xspatial()[2] << std::endl; std::cout <<
@@ -729,52 +727,14 @@ bool Mortar::Coupling3d::polygon_clipping_convex_hull(std::vector<Vertex>& poly1
   //**********************************************************************
   // STEP2: Extend Vertex data structures
   // - note that poly1 is the slave element and poly2 the master element
-  // - assign Next() and Prev() pointers to initialize linked structure
+  // - assign Next() pointers to initialize linked structure
   //**********************************************************************
 
-  // set previous and next Vertex pointer for all elements in lists
-  for (int i = 0; i < (int)poly1.size(); ++i)
-  {
-    // standard case
-    if (i != 0 && i != (int)poly1.size() - 1)
-    {
-      poly1[i].assign_next(&poly1[i + 1]);
-      poly1[i].assign_prev(&poly1[i - 1]);
-    }
-    // first element in list
-    else if (i == 0)
-    {
-      poly1[i].assign_next(&poly1[i + 1]);
-      poly1[i].assign_prev(&poly1[(int)poly1.size() - 1]);
-    }
-    // last element in list
-    else
-    {
-      poly1[i].assign_next(&poly1[0]);
-      poly1[i].assign_prev(&poly1[i - 1]);
-    }
-  }
-  for (int i = 0; i < (int)poly2.size(); ++i)
-  {
-    // standard case
-    if (i != 0 && i != (int)poly2.size() - 1)
-    {
-      poly2[i].assign_next(&poly2[i + 1]);
-      poly2[i].assign_prev(&poly2[i - 1]);
-    }
-    // first element in list
-    else if (i == 0)
-    {
-      poly2[i].assign_next(&poly2[i + 1]);
-      poly2[i].assign_prev(&poly2[(int)poly2.size() - 1]);
-    }
-    // last element in list
-    else
-    {
-      poly2[i].assign_next(&poly2[0]);
-      poly2[i].assign_prev(&poly2[i - 1]);
-    }
-  }
+  // set next Vertex pointer for all elements in lists
+  for (int i = 0; i < static_cast<int>(poly1.size()); ++i)
+    poly1[i].assign_next(&poly1[(i + 1) % static_cast<int>(poly1.size())]);
+  for (int i = 0; i < static_cast<int>(poly2.size()); ++i)
+    poly2[i].assign_next(&poly2[(i + 1) % static_cast<int>(poly2.size())]);
 
   //**********************************************************************
   // STEP3: Perform line intersection of all edge pairs
@@ -868,8 +828,7 @@ bool Mortar::Coupling3d::polygon_clipping_convex_hull(std::vector<Vertex>& poly1
           lcids[3] = (int)((poly2[j].next())->nodeids()[0]);
 
           // store intersection points
-          intersec.push_back(Vertex(ip, Vertex::lineclip, lcids, poly1[i].next(), &poly1[i], true,
-              false, nullptr, alphap));
+          intersec.emplace_back(ip, Vertex::lineclip, lcids, poly1[i].next());
         }
       }
     }
@@ -885,7 +844,6 @@ bool Mortar::Coupling3d::polygon_clipping_convex_hull(std::vector<Vertex>& poly1
       std::cout << "Coords: " << testv.coord()[0] << " " << testv.coord()[1] << " "
                 << testv.coord()[2] << std::endl;
       std::cout << "Type: " << testv.v_type() << std::endl;
-      std::cout << "Alpha: " << testv.alpha() << std::endl;
       std::cout << "Lineclip ids: " << testv.nodeids()[0] << " " << testv.nodeids()[1] << " "
                 << testv.nodeids()[2] << " " << testv.nodeids()[3] << std::endl
                 << std::endl;
@@ -954,7 +912,6 @@ bool Mortar::Coupling3d::polygon_clipping_convex_hull(std::vector<Vertex>& poly1
       std::cout << "Coords: " << testv.coord()[0] << " " << testv.coord()[1] << " "
                 << testv.coord()[2] << std::endl;
       std::cout << "Type: " << testv.v_type() << std::endl;
-      std::cout << "Alpha: " << testv.alpha() << std::endl;
       std::cout << "Lineclip ids: " << testv.nodeids()[0] << " " << testv.nodeids()[1] << " "
                 << testv.nodeids()[2] << " " << testv.nodeids()[3] << std::endl
                 << std::endl;
@@ -1358,8 +1315,7 @@ bool Mortar::Coupling3d::polygon_clipping_convex_hull(std::vector<Vertex>& poly1
     for (int point_index : Core::Geo::convex_hull_2d(transformed))
     {
       const Vertex& v = collconvexhull[point_index];
-      respoly.emplace_back(
-          v.coord(), v.v_type(), v.nodeids(), nullptr, nullptr, false, false, nullptr, -1.0);
+      respoly.emplace_back(v.coord(), v.v_type(), v.nodeids(), nullptr);
     }
   }
 
