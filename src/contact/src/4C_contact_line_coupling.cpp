@@ -591,11 +591,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   if (e0isV0 and e1isV1)
   {
     if (out) std::cout << "CASE 1" << std::endl;
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 2.: nodes on each other
@@ -603,11 +603,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 2" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 3.: e0 on v0 and e1 valid
@@ -615,11 +615,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 3" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 4.: e1 on v0 and e0 valid
@@ -627,11 +627,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 4" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 5.: e0 on v1 and e1 valid
@@ -639,11 +639,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 5" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 6.: e1 on v1 and e0 valid
@@ -651,11 +651,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 6" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 7.: e0 on v0 and e1 out of v1 but in v0
@@ -663,11 +663,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 7" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex1.coord(), Mortar::Vertex::projsource,
-        lineVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex1.coord(), Mortar::Vertex::projsource, lineVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 8.: e1 on v0 and e0 out of v1 but in v0
@@ -675,11 +675,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 8" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex1.coord(), Mortar::Vertex::projsource,
-        lineVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex1.coord(), Mortar::Vertex::projsource, lineVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 9.: e1 on v1 and e0 out of v0 but in v1
@@ -687,11 +687,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 9" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex0.coord(), Mortar::Vertex::projsource,
-        lineVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex0.coord(), Mortar::Vertex::projsource, lineVertex0.nodeids(), nullptr);
   }
   // ========================================================
   // 10.: e0 on v1 and e1 out of v0 but in v1
@@ -699,11 +699,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 10" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex0.coord(), Mortar::Vertex::projsource,
-        lineVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex0.coord(), Mortar::Vertex::projsource, lineVertex0.nodeids(), nullptr);
   }
   // ========================================================
   // 11.: e0 on v0 and e1 out of v0 but in v1
@@ -747,11 +747,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 15" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 16.: all source nodes are projected: E0 out of V0  and E1 out of V1
@@ -759,11 +759,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 16" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex0.coord(), Mortar::Vertex::projsource,
-        lineVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex0.coord(), Mortar::Vertex::projsource, lineVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex1.coord(), Mortar::Vertex::projsource,
-        lineVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex1.coord(), Mortar::Vertex::projsource, lineVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 17.: all source nodes are projected: E1 out of V0  and E0 out of V1
@@ -771,11 +771,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 17" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex0.coord(), Mortar::Vertex::projsource,
-        lineVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex0.coord(), Mortar::Vertex::projsource, lineVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex1.coord(), Mortar::Vertex::projsource,
-        lineVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex1.coord(), Mortar::Vertex::projsource, lineVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 18.: mixed: E0 and E1 pos to V0 and E0 pos to V1
@@ -783,11 +783,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 18" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex1.coord(), Mortar::Vertex::projsource,
-        lineVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex1.coord(), Mortar::Vertex::projsource, lineVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 19.: mixed: E0 and E1 pos to V0 and E1 pos to V1
@@ -795,11 +795,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 19" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex1.coord(), Mortar::Vertex::projsource,
-        lineVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex1.coord(), Mortar::Vertex::projsource, lineVertex1.nodeids(), nullptr);
   }
   // ========================================================
   // 20.: mixed: E0 neg and E1 pos to V0 and E0 and E1 pos to V1
@@ -807,11 +807,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 20" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex1.coord(), Mortar::Vertex::target,
-        edgeVertex1.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex1.coord(), Mortar::Vertex::target, edgeVertex1.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex0.coord(), Mortar::Vertex::projsource,
-        lineVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex0.coord(), Mortar::Vertex::projsource, lineVertex0.nodeids(), nullptr);
   }
   // ========================================================
   // 21.: mixed: E1 neg and E0 pos to V0 and E0 and E1 pos to V1
@@ -819,11 +819,11 @@ bool CONTACT::LineToSurfaceCoupling3d::line_to_line_clipping(Mortar::Vertex& edg
   {
     if (out) std::cout << "CASE 21" << std::endl;
 
-    inter_sections().push_back(Mortar::Vertex(edgeVertex0.coord(), Mortar::Vertex::target,
-        edgeVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        edgeVertex0.coord(), Mortar::Vertex::target, edgeVertex0.nodeids(), nullptr);
 
-    inter_sections().push_back(Mortar::Vertex(lineVertex0.coord(), Mortar::Vertex::projsource,
-        lineVertex0.nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+    inter_sections().emplace_back(
+        lineVertex0.coord(), Mortar::Vertex::projsource, lineVertex0.nodeids(), nullptr);
   }
   // ========================================================
   // 22.: out: E0 and E1 in V0 and out of V1
@@ -885,28 +885,10 @@ void CONTACT::LineToSurfaceCoupling3d::line_clipping()
   if (target_vertices().size() < 3) FOUR_C_THROW("Invalid number of Target Vertices!");
   if (source_vertices().size() != 2) FOUR_C_THROW("Invalid number of Source Vertices!");
 
-  // set previous and next Vertex pointer for all elements in lists
-  for (int i = 0; i < (int)target_vertices().size(); ++i)
-  {
-    // standard case
-    if (i != 0 && i != (int)target_vertices().size() - 1)
-    {
-      target_vertices()[i].assign_next(&target_vertices()[i + 1]);
-      target_vertices()[i].assign_prev(&target_vertices()[i - 1]);
-    }
-    // first element in list
-    else if (i == 0)
-    {
-      target_vertices()[i].assign_next(&target_vertices()[i + 1]);
-      target_vertices()[i].assign_prev(&target_vertices()[(int)target_vertices().size() - 1]);
-    }
-    // last element in list
-    else
-    {
-      target_vertices()[i].assign_next(target_vertices().data());
-      target_vertices()[i].assign_prev(&target_vertices()[i - 1]);
-    }
-  }
+  // set next Vertex pointer for all elements in lists
+  for (int i = 0; i < static_cast<int>(target_vertices().size()); ++i)
+    target_vertices()[i].assign_next(
+        &target_vertices()[(i + 1) % static_cast<int>(target_vertices().size())]);
 
   // flip ordering
   std::reverse(source_vertices().begin(), source_vertices().end());
@@ -1129,8 +1111,8 @@ void CONTACT::LineToSurfaceCoupling3d::line_clipping()
           lcids[3] = (int)((target_vertices()[j].next())->nodeids()[0]);
 
           // store intersection points
-          temp_inter_sections().push_back(Mortar::Vertex(coords, Mortar::Vertex::lineclip, lcids,
-              &(source_vertices()[1]), &(source_vertices()[0]), true, false, nullptr, alpha));
+          temp_inter_sections().emplace_back(
+              coords, Mortar::Vertex::lineclip, lcids, &(source_vertices()[1]));
         }
       }
     }  // end vertex loop
@@ -1181,9 +1163,8 @@ void CONTACT::LineToSurfaceCoupling3d::line_clipping()
         }
         else
         {
-          temp_inter_sections().push_back(
-              Mortar::Vertex(source_vertices()[i].coord(), Mortar::Vertex::projsource,
-                  source_vertices()[i].nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+          temp_inter_sections().emplace_back(source_vertices()[i].coord(),
+              Mortar::Vertex::projsource, source_vertices()[i].nodeids(), nullptr);
         }
       }
     }  // if intersections != 2
@@ -1249,9 +1230,8 @@ void CONTACT::LineToSurfaceCoupling3d::line_clipping()
           close = true;
 
           // store source vertex as intersection point
-          inter_sections().push_back(
-              Mortar::Vertex(source_vertices()[j].coord(), Mortar::Vertex::projsource,
-                  source_vertices()[j].nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+          inter_sections().emplace_back(source_vertices()[j].coord(), Mortar::Vertex::projsource,
+              source_vertices()[j].nodeids(), nullptr);
           break;
         }
       }
@@ -1274,9 +1254,8 @@ void CONTACT::LineToSurfaceCoupling3d::line_clipping()
             // intersection is close to target vertex!
             close = true;
 
-            inter_sections().push_back(
-                Mortar::Vertex(target_vertices()[j].coord(), Mortar::Vertex::target,
-                    target_vertices()[j].nodeids(), nullptr, nullptr, false, false, nullptr, -1));
+            inter_sections().emplace_back(target_vertices()[j].coord(), Mortar::Vertex::target,
+                target_vertices()[j].nodeids(), nullptr);
             break;
           }
         }
@@ -1985,8 +1964,7 @@ bool CONTACT::LineToSurfaceCoupling3d::project_source()
     source_node_ids[0] = mycnode->id();
 
     // store into vertex data structure
-    source_vertices().push_back(Mortar::Vertex(vertices, Mortar::Vertex::projsource,
-        source_node_ids, nullptr, nullptr, false, false, nullptr, -1.0));
+    source_vertices().emplace_back(vertices, Mortar::Vertex::projsource, source_node_ids, nullptr);
   }
   return true;
 }
@@ -2179,8 +2157,7 @@ bool CONTACT::LineToSurfaceCoupling3d::project_target()
     target_node_ids[0] = mycnode->id();
 
     // store into vertex data structure
-    target_vertices().push_back(Mortar::Vertex(vertices, Mortar::Vertex::target, target_node_ids,
-        nullptr, nullptr, false, false, nullptr, -1.0));
+    target_vertices().emplace_back(vertices, Mortar::Vertex::target, target_node_ids, nullptr);
 
     // std::cout << "->RealNode(M) " << mycnode->Id() << ": " << mycnode->xspatial()[0] << " " <<
     // mycnode->xspatial()[1] << " " << mycnode->xspatial()[2] << std::endl; std::cout <<

@@ -17,6 +17,8 @@
 #include "4C_mortar_integrator.hpp"
 #include "4C_mortar_projector.hpp"
 
+#include <utility>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
@@ -908,17 +910,9 @@ void Mortar::IntCell::deriv_jacobian(Core::Gen::Pairedvector<int, double>& deriv
 /*----------------------------------------------------------------------*
  |  ctor (public)                                             popp 11/08|
  *----------------------------------------------------------------------*/
-Mortar::Vertex::Vertex(std::vector<double> coord, Vertex::VType type, std::vector<int> nodeids,
-    Vertex* next, Vertex* prev, bool intersect, bool entryexit, Vertex* neighbor, double alpha)
-    : coord_(coord),
-      type_(type),
-      nodeids_(nodeids),
-      next_(next),
-      prev_(prev),
-      intersect_(intersect),
-      entryexit_(entryexit),
-      neighbor_(neighbor),
-      alpha_(alpha)
+Mortar::Vertex::Vertex(
+    std::vector<double> coord, Vertex::VType type, std::vector<int> nodeids, Vertex* next)
+    : coord_(std::move(coord)), type_(type), nodeids_(std::move(nodeids)), next_(next)
 {
   // empty constructor body
   return;
@@ -928,15 +922,7 @@ Mortar::Vertex::Vertex(std::vector<double> coord, Vertex::VType type, std::vecto
  |  cctor (public)                                            popp 11/08|
  *----------------------------------------------------------------------*/
 Mortar::Vertex::Vertex(const Vertex& old)
-    : coord_(old.coord_),
-      type_(old.type_),
-      nodeids_(old.nodeids_),
-      next_(old.next_),
-      prev_(old.prev_),
-      intersect_(old.intersect_),
-      entryexit_(old.entryexit_),
-      neighbor_(old.neighbor_),
-      alpha_(old.alpha_)
+    : coord_(old.coord_), type_(old.type_), nodeids_(old.nodeids_), next_(old.next_)
 {
   // empty copy constructor body
   return;

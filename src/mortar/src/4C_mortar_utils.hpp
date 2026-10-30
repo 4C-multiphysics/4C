@@ -10,9 +10,9 @@
 
 #include "4C_config.hpp"
 
-#include "4C_linalg_map.hpp"
+#include "4C_fem_discretization.hpp"
 #include "4C_linalg_vector.hpp"
-#include "4C_mortar_coupling3d_classes.hpp"
+#include "4C_mortar_element.hpp"
 
 #include <memory>
 
@@ -28,33 +28,6 @@ namespace Core::LinAlg
 
 namespace Mortar
 {
-
-  /*!
-  \brief Sort vector in ascending order
-
-  This routine is taken from Trilinos MOERTEL package.
-
-  \param dlist (in): vector to be sorted (unsorted on input, sorted on output)
-  \param N (in):     length of vector to be sorted
-  \param list2 (in): another vector which is sorted accordingly
-  */
-  void sort(double* dlist, int N, int* list2);
-
-
-  /*!
-  \brief Convex hull points are sorted in order to obtain final clip polygon
-
-  \param out (in): bool to switch output on/off
-  \param transformed (in): coordinates of vertex objects transformed into auxiliary plane
-  \param collconvexhull (in): vector of vertex objects to be sorted
-  \param respoly (out): vector of vertex objects for result polygon
-  \param tol (in): clipping tolerance for close vertices detection
-  \return number of removed points from collconvexhull
-
-  */
-  int sort_convex_hull_points(bool out, Core::LinAlg::SerialDenseMatrix& transformed,
-      std::vector<Vertex>& collconvexhull, std::vector<Vertex>& respoly, double& tol);
-
   namespace Utils
   {
     /*!

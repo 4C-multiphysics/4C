@@ -5974,23 +5974,23 @@ RESULT DESCRIPTION:
       DIS: "fluid"
       NODE: 1521
       QUANTITY: "velx"
-      VALUE: 3.93102106573548e-05
+      VALUE: 3.933114310247919e-05
       TOLERANCE: 1e-09
   - FLUID:
       DIS: "fluid"
       NODE: 960
       QUANTITY: "velx"
-      VALUE: -3.9314172646863545e-05
+      VALUE: -3.9334949974033905e-05
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 2271
       QUANTITY: "dispx"
-      VALUE: 1.5073841173452597e-05
+      VALUE: 1.506841083260311e-05
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 2031
       QUANTITY: "dispx"
-      VALUE: -1.5076211637772422e-05
+      VALUE: -1.5070063533974505e-05
       TOLERANCE: 1e-09
