@@ -45,7 +45,7 @@ ENV PATH=/usr/local/cuda/bin:${PATH}
 # Install cmake
 RUN /dependencies/current/cmake/install.sh /usr/local
 
-# Install superLU_dist 7.2.0
+# Install superLU_dist
 RUN /dependencies/current/superlu_dist/install.sh ${INSTALL_DIR}
 
 # Install Trilinos 2026.2 with Kokkos' CUDA backend enabled
