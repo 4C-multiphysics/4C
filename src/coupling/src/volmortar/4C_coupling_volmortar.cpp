@@ -22,7 +22,6 @@
 #include "4C_linalg_mapextractor.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
-#include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linear_solver_method.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
@@ -3756,8 +3755,7 @@ void Coupling::VolMortar::VolMortarCoupl::define_vertices_source(
     snodeids[0] = mynodes[i]->id();
 
     // store into vertex data structure
-    source_vertices.push_back(Mortar::Vertex(
-        vertices, Mortar::Vertex::source, snodeids, nullptr, nullptr, false, false, nullptr, -1.0));
+    source_vertices.emplace_back(vertices, Mortar::Vertex::source, snodeids, nullptr);
   }
 }
 
@@ -3786,8 +3784,7 @@ void Coupling::VolMortar::VolMortarCoupl::define_vertices_target(
     tnodeids[0] = mynodes[i]->id();
 
     // store into vertex data structure
-    target_vertices.push_back(Mortar::Vertex(vertices, Mortar::Vertex::projtarget, tnodeids,
-        nullptr, nullptr, false, false, nullptr, -1.0));
+    target_vertices.emplace_back(vertices, Mortar::Vertex::projtarget, tnodeids, nullptr);
   }
 }
 
@@ -3944,51 +3941,13 @@ bool Coupling::VolMortar::VolMortarCoupl::polygon_clipping_convex_hull(
   //**********************************************************************
   // STEP2: Extend Vertex data structures
   // - note that poly1 is the source element and poly2 the target element
-  // - assign Next() and Prev() pointers to initialize linked structure
+  // - assign Next() pointers to initialize linked structure
   //**********************************************************************
-  // set previous and next Vertex pointer for all elements in lists
-  for (int i = 0; i < (int)poly1.size(); ++i)
-  {
-    // standard case
-    if (i != 0 && i != (int)poly1.size() - 1)
-    {
-      poly1[i].assign_next(&poly1[i + 1]);
-      poly1[i].assign_prev(&poly1[i - 1]);
-    }
-    // first element in list
-    else if (i == 0)
-    {
-      poly1[i].assign_next(&poly1[i + 1]);
-      poly1[i].assign_prev(&poly1[(int)poly1.size() - 1]);
-    }
-    // last element in list
-    else
-    {
-      poly1[i].assign_next(&poly1[0]);
-      poly1[i].assign_prev(&poly1[i - 1]);
-    }
-  }
-  for (int i = 0; i < (int)poly2.size(); ++i)
-  {
-    // standard case
-    if (i != 0 && i != (int)poly2.size() - 1)
-    {
-      poly2[i].assign_next(&poly2[i + 1]);
-      poly2[i].assign_prev(&poly2[i - 1]);
-    }
-    // first element in list
-    else if (i == 0)
-    {
-      poly2[i].assign_next(&poly2[i + 1]);
-      poly2[i].assign_prev(&poly2[(int)poly2.size() - 1]);
-    }
-    // last element in list
-    else
-    {
-      poly2[i].assign_next(&poly2[0]);
-      poly2[i].assign_prev(&poly2[i - 1]);
-    }
-  }
+  // set next Vertex pointer for all elements in lists
+  for (int i = 0; i < static_cast<int>(poly1.size()); ++i)
+    poly1[i].assign_next(&poly1[(i + 1) % static_cast<int>(poly1.size())]);
+  for (int i = 0; i < static_cast<int>(poly2.size()); ++i)
+    poly2[i].assign_next(&poly2[(i + 1) % static_cast<int>(poly2.size())]);
 
   //**********************************************************************
   // STEP3: Perform line intersection of all edge pairs
@@ -4066,8 +4025,7 @@ bool Coupling::VolMortar::VolMortarCoupl::polygon_clipping_convex_hull(
           lcids[3] = (int)((poly2[j].next())->nodeids()[0]);
 
           // store intersection points
-          intersec.push_back(Mortar::Vertex(ip, Mortar::Vertex::lineclip, lcids, poly1[i].next(),
-              &poly1[i], true, false, nullptr, alphap));
+          intersec.emplace_back(ip, Mortar::Vertex::lineclip, lcids, poly1[i].next());
         }
       }
     }

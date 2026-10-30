@@ -339,8 +339,8 @@ namespace Mortar
   /*!
   \brief A class representing one Vertex during the polygon clipping of
          slave and master element from the Coupling class. Besides the
-         vertex coordinates this class provides different pointers to
-         build up doubly-linked list structures.
+         vertex coordinates this class provides a pointer to the next
+         vertex on the polygon.
          Note that a Vertex can EITHER live in physical space (this is the
          case when an auxiliary plane is used for 3D coupling) or in the slave
          element parameter space (this is the case when 3D coupling is performed
@@ -372,8 +372,7 @@ namespace Mortar
     performed in parallel by individual processes.
 
     */
-    Vertex(std::vector<double> coord, Vertex::VType type, std::vector<int> nodeids, Vertex* next,
-        Vertex* prev, bool intersect, bool entryexit, Vertex* neighbor, double alpha);
+    Vertex(std::vector<double> coord, Vertex::VType type, std::vector<int> nodeids, Vertex* next);
 
     /*!
     \brief Copy Constructor
@@ -416,68 +415,6 @@ namespace Mortar
     virtual void assign_next(Vertex* assign) { next_ = assign; }
 
     /*!
-    \brief Return pointer to previous vertex on polygon
-
-    */
-    virtual Vertex* prev() { return prev_; }
-
-    /*!
-    \brief Assign pointer to previous vertex on polygon
-
-    */
-    virtual void assign_prev(Vertex* assign) { prev_ = assign; }
-
-    /*!
-    \brief Return intersection status of this vertex
-    True if vertex is an intersection point of the polygons.
-
-    */
-    virtual bool& intersect() { return intersect_; }
-
-    /*!
-    \brief Return entry / exit status of this vertex
-    True if vertex is an entry intersection point, false if
-    vertex is an exit intersection point with respect to the
-    respective other polygon. Irrelevant if intersect_==false.
-
-    */
-    virtual bool& entry_exit()
-    {
-      if (!intersect_) FOUR_C_THROW("EntryExit only for intersections");
-      return entryexit_;
-    }
-
-    /*!
-    \brief Return pointer to neighbor on other polygon
-    This pointer can only be set for an intersrection vertex,
-    i.e. if intersect_==true. It then points to the identical
-    vertex on the other polygon.
-
-    */
-    virtual Vertex* neighbor()
-    {
-      if (!intersect_) FOUR_C_THROW("Neighbor only for intersections");
-      return neighbor_;
-    }
-
-    /*!
-    \brief Assign pointer to neighbor on other polygon
-
-    */
-    virtual void assign_neighbor(Vertex* assign)
-    {
-      if (!intersect_) FOUR_C_THROW("Neighbor only for intersections");
-      neighbor_ = assign;
-    }
-
-    /*!
-    \brief Return intersection parameter alpha. Note that
-    valid intersections yield an alpha in the range [0,1].
-
-    */
-    virtual double& alpha() { return alpha_; }
-
-    /*!
     \brief Return vector of relevant node ids (length 1 or 4)
     Note that for a slave or projmaster type vertex only the
     respective node id is relevant, therefore length 1. For a
@@ -506,11 +443,6 @@ namespace Mortar
     Vertex::VType type_;         // vertex type (slave,projmaster,lineclip)
     std::vector<int> nodeids_;   // relevant ids (1 if slave or master, 4 if lineclip)
     Vertex* next_;               // pointer to next vertex on polygon
-    Vertex* prev_;               // pointer to previous vertex on polygon
-    bool intersect_;             // if true, this is an intersection vertex
-    bool entryexit_;             // if true, this is an entry vertex
-    Vertex* neighbor_;           // pointer to neighbor vertex on other polygon
-    double alpha_;               // intersection parameter
 
   };  // class Vertex
 
