@@ -10,7 +10,7 @@
 
 #include "4C_config.hpp"
 
-#include "4C_reduced_lung_helpers.hpp"
+#include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_nonlinear_solver.hpp"
 
 #include <mpi.h>
@@ -40,7 +40,6 @@ namespace ReducedLung
         tree_linear_solver;  ///< Tree Newton correction linear solver.
     const NonlinearSolverAssemblyPipeline&
         assembly_pipeline;                                ///< Ordered model assembly callbacks.
-    Core::LinAlg::Vector<double>& dofs;                   ///< Owned dof vector.
     Core::LinAlg::Vector<double>& locally_relevant_dofs;  ///< Ghosted dof vector.
     Core::LinAlg::Vector<double>& x;                      ///< Nonlinear solution vector.
   };

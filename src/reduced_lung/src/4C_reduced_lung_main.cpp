@@ -26,6 +26,7 @@
 #include "4C_reduced_lung_junctions.hpp"
 #include "4C_reduced_lung_newton_tree.hpp"
 #include "4C_reduced_lung_nonlinear_solver.hpp"
+#include "4C_reduced_lung_nox_solver.hpp"
 #include "4C_reduced_lung_resulttest.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_tree_linear_solver.hpp"
@@ -396,7 +397,7 @@ namespace ReducedLung
        */
       void build_tree_newton_solver()
       {
-        FOUR_C_ASSERT_ALWAYS(dofs_ != nullptr && locally_relevant_dofs_ != nullptr && x_ != nullptr,
+        FOUR_C_ASSERT_ALWAYS(locally_relevant_dofs_ != nullptr && x_ != nullptr,
             "Reduced lung linear system must be initialized before NewtonTree solver setup.");
         FOUR_C_ASSERT_ALWAYS(tree_newton_linear_solver_ != nullptr,
             "Reduced lung NewtonTree solver requires a tree Newton linear solver.");
@@ -406,7 +407,6 @@ namespace ReducedLung
             .dynamics = context_.parameters.dynamics,
             .tree_linear_solver = tree_newton_linear_solver_,
             .assembly_pipeline = assembly_pipeline_,
-            .dofs = *dofs_,
             .locally_relevant_dofs = *locally_relevant_dofs_,
             .x = *x_,
         };

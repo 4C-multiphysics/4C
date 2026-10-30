@@ -14,6 +14,7 @@
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
+#include "4C_reduced_lung_nox_solver.hpp"
 #include "4C_reduced_lung_tree_linear_solver.hpp"
 #include "4C_solver_nonlin_nox_aux.hpp"
 #include "4C_solver_nonlin_nox_globaldata.hpp"
@@ -47,17 +48,16 @@ namespace ReducedLung
     /**
      * @brief Evaluates reduced-lung residuals and tree linearizations for NOX callbacks.
      *
-     * The model state (dof vectors and state updaters) is synced in every residual evaluation.
-     * The tree linearization reuses that state: @ref TreeGroup only requests a Jacobian at the
-     * state of the most recent residual evaluation, and NOX's final residual evaluation happens at
-     * the converged state, so the models are up to date after a solve.
+     * The model state (locally relevant dofs and state updaters) is synced in every residual
+     * evaluation. The tree linearization reuses that state: @ref TreeGroup only requests a Jacobian
+     * at the state of the most recent residual evaluation, and NOX's final residual evaluation
+     * happens at the converged state, so the models are up to date after a solve.
      */
     class TreeModelEvaluator
     {
      public:
       TreeModelEvaluator(const NewtonTreeContext& context, double initial_time)
-          : dofs_(context.dofs),
-            locally_relevant_dofs_(context.locally_relevant_dofs),
+          : locally_relevant_dofs_(context.locally_relevant_dofs),
             assembly_pipeline_(context.assembly_pipeline),
             tree_linear_solver_(context.tree_linear_solver),
             dt_(context.dynamics.time_increment),
@@ -83,7 +83,8 @@ namespace ReducedLung
        */
       [[nodiscard]] bool is_synced_to(const Core::LinAlg::Vector<double>& x) const
       {
-        return std::ranges::equal(x.local_values_as_span(), dofs_.local_values_as_span());
+        return std::ranges::equal(
+            x.local_values_as_span(), locally_relevant_dofs_.local_values_as_span());
       }
 
       /**
@@ -119,14 +120,13 @@ namespace ReducedLung
 
      private:
       /**
-       * @brief Copy x to the dof vectors and update the models.
+       * @brief Copy x to the locally relevant dof vector and update the models.
        *
-       * The tree solver is serial-only, where x, the owned and the ghosted dof vectors share the
-       * same local layout, so a plain copy suffices.
+       * The tree solver is serial-only, where x and the locally relevant dof vector share the same
+       * local layout, so a plain copy suffices.
        */
       void sync_state(const Core::LinAlg::Vector<double>& x)
       {
-        dofs_.update(1.0, x, 0.0);
         locally_relevant_dofs_.update(1.0, x, 0.0);
 
         for (const auto& update_state : assembly_pipeline_.state_updaters)
@@ -135,7 +135,6 @@ namespace ReducedLung
         }
       }
 
-      Core::LinAlg::Vector<double>& dofs_;
       Core::LinAlg::Vector<double>& locally_relevant_dofs_;
       NonlinearSolverAssemblyPipeline assembly_pipeline_;
       std::shared_ptr<TreeNewtonLinearSolver> tree_linear_solver_;
