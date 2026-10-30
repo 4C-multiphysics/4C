@@ -21,6 +21,8 @@
 #include "4C_mortar_input.hpp"
 #include "4C_mortar_node.hpp"
 
+#include <map>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
@@ -183,8 +185,6 @@ void CONTACT::TSIInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linsli
 
   double frcoeff_in =
       interface_params().get<double>("FRCOEFF");  // the friction coefficient from the input
-  double ct_input = interface_params().get<double>("SEMI_SMOOTH_CT");
-  double cn_input = interface_params().get<double>("SEMI_SMOOTH_CN");
 
   // some things that are not implemented
   const bool gp_slip = interface_params().get<bool>("GP_SLIP_INCR");
@@ -237,8 +237,9 @@ void CONTACT::TSIInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linsli
     std::map<int, double> dfrdT, dfrdD;
     cnode->deriv_fr_coeff_temp(frcoeff_in, dfrdT, dfrdD);
 
-    double cn = cn_input;
-    double ct = ct_input;
+    const int local_id = cnValues_->get_map().lid(gid);
+    const double cn = cnValues_->get_values()[local_id];
+    const double ct = ctValues_->get_values()[local_id];
 
     double fac = lm_n - cn * wgap;
     for (CI p = dfrdT.begin(); p != dfrdT.end(); ++p)
@@ -421,14 +422,15 @@ void CONTACT::TSIInterface::assemble_lin_dm_x(Core::LinAlg::SparseMatrix* linD_X
           lm = 0.;
         else
         {
-          double dval = 1.;
-          if (cnode->mo_data().get_d().size() == 0)
-            continue;
-          else
-            cnode->mo_data().get_d()[cnode->id()];
+          if (cnode->mo_data().get_d().size() == 0) continue;
+          // diagonal entry D_jj of the D-matrix for the current source node
+          const double dval = cnode->mo_data().get_d()[cnode->id()];
+          // contact Lagrange multiplier (= negative traction)
           const Core::LinAlg::Matrix<3, 1> lmc(cnode->mo_data().lm(), true);
           const Core::LinAlg::Matrix<3, 1> n(cnode->mo_data().n(), true);
+          // weighted relative slip increment
           const Core::LinAlg::Matrix<3, 1> jump(frnode->fri_data().jump(), true);
+          // calculate frictional dissipation
           double diss = (-lmc.dot(jump) + lmc.dot(n) * jump.dot(n)) / (dt * dval);
           lm = diss;
         }
@@ -605,18 +607,17 @@ void CONTACT::TSIInterface::assemble_dm_lin_diss(Core::LinAlg::SparseMatrix* d_L
       const std::vector<std::map<int, double>>& derivJump = fnode->fri_data().get_deriv_jump();
       const std::vector<Core::Gen::Pairedvector<int, double>>& derivN = cnode->data().get_deriv_n();
 
-      // calculate derivative of Dissipation *******************************
+      // calculate derivative of the dissipation with respect to nodal displacements u_k
       std::map<int, double> derivDiss;
       for (int i = 0; i < 3; ++i)
       {
-        for (_cim p = derivJump[i].begin(); p != derivJump[i].end(); ++p)
-          derivDiss[p->first] -= ((lm(i) - lm_n * n(i)) * p->second) / (dt * dval);
-        for (_cip p = derivN[i].begin(); p != derivN[i].end(); ++p)
-          derivDiss[p->first] += ((lm_n * jump(i) + jump_n * lm(i)) * p->second) / (dt * dval);
-        for (_cim p = derivD.begin(); p != derivD.end(); ++p)
-          derivDiss[p->first] +=
-              (-lm.dot(jump) + lm.dot(n) * jump.dot(n)) / (dt * dval * dval) * (-p->second);
+        for (const auto& [k, jump_wrt_uk] : derivJump[i])
+          derivDiss[k] -= ((lm_t(i)) * jump_wrt_uk) / (dt * dval);
+        for (const auto& [k, n_wrt_uk] : derivN[i])
+          derivDiss[k] += ((lm_n * jump(i) + jump_n * lm(i)) * n_wrt_uk) / (dt * dval);
       }
+      for (const auto& [k, dval_wrt_uk] : derivD)
+        derivDiss[k] += (lm.dot(jump) - lm.dot(n) * jump.dot(n)) / (dt * dval * dval) * dval_wrt_uk;
 
       // put everything together*******************************************
       /**************************************************** D-matrix ******/

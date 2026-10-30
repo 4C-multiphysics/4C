@@ -87,24 +87,60 @@ namespace CONTACT
     );
 
     /*!
-      \brief Assemble the linearization of D and M times some nodal value
+      \brief Assemble the linearization of \f$\mathbf{D}\f$ and \f${\mathbf{M}}\f$ matrices times
+      some nodal value.
 
-      This assembles  D_{jk,c) X_j and
-                     -M_{jl,c} X_j (mind the minus sign!)
-      where X_j is some (scalar) nodal value determined by "mode"
+      Specifically, this adds
+      \f[
+        \mathtt{linD\_X}_{kc} \mathrel{+}= \mathtt{fac}
+          \frac{\mathrm{d}D_{jk}}{\mathrm{d}u_c} X_j, \qquad
+        \mathtt{linM\_X}_{lc} \mathrel{-}= \mathtt{fac}
+          \frac{\mathrm{d}M_{jl}}{\mathrm{d}u_c} X_j
+      \f]
+      for all \f$j\f$ in @p node_rowmap. \f$X_j\f$ is a (scalar) nodal value
+      determined by @p mode. For example, if mode is @ref LinDmXMode::LinDM_Diss, then
+      \f$X_j = \mathcal{P}_j\f$ is the nodal frictional dissipation power, see
+      @ref assemble_dm_lin_diss() for the definition.
       */
     virtual void assemble_lin_dm_x(Core::LinAlg::SparseMatrix* linD_X,
         Core::LinAlg::SparseMatrix* linM_X, const double fac, const LinDmXMode mode,
         const std::shared_ptr<const Core::LinAlg::Map> node_rowmap);
 
     /*!
-      \brief Assemble D and M times the linearization of the nodal frictional dissipation
+      \brief Assemble \f$\mathbf{D}\f$ and \f$\mathbf{M}\f$ matrices times the linearization of the
+      nodal frictional dissipation \f$\mathcal{P}\f$.
 
-      This assembles  D_{jk) Diss_{j,c} and
-                      M_{jl} Diss_{j,c}
-                     where c is some discrete nodal DISPLACEMENT or LM dof.
-      The dissipation is calculated by the tangential slip times the contact Lagrange multiplier
-      Diss = \lambda^{contact}  \cdot  (1 - n \otimes n) \cdot jump
+      Specifically, this adds
+      \f[
+        \mathtt{d\_LinDissX}_{kc} \mathrel{+}= \mathtt{fac}\,
+          D_{jk} \frac{\mathrm{d}\,\mathcal{P}_j}{\mathrm{d}X_c}, \qquad
+        \mathtt{m\_LinDissX}_{kc} \mathrel{+}= \mathtt{fac}\,
+          M_{jk} \frac{\mathrm{d}\,\mathcal{P}_j}{\mathrm{d}X_c}
+      \f]
+      for all active nodes \f$j\f$ and \f$X_c\f$ a displacement (DISP) or contact Lagrange
+      multiplier (ContactLM) dof. The nodal frictional dissipation power (cf.
+      https://mediatum.ub.tum.de/?id=1454145, equation 4.57) is
+      \f[
+        \mathcal{P}_j = \mathbf{t}_\tau \cdot \mathbf{v}_\tau
+        = \mathbf{t} \cdot \left(\mathbf{I} - \mathbf{n}\otimes\mathbf{n}\right) \cdot
+          \frac{\Delta\tilde{\mathbf{u}}}{\Delta t D_{jj}}
+      \f]
+      with the traction \f$\mathbf{t} = -\boldsymbol{\lambda}_j\f$, the normal \f$\mathbf{n}\f$
+      and the weighted slip increment (jump) \f$\Delta\tilde{\mathbf{u}}\f$ (no summation over
+      \f$j\f$). Its derivative w.r.t. a displacement dof is
+      \f[
+        \frac{\mathrm{d}\mathcal{P}_j}{\mathrm{d}u_c}
+        = \left[\mathbf{t}_\tau \cdot \frac{\mathrm{d}\Delta\tilde{\mathbf{u}}}{\mathrm{d}u_c}
+          - \left(t_n \Delta\tilde{\mathbf{u}} + \Delta\tilde{u}_n \mathbf{t}\right) \cdot
+            \frac{\mathrm{d}\mathbf{n}}{\mathrm{d}u_c}\right] \frac{1}{\Delta t D_{jj}}
+        - \frac{\mathcal{P}_j}{D_{jj}} \frac{\mathrm{d}D_{jj}}{\mathrm{d}u_c}
+      \f]
+      and w.r.t. the contact Lagrange multiplier
+      \f[
+        \frac{\mathrm{d}\mathcal{P}_j}{\mathrm{d}\boldsymbol{\lambda}_j}
+        = -\left(\mathbf{I} - \mathbf{n}\otimes\mathbf{n}\right) \cdot
+          \frac{\Delta\tilde{\mathbf{u}}}{\Delta t D_{jj}}
+      \f]
       */
     virtual void assemble_dm_lin_diss(Core::LinAlg::SparseMatrix* d_LinDissDISP,
         Core::LinAlg::SparseMatrix* m_LinDissDISP, Core::LinAlg::SparseMatrix* d_LinDissContactLM,
