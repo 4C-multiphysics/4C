@@ -58,7 +58,7 @@ namespace Core::LinearSolver
     void setup(Core::LinAlg::SparseOperator& matrix, Core::LinAlg::MultiVector<double>& b) override;
 
     //! linear operator used for preconditioning
-    std::shared_ptr<Epetra_Operator> prec_operator() const final { return p_; }
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> prec_operator() const override { return p_; }
 
    private:
     //! system of equations used for preconditioning used by P_ only
@@ -69,11 +69,40 @@ namespace Core::LinearSolver
     Teuchos::ParameterList& muelulist_;
 
     //! preconditioner
-    std::shared_ptr<Epetra_Operator> p_;
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> p_;
 
     //! MueLu hierarchy
     Teuchos::RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>> H_;
   };
+
+
+  template <typename LO, typename GO, typename Node>
+  Teuchos::RCP<const Xpetra::Map<LO, GO, Node>> unwrap_xpetra_map(
+      Teuchos::RCP<const Xpetra::Map<LO, GO, Node>> map)
+  {
+    FOUR_C_ASSERT_ALWAYS(map != Teuchos::null, "Cannot unwrap a null Xpetra map.");
+
+    while (true)
+    {
+      if (const auto blocked_map =
+              Teuchos::rcp_dynamic_cast<const Xpetra::BlockedMap<LO, GO, Node>>(map, false);
+          blocked_map != Teuchos::null)
+      {
+        map = blocked_map->getMap();
+        continue;
+      }
+
+      if (const auto strided_map =
+              Teuchos::rcp_dynamic_cast<const Xpetra::StridedMap<LO, GO, Node>>(map, false);
+          strided_map != Teuchos::null)
+      {
+        map = strided_map->getMap();
+        continue;
+      }
+
+      return map;
+    }
+  }
 
   /*!
    * @brief Check whether the chosen coarse solver type is actually available

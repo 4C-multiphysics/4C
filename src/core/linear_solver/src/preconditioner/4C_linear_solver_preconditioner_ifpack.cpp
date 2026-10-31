@@ -70,9 +70,7 @@ void Core::LinearSolver::IFPACKPreconditioner::setup(
       builder.createPreconditioningStrategy("Ifpack");
   Teuchos::RCP<Thyra::PreconditionerBase<double>> prec =
       Thyra::prec<double>(*precFactory, pmatrix_);
-  auto inverseOp = prec->getUnspecifiedPrecOp();
-
-  p_ = Utils::get_epetra_inverse_operator_from_thyra(inverseOp);
+  p_ = prec->getUnspecifiedPrecOp();
 }
 
 FOUR_C_NAMESPACE_CLOSE
