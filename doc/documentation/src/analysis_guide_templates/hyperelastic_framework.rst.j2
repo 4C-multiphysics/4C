@@ -1,0 +1,145 @@
+{% set framework_file = "cardiovascular0d_arterialproxdist_structure_direct_genalpha.4C.yaml" %}
+{% set framework = load_input_file(framework_file) %}
+
+.. _hyperelastic-framework:
+
+Hyperelastic framework
+======================
+
+``MAT_ElastHyper`` constructs a strain-energy function by summing separately registered
+``ELAST_*`` contributions:
+
+.. math::
+
+   \Psi = \sum_{a=1}^{n_\mathrm{mat}} \Psi_a.
+
+One material is the *parent material*, which is assigned to the element.
+This material entry does not define its properties (except the density of the material), but contains
+pointers to the energy summands.
+Its children, denoted by the parameter ``MATIDS``, refer to the material IDs of these summands (see example below).
+
+Notation for the potentials
+---------------------------
+
+The summands :math:`\Psi_a` state the strain-energy density implemented by each contribution,
+based on the deformation gradient :math:`\boldsymbol F` and the right Cauchy-Green deformation tensor
+:math:`\boldsymbol C` or the Green-Lagrange strain tensor :math:`\boldsymbol E`:
+
+.. math::
+
+   \boldsymbol C = \boldsymbol F^\mathrm{T}\boldsymbol F \quad , \quad
+   \boldsymbol E = \tfrac12(\boldsymbol C-\boldsymbol I)\quad , \quad
+   J = \det\boldsymbol F,
+
+They are either based on strain invariants
+
+.. math::
+
+   I_1 = \operatorname{tr}\boldsymbol C \quad , \quad
+   I_2 = \tfrac12\left[(\operatorname{tr}\boldsymbol C)^2
+     -\operatorname{tr}(\boldsymbol C^2)\right] \quad , \quad
+   I_3 = \det\boldsymbol C=J^2,
+
+or on principal stretches :math:`\lambda_i`, which are the positive square roots of the eigenvalues of
+:math:`\boldsymbol C`.
+
+We can define distortional quantities, that don't account for volume changes and carry an overbar,
+often colled *modified deformation gradient* and *modified Cauchy-Green deformation tensor*:
+
+.. math::
+
+   \bar{\boldsymbol C}=J^{-2/3}\boldsymbol C,\qquad
+   \bar I_1=J^{-2/3}I_1,\qquad
+   \bar I_2=J^{-4/3}I_2,\qquad
+   \bar\lambda_i=J^{-1/3}\lambda_i.
+
+For a reference fiber direction :math:`\boldsymbol a` and two-family directions
+:math:`\boldsymbol a_1,\boldsymbol a_2`, the anisotropic invariants are
+
+.. math::
+
+   I_4 &= \boldsymbol a\mathbin{\cdot}\boldsymbol C\boldsymbol a \quad, \quad
+   &I_5 &= \boldsymbol a\mathbin{\cdot}\boldsymbol C^2\boldsymbol a,\\
+   I_6 &= \boldsymbol a_2\mathbin{\cdot}\boldsymbol C\boldsymbol a_2 \quad, \quad
+   &I_8 &= \tfrac12(\boldsymbol a_1\otimes\boldsymbol a_2+
+     \boldsymbol a_2\otimes\boldsymbol a_1):\boldsymbol C .
+
+Choosing summands
+-----------------
+
+There are two common ways to define the full hyperelastic response:
+
+- A **coupled** contribution depends on the full deformation and already contains distortional
+  and volumetric response.
+- A **split** formulation usually combines any number of isochoric ``ELAST_Iso*`` contributions
+  with any number of ``ELAST_Vol*`` contributions. It is also possible (but less common) to add
+  coupled laws (``ELAST_Coup*``) as well.
+
+Composition rules and limiting cases
+------------------------------------
+
+The framework adds all referenced potentials and does not require a particular number of
+isochoric, volumetric, or coupled summands. Consequently, the following combinations are
+technically possible:
+
+- Any number of isochoric, volumetric and combined summands may be included.
+- If a model contains only isochoric terms, its energy is independent of :math:`J`. This gives
+  zero volumetric stress and stiffness; it does **not** impose :math:`J=1` or otherwise prescribe
+  incompressibility. Without a separate constraint, such a model offers no resistance to volume
+  change and is generally unsuitable for a displacement-based solid.
+
+Incompressibility and rubber-like materials
+-------------------------------------------
+
+Classical incompressible hyperelastic laws, e.g., the isochoric NeoHooke, Mooney-Rivlin, Yeoh, etc. models, often
+state only an isochoric energy :math:`\Psi_\mathrm{iso}` because incompressibility is imposed
+separately through a pressure Lagrange multiplier:
+
+.. math::
+
+   \Psi=\Psi_\mathrm{iso}(\bar{\boldsymbol C})+p(J-1).
+
+The absence of a :math:`J`-dependent term in such a law therefore does not itself enforce :math:`J=1`.
+In this framework, rubber-like behavior is commonly represented as **nearly incompressible** by
+combining the isochoric law with a volumetric penalty:
+
+.. math::
+
+   \Psi=\Psi_\mathrm{iso}(\bar{\boldsymbol C})+U(J).
+
+For example, ``ELAST_VolPenalty`` penalizes volume changes through
+
+.. math::
+
+   U(J)=\epsilon\left(J^\gamma+J^{-\gamma}-2\right).
+
+.. note::
+
+    A sufficiently large penalty parameter or bulk modulus keeps :math:`J` close to one, but does not
+    enforce exact incompressibility. Increasing it excessively can lead to poor conditioning and
+    volumetric locking. Suitable EAS or F-bar element technology can alleviate locking for nearly
+    incompressible displacement-based solids, but does not itself impose :math:`J=1`.
+
+The plain ``MAT_ElastHyper`` framework accepts elastic summands only. Use
+:doc:`viscoelastic_materials` when adding time-dependent branches.
+
+Summand catalogs
+----------------
+
+.. toctree::
+   :maxdepth: 1
+
+   hyperelastic_isotropic_coupled
+   hyperelastic_isochoric_volumetric
+   hyperelastic_anisotropic
+
+Example
+---------
+
+Here, the parent materials, which consist of two coupled material parts each, are assigned to the element.
+They combine a compressible isotropic matrix with an anisotropic fiber contribution and its structural-tensor definition.
+Their ``MATIDS``, that is, the material laws of the summation parts, refer to the material IDs of the energy summands,
+which are given as separate material IDs in the ``MATERIALS`` section.
+The example is taken from ``{{ framework_file }}``.
+
+{{ section_dump(framework, "MATERIALS") }}

@@ -1,0 +1,32 @@
+{% set framework_file = "mat_iso_thermoviscoplast_refJC_log_timint_tsi_monolithic.4C.yaml" %}
+{% set framework = load_input_file(framework_file) %}
+
+.. _ multiplicative-split-framework:
+
+Multiplicative split framework
+================================
+
+The material model ``MAT_MultiplicativeSplitDefgradElastHyper``
+(see the :ref:`model definition in the input reference<MATERIALS_MAT_MultiplicativeSplitDefgradElastHyper>`)
+allows for a multiplicative split of the inelastic deformation into a hyperelastic part and a viscoplastic part.
+This framework is useful for modeling materials that exhibit inelastic behavior, such as viscoplasticity or growth,
+combined with an arbitrary, even coupled, hyperelastic response.
+
+It is similar to the :ref:`Visco-hyperelastic framework <visco-hyperelastic-framework>`,
+but it allows for a more general definition of the inelastic part of the material response.
+For the hyperelastic part, all materials of the :ref:`hyperelastic framework <hyperelastic-framework>` can be used,
+while the inelastic part can be defined using any combination of the materials denoted by ``MAT_InelasticDefgrad_<inelastic_summand>``.
+
+Note that this multiplicative split of the inelastic deformation is not generally commutative,
+i.e., the order in which the inelastic contributions are applied is important
+(particularly for complex inelastic deformation factors, such as viscoplastic behavior).
+The order is specified within the array ``INELDEFGRADFACIDS``.
+
+
+Example
+---------
+
+Here, the multiplicative split framework consists of a compressible NeoHookean hyperelastic part and a viscoplastic part.
+The example is taken from ``{{ framework_file }}``.
+
+{{ section_dump(framework, "MATERIALS") }}
