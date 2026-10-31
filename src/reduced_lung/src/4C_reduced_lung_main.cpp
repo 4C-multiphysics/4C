@@ -24,23 +24,23 @@
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_junctions.hpp"
+#include "4C_reduced_lung_newton_tree.hpp"
+#include "4C_reduced_lung_nonlinear_solver.hpp"
+#include "4C_reduced_lung_nox_solver.hpp"
 #include "4C_reduced_lung_resulttest.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_tree_linear_solver.hpp"
 #include "4C_reduced_lung_tree_metadata.hpp"
-#include "4C_reduced_lung_tree_newton_solver.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 
 #include <functional>
-#include <iomanip>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <string>
 
 
@@ -355,7 +355,7 @@ namespace ReducedLung
             .jacobian = *sysmat_,
         };
 
-        nox_solver_ = std::make_unique<NoxSolver>(nox_solver_context, current_time_);
+        nonlinear_solver_ = std::make_unique<NoxSolver>(nox_solver_context, current_time_);
       }
 
       /**
@@ -397,30 +397,28 @@ namespace ReducedLung
        */
       void build_tree_newton_solver()
       {
-        FOUR_C_ASSERT_ALWAYS(dofs_ != nullptr && locally_relevant_dofs_ != nullptr && x_ != nullptr,
+        FOUR_C_ASSERT_ALWAYS(locally_relevant_dofs_ != nullptr && x_ != nullptr,
             "Reduced lung linear system must be initialized before NewtonTree solver setup.");
         FOUR_C_ASSERT_ALWAYS(tree_newton_linear_solver_ != nullptr,
             "Reduced lung NewtonTree solver requires a tree Newton linear solver.");
 
-        const TreeNewtonSolverContext tree_newton_solver_context{
+        const NewtonTreeContext newton_tree_context{
+            .comm = comm_,
             .dynamics = context_.parameters.dynamics,
             .tree_linear_solver = tree_newton_linear_solver_,
             .assembly_pipeline = assembly_pipeline_,
-            .dofs = *dofs_,
             .locally_relevant_dofs = *locally_relevant_dofs_,
             .x = *x_,
         };
-
-        tree_newton_solver_ =
-            std::make_unique<TreeNewtonSolver>(tree_newton_solver_context, current_time_);
+        nonlinear_solver_ = std::make_unique<NewtonTree>(newton_tree_context, current_time_);
       }
 
       /**
-       * Advance one timestep and print compact convergence information for NewtonTree runs.
+       * Advance one timestep.
        */
       void solve_timestep(int step)
       {
-        FOUR_C_ASSERT_ALWAYS(nox_solver_ != nullptr || tree_newton_solver_ != nullptr,
+        FOUR_C_ASSERT_ALWAYS(nonlinear_solver_ != nullptr,
             "Reduced lung solver must be initialized before time integration.");
         FOUR_C_ASSERT_ALWAYS(locally_relevant_dofs_ != nullptr,
             "Reduced lung locally relevant dof vector must be initialized before time "
@@ -430,30 +428,14 @@ namespace ReducedLung
         // Constant during the solve, so refresh once per timestep rather than per iteration.
         BoundaryConditions::refresh_total_terminal_unit_volume(
             boundary_conditions_, terminal_units_, comm_);
-        if (nox_solver_ != nullptr)
+        if (Core::Communication::my_mpi_rank(comm_) == 0)
         {
-          if (Core::Communication::my_mpi_rank(comm_) == 0)
-          {
-            std::cout << "Timestep: " << step << "/" << n_timesteps_
-                      << "\n----------------------------------------\n"
-                      << std::flush;
-          }
-          nox_solver_->solve(current_time_);
+          std::cout << "Timestep: " << step << "/" << n_timesteps_
+                    << "\n----------------------------------------\n"
+                    << std::flush;
         }
-        else
-        {
-          const unsigned int iterations = tree_newton_solver_->solve(current_time_);
-          if (Core::Communication::my_mpi_rank(comm_) == 0)
-          {
-            std::ostringstream residual_norm;
-            residual_norm << std::scientific << std::setprecision(2)
-                          << tree_newton_solver_->last_residual_norm();
-            std::cout << "Timestep " << step << "/" << n_timesteps_
-                      << " | Newton iters: " << iterations << " | ||F||: " << residual_norm.str()
-                      << "\n"
-                      << std::flush;
-          }
-        }
+
+        nonlinear_solver_->solve(current_time_);
 
         TerminalUnits::end_of_timestep_routine(terminal_units_, *locally_relevant_dofs_, dt_);
         Airways::end_of_timestep_routine(airways_, *locally_relevant_dofs_, dt_);
@@ -521,8 +503,7 @@ namespace ReducedLung
       std::unique_ptr<Core::LinAlg::SparseMatrix> sysmat_;
       NonlinearSolverAssemblyPipeline assembly_pipeline_;
 
-      std::unique_ptr<NoxSolver> nox_solver_;
-      std::unique_ptr<TreeNewtonSolver> tree_newton_solver_;
+      std::unique_ptr<NonlinearSolver> nonlinear_solver_;
       std::shared_ptr<TreeNewtonLinearSolver> tree_newton_linear_solver_;
       std::optional<ReducedLungTreeMetadata> tree_metadata_;
       const double dt_;

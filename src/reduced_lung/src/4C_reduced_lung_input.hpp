@@ -42,7 +42,7 @@ namespace ReducedLung
     enum class NonlinearSolverType : std::uint8_t
     {
       Nox,        ///< Legacy NOX-based nonlinear solver workflow.
-      NewtonTree  ///< Custom Newton solver with the serial structured-tree linear solver.
+      NewtonTree  ///< NOX Newton driver with the serial structured-tree linear solver.
     };
 
     struct Dynamics

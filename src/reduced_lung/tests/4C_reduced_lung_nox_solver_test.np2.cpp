@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_reduced_lung_nox_solver.hpp"
+
 #include "4C_fem_discretization.hpp"
 #include "4C_linear_solver_method.hpp"
 #include "4C_rebalance.hpp"
