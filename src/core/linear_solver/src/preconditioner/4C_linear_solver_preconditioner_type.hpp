@@ -14,6 +14,10 @@
 #include "4C_linalg_vector.hpp"
 
 #include <Epetra_Operator.h>
+#include <Teuchos_RCPDecl.hpp>
+#include <Teuchos_RCPStdSharedPtrConversions.hpp>
+#include <Thyra_EpetraLinearOp.hpp>
+#include <Thyra_LinearOpBase_decl.hpp>
 
 #include <memory>
 
@@ -45,6 +49,11 @@ namespace Core::LinearSolver
 
     /// linear operator used for preconditioning
     virtual std::shared_ptr<Epetra_Operator> prec_operator() const = 0;
+
+    virtual Teuchos::RCP<const Thyra::LinearOpBase<double>> thyra_prec_operator() const
+    {
+      return Thyra::epetraLinearOp(Teuchos::rcpFromRef(*prec_operator()));
+    }
   };
 }  // namespace Core::LinearSolver
 

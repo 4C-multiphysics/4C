@@ -125,9 +125,9 @@ void Core::LinearSolver::MueLuPreconditioner::setup(
         builder.createPreconditioningStrategy("MueLu");
     Teuchos::RCP<Thyra::PreconditionerBase<double>> prec =
         Thyra::prec<double>(*precFactory, pmatrix_);
-    auto inverseOp = prec->getUnspecifiedPrecOp();
+    p_thyra_ = prec->getUnspecifiedPrecOp();
 
-    p_ = Utils::get_epetra_inverse_operator_from_thyra(inverseOp);
+    p_ = Utils::get_epetra_inverse_operator_from_thyra(p_thyra_);
   }
   else
   {

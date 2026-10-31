@@ -16,15 +16,16 @@
 #include "4C_linear_solver_preconditioner_muelu.hpp"
 #include "4C_linear_solver_preconditioner_projection.hpp"
 #include "4C_linear_solver_preconditioner_teko.hpp"
+#include "4C_linear_solver_thyra_utils.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <BelosBiCGStabSolMgr.hpp>
 #include <BelosBlockCGSolMgr.hpp>
 #include <BelosBlockGmresSolMgr.hpp>
-#include <BelosEpetraAdapter.hpp>
 #include <BelosLinearProblem.hpp>
 #include <BelosPseudoBlockCGSolMgr.hpp>
 #include <BelosPseudoBlockGmresSolMgr.hpp>
+#include <BelosThyraAdapter.hpp>
 #include <Teuchos_RCPDecl.hpp>
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 #include <Teuchos_TimeMonitor.hpp>
@@ -32,8 +33,8 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-using BelosVectorType = Epetra_MultiVector;
-using BelosMatrixType = Epetra_Operator;
+using BelosVectorType = ::Thyra::MultiVectorBase<double>;
+using BelosMatrixType = ::Thyra::LinearOpBase<double>;
 
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
@@ -103,18 +104,21 @@ int Core::LinearSolver::IterativeSolver::solve(Core::LinAlg::MultiVector<double>
 {
   Teuchos::ParameterList& belist = params().sublist("Belos Parameters");
 
-  Teuchos::RCP<Epetra_Operator> a =
-      Teuchos::make_rcp<Core::LinearSolver::EpetraOperatorAdapter>(a_);
+  auto thyra_matrix = Core::LinearSolver::Utils::create_thyra_linear_op(a_);
+  auto thyra_x = Core::LinearSolver::Utils::create_thyra_multi_vector(x, x.get_map());
+  auto thyra_b = Core::LinearSolver::Utils::create_thyra_multi_vector(*b_, b_->get_map());
 
   auto problem = Teuchos::make_rcp<Belos::LinearProblem<double, BelosVectorType, BelosMatrixType>>(
-      a, Teuchos::rcpFromRef(x.get_epetra_multi_vector()),
-      Teuchos::rcpFromRef(b_->get_epetra_multi_vector()));
+      thyra_matrix, thyra_x, thyra_b);
 
   if (preconditioner_ != nullptr)
   {
-    auto belosPrec =
-        Teuchos::make_rcp<Belos::EpetraPrecOp>(Teuchos::rcp(preconditioner_->prec_operator()));
-    problem->setRightPrec(belosPrec);
+    auto thyra_preconditioner = preconditioner_->thyra_prec_operator();
+
+    FOUR_C_ASSERT_ALWAYS(
+        !thyra_preconditioner.is_null(), "The preconditioner returned a null Thyra operator.");
+
+    problem->setRightPrec(thyra_preconditioner);
   }
 
   const bool set = problem->setProblem();
