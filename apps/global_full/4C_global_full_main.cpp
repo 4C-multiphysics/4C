@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
     {
       ryml::Tree tree = Core::IO::init_yaml_tree_with_exceptions();
       ryml::NodeRef root = tree.rootref();
-      root |= ryml::MAP;
+      root.set_map();
       Core::IO::YamlNodeRef root_ref(root, "");
 
       // Write the non-user input metadata that is defined globally for 4C.

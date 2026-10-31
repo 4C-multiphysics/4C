@@ -13,10 +13,9 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace
 {
-  [[noreturn]] void throw_on_yaml_parse_error(
-      const char* msg, size_t msg_len, ryml::Location location, void* user_data)
+  [[noreturn]] void throw_on_yaml_parse_error(ryml::csubstr msg, const ryml::ErrorDataParse&, void*)
   {
-    throw Core::IO::YamlException(std::string(msg, msg_len));
+    throw Core::IO::YamlException(std::string(msg.data(), msg.size()));
   }
 }  // namespace
 
@@ -25,11 +24,14 @@ Core::IO::YamlException::YamlException(const std::string& message) : Core::Excep
 ryml::Tree Core::IO::init_yaml_tree_with_exceptions()
 {
   ryml::Callbacks cb{};
-  cb.m_error = throw_on_yaml_parse_error;
+  cb.set_error_parse(throw_on_yaml_parse_error);
   return ryml::Tree{cb};
 }
 
-void Core::IO::emit_value_as_yaml(YamlNodeRef node, const int& value) { node.node << value; }
+void Core::IO::emit_value_as_yaml(YamlNodeRef node, const int& value)
+{
+  node.node.set_serialized(value);
+}
 
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const double& value)
 {
@@ -37,38 +39,35 @@ void Core::IO::emit_value_as_yaml(YamlNodeRef node, const double& value)
   // defined. libc++ (macOS) does not define it since its std::from_chars for floating-point types
   // is incomplete, so ryml falls back to printf("%g"), which keeps only six significant digits.
   // std::format always writes the shortest representation that reads back exactly.
-  node.node << std::format("{}", value);
+  node.node.set_serialized(std::format("{}", value));
 }
 
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::string& value)
 {
-  node.node |= ryml::VAL_DQUO;
-  node.node << ryml::to_csubstr(value);
+  node.node.set_serialized(value, ryml::VAL_DQUO);
 }
 
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::string_view& value)
 {
-  node.node |= ryml::VAL_DQUO;
-  node.node << ryml::csubstr(value.data(), value.size());
+  node.node.set_serialized(value, ryml::VAL_DQUO);
 }
 
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const bool& value)
 {
-  node.node << (value ? "true" : "false");
+  node.node.set_serialized(value ? "true" : "false");
 }
 
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::filesystem::path& value)
 {
-  node.node |= ryml::VAL_DQUO;
   if (node.associated_file.empty() || value.is_absolute())
   {
-    node.node << value.string();
+    node.node.set_serialized(value.string(), ryml::VAL_DQUO);
   }
   // Make the relative path relative to the associated file.
   else
   {
     auto relative_path = std::filesystem::relative(value, node.associated_file.parent_path());
-    node.node << relative_path.string();
+    node.node.set_serialized(relative_path.string(), ryml::VAL_DQUO);
   }
 }
 

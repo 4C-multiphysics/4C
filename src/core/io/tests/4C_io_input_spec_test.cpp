@@ -728,8 +728,8 @@ a: 1
       ryml::Tree tree = init_yaml_tree_with_exceptions();
       ryml::NodeRef root = tree.rootref();
 
-      root |= ryml::SEQ;
-      root.append_child() << 1;
+      root.set_seq();
+      root.append_child().set_serialized(1);
       ConstYamlNodeRef node(root, "");
 
       InputParameterContainer container;

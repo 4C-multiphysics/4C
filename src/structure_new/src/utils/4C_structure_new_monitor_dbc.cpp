@@ -207,11 +207,12 @@ void Solid::MonitorDbc::read_restart_yaml_file(const Core::Conditions::Condition
       if (!candidate.is_map() && !candidate.is_seq())
       {
         int val = 0;
-        candidate >> val;
-
-        if (val > Global::Problem::instance()->restart())
+        if (candidate.deserialize(&val))
         {
-          to_remove.push_back(child);
+          if (val > Global::Problem::instance()->restart())
+          {
+            to_remove.push_back(child);
+          }
         }
       }
     }
@@ -275,30 +276,30 @@ void Solid::MonitorDbc::setup()
             dbc_monitor_yaml_file_trees_.emplace_back(Core::IO::init_yaml_tree_with_exceptions());
             ryml::NodeRef root = dbc_monitor_yaml_file_trees_.back().rootref();
             // make root node a map
-            root |= ryml::MAP;
+            root.set_map();
 
             // write condition information node if requested (not necessary for restarts)
             if (sublist_IO_monitor_structure_dbc.get<bool>("WRITE_CONDITION_INFORMATION"))
             {
               auto information_node = root.append_child();
-              information_node << ryml::key("dbc monitor condition");
-              information_node |= ryml::MAP;
+              information_node.set_key_serialized("dbc monitor condition");
+              information_node.set_map();
               {
                 auto node_gids = information_node.append_child();
-                node_gids << ryml::key("node gids");
-                node_gids |= ryml::SEQ;
+                node_gids.set_key_serialized("node gids");
+                node_gids.set_seq();
                 const auto* node_ids = rcond_ptr->get_nodes();
                 for (const auto node_id : *node_ids)
                 {
-                  node_gids.append_child() << node_id;
+                  node_gids.append_child().set_serialized(node_id);
                 }
               }
             }
 
             // create data node
             auto data_node = root.append_child();
-            data_node << ryml::key("dbc monitor condition data");
-            data_node |= ryml::SEQ;
+            data_node.set_key_serialized("dbc monitor condition data");
+            data_node.set_seq();
           }
           break;
         }
@@ -398,14 +399,14 @@ void Solid::MonitorDbc::execute(Core::IO::DiscretizationWriter& writer)
         auto data_node = root["dbc monitor condition data"];
 
         auto current_entry = data_node.append_child();
-        current_entry |= ryml::MAP;
+        current_entry.set_map();
 
-        current_entry["step"] << gstate_ptr_->get_step_n();
-        current_entry["time"] << gstate_ptr_->get_time_n();
-        current_entry["f"] << rforce_vec;
-        current_entry["m"] << rmoment_vec;
-        current_entry["curr_area"] << area_curr;
-        current_entry["ref_area"] << area_ref;
+        current_entry["step"].set_serialized(gstate_ptr_->get_step_n());
+        current_entry["time"].set_serialized(gstate_ptr_->get_time_n());
+        current_entry["f"].set_serialized(rforce_vec);
+        current_entry["m"].set_serialized(rmoment_vec);
+        current_entry["curr_area"].set_serialized(area_curr);
+        current_entry["ref_area"].set_serialized(area_ref);
 
         std::string file_name = Global::Problem::instance()->output_control_file()->file_name() +
                                 "-" + rcond_ptr->node_set_name() + "_monitor_dbc.yaml";

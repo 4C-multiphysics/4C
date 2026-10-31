@@ -158,10 +158,11 @@ void Global::emit_general_metadata(Core::IO::YamlNodeRef node)
   // Basic information.
   {
     auto metadata = root["metadata"];
-    metadata |= ryml::MAP;
-    metadata["commit_hash"] << VersionControl::git_hash;
-    metadata["version"] << FOUR_C_VERSION_FULL;
-    metadata["description_section_name"] = Core::IO::InputFile::description_section_name;
+    metadata.set_map();
+    metadata["commit_hash"].set_serialized(VersionControl::git_hash);
+    metadata["version"].set_serialized(FOUR_C_VERSION_FULL);
+    metadata["description_section_name"].set_serialized(
+        Core::IO::InputFile::description_section_name);
   }
 
   // Element types.
@@ -169,19 +170,19 @@ void Global::emit_general_metadata(Core::IO::YamlNodeRef node)
     Core::Elements::ElementDefinition element_definition;
 
     auto legacy_element_specs = root["legacy_element_specs"];
-    legacy_element_specs |= ryml::MAP;
+    legacy_element_specs.set_map();
 
     for (const auto& [element_type, cell_specs] : element_definition.definitions)
     {
       auto element_specs = legacy_element_specs.append_child();
-      element_specs << ryml::key(element_type);
+      element_specs.set_key_serialized(element_type);
 
-      element_specs |= ryml::SEQ;
+      element_specs.set_seq();
       for (const auto& [cell_type, spec] : cell_specs)
       {
         auto cell_spec = element_specs.append_child();
-        cell_spec |= ryml::MAP;
-        cell_spec["cell_type"] << ryml::to_csubstr(Core::FE::cell_type_to_string(cell_type));
+        cell_spec.set_map();
+        cell_spec["cell_type"].set_serialized(Core::FE::cell_type_to_string(cell_type));
         auto spec_node = cell_spec["spec"];
         spec.emit_metadata(Core::IO::YamlNodeRef(spec_node, ""));
       }
@@ -191,7 +192,7 @@ void Global::emit_general_metadata(Core::IO::YamlNodeRef node)
   // Particle types.
   {
     auto legacy_particle_spec = root["legacy_particle_specs"];
-    legacy_particle_spec |= ryml::MAP;
+    legacy_particle_spec.set_map();
 
     Core::IO::YamlNodeRef spec_emitter{legacy_particle_spec, ""};
     Particle::create_particle_spec().emit_metadata(spec_emitter);
@@ -200,7 +201,7 @@ void Global::emit_general_metadata(Core::IO::YamlNodeRef node)
   // Cell types.
   {
     auto cell_types = root["cell_types"];
-    cell_types |= ryml::MAP;
+    cell_types.set_map();
 
     for (const auto cell_type : EnumTools::enum_values<Core::FE::CellType>())
     {
@@ -208,9 +209,9 @@ void Global::emit_general_metadata(Core::IO::YamlNodeRef node)
       {
         auto cell_type_node = cell_types.append_child();
         auto cell_type_str = Core::FE::cell_type_to_string(cell_type);
-        cell_type_node << ryml::key(cell_type_str);
-        cell_type_node |= ryml::MAP;
-        cell_type_node["number_of_nodes"] << Core::FE::num_nodes(cell_type);
+        cell_type_node.set_key_serialized(cell_type_str);
+        cell_type_node.set_map();
+        cell_type_node["number_of_nodes"].set_serialized(Core::FE::num_nodes(cell_type));
       }
     }
   }
