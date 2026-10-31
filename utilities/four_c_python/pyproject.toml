@@ -25,6 +25,7 @@ check-companion-test-files = "four_c_development.check_companion_test_files:main
 check-preprocessor = "four_c_development.check_preprocessor:main"
 check-python-files = "four_c_development.check_python_files:main"
 check-workflow-dependencies-hash = "four_c_development.check_workflow_dependencies_hash:main"
+generate-spack-cmake-presets = "four_c_development.generate_spack_cmake_presets:main"
 chunk-test-suite = "four_c_ci.chunk_test_suite:main"
 clang-tidy-filter-config = "four_c_ci.clang_tidy_filter_config:main"
 clang-tidy-filter-output = "four_c_ci.clang_tidy_filter_output:main"
