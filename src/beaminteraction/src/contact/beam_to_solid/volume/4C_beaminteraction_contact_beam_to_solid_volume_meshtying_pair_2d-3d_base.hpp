@@ -43,6 +43,24 @@ namespace BeamInteraction
     //! Type to be used for scalar AD variables. This can not be inherited from the base class.
     using scalar_type = typename base_class::scalar_type;
 
+    //! Rotation representation. Each node has a rotation vector with 3 components.
+    static constexpr unsigned int n_nodes_rot_ = 3;
+    static constexpr unsigned int n_dof_rot_ = n_nodes_rot_ * 3;
+
+    //! Number of DOFs for the pair.
+    static constexpr unsigned int n_dof_pair_ = Beam::n_dof_ + Solid::n_dof_ + n_dof_rot_;
+
+    //! Number of dependent variables for the pair. The ordering is as follows: first the beam DOFs,
+    //! then the solid DOFs, then the components of the cross section rotation vector.
+    static constexpr unsigned int n_dof_fad_ = Beam::n_dof_ + Solid::n_dof_ + n_dof_rot_ + 3;
+
+    //! FAD type to evaluate the rotational coupling terms. The first ordering is as follows: beam
+    //! DOFs, solid DOFs, 3 components of the rotation vector psi.
+    using scalar_type_pair = typename Sacado::Fad::SLFad<double, n_dof_fad_>;
+
+    //! Current triad interpolation in the beam element
+    LargeRotations::TriadInterpolationLocalRotationVectors<3, double> triad_interpolation_scheme_;
+
    public:
     /**
      * \brief Standard Constructor
@@ -63,6 +81,12 @@ namespace BeamInteraction
             geometry_evaluation_data_ptr) override;
 
    protected:
+    void evaluate_force_stiff_penalty_potential(
+        const std::shared_ptr<const Core::FE::Discretization>& discret,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
+        const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
+        const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector);
+
     /**
      * \brief Calculate the position on the beam, also taking into account parameter coordinates on
      * the cross section.

@@ -23,6 +23,12 @@ namespace BeamInteraction
    * element.
    * @param beam Type from GeometryPair::ElementDiscretization... representing the beam.
    * @param solid Type from GeometryPair::ElementDiscretization... representing the solid.
+   *
+   * The implementation is based on Appendix A from:
+   *
+   * I. Steinbrecher: Mixed-dimensional finite element formulations for beam-to-solid interaction,
+   * PhD Thesis, 2023, https://athene-forschung.unibw.de/143755
+   *
    */
   template <typename Beam, typename Solid>
   class BeamToSolidVolumeMeshtyingPair2D3DFull
@@ -68,7 +74,9 @@ namespace BeamInteraction
      * \brief Evaluate the pair and directly assemble it into the global force vector and stiffness
      * matrix (derived).
      *
-     * Rotational coupling contributions will be added in this method.
+     * Evaluates and directly assembles the translational and rotational residual and consistent
+     * tangent contributions derived from the continuous \(L^2\) penalty potential of the pointwise
+     * beam-surface-to-solid gap.
      */
     void evaluate_and_assemble(const std::shared_ptr<const Core::FE::Discretization>& discret,
         const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
@@ -92,9 +100,6 @@ namespace BeamInteraction
     //! Reference triad interpolation in the beam element
     LargeRotations::TriadInterpolationLocalRotationVectors<3, double>
         triad_interpolation_scheme_ref_;
-
-    //! Current triad interpolation in the beam element
-    LargeRotations::TriadInterpolationLocalRotationVectors<3, double> triad_interpolation_scheme_;
   };
 }  // namespace BeamInteraction
 

@@ -83,6 +83,9 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
         "There can be a maximum of one segment for coupling pairs that couple on the beam "
         "surface!");
 
+  const auto ele1pos_double = GeometryPair::ElementDataToDouble<Beam>::to_double(this->ele1pos_);
+  const auto ele2pos_double = GeometryPair::ElementDataToDouble<Solid>::to_double(this->ele2pos_);
+
   // Check that the beam element is a Simo-Reissner beam.
   auto beam_ele = dynamic_cast<const Discret::Elements::Beam3r*>(this->element1());
   if (beam_ele == nullptr)
@@ -166,8 +169,8 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
       beam_jacobian = dr_beam_ref.norm2();
 
       GeometryPair::evaluate_shape_function_matrix<Beam>(
-          H, eta, this->ele1pos_.shape_function_data_);
-      GeometryPair::evaluate_position<Beam>(eta, this->ele1pos_, pos_beam);
+          H, eta, ele1pos_double.shape_function_data_);
+      GeometryPair::evaluate_position<Beam>(eta, ele1pos_double, pos_beam);
 
       GeometryPair::evaluate_shape_function_matrix<GeometryPair::t_line3>(L, eta);
 
@@ -198,9 +201,9 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
 
     // Get the shape function matrices
     GeometryPair::evaluate_shape_function_matrix<Solid>(
-        N, projected_gauss_point.get_xi(), this->ele2pos_.shape_function_data_);
+        N, projected_gauss_point.get_xi(), ele2pos_double.shape_function_data_);
     GeometryPair::evaluate_position<Solid>(
-        projected_gauss_point.get_xi(), this->ele2pos_, pos_solid);
+        projected_gauss_point.get_xi(), ele2pos_double, pos_solid);
     Core::LinAlg::Matrix<2, 1, double> xi_mortar;
     xi_mortar(0) = eta;
     xi_mortar(1) = cross_section_angle_parameter_space;
@@ -539,7 +542,9 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
             cross_section_vector_current.multiply(triad, cross_section_vector_material);
 
             GeometryPair::evaluate_position<Beam>(xi(0), this->ele1posref_, X);
-            GeometryPair::evaluate_position<Beam>(xi(0), this->ele1pos_, r);
+            const auto ele1pos_double =
+                GeometryPair::ElementDataToDouble<Beam>::to_double(this->ele1pos_);
+            GeometryPair::evaluate_position<Beam>(xi(0), ele1pos_double, r);
 
             X += cross_section_vector_ref;
             r += cross_section_vector_current;

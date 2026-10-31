@@ -30,6 +30,13 @@ namespace GeometryPair
    * @tparam n_fourier_modes Number of Fourier modes.
    * @tparam spatial_dim Number of spatial dimensions. This affects the number of degrees of freedom
    * of the element
+   *
+   * The implementation is based on:
+   *
+   * L. Heltai and P. Zunino: Reduced Lagrange multiplier approach for non-matching coupling of
+   * mixed-dimensional domains, Mathematical Models and Methods in Applied Sciences,
+   * 33(12):2425-2462, 2023
+   *
    */
   template <typename CurveDiscretization, unsigned int n_fourier_modes,
       unsigned int spatial_dim = 3>
@@ -140,11 +147,14 @@ namespace BeamInteraction
    */
   template <typename Beam, typename Solid, typename Mortar>
   class BeamToSolidVolumeMeshtyingPair2D3DMortar
-      : public BeamToSolidVolumeMeshtyingPair2D3DBase<double, Beam, Solid>
+      : public BeamToSolidVolumeMeshtyingPair2D3DBase<
+            GeometryPair::line_to_volume_scalar_type<Beam, Solid>, Beam, Solid>
   {
    private:
+    using scalar_type = GeometryPair::line_to_volume_scalar_type<Beam, Solid>;
+
     //! Shortcut to the base class.
-    using base_class = BeamToSolidVolumeMeshtyingPair2D3DBase<double, Beam, Solid>;
+    using base_class = BeamToSolidVolumeMeshtyingPair2D3DBase<scalar_type, Beam, Solid>;
 
     //! Rotation representation. Each node has a rotation vector with 3 components.
     static constexpr unsigned int n_nodes_rot_ = 3;
