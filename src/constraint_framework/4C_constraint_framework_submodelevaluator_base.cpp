@@ -20,6 +20,8 @@
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
+#include <algorithm>
+
 FOUR_C_NAMESPACE_OPEN
 
 Constraints::SubmodelEvaluator::ConstraintBase::ConstraintBase()
@@ -66,33 +68,57 @@ void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_force_stiff(
 void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_coupling_terms(
     Solid::TimeInt::BaseDataGlobalState& gstate)
 {
-  // Get the number of multipoint equations
-  int ncon_ = 0;
+  // each rank created its own constraint equations; their ids are the rows of Q_Ld it assembles
+  std::vector<int> my_equation_ids;
   for (const auto& mpc : constraint_equations_)
-    ncon_ += mpc->get_number_of_constraint_equation_objects();
+    for (int i = 0; i < mpc->get_number_of_constraint_equation_objects(); ++i)
+      my_equation_ids.push_back(mpc->get_first_row_id() + i);
 
-  // ToDo: Add an offset to the constraint dof map.
-  n_condition_map_ = std::make_shared<Core::LinAlg::Map>(ncon_, 0, stiff_ptr_->get_comm());
+  // ToDo: Add an offset to the constraint equation ids so they do not overlap with the dof gids
+  // (needed for a Lagrange multiplier enforcement).
+  constraint_equation_map_ = std::make_shared<Core::LinAlg::Map>(-1,
+      static_cast<int>(my_equation_ids.size()), my_equation_ids.data(), 0, stiff_ptr_->get_comm());
+  FOUR_C_ASSERT(constraint_equation_map_->unique_gids(), "Constraint equation ids are not unique.");
 
   // initialise all global coupling objects
-  constraint_residual_ = std::make_shared<Core::LinAlg::Vector<double>>(*n_condition_map_, true);
-  Q_Ld_ = std::make_shared<Core::LinAlg::SparseMatrix>(*n_condition_map_, 4);
-  Q_dL_ = std::make_shared<Core::LinAlg::SparseMatrix>(stiff_ptr_->row_map(), 4);
-  Q_dd_ = std::make_shared<Core::LinAlg::SparseMatrix>(stiff_ptr_->row_map(), 0);
-
-  // set Q_dd to zero as default
+  constraint_residual_ =
+      std::make_shared<Core::LinAlg::Vector<double>>(*constraint_equation_map_, true);
+  Q_Ld_ = std::make_shared<Core::LinAlg::SparseMatrix>(*constraint_equation_map_, 4);
+  // FE matrices (FE_MATRIX), since the dofs of an equation (and thus the rows of Q_dL and Q_dd)
+  // may be owned by other ranks
+  Q_dL_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      stiff_ptr_->row_map(), 4, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
+  Q_dd_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      stiff_ptr_->row_map(), 0, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
   Q_dd_->zero();
+
+  // the equations need the displacements of dofs that may be owned by other ranks:
+  // collect those dofs and import their values into an overlapping vector
+  std::vector<int> equation_dof_gids;
+  for (const auto& mpc : constraint_equations_)
+  {
+    const std::vector<int> dof_gids = mpc->get_dof_gids();
+    equation_dof_gids.insert(equation_dof_gids.end(), dof_gids.begin(), dof_gids.end());
+  }
+  std::sort(equation_dof_gids.begin(), equation_dof_gids.end());
+  equation_dof_gids.erase(
+      std::unique(equation_dof_gids.begin(), equation_dof_gids.end()), equation_dof_gids.end());
+  const Core::LinAlg::Map equation_dof_map(-1, static_cast<int>(equation_dof_gids.size()),
+      equation_dof_gids.data(), 0, stiff_ptr_->get_comm());
+  Core::LinAlg::Vector<double> equation_dof_displacements(equation_dof_map, true);
+  Core::LinAlg::export_to(*gstate.get_dis_np(), equation_dof_displacements);
+
   // Evaluate the Constraint Pairs / equations objects
-  std::shared_ptr<const Core::LinAlg::Vector<double>> dis_np = gstate.get_dis_np();
   for (const auto& obj : constraint_equations_)
   {
-    obj->evaluate_equation(*Q_dd_, *Q_dL_, *Q_Ld_, *constraint_residual_, *dis_np);
+    obj->evaluate_equation(
+        *Q_dd_, *Q_dL_, *Q_Ld_, *constraint_residual_, equation_dof_displacements);
   }
   Core::IO::cout(Core::IO::debug) << "Evaluated all constraint objects" << Core::IO::endl;
 
   // Complete
   Q_dd_->complete();
-  Q_Ld_->complete(stiff_ptr_->domain_map(), *n_condition_map_);
-  Q_dL_->complete(*n_condition_map_, stiff_ptr_->domain_map());
+  Q_Ld_->complete(stiff_ptr_->domain_map(), *constraint_equation_map_);
+  Q_dL_->complete(*constraint_equation_map_, stiff_ptr_->domain_map());
 }
 FOUR_C_NAMESPACE_CLOSE
