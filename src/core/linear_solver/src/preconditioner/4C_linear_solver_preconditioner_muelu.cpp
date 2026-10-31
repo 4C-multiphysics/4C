@@ -229,7 +229,20 @@ void Core::LinearSolver::MueLuPreconditioner::setup(
     }
 
     mueLuFactory.SetupHierarchy(*H_);
-    // p_ = std::make_shared<MueLu::EpetraOperator>(H_);
+
+    using XpetraOperator = Xpetra::Operator<SC, LO, GO, NO>;
+    using MueLuXpetraOperator = MueLu::XpetraOperator<SC, LO, GO, NO>;
+    using XpetraThyraUtils = Xpetra::ThyraUtils<SC, LO, GO, NO>;
+
+    Teuchos::RCP<XpetraOperator> xpetra_preconditioner = Teuchos::make_rcp<MueLuXpetraOperator>(H_);
+
+    const auto range_map = unwrap_xpetra_map<LO, GO, NO>(xpetra_preconditioner->getRangeMap());
+    const auto domain_map = unwrap_xpetra_map<LO, GO, NO>(xpetra_preconditioner->getDomainMap());
+
+    const auto range_space = XpetraThyraUtils::toThyra(range_map);
+    const auto domain_space = XpetraThyraUtils::toThyra(domain_map);
+
+    p_ = Thyra::xpetraLinearOp<SC, LO, GO, NO>(range_space, domain_space, xpetra_preconditioner);
   }
 }
 

@@ -105,18 +105,17 @@ int Core::LinearSolver::IterativeSolver::solve(Core::LinAlg::MultiVector<double>
   using OP = Thyra::LinearOpBase<double>;
   using belos_problem = Belos::LinearProblem<double, MV, OP>;
 
-  auto a = Utils::create_thyra_linear_op(*a_, LinAlg::DataAccess::Share);
+  auto prec = preconditioner_->prec_operator();
+  const bool use_product_space =
+      Teuchos::rcp_dynamic_cast<const Thyra::ProductVectorSpaceBase<double>>(
+          prec->domain(), false) != Teuchos::null;
+
+  auto a = Utils::create_thyra_linear_op(a_, Core::LinAlg::DataAccess::Share, use_product_space);
   auto solution = Utils::create_thyra_multi_vector(x, a->range());
   auto b = Utils::create_thyra_multi_vector(*b_, a->domain());
 
   auto problem = Teuchos::make_rcp<belos_problem>(a, solution, b);
-
-  if (preconditioner_ != nullptr)
-  {
-    auto belosPrec = preconditioner_->prec_operator();
-    problem->setRightPrec(belosPrec);
-  }
-
+  if (preconditioner_ != nullptr) problem->setRightPrec(prec);
   const bool set = problem->setProblem();
   if (set == false)
     FOUR_C_THROW("Core::LinearSolver::BelosSolver: Iterative solver failed to set up correctly.");
