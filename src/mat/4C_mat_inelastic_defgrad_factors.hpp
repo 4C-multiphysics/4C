@@ -340,6 +340,11 @@ namespace Mat
 
       //! get ID of the viscoplasticity law
       [[nodiscard]] int viscoplastic_law_id() const { return viscoplastic_law_id_; }
+      //! get reference temperature for parameters specified within the viscoplasticity law
+      [[nodiscard]] double ref_temperature_viscoplast_law() const
+      {
+        return ref_temperature_viscoplast_law_;
+      }
       //! get Taylor-Quinney coefficient \f$ \xi_{TQ}\f$
       [[nodiscard]] double taylor_quinney_coefficient() const
       {
@@ -432,6 +437,9 @@ namespace Mat
      private:
       //! ID of the viscoplasticity law
       const int viscoplastic_law_id_;
+
+      //! reference temperature for the parameters specified within the viscoplasticity law
+      const double ref_temperature_viscoplast_law_;
 
       //! Taylor-Quinney coefficient \f$ \xi_{TQ}\f$
       const double taylor_quinney_coefficient_;
@@ -1503,8 +1511,8 @@ namespace Mat
      * isotropic)
      * @param[in] thermal_expansion_coefficient Isotropic thermal expansion coefficient (provided by
      * the parent material)
-     * @param[in] ref_temperature Reference temperature for thermal expansion (provided by the
-     * parent material)
+     * @param[in] ref_temperature_thermal_expansion Reference temperature for thermal expansion
+     * (provided by the parent material)
      */
 
     explicit InelasticDefgradTransvIsotropElastViscoplast(Core::Mat::PAR::Parameter* params,
@@ -1512,7 +1520,7 @@ namespace Mat
         Mat::Elastic::CoupTransverselyIsotropic fiber_reader,
         std::vector<std::shared_ptr<Mat::Elastic::Summand>> pot_sum_el,
         std::vector<std::shared_ptr<Mat::Elastic::CoupTransverselyIsotropic>> pot_sum_el_transv_iso,
-        const double thermal_expansion_coefficient, const double ref_temperature);
+        const double thermal_expansion_coefficient, const double ref_temperature_thermal_expansion);
 
     [[nodiscard]] Core::Materials::MaterialType material_type() const override
     {
@@ -1657,8 +1665,7 @@ namespace Mat
     const double thermal_expansion_coefficient_;
 
     /// reference temperature for thermal expansion
-    const double ref_temperature_;
-
+    const double ref_temperature_thermal_expansion_;
 
     //! map to elastic materials/potential summands (only isotropic)
     std::vector<std::shared_ptr<Mat::Elastic::Summand>> potsumel_;

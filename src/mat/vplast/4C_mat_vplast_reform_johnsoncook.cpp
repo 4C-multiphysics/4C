@@ -33,30 +33,30 @@ Mat::Viscoplastic::PAR::ReformulatedJohnsonCook::ReformulatedJohnsonCook(
       init_yield_strength_(matdata.parameters.get<double>("INIT_YIELD_STRENGTH")),
       isotrop_harden_prefac_(matdata.parameters.get<double>("ISOTROP_HARDEN_PREFAC")),
       isotrop_harden_exp_(matdata.parameters.get<double>("ISOTROP_HARDEN_EXP")),
-      ref_temperature_(matdata.parameters.get<double>("REF_TEMPERATURE")),
       melt_temperature_(matdata.parameters.get<double>("MELT_TEMPERATURE")),
       temperature_sens_(matdata.parameters.get<double>("TEMPERATURE_SENS"))
 {
-  // consistency checks for the temperature
-  FOUR_C_ASSERT_ALWAYS(ref_temperature_ > 0.0,
-      "Reference temperature must be > 0.0: current value: {}", ref_temperature_);
-  FOUR_C_ASSERT_ALWAYS(melt_temperature_ > ref_temperature_,
-      "Melting temperature must be > reference temperature: current values: {} (T_m) and {} "
-      "(T_ref)",
-      melt_temperature_, ref_temperature_);
 }
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 Mat::Viscoplastic::ReformulatedJohnsonCook::ReformulatedJohnsonCook(
-    Core::Mat::PAR::Parameter* params,
+    Core::Mat::PAR::Parameter* params, const double reference_temperature,
     const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
         error_registration_settings)
-    : Mat::Viscoplastic::Law(params, error_registration_settings),
+    : Mat::Viscoplastic::Law(params, reference_temperature, error_registration_settings),
       const_pars_(parameter()->strain_rate_pre_fac(), 1.0 / parameter()->strain_rate_exp_fac(),
           parameter()->isotrop_harden_prefac(), parameter()->isotrop_harden_exp(),
           parameter()->init_yield_strength())
 {
+  // parameter validation
+  FOUR_C_ASSERT_ALWAYS(reference_temperature_ > 0.0,
+      "Reference temperature must be > 0.0: current value: {}", reference_temperature_);
+
+  FOUR_C_ASSERT_ALWAYS(parameter()->melt_temperature() > reference_temperature_,
+      "Melting temperature must be > reference temperature: current values: {} (T_m) and {} "
+      "(T_ref)",
+      parameter()->melt_temperature(), reference_temperature_);
 }
 
 
