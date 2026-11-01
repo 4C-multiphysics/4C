@@ -137,6 +137,8 @@ namespace Mat
 
       void pre_evaluate(const Teuchos::ParameterList& params) override;
 
+      void update_temperature_dependent_factors() override;
+
      private:
       /// struct containing constant parameters to be evaluated only once
       struct ConstPars

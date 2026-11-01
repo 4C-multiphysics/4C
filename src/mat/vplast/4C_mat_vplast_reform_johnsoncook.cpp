@@ -67,26 +67,28 @@ void Mat::Viscoplastic::ReformulatedJohnsonCook::pre_evaluate(const Teuchos::Par
   // call pre_evaluate of base class
   Mat::Viscoplastic::Law::pre_evaluate(params);
 
-
-  // get temperature factors
-  double T = parameter()->ref_temperature();
-  if (params.isParameter("temperature"))
-  {
-    T = params.get<double>("temperature");
-  }
-  const double T_ref = parameter()->ref_temperature();
+  // consistency checks and update for the temperature-related factors
+  const double T = temperature_;
   const double T_melt = parameter()->melt_temperature();
-  const double M = parameter()->temperature_sens();
-
-  // consistency checks for the temperature
   FOUR_C_ASSERT_ALWAYS(T > 0.0 && T < T_melt,
       "Temperature must be > 0.0 and < melting temperature: current value: {} (T) and {} (T_m)", T,
       T_melt);
+  update_temperature_dependent_factors();
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+void Mat::Viscoplastic::ReformulatedJohnsonCook::update_temperature_dependent_factors()
+{
+  const double T = temperature_;
+  const double T_ref = reference_temperature_;
+  const double T_melt = parameter()->melt_temperature();
+  const double M = parameter()->temperature_sens();
 
   // set temperature ratio
   temperature_ratio_ = 1.0;
   log_temperature_ratio_ = 0.0;
-  if (T != T_ref)
+  if (temperature_ != reference_temperature_)
   {
     FOUR_C_ASSERT_ALWAYS(T_ref < T_melt,
         "You specified the reference temperature {} >= melting temperature: {}! This cannot be "

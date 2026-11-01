@@ -176,7 +176,17 @@ namespace Mat
        *
        * @param[in] params  Various parameters, such as e.g. the temperature in TSI simulations
        */
-      virtual void pre_evaluate(const Teuchos::ParameterList& params) {};
+      virtual void pre_evaluate(const Teuchos::ParameterList& params)
+      {
+        temperature_ = params.isParameter("temperature") ? params.get<double>("temperature")
+                                                         : reference_temperature_;
+        update_temperature_dependent_factors();
+        reset_substep_state();
+      };
+
+      /// update method for internal temperature-related variables based on the current \ref
+      /// temperature_
+      virtual void update_temperature_dependent_factors() {};
 
       /*!
        * @brief Update history variables of the viscoplasticity law for next time step
@@ -247,6 +257,10 @@ namespace Mat
 
       /// reference temperature for the viscoplastic law parameters
       const double reference_temperature_;
+
+      /// current temperature; set to \ref reference_temperature_ in \ref pre_evaluate if not
+      /// specified using the pre-evaluation parameters
+      double temperature_;
 
      private:
       /// material parameters
