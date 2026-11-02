@@ -841,7 +841,10 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::redistribute(
 {
   Core::LinAlg::Export exporter(permrowmap, src.row_map());
 
-  auto permsrc = std::make_shared<Core::LinAlg::SparseMatrix>(permrowmap, src.max_num_entries());
+  // Imported rows may be wider than any row owned locally (or this rank may own none).
+  // Reserve enough per-row capacity to accommodate them with a static profile.
+  auto permsrc =
+      std::make_shared<Core::LinAlg::SparseMatrix>(permrowmap, src.global_max_num_entries());
   permsrc->import(src, exporter, Core::LinAlg::CombineMode::insert);
   permsrc->complete(permdomainmap, permrowmap);
   return permsrc;
