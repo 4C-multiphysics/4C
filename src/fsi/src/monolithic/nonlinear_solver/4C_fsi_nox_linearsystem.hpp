@@ -70,6 +70,9 @@ namespace FSI::Nonlinear
     /// Evaluates the Jacobian based on the solution vector x.
     bool compute_jacobian(const NOX::Nln::Vector& x) override;
 
+    /// Not supported: this linear system is only used with FSI::Nonlinear::Group.
+    bool compute_f_and_jacobian(const NOX::Nln::Vector& x, NOX::Nln::Vector& rhs) override;
+
     /// Return Jacobian operator.
     std::shared_ptr<const Core::LinAlg::SparseOperator> get_jacobian_operator() const override;
 

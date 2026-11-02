@@ -106,10 +106,9 @@ NOX::Nln::GlobalData::GlobalData(MPI_Comm comm, Teuchos::ParameterList& noxParam
  *----------------------------------------------------------------------------*/
 void NOX::Nln::GlobalData::check_input() const
 {
-  // short input check
-  if (lin_solvers_.size() == 0)
-    FOUR_C_THROW("The linear solver map has the size 0! Required size > 0.");
-
+  // An empty linear solver map is valid for user-provided linear systems that do not use a
+  // Core::LinAlg::Solver. Linear systems built by the factory require at least one linear solver,
+  // which is checked in NOX::Nln::Aux::get_linear_system_type().
   using CI = std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>::const_iterator;
   for (CI iter = lin_solvers_.begin(); iter != lin_solvers_.end(); ++iter)
     if (iter->second.is_null())

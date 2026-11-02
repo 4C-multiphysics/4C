@@ -162,14 +162,7 @@ void NOX::Nln::Group::set_skip_update_x(bool skipUpdateX) { skipUpdateX_ = skipU
     isValidRHS = false;
     prePostOperatorPtr_->run_pre_compute_f(RHSVector.get_linalg_vector(), *this);
 
-    bool status = false;
-    Teuchos::RCP<NOX::Nln::LinearSystem> nlnSharedLinearSystem =
-        Teuchos::rcp_dynamic_cast<NOX::Nln::LinearSystem>(linearSystemPtr);
-
-    if (nlnSharedLinearSystem.is_null())
-      throw_error("compute_f_and_jacobian", "Dynamic cast of the shared linear system failed!");
-
-    status = nlnSharedLinearSystem->compute_f_and_jacobian(xVector, RHSVector);
+    const bool status = linearSystemPtr->compute_f_and_jacobian(xVector, RHSVector);
     if (!status) throw_error("compute_f_and_jacobian", "evaluation failed!");
 
     isValidRHS = true;
