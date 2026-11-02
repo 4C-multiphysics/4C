@@ -281,8 +281,6 @@ namespace ReducedLung
        */
       void build_maps_and_local_ids()
       {
-        locally_owned_dof_map_ = std::make_unique<Core::LinAlg::Map>(
-            create_domain_map(comm_, airways_, terminal_units_));
         row_map_ = std::make_unique<Core::LinAlg::Map>(create_row_map(
             comm_, airways_, terminal_units_, connections_, bifurcations_, boundary_conditions_));
         locally_relevant_dof_map_ = std::make_unique<Core::LinAlg::Map>(
@@ -304,11 +302,9 @@ namespace ReducedLung
        */
       void build_linear_system_and_solver()
       {
-        FOUR_C_ASSERT_ALWAYS(locally_owned_dof_map_ != nullptr && row_map_ != nullptr &&
-                                 locally_relevant_dof_map_ != nullptr,
+        FOUR_C_ASSERT_ALWAYS(row_map_ != nullptr && locally_relevant_dof_map_ != nullptr,
             "Reduced lung maps must be initialized before linear system setup.");
 
-        dofs_ = std::make_unique<Core::LinAlg::Vector<double>>(*locally_owned_dof_map_, true);
         locally_relevant_dofs_ =
             std::make_unique<Core::LinAlg::Vector<double>>(*locally_relevant_dof_map_, true);
         x_ = std::make_unique<Core::LinAlg::Vector<double>>(*row_map_, true);
@@ -336,9 +332,8 @@ namespace ReducedLung
        */
       void build_newton_sparse_solver()
       {
-        FOUR_C_ASSERT_ALWAYS(dofs_ != nullptr && locally_relevant_dofs_ != nullptr &&
-                                 x_ != nullptr && row_map_ != nullptr &&
-                                 locally_relevant_dof_map_ != nullptr,
+        FOUR_C_ASSERT_ALWAYS(locally_relevant_dofs_ != nullptr && x_ != nullptr &&
+                                 row_map_ != nullptr && locally_relevant_dof_map_ != nullptr,
             "Reduced lung linear system must be initialized before NOX solver setup.");
         sysmat_ =
             std::make_unique<Core::LinAlg::SparseMatrix>(*row_map_, *locally_relevant_dof_map_, 4);
@@ -349,7 +344,6 @@ namespace ReducedLung
             .linear_solver_parameters = context_.linear_solver_parameters,
             .solver_params_callback = context_.solver_params_callback,
             .assembly_pipeline = assembly_pipeline_,
-            .dofs = *dofs_,
             .locally_relevant_dofs = *locally_relevant_dofs_,
             .x = *x_,
             .jacobian = *sysmat_,
@@ -366,7 +360,7 @@ namespace ReducedLung
         const int comm_size = Core::Communication::num_mpi_ranks(comm_);
         FOUR_C_ASSERT_ALWAYS(row_map_ != nullptr && locally_relevant_dof_map_ != nullptr,
             "Reduced lung maps must be initialized before NewtonTree solver setup.");
-        FOUR_C_ASSERT_ALWAYS(dofs_ != nullptr && locally_relevant_dofs_ != nullptr && x_ != nullptr,
+        FOUR_C_ASSERT_ALWAYS(locally_relevant_dofs_ != nullptr && x_ != nullptr,
             "Reduced lung linear system must be initialized before NewtonTree solver setup.");
         if (comm_size != 1)
         {
@@ -397,7 +391,6 @@ namespace ReducedLung
             .dynamics = context_.parameters.dynamics,
             .tree_linear_solver = tree_linear_solver_,
             .assembly_pipeline = assembly_pipeline_,
-            .dofs = *dofs_,
             .locally_relevant_dofs = *locally_relevant_dofs_,
             .x = *x_,
         };
@@ -486,10 +479,8 @@ namespace ReducedLung
       Junctions::ConnectionData connections_;
       Junctions::BifurcationData bifurcations_;
 
-      std::unique_ptr<Core::LinAlg::Map> locally_owned_dof_map_;
       std::unique_ptr<Core::LinAlg::Map> row_map_;
       std::unique_ptr<Core::LinAlg::Map> locally_relevant_dof_map_;
-      std::unique_ptr<Core::LinAlg::Vector<double>> dofs_;
       std::unique_ptr<Core::LinAlg::Vector<double>> locally_relevant_dofs_;
       std::unique_ptr<Core::LinAlg::Vector<double>> x_;
       std::unique_ptr<Core::LinAlg::SparseMatrix> sysmat_;

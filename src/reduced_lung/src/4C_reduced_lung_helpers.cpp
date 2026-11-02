@@ -600,37 +600,6 @@ namespace ReducedLung
     }
   }
 
-  Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const AirwayContainer& airways,
-      const TerminalUnitContainer& terminal_units)
-  {
-    std::vector<int> locally_owned_dof_indices;
-    for (const auto& airway : airways.models)
-    {
-      locally_owned_dof_indices.insert(
-          locally_owned_dof_indices.end(), airway.data.gid_p1.begin(), airway.data.gid_p1.end());
-      locally_owned_dof_indices.insert(
-          locally_owned_dof_indices.end(), airway.data.gid_p2.begin(), airway.data.gid_p2.end());
-      locally_owned_dof_indices.insert(
-          locally_owned_dof_indices.end(), airway.data.gid_q1.begin(), airway.data.gid_q1.end());
-      locally_owned_dof_indices.insert(locally_owned_dof_indices.end(), airway.data.gid_q2.begin(),
-          airway.data.gid_q2
-              .end());  // does nothing if the model has only 1 state equation, i.e. gid_q2 is empty
-    }
-    for (const auto& tu_model : terminal_units.models)
-    {
-      locally_owned_dof_indices.insert(locally_owned_dof_indices.end(),
-          tu_model.data.gid_p1.begin(), tu_model.data.gid_p1.end());
-      locally_owned_dof_indices.insert(locally_owned_dof_indices.end(),
-          tu_model.data.gid_p2.begin(), tu_model.data.gid_p2.end());
-      locally_owned_dof_indices.insert(
-          locally_owned_dof_indices.end(), tu_model.data.gid_q.begin(), tu_model.data.gid_q.end());
-    }
-    const Core::LinAlg::Map domain_map(
-        -1, locally_owned_dof_indices.size(), locally_owned_dof_indices.data(), 0, comm);
-
-    return domain_map;
-  }
-
   Core::LinAlg::Map create_row_map(const MPI_Comm& comm, const AirwayContainer& airways,
       const TerminalUnitContainer& terminal_units, const Junctions::ConnectionData& connections,
       const Junctions::BifurcationData& bifurcations,

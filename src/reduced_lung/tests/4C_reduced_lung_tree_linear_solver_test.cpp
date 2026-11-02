@@ -444,10 +444,8 @@ namespace
     BoundaryConditions::BoundaryConditionContainer boundary_conditions;
     Junctions::ConnectionData connections;
     Junctions::BifurcationData bifurcations;
-    std::unique_ptr<Core::LinAlg::Map> locally_owned_dof_map;
     std::unique_ptr<Core::LinAlg::Map> row_map;
     std::unique_ptr<Core::LinAlg::Map> locally_relevant_dof_map;
-    std::unique_ptr<Core::LinAlg::Vector<double>> dofs;
     std::unique_ptr<Core::LinAlg::Vector<double>> locally_relevant_dofs;
     std::unique_ptr<Core::LinAlg::Vector<double>> x;
     std::unique_ptr<Core::LinAlg::SparseMatrix> sysmat;
@@ -498,8 +496,6 @@ namespace
       Junctions::assign_junction_local_equation_ids(connections, bifurcations, n_local_equations);
       BoundaryConditions::assign_local_equation_ids(boundary_conditions, n_local_equations);
 
-      locally_owned_dof_map = std::make_unique<Core::LinAlg::Map>(
-          create_domain_map(MPI_COMM_WORLD, airways, terminal_units));
       row_map = std::make_unique<Core::LinAlg::Map>(create_row_map(
           MPI_COMM_WORLD, airways, terminal_units, connections, bifurcations, boundary_conditions));
       locally_relevant_dof_map = std::make_unique<Core::LinAlg::Map>(
@@ -514,7 +510,6 @@ namespace
           *locally_relevant_dof_map, connections, bifurcations);
       BoundaryConditions::assign_local_dof_ids(*locally_relevant_dof_map, boundary_conditions);
 
-      dofs = std::make_unique<Core::LinAlg::Vector<double>>(*locally_owned_dof_map, true);
       locally_relevant_dofs =
           std::make_unique<Core::LinAlg::Vector<double>>(*locally_relevant_dof_map, true);
       x = std::make_unique<Core::LinAlg::Vector<double>>(*row_map, true);
@@ -530,8 +525,7 @@ namespace
 
     void sync_state_from_x()
     {
-      Core::LinAlg::export_to(*x, *dofs);
-      Core::LinAlg::export_to(*dofs, *locally_relevant_dofs);
+      Core::LinAlg::export_to(*x, *locally_relevant_dofs);
       for (const auto& update_state : assembly_pipeline.state_updaters)
       {
         update_state(*locally_relevant_dofs, params.dynamics.time_increment);
@@ -592,7 +586,6 @@ namespace
           .linear_solver_parameters = solver_params,
           .solver_params_callback = solver_params_callback,
           .assembly_pipeline = assembly_pipeline,
-          .dofs = *dofs,
           .locally_relevant_dofs = *locally_relevant_dofs,
           .x = *x,
           .jacobian = *sysmat,
@@ -608,7 +601,6 @@ namespace
           .dynamics = params.dynamics,
           .tree_linear_solver = tree_linear_solver,
           .assembly_pipeline = solver_assembly_pipeline,
-          .dofs = *dofs,
           .locally_relevant_dofs = *locally_relevant_dofs,
           .x = *x,
       };
@@ -806,7 +798,8 @@ namespace
           tree_iterations, static_cast<unsigned int>(params.dynamics.max_nonlinear_iterations));
 
       expect_vectors_near(*sparse_fixture.x, *tree_fixture.x, solution_tolerance);
-      expect_vectors_near(*sparse_fixture.dofs, *tree_fixture.dofs, solution_tolerance);
+      expect_vectors_near(*sparse_fixture.locally_relevant_dofs,
+          *tree_fixture.locally_relevant_dofs, solution_tolerance);
       EXPECT_LE(sparse_fixture.residual_norm(current_time), residual_tolerance);
       EXPECT_LE(tree_fixture.residual_norm(current_time), residual_tolerance);
 

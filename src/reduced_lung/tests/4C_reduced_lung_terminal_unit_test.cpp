@@ -9,7 +9,6 @@
 
 #include "4C_reduced_lung_terminal_unit.hpp"
 
-#include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_terminal_unit_elasticity.hpp"
 #include "4C_reduced_lung_terminal_unit_model_registry.hpp"
@@ -244,14 +243,11 @@ namespace
            (1.0 - std::pow(v0_over_vi, elasticity.nonlinear_stiffening_beta[i]));
   }
 
-  void fill_terminal_unit_test_dofs(
-      const Map& dof_map, const Map& col_map, Vector<double>& locally_relevant_dofs)
+  void fill_terminal_unit_test_dofs(Vector<double>& locally_relevant_dofs)
   {
-    Vector<double> dofs(dof_map, true);
-    dofs.replace_local_values(9,
+    locally_relevant_dofs.replace_global_values(9,
         std::array<double, 9>{2.0, 2.5, 3.0, 1.2, 1.1, 0.9, 0.2, -0.1, 0.3}.data(),
         std::array<int, 9>{0, 1, 2, 3, 4, 5, 6, 7, 8}.data());
-    export_to(dofs, locally_relevant_dofs);
   }
 
   class TerminalUnitRegistryAndJacobianTest : public testing::TestWithParam<TerminalUnitModelCase>
@@ -689,13 +685,12 @@ namespace
     Airways::AirwayContainer airways;
     const std::map<int, int> global_dof_per_ele = {{0, 3}, {1, 3}, {2, 3}};
     const std::map<int, int> first_global_dof_of_ele = {{0, 0}, {1, 3}, {2, 6}};
-    const auto dof_map = create_domain_map(MPI_COMM_WORLD, airways, terminal_units);
     const auto row_map = create_row_map(MPI_COMM_WORLD, airways, terminal_units, {}, {}, {});
     const auto col_map = create_column_map(MPI_COMM_WORLD, airways, terminal_units,
         global_dof_per_ele, first_global_dof_of_ele, {}, {}, {});
 
     Vector<double> locally_relevant_dofs(col_map, true);
-    fill_terminal_unit_test_dofs(dof_map, col_map, locally_relevant_dofs);
+    fill_terminal_unit_test_dofs(locally_relevant_dofs);
 
     TerminalUnits::create_evaluators(terminal_units);
     auto& optimized_model = terminal_units.models.front();
@@ -745,13 +740,12 @@ namespace
       Airways::AirwayContainer airways;
       const std::map<int, int> global_dof_per_ele = {{0, 3}, {1, 3}, {2, 3}};
       const std::map<int, int> first_global_dof_of_ele = {{0, 0}, {1, 3}, {2, 6}};
-      const auto dof_map = create_domain_map(MPI_COMM_WORLD, airways, terminal_units);
       const auto row_map = create_row_map(MPI_COMM_WORLD, airways, terminal_units, {}, {}, {});
       const auto col_map = create_column_map(MPI_COMM_WORLD, airways, terminal_units,
           global_dof_per_ele, first_global_dof_of_ele, {}, {}, {});
 
       Vector<double> locally_relevant_dofs(col_map, true);
-      fill_terminal_unit_test_dofs(dof_map, col_map, locally_relevant_dofs);
+      fill_terminal_unit_test_dofs(locally_relevant_dofs);
 
       TerminalUnits::create_evaluators(terminal_units);
       auto& optimized_model = terminal_units.models.front();
@@ -797,13 +791,12 @@ namespace
     Airways::AirwayContainer airways;
     const std::map<int, int> global_dof_per_ele = {{0, 3}, {1, 3}, {2, 3}};
     const std::map<int, int> first_global_dof_of_ele = {{0, 0}, {1, 3}, {2, 6}};
-    const auto dof_map = create_domain_map(MPI_COMM_WORLD, airways, terminal_units);
     const auto row_map = create_row_map(MPI_COMM_WORLD, airways, terminal_units, {}, {}, {});
     const auto col_map = create_column_map(MPI_COMM_WORLD, airways, terminal_units,
         global_dof_per_ele, first_global_dof_of_ele, {}, {}, {});
 
     Vector<double> locally_relevant_dofs(col_map, true);
-    fill_terminal_unit_test_dofs(dof_map, col_map, locally_relevant_dofs);
+    fill_terminal_unit_test_dofs(locally_relevant_dofs);
 
     TerminalUnits::create_evaluators(terminal_units);
     auto& optimized_model = terminal_units.models.front();
@@ -879,30 +872,18 @@ namespace
     int n_local_equations = 0;
     TerminalUnits::assign_local_equation_ids(terminal_units, n_local_equations);
 
-    const auto dof_map = create_domain_map(MPI_COMM_WORLD, airways, terminal_units);
     const auto row_map = create_row_map(MPI_COMM_WORLD, airways, terminal_units, {}, {}, {});
     const auto col_map = create_column_map(MPI_COMM_WORLD, airways, terminal_units,
         global_dof_per_ele, first_global_dof_of_ele, {}, {}, {});
     TerminalUnits::assign_local_dof_ids(col_map, terminal_units);
 
-    // Artificial dof vector
-    Vector<double> dofs(dof_map, true);
+    // Artificial dof vector: every terminal unit gets the case's (p1, p2, q)
     Vector<double> locally_relevant_dofs(col_map, true);
-    const std::array<double, 9> dof_values{model_case.dofs[0], model_case.dofs[1],
-        model_case.dofs[2], model_case.dofs[0], model_case.dofs[1], model_case.dofs[2],
-        model_case.dofs[0], model_case.dofs[1], model_case.dofs[2]};
-    dofs.replace_local_values(
-        9, dof_values.data(), std::array<int, 9>{0, 1, 2, 3, 4, 5, 6, 7, 8}.data());
-    export_to(dofs, locally_relevant_dofs);
-
-    if (model_case.reference_volume_linearization == ReferenceVolumeLinearization::Coupled)
+    for (size_t i = 0; i < model.data.number_of_elements(); ++i)
     {
-      for (size_t i = 0; i < model.data.number_of_elements(); ++i)
-      {
-        locally_relevant_dofs.get_values()[model.data.lid_p1[i]] = model_case.dofs[0];
-        locally_relevant_dofs.get_values()[model.data.lid_p2[i]] = model_case.dofs[1];
-        locally_relevant_dofs.get_values()[model.data.lid_q[i]] = model_case.dofs[2];
-      }
+      locally_relevant_dofs.get_values()[model.data.lid_p1[i]] = model_case.dofs[0];
+      locally_relevant_dofs.get_values()[model.data.lid_p2[i]] = model_case.dofs[1];
+      locally_relevant_dofs.get_values()[model.data.lid_q[i]] = model_case.dofs[2];
     }
 
     double dt = 1e-1;         // Dummy time step size

@@ -46,7 +46,6 @@ namespace ReducedLung
         solver_params_callback;  ///< Callback for nested/ID-based solver parameters.
     const NonlinearSolverAssemblyPipeline&
         assembly_pipeline;                                ///< Ordered model assembly callbacks.
-    Core::LinAlg::Vector<double>& dofs;                   ///< Owned dof vector.
     Core::LinAlg::Vector<double>& locally_relevant_dofs;  ///< Ghosted dof vector.
     Core::LinAlg::Vector<double>& x;                      ///< NOX solution vector.
     Core::LinAlg::SparseMatrix& jacobian;                 ///< Sparse Jacobian matrix.
@@ -82,8 +81,8 @@ namespace ReducedLung
      * @brief Solve nonlinear system at given physical time.
      *
      * Updates current time for boundary conditions, performs Newton solve,
-     * and synchronizes the converged solution to dofs, locally_relevant_dofs,
-     * and registered internal state vectors via the assembly pipeline.
+     * and synchronizes the converged solution to locally_relevant_dofs and the registered
+     * internal state vectors via the assembly pipeline.
      *
      * @param time Current physical time for time-dependent BCs.
      * @return Number of nonlinear iterations performed.
@@ -101,7 +100,6 @@ namespace ReducedLung
     void sync_state_from_x(const Core::LinAlg::Vector<double>& x);
 
     Core::LinAlg::Vector<double>& x_solution_;
-    Core::LinAlg::Vector<double>& dofs_;
     Core::LinAlg::Vector<double>& locally_relevant_dofs_;
     Core::LinAlg::SparseMatrix& jacobian_;
     NonlinearSolverAssemblyPipeline assembly_pipeline_;

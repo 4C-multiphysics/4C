@@ -37,7 +37,6 @@ namespace ReducedLung
         tree_linear_solver;  ///< Tree linear solver for the Newton corrections.
     const NonlinearSolverAssemblyPipeline&
         assembly_pipeline;                                ///< Ordered model assembly callbacks.
-    Core::LinAlg::Vector<double>& dofs;                   ///< Owned dof vector.
     Core::LinAlg::Vector<double>& locally_relevant_dofs;  ///< Ghosted dof vector.
     Core::LinAlg::Vector<double>& x;                      ///< Nonlinear solution vector.
   };
@@ -122,7 +121,6 @@ namespace ReducedLung
     double solve_linear_correction();
 
     Core::LinAlg::Vector<double>& x_solution_;
-    Core::LinAlg::Vector<double>& dofs_;
     Core::LinAlg::Vector<double>& locally_relevant_dofs_;
     NonlinearSolverAssemblyPipeline assembly_pipeline_;
 

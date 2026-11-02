@@ -234,24 +234,6 @@ namespace ReducedLung
       int n_connections, int n_bifurcations, int n_boundary_conditions);
 
   /*!
-   * @brief Create the map with the locally owned dofs spanning the computation domain that
-   * are necessary for the solution vector.
-   *
-   * The 4C discretization gives a mpi distribution of the Reduced Lung elements. From this
-   * distribution and the knowledge about the number of dofs in every element, the new map
-   * mapping the local dofs to their global ids is created. Example: The dofs of element k have
-   * global ids in the range first_global_dof_of_ele[k] to first_global_dof_of_ele[k] + dofs of
-   * element k.
-   *
-   * @param comm Communicator of the 4C discretization.
-   * @param airways Vector of locally owned airways.
-   * @param terminal_units Locally owned terminal units.
-   * @return map specifying the dof-distribution over all ranks.
-   */
-  Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const Airways::AirwayContainer& airways,
-      const TerminalUnits::TerminalUnitContainer& terminal_units);
-
-  /*!
    * @brief Create the map with the locally owned row indices of the system matrix, i.e. the
    * distribution of the system's equation.
    *

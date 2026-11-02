@@ -159,8 +159,6 @@ namespace
     Junctions::assign_junction_local_equation_ids(connections, bifurcations, n_local_equations);
     BoundaryConditions::assign_local_equation_ids(boundary_conditions, n_local_equations);
 
-    const Core::LinAlg::Map locally_owned_dof_map =
-        create_domain_map(MPI_COMM_WORLD, airways, terminal_units);
     const Core::LinAlg::Map row_map = create_row_map(
         MPI_COMM_WORLD, airways, terminal_units, connections, bifurcations, boundary_conditions);
     const Core::LinAlg::Map locally_relevant_dof_map =
@@ -175,7 +173,6 @@ namespace
     Junctions::assign_junction_local_dof_ids(locally_relevant_dof_map, connections, bifurcations);
     BoundaryConditions::assign_local_dof_ids(locally_relevant_dof_map, boundary_conditions);
 
-    Core::LinAlg::Vector<double> dofs(locally_owned_dof_map, true);
     Core::LinAlg::Vector<double> locally_relevant_dofs(locally_relevant_dof_map, true);
     Core::LinAlg::Vector<double> x(row_map, true);
     Core::LinAlg::SparseMatrix sysmat(row_map, locally_relevant_dof_map, 3);
@@ -198,7 +195,6 @@ namespace
         .linear_solver_parameters = solver_params,
         .solver_params_callback = get_solver_params,
         .assembly_pipeline = assembly_pipeline,
-        .dofs = dofs,
         .locally_relevant_dofs = locally_relevant_dofs,
         .x = x,
         .jacobian = sysmat,

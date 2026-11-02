@@ -25,7 +25,6 @@ namespace ReducedLung
 {
   NewtonSparse::NewtonSparse(const NewtonSparseContext& context, double initial_time)
       : x_solution_(context.x),
-        dofs_(context.dofs),
         locally_relevant_dofs_(context.locally_relevant_dofs),
         jacobian_(context.jacobian),
         assembly_pipeline_(context.assembly_pipeline),
@@ -109,17 +108,15 @@ namespace ReducedLung
 
   void NewtonSparse::sync_state_from_x(const Core::LinAlg::Vector<double>& x)
   {
-    // In serial, all maps hold the same dofs in the same order, so plain copies replace the
-    // exports. This runs at every residual and Jacobian evaluation.
+    // In serial, x and the locally relevant dof vector hold the same dofs in the same order, so a
+    // plain copy replaces the import. This runs at every residual and Jacobian evaluation.
     if (Core::Communication::num_mpi_ranks(x.get_comm()) == 1)
     {
-      dofs_.update(1.0, x, 0.0);
       locally_relevant_dofs_.update(1.0, x, 0.0);
     }
     else
     {
-      Core::LinAlg::export_to(x, dofs_);
-      Core::LinAlg::export_to(dofs_, locally_relevant_dofs_);
+      Core::LinAlg::export_to(x, locally_relevant_dofs_);
     }
 
     for (const auto& update_state : assembly_pipeline_.state_updaters)
