@@ -25,12 +25,12 @@
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_junctions.hpp"
 #include "4C_reduced_lung_newton_sparse.hpp"
+#include "4C_reduced_lung_newton_tree.hpp"
 #include "4C_reduced_lung_nonlinear_solver.hpp"
 #include "4C_reduced_lung_resulttest.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_tree_linear_solver.hpp"
 #include "4C_reduced_lung_tree_metadata.hpp"
-#include "4C_reduced_lung_tree_newton_solver.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
@@ -387,15 +387,15 @@ namespace ReducedLung
         tree_linear_solver_ = std::make_shared<TreeLinearSolver>(
             TreeLinearSolverContext{.tree_metadata = *tree_metadata_});
 
-        const TreeNewtonSolverContext tree_newton_solver_context{
+        const NewtonTreeContext newton_tree_context{
+            .comm = comm_,
             .dynamics = context_.parameters.dynamics,
             .tree_linear_solver = tree_linear_solver_,
             .assembly_pipeline = assembly_pipeline_,
             .locally_relevant_dofs = *locally_relevant_dofs_,
             .x = *x_,
         };
-        nonlinear_solver_ =
-            std::make_unique<TreeNewtonSolver>(tree_newton_solver_context, current_time_);
+        nonlinear_solver_ = std::make_unique<NewtonTree>(newton_tree_context, current_time_);
       }
 
       /**
