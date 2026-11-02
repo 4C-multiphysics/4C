@@ -45,7 +45,7 @@ namespace ReducedLung
   /**
    * @brief Full-step Newton solver for reduced-lung tree nonlinear systems.
    *
-   * This solver is intentionally parallel to @ref NoxSolver. It reuses the reduced-lung assembly
+   * This solver is intentionally parallel to @ref NewtonSparse. It reuses the reduced-lung assembly
    * pipeline, but owns the nonlinear iteration loop and delegates correction solves to
    * @ref TreeLinearSolver.
    */

@@ -87,8 +87,9 @@ namespace ReducedLung
    * Registers airway, terminal-unit, junction, and boundary-condition contributions for residual,
    * sparse Jacobian, structured tree-linearization, and state-update assembly.
    *
-   * @param include_sparse_jacobian_assemblers Register callbacks needed by NOX. Production
-   * NewtonTree disables these callbacks because it assembles structured coefficients.
+   * @param include_sparse_jacobian_assemblers Register the sparse Jacobian callbacks needed by
+   * NewtonSparse. NewtonTree disables these callbacks because it assembles structured
+   * coefficients.
    */
   NonlinearSolverAssemblyPipeline create_default_nonlinear_solver_assembly_pipeline(
       Airways::AirwayContainer& airways, TerminalUnits::TerminalUnitContainer& terminal_units,

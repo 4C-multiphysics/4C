@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include "4C_reduced_lung_nox_solver.hpp"
+#include "4C_reduced_lung_newton_sparse.hpp"
 
 #include "4C_fem_discretization.hpp"
 #include "4C_linear_solver_method.hpp"
@@ -105,13 +105,13 @@ namespace
     return function_manager;
   }
 
-  TEST(ReducedLungNoxSolverTest, SingleTerminalUnitOgdenMatchesAnalyticalVolume)
+  TEST(ReducedLungNewtonSparseTest, SingleTerminalUnitOgdenMatchesAnalyticalVolume)
   {
     const double dt = 0.4;
     const int steps = 5;
     const auto params = make_single_tu_parameters(dt, steps);
 
-    Core::FE::Discretization discretization("reduced_lung_nox_test", MPI_COMM_WORLD, 3);
+    Core::FE::Discretization discretization("reduced_lung_newton_sparse_test", MPI_COMM_WORLD, 3);
     Core::Rebalance::RebalanceParameters rebalance_parameters;
     const std::vector<std::array<double, 3>> node_coordinates{{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}};
     const std::vector<std::array<int, 2>> element_nodes{{0, 1}};
@@ -192,7 +192,7 @@ namespace
     const auto assembly_pipeline = create_default_nonlinear_solver_assembly_pipeline(
         airways, terminal_units, connections, bifurcations, boundary_conditions);
 
-    const NoxSolverContext nox_solver_context{
+    const NewtonSparseContext newton_sparse_context{
         .comm = MPI_COMM_WORLD,
         .dynamics = params.dynamics,
         .linear_solver_parameters = solver_params,
@@ -204,7 +204,7 @@ namespace
         .jacobian = sysmat,
     };
 
-    auto nox_solver = NoxSolver(nox_solver_context);
+    auto solver = NewtonSparse(newton_sparse_context);
 
     const int owns_terminal_unit = terminal_units.models.empty() ? 0 : 1;
     int owner_count = 0;
@@ -222,7 +222,7 @@ namespace
     for (int n = 1; n <= steps; ++n)
     {
       const double current_time = n * dt;
-      nox_solver.solve(current_time);
+      solver.solve(current_time);
 
       TerminalUnits::end_of_timestep_routine(terminal_units, locally_relevant_dofs, dt);
       Airways::end_of_timestep_routine(airways, locally_relevant_dofs, dt);

@@ -24,8 +24,8 @@
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_junctions.hpp"
+#include "4C_reduced_lung_newton_sparse.hpp"
 #include "4C_reduced_lung_nonlinear_solver.hpp"
-#include "4C_reduced_lung_nox_solver.hpp"
 #include "4C_reduced_lung_resulttest.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_tree_linear_solver.hpp"
@@ -104,8 +104,8 @@ namespace ReducedLung
       using SolverType = ReducedLungParameters::NonlinearSolverType;
       switch (solver)
       {
-        case SolverType::Nox:
-          return "NOX";
+        case SolverType::NewtonSparse:
+          return "NewtonSparse";
         case SolverType::NewtonTree:
           return "NewtonTree";
       }
@@ -316,12 +316,12 @@ namespace ReducedLung
         assembly_pipeline_ = create_default_nonlinear_solver_assembly_pipeline(airways_,
             terminal_units_, connections_, bifurcations_, boundary_conditions_,
             context_.parameters.dynamics.nonlinear_solver ==
-                ReducedLungParameters::NonlinearSolverType::Nox);
+                ReducedLungParameters::NonlinearSolverType::NewtonSparse);
 
         switch (context_.parameters.dynamics.nonlinear_solver)
         {
-          case ReducedLungParameters::NonlinearSolverType::Nox:
-            build_nox_solver();
+          case ReducedLungParameters::NonlinearSolverType::NewtonSparse:
+            build_newton_sparse_solver();
             break;
           case ReducedLungParameters::NonlinearSolverType::NewtonTree:
             build_newton_tree_solver();
@@ -332,9 +332,9 @@ namespace ReducedLung
       }
 
       /**
-       * Build the legacy NOX-based nonlinear solver workflow.
+       * Build the NewtonSparse driver with an assembled sparse Jacobian.
        */
-      void build_nox_solver()
+      void build_newton_sparse_solver()
       {
         FOUR_C_ASSERT_ALWAYS(dofs_ != nullptr && locally_relevant_dofs_ != nullptr &&
                                  x_ != nullptr && row_map_ != nullptr &&
@@ -343,7 +343,7 @@ namespace ReducedLung
         sysmat_ =
             std::make_unique<Core::LinAlg::SparseMatrix>(*row_map_, *locally_relevant_dof_map_, 4);
 
-        const NoxSolverContext nox_solver_context{
+        const NewtonSparseContext newton_sparse_context{
             .comm = comm_,
             .dynamics = context_.parameters.dynamics,
             .linear_solver_parameters = context_.linear_solver_parameters,
@@ -355,7 +355,7 @@ namespace ReducedLung
             .jacobian = *sysmat_,
         };
 
-        nonlinear_solver_ = std::make_unique<NoxSolver>(nox_solver_context, current_time_);
+        nonlinear_solver_ = std::make_unique<NewtonSparse>(newton_sparse_context, current_time_);
       }
 
       /**
@@ -372,7 +372,8 @@ namespace ReducedLung
         {
           FOUR_C_THROW(
               "Reduced lung NewtonTree is serial-only, but the run uses {} MPI ranks. Run "
-              "NewtonTree with one MPI rank, or select nonlinear_solver: Nox for MPI runs.",
+              "NewtonTree with one MPI rank, or select nonlinear_solver: NewtonSparse for MPI "
+              "runs.",
               comm_size);
         }
         FOUR_C_ASSERT_ALWAYS(sysmat_ == nullptr,

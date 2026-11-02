@@ -18,7 +18,7 @@
 #include "4C_reduced_lung_boundary_conditions.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_junctions.hpp"
-#include "4C_reduced_lung_nox_solver.hpp"
+#include "4C_reduced_lung_newton_sparse.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_test_utils_test.hpp"
 #include "4C_reduced_lung_tree_metadata.hpp"
@@ -584,9 +584,9 @@ namespace
       });
     }
 
-    std::unique_ptr<NoxSolver> create_nox_solver()
+    std::unique_ptr<NewtonSparse> create_newton_sparse_solver()
     {
-      const NoxSolverContext context{
+      const NewtonSparseContext context{
           .comm = MPI_COMM_WORLD,
           .dynamics = params.dynamics,
           .linear_solver_parameters = solver_params,
@@ -597,7 +597,7 @@ namespace
           .x = *x,
           .jacobian = *sysmat,
       };
-      return std::make_unique<NoxSolver>(context);
+      return std::make_unique<NewtonSparse>(context);
     }
 
     std::unique_ptr<TreeNewtonSolver> create_tree_newton_solver(
@@ -784,10 +784,10 @@ namespace
       const std::vector<std::string>& function_definitions, ComparisonChecks checks)
   {
     const auto& params = problem.parameters;
-    LinearSolverFixture nox_fixture(name + "_nox", problem, function_definitions);
+    LinearSolverFixture sparse_fixture(name + "_sparse", problem, function_definitions);
     LinearSolverFixture tree_fixture(name + "_tree", problem, function_definitions);
 
-    auto nox_solver = nox_fixture.create_nox_solver();
+    auto sparse_solver = sparse_fixture.create_newton_sparse_solver();
     auto tree_solver = tree_fixture.create_tree_newton_workflow_solver();
 
     const double solution_tolerance = 1.0e-6;
@@ -797,35 +797,35 @@ namespace
     for (int step = 1; step <= params.dynamics.number_of_steps; ++step)
     {
       const double current_time = step * params.dynamics.time_increment;
-      const unsigned int nox_iterations = nox_solver->solve(current_time);
+      const unsigned int sparse_iterations = sparse_solver->solve(current_time);
       const unsigned int tree_iterations = tree_solver->solve(current_time);
 
       EXPECT_LE(
-          nox_iterations, static_cast<unsigned int>(params.dynamics.max_nonlinear_iterations));
+          sparse_iterations, static_cast<unsigned int>(params.dynamics.max_nonlinear_iterations));
       EXPECT_LE(
           tree_iterations, static_cast<unsigned int>(params.dynamics.max_nonlinear_iterations));
 
-      expect_vectors_near(*nox_fixture.x, *tree_fixture.x, solution_tolerance);
-      expect_vectors_near(*nox_fixture.dofs, *tree_fixture.dofs, solution_tolerance);
-      EXPECT_LE(nox_fixture.residual_norm(current_time), residual_tolerance);
+      expect_vectors_near(*sparse_fixture.x, *tree_fixture.x, solution_tolerance);
+      expect_vectors_near(*sparse_fixture.dofs, *tree_fixture.dofs, solution_tolerance);
+      EXPECT_LE(sparse_fixture.residual_norm(current_time), residual_tolerance);
       EXPECT_LE(tree_fixture.residual_norm(current_time), residual_tolerance);
 
       if (checks.connection_flow_balance)
       {
-        expect_connection_flow_balance(nox_fixture, solution_tolerance);
+        expect_connection_flow_balance(sparse_fixture, solution_tolerance);
         expect_connection_flow_balance(tree_fixture, solution_tolerance);
       }
       if (checks.bifurcation_flow_balance)
       {
-        expect_bifurcation_flow_balance(nox_fixture, solution_tolerance);
+        expect_bifurcation_flow_balance(sparse_fixture, solution_tolerance);
         expect_bifurcation_flow_balance(tree_fixture, solution_tolerance);
       }
 
-      nox_fixture.advance_end_of_timestep();
+      sparse_fixture.advance_end_of_timestep();
       tree_fixture.advance_end_of_timestep();
       if (checks.terminal_unit_volumes)
       {
-        expect_terminal_unit_volumes_near(nox_fixture, tree_fixture, solution_tolerance);
+        expect_terminal_unit_volumes_near(sparse_fixture, tree_fixture, solution_tolerance);
       }
     }
   }
@@ -887,7 +887,7 @@ namespace
         make_large_mixed_airway_terminal_unit_parameters(0.1));
   }
 
-  TEST(ReducedLungTreeWorkflowTests, SingleTerminalUnitMatchesNox)
+  TEST(ReducedLungTreeWorkflowTests, SingleTerminalUnitMatchesNewtonSparse)
   {
     auto problem = make_single_terminal_unit_parameters(0.25);
     problem.parameters.dynamics.number_of_steps = 3;
@@ -895,7 +895,7 @@ namespace
         {.terminal_unit_volumes = true});
   }
 
-  TEST(ReducedLungTreeWorkflowTests, SerialRigidAirwaysMatchNox)
+  TEST(ReducedLungTreeWorkflowTests, SerialRigidAirwaysMatchNewtonSparse)
   {
     auto problem = make_serial_airway_parameters(0.5);
     problem.parameters.dynamics.number_of_steps = 3;
@@ -903,7 +903,7 @@ namespace
         "tree_workflow_serial_airways", problem, {"t", "0.0"}, {.connection_flow_balance = true});
   }
 
-  TEST(ReducedLungTreeWorkflowTests, RootInletFlowBoundaryMatchesNox)
+  TEST(ReducedLungTreeWorkflowTests, RootInletFlowBoundaryMatchesNewtonSparse)
   {
     auto problem = make_serial_airway_root_flow_parameters(0.5);
     problem.parameters.dynamics.number_of_steps = 3;
@@ -911,7 +911,7 @@ namespace
         {.connection_flow_balance = true});
   }
 
-  TEST(ReducedLungTreeWorkflowTests, BifurcationRigidAirwaysMatchNox)
+  TEST(ReducedLungTreeWorkflowTests, BifurcationRigidAirwaysMatchNewtonSparse)
   {
     auto problem = make_bifurcation_parameters(0.5);
     problem.parameters.dynamics.number_of_steps = 3;
@@ -919,7 +919,7 @@ namespace
         {.bifurcation_flow_balance = true});
   }
 
-  TEST(ReducedLungTreeWorkflowTests, MixedAirwaysAndTerminalUnitsMatchNox)
+  TEST(ReducedLungTreeWorkflowTests, MixedAirwaysAndTerminalUnitsMatchNewtonSparse)
   {
     auto problem = make_mixed_airway_terminal_unit_parameters(0.25);
     problem.parameters.dynamics.number_of_steps = 2;

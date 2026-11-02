@@ -7,7 +7,7 @@
 
 #include "4C_config.hpp"
 
-#include "4C_reduced_lung_nox_solver.hpp"
+#include "4C_reduced_lung_newton_sparse.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_linalg_sparsematrix.hpp"
@@ -23,27 +23,24 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace ReducedLung
 {
-  NoxSolver::NoxSolver(const NoxSolverContext& context, double initial_time)
+  NewtonSparse::NewtonSparse(const NewtonSparseContext& context, double initial_time)
       : x_solution_(context.x),
         dofs_(context.dofs),
         locally_relevant_dofs_(context.locally_relevant_dofs),
+        jacobian_(context.jacobian),
         assembly_pipeline_(context.assembly_pipeline),
         dt_(context.dynamics.time_increment),
         current_time_(initial_time),
         linear_solver_(std::make_shared<Core::LinAlg::Solver>(context.linear_solver_parameters,
             context.comm, context.solver_params_callback, Core::IO::Verbositylevel::minimal))
   {
-    if (!linear_solver_)
-    {
-      FOUR_C_THROW("ReducedLung::NoxSolver requires a valid linear solver instance.");
-    }
     if (assembly_pipeline_.residual_assemblers.empty())
     {
-      FOUR_C_THROW("ReducedLung::NoxSolver requires at least one residual assembler callback.");
+      FOUR_C_THROW("ReducedLung::NewtonSparse requires at least one residual assembler callback.");
     }
     if (assembly_pipeline_.jacobian_assemblers.empty())
     {
-      FOUR_C_THROW("ReducedLung::NoxSolver requires at least one Jacobian assembler callback.");
+      FOUR_C_THROW("ReducedLung::NewtonSparse requires at least one Jacobian assembler callback.");
     }
 
     // Create NOX parameter list
@@ -62,13 +59,11 @@ namespace ReducedLung
     std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>> solver_map;
     solver_map[NOX::Nln::sol_generic] = Teuchos::rcpFromRef(*linear_solver_);
 
-
-    // Construct NOX adapter in-place using std::optional::emplace
     adapter_.emplace(context.comm, nox_params, solver_map, context.x, context.jacobian,
         std::move(residual_callback), std::move(jacobian_callback));
   }
 
-  unsigned int NoxSolver::solve(double time)
+  unsigned int NewtonSparse::solve(double time)
   {
     current_time_ = time;
     unsigned int iterations = adapter_->solve();
@@ -77,7 +72,7 @@ namespace ReducedLung
     return iterations;
   }
 
-  bool NoxSolver::residual(const Core::LinAlg::Vector<double>& x,
+  bool NewtonSparse::residual(const Core::LinAlg::Vector<double>& x,
       Core::LinAlg::Vector<double>& residual, NOX::Nln::FillType /*fill_type*/)
   {
     sync_state_from_x(x);
@@ -90,32 +85,32 @@ namespace ReducedLung
     return true;
   }
 
-  bool NoxSolver::jacobian(const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac)
+  bool NewtonSparse::jacobian(
+      const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac)
   {
+    // NOX hands back the Jacobian operator passed to the adapter, i.e. our own sparse matrix.
+    FOUR_C_ASSERT_ALWAYS(&jac == &jacobian_,
+        "ReducedLung::NewtonSparse expects NOX to assemble into the Jacobian given at "
+        "construction.");
     sync_state_from_x(x);
-
-    auto* jac_matrix = dynamic_cast<Core::LinAlg::SparseMatrix*>(&jac);
-    if (jac_matrix == nullptr)
-    {
-      FOUR_C_THROW(
-          "ReducedLung NOX assembly requires Core::LinAlg::SparseMatrix Jacobian operator.");
-    }
 
     for (const auto& assemble_jacobian : assembly_pipeline_.jacobian_assemblers)
     {
-      assemble_jacobian(*jac_matrix, locally_relevant_dofs_, current_time_, dt_);
+      assemble_jacobian(jacobian_, locally_relevant_dofs_, current_time_, dt_);
     }
 
-    if (!jac_matrix->filled())
+    if (!jacobian_.filled())
     {
-      jac_matrix->complete();
+      jacobian_.complete();
     }
 
     return true;
   }
 
-  void NoxSolver::sync_state_from_x(const Core::LinAlg::Vector<double>& x)
+  void NewtonSparse::sync_state_from_x(const Core::LinAlg::Vector<double>& x)
   {
+    // In serial, all maps hold the same dofs in the same order, so plain copies replace the
+    // exports. This runs at every residual and Jacobian evaluation.
     if (Core::Communication::num_mpi_ranks(x.get_comm()) == 1)
     {
       dofs_.update(1.0, x, 0.0);

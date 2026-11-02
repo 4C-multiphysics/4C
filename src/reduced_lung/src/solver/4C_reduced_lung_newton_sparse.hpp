@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_REDUCED_LUNG_NOX_SOLVER_HPP
-#define FOUR_C_REDUCED_LUNG_NOX_SOLVER_HPP
+#ifndef FOUR_C_REDUCED_LUNG_NEWTON_SPARSE_HPP
+#define FOUR_C_REDUCED_LUNG_NEWTON_SPARSE_HPP
 
 #include "4C_config.hpp"
 
@@ -26,6 +26,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Core::LinAlg
 {
   class Solver;
+  class SparseMatrix;
   class SparseOperator;
   template <typename T>
   class Vector;
@@ -34,9 +35,9 @@ namespace Core::LinAlg
 namespace ReducedLung
 {
   /**
-   * @brief Context bundling all objects required to construct and run @ref NoxSolver.
+   * @brief Context bundling all objects required to construct and run @ref NewtonSparse.
    */
-  struct NoxSolverContext
+  struct NewtonSparseContext
   {
     MPI_Comm comm;  ///< MPI communicator used by NOX and the linear solver.
     const ReducedLungParameters::Dynamics& dynamics;  ///< Nonlinear/timestep solver parameters.
@@ -48,32 +49,34 @@ namespace ReducedLung
     Core::LinAlg::Vector<double>& dofs;                   ///< Owned dof vector.
     Core::LinAlg::Vector<double>& locally_relevant_dofs;  ///< Ghosted dof vector.
     Core::LinAlg::Vector<double>& x;                      ///< NOX solution vector.
-    Core::LinAlg::SparseOperator& jacobian;               ///< NOX Jacobian operator.
+    Core::LinAlg::SparseMatrix& jacobian;                 ///< Sparse Jacobian matrix.
   };
 
   /**
-   * @brief NOX solver for reduced lung simulations.
+   * @brief NOX Newton solver with an assembled sparse Jacobian for reduced lung simulations.
    *
-   * Encapsulates all NOX setup, callbacks, and time management for reduced lung physics.
+   * Encapsulates all NOX setup, callbacks, and time management for reduced lung physics. The
+   * Jacobian is assembled into a sparse matrix and solved with the configured linear solver, so
+   * this solver also runs in MPI-parallel.
    * Provides a simple interface: construct once, then call solve(time) in each timestep.
    */
-  class NoxSolver final : public NonlinearSolver
+  class NewtonSparse final : public NonlinearSolver
   {
    public:
     /**
-     * @brief Construct NOX solver with all required model components.
+     * @brief Construct the NewtonSparse solver with all required model components.
      *
      * @param context NOX setup context including communicator, dynamics, linear solver setup,
      * assembly pipeline callbacks, and all bound vectors/operators.
      * @param initial_time Initial time for the simulation.
      */
-    NoxSolver(const NoxSolverContext& context, double initial_time = 0.0);
+    NewtonSparse(const NewtonSparseContext& context, double initial_time = 0.0);
 
-    NoxSolver(const NoxSolver&) = delete;
-    NoxSolver& operator=(const NoxSolver&) = delete;
-    NoxSolver(NoxSolver&&) = delete;
-    NoxSolver& operator=(NoxSolver&&) = delete;
-    ~NoxSolver() override = default;
+    NewtonSparse(const NewtonSparse&) = delete;
+    NewtonSparse& operator=(const NewtonSparse&) = delete;
+    NewtonSparse(NewtonSparse&&) = delete;
+    NewtonSparse& operator=(NewtonSparse&&) = delete;
+    ~NewtonSparse() override = default;
 
     /**
      * @brief Solve nonlinear system at given physical time.
@@ -100,6 +103,7 @@ namespace ReducedLung
     Core::LinAlg::Vector<double>& x_solution_;
     Core::LinAlg::Vector<double>& dofs_;
     Core::LinAlg::Vector<double>& locally_relevant_dofs_;
+    Core::LinAlg::SparseMatrix& jacobian_;
     NonlinearSolverAssemblyPipeline assembly_pipeline_;
 
     // Time integration parameters
