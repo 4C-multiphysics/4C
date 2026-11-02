@@ -16,6 +16,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_io_visualization_parameters.hpp"
 #include "4C_particle_algorithm_utils.hpp"
 #include "4C_particle_engine_communication_utils.hpp"
 #include "4C_particle_engine_container.hpp"
@@ -32,6 +33,7 @@
 #include <Teuchos_TimeMonitor.hpp>
 
 #include <memory>
+#include <optional>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -906,10 +908,20 @@ void Particle::ParticleEngine::init_binning_strategy()
   Core::Utils::add_enum_class_to_parameter_list<Core::FE::ShapeFunctionType>(
       "spatial_approximation_type", Global::Problem::instance()->spatial_approximation_type(),
       binning_params);
+  std::optional<Core::IO::VisualizationParameters> bin_output_visualization_parameters;
+  if (Teuchos::getIntegralValue<Core::Binstrategy::WriteBins>(binning_params, "WRITEBINS") !=
+      Core::Binstrategy::WriteBins::none)
+
+  {
+    bin_output_visualization_parameters = Core::IO::visualization_parameters_factory(
+        Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
+        *Global::Problem::instance()->output_control_file(), 0.0);
+  }
+
   binning_ = std::make_shared<Binning>();
   binning_->binstrategy_ = std::make_shared<Core::Binstrategy::BinningStrategy>(binning_params,
       Global::Problem::instance()->output_control_file(), comm_,
-      Core::Communication::my_mpi_rank(comm_));
+      Core::Communication::my_mpi_rank(comm_), std::move(bin_output_visualization_parameters));
 }
 
 void Particle::ParticleEngine::setup_binning_strategy()
