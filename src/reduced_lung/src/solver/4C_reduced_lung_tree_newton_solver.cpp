@@ -16,6 +16,8 @@
 #include "4C_utils_exceptions.hpp"
 
 #include <cmath>
+#include <format>
+#include <iostream>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -67,7 +69,7 @@ namespace ReducedLung
     }
     if (tree_linear_solver_ == nullptr)
     {
-      FOUR_C_THROW("ReducedLung::TreeNewtonSolver requires a valid tree Newton linear solver.");
+      FOUR_C_THROW("ReducedLung::TreeNewtonSolver requires a valid tree linear solver.");
     }
     if (assembly_pipeline_.residual_assemblers.empty())
     {
@@ -93,13 +95,14 @@ namespace ReducedLung
     {
       sync_state_from_x(x_solution_);
       const double residual_norm = assemble_residual_for_current_state();
-      last_residual_norm_ = residual_norm;
       const bool residual_converged = residual_norm <= nonlinear_residual_tolerance_;
 
       // The residual is the authoritative convergence check. A large first correction is expected
       // when advancing in time, even for linear systems.
       if (residual_converged)
       {
+        std::cout << std::format("Newton iters: {} | ||F||: {:.2e}\n", iteration, residual_norm)
+                  << std::flush;
         return iteration;
       }
 

@@ -70,7 +70,7 @@ namespace ReducedLung::TerminalUnits
    * paths.
    */
   void update_static_tree_linearization(
-      TreeNewtonLinearSolver& target, TerminalUnitContainer& terminal_units);
+      TreeLinearSolver& target, TerminalUnitContainer& terminal_units);
 
   /**
    * @brief Update dynamic terminal-unit structured tree-linearization coefficients.
@@ -78,8 +78,7 @@ namespace ReducedLung::TerminalUnits
    * Replaces all three coefficients in the row pattern. Coupled recruitment makes the pressure
    * coefficients state-dependent as well as the q coefficient.
    */
-  void update_tree_linearization(TreeNewtonLinearSolver& target,
-      TerminalUnitContainer& terminal_units,
+  void update_tree_linearization(TreeLinearSolver& target, TerminalUnitContainer& terminal_units,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt);
 
   /**

@@ -555,7 +555,7 @@ namespace ReducedLung
     }
 
     void update_tree_linearization(
-        TreeNewtonLinearSolver& target, const BoundaryConditionContainer& boundary_conditions)
+        TreeLinearSolver& target, const BoundaryConditionContainer& boundary_conditions)
     {
       /* Boundary constraints contribute constant identity rows to the structured linearization. */
       for (const auto& model : boundary_conditions.models)

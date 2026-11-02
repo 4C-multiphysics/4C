@@ -122,7 +122,7 @@ namespace ReducedLung::TerminalUnits::Rheology
    * @brief Build dynamic structured tree-linearization evaluator for the concrete rheology variant.
    *
    * The callback combines elastic-pressure partials, recruitment derivatives, and rheology terms
-   * before writing p1, p2, and q coefficients through TreeNewtonLinearSolver.
+   * before writing p1, p2, and q coefficients through TreeLinearSolver.
    */
   TreeLinearizationEvaluator make_tree_linearization_evaluator(RheologicalModel& rheological_model,
       Elasticity::ElasticPressurePartialsEvaluator elastic_pressure_partials_evaluator);

@@ -23,7 +23,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace ReducedLung
 {
   struct RuntimeOutputCollector;
-  class TreeNewtonLinearSolver;
+  class TreeLinearSolver;
 }  // namespace ReducedLung
 namespace ReducedLung::Airways
 {
@@ -88,10 +88,10 @@ namespace ReducedLung::Airways
   /**
    * @brief Callback type for state-dependent structured tree coefficient assembly.
    *
-   * Implementations write directly to a TreeNewtonLinearSolver coefficient target.
+   * Implementations write directly to a TreeLinearSolver coefficient target.
    */
   using TreeLinearizationEvaluator =
-      std::function<void(const AirwayData& data, TreeNewtonLinearSolver& target,
+      std::function<void(const AirwayData& data, TreeLinearSolver& target,
           const Core::LinAlg::Vector<double>& locally_relevant_dofs, double time_step_size_dt)>;
 
   /**
@@ -101,7 +101,7 @@ namespace ReducedLung::Airways
    * replaced by TreeLinearizationEvaluator during Newton iterations.
    */
   using StaticTreeLinearizationEvaluator =
-      std::function<void(const AirwayData& data, TreeNewtonLinearSolver& target)>;
+      std::function<void(const AirwayData& data, TreeLinearSolver& target)>;
 
   ///< Callback type for nonlinear-iteration internal state synchronization.
   using InternalStateUpdater = std::function<void(AirwayData& data,

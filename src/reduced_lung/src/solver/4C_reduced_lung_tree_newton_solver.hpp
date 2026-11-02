@@ -10,7 +10,8 @@
 
 #include "4C_config.hpp"
 
-#include "4C_reduced_lung_helpers.hpp"
+#include "4C_reduced_lung_input.hpp"
+#include "4C_reduced_lung_nonlinear_solver.hpp"
 
 #include <memory>
 
@@ -24,7 +25,7 @@ namespace Core::LinAlg
 
 namespace ReducedLung
 {
-  class TreeNewtonLinearSolver;
+  class TreeLinearSolver;
 
   /**
    * @brief Context bundling all objects required by @ref TreeNewtonSolver.
@@ -32,8 +33,8 @@ namespace ReducedLung
   struct TreeNewtonSolverContext
   {
     const ReducedLungParameters::Dynamics& dynamics;  ///< Nonlinear/timestep solver parameters.
-    std::shared_ptr<TreeNewtonLinearSolver>
-        tree_linear_solver;  ///< Tree Newton correction linear solver.
+    std::shared_ptr<TreeLinearSolver>
+        tree_linear_solver;  ///< Tree linear solver for the Newton corrections.
     const NonlinearSolverAssemblyPipeline&
         assembly_pipeline;                                ///< Ordered model assembly callbacks.
     Core::LinAlg::Vector<double>& dofs;                   ///< Owned dof vector.
@@ -46,9 +47,9 @@ namespace ReducedLung
    *
    * This solver is intentionally parallel to @ref NoxSolver. It reuses the reduced-lung assembly
    * pipeline, but owns the nonlinear iteration loop and delegates correction solves to
-   * @ref TreeNewtonLinearSolver.
+   * @ref TreeLinearSolver.
    */
-  class TreeNewtonSolver
+  class TreeNewtonSolver final : public NonlinearSolver
   {
    public:
     /**
@@ -83,7 +84,7 @@ namespace ReducedLung
     /**
      * @brief Destroy the tree Newton solver.
      */
-    ~TreeNewtonSolver() = default;
+    ~TreeNewtonSolver() override = default;
 
     /**
      * @brief Solve the nonlinear system at the given physical time.
@@ -91,14 +92,7 @@ namespace ReducedLung
      * @param time Current physical time for time-dependent boundary conditions.
      * @return Number of Newton corrections applied.
      */
-    unsigned int solve(double time);
-
-    /**
-     * @brief Final residual norm from the most recent nonlinear solve.
-     *
-     * @return Euclidean norm of the last assembled residual.
-     */
-    [[nodiscard]] double last_residual_norm() const { return last_residual_norm_; }
+    unsigned int solve(double time) override;
 
    private:
     /**
@@ -138,12 +132,11 @@ namespace ReducedLung
 
     double dt_;
     double current_time_;
-    double last_residual_norm_ = 0.0;
     unsigned int max_nonlinear_iterations_;
     double nonlinear_residual_tolerance_;
     double nonlinear_increment_tolerance_;
 
-    std::shared_ptr<TreeNewtonLinearSolver> tree_linear_solver_;
+    std::shared_ptr<TreeLinearSolver> tree_linear_solver_;
   };
 }  // namespace ReducedLung
 

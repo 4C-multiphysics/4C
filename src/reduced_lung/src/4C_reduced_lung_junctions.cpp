@@ -353,8 +353,8 @@ namespace ReducedLung
       }
     }
 
-    void update_tree_linearization(TreeNewtonLinearSolver& target,
-        const ConnectionData& connections, const BifurcationData& bifurcations)
+    void update_tree_linearization(TreeLinearSolver& target, const ConnectionData& connections,
+        const BifurcationData& bifurcations)
     {
       /* Junction equations are linear and state-independent; only constant coefficients are stored.
        */

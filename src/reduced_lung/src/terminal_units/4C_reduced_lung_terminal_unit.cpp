@@ -47,7 +47,7 @@ namespace ReducedLung
     }
 
     void update_static_tree_linearization(
-        TreeNewtonLinearSolver& target, TerminalUnitContainer& terminal_units)
+        TreeLinearSolver& target, TerminalUnitContainer& terminal_units)
     {
       for (auto& model : terminal_units.models)
       {
@@ -55,8 +55,7 @@ namespace ReducedLung
       }
     }
 
-    void update_tree_linearization(TreeNewtonLinearSolver& target,
-        TerminalUnitContainer& terminal_units,
+    void update_tree_linearization(TreeLinearSolver& target, TerminalUnitContainer& terminal_units,
         const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
     {
       for (auto& model : terminal_units.models)

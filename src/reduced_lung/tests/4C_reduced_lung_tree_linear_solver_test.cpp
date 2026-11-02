@@ -18,6 +18,7 @@
 #include "4C_reduced_lung_boundary_conditions.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_junctions.hpp"
+#include "4C_reduced_lung_nox_solver.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_test_utils_test.hpp"
 #include "4C_reduced_lung_tree_metadata.hpp"
@@ -550,7 +551,7 @@ namespace
     }
 
     void assemble_tree_coefficients(
-        TreeNewtonLinearSolver& target, double current_time, bool include_static_coefficients)
+        TreeLinearSolver& target, double current_time, bool include_static_coefficients)
     {
       if (include_static_coefficients)
       {
@@ -600,7 +601,7 @@ namespace
     }
 
     std::unique_ptr<TreeNewtonSolver> create_tree_newton_solver(
-        const std::shared_ptr<TreeNewtonLinearSolver>& tree_linear_solver,
+        const std::shared_ptr<TreeLinearSolver>& tree_linear_solver,
         const NonlinearSolverAssemblyPipeline& solver_assembly_pipeline)
     {
       const TreeNewtonSolverContext context{
@@ -617,8 +618,8 @@ namespace
     std::unique_ptr<TreeNewtonSolver> create_tree_newton_workflow_solver()
     {
       tree_metadata = build_tree_metadata();
-      auto linear_solver = std::make_shared<TreeNewtonLinearSolver>(
-          TreeNewtonLinearSolverContext{.tree_metadata = *tree_metadata});
+      auto linear_solver = std::make_shared<TreeLinearSolver>(
+          TreeLinearSolverContext{.tree_metadata = *tree_metadata});
       const auto tree_assembly_pipeline = create_default_nonlinear_solver_assembly_pipeline(
           airways, terminal_units, connections, bifurcations, boundary_conditions, false);
       EXPECT_TRUE(tree_assembly_pipeline.jacobian_assemblers.empty());
@@ -697,8 +698,8 @@ namespace
     const auto& params = problem.parameters;
     LinearSolverFixture fixture(name, problem, {"0.25 + 0.5 * t", "0.0"});
     const auto tree_metadata = fixture.build_tree_metadata();
-    TreeNewtonLinearSolver tree_solver(
-        TreeNewtonLinearSolverContext{.tree_metadata = tree_metadata, .pivot_tolerance = 1.0e-12});
+    TreeLinearSolver tree_solver(
+        TreeLinearSolverContext{.tree_metadata = tree_metadata, .pivot_tolerance = 1.0e-12});
 
     const std::vector<double> state_scales{0.75, 1.0, 1.25};
     for (std::size_t step = 0; step < state_scales.size(); ++step)
@@ -716,7 +717,7 @@ namespace
       seed_nonzero_initial_state(step_fresh_fixture, state_scales[step]);
       step_fresh_fixture.sync_state_from_x();
       const auto fresh_tree_metadata = step_fresh_fixture.build_tree_metadata();
-      TreeNewtonLinearSolver fresh_tree_solver(TreeNewtonLinearSolverContext{
+      TreeLinearSolver fresh_tree_solver(TreeLinearSolverContext{
           .tree_metadata = fresh_tree_metadata, .pivot_tolerance = 1.0e-12});
       step_fresh_fixture.assemble_tree_coefficients(fresh_tree_solver, current_time, true);
 
@@ -834,8 +835,7 @@ namespace
     LinearSolverFixture fixture("tree_linear_coefficient_slots_alias",
         make_mixed_airway_terminal_unit_parameters(0.1), {"0.25 + 0.5 * t", "0.0"});
     const auto tree_metadata = fixture.build_tree_metadata();
-    TreeNewtonLinearSolver tree_solver(
-        TreeNewtonLinearSolverContext{.tree_metadata = tree_metadata});
+    TreeLinearSolver tree_solver(TreeLinearSolverContext{.tree_metadata = tree_metadata});
 
     ASSERT_FALSE(fixture.terminal_units.models.empty());
     const auto& data = fixture.terminal_units.models.front().data;
@@ -865,10 +865,8 @@ namespace
         make_mixed_airway_terminal_unit_parameters(0.1), {"0.25 + 0.5 * t", "0.0"});
     const auto tree_metadata = fixture.build_tree_metadata();
     const auto& data = fixture.terminal_units.models.front().data;
-    TreeNewtonLinearSolver tree_solver(
-        TreeNewtonLinearSolverContext{.tree_metadata = tree_metadata});
-    TreeNewtonLinearSolver other_tree_solver(
-        TreeNewtonLinearSolverContext{.tree_metadata = tree_metadata});
+    TreeLinearSolver tree_solver(TreeLinearSolverContext{.tree_metadata = tree_metadata});
+    TreeLinearSolver other_tree_solver(TreeLinearSolverContext{.tree_metadata = tree_metadata});
 
     TreeCoefficientSlots slots;
     slots.bind(tree_solver, data.local_row_id, data.lid_q);

@@ -65,7 +65,7 @@ namespace ReducedLung::Airways
    * Appends the coefficient row patterns consumed by the direct and generic structured tree
    * assembly paths.
    */
-  void update_static_tree_linearization(TreeNewtonLinearSolver& target, AirwayContainer& airways);
+  void update_static_tree_linearization(TreeLinearSolver& target, AirwayContainer& airways);
 
   /**
    * @brief Update dynamic airway structured tree-linearization coefficients for all local blocks.
@@ -73,7 +73,7 @@ namespace ReducedLung::Airways
    * Replaces only the flow-dependent coefficients in the row patterns created by
    * update_static_tree_linearization().
    */
-  void update_tree_linearization(TreeNewtonLinearSolver& target, AirwayContainer& airways,
+  void update_tree_linearization(TreeLinearSolver& target, AirwayContainer& airways,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt);
 
   /**

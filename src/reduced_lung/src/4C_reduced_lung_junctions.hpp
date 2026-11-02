@@ -31,7 +31,7 @@ namespace Core::LinAlg
 
 namespace ReducedLung
 {
-  class TreeNewtonLinearSolver;
+  class TreeLinearSolver;
 
   namespace Junctions
   {
@@ -144,8 +144,8 @@ namespace ReducedLung
     /**
      * @brief Assemble connection and bifurcation coefficients into structured tree storage.
      */
-    void update_tree_linearization(TreeNewtonLinearSolver& target,
-        const ConnectionData& connections, const BifurcationData& bifurcations);
+    void update_tree_linearization(TreeLinearSolver& target, const ConnectionData& connections,
+        const BifurcationData& bifurcations);
   }  // namespace Junctions
 }  // namespace ReducedLung
 
