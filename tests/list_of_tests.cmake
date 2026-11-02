@@ -1160,6 +1160,7 @@ four_c_test(TEST_FILE particle_dem_3d_tangentialcontact_linspringdamp_walldiscre
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 150)
 four_c_test(TEST_FILE particle_nointer_3d_nopbc_walldiscretcond_nonmoving.4C.yaml NP 3 RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 3 RESTART_STEP 300)
+__four_c_test_vtk(BASED_ON ${current} PVD_RESULT_FILE xxx-bins.pvd PVD_REFERENCE_FILE ref/particle_nointer_3d_nopbc_walldiscretcond_nonmoving-bins.pvd TOLERANCE 1e-08 TIME_STEPS 0.4)
 __four_c_test_vtk(BASED_ON ${current} PVD_RESULT_FILE xxx-particlewalls.pvd PVD_REFERENCE_FILE ref/particle_nointer_3d_nopbc_walldiscretcond_nonmoving-particlewalls.pvd TOLERANCE 1e-08 TIME_STEPS 0.4)
 __four_c_test_vtk(BASED_ON ${current} PVD_RESULT_FILE xxx-particle-phase1-owned.pvd PVD_REFERENCE_FILE ref/particle_nointer_3d_nopbc_walldiscretcond_nonmoving-particle-phase1-owned.pvd TOLERANCE 1e-08 TIME_STEPS 0.4)
 __four_c_test_vtk(BASED_ON ${current} PVD_RESULT_FILE xxx-particle-phase1-ghosted.pvd PVD_REFERENCE_FILE ref/particle_nointer_3d_nopbc_walldiscretcond_nonmoving-particle-phase1-ghosted.pvd TOLERANCE 1e-08 TIME_STEPS 0.4)

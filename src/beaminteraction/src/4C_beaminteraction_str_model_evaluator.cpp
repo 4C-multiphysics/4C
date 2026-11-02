@@ -32,6 +32,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_io_visualization_parameters.hpp"
 #include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
@@ -48,6 +49,8 @@
 #include "4C_utils_parameter_list.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
+
+#include <optional>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -197,10 +200,20 @@ void Solid::ModelEvaluator::BeamInteractionModelEvaluator::setup()
 
   if (use_binning_based_partitioning())
   {
+    std::optional<Core::IO::VisualizationParameters> bin_output_visualization_parameters;
+    if (Teuchos::getIntegralValue<Core::Binstrategy::WriteBins>(binning_params, "WRITEBINS") !=
+        Core::Binstrategy::WriteBins::none)
+    {
+      bin_output_visualization_parameters = Core::IO::visualization_parameters_factory(
+          Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
+          *Global::Problem::instance()->output_control_file(), global_state().get_time_n());
+    }
+
     binstrategy_ = std::make_shared<Core::Binstrategy::BinningStrategy>(binning_params,
         Global::Problem::instance()->output_control_file(), ia_discret_->get_comm(),
-        Core::Communication::my_mpi_rank(ia_discret_->get_comm()), correct_node,
-        determine_relevant_points, discret_vec, disp_vec);
+        Core::Communication::my_mpi_rank(ia_discret_->get_comm()),
+        std::move(bin_output_visualization_parameters), correct_node, determine_relevant_points,
+        discret_vec, disp_vec);
 
     binstrategy_->set_deforming_binning_domain_handler(
         tim_int().get_data_sdyn_ptr()->get_periodic_bounding_box());
