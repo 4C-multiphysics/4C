@@ -64,6 +64,14 @@ namespace NOX
       virtual bool compute_jacobian(const NOX::Nln::Vector& x) = 0;
 
       /**
+       * \brief Evaluates the Jacobian and the right hand side based on the solution vector x at
+       * once.
+       *
+       * Required by NOX::Nln::Group.
+       */
+      virtual bool compute_f_and_jacobian(const NOX::Nln::Vector& x, NOX::Nln::Vector& rhs) = 0;
+
+      /**
        * \brief Return Jacobian operator
        */
       virtual std::shared_ptr<const Core::LinAlg::SparseOperator> get_jacobian_operator() const = 0;
