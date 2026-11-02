@@ -43,7 +43,7 @@ namespace ReducedLung
     {
       NewtonSparse,  ///< NOX Newton with an assembled sparse Jacobian and a configurable linear
                      ///< solver; MPI-parallel.
-      NewtonTree     ///< Custom Newton solver with the serial structured-tree linear solver.
+      NewtonTree     ///< NOX Newton driver with the serial structured-tree linear solver.
     };
 
     struct Dynamics

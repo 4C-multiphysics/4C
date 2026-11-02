@@ -19,10 +19,10 @@
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_junctions.hpp"
 #include "4C_reduced_lung_newton_sparse.hpp"
+#include "4C_reduced_lung_newton_tree.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_test_utils_test.hpp"
 #include "4C_reduced_lung_tree_metadata.hpp"
-#include "4C_reduced_lung_tree_newton_solver.hpp"
 #include "4C_utils_function_manager.hpp"
 #include "4C_utils_function_of_time.hpp"
 
@@ -593,21 +593,22 @@ namespace
       return std::make_unique<NewtonSparse>(context);
     }
 
-    std::unique_ptr<TreeNewtonSolver> create_tree_newton_solver(
+    std::unique_ptr<NewtonTree> create_tree_newton_solver(
         const std::shared_ptr<TreeLinearSolver>& tree_linear_solver,
         const NonlinearSolverAssemblyPipeline& solver_assembly_pipeline)
     {
-      const TreeNewtonSolverContext context{
+      const NewtonTreeContext context{
+          .comm = MPI_COMM_WORLD,
           .dynamics = params.dynamics,
           .tree_linear_solver = tree_linear_solver,
           .assembly_pipeline = solver_assembly_pipeline,
           .locally_relevant_dofs = *locally_relevant_dofs,
           .x = *x,
       };
-      return std::make_unique<TreeNewtonSolver>(context);
+      return std::make_unique<NewtonTree>(context);
     }
 
-    std::unique_ptr<TreeNewtonSolver> create_tree_newton_workflow_solver()
+    std::unique_ptr<NewtonTree> create_tree_newton_workflow_solver()
     {
       tree_metadata = build_tree_metadata();
       auto linear_solver = std::make_shared<TreeLinearSolver>(
