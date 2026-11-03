@@ -1525,6 +1525,10 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("SATHARDENING", {.description = "saturation hardening"}),
             parameter<double>("HARDEXPO", {.description = "hardening exponent"}),
             parameter<double>("TOL", {.description = "tolerance for local Newton iteration"}),
+            parameter<double>("DAMCRIT",
+                {.description = "critical damage from which on a material point is considered as "
+                                "failed, e.g. for element deactivation",
+                    .default_value = 1.0}),
         },
         {.description = "elasto-plastic von Mises material with ductile damage"});
   }

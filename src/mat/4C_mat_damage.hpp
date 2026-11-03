@@ -15,6 +15,8 @@
 #include "4C_mat_so3_material.hpp"
 #include "4C_material_parameter_base.hpp"
 
+#include <algorithm>
+
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -60,6 +62,8 @@ namespace Mat
       const double hardexpo_;
       //! tolerance for local Newton iteration
       const double abstol_;
+      //! critical damage from which on a material point is considered as failed
+      const double damcrit_;
 
       //@}
 
@@ -303,6 +307,15 @@ namespace Mat
     //! the old history vectors last_, while the current history vectors curr_
     //! are reset
     [[nodiscard]] double failure_flag(int gp) const { return failedlast_.at(gp); }
+
+    //! The material point failed if the damage reached its maximum or the critical damage (in this
+    //! or a previous step)
+    [[nodiscard]] bool is_failed(int gp) const override
+    {
+      if (gp >= static_cast<int>(failedlast_.size())) return false;
+      return failedlast_.at(gp) or failedcurr_.at(gp) or
+             std::max(damagelast_.at(gp), damagecurr_.at(gp)) >= params_->damcrit_;
+    }
 
     //! check if history variables are already initialised
     [[nodiscard]] bool initialized() const { return isinit_; }

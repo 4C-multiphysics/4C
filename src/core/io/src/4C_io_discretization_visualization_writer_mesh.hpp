@@ -15,6 +15,7 @@
 #include "4C_io_visualization_parameters.hpp"
 #include "4C_linalg_vector.hpp"
 
+#include <functional>
 #include <memory>
 #include <optional>
 
@@ -210,6 +211,15 @@ namespace Core::IO
      * @param resultname (in) Name of the field in the visualization file
      */
     void append_element_active(const std::string& resultname);
+
+    /**
+     * \brief Write whether each element is active (1) or inactive (0) as given by @p is_active
+     *
+     * @param resultname (in) Name of the field in the visualization file
+     * @param is_active (in) Returns whether an element is active
+     */
+    void append_element_active(const std::string& resultname,
+        const std::function<bool(const Core::Elements::Element&)>& is_active);
 
     /**
      * \brief Write the internal element evaluation times for each element

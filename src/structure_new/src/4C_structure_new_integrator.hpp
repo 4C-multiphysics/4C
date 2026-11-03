@@ -35,6 +35,7 @@ namespace Core::LinAlg
   class Vector;
   class SparseOperator;
   class SparseMatrix;
+  class Map;
 }  // namespace Core::LinAlg
 
 namespace Core::IO
@@ -225,6 +226,19 @@ namespace Solid
 
     //! things that should be done before updating
     virtual void pre_update() = 0;
+
+    /*! \brief Erode elements based on the converged state
+     *
+     *  Nodes which are only connected to inactive elements are fixed at their current position.
+     *  Call this before update_step_state(). */
+    void apply_element_erosion();
+
+    /*! \brief Fix the nodes which are only connected to inactive elements at their current
+     *  position in addition to the Dirichlet conditions
+     *
+     *  The fixed nodes are at rest, i.e., their velocity and acceleration are zero.
+     */
+    void fix_nodes_without_active_elements();
 
     /*! \brief Update configuration after time step
      *

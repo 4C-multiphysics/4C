@@ -251,6 +251,31 @@ namespace Solid
                              .default_value = 0.1}),
 
             TimeStepping::TimeStepControlSettings::input_spec(),
+            group<ElementErosionParameters>("element_erosion",
+                {
+                    parameter<std::optional<int>>("erosion_function",
+                        {.description =
+                                "Function of space and time to remove elements: an element is "
+                                "deactivated for good at the end of the first converged time step "
+                                "at which the function value at its center in the reference "
+                                "configuration reaches threshold. Inactive elements do not "
+                                "contribute to the system and nodes that are only connected to "
+                                "inactive elements are fixed at their current position.",
+                            .store = in_struct(&ElementErosionParameters::erosion_function_id)}),
+                    parameter<double>(
+                        "threshold", {.description = "Threshold of the erosion_function",
+                                         .default_value = 0.5,
+                                         .store = in_struct(&ElementErosionParameters::threshold)}),
+                    parameter<bool>("deactivate_failed_elements",
+                        {.description =
+                                "Deactivate elements for good at the end of a converged time step "
+                                "as soon as they failed, i.e., solid elements as soon as their "
+                                "material failed at a Gauss point.",
+                            .default_value = false,
+                            .store =
+                                in_struct(&ElementErosionParameters::deactivate_failed_elements)}),
+                },
+                {.description = "Settings for element erosion", .required = false}),
             parameter<double>("TOLCONSTR",
                 {.description = "tolerance in the constr error norm for the newton iteration",
                     .default_value = 1.0E-08}),

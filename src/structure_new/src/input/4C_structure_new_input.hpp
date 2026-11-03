@@ -14,6 +14,7 @@
 #include "4C_io_input_spec.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -365,6 +366,33 @@ namespace Solid
 
   std::string kinem_type_string(const KinemType kinem_type);
   //!@}
+
+  /*!
+   * @brief Parameters of the erosion of structural elements
+   *
+   * At the end of each converged time step, the deactivation criteria are evaluated for all active
+   * elements. Elements satisfying a criterion are deactivated for good, i.e., they do not
+   * contribute to any global system anymore (see Core::Elements::Element::is_active()). Nodes which
+   * are only connected to inactive elements are constrained at their current position.
+   */
+  struct ElementErosionParameters
+  {
+    //! id of the function of space and time removing elements: an element is deactivated as soon as
+    //! the function value at its center in the reference configuration reaches the threshold
+    std::optional<int> erosion_function_id;
+
+    //! threshold of the erosion function
+    double threshold;
+
+    //! Deactivate solid elements when their material has failed at any Gauss point.
+    bool deactivate_failed_elements;
+
+    //! whether elements can be eroded at all
+    [[nodiscard]] bool enabled() const
+    {
+      return erosion_function_id.has_value() or deactivate_failed_elements;
+    }
+  };
 
   /// structure parameters
   std::vector<typename Core::IO::InputSpec> valid_parameters();

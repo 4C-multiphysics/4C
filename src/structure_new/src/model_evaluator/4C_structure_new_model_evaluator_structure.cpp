@@ -10,6 +10,7 @@
 #include "4C_beam3_base.hpp"
 #include "4C_beam3_discretization_runtime_output_params.hpp"
 #include "4C_beam3_discretization_runtime_vtu_writer.hpp"
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_discretization_utils.hpp"
 #include "4C_fem_general_utils_gauss_point_postprocess.hpp"
@@ -27,6 +28,7 @@
 #include "4C_linalg_vector.hpp"
 #include "4C_structure_new_dbc.hpp"
 #include "4C_structure_new_discretization_runtime_output_params.hpp"
+#include "4C_structure_new_element_erosion.hpp"
 #include "4C_structure_new_error_evaluator.hpp"
 #include "4C_structure_new_integrator.hpp"
 #include "4C_structure_new_model_evaluator_data.hpp"
@@ -35,6 +37,8 @@
 #include "4C_structure_new_timint_basedataio_runtime_vtk_output.hpp"
 #include "4C_structure_new_timint_implicit.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_utils_function.hpp"
+#include "4C_utils_function_manager.hpp"
 
 #include <Teuchos_ParameterList.hpp>
 
@@ -141,6 +145,12 @@ void Solid::ModelEvaluator::Structure::setup()
         Global::Problem::instance()->structural_dynamic_params().sublist("ERROR EVALUATION"));
   }
 
+  if (const auto function_id = element_erosion_parameters().erosion_function_id)
+  {
+    const auto& functions = Global::Problem::instance()->function_manager();
+    erosion_function_ = &functions.function_by_id<Core::Utils::FunctionOfSpaceTime>(*function_id);
+  }
+
   // set flag
   issetup_ = true;
 }
@@ -187,6 +197,9 @@ void Solid::ModelEvaluator::Structure::reset(const Core::LinAlg::Vector<double>&
 
   // set evaluation time back to zero
   *dt_ele_ptr_ = 0.0;
+
+  // a new solution is computed without the inactive elements
+  elements_deactivated_after_solution_.clear();
 }
 
 /*----------------------------------------------------------------------------*
@@ -418,7 +431,7 @@ bool Solid::ModelEvaluator::Structure::pre_apply_force_stiff_external(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluator::Structure::apply_force_stiff_internal()
+void Solid::ModelEvaluator::Structure::apply_force_stiff_internal(bool rebuild_constant_mass)
 {
   check_init_setup();
   // currently a fixed number of matrix and vector pointers are supported
@@ -435,7 +448,7 @@ void Solid::ModelEvaluator::Structure::apply_force_stiff_internal()
   // set action types and evaluate matrices/vectors
   static_contributions(eval_mat.data(), eval_vec.data());
   material_damping_contributions(eval_mat.data());
-  if (masslin_type_ != Solid::MassLin::ml_none)
+  if (masslin_type_ != Solid::MassLin::ml_none or rebuild_constant_mass)
     inertial_contributions(eval_mat.data(), eval_vec.data());
 
   // evaluate
@@ -740,6 +753,16 @@ void Solid::ModelEvaluator::Structure::write_output_runtime_structure(
   // append element GIDs if desired
   if (structure_output_params.output_element_gid())
     vtu_writer_ptr_->append_element_gid("element_gid");
+
+  // append the active flags if elements can be eroded
+  if (element_erosion_parameters().enabled())
+  {
+    vtu_writer_ptr_->append_element_active("element_active",
+        [&](const Core::Elements::Element& element)
+        {
+          return element.is_active() or elements_deactivated_after_solution_.contains(element.id());
+        });
+  }
 
   // append element evaluation times if desired
   if (global_in_output().get_runtime_output_params()->output_element_eval_times())
@@ -1047,8 +1070,8 @@ void Solid::ModelEvaluator::Structure::output_runtime_structure_postprocess_stre
 
   auto do_postprocessing_on_element = [](const Core::Elements::Element& ele)
   {
-    // If it is not a beam element, we post-process it.
-    return dynamic_cast<const Discret::Elements::Beam3Base*>(&ele) == nullptr;
+    // If it is an active element and not a beam element, we post-process it.
+    return ele.is_active() and dynamic_cast<const Discret::Elements::Beam3Base*>(&ele) == nullptr;
   };
 
   auto evaluate_gauss_point_data = [&](const std::vector<char>& raw_data)
@@ -1629,6 +1652,59 @@ void Solid::ModelEvaluator::Structure::update_residual()
 {
   check_init_setup();
   dis_incr_ptr_->update(-1.0, *global_state().get_dis_n(), 1.0, *global_state().get_dis_np(), 0.0);
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+const Solid::ElementErosionParameters&
+Solid::ModelEvaluator::Structure::element_erosion_parameters() const
+{
+  return tim_int().get_data_sdyn().get_element_erosion_parameters();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+bool Solid::ModelEvaluator::Structure::erode_elements()
+{
+  check_init_setup();
+
+  if (!element_erosion_parameters().enabled()) return false;
+
+  const ErosionResult change = Solid::erode_elements(
+      discret(), element_erosion_parameters(), erosion_function_, global_state().get_time_np());
+  if (change.global_count == 0) return false;
+
+  // the output of this step shows the elements used to compute the solution
+  elements_deactivated_after_solution_.insert(
+      change.row_element_ids.begin(), change.row_element_ids.end());
+
+  if (global_state().get_my_rank() == 0)
+  {
+    Core::IO::cout << "Element erosion: " << change.global_count
+                   << " element(s) deactivated at time " << global_state().get_time_np()
+                   << Core::IO::endl;
+  }
+
+  return true;
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Structure::reevaluate_after_erosion()
+{
+  check_init_setup();
+
+  // We need to re-evaluate all forces considering newly inactive elements after element erosion.
+  // Additionally, the contribution of inactive elements must be removed from the mass matrix.
+
+  stiff().zero();
+  fext_np().put_scalar(0.0);
+  fint_np().put_scalar(0.0);
+
+  const double start_time = global_state().get_timer()->wallTime();
+  apply_force_stiff_external();
+  apply_force_stiff_internal(true);
+  *dt_ele_ptr_ += global_state().get_timer()->wallTime() - start_time;
 }
 
 /*----------------------------------------------------------------------------*

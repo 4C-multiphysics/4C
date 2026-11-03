@@ -132,6 +132,14 @@ namespace Solid
        */
       virtual Solid::ModelType type() const = 0;
 
+      /*! \brief Whether this model handles inactive structural elements (e.g. element erosion)
+       *
+       *  A model supports it if its contributions skip inactive elements, e.g. by evaluating them
+       *  via the loops of the discretization, and its own element-related data skips inactive
+       *  elements too. Models have to support it explicitly to be used with element erosion.
+       */
+      [[nodiscard]] virtual bool supports_inactive_elements() const { return false; }
+
       /*! \brief Reset model specific variables (without jacobian)
        *
        *  This function is always called before the actual evaluate() routine is going to start.

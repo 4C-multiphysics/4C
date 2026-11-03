@@ -528,6 +528,15 @@ namespace Core::IO
    *-----------------------------------------------------------------------------------------------*/
   void DiscretizationVisualizationWriterMesh::append_element_active(const std::string& resultname)
   {
+    append_element_active(
+        resultname, [](const Core::Elements::Element& element) { return element.is_active(); });
+  }
+
+  /*-----------------------------------------------------------------------------------------------*
+   *-----------------------------------------------------------------------------------------------*/
+  void DiscretizationVisualizationWriterMesh::append_element_active(const std::string& resultname,
+      const std::function<bool(const Core::Elements::Element&)>& is_active)
+  {
     // Vector with the active flags of the elements in the row map.
     std::vector<double> active_flags_of_row_elements;
     active_flags_of_row_elements.reserve(discretization_->num_my_row_elements());
@@ -535,7 +544,7 @@ namespace Core::IO
     for (auto ele : discretization_->my_row_element_range())
     {
       if (element_filter_(ele.user_element()))
-        active_flags_of_row_elements.push_back(ele.user_element()->is_active() ? 1.0 : 0.0);
+        active_flags_of_row_elements.push_back(is_active(*ele.user_element()) ? 1.0 : 0.0);
     }
 
     // Pass data to the output writer.

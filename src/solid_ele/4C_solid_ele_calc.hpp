@@ -123,6 +123,9 @@ namespace Discret::Elements
         const Core::LinAlg::Tensor<double, 3>& xi, const Core::LinAlg::Tensor<double, 3>& n,
         const Core::LinAlg::Tensor<double, 3>& dir, CauchyNDirLinearizations<3>& linearizations);
 
+    //! Return whether the material failed at any Gauss point
+    [[nodiscard]] bool material_failed(const Mat::So3Material& solid_material) const;
+
     void for_each_gauss_point(const Core::Elements::Element& ele, Mat::So3Material& solid_material,
         const Core::FE::Discretization& discretization, const std::vector<int>& lm,
         const std::function<void(Mat::So3Material&, double integration_factor, int gp)>& integrator)

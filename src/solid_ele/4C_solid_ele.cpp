@@ -276,6 +276,15 @@ const Core::FE::GaussIntegration& Discret::Elements::Solid<dim>::get_gauss_rule(
 }
 
 template <unsigned dim>
+bool Discret::Elements::Solid<dim>::material_failed() const
+{
+  FOUR_C_ASSERT(solid_calc_variant_.has_value(),
+      "The solid calculation interface is not initialized for element id {}.", id());
+  return std::visit([&](auto& interface) { return interface->material_failed(*solid_material()); },
+      *solid_calc_variant_);
+}
+
+template <unsigned dim>
 void Discret::Elements::Solid<dim>::pack(Core::Communication::PackBuffer& data) const
 {
   add_to_pack(data, unique_par_object_id());

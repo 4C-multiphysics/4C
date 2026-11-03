@@ -34,7 +34,8 @@ Mat::PAR::Damage::Damage(const Core::Mat::PAR::Parameter::Data& matdata)
       kinhard_rec_(matdata.parameters.get<double>("KINHARD_REC")),
       sathardening_(matdata.parameters.get<double>("SATHARDENING")),
       hardexpo_(matdata.parameters.get<double>("HARDEXPO")),
-      abstol_(matdata.parameters.get<double>("TOL"))
+      abstol_(matdata.parameters.get<double>("TOL")),
+      damcrit_(matdata.parameters.get<double>("DAMCRIT"))
 {
   if (hardexpo_ < 0.0) FOUR_C_THROW("Nonlinear hardening exponent must be non-negative!");
   if (damden_ == 0.0)

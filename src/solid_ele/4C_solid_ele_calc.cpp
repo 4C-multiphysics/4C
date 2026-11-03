@@ -36,9 +36,11 @@
 
 #include <Teuchos_ParameterList.hpp>
 
+#include <algorithm>
 #include <concepts>
 #include <memory>
 #include <optional>
+#include <ranges>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -629,6 +631,14 @@ Discret::Elements::SolidEleCalc<celltype, ElementFormulation>::get_normal_cauchy
               dir, ele.id(), evaluator, linearizations);
         });
   }
+}
+
+template <Core::FE::CellType celltype, typename ElementFormulation>
+bool Discret::Elements::SolidEleCalc<celltype, ElementFormulation>::material_failed(
+    const Mat::So3Material& solid_material) const
+{
+  return std::ranges::any_of(std::views::iota(0, stiffness_matrix_integration_.num_points()),
+      [&](int gp) { return solid_material.is_failed(gp); });
 }
 
 template <Core::FE::CellType celltype, typename ElementFormulation>

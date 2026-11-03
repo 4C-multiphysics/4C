@@ -312,6 +312,13 @@ namespace Solid
       }
       ///@}
 
+      /// Returns the element erosion parameters
+      const Solid::ElementErosionParameters& get_element_erosion_parameters() const
+      {
+        check_init_setup();
+        return element_erosion_parameters_;
+      }
+
       /// @name Get model evaluator control parameters (read only access)
       ///@{
       /// Returns types of the current models
@@ -557,6 +564,9 @@ namespace Solid
       /// neglect inertia?
       bool neglectinertia_;
       ///@}
+
+      /// element erosion parameters
+      Solid::ElementErosionParameters element_erosion_parameters_;
 
       /// @name Model evaluator control parameters
       ///@{

@@ -190,6 +190,14 @@ namespace Mat
     virtual void update() {}
 
     /*!
+     * @brief Return whether the material at Gauss point @p gp failed completely
+     *
+     * Elements with failed material points can be deactivated (element erosion). The state of the
+     * last evaluation is considered.
+     */
+    [[nodiscard]] virtual bool is_failed(int gp) const { return false; }
+
+    /*!
      * @brief Indicator, whether the extended update call is used
      *
      * Return true, if the material needs the update(defgrd, gp, params, eleGID) call

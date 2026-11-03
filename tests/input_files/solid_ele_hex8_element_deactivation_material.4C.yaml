@@ -1,0 +1,202 @@
+TITLE:
+  - "Element deactivation of a bar with two fibers under tension"
+  - "- quasi-static, small strain von Mises plasticity"
+  - "- von Mises plasticity with Lemaitre damage, the weak fiber softens until its material"
+  - "  fails (DAMCRIT) at a Gauss point, then the element is deactivated"
+  - "- the node between them is fixed afterwards, the strong fiber carries the load"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  GAUSS_POINT_DATA_OUTPUT_TYPE: element_center
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  RESTARTEVERY: 5
+  TIMESTEP: 0.1
+  NUMSTEP: 10
+  MAXTIME: 1
+  TOLDISP: 1e-10
+  TOLRES: 1e-10
+  LINEAR_SOLVER: 1
+  element_erosion:
+    deactivate_failed_elements: true
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_Damage:
+      YOUNG: 206.9
+      NUE: 0.29
+      DENS: 0
+      SAMPLENUM: 2
+      SIGMA_Y: [5.0, 6.0]
+      EPSBAR_P: [0, 1]
+      DAMDEN: 0.00001
+      DAMEXP: 1
+      DAMTHRESHOLD: 0.0
+      KINHARD: 0
+      KINHARD_REC: 0
+      SATHARDENING: 0
+      HARDEXPO: 0
+      TOL: 1e-10
+      DAMCRIT: 0.3
+  - MAT: 2
+    MAT_Struct_Damage:
+      YOUNG: 206.9
+      NUE: 0.29
+      DENS: 0
+      SAMPLENUM: 2
+      SIGMA_Y: [0.5, 0.6]
+      EPSBAR_P: [0, 1]
+      DAMDEN: 0.00001
+      DAMEXP: 1
+      DAMTHRESHOLD: 0.0
+      KINHARD: 0
+      KINHARD_REC: 0
+      SATHARDENING: 0
+      HARDEXPO: 0
+      TOL: 1e-10
+      DAMCRIT: 0.3
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.04, 0, 0]
+    FUNCT: [1, 0, 0]
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 18
+      QUANTITY: "dispx"
+      VALUE: 1.00000000000000158e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 18
+      QUANTITY: "dispy"
+      VALUE: 1.77191441367327823e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 18
+      QUANTITY: "dispz"
+      VALUE: -2.46427041976033951e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 17
+      QUANTITY: "dispx"
+      VALUE: -1.50367477658262133e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 17
+      QUANTITY: "dispy"
+      VALUE: -2.21382914153975697e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 17
+      QUANTITY: "dispz"
+      VALUE: 3.11239781537633430e-04
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 28
+      QUANTITY: "dispx"
+      VALUE: 1.99999999999999969e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 28
+      QUANTITY: "dispy"
+      VALUE: -8.35957000511862100e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 28
+      QUANTITY: "dispz"
+      VALUE: -9.86347213762568242e-04
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispx"
+      VALUE: 1.99999999999999969e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispy"
+      VALUE: -4.90210410612604286e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispz"
+      VALUE: 2.34597997928428018e-03
+      TOLERANCE: 1e-9
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 6 DSURFACE 1"
+  - "NODE 11 DSURFACE 1"
+  - "NODE 16 DSURFACE 1"
+  - "NODE 21 DSURFACE 1"
+  - "NODE 26 DSURFACE 1"
+  - "NODE 5 DSURFACE 2"
+  - "NODE 10 DSURFACE 2"
+  - "NODE 15 DSURFACE 2"
+  - "NODE 20 DSURFACE 2"
+  - "NODE 25 DSURFACE 2"
+  - "NODE 30 DSURFACE 2"
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 1.0 0.0 0.0"
+  - "NODE 3 COORD 2.0 0.0 0.0"
+  - "NODE 4 COORD 3.0 0.0 0.0"
+  - "NODE 5 COORD 4.0 0.0 0.0"
+  - "NODE 6 COORD 0.0 1.0 0.0"
+  - "NODE 7 COORD 1.0 1.0 0.0"
+  - "NODE 8 COORD 2.0 1.0 0.0"
+  - "NODE 9 COORD 3.0 1.0 0.0"
+  - "NODE 10 COORD 4.0 1.0 0.0"
+  - "NODE 11 COORD 0.0 2.0 0.0"
+  - "NODE 12 COORD 1.0 2.0 0.0"
+  - "NODE 13 COORD 2.0 2.0 0.0"
+  - "NODE 14 COORD 3.0 2.0 0.0"
+  - "NODE 15 COORD 4.0 2.0 0.0"
+  - "NODE 16 COORD 0.0 0.0 1.0"
+  - "NODE 17 COORD 1.0 0.0 1.0"
+  - "NODE 18 COORD 2.0 0.0 1.0"
+  - "NODE 19 COORD 3.0 0.0 1.0"
+  - "NODE 20 COORD 4.0 0.0 1.0"
+  - "NODE 21 COORD 0.0 1.0 1.0"
+  - "NODE 22 COORD 1.0 1.0 1.0"
+  - "NODE 23 COORD 2.0 1.0 1.0"
+  - "NODE 24 COORD 3.0 1.0 1.0"
+  - "NODE 25 COORD 4.0 1.0 1.0"
+  - "NODE 26 COORD 0.0 2.0 1.0"
+  - "NODE 27 COORD 1.0 2.0 1.0"
+  - "NODE 28 COORD 2.0 2.0 1.0"
+  - "NODE 29 COORD 3.0 2.0 1.0"
+  - "NODE 30 COORD 4.0 2.0 1.0"
+STRUCTURE ELEMENTS:
+  - "1 SOLID HEX8 1 2 7 6 16 17 22 21 MAT 1 KINEM linear"
+  - "2 SOLID HEX8 2 3 8 7 17 18 23 22 MAT 2 KINEM linear"
+  - "3 SOLID HEX8 3 4 9 8 18 19 24 23 MAT 2 KINEM linear"
+  - "4 SOLID HEX8 4 5 10 9 19 20 25 24 MAT 1 KINEM linear"
+  - "5 SOLID HEX8 6 7 12 11 21 22 27 26 MAT 1 KINEM linear"
+  - "6 SOLID HEX8 7 8 13 12 22 23 28 27 MAT 1 KINEM linear"
+  - "7 SOLID HEX8 8 9 14 13 23 24 29 28 MAT 1 KINEM linear"
+  - "8 SOLID HEX8 9 10 15 14 24 25 30 29 MAT 1 KINEM linear"

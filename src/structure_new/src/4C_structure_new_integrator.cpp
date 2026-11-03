@@ -8,11 +8,14 @@
 #include "4C_structure_new_integrator.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
+#include "4C_fem_discretization_utils.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_io_runtime_csv_writer.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_utils_sparse_algebra_assemble.hpp"
+#include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_solver_nonlin_nox_aux.hpp"
@@ -85,6 +88,9 @@ void Solid::Integrator::setup()
   modelevaluator_ptr_->init(eval_data_ptr_, sdyn_ptr_, gstate_ptr_, io_ptr_,
       Core::Utils::shared_ptr_from_ref(*this), timint_ptr_);
   modelevaluator_ptr_->setup();
+
+  // after a restart, elements might be inactive already
+  fix_nodes_without_active_elements();
 
   // ---------------------------------------------------------------------------
   // build monitor for a tensile test
@@ -676,6 +682,40 @@ void Solid::Integrator::recover_from_backup_state()
 {
   check_init_setup();
   model_eval().recover_from_backup_state();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::Integrator::apply_element_erosion()
+{
+  check_init_setup();
+
+  auto& structure = dynamic_cast<Solid::ModelEvaluator::Structure&>(
+      model_eval().evaluator(Solid::model_structure));
+
+  // Erode elements and return early if no elements were eroded.
+  if (not structure.erode_elements()) return;
+
+  // Fix nodes that have no active elements attached to them
+  fix_nodes_without_active_elements();
+
+  // Re-evaluate with the new constraints on orphaned nodes.
+  structure.reevaluate_after_erosion();
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::Integrator::fix_nodes_without_active_elements()
+{
+  const auto dofs_without_active_elements = std::make_shared<const Core::LinAlg::Map>(
+      Core::FE::dofs_without_active_elements(*global_state().get_discret()));
+  const auto newly_fixed_dofs = Core::LinAlg::split_map(
+      *dofs_without_active_elements, *dbc().get_dbc_map_extractor()->cond_map());
+  dbc().add_dirich_dofs(dofs_without_active_elements);
+  Core::LinAlg::apply_dirichlet_to_system(
+      *global_state().get_vel_np(), dbc().get_zeros(), *newly_fixed_dofs);
+  Core::LinAlg::apply_dirichlet_to_system(
+      *global_state().get_acc_np(), dbc().get_zeros(), *newly_fixed_dofs);
 }
 
 /*----------------------------------------------------------------------------*

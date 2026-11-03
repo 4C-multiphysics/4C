@@ -18,6 +18,7 @@
 #include "4C_structure_new_model_evaluator_generic.hpp"  // base class
 
 #include <memory>
+#include <set>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -32,6 +33,11 @@ namespace Core::LinAlg
 {
   class SparseMatrix;
 }  // namespace Core::LinAlg
+
+namespace Core::Utils
+{
+  class FunctionOfSpaceTime;
+}
 
 namespace Solid
 {
@@ -55,6 +61,9 @@ namespace Solid
       Solid::ModelType type() const override { return Solid::model_structure; }
 
       //! derived
+      [[nodiscard]] bool supports_inactive_elements() const override { return true; }
+
+      //! derived
       void reset(const Core::LinAlg::Vector<double>& x) override;
 
       //! derived
@@ -75,11 +84,20 @@ namespace Solid
       /*! \brief Initialize viscous and inertial matrices
        *
        *  This is the place where we calculate the default mass matrix and the
-       *  Rayleigh damping matrix only once during the compute_mass_matrix_and_init_acc routine.
+       *  Rayleigh damping matrix at startup and restart.
        *
 
       *  */
       void initialize_inertia_and_damping();
+
+      /*! \brief Deactivate elements that satisfy an erosion criterion.
+       *
+       *  \return Whether any elements were eroded.
+       */
+      bool erode_elements();
+
+      /*! \brief Re-evaluate forces, stiffness, and mass after erosion. */
+      void reevaluate_after_erosion();
 
       //! derived
       void assemble_force(Core::LinAlg::Vector<double>& f, const double& timefac_np) const override;
@@ -191,8 +209,8 @@ namespace Solid
       //! apply the external force contributions
       void apply_force_external();
 
-      //! apply the internal force contributions and the evaluate the structural stiffness terms
-      void apply_force_stiff_internal();
+      //! Apply internal forces and stiffness, also rebuilding constant mass if requested.
+      void apply_force_stiff_internal(bool rebuild_constant_mass = false);
 
       //! apply the external force contributions and evaluate possible linearization contributions
       void apply_force_stiff_external();
@@ -373,6 +391,9 @@ namespace Solid
        */
       void init_output_runtime_structure_gauss_point_data();
 
+      //! element erosion parameters of the structural time integration
+      const ElementErosionParameters& element_erosion_parameters() const;
+
 
       /*! \brief writes output for discretization structure at the end of a time step
        *
@@ -544,6 +565,16 @@ namespace Solid
 
       //! error evaluator parameters
       ErrorEvaluator::Parameters error_evaluator_parameters_;
+
+      //! Erosion function managed by Global::Problem; resolved during setup.
+      const Core::Utils::FunctionOfSpaceTime* erosion_function_ = nullptr;
+
+      /*! \brief Row elements deactivated after the current solution was computed
+       *
+       *  Elements are eroded at the end of a time step, i.e., before the output of this step is
+       *  written. To be consistent with the written solution, the output still shows them as
+       *  active. Cleared with the next evaluation. */
+      std::set<int> elements_deactivated_after_solution_;
 
       std::shared_ptr<Core::IO::DiscretizationVisualizationWriterMesh> vtu_writer_ptr_;
 

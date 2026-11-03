@@ -103,6 +103,7 @@ void Solid::TimeInt::ImplicitBase::update(double endtime)
 {
   check_init_setup();
   pre_update();
+  integrator().apply_element_erosion();
   integrator().update_step_state();
   set_time_np(endtime);
   update_step_time();

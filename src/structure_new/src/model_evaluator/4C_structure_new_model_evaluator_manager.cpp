@@ -84,6 +84,15 @@ void Solid::ModelEvaluatorManager::setup()
 
   me_vec_ptr_ = transform_to_vector(*me_map_ptr_);
 
+  if (sdyn_ptr_->get_element_erosion_parameters().enabled())
+  {
+    for (const auto& [model_type, model_evaluator] : *me_map_ptr_)
+    {
+      FOUR_C_ASSERT_ALWAYS(model_evaluator->supports_inactive_elements(),
+          "The model '{}' does not support element erosion.", EnumTools::enum_name(model_type));
+    }
+  }
+
   int dof_offset = 0;
   for (const auto& [model_type, model_evaluator] : *me_map_ptr_)
   {

@@ -1,0 +1,202 @@
+TITLE:
+  - "Element deactivation of a quasi-static hyperelastic cantilever"
+  - "- the two outermost elements are deactivated at t=0.3 and t=0.6 by a function criterion"
+  - "- the first element stays inactive after the function drops below the threshold at t=0.5"
+  - "- the loads on deactivated elements (body force, surface traction) are removed"
+  - "- the final state equals the one of a cantilever meshed without these two elements"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO:
+  STRUCT_STRESS: "Cauchy"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  RESTARTEVERY: 2
+  TIMESTEP: 0.1
+  NUMSTEP: 10
+  MAXTIME: 1
+  TOLDISP: 1e-10
+  TOLRES: 1e-10
+  LINEAR_SOLVER: 1
+  element_erosion:
+    erosion_function: 1
+    threshold: 0.5
+MATERIALS:
+  - MAT: 1
+    MAT_ElastHyper:
+      NUMMAT: 1
+      MATIDS: [10]
+      DENS: 1
+  - MAT: 10
+    ELAST_CoupNeoHooke:
+      YOUNG: 100
+      NUE: 0.3
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "heaviside(x-5)*(heaviside(t-0.25)-heaviside(t-0.45))+heaviside(x-4)*(1-heaviside(x-5))*heaviside(t-0.55)"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 2
+    NUMDOF: 6
+    ONOFF: [0, 0, 1, 0, 0, 0]
+    VAL: [0, 0, -0.5, 0, 0, 0]
+    FUNCT: [0, 0, 2, 0, 0, 0]
+DESIGN VOL NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 6
+    ONOFF: [0, 0, 1, 0, 0, 0]
+    VAL: [0, 0, -0.2, 0, 0, 0]
+    FUNCT: [0, 0, 2, 0, 0, 0]
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispx"
+      VALUE: -7.04625532103792751e-01
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispy"
+      VALUE: -7.21077554483355370e-04
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispz"
+      VALUE: -1.69484664063717094e+00
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 25
+      QUANTITY: "dispx"
+      VALUE: 2.59419321168959695e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 25
+      QUANTITY: "dispy"
+      VALUE: -3.66181587504370255e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 25
+      QUANTITY: "dispz"
+      VALUE: -1.30117180545004785e+00
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 26
+      QUANTITY: "dispx"
+      VALUE: -1.39458335358237151e-01
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 26
+      QUANTITY: "dispy"
+      VALUE: -5.54120379052124284e-04
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 26
+      QUANTITY: "dispz"
+      VALUE: -1.87286320040412124e+00
+      TOLERANCE: 1e-9
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 8 DSURFACE 1"
+  - "NODE 15 DSURFACE 1"
+  - "NODE 22 DSURFACE 1"
+  - "NODE 15 DSURFACE 2"
+  - "NODE 16 DSURFACE 2"
+  - "NODE 17 DSURFACE 2"
+  - "NODE 18 DSURFACE 2"
+  - "NODE 19 DSURFACE 2"
+  - "NODE 20 DSURFACE 2"
+  - "NODE 21 DSURFACE 2"
+  - "NODE 22 DSURFACE 2"
+  - "NODE 23 DSURFACE 2"
+  - "NODE 24 DSURFACE 2"
+  - "NODE 25 DSURFACE 2"
+  - "NODE 26 DSURFACE 2"
+  - "NODE 27 DSURFACE 2"
+  - "NODE 28 DSURFACE 2"
+DVOL-NODE TOPOLOGY:
+  - "NODE 1 DVOL 1"
+  - "NODE 2 DVOL 1"
+  - "NODE 3 DVOL 1"
+  - "NODE 4 DVOL 1"
+  - "NODE 5 DVOL 1"
+  - "NODE 6 DVOL 1"
+  - "NODE 7 DVOL 1"
+  - "NODE 8 DVOL 1"
+  - "NODE 9 DVOL 1"
+  - "NODE 10 DVOL 1"
+  - "NODE 11 DVOL 1"
+  - "NODE 12 DVOL 1"
+  - "NODE 13 DVOL 1"
+  - "NODE 14 DVOL 1"
+  - "NODE 15 DVOL 1"
+  - "NODE 16 DVOL 1"
+  - "NODE 17 DVOL 1"
+  - "NODE 18 DVOL 1"
+  - "NODE 19 DVOL 1"
+  - "NODE 20 DVOL 1"
+  - "NODE 21 DVOL 1"
+  - "NODE 22 DVOL 1"
+  - "NODE 23 DVOL 1"
+  - "NODE 24 DVOL 1"
+  - "NODE 25 DVOL 1"
+  - "NODE 26 DVOL 1"
+  - "NODE 27 DVOL 1"
+  - "NODE 28 DVOL 1"
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 1.0 0.0 0.0"
+  - "NODE 3 COORD 2.0 0.0 0.0"
+  - "NODE 4 COORD 3.0 0.0 0.0"
+  - "NODE 5 COORD 4.0 0.0 0.0"
+  - "NODE 6 COORD 5.0 0.0 0.0"
+  - "NODE 7 COORD 6.0 0.0 0.0"
+  - "NODE 8 COORD 0.0 1.0 0.0"
+  - "NODE 9 COORD 1.0 1.0 0.0"
+  - "NODE 10 COORD 2.0 1.0 0.0"
+  - "NODE 11 COORD 3.0 1.0 0.0"
+  - "NODE 12 COORD 4.0 1.0 0.0"
+  - "NODE 13 COORD 5.0 1.0 0.0"
+  - "NODE 14 COORD 6.0 1.0 0.0"
+  - "NODE 15 COORD 0.0 0.0 1.0"
+  - "NODE 16 COORD 1.0 0.0 1.0"
+  - "NODE 17 COORD 2.0 0.0 1.0"
+  - "NODE 18 COORD 3.0 0.0 1.0"
+  - "NODE 19 COORD 4.0 0.0 1.0"
+  - "NODE 20 COORD 5.0 0.0 1.0"
+  - "NODE 21 COORD 6.0 0.0 1.0"
+  - "NODE 22 COORD 0.0 1.0 1.0"
+  - "NODE 23 COORD 1.0 1.0 1.0"
+  - "NODE 24 COORD 2.0 1.0 1.0"
+  - "NODE 25 COORD 3.0 1.0 1.0"
+  - "NODE 26 COORD 4.0 1.0 1.0"
+  - "NODE 27 COORD 5.0 1.0 1.0"
+  - "NODE 28 COORD 6.0 1.0 1.0"
+STRUCTURE ELEMENTS:
+  - "1 SOLID HEX8 1 2 9 8 15 16 23 22 MAT 1 KINEM nonlinear"
+  - "2 SOLID HEX8 2 3 10 9 16 17 24 23 MAT 1 KINEM nonlinear"
+  - "3 SOLID HEX8 3 4 11 10 17 18 25 24 MAT 1 KINEM nonlinear"
+  - "4 SOLID HEX8 4 5 12 11 18 19 26 25 MAT 1 KINEM nonlinear"
+  - "5 SOLID HEX8 5 6 13 12 19 20 27 26 MAT 1 KINEM nonlinear"
+  - "6 SOLID HEX8 6 7 14 13 20 21 28 27 MAT 1 KINEM nonlinear"

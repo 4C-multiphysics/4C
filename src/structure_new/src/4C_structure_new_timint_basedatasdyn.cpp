@@ -138,6 +138,10 @@ void Solid::TimeInt::BaseDataSDyn::init(const std::shared_ptr<Core::FE::Discreti
     neglectinertia_ = sdynparams.get<bool>("NEGLECTINERTIA");
   }
   // ---------------------------------------------------------------------------
+  // initialize the element erosion parameters
+  // ---------------------------------------------------------------------------
+  element_erosion_parameters_ = sdynparams.get<ElementErosionParameters>("element_erosion");
+  // ---------------------------------------------------------------------------
   // initialize model evaluator control parameters
   // ---------------------------------------------------------------------------
   {

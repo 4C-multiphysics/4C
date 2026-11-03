@@ -197,6 +197,9 @@ bool Solid::TimeInt::Base::perform_dynamic_rebalance()
   dbc_ptr_->init(dataglobalstate_->get_discret(), dataglobalstate_->get_freact_np(),
       Core::Utils::shared_ptr_from_ref(*this));
   dbc_ptr_->setup();
+
+  // nodes which are only connected to inactive elements are fixed
+  int_ptr_->fix_nodes_without_active_elements();
   int_ptr_->remap_after_redistribution();
   remap_solver_after_redistribution();
 
@@ -360,6 +363,7 @@ void Solid::TimeInt::Base::update()
   check_init_setup();
   int_ptr_->pre_update();
   int_ptr_->update_structural_energy();
+  int_ptr_->apply_element_erosion();
   int_ptr_->update_step_state();
   update_step_time();
   set_number_of_nonlinear_iterations();
