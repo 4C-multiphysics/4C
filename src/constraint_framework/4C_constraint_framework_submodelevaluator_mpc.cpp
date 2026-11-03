@@ -28,7 +28,6 @@
 
 #include <algorithm>
 #include <array>
-#include <numeric>
 #include <set>
 #include <string>
 #include <vector>
@@ -568,87 +567,20 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
     Core::IO::cout(Core::IO::standard) << Core::IO::endl;
   }
 
-  const int num_candidate_relations =
+  const int num_relations =
       Core::Communication::sum_all(static_cast<int>(periodic_relation_nodes.size()), comm);
-  Core::IO::cout(Core::IO::verbose)
-      << "Candidate periodic relations: " << num_candidate_relations << Core::IO::endl;
-
-  // Ensure no constraint is enforced twice (the automatic search already skips duplicates, the
-  // manual definition relies on this check):
-  int indx = 0;
-  std::map<int, std::vector<int>> idListSet;
-
-  for (const auto& node_set : periodic_relation_nodes)
-  {
-    std::vector<int> ids(node_set.begin(), node_set.end());
-    std::sort(ids.begin(), ids.end());
-    idListSet[indx++] = ids;
-  }
-  std::vector<int> idsToRemove;
-  std::map<int, int> duplicate_sources;
-  for (const auto& entryA : idListSet)
-  {
-    if (std::find(idsToRemove.begin(), idsToRemove.end(), entryA.first) == idsToRemove.end())
-    {
-      for (const auto& entryB : idListSet)
-      {
-        if (entryA.second == entryB.second && entryA.first != entryB.first)
-        {
-          idsToRemove.push_back(entryB.first);
-          duplicate_sources.emplace(entryB.first, entryA.first);
-        }
-      }
-    }
-  }
-
-  for (const int duplicate_id : idsToRemove)
-  {
-    const int original_id = duplicate_sources.at(duplicate_id);
-    Core::IO::cout(Core::IO::debug) << "Removed " << pbc_labels[duplicate_id]
-                                    << ": same node set as " << pbc_labels[original_id] << " [";
-
-    const auto& node_ids = idListSet.at(duplicate_id);
-    const char* separator = "";
-    for (const int node_id : node_ids)
-    {
-      Core::IO::cout(Core::IO::debug) << separator << node_id;
-      separator = ", ";
-    }
-    Core::IO::cout(Core::IO::debug) << "]" << Core::IO::endl;
-  }
-
-  // Remove duplicate constraints
-  std::sort(idsToRemove.rbegin(), idsToRemove.rend());
-  for (int id : idsToRemove)
-  {
-    periodic_relation_nodes.erase(periodic_relation_nodes.begin() + id);
-    pbc_labels.erase(pbc_labels.begin() + id);
-  }
-
-  const int num_removed_duplicates =
-      Core::Communication::sum_all(static_cast<int>(idsToRemove.size()), comm);
-  const int num_unique_relations =
-      Core::Communication::sum_all(static_cast<int>(periodic_relation_nodes.size()), comm);
-  Core::IO::cout(Core::IO::verbose)
-      << "Removed duplicate relations: " << num_removed_duplicates << Core::IO::endl;
   Core::IO::cout(Core::IO::standard)
-      << "Unique periodic relations: " << num_unique_relations << Core::IO::endl;
-
-  // every equation needs a unique global id: start counting where the lower ranks stop
-  int num_my_constraint_equations = static_cast<int>(periodic_relation_nodes.size()) * num_dim;
-  std::vector<int> num_constraint_equations_per_rank(Core::Communication::num_mpi_ranks(comm), 0);
-  Core::Communication::gather_all(
-      &num_my_constraint_equations, num_constraint_equations_per_rank.data(), 1, comm);
-  int equation_id = 0;
-  for (int pid = 0; pid < Core::Communication::my_mpi_rank(comm); ++pid)
-    equation_id += num_constraint_equations_per_rank[pid];
+      << "Unique periodic relations: " << num_relations << Core::IO::endl;
 
   // dof of a node: looked up directly if this rank owns the node, otherwise from the gathered table
   auto dof_of = [&](const int node_gid, const int dim)
   {
     if (node_row_map.my_gid(node_gid))
       return discret_ptr_->dof(discret_ptr_->g_node(node_gid))[dim];
-    return gathered_node_dofs.at(node_gid)[dim];
+    const auto gathered = gathered_node_dofs.find(node_gid);
+    FOUR_C_ASSERT(
+        gathered != gathered_node_dofs.end(), "Dofs of node {} were not gathered.", node_gid);
+    return gathered->second[dim];
   };
 
   Core::IO::cout(Core::IO::verbose)
@@ -673,23 +605,25 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
       for (const int node_gid : node_set) pbc_dofs.push_back(dof_of(node_gid, dim));
 
       Core::IO::cout(Core::IO::debug)
-          << "  Equation " << equation_id << ", " << displacement_components[dim]
-          << " displacement: d" << pbc_dofs[0] << " - d" << pbc_dofs[1] << " - d" << pbc_dofs[2]
-          << " + d" << pbc_dofs[3] << " = 0" << Core::IO::endl;
+          << "  " << displacement_components[dim] << " displacement: d" << pbc_dofs[0] << " - d"
+          << pbc_dofs[1] << " - d" << pbc_dofs[2] << " + d" << pbc_dofs[3] << " = 0"
+          << Core::IO::endl;
 
       constraint_equations_.emplace_back(
-          std::make_shared<LinearCoupledEquation>(equation_id++, pbc_dofs, pbc_coefficients));
+          std::make_shared<LinearCoupledEquation>(pbc_dofs, pbc_coefficients));
     }
   }
   Core::IO::cout(Core::IO::debug) << Core::IO::endl;
 
   Core::IO::cout(Core::IO::verbose)
       << "Displacement components per relation: " << num_dim << Core::IO::endl;
-  Core::IO::cout(Core::IO::standard) << "Periodic boundary conditions initialized: "
-                                     << std::accumulate(num_constraint_equations_per_rank.begin(),
-                                            num_constraint_equations_per_rank.end(), 0)
-                                     << " scalar constraint equations" << Core::IO::endl
-                                     << Core::IO::endl;
+  const int num_my_constraint_equations =
+      static_cast<int>(periodic_relation_nodes.size()) * num_dim;
+  Core::IO::cout(Core::IO::standard)
+      << "Periodic boundary conditions initialized: "
+      << Core::Communication::sum_all(num_my_constraint_equations, comm)
+      << " scalar constraint equations" << Core::IO::endl
+      << Core::IO::endl;
 }
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
@@ -767,17 +701,11 @@ int Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_linear
     Core::IO::cout(Core::IO::debug)
         << "Current SIze constraintColIDs" << constraintColIds.size() << Core::IO::endl;
   }
-  // Get number of MPC already in the MPCs List
-  int nMPC = 0;
-  for (const auto& mpc : constraint_equations_)
-  {
-    nMPC += mpc->get_number_of_constraint_equation_objects();
-  }
   unsigned int i = 0;
   for (; i < constraintRowIds.size(); ++i)
   {
     constraint_equations_.emplace_back(
-        std::make_shared<LinearCoupledEquation>(nMPC++, constraintColIds[i], constraintCoeffs[i]));
+        std::make_shared<LinearCoupledEquation>(constraintColIds[i], constraintCoeffs[i]));
 
     Core::IO::cout(Core::IO::verbose) << "Linear MPC #" << i << "  Created: 0 = ";
     for (unsigned int o = 0; o < constraintColIds[i].size(); ++o)
@@ -789,7 +717,7 @@ int Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_linear
   }
   Core::IO::cout(Core::IO::verbose) << "Number of Linear MPCs Created: " << i + 1 << Core::IO::endl;
   Core::IO::cout(Core::IO::verbose)
-      << "Number of Elements in the listMPC: " << nMPC << Core::IO::endl;
+      << "Number of Elements in the listMPC: " << constraint_equations_.size() << Core::IO::endl;
 
   return i + 1;
 }

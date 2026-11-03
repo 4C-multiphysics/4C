@@ -61,7 +61,7 @@ namespace Constraints::SubmodelEvaluator
      */
     int get_first_row_id() const;
 
-    /*! \brief Return the global id of the affected row of this equation
+    /*! \brief Set the global id of the affected row of this equation
      *
      * @param [in] global_row_id global id of the affected row of this equation
      */
@@ -71,8 +71,8 @@ namespace Constraints::SubmodelEvaluator
     //! Number of dof coupled per Object (= Number of equations per Obj.)
     int n_dof_coupled_ = 1;
 
-    //! ID of the first constraint in the set
-    int first_row_id_;
+    //! ID of the first constraint in the set, -1 until ConstraintBase numbers the equations
+    int first_row_id_ = -1;
   };
   /*! \brief The class provides the method for evaluating linear coupled
    *  equations and manages associated coefficients and data.
@@ -88,7 +88,7 @@ namespace Constraints::SubmodelEvaluator
     /*!
         \brief Standard Constructor
     */
-    LinearCoupledEquation(int id, const std::vector<int>& dofs, std::vector<double> coefficients);
+    LinearCoupledEquation(const std::vector<int>& dofs, std::vector<double> coefficients);
 
     //! derived
     void evaluate_equation(Core::LinAlg::SparseMatrix& Q_dd, Core::LinAlg::SparseMatrix& Q_dL,
@@ -99,11 +99,10 @@ namespace Constraints::SubmodelEvaluator
     std::vector<int> get_dof_gids() const override;
 
    private:
-    //! Struct with Term data: Coef, RowID, DofID
+    //! Struct with Term data: Coef, DofID
     struct TermData
     {
       double Coef;
-      int RowId;  // is equal to the id of the MPC
       int DofId;  // dof the coefficient is multiplied with.
     };
 

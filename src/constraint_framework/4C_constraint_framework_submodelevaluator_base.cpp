@@ -9,18 +9,18 @@
 
 #include "4C_constraint_framework_submodelevaluator_base.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_sparseoperator.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
-#include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_structure_new_timint_base.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
-#include <algorithm>
+#include <set>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -65,20 +65,65 @@ void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_force_stiff(
   }
 }
 
-void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_coupling_terms(
-    Solid::TimeInt::BaseDataGlobalState& gstate)
+void Constraints::SubmodelEvaluator::ConstraintBase::setup_constraint_equation_map(
+    const Core::LinAlg::Map& displacement_map)
 {
-  // each rank created its own constraint equations; their ids are the rows of Q_Ld it assembles
-  std::vector<int> my_equation_ids;
+  const MPI_Comm comm = stiff_ptr_->get_comm();
+
+  // start counting where the lower ranks stop
+  int num_my_equations = 0;
   for (const auto& mpc : constraint_equations_)
-    for (int i = 0; i < mpc->get_number_of_constraint_equation_objects(); ++i)
-      my_equation_ids.push_back(mpc->get_first_row_id() + i);
+    num_my_equations += mpc->get_number_of_constraint_equation_objects();
+  std::vector<int> num_equations_per_rank(Core::Communication::num_mpi_ranks(comm), 0);
+  Core::Communication::gather_all(&num_my_equations, num_equations_per_rank.data(), 1, comm);
+  int equation_id = 0;
+  for (int rank = 0; rank < Core::Communication::my_mpi_rank(comm); ++rank)
+    equation_id += num_equations_per_rank[rank];
 
   // ToDo: Add an offset to the constraint equation ids so they do not overlap with the dof gids
   // (needed for a Lagrange multiplier enforcement).
-  constraint_equation_map_ = std::make_shared<Core::LinAlg::Map>(-1,
-      static_cast<int>(my_equation_ids.size()), my_equation_ids.data(), 0, stiff_ptr_->get_comm());
-  FOUR_C_ASSERT(constraint_equation_map_->unique_gids(), "Constraint equation ids are not unique.");
+  std::vector<int> my_equation_ids;
+  my_equation_ids.reserve(num_my_equations);
+  for (const auto& mpc : constraint_equations_)
+  {
+    mpc->set_first_row_id(equation_id);
+    for (int i = 0; i < mpc->get_number_of_constraint_equation_objects(); ++i)
+      my_equation_ids.push_back(equation_id++);
+  }
+
+  // each rank owns the rows of the equations it created
+  constraint_equation_map_ =
+      std::make_shared<Core::LinAlg::Map>(-1, num_my_equations, my_equation_ids.data(), 0, comm);
+
+  // the equations need the displacements of dofs that may be owned by other ranks:
+  // collect those dofs in an overlapping map and prepare the import into it
+  std::set<int> unique_dof_gids;
+  for (const auto& mpc : constraint_equations_)
+  {
+    const std::vector<int> dof_gids = mpc->get_dof_gids();
+    unique_dof_gids.insert(dof_gids.begin(), dof_gids.end());
+  }
+  const std::vector<int> equation_dof_gids(unique_dof_gids.begin(), unique_dof_gids.end());
+  const Core::LinAlg::Map equation_dof_map(
+      -1, static_cast<int>(equation_dof_gids.size()), equation_dof_gids.data(), 0, comm);
+  equation_dof_displacements_ = std::make_shared<Core::LinAlg::Vector<double>>(equation_dof_map);
+  equation_dof_importer_ =
+      std::make_shared<Core::LinAlg::Import>(equation_dof_map, displacement_map);
+}
+
+void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_coupling_terms(
+    Solid::TimeInt::BaseDataGlobalState& gstate)
+{
+  if (!constraint_equation_map_) setup_constraint_equation_map(gstate.get_dis_np()->get_map());
+
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  int num_my_equations = 0;
+  for (const auto& mpc : constraint_equations_)
+    num_my_equations += mpc->get_number_of_constraint_equation_objects();
+  FOUR_C_ASSERT(num_my_equations == constraint_equation_map_->num_my_elements(),
+      "{} constraint equations, but {} rows: equations were added after the first evaluation.",
+      num_my_equations, constraint_equation_map_->num_my_elements());
+#endif
 
   // initialise all global coupling objects
   constraint_residual_ =
@@ -92,27 +137,15 @@ void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_coupling_terms(
       stiff_ptr_->row_map(), 0, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
   Q_dd_->zero();
 
-  // the equations need the displacements of dofs that may be owned by other ranks:
-  // collect those dofs and import their values into an overlapping vector
-  std::vector<int> equation_dof_gids;
-  for (const auto& mpc : constraint_equations_)
-  {
-    const std::vector<int> dof_gids = mpc->get_dof_gids();
-    equation_dof_gids.insert(equation_dof_gids.end(), dof_gids.begin(), dof_gids.end());
-  }
-  std::sort(equation_dof_gids.begin(), equation_dof_gids.end());
-  equation_dof_gids.erase(
-      std::unique(equation_dof_gids.begin(), equation_dof_gids.end()), equation_dof_gids.end());
-  const Core::LinAlg::Map equation_dof_map(-1, static_cast<int>(equation_dof_gids.size()),
-      equation_dof_gids.data(), 0, stiff_ptr_->get_comm());
-  Core::LinAlg::Vector<double> equation_dof_displacements(equation_dof_map, true);
-  Core::LinAlg::export_to(*gstate.get_dis_np(), equation_dof_displacements);
+  // fetch the current displacements of the dofs the equations need
+  equation_dof_displacements_->import(
+      *gstate.get_dis_np(), *equation_dof_importer_, Core::LinAlg::CombineMode::insert);
 
   // Evaluate the Constraint Pairs / equations objects
   for (const auto& obj : constraint_equations_)
   {
     obj->evaluate_equation(
-        *Q_dd_, *Q_dL_, *Q_Ld_, *constraint_residual_, equation_dof_displacements);
+        *Q_dd_, *Q_dL_, *Q_Ld_, *constraint_residual_, *equation_dof_displacements_);
   }
   Core::IO::cout(Core::IO::debug) << "Evaluated all constraint objects" << Core::IO::endl;
 

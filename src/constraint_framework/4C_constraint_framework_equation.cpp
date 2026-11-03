@@ -9,8 +9,6 @@
 
 #include "4C_constraint_framework_equation.hpp"
 
-#include "4C_fem_discretization.hpp"
-
 FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
@@ -19,12 +17,14 @@ void Constraints::SubmodelEvaluator::LinearCoupledEquation::evaluate_equation(
     Core::LinAlg::SparseMatrix& Q_Ld, Core::LinAlg::Vector<double>& constraint_vector,
     const Core::LinAlg::Vector<double>& D_np1)
 {
-  // loop over the terms of this equation; each term is one coefficient times one dof,
-  // stored as (coefficient, row id, dof id) with row id = id of the equation
-  for (const auto& [coefficient, row_id, dof_id] : equation_data_)
+  const int row_id = get_first_row_id();
+  FOUR_C_ASSERT(row_id >= 0, "Constraint equation has no row id yet.");
+  FOUR_C_ASSERT(Q_Ld.row_map().my_gid(row_id),
+      "Constraint equation row {} is not owned by this rank.", row_id);
+
+  // loop over the terms of this equation; each term is one coefficient times one dof
+  for (const auto& [coefficient, dof_id] : equation_data_)
   {
-    FOUR_C_ASSERT(Q_Ld.row_map().my_gid(row_id),
-        "Constraint equation row {} is not owned by this rank.", row_id);
     const int dof_lid = D_np1.get_map().lid(dof_id);
     FOUR_C_ASSERT(dof_lid >= 0, "Displacement of dof {} is not available on this rank.", dof_id);
 
@@ -68,13 +68,11 @@ void Constraints::SubmodelEvaluator::ConstraintEquationBase::set_first_row_id(in
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 Constraints::SubmodelEvaluator::LinearCoupledEquation::LinearCoupledEquation(
-    int id, const std::vector<int>& dofs, std::vector<double> coefficients)
+    const std::vector<int>& dofs, std::vector<double> coefficients)
 {
-  set_first_row_id(id);
-
   for (std::vector<double>::size_type i = 0; i < coefficients.size(); ++i)
   {
-    TermData term = {coefficients[i], id, dofs[i]};
+    TermData term = {coefficients[i], dofs[i]};
     equation_data_.emplace_back(term);
   }
 }

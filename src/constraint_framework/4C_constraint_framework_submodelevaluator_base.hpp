@@ -12,6 +12,8 @@
 
 #include "4C_constraint_framework_equation.hpp"
 #include "4C_constraint_framework_input.hpp"
+#include "4C_linalg_transfer.hpp"
+#include "4C_linalg_vector.hpp"
 #include "4C_structure_new_enum_lists.hpp"
 #include "4C_structure_new_model_evaluator_generic.hpp"
 
@@ -64,8 +66,24 @@ namespace Constraints::SubmodelEvaluator
     [[nodiscard]] virtual std::map<Solid::EnergyType, double> get_energy() const = 0;
 
    private:
+    /*! \brief Number the constraint equations, build their row map and the importer of the
+     *  displacements they need
+     *
+     * The equations of all ranks get consecutive global ids, rank 0 first. Each rank owns the
+     * rows of the equations it created.
+     *
+     * @param [in] displacement_map map of the displacement vector the equations are evaluated with
+     */
+    void setup_constraint_equation_map(const Core::LinAlg::Map& displacement_map);
+
     //! Map of the constraint equations: one gid per equation, owned by the rank that created it
     std::shared_ptr<Core::LinAlg::Map> constraint_equation_map_;
+
+    //! Displacements of the dofs the equations of this rank need (may be owned by other ranks)
+    std::shared_ptr<Core::LinAlg::Vector<double>> equation_dof_displacements_;
+
+    //! Importer from the displacement vector into equation_dof_displacements_
+    std::shared_ptr<Core::LinAlg::Import> equation_dof_importer_;
 
     //! Penalty parameter
     double penalty_parameter_;
