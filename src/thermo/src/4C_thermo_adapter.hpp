@@ -112,6 +112,16 @@ namespace Thermo
     /// Return MapExtractor for Dirichlet boundary conditions
     virtual std::shared_ptr<const Core::LinAlg::MapExtractor> get_dbc_map_extractor() = 0;
 
+    /*! \brief Fix the nodes which are only connected to inactive elements
+     *
+     *  The dofs of nodes which are only connected to inactive elements are constrained, i.e.,
+     *  their temperatures are kept at their current value and the corresponding temperature rates
+     *  are set to zero.
+     *
+     *  \return Global number of dofs which have been fixed by this call
+     */
+    virtual int fix_nodes_without_active_elements() = 0;
+
     //@}
 
     //! @name Time step helpers

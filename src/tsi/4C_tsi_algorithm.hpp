@@ -142,6 +142,18 @@ namespace TSI
     //! store it in tsi and hand it to the thermal field
     void prepare_contact_strategy();
 
+    /*! \brief Deactivate the thermo elements of inactive structural elements
+     *
+     *  Call this after the update of the structural field (where structural elements are eroded)
+     *  and before the update of the thermal field. Thermo nodes which are only connected to
+     *  inactive elements are constrained. After a time step (@p initialization is false), the
+     *  thermal field is evaluated again at the current state if thermo elements have been
+     *  deactivated, such that their contributions are removed before the thermal update. At the
+     *  start or after a restart (@p initialization is true), the thermal field is adapted to the
+     *  inactive elements in any case.
+     */
+    void adapt_to_structure_active_flags(bool initialization);
+
     //! Access to the dof coupling for matching grid TSI
     Coupling::Adapter::Coupling& structure_thermo_coupling() { return *structure_thermo_coupling_; }
     //@}
@@ -180,6 +192,9 @@ namespace TSI
 
     //! flag for matchinggrid
     const bool matchinggrid_;
+
+    //! whether structural elements can be eroded
+    bool can_deactivate_elements_ = false;
     //! volume coupling (using mortar) adapter
     std::shared_ptr<Coupling::Adapter::MortarVolCoupl> volcoupl_;
 

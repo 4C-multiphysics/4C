@@ -8,13 +8,16 @@
 #include "4C_thermo_timint.hpp"
 
 #include "4C_fem_discretization_nullspace.hpp"
+#include "4C_fem_discretization_utils.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_io_visualization_parameters.hpp"
+#include "4C_linalg_mapextractor.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_thermo_ele_action.hpp"
 #include "4C_thermo_resulttest.hpp"
 #include "4C_timestepping_mstep.hpp"
@@ -103,6 +106,7 @@ Thermo::TimInt::TimInt(const Teuchos::ParameterList& ioparams,
         "function_manager", &Global::Problem::instance()->function_manager());
     discret_->evaluate_dirichlet(p, zeros_, nullptr, nullptr, nullptr, dbcmaps_);
     zeros_->put_scalar(0.0);  // just in case of change
+    dbcmaps_of_conditions_ = *dbcmaps_;
   }
 
   // temperatures T_{n}
@@ -717,6 +721,31 @@ void Thermo::TimInt::apply_force_tang_internal(
 
 }  // apply_force_tang_internal()
 
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+int Thermo::TimInt::fix_nodes_without_active_elements()
+{
+  const Core::LinAlg::Map dofs_without_active_elements =
+      Core::FE::dofs_without_active_elements(*discret_);
+
+  // the dofs of the Dirichlet conditions stay constrained
+  const std::shared_ptr<const Core::LinAlg::Map> constrained_dofs =
+      Core::LinAlg::merge_map(*dbcmaps_of_conditions_.cond_map(), dofs_without_active_elements);
+  const std::shared_ptr<const Core::LinAlg::Map> fixed_dofs =
+      Core::LinAlg::split_map(*constrained_dofs, *dbcmaps_->cond_map());
+
+  const int num_fixed_dofs = fixed_dofs->num_global_elements();
+  if (num_fixed_dofs == 0) return num_fixed_dofs;
+
+  *dbcmaps_ = Core::LinAlg::MapExtractor(*discret_->dof_row_map(), constrained_dofs);
+
+  // keep the temperatures of the constrained dofs constant
+  for (int lid = 0; lid < fixed_dofs->num_my_elements(); ++lid)
+    raten_->get_values()[raten_->get_map().lid(fixed_dofs->gid(lid))] = 0.0;
+
+  return num_fixed_dofs;
+}
 
 /*----------------------------------------------------------------------*
  | evaluate ordinary internal force, its tangent at state   bborn 10/09 |

@@ -67,6 +67,9 @@ namespace Discret::Elements
         Mat::So3Material& solid_material, const Core::FE::Discretization& discretization,
         const Core::Elements::LocationArray& la, Teuchos::ParameterList& params);
 
+    //! Return whether the material failed at any Gauss point
+    bool material_failed(const Mat::So3Material& solid_material) const;
+
     void initialize_gauss_point_data_output(const Core::Elements::Element& ele,
         const Mat::So3Material& solid_material,
         FourC::Solid::ModelEvaluator::GaussPointDataOutputManager& gp_data_output_manager) const;

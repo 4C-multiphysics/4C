@@ -12,6 +12,7 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_element_center.hpp"
 #include "4C_solid_ele.hpp"
+#include "4C_solid_scatra_ele.hpp"
 #include "4C_structure_new_input.hpp"
 #include "4C_utils_function.hpp"
 
@@ -33,6 +34,10 @@ Solid::ErosionResult Solid::erode_elements(Core::FE::Discretization& discretizat
     if (const auto* solid = dynamic_cast<const Discret::Elements::Solid<2>*>(&element))
       return solid->material_failed();
     if (const auto* solid = dynamic_cast<const Discret::Elements::Solid<3>*>(&element))
+      return solid->material_failed();
+    if (const auto* solid = dynamic_cast<const Discret::Elements::SolidScatra<2>*>(&element))
+      return solid->material_failed();
+    if (const auto* solid = dynamic_cast<const Discret::Elements::SolidScatra<3>*>(&element))
       return solid->material_failed();
     return false;
   };

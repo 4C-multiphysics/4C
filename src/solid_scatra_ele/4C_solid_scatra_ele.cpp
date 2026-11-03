@@ -324,6 +324,15 @@ Mat::So3Material& Discret::Elements::SolidScatra<dim>::solid_material(int nummat
   return *std::dynamic_pointer_cast<Mat::So3Material>(Core::Elements::Element::material(nummat));
 }
 
+template <unsigned dim>
+bool Discret::Elements::SolidScatra<dim>::material_failed() const
+{
+  FOUR_C_ASSERT(solid_scatra_calc_variant_.has_value(),
+      "The solid-scatra calculation interface is not initialized for element id {}.", id());
+  return std::visit([&](auto& interface) { return interface->material_failed(solid_material()); },
+      *solid_scatra_calc_variant_);
+}
+
 template class Discret::Elements::SolidScatraType<2>;
 template class Discret::Elements::SolidScatra<2>;
 template class Discret::Elements::SolidScatraType<3>;

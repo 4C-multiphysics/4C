@@ -86,6 +86,9 @@ namespace Discret::Elements
 
     [[nodiscard]] virtual Mat::So3Material& solid_material(int nummat = 0) const;
 
+    /// Whether the solid material has failed at any element Gauss point.
+    [[nodiscard]] bool material_failed() const;
+
     [[nodiscard]] int num_line() const override;
 
     [[nodiscard]] int num_surface() const override;

@@ -16,6 +16,7 @@
 #include "4C_io_control.hpp"
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_io_runtime_csv_writer.hpp"
+#include "4C_linalg_mapextractor.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
@@ -342,6 +343,9 @@ namespace Thermo
       return dbcmaps_;
     }
 
+    //! Fix the nodes which are only connected to inactive elements
+    int fix_nodes_without_active_elements() override;
+
     //@}
 
    protected:
@@ -359,6 +363,10 @@ namespace Thermo
                                                            //!< containing non-overlapping
                                                            //!< map of global DOFs on Dirichlet
                                                            //!< boundary conditions
+
+    //! map extractor of the Dirichlet boundary conditions without the dofs fixed since their nodes
+    //! are only connected to inactive elements
+    Core::LinAlg::MapExtractor dbcmaps_of_conditions_;
     //@}
 
     //! @name Printing and output

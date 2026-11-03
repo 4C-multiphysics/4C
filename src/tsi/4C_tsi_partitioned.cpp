@@ -95,6 +95,9 @@ void TSI::Partitioned::read_restart(int step)
 
   // structural and thermal contact
   prepare_contact_strategy();
+
+  // elements deactivated before the restart
+  adapt_to_structure_active_flags(true);
 }  // read_restart()
 
 
@@ -1252,6 +1255,7 @@ void TSI::Partitioned::prepare_output(bool force_prepare)
 void TSI::Partitioned::update()
 {
   structure_field()->update();
+  adapt_to_structure_active_flags(false);
   thermo_field()->update();
   if (contact_strategy_lagrange_ != nullptr)
     contact_strategy_lagrange_->update((structure_field()->dispnp()));

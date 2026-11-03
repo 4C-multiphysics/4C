@@ -10,6 +10,7 @@
 #include "4C_adapter_str_factory.hpp"
 #include "4C_adapter_str_structure_new.hpp"
 #include "4C_adapter_str_wrapper.hpp"
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_contact_lagrange_strategy_tsi.hpp"
 #include "4C_contact_meshtying_contact_bridge.hpp"
 #include "4C_contact_strategy_factory.hpp"
@@ -18,9 +19,11 @@
 #include "4C_coupling_adapter_volmortar.hpp"
 #include "4C_coupling_volmortar_utils.hpp"
 #include "4C_fem_discretization.hpp"
+#include "4C_fem_discretization_utils.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_mortar_multifield_coupling.hpp"
+#include "4C_structure_new_input.hpp"
 #include "4C_thermo_adapter.hpp"
 #include "4C_tsi_input.hpp"
 #include "4C_tsi_problem_access.hpp"
@@ -102,6 +105,11 @@ TSI::Algorithm::Algorithm(MPI_Comm comm)
     adapterbase_ptr->setup();
     structure_ =
         std::dynamic_pointer_cast<Adapter::StructureWrapper>(adapterbase_ptr->structure_field());
+
+    can_deactivate_elements_ =
+        sdyn.get<Solid::ElementErosionParameters>("element_erosion").enabled();
+    if (can_deactivate_elements_ and !matchinggrid_)
+      FOUR_C_THROW("Element deactivation is only implemented for TSI with matching grids.");
 
     if (restart &&
         Teuchos::getIntegralValue<TSI::SolutionSchemeOverFields>(problem_->tsi_dynamic_params(),
@@ -263,6 +271,37 @@ void TSI::Algorithm::apply_struct_coupling_state(
 
 
 /*----------------------------------------------------------------------*/
+void TSI::Algorithm::adapt_to_structure_active_flags(const bool initialization)
+{
+  if (!can_deactivate_elements_) return;
+
+  Core::FE::Discretization& thermo_discretization = *thermo_field()->discretization();
+  const int num_deactivated_elements = Core::FE::copy_element_active_flags(
+      *structure_field()->discretization(), thermo_discretization);
+
+  // the thermo elements might already be inactive, e.g. after a restart, but the thermal field has
+  // not been adapted yet
+  if (num_deactivated_elements == 0 and !initialization) return;
+
+  const int num_fixed_dofs = thermo_field()->fix_nodes_without_active_elements();
+
+  if (Core::Communication::my_mpi_rank(get_comm()) == 0 and num_deactivated_elements > 0)
+  {
+    std::cout << "Element erosion: " << num_deactivated_elements
+              << " thermo element(s) deactivated, " << num_fixed_dofs
+              << " thermo dof(s) fixed (nodes without active elements)\n";
+  }
+
+  // remove the contributions of the deactivated elements from the current state
+  if (!initialization)
+  {
+    apply_struct_coupling_state(structure_field()->dispnp(), structure_field()->velnp());
+    thermo_field()->evaluate();
+  }
+}
+
+
+/*----------------------------------------------------------------------*/
 void TSI::Algorithm::prepare_contact_strategy()
 {
   auto stype = Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(
@@ -350,6 +389,9 @@ void TSI::Algorithm::prepare_contact_strategy()
 
 void TSI::Algorithm::post_setup()
 {
+  // after a restart, elements might be inactive already
+  adapt_to_structure_active_flags(true);
+
   // call the post_setup routine of the structure field
   structure_->post_setup();
 }

@@ -31,8 +31,10 @@
 
 #include <Teuchos_ParameterList.hpp>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
+#include <ranges>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -717,6 +719,14 @@ double Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::calcul
       });
 
   return intenergy;
+}
+
+template <Core::FE::CellType celltype, typename SolidFormulation>
+bool Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::material_failed(
+    const Mat::So3Material& solid_material) const
+{
+  return std::ranges::any_of(std::views::iota(0, stiffness_matrix_integration_.num_points()),
+      [&](int gp) { return solid_material.is_failed(gp); });
 }
 
 template <Core::FE::CellType celltype, typename SolidFormulation>

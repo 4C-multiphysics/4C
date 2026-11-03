@@ -189,6 +189,9 @@ void TSI::Monolithic::read_restart(int step)
   p.set<std::string>("action", "calc_struct_reset_istep");
   structure_field()->discretization()->evaluate(p);
 
+  // elements deactivated before the restart
+  adapt_to_structure_active_flags(true);
+
 }  // read_restart()
 
 
@@ -2204,6 +2207,7 @@ void TSI::Monolithic::update()
 {
   apply_thermo_coupling_state(thermo_field()->tempnp());
   structure_field()->update();
+  adapt_to_structure_active_flags(false);
   thermo_field()->update();
   if (contact_strategy_lagrange_ != nullptr)
     contact_strategy_lagrange_->update((structure_field()->dispnp()));
