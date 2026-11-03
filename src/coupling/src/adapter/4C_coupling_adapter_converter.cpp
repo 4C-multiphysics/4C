@@ -141,7 +141,9 @@ bool Coupling::Adapter::MatrixLogicalSplitAndTransform::operator()(
         exporter_ = std::make_shared<Core::LinAlg::Export>(permsrcmap, src.row_map());
       }
 
-      auto permsrc = std::make_shared<Core::LinAlg::SparseMatrix>(permsrcmap, 0);
+      // Imported rows may be wider than any row owned locally (or this rank may own none).
+      auto permsrc =
+          std::make_shared<Core::LinAlg::SparseMatrix>(permsrcmap, src.global_max_num_entries());
       permsrc->import(src, *exporter_, Core::LinAlg::CombineMode::insert);
       permsrc->complete(src.domain_map(), permsrcmap);
       esrc = permsrc;
