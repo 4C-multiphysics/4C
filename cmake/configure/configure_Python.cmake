@@ -101,6 +101,7 @@ endif()
 if(_four_c_python_build_install_is_current)
   message(STATUS "Using existing Python build environment; skipping pip install")
 else()
+  file(REMOVE "${_four_c_python_build_install_stamp}")
   _execute_process(
     PROCESS_COMMAND
     ${Python_EXECUTABLE}
