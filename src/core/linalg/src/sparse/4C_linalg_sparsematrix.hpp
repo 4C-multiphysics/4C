@@ -127,6 +127,11 @@ namespace Core::LinAlg
     SparseMatrix(const Core::LinAlg::Map& rowmap, std::vector<int>& numentries,
         bool explicitdirichlet = true, bool savegraph = false, MatrixType matrixtype = CRS_MATRIX);
 
+    /// Construct with individual row capacities; a static profile is supported only for CRS_MATRIX.
+    SparseMatrix(const Core::LinAlg::Map& rowmap, std::vector<int>& numentries,
+        StorageProfile profile, bool explicitdirichlet = true, bool savegraph = false,
+        MatrixType matrixtype = CRS_MATRIX);
+
     /// construction of sparse matrix
     /*!
        Makes either a deep copy of the Epetra_CrsMatrix or Epetra_FECrsMatrix.

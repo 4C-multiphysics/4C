@@ -40,10 +40,21 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::BlockSparseMatrixBase:
 {
   TEUCHOS_FUNC_TIME_MONITOR("Core::LinAlg::BlockSparseMatrixBase::Merge");
 
-  const SparseMatrix& m00 = matrix(0, 0);
+  // Static-profile rows cannot grow when the blocks are added to the merged matrix.
+  // Reserve space in each row for its entries from every column block.
+  std::vector<int> entries_per_row(fullrowmap_->num_my_elements(), 0);
+  for (int r = 0; r < rows(); ++r)
+  {
+    for (int c = 0; c < cols(); ++c)
+    {
+      const auto& block = matrix(r, c);
+      for (int i = 0; i < block.num_my_rows(); ++i)
+        entries_per_row[fullrowmap_->lid(block.global_row_index(i))] += block.num_my_entries(i);
+    }
+  }
 
-  std::shared_ptr<SparseMatrix> sparse =
-      std::make_shared<SparseMatrix>(*fullrowmap_, m00.max_num_entries(), explicitdirichlet);
+  std::shared_ptr<SparseMatrix> sparse = std::make_shared<SparseMatrix>(*fullrowmap_,
+      entries_per_row, SparseMatrix::StorageProfile::static_profile, explicitdirichlet);
   for (const auto& block : blocks_)
   {
     Core::LinAlg::matrix_add(block, false, 1.0, *sparse, 1.0);

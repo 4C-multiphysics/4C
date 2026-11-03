@@ -97,6 +97,14 @@ Core::LinAlg::SparseMatrix::SparseMatrix(const Core::LinAlg::Map& rowmap,
  *----------------------------------------------------------------------*/
 Core::LinAlg::SparseMatrix::SparseMatrix(const Core::LinAlg::Map& rowmap,
     std::vector<int>& numentries, bool explicitdirichlet, bool savegraph, MatrixType matrixtype)
+    : SparseMatrix(rowmap, numentries, StorageProfile::dynamic_profile, explicitdirichlet,
+          savegraph, matrixtype)
+{
+}
+
+Core::LinAlg::SparseMatrix::SparseMatrix(const Core::LinAlg::Map& rowmap,
+    std::vector<int>& numentries, StorageProfile profile, bool explicitdirichlet, bool savegraph,
+    MatrixType matrixtype)
     : graph_(nullptr),
       dbcmaps_(nullptr),
       explicitdirichlet_(explicitdirichlet),
@@ -108,12 +116,16 @@ Core::LinAlg::SparseMatrix::SparseMatrix(const Core::LinAlg::Map& rowmap,
   if ((int)(numentries.size()) != rowmap.num_my_elements())
     FOUR_C_THROW("estimate for non zero entries per row does not match the size of row map");
 
+  const bool static_profile = profile == StorageProfile::static_profile;
   if (matrixtype_ == CRS_MATRIX)
     sysmat_ = std::make_shared<Epetra_CrsMatrix>(
-        ::Copy, rowmap.get_epetra_map(), numentries.data(), false);
+        ::Copy, rowmap.get_epetra_map(), numentries.data(), static_profile);
   else if (matrixtype_ == FE_MATRIX)
+  {
+    if (static_profile) FOUR_C_THROW("Static storage profile is not supported for FE matrices");
     sysmat_ = std::make_shared<Epetra_FECrsMatrix>(
         ::Copy, rowmap.get_epetra_map(), numentries.data(), false);
+  }
   else
     FOUR_C_THROW("matrix type is not correct");
 }
