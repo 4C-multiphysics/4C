@@ -342,7 +342,9 @@ namespace Core::Communication
 
     // export full matrices to the two desired processors
     Core::LinAlg::Import serialimporter(*serialrowmap, rowmap);
-    Core::LinAlg::SparseMatrix serialCrsMatrix(*serialrowmap, 0);
+    // Imported rows must fit even on a rank that owns no source rows.
+    Core::LinAlg::SparseMatrix serialCrsMatrix(*serialrowmap, matrix.global_max_num_entries(),
+        Core::LinAlg::SparseMatrix::StorageProfile::static_profile);
     serialCrsMatrix.import(matrix, serialimporter, Core::LinAlg::CombineMode::insert);
     serialCrsMatrix.complete(*serialdomainmap, *serialrowmap);
 
