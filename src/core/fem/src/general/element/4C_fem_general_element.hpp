@@ -251,6 +251,15 @@ namespace Core::Elements
     int owner() const { return owner_; }
 
     /*!
+    \brief Return whether this element is active
+
+    Inactive elements (e.g. eroded or damaged elements) are skipped by all element loops of the
+    Core::FE::Discretization (evaluate(), evaluate_neumann(), evaluate_condition(),
+    evaluate_scalars()), i.e., they do not contribute to any global system anymore.
+    */
+    virtual bool is_active() const { return is_active_; }
+
+    /*!
     \brief Get shape type of element
     */
     virtual Core::FE::CellType shape() const = 0;
@@ -695,6 +704,15 @@ might become invalid after a redistribution of the discretization.
 
     */
     void set_owner(const int owner) { owner_ = owner; }
+
+    /*!
+    \brief Activate or deactivate this element
+
+    \note The flag has to be consistent on all ranks holding a copy of this element. Use
+    Core::FE::Discretization::deactivate_elements() to deactivate the elements of a
+    discretization.
+    */
+    void set_active(const bool active) { is_active_ = active; }
 
     /*!
     \brief Set a list of node ids this element is connected to
@@ -1180,6 +1198,9 @@ might become invalid after a redistribution of the discretization.
     //! \brief owner processor of this element
     int owner_;
 
+    //! \brief whether this element takes part in the evaluation of the discretization
+    bool is_active_ = true;
+
     //! \brief List of my nodal ids, length num_node()
     std::vector<int> nodeids_;
 
@@ -1253,6 +1274,18 @@ might become invalid after a redistribution of the discretization.
     living there
     */
     bool is_face_element() const override { return true; }
+
+    /*!
+    \brief Return whether this face element is active
+
+    A face element is inactive if it was deactivated itself or if its parent element (if assigned)
+    is inactive, e.g., loads on the surface of an eroded element are not applied anymore.
+    */
+    bool is_active() const override
+    {
+      return Element::is_active() and
+             (parent_element() == nullptr or parent_element()->is_active());
+    }
 
     /*!
     \brief Return the parent element id the face element is connected to (for interior faces, the

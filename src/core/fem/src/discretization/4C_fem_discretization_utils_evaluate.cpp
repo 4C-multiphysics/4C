@@ -35,6 +35,10 @@ namespace
     else
       is_subset = true;
 
+    // inactive elements do not contribute, but they assemble zeros into matrices which can still
+    // get new entries, such that their couplings are part of the sparsity pattern
+    const bool assemble_inactive_elements = strategy.has_unfilled_system_matrix();
+
     // loop over column elements
     const int numcolele = col_ele_map->num_my_elements();
     const int* ele_gids = col_ele_map->my_global_elements();
@@ -49,6 +53,20 @@ namespace
       }
       else
         actele = discret.l_col_element(i);
+
+      if (!actele->is_active())
+      {
+        if (assemble_inactive_elements)
+        {
+          actele->location_vector(discret, la);
+          strategy.clear_element_storage(la[row].size(), la[col].size());
+          strategy.assemble_matrix1(
+              actele->id(), la[row].lm_, la[col].lm_, la[row].lmowner_, la[col].stride_);
+          strategy.assemble_matrix2(
+              actele->id(), la[row].lm_, la[col].lm_, la[row].lmowner_, la[col].stride_);
+        }
+        continue;
+      }
 
       {
         TEUCHOS_FUNC_TIME_MONITOR("Core::FE::Evaluate LocationVector");

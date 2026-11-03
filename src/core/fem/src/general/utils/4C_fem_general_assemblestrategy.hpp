@@ -136,6 +136,13 @@ namespace Core::FE
       }
     }
 
+    /*!
+     * @brief Return whether a system matrix is assembled which is not filled yet, i.e., which can
+     * still get new entries
+     */
+    bool has_unfilled_system_matrix() const;
+
+
     //@}
 
     //! @name General Purpose Assembly Methods

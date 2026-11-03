@@ -205,6 +205,13 @@ namespace Core::IO
     void append_element_gid(const std::string& resultname);
 
     /**
+     * \brief Write whether each element is active (1) or inactive (0)
+     *
+     * @param resultname (in) Name of the field in the visualization file
+     */
+    void append_element_active(const std::string& resultname);
+
+    /**
      * \brief Write the internal element evaluation times for each element
      *
      * @param resultname (in) Name of the field in the visualization file

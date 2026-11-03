@@ -7,7 +7,9 @@
 
 #include "4C_fem_general_utils_gauss_point_extrapolation.hpp"
 
+#include "4C_fem_discretization.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
+#include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_fem_general_utils_gausspoints.hpp"
@@ -18,6 +20,8 @@
 #include "4C_linalg_serialdensesolver.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
+
+#include <algorithm>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -269,7 +273,13 @@ namespace
       const int lid = global_data.get_map().lid(ele.node_ids()[i]);
       if (lid >= 0)  // rownode
       {
-        const double invmyadjele = (nodal_average) ? 1.0 / ele.nodes()[i]->num_element() : 1.0;
+        // average over the active adjacent elements, since only those are evaluated
+        const double invmyadjele =
+            (nodal_average)
+                ? 1.0 / static_cast<double>(std::ranges::count_if(
+                            ele.nodes()[i]->adjacent_elements(), [](auto adjacent_element)
+                            { return adjacent_element.user_element()->is_active(); }))
+                : 1.0;
         for (decltype(nodal_data.numCols()) j = 0; j < nodal_data.numCols(); ++j)
         {
           global_data.get_vector(j).get_values()[lid] += nodal_data(i, j) * invmyadjele;

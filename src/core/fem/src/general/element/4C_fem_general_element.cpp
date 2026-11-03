@@ -142,6 +142,7 @@ Core::Elements::Element::Element(const Element& old)
       eval_time_(old.eval_time_),
       lid_(old.lid_),
       owner_(old.owner_),
+      is_active_(old.is_active_),
       nodeids_(old.nodeids_),
       nodes_(old.nodes_),
       faces_(old.faces_),
@@ -173,6 +174,7 @@ std::ostream& operator<<(std::ostream& os, const Core::Elements::Element& elemen
 void Core::Elements::Element::print(std::ostream& os) const
 {
   os << std::setw(12) << id() << " Owner " << std::setw(5) << owner() << " ";
+  if (!is_active_) os << " Inactive ";
   const int nnode = num_node();
   const int* nodeids = node_ids();
   if (nnode > 0)
@@ -258,6 +260,8 @@ void Core::Elements::Element::pack(Core::Communication::PackBuffer& data) const
   add_to_pack(data, id_);
   // add owner
   add_to_pack(data, owner_);
+  // add active flag
+  add_to_pack(data, is_active_);
   // add vector nodeid_
   add_to_pack(data, nodeids_);
   // add material
@@ -286,6 +290,8 @@ void Core::Elements::Element::unpack(Core::Communication::UnpackBuffer& buffer)
   extract_from_pack(buffer, id_);
   // owner_
   extract_from_pack(buffer, owner_);
+  // is_active_
+  extract_from_pack(buffer, is_active_);
   // nodeid_
   extract_from_pack(buffer, nodeids_);
   // mat_

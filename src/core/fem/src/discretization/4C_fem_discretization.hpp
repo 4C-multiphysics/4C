@@ -25,6 +25,7 @@
 #include <functional>
 #include <ranges>
 #include <set>
+#include <span>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -1568,6 +1569,19 @@ namespace Core::FE
     {
       return condition_;
     }
+
+    //@}
+
+    //! @name Inactive elements
+    //@{
+
+    /*!
+     * @brief Deactivate the row elements with the global ids @p row_element_ids and update
+     * their ghosted copies.
+     *
+     * Inactive elements in @p row_element_ids are ignored. This is a collective call.
+     */
+    void deactivate_elements(std::span<const int> row_element_ids);
 
     //@}
 

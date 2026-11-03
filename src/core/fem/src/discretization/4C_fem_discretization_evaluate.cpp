@@ -81,10 +81,29 @@ void Core::FE::Discretization::evaluate(Teuchos::ParameterList& params,
 
   Core::Elements::LocationArray la(dofsets_.size());
 
+  // inactive elements do not contribute, but they assemble zeros into matrices which can still
+  // get new entries, such that their couplings are part of the sparsity pattern
+  const bool assemble_inactive_elements = strategy.has_unfilled_system_matrix();
+
   // loop over column elements
   for (auto ele : my_col_element_range())
   {
     auto* actele = ele.user_element();
+
+    if (!actele->is_active())
+    {
+      if (assemble_inactive_elements)
+      {
+        actele->location_vector(*this, la);
+        strategy.clear_element_storage(la[row].size(), la[col].size());
+        strategy.assemble_matrix1(
+            actele->id(), la[row].lm_, la[col].lm_, la[row].lmowner_, la[col].stride_);
+        strategy.assemble_matrix2(
+            actele->id(), la[row].lm_, la[col].lm_, la[row].lmowner_, la[col].stride_);
+      }
+      continue;
+    }
+
     // get element location vector, dirichlet flags and ownerships
     actele->location_vector(*this, la);
 
@@ -134,6 +153,8 @@ void Core::FE::Discretization::evaluate(
 
   for (auto actele : my_col_element_range())
   {
+    if (!actele.user_element()->is_active()) continue;
+
     // time the function wrapper separately if timing is enabled, to get per element evaluation
     // to avoid double counting evaluate_with_timing should not be passed as element_action
     const auto start_time = time_ele_evaluations_ ? std::chrono::steady_clock::now()
@@ -269,6 +290,8 @@ void Core::FE::Discretization::evaluate_neumann(Teuchos::ParameterList& params,
       Core::LinAlg::SerialDenseMatrix elematrix;
       for (const auto& [_, ele] : geom)
       {
+        if (!ele->is_active()) continue;
+
         // get element location vector, dirichlet flags and ownerships
         std::vector<int> lm;
         std::vector<int> lmowner;
@@ -423,6 +446,8 @@ void Core::FE::Discretization::evaluate_condition(Teuchos::ParameterList& params
 
         for (const auto& [_, ele] : geom)
         {
+          if (!ele->is_active()) continue;
+
           // get element location vector and ownerships
           // the LocationVector method will return the location vector
           // of the dofs this condition is meant to assemble into.
@@ -506,6 +531,8 @@ void Core::FE::Discretization::evaluate_scalars(
   for (auto ele : my_row_element_range())
   {
     auto* actele = ele.user_element();
+    if (!actele->is_active()) continue;
+
     // get element location vector
     Core::Elements::LocationArray la(dofsets_.size());
     actele->location_vector(*this, la);
@@ -582,8 +609,9 @@ void Core::FE::Discretization::evaluate_scalars(
         // loop over all elements associated with current condition
         for (auto& [_, element] : geometry)
         {
-          // consider only unghosted elements for evaluation
-          if (element->owner() == Core::Communication::my_mpi_rank(get_comm()))
+          // consider only active and unghosted elements for evaluation
+          if (element->is_active() and
+              element->owner() == Core::Communication::my_mpi_rank(get_comm()))
           {
             // construct location vector for current element
             Core::Elements::LocationArray la(dofsets_.size());
@@ -648,6 +676,13 @@ void Core::FE::Discretization::evaluate_scalars(
 
     if (!scalars.get_map().my_gid(actele->id()))
       FOUR_C_THROW("Proc does not have global element {}", actele->id());
+
+    // inactive elements do not contribute
+    if (!actele->is_active())
+    {
+      for (int j = 0; j < numscalars; ++j) sca.get_vector(j).get_values()[i] = 0.0;
+      continue;
+    }
 
     // get element location vector
     Core::Elements::LocationArray la(dofsets_.size());

@@ -16,11 +16,14 @@
 
 #include <memory>
 #include <set>
+#include <span>
+#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::LinAlg
 {
+  class Map;
   class MapExtractor;
 }  // namespace Core::LinAlg
 
@@ -40,6 +43,32 @@ namespace Core::FE
   class DiscretizationFaces;
   class Dbc;
 
+  // Inactive elements
+  /*!
+   * @brief Copy whether the elements of @p source are active to the elements of @p target with the
+   * same global id.
+   *
+   * This is useful for discretizations which are cloned from each other (e.g. the thermo
+   * discretization of a TSI problem). The parallel distribution of both discretizations may differ.
+   * Every element of @p target needs to have an element in @p source with the same global id.
+   *
+   * An inactive target element cannot be activated by this call.
+   *
+   * @return Global number of row elements of @p target deactivated by this call. This is a
+   * collective call.
+   */
+  int copy_element_active_flags(const Discretization& source, Discretization& target);
+
+  /*!
+   * @brief Build the map of all row dofs of dofset @p nds belonging to row nodes that are only
+   * connected to inactive elements.
+   *
+   * Such nodes do not get any contribution from the element evaluation anymore, i.e., their dofs
+   * have to be constrained to obtain a regular system of equations. Nodes without any adjacent
+   * element are ignored.
+   */
+  Core::LinAlg::Map dofs_without_active_elements(
+      const Discretization& discretization, unsigned nds = 0);
 
   /*!
    * \brief Extract nodal coordinate vector of a discretization based on a nodal rowmap

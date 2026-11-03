@@ -71,6 +71,14 @@ void Core::FE::AssembleStrategy::complete()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+bool Core::FE::AssembleStrategy::has_unfilled_system_matrix() const
+{
+  return (systemmatrix1_ != nullptr and not systemmatrix1_->filled()) or
+         (systemmatrix2_ != nullptr and not systemmatrix2_->filled());
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 void Core::FE::AssembleStrategy::clear_element_storage(int rdim, int cdim)
 {
   if (assemblemat1())
