@@ -93,7 +93,8 @@ namespace
           numberOfElementsToDistribute_, 0, communicators_.local_comm());
       int approximateNumberOfNonZeroesPerRow = 3;
       matrix_ =
-          std::make_shared<Core::LinAlg::SparseMatrix>(*rowmap, approximateNumberOfNonZeroesPerRow);
+          std::make_shared<Core::LinAlg::SparseMatrix>(*rowmap, approximateNumberOfNonZeroesPerRow,
+              Core::LinAlg::SparseMatrix::StorageProfile::static_profile);
 
       // fill tri-diagonal matrix
       double* values = new double[3];
@@ -160,7 +161,8 @@ namespace
       Core::LinAlg::Map colmap(2 * numberOfElementsToDistribute_, 0, communicators_.local_comm());
       int approximateNumberOfNonZeroesPerRow = 6;
       matrix_ =
-          std::make_shared<Core::LinAlg::SparseMatrix>(rowmap, approximateNumberOfNonZeroesPerRow);
+          std::make_shared<Core::LinAlg::SparseMatrix>(rowmap, approximateNumberOfNonZeroesPerRow,
+              Core::LinAlg::SparseMatrix::StorageProfile::static_profile);
 
       // fill rectangular matrix
       double* values = new double[6];
