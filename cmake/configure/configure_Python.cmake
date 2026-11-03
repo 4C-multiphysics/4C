@@ -99,7 +99,74 @@ if(EXISTS "${_four_c_python_build_install_stamp}"
 endif()
 
 if(_four_c_python_build_install_is_current)
-  message(STATUS "Using existing Python build environment; skipping pip install")
+  set(_four_c_python_update_report "${PROJECT_BINARY_DIR}/four_c_python_update_report.json")
+  file(REMOVE "${_four_c_python_update_report}")
+  execute_process(
+    COMMAND
+      "${FOUR_C_PYTHON_VENV_BUILD}/bin/python3" -m pip install --dry-run --upgrade
+      --upgrade-strategy eager --report "${_four_c_python_update_report}" --retries 2 --timeout 3
+      --disable-pip-version-check -e "${PROJECT_SOURCE_DIR}/utilities/four_c_python[build]"
+    RESULT_VARIABLE _four_c_python_update_check_result
+    OUTPUT_QUIET ERROR_QUIET
+    )
+  if(_four_c_python_update_check_result EQUAL 0)
+    file(READ "${_four_c_python_update_report}" _four_c_python_update_report_contents)
+    string(
+      JSON _four_c_python_update_count ERROR_VARIABLE _four_c_python_report_error
+      LENGTH "${_four_c_python_update_report_contents}" install
+      )
+    file(REMOVE "${_four_c_python_update_report}")
+    if(NOT _four_c_python_report_error STREQUAL "NOTFOUND")
+      message(FATAL_ERROR "Could not parse pip update report: ${_four_c_python_report_error}")
+    endif()
+
+    set(_four_c_python_updates_available FALSE)
+    if(_four_c_python_update_count GREATER 0)
+      math(EXPR _four_c_python_last_update_index "${_four_c_python_update_count} - 1")
+      foreach(_update_index RANGE 0 ${_four_c_python_last_update_index})
+        string(
+          JSON
+          _update_name
+          GET
+          "${_four_c_python_update_report_contents}"
+          install
+          ${_update_index}
+          metadata
+          name
+          )
+        string(TOLOWER "${_update_name}" _update_name)
+        if(NOT _update_name STREQUAL "four_c_python")
+          set(_four_c_python_updates_available TRUE)
+        endif()
+      endforeach()
+    endif()
+    if(_four_c_python_updates_available)
+      message(STATUS "Python dependency updates are available; updating build environment")
+      file(REMOVE "${_four_c_python_build_install_stamp}")
+      _execute_process(
+        PROCESS_COMMAND
+        "${FOUR_C_PYTHON_VENV_BUILD}/bin/python3"
+        -m
+        pip
+        install
+        --upgrade
+        --upgrade-strategy
+        eager
+        -e
+        "${PROJECT_SOURCE_DIR}/utilities/four_c_python[build]"
+        )
+      file(
+        WRITE "${_four_c_python_build_install_stamp}" "${_four_c_python_build_install_fingerprint}"
+        )
+    else()
+      message(STATUS "Python build environment is up to date")
+    endif()
+  else()
+    file(REMOVE "${_four_c_python_update_report}")
+    message(
+      WARNING "Could not check for Python dependency updates; using existing build environment"
+      )
+  endif()
 else()
   file(REMOVE "${_four_c_python_build_install_stamp}")
   _execute_process(
@@ -113,6 +180,9 @@ else()
     PROCESS_COMMAND
     ${FOUR_C_PYTHON_VENV_BUILD}/bin/pip
     install
+    --upgrade
+    --upgrade-strategy
+    eager
     -e
     ${PROJECT_SOURCE_DIR}/utilities/four_c_python[build]
     )
