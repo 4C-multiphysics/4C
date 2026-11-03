@@ -32,29 +32,6 @@ namespace Core::IO
   {
     std::string to_string(const ryml::csubstr str) { return std::string(str.data(), str.size()); };
 
-    // Copy the content of the source node to the destination node. Useful to copy a node from one
-    // tree to another.
-    void deep_copy(ryml::NodeRef src, ryml::NodeRef dst)
-    {
-      dst.set_type(src.type());
-
-      if (src.has_key())
-      {
-        dst.set_key(src.key());
-      }
-      if (src.has_val())
-      {
-        dst.set_val(src.val());
-      }
-      // Recursively copy children
-      for (size_t i = 0; i < src.num_children(); ++i)
-      {
-        c4::yml::NodeRef src_child = src.child(i);
-        c4::yml::NodeRef dst_child = dst.append_child();
-        deep_copy(src_child, dst_child);
-      }
-    };
-
   }  // namespace
 
   namespace Internal
@@ -158,7 +135,7 @@ namespace Core::IO
       InputFileImpl(MPI_Comm comm) : comm_(comm), yaml_tree_(init_yaml_tree_with_exceptions())
       {
         // Root node is a map that stores the file paths as keys and the file content as values.
-        yaml_tree_.rootref() |= ryml::MAP;
+        yaml_tree_.rootref().set_map();
       }
 
       MPI_Comm comm_;
@@ -277,7 +254,7 @@ namespace Core::IO
       ryml::NodeRef file_node = input_file_impl.yaml_tree_.rootref().append_child();
       {
         std::string file_path_str = file_path.string();
-        file_node << ryml::key(file_path_str);
+        file_node.set_key_serialized(file_path_str);
         ryml::parse_in_arena(ryml::to_csubstr(file_content_without_docs_str), file_node);
       }
 
@@ -453,21 +430,20 @@ namespace Core::IO
       if (Core::Communication::my_mpi_rank(pimpl_->comm_) == 0)
       {
         ryml::Tree tree_with_small_sections = init_yaml_tree_with_exceptions();
-        tree_with_small_sections.rootref() |= ryml::MAP;
+        tree_with_small_sections.rootref().set_map();
         // Go through the tree and drop the legacy sections from the tree.
         for (auto file_node : pimpl_->yaml_tree_.rootref())
         {
           auto new_file_node = tree_with_small_sections.rootref().append_child();
-          new_file_node.set_type(file_node.type());
           new_file_node.set_key(file_node.key());
+          new_file_node.change_type(file_node.type());
 
           for (auto section_node : file_node.children())
           {
             if (!pimpl_->is_legacy_section(to_string(section_node.key())))
             {
               // Copy the node to the new tree.
-              auto new_section_node = new_file_node.append_child();
-              deep_copy(section_node, new_section_node);
+              section_node.duplicate(new_file_node, new_file_node.last_child());
             }
           }
         }
@@ -635,7 +611,7 @@ namespace Core::IO
 
     {
       auto sections = root["sections"];
-      sections |= ryml::MAP;
+      sections.set_map();
 
       auto all_sections = pimpl_->valid_sections_ | std::views::values;
       auto combined_spec =
@@ -647,10 +623,10 @@ namespace Core::IO
 
     {
       auto legacy_string_sections = root["legacy_string_sections"];
-      legacy_string_sections |= ryml::SEQ;
+      legacy_string_sections.set_seq();
       for (const auto& name : pimpl_->legacy_section_names_)
       {
-        legacy_string_sections.append_child() << name;
+        legacy_string_sections.append_child().set_serialized(name);
       }
     }
   }
@@ -658,7 +634,7 @@ namespace Core::IO
   void InputFile::write_as_yaml(std::ostream& out, const std::filesystem::path& file_name) const
   {
     auto tree = init_yaml_tree_with_exceptions();
-    tree.rootref() |= ryml::MAP;
+    tree.rootref().set_map();
     // Iterate the sections, parse them into a container, and emit the container data.
     InputParameterContainer container;
 
@@ -680,8 +656,8 @@ namespace Core::IO
         // Emit the section as a sequence of strings. This also works for the special
         // description section.
         auto section = tree.rootref().append_child();
-        section << ryml::key(section_name);
-        section |= ryml::SEQ;
+        section.set_key_serialized(section_name);
+        section.set_seq();
         for (const auto& line : pimpl_->in_section(section_name))
         {
           YamlNodeRef line_node{section.append_child(), file_name};

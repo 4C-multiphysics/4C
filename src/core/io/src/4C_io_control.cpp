@@ -50,7 +50,7 @@ struct Core::IO::ControlFileWriter::Impl
   {
     tree_ = init_yaml_tree_with_exceptions();
     current_node_id_ = tree_.rootref().id();
-    tree_.rootref() |= ryml::SEQ;
+    tree_.rootref().set_seq();
   }
 
   // Flush the current tree to the output stream and reset it.
@@ -70,7 +70,7 @@ struct Core::IO::ControlFileWriter::Impl
     tree_.clear_arena();
     current_node_id_ = tree_.rootref().id();
     group_level = 0;
-    tree_.rootref() |= ryml::SEQ;
+    tree_.rootref().set_seq();
     group_write_start_ = -1;
   }
 
@@ -79,8 +79,7 @@ struct Core::IO::ControlFileWriter::Impl
   {
     FOUR_C_ASSERT_ALWAYS(current().is_map(), "Internal error: appending to non-map node");
     auto node = current().append_child();
-    const auto key_str = ryml::csubstr(key.data(), key.size());
-    node << ryml::key(key_str);
+    node.set_key_serialized(key);
 
     emit_value_as_yaml(YamlNodeRef{node, ""}, value);
 
@@ -98,12 +97,11 @@ struct Core::IO::ControlFileWriter::Impl
     ++group_level;
 
     ryml::NodeRef outer = (current().is_seq()) ? current().append_child() : current();
-    outer |= ryml::MAP;
+    outer.set_map();
 
     auto group_node = outer.append_child();
-    group_node |= ryml::MAP;
-    const auto key_str = ryml::csubstr(key.data(), key.size());
-    group_node << ryml::key(key_str);
+    group_node.set_map();
+    group_node.set_key_serialized(key);
     current_node_id_ = group_node.id();
   }
 

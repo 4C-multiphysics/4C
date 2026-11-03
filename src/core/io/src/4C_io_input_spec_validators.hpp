@@ -238,7 +238,7 @@ namespace Core::IO::InputSpecBuilders::Validators
       void emit_metadata(YamlNodeRef yaml) const
       {
         auto& node = yaml.node;
-        node |= ryml::MAP;
+        node.set_map();
         auto all_node = node["all_elements"];
         inner_validator_.emit_metadata(yaml.wrap(all_node));
       }
@@ -483,9 +483,9 @@ template <typename Low, typename High, typename T>
     void emit_metadata(YamlNodeRef yaml) const
     {
       auto& node = yaml.node;
-      node |= ryml::MAP;
+      node.set_map();
       auto range_node = node["range"];
-      range_node |= ryml::MAP;
+      range_node.set_map();
       emit_value_as_yaml(yaml.wrap(range_node["minimum"]), low_val);
       emit_value_as_yaml(yaml.wrap(range_node["maximum"]), high_val);
       const bool min_excl = (low_type == Internal::InclExclType::excl);
@@ -552,13 +552,13 @@ template <typename T>
     void emit_metadata(YamlNodeRef yaml) const
     {
       auto& node = yaml.node;
-      node |= ryml::MAP;
+      node.set_map();
       auto set_node = node["choices"];
-      set_node |= ryml::SEQ;
+      set_node.set_seq();
       for (const auto& val : set)
       {
         auto choice_node = set_node.append_child();
-        choice_node |= ryml::MAP;
+        choice_node.set_map();
         emit_value_as_yaml(yaml.wrap(choice_node["name"]), val);
       }
     }

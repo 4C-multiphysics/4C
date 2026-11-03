@@ -216,8 +216,8 @@ void Core::IO::Internal::emit_metadata_helper(const Core::IO::InputSpec& spec,
       auto references_node =
           node.node.tree()->rootref()[ryml::to_csubstr(context.options.references_node_name)];
       // Ensure that the name of the reference node is serialized into the YAML tree.
-      references_node << ryml::key(context.options.references_node_name);
-      references_node |= ryml::MAP;
+      references_node.set_key_serialized(context.options.references_node_name);
+      references_node.set_map();
 
 
       auto next_id = references_node.num_children();
@@ -225,9 +225,8 @@ void Core::IO::Internal::emit_metadata_helper(const Core::IO::InputSpec& spec,
       FOUR_C_ASSERT(!references_node.has_child(ryml::to_csubstr(ref_name)),
           "Internal error: duplicate reference name {}.", ref_name);
       auto target_node = references_node.append_child();
-      target_node << ryml::key(ref_name);
-      target_node |= ryml::KEY_DQUO;
-      target_node |= ryml::MAP;
+      target_node.set_key_serialized(ref_name, ryml::KEY_DQUO);
+      target_node.set_map();
 
       context.currently_emitting_to_references = true;
       spec.impl().emit_metadata(node.wrap(target_node), context);
@@ -238,7 +237,7 @@ void Core::IO::Internal::emit_metadata_helper(const Core::IO::InputSpec& spec,
 
     // Use the reference instead of the full metadata.
     auto dst = node.node.append_child();
-    dst << ryml::key(context.options.reference_key);
+    dst.set_key_serialized(context.options.reference_key);
     emit_value_as_yaml(node.wrap(dst), context.emitted_specs[&spec.impl()]);
   }
   else
@@ -784,19 +783,19 @@ void Core::IO::Internal::GroupSpec::set_default_value(InputSpecBuilders::Storage
 void Core::IO::Internal::GroupSpec::emit_metadata(
     YamlNodeRef node, EmitMetadataContext& context) const
 {
-  node.node |= ryml::MAP;
-  node.node["name"] << name;
+  node.node.set_map();
+  node.node["name"].set_serialized(name);
 
-  node.node["type"] = "group";
+  node.node["type"].set_val("group");
   if (!data.description.empty())
   {
-    node.node["description"] << data.description;
+    node.node["description"].set_serialized(data.description);
   }
   emit_value_as_yaml(node.wrap(node.node["required"]), data.required);
-  node.node["specs"] |= ryml::SEQ;
+  node.node["specs"].set_seq();
   {
     auto child = node.node["specs"].append_child();
-    child |= ryml::MAP;
+    child.set_map();
     emit_metadata_helper(spec, node.wrap(child), context);
   }
 }
@@ -805,13 +804,13 @@ void Core::IO::Internal::GroupSpec::emit_metadata(
 bool Core::IO::Internal::GroupSpec::emit(YamlNodeRef node, const InputParameterContainer& container,
     const InputSpecEmitOptions& options) const
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
   ChildNodeCheckpoint checkpoint(node);
   if (container.has_group(name))
   {
     auto group_node = node.node.append_child();
-    group_node << ryml::key(name);
-    group_node |= ryml::MAP;
+    group_node.set_key_serialized(name);
+    group_node.set_map();
     if (!spec.impl().emit(node.wrap(group_node), container.group(name), options))
     {
       checkpoint.restore();
@@ -859,15 +858,15 @@ void Core::IO::Internal::AllOfSpec::set_default_value(InputSpecBuilders::Storage
 void Core::IO::Internal::AllOfSpec::emit_metadata(
     YamlNodeRef node, EmitMetadataContext& context) const
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
 
-  node.node["type"] = "all_of";
-  node.node["specs"] |= ryml::SEQ;
+  node.node["type"].set_val("all_of");
+  node.node["specs"].set_seq();
   {
     for (const auto& spec : specs)
     {
       auto child = node.node["specs"].append_child();
-      child |= ryml::MAP;
+      child.set_map();
       emit_metadata_helper(spec, node.wrap(child), context);
     }
   }
@@ -877,7 +876,7 @@ void Core::IO::Internal::AllOfSpec::emit_metadata(
 bool Core::IO::Internal::AllOfSpec::emit(YamlNodeRef node, const InputParameterContainer& container,
     const InputSpecEmitOptions& options) const
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
   ChildNodeCheckpoint checkpoint(node);
   for (const auto& spec : specs)
   {
@@ -1003,10 +1002,10 @@ void Core::IO::Internal::OneOfSpec::set_default_value(InputSpecBuilders::Storage
 void Core::IO::Internal::OneOfSpec::emit_metadata(
     YamlNodeRef node, EmitMetadataContext& context) const
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
 
-  node.node["type"] << "one_of";
-  node.node["specs"] |= ryml::SEQ;
+  node.node["type"].set_val("one_of");
+  node.node["specs"].set_seq();
   for (const auto& spec : specs)
   {
     auto child = node.node["specs"].append_child();
@@ -1018,7 +1017,7 @@ void Core::IO::Internal::OneOfSpec::emit_metadata(
 bool Core::IO::Internal::OneOfSpec::emit(YamlNodeRef node, const InputParameterContainer& container,
     const InputSpecEmitOptions& options) const
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
   ChildNodeCheckpoint checkpoint(node);
 
   for (const auto& spec : specs)
@@ -1148,18 +1147,18 @@ void Core::IO::Internal::ListSpec::set_default_value(InputSpecBuilders::Storage&
 void Core::IO::Internal::ListSpec::emit_metadata(
     YamlNodeRef node, EmitMetadataContext& context) const
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
 
-  node.node["name"] << name;
+  node.node["name"].set_serialized(name);
 
-  node.node["type"] << "list";
+  node.node["type"].set_val("list");
   if (!data.description.empty())
   {
-    node.node["description"] << Core::Utils::trim(data.description);
+    node.node["description"].set_serialized(Core::Utils::trim(data.description));
   }
   emit_value_as_yaml(node.wrap(node.node["required"]), data.required);
-  if (data.size > 0) node.node["size"] << data.size;
-  node.node["spec"] |= ryml::MAP;
+  if (data.size > 0) node.node["size"].set_serialized(data.size);
+  node.node["spec"].set_map();
   emit_metadata_helper(spec, node.wrap(node.node["spec"]), context);
 }
 
@@ -1167,13 +1166,13 @@ void Core::IO::Internal::ListSpec::emit_metadata(
 bool Core::IO::Internal::ListSpec::emit(YamlNodeRef node, const InputParameterContainer& container,
     const InputSpecEmitOptions& options) const
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
   ChildNodeCheckpoint checkpoint(node);
   if (const auto* list = container.get_if<InputParameterContainer::List>(name); list)
   {
     auto list_node = node.node.append_child();
-    list_node << ryml::key(name);
-    list_node |= ryml::SEQ;
+    list_node.set_key_serialized(name);
+    list_node.set_seq();
 
     for (const auto& subcontainer : *list)
     {

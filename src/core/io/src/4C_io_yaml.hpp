@@ -209,15 +209,11 @@ namespace Core::IO
     [[nodiscard]] YamlReadStatus read_value_from_yaml(ConstYamlNodeRef node, T& value)
     {
       if (!node.node.has_val()) return YamlReadStatus::wrong_type;
-      try
+      if constexpr (!std::same_as<T, std::string>)
       {
-        node.node >> value;
+        if (node.node.is_val_quoted()) return YamlReadStatus::wrong_type;
       }
-      catch (const YamlException&)
-      {
-        return YamlReadStatus::wrong_type;
-      }
-      return YamlReadStatus::success;
+      return node.node.deserialize(&value) ? YamlReadStatus::success : YamlReadStatus::wrong_type;
     }
 
     [[nodiscard]] YamlReadStatus read_value_from_yaml(ConstYamlNodeRef node, double& value);
@@ -444,7 +440,7 @@ template <typename T>
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const T& value)
 {
   std::string_view str = EnumTools::enum_name(value);
-  node.node << ryml::csubstr(str.data(), str.size());
+  node.node.set_serialized(str);
 }
 
 template <typename T>
@@ -456,18 +452,18 @@ void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::optional<T>& valu
   }
   else
   {
-    node.node = "null";
+    node.node.set_val("null");
   }
 }
 
 template <typename T>
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::map<std::string, T>& value)
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
   for (const auto& [key, v] : value)
   {
     auto child = node.wrap(node.node.append_child());
-    child.node << ryml::key(key);
+    child.node.set_key_serialized(key);
     emit_value_as_yaml(child, v);
   }
 }
@@ -475,7 +471,7 @@ void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::map<std::string, 
 template <typename T>
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::vector<T>& value)
 {
-  node.node |= ryml::SEQ | ryml::FLOW_SL;
+  node.node.set_seq(ryml::FLOW_SL);
   for (const auto& v : value)
   {
     auto child = node.wrap(node.node.append_child());
@@ -486,7 +482,7 @@ void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::vector<T>& value)
 template <typename T, std::size_t n>
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::array<T, n>& value)
 {
-  node.node |= ryml::SEQ | ryml::FLOW_SL;
+  node.node.set_seq(ryml::FLOW_SL);
   for (const auto& v : value)
   {
     auto child = node.wrap(node.node.append_child());
@@ -497,7 +493,7 @@ void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::array<T, n>& valu
 template <typename... Ts>
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::tuple<Ts...>& value)
 {
-  node.node |= ryml::SEQ;
+  node.node.set_seq();
 
   std::apply([&](const auto&... val)
       { (emit_value_as_yaml(node.wrap(node.node.append_child()), val), ...); }, value);
@@ -506,7 +502,7 @@ void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::tuple<Ts...>& val
 template <typename T1, typename T2>
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::pair<T1, T2>& value)
 {
-  node.node |= ryml::SEQ;
+  node.node.set_seq();
 
   auto first_child = node.wrap(node.node.append_child());
   emit_value_as_yaml(first_child, value.first);

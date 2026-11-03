@@ -168,7 +168,7 @@ namespace Core::IO
       void operator()(ryml::NodeRef node, YamlTypeEmitterContext& context)
       {
         FOUR_C_ASSERT(node.is_map(), "Expected a map node.");
-        node["type"] << get_pretty_type_name<T>();
+        node["type"].set_serialized(get_pretty_type_name<T>());
       }
     };
 
@@ -179,7 +179,7 @@ namespace Core::IO
       void operator()(ryml::NodeRef node, YamlTypeEmitterContext& context)
       {
         FOUR_C_ASSERT(node.is_map(), "Expected a map node.");
-        node["type"] = "enum";
+        node["type"].set_val("enum");
       }
     };
 
@@ -189,12 +189,12 @@ namespace Core::IO
       void operator()(ryml::NodeRef node, YamlTypeEmitterContext& context)
       {
         FOUR_C_ASSERT(node.is_map(), "Expected a map node.");
-        node["type"] = "vector";
+        node["type"].set_val("vector");
         if (context.current_dynamic_size() > 0)
         {
-          node["size"] << context.current_dynamic_size();
+          node["size"].set_serialized(context.current_dynamic_size());
         }
-        node["value_type"] |= ryml::MAP;
+        node["value_type"].set_map();
 
         context.next_dynamic_size();
         YamlTypeEmitter<T>{}(node["value_type"], context);
@@ -209,9 +209,9 @@ namespace Core::IO
       {
         FOUR_C_ASSERT(node.is_map(), "Expected a map node.");
         // In the schema we do not distinguish between arrays and vectors, so we use the same type.
-        node["type"] = "vector";
-        node["size"] << size_n;
-        node["value_type"] |= ryml::MAP;
+        node["type"].set_val("vector");
+        node["size"].set_serialized(size_n);
+        node["value_type"].set_map();
         YamlTypeEmitter<T>{}(node["value_type"], context);
       }
     };
@@ -222,12 +222,12 @@ namespace Core::IO
       void operator()(ryml::NodeRef node, YamlTypeEmitterContext& context)
       {
         FOUR_C_ASSERT(node.is_map(), "Expected a map node.");
-        node["type"] = "map";
+        node["type"].set_val("map");
         if (context.current_dynamic_size() > 0)
         {
-          node["size"] << context.current_dynamic_size();
+          node["size"].set_serialized(context.current_dynamic_size());
         }
-        node["value_type"] |= ryml::MAP;
+        node["value_type"].set_map();
 
         context.next_dynamic_size();
         YamlTypeEmitter<T>{}(node["value_type"], context);
@@ -245,7 +245,7 @@ namespace Core::IO
         {
           using Te = std::tuple_element_t<tuple_index, std::tuple<Ts...>>;
           ryml::NodeRef child = node["value_types"].append_child();
-          child |= ryml::MAP;
+          child.set_map();
           YamlTypeEmitter<Te>{}(child, context);
 
           emit_elements<tuple_index + 1>(node, context);  // recurse to next element
@@ -255,9 +255,9 @@ namespace Core::IO
       void operator()(ryml::NodeRef node, YamlTypeEmitterContext& context)
       {
         FOUR_C_ASSERT(node.is_map(), "Expected a map node.");
-        node["type"] = "tuple";
-        node["size"] << sizeof...(Ts);
-        node["value_types"] |= ryml::SEQ;
+        node["type"].set_val("tuple");
+        node["size"].set_serialized(sizeof...(Ts));
+        node["value_types"].set_seq();
         emit_elements(node, context);
       }
     };
@@ -1985,8 +1985,8 @@ template <Core::IO::SupportedType T>
 void Core::IO::Internal::ParameterSpec<T>::emit_metadata(
     YamlNodeRef node, EmitMetadataContext& context) const
 {
-  node.node |= ryml::MAP;
-  node.node["name"] << name;
+  node.node.set_map();
+  node.node["name"].set_serialized(name);
 
   if constexpr (dynamic_rank<T>() == 0)
     IO::Internal::emit_type_as_yaml<StoredType>(node.node);
@@ -2052,11 +2052,11 @@ void Core::IO::Internal::ParameterSpec<T>::emit_metadata(
     {
       // If no validator is set, we emit all enum values as valid values.
       auto choices_node = node.node["choices"];
-      choices_node |= ryml::SEQ;
+      choices_node.set_seq();
       for (const auto& choice : EnumTools::enum_values<RemoveOptional<T>>())
       {
         auto choice_node = choices_node.append_child();
-        choice_node |= ryml::MAP;
+        choice_node.set_map();
         emit_value_as_yaml(node.wrap(choice_node["name"]), choice);
         if (data.enum_value_description)
         {
@@ -2076,7 +2076,7 @@ template <Core::IO::SupportedType T>
 bool Core::IO::Internal::ParameterSpec<T>::emit(YamlNodeRef node,
     const InputParameterContainer& container, const InputSpecEmitOptions& options) const
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
   // Value present in container
   if (auto value = container.get_if<StoredType>(name))
   {
@@ -2084,7 +2084,7 @@ bool Core::IO::Internal::ParameterSpec<T>::emit(YamlNodeRef node,
         std::get<1>(data.default_value) != *value)
     {
       auto value_node = node.node.append_child();
-      value_node << ryml::key(name);
+      value_node.set_key_serialized(name);
       emit_value_as_yaml(node.wrap(value_node), *value);
     }
     return true;
@@ -2095,7 +2095,7 @@ bool Core::IO::Internal::ParameterSpec<T>::emit(YamlNodeRef node,
     if (options.emit_defaulted_values)
     {
       auto value_node = node.node.append_child();
-      value_node << ryml::key(name);
+      value_node.set_key_serialized(name);
       emit_value_as_yaml(node.wrap(value_node), std::get<1>(data.default_value));
     }
     return true;
@@ -2242,11 +2242,11 @@ template <typename T>
 void Core::IO::Internal::DeprecatedSelectionSpec<T>::emit_metadata(
     YamlNodeRef node, EmitMetadataContext& context) const
 {
-  node.node |= ryml::MAP;
-  node.node["name"] << name;
+  node.node.set_map();
+  node.node["name"].set_serialized(name);
 
   if constexpr (OptionalType<T>) emit_value_as_yaml(node.wrap(node.node["noneable"]), true);
-  node.node["type"] = "enum";
+  node.node["type"].set_val("enum");
 
   if (!data.description.empty())
   {
@@ -2262,12 +2262,12 @@ void Core::IO::Internal::DeprecatedSelectionSpec<T>::emit_metadata(
         default_value_it != choices.end(), "Internal error: default value not found in choices.");
     emit_value_as_yaml(node.wrap(node.node["default"]), default_value_it->first);
   }
-  node.node["choices"] |= ryml::SEQ;
+  node.node["choices"].set_seq();
   for (const auto& [choice_string, _] : choices)
   {
     auto entry = node.node["choices"].append_child();
     // Write every choice entry as a map to easily extend the information at a later point.
-    entry |= ryml::MAP;
+    entry.set_map();
     emit_value_as_yaml(node.wrap(entry["name"]), choice_string);
   }
 }
@@ -2276,7 +2276,7 @@ template <typename T>
 bool Core::IO::Internal::DeprecatedSelectionSpec<T>::emit(YamlNodeRef node,
     const InputParameterContainer& container, const InputSpecEmitOptions& options) const
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
 
   const auto emit_key_value = [&](const std::string& key, const StoredType& value)
   {
@@ -2285,7 +2285,7 @@ bool Core::IO::Internal::DeprecatedSelectionSpec<T>::emit(YamlNodeRef node,
       if (choice.second == value)
       {
         auto value_node = node.node.append_child();
-        value_node << ryml::key(key);
+        value_node.set_key_serialized(key);
         emit_value_as_yaml(node.wrap(value_node), choice.first);
         return true;
       }
@@ -2444,11 +2444,11 @@ template <typename T>
 void Core::IO::Internal::SelectionSpec<T>::emit_metadata(
     YamlNodeRef node, EmitMetadataContext& context) const
 {
-  node.node |= ryml::MAP;
-  node.node["name"] << group_name;
+  node.node.set_map();
+  node.node["name"].set_serialized(group_name);
 
   if constexpr (OptionalType<T>) emit_value_as_yaml(node.wrap(node.node["noneable"]), true);
-  node.node["type"] = "selection";
+  node.node["type"].set_val("selection");
 
   if (!data.description.empty())
   {
@@ -2456,11 +2456,11 @@ void Core::IO::Internal::SelectionSpec<T>::emit_metadata(
   }
   emit_value_as_yaml(node.wrap(node.node["required"]), required);
 
-  node.node["choices"] |= ryml::SEQ;
+  node.node["choices"].set_seq();
   for (const auto& [choice, spec] : choices)
   {
     auto entry = node.node["choices"].append_child();
-    entry |= ryml::MAP;
+    entry.set_map();
     emit_value_as_yaml(node.wrap(entry["name"]), choice);
     spec.impl().emit_metadata(node.wrap(entry["spec"]), context);
   }
@@ -2471,12 +2471,12 @@ template <typename T>
 bool Core::IO::Internal::SelectionSpec<T>::emit(YamlNodeRef node,
     const InputParameterContainer& container, const InputSpecEmitOptions& options) const
 {
-  node.node |= ryml::MAP;
+  node.node.set_map();
   if (container.has_group(group_name))
   {
     auto group_node = node.node.append_child();
-    group_node << ryml::key(group_name);
-    group_node |= ryml::MAP;
+    group_node.set_key_serialized(group_name);
+    group_node.set_map();
 
     // Try to emit each of the choices, only one of them will succeed.
     bool success = false;

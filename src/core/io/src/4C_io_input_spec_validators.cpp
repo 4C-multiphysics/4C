@@ -28,9 +28,9 @@ namespace
     void emit_metadata(Core::IO::YamlNodeRef yaml) const
     {
       auto& node = yaml.node;
-      node |= ryml::MAP;
-      node["pattern"] |= ryml::MAP;
-      node["pattern"]["pattern"] << pattern;
+      node.set_map();
+      node["pattern"].set_map();
+      node["pattern"]["pattern"].set_serialized(pattern);
     }
 
 
