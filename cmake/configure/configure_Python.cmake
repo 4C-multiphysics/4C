@@ -77,7 +77,9 @@ set_property(
   PROPERTY CMAKE_CONFIGURE_DEPENDS ${_four_c_python_build_install_inputs}
   )
 
-set(_four_c_python_build_install_fingerprint "${Python_EXECUTABLE};${Python_VERSION}")
+set(_four_c_python_build_install_fingerprint
+    "${PROJECT_SOURCE_DIR};${Python_EXECUTABLE};${Python_VERSION}"
+    )
 foreach(_input_file IN LISTS _four_c_python_build_install_inputs)
   file(SHA256 "${_input_file}" _input_hash)
   string(APPEND _four_c_python_build_install_fingerprint ";${_input_hash}")
@@ -86,7 +88,7 @@ string(
   SHA256 _four_c_python_build_install_fingerprint "${_four_c_python_build_install_fingerprint}"
   )
 
-# Only package inputs are fingerprinted; the configured virtual environment is mutable.
+# The source checkout and package inputs are fingerprinted; the venv is mutable.
 set(_four_c_python_build_install_stamp "${PROJECT_BINARY_DIR}/four_c_python_build_install_stamp")
 set(_four_c_python_build_install_is_current FALSE)
 if(EXISTS "${_four_c_python_build_install_stamp}"
