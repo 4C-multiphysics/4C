@@ -1,0 +1,205 @@
+TITLE:
+  - "Element deactivation with mortar contact (penalty)"
+  - "- a block is pressed onto another block by prescribed displacements"
+  - "- at t=0.5 an element of the slave block is deactivated, its slave nodes lose contact"
+  - "- at t=0.8 an element of the master block is deactivated, its master face is removed"
+  - "  from contact evaluation"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  RESTARTEVERY: 1
+  TIMESTEP: 0.1
+  NUMSTEP: 10
+  MAXTIME: 1
+  TOLDISP: 1e-10
+  TOLRES: 1e-08
+  LINEAR_SOLVER: 1
+  element_erosion:
+    erosion_function: 2
+    threshold: 0.5
+CONTACT DYNAMIC:
+  LINEAR_SOLVER: 2
+  STRATEGY: "Penalty"
+  PENALTYPARAM: 100000
+MORTAR COUPLING:
+  LM_SHAPEFCN: "Standard"
+  SEARCH_ALGORITHM: "BruteForce"
+  SEARCH_PARAM: 0.3
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+SOLVER 2:
+  SOLVER: "UMFPACK"
+  NAME: "Contact_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_ElastHyper:
+      NUMMAT: 1
+      MATIDS: [2]
+      DENS: 0.1
+  - MAT: 2
+    ELAST_CoupNeoHooke:
+      YOUNG: 1000
+      NUE: 0.3
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "heaviside(x-2)*heaviside(z-1)*heaviside(t-0.45)+heaviside(1-x)*heaviside(1-z)*heaviside(t-0.75)"
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, -0.05]
+    FUNCT: [0, 0, 1]
+DESIGN SURF MORTAR CONTACT CONDITIONS 3D:
+  - E: 3
+    InterfaceID: 1
+    Side: "Slave"
+  - E: 4
+    InterfaceID: 1
+    Side: "Master"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 38
+      QUANTITY: "dispx"
+      VALUE: 7.08812877015258924e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 38
+      QUANTITY: "dispz"
+      VALUE: -3.56093432112589287e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 39
+      QUANTITY: "dispx"
+      VALUE: 1.65334005649801739e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 39
+      QUANTITY: "dispz"
+      VALUE: -1.45423173025720429e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 40
+      QUANTITY: "dispx"
+      VALUE: 5.07550447055049765e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 40
+      QUANTITY: "dispz"
+      VALUE: -1.25441572638734181e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 13
+      QUANTITY: "dispx"
+      VALUE: -9.17293821850962213e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 13
+      QUANTITY: "dispz"
+      VALUE: -2.03339321770080010e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 15
+      QUANTITY: "dispx"
+      VALUE: -7.09446785348004112e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 15
+      QUANTITY: "dispz"
+      VALUE: -1.43684184819028744e-02
+      TOLERANCE: 1e-9
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
+  - "NODE 3 DSURFACE 1"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 5 DSURFACE 1"
+  - "NODE 6 DSURFACE 1"
+  - "NODE 7 DSURFACE 1"
+  - "NODE 8 DSURFACE 1"
+  - "NODE 41 DSURFACE 2"
+  - "NODE 42 DSURFACE 2"
+  - "NODE 43 DSURFACE 2"
+  - "NODE 44 DSURFACE 2"
+  - "NODE 45 DSURFACE 2"
+  - "NODE 46 DSURFACE 2"
+  - "NODE 47 DSURFACE 2"
+  - "NODE 48 DSURFACE 2"
+  - "NODE 33 DSURFACE 3"
+  - "NODE 34 DSURFACE 3"
+  - "NODE 35 DSURFACE 3"
+  - "NODE 36 DSURFACE 3"
+  - "NODE 37 DSURFACE 3"
+  - "NODE 38 DSURFACE 3"
+  - "NODE 39 DSURFACE 3"
+  - "NODE 40 DSURFACE 3"
+  - "NODE 9 DSURFACE 4"
+  - "NODE 10 DSURFACE 4"
+  - "NODE 11 DSURFACE 4"
+  - "NODE 12 DSURFACE 4"
+  - "NODE 13 DSURFACE 4"
+  - "NODE 14 DSURFACE 4"
+  - "NODE 15 DSURFACE 4"
+  - "NODE 16 DSURFACE 4"
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 1.0 0.0 0.0"
+  - "NODE 3 COORD 2.0 0.0 0.0"
+  - "NODE 4 COORD 3.0 0.0 0.0"
+  - "NODE 5 COORD 0.0 1.0 0.0"
+  - "NODE 6 COORD 1.0 1.0 0.0"
+  - "NODE 7 COORD 2.0 1.0 0.0"
+  - "NODE 8 COORD 3.0 1.0 0.0"
+  - "NODE 9 COORD 0.0 0.0 1.0"
+  - "NODE 10 COORD 1.0 0.0 1.0"
+  - "NODE 11 COORD 2.0 0.0 1.0"
+  - "NODE 12 COORD 3.0 0.0 1.0"
+  - "NODE 13 COORD 0.0 1.0 1.0"
+  - "NODE 14 COORD 1.0 1.0 1.0"
+  - "NODE 15 COORD 2.0 1.0 1.0"
+  - "NODE 16 COORD 3.0 1.0 1.0"
+  - "NODE 33 COORD 0.0 0.0 1.0"
+  - "NODE 34 COORD 1.0 0.0 1.0"
+  - "NODE 35 COORD 2.0 0.0 1.0"
+  - "NODE 36 COORD 3.0 0.0 1.0"
+  - "NODE 37 COORD 0.0 1.0 1.0"
+  - "NODE 38 COORD 1.0 1.0 1.0"
+  - "NODE 39 COORD 2.0 1.0 1.0"
+  - "NODE 40 COORD 3.0 1.0 1.0"
+  - "NODE 41 COORD 0.0 0.0 2.0"
+  - "NODE 42 COORD 1.0 0.0 2.0"
+  - "NODE 43 COORD 2.0 0.0 2.0"
+  - "NODE 44 COORD 3.0 0.0 2.0"
+  - "NODE 45 COORD 0.0 1.0 2.0"
+  - "NODE 46 COORD 1.0 1.0 2.0"
+  - "NODE 47 COORD 2.0 1.0 2.0"
+  - "NODE 48 COORD 3.0 1.0 2.0"
+STRUCTURE ELEMENTS:
+  - "1 SOLID HEX8 1 2 6 5 9 10 14 13 MAT 1 KINEM nonlinear"
+  - "2 SOLID HEX8 2 3 7 6 10 11 15 14 MAT 1 KINEM nonlinear"
+  - "3 SOLID HEX8 3 4 8 7 11 12 16 15 MAT 1 KINEM nonlinear"
+  - "4 SOLID HEX8 33 34 38 37 41 42 46 45 MAT 1 KINEM nonlinear"
+  - "5 SOLID HEX8 34 35 39 38 42 43 47 46 MAT 1 KINEM nonlinear"
+  - "6 SOLID HEX8 35 36 40 39 43 44 48 47 MAT 1 KINEM nonlinear"

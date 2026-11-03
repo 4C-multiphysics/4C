@@ -21,6 +21,7 @@ namespace CONTACT
 {
   class Manager;
   class AbstractStrategy;
+  class Interface;
 }  // namespace CONTACT
 
 namespace Mortar
@@ -45,6 +46,9 @@ namespace Solid
 
       //! [derived]
       [[nodiscard]] Solid::ModelType type() const override { return Solid::model_contact; }
+
+      //! [derived]
+      [[nodiscard]] bool supports_inactive_elements() const override { return true; }
 
       //! reset class variables (without jacobian) [derived]
       void reset(const Core::LinAlg::Vector<double>& x) override;
@@ -198,6 +202,14 @@ namespace Solid
       void set_time_integration_info(CONTACT::AbstractStrategy& strategy) const;
 
       void post_update_step_state();
+
+      /*! \brief Deactivate the contact elements of inactive (e.g. eroded) structural elements
+       *
+       *  Inactive contact elements are excluded from the contact search and the mortar
+       *  integration. Slave nodes without active contact elements are thus inactive.
+       */
+      void sync_contact_element_activity(
+          const std::vector<std::shared_ptr<CONTACT::Interface>>& interfaces) const;
 
       void extend_lagrange_multiplier_domain(
           std::shared_ptr<Core::LinAlg::Vector<double>>& lm_vec) const;

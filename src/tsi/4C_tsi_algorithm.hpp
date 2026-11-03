@@ -142,7 +142,7 @@ namespace TSI
     //! store it in tsi and hand it to the thermal field
     void prepare_contact_strategy();
 
-    /*! \brief Deactivate the thermo elements of inactive structural elements
+    /*! \brief Deactivate the thermo and contact elements of inactive structural elements
      *
      *  Call this after the update of the structural field (where structural elements are eroded)
      *  and before the update of the thermal field. Thermo nodes which are only connected to

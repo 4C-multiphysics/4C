@@ -597,6 +597,9 @@ namespace Mortar
      */
     virtual void build_averaged_normal();
 
+    //! Whether an adjacent element contributes to the averaged nodal normal.
+    [[nodiscard]] bool contributes_to_averaged_normal(const Core::Elements::Element& element) const;
+
     /*!
      \brief Find closest node from given node set and return pointer
 

@@ -12,6 +12,8 @@
 #include "4C_mortar_element.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <algorithm>
+
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -423,6 +425,15 @@ void Mortar::Node::reset_data_container()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+bool Mortar::Node::contributes_to_averaged_normal(const Core::Elements::Element& element) const
+{
+  // An orphaned node still needs a normal, even though it cannot enter contact.
+  if (element.is_active()) return true;
+
+  return std::ranges::none_of(
+      adjacent_elements(), [](auto ele) { return ele.user_element()->is_active(); });
+}
+
 void Mortar::Node::build_averaged_normal()
 {
   // reset normal and tangents when this method is called
@@ -453,7 +464,8 @@ void Mortar::Node::build_averaged_normal()
     adjmrtrele->build_normal_at_node(id(), i, elens);
 
     // add (weighted) element normal to nodal normal n
-    for (int j = 0; j < 3; ++j) mo_data().n()[j] += elens(j, i) / elens(4, i);
+    if (contributes_to_averaged_normal(*adjmrtrele))
+      for (int j = 0; j < 3; ++j) mo_data().n()[j] += elens(j, i) / elens(4, i);
     ++i;
   }
 

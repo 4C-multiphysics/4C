@@ -1106,6 +1106,11 @@ void CONTACT::STRATEGY::Factory::build_interfaces(const Teuchos::ParameterList& 
             std::make_shared<CONTACT::Element>(ele->id() + ggsize, ele->owner(), ele->shape(),
                 ele->num_node(), ele->node_ids(), issource[j], nurbs);
 
+        // Store the parent ID to synchronize contact activity with the volume element.
+        // Poro and gpts contact also attach the parent pointer and local face number below.
+        if (const auto* faceele = dynamic_cast<const Core::Elements::FaceElement*>(ele.get()))
+          cele->set_parent_element_id(faceele->parent_element_id());
+
         if (isporo) set_poro_parent_element(sourcetype, targettype, *cele, ele, discret());
 
         if (algo == Mortar::algorithm_gpts)

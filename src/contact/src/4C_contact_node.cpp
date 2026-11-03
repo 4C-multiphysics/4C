@@ -853,7 +853,8 @@ void CONTACT::Node::build_averaged_normal()
     adjcele->build_normal_at_node(id(), i, elens);
 
     // add (weighted) element normal to nodal normal n
-    for (int j = 0; j < 3; ++j) n_tmp[j] += elens(j, i) / elens(4, i);
+    if (contributes_to_averaged_normal(*adjcele))
+      for (int j = 0; j < 3; ++j) n_tmp[j] += elens(j, i) / elens(4, i);
     ++i;
   }
 
@@ -970,7 +971,8 @@ void CONTACT::Node::deriv_averaged_normal(
     Element* adjcele = dynamic_cast<Element*>(ele.user_element());
 
     // build element normal derivative at current node
-    adjcele->deriv_normal_at_node(id(), i, elens, data().get_deriv_n());
+    if (contributes_to_averaged_normal(*adjcele))
+      adjcele->deriv_normal_at_node(id(), i, elens, data().get_deriv_n());
     ++i;
   }
 

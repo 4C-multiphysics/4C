@@ -7,6 +7,7 @@
 
 #include "4C_structure_new_model_evaluator_contact.hpp"
 
+#include "4C_contact_interface.hpp"
 #include "4C_contact_lagrange_strategy_poro.hpp"
 #include "4C_contact_strategy_factory.hpp"
 #include "4C_global_data.hpp"
@@ -24,6 +25,7 @@
 #include "4C_structure_new_model_evaluator_manager.hpp"
 #include "4C_structure_new_timint_base.hpp"
 #include "4C_structure_new_timint_basedataio_runtime_vtk_output.hpp"
+#include "4C_structure_new_timint_basedatasdyn.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -84,6 +86,9 @@ void Solid::ModelEvaluator::Contact::setup()
   strategy_ptr_->inttime_init();
   set_time_integration_info(*strategy_ptr_);
   strategy_ptr_->redistribute_contact(global_state().get_dis_n(), global_state().get_vel_n());
+
+  // Initialize the interface face flags from the structural elements.
+  sync_contact_element_activity(strategy_ptr_->contact_interfaces());
 
   check_pseudo2d();
 
@@ -368,6 +373,7 @@ void Solid::ModelEvaluator::Contact::write_restart(
 void Solid::ModelEvaluator::Contact::read_restart(Core::IO::DiscretizationReader& ioreader)
 {
   eval_contact().set_action_type(Mortar::eval_force_stiff);
+  sync_contact_element_activity(strategy().contact_interfaces());
   // reader strategy specific stuff
   strategy().do_read_restart(
       ioreader, *global_state().get_dis_n(), eval_data().contact_ptr().get());
@@ -404,11 +410,24 @@ void Solid::ModelEvaluator::Contact::post_update_step_state()
   // redistribute contact
   strategy_ptr_->redistribute_contact(global_state().get_dis_n(), global_state().get_vel_n());
 
+  // structural elements might have been deactivated at the end of the time step
+  sync_contact_element_activity(strategy_ptr_->contact_interfaces());
+
   // setup the map extractor, since redistribute calls fill_complete
   // on the structural discretization. Though this only changes the
   // ghosted dofs while keeping row distribution fixed, the map pointers
   // in the global state are no longer valid. So we reset them.
   integrator().model_eval().setup_multi_map_extractor();
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Contact::sync_contact_element_activity(
+    const std::vector<std::shared_ptr<CONTACT::Interface>>& interfaces) const
+{
+  if (!tim_int().get_data_sdyn().get_element_erosion_parameters().enabled()) return;
+
+  for (const auto& interface : interfaces) interface->sync_element_activity(discret());
 }
 
 /*----------------------------------------------------------------------*

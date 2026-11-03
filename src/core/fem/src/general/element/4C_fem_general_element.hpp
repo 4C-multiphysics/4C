@@ -1377,6 +1377,14 @@ might become invalid after a redistribution of the discretization.
       if (target != nullptr) parent_id_ = target->id();
     }
 
+    /*! \brief Record the parent ID without retaining a pointer or local face number. */
+    void set_parent_element_id(const int parent_id)
+    {
+      parent_target_ = nullptr;
+      parent_id_ = parent_id;
+      lface_target_ = -1;
+    }
+
     /*!
     \brief Set the source element this face element is connected to
 

@@ -11,6 +11,7 @@
 #include "4C_adapter_str_structure_new.hpp"
 #include "4C_adapter_str_wrapper.hpp"
 #include "4C_comm_mpi_utils.hpp"
+#include "4C_contact_interface.hpp"
 #include "4C_contact_lagrange_strategy_tsi.hpp"
 #include "4C_contact_meshtying_contact_bridge.hpp"
 #include "4C_contact_strategy_factory.hpp"
@@ -274,6 +275,12 @@ void TSI::Algorithm::apply_struct_coupling_state(
 void TSI::Algorithm::adapt_to_structure_active_flags(const bool initialization)
 {
   if (!can_deactivate_elements_) return;
+
+  if (contact_strategy_lagrange_ != nullptr)
+  {
+    for (const auto& interface : contact_strategy_lagrange_->contact_interfaces())
+      interface->sync_element_activity(*structure_field()->discretization());
+  }
 
   Core::FE::Discretization& thermo_discretization = *thermo_field()->discretization();
   const int num_deactivated_elements = Core::FE::copy_element_active_flags(

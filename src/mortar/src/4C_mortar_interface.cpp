@@ -9,6 +9,7 @@
 
 #include "4C_binstrategy.hpp"
 #include "4C_contact_interpolator.hpp"
+#include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fem_nurbs_discretization.hpp"
 #include "4C_io.hpp"
@@ -38,7 +39,9 @@
 #include <Teuchos_Time.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 
+#include <algorithm>
 #include <utility>
+#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -319,6 +322,57 @@ void Mortar::Interface::print(std::ostream& os) const
  |  check if interface is fill_complete (public)              mwgee 10/07|
  *----------------------------------------------------------------------*/
 bool Mortar::Interface::filled() const { return idiscret_->filled(); }
+
+void Mortar::Interface::sync_element_activity(const Core::FE::Discretization& parent_discretization)
+{
+  FOUR_C_ASSERT_ALWAYS(parent_discretization.filled(), "fill_complete() was not called on '{}'",
+      parent_discretization.name());
+  FOUR_C_ASSERT_ALWAYS(
+      filled(), "fill_complete() was not called on interface '{}'.", discret().name());
+
+  // The interface and volume discretizations use different element IDs. Request flags using
+  // the parent volume IDs of every local interface face, including ghost faces.
+  std::vector<int> parent_ids;
+  for (auto ele : discret().my_col_element_range())
+    if (const auto* face = dynamic_cast<Mortar::Element*>(ele.user_element());
+        face != nullptr and face->parent_element_id() >= 0)
+      parent_ids.push_back(face->parent_element_id());
+
+  // Several faces can share a parent; each ID occurs only once in the requested map.
+  std::ranges::sort(parent_ids);
+  const auto [first, last] = std::ranges::unique(parent_ids);
+  parent_ids.erase(first, last);
+
+  // Contact redistribution does not guarantee that parent elements are local ghosts.
+  // The map lets export_to fetch each flag from the rank owning the volume element.
+  const Core::LinAlg::Map requested_map(-1, static_cast<int>(parent_ids.size()), parent_ids.data(),
+      0, parent_discretization.get_comm());
+  Core::LinAlg::Vector<int> parent_activity(requested_map, false);
+  // Keep -1 for any parent ID that is absent from the volume discretization.
+  parent_activity.put_value(-1);
+
+  // The volume row map supplies one authoritative flag for each requested parent ID.
+  Core::LinAlg::Vector<int> owned_activity(*parent_discretization.element_row_map(), false);
+  auto owned_values = owned_activity.get_local_values();
+  for (int lid = 0; lid < parent_discretization.num_my_row_elements(); ++lid)
+    owned_values[lid] = parent_discretization.l_row_element(lid)->is_active() ? 1 : 0;
+  Core::LinAlg::export_to(owned_activity, parent_activity);
+
+  // Look up the received flag by parent ID and copy it to each local face.
+  const auto activity = parent_activity.get_local_values();
+  for (auto ele : discret().my_col_element_range())
+  {
+    auto* face = dynamic_cast<Mortar::Element*>(ele.user_element());
+    if (face == nullptr or face->parent_element_id() < 0) continue;
+
+    const int parent_id = face->parent_element_id();
+    const int flag = activity[requested_map.lid(parent_id)];
+    FOUR_C_ASSERT_ALWAYS(flag == 0 or flag == 1,
+        "Parent element {} of interface element {} is not part of discretization '{}'.", parent_id,
+        face->id(), parent_discretization.name());
+    face->set_active(flag == 1);
+  }
+}
 
 /*----------------------------------------------------------------------*
  |  print parallel distribution (public)                      popp 06/10|
@@ -2391,6 +2445,9 @@ void Mortar::Interface::evaluate_sts(const Core::LinAlg::Map& selecolmap,
     // skip zero-sized nurbs elements (slave)
     if (selement->zero_sized()) continue;
 
+    // skip inactive (e.g. eroded) elements (slave)
+    if (!selement->is_active()) continue;
+
     // empty vector of master element pointers
     std::vector<Mortar::Element*> melements;
 
@@ -2405,6 +2462,9 @@ void Mortar::Interface::evaluate_sts(const Core::LinAlg::Map& selecolmap,
 
       // skip zero-sized nurbs elements (master)
       if (melement->zero_sized()) continue;
+
+      // skip inactive (e.g. eroded) elements (master)
+      if (!melement->is_active()) continue;
 
       melements.push_back(melement);
     }
@@ -2542,6 +2602,7 @@ void Mortar::Interface::find_target_elements(
 
     // skip zero-sized nurbs elements (slave)
     if (adjcele->zero_sized()) continue;
+    if (!adjcele->is_active()) continue;
 
     // loop over the candidate master elements of sele_
     // use slave element's candidate list SearchElements !!!
@@ -2554,6 +2615,7 @@ void Mortar::Interface::find_target_elements(
 
       // skip zero-sized nurbs elements (master)
       if (melement->zero_sized()) continue;
+      if (!melement->is_active()) continue;
 
       // check uniqueness
       auto iter = donebefore.find(melement->id());

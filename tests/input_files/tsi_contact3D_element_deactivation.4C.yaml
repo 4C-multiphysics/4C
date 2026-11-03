@@ -1,0 +1,270 @@
+TITLE:
+  - "Element deactivation with TSI contact (lagrange, heat transfer across the contact)"
+  - "- an upper block is pressed onto a lower block and heated on its top surface"
+  - "- at t=0.5 an element of the upper (slave) block is deactivated, its slave nodes lose contact"
+  - "- at t=0.8 an element of the lower (master) block is deactivated, its master face is removed"
+  - "  from the contact search"
+  - "- nodes without active elements keep their displacements and temperatures"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Thermo_Structure_Interaction"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+CONTACT DYNAMIC:
+  LINEAR_SOLVER: 1
+MORTAR COUPLING/PARALLEL REDISTRIBUTION:
+  PARALLEL_REDIST: "None"
+TSI CONTACT:
+  HEATTRANSSLAVE: 10
+  HEATTRANSMASTER: 10
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 0.1
+  TOLDISP: 1e-08
+  TOLRES: 1
+  LINEAR_SOLVER: 1
+  element_erosion:
+    erosion_function: 3
+    threshold: 0.5
+THERMAL DYNAMIC:
+  DYNAMICTYPE: Statics
+  INITIALFIELD: "field_by_function"
+  INITFUNCNO: 1
+  TIMESTEP: 0.1
+  NUMSTEP: 10
+  MAXTIME: 1
+  LINEAR_SOLVER: 1
+TSI DYNAMIC:
+  NUMSTEP: 10
+  MAXTIME: 1
+  TIMESTEP: 0.1
+  RESTARTEVERY: 1
+TSI DYNAMIC/MONOLITHIC:
+  CONVTOL: 0.0001
+  TOLINC: 1e-07
+  NORMCOMBI_RESFINC: "Coupl_Or_Single"
+  LINEAR_SOLVER: 1
+  MERGE_TSI_BLOCK_MATRIX: true
+SOLVER 1:
+  SOLVER: "UMFPACK"
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_ThermoStVenantK:
+      YOUNGNUM: 1
+      YOUNG: [4000]
+      NUE: 0.3
+      DENS: 0
+      THEXPANS: 1e-05
+      INITTEMP: 20
+  - MAT: 2
+    MAT_Fourier:
+      CAPA: 0
+      CONDUCT:
+        constant: [52]
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 1
+    TAR_FIELD: "thermo"
+    TAR_MAT: 2
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "20+z*10"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+FUNCT3:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "heaviside(x-2)*heaviside(z-1)*heaviside(t-0.45)+heaviside(1-x)*heaviside(1-z)*heaviside(t-0.75)"
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, -0.02]
+    FUNCT: [0, 0, 2]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF THERMO DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [40]
+    FUNCT: [0]
+  - E: 2
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [20]
+    FUNCT: [0]
+DESIGN SURF MORTAR CONTACT CONDITIONS 3D:
+  - E: 3
+    InterfaceID: 1
+    Side: "Slave"
+    Initialization: "Active"
+  - E: 4
+    InterfaceID: 1
+    Side: "Master"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 10
+      QUANTITY: "dispx"
+      VALUE: -7.07036179180923867e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 10
+      QUANTITY: "dispz"
+      VALUE: -1.46323117956554446e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 11
+      QUANTITY: "dispx"
+      VALUE: -3.04587975661842853e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 11
+      QUANTITY: "dispz"
+      VALUE: -5.65270887392916709e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 34
+      QUANTITY: "dispx"
+      VALUE: 3.08467954802700648e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 34
+      QUANTITY: "dispz"
+      VALUE: -1.45413252151346001e-02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 35
+      QUANTITY: "dispx"
+      VALUE: 7.14162257459736126e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 35
+      QUANTITY: "dispz"
+      VALUE: -5.56193173928356925e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 36
+      QUANTITY: "dispx"
+      VALUE: 2.24106054468882878e-03
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 36
+      QUANTITY: "dispz"
+      VALUE: -5.08079417395222721e-03
+      TOLERANCE: 1e-9
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 10
+      QUANTITY: "temp"
+      VALUE: 3.11376155061664441e+01
+      TOLERANCE: 1e-9
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 11
+      QUANTITY: "temp"
+      VALUE: 2.64501900604083460e+01
+      TOLERANCE: 1e-9
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 34
+      QUANTITY: "temp"
+      VALUE: 3.35474164887865314e+01
+      TOLERANCE: 1e-9
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 35
+      QUANTITY: "temp"
+      VALUE: 2.88674243713116994e+01
+      TOLERANCE: 1e-9
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 36
+      QUANTITY: "temp"
+      VALUE: 3.19786937141641054e+01
+      TOLERANCE: 1e-9
+DSURF-NODE TOPOLOGY:
+  - "NODE 41 DSURFACE 1"
+  - "NODE 42 DSURFACE 1"
+  - "NODE 43 DSURFACE 1"
+  - "NODE 44 DSURFACE 1"
+  - "NODE 45 DSURFACE 1"
+  - "NODE 46 DSURFACE 1"
+  - "NODE 47 DSURFACE 1"
+  - "NODE 48 DSURFACE 1"
+  - "NODE 1 DSURFACE 2"
+  - "NODE 2 DSURFACE 2"
+  - "NODE 3 DSURFACE 2"
+  - "NODE 4 DSURFACE 2"
+  - "NODE 5 DSURFACE 2"
+  - "NODE 6 DSURFACE 2"
+  - "NODE 7 DSURFACE 2"
+  - "NODE 8 DSURFACE 2"
+  - "NODE 33 DSURFACE 3"
+  - "NODE 34 DSURFACE 3"
+  - "NODE 35 DSURFACE 3"
+  - "NODE 36 DSURFACE 3"
+  - "NODE 37 DSURFACE 3"
+  - "NODE 38 DSURFACE 3"
+  - "NODE 39 DSURFACE 3"
+  - "NODE 40 DSURFACE 3"
+  - "NODE 9 DSURFACE 4"
+  - "NODE 10 DSURFACE 4"
+  - "NODE 11 DSURFACE 4"
+  - "NODE 12 DSURFACE 4"
+  - "NODE 13 DSURFACE 4"
+  - "NODE 14 DSURFACE 4"
+  - "NODE 15 DSURFACE 4"
+  - "NODE 16 DSURFACE 4"
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 1.0 0.0 0.0"
+  - "NODE 3 COORD 2.0 0.0 0.0"
+  - "NODE 4 COORD 3.0 0.0 0.0"
+  - "NODE 5 COORD 0.0 1.0 0.0"
+  - "NODE 6 COORD 1.0 1.0 0.0"
+  - "NODE 7 COORD 2.0 1.0 0.0"
+  - "NODE 8 COORD 3.0 1.0 0.0"
+  - "NODE 9 COORD 0.0 0.0 1.0"
+  - "NODE 10 COORD 1.0 0.0 1.0"
+  - "NODE 11 COORD 2.0 0.0 1.0"
+  - "NODE 12 COORD 3.0 0.0 1.0"
+  - "NODE 13 COORD 0.0 1.0 1.0"
+  - "NODE 14 COORD 1.0 1.0 1.0"
+  - "NODE 15 COORD 2.0 1.0 1.0"
+  - "NODE 16 COORD 3.0 1.0 1.0"
+  - "NODE 33 COORD 0.0 0.0 1.0"
+  - "NODE 34 COORD 1.0 0.0 1.0"
+  - "NODE 35 COORD 2.0 0.0 1.0"
+  - "NODE 36 COORD 3.0 0.0 1.0"
+  - "NODE 37 COORD 0.0 1.0 1.0"
+  - "NODE 38 COORD 1.0 1.0 1.0"
+  - "NODE 39 COORD 2.0 1.0 1.0"
+  - "NODE 40 COORD 3.0 1.0 1.0"
+  - "NODE 41 COORD 0.0 0.0 2.0"
+  - "NODE 42 COORD 1.0 0.0 2.0"
+  - "NODE 43 COORD 2.0 0.0 2.0"
+  - "NODE 44 COORD 3.0 0.0 2.0"
+  - "NODE 45 COORD 0.0 1.0 2.0"
+  - "NODE 46 COORD 1.0 1.0 2.0"
+  - "NODE 47 COORD 2.0 1.0 2.0"
+  - "NODE 48 COORD 3.0 1.0 2.0"
+STRUCTURE ELEMENTS:
+  - "1 SOLIDSCATRA HEX8 1 2 6 5 9 10 14 13 MAT 1 KINEM linear TYPE Undefined"
+  - "2 SOLIDSCATRA HEX8 2 3 7 6 10 11 15 14 MAT 1 KINEM linear TYPE Undefined"
+  - "3 SOLIDSCATRA HEX8 3 4 8 7 11 12 16 15 MAT 1 KINEM linear TYPE Undefined"
+  - "4 SOLIDSCATRA HEX8 33 34 38 37 41 42 46 45 MAT 1 KINEM linear TYPE Undefined"
+  - "5 SOLIDSCATRA HEX8 34 35 39 38 42 43 47 46 MAT 1 KINEM linear TYPE Undefined"
+  - "6 SOLIDSCATRA HEX8 35 36 40 39 43 44 48 47 MAT 1 KINEM linear TYPE Undefined"
