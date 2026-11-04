@@ -26,17 +26,9 @@ namespace BeamInteraction
    */
   template <typename Beam, typename Solid>
   class BeamToSolidVolumeMeshtyingPair2D3DFull
-      : public BeamToSolidVolumeMeshtyingPair2D3DBase<
-            GeometryPair::line_to_volume_scalar_type<Beam, Solid>, Beam, Solid>
+      : public BeamToSolidVolumeMeshtyingPair2D3DBase<double, Beam, Solid>
   {
    private:
-    //! Shortcut to the base class.
-    using base_class = BeamToSolidVolumeMeshtyingPair2D3DBase<
-        GeometryPair::line_to_volume_scalar_type<Beam, Solid>, Beam, Solid>;
-
-    //! Type to be used for scalar AD variables. This can not be inherited from the base class.
-    using scalar_type = typename base_class::scalar_type;
-
     //! Rotation representation. Each node has a rotation vector with 3 components.
     static constexpr unsigned int n_nodes_rot_ = 3;
     static constexpr unsigned int n_dof_rot_ = n_nodes_rot_ * 3;

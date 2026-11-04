@@ -63,7 +63,7 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DFull<Beam, Solid>::evalu
         "surface!");
 
   // Check that the beam element is a Simo--Reissner beam.
-  auto beam_ele = dynamic_cast<const Discret::Elements::Beam3r*>(this->element1());
+  const auto* beam_ele = dynamic_cast<const Discret::Elements::Beam3r*>(this->element1());
   if (beam_ele == nullptr)
     FOUR_C_THROW("GetBeamTriadInterpolationScheme is only implemented for SR beams.");
 
@@ -79,7 +79,7 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DFull<Beam, Solid>::evalu
   {
     for (unsigned int i_dof = 0; i_dof < q_original.num_rows(); i_dof++)
       q_fad(i_dof) = Core::FADUtils::HigherOrderFadValue<scalar_type_pair>::apply(
-          n_dof_fad_, fad_offset + i_dof, Core::FADUtils::cast_to_double(q_original(i_dof)));
+          n_dof_fad_, fad_offset + i_dof, q_original(i_dof));
   };
   auto q_beam =
       GeometryPair::InitializeElementData<Beam, scalar_type_pair>::initialize(this->element1());
