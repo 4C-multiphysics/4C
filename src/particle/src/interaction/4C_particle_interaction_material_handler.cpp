@@ -22,7 +22,7 @@ Particle::MaterialHandler::MaterialHandler(const Teuchos::ParameterList& params)
 void Particle::MaterialHandler::initialize_parameters()
 {
   // init map relating particle types to material ids
-  std::map<Particle::Type, int> typetomatidmap;
+  std::map<ParticleType, int> typetomatidmap;
 
   // read parameters relating particle types to values
   ParticleUtils::read_params_types_related_to_values(
@@ -38,7 +38,7 @@ void Particle::MaterialHandler::initialize_parameters()
   for (auto& typeIt : typetomatidmap)
   {
     // get type of particle
-    Particle::Type type_i = typeIt.first;
+    ParticleType type_i = typeIt.first;
 
     // add to set of particle types of stored particle material parameters
     storedtypes_.insert(type_i);

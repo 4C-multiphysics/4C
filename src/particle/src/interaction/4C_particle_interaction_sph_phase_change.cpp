@@ -24,9 +24,9 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 Particle::SPHPhaseChangeBase::SPHPhaseChangeBase(const Teuchos::ParameterList& params)
     : params_sph_(params),
-      belowphase_(Particle::Type::Phase1),
-      abovephase_(Particle::Type::Phase2),
-      transitionstate_(Particle::State::Density),
+      belowphase_(ParticleType::Phase1),
+      abovephase_(ParticleType::Phase2),
+      transitionstate_(ParticleState::Density),
       transitionvalue_(0.0),
       hysteresisgap_(0.0)
 {
@@ -134,18 +134,18 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_below_to_above_pha
     std::vector<std::vector<std::pair<int, Particle::ParticleObjShrdPtr>>>& particlestoinsert) const
 {
   // set source and target type of particles
-  Particle::Type type_source = belowphase_;
-  Particle::Type type_target = abovephase_;
+  ParticleType type_source = belowphase_;
+  ParticleType type_target = abovephase_;
 
   // check for boundary or rigid particles
   bool isboundaryrigid_source =
-      (type_source == Particle::Type::BoundaryPhase or type_source == Particle::Type::RigidPhase);
+      (type_source == ParticleType::BoundaryPhase or type_source == ParticleType::RigidPhase);
   bool isboundaryrigid_target =
-      (type_target == Particle::Type::BoundaryPhase or type_target == Particle::Type::RigidPhase);
+      (type_target == ParticleType::BoundaryPhase or type_target == ParticleType::RigidPhase);
 
   // get container of owned particles of source particle type
   Particle::ParticleContainer* container =
-      particlecontainerbundle_->get_specific_container(type_source, Particle::Status::Owned);
+      particlecontainerbundle_->get_specific_container(type_source, ParticleStatus::Owned);
 
   // get number of particles stored in container
   int particlestored = container->particles_stored();
@@ -161,6 +161,8 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_below_to_above_pha
       particlematerial_->get_ptr_to_particle_mat_parameter(type_source);
   const Mat::PAR::ParticleMaterialBase* material_target =
       particlematerial_->get_ptr_to_particle_mat_parameter(type_target);
+  const double initDensity_source = material_source->initDensity_;
+  const double initDensity_target = material_target->initDensity_;
 
   // get equation of state of target particle type
   const Particle::SPHEquationOfStateBase* equationofstate_target;
@@ -181,20 +183,19 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_below_to_above_pha
       // add density and pressure state for boundary or rigid particles
       if (isboundaryrigid_source and (not isboundaryrigid_target))
       {
-        particlestates[static_cast<int>(Particle::State::Density)].assign(
-            1, material_source->initDensity_);
+        particlestates[static_cast<int>(ParticleState::Density)].assign(1, initDensity_source);
 
-        const double press = equationofstate_target->density_to_pressure(
-            material_source->initDensity_, material_target->initDensity_);
+        const double press =
+            equationofstate_target->density_to_pressure(initDensity_source, initDensity_target);
 
-        particlestates[static_cast<int>(Particle::State::Pressure)].assign(1, press);
+        particlestates[static_cast<int>(ParticleState::Pressure)].assign(1, press);
       }
 
       // clear velocity and acceleration state of boundary or rigid particles
       if (isboundaryrigid_target and (not isboundaryrigid_source))
       {
-        particlestates[static_cast<int>(Particle::State::Velocity)].assign(3, 0.0);
-        particlestates[static_cast<int>(Particle::State::Acceleration)].assign(3, 0.0);
+        particlestates[static_cast<int>(ParticleState::Velocity)].assign(3, 0.0);
+        particlestates[static_cast<int>(ParticleState::Acceleration)].assign(3, 0.0);
       }
 
       Particle::ParticleObjShrdPtr particleobject =
@@ -219,18 +220,18 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_above_to_below_pha
     std::vector<std::vector<std::pair<int, Particle::ParticleObjShrdPtr>>>& particlestoinsert) const
 {
   // set source and target type of particles
-  Particle::Type type_source = abovephase_;
-  Particle::Type type_target = belowphase_;
+  ParticleType type_source = abovephase_;
+  ParticleType type_target = belowphase_;
 
   // check for boundary or rigid particles
   bool isboundaryrigid_source =
-      (type_source == Particle::Type::BoundaryPhase or type_source == Particle::Type::RigidPhase);
+      (type_source == ParticleType::BoundaryPhase or type_source == ParticleType::RigidPhase);
   bool isboundaryrigid_target =
-      (type_target == Particle::Type::BoundaryPhase or type_target == Particle::Type::RigidPhase);
+      (type_target == ParticleType::BoundaryPhase or type_target == ParticleType::RigidPhase);
 
   // get container of owned particles of source particle type
   Particle::ParticleContainer* container =
-      particlecontainerbundle_->get_specific_container(type_source, Particle::Status::Owned);
+      particlecontainerbundle_->get_specific_container(type_source, ParticleStatus::Owned);
 
   // get number of particles stored in container
   int particlestored = container->particles_stored();
@@ -246,6 +247,8 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_above_to_below_pha
       particlematerial_->get_ptr_to_particle_mat_parameter(type_source);
   const Mat::PAR::ParticleMaterialBase* material_target =
       particlematerial_->get_ptr_to_particle_mat_parameter(type_target);
+  const double initDensity_source = material_source->initDensity_;
+  const double initDensity_target = material_target->initDensity_;
 
   // get equation of state of target particle type
   const Particle::SPHEquationOfStateBase* equationofstate_target;
@@ -266,20 +269,19 @@ void Particle::SPHPhaseChangeBase::evaluate_phase_change_from_above_to_below_pha
       // add density and pressure state for boundary or rigid particles
       if (isboundaryrigid_source and (not isboundaryrigid_target))
       {
-        particlestates[static_cast<int>(Particle::State::Density)].assign(
-            1, material_source->initDensity_);
+        particlestates[static_cast<int>(ParticleState::Density)].assign(1, initDensity_source);
 
-        const double press = equationofstate_target->density_to_pressure(
-            material_source->initDensity_, material_target->initDensity_);
+        const double press =
+            equationofstate_target->density_to_pressure(initDensity_source, initDensity_target);
 
-        particlestates[static_cast<int>(Particle::State::Pressure)].assign(1, press);
+        particlestates[static_cast<int>(ParticleState::Pressure)].assign(1, press);
       }
 
       // clear velocity and acceleration state of boundary or rigid particles
       if (isboundaryrigid_target and (not isboundaryrigid_source))
       {
-        particlestates[static_cast<int>(Particle::State::Velocity)].assign(3, 0.0);
-        particlestates[static_cast<int>(Particle::State::Acceleration)].assign(3, 0.0);
+        particlestates[static_cast<int>(ParticleState::Velocity)].assign(3, 0.0);
+        particlestates[static_cast<int>(ParticleState::Acceleration)].assign(3, 0.0);
       }
 
       Particle::ParticleObjShrdPtr particleobject =

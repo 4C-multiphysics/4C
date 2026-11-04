@@ -66,10 +66,10 @@ namespace Particle
     std::shared_ptr<Particle::SPHNeighborPairs> neighborpairs_;
 
     //! set of fluid particle types
-    std::set<Particle::Type> fluidtypes_;
+    std::set<ParticleType> fluidtypes_;
 
     //! set of boundary particle types
-    std::set<Particle::Type> boundarytypes_;
+    std::set<ParticleType> boundarytypes_;
   };
 
   class SPHBoundaryParticleAdami : public SPHBoundaryParticleBase
