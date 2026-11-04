@@ -138,7 +138,7 @@ namespace ReducedLung::Airways::WallMechanics
    * pair.
    *
    * The callback evaluates resistance, inertia, and wall derivatives into reusable scratch buffers
-   * and writes them through TreeNewtonLinearSolver.
+   * and writes them through TreeLinearSolver.
    */
   TreeLinearizationEvaluator make_tree_linearization_evaluator(
       WallModel& wall_model, FlowModel& flow_model);

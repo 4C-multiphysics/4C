@@ -41,7 +41,7 @@ namespace ReducedLung
   /**
    * @brief Context for the serial tree-based Newton correction solver.
    */
-  struct TreeNewtonLinearSolverContext
+  struct TreeLinearSolverContext
   {
     const ReducedLungTreeMetadata& tree_metadata;  ///< Directed tree metadata for the solve.
     double pivot_tolerance = 1.0e-12;              ///< Dense pivot tolerance.
@@ -59,22 +59,22 @@ namespace ReducedLung
    * Newton corrections are recovered top-down. Coefficients are assembled directly into
    * solver-owned structured storage.
    */
-  class TreeNewtonLinearSolver
+  class TreeLinearSolver
   {
    public:
     /**
-     * @brief Construct the serial tree Newton correction solver.
+     * @brief Construct the serial tree linear solver for Newton corrections.
      *
      * @param context Tree metadata and tolerances.
      */
-    explicit TreeNewtonLinearSolver(const TreeNewtonLinearSolverContext& context);
+    explicit TreeLinearSolver(const TreeLinearSolverContext& context);
 
     // Coefficient storage is referenced by raw pointers (direct coefficient lookup table and
     // TreeCoefficientSlots), so the solver must stay at its construction address.
-    TreeNewtonLinearSolver(const TreeNewtonLinearSolver&) = delete;
-    TreeNewtonLinearSolver& operator=(const TreeNewtonLinearSolver&) = delete;
-    TreeNewtonLinearSolver(TreeNewtonLinearSolver&&) = delete;
-    TreeNewtonLinearSolver& operator=(TreeNewtonLinearSolver&&) = delete;
+    TreeLinearSolver(const TreeLinearSolver&) = delete;
+    TreeLinearSolver& operator=(const TreeLinearSolver&) = delete;
+    TreeLinearSolver(TreeLinearSolver&&) = delete;
+    TreeLinearSolver& operator=(TreeLinearSolver&&) = delete;
 
     /**
      * @brief Set a structured coefficient value in this solver target.
@@ -240,11 +240,11 @@ namespace ReducedLung
    * Dynamic tree-linearization kernels write the same (row, dof) pairs in every Newton iteration.
    * bind() resolves these pairs once on first use; afterwards values are written directly to the
    * coefficient storage without repeating the row/dof lookup of
-   * TreeNewtonLinearSolver::set_value().
+   * TreeLinearSolver::set_value().
    *
    * The slots stay bound to the solver of the first bind() call. Each assembly pipeline, and thus
    * every TreeCoefficientSlots captured by its kernels, must be used with a single
-   * TreeNewtonLinearSolver and always with the same (row, dof) pairs.
+   * TreeLinearSolver and always with the same (row, dof) pairs.
    */
   class TreeCoefficientSlots
   {
@@ -253,7 +253,7 @@ namespace ReducedLung
      * @brief Bind the pairs (local_row_ids[i] + row_offset, local_dof_ids[i]) to @p target on the
      * first call; later calls only check (with assertions enabled) that the binding matches.
      */
-    void bind(TreeNewtonLinearSolver& target, std::span<const int> local_row_ids,
+    void bind(TreeLinearSolver& target, std::span<const int> local_row_ids,
         std::span<const int> local_dof_ids, int row_offset = 0);
 
     [[nodiscard]] std::size_t size() const { return slots_.size(); }
@@ -267,7 +267,7 @@ namespace ReducedLung
 
    private:
     std::vector<double*> slots_;
-    const TreeNewtonLinearSolver* bound_solver_ = nullptr;  ///< nullptr while unbound.
+    const TreeLinearSolver* bound_solver_ = nullptr;  ///< nullptr while unbound.
   };
 
 }  // namespace ReducedLung

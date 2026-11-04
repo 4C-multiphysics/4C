@@ -18,6 +18,7 @@
 #include "4C_reduced_lung_boundary_conditions.hpp"
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_junctions.hpp"
+#include "4C_reduced_lung_newton_sparse.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_test_utils_test.hpp"
 #include "4C_reduced_lung_tree_metadata.hpp"
@@ -443,10 +444,8 @@ namespace
     BoundaryConditions::BoundaryConditionContainer boundary_conditions;
     Junctions::ConnectionData connections;
     Junctions::BifurcationData bifurcations;
-    std::unique_ptr<Core::LinAlg::Map> locally_owned_dof_map;
     std::unique_ptr<Core::LinAlg::Map> row_map;
     std::unique_ptr<Core::LinAlg::Map> locally_relevant_dof_map;
-    std::unique_ptr<Core::LinAlg::Vector<double>> dofs;
     std::unique_ptr<Core::LinAlg::Vector<double>> locally_relevant_dofs;
     std::unique_ptr<Core::LinAlg::Vector<double>> x;
     std::unique_ptr<Core::LinAlg::SparseMatrix> sysmat;
@@ -497,8 +496,6 @@ namespace
       Junctions::assign_junction_local_equation_ids(connections, bifurcations, n_local_equations);
       BoundaryConditions::assign_local_equation_ids(boundary_conditions, n_local_equations);
 
-      locally_owned_dof_map = std::make_unique<Core::LinAlg::Map>(
-          create_domain_map(MPI_COMM_WORLD, airways, terminal_units));
       row_map = std::make_unique<Core::LinAlg::Map>(create_row_map(
           MPI_COMM_WORLD, airways, terminal_units, connections, bifurcations, boundary_conditions));
       locally_relevant_dof_map = std::make_unique<Core::LinAlg::Map>(
@@ -513,7 +510,6 @@ namespace
           *locally_relevant_dof_map, connections, bifurcations);
       BoundaryConditions::assign_local_dof_ids(*locally_relevant_dof_map, boundary_conditions);
 
-      dofs = std::make_unique<Core::LinAlg::Vector<double>>(*locally_owned_dof_map, true);
       locally_relevant_dofs =
           std::make_unique<Core::LinAlg::Vector<double>>(*locally_relevant_dof_map, true);
       x = std::make_unique<Core::LinAlg::Vector<double>>(*row_map, true);
@@ -529,8 +525,7 @@ namespace
 
     void sync_state_from_x()
     {
-      Core::LinAlg::export_to(*x, *dofs);
-      Core::LinAlg::export_to(*dofs, *locally_relevant_dofs);
+      Core::LinAlg::export_to(*x, *locally_relevant_dofs);
       for (const auto& update_state : assembly_pipeline.state_updaters)
       {
         update_state(*locally_relevant_dofs, params.dynamics.time_increment);
@@ -550,7 +545,7 @@ namespace
     }
 
     void assemble_tree_coefficients(
-        TreeNewtonLinearSolver& target, double current_time, bool include_static_coefficients)
+        TreeLinearSolver& target, double current_time, bool include_static_coefficients)
     {
       if (include_static_coefficients)
       {
@@ -583,31 +578,29 @@ namespace
       });
     }
 
-    std::unique_ptr<NoxSolver> create_nox_solver()
+    std::unique_ptr<NewtonSparse> create_newton_sparse_solver()
     {
-      const NoxSolverContext context{
+      const NewtonSparseContext context{
           .comm = MPI_COMM_WORLD,
           .dynamics = params.dynamics,
           .linear_solver_parameters = solver_params,
           .solver_params_callback = solver_params_callback,
           .assembly_pipeline = assembly_pipeline,
-          .dofs = *dofs,
           .locally_relevant_dofs = *locally_relevant_dofs,
           .x = *x,
           .jacobian = *sysmat,
       };
-      return std::make_unique<NoxSolver>(context);
+      return std::make_unique<NewtonSparse>(context);
     }
 
     std::unique_ptr<TreeNewtonSolver> create_tree_newton_solver(
-        const std::shared_ptr<TreeNewtonLinearSolver>& tree_linear_solver,
+        const std::shared_ptr<TreeLinearSolver>& tree_linear_solver,
         const NonlinearSolverAssemblyPipeline& solver_assembly_pipeline)
     {
       const TreeNewtonSolverContext context{
           .dynamics = params.dynamics,
           .tree_linear_solver = tree_linear_solver,
           .assembly_pipeline = solver_assembly_pipeline,
-          .dofs = *dofs,
           .locally_relevant_dofs = *locally_relevant_dofs,
           .x = *x,
       };
@@ -617,8 +610,8 @@ namespace
     std::unique_ptr<TreeNewtonSolver> create_tree_newton_workflow_solver()
     {
       tree_metadata = build_tree_metadata();
-      auto linear_solver = std::make_shared<TreeNewtonLinearSolver>(
-          TreeNewtonLinearSolverContext{.tree_metadata = *tree_metadata});
+      auto linear_solver = std::make_shared<TreeLinearSolver>(
+          TreeLinearSolverContext{.tree_metadata = *tree_metadata});
       const auto tree_assembly_pipeline = create_default_nonlinear_solver_assembly_pipeline(
           airways, terminal_units, connections, bifurcations, boundary_conditions, false);
       EXPECT_TRUE(tree_assembly_pipeline.jacobian_assemblers.empty());
@@ -697,8 +690,8 @@ namespace
     const auto& params = problem.parameters;
     LinearSolverFixture fixture(name, problem, {"0.25 + 0.5 * t", "0.0"});
     const auto tree_metadata = fixture.build_tree_metadata();
-    TreeNewtonLinearSolver tree_solver(
-        TreeNewtonLinearSolverContext{.tree_metadata = tree_metadata, .pivot_tolerance = 1.0e-12});
+    TreeLinearSolver tree_solver(
+        TreeLinearSolverContext{.tree_metadata = tree_metadata, .pivot_tolerance = 1.0e-12});
 
     const std::vector<double> state_scales{0.75, 1.0, 1.25};
     for (std::size_t step = 0; step < state_scales.size(); ++step)
@@ -716,7 +709,7 @@ namespace
       seed_nonzero_initial_state(step_fresh_fixture, state_scales[step]);
       step_fresh_fixture.sync_state_from_x();
       const auto fresh_tree_metadata = step_fresh_fixture.build_tree_metadata();
-      TreeNewtonLinearSolver fresh_tree_solver(TreeNewtonLinearSolverContext{
+      TreeLinearSolver fresh_tree_solver(TreeLinearSolverContext{
           .tree_metadata = fresh_tree_metadata, .pivot_tolerance = 1.0e-12});
       step_fresh_fixture.assemble_tree_coefficients(fresh_tree_solver, current_time, true);
 
@@ -783,10 +776,10 @@ namespace
       const std::vector<std::string>& function_definitions, ComparisonChecks checks)
   {
     const auto& params = problem.parameters;
-    LinearSolverFixture nox_fixture(name + "_nox", problem, function_definitions);
+    LinearSolverFixture sparse_fixture(name + "_sparse", problem, function_definitions);
     LinearSolverFixture tree_fixture(name + "_tree", problem, function_definitions);
 
-    auto nox_solver = nox_fixture.create_nox_solver();
+    auto sparse_solver = sparse_fixture.create_newton_sparse_solver();
     auto tree_solver = tree_fixture.create_tree_newton_workflow_solver();
 
     const double solution_tolerance = 1.0e-6;
@@ -796,35 +789,36 @@ namespace
     for (int step = 1; step <= params.dynamics.number_of_steps; ++step)
     {
       const double current_time = step * params.dynamics.time_increment;
-      const unsigned int nox_iterations = nox_solver->solve(current_time);
+      const unsigned int sparse_iterations = sparse_solver->solve(current_time);
       const unsigned int tree_iterations = tree_solver->solve(current_time);
 
       EXPECT_LE(
-          nox_iterations, static_cast<unsigned int>(params.dynamics.max_nonlinear_iterations));
+          sparse_iterations, static_cast<unsigned int>(params.dynamics.max_nonlinear_iterations));
       EXPECT_LE(
           tree_iterations, static_cast<unsigned int>(params.dynamics.max_nonlinear_iterations));
 
-      expect_vectors_near(*nox_fixture.x, *tree_fixture.x, solution_tolerance);
-      expect_vectors_near(*nox_fixture.dofs, *tree_fixture.dofs, solution_tolerance);
-      EXPECT_LE(nox_fixture.residual_norm(current_time), residual_tolerance);
+      expect_vectors_near(*sparse_fixture.x, *tree_fixture.x, solution_tolerance);
+      expect_vectors_near(*sparse_fixture.locally_relevant_dofs,
+          *tree_fixture.locally_relevant_dofs, solution_tolerance);
+      EXPECT_LE(sparse_fixture.residual_norm(current_time), residual_tolerance);
       EXPECT_LE(tree_fixture.residual_norm(current_time), residual_tolerance);
 
       if (checks.connection_flow_balance)
       {
-        expect_connection_flow_balance(nox_fixture, solution_tolerance);
+        expect_connection_flow_balance(sparse_fixture, solution_tolerance);
         expect_connection_flow_balance(tree_fixture, solution_tolerance);
       }
       if (checks.bifurcation_flow_balance)
       {
-        expect_bifurcation_flow_balance(nox_fixture, solution_tolerance);
+        expect_bifurcation_flow_balance(sparse_fixture, solution_tolerance);
         expect_bifurcation_flow_balance(tree_fixture, solution_tolerance);
       }
 
-      nox_fixture.advance_end_of_timestep();
+      sparse_fixture.advance_end_of_timestep();
       tree_fixture.advance_end_of_timestep();
       if (checks.terminal_unit_volumes)
       {
-        expect_terminal_unit_volumes_near(nox_fixture, tree_fixture, solution_tolerance);
+        expect_terminal_unit_volumes_near(sparse_fixture, tree_fixture, solution_tolerance);
       }
     }
   }
@@ -834,8 +828,7 @@ namespace
     LinearSolverFixture fixture("tree_linear_coefficient_slots_alias",
         make_mixed_airway_terminal_unit_parameters(0.1), {"0.25 + 0.5 * t", "0.0"});
     const auto tree_metadata = fixture.build_tree_metadata();
-    TreeNewtonLinearSolver tree_solver(
-        TreeNewtonLinearSolverContext{.tree_metadata = tree_metadata});
+    TreeLinearSolver tree_solver(TreeLinearSolverContext{.tree_metadata = tree_metadata});
 
     ASSERT_FALSE(fixture.terminal_units.models.empty());
     const auto& data = fixture.terminal_units.models.front().data;
@@ -865,10 +858,8 @@ namespace
         make_mixed_airway_terminal_unit_parameters(0.1), {"0.25 + 0.5 * t", "0.0"});
     const auto tree_metadata = fixture.build_tree_metadata();
     const auto& data = fixture.terminal_units.models.front().data;
-    TreeNewtonLinearSolver tree_solver(
-        TreeNewtonLinearSolverContext{.tree_metadata = tree_metadata});
-    TreeNewtonLinearSolver other_tree_solver(
-        TreeNewtonLinearSolverContext{.tree_metadata = tree_metadata});
+    TreeLinearSolver tree_solver(TreeLinearSolverContext{.tree_metadata = tree_metadata});
+    TreeLinearSolver other_tree_solver(TreeLinearSolverContext{.tree_metadata = tree_metadata});
 
     TreeCoefficientSlots slots;
     slots.bind(tree_solver, data.local_row_id, data.lid_q);
@@ -889,7 +880,7 @@ namespace
         make_large_mixed_airway_terminal_unit_parameters(0.1));
   }
 
-  TEST(ReducedLungTreeWorkflowTests, SingleTerminalUnitMatchesNox)
+  TEST(ReducedLungTreeWorkflowTests, SingleTerminalUnitMatchesNewtonSparse)
   {
     auto problem = make_single_terminal_unit_parameters(0.25);
     problem.parameters.dynamics.number_of_steps = 3;
@@ -897,7 +888,7 @@ namespace
         {.terminal_unit_volumes = true});
   }
 
-  TEST(ReducedLungTreeWorkflowTests, SerialRigidAirwaysMatchNox)
+  TEST(ReducedLungTreeWorkflowTests, SerialRigidAirwaysMatchNewtonSparse)
   {
     auto problem = make_serial_airway_parameters(0.5);
     problem.parameters.dynamics.number_of_steps = 3;
@@ -905,7 +896,7 @@ namespace
         "tree_workflow_serial_airways", problem, {"t", "0.0"}, {.connection_flow_balance = true});
   }
 
-  TEST(ReducedLungTreeWorkflowTests, RootInletFlowBoundaryMatchesNox)
+  TEST(ReducedLungTreeWorkflowTests, RootInletFlowBoundaryMatchesNewtonSparse)
   {
     auto problem = make_serial_airway_root_flow_parameters(0.5);
     problem.parameters.dynamics.number_of_steps = 3;
@@ -913,7 +904,7 @@ namespace
         {.connection_flow_balance = true});
   }
 
-  TEST(ReducedLungTreeWorkflowTests, BifurcationRigidAirwaysMatchNox)
+  TEST(ReducedLungTreeWorkflowTests, BifurcationRigidAirwaysMatchNewtonSparse)
   {
     auto problem = make_bifurcation_parameters(0.5);
     problem.parameters.dynamics.number_of_steps = 3;
@@ -921,7 +912,7 @@ namespace
         {.bifurcation_flow_balance = true});
   }
 
-  TEST(ReducedLungTreeWorkflowTests, MixedAirwaysAndTerminalUnitsMatchNox)
+  TEST(ReducedLungTreeWorkflowTests, MixedAirwaysAndTerminalUnitsMatchNewtonSparse)
   {
     auto problem = make_mixed_airway_terminal_unit_parameters(0.25);
     problem.parameters.dynamics.number_of_steps = 2;

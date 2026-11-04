@@ -16,6 +16,8 @@
 #include "4C_utils_exceptions.hpp"
 
 #include <cmath>
+#include <format>
+#include <iostream>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -46,7 +48,6 @@ namespace ReducedLung
 
   TreeNewtonSolver::TreeNewtonSolver(const TreeNewtonSolverContext& context, double initial_time)
       : x_solution_(context.x),
-        dofs_(context.dofs),
         locally_relevant_dofs_(context.locally_relevant_dofs),
         assembly_pipeline_(context.assembly_pipeline),
         residual_(context.x.get_map(), true),
@@ -67,7 +68,7 @@ namespace ReducedLung
     }
     if (tree_linear_solver_ == nullptr)
     {
-      FOUR_C_THROW("ReducedLung::TreeNewtonSolver requires a valid tree Newton linear solver.");
+      FOUR_C_THROW("ReducedLung::TreeNewtonSolver requires a valid tree linear solver.");
     }
     if (assembly_pipeline_.residual_assemblers.empty())
     {
@@ -93,13 +94,14 @@ namespace ReducedLung
     {
       sync_state_from_x(x_solution_);
       const double residual_norm = assemble_residual_for_current_state();
-      last_residual_norm_ = residual_norm;
       const bool residual_converged = residual_norm <= nonlinear_residual_tolerance_;
 
       // The residual is the authoritative convergence check. A large first correction is expected
       // when advancing in time, even for linear systems.
       if (residual_converged)
       {
+        std::cout << std::format("Newton iters: {} | ||F||: {:.2e}\n", iteration, residual_norm)
+                  << std::flush;
         return iteration;
       }
 
@@ -130,15 +132,15 @@ namespace ReducedLung
 
   void TreeNewtonSolver::sync_state_from_x(const Core::LinAlg::Vector<double>& x)
   {
+    // In serial, x and the locally relevant dof vector hold the same dofs in the same order, so a
+    // plain copy replaces the import. This runs at every residual and Jacobian evaluation.
     if (Core::Communication::num_mpi_ranks(x.get_comm()) == 1)
     {
-      dofs_.update(1.0, x, 0.0);
       locally_relevant_dofs_.update(1.0, x, 0.0);
     }
     else
     {
-      Core::LinAlg::export_to(x, dofs_);
-      Core::LinAlg::export_to(dofs_, locally_relevant_dofs_);
+      Core::LinAlg::export_to(x, locally_relevant_dofs_);
     }
 
     for (const auto& update_state : assembly_pipeline_.state_updaters)

@@ -41,8 +41,9 @@ namespace ReducedLung
      */
     enum class NonlinearSolverType : std::uint8_t
     {
-      Nox,        ///< Legacy NOX-based nonlinear solver workflow.
-      NewtonTree  ///< Custom Newton solver with the serial structured-tree linear solver.
+      NewtonSparse,  ///< NOX Newton with an assembled sparse Jacobian and a configurable linear
+                     ///< solver; MPI-parallel.
+      NewtonTree     ///< Custom Newton solver with the serial structured-tree linear solver.
     };
 
     struct Dynamics
@@ -61,7 +62,7 @@ namespace ReducedLung
        *
        * NOX is the safe default; NewtonTree is an explicit opt-in workflow.
        */
-      NonlinearSolverType nonlinear_solver = NonlinearSolverType::Nox;
+      NonlinearSolverType nonlinear_solver = NonlinearSolverType::NewtonSparse;
     } dynamics;
     /**
      * The geometry of the lung tree is read from a VTU mesh file. The mesh provides the

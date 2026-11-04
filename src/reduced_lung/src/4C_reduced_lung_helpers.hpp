@@ -16,17 +16,14 @@
 #include "4C_reduced_lung_airways.hpp"
 #include "4C_reduced_lung_boundary_conditions.hpp"
 #include "4C_reduced_lung_junctions.hpp"
+#include "4C_reduced_lung_nonlinear_solver.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
-#include "4C_solver_nonlin_nox_adapter.hpp"
 
 #include <mpi.h>
-#include <Teuchos_ParameterList.hpp>
 
 #include <array>
-#include <functional>
 #include <limits>
 #include <map>
-#include <optional>
 #include <span>
 #include <string>
 #include <tuple>
@@ -42,9 +39,6 @@ namespace Core::Nodes
 
 namespace Core::LinAlg
 {
-  class Solver;
-  class SparseMatrix;
-  class SparseOperator;
   template <typename T>
   class Vector;
 }  // namespace Core::LinAlg
@@ -61,67 +55,6 @@ namespace Core::Rebalance
 
 namespace ReducedLung
 {
-  class TreeNewtonLinearSolver;
-
-  /**
-   * @brief Ordered callback registry for nonlinear-solver assembly.
-   *
-   * The pipeline decouples solver workflows from concrete reduced-lung model blocks. Additional
-   * model families can register callbacks without changing solver internals.
-   */
-  struct NonlinearSolverAssemblyPipeline
-  {
-    using ResidualAssembler = std::function<void(Core::LinAlg::Vector<double>& residual,
-        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double current_time,
-        double time_step_size_dt)>;
-
-    using JacobianAssembler = std::function<void(Core::LinAlg::SparseMatrix& jacobian,
-        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double current_time,
-        double time_step_size_dt)>;
-
-    /**
-     * @brief Assemble state-dependent coefficients into the tree solver.
-     */
-    using TreeLinearizationAssembler = std::function<void(TreeNewtonLinearSolver& target,
-        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double current_time,
-        double time_step_size_dt)>;
-
-    /**
-     * @brief Assemble state-independent coefficients into the tree solver.
-     */
-    using StaticTreeLinearizationAssembler = std::function<void(TreeNewtonLinearSolver& target)>;
-
-    using StateUpdater = std::function<void(
-        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double time_step_size_dt)>;
-
-    std::vector<ResidualAssembler> residual_assemblers;  ///< Residual callbacks for all workflows.
-    std::vector<JacobianAssembler> jacobian_assemblers;  ///< Sparse Jacobian callbacks.
-    std::vector<StaticTreeLinearizationAssembler>
-        tree_linearization_static_assemblers;  ///< Static structured coefficient callbacks.
-    std::vector<TreeLinearizationAssembler>
-        tree_linearization_assemblers;  ///< State-dependent structured coefficient callbacks.
-    std::vector<StateUpdater>
-        state_updaters;  ///< End-of-solve model state synchronization callbacks.
-  };
-
-  /**
-   * @brief Context bundling all objects required to construct and run @ref NoxSolver.
-   */
-  struct NoxSolverContext
-  {
-    MPI_Comm comm;  ///< MPI communicator used by NOX and the linear solver.
-    const ReducedLungParameters::Dynamics& dynamics;  ///< Nonlinear/timestep solver parameters.
-    const Teuchos::ParameterList& linear_solver_parameters;  ///< Linear solver configuration.
-    std::function<const Teuchos::ParameterList&(int)>
-        solver_params_callback;  ///< Callback for nested/ID-based solver parameters.
-    const NonlinearSolverAssemblyPipeline&
-        assembly_pipeline;                                ///< Ordered model assembly callbacks.
-    Core::LinAlg::Vector<double>& dofs;                   ///< Owned dof vector.
-    Core::LinAlg::Vector<double>& locally_relevant_dofs;  ///< Ghosted dof vector.
-    Core::LinAlg::Vector<double>& x;                      ///< NOX solution vector.
-    Core::LinAlg::SparseOperator& jacobian;               ///< NOX Jacobian operator.
-  };
-
   /**
    * @brief Collector for runtime output data vectors.
    *
@@ -154,83 +87,15 @@ namespace ReducedLung
    * Registers airway, terminal-unit, junction, and boundary-condition contributions for residual,
    * sparse Jacobian, structured tree-linearization, and state-update assembly.
    *
-   * @param include_sparse_jacobian_assemblers Register callbacks needed by NOX. Production
-   * NewtonTree disables these callbacks because it assembles structured coefficients.
+   * @param include_sparse_jacobian_assemblers Register the sparse Jacobian callbacks needed by
+   * NewtonSparse. NewtonTree disables these callbacks because it assembles structured
+   * coefficients.
    */
   NonlinearSolverAssemblyPipeline create_default_nonlinear_solver_assembly_pipeline(
       Airways::AirwayContainer& airways, TerminalUnits::TerminalUnitContainer& terminal_units,
       Junctions::ConnectionData& connections, Junctions::BifurcationData& bifurcations,
       BoundaryConditions::BoundaryConditionContainer& boundary_conditions,
       bool include_sparse_jacobian_assemblers = true);
-
-  /**
-   * @brief NOX solver for reduced lung simulations.
-   *
-   * Encapsulates all NOX setup, callbacks, and time management for reduced lung physics.
-   * Provides a simple interface: construct once, then call solve(time) in each timestep.
-   */
-  class NoxSolver
-  {
-   public:
-    /**
-     * @brief Construct NOX solver with all required model components.
-     *
-     * @param context NOX setup context including communicator, dynamics, linear solver setup,
-     * assembly pipeline callbacks, and all bound vectors/operators.
-     * @param initial_time Initial time for the simulation.
-     */
-    NoxSolver(const NoxSolverContext& context, double initial_time = 0.0);
-
-    NoxSolver(const NoxSolver&) = delete;
-    NoxSolver& operator=(const NoxSolver&) = delete;
-    NoxSolver(NoxSolver&&) = delete;
-    NoxSolver& operator=(NoxSolver&&) = delete;
-    ~NoxSolver() = default;
-
-    /**
-     * @brief Solve nonlinear system at given physical time.
-     *
-     * Updates current time for boundary conditions, performs Newton solve,
-     * and synchronizes the converged solution to dofs, locally_relevant_dofs,
-     * and registered internal state vectors via the assembly pipeline.
-     *
-     * @param time Current physical time for time-dependent BCs.
-     * @return Number of nonlinear iterations performed.
-     */
-    unsigned int solve(double time);
-
-   private:
-    // Callback implementations for NOX
-    bool residual(const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& residual,
-        NOX::Nln::FillType fill_type);
-
-    bool jacobian(const Core::LinAlg::Vector<double>& x, Core::LinAlg::SparseOperator& jac);
-
-    // Helper to sync state from NOX vector to model containers
-    void sync_state_from_x(const Core::LinAlg::Vector<double>& x);
-
-    Core::LinAlg::Vector<double>& x_solution_;
-    Core::LinAlg::Vector<double>& dofs_;
-    Core::LinAlg::Vector<double>& locally_relevant_dofs_;
-    NonlinearSolverAssemblyPipeline assembly_pipeline_;
-
-    // Time integration parameters
-    double dt_;
-    double current_time_;
-
-    std::shared_ptr<Core::LinAlg::Solver> linear_solver_;
-
-    // NOX adapter
-    std::optional<NOX::Nln::Adapter> adapter_;
-  };
-
-  /**
-   * @brief Create a NOX parameter list for reduced-lung nonlinear solves.
-   *
-   * @param dynamics Reduced-lung dynamics parameters.
-   * @return Teuchos parameter list configured for NOX::Nln::Adapter.
-   */
-  Teuchos::ParameterList create_nox_parameter_list(const ReducedLungParameters::Dynamics& dynamics);
 
   /*!
    * @brief The cell blocks of the lung mesh.
@@ -367,24 +232,6 @@ namespace ReducedLung
    */
   void print_instantiated_object_counts(const MPI_Comm& comm, int n_airways, int n_terminal_units,
       int n_connections, int n_bifurcations, int n_boundary_conditions);
-
-  /*!
-   * @brief Create the map with the locally owned dofs spanning the computation domain that
-   * are necessary for the solution vector.
-   *
-   * The 4C discretization gives a mpi distribution of the Reduced Lung elements. From this
-   * distribution and the knowledge about the number of dofs in every element, the new map
-   * mapping the local dofs to their global ids is created. Example: The dofs of element k have
-   * global ids in the range first_global_dof_of_ele[k] to first_global_dof_of_ele[k] + dofs of
-   * element k.
-   *
-   * @param comm Communicator of the 4C discretization.
-   * @param airways Vector of locally owned airways.
-   * @param terminal_units Locally owned terminal units.
-   * @return map specifying the dof-distribution over all ranks.
-   */
-  Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const Airways::AirwayContainer& airways,
-      const TerminalUnits::TerminalUnitContainer& terminal_units);
 
   /*!
    * @brief Create the map with the locally owned row indices of the system matrix, i.e. the

@@ -15,8 +15,6 @@
 #include "4C_reduced_lung_helpers.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_test_utils_test.hpp"
-// needed for export_to
-#include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 
 #include <array>
 #include <span>
@@ -175,20 +173,16 @@ namespace
     model.wall_model = RigidWall{};
     airways.models.push_back(model);
 
-    const auto dof_map =
-        create_domain_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{});
     const auto row_map =
         create_row_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{}, {}, {}, {});
     const auto col_map =
         create_column_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{},
             {{0, 3}, {1, 3}, {2, 3}}, {{0, 0}, {1, 3}, {2, 6}}, {}, {}, {});
 
-    Vector<double> dofs(dof_map, true);
     Vector<double> locally_relevant_dofs(col_map, true);
-    dofs.replace_local_values(9,
+    locally_relevant_dofs.replace_global_values(9,
         std::array<double, 9>{2.0, 2.5, 3.0, 1.2, 1.1, 0.9, 10.0, -3.0, 4.5}.data(),
         std::array<int, 9>{0, 1, 2, 3, 4, 5, 6, 7, 8}.data());
-    export_to(dofs, locally_relevant_dofs);
 
     assign_model_evaluators(model);
 
@@ -247,20 +241,16 @@ namespace
     model.wall_model = RigidWall{};
     airways.models.push_back(model);
 
-    const auto dof_map =
-        create_domain_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{});
     const auto row_map =
         create_row_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{}, {}, {}, {});
     const auto col_map =
         create_column_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{},
             {{0, 3}, {1, 3}, {2, 3}}, {{0, 0}, {1, 3}, {2, 6}}, {}, {}, {});
 
-    Vector<double> dofs(dof_map, true);
     Vector<double> locally_relevant_dofs(col_map, true);
-    dofs.replace_local_values(9,
+    locally_relevant_dofs.replace_global_values(9,
         std::array<double, 9>{2.0, 2.5, 3.0, 1.2, 1.1, 0.9, 10.0, -3.0, 4.5}.data(),
         std::array<int, 9>{0, 1, 2, 3, 4, 5, 6, 7, 8}.data());
-    export_to(dofs, locally_relevant_dofs);
 
     check_rigid_residual_matches_generic(model, row_map, locally_relevant_dofs, 0.2);
   }
@@ -304,21 +294,17 @@ namespace
         .beta_w = std::vector<double>{1.0, 1.0, 1.0}};
     airways.models.push_back(model);
 
-    const auto dof_map =
-        create_domain_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{});
     const auto row_map =
         create_row_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{}, {}, {}, {});
     const auto col_map =
         create_column_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{},
             {{0, 4}, {1, 4}, {2, 4}}, {{0, 0}, {1, 4}, {2, 8}}, {}, {}, {});
 
-    Vector<double> dofs(dof_map, true);
     Vector<double> locally_relevant_dofs(col_map, true);
-    dofs.replace_local_values(12,
+    locally_relevant_dofs.replace_global_values(12,
         std::array<double, 12>{2.0, 2.5, 3.0, 1.2, 1.1, 0.9, 10.0, -3.0, 4.5, 8.0, -2.0, 5.0}
             .data(),
         std::array<int, 12>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}.data());
-    export_to(dofs, locally_relevant_dofs);
 
     check_kelvin_voigt_residual_matches_generic(model, row_map, locally_relevant_dofs, 0.2);
   }
@@ -365,21 +351,17 @@ namespace
         .beta_w = std::vector<double>{1.0, 1.0, 1.0}};
     airways.models.push_back(model);
 
-    const auto dof_map =
-        create_domain_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{});
     const auto row_map =
         create_row_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{}, {}, {}, {});
     const auto col_map =
         create_column_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{},
             {{0, 4}, {1, 4}, {2, 4}}, {{0, 0}, {1, 4}, {2, 8}}, {}, {}, {});
 
-    Vector<double> dofs(dof_map, true);
     Vector<double> locally_relevant_dofs(col_map, true);
-    dofs.replace_local_values(12,
+    locally_relevant_dofs.replace_global_values(12,
         std::array<double, 12>{2.0, 2.5, 3.0, 1.2, 1.1, 0.9, 10.0, -3.0, 4.5, 8.0, -2.0, 5.0}
             .data(),
         std::array<int, 12>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}.data());
-    export_to(dofs, locally_relevant_dofs);
 
     check_kelvin_voigt_residual_matches_generic(model, row_map, locally_relevant_dofs, 0.2);
   }
@@ -412,19 +394,16 @@ namespace
 
     // We'll reuse the same model structure and swap evaluators per case below.
     // Prepare maps used by both cases
-    const auto dof_map =
-        create_domain_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{});
     const auto row_map =
         create_row_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{}, {}, {}, {});
     const auto col_map =
         create_column_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{},
             {{0, 3}, {1, 3}, {2, 3}}, {{0, 0}, {1, 3}, {2, 6}}, {}, {}, {});
 
-    Vector<double> dofs(dof_map, true);
     Vector<double> locally_relevant_dofs(col_map, true);
-    dofs.replace_local_values(9, std::array<double, 9>{1, 1, 1, 1, 1, 1, 100, 50, 10}.data(),
+    locally_relevant_dofs.replace_global_values(9,
+        std::array<double, 9>{1, 1, 1, 1, 1, 1, 100, 50, 10}.data(),
         std::array<int, 9>{0, 1, 2, 3, 4, 5, 6, 7, 8}.data());
-    export_to(dofs, locally_relevant_dofs);
 
     double dt = 1e-1;
     const double eps = 1e-6;
@@ -542,20 +521,16 @@ namespace
 
     // We'll reuse the same model structure and swap evaluators per case below.
     // Prepare maps used by both cases
-    const auto dof_map =
-        create_domain_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{});
     const auto row_map =
         create_row_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{}, {}, {}, {});
     const auto col_map =
         create_column_map(MPI_COMM_WORLD, airways, TerminalUnits::TerminalUnitContainer{},
             {{0, 4}, {1, 4}, {2, 4}}, {{0, 0}, {1, 4}, {2, 8}}, {}, {}, {});
 
-    Vector<double> dofs(dof_map, true);
     Vector<double> locally_relevant_dofs(col_map, true);
-    dofs.replace_local_values(12,
+    locally_relevant_dofs.replace_global_values(12,
         std::array<double, 12>{1, 1, 1, 1, 1, 1, 100, 50, 10, 101, 52, 9}.data(),
         std::array<int, 12>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}.data());
-    export_to(dofs, locally_relevant_dofs);
 
     double dt = 1e-1;
     const double eps = 1e-6;

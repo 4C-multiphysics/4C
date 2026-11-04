@@ -24,7 +24,7 @@ namespace ReducedLung::Airways
     }
   }
 
-  void update_static_tree_linearization(TreeNewtonLinearSolver& target, AirwayContainer& airways)
+  void update_static_tree_linearization(TreeLinearSolver& target, AirwayContainer& airways)
   {
     for (auto& model : airways.models)
     {
@@ -32,7 +32,7 @@ namespace ReducedLung::Airways
     }
   }
 
-  void update_tree_linearization(TreeNewtonLinearSolver& target, AirwayContainer& airways,
+  void update_tree_linearization(TreeLinearSolver& target, AirwayContainer& airways,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt)
   {
     for (auto& model : airways.models)

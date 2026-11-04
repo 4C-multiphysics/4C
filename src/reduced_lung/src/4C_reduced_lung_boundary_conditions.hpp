@@ -48,7 +48,7 @@ namespace Core::Utils
 
 namespace ReducedLung
 {
-  class TreeNewtonLinearSolver;
+  class TreeLinearSolver;
 
   namespace BoundaryConditions
   {
@@ -266,7 +266,7 @@ namespace ReducedLung
      * the residual, so the structured coefficients are state- and time-independent.
      */
     void update_tree_linearization(
-        TreeNewtonLinearSolver& target, const BoundaryConditionContainer& boundary_conditions);
+        TreeLinearSolver& target, const BoundaryConditionContainer& boundary_conditions);
   }  // namespace BoundaryConditions
 }  // namespace ReducedLung
 

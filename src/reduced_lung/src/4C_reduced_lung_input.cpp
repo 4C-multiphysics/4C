@@ -568,10 +568,12 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                       }),
                   parameter<ReducedLungParameters::NonlinearSolverType>("nonlinear_solver",
                       {
-                          .description = "Nonlinear solver workflow: Nox uses the legacy NOX "
-                                         "solver, and NewtonTree uses the serial structured-tree "
-                                         "linear solver.",
-                          .default_value = ReducedLungParameters::NonlinearSolverType::Nox,
+                          .description = "Nonlinear solver workflow. NewtonSparse assembles a "
+                                         "sparse Jacobian and solves it with linear_solver "
+                                         "(MPI-parallel). NewtonTree uses the serial "
+                                         "structured-tree linear solver and ignores "
+                                         "linear_solver.",
+                          .default_value = ReducedLungParameters::NonlinearSolverType::NewtonSparse,
                           .store = in_struct(&ReducedLungParameters::Dynamics::nonlinear_solver),
                       }),
                   parameter<int>("max_nonlinear_iterations",

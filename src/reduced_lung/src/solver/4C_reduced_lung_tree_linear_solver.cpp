@@ -31,14 +31,14 @@ namespace ReducedLung
     double rhs_value(const Core::LinAlg::Vector<double>& residual, int local_row)
     {
       FOUR_C_ASSERT(local_row >= 0 && local_row < residual.local_length(),
-          "TreeNewtonLinearSolver row {} is not locally available.", local_row);
+          "TreeLinearSolver row {} is not locally available.", local_row);
       return -residual.local_values_as_span()[static_cast<std::size_t>(local_row)];
     }
 
     double required_matrix_value(double value, double tolerance, const std::string& context)
     {
       FOUR_C_ASSERT(std::abs(value) > tolerance,
-          "TreeNewtonLinearSolver missing or near-zero matrix coefficient for {}.", context);
+          "TreeLinearSolver missing or near-zero matrix coefficient for {}.", context);
       return value;
     }
 
@@ -56,7 +56,7 @@ namespace ReducedLung
       FOUR_C_ASSERT(matrix.size() == n * n && rhs_constant.size() == n &&
                         rhs_inlet_pressure.size() == n && intercept.size() == n &&
                         slope.size() == n,
-          "TreeNewtonLinearSolver fixed-size system has inconsistent span sizes for {}.", context);
+          "TreeLinearSolver fixed-size system has inconsistent span sizes for {}.", context);
       for (int row = 0; row < block_size; ++row)
       {
         for (int col = 0; col < block_size; ++col)
@@ -68,8 +68,7 @@ namespace ReducedLung
 
       const double determinant = local_matrix.invert();
       FOUR_C_ASSERT_ALWAYS(std::abs(determinant) > pivot_tolerance,
-          "TreeNewtonLinearSolver found a singular or underconstrained local block for {}.",
-          context);
+          "TreeLinearSolver found a singular or underconstrained local block for {}.", context);
 
       for (int row = 0; row < block_size; ++row)
       {
@@ -92,12 +91,12 @@ namespace ReducedLung
         double pivot_tolerance, const std::string& context)
     {
       const int n = static_cast<int>(rhs_constant.size());
-      FOUR_C_ASSERT(n > 0, "TreeNewtonLinearSolver dense system has invalid size for {}.", context);
+      FOUR_C_ASSERT(n > 0, "TreeLinearSolver dense system has invalid size for {}.", context);
       FOUR_C_ASSERT(rhs_inlet_pressure.size() == rhs_constant.size() &&
                         intercept.size() == rhs_constant.size() &&
                         slope.size() == rhs_constant.size() &&
                         matrix.size() == rhs_constant.size() * rhs_constant.size(),
-          "TreeNewtonLinearSolver dense system has inconsistent span sizes for {}.", context);
+          "TreeLinearSolver dense system has inconsistent span sizes for {}.", context);
 
       if (n == 2)
       {
@@ -123,21 +122,21 @@ namespace ReducedLung
       const auto last = unknown_global_dof_ids.begin() + unknown_end;
       const auto it = std::find(first, last, global_dof_id);
       FOUR_C_ASSERT_ALWAYS(it != last,
-          "TreeNewtonLinearSolver recovery data does not contain global dof {}.", global_dof_id);
+          "TreeLinearSolver recovery data does not contain global dof {}.", global_dof_id);
       return static_cast<int>(std::distance(first, it));
     }
 
   }  // namespace
 
-  TreeNewtonLinearSolver::TreeNewtonLinearSolver(const TreeNewtonLinearSolverContext& context)
+  TreeLinearSolver::TreeLinearSolver(const TreeLinearSolverContext& context)
       : tree_metadata_(context.tree_metadata), pivot_tolerance_(context.pivot_tolerance)
   {
     FOUR_C_ASSERT_ALWAYS(pivot_tolerance_ > 0.0,
-        "TreeNewtonLinearSolver requires a positive pivot tolerance, got {}.", pivot_tolerance_);
+        "TreeLinearSolver requires a positive pivot tolerance, got {}.", pivot_tolerance_);
     build_symbolic_plan();
   }
 
-  void TreeNewtonLinearSolver::build_symbolic_plan()
+  void TreeLinearSolver::build_symbolic_plan()
   {
     const auto& root_boundary = tree_root_inlet_boundary(tree_metadata_);
     root_boundary_variable_ = root_boundary.constrained_variable;
@@ -251,7 +250,7 @@ namespace ReducedLung
 
       FOUR_C_ASSERT_ALWAYS(equation_offset_[element_index + 1] - equation_offset_[element_index] ==
                                block_size_[element_index],
-          "TreeNewtonLinearSolver local block for element {} has {} equations for {} unknowns.",
+          "TreeLinearSolver local block for element {} has {} equations for {} unknowns.",
           element.global_element_id + 1,
           equation_offset_[element_index + 1] - equation_offset_[element_index],
           block_size_[element_index]);
@@ -339,7 +338,7 @@ namespace ReducedLung
         [&](const TreeCoefficientLocation& location, double& value, const char* context)
     {
       FOUR_C_ASSERT_ALWAYS(location.local_row >= 0 && location.local_dof >= 0,
-          "TreeNewtonLinearSolver direct coefficient {} has invalid row {} dof {}.", context,
+          "TreeLinearSolver direct coefficient {} has invalid row {} dof {}.", context,
           location.local_row, location.local_dof);
       pending_direct_coefficients.push_back(PendingDirectCoefficientEntry{
           .local_row = location.local_row,
@@ -401,7 +400,7 @@ namespace ReducedLung
         const DirectCoefficientEntry& existing_entry =
             direct_coefficient_entries_[static_cast<std::size_t>(existing_position)];
         FOUR_C_ASSERT_ALWAYS(existing_entry.local_dof != entry.local_dof,
-            "TreeNewtonLinearSolver direct coefficient location row {} dof {} is registered more "
+            "TreeLinearSolver direct coefficient location row {} dof {} is registered more "
             "than once (existing {}, duplicate {}).",
             entry.local_row, entry.local_dof, existing_entry.context, entry.context);
       }
@@ -420,7 +419,7 @@ namespace ReducedLung
       for (const int global_dof_id : element.global_dof_ids)
       {
         FOUR_C_ASSERT_ALWAYS(global_dof_id >= 0 && global_dof_id < tree_metadata_.num_global_dofs,
-            "TreeNewtonLinearSolver correction dof {} is outside [0, {}).", global_dof_id,
+            "TreeLinearSolver correction dof {} is outside [0, {}).", global_dof_id,
             tree_metadata_.num_global_dofs);
         ++correction_dof_visit_count[static_cast<std::size_t>(global_dof_id)];
       }
@@ -428,17 +427,17 @@ namespace ReducedLung
     for (int global_dof_id = 0; global_dof_id < tree_metadata_.num_global_dofs; ++global_dof_id)
     {
       FOUR_C_ASSERT_ALWAYS(correction_dof_visit_count[static_cast<std::size_t>(global_dof_id)] == 1,
-          "TreeNewtonLinearSolver top-down recovery writes correction dof {} {} times.",
-          global_dof_id, correction_dof_visit_count[static_cast<std::size_t>(global_dof_id)]);
+          "TreeLinearSolver top-down recovery writes correction dof {} {} times.", global_dof_id,
+          correction_dof_visit_count[static_cast<std::size_t>(global_dof_id)]);
     }
   }
 
-  void TreeNewtonLinearSolver::set_values(std::span<const int> local_row_ids,
+  void TreeLinearSolver::set_values(std::span<const int> local_row_ids,
       std::span<const int> local_dof_ids, std::span<const double> values)
   {
     FOUR_C_ASSERT(
         local_row_ids.size() == local_dof_ids.size() && local_row_ids.size() == values.size(),
-        "TreeNewtonLinearSolver direct coefficient batch size mismatch: rows {}, dofs "
+        "TreeLinearSolver direct coefficient batch size mismatch: rows {}, dofs "
         "{}, values {}.",
         local_row_ids.size(), local_dof_ids.size(), values.size());
     for (std::size_t i = 0; i < values.size(); ++i)
@@ -447,12 +446,12 @@ namespace ReducedLung
     }
   }
 
-  void TreeNewtonLinearSolver::set_value(int local_row_id, int local_dof_id, double value)
+  void TreeLinearSolver::set_value(int local_row_id, int local_dof_id, double value)
   {
     *resolve_slot(local_row_id, local_dof_id) = value;
   }
 
-  double* TreeNewtonLinearSolver::resolve_slot(int local_row_id, int local_dof_id)
+  double* TreeLinearSolver::resolve_slot(int local_row_id, int local_dof_id)
   {
     const DirectCoefficientEntry* entry = nullptr;
     if (local_row_id >= 0 &&
@@ -472,17 +471,17 @@ namespace ReducedLung
       }
     }
     FOUR_C_ASSERT(entry != nullptr,
-        "TreeNewtonLinearSolver direct coefficient for row {} dof {} does not match the serial "
+        "TreeLinearSolver direct coefficient for row {} dof {} does not match the serial "
         "tree symbolic plan.",
         local_row_id, local_dof_id);
     FOUR_C_ASSERT(entry->value != nullptr,
-        "TreeNewtonLinearSolver direct coefficient for row {} dof {} has no storage.", local_row_id,
+        "TreeLinearSolver direct coefficient for row {} dof {} has no storage.", local_row_id,
         local_dof_id);
     return entry->value;
   }
 
-  void TreeCoefficientSlots::bind(TreeNewtonLinearSolver& target,
-      std::span<const int> local_row_ids, std::span<const int> local_dof_ids, int row_offset)
+  void TreeCoefficientSlots::bind(TreeLinearSolver& target, std::span<const int> local_row_ids,
+      std::span<const int> local_dof_ids, int row_offset)
   {
     FOUR_C_ASSERT(local_row_ids.size() == local_dof_ids.size(),
         "TreeCoefficientSlots bind size mismatch: rows {}, dofs {}.", local_row_ids.size(),
@@ -490,7 +489,7 @@ namespace ReducedLung
     if (bound_solver_ != nullptr)
     {
       FOUR_C_ASSERT(bound_solver_ == &target,
-          "TreeCoefficientSlots are bound to a different TreeNewtonLinearSolver. An assembly "
+          "TreeCoefficientSlots are bound to a different TreeLinearSolver. An assembly "
           "pipeline must be used with a single tree solver.");
       FOUR_C_ASSERT(slots_.size() == local_row_ids.size(),
           "TreeCoefficientSlots are bound to {} coefficients but {} were requested.", slots_.size(),
@@ -506,19 +505,19 @@ namespace ReducedLung
     bound_solver_ = &target;
   }
 
-  void TreeNewtonLinearSolver::validate_solve_inputs(
+  void TreeLinearSolver::validate_solve_inputs(
       const Core::LinAlg::Vector<double>& residual, const Core::LinAlg::Vector<double>& delta) const
   {
     const int comm_size = Core::Communication::num_mpi_ranks(delta.get_comm());
-    FOUR_C_ASSERT_ALWAYS(comm_size == 1,
-        "TreeNewtonLinearSolver currently supports only serial reduced-lung solves.");
+    FOUR_C_ASSERT_ALWAYS(
+        comm_size == 1, "TreeLinearSolver currently supports only serial reduced-lung solves.");
     FOUR_C_ASSERT_ALWAYS(residual.local_length() == tree_metadata_.num_global_equations,
-        "TreeNewtonLinearSolver requires all residual rows to be locally available.");
+        "TreeLinearSolver requires all residual rows to be locally available.");
     FOUR_C_ASSERT_ALWAYS(delta.local_length() == tree_metadata_.num_global_dofs,
-        "TreeNewtonLinearSolver requires all correction dofs to be locally available.");
+        "TreeLinearSolver requires all correction dofs to be locally available.");
   }
 
-  void TreeNewtonLinearSolver::initialize_correction_local_dof_ids(
+  void TreeLinearSolver::initialize_correction_local_dof_ids(
       const Core::LinAlg::Vector<double>& delta)
   {
     if (!correction_local_dof_ids_initialized_)
@@ -528,7 +527,7 @@ namespace ReducedLung
       {
         const int local_dof_id = correction_map.lid(global_dof_id);
         FOUR_C_ASSERT_ALWAYS(local_dof_id >= 0 && local_dof_id < delta.local_length(),
-            "TreeNewtonLinearSolver correction dof {} is not locally available.", global_dof_id);
+            "TreeLinearSolver correction dof {} is not locally available.", global_dof_id);
         return local_dof_id;
       };
 
@@ -550,7 +549,7 @@ namespace ReducedLung
     }
   }
 
-  double TreeNewtonLinearSolver::solve_root_inlet_pressure(
+  double TreeLinearSolver::solve_root_inlet_pressure(
       const Core::LinAlg::Vector<double>& residual) const
   {
     // Prescribed boundary residuals are assembled as unknown - prescribed_value, so this is 1.0.
@@ -568,18 +567,18 @@ namespace ReducedLung
     {
       const double root_subtree_slope = subtree_relation_g_[root_element_index_size];
       FOUR_C_ASSERT_ALWAYS(std::abs(root_subtree_slope) > pivot_tolerance_,
-          "TreeNewtonLinearSolver root inlet flow boundary cannot determine the root inlet "
+          "TreeLinearSolver root inlet flow boundary cannot determine the root inlet "
           "pressure because the condensed root flow relation has a near-zero pressure slope.");
       return (root_boundary_rhs / root_boundary_coeff -
                  subtree_relation_h_[root_element_index_size]) /
              root_subtree_slope;
     }
 
-    FOUR_C_THROW("TreeNewtonLinearSolver found an unsupported root inlet boundary type.");
+    FOUR_C_THROW("TreeLinearSolver found an unsupported root inlet boundary type.");
     return 0.0;
   }
 
-  void TreeNewtonLinearSolver::solve_with_coefficients(
+  void TreeLinearSolver::solve_with_coefficients(
       const Core::LinAlg::Vector<double>& residual, Core::LinAlg::Vector<double>& delta)
   {
     const auto add_equation_row = [&](int element_index, int equation_index, int local_row)
@@ -724,7 +723,7 @@ namespace ReducedLung
     {
       const std::size_t element_index_size = static_cast<std::size_t>(element_index);
       FOUR_C_ASSERT(inlet_pressure_stamp_[element_index_size] != solve_stamp,
-          "TreeNewtonLinearSolver inlet-pressure correction for element {} was written more than "
+          "TreeLinearSolver inlet-pressure correction for element {} was written more than "
           "once.",
           global_element_id_[element_index_size] + 1);
       inlet_pressure_by_element_[element_index_size] = value;
@@ -743,7 +742,7 @@ namespace ReducedLung
     {
       const std::size_t element_index_size = static_cast<std::size_t>(element_index);
       FOUR_C_ASSERT(inlet_pressure_stamp_[element_index_size] == solve_stamp,
-          "TreeNewtonLinearSolver missing inlet-pressure correction for element {}.",
+          "TreeLinearSolver missing inlet-pressure correction for element {}.",
           global_element_id_[element_index_size] + 1);
       const double inlet_pressure = inlet_pressure_by_element_[element_index_size];
       set_delta_local_value(
@@ -795,7 +794,7 @@ namespace ReducedLung
     }
   }
 
-  void TreeNewtonLinearSolver::solve(
+  void TreeLinearSolver::solve(
       const Core::LinAlg::Vector<double>& residual, Core::LinAlg::Vector<double>& delta)
   {
     validate_solve_inputs(residual, delta);

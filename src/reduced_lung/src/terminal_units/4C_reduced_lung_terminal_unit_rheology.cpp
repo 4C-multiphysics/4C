@@ -32,7 +32,7 @@ namespace ReducedLung::TerminalUnits::Rheology
       TreeCoefficientSlots p2;
       TreeCoefficientSlots q;
 
-      void bind(TreeNewtonLinearSolver& target, const TerminalUnitData& data)
+      void bind(TreeLinearSolver& target, const TerminalUnitData& data)
       {
         p1.bind(target, data.local_row_id, data.lid_p1);
         p2.bind(target, data.local_row_id, data.lid_p2);
@@ -191,7 +191,7 @@ namespace ReducedLung::TerminalUnits::Rheology
       }
     }
 
-    void evaluate_kelvin_voigt_tree_linearization(TreeNewtonLinearSolver& target,
+    void evaluate_kelvin_voigt_tree_linearization(TreeLinearSolver& target,
         TerminalUnitTreeCoefficients& coefficients, KelvinVoigt& kelvin_voigt_model,
         TerminalUnitData& data, const Core::LinAlg::Vector<double>& locally_relevant_dofs,
         const Elasticity::ElasticPressurePartialsView& elastic_pressure_partials)
@@ -214,7 +214,7 @@ namespace ReducedLung::TerminalUnits::Rheology
       }
     }
 
-    void evaluate_four_element_maxwell_tree_linearization(TreeNewtonLinearSolver& target,
+    void evaluate_four_element_maxwell_tree_linearization(TreeLinearSolver& target,
         TerminalUnitTreeCoefficients& coefficients, FourElementMaxwell& four_element_maxwell_model,
         TerminalUnitData& data, const Core::LinAlg::Vector<double>& locally_relevant_dofs,
         const Elasticity::ElasticPressurePartialsView& elastic_pressure_partials, double dt)
@@ -242,7 +242,7 @@ namespace ReducedLung::TerminalUnits::Rheology
       }
     }
 
-    void initialize_tree_linearization(TreeNewtonLinearSolver& target, TerminalUnitData& data)
+    void initialize_tree_linearization(TreeLinearSolver& target, TerminalUnitData& data)
     {
       /* Set the terminal-unit row pattern once. */
       for (size_t i = 0; i < data.number_of_elements(); ++i)
@@ -360,7 +360,7 @@ namespace ReducedLung::TerminalUnits::Rheology
     return std::visit(
         [](auto& /*model*/) -> StaticTreeLinearizationEvaluator
         {
-          return [](TerminalUnitData& data, TreeNewtonLinearSolver& target)
+          return [](TerminalUnitData& data, TreeLinearSolver& target)
           { initialize_tree_linearization(target, data); };
         },
         rheological_model);
@@ -377,7 +377,7 @@ namespace ReducedLung::TerminalUnits::Rheology
           {
             return [&model, elastic_pressure_partials_evaluator,
                        coefficients = TerminalUnitTreeCoefficients{}](TerminalUnitData& data,
-                       TreeNewtonLinearSolver& target,
+                       TreeLinearSolver& target,
                        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt) mutable
             {
               const auto elastic_pressure_partials =
@@ -390,7 +390,7 @@ namespace ReducedLung::TerminalUnits::Rheology
           {
             return [&model, elastic_pressure_partials_evaluator,
                        coefficients = TerminalUnitTreeCoefficients{}](TerminalUnitData& data,
-                       TreeNewtonLinearSolver& target,
+                       TreeLinearSolver& target,
                        const Core::LinAlg::Vector<double>& locally_relevant_dofs, double dt) mutable
             {
               const auto elastic_pressure_partials =

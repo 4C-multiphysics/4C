@@ -206,10 +206,10 @@ namespace
     }
   }
 
-  TEST(ReducedLungInputPipelineTest, NonlinearSolverDefaultsToNox)
+  TEST(ReducedLungInputPipelineTest, NonlinearSolverDefaultsToNewtonSparse)
   {
     const ReducedLungParameters::Dynamics dynamics{};
-    EXPECT_EQ(dynamics.nonlinear_solver, ReducedLungParameters::NonlinearSolverType::Nox);
+    EXPECT_EQ(dynamics.nonlinear_solver, ReducedLungParameters::NonlinearSolverType::NewtonSparse);
   }
 
   TEST(ReducedLungInputPipelineTest, NewtonTreeIsExplicitOptInValue)
