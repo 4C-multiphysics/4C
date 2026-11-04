@@ -45,7 +45,8 @@ namespace Constraints::SubmodelEvaluator
     void check_input();
 
     /*!
-     * \brief Reset the constraint stiffness matrix and delete node pairs
+     * \brief The periodic constraint equations are built once in the constructor
+     *        and stay unchanged for the whole simulation
      */
     void reset() override;
 
