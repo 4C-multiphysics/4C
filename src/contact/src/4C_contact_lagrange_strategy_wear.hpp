@@ -333,9 +333,21 @@ namespace Wear
 
     For a lagrangian strategy this includes the global normal / tangent matrices N and T,
     the global derivative matrices S and P and Tresca friction matrix L + vector r.
+    For wear, derivative matrices reserve row capacity from nodal derivative columns.
 
     */
     void initialize() override;
+
+    /// Reserve each stick displacement row for its distinct nodal derivative columns.
+    std::vector<int> calculate_stick_matrix_capacity(
+        const Core::LinAlg::Map& stick_dof_row_map) const;
+
+    /// Reserve each slip displacement row for its distinct nodal derivative columns.
+    std::vector<int> calculate_slip_matrix_capacity(
+        const Core::LinAlg::Map& slip_dof_row_map) const;
+
+    /// Reserve each active S row for its gap and implicit-wear derivative columns.
+    std::vector<int> calculate_s_matrix_capacity(const Core::LinAlg::Map& s_dof_row_map) const;
 
     /*!
     \brief Setup this strategy object (maps, vectors, etc.)
