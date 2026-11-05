@@ -64,6 +64,12 @@ Remarks:
   do only make sense for self contact.
 
 
+Contact search
+""""""""""""""
+
+Before the contact constraints are evaluated, |FOURC| performs a contact search to identify candidate source and target element pairs. By default, a binary tree search (``SEARCH_ALGORITHM: BinaryTree``) based on bounding volumes (k-DOPs) is used (see [contact:YangLaursen06]_).
+These volumes are inflated by ``SEARCH_PARAM`` times the minimum element edge length of all source and target elements of the contact pair.
+
 Contact and symmetry conditions
 """""""""""""""""""""""""""""""
 

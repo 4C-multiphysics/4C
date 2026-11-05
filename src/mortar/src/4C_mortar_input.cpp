@@ -60,7 +60,9 @@ std::vector<Core::IO::InputSpec> Mortar::valid_parameters()
                   .default_value = binarytree_bottom_up}),
 
           parameter<double>("SEARCH_PARAM",
-              {.description = "Radius / Bounding volume inflation for contact search",
+              {.description = "Inflation factor for the bounding volumes (k-DOPs) used in the "
+                              "contact search. The bounding volumes are enlarged by this factor "
+                              "times the minimum edge length of all contact pair elements.",
                   .default_value = 0.3}),
 
           parameter<bool>("SEARCH_USE_AUX_POS",

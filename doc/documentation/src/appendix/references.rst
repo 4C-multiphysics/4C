@@ -18,6 +18,8 @@ References
 
 .. [strdyn:bornemann03] P.B. Bornemann. Time integration algorithms for the steady states of dissipative non-linear dynamic systems. PhD thesis, Imperial College London, 2003.
 
+.. [contact:YangLaursen06] B. Yang, T.A. Laursen. A contact searching algorithm including bounding volume trees applied to finite sliding mortar formulations. Computational Mechanics, 41(2):189–205, 2008. doi:10.1007/s00466-006-0116-z
+
 ~
 ~
 ~
