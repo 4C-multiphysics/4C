@@ -15,6 +15,7 @@
 #include "4C_contact_lagrange_strategy.hpp"
 #include "4C_contact_wear_input.hpp"
 #include "4C_contact_wear_interface.hpp"
+#include "4C_contact_wear_row_capacity.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
@@ -28,6 +29,9 @@
 #include "4C_structure_new_timint_base.hpp"
 
 #include <Teuchos_Time.hpp>
+
+#include <algorithm>
+#include <set>
 
 FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
@@ -467,6 +471,124 @@ void Wear::LagrangeStrategyWear::assemble_mortar()
 void Wear::LagrangeStrategyWear::initialize()
 {
   CONTACT::LagrangeStrategy::initialize();
+
+  // Both stick and slip displacement rows can receive contributions from these
+  // derivatives. Use their distinct column IDs rather than a fixed row estimate.
+  const auto displacement_columns = [](CONTACT::FriNode& node)
+  {
+    std::set<int> columns;
+    const auto add_columns = [&columns](const auto& derivatives)
+    {
+      for (const auto& [column, value] : derivatives) columns.insert(column);
+    };
+    for (const auto& derivatives : node.data().get_deriv_n()) add_columns(derivatives);
+    for (const auto& derivatives : node.data().get_deriv_txi()) add_columns(derivatives);
+    for (const auto& derivatives : node.data().get_deriv_teta()) add_columns(derivatives);
+    for (const auto& derivatives : node.fri_data().get_deriv_jump()) add_columns(derivatives);
+    for (const auto& derivatives : node.fri_data().get_deriv_var_jump()) add_columns(derivatives);
+    add_columns(node.data().get_deriv_g());
+    add_columns(node.data().get_deriv_w());
+    return columns;
+  };
+
+  const auto& stick_row_map = linstickDIS_->row_map();
+  std::vector<std::set<int>> stick_columns(stick_row_map.num_my_elements());
+  for (const auto& interface : interface_)
+  {
+    const auto stick_nodes =
+        Core::LinAlg::split_map(*interface->active_nodes(), *interface->slip_nodes());
+    const auto stick_t =
+        Core::LinAlg::split_map(*interface->active_t_dofs(), *interface->slip_t_dofs());
+    for (int i = 0; i < stick_nodes->num_my_elements(); ++i)
+    {
+      auto* node =
+          dynamic_cast<CONTACT::FriNode*>(interface->discret().g_node(stick_nodes->gid(i)));
+      if (!node) FOUR_C_THROW("Cannot find frictional stick node {}", stick_nodes->gid(i));
+
+      const auto columns = displacement_columns(*node);
+      for (int tangent = 0; tangent < n_dim() - 1; ++tangent)
+      {
+        const int row = stick_t->gid((n_dim() - 1) * i) + tangent;
+        const int local_row = stick_row_map.lid(row);
+        if (local_row < 0) FOUR_C_THROW("Stick displacement row {} is not owned locally", row);
+        stick_columns[local_row].insert(columns.begin(), columns.end());
+      }
+    }
+  }
+  std::vector<int> stick_capacity;
+  stick_capacity.reserve(stick_columns.size());
+  for (const auto& columns : stick_columns)
+    stick_capacity.push_back(std::max(3, static_cast<int>(columns.size())));
+  linstickDIS_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      stick_row_map, stick_capacity, Core::LinAlg::SparseMatrix::StorageProfile::static_profile);
+
+  // Slip displacement derivatives can involve many more columns than the three
+  // reserved by the base strategy. The active set and nodal derivatives are
+  // available now, so reserve the union of possible columns for each local row.
+  const auto& row_map = linslipDIS_->row_map();
+  std::vector<std::set<int>> slip_columns(row_map.num_my_elements());
+  for (const auto& interface : interface_)
+  {
+    const auto slip_nodes = interface->slip_nodes();
+    const auto slip_t = interface->slip_t_dofs();
+    for (int i = 0; i < slip_nodes->num_my_elements(); ++i)
+    {
+      auto* node = dynamic_cast<CONTACT::FriNode*>(interface->discret().g_node(slip_nodes->gid(i)));
+      if (!node) FOUR_C_THROW("Cannot find frictional slip node {}", slip_nodes->gid(i));
+
+      const auto columns = displacement_columns(*node);
+
+      for (int tangent = 0; tangent < n_dim() - 1; ++tangent)
+      {
+        const int row = slip_t->gid((n_dim() - 1) * i) + tangent;
+        const int local_row = row_map.lid(row);
+        if (local_row < 0) FOUR_C_THROW("Slip displacement row {} is not owned locally", row);
+        slip_columns[local_row].insert(columns.begin(), columns.end());
+      }
+    }
+  }
+  std::vector<int> row_capacity;
+  row_capacity.reserve(slip_columns.size());
+  for (const auto& columns : slip_columns)
+    row_capacity.push_back(std::max(3, static_cast<int>(columns.size())));
+  linslipDIS_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      row_map, row_capacity, Core::LinAlg::SparseMatrix::StorageProfile::static_profile);
+
+  // S contains the gap derivative and, for implicit wear, the wear derivative.
+  // Their union is the row's maximum sparsity, rather than a fixed guess.
+  const auto& s_row_map = smatrix_->row_map();
+  std::vector<std::set<int>> s_columns(s_row_map.num_my_elements());
+  for (const auto& interface : interface_)
+  {
+    const auto active_nodes = interface->active_nodes();
+    const auto active_n = interface->active_n_dofs();
+    for (int i = 0; i < active_nodes->num_my_elements(); ++i)
+    {
+      auto* node = dynamic_cast<CONTACT::Node*>(interface->discret().g_node(active_nodes->gid(i)));
+      if (!node) FOUR_C_THROW("Cannot find active contact node {}", active_nodes->gid(i));
+
+      const auto columns =
+          Internal::s_derivative_columns(node->data().get_deriv_g(), node->data().get_deriv_w());
+      const auto add_row = [&](int row)
+      {
+        const int local_row = s_row_map.lid(row);
+        if (local_row < 0) FOUR_C_THROW("Contact S row {} is not owned locally", row);
+        s_columns[local_row].insert(columns.begin(), columns.end());
+      };
+      if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
+      {
+        for (int j = 0; j < node->num_dof(); ++j) add_row(node->dofs()[j]);
+      }
+      else
+        add_row(active_n->gid(i));
+    }
+  }
+  std::vector<int> s_capacity;
+  s_capacity.reserve(s_columns.size());
+  for (const auto& columns : s_columns)
+    s_capacity.push_back(std::max(3, static_cast<int>(columns.size())));
+  smatrix_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      s_row_map, s_capacity, Core::LinAlg::SparseMatrix::StorageProfile::static_profile);
 
   // (re)setup global tangent matrix
   tmatrix_ = std::make_shared<Core::LinAlg::SparseMatrix>(*gactivet_, 3);
