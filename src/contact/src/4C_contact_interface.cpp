@@ -34,9 +34,12 @@
 #include "4C_mortar_projector.hpp"
 #include "4C_rebalance_graph_based.hpp"
 #include "4C_scatra_ele_parameter_boundary.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_Time.hpp>
 #include <Teuchos_TimeMonitor.hpp>
+
+#include <algorithm>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -6270,6 +6273,7 @@ void CONTACT::Interface::evaluate_relative_movement(
 
   // parameters
   double pp = interface_params().get<double>("PENALTYPARAM");
+  const bool use_frictionless_first = interface_params().get<bool>("FRLESS_FIRST");
 
   // loop over all source row nodes on the current interface
   for (int i = 0; i < source_row_nodes()->num_my_elements(); ++i)
@@ -6342,14 +6346,33 @@ void CONTACT::Interface::evaluate_relative_movement(
 
     if (activeinfuture)
     {
+      const bool is_first_contact_step = not cnode->data().active_old();
+
+      // A node that was not active in the last converged time step has no meaningful old mortar
+      // mappings, which means that no jump can be calculated. However, if the first contact step is
+      // considered frictionless, the jump computation is not required.
+      const bool skip_jump_evaluation = (is_first_contact_step and use_frictionless_first);
+
+      // If the jump is not required, we can skip the computation and set the jump to zero.
+      if (skip_jump_evaluation)
+      {
+        std::fill_n(cnode->fri_data().jump(), n_dim(), 0.0);
+        auto& deriv_jump = cnode->fri_data().get_deriv_jump();
+        deriv_jump.clear();
+        deriv_jump.resize(cnode->num_dof());
+        continue;
+      }
+
+      // if the jump is required, it must be computable, i.e. we need history of the mortar
+      // mappings:
+      FOUR_C_ASSERT_ALWAYS(not cnode->fri_data().get_d_old().empty(),
+          "Error in Interface::evaluate_relative_movement(): No old D-Map!");
+
+
       Core::Gen::Pairedvector<int, double>& dmap = cnode->mo_data().get_d();
       Core::Gen::Pairedvector<int, double>& dmapold = cnode->fri_data().get_d_old();
 
       std::set<int> source_nodes = cnode->fri_data().get_source_nodes();
-
-      // check if there are entries in the old D map
-      if (dmapold.size() < 1)
-        FOUR_C_THROW("Error in Interface::evaluate_relative_movement(): No old D-Map!");
 
       std::map<int, double>::iterator colcurr;
       std::set<int>::iterator s_curr;
@@ -6433,11 +6456,9 @@ void CONTACT::Interface::evaluate_relative_movement(
       // linearization of jump vector
 
       // reset derivative map of jump
-      for (auto& j : cnode->fri_data().get_deriv_jump())
-      {
-        j.clear();
-      }
-      (cnode->fri_data().get_deriv_jump()).resize(0);
+      auto& deriv_jump = cnode->fri_data().get_deriv_jump();
+      deriv_jump.clear();
+      deriv_jump.resize(cnode->num_dof());
 
       /*** 01  **********************************************************/
 
