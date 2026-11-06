@@ -157,7 +157,7 @@ namespace
             .res_tol = 1.0e-14,
             .incr_tol = 1.0e-14,
             .conv_check = ViscoplastUtils::LocalNewtonConvCheck::residual_and_increment_ratio,
-            .diver_cont = ViscoplastUtils::LocalNewtonDiverCont::stop,
+            .diver_cont = ViscoplastUtils::LocalNewtonDiverCont::stop_and_request_step_reduction,
             .max_iter = 100,
             .max_exceedance_fact_res_tol = 1.0e1,
             .max_exceedance_fact_incr_tol = 1.0e1,

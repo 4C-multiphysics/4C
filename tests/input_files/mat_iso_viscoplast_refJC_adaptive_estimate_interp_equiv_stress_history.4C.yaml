@@ -60,7 +60,7 @@ MATERIALS:
         MAX_ITER: 100
         RES_TOL: 1.0e-10
         INCR_TOL: 1.0e-10
-        DIVER_CONT: stop
+        DIVER_CONT: stop_and_request_step_reduction
       ERROR_REGISTRATION_SETTINGS:
         MAX_PLASTIC_STRAIN_INCR: 1.0e12
       ADAPTIVE_ESTIMATE_INTERPOLATION:
