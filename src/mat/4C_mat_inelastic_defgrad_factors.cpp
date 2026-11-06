@@ -675,6 +675,8 @@ Mat::PAR::InelasticDefgradTransvIsotropElastViscoplast::
     InelasticDefgradTransvIsotropElastViscoplast(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
       viscoplastic_law_id_(matdata.parameters.get<int>("VISCOPLAST_LAW_ID")),
+      ref_temperature_viscoplast_law_(
+          matdata.parameters.get<double>("REF_TEMPERATURE_VISCOPLAST_LAW")),
       taylor_quinney_coefficient_(matdata.parameters.get<double>("TAYLOR_QUINNEY_COEFFICIENT")),
       fiber_reader_gid_(matdata.parameters.get<int>("FIBER_READER_ID")),
       yield_cond_a_(matdata.parameters.get<std::optional<double>>("YIELD_COND_A").value_or(0.0)),
@@ -831,9 +833,8 @@ std::shared_ptr<Mat::InelasticDefgradFactors> Mat::InelasticDefgradFactors::fact
           dynamic_cast<Mat::PAR::InelasticDefgradTransvIsotropElastViscoplast*>(current_material);
 
       // create viscoplastic law
-      auto viscoplastic_law = Mat::Viscoplastic::Law::factory(
-          params->viscoplastic_law_id(), params->error_registration_settings());
-
+      auto viscoplastic_law = Mat::Viscoplastic::Law::factory(params->viscoplastic_law_id(),
+          params->error_registration_settings(), params->ref_temperature_viscoplast_law());
       // construct fiber reader
       auto* fiber_reader_params = Global::Problem::instance(probinst)->materials()->parameter_by_id(
           params->fiber_reader_gid());
@@ -867,12 +868,13 @@ std::shared_ptr<Mat::InelasticDefgradFactors> Mat::InelasticDefgradFactors::fact
       const double thermal_expansion_coefficient =
           parentmat_input_params.get<double>("THERMAL_EXPANSION_COEFFICIENT");
 
-      const auto ref_temperature = parentmat_input_params.get<double>("REF_TEMPERATURE");
+      const auto ref_temperature_thermal_expansion =
+          parentmat_input_params.get<double>("REF_TEMPERATURE_THERMAL_EXPANSION");
 
       // return shared pointer to the inelastic factor
       return std::make_shared<InelasticDefgradTransvIsotropElastViscoplast>(params,
           viscoplastic_law, fiber_reader, potsumel, potsumel_transviso,
-          thermal_expansion_coefficient, ref_temperature);
+          thermal_expansion_coefficient, ref_temperature_thermal_expansion);
     }
 
     default:
@@ -1775,10 +1777,10 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::InelasticDefgradTransvIsotrop
     Mat::Elastic::CoupTransverselyIsotropic fiber_reader,
     std::vector<std::shared_ptr<Mat::Elastic::Summand>> pot_sum_el,
     std::vector<std::shared_ptr<Mat::Elastic::CoupTransverselyIsotropic>> pot_sum_el_transv_iso,
-    const double thermal_expansion_coefficient, const double ref_temperature)
+    const double thermal_expansion_coefficient, const double ref_temperature_thermal_expansion)
     : InelasticDefgradFactors(params),
       thermal_expansion_coefficient_(thermal_expansion_coefficient),
-      ref_temperature_(ref_temperature),
+      ref_temperature_thermal_expansion_(ref_temperature_thermal_expansion),
       potsumel_(std::move(pot_sum_el)),
       potsumel_transviso_(std::move(pot_sum_el_transv_iso)),
       fiber_reader_(std::move(fiber_reader)),
@@ -1800,7 +1802,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::InelasticDefgradTransvIsotrop
   time_step_tracker_.min_dt = 0.0;
 
   // initialize time step quantities
-  time_step_quantities_.init(ref_temperature_);
+  time_step_quantities_.init(ref_temperature_thermal_expansion_);
 
   // initialize vector tracking plastic flow for a single Gauss point; we resize it afterwards
   is_plastic_gp_.resize(1, false);
@@ -1830,7 +1832,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::pre_evaluate(
   const double previous_temperature = time_step_quantities_.current_temperature[gp];
 
   // set current absolute temperature
-  time_step_quantities_.current_temperature[gp] = ref_temperature_;
+  time_step_quantities_.current_temperature[gp] = ref_temperature_thermal_expansion_;
   if (params.isParameter("temperature"))
   {
     time_step_quantities_.current_temperature[gp] = params.get<double>("temperature");
@@ -1950,7 +1952,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
     Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3> dSedCe{};
     for (const auto& p : potsumel_transviso_)
     {
-      FOUR_C_ASSERT_ALWAYS(std::abs(temperature - ref_temperature_) <= 1.0e-16,
+      FOUR_C_ASSERT_ALWAYS(std::abs(temperature - ref_temperature_thermal_expansion_) <= 1.0e-16,
           "Thermoelastic coupling with transversely isotropic elastic summands is not supported "
           "yet. Use isotropic elastic summands only.");
       p->add_stress_aniso_principal(CeV, dSedCe, SeV, param_list, gp_, ele_gid_);
@@ -1965,7 +1967,8 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
   CeCeM.multiply_nn(1.0, state_quantities.curr_CeM, state_quantities.curr_CeM, 0.0);
 
   state_quantities.curr_ST = Mat::ThermalExpansion::compute_thermoelastic_stress_contribution(
-      temperature - ref_temperature_, thermal_expansion_coefficient_, potsumel_, gp_, ele_gid_);
+      temperature - ref_temperature_thermal_expansion_, thermal_expansion_coefficient_, potsumel_,
+      gp_, ele_gid_);
 
   /**
   compute symmetric part of thermo-elastic Mandel stress tensor
@@ -2999,8 +3002,9 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
   // via return mapping.
 
   // temperature was set by pre_evaluate
-  const double temperature =
-      params_.isParameter("temperature") ? params_.get<double>("temperature") : ref_temperature_;
+  const double temperature = params_.isParameter("temperature")
+                                 ? params_.get<double>("temperature")
+                                 : ref_temperature_thermal_expansion_;
   iFinM = constitutive_update(reduced_kinematics.defgrad, temperature).inv_plastic_defgrad;
 }
 

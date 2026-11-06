@@ -20,22 +20,28 @@ namespace ViscoplastUtils = Mat::InelasticDefgradTransvIsotropElastViscoplastUti
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
-Mat::Viscoplastic::Law::Law(Core::Mat::PAR::Parameter* params,
+Mat::Viscoplastic::Law::Law(Core::Mat::PAR::Parameter* params, const double reference_temperature,
     const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
         error_registration_settings)
-    : error_registration_settings_(error_registration_settings), params_(params)
+    : error_registration_settings_(error_registration_settings),
+      reference_temperature_(reference_temperature),
+      params_(params)
 {
 }
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
-Mat::Viscoplastic::Law::Law() : error_registration_settings_(), params_(nullptr) {}
+Mat::Viscoplastic::Law::Law()
+    : error_registration_settings_(), reference_temperature_(-1.0), params_(nullptr)
+{
+}
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 std::shared_ptr<Mat::Viscoplastic::Law> Mat::Viscoplastic::Law::factory(const int matnum,
     const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
-        error_registration_settings)
+        error_registration_settings,
+    const double reference_temperature)
 {
   // for the sake of safety
   if (Global::Problem::instance()->materials() == nullptr)
@@ -62,7 +68,7 @@ std::shared_ptr<Mat::Viscoplastic::Law> Mat::Viscoplastic::Law::factory(const in
 
       // return pointer to material
       return std::make_shared<Mat::Viscoplastic::ReformulatedJohnsonCook>(
-          params, error_registration_settings);
+          params, reference_temperature, error_registration_settings);
     }
 
     default:

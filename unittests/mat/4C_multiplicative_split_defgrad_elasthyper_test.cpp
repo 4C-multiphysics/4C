@@ -125,7 +125,7 @@ namespace
       std::vector<int> inelastic_defgrad_factor_ids = {inelastic_defgrad_id};
       multiplicativeSplitDefgradData.add("INELDEFGRADFACIDS", inelastic_defgrad_factor_ids);
       multiplicativeSplitDefgradData.add("DENS", 1.32e1);
-      multiplicativeSplitDefgradData.add("REF_TEMPERATURE", 293.0);
+      multiplicativeSplitDefgradData.add("REF_TEMPERATURE_THERMAL_EXPANSION", 293.0);
       multiplicativeSplitDefgradData.add("THERMAL_EXPANSION_COEFFICIENT", 0.1);
 
       // get pointer to parameter class
@@ -664,7 +664,7 @@ namespace
     no_growth_material_data.add("NUMFACINEL", 1);
     no_growth_material_data.add("INELDEFGRADFACIDS", std::vector<int>{no_growth_id});
     no_growth_material_data.add("DENS", 1.32e1);
-    no_growth_material_data.add("REF_TEMPERATURE", 293.0);
+    no_growth_material_data.add("REF_TEMPERATURE_THERMAL_EXPANSION", 293.0);
     no_growth_material_data.add("THERMAL_EXPANSION_COEFFICIENT", 0.1);
     Mat::PAR::MultiplicativeSplitDefgradElastHyper no_growth_parameters(
         Core::Mat::PAR::Parameter::Data{.parameters = no_growth_material_data});
