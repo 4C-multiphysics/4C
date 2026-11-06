@@ -13,10 +13,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  kokkosopenmp_build:
+  kokkosopenmp_fourc_assertions_trilinos_assertions_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:156ec01a
+      image: ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:b44604ae
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -38,13 +38,13 @@ jobs:
         with:
           directory: ${{ github.workspace }}/build
           retention-days: 1
-          name: kokkosopenmp_build
+          name: kokkosopenmp_fourc_assertions_trilinos_assertions_build
 
-  kokkosopenmp_test_minimal:
-    needs: kokkosopenmp_build
+  kokkosopenmp_fourc_assertions_trilinos_assertions_test_minimal:
+    needs: kokkosopenmp_fourc_assertions_trilinos_assertions_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:156ec01a
+      image: ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:b44604ae
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -61,7 +61,7 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
       - uses: ./.github/actions/download_directory
         with:
-          name: kokkosopenmp_build
+          name: kokkosopenmp_fourc_assertions_trilinos_assertions_build
           destination: ${{ github.workspace }}/build
       - name: Test
         run: |
@@ -73,10 +73,10 @@ jobs:
           OPENBLAS_NUM_THREADS: "1"
           OMP_DYNAMIC: "FALSE"
 
-  kokkoscuda_build:
+  kokkoscuda_fourc_assertions_trilinos_assertions_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:156ec01a
+      image: ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:b44604ae
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -172,10 +172,10 @@ jobs:
 
   ensure_all_tests_pass_kokkos:
     needs:
-      - kokkoscuda_build
+      - kokkoscuda_fourc_assertions_trilinos_assertions_build
       - clangcuda_cuda13_tiny_example_build
-      - kokkosopenmp_build
-      - kokkosopenmp_test_minimal
+      - kokkosopenmp_fourc_assertions_trilinos_assertions_build
+      - kokkosopenmp_fourc_assertions_trilinos_assertions_test_minimal
     runs-on: ubuntu-latest
     if: always() && github.ref != 'refs/heads/main'
     steps:
@@ -183,5 +183,5 @@ jobs:
         uses: re-actors/alls-green@release/v1
         with:
           # Temporarily disabled while fixing ccache; see #2183.
-          allowed-skips: kokkoscuda_build
+          allowed-skips: kokkoscuda_fourc_assertions_trilinos_assertions_build
           jobs: ${{ toJSON(needs) }}

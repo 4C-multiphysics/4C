@@ -30,7 +30,8 @@ jobs:
         with:
           path: ${{ env.HOME }}/opt
           key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh', 'dependencies/darwin/**/install.sh',
-            'dependencies/current/**/install.sh') }}-brew-${{ steps.brew-versions.outputs.hash }}
+            'dependencies/current/**/install.sh', 'dependencies/common/**') }}-brew-${{ steps.brew-versions.outputs.hash
+            }}
       - name: Compile and install the dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
         run: |
@@ -43,7 +44,8 @@ jobs:
         with:
           path: ${{ env.HOME }}/opt
           key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh', 'dependencies/darwin/**/install.sh',
-            'dependencies/current/**/install.sh') }}-brew-${{ steps.brew-versions.outputs.hash }}
+            'dependencies/current/**/install.sh', 'dependencies/common/**') }}-brew-${{ steps.brew-versions.outputs.hash
+            }}
       - name: Restore build cache
         id: cache-build
         uses: actions/cache/restore@v6
@@ -98,7 +100,8 @@ jobs:
         with:
           path: ${{ env.HOME }}/opt
           key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh', 'dependencies/darwin/**/install.sh',
-            'dependencies/current/**/install.sh') }}-brew-${{ steps.brew-versions.outputs.hash }}
+            'dependencies/current/**/install.sh', 'dependencies/common/**') }}-brew-${{ steps.brew-versions.outputs.hash
+            }}
       - name: Restore build cache
         id: cache-build
         uses: actions/cache/restore@v6

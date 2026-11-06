@@ -42,8 +42,9 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
-          file: docker/trilinos_develop/Dockerfile
+          file: docker/dependencies/Dockerfile
           build-args: |
+            TRILINOS_VARIANT=trilinos_develop
             TRILINOS_VERSION=develop
           push: true
           tags: ${{ env.IMAGE_NAME }}:develop

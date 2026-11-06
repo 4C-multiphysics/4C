@@ -57,15 +57,20 @@ docker pull ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:${VERSION_DEPEND
 docker tag ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:${VERSION_DEPENDENCIES} ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:${RELEASE}
 docker tag ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:${VERSION_DEPENDENCIES} ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:latest
 
+# Assertions dependencies image
+docker pull ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:${VERSION_DEPENDENCIES}
+docker tag ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:${VERSION_DEPENDENCIES} ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:${RELEASE}
+docker tag ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:${VERSION_DEPENDENCIES} ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:latest
+
 # kokkosparallel dependencies image
-docker pull ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:${VERSION_DEPENDENCIES_KOKKOSPARALLEL}
-docker tag ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:${VERSION_DEPENDENCIES_KOKKOSPARALLEL} ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:${RELEASE}
-docker tag ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:${VERSION_DEPENDENCIES_KOKKOSPARALLEL} ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:latest
+docker pull ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:${VERSION_DEPENDENCIES_KOKKOSPARALLEL}
+docker tag ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:${VERSION_DEPENDENCIES_KOKKOSPARALLEL} ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:${RELEASE}
+docker tag ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:${VERSION_DEPENDENCIES_KOKKOSPARALLEL} ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:latest
 
 # Oldest supported dependencies image
-docker pull ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:${VERSION_DEPENDENCIES}
-docker tag ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:${VERSION_DEPENDENCIES} ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:${RELEASE}
-docker tag ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:${VERSION_DEPENDENCIES} ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:latest
+docker pull ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions-oldest-supported:${VERSION_DEPENDENCIES}
+docker tag ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions-oldest-supported:${VERSION_DEPENDENCIES} ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions-oldest-supported:${RELEASE}
+docker tag ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions-oldest-supported:${VERSION_DEPENDENCIES} ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions-oldest-supported:latest
 
 
 # Prebuilt 4C
@@ -111,11 +116,14 @@ fi
 docker push ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:${RELEASE}
 docker push ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:latest
 
-docker push ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:${RELEASE}
-docker push ghcr.io/4c-multiphysics/4c-dependencies-trilinos-kokkosparallel:latest
+docker push ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:${RELEASE}
+docker push ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:latest
 
-docker push ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:${RELEASE}
-docker push ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-oldest-supported:latest
+docker push ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:${RELEASE}
+docker push ghcr.io/4c-multiphysics/4c-dependencies-assertions-trilinos-kokkosparallel:latest
+
+docker push ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions-oldest-supported:${RELEASE}
+docker push ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions-oldest-supported:latest
 
 docker push ghcr.io/4c-multiphysics/4c:${RELEASE}
 docker push ghcr.io/4c-multiphysics/4c:latest
