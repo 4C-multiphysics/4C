@@ -51,6 +51,7 @@
 #include "4C_mat_constraintmixture_history.hpp"
 #include "4C_mat_crystal_plasticity.hpp"
 #include "4C_mat_damage.hpp"
+#include "4C_mat_ductile_damage.hpp"
 #include "4C_mat_elasthyper.hpp"
 #include "4C_mat_elchmat.hpp"
 #include "4C_mat_fluid_linear_density_viscosity.hpp"
@@ -251,6 +252,7 @@ namespace
       << Mat::PlasticLinElastType::instance().name() << " " << Mat::RobinsonType::instance().name()
       << " " << Mat::DamageType::instance().name() << " "
       << Mat::ProgressiveDamageType::instance().name() << " "
+      << Mat::DuctileDamageType::instance().name() << " "
       << Mat::Maxwell0dAcinusType::instance().name() << " "
       << Mat::Maxwell0dAcinusNeoHookeanType::instance().name() << " "
       << Mat::Maxwell0dAcinusExponentialType::instance().name() << " "

@@ -11,6 +11,7 @@
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
+#include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
@@ -237,6 +238,8 @@ void Mat::ThermoPlasticHyperElast::unpack(Core::Communication::UnpackBuffer& buf
     extract_from_pack(buffer, tmp_scalar);
     accplstraincurr_->push_back(tmp_scalar);
   }
+  // only valid for the current evaluation, i.e., not packed
+  d_accplstrain_d_glstrain_.assign(histsize, {});
 
   extract_from_pack(buffer, plastic_step_);
 }
@@ -274,6 +277,7 @@ void Mat::ThermoPlasticHyperElast::setup(int numgp, const Discret::Elements::Fib
 
   accplstrainlast_->resize(numgp);
   accplstraincurr_->resize(numgp);
+  d_accplstrain_d_glstrain_.assign(numgp, {});
 
   mechdiss_->resize(numgp);
   mechdiss_k_tt_->resize(numgp);
@@ -586,6 +590,7 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
     // _n^{trial} --> _{n+1}
     bebarcurr_->at(gp) = bebar_trial;
     accplstraincurr_->at(gp) = accplstrainlast_->at(gp);
+    d_accplstrain_d_glstrain_.at(gp) = {};
     devtau = devtau_trial;
     Dgamma = 0.0;
 
@@ -694,6 +699,8 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
     bebarcurr_->at(gp) = (bebar_trial);
     bebarcurr_->at(gp).update((-2.0 / 3.0 * Dgamma * tracebebar), n, 1.0);
 
+    d_accplstrain_d_glstrain_.at(gp) = {};
+
     // plastic step update
     if (Dgamma != 0.0)
     {
@@ -787,6 +794,12 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
       dDgamma_dg.update((1.0 - 2.0 / 3.0 * q_trial * Dgamma / mubar), N);
       dDgamma_dg.update((q_trial / mubar), devNsquare, 1.0);
       dDgamma_dg.scale(1.0 / beta0);
+
+      // dastrain^p/dE = sqrt(2/3) . dDgamma/dE
+      for (int i = 0; i < 3; ++i)
+        for (int j = i; j < 3; ++j)
+          d_accplstrain_d_glstrain_.at(gp)(i, j) =
+              sqrt(2.0 / 3.0) * 0.5 * (dDgamma_dg(i, j) + dDgamma_dg(j, i));
 
       // -------------------------------------- internal/mechanical dissipation
 
@@ -1249,6 +1262,22 @@ void Mat::ThermoPlasticHyperElast::vis_names(std::map<std::string, int>& names) 
   std::string thrplheating = "thrplheating";
   names[thrplheating] = 1;  // scalar
 }  // vis_names()
+
+void Mat::ThermoPlasticHyperElast::register_output_data_names(
+    std::unordered_map<std::string, int>& names_and_size) const
+{
+  names_and_size["accumulated_plastic_strain"] = 1;
+}
+
+bool Mat::ThermoPlasticHyperElast::evaluate_output_data(
+    const std::string& name, Core::LinAlg::SerialDenseMatrix& data) const
+{
+  if (name != "accumulated_plastic_strain") return false;
+
+  // the output follows the update, i.e., the converged values are in the old history vector
+  for (int gp = 0; gp < data.numRows(); ++gp) data(gp, 0) = accplstrainlast_->at(gp);
+  return true;
+}
 
 
 /*---------------------------------------------------------------------*

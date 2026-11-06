@@ -17,6 +17,7 @@
 #include "4C_mat_constraintmixture.hpp"
 #include "4C_mat_crosslinkermat.hpp"
 #include "4C_mat_damage.hpp"
+#include "4C_mat_ductile_damage.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_mat_elast_anisoactivestress_evolution.hpp"
 #include "4C_mat_elast_coup13apow.hpp"
@@ -279,6 +280,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     case Core::Materials::m_progressive_damage:
     {
       return make_parameter_impl<Mat::PAR::ProgressiveDamage>(id, type, input_data);
+    }
+    case Core::Materials::m_ductile_damage:
+    {
+      return make_parameter_impl<Mat::PAR::DuctileDamage>(id, type, input_data);
     }
     case Core::Materials::m_struct_multiscale:
     {

@@ -16,6 +16,7 @@
 #include "4C_comm_parobjectfactory.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_so3_material.hpp"
+#include "4C_mat_trait_plastic.hpp"
 #include "4C_mat_trait_thermo_solid.hpp"
 #include "4C_material_parameter_base.hpp"
 
@@ -87,7 +88,7 @@ namespace Mat
 
   /*----------------------------------------------------------------------*/
   //! wrapper for finite strain elasto-plastic material
-  class ThermoPlasticHyperElast : public Trait::ThermoSolid
+  class ThermoPlasticHyperElast : public Trait::ThermoSolid, public Trait::Plastic
   {
    public:
     //! construct empty material object
@@ -213,6 +214,17 @@ namespace Mat
     //! are reset
     double accumulated_strain(int gp) const { return (accplstrainlast_->at(gp)); }
 
+    [[nodiscard]] double equivalent_plastic_strain(int gp) const override
+    {
+      return accplstraincurr_->at(gp);
+    }
+
+    [[nodiscard]] Core::LinAlg::SymmetricTensor<double, 3, 3>
+    d_equivalent_plastic_strain_d_glstrain(int gp) const override
+    {
+      return d_accplstrain_d_glstrain_.at(gp);
+    }
+
     //! mechanical dissipation
     double mech_diss(int gp) const { return (mechdiss_->at(gp)); }
 
@@ -253,6 +265,12 @@ namespace Mat
 
     //! return names of visualization data
     void vis_names(std::map<std::string, int>& names) const override;
+
+    void register_output_data_names(
+        std::unordered_map<std::string, int>& names_and_size) const override;
+
+    bool evaluate_output_data(
+        const std::string& name, Core::LinAlg::SerialDenseMatrix& data) const override;
 
     //! return visualization data
     bool vis_data(
@@ -354,6 +372,8 @@ namespace Mat
     std::shared_ptr<std::vector<double>> accplstrainlast_;
     //! current (i.e. at t_n+1) accumulated plastic strain
     std::shared_ptr<std::vector<double>> accplstraincurr_;
+    //! derivative of the current accumulated plastic strain w.r.t. the Green-Lagrange strain
+    std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> d_accplstrain_d_glstrain_;
 
     //@}
 

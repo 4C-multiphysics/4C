@@ -1559,6 +1559,33 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                         "fracture energy (crack band model)"});
   }
 
+  /*----------------------------------------------------------------------*/
+  // Ductile damage of a wrapped plastic solid material
+  {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+    known_materials[Core::Materials::m_ductile_damage] = group("MAT_Struct_DuctileDamage",
+        {
+            parameter<int>(
+                "MATID", {.description = "material id of the wrapped plastic solid material"}),
+            parameter<double>("D1", {.description = "parameter d1 of the fracture strain d1 + d2 "
+                                                    "exp(d3 triaxiality) (Johnson-Cook)"}),
+            parameter<double>("D2", {.description = "parameter d2 of the fracture strain"}),
+            parameter<double>("D3", {.description = "parameter d3 of the fracture strain"}),
+            parameter<double>("FRACTURE_ENERGY",
+                {.description = "energy dissipated per unit crack area until the material is "
+                                "completely damaged",
+                    .validator = positive<double>()}),
+            parameter<double>("RESIDUAL_STRENGTH_RATIO",
+                {.description = "ratio of the remaining to the initial strength at which a "
+                                "material point fails, e.g. for element deactivation, the damage "
+                                "does not grow beyond this point",
+                    .validator = in_range(excl(0.0), excl(1.0))}),
+        },
+        {.description = "Isotropic ductile damage of a wrapped plastic solid material, initiated "
+                        "by the Johnson-Cook fracture strain and evolving with the plastic "
+                        "displacement of a crack band (Lemaitre coupling)"});
+  }
+
 
   /*----------------------------------------------------------------------*/
   // Visco-elastic Neo-Hookean material law
