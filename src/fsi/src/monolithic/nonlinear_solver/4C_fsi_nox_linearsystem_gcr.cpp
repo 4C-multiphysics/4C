@@ -12,6 +12,7 @@
 #include "4C_linalg_vector.hpp"
 #include "4C_solver_nonlin_nox_linearproblem.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
+#include "4C_utils_exceptions.hpp"
 #include "4C_utils_shared_ptr_from_ref.hpp"
 
 #include <Teuchos_ParameterList.hpp>
@@ -371,6 +372,13 @@ bool FSI::Nonlinear::LinearSystemGCR::compute_jacobian(const NOX::Nln::Vector& x
 {
   bool success = jacInterfacePtr->compute_jacobian(x.get_linalg_vector(), *jacPtr);
   return success;
+}
+
+
+bool FSI::Nonlinear::LinearSystemGCR::compute_f_and_jacobian(
+    const NOX::Nln::Vector& /*x*/, NOX::Nln::Vector& /*rhs*/)
+{
+  FOUR_C_THROW("FSI::Nonlinear::LinearSystemGCR does not support compute_f_and_jacobian().");
 }
 
 

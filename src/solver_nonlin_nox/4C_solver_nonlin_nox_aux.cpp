@@ -82,6 +82,10 @@ NOX::Nln::LinSystem::LinearSystemType NOX::Nln::Aux::get_linear_system_type(
 
   switch (num_ls)
   {
+    case 0:
+    {
+      FOUR_C_THROW("The linear solver map has the size 0! Required size > 0.");
+    }
     case 1:
     {
       if (linsolvers.find(NOX::Nln::sol_generic) != ci_end)

@@ -13,6 +13,7 @@
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_solver_nonlin_nox_interface_jacobian_base.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
+#include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -121,6 +122,15 @@ bool FSI::Nonlinear::LinearSystem::compute_jacobian(const NOX::Nln::Vector& x)
 {
   bool success = jac_interface_ptr_->compute_jacobian(x.get_linalg_vector(), *jac_ptr_);
   return success;
+}
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+bool FSI::Nonlinear::LinearSystem::compute_f_and_jacobian(
+    const NOX::Nln::Vector& /*x*/, NOX::Nln::Vector& /*rhs*/)
+{
+  FOUR_C_THROW("FSI::Nonlinear::LinearSystem does not support compute_f_and_jacobian().");
 }
 
 
