@@ -18,6 +18,7 @@
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_material_parameter_base.hpp"
+#include "4C_io_input_field.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -37,7 +38,7 @@ namespace Mat
       //@{
 
       /// Young's modulus
-      const double youngs_;
+      const Core::IO::InputField<double> youngs_;
       /// Possion's ratio
       const double poissonratio_;
       /// mass density
@@ -104,7 +105,7 @@ namespace Mat
     }
 
     /// Young's modulus
-    [[nodiscard]] double youngs() const { return params_->youngs_; }
+    [[nodiscard]] double youngs(int eleGID) const { return params_->youngs_.at(eleGID); }
 
     /// Poisson's ratio
     [[nodiscard]] double poisson_ratio() const { return params_->poissonratio_; }
@@ -112,9 +113,9 @@ namespace Mat
     [[nodiscard]] double density() const override { return params_->density_; }
 
     /// shear modulus
-    [[nodiscard]] double shear_mod() const
+    [[nodiscard]] double shear_mod(int eleGID) const
     {
-      return 0.5 * params_->youngs_ / (1.0 + params_->poissonratio_);
+      return 0.5 * params_->youngs_.at(eleGID) / (1.0 + params_->poissonratio_);
     }
 
     [[nodiscard]] Core::Mat::PAR::Parameter* parameter() const override { return params_; }

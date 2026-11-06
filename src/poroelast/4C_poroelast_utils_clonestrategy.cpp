@@ -56,9 +56,12 @@ void PoroElast::Utils::PoroelastCloneStrategy::set_element_data(
   {
     fluid->set_material(0, Mat::factory(matid));
     // Copy Initial Porosity from StructPoro Material to FluidPoro Material
+    int eleGID = oldele->id();
+    auto struct_mat = std::static_pointer_cast<Mat::StructPoro>(oldele->material());
+    Core::IO::InputField<double> init_porosity_{struct_mat->init_porosity(eleGID)};
+
     static_cast<Mat::PAR::FluidPoro*>(fluid->material()->parameter())
-        ->set_initial_porosity(
-            std::static_pointer_cast<Mat::StructPoro>(oldele->material())->init_porosity());
+        ->set_initial_porosity(init_porosity_, eleGID);
     fluid->set_dis_type(oldele->shape());  // set distype as well!
     fluid->set_is_ale(true);
 
