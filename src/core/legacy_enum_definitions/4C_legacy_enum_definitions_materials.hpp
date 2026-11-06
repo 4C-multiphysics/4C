@@ -136,6 +136,7 @@ namespace Core::Materials
     m_pllinelast,        ///< linear elasticity (St. Venant Kirchhoff) and von Mises plasticity
     m_plnlnlogneohooke,  ///< Neo-Hooke elasticity with logarithmic finite strain von Mises
                          ///< plasticity
+    m_progressive_damage,            ///< progressive damage of a wrapped solid material
     m_poro_law_constant,             ///< constant porosity
     m_poro_law_linear,               ///< linear law for porosity
     m_poro_law_logNeoHooke_Penalty,  ///< neo hookeian like law for porosity + penalty term

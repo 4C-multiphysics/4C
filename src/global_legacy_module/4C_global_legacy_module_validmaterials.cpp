@@ -1533,6 +1533,32 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {.description = "elasto-plastic von Mises material with ductile damage"});
   }
 
+  /*----------------------------------------------------------------------*/
+  // Progressive damage of a wrapped solid material
+  {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+    known_materials[Core::Materials::m_progressive_damage] = group("MAT_Struct_ProgressiveDamage",
+        {
+            parameter<int>("MATID", {.description = "material id of the wrapped solid material"}),
+            parameter<double>("TENSILE_STRENGTH",
+                {.description = "maximum principal Cauchy stress of the undamaged material at "
+                                "which damage initiates",
+                    .validator = positive<double>()}),
+            parameter<double>("FRACTURE_ENERGY",
+                {.description = "energy dissipated per unit crack area until the material is "
+                                "completely damaged",
+                    .validator = positive<double>()}),
+            parameter<double>("RESIDUAL_STRENGTH_RATIO",
+                {.description = "ratio of the remaining to the tensile strength at which a "
+                                "material point fails, e.g. for element deactivation, the damage "
+                                "does not grow beyond this point",
+                    .validator = in_range(excl(0.0), excl(1.0))}),
+        },
+        {.description = "Isotropic progressive damage of a wrapped solid material with a maximum "
+                        "principal stress criterion and exponential softening regularized by the "
+                        "fracture energy (crack band model)"});
+  }
+
 
   /*----------------------------------------------------------------------*/
   // Visco-elastic Neo-Hookean material law

@@ -1,0 +1,156 @@
+TITLE:
+  - "Element deactivation by progressive damage for monolithic TSI"
+  - "- bar clamped at x=0 and pulled at x=4, heated at the pulled end"
+  - "- the third element softens with progressive damage (maximum principal stress criterion,"
+  - "  exponential softening regularized by the fracture energy) until it fails and is"
+  - "  deactivated together with its thermo element, the other elements unload"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Thermo_Structure_Interaction"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  GAUSS_POINT_DATA_OUTPUT_TYPE: element_center
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 1
+  MAXTIME: 12
+  TOLDISP: 1e-10
+  TOLRES: 1e-10
+  LINEAR_SOLVER: 1
+  element_erosion:
+    deactivate_failed_elements: true
+THERMAL DYNAMIC:
+  DYNAMICTYPE: Statics
+  TIMESTEP: 1
+  NUMSTEP: 12
+  TOLTEMP: 1e-10
+  TOLRES: 1e-10
+  LINEAR_SOLVER: 1
+TSI DYNAMIC:
+  NUMSTEP: 12
+  MAXTIME: 12
+  TIMESTEP: 1
+  RESTARTEVERY: 1
+TSI DYNAMIC/MONOLITHIC:
+  CONVTOL: 1e-10
+  TOLINC: 1e-10
+  NORM_RESF: "Abs"
+  LINEAR_SOLVER: 1
+  MERGE_TSI_BLOCK_MATRIX: true
+SOLVER 1:
+  SOLVER: "UMFPACK"
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_ProgressiveDamage:
+      MATID: 3
+      TENSILE_STRENGTH: 10
+      FRACTURE_ENERGY: 0.02
+      RESIDUAL_STRENGTH_RATIO: 0.05
+  - MAT: 2
+    MAT_Fourier:
+      CAPA: 3.297e+06
+      CONDUCT:
+        constant: [52]
+  - MAT: 3
+    MAT_Struct_ThermoStVenantK:
+      YOUNGNUM: 1
+      YOUNG: [21000]
+      NUE: 0.3
+      DENS: 1
+      THEXPANS: 1.2e-05
+      INITTEMP: 0
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 1
+    TAR_FIELD: "thermo"
+    TAR_MAT: 2
+  - SRC_FIELD: "structure"
+    SRC_MAT: 3
+    TAR_FIELD: "thermo"
+    TAR_MAT: 2
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.001, 0, 0]
+    FUNCT: [1, 0, 0]
+DESIGN SURF THERMO DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+  - E: 2
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [10]
+    FUNCT: [1]
+RESULT DESCRIPTION:
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 18
+      QUANTITY: "temp"
+      VALUE: 0.0
+      TOLERANCE: 1e-9
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 19
+      QUANTITY: "temp"
+      VALUE: 1.19999734432819267e+02
+      TOLERANCE: 1e-9
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 18
+      QUANTITY: "dispx"
+      VALUE: 0.0
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 19
+      QUANTITY: "dispx"
+      VALUE: 1.01297795903104813e-02
+      TOLERANCE: 1e-12
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 6 DSURFACE 1"
+  - "NODE 11 DSURFACE 1"
+  - "NODE 16 DSURFACE 1"
+  - "NODE 5 DSURFACE 2"
+  - "NODE 10 DSURFACE 2"
+  - "NODE 15 DSURFACE 2"
+  - "NODE 20 DSURFACE 2"
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 1.0 0.0 0.0"
+  - "NODE 3 COORD 2.0 0.0 0.0"
+  - "NODE 4 COORD 3.0 0.0 0.0"
+  - "NODE 5 COORD 4.0 0.0 0.0"
+  - "NODE 6 COORD 0.0 1.0 0.0"
+  - "NODE 7 COORD 1.0 1.0 0.0"
+  - "NODE 8 COORD 2.0 1.0 0.0"
+  - "NODE 9 COORD 3.0 1.0 0.0"
+  - "NODE 10 COORD 4.0 1.0 0.0"
+  - "NODE 11 COORD 0.0 0.0 1.0"
+  - "NODE 12 COORD 1.0 0.0 1.0"
+  - "NODE 13 COORD 2.0 0.0 1.0"
+  - "NODE 14 COORD 3.0 0.0 1.0"
+  - "NODE 15 COORD 4.0 0.0 1.0"
+  - "NODE 16 COORD 0.0 1.0 1.0"
+  - "NODE 17 COORD 1.0 1.0 1.0"
+  - "NODE 18 COORD 2.0 1.0 1.0"
+  - "NODE 19 COORD 3.0 1.0 1.0"
+  - "NODE 20 COORD 4.0 1.0 1.0"
+STRUCTURE ELEMENTS:
+  - "1 SOLIDSCATRA HEX8 1 2 7 6 11 12 17 16 MAT 3 KINEM nonlinear TYPE Undefined"
+  - "2 SOLIDSCATRA HEX8 2 3 8 7 12 13 18 17 MAT 3 KINEM nonlinear TYPE Undefined"
+  - "3 SOLIDSCATRA HEX8 3 4 9 8 13 14 19 18 MAT 1 KINEM nonlinear TYPE Undefined"
+  - "4 SOLIDSCATRA HEX8 4 5 10 9 14 15 20 19 MAT 3 KINEM nonlinear TYPE Undefined"

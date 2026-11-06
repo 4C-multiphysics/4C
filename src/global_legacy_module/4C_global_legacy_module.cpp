@@ -83,6 +83,7 @@
 #include "4C_mat_myocard.hpp"
 #include "4C_mat_newtonianfluid.hpp"
 #include "4C_mat_plasticlinelast.hpp"
+#include "4C_mat_progressive_damage.hpp"
 #include "4C_mat_robinson.hpp"
 #include "4C_mat_scalardepinterp.hpp"
 #include "4C_mat_scatra.hpp"
@@ -249,6 +250,7 @@ namespace
       << Discret::Elements::KirchhoffLoveShellNurbsType::instance().name() << " "
       << Mat::PlasticLinElastType::instance().name() << " " << Mat::RobinsonType::instance().name()
       << " " << Mat::DamageType::instance().name() << " "
+      << Mat::ProgressiveDamageType::instance().name() << " "
       << Mat::Maxwell0dAcinusType::instance().name() << " "
       << Mat::Maxwell0dAcinusNeoHookeanType::instance().name() << " "
       << Mat::Maxwell0dAcinusExponentialType::instance().name() << " "

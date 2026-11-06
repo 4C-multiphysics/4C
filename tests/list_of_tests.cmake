@@ -2446,6 +2446,8 @@ four_c_test(TEST_FILE tsi_element_deactivation_material_iterstagg.4C.yaml NP 2 R
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5)
 four_c_test(TEST_FILE tsi_element_deactivation_monolithic.4C.yaml NP 2 RETURN_AS current)
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 4)
+four_c_test(TEST_FILE tsi_element_deactivation_progressive_damage_monolithic.4C.yaml NP 2 RETURN_AS current)
+__four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 6)
 four_c_test(TEST_FILE tsi_geonln_heatconvection_fbar_genalpha_monolithic.4C.yaml NP 2)
 four_c_test(TEST_FILE tsi_geonln_heatconvection_fbar_monolithic.4C.yaml NP 2)
 four_c_test(TEST_FILE tsi_geonln_heatconvection_iterstagg.4C.yaml NP 2)

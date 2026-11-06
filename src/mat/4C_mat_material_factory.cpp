@@ -115,6 +115,7 @@
 #include "4C_mat_plasticnlnlogneohooke.hpp"
 #include "4C_mat_poro_density_law.hpp"
 #include "4C_mat_poro_law.hpp"
+#include "4C_mat_progressive_damage.hpp"
 #include "4C_mat_robinson.hpp"
 #include "4C_mat_scalardepinterp.hpp"
 #include "4C_mat_scatra.hpp"
@@ -274,6 +275,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     case Core::Materials::m_elpldamage:
     {
       return make_parameter_impl<Mat::PAR::Damage>(id, type, input_data);
+    }
+    case Core::Materials::m_progressive_damage:
+    {
+      return make_parameter_impl<Mat::PAR::ProgressiveDamage>(id, type, input_data);
     }
     case Core::Materials::m_struct_multiscale:
     {
