@@ -40,6 +40,7 @@
 #include <Teuchos_ParameterList.hpp>
 
 #include <algorithm>
+#include <span>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -1251,6 +1252,18 @@ namespace Discret::Elements
    * jacobian_mapping, double integration_factor, int gp) that will be called for each integration
    * point.
    */
+  /*!
+   * @brief Return the reference coordinates of the nodes as a flat view with dim values per node
+   */
+  template <Core::FE::CellType celltype>
+  std::span<const double> get_reference_nodal_coordinates(
+      const ElementNodes<celltype>& nodal_coordinates)
+  {
+    // the matrix is stored column-major, i.e., the coordinates of each node are contiguous
+    return {nodal_coordinates.reference_coordinates.data(),
+        Internal::num_dim<celltype> * Internal::num_nodes<celltype>};
+  }
+
   template <Core::FE::CellType celltype, typename GaussPointEvaluator>
   inline void for_each_gauss_point(const ElementNodes<celltype>& nodal_coordinates,
       ElementProperties<celltype> element_properties, const Core::FE::GaussIntegration& integration,

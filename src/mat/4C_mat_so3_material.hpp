@@ -19,6 +19,7 @@
 
 #include <Teuchos_ParameterList.hpp>
 
+#include <span>
 #include <unordered_map>
 
 FOUR_C_NAMESPACE_OPEN
@@ -43,6 +44,10 @@ namespace Mat
     /// Coordinates of the evaluation point in the reference configuration (nullptr if not
     /// available)
     const Core::LinAlg::Tensor<double, dim>* ref_coords;
+
+    /// Coordinates of the element nodes in the reference configuration with dim consecutive values
+    /// per node, e.g., for the regularization of softening materials (empty if not available)
+    std::span<const double> reference_nodal_coordinates = {};
   };
 
   class So3Material : public Core::Mat::Material

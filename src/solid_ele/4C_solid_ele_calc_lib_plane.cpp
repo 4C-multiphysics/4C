@@ -23,6 +23,7 @@
 #include <Teuchos_ParameterList.hpp>
 
 #include <cmath>
+#include <vector>
 
 
 FOUR_C_NAMESPACE_OPEN
@@ -30,7 +31,8 @@ FOUR_C_NAMESPACE_OPEN
 namespace
 {
   Mat::EvaluationContext<3> translate_context(const Mat::EvaluationContext<2>& context,
-      Core::LinAlg::Tensor<double, 3>& xi, Core::LinAlg::Tensor<double, 3>& ref_coords)
+      Core::LinAlg::Tensor<double, 3>& xi, Core::LinAlg::Tensor<double, 3>& ref_coords,
+      std::vector<double>& reference_nodal_coordinates)
   {
     if (context.xi)
     {
@@ -44,11 +46,19 @@ namespace
       ref_coords(1) = (*context.ref_coords)(1);
       ref_coords(2) = 0.0;
     }
+    reference_nodal_coordinates.clear();
+    for (std::size_t i = 0; i + 1 < context.reference_nodal_coordinates.size(); i += 2)
+    {
+      reference_nodal_coordinates.insert(
+          reference_nodal_coordinates.end(), {context.reference_nodal_coordinates[i],
+                                                 context.reference_nodal_coordinates[i + 1], 0.0});
+    }
     return {
         .total_time = context.total_time,
         .time_step_size = context.time_step_size,
         .xi = context.xi ? &xi : nullptr,
         .ref_coords = context.ref_coords ? &ref_coords : nullptr,
+        .reference_nodal_coordinates = reference_nodal_coordinates,
     };
   }
 
@@ -105,7 +115,9 @@ namespace
 
     // making 3D context out of 2D context
     Core::LinAlg::Tensor<double, 3> xi, gp_ref_coord;
-    const Mat::EvaluationContext<3> context_3d = translate_context(context, xi, gp_ref_coord);
+    std::vector<double> reference_nodal_coordinates;
+    const Mat::EvaluationContext<3> context_3d =
+        translate_context(context, xi, gp_ref_coord, reference_nodal_coordinates);
 
     Core::LinAlg::SymmetricTensor<double, 3, 3> pk2_3d{};
     Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3> cmat_3d{};
@@ -133,7 +145,9 @@ namespace
   {
     // making 3D context out of 2D context
     Core::LinAlg::Tensor<double, 3> xi, gp_ref_coord;
-    const Mat::EvaluationContext<3> context_3d = translate_context(context, xi, gp_ref_coord);
+    std::vector<double> reference_nodal_coordinates;
+    const Mat::EvaluationContext<3> context_3d =
+        translate_context(context, xi, gp_ref_coord, reference_nodal_coordinates);
 
     Core::LinAlg::SymmetricTensor<double, 3, 3> pk2_3d{};
     Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3> cmat_3d{};
@@ -210,7 +224,9 @@ void Discret::Elements::transform_to_3d(Mat::So3Material& material,
 {
   // making 3D context out of 2D context
   Core::LinAlg::Tensor<double, 3> xi, gp_ref_coord;
-  const Mat::EvaluationContext<3> context_3d = translate_context(context, xi, gp_ref_coord);
+  std::vector<double> reference_nodal_coordinates;
+  const Mat::EvaluationContext<3> context_3d =
+      translate_context(context, xi, gp_ref_coord, reference_nodal_coordinates);
 
   switch (element_properties.plane_assumption)
   {
