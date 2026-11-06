@@ -1135,20 +1135,21 @@ Core::LinAlg::Matrix<6, 1> Mat::MultiplicativeSplitDefgradElastHyper::evaluate_o
   return dstressdx;
 }
 
-void Mat::MultiplicativeSplitDefgradElastHyper::stress_temperature_modulus_and_deriv(
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, const int gp)
+Mat::StressTemperatureModulus
+Mat::MultiplicativeSplitDefgradElastHyper::evaluate_stress_temperature_modulus(double temperature,
+    const DeformationState& deformation_state, const EvaluationContext<3>& context, const int gp,
+    const int eleGID)
 {
   // this contribution is intentionally neglected so far.
-  stm.fill(0.0);
-  stm_dT.fill(0.0);
+  return {};
 }
 
-Mat::HeatSource Mat::MultiplicativeSplitDefgradElastHyper::evaluate_additional_heat_source(
-    const EvaluationContext<3>& context, const int gp, const int eleGID,
-    const Core::LinAlg::Matrix<3, 3>* current_defgrad, const double current_temperature)
+Mat::AdditionalHeatSource
+Mat::MultiplicativeSplitDefgradElastHyper::evaluate_additional_heat_source(const double temperature,
+    const DeformationState& deformation_state, const EvaluationContext<3>& context, const int gp,
+    const int eleGID)
 {
-  HeatSource heat_source;
+  AdditionalHeatSource heat_source;
 
   // References to vector of inelastic contributions and inelastic deformation gradients
   const auto& facdefgradin = inelastic_->fac_def_grad_in();
@@ -1165,7 +1166,9 @@ Mat::HeatSource Mat::MultiplicativeSplitDefgradElastHyper::evaluate_additional_h
                 facdefgradin[0].second))
     {
       heat_source = viscoplastic_factor->evaluate_taylor_quinney_heat_source(context, gp, eleGID,
-          current_defgrad, Core::LinAlg::identity_matrix<3>(), current_temperature);
+          deformation_state.defgrad(),
+          Core::LinAlg::get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
+          temperature);
     }
   }
   else if (num_contributions > 1)
