@@ -69,9 +69,10 @@ void Solid::ModelEvaluator::Structure::setup()
 
   if (Global::Problem::instance()->io_params().get<bool>("PER_RANK_EVAL_TIME"))
   {
-    runtime_csvwriter_rank_eval_times_ = std::make_unique<Core::IO::RuntimeCsvWriter>(
-        Core::Communication::my_mpi_rank(discret().get_comm()), discret_ptr()->writer()->output(),
-        "rank_eval_time");
+    runtime_csvwriter_rank_eval_times_ =
+        std::make_unique<Core::IO::RuntimeCsvWriterWithTimeAndStep>(
+            Core::Communication::my_mpi_rank(discret().get_comm()),
+            discret_ptr()->writer()->output(), "rank_eval_time");
     runtime_csvwriter_rank_eval_times_->register_data_vector(
         "RankEvalTime", Core::Communication::num_mpi_ranks(discret().get_comm()), 16);
   }

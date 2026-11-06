@@ -290,7 +290,7 @@ namespace SSI
     //@}
 
     // writes evaluated data to output
-    std::optional<Core::IO::RuntimeCsvWriter> runtime_csvwriter_;
+    std::optional<Core::IO::RuntimeCsvWriterWithTimeAndStep> runtime_csvwriter_;
 
     //! scatra problem
     std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra_;
