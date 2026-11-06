@@ -23,8 +23,14 @@ namespace Core::LinearSolver::Utils
 {
   Teuchos::RCP<const Thyra::VectorSpaceBase<double>> create_thyra_map(const LinAlg::Map& map);
 
-  Teuchos::RCP<Thyra::MultiVectorBase<double>> create_thyra_multi_vector(
+  Teuchos::RCP<const Thyra::MultiVectorBase<double>> create_thyra_multi_vector(
       const LinAlg::MultiVector<double>& multi_vector, const LinAlg::Map& map);
+
+  Teuchos::RCP<Thyra::MultiVectorBase<double>> create_thyra_multi_vector(
+      LinAlg::MultiVector<double>& multi_vector, const LinAlg::Map& map);
+
+  Teuchos::RCP<const Thyra::LinearOpBase<double>> create_thyra_linear_op(
+      std::shared_ptr<const LinAlg::SparseOperator> matrix);
 
   Teuchos::RCP<const Thyra::LinearOpBase<double>> create_thyra_linear_op(
       const LinAlg::SparseMatrix& matrix, LinAlg::DataAccess access);
