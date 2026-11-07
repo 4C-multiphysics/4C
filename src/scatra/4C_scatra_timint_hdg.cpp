@@ -459,7 +459,8 @@ void ScaTra::TimIntHDG::read_restart(const int step, std::shared_ptr<Core::IO::I
           binning_params);
       binningstrategy = std::make_shared<Core::Binstrategy::BinningStrategy>(binning_params,
           Global::Problem::instance()->output_control_file(), discret_->get_comm(),
-          Core::Communication::my_mpi_rank(discret_->get_comm()), nullptr, nullptr, dis);
+          Core::Communication::my_mpi_rank(discret_->get_comm()), std::nullopt, nullptr, nullptr,
+          dis);
       binningstrategy
           ->do_weighted_partitioning_of_bins_and_extend_ghosting_of_discret_to_one_bin_layer(
               dis, stdelecolmap, stdnodecolmap);

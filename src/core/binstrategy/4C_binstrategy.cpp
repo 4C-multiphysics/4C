@@ -14,6 +14,7 @@
 #include "4C_fem_geometry_intersection_math.hpp"
 #include "4C_fem_geometry_periodic_boundingbox.hpp"
 #include "4C_io.hpp"
+#include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
@@ -87,6 +88,7 @@ std::vector<std::array<double, 3>> Core::Binstrategy::DefaultRelevantPoints::ope
 
 Core::Binstrategy::BinningStrategy::BinningStrategy(const Teuchos::ParameterList& binning_params,
     std::shared_ptr<Core::IO::OutputControl> output_control, MPI_Comm comm, const int my_rank,
+    std::optional<Core::IO::VisualizationParameters> bin_output_visualization_parameters,
     std::function<const Core::Nodes::Node&(const Core::Nodes::Node& node)> correct_node,
     std::function<std::vector<std::array<double, 3>>(const Core::FE::Discretization&,
         const Core::Elements::Element&, std::shared_ptr<const Core::LinAlg::Vector<double>> disnp)>
@@ -104,7 +106,8 @@ Core::Binstrategy::BinningStrategy::BinningStrategy(const Teuchos::ParameterList
       // If this is not set by the user, we consider all nodes as relevant.
       correct_node_(correct_node
                         ? std::move(correct_node)
-                        : [](const Core::Nodes::Node& node) -> decltype(auto) { return node; })
+                        : [](const Core::Nodes::Node& node) -> decltype(auto) { return node; }),
+      bin_output_visualization_parameters_(std::move(bin_output_visualization_parameters))
 {
   // create binning discretization
   bindis_ = std::make_shared<Core::FE::Discretization>("binning", comm_, 3);
@@ -117,9 +120,6 @@ Core::Binstrategy::BinningStrategy::BinningStrategy(const Teuchos::ParameterList
   bindis_->fill_complete(Core::FE::OptionsFillComplete::none());
 
   visbindis_ = std::make_shared<Core::FE::Discretization>("bins", comm_, 3);
-  // create discretization writer
-  visbindis_->set_writer(std::make_shared<Core::IO::DiscretizationWriter>(
-      *visbindis_, *output_control, spatial_approximation_type));
 
   // try to read valid input
   domain_bounding_box_corner_positions_.put_scalar(1.0e12);
@@ -792,23 +792,31 @@ void Core::Binstrategy::BinningStrategy::write_bin_output(int const step, double
   });
 
   // create vector that shows ghosting
-  std::shared_ptr<Core::LinAlg::Vector<double>> ownedghostsvec =
-      std::make_shared<Core::LinAlg::Vector<double>>(*visbindis_->element_row_map(), true);
+  Core::LinAlg::MultiVector<double> ownedghostsvec(*visbindis_->element_row_map(), 1, true);
   for (int i = 0; i < visbindis_->num_my_row_elements(); ++i)
   {
     Core::Elements::Element* ele = visbindis_->l_row_element(i);
 
     if (ele->id() < maxgid)
-      (*ownedghostsvec).get_values()[i] = 0;  // owned
+      ownedghostsvec.replace_local_value(i, 0, 0.0);  // owned
     else
-      (*ownedghostsvec).get_values()[i] = 1;  // ghost
+      ownedghostsvec.replace_local_value(i, 0, 1.0);  // ghost
   }
 
-  // write output
-  visbindis_->writer()->write_mesh(step, time);
-  visbindis_->writer()->new_step(step, time);
-  visbindis_->writer()->write_vector("owner0ghost1", ownedghostsvec, Core::IO::elementvector);
-  visbindis_->writer()->write_element_data(true);
+  // write output via VTK writer
+  if (bin_output_writer_ == nullptr)
+  {
+    FOUR_C_ASSERT_ALWAYS(bin_output_visualization_parameters_.has_value(),
+        "Visualization parameters for bin output are not set.");
+    bin_output_writer_ = std::make_shared<Core::IO::DiscretizationVisualizationWriterMesh>(
+        visbindis_, *bin_output_visualization_parameters_);
+  }
+
+  bin_output_writer_->reset();
+  bin_output_writer_->append_result_data_vector_with_context(
+      ownedghostsvec, Core::IO::OutputEntity::element, {"owner0ghost1"});
+  bin_output_writer_->append_element_owner("Owner");
+  bin_output_writer_->write_to_disk(time, step);
 
   visbindis_->clear_discret();
 }
