@@ -333,6 +333,7 @@ namespace Wear
 
     For a lagrangian strategy this includes the global normal / tangent matrices N and T,
     the global derivative matrices S and P and Tresca friction matrix L + vector r.
+    For wear, derivative matrices reserve row capacity from nodal derivative columns.
 
     */
     void initialize() override;
