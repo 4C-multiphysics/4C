@@ -85,8 +85,6 @@ void Solid::ModelEvaluator::Contact::setup()
   set_time_integration_info(*strategy_ptr_);
   strategy_ptr_->redistribute_contact(global_state().get_dis_n(), global_state().get_vel_n());
 
-  check_pseudo2d();
-
   post_setup(cparams);
 
   if (global_in_output().get_runtime_output_params() != nullptr and
@@ -110,26 +108,6 @@ void Solid::ModelEvaluator::Contact::setup()
 void Solid::ModelEvaluator::Contact::post_setup(Teuchos::ParameterList& cparams)
 {
   // do nothing
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void Solid::ModelEvaluator::Contact::check_pseudo2d() const
-{
-  // print messages for multifield problems (e.g FSI)
-  const Core::ProblemType probtype = Global::Problem::instance()->get_problem_type();
-  if ((probtype != Core::ProblemType::structure) and (global_state().get_my_rank() == 0))
-  {
-    // warnings
-#ifdef CONTACTPSEUDO2D
-    std::cout << "WARNING: The flag CONTACTPSEUDO2D is switched on. If this "
-              << "is a real 3D problem, switch it off!" << std::endl;
-#else
-    std::cout << "Solid::ModelEvaluator::Contact::check_pseudo2d -- "
-              << "WARNING: \nThe flag CONTACTPSEUDO2D is switched off. If this "
-              << "is a 2D problem modeled pseudo-3D, switch it on!" << std::endl;
-#endif
-  }
 }
 
 /*----------------------------------------------------------------------*

@@ -894,20 +894,6 @@ void CONTACT::Node::build_averaged_normal()
   }
   else if (num_dof() == 3)
   {
-#ifdef CONTACTPSEUDO2D
-    // we want to treat a 3D mesh as pseudo 2D contact problem
-    // with all nodes fixed in z-direction
-    // thus, the second tangent is fixed to (0,0,1)
-    Data().teta()[0] = 0.0;
-    Data().teta()[1] = 0.0;
-    Data().teta()[2] = 1.0;
-
-    // txi follows from corkscrew rule (txi = teta x n)
-    Data().txi()[0] = Data().teta()[1] * MoData().n()[2] - Data().teta()[2] * MoData().n()[1];
-    Data().txi()[1] = Data().teta()[2] * MoData().n()[0] - Data().teta()[0] * MoData().n()[2];
-    Data().txi()[2] = Data().teta()[0] * MoData().n()[1] - Data().teta()[1] * MoData().n()[0];
-#else
-
     if (abs(mo_data().n()[0]) > 1.0e-4 || abs(mo_data().n()[1]) > 1.0e-4)
     {
       data().txi()[0] = -mo_data().n()[1];
@@ -940,8 +926,6 @@ void CONTACT::Node::build_averaged_normal()
     data().teta()[0] = mo_data().n()[1] * data().txi()[2] - mo_data().n()[2] * data().txi()[1];
     data().teta()[1] = mo_data().n()[2] * data().txi()[0] - mo_data().n()[0] * data().txi()[2];
     data().teta()[2] = mo_data().n()[0] * data().txi()[1] - mo_data().n()[1] * data().txi()[0];
-
-#endif
   }
   else
     FOUR_C_THROW("Contact problems must be either 2D or 3D");
@@ -1064,33 +1048,6 @@ void CONTACT::Node::deriv_averaged_normal(
   //**********************************************************************
   else
   {
-#ifdef CONTACTPSEUDO2D
-    // trivial tangent derivative teta
-    // this is 0 as teta is fixed to (0,0,1)
-
-    // get normalized tangent derivative txi
-    // use corkscrew rule from BuildAveragedNormal()
-    Core::Gen::Pairedvector<int, double>& derivtxix = Data().GetDerivTxi()[0];
-    Core::Gen::Pairedvector<int, double>& derivtxiy = Data().GetDerivTxi()[1];
-    Core::Gen::Pairedvector<int, double>& derivtxiz = Data().GetDerivTxi()[2];
-
-    for (CI p = derivnx.begin(); p != derivnx.end(); ++p)
-    {
-      derivtxiy[p->first] += Data().teta()[2] * (p->second);
-      derivtxiz[p->first] -= Data().teta()[1] * (p->second);
-    }
-    for (CI p = derivny.begin(); p != derivny.end(); ++p)
-    {
-      derivtxix[p->first] -= Data().teta()[2] * (p->second);
-      derivtxiz[p->first] += Data().teta()[0] * (p->second);
-    }
-    for (CI p = derivnz.begin(); p != derivnz.end(); ++p)
-    {
-      derivtxix[p->first] += Data().teta()[1] * (p->second);
-      derivtxiy[p->first] -= Data().teta()[0] * (p->second);
-    }
-  }
-#else
     // unnormalized tangent derivative txi
     // use definitions for txi from BuildAveragedNormal()
     if (abs(mo_data().n()[0]) > 1.0e-4 || abs(mo_data().n()[1]) > 1.0e-4)
@@ -1217,7 +1174,6 @@ void CONTACT::Node::deriv_averaged_normal(
       derivtetay[p->first] -= mo_data().n()[0] * (p->second);
     }
   }
-#endif  // #ifdef CONTACTPSEUDO2D
 
   return;
 }

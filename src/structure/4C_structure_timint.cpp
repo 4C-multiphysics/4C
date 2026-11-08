@@ -440,21 +440,6 @@ void Solid::TimInt::prepare_contact_meshtying(const Teuchos::ParameterList& sdyn
   if (conman_->have_constraint())
     FOUR_C_THROW("Constraints and contact cannot be treated at the same time yet");
 
-  // print messages for multifield problems (e.g FSI)
-  const Core::ProblemType probtype = Global::Problem::instance()->get_problem_type();
-  const std::string probname = Global::Problem::instance()->problem_name();
-  if (probtype != Core::ProblemType::structure && !myrank_)
-  {
-    // warnings
-#ifdef CONTACTPSEUDO2D
-    std::cout << "WARNING: The flag CONTACTPSEUDO2D is switched on. If this "
-              << "is a real 3D problem, switch it off!" << std::endl;
-#else
-    std::cout << "WARNING: The flag CONTACTPSEUDO2D is switched off. If this "
-              << "is a 2D problem modeled pseudo-3D, switch it on!" << std::endl;
-#endif
-  }
-
   // initialization of meshtying
   if (cmtbridge_->have_meshtying())
   {

@@ -1634,11 +1634,9 @@ void CONTACT::AbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Qua
           }
           case Mortar::StrategyBase::lmupdate:
           {
-#ifndef CONTACTPSEUDO2D
             // throw a FOUR_C_THROW if node is Active and DBC
             if (cnode->is_dbc() && cnode->active())
               FOUR_C_THROW("Source node {} is active AND carries D.B.C.s!", cnode->id());
-#endif  // #ifndef CONTACTPSEUDO2D
 
             // store updated LM into node
             cnode->mo_data().lm()[dof] = vectorinterface->local_values_as_span()[locindex[dof]];

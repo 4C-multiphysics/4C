@@ -189,8 +189,6 @@ namespace Solid
       Solid::ModelEvaluator::ContactData& eval_contact();
       [[nodiscard]] const Solid::ModelEvaluator::ContactData& eval_contact() const;
 
-      virtual void check_pseudo2d() const;
-
      private:
       void post_setup(Teuchos::ParameterList& cparams);
 
