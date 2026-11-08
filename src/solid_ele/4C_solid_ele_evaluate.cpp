@@ -269,8 +269,9 @@ int Discret::Elements::Solid<dim>::evaluate(Teuchos::ParameterList& params,
                 *this, {}, discretization, lm, analytical_displacements_function);
 
             elevec1(0) = error_result.integrated_squared_error;
-            elevec1(1) = error_result.integrated_squared_displacements;
-            elevec1(2) = error_result.integrated_volume;
+            elevec1(1) = error_result.integrated_squared_gradient_error;
+            elevec1(2) = error_result.integrated_squared_displacements;
+            elevec1(3) = error_result.integrated_volume;
           });
 
 

@@ -44,7 +44,7 @@ void Solid::ErrorEvaluator::evaluate_error(const Parameters& error_evaluator_par
 
   // Create a vector that will be filled with the sum of the square of the error at each Gauss-Point
   auto error_squared = std::make_shared<Core::LinAlg::SerialDenseVector>();
-  error_squared->size(3);
+  error_squared->size(4);
 
   // Set the function ID
   discretization_evaluation_parameters.set("analytical_function_id",
@@ -57,15 +57,17 @@ void Solid::ErrorEvaluator::evaluate_error(const Parameters& error_evaluator_par
   const int csv_precision = 16;
   Core::IO::RuntimeCsvWriter csv_writer(Core::Communication::my_mpi_rank(discretization.get_comm()),
       *Global::Problem::instance()->output_control_file(), "error_evaluation_analytical_reference");
-  csv_writer.register_data_vector("reference_volume", 1, csv_precision);
-  csv_writer.register_data_vector("displacement_integral", 1, csv_precision);
   csv_writer.register_data_vector("displacement_error_l2_norm", 1, csv_precision);
+  csv_writer.register_data_vector("displacement_error_h1_norm", 1, csv_precision);
+  csv_writer.register_data_vector("displacement_integral", 1, csv_precision);
+  csv_writer.register_data_vector("reference_volume", 1, csv_precision);
 
   csv_writer.reset_time_and_time_step(0.0, 0);
 
-  csv_writer.append_data_vector("reference_volume", {(*error_squared)(2)});
-  csv_writer.append_data_vector("displacement_integral", {(*error_squared)(1)});
   csv_writer.append_data_vector("displacement_error_l2_norm", {sqrt((*error_squared)(0))});
+  csv_writer.append_data_vector("displacement_error_h1_norm", {sqrt((*error_squared)(1))});
+  csv_writer.append_data_vector("displacement_integral", {(*error_squared)(2)});
+  csv_writer.append_data_vector("reference_volume", {(*error_squared)(3)});
 
   csv_writer.write_collected_data_to_file();
 }

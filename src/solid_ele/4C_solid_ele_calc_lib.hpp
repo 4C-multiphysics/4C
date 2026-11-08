@@ -1289,12 +1289,13 @@ namespace Discret::Elements
   struct AnalyticalDisplacementErrorIntegrationResults
   {
     double integrated_squared_error = 0;
+    double integrated_squared_gradient_error = 0;
     double integrated_squared_displacements = 0;
     double integrated_volume = 0;
   };
 
   /*!
-   * @brief compute displacement error and displacement integral
+   * @brief compute displacement error, gradient displacement error and displacement integral
    *
    * @tparam celltype : Cell type
    * @param element  : element
@@ -1322,6 +1323,8 @@ namespace Discret::Elements
             const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
             const JacobianMapping<celltype>& jacobian_mapping, double integration_factor, int gp)
         {
+          constexpr int dim = Core::FE::dim<celltype>;
+
           Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> gauss_point_reference_coordinates;
           gauss_point_reference_coordinates.multiply_nn(
               nodal_coordinates.reference_coordinates, shape_functions.shapefunctions_);
@@ -1332,7 +1335,7 @@ namespace Discret::Elements
 
           Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> analytical_solution;
           // Calculate the analytical solution for each dimension
-          for (int i_dim = 0; i_dim < Core::FE::dim<celltype>; i_dim++)
+          for (int i_dim = 0; i_dim < dim; i_dim++)
           {
             analytical_solution(i_dim) = analytical_displacements_function.evaluate(
                 gauss_point_reference_coordinates.as_span(), 0.0, i_dim);
@@ -1342,9 +1345,33 @@ namespace Discret::Elements
           // elements
           Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> error_pointwise = analytical_solution;
           error_pointwise -= gauss_point_disp;
-          // Calculate the error squared integral
+          // Calculate the displacement error squared integral
           error_result.integrated_squared_error +=
               error_pointwise.dot(error_pointwise) * integration_factor;
+
+          // Calculate the gradient displacement error squared integral
+          double squared_gradient_error = 0.0;
+
+          for (int i_dim = 0; i_dim < dim; ++i_dim)
+          {
+            const auto analytical_gradient =
+                analytical_displacements_function.evaluate_spatial_derivative(
+                    gauss_point_reference_coordinates.as_span(), 0.0, i_dim);
+
+            for (int j_dim = 0; j_dim < dim; ++j_dim)
+            {
+              double discrete_derivative = 0.0;
+              for (int node = 0; node < Core::FE::num_nodes(celltype); ++node)
+                discrete_derivative += nodal_coordinates.displacements(i_dim, node) *
+                                       jacobian_mapping.N_XYZ[node](j_dim);
+              const double gradient_error = analytical_gradient[j_dim] - discrete_derivative;
+              squared_gradient_error += gradient_error * gradient_error;
+            }
+          }
+
+          error_result.integrated_squared_gradient_error +=
+              squared_gradient_error * integration_factor;
+
           // Calculate the L2 norm of displacements
           error_result.integrated_squared_displacements +=
               gauss_point_disp.dot(gauss_point_disp) * integration_factor;

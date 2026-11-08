@@ -28,7 +28,7 @@ namespace Solid
 
     Parameters error_evaluator_parameter_factory(const Teuchos::ParameterList& parameter_list);
 
-    /*! \brief compute L2 displacement error norm with respect to an analytical solution
+    /*! \brief compute L2 and H1 displacement error norm with respect to an analytical solution
      *
      *  \param error_evaluator_parameters          error evaluation parameters from input file
      *  \param discretization_evaluation_parameters        discretization parameter interface
