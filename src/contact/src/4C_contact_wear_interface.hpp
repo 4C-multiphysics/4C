@@ -200,13 +200,6 @@ namespace Wear
     void fd_check_deriv_t_d(Core::LinAlg::SparseMatrix& lintdis);
 
     /*!
-    \brief Check mortar wear T derivatives with finite differences
-      --> for wear condition (Target)
-
-    */
-    void fd_check_deriv_t_d_target(Core::LinAlg::SparseMatrix& lintdis);
-
-    /*!
     \brief Check mortar wear E derivatives with finite differences
       --> for wear condition
 

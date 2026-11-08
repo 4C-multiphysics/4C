@@ -53,8 +53,6 @@ FOUR_C_NAMESPACE_OPEN
 // #define CONTACTFDE_D              /* flag for FD check of mortar matrix E lin for wear cond */
 // #define CONTACTFDMORTART          /* flag for FD check of mortar matrix T */
 // #define CONTACTFDMORTARE          /* flag for FD check of mortar matrix E */
-// #define CONTACTFDT_D_MASTER       /* flag for FD check of mortar matrix T lin for wear cond
-//(Target side)*/ #define CONTACTFDE_D_MASTER       /* flag for FD check of mortar matrix E lin for
 // wear cond (Target side)*/ #define CONTACTFDMORTART_MASTER   /* flag for FD check of mortar matrix
 // T (Target side) */ #define CONTACTFDMORTARE_MASTER   /* flag for FD check of mortar matrix E
 //(Target side) */

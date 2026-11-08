@@ -2954,18 +2954,6 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
 
 #endif
 
-#ifdef CONTACTFDT_D_MASTER
-
-  if (!wearprimvar_) FOUR_C_THROW("FD CHECK ONLY FOR DISCRETE WEAR!");
-
-  if (!wearbothpv_) FOUR_C_THROW("FD CHECK ONLY FOR DISCRETE WEAR!");
-
-  // FD check of stick condition
-  for (int i = 0; i < (int)interface_.size(); ++i)
-    interface_[i]->fd_check_deriv_t_d_target(*lintdisM_);
-
-#endif
-
 #ifdef CONTACTFDE_D
 
   if (!wearprimvar_) FOUR_C_THROW("FD CHECK ONLY FOR DISCRETE WEAR!");
