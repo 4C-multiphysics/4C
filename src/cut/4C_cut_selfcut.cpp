@@ -23,8 +23,6 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-// #define DEBUG_SELFCUT
-
 /*-------------------------------------------------------------------------------------*
  * constructor                                                              wirtz 05/13
  *-------------------------------------------------------------------------------------*/
@@ -415,9 +413,6 @@ void Cut::SelfCut::find_self_cut_points()
       cutside->erase_cutting_side(nocuttingside);
     }
   }
-#ifdef DEBUG_SELFCUT
-  Debug("FindSelfCutPoints");
-#endif
 }
 
 /*-------------------------------------------------------------------------------------*
@@ -518,9 +513,6 @@ void Cut::SelfCut::create_self_cut_nodes()
       }
     }
   }
-#ifdef DEBUG_SELFCUT
-  Debug("CreateSelfCutNodes");
-#endif
 }
 
 /*-------------------------------------------------------------------------------------*
@@ -580,9 +572,6 @@ void Cut::SelfCut::create_self_cut_edges()
       }
     }
   }
-#ifdef DEBUG_SELFCUT
-  Debug("CreateSelfCutEdges");
-#endif
 }
 
 /*-------------------------------------------------------------------------------------*
@@ -787,9 +776,6 @@ void Cut::SelfCut::create_self_cut_sides()
       get_self_cut_edges(*selfcutside);
     }
   }
-#ifdef DEBUG_SELFCUT
-  Debug("CreateSelfCutSides");
-#endif
 }
 
 /*-------------------------------------------------------------------------------------*
