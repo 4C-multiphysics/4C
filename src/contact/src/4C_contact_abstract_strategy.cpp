@@ -1285,15 +1285,6 @@ void CONTACT::AbstractStrategy::assemble_mortar()
     // assemble D-, M-matrix and g-vector, store them globally
     interface->assemble_dm(*dmatrix_, *mmatrix_);
     interface->assemble_g(*wgap_);
-
-#ifdef CONTACTFDMORTARM
-    // FD check of Mortar matrix M derivatives
-    std::cout << " -- CONTACTFDMORTARM -----------------------------------" << std::endl;
-    mmatrix_->Complete(*gtdofrowmap_, *gsdofrowmap_);
-    if (mmatrix_->NormOne()) Interfaces()[i]->FDCheckMortarMDeriv();
-    mmatrix_->UnComplete();
-    std::cout << " -- CONTACTFDMORTARM -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARM
   }
 
   // fill_complete() global Mortar matrices

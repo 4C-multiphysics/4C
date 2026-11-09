@@ -1212,12 +1212,6 @@ namespace CONTACT
     //!@{
 
     /*!
-    \brief Check Mortar matrix M derivatives with finite differences
-
-    */
-    void fd_check_mortar_m_deriv();
-
-    /*!
     \brief Check weighted gap g derivatives with finite differences
 
     */
