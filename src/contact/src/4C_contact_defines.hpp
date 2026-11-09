@@ -22,7 +22,6 @@ FOUR_C_NAMESPACE_OPEN
 
 // GENERAL DEBUGGING OPTIONS
 
-// #define CONTACTSTATUS             /* flag for contact segmentation measurement */
 // #define CONTACTFDNORMAL           /* flag for FD check of normal derivative */
 // #define CONTACTFDMORTARD          /* flag for FD check of mortar matrix D */
 // #define CONTACTFDMORTARM          /* flag for FD check of mortar matrix M */

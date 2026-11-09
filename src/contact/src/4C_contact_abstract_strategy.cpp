@@ -1120,52 +1120,6 @@ void CONTACT::AbstractStrategy::initialize_and_evaluate_interface()
 
   // check the parallel distribution
   check_parallel_distribution(t_start);
-
-  //**********************************************************************
-  // OVERVIEW OF PARALLEL MORTAR COUPLING STATUS
-  //**********************************************************************
-#ifdef CONTACTSTATUS
-  // total numbers per processor
-  std::vector<int> smpairs(1);
-  std::vector<int> smintpairs(1);
-  std::vector<int> intcells(1);
-
-  // add numbers of all interfaces
-  for (int i = 0; i < (int)Interfaces().size(); ++i)
-  {
-    smpairs[0] += Interfaces()[i]->SourceTargetPairs();
-    smintpairs[0] += Interfaces()[i]->SourceTargetIntPairs();
-    intcells[0] += Interfaces()[i]->IntegrationCells();
-  }
-
-  // vector containing all proc ids
-  const int numproc = Core::Communication::num_mpi_ranks(Comm());
-  std::vector<int> allproc(numproc);
-  for (int i = 0; i < numproc; ++i) allproc[i] = i;
-
-  // global numbers
-  std::vector<int> gsmpairs, gsmintpairs, gintcells;
-  Core::LinAlg::gather<int>(smpairs, gsmpairs, numproc, allproc.data(), Comm());
-  Core::LinAlg::gather<int>(smintpairs, gsmintpairs, numproc, allproc.data(), Comm());
-  Core::LinAlg::gather<int>(intcells, gintcells, numproc, allproc.data(), Comm());
-
-  // output to screen
-  if (Core::Communication::my_mpi_rank(Comm()) == 0)
-  {
-    std::cout << "--------------------------------------------------------------------------------"
-              << std::endl;
-    std::cout << std::setw(10) << "proc ID" << std::setw(16) << "# s/m pairs" << std::setw(16)
-              << "# s/m intpairs" << std::setw(16) << "# intcells" << std::endl;
-    for (int i = 0; i < numproc; ++i)
-    {
-      std::cout << std::setw(10) << i << std::setw(16) << gsmpairs[i] << std::setw(16)
-                << gsmintpairs[i] << std::setw(16) << gintcells[i] << std::endl;
-    }
-    std::cout << "--------------------------------------------------------------------------------"
-              << std::endl;
-  }
-#endif
-  //**********************************************************************
 }
 
 /*----------------------------------------------------------------------*
