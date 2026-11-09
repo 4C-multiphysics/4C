@@ -21,8 +21,10 @@
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_mortar_defines.hpp"
+#include "4C_mortar_element.hpp"
 #include "4C_mortar_interface.hpp"
 #include "4C_mortar_node.hpp"
+#include "4C_utils_function.hpp"
 
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 #include <Teuchos_Time.hpp>
@@ -1008,23 +1010,73 @@ double CONTACT::MtAbstractStrategy::evaluate_lagrange_multiplier_error_squared(
       "Cannot evaluate the Lagrange multiplier error: no Lagrange multiplier vector is available.");
 
   store_nodal_quantities(Mortar::StrategyBase::lmcurrent);
-  double error_squared = 0.0;
 
-  /*
+  const auto& analytical_function =
+      Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(
+          analytical_function_id);
+  const auto lm_shape_function =
+      Teuchos::getIntegralValue<Mortar::ShapeFcn>(params(), "LM_SHAPEFCN");
+  double local_error_squared = 0.0;
+
   for (const auto& interface : interface_)
   {
-    // Loop only over owned/source-row interface elements.
-    //
-    // At each quadrature point:
-    //   1. evaluate the actual LM interpolation lambda_h,
-    //   2. evaluate analytical lambda_ex,
-    //   3. add ||lambda_h - lambda_ex||^2 * integration_factor.
+    auto& discretization = interface->discret();
+
+    for (int local_element_id = 0; local_element_id < discretization.num_my_row_elements();
+        ++local_element_id)
+    {
+      auto* element =
+          dynamic_cast<Mortar::Element*>(discretization.l_row_element(local_element_id));
+
+      FOUR_C_ASSERT_ALWAYS(element != nullptr, "Expected a Mortar::Element.");
+      if (!element->is_source()) continue;
+
+      FOUR_C_ASSERT_ALWAYS(!element->is_quad(),
+          "Analytical LM error evaluation currently supports only first-order source elements.");
+
+      const int number_of_nodes = element->num_node();
+      const int parameter_dimension = n_dim() - 1;
+
+      Core::LinAlg::SerialDenseMatrix nodal_lagrange_multiplier(3, number_of_nodes, true);
+      element->get_nodal_lag_mult(nodal_lagrange_multiplier);
+      Core::LinAlg::SerialDenseVector lm_shape_values(number_of_nodes, true);
+      Core::LinAlg::SerialDenseMatrix lm_shape_derivatives(
+          number_of_nodes, parameter_dimension, true);
+      Mortar::ElementIntegrator quadrature(element->shape());
+
+      for (int gp = 0; gp < quadrature.n_gp(); ++gp)
+      {
+        const double xi[2] = {quadrature.coordinate(gp, 0),
+            parameter_dimension == 2 ? quadrature.coordinate(gp, 1) : 0.0};
+
+        element->evaluate_shape_lag_mult(
+            lm_shape_function, xi, lm_shape_values, lm_shape_derivatives, number_of_nodes);
+
+        double global_coordinate[3] = {0.0, 0.0, 0.0};
+        element->local_to_global(xi, global_coordinate, 0);
+        double pointwise_error_squared = 0.0;
+
+        for (int component = 0; component < n_dim(); ++component)
+        {
+          double numerical_lagrange_multiplier = 0.0;
+
+          for (int node = 0; node < number_of_nodes; ++node)
+            numerical_lagrange_multiplier +=
+                lm_shape_values[node] * nodal_lagrange_multiplier(component, node);
+
+          const double analytical_lagrange_multiplier =
+              analytical_function.evaluate(global_coordinate, time, component);
+          const double error = numerical_lagrange_multiplier - analytical_lagrange_multiplier;
+
+          pointwise_error_squared += error * error;
+        }
+        local_error_squared +=
+            pointwise_error_squared * quadrature.weight(gp) * element->jacobian(xi);
+      }
+    }
   }
-  */
 
-  Core::Communication::sum_all(error_squared, get_comm());
-
-  return error_squared;
+  return Core::Communication::sum_all(local_error_squared, get_comm());
 }
 
 FOUR_C_NAMESPACE_CLOSE
