@@ -57,9 +57,6 @@ void CONTACT::TSIInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linsli
   // a displacement derivative due to the projection
 
 
-#ifdef CONSISTENTSLIP
-  FOUR_C_THROW("CONSISTENTSLIP not implemented for CTSI");
-#endif
 
   // create map of stick nodes
   std::shared_ptr<Core::LinAlg::Map> slipnodes = slipnodes_;
