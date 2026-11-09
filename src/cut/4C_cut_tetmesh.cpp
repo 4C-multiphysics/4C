@@ -11,12 +11,14 @@
 #include "4C_cut_tetmeshintersection.hpp"
 #include "4C_cut_volumecell.hpp"
 
+#include <cstdio>
 #include <stack>
+#include <utility>
 
 #ifdef FOUR_C_WITH_QHULL
 extern "C"
 {
-#include <libqhull/qhull_a.h>
+#include <libqhull_r/qhull_ra.h>
 }
 #endif
 
@@ -46,9 +48,51 @@ namespace Cut
      private:
       FILE* f_;
     };
+
+#ifdef FOUR_C_WITH_QHULL
+    /// Owns the reentrant Qhull state and allocations for one triangulation attempt.
+    class QhullContext
+    {
+     public:
+      explicit QhullContext(FILE* errfile) { qh_zero(&context_, errfile); }
+
+      ~QhullContext()
+      {
+        // Explicit cleanup checks for leaks on the normal path; this also handles exceptions.
+        if (active_)
+        {
+          const auto [curlong, totlong] = cleanup();
+          if (curlong or totlong)
+            std::fprintf(stderr, "Qhull did not free %d bytes of long memory (%d pieces)\n",
+                totlong, curlong);
+        }
+      }
+
+      QhullContext(const QhullContext&) = delete;
+      QhullContext& operator=(const QhullContext&) = delete;
+
+      qhT* get() { return &context_; }
+
+      /// Release long allocations and the short-memory pool; return remaining allocation
+      /// count/bytes.
+      std::pair<int, int> cleanup()
+      {
+        qh_freeqhull(&context_, not qh_ALL);
+        int curlong = 0;
+        int totlong = 0;
+        qh_memfreeshort(&context_, &curlong, &totlong);
+        active_ = false;
+        return {curlong, totlong};
+      }
+
+     private:
+      qhT context_{};
+      // Avoid freeing the state twice after explicit cleanup.
+      bool active_ = true;
+    };
+#endif
   }  // namespace
 }  // namespace Cut
-
 
 
 Cut::TetMesh::TetMesh(
@@ -425,7 +469,7 @@ void Cut::TetMesh::call_q_hull(
 #ifdef QHULL_DEBUG_OUTPUT
   FILE* errfile = stderr;
 #else
-  static NullFile errfile;
+  NullFile errfile;
 #endif
 
 #ifdef QHULL_EXTENDED_DEBUG_OUTPUT
@@ -437,11 +481,12 @@ void Cut::TetMesh::call_q_hull(
     std::cout << "counter_qhull: " << counter_qhull << std::endl;
 #endif
     std::string& ostr = *i;
-    if (not qh_new_qhull(dim, n, coordinates.data(), ismalloc, const_cast<char*>(ostr.c_str()),
-            outfile, errfile))
+    QhullContext context(errfile);
+    qhT* qh = context.get();
+    if (not qh_new_qhull(qh, dim, n, coordinates.data(), ismalloc, ostr.data(), outfile, errfile))
     {
       // triangulate non-simplicial facets
-      qh_triangulate();
+      qh_triangulate(qh);
 
       facetT* facet;
       int nf = 0;
@@ -474,7 +519,7 @@ void Cut::TetMesh::call_q_hull(
             for (void** vertexp = &facet->vertices->e[0].p;
                 (vertex = static_cast<vertexT*>(*vertexp++));)
             {
-              int p = qh_pointid(vertex->point);
+              int p = qh_pointid(qh, vertex->point);
               if (p >= n)
               {
                 FOUR_C_THROW("new node in delaunay");
@@ -488,12 +533,7 @@ void Cut::TetMesh::call_q_hull(
       }
     }
 
-    // free long memory
-    qh_freeqhull(not qh_ALL);
-
-    // free short memory and memory allocator
-    int curlong, totlong;
-    qh_memfreeshort(&curlong, &totlong);
+    const auto [curlong, totlong] = context.cleanup();
 
     if (curlong or totlong)
     {
