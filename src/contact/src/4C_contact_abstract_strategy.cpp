@@ -1286,13 +1286,6 @@ void CONTACT::AbstractStrategy::assemble_mortar()
     interface->assemble_dm(*dmatrix_, *mmatrix_);
     interface->assemble_g(*wgap_);
 
-#ifdef CONTACTFDNORMAL
-    // FD check of normal derivatives
-    std::cout << " -- CONTACTFDNORMAL- -----------------------------------" << std::endl;
-    //    Interfaces()[i]->fd_check_normal_deriv();
-    Interfaces()[i]->fd_check_normal_cpp_deriv();
-    std::cout << " -- CONTACTFDNORMAL- -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDNORMAL
 #ifdef CONTACTFDMORTARD
     // FD check of Mortar matrix D derivatives
     std::cout << " -- CONTACTFDMORTARD -----------------------------------" << std::endl;

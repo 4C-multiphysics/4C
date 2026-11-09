@@ -1212,18 +1212,6 @@ namespace CONTACT
     //!@{
 
     /*!
-    \brief Check normal/tangent derivatives with finite differences
-
-    */
-    void fd_check_normal_deriv();
-
-    /*!
-    \brief Check normal/tangent derivatives with finite differences
-
-    */
-    void fd_check_normal_cpp_deriv();
-
-    /*!
     \brief Check Mortar matrix D derivatives with finite differences
 
     */
