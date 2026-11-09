@@ -1313,20 +1313,12 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
     }
   }
 
-#ifdef CONTACTFDGAP
-  // FD check of weighted gap g derivatives (non-penetr. condition)
-  for (int i = 0; i < (int)interface_.size(); ++i)
-  {
-    interface_[i]->FDCheckGapDeriv();
-  }
-#endif  // #ifdef CONTACTFDGAP
-
 #ifdef CONTACTFDALPHA
   for (int i = 0; i < (int)interface_.size(); ++i)
   {
     interface_[i]->FDCheckAlphaDeriv();
   }
-#endif  // #ifdef CONTACTFDGAP
+#endif  // #ifdef CONTACTFDALPHA
 
 #ifdef CONTACTFDSLIPINCR
   // FD check of weighted gap g derivatives (non-penetr. condition)
@@ -1335,7 +1327,7 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
     interface_[i]->fd_check_slip_incr_deriv_txi();
     if (Dim() == 3) interface_[i]->fd_check_slip_incr_deriv_teta();
   }
-#endif  // #ifdef CONTACTFDGAP
+#endif  // #ifdef CONTACTFDSLIPINCR
 
 #ifdef CONTACTFDSTICK
 
@@ -2902,21 +2894,13 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
     }
   }
 
-#ifdef CONTACTFDGAP
-  // FD check of weighted gap g derivatives (non-penetr. condition)
-  for (int i = 0; i < (int)interface_.size(); ++i)
-  {
-    interface_[i]->FDCheckGapDeriv();
-  }
-#endif  // #ifdef CONTACTFDGAP
-
 #ifdef CONTACTFDALPHA
   // FD check of weighted gap g derivatives (non-penetr. condition)
   for (int i = 0; i < (int)interface_.size(); ++i)
   {
     interface_[i]->FDCheckAlphaDeriv();
   }
-#endif  // #ifdef CONTACTFDGAP
+#endif  // #ifdef CONTACTFDALPHA
 #ifdef CONTACTFDTANGLM
   // FD check of tangential LM derivatives (frictionless condition)
   for (int i = 0; i < (int)interface_.size(); ++i)
@@ -5854,20 +5838,12 @@ void CONTACT::LagrangeStrategy::condense_friction(
   *kteff = kteffnew;
   *feff = *feffnew;
 
-#ifdef CONTACTFDGAP
-  // FD check of weighted gap g derivatives (non-penetr. condition)
-  for (int i = 0; i < (int)interface_.size(); ++i)
-  {
-    interface_[i]->FDCheckGapDeriv();
-  }
-#endif  // #ifdef CONTACTFDGAP
-
 #ifdef CONTACTFDALPHA
   for (int i = 0; i < (int)interface_.size(); ++i)
   {
     interface_[i]->FDCheckAlphaDeriv();
   }
-#endif  // #ifdef CONTACTFDGAP
+#endif  // #ifdef CONTACTFDALPHA
 
 #ifdef CONTACTFDSLIPINCR
   // FD check of weighted gap g derivatives (non-penetr. condition)
@@ -5876,7 +5852,7 @@ void CONTACT::LagrangeStrategy::condense_friction(
     interface_[i]->fd_check_slip_incr_deriv_txi();
     if (Dim() == 3) interface_[i]->fd_check_slip_incr_deriv_teta();
   }
-#endif  // #ifdef CONTACTFDGAP
+#endif  // #ifdef CONTACTFDSLIPINCR
 
 #ifdef CONTACTFDSTICK
 
@@ -6492,21 +6468,13 @@ void CONTACT::LagrangeStrategy::condense_frictionless(
   *feff = *feffnew;
 
 
-#ifdef CONTACTFDGAP
-  // FD check of weighted gap g derivatives (non-penetr. condition)
-  for (int i = 0; i < (int)interface_.size(); ++i)
-  {
-    interface_[i]->FDCheckGapDeriv();
-  }
-#endif  // #ifdef CONTACTFDGAP
-
 #ifdef CONTACTFDALPHA
   // FD check of weighted gap g derivatives (non-penetr. condition)
   for (int i = 0; i < (int)interface_.size(); ++i)
   {
     interface_[i]->FDCheckAlphaDeriv();
   }
-#endif  // #ifdef CONTACTFDGAP
+#endif  // #ifdef CONTACTFDALPHA
 #ifdef CONTACTFDTANGLM
   // FD check of tangential LM derivatives (frictionless condition)
   for (int i = 0; i < (int)interface_.size(); ++i)

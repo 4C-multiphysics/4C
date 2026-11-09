@@ -2903,15 +2903,6 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
   }
 #endif
 
-#ifdef CONTACTFDGAP
-  // FD check of weighted gap g derivatives (non-penetr. condition)
-  for (int i = 0; i < (int)interface_.size(); ++i)
-  {
-    interface_[i]->FDCheckGapDeriv();
-    interface_[i]->FDCheckGapDeriv_W();
-  }
-#endif
-
 #ifdef CONTACTFDSLIPINCR
   // FD check of weighted gap g derivatives (non-penetr. condition)
   for (int i = 0; i < (int)interface_.size(); ++i)
@@ -2919,7 +2910,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     interface_[i]->fd_check_slip_incr_deriv_txi();
     if (Dim() == 3) interface_[i]->fd_check_slip_incr_deriv_teta();
   }
-#endif  // #ifdef CONTACTFDGAP
+#endif  // #ifdef CONTACTFDSLIPINCR
 
 #ifdef CONTACTFDSTICK
 

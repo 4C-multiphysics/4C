@@ -377,15 +377,6 @@ void CONTACT::PenaltyStrategy::evaluate_contact(
     feff->update(1 - alphaf_, fcmmtemp, 1.0);
   }
 
-#ifdef CONTACTFDGAP
-  // FD check of weighted gap g derivatives (non-penetr. condition)
-
-  std::cout << "-- CONTACTFDGAP -----------------------------" << std::endl;
-  interface_[0]->FDCheckGapDeriv();
-  std::cout << "-- CONTACTFDGAP -----------------------------" << std::endl;
-
-#endif
-
   return;
 }
 

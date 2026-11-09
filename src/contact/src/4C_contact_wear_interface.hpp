@@ -211,17 +211,6 @@ namespace Wear
 
     */
     void fd_check_deriv_e_d_target(Core::LinAlg::SparseMatrix& linedis);
-    /*!
-    \brief Check weighted gap g derivatives with finite differences
-
-    */
-    void fd_check_gap_deriv();
-
-    /*!
-    \brief Check weighted gap g derivatives with finite differences
-
-    */
-    void fd_check_gap_deriv_w();
 
     /*!
     \brief Check weighted wear ~w derivatives with finite differences

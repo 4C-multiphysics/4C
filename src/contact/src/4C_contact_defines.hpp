@@ -23,7 +23,7 @@ FOUR_C_NAMESPACE_OPEN
 // GENERAL DEBUGGING OPTIONS
 
 
-// #define CONTACTFDGAP              /* flag for FD check of weighted gap g */
+
 // #define CONTACTFDGAPLTL           /* flag for FD check of vector valued gap g ltl */
 // #define CONTACTFDJUMPLTL          /* flag for FD check of vector valued jump ltl */
 // #define CONTACTFDALPHA            /* flag for FD check of scaling factor alpha*/
