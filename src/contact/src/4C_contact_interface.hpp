@@ -1212,12 +1212,6 @@ namespace CONTACT
     //!@{
 
     /*!
-    \brief Check Mortar matrix D derivatives with finite differences
-
-    */
-    void fd_check_mortar_d_deriv();
-
-    /*!
     \brief Check Mortar matrix M derivatives with finite differences
 
     */

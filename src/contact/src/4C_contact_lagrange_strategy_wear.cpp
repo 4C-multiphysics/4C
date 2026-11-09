@@ -2986,7 +2986,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     for (int i = 0; i < (int)interface_.size(); ++i) interface_[i]->FDCheckMortarTDeriv();
   // twmatrix_->UnComplete();
   std::cout << " -- CONTACTFDMORTART -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARD
+#endif  // #ifdef CONTACTFDMORTART
 
 #ifdef CONTACTFDMORTARE
 
@@ -2999,7 +2999,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     for (int i = 0; i < (int)interface_.size(); ++i) interface_[i]->FDCheckMortarEDeriv();
   // ematrix_->UnComplete();
   std::cout << " -- CONTACTFDMORTARE -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARD
+#endif  // #ifdef CONTACTFDMORTARE
 
 #ifdef CONTACTFDMORTARE_MASTER
 
@@ -3015,7 +3015,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
       interface_[i]->fd_check_mortar_e_target_deriv();
   // ematrix_->UnComplete();
   std::cout << " -- CONTACTFDMORTARE_MASTER -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARD
+#endif  // #ifdef CONTACTFDMORTARE_MASTER
 
 #ifdef CONTACTFDMORTART_MASTER
 
@@ -3031,7 +3031,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
       interface_[i]->fd_check_mortar_t_target_deriv();
   // ematrix_->UnComplete();
   std::cout << " -- CONTACTFDMORTART_MASTER -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARD
+#endif  // #ifdef CONTACTFDMORTART_MASTER
 
   return;
 }

@@ -1286,14 +1286,6 @@ void CONTACT::AbstractStrategy::assemble_mortar()
     interface->assemble_dm(*dmatrix_, *mmatrix_);
     interface->assemble_g(*wgap_);
 
-#ifdef CONTACTFDMORTARD
-    // FD check of Mortar matrix D derivatives
-    std::cout << " -- CONTACTFDMORTARD -----------------------------------" << std::endl;
-    dmatrix_->Complete();
-    if (dmatrix_->NormOne()) Interfaces()[i]->FDCheckMortarDDeriv();
-    dmatrix_->UnComplete();
-    std::cout << " -- CONTACTFDMORTARD -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARD
 #ifdef CONTACTFDMORTARM
     // FD check of Mortar matrix M derivatives
     std::cout << " -- CONTACTFDMORTARM -----------------------------------" << std::endl;

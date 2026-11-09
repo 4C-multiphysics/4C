@@ -23,7 +23,7 @@ FOUR_C_NAMESPACE_OPEN
 // GENERAL DEBUGGING OPTIONS
 
 
-// #define CONTACTFDMORTARD          /* flag for FD check of mortar matrix D */
+
 // #define CONTACTFDMORTARM          /* flag for FD check of mortar matrix M */
 // #define CONTACTFDGAP              /* flag for FD check of weighted gap g */
 // #define CONTACTFDGAPLTL           /* flag for FD check of vector valued gap g ltl */
