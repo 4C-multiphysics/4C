@@ -932,6 +932,8 @@ namespace Mortar
       return evaluate2nd_deriv_shape(xi, sdm_secderiv, valdim);
     }
 
+    double evaluate_lagrange_multiplier_error_squared(const Teuchos::ParameterList& params) const;
+
     /*!
     \brief Compute directional derivative of dual shape functions
 

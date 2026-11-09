@@ -38,7 +38,8 @@ namespace Mortar
     eval_run_post_iterate,  /*!< run in the end of a ::NOX::Solver::Step() call */
     eval_run_pre_solve,     /*!< run at the beginning of a ::NOX::Solver::solve() call */
     eval_contact_potential, /*!< Evaluate the contact potential */
-    eval_wgap_gradient_error,   /*!< Evaluate the error of the weighted gap gradient */
+    eval_wgap_gradient_error, /*!< Evaluate the error of the weighted gap gradient */
+    eval_lagraneg_multiplier_analytical_error, /*!< Evaluate the error of the Lagrange multiplier */
     eval_static_constraint_rhs, /*!< Evaluate only the contributions to the constraint rhs. The
                                    active set is not updated during the evaluation. */
     eval_run_post_apply_jacobian_inverse,       /*!< run in the end of a
@@ -79,6 +80,8 @@ namespace Mortar
         return "eval_contact_potential";
       case Mortar::eval_wgap_gradient_error:
         return "eval_wgap_gradient_error";
+      case Mortar::eval_lagraneg_multiplier_analytical_error:
+        return "eval_lagrange_multiplier_analytical_error";
       case Mortar::eval_static_constraint_rhs:
         return "eval_static_constraint_rhs";
       case Mortar::eval_run_post_apply_jacobian_inverse:
