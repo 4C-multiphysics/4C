@@ -1337,9 +1337,10 @@ namespace Discret::Elements
           error_result.integrated_squared_error += squared_error * integration_factor;
 
           // Calculate the gradient displacement error squared integral
-          double squared_gradient_error = compute_squared_h1_norm_error_at_gauss_point<celltype>(
-              nodal_coordinates, jacobian_mapping, analytical_displacements_function,
-              gauss_point_reference_coordinates.as_span(), 0.0);
+          double squared_gradient_error =
+              compute_squared_h1_semi_norm_error_at_gauss_point<celltype>(nodal_coordinates,
+                  jacobian_mapping, analytical_displacements_function,
+                  gauss_point_reference_coordinates.as_span(), 0.0);
 
           error_result.integrated_squared_gradient_error +=
               squared_gradient_error * integration_factor;
@@ -1398,7 +1399,7 @@ namespace Discret::Elements
    * @return Squared pointwise displacement-gradient error.
    */
   template <Core::FE::CellType celltype>
-  double compute_squared_h1_norm_error_at_gauss_point(
+  double compute_squared_h1_semi_norm_error_at_gauss_point(
       const ElementNodes<celltype>& nodal_coordinates,
       const JacobianMapping<celltype>& jacobian_mapping,
       const Core::Utils::FunctionOfSpaceTime& analytical_function,
