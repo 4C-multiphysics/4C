@@ -1870,14 +1870,6 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
 
     // penalty support for target side quantities:
     add_target_contributions(*kteff, *feff);
-
-#ifdef CONTACTFDGAPLTL
-    // FD check of weighted gap g derivatives (non-penetr. condition)
-    for (int i = 0; i < (int)interface_.size(); ++i)
-    {
-      interface_[i]->FDCheckGapDerivLTL();
-    }
-#endif  // #ifdef CONTACTFDGAPLTL
   }
 
 
@@ -5933,14 +5925,6 @@ void CONTACT::LagrangeStrategy::condense_frictionless(
 
     // penalty support for target side quantities:
     add_target_contributions(*kteff_op, *feff);
-
-#ifdef CONTACTFDGAPLTL
-    // FD check of weighted gap g derivatives (non-penetr. condition)
-    for (int i = 0; i < (int)interface_.size(); ++i)
-    {
-      interface_[i]->FDCheckGapDerivLTL();
-    }
-#endif  // #ifdef CONTACTFDGAPLTL
   }
 
   // complete stiffness matrix

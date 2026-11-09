@@ -24,7 +24,6 @@ FOUR_C_NAMESPACE_OPEN
 
 
 
-// #define CONTACTFDGAPLTL           /* flag for FD check of vector valued gap g ltl */
 // #define CONTACTFDJUMPLTL          /* flag for FD check of vector valued jump ltl */
 // #define CONTACTFDALPHA            /* flag for FD check of scaling factor alpha*/
 // #define CONTACTFDSLIPINCR         /* flag for FD check of weighted obj.-var. slip */

@@ -1212,12 +1212,6 @@ namespace CONTACT
     //!@{
 
     /*!
-    \brief Check gap g derivatives with finite differences LTL
-
-    */
-    void fd_check_gap_deriv_ltl();
-
-    /*!
     \brief Check jump derivatives with finite differences LTL
 
     */
