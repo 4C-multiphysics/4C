@@ -999,4 +999,32 @@ void CONTACT::MtAbstractStrategy::postprocess_quantities_per_interface(
     (*it)->postprocess_quantities(*outputParams);
 }
 
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+double CONTACT::MtAbstractStrategy::evaluate_lagrange_multiplier_error_squared(
+    int analytical_function_id, double time)
+{
+  FOUR_C_ASSERT_ALWAYS(lagrange_multiplier() != nullptr,
+      "Cannot evaluate the Lagrange multiplier error: no Lagrange multiplier vector is available.");
+
+  store_nodal_quantities(Mortar::StrategyBase::lmcurrent);
+  double error_squared = 0.0;
+
+  /*
+  for (const auto& interface : interface_)
+  {
+    // Loop only over owned/source-row interface elements.
+    //
+    // At each quadrature point:
+    //   1. evaluate the actual LM interpolation lambda_h,
+    //   2. evaluate analytical lambda_ex,
+    //   3. add ||lambda_h - lambda_ex||^2 * integration_factor.
+  }
+  */
+
+  Core::Communication::sum_all(error_squared, get_comm());
+
+  return error_squared;
+}
+
 FOUR_C_NAMESPACE_CLOSE

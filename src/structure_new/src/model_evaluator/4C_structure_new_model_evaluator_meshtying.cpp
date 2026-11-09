@@ -24,6 +24,7 @@
 #include "4C_solver_nonlin_nox_group_prepostoperator.hpp"
 #include "4C_solver_nonlin_nox_solver_linesearchbased.hpp"
 #include "4C_structure_new_dbc.hpp"
+#include "4C_structure_new_error_evaluator.hpp"
 #include "4C_structure_new_impl_generic.hpp"
 #include "4C_structure_new_model_evaluator_data.hpp"
 #include "4C_structure_new_model_evaluator_manager.hpp"
@@ -460,6 +461,24 @@ void Solid::ModelEvaluator::Meshtying::remove_condensed_contributions_from_rhs(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Meshtying::determine_analytical_error(
+    const Solid::ErrorEvaluator::Parameters& parameters, Solid::ErrorEvaluator::Results& results)
+{
+  FOUR_C_ASSERT_ALWAYS(strategy().is_saddle_point_system(),
+      "Analytical Lagrange multiplier error evaluation requires a Lagrange multiplier meshtying "
+      "strategy.");
+
+  if (parameters.evaluate_error_analytical)
+  {
+    const int function_id = parameters.evaluate_error_analytical_lagrange_multiplier_function_id;
+    results.integrated_squared_error_lagrange_multipliers =
+        strategy().evaluate_lagrange_multiplier_error_squared(
+            function_id, global_state().get_time_np());
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 void Solid::ModelEvaluator::Meshtying::write_restart(
     Core::IO::DiscretizationWriter& iowriter, const bool& forced_writerestart) const
 {
@@ -490,6 +509,16 @@ void Solid::ModelEvaluator::Meshtying::set_time_integration_info(
     CONTACT::MtAbstractStrategy& strategy) const
 {
   strategy.set_time_integration_info(integrator().get_int_param());
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+double Solid::ModelEvaluator::Meshtying::evaluate_lagrange_multiplier_error_squared(
+    const int analytical_function_id, const double time)
+{
+  check_init_setup();
+
+  return strategy().evaluate_lagrange_multiplier_error_squared(analytical_function_id, time);
 }
 
 FOUR_C_NAMESPACE_CLOSE

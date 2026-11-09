@@ -585,6 +585,9 @@ namespace CONTACT
     virtual void remove_condensed_contributions_from_rhs(
         Core::LinAlg::Vector<double>& rhs) const {};
 
+    virtual double evaluate_lagrange_multiplier_error_squared(
+        int analytical_function_id, double time);
+
     //!@}
 
    protected:

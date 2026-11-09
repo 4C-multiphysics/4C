@@ -71,6 +71,11 @@ void Solid::Integrator::init(const std::shared_ptr<Solid::TimeInt::BaseDataSDyn>
 void Solid::Integrator::setup()
 {
   check_init();
+
+  // setup error evaluator parameters
+  error_evaluator_parameters_ = ErrorEvaluator::error_evaluator_parameter_factory(
+      Global::Problem::instance()->structural_dynamic_params().sublist("ERROR EVALUATION"));
+
   // ---------------------------------------------------------------------------
   // build model evaluator data container
   // ---------------------------------------------------------------------------
@@ -685,9 +690,13 @@ void Solid::Integrator::post_time_loop()
   check_init_setup();
   model_eval().post_time_loop();
 
-  Solid::ModelEvaluator::Structure& str_model =
-      dynamic_cast<Solid::ModelEvaluator::Structure&>(evaluator(Solid::model_structure));
-  str_model.evaluate_analytical_error();
+  if (!error_evaluator_parameters_.evaluate_error_analytical) return;
+
+  Solid::ErrorEvaluator::Results results;
+
+  model_eval().determine_analytical_error(error_evaluator_parameters_, results);
+
+  Solid::ErrorEvaluator::write_error(results, *global_state().get_discret());
 }
 
 /*----------------------------------------------------------------------------*

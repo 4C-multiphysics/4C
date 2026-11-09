@@ -122,6 +122,9 @@ namespace Solid
       //! [derived]
       void determine_energy() override {};
 
+      void determine_analytical_error(const Solid::ErrorEvaluator::Parameters& parameters,
+          Solid::ErrorEvaluator::Results& results) override;
+
       //! [derived]
       void output_step_state(Core::IO::DiscretizationWriter& iowriter) const override {}
 
@@ -215,6 +218,9 @@ namespace Solid
      private:
       /// correct time integration parameters within the meshtying strategy
       void set_time_integration_info(CONTACT::MtAbstractStrategy& strategy) const;
+
+      /// calculate the squared error of the lagrange multiplier field
+      double evaluate_lagrange_multiplier_error_squared(int analytical_function_id, double time);
 
       //! meshtying strategy
       std::shared_ptr<CONTACT::MtAbstractStrategy> strategy_ptr_;
