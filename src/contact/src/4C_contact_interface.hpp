@@ -1212,13 +1212,6 @@ namespace CONTACT
     //!@{
 
     /*!
-    \brief Check alpha derivatives with finite differences (for hybrid formulation)
-
-    */
-    void fd_check_alpha_deriv();
-
-
-    /*!
     \brief Check weighted slip increment derivatives with finite differences (gp-wise calculated)
 
     */
