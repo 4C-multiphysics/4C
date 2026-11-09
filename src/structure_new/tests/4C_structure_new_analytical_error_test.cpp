@@ -39,7 +39,7 @@ namespace
   };
 
 
-  TEST(SolidAnalyticalErrorTest, discretizaiton_error)
+  TEST(SolidAnalyticalErrorTest, discretization_error)
   {
     constexpr auto celltype = Core::FE::CellType::hex8;
     constexpr int dim = Core::FE::dim<celltype>;
@@ -95,13 +95,12 @@ namespace
                 integration_factor;
           });
 
-      EXPECT_NEAR(squared_l2_norm_error, 1.0 / 30.0, 1.0e-12);
       EXPECT_NEAR(std::sqrt(squared_l2_norm_error), 1.0 / std::sqrt(30.0), 1.0e-12);
     }
 
     // displacement error in the H1 semi norm
     {
-      double squared_h1_norm_error = 0.0;
+      double squared_h1_semi_norm_error = 0.0;
 
       Discret::Elements::for_each_gauss_point<celltype>(element_nodes,
           Discret::Elements::ElementProperties<celltype>{}, integration,
@@ -113,15 +112,14 @@ namespace
             reference_coordinates.multiply_nn(
                 element_nodes.reference_coordinates, shape_functions.shapefunctions_);
 
-            squared_h1_norm_error +=
+            squared_h1_semi_norm_error +=
                 Discret::Elements::compute_squared_h1_semi_norm_error_at_gauss_point<celltype>(
                     element_nodes, jacobian_mapping, analytical_function,
                     reference_coordinates.as_span(), 0.0) *
                 integration_factor;
           });
 
-      EXPECT_NEAR(squared_h1_norm_error, 1.0 / 3.0, 1.0e-12);
-      EXPECT_NEAR(std::sqrt(squared_h1_norm_error), 1.0 / std::sqrt(3.0), 1.0e-12);
+      EXPECT_NEAR(std::sqrt(squared_h1_semi_norm_error), 1.0 / std::sqrt(3.0), 1.0e-12);
     }
   }
 }  // namespace
