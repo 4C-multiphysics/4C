@@ -154,14 +154,6 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
   {
     // add_line_to_lin_contributions(kteff,feff);
     add_line_to_lin_contributions_friction(*kteff, feff);
-
-    // FD check of weighted gap g derivatives + jump for LTL case
-#ifdef CONTACTFDJUMPLTL
-    for (int i = 0; i < (int)interface_.size(); ++i)
-    {
-      interface_[i]->FDCheckJumpDerivLTL();
-    }
-#endif
   }
 
   // check if contact contributions are present,
@@ -5086,14 +5078,6 @@ void CONTACT::LagrangeStrategy::condense_friction(
   {
     // add_line_to_lin_contributions(kteff,feff);
     add_line_to_lin_contributions_friction(*kteff_op, feff);
-
-    // FD check of weighted gap g derivatives + jump for LTL case
-#ifdef CONTACTFDJUMPLTL
-    for (int i = 0; i < (int)interface_.size(); ++i)
-    {
-      interface_[i]->FDCheckJumpDerivLTL();
-    }
-#endif  // #ifdef CONTACTFDJUMPLTL
   }
 
   // complete stiffness matrix

@@ -1212,12 +1212,6 @@ namespace CONTACT
     //!@{
 
     /*!
-    \brief Check jump derivatives with finite differences LTL
-
-    */
-    void fd_check_jump_deriv_ltl();
-
-    /*!
     \brief Check alpha derivatives with finite differences (for hybrid formulation)
 
     */
