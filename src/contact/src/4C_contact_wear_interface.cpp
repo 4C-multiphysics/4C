@@ -1260,14 +1260,6 @@ void Wear::WearInterface::assemble_lin_stick(Core::LinAlg::SparseMatrix& linstic
 
   bool consistent = false;
 
-#if defined(CONSISTENTSTICK) && defined(CONSISTENTSLIP)
-  FOUR_C_THROW(
-      "It's not reasonable to activate both, the consistent stick and slip branch, "
-      "because both together will lead again to an inconsistent formulation!");
-#endif
-#ifdef CONSISTENTSTICK
-  consistent = true;
-#endif
 
   if (consistent && ftype == CONTACT::FrictionType::coulomb)
   {
@@ -2774,100 +2766,6 @@ void Wear::WearInterface::assemble_lin_w_lm(Core::LinAlg::SparseMatrix& sglobal)
   return;
 }
 
-/*----------------------------------------------------------------------*
- |  Assemble matrix W_lmsl containing wear w~ derivatives    farah 07/13|
- |  w.r.t. lm  --> (ONLY !!!) for consistent stick                      |
- *----------------------------------------------------------------------*/
-void Wear::WearInterface::assemble_lin_w_lm_st(Core::LinAlg::SparseMatrix& sglobal)
-{
-  /************************************************
-   *  This function is only for Implicit Wear !!! *
-   ************************************************/
-  if (!wearimpl_) FOUR_C_THROW("This matrix deriv. is only required for implicit wear algorithm!");
-
-  // create map of stick nodes
-  std::shared_ptr<Core::LinAlg::Map> sticknodes =
-      Core::LinAlg::split_map(*activenodes_, *slipnodes_);
-  std::shared_ptr<Core::LinAlg::Map> stickt = Core::LinAlg::split_map(*activet_, *slipt_);
-
-  // nothing to do if no stick nodes
-  if (sticknodes->num_my_elements() == 0) return;
-
-  // get input params
-  double ct = interface_params().get<double>("SEMI_SMOOTH_CT");
-  double cn = interface_params().get<double>("SEMI_SMOOTH_CN");
-  double frcoeff = interface_params().get<double>("FRCOEFF");
-
-
-  // loop over all stick source nodes of the interface
-  for (int i = 0; i < sticknodes->num_my_elements(); ++i)
-  {
-    int gid = sticknodes->gid(i);
-    Core::Nodes::Node* node = idiscret_->g_node(gid);
-    if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
-    CONTACT::FriNode* cnode = dynamic_cast<CONTACT::FriNode*>(node);
-
-    if (cnode->owner() != Core::Communication::my_mpi_rank(get_comm()))
-      FOUR_C_THROW("Node ownership inconsistency!");
-
-    cn = cn_ref().local_values_as_span()[cn_ref().get_map().lid(cnode->id())];
-    ct = ct_ref().local_values_as_span()[ct_ref().get_map().lid(cnode->id())];
-
-    // prepare assembly, get information from node
-    std::map<int, double>& dwmap = cnode->data().get_deriv_wlm();
-
-    double* jump = cnode->fri_data().jump();
-    double* txi = cnode->data().txi();
-    double* teta = cnode->data().teta();
-
-    // iterator for maps
-    std::map<int, double>::iterator colcurr;
-
-    // row number of entries
-    std::vector<int> row(n_dim() - 1);
-    if (n_dim() == 2)
-    {
-      row[0] = stickt->gid(i);
-    }
-    else if (n_dim() == 3)
-    {
-      row[0] = stickt->gid(2 * i);
-      row[1] = stickt->gid(2 * i) + 1;
-    }
-    else
-      FOUR_C_THROW("AssemblelinSlip: Dimension not correct");
-
-    // evaluation of specific components of entries to assemble
-    double jumptxi = 0;
-    double jumpteta = 0;
-    for (int i = 0; i < n_dim(); i++)
-    {
-      jumptxi += txi[i] * jump[i];
-      jumpteta += teta[i] * jump[i];
-    }
-
-    // loop over all entries of the current derivative map
-    for (colcurr = dwmap.begin(); colcurr != dwmap.end(); ++colcurr)
-    {
-      int col = colcurr->first;
-      double valtxi = frcoeff * cn * ct * jumptxi * (colcurr->second);
-
-      // do not assemble zeros into matrix
-      if (abs(valtxi) > 1.0e-12) sglobal.assemble(valtxi, row[0], col);
-
-      if (n_dim() == 3)
-      {
-        double valteta = frcoeff * cn * ct * jumpteta * (colcurr->second);
-        if (abs(valteta) > 1.0e-12) sglobal.assemble(valteta, row[1], col);
-      }
-    }
-  }
-  return;
-}
-/*----------------------------------------------------------------------*
- |  Assemble matrix W_lmsl containing wear w~ derivatives    farah 07/13|
- |  w.r.t. lm  --> for slip                                             |
- *----------------------------------------------------------------------*/
 void Wear::WearInterface::assemble_lin_w_lm_sl(Core::LinAlg::SparseMatrix& sglobal)
 {
   /************************************************

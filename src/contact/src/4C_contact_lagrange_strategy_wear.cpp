@@ -478,10 +478,6 @@ void Wear::LagrangeStrategyWear::initialize()
     // Here are only the lin. w.r.t. the lagr. mult.
     wlinmatrix_ = std::make_shared<Core::LinAlg::SparseMatrix>(*gactiven_, 3);
     wlinmatrixsl_ = std::make_shared<Core::LinAlg::SparseMatrix>(*gslipt_, 3);
-
-#ifdef CONSISTENTSTICK
-    wlinmatrixst_ = std::make_shared<Core::LinAlg::SparseMatrix>(*gstickt, 3);
-#endif
   }
 
   if (wearprimvar_)
@@ -2710,10 +2706,6 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     {  // assemble wear-specific matrices
       interface->assemble_lin_w_lm(*wlinmatrix_);
       interface->assemble_lin_w_lm_sl(*wlinmatrixsl_);
-
-#ifdef CONSISTENTSTICK
-      interface_[i]->AssembleLinWLmSt(*wlinmatrixst_);
-#endif
     }
 
     //***************************************************
@@ -2784,10 +2776,6 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     // complete wear-specific matrices
     wlinmatrix_->complete(*gsdofrowmap_, *gactiven_);
     wlinmatrixsl_->complete(*gsdofrowmap_, *gslipt_);
-
-#ifdef CONSISTENTSTICK
-    wlinmatrixst_->Complete(*gsdofrowmap_, *gstickt);
-#endif
   }
 
   /**********************************************************************/
@@ -3300,10 +3288,6 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
         Core::LinAlg::matrix_add(*wlinmatrix_, false, 1.0, kzz, 1.0);
       if (gslipt_->num_global_elements())
         Core::LinAlg::matrix_add(*wlinmatrixsl_, false, 1.0, kzz, 1.0);
-
-#ifdef CONSISTENTSTICK
-      if (gstickt->NumGlobalElements()) kzz->Add(*wlinmatrixst_, false, 1.0, 1.0);
-#endif
     }
     kzz.complete(*gsdofrowmap_, *gsdofrowmap_);
 

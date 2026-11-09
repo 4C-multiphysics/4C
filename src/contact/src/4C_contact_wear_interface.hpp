@@ -144,7 +144,6 @@ namespace Wear
     */
     virtual void assemble_lin_w_lm(Core::LinAlg::SparseMatrix& sglobal);
     virtual void assemble_lin_w_lm_sl(Core::LinAlg::SparseMatrix& sglobal);
-    virtual void assemble_lin_w_lm_st(Core::LinAlg::SparseMatrix& sglobal);
 
     /*!
     \brief Assemble wear w

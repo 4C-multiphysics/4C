@@ -1756,14 +1756,6 @@ void CONTACT::Interface::assemble_lin_stick(Core::LinAlg::SparseMatrix& linstick
   double frcoeff = 0.;  // the friction coefficient actually used
   bool consistent = false;
 
-#if defined(CONSISTENTSTICK) && defined(CONSISTENTSLIP)
-  FOUR_C_THROW(
-      "It's not reasonable to activate both, the consistent stick and slip branch, "
-      "because both together will lead again to an inconsistent formulation!");
-#endif
-#ifdef CONSISTENTSTICK
-  consistent = true;
-#endif
 
   if (consistent && interface_params().get<bool>("REGULARIZED_NORMAL_CONTACT"))
     FOUR_C_THROW("no consistent stick for regularized contact");

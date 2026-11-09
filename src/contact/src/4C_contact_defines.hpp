@@ -16,9 +16,8 @@ FOUR_C_NAMESPACE_OPEN
 /* Contact algorithm options                                            */
 /************************************************************************/
 
-// #define CONSISTENTSTICK           /* flag for consistent stick branch of the complementarity
-//  function */ #define CONSISTENTSLIP            /* flag for consistent slip branch of the
-//  complementarity function */
+// #define CONSISTENTSLIP            /* flag for consistent slip branch of the complementarity
+// function */
 
 /************************************************************************/
 /* Debugging options                                                    */

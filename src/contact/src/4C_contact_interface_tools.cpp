@@ -3864,7 +3864,7 @@ void CONTACT::Interface::fd_check_tang_lm_deriv()
 /*----------------------------------------------------------------------*
  | Finite difference check of stick condition derivatives    farah 08/13|
  | Not for Wear Lin. or modifications concerning the compl.             |
- | fnc. !!! See flags CONSISTENTSTICK / CONSISTENTSLIP                  |
+ | fnc. !!! See flag CONSISTENTSLIP                                     |
  *----------------------------------------------------------------------*/
 void CONTACT::Interface::fd_check_stick_deriv(
     Core::LinAlg::SparseMatrix& linstickLMglobal, Core::LinAlg::SparseMatrix& linstickDISglobal)
@@ -4393,7 +4393,7 @@ void CONTACT::Interface::fd_check_stick_deriv(
 /*----------------------------------------------------------------------*
  | Finite difference check of slip condition derivatives     farah 08/13|
  | Not for Wear Lin. or modifications concerning the compl.             |
- | fnc. !!! See flags CONSISTENTSTICK / CONSISTENTSLIP                  |
+ | fnc. !!! See flag CONSISTENTSLIP                                     |
  *----------------------------------------------------------------------*/
 void CONTACT::Interface::fd_check_slip_deriv(
     Core::LinAlg::SparseMatrix& linslipLMglobal, Core::LinAlg::SparseMatrix& linslipDISglobal)

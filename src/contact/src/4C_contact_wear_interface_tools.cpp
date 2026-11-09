@@ -1223,7 +1223,7 @@ void Wear::WearInterface::fd_check_deriv_t_d(Core::LinAlg::SparseMatrix& lintdis
 /*----------------------------------------------------------------------*
  | Finite difference check of slip condition derivatives     farah 08/13|
  | Not for Wear Lin. or modifications concerning the compl.             |
- | fnc. !!! See flags CONSISTENTSTICK / CONSISTENTSLIP                  |
+ | fnc. !!! See flag CONSISTENTSLIP                                     |
  *----------------------------------------------------------------------*/
 void Wear::WearInterface::fd_check_slip_deriv(Core::LinAlg::SparseMatrix& linslipLMglobal,
     Core::LinAlg::SparseMatrix& linslipDISglobal, Core::LinAlg::SparseMatrix& linslipWglobal)
