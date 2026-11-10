@@ -13,10 +13,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  gcc13_assertions_build:
+  gcc13_fourc_assertions_trilinos_assertions_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:75a68fb3
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:f48156bf
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -38,26 +38,26 @@ jobs:
         with:
           directory: ${{ github.workspace }}/build
           retention-days: 1
-          name: gcc13_assertions_build
+          name: gcc13_fourc_assertions_trilinos_assertions_build
       - uses: ./.github/actions/chunk_test_suite
         id: set-matrix
         with:
           build-directory: ${{ github.workspace }}/build
           source-directory: ${{ github.workspace }}
           number-of-chunks: 15
-          junit-report-artifact-name: gcc13_assertions_test_report.xml
+          junit-report-artifact-name: gcc13_fourc_assertions_trilinos_assertions_test_report.xml
 
-  gcc13_assertions_test:
-    needs: gcc13_assertions_build
+  gcc13_fourc_assertions_trilinos_assertions_test:
+    needs: gcc13_fourc_assertions_trilinos_assertions_build
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:75a68fb3
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:f48156bf
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     strategy:
       fail-fast: false
       matrix:
-        test-chunk: ${{fromJson(needs.gcc13_assertions_build.outputs.test-chunks)}}
+        test-chunk: ${{fromJson(needs.gcc13_fourc_assertions_trilinos_assertions_build.outputs.test-chunks)}}
     defaults:
       run:
         shell: bash
@@ -71,25 +71,25 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
       - uses: ./.github/actions/download_directory
         with:
-          name: gcc13_assertions_build
+          name: gcc13_fourc_assertions_trilinos_assertions_build
           destination: ${{ github.workspace }}/build
       - name: Test
         run: |
           cd $GITHUB_WORKSPACE/build
-          ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/gcc13_assertions_test_report-$TEST_CHUNK.xml
+          ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/gcc13_fourc_assertions_trilinos_assertions_test_report-$TEST_CHUNK.xml
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
       - name: Upload test report
         if: success() || failure()
         uses: actions/upload-artifact@v7
         with:
-          name: gcc13_assertions_test_report-${{ matrix.test-chunk }}.xml
+          name: gcc13_fourc_assertions_trilinos_assertions_test_report-${{ matrix.test-chunk }}.xml
           path: |
-            ${{ github.workspace }}/gcc13_assertions_test_report-${{ matrix.test-chunk }}.xml
+            ${{ github.workspace }}/gcc13_fourc_assertions_trilinos_assertions_test_report-${{ matrix.test-chunk }}.xml
           retention-days: 1
 
-  gcc13_assertions_test_report:
-    needs: gcc13_assertions_test
+  gcc13_fourc_assertions_trilinos_assertions_test_report:
+    needs: gcc13_fourc_assertions_trilinos_assertions_test
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main' && (success() || failure())
     steps:
@@ -98,13 +98,13 @@ jobs:
           sparse-checkout: .github
       - uses: ./.github/actions/merge_junit_report_artifacts
         with:
-          junit-report-base-name: gcc13_assertions_test_report
+          junit-report-base-name: gcc13_fourc_assertions_trilinos_assertions_test_report
           retention-days: 1
 
-  clang18_build:
+  clang18_fourc_assertions_trilinos_assertions_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:75a68fb3
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:f48156bf
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -123,7 +123,7 @@ jobs:
       - uses: ./.github/actions/build_4C
         id: build-4C
         with:
-          cmake-preset: docker_clang
+          cmake-preset: docker_clang_assertions
           build-targets: full
           build-directory: ${{ github.workspace }}/build
           use-ccache: "true"
@@ -132,13 +132,13 @@ jobs:
         with:
           directory: ${{ github.workspace }}/build
           retention-days: 1
-          name: clang18_build
+          name: clang18_fourc_assertions_trilinos_assertions_build
       - name: Upload ccache dir as artifact
         uses: ./.github/actions/upload_directory
         with:
           directory: ${{ env.CCACHE_DIR }}
           retention-days: 1
-          name: clang18_build_ccache
+          name: clang18_fourc_assertions_trilinos_assertions_build_ccache
       - name: Upload 4C schema
         uses: actions/upload-artifact@v7
         with:
@@ -160,11 +160,11 @@ jobs:
             ${{ github.workspace }}/build/4C_metadata.yaml
           retention-days: 1
 
-  clang18_test_minimal:
-    needs: clang18_build
+  clang18_fourc_assertions_trilinos_assertions_test_minimal:
+    needs: clang18_fourc_assertions_trilinos_assertions_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:75a68fb3
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:f48156bf
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -179,18 +179,18 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
       - uses: ./.github/actions/download_directory
         with:
-          name: clang18_build
+          name: clang18_fourc_assertions_trilinos_assertions_build
           destination: ${{ github.workspace }}/build
       - name: Test
         run: |
           cd $GITHUB_WORKSPACE/build
           ctest -L minimal -j `nproc` --output-on-failure
 
-  clang18_test_install:
-    needs: clang18_build
+  clang18_fourc_assertions_trilinos_assertions_test_install:
+    needs: clang18_fourc_assertions_trilinos_assertions_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:75a68fb3
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04-assertions:f48156bf
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -207,7 +207,7 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
       - uses: ./.github/actions/download_directory
         with:
-          name: clang18_build_ccache
+          name: clang18_fourc_assertions_trilinos_assertions_build_ccache
           destination: ${{ env.CCACHE_DIR }}
       - name: Install ccache
         run: |
@@ -215,19 +215,19 @@ jobs:
           apt install -y ccache
       - uses: ./.github/actions/build_4C
         with:
-          cmake-preset: docker_clang
+          cmake-preset: docker_clang_assertions
           build-targets: install
           build-directory: ${{ github.workspace }}/build
           use-ccache: "true"
           restore-ccache: "false" # do not restore the ccache from the Github cache
-          cache-key: ${{needs.clang18_build.outputs.cache-key}}
+          cache-key: ${{needs.clang18_fourc_assertions_trilinos_assertions_build.outputs.cache-key}}
       - name: Test the installation
         run: |
           cd $GITHUB_WORKSPACE/build/tests/install_test
           sh test_install.sh
 
   clang18_verify_schema:
-    needs: clang18_build
+    needs: clang18_fourc_assertions_trilinos_assertions_build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -236,11 +236,11 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
-          name: clang18_build-schema
+          name: clang18_fourc_assertions_trilinos_assertions_build-schema
           path: ${{ github.workspace }}
       - uses: actions/download-artifact@v8
         with:
-          name: clang18_build-completion-schema
+          name: clang18_fourc_assertions_trilinos_assertions_build-completion-schema
           path: ${{ github.workspace }}
       - name: Validate all input files against schemas
         run: |
@@ -254,7 +254,7 @@ jobs:
   gcc13_no_optional_dependencies_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:75a68fb3
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:f48156bf
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -290,7 +290,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
     container:
-      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:75a68fb3
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:f48156bf
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     defaults:
       run:
@@ -341,12 +341,12 @@ jobs:
 
   ensure_all_tests_pass:
     needs:
-      - gcc13_assertions_test
-      - gcc13_assertions_test_report
-      - gcc13_assertions_build
-      - clang18_build
-      - clang18_test_minimal
-      - clang18_test_install
+      - gcc13_fourc_assertions_trilinos_assertions_test
+      - gcc13_fourc_assertions_trilinos_assertions_test_report
+      - gcc13_fourc_assertions_trilinos_assertions_build
+      - clang18_fourc_assertions_trilinos_assertions_build
+      - clang18_fourc_assertions_trilinos_assertions_test_minimal
+      - clang18_fourc_assertions_trilinos_assertions_test_install
       - clang18_verify_schema
       - gcc13_no_optional_dependencies_build
       - gcc13_no_optional_dependencies_test

@@ -35,7 +35,7 @@ RUN rm -r /home/user/4C-source
 # Copy everything to a new image to get rid of the intermediate layers
 FROM scratch
 COPY --from=0 / /
-LABEL org.opencontainers.image.description="Image containing the 4C executable. All optional dependencies compatible with 4C's license are enabled."
+LABEL org.opencontainers.image.description="Image containing the 4C executable. All optional dependencies compatible with 4C's license are enabled. Built with release dependencies (no Trilinos assertions)."
 LABEL org.4c-multiphysics.project=4C
 
 USER user

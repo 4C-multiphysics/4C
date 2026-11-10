@@ -7,11 +7,13 @@ on:
       - main
     paths:
       - '.github/workflows/docker_kokkosparallel.yml'
-      - 'dependencies/current/backtrace'
-      - 'dependencies/current/cmake'
-      - 'dependencies/current/dealii'
-      - 'dependencies/current/gmsh'
-      - 'dependencies/current/superlu_dist'
+      - 'dependencies/common/**'
+      - 'dependencies/current/backtrace/**'
+      - 'dependencies/current/cmake/**'
+      - 'dependencies/current/dealii/**'
+      - 'dependencies/current/gmsh/**'
+      - 'dependencies/current/superlu_dist/**'
+      - 'dependencies/current/apt_packages_ubuntu24.04.txt'
       - 'dependencies/testing/**'
       - 'dependencies/kokkosparallel/**'
       - 'docker/kokkosparallel/**'
@@ -19,7 +21,7 @@ on:
 env:
   REGISTRY: ghcr.io
   PROJECT_NAMESPACE: 4c-multiphysics
-  IMAGE_SUFFIX: dependencies-trilinos-kokkosparallel
+  IMAGE_SUFFIX: dependencies-assertions-trilinos-kokkosparallel
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -68,6 +70,7 @@ jobs:
           dependencies-hash: ${{ needs.check-if-build-dependencies-is-required.outputs.dependencies_hash
             }}
           base-image: "nvidia/cuda:12.8.1-devel-ubuntu24.04"
+          trilinos-enable-debug-assertions: "ON"
 
   tag-images-as-main:
     runs-on: ubuntu-latest

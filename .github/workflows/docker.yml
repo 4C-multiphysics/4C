@@ -7,11 +7,11 @@ on:
       - main
     paths:
       - '.github/workflows/docker.yml'
+      - 'dependencies/common/**'
       - 'dependencies/current/**'
       - 'dependencies/oldest_supported/**'
       - 'dependencies/testing/**'
       - 'docker/dependencies/**'
-      - 'docker/oldest_supported/**'
 
 env:
   REGISTRY: ghcr.io
@@ -29,6 +29,8 @@ jobs:
     outputs:
       dependencies_hash: ${{ steps.check-docker-build-required.outputs.dependencies_hash }}
       build_docker_image: ${{ steps.check-docker-build-required.outputs.build_docker_image }}
+      build_docker_image_assertions: ${{ steps.check-docker-build-required-assertions.outputs.build_docker_image
+        }}
     steps:
       - uses: actions/checkout@v7
       - id: check-docker-build-required
@@ -38,6 +40,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-ubuntu24.04
+      - id: check-docker-build-required-assertions
+        uses: ./.github/actions/check_docker_build_required
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-ubuntu24.04-assertions
 
   build-dependencies:
     runs-on: ubuntu-latest
@@ -65,7 +74,34 @@ jobs:
             }}
           base-image: "ubuntu:24.04"
 
-  build-dependencies-oldest-supported:
+  build-dependencies-assertions:
+    runs-on: ubuntu-latest
+    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      #
+    needs: check-if-build-dependencies-is-required
+    if: ${{ github.event_name == 'workflow_dispatch' && needs.check-if-build-dependencies-is-required.outputs.build_docker_image_assertions
+      == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Build and push image
+        uses: ./.github/actions/build_dependencies
+        with:
+          docker-file: docker/dependencies/Dockerfile
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-ubuntu24.04-assertions
+          dependencies-hash: ${{ needs.check-if-build-dependencies-is-required.outputs.dependencies_hash
+            }}
+          base-image: "ubuntu:24.04"
+          trilinos-enable-debug-assertions: "ON"
+
+  build-dependencies-assertions-oldest-supported:
     runs-on: ubuntu-latest
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
@@ -82,14 +118,16 @@ jobs:
       - name: Build and push image
         uses: ./.github/actions/build_dependencies
         with:
-          docker-file: docker/oldest_supported/Dockerfile
+          docker-file: docker/dependencies/Dockerfile
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-ubuntu24.04-oldest-supported
+          image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-ubuntu24.04-assertions-oldest-supported
           dependencies-hash: ${{ needs.check-if-build-dependencies-is-required.outputs.dependencies_hash
             }}
           base-image: "ubuntu:24.04"
+          trilinos-enable-debug-assertions: "ON"
+          trilinos-variant: "oldest_supported"
 
   tag-images-as-main:
     runs-on: ubuntu-latest
@@ -112,6 +150,12 @@ jobs:
       - name: Pull current Ubuntu 24.04 dependencies image and tag it with main
         run: |
           IMAGE_NAME="${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-ubuntu24.04"
+          docker pull $IMAGE_NAME:${{ steps.compute-dependencies-hash.outputs.computed_dependencies_hash }}
+          docker image tag $IMAGE_NAME:${{ steps.compute-dependencies-hash.outputs.computed_dependencies_hash }} $IMAGE_NAME:main
+          docker push $IMAGE_NAME:main
+      - name: Pull current Ubuntu 24.04 dependencies assertions image and tag it with main
+        run: |
+          IMAGE_NAME="${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-ubuntu24.04-assertions"
           docker pull $IMAGE_NAME:${{ steps.compute-dependencies-hash.outputs.computed_dependencies_hash }}
           docker image tag $IMAGE_NAME:${{ steps.compute-dependencies-hash.outputs.computed_dependencies_hash }} $IMAGE_NAME:main
           docker push $IMAGE_NAME:main

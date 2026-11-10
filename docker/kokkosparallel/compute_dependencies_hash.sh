@@ -14,4 +14,4 @@ set -e
 # - Calculate the SHA1 of every file. The SHA1 is good enough as we don't use it for cryptographic security. No need for SHA256
 # - Calculate the final SHA1 from the filenames and their respective SHA1. We include the filename and not only the content to track changes to the dependency structure.
 # - Use the first 8 characters of the SHA1 as hash. There is only a low collision probability with 8 characters as the hash is rarely updated.
-find dependencies/current/{backtrace,cmake,dealii,gmsh,superlu_dist} dependencies/testing dependencies/kokkosparallel docker/kokkosparallel -type f -not -name '.*' -exec sha1sum {} \; | sort | sha1sum | cut -c -8
+find dependencies/common dependencies/current/{backtrace,cmake,dealii,gmsh,apt_packages_ubuntu24.04.txt,superlu_dist} dependencies/testing dependencies/kokkosparallel docker/kokkosparallel -type f -not -name '.*' -exec sha1sum {} \; | sort | sha1sum | cut -c -8

@@ -24,49 +24,8 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
-RUN apt-get update && apt-get install -y \
-      build-essential \
-      ffmpeg \
-      git \
-      libglu1-mesa \
-      python3 \
-      sudo \
-      unzip \
-      vim \
-      wget \
-      && \
-    apt-get update && apt-get install -y \
-      doxygen \
-      graphviz \
-      texinfo \
-      lcov \
-      libblas-dev \
-      libboost-all-dev \
-      libcln-dev \
-      libhdf5-dev \
-      libhdf5-openmpi-dev \
-      libnetcdf-dev \
-      libfftw3-dev \
-      lld \
-      python3 \
-      python3-venv \
-      python-is-python3 \
-      liblapack-dev \
-      libopenmpi-dev \
-      libparmetis-dev \
-      libmetis-dev \
-      libsuitesparse-dev \
-      libmumps-dev \
-      libscalapack-mpi-dev \
-      libqhull-dev \
-      mpi-default-dev \
-      ninja-build \
-      libyaml-dev \
-      clang \
-      clang-tidy \
-      clang-tools \
-      libomp-dev \
-      libvtk9-dev \
+COPY dependencies/current/apt_packages_ubuntu24.04.txt /tmp/apt_packages.txt
+RUN apt-get update && xargs -a /tmp/apt_packages.txt apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Create directory for dependencies
@@ -79,11 +38,18 @@ COPY dependencies /dependencies
 # Install cmake
 RUN /dependencies/current/cmake/install.sh /usr/local
 
-# Install superLU_dist 7.2.0
+# Install superLU_dist
 RUN /dependencies/current/superlu_dist/install.sh ${INSTALL_DIR}
 
-# Install Trilinos 2026.2
-RUN /dependencies/current/trilinos/install.sh ${INSTALL_DIR}
+# Install Trilinos. The variant selects which install script is used (current, oldest_supported,
+# trilinos_develop, ...), TRILINOS_VERSION optionally overrides the checked-out ref, and
+# TRILINOS_ENABLE_DEBUG overrides the variant's default assertion setting (empty = variant default).
+ARG TRILINOS_VARIANT=current
+ARG TRILINOS_VERSION=
+ARG TRILINOS_ENABLE_DEBUG=
+RUN TRILINOS_VERSION="${TRILINOS_VERSION}" \
+    TRILINOS_ENABLE_DEBUG="${TRILINOS_ENABLE_DEBUG}" \
+    /dependencies/${TRILINOS_VARIANT}/trilinos/install.sh ${INSTALL_DIR}
 
 # Install deal.II (needs to happen after Trilinos)
 RUN /dependencies/current/dealii/install.sh ${INSTALL_DIR}
