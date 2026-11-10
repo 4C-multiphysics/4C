@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include "4C_particle_engine_container_bundle.hpp"
+#include "4C_unittest_utils_assertions_test.hpp"
 
 
 namespace
@@ -366,6 +367,63 @@ namespace
 
       compare_particle_states(particle_reference, particle);
     }
+
+    particlecontainerbundle_->scale_state_all_containers(2.0, Particle::State::Position);
+
+    {
+      Particle::ParticleContainerBundleStatePtrs& pos_ptrs =
+          particlecontainerbundle_->try_get_ptrs_to_state_writable(Particle::State::Position);
+      std::vector<double> ref_pos;
+
+      for (int index = 0; index < 3; ++index)
+      {
+        SCOPED_TRACE("Phase1, Particle " + std::to_string(index));
+        if (index == 0)
+        {
+          ref_pos = {2.40, 1.40, 4.20};
+        }
+        else if (index == 1)
+        {
+          ref_pos = {-2.1, 25.2, -17.08};
+        }
+        else if (index == 2)
+        {
+          ref_pos = {-10.04, 4.52, -14.8};
+        }
+        const int statedim = Particle::enum_to_state_dim(Particle::State::Position);
+        double* pos = Particle::bundle_state_ptrs_index(
+            pos_ptrs, Particle::Type::Phase1, Particle::Status::Owned, index, statedim);
+
+        for (auto j = 0; j < statedim; ++j)
+          EXPECT_NEAR(ref_pos[j], pos[j], 1e-14)
+              << "state '" << Particle::enum_to_state_name(Particle::State::Position)
+              << "' j = " << j;
+
+        // destroy the data to check that other particles are not effected
+        for (auto j = 0; j < statedim; ++j) pos[j] = j;
+      }
+    }
+
+    {
+      Particle::ConstParticleContainerBundleStatePtrs& pos_ptrs =
+          particlecontainerbundle_->try_get_ptrs_to_state(Particle::State::Position);
+      std::vector<double> ref_pos;
+
+      for (int index = 0; index < 3; ++index)
+      {
+        SCOPED_TRACE("Phase1, Particle " + std::to_string(index));
+        ref_pos = {0.0, 1.0, 2.0};
+        const int statedim = Particle::enum_to_state_dim(Particle::State::Position);
+        const double* pos = Particle::bundle_state_ptrs_index(
+            pos_ptrs, Particle::Type::Phase1, Particle::Status::Owned, index, statedim);
+
+        // and verify overwriting took effect
+        for (auto j = 0; j < statedim; ++j)
+          EXPECT_NEAR(ref_pos[j], pos[j], 1e-14)
+              << "state '" << Particle::enum_to_state_name(Particle::State::Position)
+              << "' j = " << j;
+      }
+    }
   }
 
   TEST_F(ParticleContainerBundleTest, update_state_all_containers)
@@ -440,64 +498,110 @@ namespace
 
     particlecontainerbundle_->set_state_all_containers(mass, Particle::State::Mass);
 
-    Particle::ParticleContainer* container = nullptr;
-    int globalid(0);
-
     Particle::ParticleStates particle;
     particle.assign(statesvectorsize_, std::vector<double>{});
     Particle::ParticleStates particle_reference;
     particle_reference.assign(statesvectorsize_, std::vector<double>{});
 
-    container = particlecontainerbundle_->get_specific_container(
-        Particle::Type::Phase1, Particle::Status::Owned);
-
-    ASSERT_EQ(container->particles_stored(), 3);
-
-    for (int index = 0; index < 3; ++index)
     {
-      SCOPED_TRACE("Phase1, Particle " + std::to_string(index));
-      if (index == 0)
-      {
-        particle_reference = create_test_particle({1.20, 0.70, 2.10}, mass, {0.12});
-      }
-      else if (index == 1)
-      {
-        particle_reference = create_test_particle({-1.05, 12.6, -8.54}, mass, {12.34});
-      }
-      else if (index == 2)
-      {
-        particle_reference = create_test_particle({-5.02, 2.26, -7.4}, mass, {2.9});
-      }
+      Particle::ConstParticleContainerBundleStatePtrs& mass_ptrs =
+          particlecontainerbundle_->try_get_ptrs_to_state(Particle::State::Mass);
 
-      container->get_particle(index, globalid, particle);
+      for (int index = 0; index < 3; ++index)
+      {
+        SCOPED_TRACE("Phase1, Particle " + std::to_string(index) + ", Owned");
+        const double* particle_mass = Particle::bundle_state_ptrs_index(
+            mass_ptrs, Particle::Type::Phase1, Particle::Status::Owned, index);
 
-      compare_particle_states(particle_reference, particle);
+        EXPECT_NEAR(mass[0], particle_mass[0], 1e-14)
+            << "state '" << Particle::enum_to_state_name(Particle::State::Mass)
+            << "' index = " << index;
+      }
     }
 
-    container = particlecontainerbundle_->get_specific_container(
-        Particle::Type::Phase2, Particle::Status::Owned);
-
-    ASSERT_EQ(container->particles_stored(), 3);
-
-    for (int index = 0; index < 3; ++index)
     {
-      SCOPED_TRACE("Phase2, Particle " + std::to_string(index));
-      if (index == 0)
+      std::set<Particle::Type> types = {Particle::Type::Phase2};
+      Particle::ConstParticleContainerBundleStatePtrs& mass_ptrs =
+          particlecontainerbundle_->try_get_ptrs_to_state(
+              Particle::State::Mass, types, Particle::Status::Owned);
+
+      // check owned particles of valid type are present
+      for (int index = 0; index < 3; ++index)
       {
-        particle_reference = create_test_particle({0.24, -1.71, -2.15}, mass, {2.2});
-      }
-      else if (index == 1)
-      {
-        particle_reference = create_test_particle({-1.15, 2.6, 7.24}, mass, {1.2});
-      }
-      else if (index == 2)
-      {
-        particle_reference = create_test_particle({5.12, 4.26, -3.4}, mass, {0.2});
+        SCOPED_TRACE("Phase2, Particle " + std::to_string(index) + ", Owned");
+        const double* particle_mass = Particle::bundle_state_ptrs_index(
+            mass_ptrs, Particle::Type::Phase2, Particle::Status::Owned, index);
+
+        EXPECT_NEAR(mass[0], particle_mass[0], 1e-14)
+            << "state '" << Particle::enum_to_state_name(Particle::State::Mass)
+            << "' index = " << index;
       }
 
-      container->get_particle(index, globalid, particle);
+      // check ghosted Phase1 particles are not present, return fallback
+      // these are present in bundle, not requested here but were previously
+      {
+        const int index = 0;
+        const double* fallback = &mass[0];
+        const double* particle_mass = Particle::bundle_state_ptrs_index(
+            mass_ptrs, fallback, Particle::Type::Phase1, Particle::Status::Ghosted, index);
 
-      compare_particle_states(particle_reference, particle);
+        EXPECT_EQ(particle_mass, fallback);
+      }
+
+      // check owned Phase 1 particles are not present, return nullptr
+      // these are present in bundle, not requested here but were previously
+      {
+        const int index = 0;
+        const double* particle_mass = Particle::bundle_state_ptrs_index_or_nullptr(
+            mass_ptrs, Particle::Type::Phase1, Particle::Status::Owned, index);
+
+        EXPECT_EQ(particle_mass, nullptr);
+      }
+
+      // check ParticleType that is not present in bundle, indexing utility should warn
+      {
+        const int index = 0;
+
+        SCOPED_TRACE("BoundaryPhase, Particle " + std::to_string(index));
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+        EXPECT_ANY_THROW(Particle::bundle_state_ptrs_index(
+            mass_ptrs, Particle::Type::BoundaryPhase, Particle::Status::Owned, index));
+#else
+        EXPECT_EQ(mass_ptrs[static_cast<int>(Particle::Type::BoundaryPhase)]
+                           [static_cast<int>(Particle::Status::Owned)],
+            nullptr);
+#endif
+      }
+    }
+
+    {
+      Particle::ParticleContainerBundleStatePtrs& mass_ptrs =
+          particlecontainerbundle_->try_get_ptrs_to_state_writable(
+              Particle::State::Mass, Particle::Status::Owned);
+
+      // check ParticleType and ParticleStatus pair that is not present, return nullptr
+      {
+        const int index = 0;
+        const double* particle_mass = Particle::bundle_state_ptrs_index_or_nullptr(
+            mass_ptrs, Particle::Type::Phase2, Particle::Status::Ghosted, index);
+
+        EXPECT_EQ(particle_mass, nullptr);
+      }
+
+      // check ParticleType that is not present in bundle, indexing utility should warn
+      {
+        const int index = 0;
+
+        SCOPED_TRACE("BoundaryPhase, Particle " + std::to_string(index));
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+        EXPECT_ANY_THROW(Particle::bundle_state_ptrs_index(
+            mass_ptrs, Particle::Type::BoundaryPhase, Particle::Status::Owned, index));
+#else
+        EXPECT_EQ(mass_ptrs[static_cast<int>(Particle::Type::BoundaryPhase)]
+                           [static_cast<int>(Particle::Status::Owned)],
+            nullptr);
+#endif
+      }
     }
   }
 

@@ -73,7 +73,7 @@ namespace Particle
     std::vector<const Mat::PAR::ParticleMaterialThermo*> thermomaterial_;
 
     //! evaporating phase
-    Particle::Type evaporatingphase_;
+    ParticleType evaporatingphase_;
 
     //! boiling temperature in recoil pressure formula
     double recoilboilingtemp_;

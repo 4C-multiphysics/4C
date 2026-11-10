@@ -68,7 +68,7 @@ namespace Particle
 
     //! insert surface tension evaluation dependent states
     void insert_particle_states_of_particle_types(
-        std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes) const;
+        std::map<ParticleType, std::set<ParticleState>>& particlestatestotypes) const;
 
     //! compute interface quantities
     void compute_interface_quantities();
@@ -126,16 +126,16 @@ namespace Particle
     std::unique_ptr<Particle::SPHBarrierForce> barrierforce_;
 
     //! liquid particle type
-    Particle::Type liquidtype_;
+    ParticleType liquidtype_;
 
     //! gas particle type
-    Particle::Type gastype_;
+    ParticleType gastype_;
 
     //! set of fluid particle types
-    std::set<Particle::Type> fluidtypes_;
+    std::set<ParticleType> fluidtypes_;
 
     //! set of boundary particle types
-    std::set<Particle::Type> boundarytypes_;
+    std::set<ParticleType> boundarytypes_;
 
     //! interface normal of ghosted particles to refresh
     Particle::StatesOfTypesToRefresh intnormtorefresh_;
