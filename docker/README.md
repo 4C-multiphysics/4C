@@ -62,7 +62,11 @@ cd <project_root>
 ```
 
 4. Update all explicit mentions of the old hashes by search and replace in all workflows in `.github/workflows`. Keep
-   the standard and kokkosparallel hashes separate.
+   the standard and kokkosparallel hashes separate. The pre-commit hook `check-dependencies-hash` verifies these tags
+   against the scripts above. Every new 4C dependency image (any image starting with
+   `ghcr.io/4c-multiphysics/4c-dependencies-`) must be registered in `DEPENDENCY_IMAGE_HASH_SCRIPTS` in
+   `utilities/four_c_python/src/four_c_development/check_workflow_dependencies_hash.py`, otherwise the hook fails.
+   Digest-pinned references (`@sha256:...`) are not supported; use a tag.
 5. Push a branch directly to the 4C repo (not your fork). The branch has to start with `docker-update`, e.g.,
    `docker-update-issue-number-update-some-dependency`.
 6. Open a PR (the automatically triggered workflows will fail)
