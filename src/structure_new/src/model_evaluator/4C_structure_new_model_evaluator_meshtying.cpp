@@ -492,10 +492,7 @@ void Solid::ModelEvaluator::Meshtying::read_restart(Core::IO::DiscretizationRead
 void Solid::ModelEvaluator::Meshtying::set_time_integration_info(
     CONTACT::MtAbstractStrategy& strategy) const
 {
-  const Solid::DynamicType dyntype = tim_int().get_data_sdyn().get_dynamic_type();
-  const double time_fac = integrator().get_int_param();
-
-  strategy.set_time_integration_info(time_fac, dyntype);
+  strategy.set_time_integration_info(integrator().get_int_param());
 }
 
 FOUR_C_NAMESPACE_CLOSE
