@@ -18,7 +18,7 @@ runs:
   using: composite
   steps:
     # Analyze compile time with ClangBuildAnalyzer
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: aras-p/ClangBuildAnalyzer
         ref: bae0cb488cce944bfc3da9850a69ad621701ebef # version 1.6.0
@@ -40,7 +40,7 @@ runs:
         SUMMARY_FILE: ${{ inputs.report-summary-file }}
 
     # Aggregate individual tracing files with ninjatracing
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: nico/ninjatracing
         ref: a669e3644cf22b29cbece31dbed2cfbf34e5f48e # no releases for this repo, this is a stable commit

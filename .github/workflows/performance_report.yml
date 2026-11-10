@@ -15,7 +15,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup python environment
         run: |
           python -m venv $GITHUB_WORKSPACE/venv
@@ -72,13 +72,13 @@ jobs:
           . $GITHUB_WORKSPACE/venv/bin/activate
           generate-performance-report $GITHUB_WORKSPACE/benchmark_test_report/collected_benchmark_test_data.json $GITHUB_WORKSPACE/benchmark_test_report --title "4C Benchmark Test Report"
       - name: Upload performance test report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: 4C_performance_test_report
           path: ${{ github.workspace }}/performance_report
           retention-days: 2
       - name: Upload benchmark test report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: 4C_benchmark_test_report
           path: ${{ github.workspace }}/benchmark_test_report

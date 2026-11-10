@@ -35,7 +35,7 @@ jobs:
       dependencies_hash: ${{ steps.check-docker-build-required.outputs.dependencies_hash }}
       build_docker_image: ${{ steps.check-docker-build-required.outputs.build_docker_image }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: check-docker-build-required
         uses: ./.github/actions/check_docker_build_required
         with:
@@ -58,7 +58,7 @@ jobs:
       == 'true' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build and push image
         uses: ./.github/actions/build_dependencies
         with:
@@ -79,7 +79,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: compute-dependencies-hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
         with:

@@ -18,7 +18,7 @@ jobs:
     outputs:
       test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - uses: ./.github/actions/build_4C
@@ -55,7 +55,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - name: Setup developer environment for testing
@@ -73,7 +73,7 @@ jobs:
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
       - name: Upload test report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: success() || failure()
         with:
           name: gcc13_fourc_assertions_trilinos_assertions_test_report-${{ matrix.test-chunk }}.xml
@@ -89,7 +89,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .github
       - uses: ./.github/actions/merge_junit_report_artifacts
@@ -119,7 +119,7 @@ jobs:
     outputs:
       test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - uses: ./.github/actions/build_4C
@@ -142,34 +142,34 @@ jobs:
           retention-days: 1
           name: clang18_fourc_assertions_trilinos_assertions_build
       - name: Upload 4C schema
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ github.job }}-schema
           path: |
             ${{ github.workspace }}/build/4C_schema.json
           retention-days: 30
       - name: Upload 4C completion schema
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ github.job }}-completion-schema
           path: |
             ${{ github.workspace }}/build/4C_schema_completion.json
           retention-days: 30
       - name: Upload 4C metadata
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ github.job }}-metadata
           path: |
             ${{ github.workspace }}/build/4C_metadata.yaml
           retention-days: 30
       - name: Upload compile time tracing summary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ github.job }}-time-trace-summary
           path: |
             ${{ github.workspace }}/clang18_fourc_assertions_trilinos_assertions_compile_time_report.txt
       - name: Upload Compile time Trace
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ github.job }}-time-trace
           path: |
@@ -197,7 +197,7 @@ jobs:
           git fetch origin 2f71f97f0b2d6f885dbeac39a7460863b10a14c0 --depth 1
           git checkout FETCH_HEAD
       - name: Download aggregated ninja trace
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: clang18_fourc_assertions_trilinos_assertions_build-time-trace
           path: ${{ github.workspace }}
@@ -205,7 +205,7 @@ jobs:
         run: |
           catapult/tracing/bin/trace2html $GITHUB_WORKSPACE/clang18_fourc_assertions_trilinos_assertions_build_trace.json --output=$GITHUB_WORKSPACE/clang18_fourc_assertions_trilinos_assertions_compile_time_report.html
       - name: Upload trace
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: clang18_fourc_assertions_trilinos_assertions_compile_time_report
           path: |
@@ -226,7 +226,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - name: Setup developer environment for testing
@@ -244,7 +244,7 @@ jobs:
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
       - name: Upload test report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: success() || failure()
         with:
           name: clang18_fourc_assertions_trilinos_assertions_test_report-${{ matrix.test-chunk }}.xml
@@ -260,7 +260,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .github
       - uses: ./.github/actions/merge_junit_report_artifacts
@@ -290,7 +290,7 @@ jobs:
     outputs:
       test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - uses: ./.github/actions/build_4C
@@ -327,7 +327,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - name: Setup developer environment for testing
@@ -345,7 +345,7 @@ jobs:
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
       - name: Upload test report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: success() || failure()
         with:
           name: clang18_fourc_assertions_trilinos_assertions_test_oldest_supported_dependencies_report-${{
@@ -365,7 +365,7 @@ jobs:
     outputs:
       test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - uses: ./.github/actions/build_4C
@@ -402,7 +402,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - name: Setup developer environment for testing
@@ -420,7 +420,7 @@ jobs:
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
       - name: Upload test report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: success() || failure()
         with:
           name: gcc13_no_optional_dependencies_test_report-${{ matrix.test-chunk }}.xml
@@ -436,7 +436,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .github
       - uses: ./.github/actions/merge_junit_report_artifacts
@@ -466,7 +466,7 @@ jobs:
     outputs:
       test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - uses: ./.github/actions/build_4C
@@ -503,7 +503,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - name: Setup developer environment for testing
@@ -521,7 +521,7 @@ jobs:
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
       - name: Upload test report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: success() || failure()
         with:
           name: gcc13_asan_test_report-${{ matrix.test-chunk }}.xml
@@ -537,7 +537,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .github
       - uses: ./.github/actions/merge_junit_report_artifacts
@@ -569,7 +569,7 @@ jobs:
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - uses: ./.github/actions/build_4C
@@ -604,7 +604,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y git-lfs
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # for performance tests, we need the large meshes, but we fetch them via a
           # cache below instead of downloading them from LFS on every nightly run
@@ -617,7 +617,7 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Cache LFS meshes
         id: lfs-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .git/lfs
           key: lfs-meshes-${{ hashFiles('tests/performance_tests/meshes/full/**') }}
@@ -633,7 +633,7 @@ jobs:
           # Note: Do not run performance tests in parallel
           time ctest -L "performance_tests|benchmark_tests" --output-on-failure --output-junit $GITHUB_WORKSPACE/clang18_performance_tests_test_report.xml
       - name: Upload test report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: success() || failure()
         with:
           name: clang18_performance_tests_test_report.xml
@@ -641,7 +641,7 @@ jobs:
             ${{ github.workspace }}/clang18_performance_tests_test_report.xml
           retention-days: 1
       - name: Upload performance test data
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: success() || failure()
         with:
           name: clang18_performance_tests_data.json
@@ -649,7 +649,7 @@ jobs:
             ${{ github.workspace }}/build/clang18_performance_tests_data.json
           retention-days: 30
       - name: Upload benchmark test data
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: success() || failure()
         with:
           name: clang18_benchmark_tests_data.json
