@@ -2156,6 +2156,8 @@ void Mortar::Interface::evaluate_geometry(std::vector<std::shared_ptr<Mortar::In
   //**********************************************************************
   if (search_alg() == Mortar::search_binarytree)
     evaluate_search_binarytree();
+  else if (search_alg() == Mortar::bounding_volume_hierarchy)
+    evaluate_bounding_volume_hierarchy();
   else
     FOUR_C_THROW("Invalid search algorithm");
 
@@ -2498,6 +2500,8 @@ void Mortar::Interface::pre_evaluate(const int& step, const int& iter)
   //**********************************************************************
   if (search_alg() == Mortar::search_binarytree)
     evaluate_search_binarytree();
+  else if (search_alg() == Mortar::bounding_volume_hierarchy)
+    evaluate_bounding_volume_hierarchy();
   else
     FOUR_C_THROW("Invalid search algorithm");
 
@@ -2691,6 +2695,102 @@ bool Mortar::Interface::evaluate_search_binarytree()
 
   return true;
 }
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Mortar::Interface::evaluate_bounding_volume_hierarchy()
+{
+  for (int i = 0; i < selecolmap_->num_my_elements(); ++i)
+  {
+    const int source_gid = selecolmap_->gid(i);
+    auto* source_element = dynamic_cast<Mortar::Element*>(idiscret_->g_element(source_gid));
+    FOUR_C_ASSERT(source_element != nullptr, "Source mortar element {} was not found.", source_gid);
+
+    source_element->mo_data().search_elements().clear();
+  }
+
+  const auto ghosting_strategy = Teuchos::getIntegralValue<Mortar::ExtendGhosting>(
+      interface_params().sublist("PARALLEL REDISTRIBUTION"), "GHOSTING_STRATEGY");
+  std::shared_ptr<Core::LinAlg::Map> target_map;
+
+  switch (ghosting_strategy)
+  {
+    case Mortar::ExtendGhosting::roundrobin:
+    case Mortar::ExtendGhosting::binning:
+      target_map = melecolmap_;
+      break;
+
+    case Mortar::ExtendGhosting::redundant_all:
+    case Mortar::ExtendGhosting::redundant_target:
+      target_map = Core::LinAlg::allreduce_e_map(*melerowmap_);
+      break;
+
+    default:
+      FOUR_C_THROW("Unsupported mortar ghosting strategy.");
+  }
+
+  if (selecolmap_->num_my_elements() == 0 || target_map->num_my_elements() == 0) return;
+
+  double minimum_edge_length = std::numeric_limits<double>::max();
+  auto update_minimum_edge_length = [&](const Core::LinAlg::Map& element_map)
+  {
+    for (int i = 0; i < element_map.num_my_elements(); ++i)
+    {
+      const int gid = element_map.gid(i);
+      const auto* element = dynamic_cast<const Mortar::Element*>(idiscret_->g_element(gid));
+
+      FOUR_C_ASSERT(element != nullptr, "Mortar element {} was not found.", gid);
+
+      minimum_edge_length = std::min(minimum_edge_length, element->min_edge_size());
+    }
+  };
+
+  update_minimum_edge_length(*selecolmap_);
+  update_minimum_edge_length(*target_map);
+
+  FOUR_C_ASSERT(
+      minimum_edge_length > 0.0, "The minimum mortar element edge length must be positive.");
+
+  const double inflation = search_param() * minimum_edge_length;
+  std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> source_bounding_volumes;
+  std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> target_bounding_volumes;
+
+  source_bounding_volumes.reserve(selecolmap_->num_my_elements());
+  target_bounding_volumes.reserve(target_map->num_my_elements());
+
+  for (int i = 0; i < selecolmap_->num_my_elements(); ++i)
+  {
+    const int gid = selecolmap_->gid(i);
+    const auto* element = dynamic_cast<const Mortar::Element*>(idiscret_->g_element(gid));
+    FOUR_C_ASSERT(element != nullptr, "Source mortar element {} was not found.", gid);
+
+    source_bounding_volumes.emplace_back(
+        gid, create_mortar_bounding_volume(*element, n_dim(), inflation, search_use_aux_pos()));
+  }
+
+  for (int i = 0; i < target_map->num_my_elements(); ++i)
+  {
+    const int gid = target_map->gid(i);
+    const auto* element = dynamic_cast<const Mortar::Element*>(idiscret_->g_element(gid));
+    FOUR_C_ASSERT(element != nullptr, "Target mortar element {} was not found.", gid);
+
+    target_bounding_volumes.emplace_back(
+        gid, create_mortar_bounding_volume(*element, n_dim(), inflation, false));
+  }
+
+  const auto collision_pairs =
+      Core::GeometricSearch::collision_search(target_bounding_volumes, source_bounding_volumes);
+
+  for (const auto& pair : collision_pairs)
+  {
+    auto* source_element = dynamic_cast<Mortar::Element*>(idiscret_->g_element(pair.gid_predicate));
+    FOUR_C_ASSERT(
+        source_element != nullptr, "Source mortar element {} was not found.", pair.gid_predicate);
+
+    source_element->add_search_elements(pair.gid_primitive);
+  }
+}
+
 
 /*----------------------------------------------------------------------*
  |  Integrate matrix M and gap g on slave/master overlap      popp 11/08|

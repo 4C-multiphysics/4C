@@ -42,8 +42,10 @@ std::vector<Core::IO::InputSpec> Mortar::valid_parameters()
                   {"BinaryTree", search_binarytree},
                   {"Binarytree", search_binarytree},
                   {"binarytree", search_binarytree},
+                  {"bounding_volume_hierarchy", bounding_volume_hierarchy},
               },
-              {.description = "Type of contact search", .default_value = search_binarytree}),
+              {.description = "Type of contact search",
+                  .default_value = bounding_volume_hierarchy}),
 
 
           deprecated_selection<Mortar::BinaryTreeUpdateType>("BINARYTREE_UPDATETYPE",

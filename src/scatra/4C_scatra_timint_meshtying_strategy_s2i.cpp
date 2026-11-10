@@ -2295,7 +2295,11 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
               interface.evaluate_search_binarytree();
               break;
             }
-
+            case Mortar::bounding_volume_hierarchy:
+            {
+              interface.evaluate_bounding_volume_hierarchy();
+              break;
+            }
             default:
             {
               FOUR_C_THROW("Invalid search algorithm!");

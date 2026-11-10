@@ -378,6 +378,8 @@ void CONTACT::Interface::round_robin_detect_ghosting()
 {
   if (search_alg() == Mortar::search_binarytree)
     evaluate_search_binarytree();
+  else if (search_alg() == Mortar::bounding_volume_hierarchy)
+    evaluate_bounding_volume_hierarchy();
   else
     FOUR_C_THROW("Invalid search algorithm");
 
@@ -412,6 +414,8 @@ void CONTACT::Interface::round_robin_detect_ghosting()
       // build new search tree or do nothing for bruteforce
       if (search_alg() == Mortar::search_binarytree)
         create_search_tree();
+      else if (search_alg() == Mortar::bounding_volume_hierarchy)
+        evaluate_bounding_volume_hierarchy();
       else
         FOUR_C_THROW("Invalid search algorithm");
 
@@ -420,6 +424,8 @@ void CONTACT::Interface::round_robin_detect_ghosting()
       {
         if (search_alg() == Mortar::search_binarytree)
           evaluate_search_binarytree();
+        else if (search_alg() == Mortar::bounding_volume_hierarchy)
+          evaluate_bounding_volume_hierarchy();
         else
           FOUR_C_THROW("Invalid search algorithm");
 
@@ -457,6 +463,8 @@ void CONTACT::Interface::round_robin_detect_ghosting()
   // build new search tree or do nothing for bruteforce
   if (search_alg() == Mortar::search_binarytree)
     create_search_tree();
+  else if (search_alg() == Mortar::bounding_volume_hierarchy)
+    evaluate_bounding_volume_hierarchy();
   else
     FOUR_C_THROW("Invalid search algorithm");
 

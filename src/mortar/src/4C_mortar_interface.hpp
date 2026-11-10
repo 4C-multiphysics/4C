@@ -11,9 +11,13 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_exporter.hpp"
+#include "4C_geometric_search_bounding_volume.hpp"
+#include "4C_geometric_search_bvh.hpp"
 #include "4C_io_control.hpp"
+#include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_mortar_element.hpp"
 #include "4C_mortar_input.hpp"
 #include "4C_mortar_paramsinterface.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -1359,6 +1363,56 @@ namespace Mortar
            slave / master pairs (element-based algorithm)
     */
     virtual bool evaluate_search_binarytree();
+
+    /*!
+    \brief Boundary volume hierarchy search algorithm for potentially coupling slave / master pairs
+    */
+    void evaluate_bounding_volume_hierarchy();
+
+    //! \brief Helper function for bounding volume generation for mortar elements
+    Core::GeometricSearch::BoundingVolume create_mortar_bounding_volume(
+        const Mortar::Element& element, const int spatial_dimension, const double inflation,
+        const bool include_auxiliary_position)
+    {
+      Core::GeometricSearch::BoundingVolume bounding_volume;
+
+      for (int inode = 0; inode < element.num_node(); ++inode)
+      {
+        const auto* node = dynamic_cast<const Mortar::Node*>(element.nodes()[inode]);
+
+        FOUR_C_ASSERT(node != nullptr, "Expected a Mortar::Node.");
+
+        Core::LinAlg::Matrix<3, 1> point;
+        point(0) = node->xspatial()[0];
+        point(1) = node->xspatial()[1];
+        point(2) = node->xspatial()[2];
+
+        bounding_volume.add_point(point);
+
+        if (include_auxiliary_position)
+        {
+          double projection = 0.0;
+
+          for (int idim = 0; idim < spatial_dimension; ++idim)
+            projection += (node->x()[idim] + node->uold()[idim] - node->xspatial()[idim]) *
+                          node->mo_data().n()[idim];
+
+          Core::LinAlg::Matrix<3, 1> auxiliary_point;
+          auxiliary_point(0) = node->xspatial()[0];
+          auxiliary_point(1) = node->xspatial()[1];
+          auxiliary_point(2) = node->xspatial()[2];
+
+          for (int idim = 0; idim < spatial_dimension; ++idim)
+            auxiliary_point(idim) += projection * node->mo_data().n()[idim];
+
+          bounding_volume.add_point(auxiliary_point);
+        }
+      }
+
+      bounding_volume.extend_boundaries(inflation);
+      return bounding_volume;
+    }
+
 
     /*!
     \brief find meles for one snode
