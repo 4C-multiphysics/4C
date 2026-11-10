@@ -18,7 +18,7 @@ jobs:
     outputs:
       test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - uses: ./.github/actions/build_4C
@@ -62,7 +62,7 @@ jobs:
           apt-get update
           apt-get upgrade -y
           apt-get install -y llvm
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - uses: ./.github/actions/download_directory
@@ -83,14 +83,14 @@ jobs:
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
       - name: Upload merged coverage data
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ github.job }}-4C-coverage-data-${{ matrix.test-chunk }}.profdata
           path: |
             ${{ github.workspace }}/4C-coverage-data-${{ matrix.test-chunk }}.profdata
           retention-days: 1
       - name: Upload test report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: success() || failure()
         with:
           name: clang18_coverage_test_report-${{ matrix.test-chunk }}.xml
@@ -102,7 +102,7 @@ jobs:
     needs: clang18_coverage_test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .github
       - uses: ./.github/actions/merge_junit_report_artifacts
@@ -117,7 +117,7 @@ jobs:
       image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:75a68fb3
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check docker hash
         uses: ./.github/actions/compute-and-check-dependencies-hash
       - name: Setup developer environment for testing
@@ -134,7 +134,7 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
           ./utilities/set_up_dev_env.sh
       - name: Download reports
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: ${{ github.workspace }}
           merge-multiple: true
@@ -164,7 +164,7 @@ jobs:
           COVERAGE_PERCENT=`llvm-cov export --object ./build/lib4C.so --format=text --instr-profile=4C-coverage-data.profdata --summary-only --ignore-filename-regex=".*/build/.*" | python -c 'import json, sys; print(json.load(sys.stdin)["data"][0]["totals"]["lines"]["percent"])'`
           anybadge -l coverage --suffix=" %" --value=$COVERAGE_PERCENT -m "%.2f" 75=red 90=orange 100=green > coverage_report/badge_coverage.svg
       - name: Upload coverage html report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: 4C_coverage_report
           path: ${{ github.workspace }}/coverage_report

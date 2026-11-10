@@ -14,7 +14,7 @@ jobs:
     outputs:
       brew-version-hash: ${{ steps.brew-versions.outputs.hash }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: System preparation
         run: ./dependencies/darwin/prepare_system.sh
       - name: Get Homebrew versions
@@ -26,7 +26,7 @@ jobs:
           echo "hash=$(echo "$bver" | sha256sum | awk '{print $1}')" >> $GITHUB_OUTPUT
       - name: Restore dependencies cache
         id: cache-deps
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.HOME }}/opt
           key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh', 'dependencies/darwin/**/install.sh',
@@ -39,14 +39,14 @@ jobs:
           ./dependencies/darwin/compile_dependencies.sh
       - name: Save dependencies cache
         if: success() && steps.cache-deps.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.HOME }}/opt
           key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh', 'dependencies/darwin/**/install.sh',
             'dependencies/current/**/install.sh') }}-brew-${{ steps.brew-versions.outputs.hash }}
       - name: Restore build cache
         id: cache-build
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build/
           key: ${{ runner.os }}-build-${{ github.sha }}-brew-${{ steps.brew-versions.outputs.hash }}
@@ -59,7 +59,7 @@ jobs:
           cmake --build build/ --target full
       - name: Save build cache
         if: success() && steps.cache-build.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build/
           key: ${{ runner.os }}-build-${{ github.sha }}-brew-${{ steps.brew-versions.outputs.hash }}
@@ -68,7 +68,7 @@ jobs:
     needs: build
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: System preparation
         run: ./dependencies/darwin/prepare_system.sh
       - name: Get Homebrew versions
@@ -94,14 +94,14 @@ jobs:
           exit 1
       - name: Restore dependencies cache
         id: cache-deps
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.HOME }}/opt
           key: ${{ runner.os }}-deps-${{ hashFiles('./dependencies/darwin/compile_dependencies.sh', 'dependencies/darwin/**/install.sh',
             'dependencies/current/**/install.sh') }}-brew-${{ steps.brew-versions.outputs.hash }}
       - name: Restore build cache
         id: cache-build
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build/
           key: ${{ runner.os }}-build-${{ github.sha }}-brew-${{ steps.brew-versions.outputs.hash }}
@@ -111,7 +111,7 @@ jobs:
           ctest  --test-dir build/ -j `sysctl -n hw.physicalcpu` --output-on-failure --output-junit $GITHUB_WORKSPACE/macos_assertions_test_report.xml
       - name: Upload test report
         if: success() || failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: macos_assertions_test_report.xml
           path: |
