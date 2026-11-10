@@ -16,26 +16,28 @@ IFS=$'\n'
 # test all changed files
 for file in "$@"
 do
-# check if there are non-ascii characters in the file (excluding *.md files)
-  non_ascii_chars=`(cat $file | grep --perl-regex --no-filename --only-matching --binary-files=without-match "[^\x00-\x7F]" | sort --unique | tr --delete '\n')`
-  if [ -n "$non_ascii_chars" ]; then
-    cnt=${#non_ascii_chars}
-    for ((i=0; i < cnt; i++)); do
-      char=${non_ascii_chars:$i:1}
-      non_ascii_error+="${file} contains non-ascii character '$char'\n"
-    done
+# check if there are non-ascii characters in the file
+  grep_status=0
+  matches=$(LC_ALL=C grep -n '[^[:print:][:cntrl:]]' "$file") || grep_status=$?
+  if [ "$grep_status" -gt 1 ]; then
+    exit "$grep_status"
+  fi
+
+  if [ -n "$matches" ]; then
+    while IFS= read -r match; do
+      line_number=${match%%:*}
+      line_content=${match#*:}
+      non_ascii_error+="${file}:${line_number}: ${line_content}"$'\n'
+    done <<< "$matches"
   fi
 done
 
 # printout for non-ascii characters
-if [ ! -z "$non_ascii_error" ]
+if [ -n "$non_ascii_error" ]
 then
-printf "\n"
-printf "The following file(s) contain non-ascii characters:\n"
-printf "\n"
-printf $non_ascii_error
-printf "\n"
-echo "--> Please remove those non-ascii characters"
+  printf "\nThe following lines contain non-ASCII characters:\n\n"
+  printf "%s" "$non_ascii_error"
+  printf "\n--> Please remove the non-ASCII characters shown above\n"
 exit 1
 fi
 
