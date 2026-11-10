@@ -741,9 +741,7 @@ void CONTACT::Interface::redistribute()
   //**********************************************************************
   // perform contact search (still with non-optimal distribution)
   initialize();
-  if (search_alg() == Mortar::search_bfele)
-    evaluate_search_brute_force(search_param());
-  else if (search_alg() == Mortar::search_binarytree)
+  if (search_alg() == Mortar::search_binarytree)
     evaluate_search_binarytree();
   else
     FOUR_C_THROW("Invalid search algorithm");
@@ -1525,9 +1523,7 @@ void CONTACT::Interface::pre_evaluate(const int& step, const int& iter)
   //**********************************************************************
   // search algorithm
   //**********************************************************************
-  if (search_alg() == Mortar::search_bfele)
-    evaluate_search_brute_force(search_param());
-  else if (search_alg() == Mortar::search_binarytree)
+  if (search_alg() == Mortar::search_binarytree)
     evaluate_search_binarytree();
   else
     FOUR_C_THROW("Invalid search algorithm");

@@ -39,10 +39,6 @@ std::vector<Core::IO::InputSpec> Mortar::valid_parameters()
 
           deprecated_selection<Mortar::SearchAlgorithm>("SEARCH_ALGORITHM",
               {
-                  {"BruteForce", search_bfele},
-                  {"bruteforce", search_bfele},
-                  {"BruteForceEleBased", search_bfele},
-                  {"bruteforceelebased", search_bfele},
                   {"BinaryTree", search_binarytree},
                   {"Binarytree", search_binarytree},
                   {"binarytree", search_binarytree},

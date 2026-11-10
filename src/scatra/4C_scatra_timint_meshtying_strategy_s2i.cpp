@@ -2290,12 +2290,6 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
           // match slave-side and master-side elements at mortar interface
           switch (interface.search_alg())
           {
-            case Mortar::search_bfele:
-            {
-              interface.evaluate_search_brute_force(interface.search_param());
-              break;
-            }
-
             case Mortar::search_binarytree:
             {
               interface.evaluate_search_binarytree();
