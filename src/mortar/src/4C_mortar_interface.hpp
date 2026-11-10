@@ -1361,12 +1361,6 @@ namespace Mortar
     virtual bool evaluate_search_binarytree();
 
     /*!
-    \brief Brute force search algorithm for potentially coupling
-           slave / master pairs (element-based algorithm)
-    */
-    void evaluate_search_brute_force(const double& eps);
-
-    /*!
     \brief find meles for one snode
     */
     void find_target_elements(const Node& mrtrnode, std::vector<Mortar::Element*>& meles) const;

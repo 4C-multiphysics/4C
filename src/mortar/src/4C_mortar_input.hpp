@@ -49,7 +49,6 @@ namespace Mortar
   /// (this enum represents the input file parameter SEARCH_ALGORITHM)
   enum SearchAlgorithm
   {
-    search_bfele,      ///< brute force element-based
     search_binarytree  ///< binary tree element based
   };
 
