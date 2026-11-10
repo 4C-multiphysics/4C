@@ -478,10 +478,6 @@ void Wear::LagrangeStrategyWear::initialize()
     // Here are only the lin. w.r.t. the lagr. mult.
     wlinmatrix_ = std::make_shared<Core::LinAlg::SparseMatrix>(*gactiven_, 3);
     wlinmatrixsl_ = std::make_shared<Core::LinAlg::SparseMatrix>(*gslipt_, 3);
-
-#ifdef CONSISTENTSTICK
-    wlinmatrixst_ = std::make_shared<Core::LinAlg::SparseMatrix>(*gstickt, 3);
-#endif
   }
 
   if (wearprimvar_)
@@ -2710,10 +2706,6 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     {  // assemble wear-specific matrices
       interface->assemble_lin_w_lm(*wlinmatrix_);
       interface->assemble_lin_w_lm_sl(*wlinmatrixsl_);
-
-#ifdef CONSISTENTSTICK
-      interface_[i]->AssembleLinWLmSt(*wlinmatrixst_);
-#endif
     }
 
     //***************************************************
@@ -2784,10 +2776,6 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     // complete wear-specific matrices
     wlinmatrix_->complete(*gsdofrowmap_, *gactiven_);
     wlinmatrixsl_->complete(*gsdofrowmap_, *gslipt_);
-
-#ifdef CONSISTENTSTICK
-    wlinmatrixst_->Complete(*gsdofrowmap_, *gstickt);
-#endif
   }
 
   /**********************************************************************/
@@ -2915,15 +2903,6 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
   }
 #endif
 
-#ifdef CONTACTFDGAP
-  // FD check of weighted gap g derivatives (non-penetr. condition)
-  for (int i = 0; i < (int)interface_.size(); ++i)
-  {
-    interface_[i]->FDCheckGapDeriv();
-    interface_[i]->FDCheckGapDeriv_W();
-  }
-#endif
-
 #ifdef CONTACTFDSLIPINCR
   // FD check of weighted gap g derivatives (non-penetr. condition)
   for (int i = 0; i < (int)interface_.size(); ++i)
@@ -2931,7 +2910,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     interface_[i]->fd_check_slip_incr_deriv_txi();
     if (Dim() == 3) interface_[i]->fd_check_slip_incr_deriv_teta();
   }
-#endif  // #ifdef CONTACTFDGAP
+#endif  // #ifdef CONTACTFDSLIPINCR
 
 #ifdef CONTACTFDSTICK
 
@@ -2951,18 +2930,6 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
 
   // FD check of stick condition
   for (int i = 0; i < (int)interface_.size(); ++i) interface_[i]->FDCheckDerivT_D(*lintdis_);
-
-#endif
-
-#ifdef CONTACTFDT_D_MASTER
-
-  if (!wearprimvar_) FOUR_C_THROW("FD CHECK ONLY FOR DISCRETE WEAR!");
-
-  if (!wearbothpv_) FOUR_C_THROW("FD CHECK ONLY FOR DISCRETE WEAR!");
-
-  // FD check of stick condition
-  for (int i = 0; i < (int)interface_.size(); ++i)
-    interface_[i]->fd_check_deriv_t_d_target(*lintdisM_);
 
 #endif
 
@@ -3010,7 +2977,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     for (int i = 0; i < (int)interface_.size(); ++i) interface_[i]->FDCheckMortarTDeriv();
   // twmatrix_->UnComplete();
   std::cout << " -- CONTACTFDMORTART -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARD
+#endif  // #ifdef CONTACTFDMORTART
 
 #ifdef CONTACTFDMORTARE
 
@@ -3023,7 +2990,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
     for (int i = 0; i < (int)interface_.size(); ++i) interface_[i]->FDCheckMortarEDeriv();
   // ematrix_->UnComplete();
   std::cout << " -- CONTACTFDMORTARE -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARD
+#endif  // #ifdef CONTACTFDMORTARE
 
 #ifdef CONTACTFDMORTARE_MASTER
 
@@ -3039,7 +3006,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
       interface_[i]->fd_check_mortar_e_target_deriv();
   // ematrix_->UnComplete();
   std::cout << " -- CONTACTFDMORTARE_MASTER -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARD
+#endif  // #ifdef CONTACTFDMORTARE_MASTER
 
 #ifdef CONTACTFDMORTART_MASTER
 
@@ -3055,7 +3022,7 @@ void Wear::LagrangeStrategyWear::evaluate_friction(
       interface_[i]->fd_check_mortar_t_target_deriv();
   // ematrix_->UnComplete();
   std::cout << " -- CONTACTFDMORTART_MASTER -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARD
+#endif  // #ifdef CONTACTFDMORTART_MASTER
 
   return;
 }
@@ -3312,10 +3279,6 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
         Core::LinAlg::matrix_add(*wlinmatrix_, false, 1.0, kzz, 1.0);
       if (gslipt_->num_global_elements())
         Core::LinAlg::matrix_add(*wlinmatrixsl_, false, 1.0, kzz, 1.0);
-
-#ifdef CONSISTENTSTICK
-      if (gstickt->NumGlobalElements()) kzz->Add(*wlinmatrixst_, false, 1.0, 1.0);
-#endif
     }
     kzz.complete(*gsdofrowmap_, *gsdofrowmap_);
 

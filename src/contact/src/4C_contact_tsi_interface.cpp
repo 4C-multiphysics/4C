@@ -41,122 +41,9 @@ void CONTACT::TSIInterface::assemble_lin_stick(Core::LinAlg::SparseMatrix& linst
 {
   CONTACT::Interface::assemble_lin_stick(linstickLMglobal, linstickDISglobal, linstickRHSglobal);
 
-#ifdef CONSISTENTSTICK
-
-  // do the additional thermal linearizations
-  // be aware, that there is another contribution to the linDIS part, since the temperature used
-  // in the calculation of the friction coefficient may be the target side temperature, which has
-  // a displacement derivative due to the projection
-
-
-  // create map of stick nodes
-  std::shared_ptr<Core::LinAlg::Map> sticknodes =
-      Core::LinAlg::split_map(*activenodes_, *slipnodes_);
-  std::shared_ptr<Core::LinAlg::Map> stickt = Core::LinAlg::split_map(*activet_, *slipt_);
-
-  // nothing to do if no stick nodes
-  if (sticknodes->NumMyElements() == 0) return;
-
-  // information from interface contact parameter list
-  auto ftype = Teuchos::getIntegralValue<CONTACT::FrictionType>(interface_params(), "FRICTION");
-  if (ftype != CONTACT::FrictionType::coulomb) FOUR_C_THROW("only coulomb friction for CTSI");
-
-  double frcoeff_in =
-      interface_params().get<double>("FRCOEFF");  // the friction coefficient from the input
-  double cn = interface_params().get<double>("SEMI_SMOOTH_CN");
-
-  const bool use_frictionless_first = interface_params().get<bool>("FRLESS_FIRST");
-
-  // some things that are not implemented
-  bool gp_slip = interface_params().get<bool>("GP_SLIP_INCR");
-  FOUR_C_ASSERT_ALWAYS(not gp_slip, "GP_SLIP_INCR is not implemented for TSI contact");
-
-  // consistent equation is:
-  // mu(d,T)*(z_n-c_n*g)ut = 0
-
-  using CI = std::map<int, double>::const_iterator;
-  // loop over all stick nodes of the interface
-  for (int i = 0; i < sticknodes->NumMyElements(); ++i)
-  {
-    int gid = sticknodes->GID(i);
-    Core::Nodes::Node* node = idiscret_->gNode(gid);
-    if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
-    FriNode* cnode = dynamic_cast<FriNode*>(node);
-
-    if (cnode->Owner() != Core::Communication::my_mpi_rank(Comm()))
-      FOUR_C_THROW("AssembleLinStick: Node ownership inconsistency!");
-
-    // If newly active nodes are considered frictionless, the base class has already assembled
-    // the frictionless tangential constraint (of zero tangential traction).
-    // That constraint does not depend on the friction coefficient, hence, no temperature
-    // linearization is required.
-    if (use_frictionless_first and not cnode->data().active_old()) continue;
-
-    const Core::LinAlg::Matrix<3, 1> n(cnode->MoData().n(), true);
-    const Core::LinAlg::Matrix<3, 1> lm(cnode->MoData().lm(), true);
-    const double lm_n = n.Dot(lm);
-    const double wgap = cnode->Data().Getg();
-    Core::LinAlg::Matrix<3, 1> txi(cnode->Data().txi(), true);
-    Core::LinAlg::Matrix<3, 1> teta(cnode->Data().teta(), true);
-    Core::LinAlg::Matrix<3, 1> jump(cnode->FriData().jump(), true);
-    double jump_txi = jump.Dot(txi);
-    double jump_teta = jump.Dot(teta);
-
-    // row number of entries
-    std::vector<int> row(Dim() - 1);
-    if (Dim() == 2)
-      FOUR_C_THROW(
-          "2-Dimensional thermo-contact not implemented 'cause there's no 2-D thermo element");
-    else if (Dim() == 3)
-    {
-      row[0] = stickt->GID(2 * i);
-      row[1] = stickt->GID(2 * i) + 1;
-    }
-    else
-      FOUR_C_THROW("AssemblelinStick: Dimension not correct");
-
-    std::map<int, double> dfrdT, dfrdD;
-    cnode->derivFrCoeffTemp(frcoeff_in, dfrdT, dfrdD);
-
-    double fac = lm_n - cn * wgap;
-    for (CI p = dfrdT.begin(); p != dfrdT.end(); ++p)
-    {
-      if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
-        for (int j = 0; j < Dim(); j++)
-        {
-          linstickTEMPglobal.Assemble(
-              fac * jump_txi * p->second * txi(j), cnode->Dofs()[j], p->first);
-          linstickTEMPglobal.Assemble(
-              fac * jump_teta * p->second * teta(j), cnode->Dofs()[j], p->first);
-        }
-      else
-      {
-        linstickTEMPglobal.Assemble(fac * jump_txi * p->second, row[0], p->first);
-        linstickTEMPglobal.Assemble(fac * jump_teta * p->second, row[1], p->first);
-      }
-    }
-    for (CI p = dfrdD.begin(); p != dfrdD.end(); ++p)
-    {
-      if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
-        for (int j = 0; j < Dim(); j++)
-        {
-          linstickDISglobal.Assemble(
-              fac * jump_txi * p->second * txi(j), cnode->Dofs()[j], p->first);
-          linstickDISglobal.Assemble(
-              fac * jump_teta * p->second * teta(j), cnode->Dofs()[j], p->first);
-        }
-      else
-      {
-        linstickDISglobal.Assemble(fac * jump_txi * p->second, row[0], p->first);
-        linstickDISglobal.Assemble(fac * jump_teta * p->second, row[1], p->first);
-      }
-    }
-  }
-#else
   // if we don't do the inconsistent stick linearization, it reduces to a mesh-tying
   // problem and hence it is independent of the friction coefficient and therefore
   // independent of the temperature. So do nothing here.
-#endif
 
   return;
 }
@@ -172,9 +59,6 @@ void CONTACT::TSIInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linsli
   // a displacement derivative due to the projection
 
 
-#ifdef CONSISTENTSLIP
-  FOUR_C_THROW("CONSISTENTSLIP not implemented for CTSI");
-#endif
 
   // create map of stick nodes
   std::shared_ptr<Core::LinAlg::Map> slipnodes = slipnodes_;

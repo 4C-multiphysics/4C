@@ -144,7 +144,6 @@ namespace Wear
     */
     virtual void assemble_lin_w_lm(Core::LinAlg::SparseMatrix& sglobal);
     virtual void assemble_lin_w_lm_sl(Core::LinAlg::SparseMatrix& sglobal);
-    virtual void assemble_lin_w_lm_st(Core::LinAlg::SparseMatrix& sglobal);
 
     /*!
     \brief Assemble wear w
@@ -200,13 +199,6 @@ namespace Wear
     void fd_check_deriv_t_d(Core::LinAlg::SparseMatrix& lintdis);
 
     /*!
-    \brief Check mortar wear T derivatives with finite differences
-      --> for wear condition (Target)
-
-    */
-    void fd_check_deriv_t_d_target(Core::LinAlg::SparseMatrix& lintdis);
-
-    /*!
     \brief Check mortar wear E derivatives with finite differences
       --> for wear condition
 
@@ -219,17 +211,6 @@ namespace Wear
 
     */
     void fd_check_deriv_e_d_target(Core::LinAlg::SparseMatrix& linedis);
-    /*!
-    \brief Check weighted gap g derivatives with finite differences
-
-    */
-    void fd_check_gap_deriv();
-
-    /*!
-    \brief Check weighted gap g derivatives with finite differences
-
-    */
-    void fd_check_gap_deriv_w();
 
     /*!
     \brief Check weighted wear ~w derivatives with finite differences

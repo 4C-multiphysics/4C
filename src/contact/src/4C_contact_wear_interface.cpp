@@ -1260,14 +1260,6 @@ void Wear::WearInterface::assemble_lin_stick(Core::LinAlg::SparseMatrix& linstic
 
   bool consistent = false;
 
-#if defined(CONSISTENTSTICK) && defined(CONSISTENTSLIP)
-  FOUR_C_THROW(
-      "It's not reasonable to activate both, the consistent stick and slip branch, "
-      "because both together will lead again to an inconsistent formulation!");
-#endif
-#ifdef CONSISTENTSTICK
-  consistent = true;
-#endif
 
   if (consistent && ftype == CONTACT::FrictionType::coulomb)
   {
@@ -2192,19 +2184,8 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
           double valtxi1 = ((ztxi + ct * jumptxi) / euclidean * ztxi) * txi[dim];
           double valtxi3 = (zteta + ct * jumpteta) / euclidean * ztxi * teta[dim];
 
-#ifdef CONSISTENTSLIP
-          valtxi0 = valtxi0 / (znor - cn * wgap);
-          valtxi1 = valtxi1 / (znor - cn * wgap);
-          valtxi3 = valtxi3 / (znor - cn * wgap);
-
-          // Additional term
-          valtxi0 -= euclidean * ztxi / pow(znor - cn * wgap, 2.0) * n[dim];
-
-          double valtxi2 = -frcoeff * txi[dim];
-#else
           double valtxi2 =
               -frcoeff * (znor - cn * wgap) * txi[dim] - frcoeff * (ztxi + ct * jumptxi) * n[dim];
-#endif
           valtxi = valtxi0 + valtxi1 + valtxi2 + valtxi3;
 
           double valteta = 0.0;
@@ -2213,19 +2194,8 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
             double valteta0 = euclidean * teta[dim];
             double valteta1 = ((ztxi + ct * jumptxi) / euclidean * zteta) * txi[dim];
             double valteta3 = (zteta + ct * jumpteta) / euclidean * zteta * teta[dim];
-#ifdef CONSISTENTSLIP
-            valteta0 = valteta0 / (znor - cn * wgap);
-            valteta1 = valteta1 / (znor - cn * wgap);
-            valteta3 = valteta3 / (znor - cn * wgap);
-
-            // Additional term
-            valteta0 -= euclidean * zteta / pow(znor - cn * wgap, 2.0) * n[dim];
-
-            double valteta2 = -frcoeff * teta[dim];
-#else
             double valteta2 = -frcoeff * (znor - cn * wgap) * teta[dim] -
                               frcoeff * (zteta + ct * jumpteta) * n[dim];
-#endif
             valteta = valteta0 + valteta1 + valteta2 + valteta3;
           }
 
@@ -2241,25 +2211,16 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
         std::vector<int> lm(n_dim() - 1);
         std::vector<int> lmowner(n_dim() - 1);
 
-#ifdef CONSISTENTSLIP
-        double valuetxi1 = -(euclidean)*ztxi / (znor - cn * wgap) + frcoeff * (ztxi + ct * jumptxi);
-#else
         double valuetxi1 =
             -(euclidean)*ztxi + (frcoeff * (znor - cn * wgap)) * (ztxi + ct * jumptxi);
-#endif
         rhsnode(0) = valuetxi1;
         lm[0] = cnode->dofs()[1];
         lmowner[0] = cnode->owner();
 
         if (n_dim() == 3)
         {
-#ifdef CONSISTENTSLIP
-          double valueteta1 =
-              -(euclidean)*zteta / (znor - cn * wgap) + frcoeff * (zteta + ct * jumpteta);
-#else
           double valueteta1 =
               -(euclidean)*zteta + (frcoeff * (znor - cn * wgap)) * (zteta + ct * jumpteta);
-#endif
 
           rhsnode(1) = valueteta1;
 
@@ -2325,12 +2286,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
               double valteta2 =
                   (zteta + ct * jumpteta) / euclidean * ct * teta[dim] * colcurr->second * zteta;
 
-#ifdef CONSISTENTSLIP
-              valtxi1 = valtxi1 / (znor - cn * wgap);
-              valteta1 = valteta1 / (znor - cn * wgap);
-              valtxi2 = valtxi2 / (znor - cn * wgap);
-              valteta2 = valteta2 / (znor - cn * wgap);
-#endif
 
               // do not assemble zeros into matrix
               if (abs(valtxi1) > 1.0e-12) linslipDISglobal.assemble(valtxi1, row[0], col);
@@ -2338,43 +2293,9 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
               if (abs(valtxi2) > 1.0e-12) linslipDISglobal.assemble(valtxi2, row[0], col);
               if (abs(valteta2) > 1.0e-12) linslipDISglobal.assemble(valteta2, row[1], col);
             }
-
-#ifdef CONSISTENTSLIP
-            /*** Additional Terms ***/
-            // normal derivative
-            for (colcurr = dnmap[dim].begin(); colcurr != dnmap[dim].end(); ++colcurr)
-            {
-              int col = colcurr->first;
-              double valtxi =
-                  -euclidean * ztxi * z[dim] / pow(znor - cn * wgap, 2.0) * (colcurr->second);
-              double valteta =
-                  -euclidean * zteta * z[dim] / pow(znor - cn * wgap, 2.0) * (colcurr->second);
-
-              // do not assemble zeros into s matrix
-              if (abs(valtxi) > 1.0e-12) linslipDISglobal.Assemble(valtxi, row[0], col);
-              if (abs(valteta) > 1.0e-12) linslipDISglobal.Assemble(valteta, row[1], col);
-            }
-#endif
           }
         }
 
-
-#ifdef CONSISTENTSLIP
-        /*** Additional Terms ***/
-        // wgap derivative
-        std::map<int, double>& dgmap = cnode->Data().GetDerivG();
-
-        for (colcurr = dgmap.begin(); colcurr != dgmap.end(); ++colcurr)
-        {
-          int col = colcurr->first;
-          double valtxi = +euclidean * ztxi / pow(znor - cn * wgap, 2.0) * cn * (colcurr->second);
-          double valteta = +euclidean * zteta / pow(znor - cn * wgap, 2.0) * cn * (colcurr->second);
-
-          // do not assemble zeros into matrix
-          if (abs(valtxi) > 1.0e-12) linslipDISglobal.Assemble(valtxi, row[0], col);
-          if (abs(valteta) > 1.0e-12) linslipDISglobal.Assemble(valteta, row[1], col);
-        }
-#endif
 
 
         /*** 02 ***************** frcoeff*znor*ct*tangent.deriv(jump) ***/
@@ -2410,15 +2331,10 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
               int col = colcurr->first;
 
               // std::cout << "val " << colcurr->second << std::endl;
-#ifdef CONSISTENTSLIP
-              double valtxi = -frcoeff * ct * txi[dim] * colcurr->second;
-              double valteta = -frcoeff * ct * teta[dim] * colcurr->second;
-#else
               double valtxi =
                   (-1) * (frcoeff * (znor - cn * wgap)) * ct * txi[dim] * colcurr->second;
               double valteta =
                   (-1) * (frcoeff * (znor - cn * wgap)) * ct * teta[dim] * colcurr->second;
-#endif
               // do not assemble zeros into matrix
               if (abs(valtxi) > 1.0e-12) linslipDISglobal.assemble(valtxi, row[0], col);
 
@@ -2440,9 +2356,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
             int col = _colcurr->first;
             double val = euclidean * (_colcurr->second) * z[j];
 
-#ifdef CONSISTENTSLIP
-            val = val / (znor - cn * wgap);
-#endif
 
             // do not assemble zeros into s matrix
             if (abs(val) > 1.0e-12) linslipDISglobal.assemble(val, row[0], col);
@@ -2456,9 +2369,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
               int col = _colcurr->first;
               double val = euclidean * (_colcurr->second) * z[j];
 
-#ifdef CONSISTENTSLIP
-              val = val / (znor - cn * wgap);
-#endif
 
               // do not assemble zeros into s matrix
               if (abs(val) > 1.0e-12) linslipDISglobal.assemble(val, row[1], col);
@@ -2477,10 +2387,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
             double valtxi = (ztxi + ct * jumptxi) / euclidean * (_colcurr->second) * z[j] * ztxi;
             double valteta = (ztxi + ct * jumptxi) / euclidean * (_colcurr->second) * z[j] * zteta;
 
-#ifdef CONSISTENTSLIP
-            valtxi = valtxi / (znor - cn * wgap);
-            valteta = valteta / (znor - cn * wgap);
-#endif
 
             // do not assemble zeros into matrix
             if (abs(valtxi) > 1.0e-12) linslipDISglobal.assemble(valtxi, row[0], col);
@@ -2499,10 +2405,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
               double valteta =
                   (zteta + ct * jumpteta) / euclidean * (_colcurr->second) * z[j] * zteta;
 
-#ifdef CONSISTENTSLIP
-              valtxi = valtxi / (znor - cn * wgap);
-              valteta = valteta / (znor - cn * wgap);
-#endif
 
               // do not assemble zeros into matrix
               if (abs(valtxi) > 1.0e-12) linslipDISglobal.assemble(valtxi, row[0], col);
@@ -2530,10 +2432,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
               double valteta =
                   (ztxi + ct * jumptxi) / euclidean * ct * (_colcurr->second) * jump[j] * zteta;
 
-#ifdef CONSISTENTSLIP
-              valtxi = valtxi / (znor - cn * wgap);
-              valteta = valteta / (znor - cn * wgap);
-#endif
 
               // do not assemble zeros into s matrix
               if (abs(valtxi) > 1.0e-12) linslipDISglobal.assemble(valtxi, row[0], col);
@@ -2551,10 +2449,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
                 double valteta =
                     (zteta + ct * jumpteta) / euclidean * ct * (_colcurr->second) * jump[j] * zteta;
 
-#ifdef CONSISTENTSLIP
-                valtxi = valtxi / (znor - cn * wgap);
-                valteta = valteta / (znor - cn * wgap);
-#endif
 
                 // do not assemble zeros into matrix
                 if (abs(valtxi) > 1.0e-12) linslipDISglobal.assemble(valtxi, row[0], col);
@@ -2572,11 +2466,7 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
           for (_colcurr = dtximap[j].begin(); _colcurr != dtximap[j].end(); ++_colcurr)
           {
             int col = _colcurr->first;
-#ifdef CONSISTENTSLIP
-            double val = -frcoeff * (_colcurr->second) * z[j];
-#else
             double val = (-1) * (frcoeff * (znor - cn * wgap)) * (_colcurr->second) * z[j];
-#endif
             // do not assemble zeros into matrix
             if (abs(val) > 1.0e-12) linslipDISglobal.assemble(val, row[0], col);
           }
@@ -2587,11 +2477,7 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
             for (_colcurr = dtetamap[j].begin(); _colcurr != dtetamap[j].end(); ++_colcurr)
             {
               int col = _colcurr->first;
-#ifdef CONSISTENTSLIP
-              double val = -frcoeff * (_colcurr->second) * z[j];
-#else
               double val = (-1.0) * (frcoeff * (znor - cn * wgap)) * (_colcurr->second) * z[j];
-#endif
               // do not assemble zeros into matrix
               if (abs(val) > 1.0e-12) linslipDISglobal.assemble(val, row[1], col);
             }
@@ -2612,12 +2498,8 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
             for (_colcurr = dtximap[j].begin(); _colcurr != dtximap[j].end(); ++_colcurr)
             {
               int col = _colcurr->first;
-#ifdef CONSISTENTSLIP
-              double val = -frcoeff * ct * (_colcurr->second) * jump[j];
-#else
               double val =
                   (-1) * (frcoeff * (znor - cn * wgap)) * ct * (_colcurr->second) * jump[j];
-#endif
               // do not assemble zeros into matrix
               if (abs(val) > 1.0e-12) linslipDISglobal.assemble(val, row[0], col);
             }
@@ -2628,12 +2510,8 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
               for (_colcurr = dtetamap[j].begin(); _colcurr != dtetamap[j].end(); ++_colcurr)
               {
                 int col = _colcurr->first;
-#ifdef CONSISTENTSLIP
-                double val = -frcoeff * ct * (_colcurr->second) * jump[j];
-#else
                 double val =
                     (-1) * (frcoeff * (znor - cn * wgap)) * ct * (_colcurr->second) * jump[j];
-#endif
                 // do not assemble zeros into s matrix
                 if (abs(val) > 1.0e-12) linslipDISglobal.assemble(val, row[1], col);
               }
@@ -2641,7 +2519,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
           }
         }
 
-#ifndef CONSISTENTSLIP
         /*** 6 ******************* -frcoeff.Deriv(n).z(ztan+ct*utan) ***/
         // loop over all dimensions
         for (int j = 0; j < n_dim(); ++j)
@@ -2674,7 +2551,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
           if (abs(valtxi) > 1.0e-12) linslipDISglobal.assemble(valtxi, row[0], col);
           if (abs(valteta) > 1.0e-12) linslipDISglobal.assemble(valteta, row[1], col);
         }
-#endif
 
         /*************************************************************************
          * Wear implicit linearization w.r.t. displ.                                          *
@@ -2682,21 +2558,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
         if (wearimpl_ and !wearpv_)
         {
           std::map<int, double>& dwmap = cnode->data().get_deriv_w();
-#ifdef CONSISTENTSLIP
-          // loop over all entries of the current derivative map
-          for (colcurr = dwmap.begin(); colcurr != dwmap.end(); ++colcurr)
-          {
-            int col = colcurr->first;
-            double valtxi =
-                euclidean * ztxi * (pow(znor - cn * wgap, -2.0) * cn * (colcurr->second));
-            double valteta =
-                euclidean * zteta * (pow(znor - cn * wgap, -2.0) * cn * (colcurr->second));
-
-            // do not assemble zeros into matrix
-            if (abs(valtxi) > 1.0e-12) linslipDISglobal.Assemble(valtxi, row[0], col);
-            if (abs(valteta) > 1.0e-12) linslipDISglobal.Assemble(valteta, row[1], col);
-          }
-#else
           // loop over all entries of the current derivative map
           for (colcurr = dwmap.begin(); colcurr != dwmap.end(); ++colcurr)
           {
@@ -2708,7 +2569,6 @@ void Wear::WearInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipL
             if (abs(valtxi) > 1.0e-12) linslipDISglobal.assemble(valtxi, row[0], col);
             if (abs(valteta) > 1.0e-12) linslipDISglobal.assemble(valteta, row[1], col);
           }
-#endif
         }  // end wearimplicit
       }  // if (frcoeff==0.0)
     }  // loop over all slip nodes of the interface
@@ -2774,100 +2634,6 @@ void Wear::WearInterface::assemble_lin_w_lm(Core::LinAlg::SparseMatrix& sglobal)
   return;
 }
 
-/*----------------------------------------------------------------------*
- |  Assemble matrix W_lmsl containing wear w~ derivatives    farah 07/13|
- |  w.r.t. lm  --> (ONLY !!!) for consistent stick                      |
- *----------------------------------------------------------------------*/
-void Wear::WearInterface::assemble_lin_w_lm_st(Core::LinAlg::SparseMatrix& sglobal)
-{
-  /************************************************
-   *  This function is only for Implicit Wear !!! *
-   ************************************************/
-  if (!wearimpl_) FOUR_C_THROW("This matrix deriv. is only required for implicit wear algorithm!");
-
-  // create map of stick nodes
-  std::shared_ptr<Core::LinAlg::Map> sticknodes =
-      Core::LinAlg::split_map(*activenodes_, *slipnodes_);
-  std::shared_ptr<Core::LinAlg::Map> stickt = Core::LinAlg::split_map(*activet_, *slipt_);
-
-  // nothing to do if no stick nodes
-  if (sticknodes->num_my_elements() == 0) return;
-
-  // get input params
-  double ct = interface_params().get<double>("SEMI_SMOOTH_CT");
-  double cn = interface_params().get<double>("SEMI_SMOOTH_CN");
-  double frcoeff = interface_params().get<double>("FRCOEFF");
-
-
-  // loop over all stick source nodes of the interface
-  for (int i = 0; i < sticknodes->num_my_elements(); ++i)
-  {
-    int gid = sticknodes->gid(i);
-    Core::Nodes::Node* node = idiscret_->g_node(gid);
-    if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
-    CONTACT::FriNode* cnode = dynamic_cast<CONTACT::FriNode*>(node);
-
-    if (cnode->owner() != Core::Communication::my_mpi_rank(get_comm()))
-      FOUR_C_THROW("Node ownership inconsistency!");
-
-    cn = cn_ref().local_values_as_span()[cn_ref().get_map().lid(cnode->id())];
-    ct = ct_ref().local_values_as_span()[ct_ref().get_map().lid(cnode->id())];
-
-    // prepare assembly, get information from node
-    std::map<int, double>& dwmap = cnode->data().get_deriv_wlm();
-
-    double* jump = cnode->fri_data().jump();
-    double* txi = cnode->data().txi();
-    double* teta = cnode->data().teta();
-
-    // iterator for maps
-    std::map<int, double>::iterator colcurr;
-
-    // row number of entries
-    std::vector<int> row(n_dim() - 1);
-    if (n_dim() == 2)
-    {
-      row[0] = stickt->gid(i);
-    }
-    else if (n_dim() == 3)
-    {
-      row[0] = stickt->gid(2 * i);
-      row[1] = stickt->gid(2 * i) + 1;
-    }
-    else
-      FOUR_C_THROW("AssemblelinSlip: Dimension not correct");
-
-    // evaluation of specific components of entries to assemble
-    double jumptxi = 0;
-    double jumpteta = 0;
-    for (int i = 0; i < n_dim(); i++)
-    {
-      jumptxi += txi[i] * jump[i];
-      jumpteta += teta[i] * jump[i];
-    }
-
-    // loop over all entries of the current derivative map
-    for (colcurr = dwmap.begin(); colcurr != dwmap.end(); ++colcurr)
-    {
-      int col = colcurr->first;
-      double valtxi = frcoeff * cn * ct * jumptxi * (colcurr->second);
-
-      // do not assemble zeros into matrix
-      if (abs(valtxi) > 1.0e-12) sglobal.assemble(valtxi, row[0], col);
-
-      if (n_dim() == 3)
-      {
-        double valteta = frcoeff * cn * ct * jumpteta * (colcurr->second);
-        if (abs(valteta) > 1.0e-12) sglobal.assemble(valteta, row[1], col);
-      }
-    }
-  }
-  return;
-}
-/*----------------------------------------------------------------------*
- |  Assemble matrix W_lmsl containing wear w~ derivatives    farah 07/13|
- |  w.r.t. lm  --> for slip                                             |
- *----------------------------------------------------------------------*/
 void Wear::WearInterface::assemble_lin_w_lm_sl(Core::LinAlg::SparseMatrix& sglobal)
 {
   /************************************************
@@ -2937,32 +2703,6 @@ void Wear::WearInterface::assemble_lin_w_lm_sl(Core::LinAlg::SparseMatrix& sglob
       jumpteta += teta[i] * jump[i];
     }
 
-#ifdef CONSISTENTSLIP
-
-    double euclidean = 0;
-    // evaluate euclidean norm ||vec(zt)+ct*vec(jump)||
-    std::vector<double> sum1(Dim() - 1, 0);
-    sum1[0] = ztxi + ct * jumptxi;
-    if (Dim() == 3) sum1[1] = zteta + ct * jumpteta;
-    if (Dim() == 2) euclidean = abs(sum1[0]);
-    if (Dim() == 3) euclidean = sqrt(sum1[0] * sum1[0] + sum1[1] * sum1[1]);
-
-    // loop over all entries of the current derivative map
-    for (colcurr = dwmap.begin(); colcurr != dwmap.end(); ++colcurr)
-    {
-      int col = colcurr->first;
-      double valtxi = euclidean * ztxi * (pow(znor - cn * wgap, -2.0) * cn * (colcurr->second));
-
-      // do not assemble zeros into matrix
-      if (abs(valtxi) > 1.0e-12) sglobal.Assemble(valtxi, row[0], col);
-
-      if (Dim() == 3)
-      {
-        double valteta = euclidean * zteta * (pow(znor - cn * wgap, -2.0) * cn * (colcurr->second));
-        if (abs(valteta) > 1.0e-12) sglobal.Assemble(valteta, row[1], col);
-      }
-    }
-#else
     // loop over all entries of the current derivative map
     for (colcurr = dwmap.begin(); colcurr != dwmap.end(); ++colcurr)
     {
@@ -2978,7 +2718,6 @@ void Wear::WearInterface::assemble_lin_w_lm_sl(Core::LinAlg::SparseMatrix& sglob
         if (abs(valteta) > 1.0e-12) sglobal.assemble(valteta, row[1], col);
       }
     }
-#endif
   }
   return;
 }

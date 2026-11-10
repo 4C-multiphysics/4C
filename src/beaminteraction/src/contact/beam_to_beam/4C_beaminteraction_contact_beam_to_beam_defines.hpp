@@ -198,10 +198,6 @@ FOUR_C_THROW("CONSISTENTTRANSITION only works in combination with AUTOMATICDIFF!
 
 #define LINPENALTY
 // #define QUADPENALTY
-// #define ARBITPENALTY 2
-#ifdef ARBITPENALTY
-#define G0 3.0e-2  // G0 > 0
-#endif
 // #define GAP0 // GAP0 > 0                        // Decide if complete stiffness is used
 #define GAUSSRULE \
   Core::FE::GaussRule1D::line_6point  // Define gauss rule for integrating residual and

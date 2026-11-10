@@ -1756,14 +1756,6 @@ void CONTACT::Interface::assemble_lin_stick(Core::LinAlg::SparseMatrix& linstick
   double frcoeff = 0.;  // the friction coefficient actually used
   bool consistent = false;
 
-#if defined(CONSISTENTSTICK) && defined(CONSISTENTSLIP)
-  FOUR_C_THROW(
-      "It's not reasonable to activate both, the consistent stick and slip branch, "
-      "because both together will lead again to an inconsistent formulation!");
-#endif
-#ifdef CONSISTENTSTICK
-  consistent = true;
-#endif
 
   if (consistent && interface_params().get<bool>("REGULARIZED_NORMAL_CONTACT"))
     FOUR_C_THROW("no consistent stick for regularized contact");
@@ -2863,19 +2855,8 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
           double valtxi1 = ((ztxi + ct * jumptxi) / euclidean * ztxi) * txi[dim];
           double valtxi3 = (zteta + ct * jumpteta) / euclidean * ztxi * teta[dim];
 
-#ifdef CONSISTENTSLIP
-          valtxi0 = valtxi0 / (znor - cn * wgap);
-          valtxi1 = valtxi1 / (znor - cn * wgap);
-          valtxi3 = valtxi3 / (znor - cn * wgap);
-
-          // Additional term
-          valtxi0 -= euclidean * ztxi / pow(znor - cn * wgap, 2.0) * n[dim];
-
-          double valtxi2 = -frcoeff * txi[dim];
-#else
           double valtxi2 =
               -frcoeff * (znor - cn * wgap) * txi[dim] - frcoeff * (ztxi + ct * jumptxi) * n[dim];
-#endif
           valtxi = valtxi0 + valtxi1 + valtxi2 + valtxi3;
 
           double valteta = 0.0;
@@ -2884,19 +2865,8 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
             double valteta0 = euclidean * teta[dim];
             double valteta1 = ((ztxi + ct * jumptxi) / euclidean * zteta) * txi[dim];
             double valteta3 = (zteta + ct * jumpteta) / euclidean * zteta * teta[dim];
-#ifdef CONSISTENTSLIP
-            valteta0 = valteta0 / (znor - cn * wgap);
-            valteta1 = valteta1 / (znor - cn * wgap);
-            valteta3 = valteta3 / (znor - cn * wgap);
-
-            // Additional term
-            valteta0 -= euclidean * zteta / pow(znor - cn * wgap, 2.0) * n[dim];
-
-            double valteta2 = -frcoeff * teta[dim];
-#else
             double valteta2 = -frcoeff * (znor - cn * wgap) * teta[dim] -
                               frcoeff * (zteta + ct * jumpteta) * n[dim];
-#endif
             valteta = valteta0 + valteta1 + valteta2 + valteta3;
           }
 
@@ -2928,13 +2898,8 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
           std::vector<int> lm(Interface::n_dim());
           std::vector<int> lmowner(Interface::n_dim());
 
-#ifdef CONSISTENTSLIP
-          double valuetxi1 =
-              -(euclidean)*ztxi / (znor - cn * wgap) + frcoeff * (ztxi + ct * jumptxi);
-#else
           double valuetxi1 =
               -(euclidean)*ztxi + (frcoeff * (znor - cn * wgap)) * (ztxi + ct * jumptxi);
-#endif
 
           for (int j = 0; j < Interface::n_dim(); j++)
           {
@@ -2945,13 +2910,8 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
 
           if (Interface::n_dim() == 3)
           {
-#ifdef CONSISTENTSLIP
-            double valueteta1 =
-                -(euclidean)*zteta / (znor - cn * wgap) + frcoeff * (zteta + ct * jumpteta);
-#else
             double valueteta1 =
                 -(euclidean)*zteta + (frcoeff * (znor - cn * wgap)) * (zteta + ct * jumpteta);
-#endif
 
             for (int j = 0; j < Interface::n_dim(); j++) rhsnode(j) += valueteta1 * teta[j];
           }
@@ -2962,26 +2922,16 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
           Core::LinAlg::SerialDenseVector rhsnode(Interface::n_dim() - 1);
           std::vector<int> lm(Interface::n_dim() - 1);
           std::vector<int> lmowner(Interface::n_dim() - 1);
-#ifdef CONSISTENTSLIP
-          double valuetxi1 =
-              -(euclidean)*ztxi / (znor - cn * wgap) + frcoeff * (ztxi + ct * jumptxi);
-#else
           double valuetxi1 =
               -(euclidean)*ztxi + (frcoeff * (znor - cn * wgap)) * (ztxi + ct * jumptxi);
-#endif
           rhsnode(0) = valuetxi1;
           lm[0] = cnode->dofs()[1];
           lmowner[0] = cnode->owner();
 
           if (Interface::n_dim() == 3)
           {
-#ifdef CONSISTENTSLIP
-            double valueteta1 =
-                -(euclidean)*zteta / (znor - cn * wgap) + frcoeff * (zteta + ct * jumpteta);
-#else
             double valueteta1 =
                 -(euclidean)*zteta + (frcoeff * (znor - cn * wgap)) * (zteta + ct * jumpteta);
-#endif
             rhsnode(1) = valueteta1;
 
             lm[1] = cnode->dofs()[2];
@@ -3072,12 +3022,6 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
               double valteta2 =
                   (zteta + ct * jumpteta) / euclidean * ct * teta[dim] * _colcurr->second * zteta;
 
-#ifdef CONSISTENTSLIP
-              valtxi1 = valtxi1 / (znor - cn * wgap);
-              valteta1 = valteta1 / (znor - cn * wgap);
-              valtxi2 = valtxi2 / (znor - cn * wgap);
-              valteta2 = valteta2 / (znor - cn * wgap);
-#endif
 
               // do not assemble zeros into matrix
               if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
@@ -3100,70 +3044,9 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
                 if (abs(valteta2) > 1.0e-12) linslipDISglobal.assemble(valteta2, row[1], col);
               }
             }
-
-#ifdef CONSISTENTSLIP
-            /*** Additional Terms ***/
-            // normal derivative
-            for (colcurr = dnmap[dim].begin(); colcurr != dnmap[dim].end(); ++colcurr)
-            {
-              int col = colcurr->first;
-              double valtxi =
-                  -euclidean * ztxi * z[dim] / pow(znor - cn * wgap, 2.0) * (colcurr->second);
-              double valteta =
-                  -euclidean * zteta * z[dim] / pow(znor - cn * wgap, 2.0) * (colcurr->second);
-
-              // do not assemble zeros into s matrix
-              if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
-              {
-                for (int j = 0; j < Dim(); j++)
-                {
-                  if (abs(valtxi * txi[j]) > 1.e-12)
-                    linslipDISglobal.Assemble(valtxi * txi[j], cnode->Dofs()[j], col);
-                  if (Dim() == 3)
-                    if (abs(valteta * teta[j]) > 1.e-12)
-                      linslipDISglobal.Assemble(valteta * teta[j], cnode->Dofs()[j], col);
-                }
-              }
-              else
-              {
-                if (abs(valtxi) > 1.0e-12) linslipDISglobal.Assemble(valtxi, row[0], col);
-                if (abs(valteta) > 1.0e-12) linslipDISglobal.Assemble(valteta, row[1], col);
-              }
-            }
-#endif
           }
         }
 
-#ifdef CONSISTENTSLIP
-        /*** Additional Terms ***/
-        // wgap derivative
-        std::map<int, double>& dgmap = cnode->Data().GetDerivG();
-
-        for (colcurr = dgmap.begin(); colcurr != dgmap.end(); ++colcurr)
-        {
-          int col = colcurr->first;
-          double valtxi = +euclidean * ztxi / pow(znor - cn * wgap, 2.0) * cn * (colcurr->second);
-          double valteta = +euclidean * zteta / pow(znor - cn * wgap, 2.0) * cn * (colcurr->second);
-
-          // do not assemble zeros into matrix
-          if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
-          {
-            for (int j = 0; j < Dim(); j++)
-            {
-              if (abs(valtxi * txi[j]) > 1.e-12)
-                linslipDISglobal.Assemble(valtxi * txi[j], cnode->Dofs()[j], col);
-              if (Dim() == 3)
-                if (abs(valteta * teta[j]) > 1.e-12)
-                  linslipDISglobal.Assemble(valteta * teta[j], cnode->Dofs()[j], col);
-            }
-          }
-          else
-          {
-            if (abs(valtxi) > 1.0e-12) linslipDISglobal.Assemble(valtxi, row[0], col);
-            if (abs(valteta) > 1.0e-12) linslipDISglobal.Assemble(valteta, row[1], col);
-          }
-        }
-#endif
 
 
         /*** 02 ***************** frcoeff*znor*ct*tangent.deriv(jump) ***/
@@ -3212,15 +3095,10 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
               int col = _colcurr->first;
 
               // std::cout << "val " << colcurr->second << std::endl;
-#ifdef CONSISTENTSLIP
-              double valtxi = -frcoeff * ct * txi[dim] * colcurr->second;
-              double valteta = -frcoeff * ct * teta[dim] * colcurr->second;
-#else
               double valtxi =
                   (-1) * (frcoeff * (znor - cn * wgap)) * ct * txi[dim] * _colcurr->second;
               double valteta =
                   (-1) * (frcoeff * (znor - cn * wgap)) * ct * teta[dim] * _colcurr->second;
-#endif
               // do not assemble zeros into matrix
               if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
               {
@@ -3255,9 +3133,6 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
             int col = colcurr->first;
             double val = euclidean * (colcurr->second) * z[j];
 
-#ifdef CONSISTENTSLIP
-            val = val / (znor - cn * wgap);
-#endif
 
             // do not assemble zeros into s matrix
             if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
@@ -3278,9 +3153,6 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
               int col = colcurr->first;
               double val = euclidean * (colcurr->second) * z[j];
 
-#ifdef CONSISTENTSLIP
-              val = val / (znor - cn * wgap);
-#endif
 
               // do not assemble zeros into s matrix
               if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
@@ -3306,10 +3178,6 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
             double valtxi = (ztxi + ct * jumptxi) / euclidean * (colcurr->second) * z[j] * ztxi;
             double valteta = (ztxi + ct * jumptxi) / euclidean * (colcurr->second) * z[j] * zteta;
 
-#ifdef CONSISTENTSLIP
-            valtxi = valtxi / (znor - cn * wgap);
-            valteta = valteta / (znor - cn * wgap);
-#endif
 
             // do not assemble zeros into matrix
             if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
@@ -3344,10 +3212,6 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
               double valteta =
                   (zteta + ct * jumpteta) / euclidean * (colcurr->second) * z[j] * zteta;
 
-#ifdef CONSISTENTSLIP
-              valtxi = valtxi / (znor - cn * wgap);
-              valteta = valteta / (znor - cn * wgap);
-#endif
 
               // do not assemble zeros into matrix
               if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
@@ -3390,10 +3254,6 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
               double valteta =
                   (ztxi + ct * jumptxi) / euclidean * ct * (colcurr->second) * jump[j] * zteta;
 
-#ifdef CONSISTENTSLIP
-              valtxi = valtxi / (znor - cn * wgap);
-              valteta = valteta / (znor - cn * wgap);
-#endif
 
               // do not assemble zeros into s matrix
               if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
@@ -3423,10 +3283,6 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
                 double valteta =
                     (zteta + ct * jumpteta) / euclidean * ct * (colcurr->second) * jump[j] * zteta;
 
-#ifdef CONSISTENTSLIP
-                valtxi = valtxi / (znor - cn * wgap);
-                valteta = valteta / (znor - cn * wgap);
-#endif
 
                 // do not assemble zeros into matrix
                 if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
@@ -3455,11 +3311,7 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
           for (colcurr = dtximap[j].begin(); colcurr != dtximap[j].end(); ++colcurr)
           {
             int col = colcurr->first;
-#ifdef CONSISTENTSLIP
-            double val = -frcoeff * (colcurr->second) * z[j];
-#else
             double val = (-1) * (frcoeff * (znor - cn * wgap)) * (colcurr->second) * z[j];
-#endif
             // do not assemble zeros into matrix
             if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
             {
@@ -3477,11 +3329,7 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
             for (colcurr = dtetamap[j].begin(); colcurr != dtetamap[j].end(); ++colcurr)
             {
               int col = colcurr->first;
-#ifdef CONSISTENTSLIP
-              double val = -frcoeff * (colcurr->second) * z[j];
-#else
               double val = (-1.0) * (frcoeff * (znor - cn * wgap)) * (colcurr->second) * z[j];
-#endif
               // do not assemble zeros into matrix
               if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
               {
@@ -3509,11 +3357,7 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
             for (colcurr = dtximap[j].begin(); colcurr != dtximap[j].end(); ++colcurr)
             {
               int col = colcurr->first;
-#ifdef CONSISTENTSLIP
-              double val = -frcoeff * ct * (colcurr->second) * jump[j];
-#else
               double val = (-1) * (frcoeff * (znor - cn * wgap)) * ct * (colcurr->second) * jump[j];
-#endif
               // do not assemble zeros into matrix
               if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
               {
@@ -3531,12 +3375,8 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
               for (colcurr = dtetamap[j].begin(); colcurr != dtetamap[j].end(); ++colcurr)
               {
                 int col = colcurr->first;
-#ifdef CONSISTENTSLIP
-                double val = -frcoeff * ct * (colcurr->second) * jump[j];
-#else
                 double val =
                     (-1) * (frcoeff * (znor - cn * wgap)) * ct * (colcurr->second) * jump[j];
-#endif
                 // do not assemble zeros into s matrix
                 if (constr_direction_ == CONTACT::ConstraintDirection::xyz)
                 {
@@ -3551,7 +3391,6 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
           }
         }
 
-#ifndef CONSISTENTSLIP
         /*** 6 ******************* -frcoeff.Deriv(n).z(ztan+ct*utan) ***/
         // loop over all dimensions
         for (int j = 0; j < Interface::n_dim(); ++j)
@@ -3608,7 +3447,6 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
             if (abs(valteta) > 1.0e-12) linslipDISglobal.assemble(valteta, row[1], col);
           }
         }
-#endif
       }  // if (frcoeff==0.0)
     }  // loop over all slip nodes of the interface
   }  // Coulomb friction

@@ -1212,55 +1212,6 @@ namespace CONTACT
     //!@{
 
     /*!
-    \brief Check normal/tangent derivatives with finite differences
-
-    */
-    void fd_check_normal_deriv();
-
-    /*!
-    \brief Check normal/tangent derivatives with finite differences
-
-    */
-    void fd_check_normal_cpp_deriv();
-
-    /*!
-    \brief Check Mortar matrix D derivatives with finite differences
-
-    */
-    void fd_check_mortar_d_deriv();
-
-    /*!
-    \brief Check Mortar matrix M derivatives with finite differences
-
-    */
-    void fd_check_mortar_m_deriv();
-
-    /*!
-    \brief Check weighted gap g derivatives with finite differences
-
-    */
-    void fd_check_gap_deriv();
-
-    /*!
-    \brief Check gap g derivatives with finite differences LTL
-
-    */
-    void fd_check_gap_deriv_ltl();
-
-    /*!
-    \brief Check jump derivatives with finite differences LTL
-
-    */
-    void fd_check_jump_deriv_ltl();
-
-    /*!
-    \brief Check alpha derivatives with finite differences (for hybrid formulation)
-
-    */
-    void fd_check_alpha_deriv();
-
-
-    /*!
     \brief Check weighted slip increment derivatives with finite differences (gp-wise calculated)
 
     */

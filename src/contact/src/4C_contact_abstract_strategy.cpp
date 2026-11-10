@@ -1120,52 +1120,6 @@ void CONTACT::AbstractStrategy::initialize_and_evaluate_interface()
 
   // check the parallel distribution
   check_parallel_distribution(t_start);
-
-  //**********************************************************************
-  // OVERVIEW OF PARALLEL MORTAR COUPLING STATUS
-  //**********************************************************************
-#ifdef CONTACTSTATUS
-  // total numbers per processor
-  std::vector<int> smpairs(1);
-  std::vector<int> smintpairs(1);
-  std::vector<int> intcells(1);
-
-  // add numbers of all interfaces
-  for (int i = 0; i < (int)Interfaces().size(); ++i)
-  {
-    smpairs[0] += Interfaces()[i]->SourceTargetPairs();
-    smintpairs[0] += Interfaces()[i]->SourceTargetIntPairs();
-    intcells[0] += Interfaces()[i]->IntegrationCells();
-  }
-
-  // vector containing all proc ids
-  const int numproc = Core::Communication::num_mpi_ranks(Comm());
-  std::vector<int> allproc(numproc);
-  for (int i = 0; i < numproc; ++i) allproc[i] = i;
-
-  // global numbers
-  std::vector<int> gsmpairs, gsmintpairs, gintcells;
-  Core::LinAlg::gather<int>(smpairs, gsmpairs, numproc, allproc.data(), Comm());
-  Core::LinAlg::gather<int>(smintpairs, gsmintpairs, numproc, allproc.data(), Comm());
-  Core::LinAlg::gather<int>(intcells, gintcells, numproc, allproc.data(), Comm());
-
-  // output to screen
-  if (Core::Communication::my_mpi_rank(Comm()) == 0)
-  {
-    std::cout << "--------------------------------------------------------------------------------"
-              << std::endl;
-    std::cout << std::setw(10) << "proc ID" << std::setw(16) << "# s/m pairs" << std::setw(16)
-              << "# s/m intpairs" << std::setw(16) << "# intcells" << std::endl;
-    for (int i = 0; i < numproc; ++i)
-    {
-      std::cout << std::setw(10) << i << std::setw(16) << gsmpairs[i] << std::setw(16)
-                << gsmintpairs[i] << std::setw(16) << gintcells[i] << std::endl;
-    }
-    std::cout << "--------------------------------------------------------------------------------"
-              << std::endl;
-  }
-#endif
-  //**********************************************************************
 }
 
 /*----------------------------------------------------------------------*
@@ -1331,30 +1285,6 @@ void CONTACT::AbstractStrategy::assemble_mortar()
     // assemble D-, M-matrix and g-vector, store them globally
     interface->assemble_dm(*dmatrix_, *mmatrix_);
     interface->assemble_g(*wgap_);
-
-#ifdef CONTACTFDNORMAL
-    // FD check of normal derivatives
-    std::cout << " -- CONTACTFDNORMAL- -----------------------------------" << std::endl;
-    //    Interfaces()[i]->fd_check_normal_deriv();
-    Interfaces()[i]->fd_check_normal_cpp_deriv();
-    std::cout << " -- CONTACTFDNORMAL- -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDNORMAL
-#ifdef CONTACTFDMORTARD
-    // FD check of Mortar matrix D derivatives
-    std::cout << " -- CONTACTFDMORTARD -----------------------------------" << std::endl;
-    dmatrix_->Complete();
-    if (dmatrix_->NormOne()) Interfaces()[i]->FDCheckMortarDDeriv();
-    dmatrix_->UnComplete();
-    std::cout << " -- CONTACTFDMORTARD -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARD
-#ifdef CONTACTFDMORTARM
-    // FD check of Mortar matrix M derivatives
-    std::cout << " -- CONTACTFDMORTARM -----------------------------------" << std::endl;
-    mmatrix_->Complete(*gtdofrowmap_, *gsdofrowmap_);
-    if (mmatrix_->NormOne()) Interfaces()[i]->FDCheckMortarMDeriv();
-    mmatrix_->UnComplete();
-    std::cout << " -- CONTACTFDMORTARM -----------------------------------" << std::endl;
-#endif  // #ifdef CONTACTFDMORTARM
   }
 
   // fill_complete() global Mortar matrices
@@ -1634,11 +1564,9 @@ void CONTACT::AbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Qua
           }
           case Mortar::StrategyBase::lmupdate:
           {
-#ifndef CONTACTPSEUDO2D
             // throw a FOUR_C_THROW if node is Active and DBC
             if (cnode->is_dbc() && cnode->active())
               FOUR_C_THROW("Source node {} is active AND carries D.B.C.s!", cnode->id());
-#endif  // #ifndef CONTACTPSEUDO2D
 
             // store updated LM into node
             cnode->mo_data().lm()[dof] = vectorinterface->local_values_as_span()[locindex[dof]];

@@ -387,8 +387,6 @@ namespace Wear
         wlinmatrix_;  // global Matrix Wg containing wear-lm derivatives
     std::shared_ptr<Core::LinAlg::SparseMatrix>
         wlinmatrixsl_;  // global Matrix Wsl containing wear-lm slip derivatives
-    std::shared_ptr<Core::LinAlg::SparseMatrix>
-        wlinmatrixst_;  // global Matrix Wst containing wear-lm stick derivatives
 
     // both-sided wear weak dirich cond
     std::shared_ptr<Core::LinAlg::SparseMatrix> d2matrix_;  // global Mortar matrix D2
