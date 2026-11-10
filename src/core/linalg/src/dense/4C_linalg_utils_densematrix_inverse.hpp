@@ -149,29 +149,6 @@ namespace Core::LinAlg
     A.scale(1. / det);
   }
 
-  /*!
-   * \brief Explicit inverse of a nonsymmetric matrix. If the matrix is singular no error will
-   * be thrown, and the original matrix will remain untouched.
-   *
-   * @param A (in/out) Matrix to be inverted. The inverse will be stored in this variable.
-   * @param eps (in) If the absolute value of the determinant is smaller than this value, the matrix
-   * is considered to be singular.
-   * @return True if matrix could be inverted, false if matrix is singular.
-   *
-   * @tparam T Scalar type of matrix.
-   * @tparam dim Dimension of matrix.
-   */
-  template <typename T, unsigned int dim>
-  bool inverse_do_not_throw_error_on_zero_determinant(
-      Core::LinAlg::Matrix<dim, dim, T>& A, double eps)
-  {
-    T det = determinant(A);
-    if (std::abs(det) < eps) return false;
-    inverse_reorder_matrix_entries(A);
-    A.scale(1. / det);
-    return true;
-  }
-
   /**
    * \brief Solve a linear system of equations \f$Ax=b\f$.
    *
