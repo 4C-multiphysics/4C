@@ -82,7 +82,7 @@ MATERIALS:
         INCR_TOL: 1e-8
         MAX_EXCEEDANCE_FACT_RES_TOL: 10
         MAX_EXCEEDANCE_FACT_INCR_TOL: 10
-        DIVER_CONT: stop
+        DIVER_CONT: stop_and_request_step_reduction
       ADAPTIVE_ESTIMATE_INTERPOLATION:
         USE_ADAPTIVE_ESTIMATE_INTERPOLATION: false
   - MAT: 4
