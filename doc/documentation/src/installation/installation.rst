@@ -119,9 +119,9 @@ Building |FOURC| with MIRCO enabled automatically fetches the repository during 
 Qhull can be used as optional dependency inside |FOURC| to calculate the convex hull of a set of points. This is mainly used for finite element procedures using cut operations.
 See the `Qhull repository <https://github.com/qhull/qhull>`_ for details and downloads.
 
-Building |FOURC| with Qhull enabled assumes that a version is already pre-installed.
+Building |FOURC| with Qhull enabled requires a pre-installed Qhull 2020.2 (8.0.2).
 
-On Linux based systems the package can be installed using ``sudo apt install libqhull-dev``.
+On Linux based systems the package can be installed using ``sudo apt install libqhull-dev``. On macOS, install it with ``brew install qhull``.
 
 
 .. _4Cinstallation:
