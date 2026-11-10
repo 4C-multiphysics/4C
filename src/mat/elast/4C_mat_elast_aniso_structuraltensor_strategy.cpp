@@ -15,6 +15,8 @@
 #include "4C_mat_service.hpp"
 #include "4C_material_parameter_base.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace

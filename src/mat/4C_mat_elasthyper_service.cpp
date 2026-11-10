@@ -15,6 +15,7 @@
 #include "4C_linalg_tensor_einstein.hpp"
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_mat_service.hpp"
 
@@ -478,7 +479,7 @@ void Mat::elast_hyper_check_polyconvexity(const Core::LinAlg::Tensor<double, 3, 
       Core::LinAlg::Initialization::zero);  // Cof(F) in Matrix-Notation
   static Core::LinAlg::Matrix<9, 1> CofF(
       Core::LinAlg::Initialization::zero);  // Cof(F) in Voigt-Notation
-  CoFacF.invert(defgrd_mat);
+  Core::LinAlg::invert(CoFacF, defgrd_mat);
   CoFacF.scale(J);
   // sort in Voigt-Notation and invert!
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(CoFacF, CofF);

@@ -18,6 +18,7 @@
 #include "4C_fluid_rotsym_periodicbc.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_elasthyper.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_structporo.hpp"
@@ -1130,7 +1131,7 @@ void Discret::Elements::FluidEleCalcPoro<distype>::gauss_point_loop(Teuchos::Par
 
     // inverse deformation gradient F^-1
     static Core::LinAlg::Matrix<nsd_, nsd_> defgrd_inv(Core::LinAlg::Initialization::uninitialized);
-    defgrd_inv.invert(defgrd);
+    Core::LinAlg::invert(defgrd_inv, defgrd);
 
     // volume change (used for porosity law). Same as J in nonlinear theory.
     double volchange = 0.0;
@@ -1647,7 +1648,7 @@ void Discret::Elements::FluidEleCalcPoro<distype>::gauss_point_loop_od(
 
     // inverse deformation gradient F^-1
     static Core::LinAlg::Matrix<nsd_, nsd_> defgrd_inv(Core::LinAlg::Initialization::uninitialized);
-    defgrd_inv.invert(defgrd);
+    Core::LinAlg::invert(defgrd_inv, defgrd);
 
     // volume change (used for porosity law). Same as J in nonlinear theory.
     double volchange = 0.0;
@@ -4868,7 +4869,7 @@ double Discret::Elements::FluidEleCalcPoro<distype>::setup_material_derivatives(
 
   // inverse of transposed jacobian "ds/dX"
   Core::LinAlg::Matrix<nsd_, nsd_> xji0(Core::LinAlg::Initialization::zero);
-  double det0 = xji0.invert(xjm0);
+  double det0 = Core::LinAlg::invert(xji0, xjm0);
 
   // ----------------------compute derivatives N_XYZ_ at gp w.r.t. material coordinates
   N_XYZ_.multiply(xji0, Base::deriv_);

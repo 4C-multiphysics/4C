@@ -13,6 +13,8 @@
 #include "4C_mat_stvenantkirchhoff.hpp"
 #include "4C_utils_function_manager.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace

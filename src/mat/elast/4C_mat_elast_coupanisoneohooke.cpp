@@ -11,6 +11,8 @@
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_material_parameter_base.hpp"
+
+#include <numbers>
 FOUR_C_NAMESPACE_OPEN
 
 

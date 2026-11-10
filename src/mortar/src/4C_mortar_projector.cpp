@@ -11,6 +11,7 @@
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_mortar_calc_utils.hpp"
 #include "4C_mortar_defines.hpp"
@@ -766,7 +767,7 @@ bool Mortar::ProjectorCalcEleBased<distype_s, distype_m>::check_projection4_auxp
 
     for (int j = 0; j < 3; ++j) P(j, 1) = t1[j];
 
-    P.invert();
+    Core::LinAlg::invert(P);
     double lambda1 = P(0, 0) * (globgp[0] - auxc[0]) + P(0, 1) * (globgp[1] - auxc[1]) +
                      P(0, 2) * (globgp[2] - auxc[2]);
     double lambda2 = P(1, 0) * (globgp[0] - auxc[0]) + P(1, 1) * (globgp[1] - auxc[1]) +
@@ -795,7 +796,7 @@ bool Mortar::ProjectorCalcEleBased<distype_s, distype_m>::check_projection4_auxp
 
     for (int j = 0; j < 3; ++j) T(j, 2) = auxc[j];
 
-    T.invert();
+    Core::LinAlg::invert(T);
     a1 = T(0, 0) * proj_gp[0] + T(0, 1) * proj_gp[1] + T(0, 2) * proj_gp[2];
 
     if (a1 > 0.0) all_negative = false;
@@ -814,7 +815,7 @@ bool Mortar::ProjectorCalcEleBased<distype_s, distype_m>::check_projection4_auxp
 
     for (int j = 0; j < 3; ++j) T(j, 2) = auxc[j];
 
-    T.invert();
+    Core::LinAlg::invert(T);
 
     a1 = T(0, 0) * proj_gp[0] + T(0, 1) * proj_gp[1] + T(0, 2) * proj_gp[2];
     // a2=T(1,0)*proj_gp[0] + T(1,1)*proj_gp[1] + T(1,2)*proj_gp[2];
@@ -931,7 +932,7 @@ bool Mortar::ProjectorCalcEleBased<distype_s, distype_m>::project_gauss_point_3d
       }
 
       // solve deta = - inv(df) * f
-      double jacdet = df.invert();
+      double jacdet = Core::LinAlg::invert(df);
       if (abs(jacdet) < 1.0e-12) FOUR_C_THROW("Singular Jacobian for projection");
 
       // update eta and alpha
@@ -1022,7 +1023,7 @@ bool Mortar::ProjectorCalc<distype>::project_gauss_point_auxn_3d(const double* g
       evaluate_grad_f_gauss_point_auxn_3d(df, globgp, auxn, ele, eta, alpha);
 
       // solve deta = - inv(df) * f
-      double jacdet = df.invert();
+      double jacdet = Core::LinAlg::invert(df);
       if (abs(jacdet) < 1.0e-12)
       {
         FOUR_C_THROW("Singular Jacobian for projection");
@@ -1209,7 +1210,7 @@ bool Mortar::ProjectorCalc<distype>::project_s_node_by_m_normal_3d(const Mortar:
     //**********************************************
     //   solve deta = - inv(dF) * F               //
     //**********************************************
-    double jacdet = df.invert();
+    double jacdet = Core::LinAlg::invert(df);
     if (abs(jacdet) < 1.0e-12) FOUR_C_THROW("Singular Jacobian for projection");
 
     // update eta and alpha
@@ -1371,7 +1372,7 @@ bool Mortar::ProjectorCalc<distype>::project_s_node_by_m_normal_3d_lin(const Mor
     //**********************************************
     //   solve deta = - inv(dF) * F               //
     //**********************************************
-    double jacdet = df.invert();
+    double jacdet = Core::LinAlg::invert(df);
     if (abs(jacdet) < 1.0e-12) FOUR_C_THROW("Singular Jacobian for projection");
 
     // update eta and alpha
@@ -1518,7 +1519,7 @@ bool Mortar::ProjectorCalc<distype>::project_s_node_by_m_nodal_normal_3d_lin(
     //**********************************************
     //   solve deta = - inv(dF) * F               //
     //**********************************************
-    double jacdet = df.invert();
+    double jacdet = Core::LinAlg::invert(df);
     if (abs(jacdet) < 1.0e-12) FOUR_C_THROW("Singular Jacobian for projection");
 
     // update eta and alpha
@@ -1830,7 +1831,7 @@ bool Mortar::ProjectorCalc<distype>::project_s_node_by_m_nodal_normal_2d_lin(
     //**********************************************
     //   solve deta = - inv(dF) * F               //
     //**********************************************
-    double jacdet = df.invert();
+    double jacdet = Core::LinAlg::invert(df);
     if (abs(jacdet) < 1.0e-12) FOUR_C_THROW("Singular Jacobian for projection");
 
     // update eta and alpha
@@ -2129,7 +2130,7 @@ bool Mortar::ProjectorCalc<distype>::project_s_node_by_m_normal_2d(const Mortar:
     //**********************************************
     //   solve deta = - inv(dF) * F               //
     //**********************************************
-    double jacdet = df.invert();
+    double jacdet = Core::LinAlg::invert(df);
     if (abs(jacdet) < 1.0e-12) FOUR_C_THROW("Singular Jacobian for projection");
 
     // update eta and alpha
@@ -2279,7 +2280,7 @@ bool Mortar::ProjectorCalc<distype>::project_s_node_by_m_normal_2d_lin(const Mor
     //**********************************************
     //   solve deta = - inv(dF) * F               //
     //**********************************************
-    double jacdet = df.invert();
+    double jacdet = Core::LinAlg::invert(df);
     if (abs(jacdet) < 1.0e-12) FOUR_C_THROW("Singular Jacobian for projection");
 
     // update eta and alpha

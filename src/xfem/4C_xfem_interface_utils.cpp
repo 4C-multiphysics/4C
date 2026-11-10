@@ -14,6 +14,7 @@
 #include "4C_fem_general_utils_integration.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
 #include "4C_fem_general_utils_nurbs_shapefunctions.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_xfem_condition_manager.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -644,7 +645,7 @@ double XFEM::Utils::eval_element_volume(Core::LinAlg::Matrix<3, Core::FE::num_no
     +-            -+        +-            -+
   */
   xjm.multiply_nt(deriv, xyze);
-  double det = xji.invert(xjm);
+  double det = Core::LinAlg::invert(xji, xjm);
 
   if (det < 1E-16) FOUR_C_THROW("GLOBAL ELEMENT ZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", det);
 

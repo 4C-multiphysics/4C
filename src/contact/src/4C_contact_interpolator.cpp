@@ -14,6 +14,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mortar_defines.hpp"
 #include "4C_mortar_projector.hpp"
 #include "4C_mortar_shape_utils.hpp"
@@ -1637,7 +1638,7 @@ void NTS::Interpolator::deriv_xi_gp_3d(Mortar::Element& source_elem, Mortar::Ele
   // get inverse of the 3x3 matrix L (in place)
   if (abs(lmatrix.determinant()) < 1e-12) FOUR_C_THROW("Singular lmatrix for derivgp3d");
 
-  lmatrix.invert();
+  Core::LinAlg::invert(lmatrix);
 
   // build directional derivative of source GP normal
   using CI = Core::Gen::Pairedvector<int, double>::const_iterator;

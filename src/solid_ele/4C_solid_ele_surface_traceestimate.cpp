@@ -21,6 +21,7 @@
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_determinant.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_fourier.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_solid_ele_surface.hpp"
@@ -321,7 +322,7 @@ void Discret::Elements::SolidSurface::strains(
   Core::LinAlg::Matrix<dim, dim> invJ;
   Core::LinAlg::Matrix<dim, dim> F_mat_view = Core::LinAlg::make_matrix_view(defgrd);
   invJ.multiply(deriv, xrefe);
-  jac = invJ.invert();
+  jac = Core::LinAlg::invert(invJ);
   N_XYZ.multiply(invJ, deriv);
   F_mat_view.multiply_tt(xcurr, N_XYZ);
 
@@ -540,7 +541,7 @@ void Discret::Elements::SolidSurface::trace_estimate_vol_matrix_tsi(
     Core::LinAlg::Matrix<3, 3> iC;
     Core::LinAlg::Matrix<3, 3> F_view = Core::LinAlg::make_matrix_view(defgrd);
     iC.multiply_tn(F_view, F_view);
-    iC.invert();
+    Core::LinAlg::invert(iC);
 
     iC_N_XYZ.multiply(iC, N_XYZ);
     iC_N_XYZ.scale(k[0]);
@@ -612,7 +613,7 @@ void Discret::Elements::SolidSurface::trace_estimate_surf_matrix_tsi(
     Core::LinAlg::Matrix<3, 3> iC;
     Core::LinAlg::Matrix<3, 3> F_view = Core::LinAlg::make_matrix_view(defgrd);
     iC.multiply_tn(F_view, F_view);
-    iC.invert();
+    Core::LinAlg::invert(iC);
     iCn.multiply(iC, n_v);
 
     iCn_N_XYZ.multiply_tn(iCn, N_XYZ);

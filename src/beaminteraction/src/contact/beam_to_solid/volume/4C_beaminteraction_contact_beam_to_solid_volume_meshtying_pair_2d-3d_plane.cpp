@@ -16,6 +16,8 @@
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 

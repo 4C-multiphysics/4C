@@ -14,6 +14,7 @@
 #include <Sacado.hpp>
 
 #include <memory>
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 

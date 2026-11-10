@@ -11,6 +11,7 @@
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_service.hpp"
 #include "4C_utils_enum.hpp"
@@ -513,7 +514,7 @@ Mat::ViscoPlasticNoYieldSurface::calculate_second_piola_kirchhoff_stresses(
     const Core::LinAlg::Matrix<3, 3>& Me) const
 {
   static Core::LinAlg::Matrix<3, 3> iF;
-  iF.invert(*defgrd);
+  Core::LinAlg::invert(iF, *defgrd);
 
   // calculate 2nd PK stress (PK2 = F^(-1) * Re_trial * Me * Re_trial^(T) * F^(-T))
   // from left to right
@@ -572,7 +573,7 @@ void Mat::ViscoPlasticNoYieldSurface::local_newton_loop(
     J = calculate_linearization(x(0), x(1), terms);
 
     // invert linearization and calculate increment
-    iJ.invert(J);
+    Core::LinAlg::invert(iJ, J);
     dx.multiply(-1.0, iJ, residual, 0.0);
 
     // update solution vector

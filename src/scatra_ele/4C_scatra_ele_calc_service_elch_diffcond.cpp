@@ -17,6 +17,8 @@
 #include "4C_scatra_ele_utils_elch_diffcond.hpp"
 #include "4C_utils_function_of_time.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 

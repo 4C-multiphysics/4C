@@ -15,6 +15,7 @@
 #include "4C_cut_utils.hpp"
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_linalg_gauss.templates.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_utils_cln_matrix_conversion.hpp"
 #include "4C_utils_clnwrapper.hpp"
 #include "4C_utils_mathoperations_cln.hpp"
@@ -1156,7 +1157,7 @@ namespace Cut::Kernel
       {
         return std::make_pair(false, -1.0);
       }
-      A_inv.invert(A_);
+      Core::LinAlg::invert(A_inv, A_);
       FloatType cond = A_inv.norm2() * A_.norm2();
       return std::make_pair(true, cond);
     }
@@ -1920,7 +1921,7 @@ namespace Cut::Kernel
       if (Kernel::close_to_zero(det)) return false;
 
 
-      TN_inv.invert();
+      Core::LinAlg::invert(TN_inv);
       aux.multiply_nt(TN_inv, A);
       scaled_tolerance.multiply(aux, real_tolerance);
 
@@ -1936,7 +1937,7 @@ namespace Cut::Kernel
       {
         return std::make_pair(false, -1.0);
       }
-      A_inv.invert(A_);
+      Core::LinAlg::invert(A_inv, A_);
       FloatType cond = A_inv.norm2() * A_.norm2();
       return std::make_pair(true, cond);
     }
@@ -3348,7 +3349,7 @@ namespace Cut::Kernel
       {
         return std::make_pair(false, -1.0);
       }
-      A_inv.invert(A_);
+      Core::LinAlg::invert(A_inv, A_);
       FloatType cond = A_inv.norm2() * A_.norm2();
       return std::make_pair(true, cond);
     }
@@ -3384,7 +3385,7 @@ namespace Cut::Kernel
       // we will not be able to find inverse
       if (Kernel::close_to_zero(det)) return false;
 
-      TN_inv.invert();
+      Core::LinAlg::invert(TN_inv);
       aux.multiply_nt(TN_inv, A);
       scaled_tolerance.multiply(aux, real_tolerance);
 

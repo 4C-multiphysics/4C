@@ -26,6 +26,8 @@
 #include "4C_xfem_input.hpp"
 #include "4C_xfem_interface_utils.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 // TODO: CouplingBase should become abstract class

@@ -28,6 +28,8 @@
 #include "4C_utils_parameter_list.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*

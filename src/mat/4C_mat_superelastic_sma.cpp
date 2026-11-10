@@ -14,6 +14,7 @@
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_service.hpp"
 #include "4C_utils_enum.hpp"
@@ -365,7 +366,7 @@ void Mat::SuperElasticSMA::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* de
   }
 
   Core::LinAlg::Matrix<3, 3> deformation_gradient_invert(defgrd_mat);
-  deformation_gradient_invert.invert();
+  Core::LinAlg::invert(deformation_gradient_invert);
 
   /*
    **********************************************************
@@ -615,7 +616,7 @@ void Mat::SuperElasticSMA::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* de
         loading.H_SA = H_SA;
         R_k = compute_local_newton_residual(lambda_S, xi_s_tmp, loading, matdata);
         d_R_d_lambda = compute_local_newton_jacobian(lambda_S, xi_s_tmp, loading, matdata);
-        d_R_d_lambda_inv.invert(d_R_d_lambda);
+        Core::LinAlg::invert(d_R_d_lambda_inv, d_R_d_lambda);
         res_vec.multiply_nn(d_R_d_lambda_inv, R_k);  // Eqn. 57
 
         // Compute function, that has to be minimized

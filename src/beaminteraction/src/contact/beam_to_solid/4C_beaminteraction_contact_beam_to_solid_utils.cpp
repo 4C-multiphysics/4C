@@ -26,6 +26,8 @@
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_fad.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 

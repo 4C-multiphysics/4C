@@ -12,6 +12,7 @@
 #include "4C_linalg_fixedsizematrix_generators.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_service.hpp"
 #include "4C_utils_enum.hpp"
@@ -1503,7 +1504,7 @@ void Mat::CrystalPlasticity::setup_flow_rule(Core::LinAlg::Matrix<3, 3> deform_g
   // determine trial elastic deformation gradient
   // get the inverse FP^{-1}
   Core::LinAlg::Matrix<3, 3> inv_plastic_deform_grad_trial;
-  inv_plastic_deform_grad_trial.invert(plastic_deform_grad_trial);
+  Core::LinAlg::invert(inv_plastic_deform_grad_trial, plastic_deform_grad_trial);
   Core::LinAlg::Matrix<3, 3> elastic_deform_grad_trial;
   elastic_deform_grad_trial.multiply_nn(deform_grad, inv_plastic_deform_grad_trial);
 
@@ -1515,7 +1516,7 @@ void Mat::CrystalPlasticity::setup_flow_rule(Core::LinAlg::Matrix<3, 3> deform_g
   Core::LinAlg::Matrix<3, 3> elastic_right_cauchy_green;
   elastic_right_cauchy_green.multiply_tn(elastic_deform_grad_trial, elastic_deform_grad_trial);
   Core::LinAlg::Matrix<3, 3> inv_elastic_right_cauchy_green;
-  inv_elastic_right_cauchy_green.invert(elastic_right_cauchy_green);
+  Core::LinAlg::invert(inv_elastic_right_cauchy_green, elastic_right_cauchy_green);
 
   // 2nd Piola-Kirchhoff stress
   // S = lambda * ln_jacobi_det_trial * inv_elastic_right_cauchy_green + mu * (identity3

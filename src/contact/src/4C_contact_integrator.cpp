@@ -19,6 +19,7 @@
 #include "4C_fem_general_utils_integration.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_structporo.hpp"
 #include "4C_mortar_calc_utils.hpp"
 #include "4C_mortar_coupling3d_classes.hpp"
@@ -5574,7 +5575,7 @@ void CONTACT::Integrator::deriv_xi_gp_3d(const Mortar::Element& source_elem,
   // get inverse of the 3x3 matrix L (in place)
   if (abs(lmatrix.determinant()) < 1e-12) FOUR_C_THROW("Singular lmatrix for derivgp3d");
 
-  lmatrix.invert();
+  Core::LinAlg::invert(lmatrix);
 
   // build directional derivative of source GP normal
   using CI = Core::Gen::Pairedvector<int, double>::const_iterator;
@@ -5728,7 +5729,7 @@ void CONTACT::Integrator::deriv_xi_gp_3d_aux_plane(const Mortar::Element& ele, c
     }
 
   // get inverse of the 3x3 matrix L (in place)
-  lmatrix.invert();
+  Core::LinAlg::invert(lmatrix);
 
   // start to fill linearization maps for element GP
   using CI = Core::Gen::Pairedvector<int, double>::const_iterator;
@@ -13036,7 +13037,7 @@ double CONTACT::Integrator::t_det_deformation_gradient(
 
   //  Core::LinAlg::Matrix<dim,numnodes>  auxJLin (true);   // matrix to be filled with
   //  linearization scalars
-  xjm.invert();
+  Core::LinAlg::invert(xjm);
   {
     //    Core::Nodes::Node** nodes = source_elem.parent_element()->Nodes();
     for (int inode = 0; inode < numnodes; ++inode)

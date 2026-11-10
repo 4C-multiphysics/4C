@@ -15,6 +15,7 @@
 #include "4C_mat_service.hpp"
 
 #include <algorithm>
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 

@@ -15,6 +15,7 @@
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_four_tensor.hpp"
 #include "4C_linalg_utils_densematrix_funct.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
 #include "4C_mat_electrode.hpp"
 #include "4C_mat_inelastic_defgrad_factors.hpp"
@@ -335,7 +336,7 @@ namespace
     Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<3, 3> iCM(Core::LinAlg::Initialization::zero);
     CM.multiply_tn(1.0, comparison.FM, comparison.FM, 0.0);
-    iCM.invert(CM);
+    Core::LinAlg::invert(iCM, CM);
     Core::LinAlg::Voigt::Stresses::matrix_to_vector(iCM, comparison.iCV);
 
     return comparison;
@@ -1534,7 +1535,7 @@ namespace
     Core::LinAlg::Matrix<3, 3> iCM;
     Core::LinAlg::Matrix<6, 1> iCV;
     CM.multiply_tn(1.0, FM_, FM_, 0.0);
-    iCM.invert(CM);
+    Core::LinAlg::invert(iCM, CM);
     Core::LinAlg::Voigt::Stresses::matrix_to_vector(iCM, iCV);
 
     // set up the "other" inverse inelastic deformation gradient (for each inelastic factor: the
@@ -3209,7 +3210,7 @@ namespace
         Core::LinAlg::Matrix<3, 3> iCM(Core::LinAlg::Initialization::zero);
         Core::LinAlg::Matrix<6, 1> iCV(Core::LinAlg::Initialization::zero);
         CM.multiply_tn(1.0, defgrad, defgrad, 0.0);
-        iCM.invert(CM);
+        Core::LinAlg::invert(iCM, CM);
         Core::LinAlg::Voigt::Stresses::matrix_to_vector(iCM, iCV);
         material->evaluate_additional_cmat(&defgrad, Core::LinAlg::identity_matrix<3>(),
             results.iFin, iCV, dSdiFin_, results.cmatadd);

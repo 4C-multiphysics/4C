@@ -9,6 +9,7 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_comm_parobject.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mixture_constituent_remodelfiber_material.hpp"
 #include "4C_mixture_growth_evolution_linear_cauchy_poisson_turnover.hpp"
 #include "4C_mixture_remodelfiber-internal.hpp"
@@ -325,7 +326,7 @@ void Mixture::Implementation::RemodelFiberImplementation<numstates,
           "The local newton didn't converge within 500 iterations. Residuum is {:.3e} > {:.3e}",
           Core::FADUtils::cast_to_double(Core::FADUtils::vector_norm(b)), 1e-10);
     }
-    K.invert();
+    Core::LinAlg::invert(K);
     x_np.multiply_nn(-1, K, b, 1.0);
     states_.back().growth_scalar = x_np(0);
     states_.back().lambda_r = x_np(1);
@@ -352,7 +353,7 @@ void Mixture::Implementation::RemodelFiberImplementation<numstates,
 
 
 
-  K.invert();
+  Core::LinAlg::invert(K);
   Core::LinAlg::Matrix<2, 1, T> d_growth_scalar_d_residuum(
       Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Matrix<2, 1, T> d_lambda_r_d_residuum(Core::LinAlg::Initialization::uninitialized);

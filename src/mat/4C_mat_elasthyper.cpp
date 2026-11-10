@@ -11,6 +11,7 @@
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_elasthyper_service.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_service.hpp"
@@ -368,7 +369,7 @@ double Mat::ElastHyper::evaluate_cauchy_n_dir_and_derivatives(
   const double bdnddir = bdn.dot(dir_mat);
 
   static Core::LinAlg::Matrix<3, 3> ib(Core::LinAlg::Initialization::zero);
-  ib.invert(b);
+  Core::LinAlg::invert(ib, b);
   static Core::LinAlg::Matrix<3, 1> ibdn(Core::LinAlg::Initialization::zero);
   ibdn.multiply(1.0, ib, n_mat, 0.0);
   static Core::LinAlg::Matrix<3, 1> ibddir(Core::LinAlg::Initialization::zero);
@@ -415,7 +416,7 @@ double Mat::ElastHyper::evaluate_cauchy_n_dir_and_derivatives(
   static Core::LinAlg::Matrix<9, 1> FV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(defgrd_mat, FV);
   static Core::LinAlg::Matrix<3, 3> iF(Core::LinAlg::Initialization::zero);
-  iF.invert(defgrd_mat);
+  Core::LinAlg::invert(iF, defgrd_mat);
   static Core::LinAlg::Matrix<3, 3> iFT(Core::LinAlg::Initialization::zero);
   iFT.update_t(iF);
   static Core::LinAlg::Matrix<9, 1> iFTV(Core::LinAlg::Initialization::zero);

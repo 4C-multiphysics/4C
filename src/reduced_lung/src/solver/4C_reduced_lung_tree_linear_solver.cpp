@@ -11,6 +11,7 @@
 
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -66,7 +67,7 @@ namespace ReducedLung
         }
       }
 
-      const double determinant = local_matrix.invert();
+      const double determinant = Core::LinAlg::invert(local_matrix);
       FOUR_C_ASSERT_ALWAYS(std::abs(determinant) > pivot_tolerance,
           "TreeLinearSolver found a singular or underconstrained local block for {}.", context);
 

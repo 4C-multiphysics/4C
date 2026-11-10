@@ -13,7 +13,6 @@
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_mathoperations.hpp"
 
-#include <numbers>
 #include <ostream>
 #include <span>
 
@@ -1332,12 +1331,80 @@ namespace Core::LinAlg
       return det;
     }
 
+    template <class ValueType>
+    inline ValueType invert4x4(ValueType* out, const ValueType* in)
+    {
+      FOUR_C_ASSERT(out != in, "'out' and 'in' point to same memory location");
+
+      const ValueType a00 = in[0];
+      const ValueType a10 = in[1];
+      const ValueType a20 = in[2];
+      const ValueType a30 = in[3];
+      const ValueType a01 = in[4];
+      const ValueType a11 = in[5];
+      const ValueType a21 = in[6];
+      const ValueType a31 = in[7];
+      const ValueType a02 = in[8];
+      const ValueType a12 = in[9];
+      const ValueType a22 = in[10];
+      const ValueType a32 = in[11];
+      const ValueType a03 = in[12];
+      const ValueType a13 = in[13];
+      const ValueType a23 = in[14];
+      const ValueType a33 = in[15];
+
+      // Compute determinant and check for invertibility
+      const ValueType det = a00 * out[0] + a01 * out[1] + a02 * out[2] + a03 * out[3];
+      if (det == 0.0) FOUR_C_THROW("determinant of 4x4 matrix is zero");
+
+      // Compute adjugate matrix elements
+      out[0] = a11 * a33 * a22 - a11 * a32 * a23 - a31 * a13 * a22 + a32 * a21 * a13 +
+               a31 * a12 * a23 - a33 * a21 * a12;
+      out[4] = -(a31 * a02 * a23 + a33 * a22 * a01 - a33 * a21 * a02 - a31 * a03 * a22 -
+                 a32 * a23 * a01 + a32 * a21 * a03);
+      out[8] = -a11 * a33 * a02 + a11 * a32 * a03 + a33 * a01 * a12 + a31 * a13 * a02 -
+               a32 * a01 * a13 - a31 * a12 * a03;
+      out[12] = -(-a11 * a02 * a23 + a11 * a03 * a22 - a03 * a21 * a12 - a01 * a13 * a22 +
+                  a02 * a21 * a13 + a01 * a12 * a23);
+
+      out[1] = -(a33 * a22 * a10 - a32 * a23 * a10 + a30 * a12 * a23 - a33 * a20 * a12 -
+                 a30 * a13 * a22 + a32 * a20 * a13);
+      out[5] = a00 * a33 * a22 - a00 * a32 * a23 + a30 * a02 * a23 - a33 * a20 * a02 +
+               a32 * a20 * a03 - a30 * a03 * a22;
+      out[9] = -(a00 * a33 * a12 - a00 * a32 * a13 - a33 * a10 * a02 - a30 * a03 * a12 +
+                 a32 * a10 * a03 + a30 * a02 * a13);
+      out[13] = -a00 * a13 * a22 + a00 * a12 * a23 - a10 * a02 * a23 + a13 * a20 * a02 +
+                a10 * a03 * a22 - a12 * a20 * a03;
+
+      out[2] = a11 * a30 * a23 - a11 * a33 * a20 - a31 * a10 * a23 + a33 * a21 * a10 +
+               a31 * a13 * a20 - a30 * a21 * a13;
+      out[6] = -(-a00 * a31 * a23 + a00 * a33 * a21 - a30 * a03 * a21 + a31 * a20 * a03 +
+                 a30 * a01 * a23 - a33 * a20 * a01);
+      out[10] = a33 * a00 * a11 - a33 * a10 * a01 - a30 * a03 * a11 - a31 * a00 * a13 +
+                a31 * a10 * a03 + a30 * a01 * a13;
+      out[14] = -(a23 * a00 * a11 - a23 * a10 * a01 - a20 * a03 * a11 - a21 * a00 * a13 +
+                  a21 * a10 * a03 + a20 * a01 * a13);
+
+      out[3] = -(a11 * a30 * a22 - a11 * a32 * a20 - a30 * a21 * a12 - a31 * a10 * a22 +
+                 a32 * a21 * a10 + a31 * a12 * a20);
+      out[7] = -a00 * a31 * a22 + a00 * a32 * a21 + a31 * a20 * a02 + a30 * a01 * a22 -
+               a32 * a20 * a01 - a30 * a02 * a21;
+      out[11] = -(a32 * a00 * a11 - a32 * a10 * a01 - a30 * a02 * a11 - a31 * a00 * a12 +
+                  a31 * a10 * a02 + a30 * a01 * a12);
+      out[15] = a22 * a00 * a11 - a22 * a10 * a01 - a20 * a02 * a11 - a21 * a00 * a12 +
+                a21 * a10 * a02 + a20 * a01 * a12;
+
+      // Compute the inverse by multiplying the adjugate by 1/det
+      const ValueType invdet = 1.0 / det;
+      for (int c = 0; c < 16; ++c) out[c] *= invdet;
+      return det;
+    }
+
     template <class ValueType, unsigned int i, unsigned int j>
     inline ValueType invert(ValueType* out, const ValueType* in)
     {
-#ifdef FOUR_C_ENABLE_ASSERTIONS
       FOUR_C_ASSERT(out != in, "'out' and 'in' point to same memory location");
-#endif
+
       static_assert(i == j, "Cannot compute inverse of non-square matrix");
 
       switch (i)
@@ -1348,8 +1415,10 @@ namespace Core::LinAlg
           return invert2x2(out, in);
         case 3:
           return invert3x3(out, in);
+        case 4:
+          return invert4x4(out, in);
         default:
-          static_assert(i < 4, "Cannot compute inverse of matrix bigger than 3x3");
+          static_assert(i <= 4, "Cannot compute inverse of matrix bigger than 4x4");
           return 0.0;
       }
     }
@@ -1410,6 +1479,73 @@ namespace Core::LinAlg
       return det;
     }
 
+    template <class ValueType>
+    inline ValueType invert4x4(ValueType* mat)
+    {
+      const ValueType a00 = mat[0];
+      const ValueType a10 = mat[1];
+      const ValueType a20 = mat[2];
+      const ValueType a30 = mat[3];
+      const ValueType a01 = mat[4];
+      const ValueType a11 = mat[5];
+      const ValueType a21 = mat[6];
+      const ValueType a31 = mat[7];
+      const ValueType a02 = mat[8];
+      const ValueType a12 = mat[9];
+      const ValueType a22 = mat[10];
+      const ValueType a32 = mat[11];
+      const ValueType a03 = mat[12];
+      const ValueType a13 = mat[13];
+      const ValueType a23 = mat[14];
+      const ValueType a33 = mat[15];
+
+      // Compute determinant and check for invertibility
+      const ValueType det = a00 * mat[0] + a01 * mat[1] + a02 * mat[2] + a03 * mat[3];
+      if (det == 0.0) FOUR_C_THROW("determinant of 4x4 matrix is zero");
+
+      // Compute adjugate matrix elements
+      mat[0] = a11 * a33 * a22 - a11 * a32 * a23 - a31 * a13 * a22 + a32 * a21 * a13 +
+               a31 * a12 * a23 - a33 * a21 * a12;
+      mat[4] = -(a31 * a02 * a23 + a33 * a22 * a01 - a33 * a21 * a02 - a31 * a03 * a22 -
+                 a32 * a23 * a01 + a32 * a21 * a03);
+      mat[8] = -a11 * a33 * a02 + a11 * a32 * a03 + a33 * a01 * a12 + a31 * a13 * a02 -
+               a32 * a01 * a13 - a31 * a12 * a03;
+      mat[12] = -(-a11 * a02 * a23 + a11 * a03 * a22 - a03 * a21 * a12 - a01 * a13 * a22 +
+                  a02 * a21 * a13 + a01 * a12 * a23);
+
+      mat[1] = -(a33 * a22 * a10 - a32 * a23 * a10 + a30 * a12 * a23 - a33 * a20 * a12 -
+                 a30 * a13 * a22 + a32 * a20 * a13);
+      mat[5] = a00 * a33 * a22 - a00 * a32 * a23 + a30 * a02 * a23 - a33 * a20 * a02 +
+               a32 * a20 * a03 - a30 * a03 * a22;
+      mat[9] = -(a00 * a33 * a12 - a00 * a32 * a13 - a33 * a10 * a02 - a30 * a03 * a12 +
+                 a32 * a10 * a03 + a30 * a02 * a13);
+      mat[13] = -a00 * a13 * a22 + a00 * a12 * a23 - a10 * a02 * a23 + a13 * a20 * a02 +
+                a10 * a03 * a22 - a12 * a20 * a03;
+
+      mat[2] = a11 * a30 * a23 - a11 * a33 * a20 - a31 * a10 * a23 + a33 * a21 * a10 +
+               a31 * a13 * a20 - a30 * a21 * a13;
+      mat[6] = -(-a00 * a31 * a23 + a00 * a33 * a21 - a30 * a03 * a21 + a31 * a20 * a03 +
+                 a30 * a01 * a23 - a33 * a20 * a01);
+      mat[10] = a33 * a00 * a11 - a33 * a10 * a01 - a30 * a03 * a11 - a31 * a00 * a13 +
+                a31 * a10 * a03 + a30 * a01 * a13;
+      mat[14] = -(a23 * a00 * a11 - a23 * a10 * a01 - a20 * a03 * a11 - a21 * a00 * a13 +
+                  a21 * a10 * a03 + a20 * a01 * a13);
+
+      mat[3] = -(a11 * a30 * a22 - a11 * a32 * a20 - a30 * a21 * a12 - a31 * a10 * a22 +
+                 a32 * a21 * a10 + a31 * a12 * a20);
+      mat[7] = -a00 * a31 * a22 + a00 * a32 * a21 + a31 * a20 * a02 + a30 * a01 * a22 -
+               a32 * a20 * a01 - a30 * a02 * a21;
+      mat[11] = -(a32 * a00 * a11 - a32 * a10 * a01 - a30 * a02 * a11 - a31 * a00 * a12 +
+                  a31 * a10 * a02 + a30 * a01 * a12);
+      mat[15] = a22 * a00 * a11 - a22 * a10 * a01 - a20 * a02 * a11 - a21 * a00 * a12 +
+                a21 * a10 * a02 + a20 * a01 * a12;
+
+      // Compute the inverse by multiplying the adjugate by 1/det
+      const ValueType invdet = 1.0 / det;
+      for (int c = 0; c < 16; ++c) mat[c] *= invdet;
+      return det;
+    }
+
 
     template <class ValueType, unsigned int i, unsigned int j>
     inline ValueType invert(ValueType* mat)
@@ -1424,8 +1560,10 @@ namespace Core::LinAlg
           return invert2x2(mat);
         case 3:
           return invert3x3(mat);
+        case 4:
+          return invert4x4(mat);
         default:
-          static_assert(i < 4, "Cannot compute inverse of matrix bigger than 3x3");
+          static_assert(i <= 4, "Cannot compute inverse of matrix bigger than 4x4");
           return 0.0;
       }
     }
@@ -1451,6 +1589,34 @@ namespace Core::LinAlg
         return mat[0] * (mat[1 + 1 * 3] * mat[2 + 2 * 3] - mat[2 + 1 * 3] * mat[1 + 2 * 3]) +
                mat[1 * 3] * (mat[2] * mat[1 + 2 * 3] - mat[1] * mat[2 + 2 * 3]) +
                mat[2 * 3] * (mat[1] * mat[2 + 1 * 3] - mat[2] * mat[1 + 1 * 3]);
+      }
+      if constexpr (i == 4)
+      {
+        const ValueType a00 = mat[0];
+        const ValueType a10 = mat[1];
+        const ValueType a20 = mat[2];
+        const ValueType a30 = mat[3];
+        const ValueType a01 = mat[4];
+        const ValueType a11 = mat[5];
+        const ValueType a21 = mat[6];
+        const ValueType a31 = mat[7];
+        const ValueType a02 = mat[8];
+        const ValueType a12 = mat[9];
+        const ValueType a22 = mat[10];
+        const ValueType a32 = mat[11];
+        const ValueType a03 = mat[12];
+        const ValueType a13 = mat[13];
+        const ValueType a23 = mat[14];
+        const ValueType a33 = mat[15];
+
+        return a00 * a11 * a33 * a22 - a00 * a11 * a32 * a23 - a00 * a31 * a13 * a22 +
+               a00 * a32 * a21 * a13 + a00 * a31 * a12 * a23 - a00 * a33 * a21 * a12 +
+               a11 * a30 * a02 * a23 - a11 * a33 * a20 * a02 + a11 * a32 * a20 * a03 -
+               a11 * a30 * a03 * a22 - a31 * a10 * a02 * a23 - a33 * a22 * a10 * a01 +
+               a33 * a21 * a10 * a02 + a33 * a20 * a01 * a12 + a30 * a03 * a21 * a12 +
+               a31 * a13 * a20 * a02 + a31 * a10 * a03 * a22 + a30 * a01 * a13 * a22 +
+               a32 * a23 * a10 * a01 - a32 * a21 * a10 * a03 - a32 * a20 * a01 * a13 -
+               a30 * a02 * a21 * a13 - a31 * a12 * a20 * a03 - a30 * a01 * a12 * a23;
       }
 
       return determinant_large_matrix(i, j, mat);
@@ -2249,24 +2415,6 @@ namespace Core::LinAlg
       \return determinant
      */
     inline ValueType determinant() const;
-
-    /// invert in place
-    /*!
-      invert this matrix in place.
-
-      \return determinant of matrix before inversion
-     */
-    inline ValueType invert();
-
-    /// invert matrix
-    /*!
-      invert matrix \e other and store the result in \e this.
-
-      \param other
-        matrix to be inverted
-      \return determinant of \e other
-     */
-    inline ValueType invert(const Matrix<rows, cols, ValueType>& other);
 
     /// Set to zero
     /*!
@@ -3327,21 +3475,6 @@ namespace Core::LinAlg
   {
     static_assert(rows == cols, "Cannot compute determinant of non-square matrix.");
     return DenseFunctions::determinant<ValueType, rows, cols>(data());
-  }
-
-  // invert
-  template <unsigned int rows, unsigned int cols, class ValueType>
-  inline ValueType Matrix<rows, cols, ValueType>::invert()
-  {
-    static_assert(rows == cols, "Cannot compute inverse of non-square matrix");
-    return DenseFunctions::invert<ValueType, rows, cols>(data());
-  }
-
-  template <unsigned int rows, unsigned int cols, class ValueType>
-  inline ValueType Matrix<rows, cols, ValueType>::invert(const Matrix<rows, cols, ValueType>& other)
-  {
-    static_assert(rows == cols, "Cannot compute inverse of non-square matrix");
-    return DenseFunctions::invert<ValueType, rows, cols>(data(), other.values());
   }
 
   template <unsigned int rows, unsigned int cols, class ValueType>

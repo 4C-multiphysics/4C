@@ -18,6 +18,7 @@
 #include "4C_linalg_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_anisotropy.hpp"
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
 #include "4C_mat_elasthyper_service.hpp"
@@ -403,7 +404,7 @@ double Mat::MultiplicativeSplitDefgradElastHyper::evaluate_cauchy_n_dir_and_deri
   beMddir.multiply(1.0, beM, dir_mat, 0.0);
 
   Core::LinAlg::Matrix<3, 3> ibeM(Core::LinAlg::Initialization::zero);
-  ibeM.invert(beM);
+  Core::LinAlg::invert(ibeM, beM);
   Core::LinAlg::Matrix<6, 1> ibeV_stress(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(ibeM, ibeV_stress);
   Core::LinAlg::Matrix<3, 1> ibeMdn(Core::LinAlg::Initialization::zero);
@@ -490,7 +491,7 @@ double Mat::MultiplicativeSplitDefgradElastHyper::evaluate_cauchy_n_dir_and_deri
     // constant invariants first part is term arising from \partial Je^{-1} / \partial F
     Core::LinAlg::Matrix<3, 3> iFeM(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<3, 3> iFeTM(Core::LinAlg::Initialization::zero);
-    iFeM.invert(FeM);
+    Core::LinAlg::invert(iFeM, FeM);
     iFeTM.update_t(1.0, iFeM, 0.0);
     Core::LinAlg::Matrix<9, 1> iFeTV(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Voigt::matrix_3x3_to_9x1(iFeTM, iFeTV);
@@ -514,7 +515,7 @@ double Mat::MultiplicativeSplitDefgradElastHyper::evaluate_cauchy_n_dir_and_deri
 
     // third part is term arising from \partial b_el^{-1} * n * v / \partial F
     Core::LinAlg::Matrix<3, 3> iFM(Core::LinAlg::Initialization::zero);
-    iFM.invert(defgrd_mat);
+    Core::LinAlg::invert(iFM, defgrd_mat);
     Core::LinAlg::Matrix<3, 1> tempvec2(Core::LinAlg::Initialization::zero);
     tempvec.multiply(1.0, ibeM, dir_mat, 0.0);
     tempvec2.multiply(1.0, iFM, n_mat, 0.0);
@@ -649,7 +650,7 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_kin_quant_elast(
   Core::LinAlg::Matrix<3, 3> iCM(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::zero);
   CM.multiply_tn(1.0, *defgrad, *defgrad, 0.0);
-  iCM.invert(CM);
+  Core::LinAlg::invert(iCM, CM);
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(iCM, iCV);
 
   // C_{in}^{-1} * C * C_{in}^{-1}
@@ -687,7 +688,7 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_kin_quant_elast(
   // C * F_{in}^{-1} * C_e^{-1}
   Core::LinAlg::Matrix<3, 3> CiFiniCeM(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 3> iCeM(Core::LinAlg::Initialization::zero);
-  iCeM.invert(CeM);
+  Core::LinAlg::invert(iCeM, CeM);
   tmp.multiply_nn(1.0, CM, iFinM, 0.0);
   CiFiniCeM.multiply_nn(1.0, tmp, iCeM, 0.0);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(CiFiniCeM, CiFiniCe9x1);
@@ -782,7 +783,7 @@ Core::LinAlg::Matrix<6, 9> Mat::MultiplicativeSplitDefgradElastHyper::evaluate_d
   Core::LinAlg::Matrix<9, 1> ddetFindiFinV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 3> ddetFindiFinM(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 3> FinM(Core::LinAlg::Initialization::zero);
-  FinM.invert(iFinM);
+  Core::LinAlg::invert(FinM, iFinM);
   ddetFindiFinM.update_t((-1.0) * detFin, FinM);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(ddetFindiFinM, ddetFindiFinV);
 

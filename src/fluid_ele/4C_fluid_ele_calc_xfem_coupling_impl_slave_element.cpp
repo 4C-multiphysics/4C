@@ -8,6 +8,7 @@
 #include "4C_cut_position.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fluid_ele_calc_xfem_coupling_impl.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_xfem_interface_utils.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
@@ -366,7 +367,7 @@ namespace Discret
         Core::LinAlg::Matrix<nsd_, nsd_> slave_xji(Core::LinAlg::Initialization::zero);
 
         slave_xjm.multiply_nt(slave_deriv_, slave_xyze_);
-        slave_xji.invert(slave_xjm);
+        Core::LinAlg::invert(slave_xji, slave_xjm);
 
         // compute global first derivatives
         slave_derxy_.multiply(slave_xji, slave_deriv_);
@@ -532,7 +533,7 @@ namespace Discret
                 proj_x_(i) - proj_sol_(2) * proj_dx_dr_times_dx_ds_(i) - x_gp_lin(i);
           }
 
-          proj_sysmat_.invert();
+          Core::LinAlg::invert(proj_sysmat_);
 
           // solve Newton iteration
           proj_incr_.multiply(
