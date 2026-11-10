@@ -9,9 +9,9 @@
 # Exports qhull::qhull as an imported target
 # Note: The Qhull_ROOT variable is automatically considered by the find_ calls below.
 
-find_path(QHULL_INCLUDE_DIR libqhull/libqhull.h)
+find_path(QHULL_INCLUDE_DIR libqhull_r/libqhull_r.h)
 
-find_library(QHULL_LIBRARY NAMES qhull)
+find_library(QHULL_LIBRARY NAMES qhull_r)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Qhull DEFAULT_MSG QHULL_LIBRARY QHULL_INCLUDE_DIR)
