@@ -101,7 +101,7 @@ Note: For contact based beaminteraction simulations ArborX is a mandatory depend
 This external dependency can be downloaded from the `Trilinos Github repository <https://github.com/trilinos/Trilinos>`_ .
 Currently supported versions are listed in ``<4C_sourceDir>/dependencies/supported_version/Trilinos.txt``. An older supported version will be supported for at least six months after its introduction. Afterwards, the version may be dropped at any time.
 
-.. note:: As 4C is still depending on Epetra based Trilinos code, the last officially supported version is release 16.2.0.
+.. note:: As 4C still depends on Epetra-based Trilinos code, the last officially supported release series is 16.2.x.
 
 .. _mirco:
 
