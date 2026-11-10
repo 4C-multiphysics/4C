@@ -1730,7 +1730,9 @@ void Solid::ModelEvaluator::Structure::determine_energy(const Core::LinAlg::Vect
 void Solid::ModelEvaluator::Structure::determine_analytical_error(
     const Solid::ErrorEvaluator::Parameters& parameters, Solid::ErrorEvaluator::Results& results)
 {
-  if (parameters.evaluate_error_analytical)
+  const int function_id = parameters.evaluate_error_analytical_displacement_function_id;
+
+  if (parameters.evaluate_error_analytical && function_id != -1)
   {
     discret().clear_state();
     discret().set_state(0, "displacement", *global_state().get_dis_np());
@@ -1741,8 +1743,7 @@ void Solid::ModelEvaluator::Structure::determine_analytical_error(
 
     eval_data().set_action_type(Core::Elements::struct_calc_analytical_error);
 
-    evaluation_parameters.set(
-        "analytical_function_id", parameters.evaluate_error_analytical_displacement_function_id);
+    evaluation_parameters.set("analytical_function_id", function_id);
 
     Core::LinAlg::SerialDenseVector integrals;
     integrals.size(4);

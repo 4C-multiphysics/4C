@@ -1,0 +1,2 @@
+step,time,displacement_error_h1_semi_norm,displacement_error_l2_norm,displacement_integral,lagrange_multiplier_error_l2_norm,reference_volume
+0,0,1.0031218671484793e-02,4.6541012359321387e-04,1.0380843294842963e-01,1.1230558624132730e+01,7.9999995955448142e+00

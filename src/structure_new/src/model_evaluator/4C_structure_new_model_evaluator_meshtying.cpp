@@ -468,9 +468,10 @@ void Solid::ModelEvaluator::Meshtying::determine_analytical_error(
       "Analytical Lagrange multiplier error evaluation requires a Lagrange multiplier meshtying "
       "strategy.");
 
-  if (parameters.evaluate_error_analytical)
+  const int function_id = parameters.evaluate_error_analytical_lagrange_multiplier_function_id;
+
+  if (parameters.evaluate_error_analytical && function_id != -1)
   {
-    const int function_id = parameters.evaluate_error_analytical_lagrange_multiplier_function_id;
     results.integrated_squared_error_lagrange_multipliers =
         strategy().evaluate_lagrange_multiplier_error_squared(
             function_id, global_state().get_time_np());
