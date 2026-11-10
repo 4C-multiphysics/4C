@@ -24,10 +24,6 @@ cd parmetis
 bash install.sh $DEP_DIR/parmetis
 #
 cd ..
-cd qhull
-bash install.sh $DEP_DIR/qhull "-DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14"
-#
-cd ..
 cd superlu_dist
 bash install.sh $DEP_DIR/superlu_dist
 #
