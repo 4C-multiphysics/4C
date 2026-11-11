@@ -667,7 +667,8 @@ void CONTACT::Integrator::integrate_deriv_segment_2d(Mortar::Element& source_ele
   if ((shape_fcn() == Mortar::shape_dual || shape_fcn() == Mortar::shape_petrovgalerkin) &&
       (source_elem.shape() == Core::FE::CellType::line3 ||
           source_elem.shape() == Core::FE::CellType::nurbs3 ||
-          source_elem.mo_data().deriv_dual_shape() != nullptr))
+          source_elem.mo_data().deriv_dual_shape() != nullptr) &&
+      lag_mult_quad() != Mortar::lagmult_const)
     source_elem.deriv_shape_dual(dualmap);
 
   // create empty vectors for shape fct. evaluation
@@ -4352,7 +4353,8 @@ void CONTACT::Integrator::integrate_deriv_ele_2d(Mortar::Element& source_elem,
   if ((shape_fcn() == Mortar::shape_dual || shape_fcn() == Mortar::shape_petrovgalerkin) &&
       (source_elem.shape() == Core::FE::CellType::line3 ||
           source_elem.mo_data().deriv_dual_shape() != nullptr ||
-          source_elem.shape() == Core::FE::CellType::nurbs3))
+          source_elem.shape() == Core::FE::CellType::nurbs3) &&
+      lag_mult_quad() != Mortar::lagmult_const)
     source_elem.deriv_shape_dual(dualmap);
 
   // decide whether boundary modification has to be considered or not
