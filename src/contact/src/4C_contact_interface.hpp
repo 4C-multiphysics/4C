@@ -808,7 +808,7 @@ namespace CONTACT
     Derived version!
 
     */
-    void create_search_tree() final;
+    void create_search_tree();
 
     /*!
     \brief Initialize / reset interface for contact

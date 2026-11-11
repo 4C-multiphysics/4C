@@ -1145,14 +1145,6 @@ namespace Mortar
     //! @}
 
     /*!
-    \brief Create binary search tree
-
-    The methods creates a binary tree object for efficient search.
-
-    */
-    virtual void create_search_tree();
-
-    /*!
       \brief Restrict slave sets to actual meshtying zone
 
       This update is done ONCE in the initialization phase, when the

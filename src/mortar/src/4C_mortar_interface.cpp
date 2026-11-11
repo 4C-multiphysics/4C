@@ -1551,54 +1551,6 @@ void Mortar::Interface::extend_interface_ghosting(const bool isFinalParallelDist
 }
 
 /*----------------------------------------------------------------------*
- |  create search tree (public)                               popp 01/10|
- *----------------------------------------------------------------------*/
-void Mortar::Interface::create_search_tree()
-{
-  // binary tree search
-  if (search_alg() == Mortar::search_binarytree)
-  {
-    // create fully overlapping map of all master elements
-    // for non-redundant storage (RRloop) we handle the master elements
-    // like the slave elements --> melecolmap_
-    auto strategy = Teuchos::getIntegralValue<Mortar::ExtendGhosting>(
-        interface_params().sublist("PARALLEL REDISTRIBUTION"), "GHOSTING_STRATEGY");
-
-    // get update type of binary tree
-    auto updatetype = Teuchos::getIntegralValue<Mortar::BinaryTreeUpdateType>(
-        interface_params(), "BINARYTREE_UPDATETYPE");
-
-    std::shared_ptr<Core::LinAlg::Map> melefullmap = nullptr;
-    switch (strategy)
-    {
-      case Mortar::ExtendGhosting::roundrobin:
-      case Mortar::ExtendGhosting::binning:
-      {
-        melefullmap = melecolmap_;
-        break;
-      }
-      case Mortar::ExtendGhosting::redundant_all:
-      case Mortar::ExtendGhosting::redundant_target:
-      {
-        melefullmap = Core::LinAlg::allreduce_e_map(*melerowmap_);
-        break;
-      }
-      default:
-      {
-        FOUR_C_THROW("Unknown strategy to deal with interface ghosting.");
-        break;
-      }
-    }
-
-    // create binary tree object for search and setup tree
-    binarytree_ = std::make_shared<Mortar::BinaryTree>(discret(), selecolmap_, melefullmap, n_dim(),
-        search_param(), updatetype, search_use_aux_pos());
-    // initialize the binary tree
-    binarytree_->init();
-  }
-}
-
-/*----------------------------------------------------------------------*
  |  update master and slave sets (nodes etc.)                 popp 11/09|
  *----------------------------------------------------------------------*/
 void Mortar::Interface::update_target_source_sets()
