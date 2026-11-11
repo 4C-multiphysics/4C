@@ -9351,14 +9351,6 @@ void inline CONTACT::Integrator::gp_3d_dm_quad_lin(bool& duallin, Mortar::Elemen
               for (CIM p = dualmap.begin(); p != dualmap.end(); ++p)
                 for (int m = 0; m < nrow; ++m)
                   dmmap_jk[p->first] -= fac * (p->second)(j, m) * source_val[m];
-
-              for (CIM p = dualmap.begin(); p != dualmap.end(); ++p)
-              {
-                double lmderiv_d = 0.0;
-                for (int m = 0; m < nrow; ++m) lmderiv_d += (p->second)(j, m) * source_val[m];
-                fac = wgt * lmderiv_d * target_val[k] * jac;
-                dmmap_jk[p->first] -= fac;
-              }
             }
 
             // (2) Lin(NSource) - source GP coordinates
@@ -9401,14 +9393,6 @@ void inline CONTACT::Integrator::gp_3d_dm_quad_lin(bool& duallin, Mortar::Elemen
               for (CIM p = dualmap.begin(); p != dualmap.end(); ++p)
                 for (int m = 0; m < nrow; ++m)
                   ddmap_jk[p->first] += fac * (p->second)(j, m) * source_val[m];
-
-              for (CIM p = dualmap.begin(); p != dualmap.end(); ++p)
-              {
-                double lmderiv_d = 0.0;
-                for (int m = 0; m < nrow; ++m) lmderiv_d += (p->second)(j, m) * source_val[m];
-                fac = wgt * lmderiv_d * target_val[k] * jac;
-                ddmap_jk[p->first] += fac;
-              }
             }
 
             // (2) Lin(NSource) - source GP coordinates
