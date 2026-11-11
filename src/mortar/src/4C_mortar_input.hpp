@@ -61,14 +61,6 @@ namespace Mortar
     other        ///< other problemtypes
   };
 
-  /// Type of binary tree update
-  /// (this enum represents the input file parameter BINARYTREE_UPDATETYPE)
-  enum BinaryTreeUpdateType
-  {
-    binarytree_bottom_up,  ///< indicates a bottom-up update of binary tree
-    binarytree_top_down    ///< indicates a top-down update of binary tree
-  };
-
   /// Type of mesh relocation
   /// (this enum represents the input file parameter MESH_RELOCATION)
   enum MeshRelocation

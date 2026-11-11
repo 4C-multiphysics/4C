@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_mortar_base_binarytree.hpp"
+#include "4C_contact_base_binarytree.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_discretization.hpp"
@@ -18,8 +18,8 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  |  ctor BaseBinaryTree (public)                           schmidt 01/19|
  *----------------------------------------------------------------------*/
-Mortar::BaseBinaryTree::BaseBinaryTree(Core::FE::Discretization& discret, int dim, double eps)
-    : Mortar::AbstractBinaryTree::AbstractBinaryTree(),
+CONTACT::BaseBinaryTree::BaseBinaryTree(Core::FE::Discretization& discret, int dim, double eps)
+    : CONTACT::AbstractBinaryTree::AbstractBinaryTree(),
       idiscret_(discret),
       dim_(dim),
       enlarge_(-1.0),
@@ -33,7 +33,7 @@ Mortar::BaseBinaryTree::BaseBinaryTree(Core::FE::Discretization& discret, int di
 /*----------------------------------------------------------------------*
  | initialize the binary tree (public)                     schmidt 01/19|
  *----------------------------------------------------------------------*/
-void Mortar::BaseBinaryTree::init()
+void CONTACT::BaseBinaryTree::init()
 {
   switch (dim_)
   {
@@ -105,10 +105,10 @@ void Mortar::BaseBinaryTree::init()
 /*----------------------------------------------------------------------*
  |  ctor BaseBinaryTreeNode (public)                       schmidt 01/19|
  *----------------------------------------------------------------------*/
-Mortar::BaseBinaryTreeNode::BaseBinaryTreeNode(Core::FE::Discretization& discret,
+CONTACT::BaseBinaryTreeNode::BaseBinaryTreeNode(Core::FE::Discretization& discret,
     std::vector<int> elelist, const Core::LinAlg::SerialDenseMatrix& dopnormals, const int& kdop,
     const int& dim, const bool& useauxpos, const int layer)
-    : Mortar::AbstractBinaryTreeNode::AbstractBinaryTreeNode(),
+    : CONTACT::AbstractBinaryTreeNode::AbstractBinaryTreeNode(),
       dim_(dim),
       dopnormals_(dopnormals),
       elelist_(elelist),
@@ -136,7 +136,7 @@ Mortar::BaseBinaryTreeNode::BaseBinaryTreeNode(Core::FE::Discretization& discret
 /*----------------------------------------------------------------------*
  | Calculate slabs of DOP out of current node positions       popp 10/08|
  *----------------------------------------------------------------------*/
-void Mortar::BaseBinaryTreeNode::calculate_slabs_dop()
+void CONTACT::BaseBinaryTreeNode::calculate_slabs_dop()
 {
   // initialize slabs
   for (int j = 0; j < kdop() / 2; ++j)
@@ -158,7 +158,7 @@ void Mortar::BaseBinaryTreeNode::calculate_slabs_dop()
     // calculate slabs for every node on every element
     for (int k = 0; k < mrtrelement->num_point(); ++k)
     {
-      Node* mrtrnode = dynamic_cast<Node*>(nodes[k]);
+      Mortar::Node* mrtrnode = dynamic_cast<Mortar::Node*>(nodes[k]);
       if (!mrtrnode) FOUR_C_THROW("ERROR: Null pointer!");
 
       // get current node position
@@ -223,7 +223,7 @@ void Mortar::BaseBinaryTreeNode::calculate_slabs_dop()
 /*----------------------------------------------------------------------*
  | Enlarge geometry of treenode (public)                      popp 10/08|
  *----------------------------------------------------------------------*/
-void Mortar::BaseBinaryTreeNode::enlarge_geometry(double& enlarge)
+void CONTACT::BaseBinaryTreeNode::enlarge_geometry(double& enlarge)
 {
   // scale slabs with scalar enlarge
   for (int i = 0; i < kdop_ / 2; ++i)
@@ -238,7 +238,7 @@ void Mortar::BaseBinaryTreeNode::enlarge_geometry(double& enlarge)
 /*----------------------------------------------------------------------*
  | Print slabs to std::cout (public)                          popp 10/08|
  *----------------------------------------------------------------------*/
-void Mortar::BaseBinaryTreeNode::print_slabs()
+void CONTACT::BaseBinaryTreeNode::print_slabs()
 {
   std::cout << std::endl
             << Core::Communication::my_mpi_rank(discret().get_comm())

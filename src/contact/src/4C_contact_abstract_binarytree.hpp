@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_MORTAR_ABSTRACT_BINARYTREE_HPP
-#define FOUR_C_MORTAR_ABSTRACT_BINARYTREE_HPP
+#ifndef FOUR_C_CONTACT_ABSTRACT_BINARYTREE_HPP
+#define FOUR_C_CONTACT_ABSTRACT_BINARYTREE_HPP
 
 #include "4C_config.hpp"
 
@@ -14,7 +14,7 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-namespace Mortar
+namespace CONTACT
 {
   /*!
   \brief An abstract interface for binary trees
@@ -90,7 +90,7 @@ namespace Mortar
     */
     virtual void init() = 0;
   };  // class AbstractBinaryTree
-}  // namespace Mortar
+}  // namespace CONTACT
 
 FOUR_C_NAMESPACE_CLOSE
 
