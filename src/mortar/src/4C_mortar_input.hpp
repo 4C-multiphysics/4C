@@ -49,7 +49,7 @@ namespace Mortar
   /// (this enum represents the input file parameter SEARCH_ALGORITHM)
   enum SearchAlgorithm
   {
-    search_binarytree,  ///< binary tree element based
+    search_binarytree,         ///< binary tree element based
     bounding_volume_hierarchy  ///< boundary volume hierarchy based search
   };
 
