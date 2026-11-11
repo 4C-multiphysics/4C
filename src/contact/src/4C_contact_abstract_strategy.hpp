@@ -16,6 +16,7 @@
 #include "4C_contact_utils.hpp"
 #include "4C_mortar_input.hpp"
 #include "4C_mortar_strategy_base.hpp"
+#include "4C_solver_nonlin_nox_constraint_interface_preconditioner.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
@@ -59,7 +60,8 @@ namespace CONTACT
    * Refer also to the Semesterarbeit of Bernd Budich, 2009
    *
    */
-  class AbstractStrategy : public Mortar::StrategyBase
+  class AbstractStrategy : public Mortar::StrategyBase,
+                           public NOX::Nln::CONSTRAINT::Interface::Preconditioner
   {
    public:
     struct PostApplyJacobianData

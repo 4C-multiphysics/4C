@@ -13,6 +13,7 @@
 #include "4C_contact_utils.hpp"
 #include "4C_mortar_input.hpp"
 #include "4C_mortar_strategy_base.hpp"
+#include "4C_solver_nonlin_nox_constraint_interface_preconditioner.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
@@ -55,7 +56,8 @@ namespace CONTACT
   more abstract framework for any solution strategies involving mortar coupling.
 
   */
-  class MtAbstractStrategy : public Mortar::StrategyBase
+  class MtAbstractStrategy : public Mortar::StrategyBase,
+                             public NOX::Nln::CONSTRAINT::Interface::Preconditioner
   {
    public:
     /*!
