@@ -8812,7 +8812,12 @@ void inline CONTACT::Integrator::gp_2d_dm_lin(int& iter, bool& bound, bool& linl
             dynamic_cast<CONTACT::Node*>(mymrtrnode)->data().get_deriv_m()[t_gid];
 
         // (1) Lin(Phi) - dual shape functions
-        // this vanishes here since there are no deformation-dependent dual functions
+        // (the dual coefficients depend on the geometry, cf. gp_3d_dm_quad_lin)
+        for (int m = 0; m < nrow; ++m)
+        {
+          fac = wgt * source_val[m] * target_val[k] * jac;
+          for (const auto& p : dualmap) dmmap_jk[p.first] += fac * (p.second)(iter, m);
+        }
 
         // (2) Lin(NSource) - source GP coordinates
         fac = wgt * lm_deriv(iter, 0) * target_val[k] * jac;
@@ -8850,7 +8855,12 @@ void inline CONTACT::Integrator::gp_2d_dm_lin(int& iter, bool& bound, bool& linl
               dynamic_cast<CONTACT::Node*>(mymrtrnode)->data().get_deriv_m()[s_gid];
 
           // (1) Lin(Phi) - dual shape functions
-          // this vanishes here since there are no deformation-dependent dual functions
+          // (the dual coefficients depend on the geometry, cf. gp_3d_dm_quad_lin)
+          for (int m = 0; m < nrow; ++m)
+          {
+            fac = wgt * source_val[m] * source_val[k] * jac;
+            for (const auto& p : dualmap) dmmap_jk[p.first] -= fac * (p.second)(iter, m);
+          }
 
           // (2) Lin(NSource) - source GP coordinates
           fac = wgt * lm_deriv(iter, 0) * source_val[k] * jac;
@@ -8876,7 +8886,12 @@ void inline CONTACT::Integrator::gp_2d_dm_lin(int& iter, bool& bound, bool& linl
               dynamic_cast<CONTACT::Node*>(mymrtrnode)->data().get_deriv_d()[s_gid];
 
           // (1) Lin(Phi) - dual shape functions
-          // this vanishes here since there are no deformation-dependent dual functions
+          // (the dual coefficients depend on the geometry, cf. gp_3d_dm_quad_lin)
+          for (int m = 0; m < nrow; ++m)
+          {
+            fac = wgt * source_val[m] * source_val[k] * jac;
+            for (const auto& p : dualmap) ddmap_jk[p.first] += fac * (p.second)(iter, m);
+          }
 
           // (2) Lin(NSource) - source GP coordinates
           fac = wgt * lm_deriv(iter, 0) * source_val[k] * jac;
