@@ -15,7 +15,6 @@
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
-#include "4C_mortar_strategy_base.hpp"
 #include "4C_solver_nonlin_nox_aux.hpp"
 #include "4C_solver_nonlin_nox_interface_jacobian.hpp"
 #include "4C_solver_nonlin_nox_interface_required.hpp"
@@ -118,7 +117,8 @@ Core::LinAlg::SolverParams NOX::Nln::CONTACT::LinearSystem::set_solver_options(
 
       auto precInterface = i_constr_prec_.begin();
 
-      const auto& strategy = dynamic_cast<const Mortar::StrategyBase&>(*precInterface->second);
+      const auto& strategy =
+          dynamic_cast<const FourC::CONTACT::AbstractStrategy&>(*precInterface->second);
 
       std::shared_ptr<Core::LinAlg::Map> targetDofMap, sourceDofMap, innerDofMap, activeDofMap;
       strategy.collect_maps_for_preconditioner(

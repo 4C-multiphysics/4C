@@ -14,7 +14,6 @@
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_mortar_interface.hpp"
-#include "4C_solver_nonlin_nox_constraint_interface_preconditioner.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <memory>
@@ -144,7 +143,7 @@ namespace Mortar
   subclass defining the concrete algorithmic steps.
 
   */
-  class StrategyBase : public NOX::Nln::CONSTRAINT::Interface::Preconditioner
+  class StrategyBase
   {
    public:
     //! @name Enums and Friends
@@ -367,11 +366,7 @@ namespace Mortar
     virtual std::shared_ptr<const Core::LinAlg::Map> target_active_nodes() const { return nullptr; }
 
     // constraint preconditioner functions
-    bool is_saddle_point_system() const override = 0;
-    bool is_condensed_system() const override = 0;
     virtual bool is_penalty() const = 0;
-    void fill_maps_for_preconditioner(
-        std::vector<Teuchos::RCP<Core::LinAlg::Map>>& maps) const override = 0;
     //@}
 
    private:
