@@ -15,7 +15,7 @@
 #include "4C_utils_function.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
-#ifdef FOUR_C_WITH_MIRCO
+#if defined(FOUR_C_WITH_MIRCO) && defined(FOUR_C_WITH_ARBORX)
 
 namespace
 {

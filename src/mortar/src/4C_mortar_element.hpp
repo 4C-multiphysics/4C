@@ -12,6 +12,7 @@
 
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_elementtype.hpp"
+#include "4C_geometric_search_bounding_volume.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
@@ -788,6 +789,10 @@ namespace Mortar
               static_cast<const Node*>(nodes()[node])->uold()[direction]);
 #endif
     }
+
+    //! \brief Helper function for bounding volume generation for mortar elements
+    Core::GeometricSearch::BoundingVolume create_bounding_volume(
+        double inflation, bool include_auxiliary_position) const;
 
     /*!
     \brief Get nodal spatial coords from previous time step of current element

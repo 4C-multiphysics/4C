@@ -2156,6 +2156,8 @@ void Mortar::Interface::evaluate_geometry(std::vector<std::shared_ptr<Mortar::In
   //**********************************************************************
   if (search_alg() == Mortar::search_binarytree)
     evaluate_search_binarytree();
+  else if (search_alg() == Mortar::bounding_volume_hierarchy)
+    evaluate_bounding_volume_hierarchy();
   else
     FOUR_C_THROW("Invalid search algorithm");
 
@@ -2498,6 +2500,8 @@ void Mortar::Interface::pre_evaluate(const int& step, const int& iter)
   //**********************************************************************
   if (search_alg() == Mortar::search_binarytree)
     evaluate_search_binarytree();
+  else if (search_alg() == Mortar::bounding_volume_hierarchy)
+    evaluate_bounding_volume_hierarchy();
   else
     FOUR_C_THROW("Invalid search algorithm");
 
@@ -2690,6 +2694,73 @@ bool Mortar::Interface::evaluate_search_binarytree()
   binarytree_->evaluate_search();
 
   return true;
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Mortar::Interface::evaluate_bounding_volume_hierarchy()
+{
+  if (selecolmap_->num_my_elements() == 0 || melecolmap_->num_my_elements() == 0) return;
+
+  // minimum edge length of all elements in source and target maps
+  double minimum_edge_length = std::numeric_limits<double>::max();
+  const auto update_minimum_edge_length = [&](const Core::LinAlg::Map& element_map)
+  {
+    for (int i = 0; i < element_map.num_my_elements(); ++i)
+    {
+      const int gid = element_map.gid(i);
+      const auto* element = dynamic_cast<const Mortar::Element*>(idiscret_->g_element(gid));
+
+      FOUR_C_ASSERT(element != nullptr, "Mortar element {} was not found.", gid);
+
+      minimum_edge_length = std::min(minimum_edge_length, element->min_edge_size());
+    }
+  };
+
+  update_minimum_edge_length(*selecolmap_);
+  update_minimum_edge_length(*melecolmap_);
+
+  FOUR_C_ASSERT(
+      minimum_edge_length > 0.0, "The minimum mortar element edge length must be positive.");
+
+  const double inflation = search_param() * minimum_edge_length;
+  std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> source_bounding_volumes;
+  source_bounding_volumes.reserve(selecolmap_->num_my_elements());
+  std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> target_bounding_volumes;
+  target_bounding_volumes.reserve(melecolmap_->num_my_elements());
+
+  for (int i = 0; i < selecolmap_->num_my_elements(); ++i)
+  {
+    const int gid = selecolmap_->gid(i);
+    auto* source_element = dynamic_cast<Mortar::Element*>(idiscret_->g_element(gid));
+    FOUR_C_ASSERT(source_element != nullptr, "Source mortar element {} was not found.", gid);
+    source_element->mo_data().search_elements().clear();
+
+    source_bounding_volumes.emplace_back(
+        gid, source_element->create_bounding_volume(inflation, search_use_aux_pos()));
+  }
+
+  for (int i = 0; i < melecolmap_->num_my_elements(); ++i)
+  {
+    const int gid = melecolmap_->gid(i);
+    const auto* target_element = dynamic_cast<const Mortar::Element*>(idiscret_->g_element(gid));
+    FOUR_C_ASSERT(target_element != nullptr, "Target mortar element {} was not found.", gid);
+
+    target_bounding_volumes.emplace_back(
+        gid, target_element->create_bounding_volume(inflation, false));
+  }
+
+  const auto collision_pairs =
+      Core::GeometricSearch::collision_search(target_bounding_volumes, source_bounding_volumes);
+
+  for (const auto& pair : collision_pairs)
+  {
+    auto* source_element = dynamic_cast<Mortar::Element*>(idiscret_->g_element(pair.gid_predicate));
+    FOUR_C_ASSERT(
+        source_element != nullptr, "Source mortar element {} was not found.", pair.gid_predicate);
+
+    source_element->add_search_elements(pair.gid_primitive);
+  }
 }
 
 /*----------------------------------------------------------------------*

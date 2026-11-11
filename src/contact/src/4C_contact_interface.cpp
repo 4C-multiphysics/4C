@@ -743,6 +743,8 @@ void CONTACT::Interface::redistribute()
   initialize();
   if (search_alg() == Mortar::search_binarytree)
     evaluate_search_binarytree();
+  else if (search_alg() == Mortar::bounding_volume_hierarchy)
+    evaluate_bounding_volume_hierarchy();
   else
     FOUR_C_THROW("Invalid search algorithm");
 
@@ -1525,6 +1527,8 @@ void CONTACT::Interface::pre_evaluate(const int& step, const int& iter)
   //**********************************************************************
   if (search_alg() == Mortar::search_binarytree)
     evaluate_search_binarytree();
+  else if (search_alg() == Mortar::bounding_volume_hierarchy)
+    evaluate_bounding_volume_hierarchy();
   else
     FOUR_C_THROW("Invalid search algorithm");
 

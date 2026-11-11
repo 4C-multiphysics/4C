@@ -851,6 +851,43 @@ void Mortar::Element::get_nodal_coords_old(
 }
 
 /*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+Core::GeometricSearch::BoundingVolume Mortar::Element::create_bounding_volume(
+    const double inflation, const bool include_auxiliary_position) const
+{
+  Core::GeometricSearch::BoundingVolume bounding_volume;
+
+  for (int inode = 0; inode < num_node(); ++inode)
+  {
+    const auto* node = dynamic_cast<const Mortar::Node*>(nodes()[inode]);
+    FOUR_C_ASSERT(node != nullptr, "Expected a Mortar::Node.");
+
+    Core::LinAlg::Matrix<3, 1> point;
+    for (int idim = 0; idim < 3; ++idim) point(idim) = node->xspatial()[idim];
+
+    bounding_volume.add_point(point);
+
+    if (include_auxiliary_position)
+    {
+      double projection = 0.0;
+      for (int idim = 0; idim < n_dim(); ++idim)
+        projection += (node->x()[idim] + node->uold()[idim] - node->xspatial()[idim]) *
+                      node->mo_data().n()[idim];
+
+      auto auxiliary_point = point;
+      for (int idim = 0; idim < n_dim(); ++idim)
+        auxiliary_point(idim) += projection * node->mo_data().n()[idim];
+
+      bounding_volume.add_point(auxiliary_point);
+    }
+  }
+
+  bounding_volume.extend_boundaries(inflation);
+
+  return bounding_volume;
+}
+
+/*----------------------------------------------------------------------*
  |  Get lagrange multipliers of the element                gitterle 08/10|
  *----------------------------------------------------------------------*/
 void Mortar::Element::get_nodal_lag_mult(

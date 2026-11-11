@@ -11,9 +11,12 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_exporter.hpp"
+#include "4C_geometric_search_bvh.hpp"
 #include "4C_io_control.hpp"
+#include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_mortar_element.hpp"
 #include "4C_mortar_input.hpp"
 #include "4C_mortar_paramsinterface.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -1359,6 +1362,11 @@ namespace Mortar
            slave / master pairs (element-based algorithm)
     */
     virtual bool evaluate_search_binarytree();
+
+    /*!
+    \brief Boundary volume hierarchy search algorithm for potentially coupling slave / master pairs
+    */
+    void evaluate_bounding_volume_hierarchy();
 
     /*!
     \brief find meles for one snode
