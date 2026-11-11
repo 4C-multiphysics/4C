@@ -1358,12 +1358,6 @@ namespace Mortar
         const std::map<std::string, std::shared_ptr<Core::FE::Discretization>>& discretization_map);
 
     /*!
-    \brief Binary tree search algorithm for potentially coupling
-           slave / master pairs (element-based algorithm)
-    */
-    virtual bool evaluate_search_binarytree();
-
-    /*!
     \brief Boundary volume hierarchy search algorithm for potentially coupling slave / master pairs
     */
     void evaluate_bounding_volume_hierarchy();

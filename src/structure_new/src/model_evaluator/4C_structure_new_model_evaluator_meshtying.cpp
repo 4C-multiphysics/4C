@@ -91,9 +91,6 @@ void Solid::ModelEvaluator::Meshtying::setup()
   strategy_ptr_ =
       factory.build_strategy(cparams, poro_source, poro_target, dof_offset(), interfaces);
 
-  // build the search tree
-  factory.build_search_tree(interfaces);
-
   // ---------------------------------------------------------------------
   // final touches to the meshtying strategy
   // ---------------------------------------------------------------------

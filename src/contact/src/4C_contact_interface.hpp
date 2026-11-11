@@ -841,11 +841,8 @@ namespace CONTACT
     /*!
     \brief Binary tree search algorithm for potentially coupling source /
     target pairs (element-based algorithm) including self-contact
-
-    Derived version!
-
     */
-    bool evaluate_search_binarytree() final;
+    bool evaluate_search_binarytree();
 
     /*!
     \brief Integrate Mortar matrix M and gap g on source/target overlaps

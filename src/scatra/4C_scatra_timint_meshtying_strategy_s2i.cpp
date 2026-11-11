@@ -2263,7 +2263,6 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                 Global::Problem::instance()->output_control_file(),
                 Global::Problem::instance()->spatial_approximation_type(), true);
             interface.print_parallel_distribution();
-            interface.create_search_tree();
           }
 
           // generate mortar integration cells
@@ -2288,23 +2287,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
         else
         {
           // match slave-side and master-side elements at mortar interface
-          switch (interface.search_alg())
-          {
-            case Mortar::search_binarytree:
-            {
-              interface.evaluate_search_binarytree();
-              break;
-            }
-            case Mortar::bounding_volume_hierarchy:
-            {
-              interface.evaluate_bounding_volume_hierarchy();
-              break;
-            }
-            default:
-            {
-              FOUR_C_THROW("Invalid search algorithm!");
-            }
-          }
+          interface.evaluate_bounding_volume_hierarchy();
 
           // evaluate normal vectors associated with slave-side nodes
           interface.evaluate_nodal_normals();

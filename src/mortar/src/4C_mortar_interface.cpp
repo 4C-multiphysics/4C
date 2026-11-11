@@ -75,7 +75,7 @@ Mortar::InterfaceDataContainer::InterfaceDataContainer()
       plmdofmap_(nullptr),
       lmdofmap_(nullptr),
       maxdofglobal_(-1),
-      searchalgo_(Mortar::search_binarytree),
+      searchalgo_(Mortar::bounding_volume_hierarchy),
       binarytree_(nullptr),
       searchparam_(-1.0),
       searchuseauxpos_(false),
@@ -2154,12 +2154,7 @@ void Mortar::Interface::evaluate_geometry(std::vector<std::shared_ptr<Mortar::In
   //**********************************************************************
   // search algorithm
   //**********************************************************************
-  if (search_alg() == Mortar::search_binarytree)
-    evaluate_search_binarytree();
-  else if (search_alg() == Mortar::bounding_volume_hierarchy)
-    evaluate_bounding_volume_hierarchy();
-  else
-    FOUR_C_THROW("Invalid search algorithm");
+  evaluate_bounding_volume_hierarchy();
 
   // create normals
   evaluate_nodal_normals();
@@ -2498,12 +2493,8 @@ void Mortar::Interface::pre_evaluate(const int& step, const int& iter)
   //**********************************************************************
   // search algorithm
   //**********************************************************************
-  if (search_alg() == Mortar::search_binarytree)
-    evaluate_search_binarytree();
-  else if (search_alg() == Mortar::bounding_volume_hierarchy)
-    evaluate_bounding_volume_hierarchy();
-  else
-    FOUR_C_THROW("Invalid search algorithm");
+  evaluate_bounding_volume_hierarchy();
+
 
   // evaluate averaged nodal normals on slave side
   evaluate_nodal_normals();
@@ -2684,16 +2675,6 @@ void Mortar::Interface::export_nodal_normals() const
     mrtrnode->mo_data().n()[1] = (*loc)(1, 0);
     mrtrnode->mo_data().n()[2] = (*loc)(2, 0);
   }
-}
-
-/*----------------------------------------------------------------------*
- |  Search for potentially coupling sl/ma pairs (public)      popp 10/08|
- *----------------------------------------------------------------------*/
-bool Mortar::Interface::evaluate_search_binarytree()
-{
-  binarytree_->evaluate_search();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*

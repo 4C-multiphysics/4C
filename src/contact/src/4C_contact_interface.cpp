@@ -5319,8 +5319,7 @@ bool CONTACT::Interface::evaluate_search_binarytree()
   }
   else
   {
-    // call mortar routine
-    Mortar::Interface::evaluate_search_binarytree();
+    FOUR_C_THROW("The binary tree search can only be used in combination with self contact.");
   }
 
   return true;
