@@ -2736,8 +2736,8 @@ void Mortar::Interface::evaluate_bounding_volume_hierarchy()
     FOUR_C_ASSERT(source_element != nullptr, "Source mortar element {} was not found.", gid);
     source_element->mo_data().search_elements().clear();
 
-    source_bounding_volumes.emplace_back(gid,
-        create_mortar_bounding_volume(*source_element, n_dim(), inflation, search_use_aux_pos()));
+    source_bounding_volumes.emplace_back(
+        gid, source_element->create_bounding_volume(inflation, search_use_aux_pos()));
   }
 
   for (int i = 0; i < melecolmap_->num_my_elements(); ++i)
@@ -2747,7 +2747,7 @@ void Mortar::Interface::evaluate_bounding_volume_hierarchy()
     FOUR_C_ASSERT(target_element != nullptr, "Target mortar element {} was not found.", gid);
 
     target_bounding_volumes.emplace_back(
-        gid, create_mortar_bounding_volume(*target_element, n_dim(), inflation, false));
+        gid, target_element->create_bounding_volume(inflation, false));
   }
 
   const auto collision_pairs =
@@ -2762,52 +2762,6 @@ void Mortar::Interface::evaluate_bounding_volume_hierarchy()
     source_element->add_search_elements(pair.gid_primitive);
   }
 }
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-Core::GeometricSearch::BoundingVolume Mortar::Interface::create_mortar_bounding_volume(
-    const Mortar::Element& element, const int spatial_dimension, const double inflation,
-    const bool include_auxiliary_position)
-{
-  Core::GeometricSearch::BoundingVolume bounding_volume;
-
-  for (int inode = 0; inode < element.num_node(); ++inode)
-  {
-    const auto* node = dynamic_cast<const Mortar::Node*>(element.nodes()[inode]);
-
-    FOUR_C_ASSERT(node != nullptr, "Expected a Mortar::Node.");
-
-    Core::LinAlg::Matrix<3, 1> point;
-    point(0) = node->xspatial()[0];
-    point(1) = node->xspatial()[1];
-    point(2) = node->xspatial()[2];
-
-    bounding_volume.add_point(point);
-
-    if (include_auxiliary_position)
-    {
-      double projection = 0.0;
-
-      for (int idim = 0; idim < spatial_dimension; ++idim)
-        projection += (node->x()[idim] + node->uold()[idim] - node->xspatial()[idim]) *
-                      node->mo_data().n()[idim];
-
-      Core::LinAlg::Matrix<3, 1> auxiliary_point;
-      auxiliary_point(0) = node->xspatial()[0];
-      auxiliary_point(1) = node->xspatial()[1];
-      auxiliary_point(2) = node->xspatial()[2];
-
-      for (int idim = 0; idim < spatial_dimension; ++idim)
-        auxiliary_point(idim) += projection * node->mo_data().n()[idim];
-
-      bounding_volume.add_point(auxiliary_point);
-    }
-  }
-
-  bounding_volume.extend_boundaries(inflation);
-  return bounding_volume;
-}
-
 
 /*----------------------------------------------------------------------*
  |  Integrate matrix M and gap g on slave/master overlap      popp 11/08|

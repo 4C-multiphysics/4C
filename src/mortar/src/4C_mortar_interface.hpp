@@ -11,7 +11,6 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_exporter.hpp"
-#include "4C_geometric_search_bounding_volume.hpp"
 #include "4C_geometric_search_bvh.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
@@ -1368,11 +1367,6 @@ namespace Mortar
     \brief Boundary volume hierarchy search algorithm for potentially coupling slave / master pairs
     */
     void evaluate_bounding_volume_hierarchy();
-
-    //! \brief Helper function for bounding volume generation for mortar elements
-    Core::GeometricSearch::BoundingVolume create_mortar_bounding_volume(
-        const Mortar::Element& element, const int spatial_dimension, const double inflation,
-        const bool include_auxiliary_position);
 
     /*!
     \brief find meles for one snode
