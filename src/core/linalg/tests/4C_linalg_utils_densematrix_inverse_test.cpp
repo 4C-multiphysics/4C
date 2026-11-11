@@ -22,7 +22,7 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace
 {
-  TEST(LinalgDenseMatrixInverseTest, 2x2InverseReorder)
+  TEST(LinalgUtilsDenseMatrixInverseTest, 2x2InverseReorder)
   {
     Core::LinAlg::Matrix<2, 2, double> A;
     A(0, 0) = 0.72903241936703114203;
@@ -40,7 +40,7 @@ namespace
     EXPECT_NEAR(A(1, 0), -B(1, 0), 1e-14);
   }
 
-  TEST(LinalgDenseMatrixInverseTest, 2x2Inverse)
+  TEST(LinalgUtilsDenseMatrixInverseTest, 2x2Inverse)
   {
     Core::LinAlg::Matrix<2, 2, double> A;
     A(0, 0) = 0.72903241936703114203;
@@ -56,14 +56,14 @@ namespace
     EXPECT_NEAR(A(1, 1), -2.7624762444413145470, 1e-14);
   }
 
-  TEST(LinalgDenseMatrixInverseTest, 2x2InverseSingular)
+  TEST(LinalgUtilsDenseMatrixInverseTest, 2x2InverseSingular)
   {
     Core::LinAlg::Matrix<2, 2, double> A_singular(Core::LinAlg::Initialization::zero);
     A_singular(0, 0) = 1.0;
     EXPECT_ANY_THROW(Core::LinAlg::inverse(A_singular));
   }
 
-  TEST(LinalgDenseMatrixInverseTest, 3x3InverseReorder)
+  TEST(LinalgUtilsDenseMatrixInverseTest, 3x3InverseReorder)
   {
     Core::LinAlg::Matrix<3, 3, double> A;
     A(0, 0) = 0.72903241936703114203;
@@ -91,7 +91,7 @@ namespace
     EXPECT_NEAR(A(2, 2), B(0, 0) * B(1, 1) - B(1, 0) * B(0, 1), 1e-14);
   }
 
-  TEST(LinalgDenseMatrixInverseTest, 3x3Inverse)
+  TEST(LinalgUtilsDenseMatrixInverseTest, 3x3Inverse)
   {
     Core::LinAlg::Matrix<3, 3, double> A;
     A(0, 0) = 0.72903241936703114203;
@@ -117,7 +117,7 @@ namespace
     EXPECT_NEAR(A(2, 2), -6.3144960342296159564, 1e-14);
   }
 
-  TEST(LinalgDenseMatrixInverseTest, 3x3InverseSingular)
+  TEST(LinalgUtilsDenseMatrixInverseTest, 3x3InverseSingular)
   {
     Core::LinAlg::Matrix<3, 3, double> A_singular(Core::LinAlg::Initialization::zero);
     A_singular(0, 0) = 1.0;
@@ -125,7 +125,7 @@ namespace
     EXPECT_ANY_THROW(Core::LinAlg::inverse(A_singular));
   }
 
-  TEST(LinalgDenseMatrixInverseTest, 4x4InverseReorder)
+  TEST(LinalgUtilsDenseMatrixInverseTest, 4x4InverseReorder)
   {
     Core::LinAlg::Matrix<4, 4, double> A;
     A(0, 0) = 0.72903241936703114203;
@@ -165,7 +165,7 @@ namespace
     EXPECT_NEAR(A(3, 3), -0.18645052203295775506, 1e-14);
   }
 
-  TEST(LinalgDenseMatrixInverseTest, 4x4Inverse)
+  TEST(LinalgUtilsDenseMatrixInverseTest, 4x4Inverse)
   {
     Core::LinAlg::Matrix<4, 4, double> A;
     A(0, 0) = 0.72903241936703114203;
@@ -205,7 +205,7 @@ namespace
     EXPECT_NEAR(A(3, 3), 11.503778211354084434, 1e-14);
   }
 
-  TEST(LinalgDenseMatrixInverseTest, 4x4InverseSingular)
+  TEST(LinalgUtilsDenseMatrixInverseTest, 4x4InverseSingular)
   {
     Core::LinAlg::Matrix<4, 4, double> A_singular(Core::LinAlg::Initialization::zero);
     A_singular(0, 0) = 1.0;
@@ -214,7 +214,7 @@ namespace
     EXPECT_ANY_THROW(Core::LinAlg::inverse(A_singular));
   }
 
-  TEST(LinalgDenseMatrixInverseTest, 4x4InverseDoNotThrowErrorOnZeroDeterminantScaled)
+  TEST(LinalgUtilsDenseMatrixInverseTest, 4x4InverseDoNotThrowErrorOnZeroDeterminantScaled)
   {
     Core::LinAlg::Matrix<4, 4, double> A(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<4, 1, double> b(Core::LinAlg::Initialization::zero);
