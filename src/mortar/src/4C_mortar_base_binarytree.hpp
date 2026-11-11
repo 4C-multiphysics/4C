@@ -38,7 +38,6 @@ namespace Mortar
   {
     // these classes need access to protected methods of this class and are therefore defined friend
     // classes here
-    friend class BinaryTree;
     friend class CONTACT::SelfBinaryTree;
     friend class CONTACT::SelfDualEdge;
     friend class CONTACT::UnbiasedSelfBinaryTree;

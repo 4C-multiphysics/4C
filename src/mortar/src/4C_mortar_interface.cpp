@@ -19,7 +19,6 @@
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_vector.hpp"
-#include "4C_mortar_binarytree.hpp"
 #include "4C_mortar_coupling2d.hpp"
 #include "4C_mortar_coupling3d.hpp"
 #include "4C_mortar_coupling3d_classes.hpp"
@@ -76,7 +75,6 @@ Mortar::InterfaceDataContainer::InterfaceDataContainer()
       lmdofmap_(nullptr),
       maxdofglobal_(-1),
       searchalgo_(Mortar::bounding_volume_hierarchy),
-      binarytree_(nullptr),
       searchparam_(-1.0),
       searchuseauxpos_(false),
       inttime_interface_(0.0),
@@ -124,7 +122,6 @@ Mortar::Interface::Interface(std::shared_ptr<Mortar::InterfaceDataContainer> int
       lmdofmap_(interface_data_->lm_dof_row_map()),
       maxdofglobal_(interface_data_->max_dof_global()),
       searchalgo_(interface_data_->search_algorithm()),
-      binarytree_(interface_data_->binary_tree()),
       searchparam_(interface_data_->search_param()),
       searchuseauxpos_(interface_data_->search_use_aux_pos()),
       inttime_interface_(interface_data_->int_time_interface()),
@@ -194,7 +191,6 @@ Mortar::Interface::Interface(std::shared_ptr<InterfaceDataContainer> interfaceDa
       lmdofmap_(interface_data_->lm_dof_row_map()),
       maxdofglobal_(interface_data_->max_dof_global()),
       searchalgo_(interface_data_->search_algorithm()),
-      binarytree_(interface_data_->binary_tree()),
       searchparam_(interface_data_->search_param()),
       searchuseauxpos_(interface_data_->search_use_aux_pos()),
       inttime_interface_(interface_data_->int_time_interface()),

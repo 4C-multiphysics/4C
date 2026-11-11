@@ -57,7 +57,6 @@ namespace Mortar
   class Node;
   class Element;
   class IntElement;
-  class BinaryTree;
   class IntCell;
   class ParamsInterface;
 
@@ -404,10 +403,6 @@ namespace Mortar
 
     inline Mortar::SearchAlgorithm search_algorithm() const { return searchalgo_; }
 
-    inline std::shared_ptr<Mortar::BinaryTree>& binary_tree() { return binarytree_; }
-
-    inline std::shared_ptr<const Mortar::BinaryTree> binary_tree() const { return binarytree_; }
-
     inline double& search_param() { return searchparam_; }
 
     inline double search_param() const { return searchparam_; }
@@ -598,9 +593,6 @@ namespace Mortar
 
     //! type of search algorithm
     Mortar::SearchAlgorithm searchalgo_;
-
-    //! binary searchtree
-    std::shared_ptr<Mortar::BinaryTree> binarytree_;
 
     //! search parameter
     double searchparam_;
@@ -1866,11 +1858,10 @@ namespace Mortar
         lmdofmap_;       ///< ref. to row map of all Lagrange multiplier dofs
     int& maxdofglobal_;  ///< ref. to maximum dof ID in global discretization
 
-    Mortar::SearchAlgorithm& searchalgo_;              ///< ref. to type of search algorithm
-    std::shared_ptr<Mortar::BinaryTree>& binarytree_;  ///< ref. to binary searchtree
-    double& searchparam_;                              ///< ref. to search parameter
-    bool& searchuseauxpos_;      ///< ref. to use auxiliary position when computing dops
-    double& inttime_interface_;  ///< ref. to integration time
+    Mortar::SearchAlgorithm& searchalgo_;  ///< ref. to type of search algorithm
+    double& searchparam_;                  ///< ref. to search parameter
+    bool& searchuseauxpos_;                ///< ref. to use auxiliary position when computing dops
+    double& inttime_interface_;            ///< ref. to integration time
 
     bool& nurbs_;  ///< ref. to flag for nurbs shape functions
     bool& ehl_;    ///< ref. to flag if ehl contact problem!

@@ -28,7 +28,6 @@
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
-#include "4C_mortar_binarytree.hpp"
 #include "4C_mortar_defines.hpp"
 #include "4C_mortar_dofset.hpp"
 #include "4C_mortar_projector.hpp"
@@ -1137,79 +1136,37 @@ void CONTACT::Interface::collect_distribution_data(int& numColElements, int& num
 void CONTACT::Interface::create_search_tree()
 {
   // binary tree search
-  if (search_alg() == Mortar::search_binarytree)
+  if (search_alg() == Mortar::search_binarytree && self_contact())
   {
-    //*****SELF CONTACT*****
-    if (self_contact())
+    // set state in interface to initialize all kinds of quantities
+    Core::LinAlg::Vector<double> zero(*idiscret_->dof_row_map());
+    set_state(Mortar::state_new_displacement, zero);
+
+    // create fully overlapping map of all contact elements
+    std::shared_ptr<Core::LinAlg::Map> elefullmap =
+        Core::LinAlg::allreduce_e_map(*idiscret_->element_row_map());
+
+    // create binary tree object for self contact search
+    if (!two_half_pass())
     {
-      // set state in interface to initialize all kinds of quantities
-      Core::LinAlg::Vector<double> zero(*idiscret_->dof_row_map());
-      set_state(Mortar::state_new_displacement, zero);
-
-      // create fully overlapping map of all contact elements
-      std::shared_ptr<Core::LinAlg::Map> elefullmap =
-          Core::LinAlg::allreduce_e_map(*idiscret_->element_row_map());
-
-      // create binary tree object for self contact search
-      if (!two_half_pass())
-      {
-        // (NOTE THAT SELF CONTACT SEARCH IS NOT YET FULLY PARALLELIZED!)
-        binarytreeself_ = std::make_shared<CONTACT::SelfBinaryTree>(
-            discret(), interface_params(), elefullmap, n_dim(), search_param());
-      }
-      else
-      {
-        // if we use the two half pass algorithm, we use the unbiased self binary tree
-        // implementation
-        binarytreeself_ = std::make_shared<CONTACT::UnbiasedSelfBinaryTree>(
-            discret(), interface_params(), elefullmap, n_dim(), search_param());
-      }
-      // initialize the self binary tree
-      binarytreeself_->init();
+      // (NOTE THAT SELF CONTACT SEARCH IS NOT YET FULLY PARALLELIZED!)
+      binarytreeself_ = std::make_shared<CONTACT::SelfBinaryTree>(
+          discret(), interface_params(), elefullmap, n_dim(), search_param());
     }
-    //*****TWO BODY CONTACT*****
     else
     {
-      std::shared_ptr<Core::LinAlg::Map> melefullmap = nullptr;
-      switch (interface_data_->get_extend_ghosting())
-      {
-        case Mortar::ExtendGhosting::roundrobin:
-        case Mortar::ExtendGhosting::binning:
-        {
-          melefullmap = melecolmap_;
-          break;
-        }
-        case Mortar::ExtendGhosting::redundant_all:
-        case Mortar::ExtendGhosting::redundant_target:
-        {
-          melefullmap = Core::LinAlg::allreduce_e_map(*melerowmap_);
-          break;
-        }
-        default:
-        {
-          FOUR_C_THROW("Chosen parallel strategy not supported!");
-          break;
-        }
-      }
-
-      {
-        // get update type of binary tree
-        auto updatetype = Teuchos::getIntegralValue<Mortar::BinaryTreeUpdateType>(
-            interface_params(), "BINARYTREE_UPDATETYPE");
-
-        // create binary tree object for contact search and setup tree
-        binarytree_ = std::make_shared<Mortar::BinaryTree>(discret(), selecolmap_, melefullmap,
-            n_dim(), search_param(), updatetype, search_use_aux_pos());
-        // initialize the binary tree
-        binarytree_->init();
-      }
+      // if we use the two half pass algorithm, we use the unbiased self binary tree
+      // implementation
+      binarytreeself_ = std::make_shared<CONTACT::UnbiasedSelfBinaryTree>(
+          discret(), interface_params(), elefullmap, n_dim(), search_param());
     }
+    // initialize the self binary tree
+    binarytreeself_->init();
   }
-
-  // no binary tree search
   else
   {
-    if (self_contact()) FOUR_C_THROW("Binarytree search needed for self contact");
+    if (self_contact())
+      FOUR_C_THROW("Self contact currently only works with a binary tree search.");
   }
 }
 
