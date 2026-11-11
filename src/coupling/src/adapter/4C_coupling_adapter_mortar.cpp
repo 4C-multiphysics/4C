@@ -494,9 +494,6 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
   source_dof_row_map_ = std::make_shared<Core::LinAlg::Map>(*interface_->source_row_dofs());
   target_dof_row_map_ = std::make_shared<Core::LinAlg::Map>(*interface_->target_row_dofs());
 
-  // create binary search tree
-  interface_->create_search_tree();
-
   return;
 }
 

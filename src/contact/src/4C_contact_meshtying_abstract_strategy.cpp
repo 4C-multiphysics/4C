@@ -154,8 +154,6 @@ void CONTACT::MtAbstractStrategy::setup(bool redistributed)
   // merge interface maps to global maps
   for (const auto& interface : interface_)
   {
-    interface->create_search_tree();
-
     // build Lagrange multiplier dof map
     interface->update_lag_mult_sets(offset_if);
 

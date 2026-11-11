@@ -378,9 +378,6 @@ void Adapter::CouplingPoroMortar::complete_interface(
   // store interface
   interface_ = interface;
 
-  // create binary search tree
-  interface_->create_search_tree();
-
   return;
 }
 

@@ -357,9 +357,6 @@ CONTACT::MtManager::MtManager(Core::FE::Discretization& discret, double alphaf)
   get_strategy().redistribute_meshtying();
   //**********************************************************************
 
-  // create binary search tree
-  for (auto& interface : interfaces) interface->create_search_tree();
-
   return;
 }
 
