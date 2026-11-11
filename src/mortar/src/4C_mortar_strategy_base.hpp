@@ -191,6 +191,8 @@ namespace Mortar
         const Teuchos::ParameterList& params, const int spatialDim, const MPI_Comm& comm,
         const double alphaf, const int maxdof);
 
+    virtual ~StrategyBase() = default;
+
     //! @name Access methods
     //! @{
     //! Get parameter list
