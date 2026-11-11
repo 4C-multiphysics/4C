@@ -246,6 +246,7 @@ four_c_test(TEST_FILE contact2D_patch_linstatic.4C.yaml NP 2 REQUIRED_DEPENDENCI
 four_c_test(TEST_FILE contact2D_patch_linstatic_new_struct.4C.json NP 2 REQUIRED_DEPENDENCIES ArborX LABELS minimal)
 four_c_test(TEST_FILE contact2D_quad.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE contact2D_quad_const.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
+four_c_test(TEST_FILE contact2D_quad_lin.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE contact2D_quad_new_struct.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE contact2D_self.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE contact2D_self_new_struct.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
