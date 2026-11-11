@@ -86,17 +86,11 @@ namespace Mortar
     double& alpha_f() { return alphaf_; }
     const double& alpha_f() const { return alphaf_; }
 
-    /// get the (dynamic) time integration type
-    inline Solid::DynamicType get_dyn_type() const { return dyntype_; }
-
     /// return dynamic time integration parameter
     inline double get_dyn_parameter_n() const { return dynparam_n_; }
 
     /// set dynamic time integration parameter
     inline void set_dyn_parameter_n(const double dynparamN) { dynparam_n_ = dynparamN; }
-
-    /// set the (dynamic) time integration type
-    inline void set_dyn_type(Solid::DynamicType dyntype) { dyntype_ = dyntype; }
 
     //! Return flag indicating parallel redistribution status
     bool& is_par_redist() { return parredist_; }
@@ -137,9 +131,6 @@ namespace Mortar
 
     //! Current used system type
     CONTACT::SystemType systype_;
-
-    //! time integration type
-    Solid::DynamicType dyntype_;
 
     //! time integration parameter for the contributions of the old/previous time step
     double dynparam_n_;
@@ -227,7 +218,7 @@ namespace Mortar
     //@}
 
     /// Set the time integration information
-    void set_time_integration_info(const double time_fac, const Solid::DynamicType dyntype);
+    void set_time_integration_info(const double time_fac);
 
     //! @name Purely virtual functions
 

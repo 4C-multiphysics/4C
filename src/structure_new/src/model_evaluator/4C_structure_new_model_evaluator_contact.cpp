@@ -115,10 +115,7 @@ void Solid::ModelEvaluator::Contact::post_setup(Teuchos::ParameterList& cparams)
 void Solid::ModelEvaluator::Contact::set_time_integration_info(
     CONTACT::AbstractStrategy& strategy) const
 {
-  const Solid::DynamicType dyntype = tim_int().get_data_sdyn().get_dynamic_type();
-  const double time_fac = integrator().get_int_param();
-
-  strategy.set_time_integration_info(time_fac, dyntype);
+  strategy.set_time_integration_info(integrator().get_int_param());
 }
 
 /*----------------------------------------------------------------------*

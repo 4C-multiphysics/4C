@@ -330,9 +330,7 @@ void TSI::Algorithm::prepare_contact_strategy()
     contact_strategy_lagrange_->save_reference_state(zero_disp);
     contact_strategy_lagrange_->evaluate_reference_state();
     contact_strategy_lagrange_->inttime_init();
-    contact_strategy_lagrange_->set_time_integration_info(structure_field()->tim_int_param(),
-        Teuchos::getIntegralValue<Solid::DynamicType>(
-            problem_->structural_dynamic_params(), "DYNAMICTYPE"));
+    contact_strategy_lagrange_->set_time_integration_info(structure_field()->tim_int_param());
     contact_strategy_lagrange_->redistribute_contact(
         structure_field()->dispn(), structure_field()->veln());
 

@@ -18,7 +18,6 @@ set(_dependencies
     poroelast
     poroelast_scatra
     solver_nonlin_nox
-    structure_new
     )
 
 four_c_add_internal_dependency(${AUTO_DEFINED_MODULE_NAME} ${_dependencies})
