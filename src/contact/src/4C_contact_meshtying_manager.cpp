@@ -554,8 +554,6 @@ bool CONTACT::MtManager::read_and_check_input(
   if (meshtyingandcontact)
   {
     // set options for mortar coupling
-    mtparams.set<Mortar::SearchAlgorithm>(
-        "SEARCH_ALGORITHM", Mortar::SearchAlgorithm::search_binarytree);
     mtparams.set<double>("SEARCH_PARAM", 0.3);
     mtparams.set<bool>("SEARCH_USE_AUX_POS", false);
     mtparams.set<Mortar::ShapeFcn>("LM_SHAPEFCN", Mortar::shape_dual);

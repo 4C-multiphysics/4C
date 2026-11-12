@@ -74,7 +74,6 @@ Mortar::InterfaceDataContainer::InterfaceDataContainer()
       plmdofmap_(nullptr),
       lmdofmap_(nullptr),
       maxdofglobal_(-1),
-      searchalgo_(Mortar::bounding_volume_hierarchy),
       searchparam_(-1.0),
       searchuseauxpos_(false),
       inttime_interface_(0.0),
@@ -121,7 +120,6 @@ Mortar::Interface::Interface(std::shared_ptr<Mortar::InterfaceDataContainer> int
       plmdofmap_(interface_data_->non_redist_lm_dof_row_map()),
       lmdofmap_(interface_data_->lm_dof_row_map()),
       maxdofglobal_(interface_data_->max_dof_global()),
-      searchalgo_(interface_data_->search_algorithm()),
       searchparam_(interface_data_->search_param()),
       searchuseauxpos_(interface_data_->search_use_aux_pos()),
       inttime_interface_(interface_data_->int_time_interface()),
@@ -190,7 +188,6 @@ Mortar::Interface::Interface(std::shared_ptr<InterfaceDataContainer> interfaceDa
       plmdofmap_(interface_data_->non_redist_lm_dof_row_map()),
       lmdofmap_(interface_data_->lm_dof_row_map()),
       maxdofglobal_(interface_data_->max_dof_global()),
-      searchalgo_(interface_data_->search_algorithm()),
       searchparam_(interface_data_->search_param()),
       searchuseauxpos_(interface_data_->search_use_aux_pos()),
       inttime_interface_(interface_data_->int_time_interface()),
@@ -205,7 +202,6 @@ Mortar::Interface::Interface(std::shared_ptr<InterfaceDataContainer> interfaceDa
   quadsource_ = false;
   interface_data_->set_extend_ghosting(Teuchos::getIntegralValue<Mortar::ExtendGhosting>(
       imortar.sublist("PARALLEL REDISTRIBUTION"), "GHOSTING_STRATEGY"));
-  searchalgo_ = Teuchos::getIntegralValue<Mortar::SearchAlgorithm>(imortar, "SEARCH_ALGORITHM");
   searchparam_ = imortar.get<double>("SEARCH_PARAM");
   searchuseauxpos_ = imortar.get<bool>("SEARCH_USE_AUX_POS");
   nurbs_ = imortar.get<bool>("NURBS");
