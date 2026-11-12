@@ -218,7 +218,7 @@ namespace
     for (int n = 1; n <= steps; ++n)
     {
       const double current_time = n * dt;
-      solver.solve(current_time);
+      solver.solve(current_time, dt);
 
       TerminalUnits::end_of_timestep_routine(terminal_units, locally_relevant_dofs, dt);
       Airways::end_of_timestep_routine(airways, locally_relevant_dofs, dt);

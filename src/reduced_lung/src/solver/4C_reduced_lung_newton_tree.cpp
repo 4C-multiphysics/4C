@@ -51,16 +51,18 @@ namespace ReducedLung
     class TreeModelEvaluator
     {
      public:
-      TreeModelEvaluator(const NewtonTreeContext& context, double initial_time)
+      explicit TreeModelEvaluator(const NewtonTreeContext& context)
           : locally_relevant_dofs_(context.locally_relevant_dofs),
             assembly_pipeline_(context.assembly_pipeline),
-            tree_linear_solver_(context.tree_linear_solver),
-            dt_(context.dynamics.time_increment),
-            current_time_(initial_time)
+            tree_linear_solver_(context.tree_linear_solver)
       {
       }
 
-      void set_time(double time) { current_time_ = time; }
+      void set_time(double time, double dt)
+      {
+        current_time_ = time;
+        dt_ = dt;
+      }
 
       void evaluate_res(const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& res)
       {
@@ -136,8 +138,8 @@ namespace ReducedLung
 
       bool tree_linearization_static_initialized_ = false;
 
-      double dt_;
-      double current_time_;
+      double dt_ = 0.0;
+      double current_time_ = 0.0;
     };
 
     /**
@@ -303,9 +305,8 @@ namespace ReducedLung
 
   struct NewtonTree::Implementation
   {
-    Implementation(const NewtonTreeContext& context, double initial_time)
-        : evaluator(context, initial_time),
-          nox_params(create_newton_tree_parameter_list(context.dynamics))
+    explicit Implementation(const NewtonTreeContext& context)
+        : evaluator(context), nox_params(create_newton_tree_parameter_list(context.dynamics))
     {
       FOUR_C_ASSERT_ALWAYS(context.dynamics.max_nonlinear_iterations > 0,
           "ReducedLung::NewtonTree requires a positive max_nonlinear_iterations, got {}.",
@@ -366,17 +367,17 @@ namespace ReducedLung
     Teuchos::RCP<::NOX::Solver::Generic> nox_solver;
   };
 
-  NewtonTree::NewtonTree(const NewtonTreeContext& context, double initial_time)
-      : implementation_(std::make_unique<Implementation>(context, initial_time))
+  NewtonTree::NewtonTree(const NewtonTreeContext& context)
+      : implementation_(std::make_unique<Implementation>(context))
   {
   }
 
   NewtonTree::~NewtonTree() = default;
 
-  unsigned int NewtonTree::solve(double time)
+  unsigned int NewtonTree::solve(double time, double dt)
   {
     Implementation& impl = *implementation_;
-    impl.evaluator.set_time(time);
+    impl.evaluator.set_time(time, dt);
 
     impl.nox_solver->reset(*impl.x_nox);
     const ::NOX::StatusTest::StatusType status = impl.nox_solver->solve();
