@@ -37,16 +37,6 @@ std::vector<Core::IO::InputSpec> Mortar::valid_parameters()
               {.description = "Type of employed set of shape functions",
                   .default_value = shape_dual}),
 
-          deprecated_selection<Mortar::SearchAlgorithm>("SEARCH_ALGORITHM",
-              {
-                  {"BinaryTree", search_binarytree},
-                  {"Binarytree", search_binarytree},
-                  {"binarytree", search_binarytree},
-                  {"bounding_volume_hierarchy", bounding_volume_hierarchy},
-              },
-              {.description = "Type of contact search",
-                  .default_value = bounding_volume_hierarchy}),
-
           parameter<double>("SEARCH_PARAM",
               {.description = "Inflation factor for the bounding volumes (k-DOPs) used in the "
                               "contact search. The bounding volumes are enlarged by this factor "

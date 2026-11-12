@@ -45,14 +45,6 @@ namespace Mortar
     lagmult_const       ///< element-wise constant interpolation (only for quadratic FE)
   };
 
-  /// Type of mortar coupling search algorithm
-  /// (this enum represents the input file parameter SEARCH_ALGORITHM)
-  enum SearchAlgorithm
-  {
-    search_binarytree,         ///< binary tree element based
-    bounding_volume_hierarchy  ///< boundary volume hierarchy based search
-  };
-
   /// Local definition of problemtype to avoid use of globalproblem.H
   enum Problemtype
   {

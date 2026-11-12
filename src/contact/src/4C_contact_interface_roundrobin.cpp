@@ -376,12 +376,10 @@ void CONTACT::Interface::round_robin_change_ownership()
  *----------------------------------------------------------------------*/
 void CONTACT::Interface::round_robin_detect_ghosting()
 {
-  if (search_alg() == Mortar::search_binarytree)
+  if (self_contact())
     evaluate_search_binarytree();
-  else if (search_alg() == Mortar::bounding_volume_hierarchy)
-    evaluate_bounding_volume_hierarchy();
   else
-    FOUR_C_THROW("Invalid search algorithm");
+    evaluate_bounding_volume_hierarchy();
 
   // first ghosting for std. distribution
   round_robin_extend_ghosting(true);
@@ -412,22 +410,15 @@ void CONTACT::Interface::round_robin_detect_ghosting()
       round_robin_change_ownership();
 
       // build new search tree or do nothing for bruteforce
-      if (search_alg() == Mortar::search_binarytree)
-        create_search_tree();
-      else if (search_alg() == Mortar::bounding_volume_hierarchy)
-        evaluate_bounding_volume_hierarchy();
-      else
-        FOUR_C_THROW("Invalid search algorithm");
+      if (self_contact()) create_search_tree();
 
       // evaluate interfaces
       if (proc < (int)(Core::Communication::num_mpi_ranks(get_comm()) - 1))
       {
-        if (search_alg() == Mortar::search_binarytree)
+        if (self_contact())
           evaluate_search_binarytree();
-        else if (search_alg() == Mortar::bounding_volume_hierarchy)
-          evaluate_bounding_volume_hierarchy();
         else
-          FOUR_C_THROW("Invalid search algorithm");
+          evaluate_bounding_volume_hierarchy();
 
         // other ghostings per iteration
         round_robin_extend_ghosting(false);
@@ -461,12 +452,7 @@ void CONTACT::Interface::round_robin_detect_ghosting()
   nextendedghosting_ = nullptr;
 
   // build new search tree or do nothing for bruteforce
-  if (search_alg() == Mortar::search_binarytree)
-    create_search_tree();
-  else if (search_alg() == Mortar::bounding_volume_hierarchy)
-    evaluate_bounding_volume_hierarchy();
-  else
-    FOUR_C_THROW("Invalid search algorithm");
+  if (self_contact()) create_search_tree();
 
   // final output for loop
   if (Core::Communication::my_mpi_rank(get_comm()) == 0)

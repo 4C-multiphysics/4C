@@ -399,10 +399,6 @@ namespace Mortar
 
     inline int max_dof_global() const { return maxdofglobal_; }
 
-    inline Mortar::SearchAlgorithm& search_algorithm() { return searchalgo_; }
-
-    inline Mortar::SearchAlgorithm search_algorithm() const { return searchalgo_; }
-
     inline double& search_param() { return searchparam_; }
 
     inline double search_param() const { return searchparam_; }
@@ -591,9 +587,6 @@ namespace Mortar
     //! @name Search algorithm
     //! @{
 
-    //! type of search algorithm
-    Mortar::SearchAlgorithm searchalgo_;
-
     //! search parameter
     double searchparam_;
 
@@ -751,11 +744,6 @@ namespace Mortar
     \brief Get flag indicating nurbs shape functions
     */
     bool is_nurbs() const { return nurbs_; };
-
-    /*!
-    \brief Get type of search algorithm
-    */
-    Mortar::SearchAlgorithm search_alg() const { return searchalgo_; };
 
     /*!
     \brief Get search algorithm parameter
@@ -1858,10 +1846,9 @@ namespace Mortar
         lmdofmap_;       ///< ref. to row map of all Lagrange multiplier dofs
     int& maxdofglobal_;  ///< ref. to maximum dof ID in global discretization
 
-    Mortar::SearchAlgorithm& searchalgo_;  ///< ref. to type of search algorithm
-    double& searchparam_;                  ///< ref. to search parameter
-    bool& searchuseauxpos_;                ///< ref. to use auxiliary position when computing dops
-    double& inttime_interface_;            ///< ref. to integration time
+    double& searchparam_;        ///< ref. to search parameter
+    bool& searchuseauxpos_;      ///< ref. to use auxiliary position when computing dops
+    double& inttime_interface_;  ///< ref. to integration time
 
     bool& nurbs_;  ///< ref. to flag for nurbs shape functions
     bool& ehl_;    ///< ref. to flag if ehl contact problem!

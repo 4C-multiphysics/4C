@@ -232,8 +232,6 @@ void Mortar::STRATEGY::FactoryMT::read_and_check_input(Teuchos::ParameterList& p
   if (meshtyingandcontact)
   {
     // set options for mortar coupling
-    params.set<Mortar::SearchAlgorithm>(
-        "SEARCH_ALGORITHM", Mortar::SearchAlgorithm::search_binarytree);
     params.set<double>("SEARCH_PARAM", 0.3);
     params.set<bool>("SEARCH_USE_AUX_POS", false);
     params.set<Mortar::ShapeFcn>("LM_SHAPEFCN", Mortar::shape_dual);

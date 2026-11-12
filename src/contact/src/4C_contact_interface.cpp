@@ -740,12 +740,10 @@ void CONTACT::Interface::redistribute()
   //**********************************************************************
   // perform contact search (still with non-optimal distribution)
   initialize();
-  if (search_alg() == Mortar::search_binarytree)
+  if (self_contact())
     evaluate_search_binarytree();
-  else if (search_alg() == Mortar::bounding_volume_hierarchy)
-    evaluate_bounding_volume_hierarchy();
   else
-    FOUR_C_THROW("Invalid search algorithm");
+    evaluate_bounding_volume_hierarchy();
 
   // split source element row map and build redundant vector of
   // all close / non-close source node ids on all procs
@@ -1135,8 +1133,7 @@ void CONTACT::Interface::collect_distribution_data(int& numColElements, int& num
  *----------------------------------------------------------------------*/
 void CONTACT::Interface::create_search_tree()
 {
-  // binary tree search
-  if (search_alg() == Mortar::search_binarytree && self_contact())
+  if (self_contact())
   {
     // set state in interface to initialize all kinds of quantities
     Core::LinAlg::Vector<double> zero(*idiscret_->dof_row_map());
@@ -1162,11 +1159,6 @@ void CONTACT::Interface::create_search_tree()
     }
     // initialize the self binary tree
     binarytreeself_->init();
-  }
-  else
-  {
-    if (self_contact())
-      FOUR_C_THROW("Self contact currently only works with a binary tree search.");
   }
 }
 
@@ -1482,12 +1474,10 @@ void CONTACT::Interface::pre_evaluate(const int& step, const int& iter)
   //**********************************************************************
   // search algorithm
   //**********************************************************************
-  if (search_alg() == Mortar::search_binarytree)
+  if (self_contact())
     evaluate_search_binarytree();
-  else if (search_alg() == Mortar::bounding_volume_hierarchy)
-    evaluate_bounding_volume_hierarchy();
   else
-    FOUR_C_THROW("Invalid search algorithm");
+    evaluate_bounding_volume_hierarchy();
 
   // set global vector of cn values
   set_cn_ct_values(iter);
@@ -5249,36 +5239,28 @@ bool CONTACT::Interface::evaluate_search_binarytree()
   // the search. Then the dynamic target/source assignment routine update_target_source_sets() is
   // called and the new source nodes' data containers are initialized.
   // *********************************************************************
-  if (self_contact())
+  // evaluate search itself
+  binarytreeself_->evaluate_search();
+
+  // update target/source sets of interface
+  update_target_source_sets();
+
+  // initialize node data container
+  // (include source side boundary nodes / crosspoints)
+  for (int i = 0; i < source_col_nodes_bound()->num_my_elements(); ++i)
   {
-    // evaluate search itself
-    binarytreeself_->evaluate_search();
+    int gid = source_col_nodes_bound()->gid(i);
+    Core::Nodes::Node* node = discret().g_node(gid);
+    if (!node) FOUR_C_THROW("Cannot find node with gid {}", gid);
+    auto* target_node = dynamic_cast<Mortar::Node*>(node);
 
-    // update target/source sets of interface
-    update_target_source_sets();
-
-    // initialize node data container
-    // (include source side boundary nodes / crosspoints)
-    for (int i = 0; i < source_col_nodes_bound()->num_my_elements(); ++i)
-    {
-      int gid = source_col_nodes_bound()->gid(i);
-      Core::Nodes::Node* node = discret().g_node(gid);
-      if (!node) FOUR_C_THROW("Cannot find node with gid {}", gid);
-      auto* target_node = dynamic_cast<Mortar::Node*>(node);
-
-      // initialize container if not yet initialized before
-      target_node->initialize_data_container();
-    }
-
-    // no initialization of element data container as this would
-    // possibly destroy the information on search elements again
-    // (this was already done in set_element_areas())
-  }
-  else
-  {
-    FOUR_C_THROW("The binary tree search can only be used in combination with self contact.");
+    // initialize container if not yet initialized before
+    target_node->initialize_data_container();
   }
 
+  // no initialization of element data container as this would
+  // possibly destroy the information on search elements again
+  // (this was already done in set_element_areas())
   return true;
 }
 
