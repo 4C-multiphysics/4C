@@ -1304,6 +1304,11 @@ namespace Mortar
     void assemble_normals(Core::LinAlg::SparseMatrix& nglobal);
 
     /*!
+     \brief Assemble the integrated mortar interface weights
+     */
+    void assemble_interface_weight(Core::LinAlg::Vector<double>& global_weight);
+
+    /*!
     \brief Assemble transformation matrices T and T^(-1)
 
     These matrices need to be applied to the slave displacements

@@ -6227,6 +6227,8 @@ void CONTACT::Integrator::gp_dm(Mortar::Element& source_elem, Mortar::Element& t
 
       if (cnode->is_on_boundor_ce()) continue;
 
+      cnode->mo_data().interface_weight() += lm_val[j] * jac * wgt;
+
       // integrate mseg
       for (int k = 0; k < ncol; ++k)
       {
@@ -6307,6 +6309,8 @@ void CONTACT::Integrator::gp_dm(Mortar::Element& source_elem, Mortar::Element& t
           ((shapefcn_ == Mortar::shape_dual || shapefcn_ == Mortar::shape_petrovgalerkin) &&
               cnode->is_on_bound()))
         continue;
+
+      cnode->mo_data().interface_weight() += lm_val[j] * jac * wgt;
 
       // integrate mseg
       for (int k = 0; k < ncol; ++k)
@@ -6405,6 +6409,8 @@ void inline CONTACT::Integrator::gp_3d_dm_quad(Mortar::Element& source_elem,
     {
       Node* cnode = dynamic_cast<Node*>(source_nodes[j]);
 
+      cnode->mo_data().interface_weight() += lm_val[j] * jac * wgt;
+
       // integrate mseg
       for (int k = 0; k < ncol; ++k)
       {
@@ -6450,6 +6456,8 @@ void inline CONTACT::Integrator::gp_3d_dm_quad(Mortar::Element& source_elem,
     for (int j = 0; j < nintrow; ++j)
     {
       Node* cnode = dynamic_cast<Node*>(sintnodes[j]);
+
+      cnode->mo_data().interface_weight() += lmintval[j] * jac * wgt;
 
       // integrate mseg
       for (int k = 0; k < ncol; ++k)

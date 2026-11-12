@@ -1929,6 +1929,9 @@ void Mortar::Interface::initialize()
     monode->mo_data().get_d().clear();
     monode->mo_data().get_m().clear();
     monode->mo_data().get_mmod().clear();
+
+    // reset geometrical interface scaling weight
+    monode->mo_data().interface_weight() = 0.0;
   }
 
   // loop over all elements to reset candidates / search lists
@@ -3241,6 +3244,57 @@ void Mortar::Interface::assemble_normals(Core::LinAlg::SparseMatrix& nglobal)
     // add normal to corresponding row in global matrix
     for (int k = 0; k < mrtrnode->num_dof(); ++k)
       nglobal.assemble(nodalnormal[k], gid, mrtrnode->dofs()[k]);
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Mortar::Interface::assemble_interface_weight(Core::LinAlg::Vector<double>& global_weight)
+{
+  const auto source_dof_map = source_row_dofs();
+  const auto lm_dof_map = lag_mult_dofs();
+
+  if (!source_dof_map || !lm_dof_map)
+    FOUR_C_THROW("Source or Lagrange multiplier map is not initialized.");
+
+  if (source_dof_map->num_my_elements() != lm_dof_map->num_my_elements())
+    FOUR_C_THROW("Source and Lagrange multiplier maps do not have the same local size.");
+
+  for (int i = 0; i < snoderowmap_->num_my_elements(); ++i)
+  {
+    const int node_gid = snoderowmap_->gid(i);
+
+    Core::Nodes::Node* node = idiscret_->g_node(node_gid);
+    if (!node) FOUR_C_THROW("Cannot find source node with gid {}.", node_gid);
+
+    auto* mortar_node = dynamic_cast<Mortar::Node*>(node);
+    if (!mortar_node) FOUR_C_THROW("Node {} is not a Mortar::Node.", node_gid);
+
+    if (mortar_node->owner() != Core::Communication::my_mpi_rank(get_comm()))
+      FOUR_C_THROW("Node ownership inconsistency for node {}.", node_gid);
+
+    const int num_dof = mortar_node->num_dof();
+    const double nodal_weight = mortar_node->mo_data().interface_weight();
+
+    Core::LinAlg::SerialDenseVector local_weight(num_dof);
+    std::vector<int> lm_gids(num_dof);
+    std::vector<int> lm_owners(num_dof);
+
+    for (int d = 0; d < num_dof; ++d)
+    {
+      local_weight(d) = nodal_weight;
+      const int source_gid = mortar_node->dofs()[d];
+      const int local_source_id = source_dof_map->lid(source_gid);
+
+      if (local_source_id < 0)
+        FOUR_C_THROW("Source dof {} of node {} was not found in the interface source map.",
+            source_gid, node_gid);
+
+      lm_gids[d] = source_dof_map->gid(local_source_id);
+      lm_owners[d] = mortar_node->owner();
+    }
+
+    Core::LinAlg::assemble(global_weight, local_weight, lm_gids, lm_owners);
   }
 }
 

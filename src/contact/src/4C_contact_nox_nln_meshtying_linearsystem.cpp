@@ -7,8 +7,8 @@
 
 #include "4C_contact_nox_nln_meshtying_linearsystem.hpp"  // base class
 
-#include "4C_contact_abstract_strategy.hpp"
 #include "4C_contact_input.hpp"
+#include "4C_contact_meshtying_abstract_strategy.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_blocksparsematrix.hpp"
@@ -115,7 +115,8 @@ Core::LinAlg::SolverParams NOX::Nln::MeshTying::LinearSystem::set_solver_options
 
       auto precInterface = i_constr_prec_.begin();
 
-      const auto& strategy = dynamic_cast<const Mortar::StrategyBase&>(*precInterface->second);
+      const auto& strategy =
+          dynamic_cast<const ::FourC::CONTACT::MtAbstractStrategy&>(*precInterface->second);
 
       std::shared_ptr<Core::LinAlg::Map> targetDofMap, sourceDofMap, innerDofMap, activeDofMap;
       strategy.collect_maps_for_preconditioner(
@@ -184,6 +185,38 @@ Core::LinAlg::SolverParams NOX::Nln::MeshTying::LinearSystem::set_solver_options
                 .sublist("MueLu Parameters")
                 .set<std::shared_ptr<Core::LinAlg::MultiVector<double>>>(
                     "nullspace", std::make_shared<Core::LinAlg::MultiVector<double>>(nullspace));
+          }
+          else if (solverPtr->params().isSublist("Teko Parameters"))
+          {
+            auto& teko_parameters = solverPtr->params().sublist("Teko Parameters");
+            const double penalty_parameter = strategy.params().get<double>("PENALTYPARAM");
+            auto interface_scaling = strategy.interface_scaling_vector();
+            FOUR_C_ASSERT_ALWAYS(
+                interface_scaling != nullptr, "Interface scaling vector is not available.");
+
+            auto interface_scaling_inv =
+                std::make_shared<Core::LinAlg::Vector<double>>(interface_scaling->get_map(), true);
+
+            for (int lid = 0; lid < interface_scaling->local_length(); ++lid)
+            {
+              const double interface_weight = interface_scaling->get_values()[lid];
+
+              if (interface_weight == 0.0)
+              {
+                interface_scaling_inv->replace_local_value(lid, 0.0);
+              }
+              else
+              {
+                FOUR_C_ASSERT_ALWAYS(std::isfinite(interface_weight) && interface_weight > 0.0,
+                    "Invalid interface scaling value {} at local index {}.", interface_weight, lid);
+
+                interface_scaling_inv->replace_local_value(
+                    lid, penalty_parameter / interface_weight);
+              }
+            }
+
+            teko_parameters.set<std::shared_ptr<Core::LinAlg::Vector<double>>>(
+                "scaling vector", interface_scaling_inv);
           }
         }
       }

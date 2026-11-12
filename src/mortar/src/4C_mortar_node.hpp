@@ -108,6 +108,13 @@ namespace Mortar
      */
     const double* edge_tangent() const { return edgeTangent_; }
 
+    /*!
+     \brief Integral of the Lagrange multiplier test function over the mortar overlap
+     */
+    double& interface_weight() { return interface_weight_; }
+
+    const double& interface_weight() const { return interface_weight_; }
+
     //! @}
 
     //! @name Access methods for Lagrange multipliers
@@ -222,6 +229,9 @@ namespace Mortar
 
     //! Current edge tangent
     double edgeTangent_[3];
+
+    //! Geometrical mortar interface weight
+    double interface_weight_{0.0};
 
     //! @}
 
