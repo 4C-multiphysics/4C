@@ -170,10 +170,10 @@ jobs:
             }}
           spack_ref: ${{ matrix.recipe == 'development' && '27b41ace7b09dfd95609b932466a282a52f6054a'
             || 'v1.2.2' }}
-          # Official recipe update adding 4C 2026.3.0 and updated dependencies.
+          # Official develop snapshot selected on 2026-11-12.
           # Advance after publishing recipe updates to spack-packages; recheck
           # the CLN workaround and development dependency overrides at that time.
-          packages_ref: b21d87c38e972c9a97cd16674464716cc0a39eef
+          packages_ref: 8933fbb6925be105d493d2eff0c0b375a2ac1cc8
           buildcache: true
           color: true
 
