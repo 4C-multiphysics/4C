@@ -30,7 +30,7 @@ CONTACT DYNAMIC:
   STRATEGY: "Penalty"
   PENALTYPARAM: 10
 SOLVER 1:
-  SOLVER: "Superlu"
+  SOLVER: MUMPS
   NAME: "Direct_Solver"
 MATERIALS:
   - MAT: 1
