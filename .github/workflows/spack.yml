@@ -8,7 +8,7 @@ on:
     - cron: "17 5 * * 0"
       timezone: "Europe/Berlin"
   workflow_dispatch:
-  push:
+  pull_request:
     paths:
       - ".github/workflows/spack.yml"
       - "dependencies/spack_repo/**"
@@ -19,8 +19,6 @@ concurrency:
 
 jobs:
   spack-build:
-    # Test pushes in forks without running the matrix on every upstream PR update.
-    if: github.event_name != 'push' || github.repository != '4C-multiphysics/4C'
     name: Build and test 4C (${{ matrix.recipe }}, ${{ matrix.platform || matrix.os }}, ${{ matrix.compiler
       }}, ${{ matrix.variant }}, ${{ matrix.version }})
     runs-on: ${{ matrix.os }}
@@ -296,12 +294,13 @@ jobs:
         if: startsWith(matrix.compiler, 'oneapi@')
         run: |
           spack python -c 'exec("""
+          import os
           import spack.environment as ev
           from spack.error import SpackError
 
           runtimes = {
               node.dag_hash(): node
-              for root in ev.active_environment().concrete_roots()
+              for root in ev.Environment(os.environ["SPACK_ENV"]).concrete_roots()
               for node in root.traverse()
               if node.name == "gcc-runtime"
           }
