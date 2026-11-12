@@ -82,8 +82,8 @@ repos:
       - id: insert-license
         name: Insert license header (#)
         types_or: [python, cmake, dockerfile, shell]
-        # Preserve the upstream Spack license on the imported recipe.
-        exclude: ^dependencies/spack_repo/fourc/packages/_4c_multiphysics/package\.py$
+        # Preserve the upstream Spack license on the recipes.
+        exclude: ^dependencies/spack_repo/fourc/packages/(_4c_multiphysics|cln)/package\.py$
         args:
           - --license-filepath
           - utilities/license_header.txt
@@ -199,6 +199,6 @@ repos:
         language: python
         types: [python]
         # Spack requires this recipe location and filename.
-        exclude: ^dependencies/spack_repo/fourc/packages/_4c_multiphysics/package\.py$
+        exclude: ^dependencies/spack_repo/fourc/packages/(_4c_multiphysics|cln)/package\.py$
         entry: utilities/python-venv/bin/check-python-files
         require_serial: true # To give a non duplicated error output
