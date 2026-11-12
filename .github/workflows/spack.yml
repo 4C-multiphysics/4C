@@ -173,6 +173,8 @@ jobs:
           spack_ref: ${{ matrix.recipe == 'development' && '27b41ace7b09dfd95609b932466a282a52f6054a'
             || 'v1.2.2' }}
           # Official recipe update adding 4C 2026.3.0 and updated dependencies.
+          # Advance after publishing recipe updates to spack-packages; recheck
+          # the CLN workaround and development dependency overrides at that time.
           packages_ref: b21d87c38e972c9a97cd16674464716cc0a39eef
           buildcache: true
           color: true
@@ -191,6 +193,8 @@ jobs:
       - name: Register only the CLN workaround for release builds
         if: matrix.recipe == 'release'
         run: |
+          # CI-only overlay: keep the official 4C/ArborX recipes under test.
+          # Remove when packages_ref includes the CLN archive and build-hook fixes.
           SOURCE_REPO="$GITHUB_WORKSPACE/4C-src/dependencies/spack_repo/fourc"
           CLN_REPO="$RUNNER_TEMP/cln-workaround/spack_repo/fourc"
           mkdir -p "$CLN_REPO/packages"

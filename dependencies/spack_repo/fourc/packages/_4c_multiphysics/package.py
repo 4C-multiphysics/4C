@@ -12,6 +12,9 @@ from spack.stage import ResourceStage
 class _4cMultiphysics(CMakePackage, CudaPackage):
     """4C is a parallel multiphysics research code."""
 
+    # When updating spack-packages, carry release-applicable fixes and resource
+    # pins into its recipe. Keep @main-only dependencies scoped to development;
+    # recheck their versions against the release's CMake configuration.
     homepage = "https://www.4c-multiphysics.org/"
     url = "https://github.com/4C-multiphysics/4C/archive/refs/tags/v2025.3.0.tar.gz"
     git = "https://github.com/4C-multiphysics/4C.git"
@@ -137,6 +140,8 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
     patch("link-installed-arborx.patch", when="@2026.1.0:2026.3.0+arborx")
     patch("use-installed-googletest.patch", when="@2026.1.0:2026.3.0")
     patch("use-installed-googletest.patch", when="@main")
+    # Packaging fixes, not just CI: +python must use Spack dependencies without
+    # pip downloads. Preserve the YAML scalar resolver when porting these patches.
     patch("python-venv-no-downloads-2026.2.patch", when="@2026.1.0:2026.2.0+python")
     patch("python-venv-no-downloads-2026.3.patch", when="@2026.3.0+python")
     patch("python-venv-no-downloads-2026.3.patch", when="@main+python")
@@ -215,6 +220,7 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
     depends_on("googletest@1.15.2+gmock", when="@2026.1.0:2026.3.0")
     depends_on("googletest@1.15.2+gmock", when="@main")
 
+    # Only main uses Qhull's reentrant API; do not upgrade older release recipes.
     depends_on("qhull@2019.1", when="@2026.1.0:2026.3.0+qhull")
     depends_on("qhull@2020.2", when="@main+qhull")
     depends_on("vtk@9:+shared", when="+vtk")
@@ -267,6 +273,9 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
         when="+dealii",
     )
     depends_on("arborx@2.0.1+mpi", when="@2026.1.0:2026.3.0+arborx")
+    # 2.1-4c is declared by our internal ArborX recipe, not builtin. Before
+    # exporting a release recipe, provide that pin upstream or use a release
+    # containing the required fixes; do not copy this dependency alone.
     depends_on(
         "arborx@=2.1-4c+mpi",
         when="@main+arborx",
@@ -300,7 +309,10 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
     def stage_development_resources(self):
         if "dev_path" not in self.spec.variants:
             return
-        # Spack skips resource staging for an existing development checkout.
+        # CI uses spack develop --no-clone to test the actual PR checkout.
+        # The pinned Spack skips its resources; normal installs stage them already.
+        # Retain this hook upstream if develop builds are supported there, until
+        # Spack itself stages resources for existing development checkouts.
         for stage in self.stage:
             if isinstance(stage, ResourceStage):
                 stage.fetch()

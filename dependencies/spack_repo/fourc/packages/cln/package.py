@@ -12,6 +12,9 @@ from spack.package import *
 class Cln(AutotoolsPackage):
     """Use the official CLN release archive instead of a Git checkout."""
 
+    # Temporary overlay for unreliable Git fetching in CI. When porting upstream,
+    # include both the archive checksum and the idempotent force_config_rpath hook.
+    # Remove this copy once the pinned builtin recipe contains both fixes.
     homepage = "https://www.ginac.de/CLN/"
     url = "https://www.ginac.de/CLN/cln-1.3.7.tar.bz2"
     git = "https://codeberg.org/ginac/cln.git"
