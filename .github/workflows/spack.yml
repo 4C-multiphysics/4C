@@ -158,8 +158,8 @@ jobs:
         run: |
           dnf install -y \
             gcc gcc-c++ gcc-gfortran git python3 python3-pip \
-            make patch diffutils findutils tar gzip bzip2 xz unzip \
-            which hostname file perl curl ca-certificates
+            make cmake pkgconf-pkg-config patch diffutils findutils tar gzip bzip2 xz unzip wget \
+            which hostname file perl curl ca-certificates libxcrypt-compat
           cat /etc/os-release
           # Keep system tools reachable when composite actions extend the container PATH.
           printf '%s\n' /usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin >> "$GITHUB_PATH"
@@ -232,6 +232,8 @@ jobs:
         env:
           COMPILER: ${{ matrix.compiler }}
         run: |
+          # Cached dependencies may require GLIBCXX_3.4.32 (at least GCC 13).
+          spack config add 'packages:gcc-runtime:require:"@13:"'
           spack install --fail-fast --verbose "intel-oneapi-compilers@${COMPILER#oneapi@} %gcc@13"
           spack compiler info "intel-oneapi-compilers@${COMPILER#oneapi@}"
 
@@ -285,6 +287,27 @@ jobs:
         run: |
           spack concretize --deprecated
           spack spec -l
+
+      - name: Verify the GNU runtime for Intel builds
+        if: startsWith(matrix.compiler, 'oneapi@')
+        run: |
+          spack python -c '
+          import spack.environment as ev
+          from spack.error import SpackError
+
+          runtimes = {
+              node.dag_hash(): node
+              for root in ev.active_environment().concrete_roots()
+              for node in root.traverse()
+              if node.name == "gcc-runtime"
+          }
+          if not runtimes:
+              raise SpackError("Intel build has no concrete GCC runtime dependency")
+          for runtime in runtimes.values():
+              if not runtime.satisfies("@13:"):
+                  raise SpackError(f"Intel build requires GCC runtime >=13, got {runtime}")
+              print(f"Verified GNU runtime: {runtime}")
+          '
 
       - name: Install 4C
         run: |
