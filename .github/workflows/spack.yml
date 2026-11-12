@@ -318,6 +318,7 @@ jobs:
         if: matrix.recipe == 'release'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          repository: 4C-multiphysics/4C
           ref: v${{ steps.version.outputs.version }}
           sparse-checkout: |
             tests/tutorials/poisson

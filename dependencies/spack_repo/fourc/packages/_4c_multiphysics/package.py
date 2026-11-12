@@ -6,6 +6,7 @@ from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 
 from spack.package import *
+from spack.stage import ResourceStage
 
 
 class _4cMultiphysics(CMakePackage, CudaPackage):
@@ -294,6 +295,17 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
     depends_on("py-pybind11", type=("build", "link", "run"), when="+pybind11")
 
     generator("ninja")
+
+    @run_before("cmake")
+    def stage_development_resources(self):
+        if "dev_path" not in self.spec.variants:
+            return
+        # Spack skips resource staging for an existing development checkout.
+        for stage in self.stage:
+            if isinstance(stage, ResourceStage):
+                stage.fetch()
+                stage.check()
+                stage.expand_archive()
 
     def setup_build_environment(self, env):
         if "+cuda" in self.spec:
