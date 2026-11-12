@@ -1,0 +1,27 @@
+{
+  "version": 5,
+  "configurePresets": [
+    {
+      "name": ".spack_base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "${sourceDir}/.spack/.spack-env/view/bin/mpicc",
+        "CMAKE_CXX_COMPILER": "${sourceDir}/.spack/.spack-env/view/bin/mpicxx",
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.spack/.spack-env/view",
+        "FETCHCONTENT_TRY_FIND_PACKAGE_MODE": "ALWAYS",
+        "FOUR_C_MPI_ROOT": "${sourceDir}/.spack/.spack-env/view",
+        "FOUR_C_HDF5_ROOT": "${sourceDir}/.spack/.spack-env/view",
+        "FOUR_C_TRILINOS_ROOT": "${sourceDir}/.spack/.spack-env/view",
+        "FOUR_C_BOOST_ROOT": "${sourceDir}/.spack/.spack-env/view",
+        "FOUR_C_CLN_ROOT": "${sourceDir}/.spack/.spack-env/view",
+        "FOUR_C_MAGIC_ENUM_ROOT": "${sourceDir}/.spack/.spack-env/view",
+        "FOUR_C_ZLIB_ROOT": "${sourceDir}/.spack/.spack-env/view",
+        "FOUR_C_CLI11_ROOT": "${sourceDir}/.spack/.spack-env/view",
+        "FOUR_C_QHULL_ROOT": "${sourceDir}/.spack/.spack-env/view",
+        "FOUR_C_BUILD_SHARED_LIBS": "ON",
+        "FOUR_C_ENABLE_DEVELOPER_MODE": "ON"
+      }
+    }
+  ]
+}
