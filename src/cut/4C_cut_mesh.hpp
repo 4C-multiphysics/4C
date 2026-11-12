@@ -309,7 +309,7 @@ namespace Cut
     //! @name Basic routines to create integration cells and/or integration points
     /*========================================================================*/
 
-    /// Execute Tessellation with QHULL for each element to generate integrationcells
+    /// Execute Tessellation for each element to generate integrationcells
     void create_integration_cells(int count, bool tetcellsonly = false);
 
     /// Call the moment fitting method for each element to generate the Gaussian integration rule

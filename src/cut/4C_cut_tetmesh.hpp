@@ -15,15 +15,11 @@
 
 #include <queue>
 
-// FLAGS FOR EXTENDED OUTPUTs
-// #define QHULL_EXTENDED_DEBUG_OUTPUT
-
 // FLAGS FOR NEW IMPLEMENTATION TESTING
 // Probably don't want to use:
 // #define REMOVE_ALL_TETS_ON_CUTSIDE
 
 // Probably want to use:
-#define DIFF_QHULL_CALL
 #define NEW_SEED_DOMAIN
 #define NEW_POSTOL_TET
 
@@ -39,10 +35,10 @@ namespace Cut
   /*!
   \brief Mesh of tet elements that is used to triangulate a VolumeCell
 
-    We use qhull for triangulation. qhull assumes convex volumes, thus it
+    We use delaunay for triangulation. It assumes convex volumes, thus it
     might create more tets than we need. Furthermore, it is not guaranteed
     to reconstruct the cut surface. We need to do post-processing of the
-    qhull triangulation to get proper integration cells.
+    delaunay triangulation to get proper integration cells.
 
    */
   class TetMesh
@@ -589,7 +585,7 @@ namespace Cut
     };
 
    public:
-    /// Construct a tet mesh by calling qhull and selecting all the tets and
+    /// Construct a tet mesh by calling delaunay triangulation and selecting all the tets and
     /// tris that are needed.
     /*!
       This is where the work is done.
@@ -638,9 +634,6 @@ namespace Cut
     /// tet-surfaces (i.e. lines)
     ///   and the connectivity of these.
     void init();
-
-    void call_q_hull(
-        const std::vector<Point*>& points, std::vector<std::vector<int>>& tets, bool project);
 
     /// Somehow checks if tet is valid. Uses intersection for FindCommonSides(t,sides).
     bool is_valid_tet(const std::vector<Point*>& t);

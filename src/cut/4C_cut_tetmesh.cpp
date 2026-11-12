@@ -10,17 +10,11 @@
 #include "4C_cut_levelsetside.hpp"
 #include "4C_cut_tetmeshintersection.hpp"
 #include "4C_cut_volumecell.hpp"
+#include "4C_fem_geometry_delaunay_triangulation.hpp"
 
 #include <cstdio>
 #include <stack>
 #include <utility>
-
-#ifdef FOUR_C_WITH_QHULL
-extern "C"
-{
-#include <libqhull_r/qhull_ra.h>
-}
-#endif
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -48,76 +42,42 @@ namespace Cut
      private:
       FILE* f_;
     };
-
-#ifdef FOUR_C_WITH_QHULL
-    /// Owns the reentrant Qhull state and allocations for one triangulation attempt.
-    class QhullContext
-    {
-     public:
-      explicit QhullContext(FILE* errfile) { qh_zero(&context_, errfile); }
-
-      ~QhullContext()
-      {
-        // Explicit cleanup checks for leaks on the normal path; this also handles exceptions.
-        if (active_)
-        {
-          const auto [curlong, totlong] = cleanup();
-          if (curlong or totlong)
-            std::fprintf(stderr, "Qhull did not free %d bytes of long memory (%d pieces)\n",
-                totlong, curlong);
-        }
-      }
-
-      QhullContext(const QhullContext&) = delete;
-      QhullContext& operator=(const QhullContext&) = delete;
-
-      qhT* get() { return &context_; }
-
-      /// Release long allocations and the short-memory pool; return remaining allocation
-      /// count/bytes.
-      std::pair<int, int> cleanup()
-      {
-        qh_freeqhull(&context_, not qh_ALL);
-        int curlong = 0;
-        int totlong = 0;
-        qh_memfreeshort(&context_, &curlong, &totlong);
-        active_ = false;
-        return {curlong, totlong};
-      }
-
-     private:
-      qhT context_{};
-      // Avoid freeing the state twice after explicit cleanup.
-      bool active_ = true;
-    };
-#endif
   }  // namespace
 }  // namespace Cut
 
 
 Cut::TetMesh::TetMesh(
-    const std::vector<Point*>& points, const plain_facet_set& facets, bool project)
+    const std::vector<Point*>& points, const plain_facet_set& facets, const bool project)
     : points_(points), facets_(facets)
 {
-  std::vector<std::vector<int>> original_tets;
+  FOUR_C_ASSERT_ALWAYS(!project, "Projected Delaunay tetrahedralization is not supported.");
 
-  call_q_hull(points_, original_tets, project);
+  std::vector<Core::Geometry::Point<3>> coordinates;
+  coordinates.reserve(points_.size());
 
-  tets_.reserve(original_tets.size());
-  for (std::vector<std::vector<int>>::iterator i = original_tets.begin(); i != original_tets.end();
-      ++i)
+  for (const Point* point : points_)
   {
-    std::vector<int>& t = *i;
+    FOUR_C_ASSERT(point != nullptr, "Received a null Cut::Point.");
+    coordinates.push_back({point->x()[0], point->x()[1], point->x()[2]});
+  }
+
+  const auto tetrahedra = Core::Geometry::delaunay_triangulation(
+      std::span<const Core::Geometry::Point<3>>(coordinates));
+  tets_.reserve(tetrahedra.size());
+
+  for (const auto& tetrahedron : tetrahedra)
+  {
     std::vector<Point*> tet;
-    tet.reserve(t.size());
-    for (std::vector<int>::iterator i = t.begin(); i != t.end(); ++i)
+    tet.reserve(tetrahedron.size());
+
+    for (const int point_index : tetrahedron)
     {
-      tet.push_back(points_[*i]);
+      FOUR_C_ASSERT(point_index >= 0 && static_cast<std::size_t>(point_index) < points_.size(),
+          "Delaunay tetrahedron contains invalid point index {}.", point_index);
+      tet.push_back(points_[point_index]);
     }
-    if (is_valid_tet(tet))
-    {
-      tets_.push_back(t);
-    }
+
+    if (is_valid_tet(tet)) tets_.emplace_back(tetrahedron.begin(), tetrahedron.end());
   }
 
   init();
@@ -334,9 +294,7 @@ void Cut::TetMesh::create_element_tets(Mesh& mesh, Element* element,
   }
 }
 
-/* Initialize the data-structures needed for the TetMesh. The call to Qhull has to be performed
- * before.
- */
+// Initialize the data-structures needed for the TetMesh.
 void Cut::TetMesh::init()
 {
   unsigned numtets = tets_.size();
@@ -365,226 +323,6 @@ void Cut::TetMesh::init()
 
   //   active_surface_tris_.resize( tet_surfaces_.size() );
   //   std::fill( active_surface_tris_.begin(), active_surface_tris_.end(), false );
-}
-
-
-/* Call up QHull and let it create the delauney-cells. There are different options for how QHull
-   can be called. 3 options are tested in order, if the previous option failed. Fill the
-   std::vector tets with tetrahedrons provided from the delauney triangulization of the
-   "convex"-hull.
-
-   One might want to take a look at the call to Qhull to improve it for non-local coordinate cuts.
-*/
-void Cut::TetMesh::call_q_hull(
-    const std::vector<Point*>& points, std::vector<std::vector<int>>& tets, bool project)
-{
-#ifdef FOUR_C_WITH_QHULL
-  const int dim = 3;
-  const int n = points.size();
-
-  if (n < 4)
-  {
-    FOUR_C_THROW("where coming from?");
-    FOUR_C_THROW("illegal element topology");
-  }
-  //   if ( n == 4 )
-  //   {
-  //     FOUR_C_THROW( "no need to triangulate" );
-  //   }
-
-  std::vector<double> coordinates(dim * n);
-
-  if (project)  // Never used... Not working properly either, I think...
-  {
-    Core::LinAlg::Matrix<3, 1> m;
-    m = 0;
-    double scale = 1. / n;
-    for (int i = 0; i < n; ++i)  // Find mid-point (m)
-    {
-      Point* p = points[i];
-      Core::LinAlg::Matrix<3, 1> x(p->x());
-      m.update(scale, x, 1);
-    }
-    double length = 0;
-    Core::LinAlg::Matrix<3, 1> l;
-    for (int i = 0; i < n;
-        ++i)  // Find the distance to the point furthest away from the mid-point (length)
-    {
-      Point* p = points[i];
-      Core::LinAlg::Matrix<3, 1> x(p->x());
-      l = m;
-      l.update(1, x, -1);
-      double n = l.norm2();
-      length = std::max(n, length);
-    }
-
-    for (int i = 0; i < n; ++i)
-    {
-      Point* p = points[i];
-      Core::LinAlg::Matrix<3, 1> x(p->x());
-      l = m;
-      l.update(1, x, -1);
-      double n = l.norm2();
-      l.scale(length / n);
-      l.update(1, m, 1);
-      std::copy(l.data(), l.data() + 3, &coordinates[dim * i]);
-    }
-  }
-  else
-  {
-    for (int i = 0; i < n; ++i)
-    {
-      Point* p = points[i];
-      p->coordinates(&coordinates[dim * i]);
-    }
-  }
-
-  boolT ismalloc = false;
-
-  // a set of option we try to process the input with
-  // Qz seems to be required for rotational symmetric input
-  std::vector<std::string> options;
-
-  // Qhull options:
-  //      Qbb - scale last coordinate to [0,m]. Preferable for integer input
-  //      QbB - scales input to unit cube [-0.5,0.5]^3. Scaling can reduce precision errors if
-  //      coord values wary widely.
-#ifdef DIFF_QHULL_CALL
-  options.push_back("qhull d Qt QbB Qc Pp");
-#endif
-
-  options.push_back("qhull d Qt Qbb Qc Pp");
-  options.push_back("qhull d Qt Qbb Qc Qz Pp");
-  options.push_back("qhull d Qt Qbb Qc QJ Pp");
-
-  // If you want some debugging information replace the 0 pointer
-  // with stdout or some other file open for writing.
-
-#ifdef QHULL_EXTENDED_DEBUG_OUTPUT
-  FILE* outfile = stdout;
-#else
-  FILE* outfile = nullptr;
-#endif
-
-#ifdef QHULL_DEBUG_OUTPUT
-  FILE* errfile = stderr;
-#else
-  NullFile errfile;
-#endif
-
-#ifdef QHULL_EXTENDED_DEBUG_OUTPUT
-  int counter_qhull = 0;
-#endif
-  for (std::vector<std::string>::iterator i = options.begin(); i != options.end(); ++i)
-  {
-#ifdef QHULL_EXTENDED_DEBUG_OUTPUT
-    std::cout << "counter_qhull: " << counter_qhull << std::endl;
-#endif
-    std::string& ostr = *i;
-    QhullContext context(errfile);
-    qhT* qh = context.get();
-    if (not qh_new_qhull(qh, dim, n, coordinates.data(), ismalloc, ostr.data(), outfile, errfile))
-    {
-      // triangulate non-simplicial facets
-      qh_triangulate(qh);
-
-      facetT* facet;
-      int nf = 0;
-
-      FORALLfacets
-      {
-        if (not facet->upperdelaunay) nf++;
-
-        // Double check
-        if (not facet->simplicial)
-        {
-          FOUR_C_THROW(
-              "Qhull returned non-simplicial facets -- try delaunayn with different options");
-        }
-      }
-
-      tets.reserve(nf);
-
-      FORALLfacets
-      {
-        if (not facet->upperdelaunay)
-        {
-          if (facet->vertices)
-          {
-            std::vector<int> ids;
-            ids.reserve(dim + 1);
-            vertexT* vertex = nullptr;
-
-            // FOREACHvertex_(facet->vertices)
-            for (void** vertexp = &facet->vertices->e[0].p;
-                (vertex = static_cast<vertexT*>(*vertexp++));)
-            {
-              int p = qh_pointid(qh, vertex->point);
-              if (p >= n)
-              {
-                FOUR_C_THROW("new node in delaunay");
-              }
-              ids.push_back(p);
-            }
-
-            tets.push_back(ids);
-          }
-        }
-      }
-    }
-
-    const auto [curlong, totlong] = context.cleanup();
-
-    if (curlong or totlong)
-    {
-      std::stringstream str;
-      str << "did not free " << totlong << " bytes of long memory (" << curlong << " pieces)";
-      FOUR_C_THROW("{}", str.str());
-    }
-
-    if (tets.size() > 0)
-    {
-      plain_int_set used_points;
-      for (std::vector<std::vector<int>>::iterator i = tets.begin(); i != tets.end(); ++i)
-      {
-        std::vector<int>& t = *i;
-        std::copy(t.begin(), t.end(), std::inserter(used_points, used_points.begin()));
-      }
-      if (used_points.size() == points.size())
-      {
-        return;
-      }
-      // FOUR_C_THROW( "failed to triangulate all points" );
-
-      // failed! start a new iteration.
-      tets.clear();
-    }
-#ifdef QHULL_EXTENDED_DEBUG_OUTPUT
-    counter_qhull++;
-#endif
-  }
-
-  // debug output to be read by qhull_test program
-  FILE* debug_f = fopen("qhull.debug", "w");
-  for (int i = 0; i < n; ++i)
-  {
-    Point* p = points[i];
-    const double* x = p->x();
-    fprintf(debug_f, "% .20f % .20f % .20f ", x[0], x[1], x[2]);
-  }
-  fprintf(debug_f, "\n");
-  fclose(debug_f);
-
-#ifdef QHULL_DEBUG_OUTPUT
-  fflush(errfile);
-#endif
-
-  FOUR_C_THROW("qhull failed: Maybe the wrong version is used. Check your installation.");
-#else
-  FOUR_C_THROW(
-      "Function can only be used with Qhull. To use it, enable Qhull during the configure "
-      "process.");
-#endif
 }
 
 /* First check if all the points of a tet share a cut-side, i.e. does the tet lie on a cut-side?
