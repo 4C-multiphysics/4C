@@ -26,16 +26,16 @@ namespace Core::LinAlg
 {
 
   /*!
-   * \brief Reorder the matrix entries for the inverse of a nonsymmetric NxN matrix.
+   * \brief Reorder the matrix entries into the adjugate matrix
    *
    * This transforms the matrix into its adjugate form; divide by the determinant to obtain the
    * inverse. Supported for 2x2, 3x3, and 4x4 matrices.
    */
   template <unsigned int dim, typename T>
-  inline void inverse_reorder_matrix_entries(Core::LinAlg::Matrix<dim, dim, T>& A)
+  inline void compute_adjugate_matrix(Core::LinAlg::Matrix<dim, dim, T>& A)
   {
     static_assert(dim == 2 || dim == 3 || dim == 4,
-        "inverse_reorder_matrix_entries is only implemented for 2x2, 3x3, and 4x4 matrices");
+        "compute_adjugate_matrix is only implemented for 2x2, 3x3, and 4x4 matrices.");
 
     if constexpr (dim == 2)
     {
@@ -147,7 +147,7 @@ namespace Core::LinAlg
     {
       const T det = A.determinant();
       if (det == 0.0) FOUR_C_THROW("determinant of {}x{} matrix is zero", dim, dim);
-      inverse_reorder_matrix_entries(A);
+      compute_adjugate_matrix(A);
       A.scale(1.0 / det);
       return det;
     }
@@ -191,7 +191,7 @@ namespace Core::LinAlg
   {
     T det = determinant(A);
     if (det == 0.0) FOUR_C_THROW("determinant of {}x{} matrix is exactly zero", dim, dim);
-    inverse_reorder_matrix_entries(A);
+    compute_adjugate_matrix(A);
     A.scale(1. / det);
   }
 
@@ -236,7 +236,7 @@ namespace Core::LinAlg
 
     T det = determinant(A);
     if (abs(det) < eps) return false;
-    inverse_reorder_matrix_entries(A);
+    compute_adjugate_matrix(A);
     A.scale(1. / det);
     x.multiply(A, b);
     return true;

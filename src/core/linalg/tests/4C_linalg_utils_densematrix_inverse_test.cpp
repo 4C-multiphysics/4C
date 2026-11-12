@@ -32,7 +32,7 @@ namespace
 
     Core::LinAlg::Matrix<2, 2, double> B(A);
 
-    Core::LinAlg::inverse_reorder_matrix_entries(A);
+    Core::LinAlg::compute_adjugate_matrix(A);
 
     EXPECT_NEAR(A(0, 0), B(1, 1), 1e-14);
     EXPECT_NEAR(A(1, 1), B(0, 0), 1e-14);
@@ -78,7 +78,7 @@ namespace
 
     Core::LinAlg::Matrix<3, 3, double> B(A);
 
-    Core::LinAlg::inverse_reorder_matrix_entries(A);
+    Core::LinAlg::compute_adjugate_matrix(A);
 
     EXPECT_NEAR(A(0, 0), B(1, 1) * B(2, 2) - B(2, 1) * B(1, 2), 1e-14);
     EXPECT_NEAR(A(1, 0), -B(1, 0) * B(2, 2) + B(2, 0) * B(1, 2), 1e-14);
@@ -145,7 +145,7 @@ namespace
     A(2, 3) = 0.024003735765356129168;
     A(3, 3) = 0.27465069811053651449;
 
-    Core::LinAlg::inverse_reorder_matrix_entries(A);
+    Core::LinAlg::compute_adjugate_matrix(A);
 
     EXPECT_NEAR(A(0, 0), 0.0071277916600247445689, 1e-14);
     EXPECT_NEAR(A(1, 0), -0.01928098922790522779, 1e-14);
