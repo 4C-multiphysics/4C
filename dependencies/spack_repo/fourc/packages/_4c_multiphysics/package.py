@@ -266,7 +266,7 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
     )
     depends_on("arborx@2.0.1+mpi", when="@2026.1.0:2026.3.0+arborx")
     depends_on(
-        "arborx@826d457a53cadfd8385f6f8a4ed241bb19c54bde=2.1+mpi",
+        "arborx@=2.1-4c+mpi",
         when="@main+arborx",
     )
     depends_on("fftw", when="+fftw")
