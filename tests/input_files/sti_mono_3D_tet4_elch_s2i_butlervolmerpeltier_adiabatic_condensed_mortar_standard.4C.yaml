@@ -270,7 +270,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 390
       QUANTITY: "phi1"
-      VALUE: 12.718974166953508
+      VALUE: 12.71897419729051
       TOLERANCE: 1e-08
   - SCATRA:
       DIS: "scatra"

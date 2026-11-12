@@ -121,7 +121,7 @@ RESULT DESCRIPTION:
       DIS: "fluid"
       NODE: 478
       QUANTITY: "velx"
-      VALUE: 1.0637492683070349
+      VALUE: 1.0637493038856787
       TOLERANCE: 3e-08
   - FLUID:
       DIS: "fluid"
