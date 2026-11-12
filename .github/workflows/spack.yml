@@ -8,7 +8,7 @@ on:
     - cron: "17 5 * * 0"
       timezone: "Europe/Berlin"
   workflow_dispatch:
-  pull_request:
+  push:
     paths:
       - ".github/workflows/spack.yml"
       - "dependencies/spack_repo/**"
@@ -19,6 +19,8 @@ concurrency:
 
 jobs:
   spack-build:
+    # Test pushes in forks without running the matrix on every upstream PR update.
+    if: github.event_name != 'push' || github.repository != '4C-multiphysics/4C'
     name: Build and test 4C (${{ matrix.recipe }}, ${{ matrix.platform || matrix.os }}, ${{ matrix.compiler
       }}, ${{ matrix.variant }}, ${{ matrix.version }})
     runs-on: ${{ matrix.os }}
@@ -159,6 +161,8 @@ jobs:
             make patch diffutils findutils tar gzip bzip2 xz unzip \
             which hostname file perl curl ca-certificates
           cat /etc/os-release
+          # Keep system tools reachable when composite actions extend the container PATH.
+          printf '%s\n' /usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin >> "$GITHUB_PATH"
 
       - name: Set up Spack
         uses: spack/setup-spack@16b756799ede8b28951287f89bcd3fdb32ec1ca3 # v3.0.0
@@ -182,6 +186,17 @@ jobs:
         if: matrix.recipe == 'development'
         run: |
           spack repo add "$GITHUB_WORKSPACE/4C-src/dependencies/spack_repo/fourc"
+          spack repo list
+
+      - name: Register only the CLN workaround for release builds
+        if: matrix.recipe == 'release'
+        run: |
+          SOURCE_REPO="$GITHUB_WORKSPACE/4C-src/dependencies/spack_repo/fourc"
+          CLN_REPO="$RUNNER_TEMP/cln-workaround/spack_repo/fourc"
+          mkdir -p "$CLN_REPO/packages"
+          cp "$SOURCE_REPO/repo.yaml" "$CLN_REPO/repo.yaml"
+          cp -R "$SOURCE_REPO/packages/cln" "$CLN_REPO/packages/cln"
+          spack repo add "$CLN_REPO"
           spack repo list
 
       - name: Find compilers

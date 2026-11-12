@@ -214,7 +214,8 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
     depends_on("googletest@1.15.2+gmock", when="@2026.1.0:2026.3.0")
     depends_on("googletest@1.15.2+gmock", when="@main")
 
-    depends_on("qhull@2020.2", when="+qhull")
+    depends_on("qhull@2019.1", when="@2026.1.0:2026.3.0+qhull")
+    depends_on("qhull@2020.2", when="@main+qhull")
     depends_on("vtk@9:+shared", when="+vtk")
     # VTK only needs Mesa as an OpenGL provider. Avoid Mesa's optional LLVM
     # backend, which is particularly prone to unusable auto-detected externals.
@@ -296,10 +297,12 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
 
     def setup_build_environment(self, env):
         if "+cuda" in self.spec:
-            env.set(
-                "CLANGCUDA_ARCH",
-                "sm_" + self.spec["kokkos"].variants["cuda_arch"].value,
-            )
+            architectures = self.spec["kokkos"].variants["cuda_arch"].value
+            if len(architectures) != 1 or architectures[0] == "none":
+                raise InstallError(
+                    "The 4C CUDA compiler wrapper requires exactly one CUDA architecture."
+                )
+            env.set("CLANGCUDA_ARCH", "sm_" + architectures[0])
             env.set("CLANGCUDA_CLANG_PATH", self.compiler.cxx)
             env.set("CLANGCUDA_CUDA_PATH", self.spec["cuda"].prefix)
 
