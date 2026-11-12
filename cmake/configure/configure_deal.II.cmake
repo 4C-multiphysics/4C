@@ -28,6 +28,11 @@ else()
 endif()
 
 include(${DEAL_II_GIT_CONFIG})
-set(FOUR_C_deal.II_GIT_HASH "${DEAL_II_GIT_REVISION}")
+if(DEAL_II_GIT_REVISION)
+  set(FOUR_C_deal.II_GIT_HASH "${DEAL_II_GIT_REVISION}")
+elseif(DEAL_II_PACKAGE_VERSION)
+  # Release archives do not retain Git metadata.
+  set(FOUR_C_deal.II_GIT_HASH "v${DEAL_II_PACKAGE_VERSION}")
+endif()
 
 four_c_remember_variable_for_install(FOUR_C_DEAL_II_ROOT)
