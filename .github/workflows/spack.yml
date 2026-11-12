@@ -291,7 +291,7 @@ jobs:
       - name: Verify the GNU runtime for Intel builds
         if: startsWith(matrix.compiler, 'oneapi@')
         run: |
-          spack python -c '
+          spack python -c 'exec("""
           import spack.environment as ev
           from spack.error import SpackError
 
@@ -307,7 +307,7 @@ jobs:
               if not runtime.satisfies("@13:"):
                   raise SpackError(f"Intel build requires GCC runtime >=13, got {runtime}")
               print(f"Verified GNU runtime: {runtime}")
-          '
+          """)'
 
       - name: Install 4C
         run: |
