@@ -64,7 +64,7 @@ This guide to |FOURC| is structured as follows:
 
    about/about
    community/4Ccommunity
-   installation/installation
+   installation/installation_overview
    tutorials/tutorials
    analysis_guide/analysisguide
    developer_guide/developmentguide
