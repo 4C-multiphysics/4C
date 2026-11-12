@@ -154,14 +154,4 @@ void Mortar::STRATEGY::Factory::prepare_nurbs_node(
   return;
 }
 
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-void Mortar::STRATEGY::Factory::build_search_tree(
-    const std::vector<std::shared_ptr<Mortar::Interface>>& interfaces) const
-{
-  for (unsigned i = 0; i < interfaces.size(); ++i) interfaces[i]->create_search_tree();
-
-  return;
-}
-
 FOUR_C_NAMESPACE_CLOSE

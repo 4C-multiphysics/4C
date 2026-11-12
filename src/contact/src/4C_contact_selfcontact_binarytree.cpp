@@ -26,8 +26,7 @@ CONTACT::SelfBinaryTreeNode::SelfBinaryTreeNode(SelfBinaryTreeNodeType type,
     const Core::LinAlg::SerialDenseMatrix& samplevectors, const int& kdop, const int& dim,
     const int& nvectors, const int layer, const bool nonsmoothsurf,
     std::vector<std::vector<std::shared_ptr<SelfBinaryTreeNode>>>& treenodes)
-    : Mortar::BaseBinaryTreeNode::BaseBinaryTreeNode(
-          discret, elelist, dopnormals, kdop, dim, true, layer),
+    : BaseBinaryTreeNode::BaseBinaryTreeNode(discret, elelist, dopnormals, kdop, dim, true, layer),
       // useauxpos_ is always true for contact problems, at least this was the case so far
       type_(type),
       parent_(parent),
@@ -405,10 +404,7 @@ void CONTACT::SelfDualEdge::calculate_costs()
 CONTACT::SelfBinaryTree::SelfBinaryTree(Core::FE::Discretization& discret,
     const Teuchos::ParameterList& iparams, std::shared_ptr<Core::LinAlg::Map> elements, int dim,
     double eps)
-    : Mortar::BaseBinaryTree(discret, dim, eps),
-      elements_(elements),
-      iparams_(iparams),
-      nvectors_(-1)
+    : BaseBinaryTree(discret, dim, eps), elements_(elements), iparams_(iparams), nvectors_(-1)
 {
 }
 
@@ -418,7 +414,7 @@ CONTACT::SelfBinaryTree::SelfBinaryTree(Core::FE::Discretization& discret,
 void CONTACT::SelfBinaryTree::init()
 {
   // call initialization method of the base class
-  Mortar::BaseBinaryTree::init();
+  BaseBinaryTree::init();
 
   // initialize internal variables
   init_internal_variables();

@@ -19,7 +19,6 @@
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_vector.hpp"
-#include "4C_mortar_binarytree.hpp"
 #include "4C_mortar_coupling2d.hpp"
 #include "4C_mortar_coupling3d.hpp"
 #include "4C_mortar_coupling3d_classes.hpp"
@@ -75,8 +74,7 @@ Mortar::InterfaceDataContainer::InterfaceDataContainer()
       plmdofmap_(nullptr),
       lmdofmap_(nullptr),
       maxdofglobal_(-1),
-      searchalgo_(Mortar::search_binarytree),
-      binarytree_(nullptr),
+      searchalgo_(Mortar::bounding_volume_hierarchy),
       searchparam_(-1.0),
       searchuseauxpos_(false),
       inttime_interface_(0.0),
@@ -124,7 +122,6 @@ Mortar::Interface::Interface(std::shared_ptr<Mortar::InterfaceDataContainer> int
       lmdofmap_(interface_data_->lm_dof_row_map()),
       maxdofglobal_(interface_data_->max_dof_global()),
       searchalgo_(interface_data_->search_algorithm()),
-      binarytree_(interface_data_->binary_tree()),
       searchparam_(interface_data_->search_param()),
       searchuseauxpos_(interface_data_->search_use_aux_pos()),
       inttime_interface_(interface_data_->int_time_interface()),
@@ -194,7 +191,6 @@ Mortar::Interface::Interface(std::shared_ptr<InterfaceDataContainer> interfaceDa
       lmdofmap_(interface_data_->lm_dof_row_map()),
       maxdofglobal_(interface_data_->max_dof_global()),
       searchalgo_(interface_data_->search_algorithm()),
-      binarytree_(interface_data_->binary_tree()),
       searchparam_(interface_data_->search_param()),
       searchuseauxpos_(interface_data_->search_use_aux_pos()),
       inttime_interface_(interface_data_->int_time_interface()),
@@ -1551,54 +1547,6 @@ void Mortar::Interface::extend_interface_ghosting(const bool isFinalParallelDist
 }
 
 /*----------------------------------------------------------------------*
- |  create search tree (public)                               popp 01/10|
- *----------------------------------------------------------------------*/
-void Mortar::Interface::create_search_tree()
-{
-  // binary tree search
-  if (search_alg() == Mortar::search_binarytree)
-  {
-    // create fully overlapping map of all master elements
-    // for non-redundant storage (RRloop) we handle the master elements
-    // like the slave elements --> melecolmap_
-    auto strategy = Teuchos::getIntegralValue<Mortar::ExtendGhosting>(
-        interface_params().sublist("PARALLEL REDISTRIBUTION"), "GHOSTING_STRATEGY");
-
-    // get update type of binary tree
-    auto updatetype = Teuchos::getIntegralValue<Mortar::BinaryTreeUpdateType>(
-        interface_params(), "BINARYTREE_UPDATETYPE");
-
-    std::shared_ptr<Core::LinAlg::Map> melefullmap = nullptr;
-    switch (strategy)
-    {
-      case Mortar::ExtendGhosting::roundrobin:
-      case Mortar::ExtendGhosting::binning:
-      {
-        melefullmap = melecolmap_;
-        break;
-      }
-      case Mortar::ExtendGhosting::redundant_all:
-      case Mortar::ExtendGhosting::redundant_target:
-      {
-        melefullmap = Core::LinAlg::allreduce_e_map(*melerowmap_);
-        break;
-      }
-      default:
-      {
-        FOUR_C_THROW("Unknown strategy to deal with interface ghosting.");
-        break;
-      }
-    }
-
-    // create binary tree object for search and setup tree
-    binarytree_ = std::make_shared<Mortar::BinaryTree>(discret(), selecolmap_, melefullmap, n_dim(),
-        search_param(), updatetype, search_use_aux_pos());
-    // initialize the binary tree
-    binarytree_->init();
-  }
-}
-
-/*----------------------------------------------------------------------*
  |  update master and slave sets (nodes etc.)                 popp 11/09|
  *----------------------------------------------------------------------*/
 void Mortar::Interface::update_target_source_sets()
@@ -2154,12 +2102,7 @@ void Mortar::Interface::evaluate_geometry(std::vector<std::shared_ptr<Mortar::In
   //**********************************************************************
   // search algorithm
   //**********************************************************************
-  if (search_alg() == Mortar::search_binarytree)
-    evaluate_search_binarytree();
-  else if (search_alg() == Mortar::bounding_volume_hierarchy)
-    evaluate_bounding_volume_hierarchy();
-  else
-    FOUR_C_THROW("Invalid search algorithm");
+  evaluate_bounding_volume_hierarchy();
 
   // create normals
   evaluate_nodal_normals();
@@ -2498,12 +2441,8 @@ void Mortar::Interface::pre_evaluate(const int& step, const int& iter)
   //**********************************************************************
   // search algorithm
   //**********************************************************************
-  if (search_alg() == Mortar::search_binarytree)
-    evaluate_search_binarytree();
-  else if (search_alg() == Mortar::bounding_volume_hierarchy)
-    evaluate_bounding_volume_hierarchy();
-  else
-    FOUR_C_THROW("Invalid search algorithm");
+  evaluate_bounding_volume_hierarchy();
+
 
   // evaluate averaged nodal normals on slave side
   evaluate_nodal_normals();
@@ -2684,16 +2623,6 @@ void Mortar::Interface::export_nodal_normals() const
     mrtrnode->mo_data().n()[1] = (*loc)(1, 0);
     mrtrnode->mo_data().n()[2] = (*loc)(2, 0);
   }
-}
-
-/*----------------------------------------------------------------------*
- |  Search for potentially coupling sl/ma pairs (public)      popp 10/08|
- *----------------------------------------------------------------------*/
-bool Mortar::Interface::evaluate_search_binarytree()
-{
-  binarytree_->evaluate_search();
-
-  return true;
 }
 
 /*----------------------------------------------------------------------*

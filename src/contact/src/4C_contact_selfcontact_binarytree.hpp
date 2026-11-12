@@ -10,9 +10,9 @@
 
 #include "4C_config.hpp"
 
+#include "4C_contact_base_binarytree.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_linalg_map.hpp"
-#include "4C_mortar_base_binarytree.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -43,7 +43,7 @@ namespace CONTACT
   Refer also to the Semesterarbeit of Anh-Tu Vuong, 2009
 
   */
-  class SelfBinaryTreeNode : public Mortar::BaseBinaryTreeNode
+  class SelfBinaryTreeNode : public BaseBinaryTreeNode
   {
    public:
     /*!
@@ -491,7 +491,7 @@ namespace CONTACT
 
   */
 
-  class SelfBinaryTree : public Mortar::BaseBinaryTree
+  class SelfBinaryTree : public BaseBinaryTree
   {
    public:
     /*!

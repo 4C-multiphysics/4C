@@ -73,15 +73,6 @@ namespace Mortar
 
       virtual void setup(int dim);
 
-      /*! \brief Create the desired search tree object
-       *
-       * We loop over all \c interfaces and build the search tree for every interface.
-       *
-       * @param[in] interfaces All meshtying interfaces
-       */
-      void build_search_tree(
-          const std::vector<std::shared_ptr<Mortar::Interface>>& interfaces) const;
-
       /*! \brief Check the problem dimension
        *
        * Mortar meshtying/contact problems are implemented for 2D and 3D only.

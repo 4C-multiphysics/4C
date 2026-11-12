@@ -5,12 +5,12 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_MORTAR_BASE_BINARYTREE_HPP
-#define FOUR_C_MORTAR_BASE_BINARYTREE_HPP
+#ifndef FOUR_C_CONTACT_BASE_BINARYTREE_HPP
+#define FOUR_C_CONTACT_BASE_BINARYTREE_HPP
 
 #include "4C_config.hpp"
 
-#include "4C_mortar_abstract_binarytree.hpp"
+#include "4C_contact_abstract_binarytree.hpp"
 
 #include <memory>
 #include <vector>
@@ -21,15 +21,13 @@ namespace Core::FE
 {
   class Discretization;
 }  // namespace Core::FE
+
 namespace CONTACT
 {
   class SelfBinaryTree;
   class SelfDualEdge;
   class UnbiasedSelfBinaryTree;
-}  // namespace CONTACT
 
-namespace Mortar
-{
   /*!
   \brief A base class for binary tree nodes
 
@@ -38,7 +36,6 @@ namespace Mortar
   {
     // these classes need access to protected methods of this class and are therefore defined friend
     // classes here
-    friend class BinaryTree;
     friend class CONTACT::SelfBinaryTree;
     friend class CONTACT::SelfDualEdge;
     friend class CONTACT::UnbiasedSelfBinaryTree;
@@ -271,7 +268,7 @@ namespace Mortar
     //! set k for DOP (8 for 2D, 18 for 3D)
     int kdop_;
   };  // class BaseBinaryTree
-}  // namespace Mortar
+}  // namespace CONTACT
 
 FOUR_C_NAMESPACE_CLOSE
 

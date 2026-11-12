@@ -481,9 +481,6 @@ void Adapter::CouplingNonLinMortar::complete_interface(
         problem->output_control_file(), problem->spatial_approximation_type(), isFinalDistribution);
   }
 
-  // create binary search tree
-  interface->create_search_tree();
-
   // store old row maps (before parallel redistribution)
   psource_dof_row_map_ = std::make_shared<Core::LinAlg::Map>(*interface->source_row_dofs());
   ptarget_dof_row_map_ = std::make_shared<Core::LinAlg::Map>(*interface->target_row_dofs());
@@ -506,9 +503,6 @@ void Adapter::CouplingNonLinMortar::complete_interface(
     // call fill complete again
     interface->fill_complete(problem->discretization_map(), problem->binning_strategy_params(),
         problem->output_control_file(), problem->spatial_approximation_type(), true);
-
-    // re create binary search tree
-    interface->create_search_tree();
 
     // print parallel distribution again
     interface->print_parallel_distribution();
@@ -702,9 +696,6 @@ void Adapter::CouplingNonLinMortar::setup_spring_dashpot(
 
   // store interface
   interface_ = interface;
-
-  // create binary search tree
-  interface_->create_search_tree();
 
   // interface displacement (=0) has to be merged from source and target discretization
   std::shared_ptr<Core::LinAlg::Map> dofrowmap =

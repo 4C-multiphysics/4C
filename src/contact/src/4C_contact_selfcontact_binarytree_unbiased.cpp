@@ -196,7 +196,7 @@ void CONTACT::UnbiasedSelfBinaryTree::get_contracted_node(
 void CONTACT::UnbiasedSelfBinaryTree::init()
 {
   // call initialization method of base class
-  Mortar::BaseBinaryTree::init();
+  BaseBinaryTree::init();
 
   // initialize internal variables
   init_internal_variables();

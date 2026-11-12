@@ -47,16 +47,6 @@ std::vector<Core::IO::InputSpec> Mortar::valid_parameters()
               {.description = "Type of contact search",
                   .default_value = bounding_volume_hierarchy}),
 
-
-          deprecated_selection<Mortar::BinaryTreeUpdateType>("BINARYTREE_UPDATETYPE",
-              {
-                  {"BottomUp", binarytree_bottom_up},
-                  {"TopDown", binarytree_top_down},
-              },
-              {.description = "Type of binary tree update, which is either a bottom up or a top "
-                              "down approach.",
-                  .default_value = binarytree_bottom_up}),
-
           parameter<double>("SEARCH_PARAM",
               {.description = "Inflation factor for the bounding volumes (k-DOPs) used in the "
                               "contact search. The bounding volumes are enlarged by this factor "
