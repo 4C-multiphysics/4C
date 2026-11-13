@@ -231,12 +231,11 @@ namespace Mat
         Core::LinAlg::Matrix<9, 1>* d_cauchyndir_dF, Core::LinAlg::Matrix<9, 9>* d2_cauchyndir_dF2,
         Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_dn,
         Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_ddir, const EvaluationContext<3>& context,
-        int eleGID, const double* concentration, const double* temp, double* d_cauchyndir_dT,
-        Core::LinAlg::Matrix<9, 1>* d2_cauchyndir_dF_dT) override;
+        int eleGID, const double* concentration) override;
 
     /**
      * \brief The derivatives of the strain energy function w.r.t. the principle invariants are
-     * filled up to the third derivative, can be overloaded if temperature is given.
+     * filled up to the third derivative.
      *
      * \param prinv(in) : principle invariants of the tensor
      * \param gp(in) : Gauss point
@@ -244,47 +243,10 @@ namespace Mat
      * \param dPI(in,out) : 1st derivative of strain energy function w.r.t. principle invariants
      * \param ddPII(in,out) : 2nd derivative of strain energy function w.r.t. principle invariants
      * \param dddPIII(in,out) : 3rd derivative of strain energy function w.r.t. principle invariants
-     * \param temp(in) : temperature
      */
     virtual void evaluate_cauchy_derivs(const Core::LinAlg::Matrix<3, 1>& prinv, int gp, int eleGID,
         Core::LinAlg::Matrix<3, 1>& dPI, Core::LinAlg::Matrix<6, 1>& ddPII,
-        Core::LinAlg::Matrix<10, 1>& dddPIII, const double* temp);
-
-    /**
-     * \brief Evaluate the thermal dependency of the linearizations of the cauchy stress, to be
-     *        overloaded
-     *
-     * \param prinv(in) : principle invariants of the tensor
-     * \param ndt(in) : dot product of vectors n and t (\f[\mathbf{t} \cdot \mathbf{t}\f])
-     * \param bdndt(in) : left Cauchy-Green tensor contracted using the vector n and t (\f[
-              \mathbf{b} \cdot \mathbf{n} \cdot \mathbf{t} \f])
-     * \param ibdndt(in) : inverse of left Cauchy-Green tensor contracted using the vector n and t
-              (\f[ \mathbf{b}^{-1} \cdot \mathbf{n} \cdot \mathbf{t} \f])
-     * \param temp(in) : temperature
-     * \param DsntDT(out) : derivative of cauchy stress contracted with vectors n and t w.r.t.
-              temperature (\f[\frac{\mathrm{d} \mathbf{\sigma} \cdot \mathbf{n} \cdot \mathbf{t} }{
-              \mathrm{d} T }\f])
-     * \param iFTV(in) : inverse transposed of the deformation gradient
-     * \param DbdndtDFV(in) : derivative of bdndt w.r.t. deformation gradient (\f[\frac{ \mathrm{d}
-              \mathbf{b} \cdot \mathbf{n} \cdot \mathbf{t}}{\mathrm{d} \mathbf{F}}\f])
-     * \param DibdndtDFV(in) : derivative of ibdndt w.r.t. deformation gradient
-              (\f[\frac{\mathrm{d} \mathbf{b}^{-1} \cdot \mathbf{n} \cdot \mathbf{t}}{\mathrm{d}
-              \mathbf{F} }\f])
-     * \param DI1DF(in) : derivative of first invariant w.r.t. deformation gradient
-     * \param DI2DF(in) : derivative of second invariant w.r.t. deformation gradient
-     * \param DI3DF(in) : derivative of third invariant w.r.t. deformation gradient
-     * \param D2sntDFDT(out) : second derivative of cauchy stress contracted with vectors n and t
-              w.r.t. temperature and deformation gradient (\f[ \frac{\mathrm{d}^2 \mathbf{\sigma}
-              \cdot \mathbf{n} \cdot \mathbf{t}} {\mathrm{d} \mathbf{F} \mathrm{d} T } \f])
-     */
-    virtual void evaluate_cauchy_temp_deriv(const Core::LinAlg::Matrix<3, 1>& prinv,
-        const double ndt, const double bdndt, const double ibdndt, const double* temp,
-        double* DsntDT, const Core::LinAlg::Matrix<9, 1>& iFTV,
-        const Core::LinAlg::Matrix<9, 1>& DbdndtDFV, const Core::LinAlg::Matrix<9, 1>& DibdndtDFV,
-        const Core::LinAlg::Matrix<9, 1>& DI1DF, const Core::LinAlg::Matrix<9, 1>& DI2DF,
-        const Core::LinAlg::Matrix<9, 1>& DI3DF, Core::LinAlg::Matrix<9, 1>* D2sntDFDT)
-    {
-    }
+        Core::LinAlg::Matrix<10, 1>& dddPIII);
 
     /// setup
     void setup(int numgp, const Discret::Elements::Fibers& fibers,

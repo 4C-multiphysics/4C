@@ -26,8 +26,7 @@ double Mat::So3Material::evaluate_cauchy_n_dir_and_derivatives(
     Core::LinAlg::Matrix<3, 1>* d_cauchyndir_ddir, Core::LinAlg::Matrix<9, 1>* d_cauchyndir_dF,
     Core::LinAlg::Matrix<9, 9>* d2_cauchyndir_dF2, Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_dn,
     Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_ddir, const EvaluationContext<3>& context,
-    int eleGID, const double* concentration, const double* temp, double* d_cauchyndir_dT,
-    Core::LinAlg::Matrix<9, 1>* d2_cauchyndir_dF_dT)
+    int eleGID, const double* concentration)
 {
   FOUR_C_THROW("evaluate_cauchy_n_dir_and_derivatives not implemented for material of type {}",
       this->material_type());

@@ -47,9 +47,6 @@ namespace CONTACT
     displ_lm,             ///< Kdz block (of the corresponding model evaluator)
     lm_displ,             ///< Kzd block (of the corresponding model evaluator)
     lm_lm,                ///< Kzz block (of the corresponding model evaluator)
-    temp_temp,            ///< Ktt block (thermal block)
-    temp_displ,           ///< Ktd block (structure-thermo-coupling)
-    displ_temp,           ///< Kdt block (thermo-structure-coupling)
     porofluid_porofluid,  ///< Kpp block (porofluid-porofluid)
     porofluid_displ,      ///< Kpd block (porofluid-structure)
     displ_porofluid,      ///< Kdp block (structure-porofluid)
@@ -66,7 +63,6 @@ namespace CONTACT
   {
     displ,       ///< displacement block (structural block)
     constraint,  ///< lagrange multiplier/constraint block of the corresponding model
-    temp,        ///< temperature block (thermal block)
     porofluid,   ///< porofluid block (porofluid block)
     scatra,      ///< scalar transport block (scatra block)
     elch         ///< electrochemistry block (elch block)

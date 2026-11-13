@@ -72,11 +72,6 @@ void Mortar::ElementNitscheData<parent_distype>::assemble_rhs(Mortar::Element* t
       assemble_rhs<Core::FE::dim<parent_distype>>(
           target_elem, rhs_, target_elem->mo_data().parent_dof(), fc);
       break;
-    case CONTACT::VecBlockType::temp:
-      if (target_elem->mo_data().parent_temp_dof().size())
-        assemble_rhs<1>(
-            target_elem, tsi_data_.rhs_t_, target_elem->mo_data().parent_temp_dof(), fc);
-      break;
     case CONTACT::VecBlockType::porofluid:
       if (target_elem->mo_data()
               .parent_pf_dof()
@@ -108,20 +103,6 @@ void Mortar::ElementNitscheData<parent_distype>::assemble_matrix(Mortar::Element
     case CONTACT::MatBlockType::displ_displ:
       assemble_matrix<Core::FE::dim<parent_distype>>(
           target_elem, k_, target_elem->mo_data().parent_dof(), kc);
-      break;
-    case CONTACT::MatBlockType::displ_temp:
-      assemble_matrix<Core::FE::dim<parent_distype>>(
-          target_elem, tsi_data_.k_dt_, target_elem->mo_data().parent_dof(), kc);
-      break;
-    case CONTACT::MatBlockType::temp_displ:
-      if (target_elem->mo_data().parent_temp_dof().size())
-        assemble_matrix<1>(
-            target_elem, tsi_data_.k_td_, target_elem->mo_data().parent_temp_dof(), kc);
-      break;
-    case CONTACT::MatBlockType::temp_temp:
-      if (target_elem->mo_data().parent_temp_dof().size())
-        assemble_matrix<1>(
-            target_elem, tsi_data_.k_tt_, target_elem->mo_data().parent_temp_dof(), kc);
       break;
     case CONTACT::MatBlockType::displ_porofluid:
       assemble_matrix<Core::FE::dim<parent_distype>>(

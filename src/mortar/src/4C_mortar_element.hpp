@@ -1069,12 +1069,6 @@ namespace Mortar
     virtual double& trace_he() { return traceHE_; }
 
     /*!
-    \brief Estimated mesh size and thermal conductivity h/K via Eigenvalues of the trace inequality.
-           For Nitsche contact formulations
-      */
-    virtual double& trace_h_cond() { return traceHCond_; }
-
-    /*!
     \brief Get Nitsche data container
       */
     virtual Mortar::ElementNitscheContainer& get_nitsche_container();
@@ -1098,8 +1092,6 @@ namespace Mortar
 
     // approximation of mesh size and stiffness from inverse trace inequality (h/E)
     double traceHE_;
-    // approximation of mesh size and stiffness from inverse trace inequality (h/conductivity)
-    double traceHCond_;
 
     // data container for element matrices in Nitsche contact
     std::shared_ptr<Mortar::ElementNitscheContainer> nitsche_container_;

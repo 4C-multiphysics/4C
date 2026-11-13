@@ -48,12 +48,6 @@ namespace Mortar
     virtual double* k(int col) = 0;
     virtual double* k(int col, int dof) = 0;
 
-    virtual double* rhs_t(int dof) = 0;
-    virtual double* rhs_t() = 0;
-    virtual double* ktt(int col) = 0;
-    virtual double* ktd(int col) = 0;
-    virtual double* kdt(int col) = 0;
-
     virtual double* rhs_p(int dof) = 0;
     virtual double* kpp(int col) = 0;
     virtual double* kpd(int col) = 0;
@@ -69,28 +63,6 @@ namespace Mortar
     virtual double* ked(int col) = 0;
     virtual double* ked(int col, int dof) = 0;
     virtual double* kde(int col) = 0;
-  };
-
-  template <Core::FE::CellType parent_distype>
-  class ElementNitscheDataTsi
-  {
-   public:
-    void clear()
-    {
-      rhs_t_.clear();
-      k_tt_.clear();
-      k_td_.clear();
-      k_dt_.clear();
-    }
-
-    static constexpr int num_parent_disp_dof =
-        Core::FE::num_nodes(parent_distype) * Core::FE::dim<parent_distype>;
-    static constexpr int num_parent_thermo_dof = Core::FE::num_nodes(parent_distype);
-
-    Core::LinAlg::Matrix<num_parent_thermo_dof, 1> rhs_t_;
-    std::unordered_map<int, Core::LinAlg::Matrix<num_parent_thermo_dof, 1>> k_tt_;
-    std::unordered_map<int, Core::LinAlg::Matrix<num_parent_thermo_dof, 1>> k_td_;
-    std::unordered_map<int, Core::LinAlg::Matrix<num_parent_disp_dof, 1>> k_dt_;
   };
 
   template <Core::FE::CellType parent_distype>
@@ -174,12 +146,6 @@ namespace Mortar
     double* k(int col) override { return k_[col].data(); }
     double* k(int col, int dof) override { return &k_[col](dof); }
 
-    double* rhs_t(int dof) override { return &tsi_data_.rhs_t_(dof); }
-    double* rhs_t() override { return tsi_data_.rhs_t_.data(); }
-    double* ktt(int col) override { return tsi_data_.k_tt_[col].data(); }
-    double* ktd(int col) override { return tsi_data_.k_td_[col].data(); }
-    double* kdt(int col) override { return tsi_data_.k_dt_[col].data(); }
-
     double* rhs_p(int dof) override { return &poro_data_.rhs_p_(dof); }
     double* kpp(int col) override { return poro_data_.k_pp_[col].data(); }
     double* kpd(int col) override { return poro_data_.k_pd_[col].data(); }
@@ -218,7 +184,6 @@ namespace Mortar
     {
       rhs_.clear();
       k_.clear();
-      tsi_data_.clear();
       poro_data_.clear();
       ssi_data_.clear();
       ssi_elch_data_.clear();
@@ -227,7 +192,6 @@ namespace Mortar
    private:
     VectorType rhs_;
     std::unordered_map<int, VectorType> k_;
-    Mortar::ElementNitscheDataTsi<parent_distype> tsi_data_;
     Mortar::ElementNitscheDataPoro<parent_distype> poro_data_;
     Mortar::ElementNitscheDataSsi<parent_distype> ssi_data_;
     Mortar::ElementNitscheDataSsiElch<parent_distype> ssi_elch_data_;

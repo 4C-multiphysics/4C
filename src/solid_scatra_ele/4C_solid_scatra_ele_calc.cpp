@@ -255,7 +255,7 @@ namespace
         get_ptr(linearization_dependencies.d2_cauchyndir_dF2),
         get_ptr(linearization_dependencies.d2_cauchyndir_dF_dn),
         get_ptr(linearization_dependencies.d2_cauchyndir_dF_ddir), context, eleGID,
-        scalars_at_xi.data(), nullptr, nullptr, nullptr);
+        scalars_at_xi.data());
 
     // Evaluate pure solid linearizations
     Discret::Elements::evaluate_cauchy_n_dir_linearizations<celltype>(
