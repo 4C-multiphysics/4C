@@ -364,16 +364,24 @@ jobs:
           import spack.environment as ev
           from spack.error import SpackError
 
-          # Cached build tools may retain an older runtime independently of
-          # the 4C libraries. Validate only the application link/run closure.
-          runtimes = {
+          # Cached build tools can carry runtimes from their build compiler.
+          # Validate the GCC runtime required by the Intel application runtime.
+          intel_runtimes = {
               node.dag_hash(): node
               for root in ev.Environment(os.environ["SPACK_ENV"]).concrete_roots()
               for node in root.traverse(deptype=("link", "run"))
-              if node.name == "gcc-runtime"
+              if node.name == "intel-oneapi-runtime"
+          }
+          if not intel_runtimes:
+              raise SpackError("Intel build has no link/run Intel runtime dependency")
+          runtimes = {
+              runtime.dag_hash(): runtime
+              for intel_runtime in intel_runtimes.values()
+              for runtime in intel_runtime.traverse(deptype=("link", "run"))
+              if runtime.name == "gcc-runtime"
           }
           if not runtimes:
-              raise SpackError("Intel build has no link/run GCC runtime dependency")
+              raise SpackError("Intel runtime has no link/run GCC runtime dependency")
           for runtime in runtimes.values():
               if not runtime.satisfies("@13:"):
                   raise SpackError(f"Intel build requires GCC runtime >=13, got {runtime}")
