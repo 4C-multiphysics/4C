@@ -1037,68 +1037,83 @@ void ScaTra::ScaTraTimIntImpl::evaluate_convective_heat_transfer(
 void ScaTra::ScaTraTimIntImpl::output_lin_solver_stats(const Core::LinAlg::Solver& solver,
     const double& time, const int& step, const int& iteration, const int& size)
 {
-  // extract communicator
-  MPI_Comm comm = solver.get_comm();
+  using Core::IO::CsvColumn;
+  using Core::IO::CsvColumnOrder;
+  using Core::IO::CsvNumberFormat;
 
-  // write performance statistics to file
-  if (Core::Communication::my_mpi_rank(comm) == 0)
+  if (not lin_solver_stats_writer_)
   {
-    // set file name
-    std::string filename(
-        Global::Problem::instance()->output_control_file()->file_name() + ".lin_solver_stats.csv");
+    lin_solver_stats_writer_.emplace(myrank_, disc_writer()->output(), "lin_solver_stats",
+        Core::IO::RuntimeCsvWriter::keep_rows_up_to_restart_step());
 
-    // open file in appropriate mode and write header at beginning
-    std::ofstream file;
-    if (step == 1 and iteration == 1)
-    {
-      file.open(filename.c_str(), std::fstream::trunc);
-      file << "Step,NewtonRaphsonIteration,SystemSize,SolverIterations,SolverTime" << '\n';
-    }
-    else
-    {
-      file.open(filename.c_str(), std::fstream::app);
-    }
-
-    // write results
-    file << step << "," << iteration << "," << size << "," << solver.get_num_iters() << ","
-         << std::setprecision(16) << std::scientific << time << '\n';
-
-    // close file
-    file.close();
+    // All columns are fixed, so that they keep the order and the spelling they have always had.
+    lin_solver_stats_writer_->register_column(CsvColumn{.name = "Step",
+        .num_components = 1,
+        .format = CsvNumberFormat::Integer,
+        .precision = 0,
+        .order = CsvColumnOrder::Fixed});
+    lin_solver_stats_writer_->register_column(CsvColumn{.name = "NewtonRaphsonIteration",
+        .num_components = 1,
+        .format = CsvNumberFormat::Integer,
+        .precision = 0,
+        .order = CsvColumnOrder::Fixed});
+    lin_solver_stats_writer_->register_column(CsvColumn{.name = "SystemSize",
+        .num_components = 1,
+        .format = CsvNumberFormat::Integer,
+        .precision = 0,
+        .order = CsvColumnOrder::Fixed});
+    lin_solver_stats_writer_->register_column(CsvColumn{.name = "SolverIterations",
+        .num_components = 1,
+        .format = CsvNumberFormat::Integer,
+        .precision = 0,
+        .order = CsvColumnOrder::Fixed});
+    lin_solver_stats_writer_->register_column(CsvColumn{.name = "SolverTime",
+        .num_components = 1,
+        .format = CsvNumberFormat::Scientific,
+        .precision = 16,
+        .order = CsvColumnOrder::Fixed});
   }
+
+  lin_solver_stats_writer_->write_data_to_file({{"Step", {static_cast<double>(step)}},
+      {"NewtonRaphsonIteration", {static_cast<double>(iteration)}},
+      {"SystemSize", {static_cast<double>(size)}},
+      {"SolverIterations", {static_cast<double>(solver.get_num_iters())}}, {"SolverTime", {time}}});
 }
 
 /*-------------------------------------------------------------------------*
  *-------------------------------------------------------------------------*/
 void ScaTra::ScaTraTimIntImpl::output_nonlin_solver_stats(
-    const int& iterations, const double& time, const int& step, MPI_Comm comm)
+    const int& iterations, const double& time, const int& step)
 {
-  // write performance statistics to file
-  if (Core::Communication::my_mpi_rank(comm) == 0)
+  using Core::IO::CsvColumn;
+  using Core::IO::CsvColumnOrder;
+  using Core::IO::CsvNumberFormat;
+
+  if (not nonlin_solver_stats_writer_)
   {
-    // set file name
-    std::string filename(Global::Problem::instance()->output_control_file()->file_name() +
-                         ".nonlin_solver_stats.csv");
+    nonlin_solver_stats_writer_.emplace(myrank_, disc_writer()->output(), "nonlin_solver_stats",
+        Core::IO::RuntimeCsvWriter::keep_rows_up_to_restart_step());
 
-    // open file in appropriate mode and write header at beginning
-    std::ofstream file;
-    if (step == 1)
-    {
-      file.open(filename.c_str(), std::fstream::trunc);
-      file << "Step,NonlinSolverIterations,NonlinSolverTime" << '\n';
-    }
-    else
-    {
-      file.open(filename.c_str(), std::fstream::app);
-    }
-
-    // write results
-    file << step << "," << iterations << "," << std::setprecision(16) << std::scientific << time
-         << '\n';
-
-    // close file
-    file.close();
+    // All columns are fixed, so that they keep the order and the spelling they have always had.
+    nonlin_solver_stats_writer_->register_column(CsvColumn{.name = "Step",
+        .num_components = 1,
+        .format = CsvNumberFormat::Integer,
+        .precision = 0,
+        .order = CsvColumnOrder::Fixed});
+    nonlin_solver_stats_writer_->register_column(CsvColumn{.name = "NonlinSolverIterations",
+        .num_components = 1,
+        .format = CsvNumberFormat::Integer,
+        .precision = 0,
+        .order = CsvColumnOrder::Fixed});
+    nonlin_solver_stats_writer_->register_column(CsvColumn{.name = "NonlinSolverTime",
+        .num_components = 1,
+        .format = CsvNumberFormat::Scientific,
+        .precision = 16,
+        .order = CsvColumnOrder::Fixed});
   }
+
+  nonlin_solver_stats_writer_->write_data_to_file({{"Step", {static_cast<double>(step)}},
+      {"NonlinSolverIterations", {static_cast<double>(iterations)}}, {"NonlinSolverTime", {time}}});
 }
 
 /*-------------------------------------------------------------------------*

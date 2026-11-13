@@ -325,7 +325,7 @@ namespace PoroPressureBased
 
    protected:
     //! runtime CSV-writer for domain integrals
-    std::optional<Core::IO::RuntimeCsvWriter> runtime_csvwriter_domain_integrals_;
+    std::optional<Core::IO::RuntimeCsvWriterWithTimeAndStep> runtime_csvwriter_domain_integrals_;
 
    private:
     /// set time parameter for element evaluation (called before every time step)
