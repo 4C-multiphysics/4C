@@ -1,7 +1,8 @@
 The pinned Spack recipe passes -Dgallium-drivers=softpipe for ~llvm, but
-Mesa 23.3.6 calls this driver swrast. Accept softpipe as a deprecated alias
-and let Meson translate it to swrast. Defaults and other drivers are unchanged.
-Deprecated-value mappings are supported by Mesa's minimum Meson version (0.60).
+Mesa 23.3 through 24.1 calls this driver swrast. Accept softpipe as a
+deprecated alias and let Meson translate it to swrast. Defaults and other
+drivers are unchanged. Deprecated-value mappings are supported by Mesa's
+minimum Meson version (0.60).
 
 diff --git a/meson_options.txt b/meson_options.txt
 --- a/meson_options.txt

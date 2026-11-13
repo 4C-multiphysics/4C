@@ -239,18 +239,16 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
     depends_on(
         "mesa~llvm",
         patches=[
-            patch("mesa-23.3.6-replace-softpipe-with-swrast.patch", when="@23.3.6"),
-            patch("mesa-25.0.5-disable-llvm-autodetection.patch", when="@25.0.5"),
-            patch("mesa-25.0.5-linux-c11-threads.patch", when="@25.0.5"),
+            patch("mesa-23.3.6-replace-softpipe-with-swrast.patch", when="@23.3:24.1"),
+            patch("mesa-25.0.5-linux-c11-threads.patch", when="@23.2:25.2.6"),
         ],
         when="+vtk platform=linux",
     )
     depends_on(
         "mesa~llvm",
         patches=[
-            patch("mesa-23.3.6-replace-softpipe-with-swrast.patch", when="@23.3.6"),
-            patch("mesa-25.0.5-disable-llvm-autodetection.patch", when="@25.0.5"),
-            patch("mesa-25.0.5-linux-c11-threads.patch", when="@25.0.5"),
+            patch("mesa-23.3.6-replace-softpipe-with-swrast.patch", when="@23.3:24.1"),
+            patch("mesa-25.0.5-linux-c11-threads.patch", when="@23.2:25.2.6"),
         ],
         when="+python platform=linux",
     )

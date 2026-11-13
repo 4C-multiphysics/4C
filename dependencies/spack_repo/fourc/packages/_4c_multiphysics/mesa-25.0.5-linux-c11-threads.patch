@@ -1,5 +1,5 @@
-Mesa 25.0.5 enables native C11 threads only on Android. On Linux with
-newer glibc, stdlib.h also declares once_flag and call_once, conflicting
+Mesa 23.2 through 25.2.6 enables native C11 threads only on Android. On Linux
+with newer glibc, stdlib.h also declares once_flag and call_once, conflicting
 with Mesa's fallback definitions. Use the detected native C11 thread API
 on Linux as well; systems without thrd_create still use the fallback.
 
