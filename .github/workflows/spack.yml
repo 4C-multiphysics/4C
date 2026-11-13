@@ -195,8 +195,8 @@ jobs:
             os: ubuntu-24.04
             platform: rocky-10.2
             container: quay.io/rockylinux/rockylinux:10.2@sha256:827d37bc128288ccf160ee318bb3cb92d591164cb217e92f8bc61e3982ae1834
-            compiler: gcc@16.1.0
-            compiler_bin: /usr/bin/g++
+            compiler: gcc@15.2
+            compiler_bin: /opt/rh/gcc-toolset-15/root/usr/bin/g++
             variant: extended
             spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
             mpi_spec: "^openmpi"
@@ -212,12 +212,20 @@ jobs:
         if: matrix.container
         run: |
           dnf install -y \
-            gcc gcc-c++ gcc-gfortran git python3 python3-pip \
+            gcc gcc-c++ gcc-gfortran \
+            gcc-toolset-15-gcc gcc-toolset-15-gcc-c++ gcc-toolset-15-gcc-gfortran \
+            git python3 python3-pip \
             make cmake pkgconf-pkg-config patch diffutils findutils tar gzip bzip2 xz unzip wget \
             which hostname file perl curl ca-certificates libxcrypt-compat
           cat /etc/os-release
           # Keep system tools reachable when composite actions extend the container PATH.
           printf '%s\n' /usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin >> "$GITHUB_PATH"
+
+      - name: Configure GCC Toolset 15 for Rocky Linux
+        if: matrix.platform == 'rocky-10.2'
+        run: |
+          printf '%s\n' /opt/rh/gcc-toolset-15/root/usr/bin >> "$GITHUB_PATH"
+          printf '%s\n' 'LD_LIBRARY_PATH=/opt/rh/gcc-toolset-15/root/usr/lib64' >> "$GITHUB_ENV"
 
       - name: Set up Spack
         uses: spack/setup-spack@16b756799ede8b28951287f89bcd3fdb32ec1ca3 # v3.0.0
@@ -264,13 +272,6 @@ jobs:
             spack compiler find /usr/bin/g++-13
           fi
           spack compiler find ${{ matrix.compiler_bin }}
-
-      - name: Install GCC 16.1 for Rocky Linux
-        if: matrix.platform == 'rocky-10.2'
-        run: |
-          spack install --fail-fast --verbose "gcc@16.1.0 %gcc"
-          spack compiler find "$(spack location --install-dir gcc@16.1.0)/bin"
-          spack compiler info gcc@16.1.0
 
       - name: Isolate Android libraries from Intel MPI discovery
         if: startsWith(matrix.compiler, 'oneapi@')
