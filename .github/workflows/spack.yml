@@ -1,38 +1,9 @@
 name: Spack build test
 
-# Builds the checkout with the local recipe and selected official releases
-# with the official recipe, then smoke-tests installations except GPU-only builds.
-#
-# Sunday runs test the latest official spack-packages develop commit. PR checks
-# use a pinned, known-good snapshot to avoid unrelated upstream regressions.
-# Manual dispatch offers latest (default) or pinned. Resolve the commit once
-# for the entire matrix and record it in job summaries and failure reports.
-# Update the pin deliberately after reviewing successful scheduled runs.
-#
-# One Ubuntu/GCC development entry follows the contributor workflow: install
-# only dependencies, generate CMake presets, build the release configuration,
-# and run a tutorial simulation. Other entries test full Spack package builds;
-# CUDA validates compilation and linking only because the runner has no GPU.
+# Temporary release-only integration test for spack/spack-packages#6479 and #7679.
+# This branch uses immutable fork snapshots; the regular CI branch is unchanged.
 on:
-  schedule:
-    # Weekly, avoiding the top of the hour as recommended by GitHub
-    - cron: "17 5 * * 0"
-      timezone: "Europe/Berlin"
   workflow_dispatch:
-    inputs:
-      packages:
-        description: "Official Spack packages: latest develop or known-good snapshot"
-        type: choice
-        options:
-          - latest
-          - pinned
-        default: latest
-  pull_request:
-    paths:
-      - ".github/workflows/spack.yml"
-      - "dependencies/spack_repo/**"
-      - "presets/spack/**"
-      - "utilities/four_c_python/src/four_c_development/generate_spack_cmake_presets.py"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -44,33 +15,25 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.packages.outputs.sha }}
+      repository: ${{ steps.packages.outputs.repository }}
     steps:
       - name: Select one commit for the entire matrix
         id: packages
         shell: bash
         env:
-          EVENT: ${{ github.event_name }}
-          SELECTION: ${{ inputs.packages }}
-          # Known-good official develop snapshot selected on 2026-11-12.
-          # Advance deliberately after a successful weekly run; reassess the
-          # CLN workaround and development dependency overrides at that time.
-          PINNED_SHA: 8933fbb6925be105d493d2eff0c0b375a2ac1cc8
+          PACKAGES_REPOSITORY: georghammerl/spack-packages
+          PACKAGES_SHA: c16789f0a9f1c288529d557353322af8763c08e6
         run: |
-          if [ "$EVENT" = schedule ] || { [ "$EVENT" = workflow_dispatch ] && [ "$SELECTION" = latest ]; }; then
-            SHA=$(git ls-remote --exit-code https://github.com/spack/spack-packages.git refs/heads/develop | cut -f1)
-            POLICY=latest
-          else
-            SHA="$PINNED_SHA"
-            POLICY=pinned
-          fi
+          SHA="$PACKAGES_SHA"
           if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
             echo "Could not resolve a single Spack packages commit: $SHA" >&2
             exit 1
           fi
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "repository=$PACKAGES_REPOSITORY" >> "$GITHUB_OUTPUT"
           echo "### Spack packages snapshot" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Policy: \`$POLICY\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Commit: [\`$SHA\`](https://github.com/spack/spack-packages/commit/$SHA)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Policy: temporary release-recipe integration" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: [\`$SHA\`](https://github.com/$PACKAGES_REPOSITORY/commit/$SHA)" >> "$GITHUB_STEP_SUMMARY"
 
   spack-build:
     needs: select-packages
@@ -87,6 +50,13 @@ jobs:
       matrix:
         include:
           # GCC 14 hits an internal compiler error on 4C's tensor templates.
+          - recipe: release
+            os: ubuntu-24.04
+            compiler: gcc@13
+            compiler_bin: /usr/bin/g++-13
+            variant: minimal
+            spec_args: ""
+            version: "2026.1.0"
           - recipe: release
             os: ubuntu-24.04
             compiler: gcc@13
@@ -122,85 +92,28 @@ jobs:
             variant: dealii
             spec_args: "+dealii"
             version: latest-release
-          - recipe: development
-            os: ubuntu-24.04
-            compiler: gcc@13
-            compiler_bin: /usr/bin/g++-13
-            variant: minimal
-            # Exercise the documented contributor path instead of installing 4C.
-            dependencies_only: true
-            spec_args: ""
-            version: main
-          - recipe: development
-            os: ubuntu-26.04
-            compiler: gcc@15
-            compiler_bin: /usr/bin/g++-15
-            variant: minimal
-            spec_args: ""
-            version: main
-          - recipe: development
-            os: ubuntu-26.04
-            compiler: gcc@15
-            compiler_bin: /usr/bin/g++-15
-            variant: extended
-            spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
-            version: main
-          - recipe: development
-            os: ubuntu-26.04
-            compiler: gcc@15
-            compiler_bin: /usr/bin/g++-15
-            variant: dealii
-            spec_args: "+dealii"
-            version: main
-          # These compilers/platforms need fixes not yet in the official recipe.
-          - recipe: development
+          - recipe: release
             os: ubuntu-24.04
             compiler: clang@18
             compiler_bin: /usr/bin/clang++-18
             variant: extended
             spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
-            version: main
-          # Compile and link CUDA code without a GPU, matching the Docker CUDA build.
-          - recipe: development
-            os: ubuntu-24.04
-            compiler: clang@18
-            compiler_bin: /usr/bin/clang++-18
-            variant: cuda
-            spec_args: "+cuda cuda_arch=90"
-            dependency_spec: "^cuda@12.8.1"
-            version: main
-          - recipe: development
+            version: latest-release
+          - recipe: release
             os: ubuntu-24.04
             compiler: oneapi@2025.3.2
             compiler_bin: /usr/bin/g++-13
             variant: extended
             spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
             mpi_spec: "^intel-oneapi-mpi"
-            version: main
-          - recipe: development
-            os: macos-15
-            compiler: apple-clang@17.0.0
-            compiler_bin: /usr/bin/clang++
-            variant: minimal
-            spec_args: ""
-            version: main
-          - recipe: development
-            os: macos-26
-            compiler: apple-clang@21.0.0
-            compiler_bin: /usr/bin/clang++
-            variant: extended
-            spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
-            version: main
-          - recipe: development
+            version: latest-release
+          - recipe: release
             os: ubuntu-24.04
-            platform: rocky-10.2
-            container: quay.io/rockylinux/rockylinux:10.2@sha256:827d37bc128288ccf160ee318bb3cb92d591164cb217e92f8bc61e3982ae1834
-            compiler: gcc@15.2
-            compiler_bin: /opt/rh/gcc-toolset-15/root/usr/bin/g++
-            variant: extended
-            spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
-            mpi_spec: "^openmpi"
-            version: main
+            compiler: gcc@13
+            compiler_bin: /usr/bin/g++-13
+            variant: python
+            spec_args: "+python"
+            version: latest-release
     steps:
       - name: Harden Runner
         if: ${{ !matrix.container }}
@@ -230,12 +143,13 @@ jobs:
       - name: Set up Spack
         uses: spack/setup-spack@16b756799ede8b28951287f89bcd3fdb32ec1ca3 # v3.0.0
         with:
-          # Temporary CI integration pin combining spack/spack#53350 (cross-repository patches)
-          # and spack/spack#53357 (compiler-wrapper runtime paths); release builds stay upstream.
-          spack_repository: ${{ matrix.recipe == 'development' && 'georghammerl/spack' || 'spack/spack'
+          # Intel builds also need the unmerged compiler-wrapper runtime fix.
+          # Other release builds continue to exercise upstream Spack v1.2.2.
+          spack_repository: ${{ startsWith(matrix.compiler, 'oneapi@') && 'georghammerl/spack' || 'spack/spack'
             }}
-          spack_ref: ${{ matrix.recipe == 'development' && '68368adaf57721831cc6bfcb0746881d4ac6a360'
+          spack_ref: ${{ startsWith(matrix.compiler, 'oneapi@') && '68368adaf57721831cc6bfcb0746881d4ac6a360'
             || 'v1.2.2' }}
+          packages_repository: ${{ needs.select-packages.outputs.repository }}
           packages_ref: ${{ needs.select-packages.outputs.sha }}
           buildcache: true
           color: true
@@ -350,12 +264,31 @@ jobs:
 
       - name: Concretize and show the spec
         run: |
-          # Release recipes also need LP64: cached ILP64 BLAS can link but crash
-          # at runtime. Keep until the official 4C recipe enforces this ABI.
-          spack config add 'packages:openblas:require:~ilp64'
-          spack config add 'packages:intel-oneapi-mkl:require:~ilp64'
           spack concretize --deprecated
           spack spec -l
+
+      - name: Verify the release recipe and BLAS ABI
+        run: |
+          spack python -c 'exec("""
+          import os
+          import spack.environment as ev
+          from spack.error import SpackError
+
+          for root in ev.Environment(os.environ["SPACK_ENV"]).concrete_roots():
+              if root.namespace != "builtin":
+                  raise SpackError(f"Expected the official release recipe, got {root.fullname}")
+              blas = [
+                  node for node in root["trilinos"].traverse(deptype=("link", "run"))
+                  if node.name in ("openblas", "intel-oneapi-mkl")
+              ]
+              if not blas:
+                  raise SpackError("No supported BLAS provider found in the Trilinos runtime")
+              for node in blas:
+                  if not node.satisfies("~ilp64"):
+                      raise SpackError(f"Release recipe failed to enforce LP64: {node}")
+                  print(f"Verified release ABI: {node}")
+              print(f"Verified official recipe: {root.package.module.__file__}")
+          """)'
 
       - name: Verify the GNU runtime for Intel builds
         if: startsWith(matrix.compiler, 'oneapi@')
