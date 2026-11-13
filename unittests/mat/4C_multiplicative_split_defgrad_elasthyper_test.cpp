@@ -505,7 +505,7 @@ namespace
     const double cauchy_n_dir =
         multiplicative_split_defgrad_->evaluate_cauchy_n_dir_and_derivatives(F_, n, dir,
             &d_cauchyndir_dn, &d_cauchyndir_ddir, &d_cauchyndir_dF, nullptr, nullptr, nullptr,
-            context, 0, &concentration, nullptr, nullptr, nullptr);
+            context, 0, &concentration);
 
     const double cauchy_n_dir_ref(6.019860168755);
     Core::LinAlg::Matrix<3, 1> d_cauchyndir_dn_ref(Core::LinAlg::Initialization::zero);

@@ -316,8 +316,7 @@ namespace Mat
         Core::LinAlg::Matrix<9, 1>* d_cauchyndir_dF, Core::LinAlg::Matrix<9, 9>* d2_cauchyndir_dF2,
         Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_dn,
         Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_ddir, const EvaluationContext<3>& context,
-        int eleGID, const double* concentration, const double* temp, double* d_cauchyndir_dT,
-        Core::LinAlg::Matrix<9, 1>* d2_cauchyndir_dF_dT) override;
+        int eleGID, const double* concentration) override;
 
     void evaluate_linearization_od(const Core::LinAlg::Tensor<double, 3, 3>& defgrd,
         double concentration, Core::LinAlg::Matrix<9, 1>& d_F_dx) override;

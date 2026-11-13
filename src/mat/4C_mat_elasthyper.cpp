@@ -327,7 +327,7 @@ void Mat::ElastHyper::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* defgrad
 /*----------------------------------------------------------------------*/
 void Mat::ElastHyper::evaluate_cauchy_derivs(const Core::LinAlg::Matrix<3, 1>& prinv, const int gp,
     int eleGID, Core::LinAlg::Matrix<3, 1>& dPI, Core::LinAlg::Matrix<6, 1>& ddPII,
-    Core::LinAlg::Matrix<10, 1>& dddPIII, const double* temp)
+    Core::LinAlg::Matrix<10, 1>& dddPIII)
 {
   for (auto& i : potsum_)
   {
@@ -349,8 +349,7 @@ double Mat::ElastHyper::evaluate_cauchy_n_dir_and_derivatives(
     Core::LinAlg::Matrix<3, 1>* d_cauchyndir_ddir, Core::LinAlg::Matrix<9, 1>* d_cauchyndir_dF,
     Core::LinAlg::Matrix<9, 9>* d2_cauchyndir_dF2, Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_dn,
     Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_ddir, const EvaluationContext<3>& context,
-    int eleGID, const double* concentration, const double* temp, double* d_cauchyndir_dT,
-    Core::LinAlg::Matrix<9, 1>* d2_cauchyndir_dF_dT)
+    int eleGID, const double* concentration)
 {
   double cauchy_n_dir = 0.0;
 
@@ -388,7 +387,7 @@ double Mat::ElastHyper::evaluate_cauchy_n_dir_and_derivatives(
   ddPII.clear();
   dddPIII.clear();
   constexpr int dummy_gp_id = -1;
-  evaluate_cauchy_derivs(prinv, dummy_gp_id, eleGID, dPI, ddPII, dddPIII, temp);
+  evaluate_cauchy_derivs(prinv, dummy_gp_id, eleGID, dPI, ddPII, dddPIII);
 
   const double prefac = 2.0 / std::sqrt(prinv(2));
 
@@ -461,10 +460,6 @@ double Mat::ElastHyper::evaluate_cauchy_n_dir_and_derivatives(
   d_ibdnddir_dF.scale(-1.0);
   static Core::LinAlg::Matrix<9, 1> d_ibdnddir_dFV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(d_ibdnddir_dF, d_ibdnddir_dFV);
-
-  if (temp != nullptr)
-    evaluate_cauchy_temp_deriv(prinv, nddir, bdnddir, ibdnddir, temp, d_cauchyndir_dT, iFTV,
-        d_bdnddir_dFV, d_ibdnddir_dFV, d_I1_dF, d_I2_dF, d_I3_dF, d2_cauchyndir_dF_dT);
 
   if (d_cauchyndir_dF != nullptr)
   {

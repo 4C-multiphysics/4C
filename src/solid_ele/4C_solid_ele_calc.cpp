@@ -81,8 +81,7 @@ namespace
         get_ptr(linearization_dependencies.d_cauchyndir_dF),
         get_ptr(linearization_dependencies.d2_cauchyndir_dF2),
         get_ptr(linearization_dependencies.d2_cauchyndir_dF_dn),
-        get_ptr(linearization_dependencies.d2_cauchyndir_dF_ddir), context, eleGID, nullptr,
-        nullptr, nullptr, nullptr);
+        get_ptr(linearization_dependencies.d2_cauchyndir_dF_ddir), context, eleGID, nullptr);
 
     Discret::Elements::evaluate_cauchy_n_dir_linearizations<celltype>(
         linearization_dependencies, linearizations);

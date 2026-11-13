@@ -121,14 +121,6 @@ namespace Mat
      * @param[in] gp                Current Gauss point
      * @param[in] eleGID            Global element ID
      * @param[in] concentration     Concentration
-     * @param[in] temp              Temperature
-     * @param[out] d_cauchyndir_dT  Derivative of cauchy_n_dir w.r.t. temperature (\f[ \frac{
-     *                              \mathrm{d} \mathbf{\sigma} \cdot \mathbf{n} \cdot \mathbf{v}}{
-     *                              \mathrm{d} T} \f])
-     * @param[out] d2_cauchyndir_dF_dT   Second derivative of cauchy_n_dir w.r.t. deformation
-     *                                   gradient and temperature (\f[ \frac{\mathrm{d}^2
-     *                                   \mathbf{\sigma} \cdot \mathbf{n} \cdot
-     *                                   \mathbf{v}}{\mathrm{d} \mathbf{F} \mathrm{d} T } \f])
      *
      * @return Cauchy stress tensor contracted using the vectors n and dir
      *                                (\f[ \mathbf{\sigma} \cdot \mathbf{n} \cdot \mathbf{v} \f])
@@ -140,8 +132,7 @@ namespace Mat
         Core::LinAlg::Matrix<9, 9>* d2_cauchyndir_dF2,
         Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_dn,
         Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_ddir, const EvaluationContext<3>& context,
-        int eleGID, const double* concentration, const double* temp, double* d_cauchyndir_dT,
-        Core::LinAlg::Matrix<9, 1>* d2_cauchyndir_dF_dT);
+        int eleGID, const double* concentration);
 
     /*!
      * @brief Evaluate the derivative of the deformation gradient w.r.t. degree of freedom x

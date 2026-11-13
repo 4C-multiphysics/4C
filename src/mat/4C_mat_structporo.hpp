@@ -287,13 +287,11 @@ namespace Mat
         Core::LinAlg::Matrix<9, 1>* d_cauchyndir_dF, Core::LinAlg::Matrix<9, 9>* d2_cauchyndir_dF2,
         Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_dn,
         Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_ddir, const EvaluationContext<3>& context,
-        int eleGID, const double* concentration, const double* temp, double* d_cauchyndir_dT,
-        Core::LinAlg::Matrix<9, 1>* d2_cauchyndir_dF_dT) override
+        int eleGID, const double* concentration) override
     {
       return mat_->evaluate_cauchy_n_dir_and_derivatives(defgrd, n, dir, d_cauchyndir_dn,
           d_cauchyndir_ddir, d_cauchyndir_dF, d2_cauchyndir_dF2, d2_cauchyndir_dF_dn,
-          d2_cauchyndir_dF_ddir, context, eleGID, concentration, temp, d_cauchyndir_dT,
-          d2_cauchyndir_dF_dT);
+          d2_cauchyndir_dF_ddir, context, eleGID, concentration);
     }
 
     //!@}
