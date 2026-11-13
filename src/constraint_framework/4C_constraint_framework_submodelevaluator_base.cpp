@@ -20,7 +20,7 @@
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
-#include <algorithm>
+#include <set>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -94,15 +94,13 @@ void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_coupling_terms(
 
   // the equations need the displacements of dofs that may be owned by other ranks:
   // collect those dofs and import their values into an overlapping vector
-  std::vector<int> equation_dof_gids;
+  std::set<int> unique_dof_gids;
   for (const auto& mpc : constraint_equations_)
   {
     const std::vector<int> dof_gids = mpc->get_dof_gids();
-    equation_dof_gids.insert(equation_dof_gids.end(), dof_gids.begin(), dof_gids.end());
+    unique_dof_gids.insert(dof_gids.begin(), dof_gids.end());
   }
-  std::sort(equation_dof_gids.begin(), equation_dof_gids.end());
-  equation_dof_gids.erase(
-      std::unique(equation_dof_gids.begin(), equation_dof_gids.end()), equation_dof_gids.end());
+  const std::vector<int> equation_dof_gids(unique_dof_gids.begin(), unique_dof_gids.end());
   const Core::LinAlg::Map equation_dof_map(-1, static_cast<int>(equation_dof_gids.size()),
       equation_dof_gids.data(), 0, stiff_ptr_->get_comm());
   Core::LinAlg::Vector<double> equation_dof_displacements(equation_dof_map, true);
