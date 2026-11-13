@@ -489,9 +489,9 @@ namespace Core::IO
           {
             if constexpr (!requires_interpolation)
             {
-              FOUR_C_THROW(
-                  "InputField can only hold constant or element-wise data. You are trying "
-                  "to initialize it from point-based mesh data.");
+              MapType& map = data_.template emplace<MapType>();
+              MeshInput::read_value_from_point_data(mesh, key, map);
+              break;
             }
             else
             {
