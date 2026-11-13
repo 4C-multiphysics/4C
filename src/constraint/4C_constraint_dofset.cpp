@@ -51,7 +51,7 @@ int Constraints::ConstraintDofSet::assign_degrees_of_freedom(
 
   // dofrowmap with index base = 0
   dofrowmap_ =
-      std::make_shared<Core::LinAlg::Map>(-1, gids.size(), gids.data(), 0, dis->get_comm());
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(gids), 0, dis->get_comm());
 
   return count;
 }

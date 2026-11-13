@@ -92,8 +92,8 @@ void Mat::MicroMaterial::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* defg
 
   // maps are created and data is broadcast to the supporting procs
   int tag = 0;
-  Core::LinAlg::Map oldmap(1, 1, &tag, 0, subcomm);
-  Core::LinAlg::Map newmap(1, 1, &tag, 0, subcomm);
+  Core::LinAlg::Map oldmap(1, std::span<const int>(&tag, 1), 0, subcomm);
+  Core::LinAlg::Map newmap(1, std::span<const int>(&tag, 1), 0, subcomm);
   Core::Communication::Exporter exporter(oldmap, newmap, subcomm);
   exporter.do_export<MultiScale::MicroStaticParObject>(condnamemap);
 
@@ -341,8 +341,8 @@ void Mat::MicroMaterial::read_restart(const int gp, const int eleID, const bool 
 
   // maps are created and data is broadcast to the supporting procs
   int tag = 0;
-  Core::LinAlg::Map oldmap(1, 1, &tag, 0, subcomm);
-  Core::LinAlg::Map newmap(1, 1, &tag, 0, subcomm);
+  Core::LinAlg::Map oldmap(1, std::span<const int>(&tag, 1), 0, subcomm);
+  Core::LinAlg::Map newmap(1, std::span<const int>(&tag, 1), 0, subcomm);
   Core::Communication::Exporter exporter(oldmap, newmap, subcomm);
   exporter.do_export<MultiScale::MicroStaticParObject>(condnamemap);
 

@@ -415,10 +415,10 @@ void XFEM::Utils::XFEMDiscretizationBuilder::redistribute(
   MPI_Comm comm(dis.get_comm());
 
   std::shared_ptr<Core::LinAlg::Map> noderowmap =
-      std::make_shared<Core::LinAlg::Map>(-1, noderowvec.size(), noderowvec.data(), 0, comm);
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(noderowvec), 0, comm);
 
   std::shared_ptr<Core::LinAlg::Map> nodecolmap =
-      std::make_shared<Core::LinAlg::Map>(-1, nodecolvec.size(), nodecolvec.data(), 0, comm);
+      std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(nodecolvec), 0, comm);
   if (!dis.filled()) dis.redistribute({*noderowmap, *nodecolmap});
 
   Core::LinAlg::Map elerowmap(*dis.element_row_map());
