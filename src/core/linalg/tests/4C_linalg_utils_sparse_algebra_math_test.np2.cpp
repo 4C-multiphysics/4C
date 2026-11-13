@@ -336,16 +336,21 @@ namespace
    * vector to itself, confirming that the rank correction shifts the zero
    * eigenvalue to one and removes the singularity in this mode.
    */
-  TEST_F(SparseAlgebraMathTest, MatrixRankmCorrection)
+  void check_rank_correction(
+      MPI_Comm comm, Core::LinAlg::SparseMatrix::StorageProfile projection_profile)
   {
     Core::LinAlg::SparseMatrix A = Core::LinAlg::read_matrix_market_file_as_sparse_matrix(
-        TESTING::get_support_file_path("test_matrices/poisson1d_periodic.mm").c_str(), comm_);
+        TESTING::get_support_file_path("test_matrices/poisson1d_periodic.mm").c_str(), comm);
 
     auto basis = Core::LinAlg::MultiVector<double>(A.row_map(), 1);
     basis.put_scalar(1.0);
     auto ortho_basis = Core::LinAlg::orthonormalize_multi_vector(basis);
 
-    auto A_projected = Core::LinAlg::matrix_rank_correction(A, basis, {1.0, true});
+    auto A_projected =
+        projection_profile == Core::LinAlg::SparseMatrix::StorageProfile::static_profile
+            ? Core::LinAlg::matrix_rank_correction(
+                  A, basis, {1.0, true, Core::LinAlg::SparseMatrix::StorageProfile::static_profile})
+            : Core::LinAlg::matrix_rank_correction(A, basis, {1.0, true});
 
     auto result = Core::LinAlg::MultiVector<double>(A.row_map(), 1);
     A_projected->multiply(false, ortho_basis, result);
@@ -357,6 +362,17 @@ namespace
 
       EXPECT_NEAR(result_value, ortho_basis_value, 1e-12);
     }
+  }
+
+  TEST_F(SparseAlgebraMathTest, MatrixRankmCorrection)
+  {
+    check_rank_correction(comm_, Core::LinAlg::SparseMatrix::StorageProfile::dynamic_profile);
+  }
+
+  // The same rank-one projection needs more than npr entries per row when CRS is forced static.
+  TEST_F(SparseAlgebraMathTest, MatrixRankmCorrectionStaticProfile)
+  {
+    check_rank_correction(comm_, Core::LinAlg::SparseMatrix::StorageProfile::static_profile);
   }
 
 }  // namespace
