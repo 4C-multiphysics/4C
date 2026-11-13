@@ -254,7 +254,8 @@ bool NOX::Nln::MatrixFree::compute_jacobian(
   */
 
   // Create NOX::Thyra::Vector from x_base
-  auto rcp_thyra_x_base = Core::LinearSolver::Utils::create_thyra_multi_vector(x, *map_);
+  auto rcp_thyra_x_base = Teuchos::rcp_const_cast<Thyra::MultiVectorBase<double>>(
+      Core::LinearSolver::Utils::create_thyra_multi_vector(x, *map_));
 
   // Wrap into NOX::Thyra::Vector
   ::NOX::Thyra::Vector initial_guess(rcp_thyra_x_base->col(0));
