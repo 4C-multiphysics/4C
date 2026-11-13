@@ -140,25 +140,13 @@ namespace ReducedLung
     outer.set("Test Type", "Combo");
     outer.set("Combo Type", "OR");
 
-    auto& converged = outer.sublist("Test 0");
-    converged.set("Test Type", "Combo");
-    converged.set("Combo Type", "AND");
-
-    auto& norm_f = converged.sublist("Test 0");
+    auto& norm_f = outer.sublist("Test 0");
     norm_f.set("Test Type", "NormF");
     norm_f.set("Quantity Type", "Generic");
     norm_f.set("Tolerance Type", "Absolute");
     norm_f.set<double>("Tolerance", dynamics.nonlinear_residual_tolerance);
     norm_f.set("Norm Type", "Two Norm");
     norm_f.set("Scale Type", "Unscaled");
-
-    auto& norm_update = converged.sublist("Test 1");
-    norm_update.set("Test Type", "NormUpdateSkipFirstIter");
-    norm_update.set("Quantity Type", "Generic");
-    norm_update.set("Tolerance Type", "Absolute");
-    norm_update.set<double>("Tolerance", dynamics.nonlinear_increment_tolerance);
-    norm_update.set("Norm Type", "Two Norm");
-    norm_update.set("Scale Type", "Unscaled");
 
     auto& max_iters = outer.sublist("Test 1");
     max_iters.set("Test Type", "MaxIters");

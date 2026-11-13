@@ -594,8 +594,9 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                   parameter<double>("nonlinear_increment_tolerance",
                       {
                           .description =
-                              "Absolute increment norm tolerance for nonlinear convergence. "
-                              "Ignored by NewtonTree, which converges on the residual alone.",
+                              "Absolute increment norm tolerance. NewtonTree uses it to detect "
+                              "stagnation. NewtonSparse converges on the residual alone and "
+                              "ignores it.",
                           .default_value = 1.0e-10,
                           .store = in_struct(
                               &ReducedLungParameters::Dynamics::nonlinear_increment_tolerance),
