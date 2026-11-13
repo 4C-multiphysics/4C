@@ -41,8 +41,8 @@ namespace Mat
        * @brief material parameters for generalized structural tensor with distribution
        * around mean fiber direction M
        *
-       * We assume only one symmetry for the distribution function \rho(M), i.e.:
-       * \rho(M) = \rho(-M) .
+       * Since the structural tensor contains the dyadic product m x m, the directions m and -m
+       * make the same contribution.
        *
        * Example input line in input file:
        * MAT 2 ELAST_IsoAnisoExpo  K1 1.0E6 K2 100.0 GAMMA 0.0 K1COMP 0.0 K2COMP 0.0 STR_TENS_ID
@@ -57,10 +57,10 @@ namespace Mat
 
         /// @name material parameters
         //@{
-        double c1_;  //!< constant 1 for distribution function
-        double c2_;  //!< constant 2 for distribution function
-        double c3_;  //!< constant 3 for distribution function
-        double c4_;  //!< constant 4 for distribution function
+        double c1_;  //!< von Mises-Fisher concentration, Bingham X1 coefficient, or dispersion
+        double c2_;  //!< Bingham coefficient of X2
+        double c3_;  //!< Bingham coefficient of X3
+        double c4_;  //!< nonzero Bingham normalization divisor
         //@}
 
         /// type of distribution function around mean fiber direction
@@ -162,9 +162,13 @@ namespace Mat
      *
      * <h3>Definition of Structural Tensor H</h3>
      *
-     * H = \frac{1}{4\pi}\int \rho(Theta,Phi) [m x m] sin(Theta) dTheta dPhi
+     * H = \int_{S^2} \rho(m) [m x m] dS
+     *   = \int_0^{2\pi}\int_0^\pi \rho(Theta,Phi) [m x m]
+     *     sin(Theta) dTheta dPhi
      * with
      * m = \sin(\Theta)\cos(\Phi)e_1 + \sin(\Theta)\sin(\Phi)e_2 + \cos(\Theta)e_3 .
+     * Theta is the polar angle measured from e_3, and Phi is the azimuthal angle measured around
+     * e_3 from e_1.
      *
      * Our convention for the rotations (cf. [Gasser 2006]) :
      *
@@ -180,18 +184,20 @@ namespace Mat
      *
      * 1) vonMisesFisher distribution:
      *
-     *    This distribution function has only one parameter C1 determining the dispersion
+     *    This distribution function has only one parameter C1 determining the concentration
      *    of fibers around the given mean direction M.
      *
      *    \rho = \frac{C1}{4\pi\sinh(C1)} \exp(C1 M \cdot m)
      *
-     *    with 0 \leq C1 , |M| = 1 , and |m| = 1
+     *    with 0 < C1 <= 500, |M| = 1, and |m| = 1. The implementation rejects C1 = 0 and
+     *    C1 > 500.
      *
      *    See also: https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution
      *
      *  2) Bingham distribution:
      *
-     *     This distribution function requires four parameters C1, C2, C3, and C4.
+     *     This distribution function requires four parameters C1, C2, C3, and C4. C1, C2, and C3
+     *     weight X1, X2, and X3, respectively. C4 is the nonzero normalization divisor.
      *
      *     !!! IMPORTANT REMARK :
      *     The definition of angles Theta and Phi in [Gasser et al. 2012] is different from our
@@ -206,6 +212,9 @@ namespace Mat
      *          X_3 = cos(theta)^2
      *
      *          K = sin(theta)*cos(phi) / cos(theta)
+     *
+     *     Equivalently, with m_1 = sin(theta) cos(phi), m_2 = sin(theta) sin(phi), and
+     *     m_3 = cos(theta), X_1 = m_1^2, X_2 = m_2^2 K^2/(1+K^2), and X_3 = m_3^2.
      *
      *     See:
      *     T.C. Gasser, S. Gallinetti, X. Xing, C. Forsell, J. Swedenborg, and J. Roy. Spatial
@@ -230,13 +239,16 @@ namespace Mat
        * @brief Evaluate generalized structural tensor with given distribution function
        *
        * Here we integrate the general integral for the structural tensor:
-       * H = \frac{1}{4\pi}\int \rho(Theta,Phi) [m x m] sin(Theta) dTheta dPhi
+       * H = \int_{S^2} \rho(m) [m x m] dS
+       *   = \int_0^{2\pi}\int_0^\pi \rho(Theta,Phi) [m x m]
+       *     sin(Theta) dTheta dPhi
        *
        * wherein H denotes the structural tensor tensor, \rho is the distribution
        * function for the dispersion of fibers around the mean fiber direction.
        *
-       * Here, M denotes the direction vector in each direction (Theta,Phi).
-       * In case of a perfect alignment of all fibres the integral yields the standard
+       * Here, m denotes the integration direction (Theta,Phi), and M is the mean fiber direction.
+       * In case of perfect alignment of all fibers, the integral yields the standard structural
+       * tensor.
        *
        * @param[in] fiber_vector mean direction of fiber
        * @param[out] structural_tensor_stress generalized structural tensor in stress-like Voigt
