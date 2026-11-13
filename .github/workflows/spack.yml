@@ -178,8 +178,8 @@ jobs:
             mpi_spec: "^intel-oneapi-mpi"
             version: main
           - recipe: development
-            os: macos-26
-            compiler: apple-clang@21.0.0
+            os: macos-15
+            compiler: apple-clang@17.0.0
             compiler_bin: /usr/bin/clang++
             variant: minimal
             spec_args: ""
