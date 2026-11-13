@@ -5,7 +5,7 @@ unusable host llvm-config; an explicit -Dllvm=enabled still takes precedence.
 diff --git a/meson_options.txt b/meson_options.txt
 --- a/meson_options.txt
 +++ b/meson_options.txt
-@@ -393,6 +393,7 @@ option(
+@@ -394,5 +394,6 @@ option(
    'llvm',
    type : 'feature',
 +  value : 'disabled',

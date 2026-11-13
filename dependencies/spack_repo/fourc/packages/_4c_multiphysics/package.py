@@ -234,9 +234,12 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
     depends_on("vtk@9:+shared", when="+vtk")
     # VTK only needs Mesa as an OpenGL provider. Avoid Mesa's optional LLVM
     # backend, which is particularly prone to unusable auto-detected externals.
+    # These Mesa fixes also apply to 4C releases. Port both dependency declarations
+    # and their patch files to the official release recipe in spack-packages.
     depends_on(
         "mesa~llvm",
         patches=[
+            patch("mesa-23.3.6-replace-softpipe-with-swrast.patch", when="@23.3.6"),
             patch("mesa-25.0.5-disable-llvm-autodetection.patch", when="@25.0.5"),
             patch("mesa-25.0.5-linux-c11-threads.patch", when="@25.0.5"),
         ],
@@ -245,6 +248,7 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
     depends_on(
         "mesa~llvm",
         patches=[
+            patch("mesa-23.3.6-replace-softpipe-with-swrast.patch", when="@23.3.6"),
             patch("mesa-25.0.5-disable-llvm-autodetection.patch", when="@25.0.5"),
             patch("mesa-25.0.5-linux-c11-threads.patch", when="@25.0.5"),
         ],
@@ -330,6 +334,9 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
     def setup_build_environment(self, env):
         if "+cuda" in self.spec:
             architectures = self.spec["kokkos"].variants["cuda_arch"].value
+            # Kokkos declares cuda_arch as single-valued, unlike CudaPackage.
+            if isinstance(architectures, str):
+                architectures = (architectures,)
             if len(architectures) != 1 or architectures[0] == "none":
                 raise InstallError(
                     "The 4C CUDA compiler wrapper requires exactly one CUDA architecture."
