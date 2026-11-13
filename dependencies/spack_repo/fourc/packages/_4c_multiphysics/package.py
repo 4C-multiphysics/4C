@@ -184,6 +184,14 @@ class _4cMultiphysics(CMakePackage, CudaPackage):
         ],
     )
     depends_on("trilinos~cuda", when="~cuda")
+    # Trilinos 16.2's BLAS wrappers pass 32-bit integers. Unsuffixed ILP64
+    # libraries can link successfully but crash during the first linear solve.
+    for blas_provider in ("openblas", "intel-oneapi-mkl"):
+        requires(
+            f"^{blas_provider}~ilp64",
+            when=f"^{blas_provider}",
+            msg="4C's Trilinos stack requires LP64 BLAS/LAPACK (32-bit integers)",
+        )
     depends_on("kokkos~cuda", when="~cuda")
     depends_on("kokkos-kernels~cuda", when="~cuda")
     depends_on("trilinos+cuda+wrapper %gcc", when="+cuda")

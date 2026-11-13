@@ -287,6 +287,10 @@ jobs:
 
       - name: Concretize and show the spec
         run: |
+          # Release recipes also need LP64: cached ILP64 BLAS can link but crash
+          # at runtime. Keep until the official 4C recipe enforces this ABI.
+          spack config add 'packages:openblas:require:~ilp64'
+          spack config add 'packages:intel-oneapi-mkl:require:~ilp64'
           spack concretize --deprecated
           spack spec -l
 
@@ -329,6 +333,7 @@ jobs:
           path: 4C-src
 
       - name: Smoke test - run 4C on a tutorial input file
+        id: smoke-test
         if: matrix.variant != 'cuda'
         shell: spack-bash {0}
         env:
@@ -348,6 +353,31 @@ jobs:
             echo "No output files were produced by the smoke test run." >&2
             exit 1
           fi
+
+      - name: Capture a backtrace after a failed Linux smoke test
+        if: failure() && steps.smoke-test.outcome == 'failure' && runner.os == 'Linux'
+        shell: spack-bash {0}
+        env:
+          OMPI_ALLOW_RUN_AS_ROOT: ${{ matrix.container && '1' || '0' }}
+          OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: ${{ matrix.container && '1' || '0' }}
+        run: |
+          if [ -n "${{ matrix.container }}" ]; then
+            dnf install -y gdb
+          else
+            sudo apt-get update
+            sudo apt-get install -y gdb
+          fi
+          spack load 4c-multiphysics
+          mkdir -p "$GITHUB_WORKSPACE/spack_build_logs"
+          cd "$GITHUB_WORKSPACE/spack_smoke_test"
+          # Reproduce without hiding the original failure; retain all thread
+          # stacks and loaded libraries in the existing failure artifact.
+          gdb --batch --return-child-result \
+            -ex run -ex "thread apply all bt" -ex "info sharedlibrary" \
+            --args "$(command -v 4C)" \
+            "$GITHUB_WORKSPACE/4C-src/tests/tutorials/poisson/tutorial_poisson_thermo.4C.yaml" \
+            spack_smoke_test_backtrace \
+            > "$GITHUB_WORKSPACE/spack_build_logs/smoke-test-backtrace.log" 2>&1
 
       - name: Collect Spack build logs on failure
         if: failure()
