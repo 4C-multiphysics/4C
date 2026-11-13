@@ -103,7 +103,8 @@ bool Mortar::Coupling3d::evaluate_coupling()
   has_proj_status();
 
   // do triangulation (+linearization) of clip polygon
-  triangulation(projpar, tol);
+  const bool triangulation_success = triangulation(projpar, tol);
+  FOUR_C_ASSERT_ALWAYS(triangulation_success, "Triangulation was not successful.");
 
   return true;
 }
@@ -1598,29 +1599,29 @@ bool Mortar::Coupling3d::triangulation(std::map<int, double>& projpar, double to
   //**********************************************************************
   vertex_linearization(linvertex, projpar);
 
+  bool triangulation_success = false;
   switch (tri_type)
   {
     //**********************************************************************
     // (2) Triangulation of clip polygon (DELAUNAY-based (new))
     //**********************************************************************
     case Mortar::triangulation_delaunay:
-      if (!delaunay_triangulation(linvertex, tol))
-        // (3) Backup triangulation of clip polygon (CENTER-based (old))
-        center_triangulation(linvertex, tol);
+      triangulation_success = delaunay_triangulation(linvertex, tol);
       break;
 
     //**********************************************************************
     // (3) Backup triangulation of clip polygon (CENTER-based (old))
     //**********************************************************************
     case Mortar::triangulation_center:
-      center_triangulation(linvertex, tol);
+      triangulation_success = center_triangulation(linvertex, tol);
       break;
 
     default:
       FOUR_C_THROW("unknown triangulation type");
       break;
   }
-  return true;
+
+  return triangulation_success;
 }
 
 /*----------------------------------------------------------------------*
