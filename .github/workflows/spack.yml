@@ -390,8 +390,13 @@ jobs:
 
       - name: Install 4C
         if: ${{ !matrix.dependencies_only }}
+        timeout-minutes: ${{ runner.os == 'macOS' && matrix.variant == 'extended' && 300 || 360 }}
         run: |
-          spack install --deprecated --fail-fast --verbose --use-buildcache package:never,dependencies:auto
+          if [ "${{ runner.os }}" = macOS ] && [ "${{ matrix.variant }}" = extended ]; then
+            # The new installer's failure shutdown hung until the job timeout.
+            spack config add 'config:installer:old'
+          fi
+          spack install --deprecated --fail-fast --verbose --show-log-on-error --use-buildcache package:never,dependencies:auto
           spack find --long --variants 4c-multiphysics
 
       - name: Install only the dependencies
@@ -480,17 +485,20 @@ jobs:
             spack_smoke_test_backtrace \
             > "$GITHUB_WORKSPACE/spack_build_logs/smoke-test-backtrace.log" 2>&1
 
-      - name: Collect Spack build logs on failure
-        if: failure()
+      - name: Collect Spack build logs on failure or cancellation
+        if: failure() || cancelled()
+        timeout-minutes: 5
         run: |
           mkdir -p "$GITHUB_WORKSPACE/spack_build_logs"
           echo "${{ needs.select-packages.outputs.sha }}" > "$GITHUB_WORKSPACE/spack_build_logs/spack-packages-commit.txt"
-          if [ "${{ matrix.dependencies_only }}" = true ]; then
+          if [ -n "$SPACK_ENV" ]; then
             for file in spack.yaml spack.lock; do
               if [ -f "$SPACK_ENV/$file" ]; then
                 cp "$SPACK_ENV/$file" "$GITHUB_WORKSPACE/spack_build_logs/"
               fi
             done
+          fi
+          if [ "${{ matrix.dependencies_only }}" = true ]; then
             BUILD_DIR="$GITHUB_WORKSPACE/4C-src/build/spack-release"
             for file in CMakeCache.txt CMakeFiles/CMakeConfigureLog.yaml; do
               if [ -f "$BUILD_DIR/$file" ]; then
@@ -516,7 +524,8 @@ jobs:
           spack debug report > "$GITHUB_WORKSPACE/spack_build_logs/spack_debug_report.txt" 2>&1 || true
 
       - name: Upload smoke test output
-        if: success() || failure()
+        if: success() || failure() || cancelled()
+        timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: spack_smoke_test_output-${{ matrix.recipe }}-${{ matrix.platform || matrix.os }}-${{ matrix.compiler
