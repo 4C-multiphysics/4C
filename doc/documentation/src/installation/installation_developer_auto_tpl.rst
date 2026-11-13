@@ -68,7 +68,7 @@ The dependency stack requires a Fortran-capable compiler (due to the dependency 
 The dependency-only installation deliberately excludes the 4C package and its source resources. During CMake
 configuration, |FOURC| downloads its ryml source; a configuration with ``+mirco`` also downloads the MIRCO source.
 
-The preset generator reads the concretized 4C Spack specification and writes matching CMake feature options to
+The preset generator writes the selected compiler paths and matching CMake feature options to
 ``.spack/4CSpackPresets.json``. It also creates a minimal ``CMakeUserPresets.json`` that includes the generated file
 when no user preset file exists. An existing ``CMakeUserPresets.json`` is never modified; add the following entry to
 its top-level object if needed::

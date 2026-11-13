@@ -9,6 +9,8 @@
 
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 
 VARIANT_CACHE_VARIABLES = {
@@ -63,6 +65,33 @@ def get_cache_variables(parameters: dict[str, object]) -> dict[str, str]:
     return cache_variables
 
 
+def get_compiler_cache_variables(environment_directory: Path) -> dict[str, str]:
+    """Query the root's compiler executables, not the cached MPI build's compilers."""
+
+    result = subprocess.run(
+        [
+            "spack",
+            "-e",
+            str(environment_directory),
+            "build-env",
+            "4c-multiphysics",
+            "--",
+            sys.executable,
+            "-c",
+            "import json, os; print(json.dumps({"
+            "'CMAKE_C_COMPILER': os.environ['SPACK_CC'], "
+            "'CMAKE_CXX_COMPILER': os.environ['SPACK_CXX']}))",
+        ],
+        stdout=subprocess.PIPE,
+        text=True,
+        check=True,
+    )
+    return json.loads(result.stdout) | {
+        "MPI_C_COMPILER": "${sourceDir}/.spack/.spack-env/view/bin/mpicc",
+        "MPI_CXX_COMPILER": "${sourceDir}/.spack/.spack-env/view/bin/mpicxx",
+    }
+
+
 def get_generated_presets(cache_variables: dict[str, str]) -> dict[str, object]:
     """Build the generated CMake preset document."""
 
@@ -75,6 +104,10 @@ def get_generated_presets(cache_variables: dict[str, str]) -> dict[str, object]:
                 "hidden": True,
                 "inherits": ".spack_base",
                 "cacheVariables": cache_variables,
+                "environment": {
+                    "OMPI_CC": cache_variables["CMAKE_C_COMPILER"],
+                    "OMPI_CXX": cache_variables["CMAKE_CXX_COMPILER"],
+                },
             },
             {
                 "name": "spack-generated-debug",
@@ -124,6 +157,7 @@ def main() -> None:
         raise FileNotFoundError(f"Spack lockfile not found: {lockfile}")
 
     cache_variables = get_cache_variables(get_4c_parameters(lockfile))
+    cache_variables.update(get_compiler_cache_variables(environment_directory))
     generated_presets.write_text(
         json.dumps(get_generated_presets(cache_variables), indent=2) + "\n",
         encoding="utf-8",
