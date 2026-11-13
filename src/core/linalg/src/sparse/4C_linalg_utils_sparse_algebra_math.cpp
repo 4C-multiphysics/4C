@@ -275,12 +275,14 @@ std::unique_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_multiply(const 
     transB = false;
   }
 
-  // First, assemble all entries. Then, complete using domain and range maps to safely work
-  // under the assumption of a static profile.
+  // Let EpetraExt fill-complete internally. This uses the import_only path, which tolerates
+  // imported rows that contain no entries. Afterwards enforce the requested domain/range maps
+  // explicitly, as EpetraExt may not set them correctly for non-square products.
   ASSERT_EPETRA_CALL(EpetraExt::MatrixMatrix::Multiply(A_trans->epetra_matrix(), transA,
-      B_trans->epetra_matrix(), transB, C->epetra_matrix(), false));
+      B_trans->epetra_matrix(), transB, C->epetra_matrix(), complete));
 
-  if (complete) C->complete(B_trans->domain_map(), A_trans->range_map());
+  if (complete)
+    C->complete(B_trans->domain_map(), A_trans->range_map(), {.enforce_complete = true});
 
   return C;
 }
