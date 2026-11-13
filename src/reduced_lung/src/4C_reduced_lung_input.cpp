@@ -552,8 +552,9 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                       }),
                   parameter<int>("restart_every",
                       {
-                          .description = "Increment for writing restart.",
-                          .default_value = 1,
+                          .description = "Increment for writing restart data; 0 writes none.",
+                          .default_value = 0,
+                          .validator = Validators::positive_or_zero<int>(),
                           .store = in_struct(&ReducedLungParameters::Dynamics::restart_every),
                       }),
                   parameter<int>("results_every",

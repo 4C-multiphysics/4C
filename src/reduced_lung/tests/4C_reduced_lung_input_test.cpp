@@ -138,6 +138,13 @@ reduced_dimensional_lung:
         "'number_of_steps' does not pass validation");
   }
 
+  TEST(ReducedLungInputTest, RejectsNegativeRestartEvery)
+  {
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        match_input(input_with_dynamics_parameter("restart_every", "-1")), Core::Exception,
+        "'restart_every' does not pass validation");
+  }
+
   TEST(ReducedLungInputTest, RejectsNonPositiveResultsEvery)
   {
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
