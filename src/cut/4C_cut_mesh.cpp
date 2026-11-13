@@ -1407,7 +1407,7 @@ void Cut::Mesh::find_nodal_dof_sets(bool include_inner)
 
 
 /*-------------------------------------------------------------------------------------*
- * Execute Tessellation with QHULL for each element to generate integrationcells
+ * Execute Tessellation for each element to generate integrationcells
  *-------------------------------------------------------------------------------------*/
 void Cut::Mesh::create_integration_cells(int count, bool tetcellsonly)
 {

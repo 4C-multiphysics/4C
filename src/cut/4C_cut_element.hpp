@@ -165,8 +165,8 @@ namespace Cut
     /*! \brief Create volumecells */
     void make_volume_cells(Mesh& mesh);
 
-    /*! \brief Create integrationcells by performing tessellation over the volumecells
-     *  of the element. This uses QHULL */
+    //! \brief Create integrationcells by performing tessellation over the volumecells of the
+    //! element.
     void create_integration_cells(Mesh& mesh, int count, bool tetcellsonly = false);
 
     /*! \brief Try to create simpled shaped integrationcells */

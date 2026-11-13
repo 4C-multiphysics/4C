@@ -939,7 +939,7 @@ void Cut::Element::create_integration_cells(Mesh& mesh, int count, bool tetcells
   points.reserve(cut_points.size());
   points.assign(cut_points.begin(), cut_points.end());
 
-  // sort points that go into qhull to obtain the same result independent of
+  // sort points that go into delaunay triangulation to obtain the same result independent of
   // pointer values (compiler flags, code structure, memory usage, ...)
   std::sort(points.begin(), points.end(), PointPidLess());
 
