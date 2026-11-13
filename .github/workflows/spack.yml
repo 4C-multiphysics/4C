@@ -1,120 +1,363 @@
 name: Spack build test
 
-# Builds the latest official 4C release with Spack
-# (https://packages.spack.io/package.html?name=4c-multiphysics) and runs a
-# smoke test against it
+# Temporary release-only integration test for spack/spack-packages#6479 and #7679.
+# This branch uses immutable fork snapshots; the regular CI branch is unchanged.
 on:
-  schedule:
-    # Weekly, avoiding the top of the hour as recommended by GitHub
-    - cron: "17 5 * * 0"
-      timezone: "Europe/Berlin"
   workflow_dispatch:
-  # Also run for PRs that change this workflow.
-  pull_request:
-    paths:
-      - ".github/workflows/spack.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  select-packages:
+    name: Resolve the Spack packages snapshot
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.packages.outputs.sha }}
+      repository: ${{ steps.packages.outputs.repository }}
+    steps:
+      - name: Select one commit for the entire matrix
+        id: packages
+        shell: bash
+        env:
+          PACKAGES_REPOSITORY: georghammerl/spack-packages
+          PACKAGES_SHA: c16789f0a9f1c288529d557353322af8763c08e6
+        run: |
+          SHA="$PACKAGES_SHA"
+          if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Could not resolve a single Spack packages commit: $SHA" >&2
+            exit 1
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "repository=$PACKAGES_REPOSITORY" >> "$GITHUB_OUTPUT"
+          echo "### Spack packages snapshot" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Policy: temporary release-recipe integration" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: [\`$SHA\`](https://github.com/$PACKAGES_REPOSITORY/commit/$SHA)" >> "$GITHUB_STEP_SUMMARY"
+
   spack-build:
-    name: Build and test 4C (${{ matrix.os.name }}, ${{ matrix.variant.name }})
-    runs-on: ${{ matrix.os.name }}
-    # Only the "minimal" variant is currently enabled. The "deal.II" and
-    # "extended" variants require a Spack PR that has not landed yet.
+    needs: select-packages
+    name: Build and test 4C (${{ matrix.recipe }}, ${{ matrix.platform || matrix.os }}, ${{ matrix.compiler
+      }}, ${{ matrix.variant }}, ${{ matrix.version }})
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container || '' }}
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
-        os:
-          # gcc@14 hits an internal compiler error on 4C's tensor templates;
-          # pin the compiler per OS to one that is known to work.
-          - name: ubuntu-24.04
+        include:
+          # GCC 14 hits an internal compiler error on 4C's tensor templates.
+          - recipe: release
+            os: ubuntu-24.04
             compiler: gcc@13
             compiler_bin: /usr/bin/g++-13
-          - name: ubuntu-26.04
+            variant: minimal
+            spec_args: ""
+            version: "2026.1.0"
+          - recipe: release
+            os: ubuntu-24.04
+            compiler: gcc@13
+            compiler_bin: /usr/bin/g++-13
+            variant: minimal
+            spec_args: ""
+            version: "2026.2.0"
+          - recipe: release
+            os: ubuntu-24.04
+            compiler: gcc@13
+            compiler_bin: /usr/bin/g++-13
+            variant: minimal
+            spec_args: ""
+            version: latest-release
+          - recipe: release
+            os: ubuntu-24.04
+            compiler: gcc@13
+            compiler_bin: /usr/bin/g++-13
+            variant: extended
+            spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
+            version: latest-release
+          - recipe: release
+            os: ubuntu-26.04
             compiler: gcc@15
             compiler_bin: /usr/bin/g++-15
-        # add macOS support as soon as 4C (and an updated spack repo entry) support it
-        variant:
-          # Optional Spack variants (see `spack info 4c-multiphysics`).
-          - name: minimal
+            variant: minimal
             spec_args: ""
-            # - name: extended
-            #   spec_args: >-
-            #     +vtk
-            #     +gmsh
-            #     +mirco
-            #     +arborx
-            #     +fftw
-            #     +backtrace
-            # - name: dealii
-            #   spec_args: "+dealii"
+            version: latest-release
+          - recipe: release
+            os: ubuntu-26.04
+            compiler: gcc@15
+            compiler_bin: /usr/bin/g++-15
+            variant: dealii
+            spec_args: "+dealii"
+            version: latest-release
+          - recipe: release
+            os: ubuntu-24.04
+            compiler: clang@18
+            compiler_bin: /usr/bin/clang++-18
+            variant: extended
+            spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
+            version: latest-release
+          - recipe: release
+            os: ubuntu-24.04
+            compiler: oneapi@2025.3.2
+            compiler_bin: /usr/bin/g++-13
+            variant: extended
+            spec_args: "+vtk +gmsh +mirco +arborx +fftw +backtrace"
+            mpi_spec: "^intel-oneapi-mpi"
+            version: latest-release
+          - recipe: release
+            os: ubuntu-24.04
+            compiler: gcc@13
+            compiler_bin: /usr/bin/g++-13
+            variant: python
+            spec_args: "+python"
+            version: latest-release
     steps:
       - name: Harden Runner
+        if: ${{ !matrix.container }}
         uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
 
+      - name: Prepare Rocky Linux
+        if: matrix.container
+        run: |
+          dnf install -y \
+            gcc gcc-c++ gcc-gfortran \
+            gcc-toolset-15-gcc gcc-toolset-15-gcc-c++ gcc-toolset-15-gcc-gfortran \
+            git python3 python3-pip \
+            make cmake pkgconf-pkg-config patch diffutils findutils tar gzip bzip2 xz unzip wget \
+            which hostname file perl curl ca-certificates libxcrypt-compat
+          cat /etc/os-release
+          # Keep system tools reachable when composite actions extend the container PATH.
+          printf '%s\n' /usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin >> "$GITHUB_PATH"
+
+      - name: Configure GCC Toolset 15 for Rocky Linux
+        if: matrix.platform == 'rocky-10.2'
+        run: |
+          printf '%s\n' /opt/rh/gcc-toolset-15/root/usr/bin >> "$GITHUB_PATH"
+          printf '%s\n' 'LD_LIBRARY_PATH=/opt/rh/gcc-toolset-15/root/usr/lib64' >> "$GITHUB_ENV"
+
       - name: Set up Spack
         uses: spack/setup-spack@16b756799ede8b28951287f89bcd3fdb32ec1ca3 # v3.0.0
         with:
-          # Pinned release for reproducibility. Bump periodically
-          spack_ref: v1.2.2
-          # `4c-multiphysics` is not part of any tagged spack-packages release
-          # yet, so pin to a `develop` commit that contains it instead.
-          # Pin to the merge commit of the PR that enables Python support for
-          # 4C. The workflow passes --deprecated because this package version
-          # still requires trilinos@16.2.1.
-          # TODO: switch `packages_ref` to a release tag (e.g. v2026.09.0) once
-          # one ships a `4c-multiphysics` package that no longer needs this.
-          packages_ref: 20a56c500d0ade1a27a087ad36eea990d952020a
+          # Intel builds also need the unmerged compiler-wrapper runtime fix.
+          # Other release builds continue to exercise upstream Spack v1.2.2.
+          spack_repository: ${{ startsWith(matrix.compiler, 'oneapi@') && 'georghammerl/spack' || 'spack/spack'
+            }}
+          spack_ref: ${{ startsWith(matrix.compiler, 'oneapi@') && '68368adaf57721831cc6bfcb0746881d4ac6a360'
+            || 'v1.2.2' }}
+          packages_repository: ${{ needs.select-packages.outputs.repository }}
+          packages_ref: ${{ needs.select-packages.outputs.sha }}
           buildcache: true
           color: true
+
+      - name: Checkout 4C
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: 4C-src
+
+      - name: Register the local development recipe
+        if: matrix.recipe == 'development'
+        run: |
+          spack repo add "$GITHUB_WORKSPACE/4C-src/dependencies/spack_repo/fourc"
+          spack repo list
+
+      - name: Register only the CLN workaround for release builds
+        if: matrix.recipe == 'release'
+        run: |
+          # CI-only overlay: keep the official 4C/ArborX recipes under test.
+          # Remove when packages_ref includes the CLN archive and build-hook fixes.
+          SOURCE_REPO="$GITHUB_WORKSPACE/4C-src/dependencies/spack_repo/fourc"
+          CLN_REPO="$RUNNER_TEMP/cln-workaround/spack_repo/fourc"
+          mkdir -p "$CLN_REPO/packages"
+          cp "$SOURCE_REPO/repo.yaml" "$CLN_REPO/repo.yaml"
+          cp -R "$SOURCE_REPO/packages/cln" "$CLN_REPO/packages/cln"
+          spack repo add "$CLN_REPO"
+          spack repo list
 
       - name: Find compilers
         run: |
           # Register only this one compiler: a broad `spack compiler find`
           # also picks up system clang/LLVM and registers it as an external
           # `libllvm`, which then breaks mesa (missing llvm-config).
-          spack compiler find ${{ matrix.os.compiler_bin }}
-
-      - name: Determine the latest 4C release known to Spack
-        id: version
-        run: |
-          # `spack versions --safe` prints a column-aligned, indented table
-          # (via colify), so tokenize on whitespace before filtering.
-          # 4C uses calendar versioning (YYYY.MINOR.PATCH), which also
-          # excludes non-release tokens such as "main".
-          LATEST_VERSION=$(spack --color=never versions --safe 4c-multiphysics \
-            | tr -s '[:space:]' '\n' \
-            | grep -E '^[0-9]{4}\.[0-9]+\.[0-9]+$' \
-            | sort --version-sort --reverse | head -n1)
-          if [ -z "$LATEST_VERSION" ]; then
-            echo "Could not determine the latest 4C release from Spack." >&2
-            exit 1
+          if [[ "${{ matrix.compiler }}" == clang@* ]]; then
+            spack compiler find /usr/bin/g++-13
           fi
-          echo "Latest 4C release known to Spack: $LATEST_VERSION"
-          echo "version=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
-          echo "### Spack build test" >> "$GITHUB_STEP_SUMMARY"
-          echo "- OS: \`${{ matrix.os.name }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Variant: \`${{ matrix.variant.name }}\` (\`${{ matrix.variant.spec_args }}\`)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- 4C version: \`$LATEST_VERSION\`" >> "$GITHUB_STEP_SUMMARY"
+          spack compiler find ${{ matrix.compiler_bin }}
 
-      - name: Show the concretized spec
-        run: spack spec --deprecated -l "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.variant.spec_args
-          }} %${{ matrix.os.compiler }}"
+      - name: Isolate Android libraries from Intel MPI discovery
+        if: startsWith(matrix.compiler, 'oneapi@')
+        run: |
+          if [ -d /usr/local/lib/android ]; then
+            sudo mv /usr/local/lib/android /usr/local/android-sdk
+          fi
+
+      - name: Use runner GNU Make for Intel builds
+        if: startsWith(matrix.compiler, 'oneapi@')
+        run: spack external find --not-buildable --path /usr/bin gmake
+
+      - name: Install Intel oneAPI compilers
+        if: startsWith(matrix.compiler, 'oneapi@')
+        env:
+          COMPILER: ${{ matrix.compiler }}
+        run: |
+          # Cached dependencies may require GLIBCXX_3.4.32 (at least GCC 13).
+          spack config add 'packages:gcc-runtime:require:"@13:"'
+          spack install --fail-fast --verbose "intel-oneapi-compilers@${COMPILER#oneapi@} %gcc@13"
+          spack compiler info "intel-oneapi-compilers@${COMPILER#oneapi@}"
+
+      - name: Select the 4C version
+        id: version
+        env:
+          RECIPE: ${{ matrix.recipe }}
+          REQUESTED_VERSION: ${{ matrix.version }}
+        run: |
+          if [ "$RECIPE" = development ]; then
+            VERSION=main
+            PACKAGE=fourc.4c-multiphysics
+          elif [ "$REQUESTED_VERSION" = latest-release ]; then
+            # Tokenize Spack's column-aligned version table before filtering.
+            VERSION=$(spack --color=never versions --safe builtin.4c-multiphysics \
+              | tr -s '[:space:]' '\n' \
+              | grep -E '^[0-9]{4}\.[0-9]+\.[0-9]+$' \
+              | sort --version-sort --reverse | head -n1)
+            if [ -z "$VERSION" ]; then
+              echo "Could not determine the latest 4C release from Spack." >&2
+              exit 1
+            fi
+            PACKAGE=builtin.4c-multiphysics
+          else
+            VERSION="$REQUESTED_VERSION"
+            PACKAGE=builtin.4c-multiphysics
+          fi
+          echo "Selected 4C: $PACKAGE@$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          ENVIRONMENT="$RUNNER_TEMP/4c-spack-env"
+          if [ "${{ matrix.dependencies_only }}" = true ]; then
+            ENVIRONMENT="$GITHUB_WORKSPACE/4C-src/.spack"
+          fi
+          spack env create --dir "$ENVIRONMENT"
+          spack -e "$ENVIRONMENT" add "$PACKAGE@$VERSION ${{ matrix.spec_args }} %${{ matrix.compiler }} ${{ matrix.mpi_spec }} ${{ matrix.dependency_spec }}"
+          if [ "$RECIPE" = development ] && [ "${{ matrix.dependencies_only }}" != true ]; then
+            spack -e "$ENVIRONMENT" develop --no-clone --path "$GITHUB_WORKSPACE/4C-src" fourc.4c-multiphysics@main
+          fi
+          echo "SPACK_ENV=$ENVIRONMENT" >> "$GITHUB_ENV"
+          echo "### Spack build test" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Spack packages: \`${{ needs.select-packages.outputs.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Recipe: \`$RECIPE\` (\`$PACKAGE\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- OS: \`${{ matrix.platform || matrix.os }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Compiler: \`${{ matrix.compiler }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Variant: \`${{ matrix.variant }}\` (\`${{ matrix.spec_args }}\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 4C version: \`$VERSION\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ matrix.dependencies_only }}" = true ]; then
+            echo "- Validation: dependency-only installation and generated CMake release preset." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "${{ matrix.variant }}" = cuda ]; then
+            echo "- Validation: compile/link only; no GPU available for runtime tests." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "$RECIPE" = development ]; then
+            echo "- Checkout: \`$(git -C "$GITHUB_WORKSPACE/4C-src" rev-parse HEAD)\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Concretize and show the spec
+        run: |
+          spack concretize --deprecated
+          spack spec -l
+
+      - name: Verify the release recipe and BLAS ABI
+        run: |
+          spack python -c 'exec("""
+          import os
+          import spack.environment as ev
+          from spack.error import SpackError
+
+          for root in ev.Environment(os.environ["SPACK_ENV"]).concrete_roots():
+              if root.namespace != "builtin":
+                  raise SpackError(f"Expected the official release recipe, got {root.fullname}")
+              blas = [
+                  node for node in root["trilinos"].traverse(deptype=("link", "run"))
+                  if node.name in ("openblas", "intel-oneapi-mkl")
+              ]
+              if not blas:
+                  raise SpackError("No supported BLAS provider found in the Trilinos runtime")
+              for node in blas:
+                  if not node.satisfies("~ilp64"):
+                      raise SpackError(f"Release recipe failed to enforce LP64: {node}")
+                  print(f"Verified release ABI: {node}")
+              print(f"Verified official recipe: {root.package.module.__file__}")
+          """)'
+
+      - name: Verify the GNU runtime for Intel builds
+        if: startsWith(matrix.compiler, 'oneapi@')
+        run: |
+          spack python -c 'exec("""
+          import os
+          import spack.environment as ev
+          from spack.error import SpackError
+
+          # Cached build tools can carry runtimes from their build compiler.
+          # Validate the GCC runtime required by the Intel application runtime.
+          intel_runtimes = {
+              node.dag_hash(): node
+              for root in ev.Environment(os.environ["SPACK_ENV"]).concrete_roots()
+              for node in root.traverse(deptype=("link", "run"))
+              if node.name == "intel-oneapi-runtime"
+          }
+          if not intel_runtimes:
+              raise SpackError("Intel build has no link/run Intel runtime dependency")
+          runtimes = {
+              runtime.dag_hash(): runtime
+              for intel_runtime in intel_runtimes.values()
+              for runtime in intel_runtime.traverse(deptype=("link", "run"))
+              if runtime.name == "gcc-runtime"
+          }
+          if not runtimes:
+              raise SpackError("Intel runtime has no link/run GCC runtime dependency")
+          for runtime in runtimes.values():
+              if not runtime.satisfies("@13:"):
+                  raise SpackError(f"Intel build requires GCC runtime >=13, got {runtime}")
+              print(f"Verified GNU runtime: {runtime}")
+          """)'
 
       - name: Install 4C
+        if: ${{ !matrix.dependencies_only }}
+        timeout-minutes: ${{ runner.os == 'macOS' && matrix.variant == 'extended' && 300 || 360 }}
         run: |
-          spack install --deprecated --fail-fast --verbose "4c-multiphysics@${{ steps.version.outputs.version }} ${{ matrix.variant.spec_args }} %${{ matrix.os.compiler }}"
+          if [ "${{ runner.os }}" = macOS ] && [ "${{ matrix.variant }}" = extended ]; then
+            # The new installer's failure shutdown hung until the job timeout.
+            spack config add 'config:installer:old'
+          fi
+          spack install --deprecated --fail-fast --verbose --show-log-on-error --use-buildcache package:never,dependencies:auto
           spack find --long --variants 4c-multiphysics
 
+      - name: Install only the dependencies
+        if: matrix.dependencies_only
+        run: |
+          spack install --only dependencies --deprecated --fail-fast --verbose \
+            --use-buildcache package:never,dependencies:auto
+
+      - name: Build the checkout using generated Spack presets
+        if: matrix.dependencies_only
+        shell: spack-bash {0}
+        run: |
+          cd "$GITHUB_WORKSPACE/4C-src"
+          ./utilities/set_up_dev_env.sh
+          ./utilities/python-venv/bin/generate-spack-cmake-presets
+          # Use the installed build tools, but let the generated preset select
+          # compilers and libraries exactly as in the contributor workflow.
+          spack load cmake ninja
+          cmake --list-presets
+          cmake --fresh --preset spack-generated-release
+          cmake --build build/spack-release --target 4C --parallel 2
+
       - name: Checkout tutorial input files matching the installed release
+        if: matrix.recipe == 'release'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          repository: 4C-multiphysics/4C
           ref: v${{ steps.version.outputs.version }}
           sparse-checkout: |
             tests/tutorials/poisson
@@ -122,14 +365,25 @@ jobs:
           path: 4C-src
 
       - name: Smoke test - run 4C on a tutorial input file
+        id: smoke-test
+        if: matrix.variant != 'cuda'
         shell: spack-bash {0}
+        env:
+          OMPI_ALLOW_RUN_AS_ROOT: ${{ matrix.container && '1' || '0' }}
+          OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: ${{ matrix.container && '1' || '0' }}
         run: |
-          spack load 4c-multiphysics
+          if [ "${{ matrix.dependencies_only }}" = true ]; then
+            EXECUTABLE="$GITHUB_WORKSPACE/4C-src/build/spack-release/4C"
+          else
+            spack load 4c-multiphysics
+            EXECUTABLE="$(command -v 4C)"
+          fi
+          echo "FOUR_C_EXECUTABLE=$EXECUTABLE" >> "$GITHUB_ENV"
 
           mkdir -p "$GITHUB_WORKSPACE/spack_smoke_test"
           cd "$GITHUB_WORKSPACE/spack_smoke_test"
           # 4C prints its version banner at the start of every run.
-          4C "$GITHUB_WORKSPACE/4C-src/tests/tutorials/poisson/tutorial_poisson_thermo.4C.yaml" spack_smoke_test_output
+          "$EXECUTABLE" "$GITHUB_WORKSPACE/4C-src/tests/tutorials/poisson/tutorial_poisson_thermo.4C.yaml" spack_smoke_test_output
 
           # Verify output was actually produced, not just a zero exit code.
           if ! ls spack_smoke_test_output*.vtu >/dev/null 2>&1 && \
@@ -138,26 +392,78 @@ jobs:
             exit 1
           fi
 
-      - name: Collect Spack build logs on failure
-        if: failure()
+      - name: Capture a backtrace after a failed Linux smoke test
+        if: failure() && steps.smoke-test.outcome == 'failure' && runner.os == 'Linux'
+        shell: spack-bash {0}
+        env:
+          OMPI_ALLOW_RUN_AS_ROOT: ${{ matrix.container && '1' || '0' }}
+          OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: ${{ matrix.container && '1' || '0' }}
+        run: |
+          if [ -n "${{ matrix.container }}" ]; then
+            dnf install -y gdb
+          else
+            sudo apt-get update
+            sudo apt-get install -y gdb
+          fi
+          if [ "${{ matrix.dependencies_only }}" != true ]; then
+            spack load 4c-multiphysics
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/spack_build_logs"
+          cd "$GITHUB_WORKSPACE/spack_smoke_test"
+          # Reproduce without hiding the original failure; retain all thread
+          # stacks and loaded libraries in the existing failure artifact.
+          gdb --batch --return-child-result \
+            -ex run -ex "thread apply all bt" -ex "info sharedlibrary" \
+            --args "$FOUR_C_EXECUTABLE" \
+            "$GITHUB_WORKSPACE/4C-src/tests/tutorials/poisson/tutorial_poisson_thermo.4C.yaml" \
+            spack_smoke_test_backtrace \
+            > "$GITHUB_WORKSPACE/spack_build_logs/smoke-test-backtrace.log" 2>&1
+
+      - name: Collect Spack build logs on failure or cancellation
+        if: failure() || cancelled()
+        timeout-minutes: 5
         run: |
           mkdir -p "$GITHUB_WORKSPACE/spack_build_logs"
-          # Build logs live under Spack's stage root, not the install prefix
-          # (which may not exist on failure). `cp --parents` keeps each
-          # package's stage subdirectory to avoid name clashes.
+          echo "${{ needs.select-packages.outputs.sha }}" > "$GITHUB_WORKSPACE/spack_build_logs/spack-packages-commit.txt"
+          if [ -n "$SPACK_ENV" ]; then
+            for file in spack.yaml spack.lock; do
+              if [ -f "$SPACK_ENV/$file" ]; then
+                cp "$SPACK_ENV/$file" "$GITHUB_WORKSPACE/spack_build_logs/"
+              fi
+            done
+          fi
+          if [ "${{ matrix.dependencies_only }}" = true ]; then
+            BUILD_DIR="$GITHUB_WORKSPACE/4C-src/build/spack-release"
+            for file in CMakeCache.txt CMakeFiles/CMakeConfigureLog.yaml; do
+              if [ -f "$BUILD_DIR/$file" ]; then
+                cp "$BUILD_DIR/$file" "$GITHUB_WORKSPACE/spack_build_logs/"
+              fi
+            done
+          fi
+          # Preserve relative stage paths without GNU-specific cp flags.
           STAGE_DIR="$(spack location --stages 2>/dev/null || true)"
           if [ -n "$STAGE_DIR" ] && [ -d "$STAGE_DIR" ]; then
-            (cd "$STAGE_DIR" && find . -name "*.txt" -exec cp --parents {} "$GITHUB_WORKSPACE/spack_build_logs/" \;)
+            (
+              cd "$STAGE_DIR"
+              find . -type f \( -name "*.txt" -o -name "*.log" -o -name "spack-build-env*" \) -print0 |
+                while IFS= read -r -d '' file; do
+                  destination="$GITHUB_WORKSPACE/spack_build_logs/$file"
+                  mkdir -p "$(dirname "$destination")"
+                  cp "$file" "$destination"
+                done
+            )
           else
             echo "Spack stage directory not found; no build logs to collect." >&2
           fi
           spack debug report > "$GITHUB_WORKSPACE/spack_build_logs/spack_debug_report.txt" 2>&1 || true
 
       - name: Upload smoke test output
-        if: success() || failure()
+        if: success() || failure() || cancelled()
+        timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: spack_smoke_test_output-${{ matrix.os.name }}-${{ matrix.variant.name }}
+          name: spack_smoke_test_output-${{ matrix.recipe }}-${{ matrix.platform || matrix.os }}-${{ matrix.compiler
+            }}-${{ matrix.variant }}-${{ matrix.version }}
           path: |
             ${{ github.workspace }}/spack_smoke_test
             ${{ github.workspace }}/spack_build_logs
@@ -165,7 +471,7 @@ jobs:
 
   report-failure:
     name: File an issue on failure
-    needs: spack-build
+    needs: [select-packages, spack-build]
     # Only file issues for unattended (scheduled) runs
     if: failure() && github.event_name == 'schedule'
     runs-on: ubuntu-latest
@@ -183,9 +489,16 @@ jobs:
           body: >
             The scheduled **Spack build test** workflow failed.
 
-            This workflow builds the latest official 4C release via the
-            [`4c-multiphysics` Spack package](https://packages.spack.io/package.html?name=4c-multiphysics)
-            across several OS/variant combinations and runs a smoke test against the result.
+            Official spack-packages commit: `${{ needs.select-packages.outputs.sha }}`.
+            Scheduled runs resolve the latest develop commit once for the entire matrix.
+
+            This workflow builds the current checkout using the in-tree Spack recipe and the
+            selected official 4C releases using the official
+            [`4c-multiphysics` Spack package](https://packages.spack.io/package.html?name=4c-multiphysics).
+            Both paths run across several OS/variant combinations and smoke-test the result,
+            except for the CUDA build, which only compiles and links because the runner has no GPU.
+            One Ubuntu/GCC development entry installs only dependencies, generates CMake presets,
+            and builds the checkout through the documented contributor workflow.
 
             A failure here typically indicates one of:
 

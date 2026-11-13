@@ -1,0 +1,14 @@
+Mesa's Spack recipe selects the softpipe driver for ~llvm but does not pass
+-Dllvm=disabled. Default the feature to disabled so Meson does not probe an
+unusable host llvm-config; an explicit -Dllvm=enabled still takes precedence.
+
+diff --git a/meson_options.txt b/meson_options.txt
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -394,5 +394,6 @@ option(
+   'llvm',
+   type : 'feature',
++  value : 'disabled',
+   deprecated: {'true': 'enabled', 'false': 'disabled'},
+   description : 'Build with LLVM support.'
+ )

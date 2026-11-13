@@ -1,0 +1,419 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
+from spack.package import *
+from spack.stage import ResourceStage
+
+
+class _4cMultiphysics(CMakePackage, CudaPackage):
+    """4C is a parallel multiphysics research code."""
+
+    # When updating spack-packages, carry release-applicable fixes and resource
+    # pins into its recipe. Keep @main-only dependencies scoped to development;
+    # recheck their versions against the release's CMake configuration.
+    homepage = "https://www.4c-multiphysics.org/"
+    url = "https://github.com/4C-multiphysics/4C/archive/refs/tags/v2025.3.0.tar.gz"
+    git = "https://github.com/4C-multiphysics/4C.git"
+
+    maintainers(
+        "bgoderbauer",
+        "c-p-schmidt",
+        "georghammerl",
+        "isteinbrecher",
+        "lauraengelhardt",
+        "mayrmt",
+        "rjoussen",
+    )
+    license("LGPL-3.0-or-later")
+
+    version("main", branch="main")
+    version(
+        "2026.3.0",
+        sha256="d8fa2ca8a3815f8050f6d7f1c428ed65c4e4fea83a7079beffe4d6e11eddfb84",
+    )
+    version(
+        "2026.2.0",
+        sha256="57e05128934e06b67d5ae3c2d3402f80d1ddfc3975b1557670e5b1d3399a6c0b",
+    )
+    version(
+        "2026.1.0",
+        sha256="9d95607a0b7668c9712392c81863b6327b8922745705b62e07f605f1d6932646",
+    )
+
+    # Keep these sources private to 4C until maintained packages are available
+    # in the builtin repository. FetchContent consumes the staged source trees.
+    resource(
+        name="ryml",
+        url="https://github.com/biojppm/rapidyaml/releases/download/v0.9.0/rapidyaml-0.9.0-src.tgz",
+        sha256="e01c66b21dfbe3d7382ecab3dfe7efcdc47a068cd25fcc8279e8f462f69c995d",
+        destination="spack-resources",
+        placement="ryml",
+        when="@2026.1.0:2026.3.0",
+    )
+    # main uses the serialization and node-type APIs introduced after 0.9.0.
+    resource(
+        name="ryml",
+        git="https://github.com/biojppm/rapidyaml.git",
+        commit="f8ac8dd50f4f7916579d55a05ebf9c6488e52670",  # version 0.16.0
+        destination="spack-resources",
+        placement="ryml",
+        when="@main",
+    )
+    resource(
+        name="mirco",
+        url="https://github.com/imcs-compsim/MIRCO/archive/84d9fa94b3cd2d358f9c498e716d50181ba626f2.tar.gz",
+        sha256="12bee3bba30e8e8a7965e961cb4924a5f11b8f173b74094ed7c66a7e38d98cb7",
+        destination="spack-resources",
+        placement="mirco",
+        when="@2026.1.0+mirco",
+    )
+    resource(
+        name="mirco",
+        url="https://github.com/imcs-compsim/MIRCO/archive/b9d0c4ba27ff8463a3d2b17163fead8800b2650c.tar.gz",
+        sha256="b3a16a0aeed5fcd778c8757d81af9070ec4964a5206f87b6257a402aa3fc4bfd",
+        destination="spack-resources",
+        placement="mirco",
+        when="@2026.2.0+mirco",
+    )
+    resource(
+        name="mirco",
+        url="https://github.com/imcs-compsim/MIRCO/archive/8b049a6462eba5809d7cffe039a77f3bc5593767.tar.gz",
+        sha256="8b051f040b5151307d9007574690adf0194bc0a94a6bb81a6e1bc6286914ba63",
+        destination="spack-resources",
+        placement="mirco",
+        when="@2026.3.0+mirco",
+    )
+    resource(
+        name="mirco",
+        url="https://github.com/imcs-compsim/MIRCO/archive/382b535af0c6824b815e847de926ddd1f52bb00d.tar.gz",
+        sha256="5d40ab83e0711a4a0bbab906c1aa789e370449f2ee83001c51f0e1ed8b31d948",
+        destination="spack-resources",
+        placement="mirco",
+        when="@main+mirco",
+    )
+
+    variant("shared", default=True, description="Build shared libraries")
+    variant("qhull", default=True, description="Enable Qhull support")
+    variant("vtk", default=False, description="Enable VTK support")
+    variant("gmsh", default=False, description="Enable Gmsh support")
+    variant("dealii", default=False, description="Enable deal.II support")
+    variant("arborx", default=False, description="Enable ArborX support")
+    variant("fftw", default=False, description="Enable FFTW support")
+    variant("mirco", default=False, description="Enable MIRCO support")
+    variant("backtrace", default=False, description="Enable libbacktrace support")
+    variant(
+        "python", default=False, description="Enable Python build and test utilities"
+    )
+    variant("pybind11", default=False, description="Build the py4C Python bindings")
+
+    conflicts("~python", when="+pybind11", msg="+pybind11 requires +python")
+    requires("%clang", when="+cuda", msg="CUDA support requires the Clang toolchain")
+    conflicts(
+        "cuda_arch=none",
+        when="+cuda",
+        msg="CUDA support requires selecting one architecture with cuda_arch=<value>",
+    )
+    conflicts(
+        "%cxx=clang",
+        when="+dealii",
+        msg="The deal.II dependency is not supported with Clang; disable +dealii or use GCC.",
+    )
+    conflicts(
+        "%cxx=oneapi",
+        when="+dealii",
+        msg="The deal.II dependency is not supported with Intel oneAPI; "
+        "disable +dealii or use GCC.",
+    )
+
+    conflicts("platform=windows", msg="4C Multiphysics does not support Windows")
+    conflicts(
+        "platform=darwin",
+        when="@2026.1.0:2026.3.0",
+        msg="macOS support is not available",
+    )
+
+    patch("identify-release-dealii.patch", when="@2026.1.0:2026.3.0+dealii")
+    patch("link-installed-arborx.patch", when="@2026.1.0:2026.3.0+arborx")
+    patch("use-installed-googletest.patch", when="@2026.1.0:2026.3.0")
+    patch("use-installed-googletest.patch", when="@main")
+    # Packaging fixes, not just CI: +python must use Spack dependencies without
+    # pip downloads. Preserve the YAML scalar resolver when porting these patches.
+    patch("python-venv-no-downloads-2026.2.patch", when="@2026.1.0:2026.2.0+python")
+    patch("python-venv-no-downloads-2026.3.patch", when="@2026.3.0+python")
+    patch("python-venv-no-downloads-2026.3.patch", when="@main+python")
+
+    # GCC 14.2.0 hits an internal compiler error (ICE) in
+    # cxx_eval_indirect_ref (cp/constexpr.cc) while instantiating
+    # Core::LinAlg::einsum_sym on 4C's tensor templates
+    # (src/core/linalg/src/dense/4C_linalg_tensor_internals.hpp). Not
+    # confirmed on other 14.x point releases; narrow this once tested.
+    conflicts(
+        "%gcc@14:14",
+        msg="GCC 14.x hits an internal compiler error compiling 4C's tensor "
+        "templates; use GCC 13 or GCC 15 instead.",
+    )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("cmake@3.30:", type="build")
+    depends_on("ninja", type="build")
+
+    depends_on("mpi")
+    depends_on("hdf5+mpi+hl")
+    # Trilinos pulls in Fortran dependencies through MUMPS. A Fortran-capable
+    # compiler must therefore be registered even though 4C has no Fortran sources.
+    depends_on(
+        "trilinos@16.2+mpi+amesos+amesos2+belos+epetra+epetraext"
+        "+ifpack+ifpack2+intrepid2+isorropia+ml+muelu+nox+sacado+shards+stratimikos"
+        "+teko+thyra+tpetra+zoltan+zoltan2+explicit_template_instantiation"
+        "+mumps+superlu-dist+suite-sparse+exodus+hdf5 gotype=int",
+        patches=[
+            patch("trilinos-iocgns-extern-c-linkage.patch", when="@:16.2.2"),
+            patch("trilinos-16.2-deprecation-warnings.patch", when="@16.2"),
+            patch(
+                "trilinos-16.2-sacado-clang-specialization.patch",
+                when="@16.2 platform=darwin",
+            ),
+            patch("trilinos-16.2-cuda-mpi-prefind.patch", when="@16.2+cuda"),
+            patch("trilinos-16.2-cuda-serial-tpetra.patch", when="@16.2+cuda"),
+            patch("trilinos-16.2-cuda-disable-loca.patch", when="@16.2+cuda"),
+        ],
+    )
+    depends_on("trilinos~cuda", when="~cuda")
+    # Trilinos 16.2's BLAS wrappers pass 32-bit integers. Unsuffixed ILP64
+    # libraries can link successfully but crash during the first linear solve.
+    for blas_provider in ("openblas", "intel-oneapi-mkl"):
+        requires(
+            f"^{blas_provider}~ilp64",
+            when=f"^{blas_provider}",
+            msg="4C's Trilinos stack requires LP64 BLAS/LAPACK (32-bit integers)",
+        )
+    depends_on("kokkos~cuda", when="~cuda")
+    depends_on("kokkos-kernels~cuda", when="~cuda")
+    depends_on("trilinos+cuda+wrapper %gcc", when="+cuda")
+    depends_on("kokkos+cuda+wrapper %gcc", when="+cuda")
+    depends_on("kokkos-kernels+cuda %gcc", when="+cuda")
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            f"trilinos+cuda+wrapper cuda_arch={arch} %gcc",
+            when=f"+cuda cuda_arch={arch}",
+        )
+        depends_on(
+            f"kokkos+cuda+wrapper cuda_arch={arch} %gcc",
+            when=f"+cuda cuda_arch={arch}",
+        )
+        depends_on(
+            f"kokkos-kernels+cuda cuda_arch={arch} %gcc",
+            when=f"+cuda cuda_arch={arch}",
+        )
+    # Trilinos exposes MPI types in its C++ ABI, so oneAPI builds require
+    # Intel MPI regardless of 4C's compiler.
+    requires(
+        "^intel-oneapi-mpi",
+        when="^trilinos %c,cxx=oneapi",
+        msg="Trilinos built with oneAPI requires Intel MPI for a consistent MPI C++ ABI",
+    )
+
+    # deal.II 9.6.2 uses bundled Boost 1.84. Keep 4C's compiled Boost.Graph
+    # library and headers ABI-compatible with the deal.II headers.
+    depends_on("boost@1.84.0+graph")
+    depends_on("cln")
+    depends_on("zlib-api")
+    depends_on("cli11@2.6.1")
+    depends_on("magic-enum@0.9.7")
+    depends_on("googletest@1.15.2+gmock", when="@2026.1.0:2026.3.0")
+    depends_on("googletest@1.15.2+gmock", when="@main")
+
+    # Only main uses Qhull's reentrant API; do not upgrade older release recipes.
+    depends_on("qhull@2019.1", when="@2026.1.0:2026.3.0+qhull")
+    depends_on("qhull@2020.2", when="@main+qhull")
+    depends_on("vtk@9:+shared", when="+vtk")
+    # VTK only needs Mesa as an OpenGL provider. Avoid Mesa's optional LLVM
+    # backend, which is particularly prone to unusable auto-detected externals.
+    # These Mesa fixes also apply to 4C releases. Port both dependency declarations
+    # and their patch files to the official release recipe in spack-packages.
+    depends_on(
+        "mesa~llvm",
+        patches=[
+            patch("mesa-23.3.6-replace-softpipe-with-swrast.patch", when="@23.3:24.1"),
+            patch("mesa-25.0.5-linux-c11-threads.patch", when="@23.2:25.2.6"),
+        ],
+        when="+vtk platform=linux",
+    )
+    depends_on(
+        "mesa~llvm",
+        patches=[
+            patch("mesa-23.3.6-replace-softpipe-with-swrast.patch", when="@23.3:24.1"),
+            patch("mesa-25.0.5-linux-c11-threads.patch", when="@23.2:25.2.6"),
+        ],
+        when="+python platform=linux",
+    )
+    depends_on("gmsh@4.15.1+shared~cgns~fltk~med", when="+gmsh")
+    depends_on(
+        "dealii@9.6.2~examples~examples_compile+hdf5+mpi+p4est+taskflow+threads+trilinos"
+        "~adol-c~arborx~arpack~assimp~cgal~ginkgo~gmsh~gsl~kokkos~metis~muparser"
+        "~netcdf~opencascade~petsc~scalapack~slepc~sundials~symengine~vtk"
+        " build_type=Release",
+        patches=[
+            patch("dealii-force-bundled-boost.patch"),
+            patch("dealii-use-cxx20.patch"),
+            patch("dealii-petsc-3.25-domain-flags.patch"),
+        ],
+        when="+dealii",
+    )
+    requires(
+        "^intel-oneapi-mpi",
+        when="+dealii %c,cxx=oneapi",
+        msg="deal.II and Trilinos must use Intel MPI with oneAPI to preserve their MPI C++ ABI",
+    )
+    requires(
+        "^dealii~cgal",
+        when="+dealii",
+        msg="deal.II must disable CGAL when using the bundled Boost required by 4C",
+    )
+    # Taskflow 4.1 documents IntelLLVM support but omits it from its compiler
+    # dispatch. Add the missing branch without constraining GCC or Clang.
+    depends_on(
+        "taskflow@4.1.0",
+        patches=[patch("taskflow-4.1-intelllvm.patch")],
+        when="+dealii",
+    )
+    depends_on("arborx@2.0.1+mpi", when="@2026.1.0:2026.3.0+arborx")
+    # 2.1-4c is declared by our internal ArborX recipe, not builtin. Before
+    # exporting a release recipe, provide that pin upstream or use a release
+    # containing the required fixes; do not copy this dependency alone.
+    depends_on(
+        "arborx@=2.1-4c+mpi",
+        when="@main+arborx",
+    )
+    depends_on("fftw", when="+fftw")
+    depends_on("libbacktrace+shared", when="+backtrace")
+    depends_on("python@3.12:", type=("build", "link", "run"), when="+python")
+    depends_on("python-venv", type=("build", "run"), when="+python")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-setuptools", type="build", when="+python")
+    depends_on("py-numpy", type=("build", "run"), when="+python")
+    depends_on("py-scipy", type=("build", "run"), when="+python")
+    depends_on("py-pytest", type=("build", "run"), when="+python")
+    depends_on("py-pyyaml", type=("build", "run"), when="+python")
+    # Newer jsonschema releases require the Rust-backed rpds-py package. 4C
+    # only uses the validator_for and RefResolver APIs available in 4.17.3.
+    depends_on("py-jsonschema@:4.17.3", type=("build", "run"), when="+python")
+    depends_on("vtk@9.4.2:9.6+python", type=("build", "run"), when="+python")
+    depends_on("py-pyvista", type=("build", "run"), when="+python")
+    depends_on("py-jinja2", type=("build", "run"), when="+python")
+    depends_on("py-matplotlib", type=("build", "run"), when="+python")
+    depends_on("py-myst-parser", type=("build", "run"), when="+python")
+    depends_on("py-nbsphinx", type=("build", "run"), when="+python")
+    depends_on("py-sphinx", type=("build", "run"), when="+python")
+    depends_on("py-sphinx-rtd-theme", type=("build", "run"), when="+python")
+    depends_on("py-pybind11", type=("build", "link", "run"), when="+pybind11")
+
+    generator("ninja")
+
+    @run_before("cmake")
+    def stage_development_resources(self):
+        if "dev_path" not in self.spec.variants:
+            return
+        # CI uses spack develop --no-clone to test the actual PR checkout.
+        # The pinned Spack skips its resources; normal installs stage them already.
+        # Retain this hook upstream if develop builds are supported there, until
+        # Spack itself stages resources for existing development checkouts.
+        for stage in self.stage:
+            if isinstance(stage, ResourceStage):
+                stage.fetch()
+                stage.check()
+                stage.expand_archive()
+
+    def setup_build_environment(self, env):
+        if "+cuda" in self.spec:
+            architectures = self.spec["kokkos"].variants["cuda_arch"].value
+            # Kokkos declares cuda_arch as single-valued, unlike CudaPackage.
+            if isinstance(architectures, str):
+                architectures = (architectures,)
+            if len(architectures) != 1 or architectures[0] == "none":
+                raise InstallError(
+                    "The 4C CUDA compiler wrapper requires exactly one CUDA architecture."
+                )
+            env.set("CLANGCUDA_ARCH", "sm_" + architectures[0])
+            env.set("CLANGCUDA_CLANG_PATH", self.compiler.cxx)
+            env.set("CLANGCUDA_CUDA_PATH", self.spec["cuda"].prefix)
+
+    def cmake_args(self):
+        spec = self.spec
+        args = [
+            self.define_from_variant("FOUR_C_BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("FOUR_C_CLANGCUDA", "cuda"),
+            self.define("FOUR_C_ENABLE_DEVELOPER_MODE", False),
+            self.define("FOUR_C_ENABLE_METADATA_GENERATION", False),
+            self.define("FETCHCONTENT_TRY_FIND_PACKAGE_MODE", "ALWAYS"),
+            self.define("FOUR_C_HDF5_ROOT", spec["hdf5"].prefix),
+            self.define("FOUR_C_MPI_ROOT", spec["mpi"].prefix),
+            self.define("FOUR_C_TRILINOS_ROOT", spec["trilinos"].prefix),
+            self.define("FOUR_C_BOOST_ROOT", spec["boost"].prefix),
+            self.define("FOUR_C_CLN_ROOT", spec["cln"].prefix),
+            self.define(
+                "FETCHCONTENT_SOURCE_DIR_RYML",
+                join_path(self.stage.source_path, "spack-resources", "ryml"),
+            ),
+            self.define("FOUR_C_MAGIC_ENUM_ROOT", spec["magic-enum"].prefix),
+            self.define("FOUR_C_ZLIB_ROOT", spec["zlib-api"].prefix),
+            self.define("FOUR_C_CLI11_ROOT", spec["cli11"].prefix),
+            self.define_from_variant("FOUR_C_WITH_QHULL", "qhull"),
+            self.define_from_variant("FOUR_C_WITH_VTK", "vtk"),
+            self.define_from_variant("FOUR_C_WITH_GMSH", "gmsh"),
+            self.define_from_variant("FOUR_C_WITH_DEAL_II", "dealii"),
+            self.define_from_variant("FOUR_C_WITH_ARBORX", "arborx"),
+            self.define_from_variant("FOUR_C_WITH_FFTW", "fftw"),
+            self.define_from_variant("FOUR_C_WITH_MIRCO", "mirco"),
+            self.define_from_variant("FOUR_C_WITH_BACKTRACE", "backtrace"),
+            self.define_from_variant("FOUR_C_WITH_PYTHON", "python"),
+            self.define_from_variant("FOUR_C_WITH_PYBIND11", "pybind11"),
+            self.define_from_variant("FOUR_C_ENABLE_PYTHON_BINDINGS", "pybind11"),
+        ]
+
+        if "+cuda" in spec:
+            args.extend(
+                [
+                    self.define(
+                        "CMAKE_CXX_COMPILER",
+                        join_path(self.stage.source_path, "utilities", "clangcuda++"),
+                    ),
+                    self.define("FOUR_C_ENABLE_LINKER_DETECTION", False),
+                ]
+            )
+
+        if spec.satisfies("platform=darwin"):
+            args.append(self.define("FOUR_C_ENABLE_LINKER_DETECTION", False))
+            args.append(self.define("FOUR_C_ENABLE_FE_TRAPPING", False))
+
+        roots = {
+            "qhull": ("FOUR_C_QHULL_ROOT", "qhull"),
+            "vtk": ("FOUR_C_VTK_ROOT", "vtk"),
+            "gmsh": ("FOUR_C_GMSH_ROOT", "gmsh"),
+            "dealii": ("FOUR_C_DEAL_II_ROOT", "dealii"),
+            "arborx": ("FOUR_C_ARBORX_ROOT", "arborx"),
+            "fftw": ("FOUR_C_FFTW_ROOT", "fftw"),
+            "backtrace": ("FOUR_C_BACKTRACE_ROOT", "libbacktrace"),
+            "python": ("FOUR_C_PYTHON_ROOT", "python"),
+            "pybind11": ("FOUR_C_PYBIND11_ROOT", "py-pybind11"),
+        }
+        for variant, (variable, dependency) in roots.items():
+            if "+" + variant in spec:
+                args.append(self.define(variable, spec[dependency].prefix))
+
+        if "+arborx" in spec:
+            args.append(self.define("FOUR_C_ARBORX_FIND_INSTALLED", True))
+        if "+mirco" in spec:
+            args.append(
+                self.define(
+                    "FETCHCONTENT_SOURCE_DIR_MIRCO",
+                    join_path(self.stage.source_path, "spack-resources", "mirco"),
+                )
+            )
+
+        return args

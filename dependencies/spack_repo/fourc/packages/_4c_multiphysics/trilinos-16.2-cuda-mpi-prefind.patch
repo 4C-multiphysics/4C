@@ -1,0 +1,17 @@
+diff --git a/cmake/tribits/core/std_tpls/FindTPLMPI.cmake b/cmake/tribits/core/std_tpls/FindTPLMPI.cmake
+index 780f8df8af..739f8cae15 100644
+--- a/cmake/tribits/core/std_tpls/FindTPLMPI.cmake
++++ b/cmake/tribits/core/std_tpls/FindTPLMPI.cmake
+@@ -23,8 +23,10 @@ endif()
+
+ # Don't allow calling find_package(MPI) by default.  Force the user to set
+ # MPI_ALLOW_PACKAGE_PREFIND=TRUE or even MPI_FORCE_PRE_FIND_PACKAGE if then
+ # want to force the finding of MPI using find_package(MPI).
+-set(MPI_ALLOW_PACKAGE_PREFIND  FALSE  CACHE  BOOL
+-  "Allow calling find_package(MPI) by default (default is FALSE)")
++# CUDA's Kokkos compiler launcher does not execute the MPI wrapper, so MPI's
++# include directories must be attached to targets explicitly.
++set(MPI_ALLOW_PACKAGE_PREFIND  TRUE  CACHE  BOOL
++  "Allow calling find_package(MPI) by default (default is TRUE)")
+
+ tribits_tpl_allow_pre_find_package(MPI MPI_ALLOW_PREFIND)
