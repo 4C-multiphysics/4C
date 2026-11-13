@@ -16,6 +16,7 @@
 #include "4C_cut_volumecell.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_dofset_predefineddofnumber.hpp"
+#include "4C_fem_geometry_convex_hull.hpp"
 #include "4C_fem_geometry_searchtree.hpp"
 #include "4C_fem_geometry_searchtree_service.hpp"
 #include "4C_linalg_mapextractor.hpp"
@@ -4435,19 +4436,9 @@ bool Coupling::VolMortar::VolMortarCoupl::polygon_clipping_convex_hull(
   // - x* = A * (x - p1) where p1 = translation, A = rotation
   // - this yields transformed points with coords (x_bar,y_bar,0)
   //**********************************************************************
-  // only continue if more than two points remaining
-  if ((int)collconvexhull.size() < 3)
-  {
-    // no clip polygon if less than 3 points
-    std::vector<Mortar::Vertex> empty;
-    respoly = empty;
-  }
-  else if ((int)collconvexhull.size() == 3)
-  {
-    // 3 points already ARE the convex hull
-    respoly = collconvexhull;
-  }
-  else
+  // no clip polygon if less than 3 points
+  respoly.clear();
+  if (collconvexhull.size() >= 3)
   {
     // do transformation to auxiliary plane
     std::array<double, 3> newzero = {
@@ -4485,7 +4476,7 @@ bool Coupling::VolMortar::VolMortarCoupl::polygon_clipping_convex_hull(
 
     // temporary storage for transformed points
     int np = (int)collconvexhull.size();
-    Core::LinAlg::SerialDenseMatrix transformed(2, np);
+    std::vector<std::array<double, 2>> transformed(np);
 
     // transform each convex hull point
     for (int i = 0; i < np; ++i)
@@ -4498,8 +4489,7 @@ bool Coupling::VolMortar::VolMortarCoupl::polygon_clipping_convex_hull(
 
       if (abs(newpoint[2]) > tol)
         FOUR_C_THROW("ERROR: Transformation to aux. plane failed: z!=0 !");
-      transformed(0, i) = newpoint[0];
-      transformed(1, i) = newpoint[1];
+      transformed[i] = {newpoint[0], newpoint[1]};
     }
 
     //**********************************************************************
@@ -4507,7 +4497,12 @@ bool Coupling::VolMortar::VolMortarCoupl::polygon_clipping_convex_hull(
     // - this yields the final clip polygon
     // - sanity of the generated output is checked
     //**********************************************************************
-    Mortar::sort_convex_hull_points(false, transformed, collconvexhull, respoly, tol);
+    for (int point_index : Core::Geo::convex_hull_2d(transformed))
+    {
+      const Mortar::Vertex& v = collconvexhull[point_index];
+      respoly.emplace_back(
+          v.coord(), v.v_type(), v.nodeids(), nullptr, nullptr, false, false, nullptr, -1.0);
+    }
   }
 
   return true;
