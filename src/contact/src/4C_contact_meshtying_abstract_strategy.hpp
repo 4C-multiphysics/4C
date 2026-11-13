@@ -152,6 +152,14 @@ namespace CONTACT
     std::shared_ptr<const Core::LinAlg::SparseMatrix> m_matrix() const override { return mmatrix_; }
 
     /*!
+     \brief Return mortar interface scaling
+     */
+    std::shared_ptr<Core::LinAlg::Vector<double>> interface_scaling_vector() const
+    {
+      return interface_scaling_;
+    };
+
+    /*!
     \brief Get dual quadratic 3d source element flag
 
     Returns TRUE if at least one higher-order 3d source element with
@@ -730,6 +738,9 @@ namespace CONTACT
 
     //! Global weighted gap vector \f$g\f$
     std::shared_ptr<Core::LinAlg::Vector<double>> g_;
+
+    //! Global Lagrange multiplier interface scaling vector \f$W\f$
+    std::shared_ptr<Core::LinAlg::Vector<double>> interface_scaling_;
 
     //! Global constraint right-hand side vector (only for saddlepoint problems)
     std::shared_ptr<Core::LinAlg::Vector<double>> constrrhs_;

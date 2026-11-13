@@ -327,9 +327,14 @@ void CONTACT::MtAbstractStrategy::mortar_coupling(
   dmatrix_ = std::make_shared<Core::LinAlg::SparseMatrix>(*gsdofrowmap_, 10);
   mmatrix_ = std::make_shared<Core::LinAlg::SparseMatrix>(*gsdofrowmap_, 100);
   g_ = std::make_shared<Core::LinAlg::Vector<double>>(*gsdofrowmap_, true);
+  interface_scaling_ = std::make_shared<Core::LinAlg::Vector<double>>(*gsdofrowmap_, true);
 
   // assemble D- and M-matrix on all interfaces
-  for (const auto& interface : interface_) interface->assemble_dm(*dmatrix_, *mmatrix_);
+  for (const auto& interface : interface_)
+  {
+    interface->assemble_dm(*dmatrix_, *mmatrix_);
+    interface->assemble_interface_weight(*interface_scaling_);
+  }
 
   // fill_complete() global Mortar matrices
   dmatrix_->complete();
