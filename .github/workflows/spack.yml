@@ -2,23 +2,78 @@ name: Spack build test
 
 # Builds the checkout with the local recipe and selected official releases
 # with the official recipe, then smoke-tests installations except GPU-only builds.
+#
+# Sunday runs test the latest official spack-packages develop commit. PR checks
+# use a pinned, known-good snapshot to avoid unrelated upstream regressions.
+# Manual dispatch offers latest (default) or pinned. Resolve the commit once
+# for the entire matrix and record it in job summaries and failure reports.
+# Update the pin deliberately after reviewing successful scheduled runs.
+#
+# One Ubuntu/GCC development entry follows the contributor workflow: install
+# only dependencies, generate CMake presets, build the release configuration,
+# and run a tutorial simulation. Other entries test full Spack package builds;
+# CUDA validates compilation and linking only because the runner has no GPU.
 on:
   schedule:
     # Weekly, avoiding the top of the hour as recommended by GitHub
     - cron: "17 5 * * 0"
       timezone: "Europe/Berlin"
   workflow_dispatch:
+    inputs:
+      packages:
+        description: "Official Spack packages: latest develop or known-good snapshot"
+        type: choice
+        options:
+          - latest
+          - pinned
+        default: latest
   pull_request:
     paths:
       - ".github/workflows/spack.yml"
       - "dependencies/spack_repo/**"
+      - "presets/spack/**"
+      - "utilities/four_c_python/src/four_c_development/generate_spack_cmake_presets.py"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  select-packages:
+    name: Resolve the Spack packages snapshot
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.packages.outputs.sha }}
+    steps:
+      - name: Select one commit for the entire matrix
+        id: packages
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          SELECTION: ${{ inputs.packages }}
+          # Known-good official develop snapshot selected on 2026-11-12.
+          # Advance deliberately after a successful weekly run; reassess the
+          # CLN workaround and development dependency overrides at that time.
+          PINNED_SHA: 8933fbb6925be105d493d2eff0c0b375a2ac1cc8
+        run: |
+          if [ "$EVENT" = schedule ] || { [ "$EVENT" = workflow_dispatch ] && [ "$SELECTION" = latest ]; }; then
+            SHA=$(git ls-remote --exit-code https://github.com/spack/spack-packages.git refs/heads/develop | cut -f1)
+            POLICY=latest
+          else
+            SHA="$PINNED_SHA"
+            POLICY=pinned
+          fi
+          if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Could not resolve a single Spack packages commit: $SHA" >&2
+            exit 1
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "### Spack packages snapshot" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Policy: \`$POLICY\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: [\`$SHA\`](https://github.com/spack/spack-packages/commit/$SHA)" >> "$GITHUB_STEP_SUMMARY"
+
   spack-build:
+    needs: select-packages
     name: Build and test 4C (${{ matrix.recipe }}, ${{ matrix.platform || matrix.os }}, ${{ matrix.compiler
       }}, ${{ matrix.variant }}, ${{ matrix.version }})
     runs-on: ${{ matrix.os }}
@@ -72,6 +127,8 @@ jobs:
             compiler: gcc@13
             compiler_bin: /usr/bin/g++-13
             variant: minimal
+            # Exercise the documented contributor path instead of installing 4C.
+            dependencies_only: true
             spec_args: ""
             version: main
           - recipe: development
@@ -170,10 +227,7 @@ jobs:
             }}
           spack_ref: ${{ matrix.recipe == 'development' && '27b41ace7b09dfd95609b932466a282a52f6054a'
             || 'v1.2.2' }}
-          # Official develop snapshot selected on 2026-11-12.
-          # Advance after publishing recipe updates to spack-packages; recheck
-          # the CLN workaround and development dependency overrides at that time.
-          packages_ref: 8933fbb6925be105d493d2eff0c0b375a2ac1cc8
+          packages_ref: ${{ needs.select-packages.outputs.sha }}
           buildcache: true
           color: true
 
@@ -266,18 +320,25 @@ jobs:
           echo "Selected 4C: $PACKAGE@$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           ENVIRONMENT="$RUNNER_TEMP/4c-spack-env"
+          if [ "${{ matrix.dependencies_only }}" = true ]; then
+            ENVIRONMENT="$GITHUB_WORKSPACE/4C-src/.spack"
+          fi
           spack env create --dir "$ENVIRONMENT"
           spack -e "$ENVIRONMENT" add "$PACKAGE@$VERSION ${{ matrix.spec_args }} %${{ matrix.compiler }} ${{ matrix.mpi_spec }} ${{ matrix.dependency_spec }}"
-          if [ "$RECIPE" = development ]; then
+          if [ "$RECIPE" = development ] && [ "${{ matrix.dependencies_only }}" != true ]; then
             spack -e "$ENVIRONMENT" develop --no-clone --path "$GITHUB_WORKSPACE/4C-src" fourc.4c-multiphysics@main
           fi
           echo "SPACK_ENV=$ENVIRONMENT" >> "$GITHUB_ENV"
           echo "### Spack build test" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Spack packages: \`${{ needs.select-packages.outputs.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Recipe: \`$RECIPE\` (\`$PACKAGE\`)" >> "$GITHUB_STEP_SUMMARY"
           echo "- OS: \`${{ matrix.platform || matrix.os }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Compiler: \`${{ matrix.compiler }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Variant: \`${{ matrix.variant }}\` (\`${{ matrix.spec_args }}\`)" >> "$GITHUB_STEP_SUMMARY"
           echo "- 4C version: \`$VERSION\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ matrix.dependencies_only }}" = true ]; then
+            echo "- Validation: dependency-only installation and generated CMake release preset." >> "$GITHUB_STEP_SUMMARY"
+          fi
           if [ "${{ matrix.variant }}" = cuda ]; then
             echo "- Validation: compile/link only; no GPU available for runtime tests." >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -302,14 +363,16 @@ jobs:
           import spack.environment as ev
           from spack.error import SpackError
 
+          # Cached build tools may retain an older runtime independently of
+          # the 4C libraries. Validate only the application link/run closure.
           runtimes = {
               node.dag_hash(): node
               for root in ev.Environment(os.environ["SPACK_ENV"]).concrete_roots()
-              for node in root.traverse()
+              for node in root.traverse(deptype=("link", "run"))
               if node.name == "gcc-runtime"
           }
           if not runtimes:
-              raise SpackError("Intel build has no concrete GCC runtime dependency")
+              raise SpackError("Intel build has no link/run GCC runtime dependency")
           for runtime in runtimes.values():
               if not runtime.satisfies("@13:"):
                   raise SpackError(f"Intel build requires GCC runtime >=13, got {runtime}")
@@ -317,9 +380,30 @@ jobs:
           """)'
 
       - name: Install 4C
+        if: ${{ !matrix.dependencies_only }}
         run: |
           spack install --deprecated --fail-fast --verbose --use-buildcache package:never,dependencies:auto
           spack find --long --variants 4c-multiphysics
+
+      - name: Install only the dependencies
+        if: matrix.dependencies_only
+        run: |
+          spack install --only dependencies --deprecated --fail-fast --verbose \
+            --use-buildcache package:never,dependencies:auto
+
+      - name: Build the checkout using generated Spack presets
+        if: matrix.dependencies_only
+        shell: spack-bash {0}
+        run: |
+          cd "$GITHUB_WORKSPACE/4C-src"
+          ./utilities/set_up_dev_env.sh
+          ./utilities/python-venv/bin/generate-spack-cmake-presets
+          # Use the installed build tools, but let the generated preset select
+          # compilers and libraries exactly as in the contributor workflow.
+          spack load cmake ninja
+          cmake --list-presets
+          cmake --fresh --preset spack-generated-release
+          cmake --build build/spack-release --target 4C --parallel 2
 
       - name: Checkout tutorial input files matching the installed release
         if: matrix.recipe == 'release'
@@ -340,12 +424,18 @@ jobs:
           OMPI_ALLOW_RUN_AS_ROOT: ${{ matrix.container && '1' || '0' }}
           OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: ${{ matrix.container && '1' || '0' }}
         run: |
-          spack load 4c-multiphysics
+          if [ "${{ matrix.dependencies_only }}" = true ]; then
+            EXECUTABLE="$GITHUB_WORKSPACE/4C-src/build/spack-release/4C"
+          else
+            spack load 4c-multiphysics
+            EXECUTABLE="$(command -v 4C)"
+          fi
+          echo "FOUR_C_EXECUTABLE=$EXECUTABLE" >> "$GITHUB_ENV"
 
           mkdir -p "$GITHUB_WORKSPACE/spack_smoke_test"
           cd "$GITHUB_WORKSPACE/spack_smoke_test"
           # 4C prints its version banner at the start of every run.
-          4C "$GITHUB_WORKSPACE/4C-src/tests/tutorials/poisson/tutorial_poisson_thermo.4C.yaml" spack_smoke_test_output
+          "$EXECUTABLE" "$GITHUB_WORKSPACE/4C-src/tests/tutorials/poisson/tutorial_poisson_thermo.4C.yaml" spack_smoke_test_output
 
           # Verify output was actually produced, not just a zero exit code.
           if ! ls spack_smoke_test_output*.vtu >/dev/null 2>&1 && \
@@ -367,14 +457,16 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y gdb
           fi
-          spack load 4c-multiphysics
+          if [ "${{ matrix.dependencies_only }}" != true ]; then
+            spack load 4c-multiphysics
+          fi
           mkdir -p "$GITHUB_WORKSPACE/spack_build_logs"
           cd "$GITHUB_WORKSPACE/spack_smoke_test"
           # Reproduce without hiding the original failure; retain all thread
           # stacks and loaded libraries in the existing failure artifact.
           gdb --batch --return-child-result \
             -ex run -ex "thread apply all bt" -ex "info sharedlibrary" \
-            --args "$(command -v 4C)" \
+            --args "$FOUR_C_EXECUTABLE" \
             "$GITHUB_WORKSPACE/4C-src/tests/tutorials/poisson/tutorial_poisson_thermo.4C.yaml" \
             spack_smoke_test_backtrace \
             > "$GITHUB_WORKSPACE/spack_build_logs/smoke-test-backtrace.log" 2>&1
@@ -383,6 +475,20 @@ jobs:
         if: failure()
         run: |
           mkdir -p "$GITHUB_WORKSPACE/spack_build_logs"
+          echo "${{ needs.select-packages.outputs.sha }}" > "$GITHUB_WORKSPACE/spack_build_logs/spack-packages-commit.txt"
+          if [ "${{ matrix.dependencies_only }}" = true ]; then
+            for file in spack.yaml spack.lock; do
+              if [ -f "$SPACK_ENV/$file" ]; then
+                cp "$SPACK_ENV/$file" "$GITHUB_WORKSPACE/spack_build_logs/"
+              fi
+            done
+            BUILD_DIR="$GITHUB_WORKSPACE/4C-src/build/spack-release"
+            for file in CMakeCache.txt CMakeFiles/CMakeConfigureLog.yaml; do
+              if [ -f "$BUILD_DIR/$file" ]; then
+                cp "$BUILD_DIR/$file" "$GITHUB_WORKSPACE/spack_build_logs/"
+              fi
+            done
+          fi
           # Preserve relative stage paths without GNU-specific cp flags.
           STAGE_DIR="$(spack location --stages 2>/dev/null || true)"
           if [ -n "$STAGE_DIR" ] && [ -d "$STAGE_DIR" ]; then
@@ -413,7 +519,7 @@ jobs:
 
   report-failure:
     name: File an issue on failure
-    needs: spack-build
+    needs: [select-packages, spack-build]
     # Only file issues for unattended (scheduled) runs
     if: failure() && github.event_name == 'schedule'
     runs-on: ubuntu-latest
@@ -431,11 +537,16 @@ jobs:
           body: >
             The scheduled **Spack build test** workflow failed.
 
+            Official spack-packages commit: `${{ needs.select-packages.outputs.sha }}`.
+            Scheduled runs resolve the latest develop commit once for the entire matrix.
+
             This workflow builds the current checkout using the in-tree Spack recipe and the
             selected official 4C releases using the official
             [`4c-multiphysics` Spack package](https://packages.spack.io/package.html?name=4c-multiphysics).
             Both paths run across several OS/variant combinations and smoke-test the result,
             except for the CUDA build, which only compiles and links because the runner has no GPU.
+            One Ubuntu/GCC development entry installs only dependencies, generates CMake presets,
+            and builds the checkout through the documented contributor workflow.
 
             A failure here typically indicates one of:
 
