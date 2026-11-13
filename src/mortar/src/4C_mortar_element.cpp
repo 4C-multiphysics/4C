@@ -219,7 +219,6 @@ void Mortar::Element::pack(Core::Communication::PackBuffer& data) const
 
   // mesh size
   add_to_pack(data, traceHE_);
-  add_to_pack(data, traceHCond_);
 
   return;
 }
@@ -278,7 +277,6 @@ void Mortar::Element::unpack(Core::Communication::UnpackBuffer& buffer)
 
   // mesh size
   extract_from_pack(buffer, traceHE_);
-  extract_from_pack(buffer, traceHCond_);
 }
 
 /*----------------------------------------------------------------------*
@@ -1693,11 +1691,6 @@ void Mortar::Element::estimate_nitsche_trace_max_eigenvalue(
   else
     traceHE_ = 1.0 / surf->estimate_nitsche_trace_max_eigenvalue(
                          mo_data().parent_disp(), mo_data().parent_scalar(), mat_eval_context);
-
-  if (parent_element()->num_material() > 1)
-    if (parent_element()->material(1)->material_type() == Core::Materials::m_thermo_fourier)
-      traceHCond_ = 1.0 / surf->estimate_nitsche_trace_max_eigenvalue_tsi(
-                              mat_eval_context, mo_data().parent_disp());
 }
 
 

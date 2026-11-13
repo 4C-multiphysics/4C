@@ -153,14 +153,6 @@ namespace Discret::Elements
         const std::vector<double>& parent_scalar,
         const Mat::EvaluationContext<3>& mat_eval_context);
 
-    //! \brief Evaluate trace inequality and return the maximal eigenvalue
-    //!
-    //! \param[in] mat_eval_context material evaluation context (recreated and further specified in
-    //! the functions)
-    //! \param[in] parent_disp    displacement values on corresponding parent element
-    double estimate_nitsche_trace_max_eigenvalue_tsi(
-        const Mat::EvaluationContext<3>& mat_eval_context, std::vector<double>& parent_disp);
-
     [[nodiscard]] Core::Elements::Element* parent_element() const override
     {
       return parent_target_element();
@@ -385,12 +377,6 @@ namespace Discret::Elements
         Core::LinAlg::Matrix<Core::FE::num_nodes(dt_vol) * Core::FE::dim<dt_vol>,
             Core::FE::num_nodes(dt_vol) * Core::FE::dim<dt_vol> -
                 Core::FE::dim<dt_vol>*(Core::FE::dim<dt_vol> + 1) / 2>& proj);
-
-
-    //! Templated version: parent and surface discretization type
-    template <Core::FE::CellType dt_vol, Core::FE::CellType dt_surf>
-    double estimate_nitsche_trace_max_eigenvalue_tsi(
-        const Mat::EvaluationContext<3>& mat_eval_context, std::vector<double>& parent_disp);
 
     //! the volume stiffness matrix
     //! unlike the "full" stiffness matrix we don't use the geometric term here

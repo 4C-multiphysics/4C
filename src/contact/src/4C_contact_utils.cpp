@@ -30,8 +30,6 @@ std::string CONTACT::vec_block_type_to_str(const CONTACT::VecBlockType bt)
   {
     case VecBlockType::displ:
       return "displ";
-    case VecBlockType::temp:
-      return "temp";
     case VecBlockType::scatra:
       return "scatra";
     case VecBlockType::constraint:
