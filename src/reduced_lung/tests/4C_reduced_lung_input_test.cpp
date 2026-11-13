@@ -74,6 +74,22 @@ reduced_dimensional_lung:
            function_id + "\n";
   }
 
+  //! A valid input in which the dynamics parameter @p name is set to @p value.
+  std::string input_with_dynamics_parameter(const std::string& name, const std::string& value)
+  {
+    std::string input = input_with_pressure_condition("1", "1");
+
+    const std::string entry_start = "    " + name + ": ";
+    if (const auto position = input.find(entry_start); position != std::string::npos)
+    {
+      input.erase(position, input.find('\n', position) - position + 1);
+    }
+
+    const std::string section = "  dynamics:\n";
+    input.insert(input.find(section) + section.size(), entry_start + value + "\n");
+    return input;
+  }
+
   void match_input(const std::string& yaml_string)
   {
     Core::IO::InputParameterContainer container;
@@ -101,5 +117,38 @@ reduced_dimensional_lung:
   {
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(match_input(input_with_pressure_condition("1", "-1")),
         Core::Exception, "'function_id' does not pass validation");
+  }
+
+  TEST(ReducedLungInputTest, RejectsNonPositiveTimeIncrement)
+  {
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        match_input(input_with_dynamics_parameter("time_increment", "0.0")), Core::Exception,
+        "'time_increment' does not pass validation");
+  }
+
+  TEST(ReducedLungInputTest, AcceptsZeroNumberOfSteps)
+  {
+    EXPECT_NO_THROW(match_input(input_with_dynamics_parameter("number_of_steps", "0")));
+  }
+
+  TEST(ReducedLungInputTest, RejectsNegativeNumberOfSteps)
+  {
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        match_input(input_with_dynamics_parameter("number_of_steps", "-1")), Core::Exception,
+        "'number_of_steps' does not pass validation");
+  }
+
+  TEST(ReducedLungInputTest, RejectsNonPositiveResultsEvery)
+  {
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        match_input(input_with_dynamics_parameter("results_every", "0")), Core::Exception,
+        "'results_every' does not pass validation");
+  }
+
+  TEST(ReducedLungInputTest, RejectsNonPositiveMaxNonlinearIterations)
+  {
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        match_input(input_with_dynamics_parameter("max_nonlinear_iterations", "0")),
+        Core::Exception, "'max_nonlinear_iterations' does not pass validation");
   }
 }  // namespace

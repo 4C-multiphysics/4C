@@ -59,9 +59,8 @@ namespace ReducedLung
      * @brief Construct the NOX stack around the tree linear solver.
      *
      * @param context Solver setup context.
-     * @param initial_time Initial time for the simulation.
      */
-    NewtonTree(const NewtonTreeContext& context, double initial_time = 0.0);
+    explicit NewtonTree(const NewtonTreeContext& context);
 
     NewtonTree(const NewtonTree&) = delete;
     NewtonTree& operator=(const NewtonTree&) = delete;
@@ -73,9 +72,10 @@ namespace ReducedLung
      * @brief Solve the nonlinear system at the given physical time.
      *
      * @param time Current physical time for time-dependent boundary conditions.
+     * @param dt Time step size from the last accepted state to @p time.
      * @return Number of Newton corrections applied.
      */
-    unsigned int solve(double time) override;
+    unsigned int solve(double time, double dt) override;
 
    private:
     struct Implementation;

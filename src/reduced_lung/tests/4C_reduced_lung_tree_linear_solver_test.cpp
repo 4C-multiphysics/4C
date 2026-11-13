@@ -790,8 +790,10 @@ namespace
     for (int step = 1; step <= params.dynamics.number_of_steps; ++step)
     {
       const double current_time = step * params.dynamics.time_increment;
-      const unsigned int sparse_iterations = sparse_solver->solve(current_time);
-      const unsigned int tree_iterations = tree_solver->solve(current_time);
+      const unsigned int sparse_iterations =
+          sparse_solver->solve(current_time, params.dynamics.time_increment);
+      const unsigned int tree_iterations =
+          tree_solver->solve(current_time, params.dynamics.time_increment);
 
       EXPECT_LE(
           sparse_iterations, static_cast<unsigned int>(params.dynamics.max_nonlinear_iterations));
@@ -919,5 +921,56 @@ namespace
     problem.parameters.dynamics.number_of_steps = 2;
     compare_all_solver_workflows("tree_workflow_mixed_airways_terminal_units", problem,
         {"0.5*t", "0.0"}, {.terminal_unit_volumes = true, .bifurcation_flow_balance = true});
+  }
+
+  /*!
+   * A solve must not change the accepted model state: re-solving a step after a different trial
+   * solve has to give the same result as solving that step once.
+   */
+  template <typename CreateSolver>
+  void expect_trial_solve_leaves_accepted_state_unchanged(
+      const std::string& name, CreateSolver create_solver)
+  {
+    const double dt = 0.25;
+    auto problem = make_mixed_airway_terminal_unit_parameters(dt);
+    // Tight enough that different initial guesses converge to the same solution up to round-off,
+    // so any remaining difference would come from a solve changing the accepted state.
+    problem.parameters.dynamics.nonlinear_residual_tolerance = 1.0e-12;
+    const std::vector<std::string> function_definitions{"0.5*t", "0.0"};
+    const double tolerance = 1.0e-11;
+
+    LinearSolverFixture reference_fixture(name + "_reference", problem, function_definitions);
+    LinearSolverFixture repeated_fixture(name + "_repeated", problem, function_definitions);
+    auto reference_solver = create_solver(reference_fixture);
+    auto repeated_solver = create_solver(repeated_fixture);
+
+    reference_solver->solve(dt, dt);
+    reference_fixture.advance_end_of_timestep();
+    repeated_solver->solve(dt, dt);
+    repeated_fixture.advance_end_of_timestep();
+
+    reference_solver->solve(2.0 * dt, dt);
+    repeated_solver->solve(1.5 * dt, 0.5 * dt);
+    repeated_solver->solve(2.0 * dt, dt);
+
+    expect_vectors_near(*reference_fixture.x, *repeated_fixture.x, tolerance);
+    expect_vectors_near(*reference_fixture.locally_relevant_dofs,
+        *repeated_fixture.locally_relevant_dofs, tolerance);
+
+    reference_fixture.advance_end_of_timestep();
+    repeated_fixture.advance_end_of_timestep();
+    expect_terminal_unit_volumes_near(reference_fixture, repeated_fixture, tolerance);
+  }
+
+  TEST(ReducedLungTreeWorkflowTests, NewtonSparseTrialSolveLeavesAcceptedStateUnchanged)
+  {
+    expect_trial_solve_leaves_accepted_state_unchanged("newton_sparse_trial_solve",
+        [](LinearSolverFixture& fixture) { return fixture.create_newton_sparse_solver(); });
+  }
+
+  TEST(ReducedLungTreeWorkflowTests, NewtonTreeTrialSolveLeavesAcceptedStateUnchanged)
+  {
+    expect_trial_solve_leaves_accepted_state_unchanged("newton_tree_trial_solve",
+        [](LinearSolverFixture& fixture) { return fixture.create_tree_newton_workflow_solver(); });
   }
 }  // namespace

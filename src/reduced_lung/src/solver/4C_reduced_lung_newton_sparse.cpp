@@ -23,13 +23,11 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace ReducedLung
 {
-  NewtonSparse::NewtonSparse(const NewtonSparseContext& context, double initial_time)
+  NewtonSparse::NewtonSparse(const NewtonSparseContext& context)
       : x_solution_(context.x),
         locally_relevant_dofs_(context.locally_relevant_dofs),
         jacobian_(context.jacobian),
         assembly_pipeline_(context.assembly_pipeline),
-        dt_(context.dynamics.time_increment),
-        current_time_(initial_time),
         linear_solver_(std::make_shared<Core::LinAlg::Solver>(context.linear_solver_parameters,
             context.comm, context.solver_params_callback, Core::IO::Verbositylevel::minimal))
   {
@@ -62,9 +60,10 @@ namespace ReducedLung
         std::move(residual_callback), std::move(jacobian_callback));
   }
 
-  unsigned int NewtonSparse::solve(double time)
+  unsigned int NewtonSparse::solve(double time, double dt)
   {
     current_time_ = time;
+    dt_ = dt;
     unsigned int iterations = adapter_->solve();
     sync_state_from_x(x_solution_);
 

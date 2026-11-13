@@ -57,7 +57,7 @@ namespace ReducedLung
    * Encapsulates all NOX setup, callbacks, and time management for reduced lung physics. The
    * Jacobian is assembled into a sparse matrix and solved with the configured linear solver, so
    * this solver also runs in MPI-parallel.
-   * Provides a simple interface: construct once, then call solve(time) in each timestep.
+   * Provides a simple interface: construct once, then call solve(time, dt) in each timestep.
    */
   class NewtonSparse final : public NonlinearSolver
   {
@@ -67,9 +67,8 @@ namespace ReducedLung
      *
      * @param context NOX setup context including communicator, dynamics, linear solver setup,
      * assembly pipeline callbacks, and all bound vectors/operators.
-     * @param initial_time Initial time for the simulation.
      */
-    NewtonSparse(const NewtonSparseContext& context, double initial_time = 0.0);
+    explicit NewtonSparse(const NewtonSparseContext& context);
 
     NewtonSparse(const NewtonSparse&) = delete;
     NewtonSparse& operator=(const NewtonSparse&) = delete;
@@ -85,9 +84,10 @@ namespace ReducedLung
      * internal state vectors via the assembly pipeline.
      *
      * @param time Current physical time for time-dependent BCs.
+     * @param dt Time step size from the last accepted state to @p time.
      * @return Number of nonlinear iterations performed.
      */
-    unsigned int solve(double time) override;
+    unsigned int solve(double time, double dt) override;
 
    private:
     // Callback implementations for NOX
@@ -105,8 +105,8 @@ namespace ReducedLung
     NonlinearSolverAssemblyPipeline assembly_pipeline_;
 
     // Time integration parameters
-    double dt_;
-    double current_time_;
+    double dt_ = 0.0;
+    double current_time_ = 0.0;
 
     std::shared_ptr<Core::LinAlg::Solver> linear_solver_;
 

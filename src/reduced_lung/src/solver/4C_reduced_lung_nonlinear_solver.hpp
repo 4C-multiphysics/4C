@@ -81,9 +81,10 @@ namespace ReducedLung
      * @brief Solve the nonlinear system at the given physical time.
      *
      * @param time Current physical time for time-dependent boundary conditions.
+     * @param dt Time step size from the last accepted state to @p time.
      * @return Number of nonlinear iterations performed.
      */
-    virtual unsigned int solve(double time) = 0;
+    virtual unsigned int solve(double time, double dt) = 0;
   };
 }  // namespace ReducedLung
 
