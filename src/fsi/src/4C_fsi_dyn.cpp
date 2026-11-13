@@ -291,8 +291,8 @@ void fsi_immersed_drt(Global::Problem& global_problem)
 
 
   auto binningstrategy = std::make_shared<Core::Binstrategy::BinningStrategy>(binning_params,
-      problem->output_control_file(), comm, Core::Communication::my_mpi_rank(comm), correct_node,
-      determine_relevant_points, dis);
+      problem->output_control_file(), comm, Core::Communication::my_mpi_rank(comm), std::nullopt,
+      correct_node, determine_relevant_points, dis);
 
   const Teuchos::ParameterList& fbidyn = problem->fbi_params();
 
@@ -463,7 +463,7 @@ void fsi_ale_drt(Global::Problem& global_problem)
             "spatial_approximation_type", problem->spatial_approximation_type(), binning_params);
         Core::Binstrategy::BinningStrategy binningstrategy(binning_params,
             problem->output_control_file(), comm, Core::Communication::my_mpi_rank(comm),
-            correct_node, determine_relevant_points, dis);
+            std::nullopt, correct_node, determine_relevant_points, dis);
         binningstrategy
             .do_weighted_partitioning_of_bins_and_extend_ghosting_of_discret_to_one_bin_layer(
                 dis, stdelecolmap, stdnodecolmap);

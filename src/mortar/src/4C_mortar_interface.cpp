@@ -1068,7 +1068,7 @@ std::shared_ptr<Core::Binstrategy::BinningStrategy> Mortar::Interface::setup_bin
 
   std::shared_ptr<Core::Binstrategy::BinningStrategy> binningstrategy =
       std::make_shared<Core::Binstrategy::BinningStrategy>(binning_params, output_control,
-          get_comm(), Core::Communication::my_mpi_rank(get_comm()), nullptr,
+          get_comm(), Core::Communication::my_mpi_rank(get_comm()), std::nullopt, nullptr,
           determine_relevant_points);
   return binningstrategy;
 }
