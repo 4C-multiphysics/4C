@@ -59,8 +59,6 @@ namespace Mat
         [[nodiscard]] double isotrop_harden_prefac() const { return isotrop_harden_prefac_; };
         //! get exponent of the isotropic hardening stress \f$ n \f$
         [[nodiscard]] double isotrop_harden_exp() const { return isotrop_harden_exp_; };
-        //! get reference temperature
-        [[nodiscard]] double ref_temperature() const { return ref_temperature_; };
         //! get melting temperature
         [[nodiscard]] double melt_temperature() const { return melt_temperature_; };
         //! get temperature sensitivity factor
@@ -83,9 +81,6 @@ namespace Mat
         //! exponent of the isotropic hardening stress \f$ n \f$
         const double isotrop_harden_exp_;
 
-        //! reference temperature \f$ T_{\mathrm{ref}} \f$
-        const double ref_temperature_;
-
         //! melting temperature \f$ T_{\mathrm{melt}} \f$
         const double melt_temperature_;
 
@@ -105,6 +100,7 @@ namespace Mat
     {
      public:
       explicit ReformulatedJohnsonCook(Core::Mat::PAR::Parameter* params,
+          double reference_temperature,
           const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
               error_registration_settings);
 
@@ -140,6 +136,8 @@ namespace Mat
           const override;
 
       void pre_evaluate(const Teuchos::ParameterList& params) override;
+
+      void update_temperature_dependent_factors() override;
 
      private:
       /// struct containing constant parameters to be evaluated only once
