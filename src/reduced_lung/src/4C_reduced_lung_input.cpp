@@ -541,11 +541,13 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                   parameter<double>("time_increment",
                       {
                           .description = "Time increment dt.",
+                          .validator = Validators::positive<double>(),
                           .store = in_struct(&ReducedLungParameters::Dynamics::time_increment),
                       }),
                   parameter<int>("number_of_steps",
                       {
                           .description = "Number of time steps.",
+                          .validator = Validators::positive_or_zero<int>(),
                           .store = in_struct(&ReducedLungParameters::Dynamics::number_of_steps),
                       }),
                   parameter<int>("restart_every",
@@ -558,6 +560,7 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                       {
                           .description = "Increment for writing solution.",
                           .default_value = 1,
+                          .validator = Validators::positive<int>(),
                           .store = in_struct(&ReducedLungParameters::Dynamics::results_every),
                       }),
                   parameter<int>("linear_solver",
@@ -580,6 +583,7 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                       {
                           .description = "Maximum number of nonlinear iterations.",
                           .default_value = 10,
+                          .validator = Validators::positive<int>(),
                           .store =
                               in_struct(&ReducedLungParameters::Dynamics::max_nonlinear_iterations),
                       }),

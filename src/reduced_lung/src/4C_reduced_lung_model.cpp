@@ -46,12 +46,6 @@ namespace ReducedLung
           actdis_(std::make_shared<Core::FE::Discretization>("reduced_lung", context.comm, 3)),
           comm_(context.comm)
     {
-      if (context_.parameters.dynamics.max_nonlinear_iterations <= 0)
-      {
-        FOUR_C_THROW("Reduced lung max_nonlinear_iterations must be positive, got {}.",
-            context_.parameters.dynamics.max_nonlinear_iterations);
-      }
-
       build_discretization();
       build_element_models();
       build_node_entities();

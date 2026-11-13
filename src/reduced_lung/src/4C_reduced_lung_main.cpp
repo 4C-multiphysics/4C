@@ -14,7 +14,6 @@
 #include "4C_rebalance.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_model.hpp"
-#include "4C_utils_exceptions.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
 
@@ -69,28 +68,6 @@ namespace ReducedLung
 
       return "Unknown";
     }
-
-    /**
-     * Validate the parameters of the standalone reduced-lung time loop.
-     */
-    void validate_time_loop_parameters(const ReducedLungParameters::Dynamics& dynamics)
-    {
-      if (dynamics.time_increment <= 0.0)
-      {
-        FOUR_C_THROW(
-            "Reduced lung time_increment must be positive, got {}.", dynamics.time_increment);
-      }
-      if (dynamics.number_of_steps < 0)
-      {
-        FOUR_C_THROW(
-            "Reduced lung number_of_steps must be non-negative, got {}.", dynamics.number_of_steps);
-      }
-      if (dynamics.results_every <= 0)
-      {
-        FOUR_C_THROW(
-            "Reduced lung results_every must be positive, got {}.", dynamics.results_every);
-      }
-    }
   }  // namespace
 
   /**
@@ -100,7 +77,6 @@ namespace ReducedLung
   {
     const ModelContext context = make_model_context_from_problem(problem);
     const auto& dynamics = context.parameters.dynamics;
-    validate_time_loop_parameters(dynamics);
 
     Model model(context);
     const MPI_Comm comm = context.comm;
