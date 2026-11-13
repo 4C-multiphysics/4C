@@ -230,10 +230,11 @@ jobs:
       - name: Set up Spack
         uses: spack/setup-spack@16b756799ede8b28951287f89bcd3fdb32ec1ca3 # v3.0.0
         with:
-          # Temporary development pin for spack/spack#53350 (cross-repository patches).
+          # Temporary CI integration pin combining spack/spack#53350 (cross-repository patches)
+          # and spack/spack#53357 (compiler-wrapper runtime paths); release builds stay upstream.
           spack_repository: ${{ matrix.recipe == 'development' && 'georghammerl/spack' || 'spack/spack'
             }}
-          spack_ref: ${{ matrix.recipe == 'development' && '27b41ace7b09dfd95609b932466a282a52f6054a'
+          spack_ref: ${{ matrix.recipe == 'development' && '68368adaf57721831cc6bfcb0746881d4ac6a360'
             || 'v1.2.2' }}
           packages_ref: ${{ needs.select-packages.outputs.sha }}
           buildcache: true
