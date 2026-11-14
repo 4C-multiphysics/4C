@@ -10,6 +10,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_list.hpp"
 #include "4C_mat_mixture.hpp"
 #include "4C_mat_scatra_nonlocal_stimulus.hpp"
@@ -234,7 +235,7 @@ void Discret::Elements::ScaTraEleCalcNonlocalStimulus<distype, probdim>::sysmat_
       Core::LinAlg::Matrix<my::nsd_, my::nsd_> xjm0;
       xjm0.multiply_nt(nodal_reference_coords, my::deriv_);
       Core::LinAlg::Matrix<my::nsd_, my::nsd_> xji0(Core::LinAlg::Initialization::zero);
-      xji0.invert(xjm0);
+      Core::LinAlg::invert(xji0, xjm0);
 
       // Reference shape derivatives dN_i/dX_r: chain rule dN/dxi * dxi/dX
       Core::LinAlg::Matrix<my::nen_, my::nsd_> dN_dX;

@@ -24,6 +24,8 @@
 #include <Teuchos_BLAS.hpp>
 #include <Teuchos_LAPACK.hpp>
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*

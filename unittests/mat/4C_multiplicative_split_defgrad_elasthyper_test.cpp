@@ -22,6 +22,8 @@
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
+#include <numbers>
+
 namespace
 {
   using namespace FourC;

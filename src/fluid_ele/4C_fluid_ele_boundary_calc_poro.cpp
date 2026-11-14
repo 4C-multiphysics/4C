@@ -16,6 +16,7 @@
 #include "4C_fluid_ele_action.hpp"
 #include "4C_fluid_ele_parameter_poro.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_newtonianfluid.hpp"
 #include "4C_mat_structporo.hpp"
@@ -616,8 +617,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     //   |  s_1,2  s_2,2  s_3,2  | = xji  = -------- ;  [xji] o [xjm] = I
     //   |_ s_1,3  s_2,3  s_3,3 _|           d x_j
     //    _
-    xji.invert(xjm);
-    xji_n.invert(xjm_n);
+    Core::LinAlg::invert(xji, xjm);
+    Core::LinAlg::invert(xji_n, xjm_n);
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
     // check unitiy of  [xji] o [xjm]
@@ -2788,7 +2789,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::poro_boundary(
     // inverse of transposed jacobian "ds/dx"
     Core::LinAlg::Matrix<nsd_, nsd_> xji;
 
-    xji.invert(xjm);
+    Core::LinAlg::invert(xji, xjm);
     derxy.multiply(xji, pderiv_loc);
 
     for (int i = 0; i < nenparent; i++)
@@ -4754,7 +4755,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
     // inverse of transposed jacobian "ds/dx"
     Core::LinAlg::Matrix<nsd_, nsd_> xji;
 
-    xji.invert(xjm);
+    Core::LinAlg::invert(xji, xjm);
     derxy.multiply(xji, pderiv_loc);
 
     for (int i = 0; i < nenparent; i++)

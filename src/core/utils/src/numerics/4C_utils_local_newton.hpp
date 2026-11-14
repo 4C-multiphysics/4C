@@ -16,6 +16,7 @@
 #include "4C_linalg_serialdensesolver.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_tensor.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_utils_fad.hpp"
 
 #include <algorithm>
@@ -70,7 +71,7 @@ namespace Core::Utils
   {
     if constexpr (n < 4)
     {
-      jacobian.invert();
+      Core::LinAlg::invert(jacobian);
     }
     else
     {

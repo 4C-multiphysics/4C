@@ -23,6 +23,8 @@
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -3199,7 +3201,7 @@ void CONTACT::LineToLineCouplingPoint3d::line_intersection(double* source_xi, do
     //**********************************************
     //   solve deta = - inv(dF) * F               //
     //**********************************************
-    double jacdet = df.invert();
+    double jacdet = Core::LinAlg::invert(df);
     if (abs(jacdet) < 1.0e-12)
     {
       source_xi[0] = 1e12;

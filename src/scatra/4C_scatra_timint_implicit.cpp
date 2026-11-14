@@ -49,6 +49,7 @@
 
 #include <Teuchos_TimeMonitor.hpp>
 
+#include <numbers>
 #include <unordered_set>
 #include <utility>
 

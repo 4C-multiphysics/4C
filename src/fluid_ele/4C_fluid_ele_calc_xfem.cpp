@@ -15,6 +15,7 @@
 #include "4C_fluid_ele_parameter_xfem.hpp"
 #include "4C_fluid_functions.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_mat_newtonianfluid.hpp"
 #include "4C_mat_par_bundle.hpp"
@@ -23,6 +24,7 @@
 
 #include <fstream>
 #include <memory>
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -4380,7 +4382,7 @@ namespace Discret
       // evaluate the derivatives of shape functions
       Core::FE::shape_function_deriv1<distype>(rst, my::deriv_);
       my::xjm_.multiply_nt(my::deriv_, my::xyze_);
-      my::det_ = my::xji_.invert(my::xjm_);
+      my::det_ = Core::LinAlg::invert(my::xji_, my::xjm_);
 
       // compute global first derivatives
       my::derxy_.multiply(my::xji_, my::deriv_);

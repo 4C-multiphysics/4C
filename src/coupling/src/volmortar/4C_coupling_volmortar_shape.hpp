@@ -434,7 +434,7 @@ namespace Coupling::VolMortar
           invJ.clear();
 
           invJ.multiply(derivs, xrefe);
-          jac = invJ.invert();
+          jac = Core::LinAlg::invert(invJ);
           if (jac <= 0.0) FOUR_C_THROW("Element Jacobian mapping {:10.5e} <= 0.0", jac);
 
           break;
@@ -540,7 +540,7 @@ namespace Coupling::VolMortar
           invJ.clear();
 
           invJ.Multiply(deriv, xrefe);
-          jac = invJ.invert();
+          jac = Core::LinAlg::invert(invJ);
           if (jac <= 0.0) FOUR_C_THROW("Element Jacobian mapping {:10.5e} <= 0.0", jac);
 
           break;

@@ -16,7 +16,10 @@
 #include "4C_fluid_ele_parameter_timint.hpp"
 #include "4C_fluid_rotsym_periodicbc.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_newtonianfluid.hpp"
+
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -528,7 +531,7 @@ void Discret::Elements::FluidEleCalcXWall<distype, enrtype>::
   */
   my::xjm_.multiply_nt(deriv_, xyze_);
 
-  my::det_ = my::xji_.invert(my::xjm_);
+  my::det_ = Core::LinAlg::invert(my::xji_, my::xjm_);
 
   if (my::det_ < 1E-16)
     FOUR_C_THROW(

@@ -10,6 +10,7 @@
 #include "4C_comm_pack_buffer.hpp"
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_comm_parobject.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mixture_constituent_remodelfiber_material.hpp"
 #include "4C_mixture_full_constrained_mixture_fiber_adaptive_history.hpp"
 #include "4C_mixture_growth_evolution_linear_cauchy_poisson_turnover.hpp"
@@ -685,7 +686,7 @@ void Mixture::FullConstrainedMixtureFiber<Number>::compute_internal_variables()
   computed_sigma_ = growth_scalar_and_sigma(1);
 
   // compute linearizations w.r.t. lambda_f_sq
-  K.invert();
+  Core::LinAlg::invert(K);
 
   const Number dRcauchy_stress_d_lambda_f_sq = evaluate_d_residuum_cauchy_stress_d_lambda_f_sq();
   const Number dRgrowth_scalar_d_lambda_f_sq = evaluate_d_residuum_growth_scalar_d_lambda_f_sq();

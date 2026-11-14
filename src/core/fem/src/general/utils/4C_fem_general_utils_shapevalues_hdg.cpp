@@ -9,6 +9,7 @@
 
 #include "4C_fem_general_utils_boundary_integration.hpp"
 #include "4C_fem_geometry_position_array.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -99,7 +100,7 @@ void Core::FE::ShapeValues<distype>::evaluate(
 
     Core::FE::shape_function_deriv1<distype>(xsi, deriv);
     xjm.multiply_nt(deriv, xyze);
-    jfac(q) = xji.invert(xjm) * quadrature_->weight(q);
+    jfac(q) = Core::LinAlg::invert(xji, xjm) * quadrature_->weight(q);
 
     Core::LinAlg::Matrix<nen_, 1> myfunct(funct.values() + q * nen_, true);
     Core::LinAlg::Matrix<nsd_, 1> mypoint(xyzreal.values() + q * nsd_, true);

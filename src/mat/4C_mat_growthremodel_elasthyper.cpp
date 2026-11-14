@@ -15,6 +15,7 @@
 #include "4C_linalg_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_elast_isoneohooke.hpp"
 #include "4C_mat_elast_remodelfiber.hpp"
 #include "4C_mat_elast_summand.hpp"
@@ -1147,7 +1148,7 @@ void Mat::GrowthRemodelElastHyper::evaluate_kin_quant_elast(
   static Core::LinAlg::Matrix<3, 3> iCM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::zero);
   CM.multiply_tn(1.0, *defgrd, *defgrd, 0.0);
-  iCM.invert(CM);
+  Core::LinAlg::invert(iCM, CM);
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(iCM, iCv);
 
   // C_{in}^{-1} * C * C_{in}^{-1}
@@ -1187,7 +1188,7 @@ void Mat::GrowthRemodelElastHyper::evaluate_kin_quant_elast(
   // C * F_{in}^{-1} * C_e^{-1}
   static Core::LinAlg::Matrix<3, 3> CiFiniCeM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> iCeM(Core::LinAlg::Initialization::zero);
-  iCeM.invert(CeM);
+  Core::LinAlg::invert(iCeM, CeM);
   tmp.multiply_nn(1.0, CM, iFinM, 0.0);
   CiFiniCeM.multiply_nn(1.0, tmp, iCeM, 0.0);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(CiFiniCeM, CiFiniCe9x1);
@@ -1408,13 +1409,13 @@ void Mat::GrowthRemodelElastHyper::evaluate_stress_cmat_membrane(
   static Core::LinAlg::FADMatrix<3, 3> CM_fad(Core::LinAlg::Initialization::zero);
   CM_fad = CM;
   static Core::LinAlg::FADMatrix<3, 3> FgM_fad(Core::LinAlg::Initialization::zero);
-  FgM_fad.invert(iFgM_fad);
+  Core::LinAlg::invert(FgM_fad, iFgM_fad);
   static Core::LinAlg::FADMatrix<3, 3> GM_fad(Core::LinAlg::Initialization::zero);
   GM_fad = gm_[gp];
   static Core::LinAlg::FADMatrix<3, 3> iFinM_fad(Core::LinAlg::Initialization::zero);
   iFinM_fad.multiply_nn(1.0, iFgM_fad, GM_fad, 0.0);
   static Core::LinAlg::FADMatrix<3, 3> FinM_fad(Core::LinAlg::Initialization::zero);
-  FinM_fad.invert(iFinM_fad);
+  Core::LinAlg::invert(FinM_fad, iFinM_fad);
   Core::LinAlg::FADMatrix<3, 3> CinM_fad(Core::LinAlg::Initialization::zero);
   CinM_fad.multiply_tn(1.0, FinM_fad, FinM_fad, 0.0);
 
@@ -1457,7 +1458,7 @@ void Mat::GrowthRemodelElastHyper::evaluate_stress_cmat_membrane(
               XM_fad(0, 2) * (XM_fad(1, 0) * XM_fad(2, 1) - XM_fad(1, 1) * XM_fad(2, 0));
 
   static Core::LinAlg::FADMatrix<3, 3> iXM_fad(Core::LinAlg::Initialization::zero);
-  iXM_fad.invert(XM_fad);
+  Core::LinAlg::invert(iXM_fad, XM_fad);
   static Core::LinAlg::FADMatrix<3, 3> ZM_fad(
       Core::LinAlg::Initialization::zero);  // Z =
                                             // F_{in}^{-T}*A_{gr}^{T}*X^{-1}*A_{gr}^{T}*F_{in}^{-1}
@@ -1703,7 +1704,7 @@ double Mat::GrowthRemodelElastHyper::evaluate_membrane_thickness_stretch(
   AplCeAplAradM.multiply_nn(1.0, tmp, apl_m_, 0.0);
   AplCeAplAradM.update(1.0, arad_m_, 1.0);
   tmp.multiply_nt(1.0, iFinM, iFinM, 0.0);
-  CinM.invert(tmp);
+  Core::LinAlg::invert(CinM, tmp);
   double rcg33 = CinM.dot(arad_m_) / AplCeAplAradM.determinant();
 
   return std::sqrt(rcg33);

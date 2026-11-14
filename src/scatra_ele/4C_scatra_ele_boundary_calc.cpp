@@ -13,6 +13,7 @@
 #include "4C_fluid_rotsym_periodicbc.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_fourier.hpp"
 #include "4C_mat_list.hpp"
 #include "4C_mat_scatra.hpp"
@@ -1347,7 +1348,7 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::calculate_det_f_of_p
 
   static Core::LinAlg::Matrix<probdim, probdim> inv_detF;
   inv_detF.multiply(deriv_parent, xrefe);
-  inv_detF.invert();
+  Core::LinAlg::invert(inv_detF);
 
   static Core::LinAlg::Matrix<probdim, parent_ele_num_nodes> N_XYZ;
   xcurr.update(1.0, xrefe, 1.0, xdisp);
@@ -2331,7 +2332,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
 
       // Jacobian matrix and determinant of parent element (including check)
       pxjm.multiply_nt(pderiv, pxyze);
-      const double det = pxji.invert(pxjm);
+      const double det = Core::LinAlg::invert(pxji, pxjm);
       FOUR_C_ASSERT_ALWAYS(det >= 1.0e-16,
           "Jacobian determinant is non-positive: {} for element with global id: {}", det,
           pele->id());
@@ -2478,7 +2479,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
 
     // Jacobian matrix and determinant of parent element (including check)
     pxjm.multiply_nt(pderiv, pxyze);
-    const double det = pxji.invert(pxjm);
+    const double det = Core::LinAlg::invert(pxji, pxjm);
     FOUR_C_ASSERT_ALWAYS(det >= 1.0e-16,
         "Jacobian determinant is non-positive: {} for element with global id: {}", det, pele->id());
 
@@ -2985,7 +2986,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype,
 
     // Jacobian matrix and determinant of parent element (including check)
     pxjm.multiply_nt(pderiv, pxyze);
-    const double det = pxji.invert(pxjm);
+    const double det = Core::LinAlg::invert(pxji, pxjm);
     FOUR_C_ASSERT_ALWAYS(det >= 1.0e-16,
         "Jacobian determinant is non-positive: {} for element with global id: {}", det, pele->id());
 

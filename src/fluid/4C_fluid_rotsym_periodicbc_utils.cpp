@@ -11,6 +11,8 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_node.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 

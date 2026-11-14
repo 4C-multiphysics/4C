@@ -9,6 +9,7 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_utils_enum.hpp"
 
@@ -426,7 +427,7 @@ namespace Mat::FLUIDPORO
       // Axial component of the transversely isotropic permeability tensor
       permeability_tensor.update(axial_permeability - permeability, structure_tensor, 1.0);
 
-      reaction_tensor.invert(permeability_tensor);
+      Core::LinAlg::invert(reaction_tensor, permeability_tensor);
       reaction_tensor.scale(dynamic_viscosity);
     }
   };
@@ -502,7 +503,7 @@ namespace Mat::FLUIDPORO
         permeability_tensor.update(orthotropic_permeabilities[dim], structure_tensor, 1.0);
       }
 
-      reaction_tensor.invert(permeability_tensor);
+      Core::LinAlg::invert(reaction_tensor, permeability_tensor);
       reaction_tensor.scale(dynamic_viscosity);
     };
 
@@ -617,7 +618,7 @@ namespace Mat::FLUIDPORO
             permeability * anisotropic_permeability_coeffs[i], structure_tensor, 1.0);
       }
 
-      reaction_tensor.invert(permeability_tensor);
+      Core::LinAlg::invert(reaction_tensor, permeability_tensor);
       reaction_tensor.scale(dynamic_viscosity);
     }
   };

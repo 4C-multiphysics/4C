@@ -7,6 +7,8 @@
 
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 
+#include "4C_linalg_utils_densematrix_inverse.hpp"
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
@@ -64,7 +66,7 @@ void Core::FE::evaluate_shape_function_spatial_derivative_in_prob_dim(
     for (unsigned i = 0; i < nen; i++) deriv_full(2, i) = 0.0;
   }
 
-  dr_dx.invert(dx_dr);
+  Core::LinAlg::invert(dr_dx, dx_dr);
 
   // compute global spatial derivatives
   deriv_xyz.multiply(dr_dx, deriv_full);

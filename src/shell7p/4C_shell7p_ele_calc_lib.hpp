@@ -21,6 +21,7 @@
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_tensor_symmetric_einstein.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_so3_material.hpp"
@@ -630,7 +631,7 @@ namespace Discret::Elements::Shell
   {
     // get contravariant basis vectors g1,g2,g3 (inverse transpose of cov)
     metrics.contravariant_ = metrics.covariant_;
-    metrics.detJ_ = metrics.contravariant_.invert();
+    metrics.detJ_ = Core::LinAlg::invert(metrics.contravariant_);
 
     // get the transpose
     for (int i = 0; i < Internal::num_dim; ++i)
@@ -644,7 +645,7 @@ namespace Discret::Elements::Shell
     }
     metrics.metric_contravariant_ = metrics.metric_covariant_;
     // get contravariant metrictensor
-    metrics.metric_contravariant_.invert();
+    Core::LinAlg::invert(metrics.metric_contravariant_);
   }
 
   /*!
@@ -731,10 +732,10 @@ namespace Discret::Elements::Shell
     g_current.metric_covariant_(1, 0) = g_current.metric_covariant_(0, 1);
 
     g_current.metric_contravariant_.update(g_current.metric_covariant_);
-    double detJ = g_current.metric_contravariant_.invert();
+    double detJ = Core::LinAlg::invert(g_current.metric_contravariant_);
     g_current.detJ_ = std::sqrt(detJ);
     g_reference.metric_contravariant_.update(g_reference.metric_covariant_);
-    detJ = g_reference.metric_contravariant_.invert();
+    detJ = Core::LinAlg::invert(g_reference.metric_contravariant_);
     g_reference.detJ_ = std::sqrt(detJ);
   }
 
@@ -836,10 +837,10 @@ namespace Discret::Elements::Shell
     g_current.metric_covariant_(1, 0) = g_current.metric_covariant_(0, 1);
 
     g_current.metric_contravariant_.update(g_current.metric_covariant_);
-    double detJ = g_current.metric_contravariant_.invert();
+    double detJ = Core::LinAlg::invert(g_current.metric_contravariant_);
     g_current.detJ_ = std::sqrt(detJ);
     g_reference.metric_contravariant_.update(g_reference.metric_covariant_);
-    detJ = g_reference.metric_contravariant_.invert();
+    detJ = Core::LinAlg::invert(g_reference.metric_contravariant_);
     g_reference.detJ_ = std::sqrt(detJ);
   }
 

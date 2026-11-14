@@ -20,6 +20,8 @@
 
 #ifdef FOUR_C_WITH_FFTW
 #include <fftw3.h>
+
+#include <numbers>
 #endif
 FOUR_C_NAMESPACE_OPEN
 

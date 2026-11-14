@@ -9,6 +9,7 @@
 
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -75,7 +76,7 @@ double Coupling::VolMortar::Cell::calc_jac(const double* xi)
   invJ.clear();
 
   invJ.multiply(derivs, xrefe);
-  jac = invJ.invert();
+  jac = Core::LinAlg::invert(invJ);
   if (jac <= 0.0) FOUR_C_THROW("Element Jacobian mapping {:10.5e} <= 0.0", jac);
 
   return jac;

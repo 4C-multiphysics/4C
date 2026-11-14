@@ -18,6 +18,7 @@
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_determinant.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_elasthyper_service.hpp"
 #include "4C_mat_service.hpp"
 
@@ -208,7 +209,7 @@ namespace Mat
     C.multiply_tn(F, F);
 
     // Compute inverse right Cauchy-Green tensor C^-1
-    iC.invert(C);
+    Core::LinAlg::invert(iC, C);
 
     // Compute inverse inelastic right Cauchy-Green Tensor
     iCin.multiply_nt(iFin, iFin);

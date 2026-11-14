@@ -15,6 +15,7 @@
 
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mortar_element.hpp"
 #include "4C_mortar_node.hpp"
 
@@ -497,7 +498,7 @@ namespace Mortar
           FOUR_C_THROW("*** WARNING: jacobi singular ***");
         }
 
-        double xjm_invert = xjm.invert();
+        double xjm_invert = Core::LinAlg::invert(xjm);
         if (abs(xjm_invert) < 1e-12) FOUR_C_THROW("ERROR: Singular Jacobian for advection map");
 
         double deltaxi[ndim];
@@ -624,7 +625,7 @@ namespace Mortar
           break;
         }
 
-        double xjm_invert = xjm.invert();
+        double xjm_invert = Core::LinAlg::invert(xjm);
         if (abs(xjm_invert) < 1e-15) FOUR_C_THROW("ERROR: Singular Jacobian");
 
         double deltaxi[3];
@@ -725,7 +726,7 @@ namespace Mortar
           break;
         }
 
-        double xjm_invert = xjm.invert();
+        double xjm_invert = Core::LinAlg::invert(xjm);
         if (abs(xjm_invert) < 1e-15) FOUR_C_THROW("ERROR: Singular Jacobian");
 
         double deltaxi[3];

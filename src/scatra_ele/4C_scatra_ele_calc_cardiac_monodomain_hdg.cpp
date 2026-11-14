@@ -27,6 +27,8 @@
 #include "4C_scatra_ele_parameter_timint.hpp"
 #include "4C_utils_shared_ptr_from_ref.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 

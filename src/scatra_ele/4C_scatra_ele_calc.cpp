@@ -14,6 +14,7 @@
 #include "4C_fem_nurbs_discretization_utils.hpp"
 #include "4C_fluid_rotsym_periodicbc.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_mat_electrode.hpp"
 #include "4C_mat_list.hpp"
@@ -27,6 +28,7 @@
 #include "4C_utils_enum.hpp"
 #include "4C_utils_function.hpp"
 
+#include <numbers>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -1045,7 +1047,7 @@ Discret::Elements::ScaTraEleCalc<distype, probdim>::eval_shape_func_and_derivs_i
     */
 
     xjm_.multiply_nt(deriv_, xyze_);
-    det = xij_.invert(xjm_);
+    det = Core::LinAlg::invert(xij_, xjm_);
   }
   else  // element dimension is smaller than problem dimension -> manifold
   {
@@ -1125,7 +1127,7 @@ Discret::Elements::ScaTraEleCalc<distype, probdim>::eval_shape_func_and_derivs_i
       for (unsigned i = 0; i < nen_; i++) deriv_(2, i) = 0.0;
     }
 
-    xij_.invert(xjm_);
+    Core::LinAlg::invert(xij_, xjm_);
   }
 
   // modify Jacobian determinant in case of spherical coordinates

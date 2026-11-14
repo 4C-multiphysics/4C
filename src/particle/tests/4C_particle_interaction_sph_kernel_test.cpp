@@ -14,6 +14,8 @@
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
+#include <numbers>
+
 namespace
 {
   using namespace FourC;
