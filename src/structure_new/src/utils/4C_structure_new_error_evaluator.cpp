@@ -28,46 +28,47 @@ Solid::ErrorEvaluator::Parameters Solid::ErrorEvaluator::error_evaluator_paramet
       parameter_list.get<bool>("EVALUATE_ERROR_ANALYTICAL_REFERENCE");
   parameters.evaluate_error_analytical_displacement_function_id =
       parameter_list.get<int>("ANALYTICAL_DISPLACEMENT_FUNCTION");
+  parameters.evaluate_error_analytical_lagrange_multiplier_function_id =
+      parameter_list.get<int>("ANALYTICAL_LAGRANGE_MULTIPLIER_FUNCTION");
 
   return parameters;
 }
 
-void Solid::ErrorEvaluator::evaluate_error(const Parameters& error_evaluator_parameters,
-    Teuchos::ParameterList& discretization_evaluation_parameters,
-    Core::FE::Discretization& discretization)
+
+void Solid::ErrorEvaluator::write_error(
+    const Results& results, Core::FE::Discretization& discretization)
 {
-  // Set action type
-  auto evaluation_data = std::dynamic_pointer_cast<Solid::ModelEvaluator::Data>(
-      discretization_evaluation_parameters.get<std::shared_ptr<Core::Elements::ParamsInterface>>(
-          "interface"));
-  evaluation_data->set_action_type(Core::Elements::struct_calc_analytical_error);
-
-  // Create a vector that will be filled with the sum of the square of the error at each Gauss-Point
-  auto error_squared = std::make_shared<Core::LinAlg::SerialDenseVector>();
-  error_squared->size(4);
-
-  // Set the function ID
-  discretization_evaluation_parameters.set("analytical_function_id",
-      error_evaluator_parameters.evaluate_error_analytical_displacement_function_id);
-
-  // Evaluate error on all elements and broadcast (and sum up) results to all processors
-  discretization.evaluate_scalars(discretization_evaluation_parameters, *error_squared);
-
-  // Write result to csv file
   const int csv_precision = 16;
   Core::IO::RuntimeCsvWriter csv_writer(Core::Communication::my_mpi_rank(discretization.get_comm()),
       *Global::Problem::instance()->output_control_file(), "error_evaluation_analytical_reference");
-  csv_writer.register_data_vector("displacement_error_l2_norm", 1, csv_precision);
-  csv_writer.register_data_vector("displacement_error_h1_semi_norm", 1, csv_precision);
-  csv_writer.register_data_vector("displacement_integral", 1, csv_precision);
-  csv_writer.register_data_vector("reference_volume", 1, csv_precision);
+
+  if (results.integrated_volume)
+    csv_writer.register_data_vector("reference_volume", 1, csv_precision);
+  if (results.integrated_squared_displacements)
+    csv_writer.register_data_vector("displacement_integral", 1, csv_precision);
+  if (results.integrated_squared_error_displacements)
+    csv_writer.register_data_vector("displacement_error_l2_norm", 1, csv_precision);
+  if (results.integrated_squared_gradient_error_displacements)
+    csv_writer.register_data_vector("displacement_error_h1_semi_norm", 1, csv_precision);
+  if (results.integrated_squared_error_lagrange_multipliers)
+    csv_writer.register_data_vector("lagrange_multiplier_error_l2_norm", 1, csv_precision);
 
   csv_writer.reset_time_and_time_step(0.0, 0);
 
-  csv_writer.append_data_vector("displacement_error_l2_norm", {sqrt((*error_squared)(0))});
-  csv_writer.append_data_vector("displacement_error_h1_semi_norm", {sqrt((*error_squared)(1))});
-  csv_writer.append_data_vector("displacement_integral", {(*error_squared)(2)});
-  csv_writer.append_data_vector("reference_volume", {(*error_squared)(3)});
+  if (results.integrated_volume)
+    csv_writer.append_data_vector("reference_volume", {*results.integrated_volume});
+  if (results.integrated_squared_displacements)
+    csv_writer.append_data_vector(
+        "displacement_integral", {*results.integrated_squared_displacements});
+  if (results.integrated_squared_error_displacements)
+    csv_writer.append_data_vector(
+        "displacement_error_l2_norm", {std::sqrt(*results.integrated_squared_error_displacements)});
+  if (results.integrated_squared_gradient_error_displacements)
+    csv_writer.append_data_vector("displacement_error_h1_semi_norm",
+        {std::sqrt(*results.integrated_squared_gradient_error_displacements)});
+  if (results.integrated_squared_error_lagrange_multipliers)
+    csv_writer.append_data_vector("lagrange_multiplier_error_l2_norm",
+        {std::sqrt(*results.integrated_squared_error_lagrange_multipliers)});
 
   csv_writer.write_collected_data_to_file();
 }

@@ -21,8 +21,10 @@
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_mortar_defines.hpp"
+#include "4C_mortar_element.hpp"
 #include "4C_mortar_interface.hpp"
 #include "4C_mortar_node.hpp"
+#include "4C_utils_function.hpp"
 
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 #include <Teuchos_Time.hpp>
@@ -997,6 +999,43 @@ void CONTACT::MtAbstractStrategy::postprocess_quantities_per_interface(
   for (std::vector<std::shared_ptr<Mortar::Interface>>::const_iterator it = interface_.begin();
       it < interface_.end(); ++it)
     (*it)->postprocess_quantities(*outputParams);
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+double CONTACT::MtAbstractStrategy::evaluate_lagrange_multiplier_error_squared(
+    int analytical_function_id, double time)
+{
+  FOUR_C_ASSERT_ALWAYS(lagrange_multiplier() != nullptr,
+      "Cannot evaluate the Lagrange multiplier error: no Lagrange multiplier vector is available.");
+
+  store_nodal_quantities(Mortar::StrategyBase::lmcurrent);
+  Teuchos::ParameterList element_parameters;
+
+  const auto& analytical_lagrange_multiplier =
+      Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(
+          analytical_function_id);
+
+  element_parameters.set<Mortar::ActionType>(
+      "action", Mortar::eval_lagrange_multiplier_analytical_error);
+  element_parameters.set<const Core::Utils::FunctionOfSpaceTime*>(
+      "analytical_function", &analytical_lagrange_multiplier);
+  element_parameters.set("time", time);
+  element_parameters.set(
+      "lm_shape_function", Teuchos::getIntegralValue<Mortar::ShapeFcn>(params(), "LM_SHAPEFCN"));
+  element_parameters.set(
+      "lm_interpolation", Teuchos::getIntegralValue<Mortar::LagMultQuad>(params(), "LM_QUAD"));
+
+  double error_squared = 0.0;
+
+  for (const auto& interface : interface_)
+  {
+    Core::LinAlg::SerialDenseVector interface_error(1, true);
+    interface->discret().evaluate_scalars(element_parameters, interface_error);
+    error_squared += interface_error[0];
+  }
+
+  return error_squared;
 }
 
 FOUR_C_NAMESPACE_CLOSE

@@ -647,7 +647,10 @@ namespace Solid
                                 "a function",
                     .default_value = false}),
             parameter<int>("ANALYTICAL_DISPLACEMENT_FUNCTION",
-                {.description = "function ID of the analytical solution", .default_value = -1})},
+                {.description = "function ID of the analytical solution", .default_value = -1}),
+            parameter<int>("ANALYTICAL_LAGRANGE_MULTIPLIER_FUNCTION",
+                {.description = "function ID of the analytical solution", .default_value = -1}),
+        },
         {.required = false}));
     return specs;
   }

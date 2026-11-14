@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_structure_new_error_evaluator.hpp"
 #include "4C_structure_new_input.hpp"  // necessary due to enums
 
 #include <map>
@@ -339,6 +340,9 @@ namespace Solid
 
     //! calculation of energy
     void determine_energy();
+
+    void determine_analytical_error(const Solid::ErrorEvaluator::Parameters& parameters,
+        Solid::ErrorEvaluator::Results& results);
 
     //! Write the current step state
     void output_step_state(Core::IO::DiscretizationWriter& iowriter) const;

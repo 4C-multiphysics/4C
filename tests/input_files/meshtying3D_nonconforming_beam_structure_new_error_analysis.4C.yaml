@@ -1,0 +1,113 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+PROBLEM SIZE:
+  DIM: 3
+CONTACT DYNAMIC:
+  LINEAR_SOLVER: 1
+  SYSTEM: "SaddlePoint"
+MORTAR COUPLING:
+  LM_SHAPEFCN: "Standard"
+MORTAR COUPLING/PARALLEL REDISTRIBUTION:
+  PARALLEL_REDIST: "None"
+SOLVER 1:
+  NAME: "Structure_Solver"
+  SOLVER: "Superlu"
+STRUCTURAL DYNAMIC:
+  LINEAR_SOLVER: 1
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  NLNSOL: "fullnewton"
+  PREDICT: "ConstDis"
+  TIMESTEP: 1.0
+  NUMSTEP: 1
+  MAXTIME: 1.0
+  TOLRES: 1e-10
+  TOLDISP: 1e-10
+  MAXITER: 20
+STRUCTURAL DYNAMIC/ERROR EVALUATION:
+  EVALUATE_ERROR_ANALYTICAL_REFERENCE: true
+  ANALYTICAL_DISPLACEMENT_FUNCTION: 3
+  ANALYTICAL_LAGRANGE_MULTIPLIER_FUNCTION: 4
+STRUCTURE GEOMETRY:
+  FILE: "meshtying3D_nonconforming_beam_structure_new_error_analysis.4C.exo"
+  SHOW_INFO: "detailed_summary"
+  ELEMENT_BLOCKS:
+    - ID: 1
+      SOLID:
+        HEX8:
+          MAT: 1
+          KINEM: "linear"
+    - ID: 2
+      SOLID:
+        HEX8:
+          MAT: 1
+          KINEM: "linear"
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 1000.0
+      NUE: 0.3
+      DENS: 0.0
+DESIGN SURF DIRICH CONDITIONS:
+  - ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [1.0, 1.0, 1.0]
+    FUNCT: [3, 3, 3]
+    E: 1
+  - ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [1, 0, 1]
+    VAL: [1.0, 0.0, 1.0]
+    FUNCT: [3, 0, 3]
+    E: 2
+  - ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0.0, 0.0, 1.0]
+    FUNCT: [0, 0, 3]
+    E: 3
+DESIGN SURF MORTAR COUPLING CONDITIONS 3D:
+  - ENTITY_TYPE: "node_set_id"
+    InterfaceID: 1
+    Side: "Master"
+    Initialization: "Inactive"
+    E: 6
+  - ENTITY_TYPE: "node_set_id"
+    InterfaceID: 1
+    Side: "Slave"
+    Initialization: "Active"
+    E: 7
+DESIGN SURF NEUMANN CONDITIONS:
+  - ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [1.0, 0.0, 0.0]
+    FUNCT: [2, 0, 0]
+    E: 4
+  - ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [1.0, 0.0, 0.0]
+    FUNCT: [1, 0, 0]
+    E: 5
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "100*y"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-100*y"
+FUNCT3:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.1*x*y"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.05*(-x*x-0.3*y*y+0.3*z*z)"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-0.03*y*z"
+FUNCT4:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "100.0*(0.33-0.19047619047619047*(1.0-4.0*x*x/16.0))*(-8.0*-0.19047619047619047*x/16.0)/sqrt(1.0+(-8.0*-0.19047619047619047*x/16.0)*(-8.0*-0.19047619047619047*x/16.0))"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"

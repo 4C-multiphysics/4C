@@ -585,6 +585,17 @@ namespace CONTACT
     virtual void remove_condensed_contributions_from_rhs(
         Core::LinAlg::Vector<double>& rhs) const {};
 
+    /**
+     * \brief evaluate the squared error of the discretized lagrange multiplier against a known
+     * solution
+     *
+     * @param analytical_function_id Function ID of the known solution
+     * @param time Time at which to evaluate the squared error
+     *
+     */
+    virtual double evaluate_lagrange_multiplier_error_squared(
+        int analytical_function_id, double time);
+
     //!@}
 
    protected:
