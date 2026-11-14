@@ -24,8 +24,6 @@
 #include "4C_mortar_element.hpp"
 #include "4C_mortar_interface.hpp"
 #include "4C_mortar_node.hpp"
-#include "4C_utils_function.hpp"
-#include "4C_utils_parameter_list.hpp"
 
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 #include <Teuchos_Time.hpp>
@@ -1014,7 +1012,7 @@ double CONTACT::MtAbstractStrategy::evaluate_lagrange_multiplier_error_squared(
   Teuchos::ParameterList element_parameters;
 
   element_parameters.set<Mortar::ActionType>(
-      "action", Mortar::eval_lagraneg_multiplier_analytical_error);
+      "action", Mortar::eval_lagrange_multiplier_analytical_error);
   element_parameters.set("analytical_function_id", analytical_function_id);
   element_parameters.set("time", time);
   element_parameters.set(

@@ -464,7 +464,7 @@ void Solid::ModelEvaluator::Meshtying::remove_condensed_contributions_from_rhs(
 void Solid::ModelEvaluator::Meshtying::determine_analytical_error(
     const Solid::ErrorEvaluator::Parameters& parameters, Solid::ErrorEvaluator::Results& results)
 {
-  FOUR_C_ASSERT_ALWAYS(strategy().is_saddle_point_system(),
+  FOUR_C_ASSERT_ALWAYS(strategy().is_penalty(),
       "Analytical Lagrange multiplier error evaluation requires a Lagrange multiplier meshtying "
       "strategy.");
 

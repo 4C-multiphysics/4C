@@ -690,13 +690,12 @@ void Solid::Integrator::post_time_loop()
   check_init_setup();
   model_eval().post_time_loop();
 
-  if (!error_evaluator_parameters_.evaluate_error_analytical) return;
-
-  Solid::ErrorEvaluator::Results results;
-
-  model_eval().determine_analytical_error(error_evaluator_parameters_, results);
-
-  Solid::ErrorEvaluator::write_error(results, *global_state().get_discret());
+  if (error_evaluator_parameters_.evaluate_error_analytical)
+  {
+    Solid::ErrorEvaluator::Results results;
+    model_eval().determine_analytical_error(error_evaluator_parameters_, results);
+    Solid::ErrorEvaluator::write_error(results, *global_state().get_discret());
+  }
 }
 
 /*----------------------------------------------------------------------------*

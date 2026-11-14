@@ -305,7 +305,7 @@ int Mortar::Element::evaluate(Teuchos::ParameterList& params,
 {
   const auto action = params.get<Mortar::ActionType>("action");
 
-  if (action == Mortar::eval_lagraneg_multiplier_analytical_error)
+  if (action == Mortar::eval_lagrange_multiplier_analytical_error)
   {
     FOUR_C_ASSERT_ALWAYS(
         elevec1.length() == 1, "Expected exactly one scalar for the mortar analytical error.");
@@ -324,7 +324,7 @@ int Mortar::Element::evaluate(Teuchos::ParameterList& params,
 double Mortar::Element::evaluate_lagrange_multiplier_error_squared(
     const Teuchos::ParameterList& params) const
 {
-  FOUR_C_ASSERT_ALWAYS(
+  FOUR_C_ASSERT(
       is_source(), "The Lagrange multiplier error must be evaluated on a source element.");
 
   const int analytical_function_id = params.get<int>("analytical_function_id");
