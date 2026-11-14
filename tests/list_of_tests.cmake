@@ -1046,7 +1046,7 @@ four_c_test(TEST_FILE meshtying3D_structure_stdlagr_new_struct_meshrelocation_no
 __four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5)
 four_c_test(TEST_FILE meshtying3D_structure_tet10.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE meshtying3D_structure_uzawa.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
-four_c_test(TEST_FILE meshtying3D_nonconforming_beam_structure_new_error_analysis.yaml NP 2 RETURN_AS current REQUIRED_DEPENDENCIES ArborX)
+four_c_test(TEST_FILE meshtying3D_nonconforming_beam_structure_new_error_analysis.4C.yaml NP 2 RETURN_AS current REQUIRED_DEPENDENCIES ArborX)
 __four_c_test_add_csv_yaml_comparison(BASED_ON ${current} RESULT_FILE xxx-error_evaluation_analytical_reference.csv REFERENCE_FILE ref/error_analytical_meshtying3D_nonconforming_beam_structure_new_error_analysis.csv TOL_R 1e-10 TOL_A 1e-12)
 four_c_test(TEST_FILE mfsi_ow3D_mtr_drt.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE mixture_elast_hyper.4C.yaml NP 2 RETURN_AS current)
