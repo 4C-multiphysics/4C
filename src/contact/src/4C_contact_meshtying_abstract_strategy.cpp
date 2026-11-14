@@ -24,6 +24,7 @@
 #include "4C_mortar_element.hpp"
 #include "4C_mortar_interface.hpp"
 #include "4C_mortar_node.hpp"
+#include "4C_utils_function.hpp"
 
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 #include <Teuchos_Time.hpp>
@@ -1011,9 +1012,14 @@ double CONTACT::MtAbstractStrategy::evaluate_lagrange_multiplier_error_squared(
   store_nodal_quantities(Mortar::StrategyBase::lmcurrent);
   Teuchos::ParameterList element_parameters;
 
+  const auto& analytical_lagrange_multiplier =
+      Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(
+          analytical_function_id);
+
   element_parameters.set<Mortar::ActionType>(
       "action", Mortar::eval_lagrange_multiplier_analytical_error);
-  element_parameters.set("analytical_function_id", analytical_function_id);
+  element_parameters.set<const Core::Utils::FunctionOfSpaceTime*>(
+      "analytical_function", &analytical_lagrange_multiplier);
   element_parameters.set("time", time);
   element_parameters.set(
       "lm_shape_function", Teuchos::getIntegralValue<Mortar::ShapeFcn>(params(), "LM_SHAPEFCN"));

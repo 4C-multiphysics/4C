@@ -327,7 +327,8 @@ double Mortar::Element::evaluate_lagrange_multiplier_error_squared(
   FOUR_C_ASSERT(
       is_source(), "The Lagrange multiplier error must be evaluated on a source element.");
 
-  const int analytical_function_id = params.get<int>("analytical_function_id");
+  const auto* analytical_lagrange_multiplier =
+      params.get<const Core::Utils::FunctionOfSpaceTime*>("analytical_function");
   const double time = params.get<double>("time");
   const auto lm_shape_function = params.get<Mortar::ShapeFcn>("lm_shape_function");
   const auto lm_interpolation = params.get<Mortar::LagMultQuad>("lm_interpolation");
@@ -336,20 +337,12 @@ double Mortar::Element::evaluate_lagrange_multiplier_error_squared(
       lm_shape_function != Mortar::shape_none && lm_shape_function != Mortar::shape_undefined,
       "No valid Lagrange multiplier shape function was specified.");
 
-  const auto& analytical_lagrange_multiplier =
-      Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(
-          analytical_function_id);
   const int num_nodes = num_node();
   const int spatial_dimension = n_dim();
   const int parametric_dimension = spatial_dimension - 1;
 
-  Core::LinAlg::SerialDenseMatrix nodal_coordinates(3, num_nodes, true);
   Core::LinAlg::SerialDenseMatrix nodal_lagrange_multiplier(3, num_nodes, true);
-  get_nodal_coords(nodal_coordinates);
   get_nodal_lag_mult(nodal_lagrange_multiplier);
-  Core::LinAlg::SerialDenseVector coordinate_shape_values(num_nodes, true);
-  Core::LinAlg::SerialDenseMatrix coordinate_shape_derivatives(
-      num_nodes, parametric_dimension, true);
   Core::LinAlg::SerialDenseVector lm_shape_values(num_nodes, true);
   Core::LinAlg::SerialDenseMatrix lm_shape_derivatives(num_nodes, parametric_dimension, true);
   Mortar::ElementIntegrator integrator(shape());
@@ -359,13 +352,11 @@ double Mortar::Element::evaluate_lagrange_multiplier_error_squared(
   for (int gp = 0; gp < integrator.n_gp(); ++gp)
   {
     const std::array<double, 2> xi{integrator.coordinate(gp, 0), integrator.coordinate(gp, 1)};
+    std::array<double, 3> position{};
+    local_to_global(xi.data(), position.data(), 0);
 
-    coordinate_shape_values.putScalar(0.0);
-    coordinate_shape_derivatives.putScalar(0.0);
     lm_shape_values.putScalar(0.0);
     lm_shape_derivatives.putScalar(0.0);
-
-    evaluate_shape(xi.data(), coordinate_shape_values, coordinate_shape_derivatives, num_nodes);
 
     if (!is_quad() || lm_interpolation == Mortar::lagmult_quad)
     {
@@ -393,24 +384,16 @@ double Mortar::Element::evaluate_lagrange_multiplier_error_squared(
       FOUR_C_THROW("Unknown Lagrange multiplier interpolation type.");
     }
 
-    std::array<double, 3> position{0.0, 0.0, 0.0};
-    std::array<double, 3> discrete_lagrange_multiplier{0.0, 0.0, 0.0};
-
+    std::array<double, 3> discrete_lagrange_multiplier{};
     for (int node = 0; node < num_nodes; ++node)
-    {
       for (int component = 0; component < 3; ++component)
-      {
-        position[component] += coordinate_shape_values(node) * nodal_coordinates(component, node);
         discrete_lagrange_multiplier[component] +=
             lm_shape_values(node) * nodal_lagrange_multiplier(component, node);
-      }
-    }
 
     double pointwise_error_squared = 0.0;
-
     for (int component = 0; component < spatial_dimension; ++component)
     {
-      const double analytical_value = analytical_lagrange_multiplier.evaluate(
+      const double analytical_value = analytical_lagrange_multiplier->evaluate(
           std::span<const double>(position.data(), position.size()), time, component);
 
       const double difference = discrete_lagrange_multiplier[component] - analytical_value;
