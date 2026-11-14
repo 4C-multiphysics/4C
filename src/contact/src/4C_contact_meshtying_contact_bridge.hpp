@@ -158,8 +158,10 @@ namespace CONTACT
     /*!
     \brief update
 
+    \param dt (in):   time step size of the finished step
+    \param total_time (in):  time at the end of the finished step
     */
-    void update(std::shared_ptr<Core::LinAlg::Vector<double>> dis);
+    void update(std::shared_ptr<Core::LinAlg::Vector<double>> dis, double dt, double total_time);
 
     /*!
     \brief write restart

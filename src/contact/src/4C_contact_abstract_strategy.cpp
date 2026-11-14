@@ -296,12 +296,12 @@ bool CONTACT::AbstractStrategy::is_update_of_ghosting_necessary(
  *----------------------------------------------------------------------*/
 bool CONTACT::AbstractStrategy::redistribute_contact(
     std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vel)
+    std::shared_ptr<const Core::LinAlg::Vector<double>> vel, const double dt)
 {
   bool redistributed = false;
 
   if (CONTACT::Utils::use_safe_redistribute_and_ghosting(params()))
-    redistributed = redistribute_with_safe_ghosting(*dis, *vel);
+    redistributed = redistribute_with_safe_ghosting(*dis, *vel, dt);
   else
   {
     if (Core::Communication::my_mpi_rank(get_comm()) == 0)
@@ -312,7 +312,7 @@ bool CONTACT::AbstractStrategy::redistribute_contact(
                 << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
                 << std::endl;
     }
-    redistributed = redistribute_contact_old(dis, *vel);
+    redistributed = redistribute_contact_old(dis, *vel, dt);
   }
 
   return redistributed;
@@ -321,7 +321,8 @@ bool CONTACT::AbstractStrategy::redistribute_contact(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 bool CONTACT::AbstractStrategy::redistribute_with_safe_ghosting(
-    const Core::LinAlg::Vector<double>& displacement, const Core::LinAlg::Vector<double>& velocity)
+    const Core::LinAlg::Vector<double>& displacement, const Core::LinAlg::Vector<double>& velocity,
+    const double dt)
 {
   // time measurement
   Core::Communication::barrier(get_comm());
@@ -351,7 +352,7 @@ bool CONTACT::AbstractStrategy::redistribute_with_safe_ghosting(
   // Update parallel distribution and ghosting of all interfaces
   for (std::size_t i = 0; i < interfaces().size(); ++i)
     interfaces()[i]->update_parallel_layout_and_data_structures(
-        perform_rebalancing, enforce_ghosting_update, maxdof_, ivel_[i]);
+        perform_rebalancing, enforce_ghosting_update, maxdof_, ivel_[i] * dt);
 
   // Re-setup strategy to update internal map objects
   if (perform_rebalancing) setup(true, false);
@@ -372,7 +373,7 @@ bool CONTACT::AbstractStrategy::redistribute_with_safe_ghosting(
  *----------------------------------------------------------------------*/
 bool CONTACT::AbstractStrategy::redistribute_contact_old(
     std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-    const Core::LinAlg::Vector<double>& vel)
+    const Core::LinAlg::Vector<double>& vel, const double dt)
 {
   // decide whether redistribution should be applied or not
   bool first_time_step = is_first_time_step();
@@ -406,7 +407,7 @@ bool CONTACT::AbstractStrategy::redistribute_contact_old(
     interfaces()[i]->fill_complete(Global::Problem::instance()->discretization_map(),
         Global::Problem::instance()->binning_strategy_params(),
         Global::Problem::instance()->output_control_file(),
-        Global::Problem::instance()->spatial_approximation_type(), true, maxdof_, ivel_[i]);
+        Global::Problem::instance()->spatial_approximation_type(), true, maxdof_, ivel_[i] * dt);
 
     // print new parallel distribution
     if (Core::Communication::my_mpi_rank(get_comm()) == 0)
@@ -1294,7 +1295,7 @@ void CONTACT::AbstractStrategy::assemble_mortar()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void CONTACT::AbstractStrategy::evaluate_reference_state()
+void CONTACT::AbstractStrategy::evaluate_reference_state(double dt)
 {
   // flag for initialization of contact with nodal gaps
   const bool initcontactbygap = params().get<bool>("INITCONTACTBYGAP");
@@ -1747,7 +1748,8 @@ void CONTACT::AbstractStrategy::store_to_old(Mortar::StrategyBase::QuantityType 
 /*----------------------------------------------------------------------*
  |  Update and output contact at end of time step             popp 06/09|
  *----------------------------------------------------------------------*/
-void CONTACT::AbstractStrategy::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
+void CONTACT::AbstractStrategy::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
+    const double dt, const double total_time)
 {
   // store Lagrange multipliers, D and M
   // (we need this for interpolation of the next generalized mid-point)

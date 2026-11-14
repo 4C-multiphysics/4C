@@ -102,10 +102,8 @@ void CONTACT::NitscheStrategy::do_read_restart(Core::IO::DiscretizationReader& r
   }
 
   FOUR_C_ASSERT_ALWAYS(cparams_ptr, "You must provide the contact parameters");
-  save_time_step_size_and_total_time(cparams_ptr->get_delta_time(), cparams_ptr->get_total_time());
-
-
-  if (params().get<bool>("NITSCHE_PENALTY_ADAPTIVE")) update_trace_ineq_estimates();
+  if (params().get<bool>("NITSCHE_PENALTY_ADAPTIVE"))
+    update_trace_ineq_estimates(cparams_ptr->get_delta_time(), cparams_ptr->get_total_time());
 }
 
 void CONTACT::NitscheStrategy::set_state(
@@ -228,13 +226,9 @@ void CONTACT::NitscheStrategy::integrate(const CONTACT::ParamsInterface& cparams
   // time measurement (on each processor)
   const double t_start = Teuchos::Time::wallTime();
 
-  // set time step size and total time
-  save_time_step_size_and_total_time(cparams.get_delta_time(), cparams.get_total_time());
-
   // Evaluation for all interfaces
   for (const auto& interface : interface_)
   {
-    interface->interface_params().set<double>("TIMESTEP", time_step_size_);
     interface->initialize();
     interface->evaluate(0, step_, iter_);
 
@@ -394,15 +388,13 @@ void CONTACT::NitscheStrategy::setup(bool redistributed, bool init)
   curr_state_eval_ = false;
 }
 
-void CONTACT::NitscheStrategy::update_trace_ineq_estimates()
+void CONTACT::NitscheStrategy::update_trace_ineq_estimates(double dt, double total_time)
 {
   auto NitWgt = Teuchos::getIntegralValue<CONTACT::NitscheWeighting>(params(), "NITSCHE_WEIGHTING");
 
   // create material evaluation context
-  Mat::EvaluationContext<3> mat_eval_context{.total_time = &total_time_,
-      .time_step_size = &time_step_size_,
-      .xi = nullptr,
-      .ref_coords = nullptr};
+  Mat::EvaluationContext<3> mat_eval_context{
+      .total_time = &total_time, .time_step_size = &dt, .xi = nullptr, .ref_coords = nullptr};
 
 
   for (const auto& interface : interface_)
@@ -418,9 +410,10 @@ void CONTACT::NitscheStrategy::update_trace_ineq_estimates()
   }
 }
 
-void CONTACT::NitscheStrategy::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
+void CONTACT::NitscheStrategy::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
+    const double dt, const double total_time)
 {
-  if (params().get<bool>("NITSCHE_PENALTY_ADAPTIVE")) update_trace_ineq_estimates();
+  if (params().get<bool>("NITSCHE_PENALTY_ADAPTIVE")) update_trace_ineq_estimates(dt, total_time);
   if (friction_)
   {
     store_to_old(Mortar::StrategyBase::n_old);
@@ -428,7 +421,7 @@ void CONTACT::NitscheStrategy::update(std::shared_ptr<const Core::LinAlg::Vector
   }
 }
 
-void CONTACT::NitscheStrategy::evaluate_reference_state()
+void CONTACT::NitscheStrategy::evaluate_reference_state(const double dt)
 {
   if (friction_)
   {
@@ -441,7 +434,7 @@ void CONTACT::NitscheStrategy::evaluate_reference_state()
   }
 
 
-  update_trace_ineq_estimates();
+  update_trace_ineq_estimates(dt, 0.0);
 }
 
 
@@ -479,14 +472,5 @@ void CONTACT::NitscheStrategy::reconnect_parent_elements()
     }
   }
 }
-
-void CONTACT::NitscheStrategy::save_time_step_size_and_total_time(
-    const double time_step_size, const double total_time)
-{
-  // save time step size and total time
-  time_step_size_ = time_step_size;
-  total_time_ = total_time;
-}
-
 
 FOUR_C_NAMESPACE_CLOSE

@@ -461,7 +461,8 @@ namespace CONTACT
     void evaluate_friction(std::shared_ptr<Core::LinAlg::SparseOperator>& kteff,
         std::shared_ptr<Core::LinAlg::Vector<double>>& feff) override;
 
-    void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
+    void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis, double dt,
+        double total_time) override;
 
 
    protected:

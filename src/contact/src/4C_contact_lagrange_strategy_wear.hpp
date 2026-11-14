@@ -77,11 +77,12 @@ namespace Wear
 
     \param[in] dis Current displacement state
     \param[in] vel Current velocity state
+    \param[in] dt Current time step size
 
     \return TRUE if the interface has been redistributed. Return FALSE otherwise.
     */
     bool redistribute_contact(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vel) final;
+        std::shared_ptr<const Core::LinAlg::Vector<double>> vel, double dt) final;
 
     /*!
     \brief Build 2x2 saddle point system
@@ -198,7 +199,8 @@ namespace Wear
     \brief Update wear contact at end of time step
 
     */
-    void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
+    void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis, double dt,
+        double total_time) override;
 
     /*!
     \brief Store wear data into wear data container

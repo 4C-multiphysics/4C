@@ -108,7 +108,7 @@ void CONTACT::IntegratorNitscheSsi::gpts_forces(Mortar::Element& source_ele,
   double nitsche_wgt_source(0.0), nitsche_wgt_target(0.0);
 
   CONTACT::Utils::nitsche_weights_and_scaling(
-      source_ele, target_ele, nit_wgt_, dt_, nitsche_wgt_source, nitsche_wgt_target, pen, pet);
+      source_ele, target_ele, nit_wgt_, nitsche_wgt_source, nitsche_wgt_target, pen, pet);
 
   double cauchy_nn_weighted_average(0.0);
   Core::Gen::Pairedvector<int, double> d_cauchy_nn_weighted_average_dd(

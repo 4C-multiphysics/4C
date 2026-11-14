@@ -317,7 +317,8 @@ namespace CONTACT
     \param dis (in):  current displacements (-> old displacements)
 
     */
-    void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
+    void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis, double dt,
+        double total_time) override;
 
     /*!
     \brief Perform a write restart
@@ -467,7 +468,7 @@ namespace CONTACT
     void aug_forces(Core::LinAlg::Vector<double>& augfs_lm, Core::LinAlg::Vector<double>& augfs_g,
         Core::LinAlg::Vector<double>& augfm_lm, Core::LinAlg::Vector<double>& augfm_g) {};
     bool redistribute_contact(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vel) final
+        std::shared_ptr<const Core::LinAlg::Vector<double>> vel, double dt) final
     {
       return false;
     }
@@ -480,7 +481,7 @@ namespace CONTACT
     {
       return nullptr;
     }
-    void evaluate_reference_state() override {}
+    void evaluate_reference_state(double dt) override {}
     void evaluate_relative_movement() override {}
     void predict_relative_movement() override {}
     std::shared_ptr<const Core::LinAlg::Map> source_row_nodes_ptr() const override

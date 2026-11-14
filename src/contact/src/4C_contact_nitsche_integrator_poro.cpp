@@ -121,7 +121,7 @@ void CONTACT::IntegratorNitschePoro::gpts_forces(Mortar::Element& source_elem,
   double w_source = 0.;
   double w_target = 0.;
   CONTACT::Utils::nitsche_weights_and_scaling(
-      source_elem, target_elem, nit_wgt_, dt_, w_source, w_target, pen, pet);
+      source_elem, target_elem, nit_wgt_, w_source, w_target, pen, pet);
 
   double cauchy_nn_weighted_average = 0.;
   Core::Gen::Pairedvector<int, double> cauchy_nn_weighted_average_deriv_d(

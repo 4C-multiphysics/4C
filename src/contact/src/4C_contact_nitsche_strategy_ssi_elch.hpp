@@ -34,7 +34,6 @@ namespace CONTACT
         : NitscheStrategySsi(data_ptr, dof_row_map, NodeRowMap, params, std::move(interface), dim,
               comm, alphaf, maxdof)
     {
-      init_time_step_size_and_total_time(params);
     }
 
     void apply_force_stiff_cmt(std::shared_ptr<Core::LinAlg::Vector<double>> dis,

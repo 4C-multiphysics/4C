@@ -4734,7 +4734,7 @@ void Wear::LagrangeStrategyWear::recover(std::shared_ptr<Core::LinAlg::Vector<do
  *----------------------------------------------------------------------*/
 bool Wear::LagrangeStrategyWear::redistribute_contact(
     std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vel)
+    std::shared_ptr<const Core::LinAlg::Vector<double>> vel, double dt)
 {
   // get out of here if parallel redistribution is switched off
   // or if this is a single processor (serial) job
@@ -5189,10 +5189,11 @@ void Wear::LagrangeStrategyWear::update_wear_discret_accumulation()
 /*----------------------------------------------------------------------*
  |  Update and output contact at end of time step            farah 02/16|
  *----------------------------------------------------------------------*/
-void Wear::LagrangeStrategyWear::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
+void Wear::LagrangeStrategyWear::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
+    const double dt, const double total_time)
 {
   // call base routine
-  CONTACT::AbstractStrategy::update(dis);
+  CONTACT::AbstractStrategy::update(dis, dt, total_time);
 
   // wear: store history values
   if (weightedwear_) store_nodal_quantities(Mortar::StrategyBase::weightedwear);

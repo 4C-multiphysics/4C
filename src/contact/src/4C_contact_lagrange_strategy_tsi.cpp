@@ -105,7 +105,7 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
     std::shared_ptr<Core::LinAlg::Vector<double>>& combined_RHS,
     std::shared_ptr<Coupling::Adapter::Coupling> coupST,
     std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> temp)
+    std::shared_ptr<const Core::LinAlg::Vector<double>> temp, const double dt)
 {
   if (thermo_s_dofs_ == nullptr) thermo_s_dofs_ = coupST->target_to_source_map(*gsdofrowmap_);
 
@@ -224,15 +224,16 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
     }
 
     // linearized thermal contact (heat conduction)
-    tsi_interface->assemble_lin_conduct(dcTdd, dcTdT, dcTdLMt, dcTdLMc);
+    tsi_interface->assemble_lin_conduct(dcTdd, dcTdT, dcTdLMt, dcTdLMc, dt);
 
-    tsi_interface->assemble_dm_lin_diss(nullptr, &m_LinDissDISP, nullptr, &m_LinDissContactLM, 1.);
+    tsi_interface->assemble_dm_lin_diss(
+        nullptr, &m_LinDissDISP, nullptr, &m_LinDissContactLM, 1., dt);
 
     tsi_interface->assemble_lin_dm(linDcontactLM, linMcontactLM);
-    tsi_interface->assemble_lin_dm_x(
-        nullptr, &linMdiss, 1., CONTACT::TSIInterface::LinDM_Diss, interface->source_row_nodes());
+    tsi_interface->assemble_lin_dm_x(nullptr, &linMdiss, 1., CONTACT::TSIInterface::LinDM_Diss,
+        interface->source_row_nodes(), dt);
     tsi_interface->assemble_lin_dm_x(&linDThermoLM, &linMThermoLM, 1.,
-        CONTACT::TSIInterface::LinDM_ThermoLM, interface->source_row_nodes());
+        CONTACT::TSIInterface::LinDM_ThermoLM, interface->source_row_nodes(), dt);
   }
 
   // complete all those linearizations
@@ -948,7 +949,8 @@ void CONTACT::LagrangeStrategyTsi::store_nodal_quantities(
   }
 }
 
-void CONTACT::LagrangeStrategyTsi::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
+void CONTACT::LagrangeStrategyTsi::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
+    const double dt, const double total_time)
 {
   if (fscn_ == nullptr) fscn_ = std::make_shared<Core::LinAlg::Vector<double>>(*gstdofrowmap_);
   fscn_->put_scalar(0.0);
@@ -968,7 +970,7 @@ void CONTACT::LagrangeStrategyTsi::update(std::shared_ptr<const Core::LinAlg::Ve
   tmp->scale(-1.);
   CONTACT::Utils::add_vector(*tmp, *fscn_);
 
-  CONTACT::AbstractStrategy::update(dis);
+  CONTACT::AbstractStrategy::update(dis, dt, total_time);
 
   Core::LinAlg::SparseMatrix dThermo(
       *structure_thermo_coupling_->target_to_source_map(*gsdofrowmap_), 100, true, false,
@@ -1002,7 +1004,7 @@ void CONTACT::LagrangeStrategyTsi::update(std::shared_ptr<const Core::LinAlg::Ve
       *gtdofrowmap_, 100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
   for (const auto& interface : interface_)
     dynamic_cast<CONTACT::TSIInterface*>(&(*interface))
-        ->assemble_dm_lin_diss(nullptr, nullptr, nullptr, &m_LinDissContactLM, 1.);
+        ->assemble_dm_lin_diss(nullptr, nullptr, nullptr, &m_LinDissContactLM, 1., dt);
   m_LinDissContactLM.complete(*gactivedofs_, *gtdofrowmap_);
   Core::LinAlg::Vector<double> z_act(*gactivedofs_);
   Core::LinAlg::export_to(*z_, z_act);

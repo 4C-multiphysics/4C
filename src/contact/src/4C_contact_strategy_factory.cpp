@@ -501,83 +501,16 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
   params.setParameters(wearlist);
   params.setParameters(tsic);
 
-  switch (problemtype)
+  if (problemtype == Core::ProblemType::poroelast or problemtype == Core::ProblemType::poroscatra)
   {
-    case Core::ProblemType::tsi:
-    {
-      const double timestep =
-          Global::Problem::instance()->tsi_dynamic_params().get<double>("TIMESTEP");
-      // rauch 01/16
-      if (Core::Communication::my_mpi_rank(get_comm()) == 0)
-      {
-        std::cout << "\n \n  Warning: CONTACT::STRATEGY::Factory::read_and_check_input() reads "
-                     "TIMESTEP = "
-                  << timestep << " from Global::Problem::instance()->TSIDynamicParams().  \n"
-                  << "Anyway, you should not use the \"TIMESTEP\" variable inside of "
-                  << "the new structural/contact framework!" << std::endl;
-      }
-      params.set<double>("TIMESTEP", timestep);
-      break;
-    }
-    case Core::ProblemType::structure:
-    {
-      const double timestep =
-          Global::Problem::instance()->structural_dynamic_params().get<double>("TIMESTEP");
-
-      params.set<double>("TIMESTEP", timestep);
-      break;
-    }
-    case Core::ProblemType::poroelast:
-    case Core::ProblemType::poroscatra:
-    {
-      const Teuchos::ParameterList& stru = Global::Problem::instance()->structural_dynamic_params();
-      const Teuchos::ParameterList& porodyn =
-          Global::Problem::instance()->poroelast_dynamic_params();
-      // porotimefac = 1/(theta*dt) --- required for derivation of structural displacements!
-      double porotimefac =
-          1 / (stru.sublist("ONESTEPTHETA").get<double>("THETA") * stru.get<double>("TIMESTEP"));
-      params.set<double>("porotimefac", porotimefac);
-      params.set<bool>("CONTACT_NO_PENETRATION",
-          porodyn.get<bool>("CONTACT_NO_PENETRATION"));  // used in the integrator
-      params.set<double>("TIMESTEP", porodyn.get<double>("TIMESTEP"));
-      break;
-    }
-    case Core::ProblemType::ssi:
-    {
-      params.set<double>(
-          "TIMESTEP", Global::Problem::instance()->ssi_control_params().get<double>("TIMESTEP"));
-      break;
-    }
-    case Core::ProblemType::fsi:
-    {
-      params.set<double>(
-          "TIMESTEP", Global::Problem::instance()->fsi_dynamic_params().get<double>("TIMESTEP"));
-      break;
-    }
-    case Core::ProblemType::fsi_xfem:
-    {
-      params.set<double>(
-          "TIMESTEP", Global::Problem::instance()->fluid_dynamic_params().get<double>("TIMESTEP"));
-      break;
-    }
-
-    case Core::ProblemType::fpsi:
-    case Core::ProblemType::fpsi_xfem:
-    {
-      params.set<double>(
-          "TIMESTEP", Global::Problem::instance()->fpsi_dynamic_params().get<double>("TIMESTEP"));
-      break;
-    }
-
-    default:
-      // store a dummy timestep for the initial reference state evaluation in the parameter list
-      // (only used for that evaluation anyway, and set correctly via the contact params interface
-      // for the real contact integration afterwards)
-      params.set<double>("TIMESTEP", 1.0);
-
-      /* Do nothing else, all the time integration related stuff is supposed to be handled outside
-       * of the contact strategy. */
-      break;
+    const Teuchos::ParameterList& stru = Global::Problem::instance()->structural_dynamic_params();
+    const Teuchos::ParameterList& porodyn = Global::Problem::instance()->poroelast_dynamic_params();
+    // porotimefac = 1/(theta*dt) --- required for derivation of structural displacements!
+    double porotimefac =
+        1 / (stru.sublist("ONESTEPTHETA").get<double>("THETA") * stru.get<double>("TIMESTEP"));
+    params.set<double>("porotimefac", porotimefac);
+    params.set<bool>("CONTACT_NO_PENETRATION",
+        porodyn.get<bool>("CONTACT_NO_PENETRATION"));  // used in the integrator
   }
 
   // ---------------------------------------------------------------------

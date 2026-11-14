@@ -179,7 +179,7 @@ void CONTACT::TSIInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linsli
 void CONTACT::TSIInterface::assemble_lin_conduct(Core::LinAlg::SparseMatrix& linConductDISglobal,
     Core::LinAlg::SparseMatrix& linConductTEMPglobal,
     Core::LinAlg::SparseMatrix& linConductThermoLMglobal,
-    Core::LinAlg::SparseMatrix& linConductContactLMglobal)
+    Core::LinAlg::SparseMatrix& linConductContactLMglobal, const double dt)
 {
   // nothing to do if no active contact nodes
   if (activenodes_->num_my_elements() == 0) return;
@@ -192,9 +192,9 @@ void CONTACT::TSIInterface::assemble_lin_conduct(Core::LinAlg::SparseMatrix& lin
 
   assemble_dual_mass_lumped(linConductThermoLMglobal, linConductDISglobal);
 
-  assemble_lin_dm_x(&linConductDISglobal, nullptr, -delta_bar, LinDM_Diss, activenodes_);
+  assemble_lin_dm_x(&linConductDISglobal, nullptr, -delta_bar, LinDM_Diss, activenodes_, dt);
   assemble_dm_lin_diss(
-      &linConductDISglobal, nullptr, &linConductContactLMglobal, nullptr, -delta_bar);
+      &linConductDISglobal, nullptr, &linConductContactLMglobal, nullptr, -delta_bar, dt);
 
   assemble_dm_l_mn(-beta_bar, &linConductTEMPglobal);
   assemble_lin_l_mn_dm_temp(-beta_bar, &linConductDISglobal, &linConductContactLMglobal);
@@ -282,7 +282,7 @@ void CONTACT::TSIInterface::assemble_dual_mass_lumped(
 
 void CONTACT::TSIInterface::assemble_lin_dm_x(Core::LinAlg::SparseMatrix* linD_X,
     Core::LinAlg::SparseMatrix* linM_X, const double fac, const LinDmXMode mode,
-    const std::shared_ptr<const Core::LinAlg::Map> node_rowmap)
+    const std::shared_ptr<const Core::LinAlg::Map> node_rowmap, const double dt)
 {
   // get out if there's nothing to do
   if (linD_X == nullptr && linM_X == nullptr) return;
@@ -290,7 +290,6 @@ void CONTACT::TSIInterface::assemble_lin_dm_x(Core::LinAlg::SparseMatrix* linD_X
   // no dissipation without friction
   if (!friction_ && mode == LinDM_Diss) return;
 
-  const double dt = interface_params().get<double>("TIMESTEP");
   const bool use_frictionless_first = interface_params().get<bool>("FRLESS_FIRST");
 
   // loop over all LM source nodes (row map)
@@ -450,7 +449,7 @@ void CONTACT::TSIInterface::assemble_lin_dm_x(Core::LinAlg::SparseMatrix* linD_X
 
 void CONTACT::TSIInterface::assemble_dm_lin_diss(Core::LinAlg::SparseMatrix* d_LinDissDISP,
     Core::LinAlg::SparseMatrix* m_LinDissDISP, Core::LinAlg::SparseMatrix* d_LinDissContactLM,
-    Core::LinAlg::SparseMatrix* m_LinDissContactLM, const double fac)
+    Core::LinAlg::SparseMatrix* m_LinDissContactLM, const double fac, const double dt)
 {
   // get out if there's nothing to do
   if (d_LinDissDISP == nullptr && m_LinDissDISP == nullptr && d_LinDissContactLM == nullptr &&
@@ -463,7 +462,6 @@ void CONTACT::TSIInterface::assemble_dm_lin_diss(Core::LinAlg::SparseMatrix* d_L
   using _cim = std::map<int, double>::const_iterator;
   using _cip = Core::Gen::Pairedvector<int, double>::const_iterator;
 
-  const double dt = interface_params().get<double>("TIMESTEP");
   const bool use_frictionless_first = interface_params().get<bool>("FRLESS_FIRST");
 
   // loop over all LM source nodes (row map)

@@ -37,7 +37,6 @@ namespace CONTACT
               dof_row_map, NodeRowMap, params, std::move(interface), dim, comm, alphaf, maxdof),
           no_penetration_(params.get<bool>("CONTACT_NO_PENETRATION"))
     {
-      init_time_step_size_and_total_time(params);
     }
 
     //! Shared data constructor
@@ -49,7 +48,6 @@ namespace CONTACT
               comm, alphaf, maxdof),
           no_penetration_(params.get<bool>("CONTACT_NO_PENETRATION"))
     {
-      init_time_step_size_and_total_time(params);
     }
 
     void apply_force_stiff_cmt(std::shared_ptr<Core::LinAlg::Vector<double>> dis,
