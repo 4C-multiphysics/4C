@@ -14,6 +14,8 @@
 #include "4C_linalg_fixedsizematrix_generators.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_four_tensor.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_funct.hpp"
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
 #include "4C_mat_electrode.hpp"
@@ -125,14 +127,19 @@ namespace
         << "actual: " << actual << ", expected: " << expected;
   }
 
-  static void expect_near_relative(const Core::LinAlg::Matrix<1, 6>& actual,
-      const Core::LinAlg::Matrix<1, 6>& expected, const double rel_tol, const double abs_floor)
+  static void expect_near_relative(const Core::LinAlg::SymmetricTensor<double, 3, 3>& actual,
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& expected, const double rel_tol,
+      const double abs_floor)
   {
-    for (int i = 0; i < 6; ++i)
+    for (int i = 0; i < 3; ++i)
     {
-      const double scale = std::max(std::abs(actual(0, i)), std::abs(expected(0, i)));
-      EXPECT_LE(std::abs(actual(0, i) - expected(0, i)), abs_floor + rel_tol * scale)
-          << "entry (" << i << ",0), actual: " << actual(0, i) << ", expected: " << expected(0, i);
+      for (int j = i; j < 3; ++j)
+      {
+        const double scale = std::max(std::abs(actual(i, j)), std::abs(expected(i, j)));
+        EXPECT_LE(std::abs(actual(i, j) - expected(i, j)), abs_floor + rel_tol * scale)
+            << "entry (" << i << "," << j << "), actual: " << actual(i, j)
+            << ", expected: " << expected(i, j);
+      }
     }
   }
 
@@ -3080,21 +3087,26 @@ namespace
     auto comparison = set_up_thermo_viscoplast_linearization_comparison();
     FOUR_C_EXPECT_NEAR(comparison.iFin_analytic, comparison.iFin_fd, 1.0e-10);
 
-    const Mat::HeatSource tq_heat_analytic =
+    const Mat::AdditionalHeatSource tq_heat_analytic =
         comparison.analytic_material.material->evaluate_taylor_quinney_heat_source(
-            comparison.context, 0, 0, &comparison.FM, Core::LinAlg::identity_matrix<3>(),
+            comparison.context, 0, 0, make_tensor_view(comparison.FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
             comparison.temperature);
-    const Mat::HeatSource tq_heat_fd =
+    const Mat::AdditionalHeatSource tq_heat_fd =
         comparison.fd_material.material->evaluate_taylor_quinney_heat_source(comparison.context, 0,
-            0, &comparison.FM, Core::LinAlg::identity_matrix<3>(), comparison.temperature);
+            0, make_tensor_view(comparison.FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
+            comparison.temperature);
 
     ASSERT_GT(std::abs(tq_heat_analytic.value), 0.0);
-    ASSERT_GT(tq_heat_analytic.derivative_wrt_cauchy_green.norm2(), 0.0);
+    ASSERT_GT(Core::LinAlg::ddot(
+                  tq_heat_analytic.derivative_wrt_strain, tq_heat_analytic.derivative_wrt_strain),
+        0.0);
     ASSERT_GT(std::abs(tq_heat_analytic.derivative_wrt_temperature), 0.0);
 
     ASSERT_DOUBLE_EQ(tq_heat_analytic.value, tq_heat_fd.value);
-    expect_near_relative(tq_heat_analytic.derivative_wrt_cauchy_green,
-        tq_heat_fd.derivative_wrt_cauchy_green, 1.0e-7, 1.0e-16);
+    expect_near_relative(
+        tq_heat_analytic.derivative_wrt_strain, tq_heat_fd.derivative_wrt_strain, 1.0e-7, 1.0e-16);
     expect_near_relative(tq_heat_analytic.derivative_wrt_temperature,
         tq_heat_fd.derivative_wrt_temperature, 1.0e-8, 1.0e-16);
   }
@@ -3181,13 +3193,13 @@ namespace
 
     struct ThermoEvaluationResults
     {
-      Mat::HeatSource heat_source;
+      Mat::AdditionalHeatSource heat_source;
       static void assert_equal(
           const ThermoEvaluationResults& actual, const ThermoEvaluationResults& expected)
       {
         ASSERT_DOUBLE_EQ(actual.heat_source.value, expected.heat_source.value);
-        FOUR_C_EXPECT_NEAR(actual.heat_source.derivative_wrt_cauchy_green,
-            expected.heat_source.derivative_wrt_cauchy_green, 1.0e-16);
+        FOUR_C_EXPECT_NEAR(actual.heat_source.derivative_wrt_strain,
+            expected.heat_source.derivative_wrt_strain, 1.0e-16);
         ASSERT_DOUBLE_EQ(actual.heat_source.derivative_wrt_temperature,
             expected.heat_source.derivative_wrt_temperature);
       }
@@ -3273,14 +3285,18 @@ namespace
             solid_evaluation(material, requested_gp, requested_FM, requested_temperature);
         // 2.: thermo evaluation
         reference.thermo_results.heat_source = material->evaluate_taylor_quinney_heat_source(
-            context, requested_gp, 0, &requested_FM, id3x3, requested_temperature);
+            context, requested_gp, 0, make_tensor_view(requested_FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
+            requested_temperature);
 
         // Since we are using this result as reference,assert that all values are non-zero to ensure
         // full evaluation paths (no early returns due to no plastic strain)
         ASSERT_GT(reference.solid_results.cmatadd.norm2(), 0.0);
         ASSERT_GT(reference.solid_results.dstressdT.norm2(), 0.0);
         ASSERT_GT(std::abs(reference.thermo_results.heat_source.value), 0.0);
-        ASSERT_GT(reference.thermo_results.heat_source.derivative_wrt_cauchy_green.norm2(), 0.0);
+        ASSERT_GT(Core::LinAlg::ddot(reference.thermo_results.heat_source.derivative_wrt_strain,
+                      reference.thermo_results.heat_source.derivative_wrt_strain),
+            0.0);
         ASSERT_GT(std::abs(reference.thermo_results.heat_source.derivative_wrt_temperature), 0.0);
       }
       {
@@ -3292,8 +3308,10 @@ namespace
         // 1.: solid evaluation with stale temperature
         solid_evaluation(material, requested_gp, requested_FM, stale_temperature);
         // 2.: thermo evaluation with the requested temperature
-        current.heat_source = material->evaluate_taylor_quinney_heat_source(
-            context, requested_gp, 0, &requested_FM, id3x3, requested_temperature);
+        current.heat_source = material->evaluate_taylor_quinney_heat_source(context, requested_gp,
+            0, make_tensor_view(requested_FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
+            requested_temperature);
 
         ThermoEvaluationResults::assert_equal(current, reference.thermo_results);
       }
@@ -3306,8 +3324,10 @@ namespace
         // 1.: solid evaluation with stale deformation gradient
         solid_evaluation(material, requested_gp, stale_FM, requested_temperature);
         // 2.: thermo evaluation with the requested deformation gradient
-        current.heat_source = material->evaluate_taylor_quinney_heat_source(
-            context, requested_gp, 0, &requested_FM, id3x3, requested_temperature);
+        current.heat_source = material->evaluate_taylor_quinney_heat_source(context, requested_gp,
+            0, make_tensor_view(requested_FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
+            requested_temperature);
         ThermoEvaluationResults::assert_equal(current, reference.thermo_results);
       }
       {
@@ -3325,8 +3345,10 @@ namespace
                                  // gauss point caches are not leaking into each other
         // 2.: thermo evaluation at the requested gauss point (should use the cache filled by the
         // first solid evaluation)
-        current.thermo_results.heat_source = material->evaluate_taylor_quinney_heat_source(
-            context, requested_gp, 0, &requested_FM, id3x3, requested_temperature);
+        current.thermo_results.heat_source = material->evaluate_taylor_quinney_heat_source(context,
+            requested_gp, 0, make_tensor_view(requested_FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
+            requested_temperature);
         EvaluationResults::assert_equal(current, reference);
       }
     }
@@ -3341,8 +3363,10 @@ namespace
         auto material = make_material();
         EvaluationResults current;
         // 1.: thermo evaluation
-        current.thermo_results.heat_source = material->evaluate_taylor_quinney_heat_source(
-            context, requested_gp, 0, &requested_FM, id3x3, requested_temperature);
+        current.thermo_results.heat_source = material->evaluate_taylor_quinney_heat_source(context,
+            requested_gp, 0, make_tensor_view(requested_FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
+            requested_temperature);
         // 2.: solid evaluation
         current.solid_results =
             solid_evaluation(material, requested_gp, requested_FM, requested_temperature);
@@ -3355,8 +3379,9 @@ namespace
             "evaluation.");
         auto material = make_material();
         // 1.: thermo evaluation with stale temperature
-        (void)material->evaluate_taylor_quinney_heat_source(
-            context, requested_gp, 0, &requested_FM, id3x3, stale_temperature);
+        (void)material->evaluate_taylor_quinney_heat_source(context, requested_gp, 0,
+            make_tensor_view(requested_FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>), stale_temperature);
         // 2.: solid evaluation with the requested temperature
         const auto current =
             solid_evaluation(material, requested_gp, requested_FM, requested_temperature);
@@ -3369,8 +3394,10 @@ namespace
             "evaluation.");
         auto material = make_material();
         // 1.: thermo evaluation with stale deformation gradient
-        (void)material->evaluate_taylor_quinney_heat_source(
-            context, requested_gp, 0, &stale_FM, id3x3, requested_temperature);
+        (void)material->evaluate_taylor_quinney_heat_source(context, requested_gp, 0,
+            make_tensor_view(stale_FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
+            requested_temperature);
         // 2.: solid evaluation with the requested deformation gradient
         const auto current =
             solid_evaluation(material, requested_gp, requested_FM, requested_temperature);
@@ -3384,9 +3411,13 @@ namespace
         EvaluationResults current;
         // 1.: thermo evaluation at two different gauss points, the most previous one with stale
         // values
-        current.thermo_results.heat_source = material->evaluate_taylor_quinney_heat_source(
-            context, requested_gp, 0, &requested_FM, id3x3, requested_temperature);
-        (void)material->evaluate_taylor_quinney_heat_source(context, stale_gp, 0, &stale_FM, id3x3,
+        current.thermo_results.heat_source = material->evaluate_taylor_quinney_heat_source(context,
+            requested_gp, 0, make_tensor_view(requested_FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
+            requested_temperature);
+        (void)material->evaluate_taylor_quinney_heat_source(context, stale_gp, 0,
+            make_tensor_view(stale_FM),
+            get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>),
             stale_temperature);  // evaluate the next gauss point with different values to test that
                                  // gauss point caches are not leaking into each other
         // 2.: solid evaluation at the requested gauss point (should use the cache filled by the
