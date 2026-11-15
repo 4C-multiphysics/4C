@@ -1147,15 +1147,16 @@ void CONTACT::Interface::create_search_tree()
     if (!two_half_pass())
     {
       // (NOTE THAT SELF CONTACT SEARCH IS NOT YET FULLY PARALLELIZED!)
-      binarytreeself_ = std::make_shared<CONTACT::SelfBinaryTree>(
-          discret(), interface_params(), elefullmap, n_dim(), search_param());
+      binarytreeself_ = std::make_shared<CONTACT::SelfBinaryTree>(discret(), interface_params(),
+          elefullmap, n_dim(), geometric_search_params_ptr_->contact_extension_factor);
     }
     else
     {
       // if we use the two half pass algorithm, we use the unbiased self binary tree
       // implementation
-      binarytreeself_ = std::make_shared<CONTACT::UnbiasedSelfBinaryTree>(
-          discret(), interface_params(), elefullmap, n_dim(), search_param());
+      binarytreeself_ =
+          std::make_shared<CONTACT::UnbiasedSelfBinaryTree>(discret(), interface_params(),
+              elefullmap, n_dim(), geometric_search_params_ptr_->contact_extension_factor);
     }
     // initialize the self binary tree
     binarytreeself_->init();

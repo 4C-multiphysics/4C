@@ -37,16 +37,6 @@ std::vector<Core::IO::InputSpec> Mortar::valid_parameters()
               {.description = "Type of employed set of shape functions",
                   .default_value = shape_dual}),
 
-          parameter<double>("SEARCH_PARAM",
-              {.description = "Inflation factor for the bounding volumes (k-DOPs) used in the "
-                              "contact search. The bounding volumes are enlarged by this factor "
-                              "times the minimum edge length of all contact pair elements.",
-                  .default_value = 0.3}),
-
-          parameter<bool>("SEARCH_USE_AUX_POS",
-              {.description = "If chosen auxiliary position is used for computing dops",
-                  .default_value = true}),
-
           deprecated_selection<Mortar::LagMultQuad>("LM_QUAD",
               {
                   {"undefined", lagmult_undefined},

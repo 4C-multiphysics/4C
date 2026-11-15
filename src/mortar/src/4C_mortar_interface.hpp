@@ -11,7 +11,8 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_exporter.hpp"
-#include "4C_geometric_search_bvh.hpp"
+#include "4C_geometric_search_input.hpp"
+#include "4C_geometric_search_visualization.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_map.hpp"
@@ -399,14 +400,6 @@ namespace Mortar
 
     inline int max_dof_global() const { return maxdofglobal_; }
 
-    inline double& search_param() { return searchparam_; }
-
-    inline double search_param() const { return searchparam_; }
-
-    inline bool& search_use_aux_pos() { return searchuseauxpos_; }
-
-    inline bool search_use_aux_pos() const { return searchuseauxpos_; }
-
     inline double& int_time_interface() { return inttime_interface_; }
 
     inline double int_time_interface() const { return inttime_interface_; }
@@ -584,17 +577,6 @@ namespace Mortar
     //! maximum dof ID in global discretization
     int maxdofglobal_;
 
-    //! @name Search algorithm
-    //! @{
-
-    //! search parameter
-    double searchparam_;
-
-    //! use auxiliary position when computing dops
-    bool searchuseauxpos_;
-
-    //! @}
-
     //! integration time
     double inttime_interface_;
 
@@ -744,16 +726,6 @@ namespace Mortar
     \brief Get flag indicating nurbs shape functions
     */
     bool is_nurbs() const { return nurbs_; };
-
-    /*!
-    \brief Get search algorithm parameter
-    */
-    double search_param() const { return searchparam_; };
-
-    /*!
-    \brief bool whether auxiliary position is used when computing dops
-    */
-    bool search_use_aux_pos() const { return searchuseauxpos_; };
 
     /*!
     \brief Get column map of all interface nodes (Filled()==true is prerequisite)
@@ -1846,8 +1818,13 @@ namespace Mortar
         lmdofmap_;       ///< ref. to row map of all Lagrange multiplier dofs
     int& maxdofglobal_;  ///< ref. to maximum dof ID in global discretization
 
-    double& searchparam_;        ///< ref. to search parameter
-    bool& searchuseauxpos_;      ///< ref. to use auxiliary position when computing dops
+    //! data container holding all geometric search related parameters
+    std::shared_ptr<Core::GeometricSearch::GeometricSearchParams> geometric_search_params_ptr_;
+
+    //! This object handles all geometric search related visualization output.
+    std::shared_ptr<Core::GeometricSearch::GeometricSearchVisualization>
+        geometric_search_visualization_ptr_;
+
     double& inttime_interface_;  ///< ref. to integration time
 
     bool& nurbs_;  ///< ref. to flag for nurbs shape functions

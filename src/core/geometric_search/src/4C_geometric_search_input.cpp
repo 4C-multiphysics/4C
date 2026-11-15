@@ -48,7 +48,16 @@ Core::IO::InputSpec Core::GeometricSearch::valid_parameters()
                       "times the sphere radius in all directions (+ and -).",
                   .default_value = 2.0,
                   .store = in_struct(&GeometricSearchParams::sphere_radius_extension_factor)}),
-
+          parameter<double>("CONTACT_EXTENSION_FACTOR",
+              {.description = "Extension factor for the bounding volumes used in the contact "
+                              "search. The bounding volumes are enlarged by this factor times the "
+                              "minimum edge length of all contact pair elements.",
+                  .default_value = 0.3,
+                  .store = in_struct(&GeometricSearchParams::contact_extension_factor)}),
+          parameter<bool>("USE_AUXILIARY_POSITION",
+              {.description = "Auxiliary position is used for computing bounding volumes.",
+                  .default_value = true,
+                  .store = in_struct(&GeometricSearchParams::use_auxiliary_position)}),
           parameter<double>(
               "POINT_TOLERANCE", {.description = "Tolerance for point objects",
                                      .default_value = 1e-4,

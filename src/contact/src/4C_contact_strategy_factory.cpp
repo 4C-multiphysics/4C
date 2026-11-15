@@ -70,6 +70,11 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
   const Teuchos::ParameterList& wearlist = Global::Problem::instance()->wear_params();
   const Teuchos::ParameterList& tsic = Global::Problem::instance()->tsi_contact_params();
 
+  const auto& geometric_search_params =
+      std::make_shared<Core::GeometricSearch::GeometricSearchParams>(
+          Core::GeometricSearch::geometric_search_params_factory(
+              Global::Problem::instance()->parameters()));
+
   // read Problem Type and Problem Dimension from Global::Problem
   const Core::ProblemType problemtype = Global::Problem::instance()->get_problem_type();
   Core::FE::ShapeFunctionType distype = Global::Problem::instance()->spatial_approximation_type();
@@ -217,7 +222,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
   // ---------------------------------------------------------------------
   if (Core::Communication::my_mpi_rank(get_comm()) == 0)
   {
-    if (mortar.get<double>("SEARCH_PARAM") == 0.0)
+    if (geometric_search_params->contact_extension_factor == 0.0)
       std::cout << ("Warning: Contact search called without inflation of bounding volumes\n")
                 << std::endl;
 

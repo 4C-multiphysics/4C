@@ -372,6 +372,11 @@ bool CONTACT::MtManager::read_and_check_input(
   const Teuchos::ParameterList& meshtying = Global::Problem::instance()->contact_dynamic_params();
   const Teuchos::ParameterList& wearlist = Global::Problem::instance()->wear_params();
 
+  const auto& geometric_search_params =
+      std::make_shared<Core::GeometricSearch::GeometricSearchParams>(
+          Core::GeometricSearch::geometric_search_params_factory(
+              Global::Problem::instance()->parameters()));
+
   // read Problem Type and Problem Dimension from Global::Problem
   const Core::ProblemType problemtype = Global::Problem::instance()->get_problem_type();
   const int spatialDim = Global::Problem::instance()->n_dim();
@@ -538,7 +543,7 @@ bool CONTACT::MtManager::read_and_check_input(
   // *********************************************************************
   // warnings
   // *********************************************************************
-  if (mortar.get<double>("SEARCH_PARAM") == 0.0 &&
+  if (geometric_search_params->contact_extension_factor == 0.0 &&
       Core::Communication::my_mpi_rank(get_comm()) == 0)
     std::cout << ("Warning: Meshtying search called without inflation of bounding volumes\n")
               << std::endl;
@@ -554,8 +559,6 @@ bool CONTACT::MtManager::read_and_check_input(
   if (meshtyingandcontact)
   {
     // set options for mortar coupling
-    mtparams.set<double>("SEARCH_PARAM", 0.3);
-    mtparams.set<bool>("SEARCH_USE_AUX_POS", false);
     mtparams.set<Mortar::ShapeFcn>("LM_SHAPEFCN", Mortar::shape_dual);
     mtparams.set<CONTACT::SystemType>("SYSTEM", CONTACT::SystemType::condensed);
     mtparams.set<bool>("NURBS", false);

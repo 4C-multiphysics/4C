@@ -11,6 +11,8 @@
 #include "4C_contact_interpolator.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fem_nurbs_discretization.hpp"
+#include "4C_geometric_search_bvh.hpp"
+#include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_map.hpp"
@@ -74,8 +76,6 @@ Mortar::InterfaceDataContainer::InterfaceDataContainer()
       plmdofmap_(nullptr),
       lmdofmap_(nullptr),
       maxdofglobal_(-1),
-      searchparam_(-1.0),
-      searchuseauxpos_(false),
       inttime_interface_(0.0),
       nurbs_(false),
       poro_(false),
@@ -120,8 +120,6 @@ Mortar::Interface::Interface(std::shared_ptr<Mortar::InterfaceDataContainer> int
       plmdofmap_(interface_data_->non_redist_lm_dof_row_map()),
       lmdofmap_(interface_data_->lm_dof_row_map()),
       maxdofglobal_(interface_data_->max_dof_global()),
-      searchparam_(interface_data_->search_param()),
-      searchuseauxpos_(interface_data_->search_use_aux_pos()),
       inttime_interface_(interface_data_->int_time_interface()),
       nurbs_(interface_data_->is_nurbs()),
       ehl_(interface_data_->is_ehl())
@@ -188,8 +186,6 @@ Mortar::Interface::Interface(std::shared_ptr<InterfaceDataContainer> interfaceDa
       plmdofmap_(interface_data_->non_redist_lm_dof_row_map()),
       lmdofmap_(interface_data_->lm_dof_row_map()),
       maxdofglobal_(interface_data_->max_dof_global()),
-      searchparam_(interface_data_->search_param()),
-      searchuseauxpos_(interface_data_->search_use_aux_pos()),
       inttime_interface_(interface_data_->int_time_interface()),
       nurbs_(interface_data_->is_nurbs()),
       ehl_(interface_data_->is_ehl())
@@ -202,8 +198,6 @@ Mortar::Interface::Interface(std::shared_ptr<InterfaceDataContainer> interfaceDa
   quadsource_ = false;
   interface_data_->set_extend_ghosting(Teuchos::getIntegralValue<Mortar::ExtendGhosting>(
       imortar.sublist("PARALLEL REDISTRIBUTION"), "GHOSTING_STRATEGY"));
-  searchparam_ = imortar.get<double>("SEARCH_PARAM");
-  searchuseauxpos_ = imortar.get<bool>("SEARCH_USE_AUX_POS");
   nurbs_ = imortar.get<bool>("NURBS");
 
   if (n_dim() != 2 && n_dim() != 3) FOUR_C_THROW("Mortar problem must be 2D or 3D.");
@@ -212,6 +206,20 @@ Mortar::Interface::Interface(std::shared_ptr<InterfaceDataContainer> interfaceDa
 
   create_interface_discretization(output_control, spatial_approximation_type);
   set_shape_function_type();
+
+  // build a new data container to manage geometric search parameters
+  geometric_search_params_ptr_ = std::make_shared<Core::GeometricSearch::GeometricSearchParams>(
+      Core::GeometricSearch::geometric_search_params_factory(
+          Global::Problem::instance()->parameters()));
+  if (geometric_search_params_ptr_->write_geometric_search_visualization)
+  {
+    geometric_search_visualization_ptr_ =
+        std::make_shared<Core::GeometricSearch::GeometricSearchVisualization>(
+            Core::IO::visualization_parameters_factory(
+                Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
+                *Global::Problem::instance()->output_control_file(), inttime_interface_),
+            get_comm(), "mortar-geometric-search");
+  }
 }
 
 /*----------------------------------------------------------------------*
@@ -2648,7 +2656,8 @@ void Mortar::Interface::evaluate_bounding_volume_hierarchy()
   FOUR_C_ASSERT(
       minimum_edge_length > 0.0, "The minimum mortar element edge length must be positive.");
 
-  const double inflation = search_param() * minimum_edge_length;
+  const double extension_factor =
+      geometric_search_params_ptr_->contact_extension_factor * minimum_edge_length;
   std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> source_bounding_volumes;
   source_bounding_volumes.reserve(selecolmap_->num_my_elements());
   std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> target_bounding_volumes;
@@ -2662,7 +2671,8 @@ void Mortar::Interface::evaluate_bounding_volume_hierarchy()
     source_element->mo_data().search_elements().clear();
 
     source_bounding_volumes.emplace_back(
-        gid, source_element->create_bounding_volume(inflation, search_use_aux_pos()));
+        gid, source_element->create_bounding_volume(
+                 extension_factor, geometric_search_params_ptr_->use_auxiliary_position));
   }
 
   for (int i = 0; i < melecolmap_->num_my_elements(); ++i)
@@ -2672,7 +2682,7 @@ void Mortar::Interface::evaluate_bounding_volume_hierarchy()
     FOUR_C_ASSERT(target_element != nullptr, "Target mortar element {} was not found.", gid);
 
     target_bounding_volumes.emplace_back(
-        gid, target_element->create_bounding_volume(inflation, false));
+        gid, target_element->create_bounding_volume(extension_factor, false));
   }
 
   const auto collision_pairs =
@@ -2685,6 +2695,15 @@ void Mortar::Interface::evaluate_bounding_volume_hierarchy()
         source_element != nullptr, "Source mortar element {} was not found.", pair.gid_predicate);
 
     source_element->add_search_elements(pair.gid_primitive);
+  }
+
+  // Check if the primitives and predicates should be output
+  if (geometric_search_params_ptr_->write_geometric_search_visualization)
+  {
+    // Output is desired, so create it right here, because we only search the pairs once per time
+    // step anyways.
+    geometric_search_visualization_ptr_->write_primitives_and_predicates_to_disk(
+        inttime_interface_, 0, source_bounding_volumes, target_bounding_volumes);
   }
 }
 
