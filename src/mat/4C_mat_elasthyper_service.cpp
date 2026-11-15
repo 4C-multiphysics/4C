@@ -165,44 +165,39 @@ void Mat::elast_hyper_add_isotropic_stress_cmat(
   static Core::LinAlg::Matrix<3, 1> gamma(Core::LinAlg::Initialization::zero);
   // constitutive tensor factors (according to Holzapfel-Nonlinear Solid Mechanics p. 261)
   static Core::LinAlg::Matrix<8, 1> delta(Core::LinAlg::Initialization::zero);
-  // 4th order identity tensor (rows and columns are stress-like)
-  static Core::LinAlg::Matrix<6, 6> id4sharp(Core::LinAlg::Initialization::uninitialized);
-  Core::LinAlg::Voigt::fourth_order_identity_matrix<Core::LinAlg::Voigt::NotationType::stress,
-      Core::LinAlg::Voigt::NotationType::stress>(id4sharp);
 
   // compose coefficients
   calculate_gamma_delta(gamma, delta, prinv, dPI, ddPII);
 
+  using Core::LinAlg::dyadic;
+  const auto& id = Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
+
   // 2nd Piola Kirchhoff stress
-  S_stress += gamma(0) * Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
+  S_stress += gamma(0) * id;
   S_stress += gamma(1) * C_strain;
   S_stress += gamma(2) * iC_strain;
 
-  // constitutive tensor
+  // constitutive tensor, terms with vanishing factors are skipped since most summands only
+  // contribute to a few of them
   // contribution: Id \otimes Id
-  cmat += delta(0) * Core::LinAlg::dyadic(Core::LinAlg::TensorGenerators::identity<double, 3, 3>,
-                         Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
+  if (delta(0) != 0.0) cmat += delta(0) * dyadic(id, id);
   // contribution: Id \otimes C + C \otimes Id
-  cmat +=
-      delta(1) *
-      (Core::LinAlg::dyadic(Core::LinAlg::TensorGenerators::identity<double, 3, 3>, C_strain) +
-          Core::LinAlg::dyadic(C_strain, Core::LinAlg::TensorGenerators::identity<double, 3, 3>));
+  if (delta(1) != 0.0) cmat += delta(1) * (dyadic(id, C_strain) + dyadic(C_strain, id));
   // contribution: Id \otimes Cinv + Cinv \otimes Id
-  cmat +=
-      delta(2) *
-      (Core::LinAlg::dyadic(Core::LinAlg::TensorGenerators::identity<double, 3, 3>, iC_strain) +
-          Core::LinAlg::dyadic(iC_strain, Core::LinAlg::TensorGenerators::identity<double, 3, 3>));
+  if (delta(2) != 0.0) cmat += delta(2) * (dyadic(id, iC_strain) + dyadic(iC_strain, id));
   // contribution: C \otimes C
-  cmat += delta(3) * Core::LinAlg::dyadic(C_strain, C_strain);
+  if (delta(3) != 0.0) cmat += delta(3) * dyadic(C_strain, C_strain);
   // contribution: C \otimes Cinv + Cinv \otimes C
-  cmat += delta(4) *
-          (Core::LinAlg::dyadic(C_strain, iC_strain) + Core::LinAlg::dyadic(iC_strain, C_strain));
+  if (delta(4) != 0.0)
+    cmat += delta(4) * (dyadic(C_strain, iC_strain) + dyadic(iC_strain, C_strain));
   // contribution: Cinv \otimes Cinv
-  cmat += delta(5) * Core::LinAlg::dyadic(iC_strain, iC_strain);
+  if (delta(5) != 0.0) cmat += delta(5) * dyadic(iC_strain, iC_strain);
   // contribution: Cinv \odot Cinv
-  cmat += delta(6) * Core::LinAlg::FourTensorOperations::holzapfel_product(iC_strain);
+  if (delta(6) != 0.0)
+    cmat += delta(6) * Core::LinAlg::FourTensorOperations::holzapfel_product(iC_strain);
   // contribution: Id4^#
-  cmat += Core::LinAlg::TensorGenerators::symmetric_identity<double, 3, 3, 3, 3> * (delta(7));
+  if (delta(7) != 0.0)
+    cmat += delta(7) * Core::LinAlg::TensorGenerators::symmetric_identity<double, 3, 3, 3, 3>;
 }
 
 void Mat::elast_hyper_add_response_stretches(
