@@ -29,7 +29,7 @@ Solid::ErrorEvaluator::Parameters Solid::ErrorEvaluator::error_evaluator_paramet
   parameters.evaluate_error_analytical_displacement_function_id =
       parameter_list.get<int>("ANALYTICAL_DISPLACEMENT_FUNCTION");
   parameters.evaluate_error_analytical_lagrange_multiplier_function_id =
-      parameter_list.get<int>("ANALYTICAL_LAGRANGE_MULTIPLIER_FUNCTION");
+      parameter_list.get<int>("ANALYTICAL_MESHTYING_LAGRANGE_MULTIPLIER_FUNCTION");
 
   return parameters;
 }
