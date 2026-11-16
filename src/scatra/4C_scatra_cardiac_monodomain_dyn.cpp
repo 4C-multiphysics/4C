@@ -150,7 +150,8 @@ void scatra_cardiac_monodomain_dyn(int restart)
               Global::Problem::instance()->spatial_approximation_type(), binning_params);
           binningstrategy = std::make_shared<Core::Binstrategy::BinningStrategy>(binning_params,
               Global::Problem::instance()->output_control_file(), scatradis->get_comm(),
-              Core::Communication::my_mpi_rank(scatradis->get_comm()), nullptr, nullptr, dis);
+              Core::Communication::my_mpi_rank(scatradis->get_comm()), std::nullopt, nullptr,
+              nullptr, dis);
           binningstrategy
               ->do_weighted_partitioning_of_bins_and_extend_ghosting_of_discret_to_one_bin_layer(
                   dis, stdelecolmap, stdnodecolmap);

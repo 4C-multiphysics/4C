@@ -14,6 +14,7 @@
 #include "4C_config.hpp"
 
 #include "4C_binstrategy_utils.hpp"
+#include "4C_io_visualization_parameters.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
@@ -21,6 +22,7 @@
 #include <functional>
 #include <list>
 #include <memory>
+#include <optional>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -49,7 +51,8 @@ namespace Core::Geo::MeshFree
 namespace Core::IO
 {
   class OutputControl;
-}
+  class DiscretizationVisualizationWriterMesh;
+}  // namespace Core::IO
 
 /*----------------------------------------------------------------------*
  | binning strategy                                         ghamm 11/13 |
@@ -145,6 +148,8 @@ namespace Core::Binstrategy
      * \param[in] output_control output control file
      * \param[in] comm MPI Communicator
      * \param[in] my_rank id of this process
+     * \param[in] bin_output_visualization_parameters visualization parameters used to write the
+     * optional bin output
      * \param[in] correct_node should a node be included into binning? If this function is not
      * provided, all nodes are considered relevant.
      * \param[in] determine_relevant_points function that determines the relevant points for binning
@@ -155,6 +160,8 @@ namespace Core::Binstrategy
      */
     BinningStrategy(const Teuchos::ParameterList& binning_params,
         std::shared_ptr<Core::IO::OutputControl> output_control, MPI_Comm comm, const int my_rank,
+        std::optional<Core::IO::VisualizationParameters> bin_output_visualization_parameters =
+            std::nullopt,
         std::function<const Core::Nodes::Node&(const Core::Nodes::Node& node)> correct_node = {},
         std::function<std::vector<std::array<double, 3>>(const Core::FE::Discretization&,
             const Core::Elements::Element&,
@@ -427,6 +434,13 @@ namespace Core::Binstrategy
      * \return linear map linear map based on bin ids
      */
     std::shared_ptr<Core::LinAlg::Map> create_linear_map_for_numbin(MPI_Comm comm) const;
+
+    /*!
+     * \brief set the restart time for the bin output
+     *
+     * \param[in] restart_time time the simulation is restarted from
+     */
+    void set_bin_output_restart_time(double restart_time);
 
     /*!
      * \brief write binning domain and its parallel distribution as output
@@ -822,6 +836,12 @@ namespace Core::Binstrategy
 
     //! Function that allows selecting a different node to be used in binning.
     const std::function<const Core::Nodes::Node&(const Core::Nodes::Node& node)> correct_node_;
+
+    //! Visualization parameters for the optional bin output
+    std::optional<Core::IO::VisualizationParameters> bin_output_visualization_parameters_;
+
+    //! VTK writer used for the optional bin output
+    std::shared_ptr<Core::IO::DiscretizationVisualizationWriterMesh> bin_output_writer_;
   };  // namespace Core::Binstrategy
 
   /*!

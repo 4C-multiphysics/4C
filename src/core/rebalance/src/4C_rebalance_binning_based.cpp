@@ -67,7 +67,7 @@ void Core::Rebalance::rebalance_discretizations_by_binning(
     // binning strategy is created and parallel redistribution is performed
     Binstrategy::BinningStrategy binningstrategy(binning_params, output_control,
         vector_of_discretizations[0]->get_comm(),
-        Core::Communication::my_mpi_rank(vector_of_discretizations[0]->get_comm()),
+        Core::Communication::my_mpi_rank(vector_of_discretizations[0]->get_comm()), std::nullopt,
         std::move(correct_node), std::move(determine_relevant_points), vector_of_discretizations);
 
     binningstrategy
