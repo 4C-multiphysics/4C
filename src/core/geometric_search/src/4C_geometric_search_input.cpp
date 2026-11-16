@@ -40,7 +40,7 @@ Core::IO::InputSpec Core::GeometricSearch::valid_parameters()
       },
       {.required = false, .store = in_struct(&GeometricSearchParams::beam_bounding_volume)});
 
-  Core::IO::InputSpec spec = group<GeometricSearchParams>("BOUNDINGVOLUME STRATEGY",
+  Core::IO::InputSpec spec = group<GeometricSearchParams>("GEOMETRIC SEARCH",
       {beam_bounding_volume,
           parameter<double>("SPHERE_RADIUS_EXTENSION_FACTOR",
               {.description =
@@ -48,7 +48,17 @@ Core::IO::InputSpec Core::GeometricSearch::valid_parameters()
                       "times the sphere radius in all directions (+ and -).",
                   .default_value = 2.0,
                   .store = in_struct(&GeometricSearchParams::sphere_radius_extension_factor)}),
-
+          parameter<double>("BOUNDING_VOLUME_INFLATION_FACTOR",
+              {.description = "Extension factor for the bounding volumes used in the contact "
+                              "search. The bounding volumes are enlarged by this factor times the "
+                              "minimum edge length of all contact pair elements.",
+                  .default_value = 0.3,
+                  .validator = Validators::positive<double>(),
+                  .store = in_struct(&GeometricSearchParams::bounding_volume_inflation_factor)}),
+          parameter<bool>("USE_AUXILIARY_POSITION",
+              {.description = "Auxiliary position is used for computing bounding volumes.",
+                  .default_value = true,
+                  .store = in_struct(&GeometricSearchParams::use_auxiliary_position)}),
           parameter<double>(
               "POINT_TOLERANCE", {.description = "Tolerance for point objects",
                                      .default_value = 1e-4,
@@ -67,8 +77,7 @@ Core::GeometricSearch::GeometricSearchParams Core::GeometricSearch::geometric_se
     const Teuchos::ParameterList& global_parameters)
 {
   auto geometric_search_params =
-      global_parameters.get<Core::GeometricSearch::GeometricSearchParams>(
-          "BOUNDINGVOLUME STRATEGY");
+      global_parameters.get<Core::GeometricSearch::GeometricSearchParams>("GEOMETRIC SEARCH");
 
   geometric_search_params.verbosity = Teuchos::getIntegralValue<Core::IO::Verbositylevel>(
       global_parameters.sublist("IO"), "VERBOSITY");

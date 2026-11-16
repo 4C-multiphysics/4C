@@ -808,11 +808,6 @@ bool CONTACT::Manager::read_and_check_input(Teuchos::ParameterList& cparams) con
   // *********************************************************************
   // warnings
   // *********************************************************************
-  if (mortar.get<double>("SEARCH_PARAM") == 0.0 &&
-      Core::Communication::my_mpi_rank(get_comm()) == 0)
-    std::cout << ("Warning: Contact search called without inflation of bounding volumes\n")
-              << std::endl;
-
   if (Teuchos::getIntegralValue<Wear::WearSide>(wearlist, "WEAR_SIDE") != Wear::wear_source)
     std::cout << ("\n \n Warning: Contact with both-sided wear is still experimental !")
               << std::endl;

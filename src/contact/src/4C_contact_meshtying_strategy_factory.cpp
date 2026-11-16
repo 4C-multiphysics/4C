@@ -213,14 +213,6 @@ void Mortar::STRATEGY::FactoryMT::read_and_check_input(Teuchos::ParameterList& p
       mortar.get<int>("NUMGP_PER_DIM") <= 1)
     FOUR_C_THROW("Invalid Gauss point number NUMGP_PER_DIM for element-based integration.");
 
-  // *********************************************************************
-  // warnings
-  // *********************************************************************
-  if (mortar.get<double>("SEARCH_PARAM") == 0.0 &&
-      Core::Communication::my_mpi_rank(get_comm()) == 0)
-    std::cout << ("Warning: Meshtying search called without inflation of bounding volumes\n")
-              << std::endl;
-
   // get parameter lists
   params.setParameters(mortar);
   params.setParameters(meshtying);
@@ -232,8 +224,6 @@ void Mortar::STRATEGY::FactoryMT::read_and_check_input(Teuchos::ParameterList& p
   if (meshtyingandcontact)
   {
     // set options for mortar coupling
-    params.set<double>("SEARCH_PARAM", 0.3);
-    params.set<bool>("SEARCH_USE_AUX_POS", false);
     params.set<Mortar::ShapeFcn>("LM_SHAPEFCN", Mortar::shape_dual);
     params.set<CONTACT::SystemType>("SYSTEM", CONTACT::SystemType::condensed);
     params.set<bool>("NURBS", false);

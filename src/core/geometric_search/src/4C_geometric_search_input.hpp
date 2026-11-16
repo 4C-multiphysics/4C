@@ -41,7 +41,9 @@ namespace Core::GeometricSearch
   {
     BeamBoundingVolume beam_bounding_volume;
     double sphere_radius_extension_factor;
+    double bounding_volume_inflation_factor;
     double point_tolerance;
+    bool use_auxiliary_position;
     bool write_geometric_search_visualization;
     Core::IO::Verbositylevel verbosity;
   };
