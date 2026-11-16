@@ -97,7 +97,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 41
       QUANTITY: "phi1"
-      VALUE: 8.399415554345541
+      VALUE: 8.399415561460877
       TOLERANCE: 1e-09
   - SCATRA:
       DIS: "scatra"
@@ -115,31 +115,31 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 41
       QUANTITY: "flux_boundary_1_y"
-      VALUE: -1.4734855655622836e-05
+      VALUE: -1.4734855607443964e-05
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 41
       QUANTITY: "flux_boundary_1_z"
-      VALUE: 4.048503371612255e-06
+      VALUE: 4.048503358374777e-06
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 244
       QUANTITY: "flux_boundary_1_x"
-      VALUE: -5.647131241946855e-06
+      VALUE: -5.6471383869829654e-06
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 244
       QUANTITY: "flux_boundary_1_y"
-      VALUE: -5.966685352957498e-06
+      VALUE: -5.966692902309635e-06
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 244
       QUANTITY: "flux_boundary_1_z"
-      VALUE: 2.4240494755857762e-06
+      VALUE: 2.424052542615795e-06
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
@@ -151,7 +151,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 244
       QUANTITY: "phi2"
-      VALUE: -0.09998674587352177
+      VALUE: -0.09998674583664445
       TOLERANCE: 1e-11
   - SCATRA:
       DIS: "scatra"
@@ -163,49 +163,49 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 239
       QUANTITY: "phi2"
-      VALUE: -0.09999720331599575
+      VALUE: -0.09999720327709762
       TOLERANCE: 1e-11
   - SCATRA:
       DIS: "scatra"
       NODE: 239
       QUANTITY: "flux_boundary_1_x"
-      VALUE: -6.128715592644192e-06
+      VALUE: -6.128766326361053e-06
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 239
       QUANTITY: "flux_boundary_1_y"
-      VALUE: 4.4090296576732e-06
+      VALUE: 4.409066155771195e-06
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 239
       QUANTITY: "flux_boundary_1_z"
-      VALUE: -1.2568190603625096e-06
+      VALUE: -1.2568294643535892e-06
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 390
       QUANTITY: "flux_boundary_1_x"
-      VALUE: -4.413083112988732e-06
+      VALUE: -4.413083350766353e-06
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 390
       QUANTITY: "flux_boundary_1_y"
-      VALUE: 1.3889547029557836e-05
+      VALUE: 1.388954777792884e-05
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 390
       QUANTITY: "flux_boundary_1_z"
-      VALUE: -7.38198390392466e-07
+      VALUE: -7.381984301667128e-07
       TOLERANCE: 1e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 390
       QUANTITY: "phi1"
-      VALUE: 12.71909012142737
+      VALUE: 12.719090152117246
       TOLERANCE: 1e-08
   - SCATRA:
       DIS: "scatra"
