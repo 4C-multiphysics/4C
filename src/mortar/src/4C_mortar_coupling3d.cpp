@@ -1605,8 +1605,12 @@ bool Mortar::Coupling3d::triangulation(std::map<int, double>& projpar, double to
     //**********************************************************************
     case Mortar::triangulation_delaunay:
       if (!delaunay_triangulation(linvertex, tol))
+      {
         // (3) Backup triangulation of clip polygon (CENTER-based (old))
+        std::cout << "***\nTriangulation delaunay failed -> Using centered triangulation!"
+                  << std::endl;
         center_triangulation(linvertex, tol);
+      }
       break;
 
     //**********************************************************************
@@ -1632,7 +1636,7 @@ bool Mortar::Coupling3d::delaunay_triangulation(
   // preparations
   cells().resize(0);
   int clipsize = (int)(clip().size());
-  bool out = false;
+  bool out = true;
   if (out) std::cout << "***\nPolygon with " << clipsize << " vertices\n***" << std::endl;
 
   //**********************************************************************
@@ -1810,7 +1814,7 @@ bool Mortar::Coupling3d::delaunay_triangulation(
       if (abs(radius2 - radius1) > tol || abs(radius3 - radius1) > tol)
       {
         std::cout << "***WARNING*** Delaunay triangulation failed (no well-defined circumcircles)"
-                  << " -> using backup" << std::endl;
+                  << " -> using center triangulation" << std::endl;
 
         // if Delaunay triangulation failed, use old center-based
         // triangulation as backup (therefore return false)
@@ -1835,8 +1839,22 @@ bool Mortar::Coupling3d::delaunay_triangulation(
         const double diff = abs(dist - radius1);
         if (diff < close[t]) close[t] = diff;
 
-        // check for bad triangle (without tolerance)
-        if (dist < radius1) bad[t] = true;
+        const double signed_gap = dist - radius1;
+        const double circle_tolerance = tol * std::max({1.0, dist, radius1});
+
+        if (std::abs(signed_gap) <= circle_tolerance)
+        {
+          if (out)
+          {
+            std::cout << "Delaunay triangulation is non-unique for triangle " << idx0 << " " << idx1
+                      << " " << idx2 << " and vertex " << k << " (signed gap " << signed_gap << ")"
+                      << " -> using center triangulation" << std::endl;
+          }
+
+          return false;
+        }
+
+        if (signed_gap < 0.0) bad[t] = true;
       }
     }
 

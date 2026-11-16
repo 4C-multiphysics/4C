@@ -26,7 +26,6 @@ MORTAR COUPLING:
   LM_DUAL_CONSISTENT: "none"
   INTTYPE: "Elements"
   NUMGP_PER_DIM: 3
-  TRIANGULATION: "Center"
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Structure_Solver"

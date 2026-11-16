@@ -126,7 +126,7 @@ std::vector<Core::IO::InputSpec> Mortar::valid_parameters()
                   {"center", triangulation_center},
               },
               {.description = "Type of triangulation for segment-based integration",
-                  .default_value = triangulation_delaunay}),
+                  .default_value = triangulation_center}),
 
           parameter<bool>("RESTART_WITH_MESHTYING",
               {.description = "Must be chosen if a non-meshtying simulation is to be restarted "
