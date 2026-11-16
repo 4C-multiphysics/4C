@@ -328,11 +328,11 @@ void TSI::Algorithm::prepare_contact_strategy()
         std::make_shared<Core::LinAlg::Vector<double>>(*structure_field()->dof_row_map(), true);
     contact_strategy_lagrange_->set_state(Mortar::state_new_displacement, *zero_disp);
     contact_strategy_lagrange_->save_reference_state(zero_disp);
-    contact_strategy_lagrange_->evaluate_reference_state();
+    contact_strategy_lagrange_->evaluate_reference_state(dt());
     contact_strategy_lagrange_->inttime_init();
     contact_strategy_lagrange_->set_time_integration_info(structure_field()->tim_int_param());
     contact_strategy_lagrange_->redistribute_contact(
-        structure_field()->dispn(), structure_field()->veln());
+        structure_field()->dispn(), structure_field()->veln(), dt());
 
     if (contact_strategy_lagrange_ != nullptr)
     {

@@ -5024,7 +5024,8 @@ void CONTACT::LagrangeStrategy::update_active_set_semi_smooth(const bool firstSt
 /*----------------------------------------------------------------------*
  |  update routine for ltl forces                            farah 10/16|
  *----------------------------------------------------------------------*/
-void CONTACT::LagrangeStrategy::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
+void CONTACT::LagrangeStrategy::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
+    const double dt, const double total_time)
 {
   if (fLTL_ != nullptr)
   {
@@ -5034,7 +5035,7 @@ void CONTACT::LagrangeStrategy::update(std::shared_ptr<const Core::LinAlg::Vecto
   }
 
   // abstract routine
-  CONTACT::AbstractStrategy::update(dis);
+  CONTACT::AbstractStrategy::update(dis, dt, total_time);
 
   if (fconservation_ == nullptr) return;
 }

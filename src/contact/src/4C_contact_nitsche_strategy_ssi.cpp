@@ -30,7 +30,7 @@ void CONTACT::NitscheStrategySsi::integrate(const CONTACT::ParamsInterface& cpar
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void CONTACT::NitscheStrategySsi::evaluate_reference_state()
+void CONTACT::NitscheStrategySsi::evaluate_reference_state(const double dt)
 {
   auto phinp = Global::Problem::instance()->get_dis("structure")->get_state(1, "scalarfield");
   const auto* scatra_dofrowmap = Global::Problem::instance()->get_dis("scatra")->dof_row_map();
@@ -40,7 +40,7 @@ void CONTACT::NitscheStrategySsi::evaluate_reference_state()
   set_state(Mortar::state_scalar, phinp_dofrowmap);
 
   // call base class
-  CONTACT::NitscheStrategy::evaluate_reference_state();
+  CONTACT::NitscheStrategy::evaluate_reference_state(dt);
 }
 
 /*------------------------------------------------------------------------*

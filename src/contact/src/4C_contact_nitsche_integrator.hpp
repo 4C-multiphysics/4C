@@ -55,7 +55,6 @@ namespace CONTACT
           frcoeff_(imortar_.get<double>("FRCOEFF", -1.)),
           frbound_(imortar_.get<double>("FRBOUND", -1.)),
           frtype_(Teuchos::getIntegralValue<CONTACT::FrictionType>(imortar_, "FRICTION")),
-          dt_(imortar_.get<double>("TIMESTEP")),
           two_half_pass_(imortar_.get<bool>("Two_half_pass"))
     {
     }
@@ -203,8 +202,6 @@ namespace CONTACT
     double frbound_;
     //! type of contact friction law
     CONTACT::FrictionType frtype_;
-    //! time step size
-    double dt_;
     //! flag indicating if unbiased two half pass algorithm is activated or not
     bool two_half_pass_;
   };
@@ -265,15 +262,14 @@ namespace CONTACT
      * @param[in] source_elem     source-side nitsche weight
      * @param[in] target_elem     target-side nitsche weight
      * @param[in] nit_wgt  weighting methood for nitsche contact
-     * @param[in] dt       time step size
      * @param[out] w_source      source-side nitsche weight
      * @param[out] w_target      target-side nitsche weight
      * @param[out] pen     scaled nitsche penalty parameter in normal direction
      * @param[out] pet     scaled nitsche penalty parameter in tangential direction
      */
     void nitsche_weights_and_scaling(Mortar::Element& source_elem, Mortar::Element& target_elem,
-        CONTACT::NitscheWeighting nit_wgt, double dt, double& w_source, double& w_target,
-        double& pen, double& pet);
+        CONTACT::NitscheWeighting nit_wgt, double& w_source, double& w_target, double& pen,
+        double& pet);
 
 
     // --- template and inline functions --- //

@@ -357,7 +357,7 @@ void TSI::Monolithic::newton_full()
   // do the thermo contact modifications all at once
   if (contact_strategy_lagrange_ != nullptr)
     contact_strategy_lagrange_->evaluate(system_matrix(), rhs_, structure_thermo_coupling_,
-        structure_field()->dispnp(), thermo_field()->tempnp());
+        structure_field()->dispnp(), thermo_field()->tempnp(), dt());
   apply_dbc();
 
   // initialize with predictor values
@@ -432,7 +432,7 @@ void TSI::Monolithic::newton_full()
       // *********** time measurement ***********
 
       contact_strategy_lagrange_->evaluate(system_matrix(), rhs_, structure_thermo_coupling_,
-          structure_field()->dispnp(), thermo_field()->tempnp());
+          structure_field()->dispnp(), thermo_field()->tempnp(), dt());
 
       // *********** time measurement ***********
       dtcmt_ = timernewton_.wallTime() - dtcpu;
@@ -2206,7 +2206,7 @@ void TSI::Monolithic::update()
   structure_field()->update();
   thermo_field()->update();
   if (contact_strategy_lagrange_ != nullptr)
-    contact_strategy_lagrange_->update((structure_field()->dispnp()));
+    contact_strategy_lagrange_->update(structure_field()->dispnp(), dt(), time());
 }
 
 /*----------------------------------------------------------------------*

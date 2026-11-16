@@ -530,7 +530,8 @@ void Mortar::Interface::fill_complete(
     const Teuchos::ParameterList& binning_params,
     std::shared_ptr<Core::IO::OutputControl> output_control,
     const Core::FE::ShapeFunctionType spatial_approximation_type,
-    const bool isFinalParallelDistribution, const int maxdof, const double meanVelocity)
+    const bool isFinalParallelDistribution, const int maxdof,
+    const double mean_displacement_increment)
 {
   TEUCHOS_FUNC_TIME_MONITOR("Mortar::Interface::fill_complete");
 
@@ -572,8 +573,8 @@ void Mortar::Interface::fill_complete(
   // get standard element column map (overlap=1)
   oldelecolmap_ = std::make_shared<Core::LinAlg::Map>(*(discret().element_col_map()));
 
-  extend_interface_ghosting(isFinalParallelDistribution, meanVelocity, binning_params,
-      output_control, spatial_approximation_type);
+  extend_interface_ghosting(isFinalParallelDistribution, mean_displacement_increment,
+      binning_params, output_control, spatial_approximation_type);
 
   // make sure discretization is complete
   discret().fill_complete({
@@ -973,7 +974,7 @@ void Mortar::Interface::initialize_data_container()
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::shared_ptr<Core::Binstrategy::BinningStrategy> Mortar::Interface::setup_binning_strategy(
-    Teuchos::ParameterList binning_params, const double meanVelocity,
+    Teuchos::ParameterList binning_params, const double mean_displacement_increment,
     std::shared_ptr<Core::IO::OutputControl> output_control,
     const Core::FE::ShapeFunctionType spatial_approximation_type)
 {
@@ -1032,13 +1033,9 @@ std::shared_ptr<Core::Binstrategy::BinningStrategy> Mortar::Interface::setup_bin
   double cutoff = -1.0;
   cutoff = Core::Communication::max_all(global_slave_max_edge_size, get_comm());
 
-  // extend cutoff based on problem interface velocity
+  // extend cutoff based on the interface movement during one time step
   // --> only for contact problems
-  if (meanVelocity >= 1e-12)
-  {
-    const double dt = interface_params().get<double>("TIMESTEP");
-    cutoff = cutoff + 2 * dt * meanVelocity;
-  }
+  cutoff += 2.0 * mean_displacement_increment;
 
   // increase XAABB by 2x cutoff radius
   std::stringstream domain_bounding_box_stream;
@@ -1229,14 +1226,14 @@ void Mortar::Interface::redistribute_target_side(std::shared_ptr<Core::LinAlg::M
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Mortar::Interface::update_parallel_layout_and_data_structures(const bool perform_rebalancing,
-    const bool enforce_ghosting_update, const int maxdof, const double meanVelocity)
+    const bool enforce_ghosting_update, const int maxdof, const double mean_displacement_increment)
 {
   FOUR_C_THROW("Not implemented for meshtying.");
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Mortar::Interface::extend_interface_ghosting_safely(const double meanVelocity)
+void Mortar::Interface::extend_interface_ghosting_safely(const double mean_displacement_increment)
 {
   FOUR_C_THROW("Not implemented for meshtying.");
 }
@@ -1244,7 +1241,7 @@ void Mortar::Interface::extend_interface_ghosting_safely(const double meanVeloci
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Mortar::Interface::extend_interface_ghosting(const bool isFinalParallelDistribution,
-    const double meanVelocity, const Teuchos::ParameterList& binning_params,
+    const double mean_displacement_increment, const Teuchos::ParameterList& binning_params,
     std::shared_ptr<Core::IO::OutputControl> output_control,
     const Core::FE::ShapeFunctionType spatial_approximation_type)
 {
@@ -1500,7 +1497,7 @@ void Mortar::Interface::extend_interface_ghosting(const bool isFinalParallelDist
 
       // Create the binning strategy
       std::shared_ptr<Core::Binstrategy::BinningStrategy> binningstrategy = setup_binning_strategy(
-          binning_params, meanVelocity, output_control, spatial_approximation_type);
+          binning_params, mean_displacement_increment, output_control, spatial_approximation_type);
 
       // fill master and slave elements into bins
       std::map<int, std::set<int>> slavebinelemap;

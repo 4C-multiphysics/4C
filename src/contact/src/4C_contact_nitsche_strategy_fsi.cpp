@@ -159,7 +159,7 @@ bool CONTACT::Utils::check_nitsche_contact_state(CONTACT::Interface& contactinte
   double my_pen = pen_n;
   double my_pen_t = 0.0;
   CONTACT::Utils::nitsche_weights_and_scaling(
-      *cele, *other_cele, weighting, 1., w_source, w_target, my_pen, my_pen_t);
+      *cele, *other_cele, weighting, w_source, w_target, my_pen, my_pen_t);
 
   Core::LinAlg::Matrix<3, 1> ele_n;
   cele->compute_unit_normal_at_xi(xsi.data(), ele_n.data());

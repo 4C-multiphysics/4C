@@ -68,11 +68,13 @@ namespace CONTACT
     This method assembles the Thermo-Lagrange-Multiplier line
     in the global system of equations, containing linearizations
     wrt displacements, contact forces, temperatures
+
+    The time step size @p dt enters the frictional dissipation.
     */
     virtual void assemble_lin_conduct(Core::LinAlg::SparseMatrix& linConductDISglobal,
         Core::LinAlg::SparseMatrix& linConductTEMPglobal,
         Core::LinAlg::SparseMatrix& linConductThermoLMglobal,
-        Core::LinAlg::SparseMatrix& linConductContactLMglobal);
+        Core::LinAlg::SparseMatrix& linConductContactLMglobal, double dt);
 
     /*!
     \brief Assemble lumped mass matrix of the dual basis
@@ -100,11 +102,12 @@ namespace CONTACT
       for all \f$j\f$ in @p node_rowmap. \f$X_j\f$ is a (scalar) nodal value
       determined by @p mode. For example, if mode is @ref LinDmXMode::LinDM_Diss, then
       \f$X_j = \mathcal{P}_j\f$ is the nodal frictional dissipation power, see
-      @ref assemble_dm_lin_diss() for the definition.
+      @ref assemble_dm_lin_diss() for the definition. The time step size @p dt is only used
+      for this mode.
       */
     virtual void assemble_lin_dm_x(Core::LinAlg::SparseMatrix* linD_X,
         Core::LinAlg::SparseMatrix* linM_X, const double fac, const LinDmXMode mode,
-        const std::shared_ptr<const Core::LinAlg::Map> node_rowmap);
+        const std::shared_ptr<const Core::LinAlg::Map> node_rowmap, double dt);
 
     /*!
       \brief Assemble \f$\mathbf{D}\f$ and \f$\mathbf{M}\f$ matrices times the linearization of the
@@ -125,9 +128,10 @@ namespace CONTACT
         = \mathbf{t} \cdot \left(\mathbf{I} - \mathbf{n}\otimes\mathbf{n}\right) \cdot
           \frac{\Delta\tilde{\mathbf{u}}}{\Delta t D_{jj}}
       \f]
-      with the traction \f$\mathbf{t} = -\boldsymbol{\lambda}_j\f$, the normal \f$\mathbf{n}\f$
-      and the weighted slip increment (jump) \f$\Delta\tilde{\mathbf{u}}\f$ (no summation over
-      \f$j\f$). Its derivative w.r.t. a displacement dof is
+      with the traction \f$\mathbf{t} = -\boldsymbol{\lambda}_j\f$, the normal \f$\mathbf{n}\f$,
+      the weighted slip increment (jump) \f$\Delta\tilde{\mathbf{u}}\f$ and the time step size
+      \f$\Delta t\f$ = @p dt (no summation over \f$j\f$). Its derivative w.r.t. a displacement dof
+      is
       \f[
         \frac{\mathrm{d}\mathcal{P}_j}{\mathrm{d}u_c}
         = \left[\mathbf{t}_\tau \cdot \frac{\mathrm{d}\Delta\tilde{\mathbf{u}}}{\mathrm{d}u_c}
@@ -144,7 +148,7 @@ namespace CONTACT
       */
     virtual void assemble_dm_lin_diss(Core::LinAlg::SparseMatrix* d_LinDissDISP,
         Core::LinAlg::SparseMatrix* m_LinDissDISP, Core::LinAlg::SparseMatrix* d_LinDissContactLM,
-        Core::LinAlg::SparseMatrix* m_LinDissContactLM, const double fac);
+        Core::LinAlg::SparseMatrix* m_LinDissContactLM, const double fac, double dt);
 
     /*!
       \brief Assemble the linearization of D and M times the temperature

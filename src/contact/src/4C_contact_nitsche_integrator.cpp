@@ -127,7 +127,7 @@ void CONTACT::IntegratorNitsche::gpts_forces(Mortar::Element& source_elem,
     double w_source = 0.;
     double w_target = 0.;
     CONTACT::Utils::nitsche_weights_and_scaling(
-        source_elem, target_elem, nit_wgt_, dt_, w_source, w_target, pen, pet);
+        source_elem, target_elem, nit_wgt_, w_source, w_target, pen, pet);
 
     // variables for friction (declaration only)
     Core::LinAlg::Matrix<dim, 1> t1, t2;
@@ -700,8 +700,8 @@ void CONTACT::IntegratorNitsche::integrate_adjoint_test(const double fac, const 
 }
 
 void CONTACT::Utils::nitsche_weights_and_scaling(Mortar::Element& source_elem,
-    Mortar::Element& target_elem, const CONTACT::NitscheWeighting nit_wgt, const double dt,
-    double& w_source, double& w_target, double& pen, double& pet)
+    Mortar::Element& target_elem, const CONTACT::NitscheWeighting nit_wgt, double& w_source,
+    double& w_target, double& pen, double& pet)
 {
   const double he_source = dynamic_cast<CONTACT::Element&>(source_elem).trace_he();
   const double he_target = dynamic_cast<CONTACT::Element&>(target_elem).trace_he();

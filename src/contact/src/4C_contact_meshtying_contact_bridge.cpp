@@ -169,13 +169,14 @@ void CONTACT::MeshtyingContactBridge::write_restart(
 /*----------------------------------------------------------------------*
  |  Write restart                                            farah 06/14|
  *----------------------------------------------------------------------*/
-void CONTACT::MeshtyingContactBridge::update(std::shared_ptr<Core::LinAlg::Vector<double>> dis)
+void CONTACT::MeshtyingContactBridge::update(
+    std::shared_ptr<Core::LinAlg::Vector<double>> dis, const double dt, const double total_time)
 {
   // contact
-  if (have_contact()) contact_manager()->get_strategy().update(dis);
+  if (have_contact()) contact_manager()->get_strategy().update(dis, dt, total_time);
 
   // meshtying
-  if (have_meshtying()) mt_manager()->get_strategy().update(dis);
+  if (have_meshtying()) mt_manager()->get_strategy().update(dis, dt, total_time);
 }
 
 

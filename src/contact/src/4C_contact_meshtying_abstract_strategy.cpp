@@ -753,7 +753,8 @@ void CONTACT::MtAbstractStrategy::store_dirichlet_status(
 /*----------------------------------------------------------------------*
  | Update meshtying at end of time step                       popp 06/09|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
+void CONTACT::MtAbstractStrategy::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
+    const double dt, const double total_time)
 {
   // store Lagrange multipliers
   // (we need this for interpolation of the next generalized mid-point)

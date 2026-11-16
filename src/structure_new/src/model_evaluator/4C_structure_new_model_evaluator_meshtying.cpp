@@ -97,7 +97,7 @@ void Solid::ModelEvaluator::Meshtying::setup()
   strategy_ptr_->store_dirichlet_status(integrator().get_dbc().get_dbc_map_extractor());
   strategy_ptr_->set_state(Mortar::state_new_displacement, integrator().get_dbc().get_zeros());
   strategy_ptr_->save_reference_state(integrator().get_dbc().get_zeros_ptr());
-  strategy_ptr_->evaluate_reference_state();
+  strategy_ptr_->evaluate_reference_state(global_state().get_delta_time()[0]);
   strategy_ptr_->inttime_init();
   set_time_integration_info(*strategy_ptr_);
   strategy_ptr_->redistribute_meshtying();

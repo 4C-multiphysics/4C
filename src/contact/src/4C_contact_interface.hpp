@@ -724,10 +724,11 @@ namespace CONTACT
     @param perform_rebalancing Flag to enforce rebalancing of interface discretizations
     @param enforce_ghosting_update Flag to enforce an update of the interface ghosting
     @param maxdof Largest GID of underlying solid discretization
-    @param meanVelocity Mean velocity of this interface
+    @param mean_displacement_increment Mean displacement of this interface during one time step
     */
     void update_parallel_layout_and_data_structures(const bool perform_rebalancing,
-        const bool enforce_ghosting_update, const int maxdof, const double meanVelocity) final;
+        const bool enforce_ghosting_update, const int maxdof,
+        const double mean_displacement_increment) final;
 
     /*!
     \brief Redistribute contact interface among all procs
@@ -1545,10 +1546,10 @@ namespace CONTACT
     /*!
     \brief Extend the interface ghosting while guaranteeing sufficient extension
 
-    \note The argument \c meanVelocity is just needed for contact problems that extend the
-    target-sided interface ghosting via binning.
+    \note The argument \c mean_displacement_increment is just needed for contact problems that
+    extend the target-sided interface ghosting via binning.
 
-    @param meanVelocity Mean velocity of this interface
+    @param mean_displacement_increment Mean displacement of this interface during one time step
 
     References
     ==========
@@ -1557,7 +1558,7 @@ namespace CONTACT
     Engineering with Computers, 2023, https://doi.org/10.1007/s00366-022-01779-3
 
     */
-    void extend_interface_ghosting_safely(const double meanVelocity = 0.0) final;
+    void extend_interface_ghosting_safely(const double mean_displacement_increment = 0.0) final;
 
     //! @}
 

@@ -104,12 +104,13 @@ namespace CONTACT
       overloaded to do nothing, since in a coupled problem, we need to be very careful, when
       condensating the Lagrange multipliers.
 
+      The time step size @p dt is used for the frictional dissipation.
      */
     virtual void evaluate(std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
         std::shared_ptr<Core::LinAlg::Vector<double>>& combined_RHS,
         std::shared_ptr<Coupling::Adapter::Coupling> coupST,
         std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> temp);
+        std::shared_ptr<const Core::LinAlg::Vector<double>> temp, double dt);
 
     /*!
     \brief Overload CONTACT::LagrangeStrategy::recover as this is called in the structure
@@ -130,9 +131,12 @@ namespace CONTACT
      \brief Update contact at end of time step
 
      \param dis (in):  current displacements (-> old displacements)
+     \param dt (in):   time step size, used for the frictional dissipation
+     \param total_time (in):  time at the end of the finished step
 
      */
-    void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
+    void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis, double dt,
+        double total_time) override;
 
     /*!
      \brief Set time integration parameter from Thermo time integration

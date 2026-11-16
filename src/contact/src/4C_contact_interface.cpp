@@ -414,7 +414,7 @@ void CONTACT::Interface::add_element(std::shared_ptr<CONTACT::Element> cele)
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void CONTACT::Interface::update_parallel_layout_and_data_structures(const bool perform_rebalancing,
-    const bool enforce_ghosting_update, const int maxdof, const double meanVelocity)
+    const bool enforce_ghosting_update, const int maxdof, const double mean_displacement_increment)
 {
   if (perform_rebalancing)
   {
@@ -428,7 +428,7 @@ void CONTACT::Interface::update_parallel_layout_and_data_structures(const bool p
     if (!filled()) fill_complete_new(false, maxdof);
 
     // Finalize interface maps
-    extend_interface_ghosting_safely(meanVelocity);
+    extend_interface_ghosting_safely(mean_displacement_increment);
     fill_complete_new(true, maxdof);
   }
 
@@ -497,7 +497,7 @@ void CONTACT::Interface::fill_complete_new(const bool isFinalParallelDistributio
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void CONTACT::Interface::extend_interface_ghosting_safely(const double meanVelocity)
+void CONTACT::Interface::extend_interface_ghosting_safely(const double mean_displacement_increment)
 {
   if (discret().node_col_map() == nullptr) FOUR_C_THROW("NodeColMap not set.");
   if (discret().element_col_map() == nullptr) FOUR_C_THROW("ElementColMap not set.");
@@ -657,7 +657,7 @@ void CONTACT::Interface::extend_interface_ghosting_safely(const double meanVeloc
       // Create the binning strategy
       auto binningstrategy =
           setup_binning_strategy(Global::Problem::instance()->binning_strategy_params(),
-              meanVelocity, Global::Problem::instance()->output_control_file(),
+              mean_displacement_increment, Global::Problem::instance()->output_control_file(),
               Global::Problem::instance()->spatial_approximation_type());
 
       // fill target and source elements into bins

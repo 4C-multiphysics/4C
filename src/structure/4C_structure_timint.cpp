@@ -472,7 +472,7 @@ void Solid::TimInt::prepare_contact_meshtying(const Teuchos::ParameterList& sdyn
 
     // FOR CONTACT FORMULATIONS (ONLY ONCE)
     // (1) Evaluate reference state for friction and initialize gap
-    cmtbridge_->contact_manager()->get_strategy().evaluate_reference_state();
+    cmtbridge_->contact_manager()->get_strategy().evaluate_reference_state((*dt_)[0]);
   }
 
   //**********************************************************************
@@ -852,7 +852,7 @@ void Solid::TimInt::prepare_step_contact()
     if (cmtbridge_->have_contact())
     {
       cmtbridge_->get_strategy().inttime_init();
-      cmtbridge_->get_strategy().redistribute_contact((*dis_)(0), (*vel_)(0));
+      cmtbridge_->get_strategy().redistribute_contact((*dis_)(0), (*vel_)(0), (*dt_)[0]);
     }
   }
 }
@@ -1116,7 +1116,7 @@ void Solid::TimInt::update_step_contact_meshtying()
 {
   if (have_contact_meshtying())
   {
-    cmtbridge_->update(disn_);
+    cmtbridge_->update(disn_, (*dt_)[0], timen_);
   }
 }
 

@@ -642,11 +642,12 @@ namespace CONTACT
 
     \param[in] dis Current displacement state
     \param[in] vel Current velocity state
+    \param[in] dt Current time step size
 
     \return TRUE if the interface has been redistributed. Return FALSE otherwise.
     */
     bool redistribute_contact(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vel) override;
+        std::shared_ptr<const Core::LinAlg::Vector<double>> vel, double dt) override;
 
     /** \brief Redistribute all contact interfaces in parallel
      *
@@ -747,7 +748,7 @@ namespace CONTACT
 
      \pre set_state() has been called.
      */
-    void evaluate_reference_state() override;
+    void evaluate_reference_state(double dt) override;
 
     /*! \brief Evaluate matrix of nodal normals
 
@@ -833,9 +834,12 @@ namespace CONTACT
     /*! \brief Update contact at end of time step
 
      \param dis (in):  current displacements (-> old displacements)
+     \param dt (in):   time step size of the finished step
+     \param total_time (in):  time at the end of the finished step
 
      */
-    void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
+    void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis, double dt,
+        double total_time) override;
 
     /*! \brief Reset contact state after a failed trial time step
 
@@ -1361,10 +1365,11 @@ namespace CONTACT
 
     @param[in] displacement
     @param[in] velocity
+    @param[in] dt Current time step size
     @return TRUE if the interface has been redistributed. Return FALSE otherwise.
     */
     bool redistribute_with_safe_ghosting(const Core::LinAlg::Vector<double>& displacement,
-        const Core::LinAlg::Vector<double>& velocity);
+        const Core::LinAlg::Vector<double>& velocity, double dt);
 
     /*!
     \brief Redistribute all contact interfaces in parallel (legacy implementation)
@@ -1387,11 +1392,12 @@ namespace CONTACT
 
     \param[in] dis Current displacement state
     \param[in] vel Current velocity state
+    \param[in] dt Current time step size
 
     \return TRUE if the interface has been redistributed. Return FALSE otherwise.
     */
     bool redistribute_contact_old(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-        const Core::LinAlg::Vector<double>& vel);
+        const Core::LinAlg::Vector<double>& vel, double dt);
 
     //! @}
 

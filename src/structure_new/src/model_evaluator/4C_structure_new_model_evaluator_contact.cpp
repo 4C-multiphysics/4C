@@ -80,10 +80,11 @@ void Solid::ModelEvaluator::Contact::setup()
   strategy_ptr_->store_dirichlet_status(integrator().get_dbc().get_dbc_map_extractor());
   strategy_ptr_->set_state(Mortar::state_new_displacement, integrator().get_dbc().get_zeros());
   strategy_ptr_->save_reference_state(integrator().get_dbc().get_zeros_ptr());
-  strategy_ptr_->evaluate_reference_state();
+  strategy_ptr_->evaluate_reference_state(global_state().get_delta_time()[0]);
   strategy_ptr_->inttime_init();
   set_time_integration_info(*strategy_ptr_);
-  strategy_ptr_->redistribute_contact(global_state().get_dis_n(), global_state().get_vel_n());
+  strategy_ptr_->redistribute_contact(
+      global_state().get_dis_n(), global_state().get_vel_n(), global_state().get_delta_time()[0]);
 
   post_setup(cparams);
 
@@ -364,7 +365,8 @@ void Solid::ModelEvaluator::Contact::update_step_state(const double& timefac_n)
 
   /* Note: DisN() and dis_np() have the same value at this stage, since
    * we call the structural model evaluator always in first place! */
-  strategy_ptr_->update(global_state().get_dis_n());
+  strategy_ptr_->update(
+      global_state().get_dis_n(), global_state().get_delta_time()[0], global_state().get_time_np());
 
   post_update_step_state();
 }
@@ -377,7 +379,8 @@ void Solid::ModelEvaluator::Contact::post_update_step_state()
   strategy_ptr_->inttime_init();
 
   // redistribute contact
-  strategy_ptr_->redistribute_contact(global_state().get_dis_n(), global_state().get_vel_n());
+  strategy_ptr_->redistribute_contact(
+      global_state().get_dis_n(), global_state().get_vel_n(), global_state().get_delta_time()[0]);
 
   // setup the map extractor, since redistribute calls fill_complete
   // on the structural discretization. Though this only changes the

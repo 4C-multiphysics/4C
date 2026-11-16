@@ -1037,7 +1037,8 @@ namespace Mortar
     \param isFinalParallelDistribution (in): Is this the final parallel distribution?
     \param maxdof (in): maximum dof ID in global discretization
                         (if default=0, then no lmdofrowmap is created)
-    \param meanVelocity (in): mean velocity of this interface (for contact with ghosting by binning)
+    \param mean_displacement_increment (in): mean displacement of this interface during one time
+    step (for contact with ghosting by binning)
 
     \return Filled()==true
     */
@@ -1047,7 +1048,7 @@ namespace Mortar
         std::shared_ptr<Core::IO::OutputControl> output_control,
         Core::FE::ShapeFunctionType spatial_approximation_type,
         const bool isFinalParallelDistribution, const int maxdof = 0,
-        const double meanVelocity = 0.0);
+        const double mean_displacement_increment = 0.0);
 
     /*!
     \brief Update the parallel layout, distribution, and related data structures
@@ -1061,10 +1062,11 @@ namespace Mortar
     @param perform_rebalancing Flag to enforce rebalancing of interface discretizations
     @param enforce_ghosting_update Flag to enforce an update of the interface ghosting
     @param maxdof Largest GID of underlying solid discretization
-    @param meanVelocity Mean velocity of this interface
+    @param mean_displacement_increment Mean displacement of this interface during one time step
     */
     virtual void update_parallel_layout_and_data_structures(const bool perform_rebalancing,
-        const bool enforce_ghosting_update, const int maxdof, const double meanVelocity);
+        const bool enforce_ghosting_update, const int maxdof,
+        const double mean_displacement_increment);
 
     /*!
     \brief Redistribute interface among all procs
@@ -1404,15 +1406,16 @@ namespace Mortar
     /*!
     \brief Setup the binning strategy for geometrically motivated extended ghosting
 
-    \note The average velocity is only important, if binning is performed in the deformed
+    \note The mean displacement is only important, if binning is performed in the deformed
     configuration, e.g. as in contact problems. For meshtying, where binning occurs during mortar
-    coupling in the reference configuration, it suffices to set the velocity to 0.0.
+    coupling in the reference configuration, it suffices to set it to 0.0.
 
-    @param[in] meanVelocity Current absolute value of the mean velocity of this interface
+    @param[in] mean_displacement_increment Absolute value of the mean displacement of this interface
+    during one time step
     @return Binning strategy object ready to be used
     */
     std::shared_ptr<Core::Binstrategy::BinningStrategy> setup_binning_strategy(
-        Teuchos::ParameterList binning_params, double meanVelocity,
+        Teuchos::ParameterList binning_params, double mean_displacement_increment,
         std::shared_ptr<Core::IO::OutputControl> output_control,
         Core::FE::ShapeFunctionType spatial_approximation_type);
 
@@ -1581,10 +1584,10 @@ namespace Mortar
     /*!
     \brief Extend the interface ghosting while guaranteeing sufficient extension
 
-    \note The argument \c meanVelocity is just needed for contact problems that extend the
-    master-sided interface ghosting via binning.
+    \note The argument \c mean_displacement_increment is just needed for contact problems that
+    extend the master-sided interface ghosting via binning.
 
-    @param meanVelocity Mean velocity of this interface
+    @param mean_displacement_increment Mean displacement of this interface during one time step
 
     References
     ==========
@@ -1592,7 +1595,7 @@ namespace Mortar
     - M. Mayr, A. Popp: Scalable computational kernels for mortar finite element methods,
     Engineering with Computers, 2023, https://doi.org/10.1007/s00366-022-01779-3
     */
-    virtual void extend_interface_ghosting_safely(const double meanVelocity = 0.0);
+    virtual void extend_interface_ghosting_safely(const double mean_displacement_increment = 0.0);
 
     /*!
     \brief Extend interface ghosting
@@ -1624,10 +1627,11 @@ namespace Mortar
     \post The interface discretization is _NOT_ fill_complete.
 
     \param[in] isFinalParallelDistribution Is this parallel distribution final?
-    \param[in] meanVelocity Mean velocity of this interface (needed for contact with binning)
+    \param[in] mean_displacement_increment Mean displacement of this interface during one time step
+    (needed for contact with binning)
     */
     void extend_interface_ghosting(const bool isFinalParallelDistribution,
-        const double meanVelocity, const Teuchos::ParameterList& binning_params,
+        const double mean_displacement_increment, const Teuchos::ParameterList& binning_params,
         std::shared_ptr<Core::IO::OutputControl> output_control,
         Core::FE::ShapeFunctionType spatial_approximation_type);
 
