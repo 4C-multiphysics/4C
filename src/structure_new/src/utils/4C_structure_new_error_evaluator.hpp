@@ -29,6 +29,7 @@ namespace Solid
 
     struct Results
     {
+      std::optional<double> number_of_degrees_of_freedom;
       std::optional<double> integrated_squared_error_displacements;
       std::optional<double> integrated_squared_gradient_error_displacements;
       std::optional<double> integrated_squared_displacements;

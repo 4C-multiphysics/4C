@@ -42,6 +42,8 @@ void Solid::ErrorEvaluator::write_error(
   Core::IO::RuntimeCsvWriter csv_writer(Core::Communication::my_mpi_rank(discretization.get_comm()),
       *Global::Problem::instance()->output_control_file(), "error_evaluation_analytical_reference");
 
+  if (results.number_of_degrees_of_freedom)
+    csv_writer.register_data_vector("number_of_dofs", 1, csv_precision);
   if (results.integrated_volume)
     csv_writer.register_data_vector("reference_volume", 1, csv_precision);
   if (results.integrated_squared_displacements)
@@ -55,6 +57,8 @@ void Solid::ErrorEvaluator::write_error(
 
   csv_writer.reset_time_and_time_step(0.0, 0);
 
+  if (results.number_of_degrees_of_freedom)
+    csv_writer.append_data_vector("number_of_dofs", {*results.number_of_degrees_of_freedom});
   if (results.integrated_volume)
     csv_writer.append_data_vector("reference_volume", {*results.integrated_volume});
   if (results.integrated_squared_displacements)

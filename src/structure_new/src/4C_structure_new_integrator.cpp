@@ -693,6 +693,7 @@ void Solid::Integrator::post_time_loop()
   if (error_evaluator_parameters_.evaluate_error_analytical)
   {
     Solid::ErrorEvaluator::Results results;
+    results.number_of_degrees_of_freedom = gstate_ptr_->dof_row_map()->num_global_elements();
     model_eval().determine_analytical_error(error_evaluator_parameters_, results);
     Solid::ErrorEvaluator::write_error(results, *global_state().get_discret());
   }
