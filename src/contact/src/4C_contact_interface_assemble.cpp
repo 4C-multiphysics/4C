@@ -1311,17 +1311,22 @@ void CONTACT::Interface::assemble_lin_d(Core::LinAlg::SparseMatrix& lindglobal, 
   // we compute (LinD)_kc = D_jk,c * z_j
   /**********************************************************************/
 
+  // D is lumped for dual linear LM (see Mortar::Interface::assemble_d()), so are its derivatives
+  const bool nonsmooth = interface_params().get<bool>("NONSMOOTH_GEOMETRIES");
+  const bool lagmultlin = (Teuchos::getIntegralValue<Mortar::LagMultQuad>(
+                               interface_params(), "LM_QUAD") == Mortar::lagmult_lin);
+  const bool lumped_d =
+      not nonsmooth and
+      (shapefcn_ == Mortar::shape_dual or shapefcn_ == Mortar::shape_petrovgalerkin) and lagmultlin;
+
   // loop over all LM source nodes (row map)
   for (int j = 0; j < snoderowmap_->num_my_elements(); ++j)
   {
     int gid = snoderowmap_->gid(j);
     Core::Nodes::Node* node = idiscret_->g_node(gid);
     if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
-    Node* cnode = dynamic_cast<Node*>(node);
-    int dim = cnode->num_dof();
-
-    // Mortar matrix D and M derivatives
-    std::map<int, std::map<int, double>>& dderiv = cnode->data().get_deriv_d();
+    auto* cnode = dynamic_cast<CONTACT::Node*>(node);
+    const int ndim = cnode->num_dof();
 
     // current Lagrange multipliers
     double* lm;
@@ -1330,58 +1335,39 @@ void CONTACT::Interface::assemble_lin_d(Core::LinAlg::SparseMatrix& lindglobal, 
     else
       lm = cnode->poro_data().poro_lm();
 
-    // get sizes and iterator start
-    int sourcesize = (int)dderiv.size();
-    std::map<int, std::map<int, double>>::iterator s_curr = dderiv.begin();
-
     /********************************************** LinDMatrix **********/
-    // loop over all DISP source nodes in the DerivD-map of the current LM source node
-    for (int k = 0; k < sourcesize; ++k)
+    // loop over all DISP source nodes k in the DerivD-map of the current LM source node j
+    for (const auto& [k_gid, dderiv_jk] : cnode->data().get_deriv_d())
     {
-      int s_gid = s_curr->first;
-      ++s_curr;
+      Core::Nodes::Node* source_node = idiscret_->g_node(k_gid);
+      if (!source_node) FOUR_C_THROW("Cannot find node with gid %", k_gid);
+      const auto* c_source_node = dynamic_cast<const CONTACT::Node*>(source_node);
 
-      Core::Nodes::Node* source_node = idiscret_->g_node(s_gid);
-      if (!source_node) FOUR_C_THROW("Cannot find node with gid %", s_gid);
-      Node* c_source_node = dynamic_cast<Node*>(source_node);
-
-      // Mortar matrix D derivatives
-      std::map<int, double>& thisdderiv = cnode->data().get_deriv_d()[s_gid];
-      int mapsize = (int)(thisdderiv.size());
-
-      // inner product D_{jk,c} * z_j for index j
-      for (int prodj = 0; prodj < dim; ++prodj)
+      // inner product D_{jk,c} * z_j for each spatial component
+      for (int dim = 0; dim < ndim; ++dim)
       {
-        int row = c_source_node->dofs()[prodj];
-        std::map<int, double>::iterator scolcurr = thisdderiv.begin();
+        const int dof_j = cnode->dofs()[dim];          // LM source node j
+        const int dof_k = c_source_node->dofs()[dim];  // displacement source node k
 
-        // loop over all directional derivative entries
-        for (int c = 0; c < mapsize; ++c)
+        // loop over all directional derivatives D_jk,c
+        for (const auto& [dof_c, dderiv_jk_wrt_c] : dderiv_jk)
         {
-          int col = scolcurr->first;
-          double val = lm[prodj] * (scolcurr->second);
-          ++scolcurr;
+          const double val = lm[dim] * dderiv_jk_wrt_c;
+          if (abs(val) <= 1.0e-12) continue;
 
-          // owner of LM source node can do the assembly, although it actually
-          // might not own the corresponding rows in lindglobal (DISP source node)
-          // (FE_MATRIX automatically takes care of non-local assembly inside!!!)
-          // std::cout << "Assemble LinD: " << row << " " << col << " " << val << std::endl;
-          if (abs(val) > 1.0e-12) lindglobal.fe_assemble(val, row, col);
+          if (lumped_d)
+          {
+            // For lumped D, assemble all contributions into the LM source node row
+            lindglobal.fe_assemble(val, dof_j, dof_c);
+          }
+          else
+          {
+            lindglobal.fe_assemble(val, dof_k, dof_c);
+          }
         }
-
-        // check for completeness of DerivD-Derivatives-iteration
-        if (scolcurr != thisdderiv.end())
-          FOUR_C_THROW("AssembleLinDM: Not all derivative entries of DerivD considered!");
       }
     }
-
-    // check for completeness of DerivD-Source-iteration
-    if (s_curr != dderiv.end())
-      FOUR_C_THROW("AssembleLinDM: Not all DISP source entries of DerivD considered!");
-    /******************************** Finished with LinDMatrix **********/
   }
-
-  return;
 }
 
 

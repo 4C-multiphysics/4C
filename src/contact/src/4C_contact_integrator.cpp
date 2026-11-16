@@ -667,7 +667,8 @@ void CONTACT::Integrator::integrate_deriv_segment_2d(Mortar::Element& source_ele
   if ((shape_fcn() == Mortar::shape_dual || shape_fcn() == Mortar::shape_petrovgalerkin) &&
       (source_elem.shape() == Core::FE::CellType::line3 ||
           source_elem.shape() == Core::FE::CellType::nurbs3 ||
-          source_elem.mo_data().deriv_dual_shape() != nullptr))
+          source_elem.mo_data().deriv_dual_shape() != nullptr) &&
+      lag_mult_quad() != Mortar::lagmult_const)
     source_elem.deriv_shape_dual(dualmap);
 
   // create empty vectors for shape fct. evaluation
@@ -4352,7 +4353,8 @@ void CONTACT::Integrator::integrate_deriv_ele_2d(Mortar::Element& source_elem,
   if ((shape_fcn() == Mortar::shape_dual || shape_fcn() == Mortar::shape_petrovgalerkin) &&
       (source_elem.shape() == Core::FE::CellType::line3 ||
           source_elem.mo_data().deriv_dual_shape() != nullptr ||
-          source_elem.shape() == Core::FE::CellType::nurbs3))
+          source_elem.shape() == Core::FE::CellType::nurbs3) &&
+      lag_mult_quad() != Mortar::lagmult_const)
     source_elem.deriv_shape_dual(dualmap);
 
   // decide whether boundary modification has to be considered or not
@@ -8812,7 +8814,12 @@ void inline CONTACT::Integrator::gp_2d_dm_lin(int& iter, bool& bound, bool& linl
             dynamic_cast<CONTACT::Node*>(mymrtrnode)->data().get_deriv_m()[t_gid];
 
         // (1) Lin(Phi) - dual shape functions
-        // this vanishes here since there are no deformation-dependent dual functions
+        // (the dual coefficients depend on the geometry, cf. gp_3d_dm_quad_lin)
+        for (int m = 0; m < nrow; ++m)
+        {
+          fac = wgt * source_val[m] * target_val[k] * jac;
+          for (const auto& p : dualmap) dmmap_jk[p.first] += fac * (p.second)(iter, m);
+        }
 
         // (2) Lin(NSource) - source GP coordinates
         fac = wgt * lm_deriv(iter, 0) * target_val[k] * jac;
@@ -8850,7 +8857,12 @@ void inline CONTACT::Integrator::gp_2d_dm_lin(int& iter, bool& bound, bool& linl
               dynamic_cast<CONTACT::Node*>(mymrtrnode)->data().get_deriv_m()[s_gid];
 
           // (1) Lin(Phi) - dual shape functions
-          // this vanishes here since there are no deformation-dependent dual functions
+          // (the dual coefficients depend on the geometry, cf. gp_3d_dm_quad_lin)
+          for (int m = 0; m < nrow; ++m)
+          {
+            fac = wgt * source_val[m] * source_val[k] * jac;
+            for (const auto& p : dualmap) dmmap_jk[p.first] -= fac * (p.second)(iter, m);
+          }
 
           // (2) Lin(NSource) - source GP coordinates
           fac = wgt * lm_deriv(iter, 0) * source_val[k] * jac;
@@ -8876,7 +8888,12 @@ void inline CONTACT::Integrator::gp_2d_dm_lin(int& iter, bool& bound, bool& linl
               dynamic_cast<CONTACT::Node*>(mymrtrnode)->data().get_deriv_d()[s_gid];
 
           // (1) Lin(Phi) - dual shape functions
-          // this vanishes here since there are no deformation-dependent dual functions
+          // (the dual coefficients depend on the geometry, cf. gp_3d_dm_quad_lin)
+          for (int m = 0; m < nrow; ++m)
+          {
+            fac = wgt * source_val[m] * source_val[k] * jac;
+            for (const auto& p : dualmap) ddmap_jk[p.first] += fac * (p.second)(iter, m);
+          }
 
           // (2) Lin(NSource) - source GP coordinates
           fac = wgt * lm_deriv(iter, 0) * source_val[k] * jac;
@@ -9334,14 +9351,6 @@ void inline CONTACT::Integrator::gp_3d_dm_quad_lin(bool& duallin, Mortar::Elemen
               for (CIM p = dualmap.begin(); p != dualmap.end(); ++p)
                 for (int m = 0; m < nrow; ++m)
                   dmmap_jk[p->first] -= fac * (p->second)(j, m) * source_val[m];
-
-              for (CIM p = dualmap.begin(); p != dualmap.end(); ++p)
-              {
-                double lmderiv_d = 0.0;
-                for (int m = 0; m < nrow; ++m) lmderiv_d += (p->second)(j, m) * source_val[m];
-                fac = wgt * lmderiv_d * target_val[k] * jac;
-                dmmap_jk[p->first] -= fac;
-              }
             }
 
             // (2) Lin(NSource) - source GP coordinates
@@ -9384,14 +9393,6 @@ void inline CONTACT::Integrator::gp_3d_dm_quad_lin(bool& duallin, Mortar::Elemen
               for (CIM p = dualmap.begin(); p != dualmap.end(); ++p)
                 for (int m = 0; m < nrow; ++m)
                   ddmap_jk[p->first] += fac * (p->second)(j, m) * source_val[m];
-
-              for (CIM p = dualmap.begin(); p != dualmap.end(); ++p)
-              {
-                double lmderiv_d = 0.0;
-                for (int m = 0; m < nrow; ++m) lmderiv_d += (p->second)(j, m) * source_val[m];
-                fac = wgt * lmderiv_d * target_val[k] * jac;
-                ddmap_jk[p->first] += fac;
-              }
             }
 
             // (2) Lin(NSource) - source GP coordinates

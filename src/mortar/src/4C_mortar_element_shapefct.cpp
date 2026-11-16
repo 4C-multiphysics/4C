@@ -4453,24 +4453,16 @@ bool Mortar::Element::deriv_shape_dual(
 
 
 
-  // do trafo
-  Core::Gen::Pairedvector<int, Core::LinAlg::SerialDenseMatrix> dummy(
-      nnodes * nnodes * 3 * 10, 0, Core::LinAlg::SerialDenseMatrix(nnodes, nnodes, true));
-
-  using CIM = Core::Gen::Pairedvector<int, Core::LinAlg::SerialDenseMatrix>::const_iterator;
-  for (CIM p = derivdual.begin(); p != derivdual.end(); ++p)
+  // do trafo: LM values are trafo * (dual coefficients) * N, so derivdual becomes trafo * derivdual
+  for (auto& [dof, deriv_coefficients] : derivdual)
   {
+    Core::LinAlg::SerialDenseMatrix transformed(nnodes, nnodes, true);
     for (int i = 0; i < nnodes; ++i)
-    {
       for (int j = 0; j < nnodes; ++j)
-      {
-        dummy[p->first](i, j) += trafo(i, j) * (p->second)(j, i);
-      }
-    }
+        for (int k = 0; k < nnodes; ++k)
+          transformed(i, j) += trafo(i, k) * deriv_coefficients(k, j);
+    deriv_coefficients = transformed;
   }
-
-  for (CIM p = dummy.begin(); p != dummy.end(); ++p) derivdual[p->first] = p->second;
-
 
   return true;
 }
