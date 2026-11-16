@@ -1148,7 +1148,7 @@ void CONTACT::Interface::create_search_tree()
     {
       // (NOTE THAT SELF CONTACT SEARCH IS NOT YET FULLY PARALLELIZED!)
       binarytreeself_ = std::make_shared<CONTACT::SelfBinaryTree>(discret(), interface_params(),
-          elefullmap, n_dim(), geometric_search_params_ptr_->contact_extension_factor);
+          elefullmap, n_dim(), geometric_search_params_ptr_->bounding_volume_inflation_factor);
     }
     else
     {
@@ -1156,7 +1156,7 @@ void CONTACT::Interface::create_search_tree()
       // implementation
       binarytreeself_ =
           std::make_shared<CONTACT::UnbiasedSelfBinaryTree>(discret(), interface_params(),
-              elefullmap, n_dim(), geometric_search_params_ptr_->contact_extension_factor);
+              elefullmap, n_dim(), geometric_search_params_ptr_->bounding_volume_inflation_factor);
     }
     // initialize the self binary tree
     binarytreeself_->init();

@@ -2657,7 +2657,7 @@ void Mortar::Interface::evaluate_bounding_volume_hierarchy()
       minimum_edge_length > 0.0, "The minimum mortar element edge length must be positive.");
 
   const double extension_factor =
-      geometric_search_params_ptr_->contact_extension_factor * minimum_edge_length;
+      geometric_search_params_ptr_->bounding_volume_inflation_factor * minimum_edge_length;
   std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> source_bounding_volumes;
   source_bounding_volumes.reserve(selecolmap_->num_my_elements());
   std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>> target_bounding_volumes;

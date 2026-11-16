@@ -28,7 +28,6 @@
 #include "4C_contact_wear_input.hpp"
 #include "4C_contact_wear_interface.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_geometric_search_input.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
@@ -671,11 +670,6 @@ bool CONTACT::Manager::read_and_check_input(Teuchos::ParameterList& cparams) con
   const Teuchos::ParameterList& tsic = Global::Problem::instance()->tsi_contact_params();
   const Teuchos::ParameterList& stru = Global::Problem::instance()->structural_dynamic_params();
 
-  const auto& geometric_search_params =
-      std::make_shared<Core::GeometricSearch::GeometricSearchParams>(
-          Core::GeometricSearch::geometric_search_params_factory(
-              Global::Problem::instance()->parameters()));
-
   // read Problem Type and Problem Dimension from Global::Problem
   const Core::ProblemType problemtype = Global::Problem::instance()->get_problem_type();
   Core::FE::ShapeFunctionType distype = Global::Problem::instance()->spatial_approximation_type();
@@ -814,11 +808,6 @@ bool CONTACT::Manager::read_and_check_input(Teuchos::ParameterList& cparams) con
   // *********************************************************************
   // warnings
   // *********************************************************************
-  if (geometric_search_params->contact_extension_factor == 0.0 &&
-      Core::Communication::my_mpi_rank(get_comm()) == 0)
-    std::cout << ("Warning: Contact search called without inflation of bounding volumes\n")
-              << std::endl;
-
   if (Teuchos::getIntegralValue<Wear::WearSide>(wearlist, "WEAR_SIDE") != Wear::wear_source)
     std::cout << ("\n \n Warning: Contact with both-sided wear is still experimental !")
               << std::endl;

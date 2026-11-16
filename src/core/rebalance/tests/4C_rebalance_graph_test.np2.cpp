@@ -123,7 +123,7 @@ namespace
                     Core::GeometricSearch::BeamBoundingVolumeType::centerline_kdop,
                 .radius_extension_factor = 1.0},
         .sphere_radius_extension_factor = 1.0,
-        .contact_extension_factor = 1.0,
+        .bounding_volume_inflation_factor = 1.0,
         .point_tolerance = 1e-4,
         .use_auxiliary_position = true,
         .write_geometric_search_visualization = false,
