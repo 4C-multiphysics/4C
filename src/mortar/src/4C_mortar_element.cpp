@@ -9,12 +9,15 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_contact_nitsche_utils.hpp"
+#include "4C_global_data.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_material_base.hpp"
 #include "4C_mortar_node.hpp"
+#include "4C_mortar_paramsinterface.hpp"
 #include "4C_solid_ele_surface.hpp"
+#include "4C_utils_function.hpp"
 
 #include <memory>
 
@@ -298,8 +301,108 @@ int Mortar::Element::evaluate(Teuchos::ParameterList& params,
     Core::LinAlg::SerialDenseVector& elevec1, Core::LinAlg::SerialDenseVector& elevec2,
     Core::LinAlg::SerialDenseVector& elevec3)
 {
-  FOUR_C_THROW("Mortar::Element::Evaluate not implemented!");
-  return -1;
+  const auto action = params.get<Mortar::ActionType>("action");
+
+  if (action == Mortar::eval_lagrange_multiplier_analytical_error)
+  {
+    FOUR_C_ASSERT_ALWAYS(
+        elevec1.length() == 1, "Expected exactly one scalar for the mortar analytical error.");
+
+    elevec1(0) = 0.0;
+    if (is_source()) elevec1(0) = evaluate_lagrange_multiplier_error_squared(params);
+
+    return 0;
+  }
+
+  FOUR_C_THROW("Unknown mortar element action.");
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+double Mortar::Element::evaluate_lagrange_multiplier_error_squared(
+    const Teuchos::ParameterList& params) const
+{
+  FOUR_C_ASSERT(
+      is_source(), "The Lagrange multiplier error must be evaluated on a source element.");
+
+  const auto* analytical_lagrange_multiplier =
+      params.get<const Core::Utils::FunctionOfSpaceTime*>("analytical_function");
+  const double time = params.get<double>("time");
+  const auto lm_shape_function = params.get<Mortar::ShapeFcn>("lm_shape_function");
+  const auto lm_interpolation = params.get<Mortar::LagMultQuad>("lm_interpolation");
+
+  FOUR_C_ASSERT_ALWAYS(
+      lm_shape_function != Mortar::shape_none && lm_shape_function != Mortar::shape_undefined,
+      "No valid Lagrange multiplier shape function was specified.");
+
+  const int num_nodes = num_node();
+  const int spatial_dimension = n_dim();
+  const int parametric_dimension = spatial_dimension - 1;
+
+  Core::LinAlg::SerialDenseMatrix nodal_lagrange_multiplier(3, num_nodes, true);
+  get_nodal_lag_mult(nodal_lagrange_multiplier);
+  Core::LinAlg::SerialDenseVector lm_shape_values(num_nodes, true);
+  Core::LinAlg::SerialDenseMatrix lm_shape_derivatives(num_nodes, parametric_dimension, true);
+  Mortar::ElementIntegrator integrator(shape());
+
+  double error_squared = 0.0;
+
+  for (int gp = 0; gp < integrator.n_gp(); ++gp)
+  {
+    const std::array<double, 2> xi{integrator.coordinate(gp, 0), integrator.coordinate(gp, 1)};
+    std::array<double, 3> position{};
+    local_to_global(xi.data(), position.data(), 0);
+
+    lm_shape_values.putScalar(0.0);
+    lm_shape_derivatives.putScalar(0.0);
+
+    if (!is_quad() || lm_interpolation == Mortar::lagmult_quad)
+    {
+      evaluate_shape_lag_mult(
+          lm_shape_function, xi.data(), lm_shape_values, lm_shape_derivatives, num_nodes);
+    }
+    else if (lm_interpolation == Mortar::lagmult_lin)
+    {
+      evaluate_shape_lag_mult_lin(
+          lm_shape_function, xi.data(), lm_shape_values, lm_shape_derivatives, num_nodes);
+    }
+    else if (lm_interpolation == Mortar::lagmult_const)
+    {
+      evaluate_shape_lag_mult_const(
+          lm_shape_function, xi.data(), lm_shape_values, lm_shape_derivatives, num_nodes);
+    }
+    else if (lm_interpolation == Mortar::lagmult_pwlin)
+    {
+      FOUR_C_THROW(
+          "L2 error evaluation is not yet implemented for piecewise linear multiplier "
+          "interpolation.");
+    }
+    else
+    {
+      FOUR_C_THROW("Unknown Lagrange multiplier interpolation type.");
+    }
+
+    std::array<double, 3> discrete_lagrange_multiplier{};
+    for (int node = 0; node < num_nodes; ++node)
+      for (int component = 0; component < 3; ++component)
+        discrete_lagrange_multiplier[component] +=
+            lm_shape_values(node) * nodal_lagrange_multiplier(component, node);
+
+    double pointwise_error_squared = 0.0;
+    for (int component = 0; component < spatial_dimension; ++component)
+    {
+      const double analytical_value = analytical_lagrange_multiplier->evaluate(
+          std::span<const double>(position.data(), position.size()), time, component);
+
+      const double difference = discrete_lagrange_multiplier[component] - analytical_value;
+      pointwise_error_squared += difference * difference;
+    }
+
+    const double integration_factor = integrator.weight(gp) * jacobian(xi.data());
+    error_squared += pointwise_error_squared * integration_factor;
+  }
+
+  return error_squared;
 }
 
 /*----------------------------------------------------------------------*

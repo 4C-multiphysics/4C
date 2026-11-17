@@ -711,6 +711,15 @@ void Solid::ModelEvaluatorManager::determine_energy()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluatorManager::determine_analytical_error(
+    const Solid::ErrorEvaluator::Parameters& parameters, Solid::ErrorEvaluator::Results& results)
+{
+  check_init_setup();
+  for (const auto& me_iter : *me_vec_ptr_) me_iter->determine_analytical_error(parameters, results);
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluatorManager::output_step_state(Core::IO::DiscretizationWriter& iowriter) const
 {
   check_init_setup();

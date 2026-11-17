@@ -11,7 +11,8 @@
 #include "4C_config.hpp"
 
 #include "4C_solver_nonlin_nox_enum_lists.hpp"  // enumerators
-#include "4C_structure_new_input.hpp"           // enumerators
+#include "4C_structure_new_error_evaluator.hpp"
+#include "4C_structure_new_input.hpp"  // enumerators
 
 #include <NOX_Abstract_Vector.H>  // enumerators
 
@@ -472,6 +473,9 @@ namespace Solid
 
     //! pointer to the dirichlet boundary condition monitor
     std::shared_ptr<Solid::MonitorDbc> monitor_dbc_ptr_ = nullptr;
+
+    //! error evaluator parameters
+    Solid::ErrorEvaluator::Parameters error_evaluator_parameters_;
   };  // namespace Solid
 }  // namespace Solid
 

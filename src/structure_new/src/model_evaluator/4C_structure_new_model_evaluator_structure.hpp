@@ -144,6 +144,9 @@ namespace Solid
        *                      save the global result. */
       void determine_strain_energy(const Core::LinAlg::Vector<double>& disnp, const bool global);
 
+      void determine_analytical_error(const Solid::ErrorEvaluator::Parameters& parameters,
+          Solid::ErrorEvaluator::Results& results) override;
+
       //! derived
       void reset_step_state() override;
 
@@ -541,9 +544,6 @@ namespace Solid
 
       //! visualization parameters
       Core::IO::VisualizationParameters visualization_params_;
-
-      //! error evaluator parameters
-      ErrorEvaluator::Parameters error_evaluator_parameters_;
 
       std::shared_ptr<Core::IO::DiscretizationVisualizationWriterMesh> vtu_writer_ptr_;
 

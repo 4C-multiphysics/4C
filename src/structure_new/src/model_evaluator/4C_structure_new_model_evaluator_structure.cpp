@@ -136,12 +136,6 @@ void Solid::ModelEvaluator::Structure::setup()
     }
   }
 
-  // setup error evaluator parameters
-  {
-    error_evaluator_parameters_ = ErrorEvaluator::error_evaluator_parameter_factory(
-        Global::Problem::instance()->structural_dynamic_params().sublist("ERROR EVALUATION"));
-  }
-
   // set flag
   issetup_ = true;
 }
@@ -909,23 +903,6 @@ void Solid::ModelEvaluator::Structure::write_output_runtime_structure(
 
   // finalize everything and write all required files to filesystem
   vtu_writer_ptr_->write_to_disk(time, timestep_number);
-}
-
-void Solid::ModelEvaluator::Structure::evaluate_analytical_error()
-{
-  if (error_evaluator_parameters_.evaluate_error_analytical)
-  {
-    // Set vector values needed by elements
-    discret().clear_state();
-    discret().set_state(0, "displacement", *global_state().get_dis_np());
-
-    // Call the error evaluator
-    Teuchos::ParameterList evaluation_parameters;
-    evaluation_parameters.set<std::shared_ptr<Core::Elements::ParamsInterface>>(
-        "interface", eval_data_ptr());
-    ErrorEvaluator::evaluate_error(
-        error_evaluator_parameters_, evaluation_parameters, *discret_ptr());
-  }
 }
 
 /*----------------------------------------------------------------------------*
@@ -1745,6 +1722,38 @@ void Solid::ModelEvaluator::Structure::determine_energy(const Core::LinAlg::Vect
       eval_data().add_contribution_to_energy_type(
           0.5 * kinetic_energy_times2, Solid::kinetic_energy);
     }
+  }
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Structure::determine_analytical_error(
+    const Solid::ErrorEvaluator::Parameters& parameters, Solid::ErrorEvaluator::Results& results)
+{
+  const int function_id = parameters.evaluate_error_analytical_displacement_function_id;
+
+  if (parameters.evaluate_error_analytical && function_id != -1)
+  {
+    discret().clear_state();
+    discret().set_state(0, "displacement", *global_state().get_dis_np());
+
+    Teuchos::ParameterList evaluation_parameters;
+    evaluation_parameters.set<std::shared_ptr<Core::Elements::ParamsInterface>>(
+        "interface", eval_data_ptr());
+
+    eval_data().set_action_type(Core::Elements::struct_calc_analytical_error);
+
+    evaluation_parameters.set("analytical_function_id", function_id);
+
+    Core::LinAlg::SerialDenseVector integrals;
+    integrals.size(4);
+
+    discret().evaluate_scalars(evaluation_parameters, integrals);
+
+    results.integrated_squared_error_displacements = integrals(0);
+    results.integrated_squared_gradient_error_displacements = integrals(1);
+    results.integrated_squared_displacements = integrals(2);
+    results.integrated_volume = integrals(3);
   }
 }
 

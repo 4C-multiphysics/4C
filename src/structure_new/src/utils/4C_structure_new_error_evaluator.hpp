@@ -24,20 +24,22 @@ namespace Solid
     {
       bool evaluate_error_analytical;
       int evaluate_error_analytical_displacement_function_id;
+      int evaluate_error_analytical_lagrange_multiplier_function_id;
+    };
+
+    struct Results
+    {
+      std::optional<double> integrated_squared_error_displacements;
+      std::optional<double> integrated_squared_gradient_error_displacements;
+      std::optional<double> integrated_squared_displacements;
+      std::optional<double> integrated_volume;
+
+      std::optional<double> integrated_squared_error_lagrange_multipliers;
     };
 
     Parameters error_evaluator_parameter_factory(const Teuchos::ParameterList& parameter_list);
 
-    /*! \brief compute L2 and H1 displacement error norm with respect to an analytical solution
-     *
-     *  \param error_evaluator_parameters          error evaluation parameters from input file
-     *  \param discretization_evaluation_parameters        discretization parameter interface
-     *  \param discretization  discretization object
-     *
-     */
-    void evaluate_error(const Parameters& error_evaluator_parameters,
-        Teuchos::ParameterList& discretization_evaluation_parameters,
-        Core::FE::Discretization& discretization);
+    void write_error(const Results& results, Core::FE::Discretization& discretization);
 
   }  // namespace ErrorEvaluator
 }  // namespace Solid

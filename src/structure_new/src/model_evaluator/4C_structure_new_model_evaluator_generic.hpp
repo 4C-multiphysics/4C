@@ -71,6 +71,12 @@ namespace Solid
     class Base;
   }  // namespace TimeInt
 
+  namespace ErrorEvaluator
+  {
+    struct Parameters;
+    struct Results;
+  }  // namespace ErrorEvaluator
+
   namespace ModelEvaluator
   {
     class Data;
@@ -370,6 +376,10 @@ namespace Solid
        *
        *  */
       virtual void determine_energy() = 0;
+
+
+      virtual void determine_analytical_error(const Solid::ErrorEvaluator::Parameters& parameters,
+          Solid::ErrorEvaluator::Results& results) {};
 
       /*! \brief Output routine for model evaluator
        *
