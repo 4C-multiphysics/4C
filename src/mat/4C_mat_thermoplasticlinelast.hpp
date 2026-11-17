@@ -21,8 +21,6 @@
 #include "4C_mat_trait_thermo_solid.hpp"
 #include "4C_material_parameter_base.hpp"
 
-#include <boost/range/empty.hpp>
-
 FOUR_C_NAMESPACE_OPEN
 
 namespace Mat

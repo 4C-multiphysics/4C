@@ -19,8 +19,6 @@
 #include "4C_linalg_utils_densematrix_eigen.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <boost/fusion/view/joint_view/detail/deref_impl.hpp>
-
 #include <iterator>
 #include <map>
 #include <string>
