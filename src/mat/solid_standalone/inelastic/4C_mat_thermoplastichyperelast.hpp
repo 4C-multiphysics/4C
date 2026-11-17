@@ -210,41 +210,6 @@ namespace Mat
     //! are reset
     double accumulated_strain(int gp) const { return (accplstrainlast_->at(gp)); }
 
-    //! mechanical dissipation
-    double mech_diss(int gp) const { return (mechdiss_->at(gp)); }
-
-    //! linearisation of Dmech w.r.t. temperatures T_{n+1}
-    //! contribution to K_TT
-    double mech_diss_k_tt(int gp) const { return (mechdiss_k_tt_->at(gp)); }
-
-    //! linearisation of the mechanical dissipation w.r.t. displacements d_{n+1}
-    //! contribution to K_Td
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> mech_diss_k_td(int gp) const
-    {
-      return (mechdiss_k_td_->at(gp));
-    }
-
-    //! thermoplastic heating
-    double thermo_plast_heating(int gp) const { return (thrplheat_->at(gp)); }
-
-    //! linearisation of thermoplastic heating w.r.t. temperatures T_{n+1}
-    //! contribution to K_TT
-    double thermo_plast_heating_k_tt(int gp) const { return (thrplheat_k_tt_->at(gp)); }
-
-    //! linearisation of thermoplastic heating w.r.t. temperatures T_{n+1}
-    //! contribution to K_Td
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> thermo_plast_heating_k_td(int gp) const
-    {
-      return (thrplheat_k_td_->at(gp));
-    }
-
-    //! linearisation of material tangent w.r.t. temperatures T_{n+1}
-    //! contribution to K_dT
-    Core::LinAlg::SymmetricTensor<double, 3, 3> c_mat_kd_t(int gp) const
-    {
-      return (cmat_kd_t_->at(gp));
-    }
-
     //! check if history variables are already initialised
     bool initialized() const { return (isinit_ and (defgrdcurr_ != nullptr)); }
 
@@ -344,6 +309,10 @@ namespace Mat
     [[nodiscard]] StressTemperatureModulus evaluate_stress_temperature_modulus(double temperature,
         const DeformationState& deformation_state, const EvaluationContext<3>& context, int gp,
         int eleGID) override;
+
+    [[nodiscard]] AdditionalHeatSource evaluate_additional_heat_source(const double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context,
+        const int gp, const int eleGID) override;
 
    private:
     //! my material parameters
