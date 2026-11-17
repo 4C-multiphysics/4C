@@ -16,7 +16,6 @@
 #include "4C_fem_nurbs_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
-#include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
@@ -626,7 +625,7 @@ void Discret::Elements::TemperImpl<distype>::evaluate_tang_capa_fint(
   if ((kintype == Solid::KinemType::linear))
   {
     // purely thermal contributions
-    linear_thermo_contribution(ele, time, etang,
+    linear_thermo_contribution(ele, etang,
         ecapa,     // capa matric
         ecapalin,  // capa linearization
         efint);
@@ -734,7 +733,6 @@ void Discret::Elements::TemperImpl<distype>::evaluate_fext(
 template <Core::FE::CellType distype>
 void Discret::Elements::TemperImpl<distype>::linear_thermo_contribution(
     const Core::Elements::Element* ele,  // the element whose matrix is calculated
-    const double time,                   // current time
     Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>*
         econd,  // conductivity matrix
     Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>* ecapa,  // capacity matrix
@@ -1947,82 +1945,6 @@ void Discret::Elements::TemperImpl<distype>::integrate_shape_functions(
 
 }  // TemperImpl<distype>::integrate_shape_function
 
-
-template <Core::FE::CellType distype>
-void Discret::Elements::TemperImpl<distype>::extrapolate_from_gauss_points_to_nodes(
-    const Core::Elements::Element* ele,  // the element whose matrix is calculated
-    const Core::LinAlg::Matrix<nquad_, nsd_>& gpheatflux,
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>& efluxx,
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>& efluxy,
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>& efluxz)
-{
-  // this quick'n'dirty hack functions only for elements which has the same
-  // number of gauss points AND same number of nodes
-  if (not((distype == Core::FE::CellType::hex8) or (distype == Core::FE::CellType::hex27) or
-          (distype == Core::FE::CellType::tet4) or (distype == Core::FE::CellType::quad4) or
-          (distype == Core::FE::CellType::line2)))
-    FOUR_C_THROW("Sorry, not implemented for element shape");
-
-  // another check
-  if (nen_ * numdofpernode_ != nquad_)
-    FOUR_C_THROW("Works only if number of gauss points and nodes match");
-
-  // integrations points and weights
-  Core::FE::IntPointsAndWeights<nsd_> intpoints(Thermo::DisTypeToOptGaussRule<distype>::rule);
-  if (intpoints.ip().nquad != nquad_) FOUR_C_THROW("Trouble with number of Gauss points");
-
-  // build matrix of shape functions at Gauss points
-  Core::LinAlg::Matrix<nquad_, nquad_> shpfctatgps;
-  for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
-  {
-    // coordinates of the current integration point
-    const double* gpcoord = (intpoints.ip().qxg)[iquad];
-    for (int idim = 0; idim < nsd_; idim++) xsi_(idim) = gpcoord[idim];
-
-    // shape functions and their first derivatives
-    Core::FE::shape_function<distype>(xsi_, funct_);
-
-    for (int inode = 0; inode < nen_; ++inode) shpfctatgps(iquad, inode) = funct_(inode);
-  }
-
-  // extrapolation
-  Core::LinAlg::Matrix<nquad_, nsd_> ndheatflux;  //  objective nodal heatflux
-  Core::LinAlg::Matrix<nquad_, nsd_> gpheatflux2(
-      gpheatflux);  // copy the heatflux at the Gauss point
-  {
-    Core::LinAlg::FixedSizeSerialDenseSolver<nquad_, nquad_, nsd_> solver;  // must be quadratic
-    solver.set_matrix(shpfctatgps);
-    solver.set_vectors(ndheatflux, gpheatflux2);
-    solver.solve();
-  }
-
-  // copy into component vectors
-  for (int idof = 0; idof < nen_ * numdofpernode_; ++idof)
-  {
-    efluxx(idof) = ndheatflux(idof, 0);
-    if (nsd_ > 1) efluxy(idof) = ndheatflux(idof, 1);
-    if (nsd_ > 2) efluxz(idof) = ndheatflux(idof, 2);
-  }
-}
-
-template <Core::FE::CellType distype>
-double Discret::Elements::TemperImpl<distype>::calculate_char_ele_length() const
-{
-  // volume of the element (2D: element surface area; 1D: element length)
-  // (Integration of f(x) = 1 gives exactly the volume/surface/length of element)
-  const double vol = fac_;
-
-  // as shown in calc_char_ele_length() in ScaTraImpl
-  // c) cubic/square root of element volume/area or element length (3-/2-/1-D)
-  // cast dimension to a double variable -> pow()
-
-  // get characteristic element length as cubic root of element volume
-  // (2D: square root of element area, 1D: element length)
-  // h = vol^(1/dim)
-  double h = std::pow(vol, (1.0 / nsd_));
-
-  return h;
-}
 
 
 template <Core::FE::CellType distype>
