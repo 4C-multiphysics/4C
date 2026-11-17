@@ -33,6 +33,9 @@ Makefile
 CMakeUserPresets.json
 compile_commands.json
 
+# Checkout-local Spack environment
+.spack/
+
 # SVN
 .svn
 
