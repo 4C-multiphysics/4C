@@ -261,32 +261,6 @@ namespace Discret
 
       /// @}
 
-      //! @name finite strain thermoplasticity solved with TSI
-      //! @{
-
-      //! calculate internal dissipation arising when a thermo-elasto-plastic
-      //! material is used within geometrically nonlinear analysis
-      //! Clausius-Duhem inequality is no longer = 0, but > 0:
-      //! mechanical energy dissipates as heat
-      void nonlinear_dissipation_fint_tang(
-          const Core::Elements::Element* ele,  //!< the element whose matrix is calculated
-          const std::vector<double>& disp,     //!< current displacements
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>*
-              econd,                                              //!< conductivity matrix
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>* efint,  //!< internal force
-          Teuchos::ParameterList& params);
-
-      //! calculate terms of dissipation for thermo-mechanical system matrix k_Td
-      //! used in case of plastic material within geometrically nonlinear analysis
-      void nonlinear_dissipation_coupled_tang(
-          const Core::Elements::Element* ele,  //!< the element whose matrix is calculated
-          const std::vector<double>& disp,     //!< current displacements
-          const std::vector<double>& vel,      //!< current velocities
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, nsd_ * nen_ * numdofpernode_>*
-              etangcoupl,  //!< k_Td
-          Teuchos::ParameterList& params);
-
-      /// @}
 
       //! get the body force
       virtual void radiation(
@@ -428,8 +402,6 @@ namespace Discret
       //! @name material related stuff
       //! @{
 
-      //! flag plastic material is used
-      bool plasticmat_;
 
       //! nurbs specific: element knots
       std::vector<Core::LinAlg::SerialDenseVector> myknots_;

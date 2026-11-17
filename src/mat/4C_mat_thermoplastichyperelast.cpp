@@ -362,6 +362,27 @@ Mat::StressTemperatureModulus Mat::ThermoPlasticHyperElast::evaluate_stress_temp
   return stress_temperature_modulus;
 }
 
+Mat::AdditionalHeatSource Mat::ThermoPlasticHyperElast::evaluate_additional_heat_source(
+    const double temperature, const DeformationState& deformation_state,
+    const EvaluationContext<3>& context, const int gp, const int eleGID)
+{
+  FOUR_C_ASSERT_ALWAYS(context.time_step_size != nullptr, "Time-step size is required.");
+  const double dt = *context.time_step_size;
+
+  AdditionalHeatSource source;
+  source.value = 1.0 / dt * (temperature * thrplheat_->at(gp) + mechdiss_->at(gp));
+  source.derivative_wrt_temperature =
+      1.0 / dt *
+      (thrplheat_->at(gp) + temperature * thrplheat_k_tt_->at(gp) + mechdiss_k_tt_->at(gp));
+  source.derivative_wrt_strain =
+      1.0 / dt *
+      (temperature * Core::LinAlg::make_symmetric_tensor_from_stress_like_voigt_matrix(
+                         thrplheat_k_td_->at(gp)) +
+          Core::LinAlg::make_symmetric_tensor_from_stress_like_voigt_matrix(
+              mechdiss_k_td_->at(gp)));
+  return source;
+}
+
 /*----------------------------------------------------------------------*
  |  Evaluates the added derivatives of the stress w.r.t. all scalars    |
  *----------------------------------------------------------------------*/
@@ -789,7 +810,7 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
       // --------------------------------------------------------- D_mech
       // D_mech = tau . [-1/2  Lie(b_e)] . b_e^{-1} - kappa . alpha'
       //        = sqrt(2/3) . sigma_y0(T_{n+1}) . Dgamma/Dt
-      // be aware: multiplication with Dt is done in thermo element
+      // be aware: division by Dt is done in evaluate_additional_heat_source()
       double mechdiss = sqrt(2.0 / 3.0) * Dgamma * sigma_y0_temp;
       mechdiss_->at(gp) = mechdiss;
 
@@ -829,8 +850,8 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
       // thrplheat_ = dkappa/dT . sqrt(2/3) . Dgamma
       thrplheat_->at(gp) = dkappa_dT * sqrt(2.0 / 3.0) * Dgamma;
       // H_p = T . thrplheat_ . 1/Dt
-      // be aware: multiplication with 1/Dt and (T = N_T . T) is done in thermo
-      //           element
+      // be aware: multiplication with 1/Dt and T is done in
+      //           evaluate_additional_heat_source()
 
       // ----------------------------------------------- dH_p/dT for k_TT
 
@@ -840,7 +861,7 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
       //                        + dkappa/dT . dastrain^p'/dT ]
       //
       //       = [ thrplheat_ . 1/Dt + T . thrplheat_kTT_ . 1/Dt ] . N_T
-      // be aware: multiplication with 1/Dt and T is done in thermo element
+      // be aware: multiplication with 1/Dt and T is done in evaluate_additional_heat_source()
       thrplheat_k_tt_->at(gp) =
           ddkappa_dTT * sqrt(2.0 / 3.0) * Dgamma + dkappa_dT * sqrt(2.0 / 3.0) * dDgamma_dT;
 
@@ -856,7 +877,8 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
       //
       // dH_p/dE = [ dkappa_dTdastrain . (2/3) . dDgamma + dkappa/dT. sqrt{2/3} ]
       //           . 1/Dt . dDgamma/dE
-      // be aware: multiplication with 1/Dt and dE/dd is done in thermo element
+      // be aware: multiplication with 1/Dt is done in evaluate_additional_heat_source() and with
+      //           dE/dd in the thermo element
       double fac_thrpl_kTd = dkappa_dTdastrain * (2.0 / 3.0) * Dgamma + dkappa_dT * sqrt(2.0 / 3.0);
       Core::LinAlg::Matrix<3, 3> thrplheat_kTd_matrix(Core::LinAlg::Initialization::uninitialized);
       thrplheat_kTd_matrix.update(fac_thrpl_kTd, dDgamma_dg);
@@ -1235,7 +1257,7 @@ bool Mat::ThermoPlasticHyperElast::vis_data(
   {
     if ((int)data.size() != 1) FOUR_C_THROW("size mismatch");
     double temp = 0.0;
-    for (int iter = 0; iter < numgp; iter++) temp += mech_diss(iter);
+    for (int iter = 0; iter < numgp; iter++) temp += mechdiss_->at(iter);
     data[0] = temp / numgp;
   }
 
@@ -1244,7 +1266,7 @@ bool Mat::ThermoPlasticHyperElast::vis_data(
   {
     if ((int)data.size() != 1) FOUR_C_THROW("size mismatch");
     double temp = 0.0;
-    for (int iter = 0; iter < numgp; iter++) temp += thermo_plast_heating(iter);
+    for (int iter = 0; iter < numgp; iter++) temp += thrplheat_->at(iter);
     data[0] = temp / numgp;
   }
 
