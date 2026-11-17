@@ -43,6 +43,7 @@ namespace CONTACT
   {
     vague,      ///< no solving strategy defined
     lagmult,    ///< method of Lagrange multipliers
+    augmented,  ///< augmented Lagrange approach
     penalty,    ///< penalty approach
     uzawa,      ///< Uzawa augmented Lagrange approach
     nitsche,    ///< Nitsche contact solution method
@@ -58,6 +59,8 @@ namespace CONTACT
         return "CONTACT::SolvingStrategy::vague";
       case SolvingStrategy::lagmult:
         return "CONTACT::SolvingStrategy::lagmult";
+      case SolvingStrategy::augmented:
+        return "CONTACT::SolvingStrategy::augmented";
       case SolvingStrategy::penalty:
         return "CONTACT::SolvingStrategy::penalty";
       case SolvingStrategy::uzawa:

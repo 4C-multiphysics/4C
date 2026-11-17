@@ -11,6 +11,7 @@
 #include "4C_contact_abstract_strategy.hpp"
 #include "4C_contact_input.hpp"
 #include "4C_contact_meshtying_abstract_strategy.hpp"
+#include "4C_contact_meshtying_augmented_lagrange_strategy.hpp"
 #include "4C_contact_meshtying_lagrange_strategy.hpp"
 #include "4C_contact_meshtying_penalty_strategy.hpp"
 #include "4C_contact_utils.hpp"
@@ -608,9 +609,16 @@ std::shared_ptr<CONTACT::MtAbstractStrategy> Mortar::STRATEGY::FactoryMT::build_
     strategy_ptr = std::make_shared<CONTACT::MtLagrangeStrategy>(
         dof_row_map, node_row_map, params, interfaces, dim, comm_ptr, dummy, dof_offset);
   }
+  else if (stype == CONTACT::SolvingStrategy::augmented)
+  {
+    strategy_ptr = std::make_shared<CONTACT::MtAugmentedLagrangeStrategy>(
+        dof_row_map, node_row_map, params, interfaces, dim, comm_ptr, dummy, dof_offset);
+  }
   else if (stype == CONTACT::SolvingStrategy::penalty or stype == CONTACT::SolvingStrategy::uzawa)
+  {
     strategy_ptr = std::make_shared<CONTACT::MtPenaltyStrategy>(
         dof_row_map, node_row_map, params, interfaces, dim, comm_ptr, dummy, dof_offset);
+  }
   else
     FOUR_C_THROW("Unrecognized strategy");
 
