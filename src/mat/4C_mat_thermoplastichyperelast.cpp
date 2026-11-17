@@ -344,25 +344,22 @@ void Mat::ThermoPlasticHyperElast::update()
   }
 }  // update()
 
-/*----------------------------------------------------------------------*
- | calculate stress-temperature modulus and thermal derivative          |
- |   for coupled thermomechanics                                        |
- *----------------------------------------------------------------------*/
-void Mat::ThermoPlasticHyperElast::stress_temperature_modulus_and_deriv(
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp)
+Mat::StressTemperatureModulus Mat::ThermoPlasticHyperElast::evaluate_stress_temperature_modulus(
+    double temperature, const DeformationState& deformation_state,
+    const EvaluationContext<3>& context, int gp, int eleGID)
 {
-  const auto& defgrad = (*defgrdcurr_)[gp];
+  const Core::LinAlg::Tensor<double, 3, 3>& defgrad = deformation_state.defgrad();
+  const auto inverse_cauchy_green =
+      Core::LinAlg::inv(Core::LinAlg::assume_symmetry(Core::LinAlg::transpose(defgrad) * defgrad));
+  const double jacobian = Core::LinAlg::det(defgrad);
 
-  // inverse of right Cauchy-Green tensor = F^{-1} . F^{-T}
-  Core::LinAlg::SymmetricTensor<double, 3, 3> cauchygreen =
-      Core::LinAlg::assume_symmetry(Core::LinAlg::transpose(defgrad) * defgrad);
-  Core::LinAlg::SymmetricTensor<double, 3, 3> Cinv = Core::LinAlg::inv(cauchygreen);
+  StressTemperatureModulus stress_temperature_modulus;
+  setup_cthermo(stress_temperature_modulus.value, jacobian, inverse_cauchy_green);
+  setup_cmat_thermo(
+      stress_temperature_modulus.derivative_wrt_strain, jacobian, inverse_cauchy_green);
 
-  setup_cthermo(stm, Core::LinAlg::det(defgrad), Cinv);
-
-  // the stress-temperature modulus does not depend on the temperature
-  stm_dT = {};
+  // derivative wrt to temperature is zero.
+  return stress_temperature_modulus;
 }
 
 /*----------------------------------------------------------------------*
@@ -387,8 +384,6 @@ Mat::ThermoPlasticHyperElast::evaluate_d_stress_d_scalar(
     }
   }();
 
-  reinit(temperature, gp);  // fixme call this before
-
   // inverse of right Cauchy-Green tensor = F^{-1} . F^{-T}
   Core::LinAlg::SymmetricTensor<double, 3, 3> cauchygreen =
       Core::LinAlg::assume_symmetry(Core::LinAlg::transpose(defgrad) * defgrad);
@@ -397,9 +392,9 @@ Mat::ThermoPlasticHyperElast::evaluate_d_stress_d_scalar(
   // get the temperature-dependent mechanical material tangent
   Core::LinAlg::SymmetricTensor<double, 3, 3> dS_dT{};
   Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3> cmat_T;
-  setup_cmat_thermo(current_temperature_, cmat_T, defgrad);
+  setup_cmat_thermo(cmat_T, Core::LinAlg::det(defgrad), Cinv);
   // evaluate mechanical stress part
-  dS_dT = Core::LinAlg::ddot(cmat_T, glstrain);
+  dS_dT = (temperature - params_->inittemp_) * Core::LinAlg::ddot(cmat_T, glstrain);
 
   // get the temperature-dependent material tangent
   Core::LinAlg::SymmetricTensor<double, 3, 3> ctemp{};
@@ -1152,45 +1147,13 @@ void Mat::ThermoPlasticHyperElast::calculate_current_bebar(
 }  // calculate_current_bebar()
 
 
-/*----------------------------------------------------------------------*
- | computes temperature-dependent isotropic                  dano 09/13 |
- | elasticity tensor in matrix notion for 3d, second(!) order tensor    |
- *----------------------------------------------------------------------*/
-void Mat::ThermoPlasticHyperElast::setup_cmat_thermo(const double temperature,
-    Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat_T,
-    const Core::LinAlg::Tensor<double, 3, 3>& defgrd) const
+void Mat::ThermoPlasticHyperElast::setup_cmat_thermo(
+    Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat_T, const double J,
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv) const
 {
-  // temperature-dependent material tangent
-  // cmat_T = cmat_vol,dT = dstresstemp/dE = 2 dstresstemp/dC
-  //        = (T - T_0) . m_0/2.0 . (J - 1/J) (C^{-1} \otimes C^{-1}) -
-  //          - (T - T_0) . m_0 . (J + 1/J) ( Cinv boeppel Cinv )
-
-  // calculate the temperature difference
-  // Delta T = T - T_0
-  const double deltaT = temperature - (params_->inittemp_);
-
-  // get stress-temperature modulus
-  double m_0 = st_modulus();
-  // get Jacobi
-  double J = Core::LinAlg::det(defgrd);
-  // calculate the right Cauchy Green (RCG) deformation tensor and its inverse
-  Core::LinAlg::SymmetricTensor<double, 3, 3> RCG =
-      Core::LinAlg::assume_symmetry(Core::LinAlg::transpose(defgrd) * defgrd);
-  Core::LinAlg::SymmetricTensor<double, 3, 3> invRCG = Core::LinAlg::inv(RCG);
-
-  // clear the material tangent
-  Core::LinAlg::Matrix<6, 6> cmat_view = Core::LinAlg::make_stress_like_voigt_view(cmat_T);
-  const Core::LinAlg::Matrix<3, 3> invRCG_mat =
-      Core::LinAlg::make_matrix(Core::LinAlg::get_full(invRCG));
-  cmat_view.clear();
-
-  // cmat_T = 2 . dS_vol,dT/dd
-  //        = (T - T_0) . m_0/2 . (J - 1/J) (C^{-1} \otimes C^{-1})
-  //          - (T - T_0) . m_0 . (J + 1/J) ( Cinv boeppel Cinv )
-  Core::LinAlg::FourTensorOperations::add_elasticity_tensor_product(
-      cmat_view, (deltaT * m_0 / 2.0 * (J - 1 / J)), invRCG_mat, invRCG_mat, 1.0);
-  Core::LinAlg::FourTensorOperations::add_kronecker_tensor_product(
-      cmat_view, (-deltaT * m_0 * (J + 1 / J)), invRCG_mat, invRCG_mat, 1.0);
+  const double m_0 = st_modulus();
+  cmat_T = m_0 / 2.0 * (J - 1.0 / J) * Core::LinAlg::dyadic(Cinv, Cinv) -
+           m_0 * (J + 1.0 / J) * Core::LinAlg::FourTensorOperations::holzapfel_product(Cinv);
 
 
 }  // SetupCmatThermo()
@@ -1397,11 +1360,6 @@ void Mat::ThermoPlasticHyperElast::fd_check(
   }  // loop strains
 
 }  // fd_check()
-
-void Mat::ThermoPlasticHyperElast::reinit(double temperature, unsigned gp)
-{
-  current_temperature_ = temperature;
-}
 
 /*----------------------------------------------------------------------*/
 

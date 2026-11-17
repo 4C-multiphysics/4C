@@ -194,9 +194,6 @@ namespace Mat
     //! initial, reference temperature
     virtual double init_temp() const { return params_->inittemp_; }
 
-    void stress_temperature_modulus_and_deriv(Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-        Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp) override;
-
     Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_d_stress_d_scalar(
         const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
@@ -299,19 +296,35 @@ namespace Mat
         int gp                                  //!< current Gauss-point
     );
 
-    //! computes temperature-dependent isotropic thermal elasticity tensor in
-    //! matrix notion for 3d
+    /*!
+     * @brief Compute the stress-temperature modulus
+     * \f[
+     *   \frac{\partial \mathbf{S}}{\partial T} = \frac{m_0}{2} \left(J + \frac{1}{J}\right)
+     *   \mathbf{C}^{-1}
+     * \f]
+     * with \f$J=\det(\mathbf{F})\f$ and the constant \f$m_0\f$ from \ref st_modulus().
+     */
     void setup_cthermo(Core::LinAlg::SymmetricTensor<double, 3, 3>&
                            ctemp,  //!< temperature dependent material tangent
         const double J,            //!< determinant of deformation gradient
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv  //!< inverse of Cauchy-Green tensor
     ) const;
 
-    //! computes temperature-dependent isotropic mechanical elasticity tensor in
-    //! matrix notion for 3d
-    void setup_cmat_thermo(const double temperature,
-        Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat_T,
-        const Core::LinAlg::Tensor<double, 3, 3>& defgrd) const;
+    /*!
+     * @brief Compute the derivative of the stress-temperature modulus (see setup_cthermo())
+     * w.r.t. the Green-Lagrange strain. With \f$\mathrm{d}J / \mathrm{d}\mathbf{E} = J
+     * \mathbf{C}^{-1}\f$ and \f$\mathrm{d}\mathbf{C}^{-1} / \mathrm{d}\mathbf{E} = -2
+     * \mathbf{C}^{-1} \odot \mathbf{C}^{-1}\f$, the product rule gives
+     * \f[
+     *   \frac{\mathrm{d}}{\mathrm{d} \mathbf{E}} \frac{\partial \mathbf{S}}{\partial T}
+     *     = \frac{m_0}{2} \left(J - \frac{1}{J}\right) \mathbf{C}^{-1} \otimes \mathbf{C}^{-1}
+     *       - m_0 \left(J + \frac{1}{J}\right) \mathbf{C}^{-1} \odot \mathbf{C}^{-1}
+     * \f]
+     */
+    void setup_cmat_thermo(Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat_T,
+        const double J,  //!< determinant of deformation gradient
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv  //!< inverse of Cauchy-Green tensor
+    ) const;
 
     //! calculates stress-temperature modulus
     double st_modulus() const;
@@ -328,14 +341,13 @@ namespace Mat
 
     //@}
 
-    void reinit(double temperature, unsigned gp) override;
+    [[nodiscard]] StressTemperatureModulus evaluate_stress_temperature_modulus(double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context, int gp,
+        int eleGID) override;
 
    private:
     //! my material parameters
     Mat::PAR::ThermoPlasticHyperElast* params_;
-
-    //! current temperature (set by Reinit())
-    double current_temperature_{};
 
     //! @name Internal / history variables
 
