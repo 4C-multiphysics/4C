@@ -23,7 +23,6 @@
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_mat_thermoplastichyperelast.hpp"
-#include "4C_mat_thermoplasticlinelast.hpp"
 #include "4C_mat_trait_thermo.hpp"
 #include "4C_mat_trait_thermo_solid.hpp"
 #include "4C_structure_new_input.hpp"
@@ -204,9 +203,7 @@ int Discret::Elements::TemperImpl<distype>::evaluate(
     // call ThermoStVenantKirchhoff material and get the temperature dependent
     // tangent ctemp
     plasticmat_ = false;
-    if ((structmat->material_type() == Core::Materials::m_thermopllinelast) or
-        (structmat->material_type() == Core::Materials::m_thermoplhyperelast))
-      plasticmat_ = true;
+    if (structmat->material_type() == Core::Materials::m_thermoplhyperelast) plasticmat_ = true;
   }  // (la.Size > 1)
 
   //============================================================================
@@ -655,10 +652,6 @@ void Discret::Elements::TemperImpl<distype>::evaluate_tang_capa_fint(
         linear_disp_contribution(ele, time, mydisp, myvel, etang, efint, params);
       else
         FOUR_C_THROW("TSI is only implemented in 3D.");
-
-      // if structural material is plastic --> calculate the mechanical dissipation terms
-      // A_k * a_k - (d^2 psi / dT da_k) * a_k'
-      if (plasticmat_) linear_dissipation_fint(ele, efint, params);
     }
   }  // TSI: (kintype_ == Solid::KinemType::linear)
 
@@ -703,11 +696,6 @@ void Discret::Elements::TemperImpl<distype>::evaluate_coupled_tang(
       if (kintype == Solid::KinemType::linear)
       {
         linear_coupled_tang(ele, mydisp, myvel, etangcoupl, params);
-
-        // calculate Dmech_d
-        if (plasticmat_) linear_dissipation_coupled_tang(ele, etangcoupl, params);
-        // --> be careful: so far only implicit Euler for time integration
-        //                 of the evolution equation available!!!
       }  // TSI: (kintype_ == Solid::KinemType::linear)
 
       // geometrically nonlinear TSI problem
@@ -1561,240 +1549,6 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
   {
     etangcoupl->scale(timefac);
   }
-}
-
-template <Core::FE::CellType distype>
-void Discret::Elements::TemperImpl<distype>::linear_dissipation_fint(
-    const Core::Elements::Element* ele,  // the element whose matrix is calculated
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>* efint,  // internal force
-    Teuchos::ParameterList& params)
-{
-  // get node coordinates
-  Core::Geo::fill_initial_position_array<distype, nsd_, Core::LinAlg::Matrix<nsd_, nen_>>(
-      ele, xyze_);
-
-  // --------------------------------------------------------- initialise
-  // thermal material tangent
-  Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::zero);
-
-  // ------------------------------------------------ structural material
-  std::shared_ptr<Core::Mat::Material> structmat = get_str_material(ele);
-
-  if (structmat->material_type() != Core::Materials::m_thermopllinelast)
-  {
-    FOUR_C_THROW("So far dissipation only for ThermoPlasticLinElast material!");
-  }
-  std::shared_ptr<Mat::ThermoPlasticLinElast> thrpllinelast =
-      std::dynamic_pointer_cast<Mat::ThermoPlasticLinElast>(structmat);
-  // true: error if cast fails
-
-  // --------------------------------------------------- time integration
-  // get step size dt
-  const double stepsize = params.get<double>("delta time");
-
-  // ----------------------------------- integration loop for one element
-
-  // integrations points and weights
-  Core::FE::IntPointsAndWeights<nsd_> intpoints(Thermo::DisTypeToOptGaussRule<distype>::rule);
-  if (intpoints.ip().nquad != nquad_) FOUR_C_THROW("Trouble with number of Gauss points");
-
-  // --------------------------------------------------- loop over Gauss Points
-  for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
-  {
-    // compute inverse Jacobian matrix and derivatives at GP w.r.t. material
-    // coordinates
-    eval_shape_func_and_derivs_at_int_point(intpoints, iquad, ele->id());
-
-    // GEOMETRIC LINEAR problem the deformation gradient is equal to identity
-
-    // build the linear B-operator
-    Core::LinAlg::Matrix<6, nsd_ * nen_ * numdofpernode_> boplin(
-        Core::LinAlg::Initialization::uninitialized);
-    calculate_boplin(&boplin, &derxy_);
-
-    // ------------------------------------------------------------ dissipation
-
-    // D_mech = - N_T^T . (sigma_{d,T} - beta) . strain^p'
-    //          + N_T^T Hiso strainbar^p . strainbar^p'
-    // with eta = sigma_d - beta
-    // --> consider sigma_T separately
-
-    // --------------------------------------- Dmech due to kinematic hardening
-    // Dmech_kin = N_T^T . (sigma_{d,T} - beta) . strain^p'
-
-    // for a thermo-elasto-plastic solid material: strainvel == total strain e'
-    // split strainvel into elastic and plastic terms
-    // additive split of strains: e' = (e^e)' + (e^p)'
-
-    // ------------------------------------------------ mechanical contribution
-    // Dmech_kin = (sigma_d - beta) : strain^p_{n+1}'
-
-    // --------------------------------------- Dmech due to isotropic hardening
-    // N_T^T . kappa . strainbar^p' = N_T^T . Hiso . strainbar^p . Dgamma/dt
-    // kappa = kappa(strainbar^p): isotropic work hardening von Mises stress
-
-    // Dmech += Hiso . strainbar^p . Dgamma
-    double Dmech = thrpllinelast->mechanical_kinematic_dissipation(iquad) / stepsize;
-
-    // CAUTION: (tr(strain^p) == 0) and sigma_T(i,i)=const.
-    // --> neglect: Dmech = -sigma_{T,n+1} : strain^p_{n+1}' == 0: (vol:dev == 0)
-    // --> no additional terms for fint, nor for econd!
-
-    // update/integrate internal force vector (coupling fraction towards displacements)
-    if (efint != nullptr)
-    {
-      // update of the internal "force" vector
-      // fint += N_T^T . 1/Dt . Dmech . detJ . w(gp)
-      efint->update((fac_ * Dmech), funct_, 1.0);
-    }
-
-  }  // -------------------------------------------- end loop over Gauss Points
-}
-
-template <Core::FE::CellType distype>
-void Discret::Elements::TemperImpl<distype>::linear_dissipation_coupled_tang(
-    const Core::Elements::Element* ele,  // the element whose matrix is calculated
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, nsd_ * nen_ * numdofpernode_>* etangcoupl,  // k_Td
-    Teuchos::ParameterList& params)
-{
-  // get node coordinates
-  Core::Geo::fill_initial_position_array<distype, nsd_, Core::LinAlg::Matrix<nsd_, nen_>>(
-      ele, xyze_);
-
-  // ------------------------------------------------ structural material
-  std::shared_ptr<Core::Mat::Material> structmat = get_str_material(ele);
-  if (structmat->material_type() != Core::Materials::m_thermopllinelast)
-  {
-    FOUR_C_THROW("So far dissipation only available for ThermoPlasticLinElast material!");
-  }
-  std::shared_ptr<Mat::ThermoPlasticLinElast> thrpllinelast =
-      std::dynamic_pointer_cast<Mat::ThermoPlasticLinElast>(structmat);
-  // true: error if cast fails
-
-  // --------------------------------------------------- time integration
-  // get step size dt
-  const double stepsize = params.get<double>("delta time");
-
-  // check the time integrator and add correct time factor
-  const auto timint =
-      params.get<Thermo::DynamicType>("time integrator", Thermo::DynamicType::Undefined);
-  // initialise time_fac of velocity discretisation w.r.t. displacements
-  double timefac = 0.0;
-  switch (timint)
-  {
-    case Thermo::DynamicType::Statics:
-    {
-      // evolution equation of plastic material use implicit Euler
-      // put str_timefac = 1.0
-      timefac = 1.0;
-      break;
-    }
-    case Thermo::DynamicType::OneStepTheta:
-    {
-      // k_Td = theta . k_Td^e . timefac_Dgamma = theta . k_Td / Dt
-      double theta = params.get<double>("theta");
-      timefac = theta;
-      break;
-    }
-    case Thermo::DynamicType::GenAlpha:
-    {
-      // k_Td = alphaf . k_Td^e . timefac_Dgamma = alphaf . k_Td / Dt
-      double alphaf = params.get<double>("alphaf");
-      timefac = alphaf;
-      break;
-    }
-    case Thermo::DynamicType::Undefined:
-    default:
-    {
-      FOUR_C_THROW("Add correct temporal coefficient here!");
-      break;
-    }
-  }  // end of switch(timint)
-
-  // ----------------------------------- integration loop for one element
-
-  // integrations points and weights
-  Core::FE::IntPointsAndWeights<nsd_> intpoints(Thermo::DisTypeToOptGaussRule<distype>::rule);
-  if (intpoints.ip().nquad != nquad_) FOUR_C_THROW("Trouble with number of Gauss points");
-
-  // --------------------------------------------- loop over Gauss Points
-  for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
-  {
-    // compute inverse Jacobian matrix and derivatives at GP w.r.t. material
-    // coordinates
-    eval_shape_func_and_derivs_at_int_point(intpoints, iquad, ele->id());
-
-    // GEOMETRIC LINEAR problem the deformation gradient is equal to identity
-
-    // calculate the linear B-operator
-    Core::LinAlg::Matrix<6, nsd_ * nen_ * numdofpernode_> boplin(
-        Core::LinAlg::Initialization::uninitialized);
-    calculate_boplin(&boplin, &derxy_);
-
-    // --------------------------- calculate linearisation of dissipation
-
-    // k_Td = Lin [D_mech] . Inc_d
-    //      = (dD_mech/dstrain) : Lin [ strain ] . Inc_d
-    //      = (dD_mech/dstrain) . B_d . Inc_d
-    //
-    // --> perform the linearisation w.r.t. to strains, NOT w.r.t. to displacements
-
-    // calculate the derivation of the dissipation w.r.t. to the strains
-    // (dD_mech/dstrain)
-    // = N_T^T . (- dDmech_kin/ dstrain + dDmech_iso/ dstrain )
-    // = - N_T^T . (d [ (sigma_{d,T} - beta) . strain^p' ]/ dstrain)
-    //   + N_T^T . (d [ kappa(strainbar^p) . strainbar^p' ]/ dstrain)
-
-    // ---------------------- linearisation of KINEMATIC hardening for k_Td
-
-    // (dD_mech_kin/dstrain) = (d [ (sigma_{d,T} - beta) . strain^p' ]/ dstrain)
-    //
-    // d[ (sigma_{d,T} - beta) . strain^p' ]/ dstrain
-    // = d(sigma_{d,T} - beta)/dstrain . strain^p'
-    //   + (sigma_{d,T} - beta) . (dstrain^p')/ dstrain)
-    //
-    // sigma_T is independent of deformation, i.e. strains: dsigma_T/dstrain = 0
-    //
-    // = d(sigma_d - beta)/dstrain . strain^p'
-    //   + (sigma_{d,T} - beta) . [(dstrain^p')/ dstrain]
-    //
-    // thermal contribution can be neglected because [(vol : dev) == 0]
-    // sigma_T: vol, plasticity: deviatoric!!
-    // (dDthr/dstrain) = sigma_T : (dstrain^p'/dstrain) == 0,
-
-    // --------- calculate (sigma_{d,T} - beta) . [(dstrain^p')/ dstrain]
-
-    // ---------------------------------calculate [(dstrain^p')/ dstrain]
-    // strain^p_{n+1}' = (strain^p_{n+1}-strain^p_n)/Dt = Dgamma/Dt N_n+1
-    // strain^p_{n+1} = strain^p_n + Dgamma N_n+1
-    //
-    // [(dstrain^p')/ dstrain] = 1/Dt (dstrain^p_{n+1}/dstrain)
-    //                         = 1/Dt (dDgamma/dstrain) \otimes N_{n+1} + Dgamma .
-    //                         (dN_{n+1}/dstrain)
-
-    // (dDgamma/dstrain^{trial}_{n+1}) \otimes N_{n+1}
-    // = 2G/(3G + Hiso + Hkin) N_{n+1} \otimes N_{n+1}
-
-    // (dN_{n+1}/dstrain) = 2G / || eta || [sqrt{3/2} I_d - N_{n+1} \otimes N_{n+1}]
-
-    // ----------------------------------------linearisation of Dmech_iso
-    // (dD_mech/dstrain) += N_T^T . Hiso . (d [ strainbar^p . strainbar^p' ]/ dstrain)
-    Core::LinAlg::Matrix<6, 1> Dmech_d(Core::LinAlg::Initialization::uninitialized);
-    Dmech_d.update(thrpllinelast->dissipation_linearised_for_coupl_cond(iquad));
-    Core::LinAlg::Matrix<1, nsd_ * nen_ * numdofpernode_> DBop(
-        Core::LinAlg::Initialization::uninitialized);
-    DBop.multiply_tn(Dmech_d, boplin);
-
-    // coupling stiffness matrix
-    if (etangcoupl != nullptr)
-    {
-      // k_Td^e += timefac . N_T^T . 1/Dt . Dmech_d . B_L . detJ . w(gp)
-      // with C_T = m . I
-      // (8x24) = (8x1) . (1x24)
-      etangcoupl->multiply_nn((fac_ * timefac / stepsize), funct_, DBop, 1.0);
-    }  // (etangcoupl != nullptr)
-
-  }  //---------------------------------- end loop over Gauss Points
 }
 
 template <Core::FE::CellType distype>
