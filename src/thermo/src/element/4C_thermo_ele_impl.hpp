@@ -280,30 +280,6 @@ namespace Discret
           const Core::LinAlg::Matrix<nsd_, nen_>* N_XYZ                //!< gradient-operator
       ) const;
 
-      //! build linearisation of Jacobian w.r.t. d: dJ_dd
-      void calculate_linearisation_of_jacobian(
-          Core::LinAlg::Matrix<1, nsd_ * nen_ * numdofpernode_>& dJ_dd,  //!<  [out] dJ_dd
-          const double J,                                                //!< Jacobian
-          const Core::LinAlg::Matrix<nsd_, nen_>& N_XYZ,  //!< linear gradient of shape functions
-          const Core::LinAlg::Matrix<nsd_, nsd_>& defgrd_inv  //!< inverse of F
-      ) const;
-
-      /*!
-       * @brief Compute the rate and the inverse of the right Cauchy-Green tensor
-       *
-       * @param[out] Cratevct \f$\dot{\mathbf{C}}\f$ in strain-like Voigt notation
-       * @param[out] Cinvvct \f$\mathbf{C}^{-1}\f$ in stress-like Voigt notation
-       * @param[out] Cinv \f$\mathbf{C}^{-1}\f$ as matrix
-       * @param[in] defgrd deformation gradient \f$\mathbf{F}\f$
-       * @param[in] defgrdrate time derivative of the deformation gradient \f$\dot{\mathbf{F}}\f$
-       * @param[in] invdefgrd inverse deformation gradient \f$\mathbf{F}^{-1}\f$
-       */
-      void calculate_cauchy_greens(Core::LinAlg::Matrix<6, 1>& Cratevct,
-          Core::LinAlg::Matrix<6, 1>& Cinvvct, Core::LinAlg::Matrix<nsd_, nsd_>& Cinv,
-          const Core::LinAlg::Matrix<nsd_, nsd_>* defgrd,
-          const Core::LinAlg::Matrix<nsd_, nsd_>* defgrdrate,
-          const Core::LinAlg::Matrix<nsd_, nsd_>* invdefgrd) const;
-
       /// @}
 
       //! @name finite strain thermoplasticity solved with TSI
