@@ -1134,13 +1134,13 @@ Core::LinAlg::Matrix<6, 1> Mat::MultiplicativeSplitDefgradElastHyper::evaluate_o
   return dstressdx;
 }
 
-void Mat::MultiplicativeSplitDefgradElastHyper::stress_temperature_modulus_and_deriv(
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, const int gp)
+Mat::StressTemperatureModulus
+Mat::MultiplicativeSplitDefgradElastHyper::evaluate_stress_temperature_modulus(double temperature,
+    const DeformationState& deformation_state, const EvaluationContext<3>& context, const int gp,
+    const int eleGID)
 {
   // this contribution is intentionally neglected so far.
-  stm.fill(0.0);
-  stm_dT.fill(0.0);
+  return {};
 }
 
 Mat::HeatSource Mat::MultiplicativeSplitDefgradElastHyper::evaluate_additional_heat_source(

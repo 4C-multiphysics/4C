@@ -508,12 +508,11 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* defgrad,
  | calculate stress-temperature modulus and thermal derivative          |
  |   for coupled thermomechanics                                        |
  *----------------------------------------------------------------------*/
-void Mat::Robinson::stress_temperature_modulus_and_deriv(
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp)
+Mat::StressTemperatureModulus Mat::Robinson::evaluate_stress_temperature_modulus(double temperature,
+    const DeformationState& deformation_state, const EvaluationContext<3>& context, int gp,
+    int eleGID)
 {
-  stm = {};
-  stm_dT = {};
+  return {};
 }
 
 /*----------------------------------------------------------------------*
@@ -1467,10 +1466,6 @@ void Mat::Robinson::iterative_update_of_internal_variables(const int gp,
   backstresscurr_->at(gp) = backstress_n;
 
 }  // iterative_update_of_internal_variables()
-
-/*----------------------------------------------------------------------*/
-
-void Mat::Robinson::reinit(double temperature, unsigned gp) { current_temperature_ = temperature; }
 
 /*----------------------------------------------------------------------*/
 

@@ -288,11 +288,6 @@ namespace Mat
         const Teuchos::ParameterList& params, const EvaluationContext<3>& context, int gp,
         int eleGID) override;
 
-    void reinit(double temperature, unsigned gp) override { /* do nothing */ };
-
-    void stress_temperature_modulus_and_deriv(Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-        Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, const int gp) override;
-
     /*!
      * @brief Evaluate the heat source produced by this material. Currently, this is only
      * enabled for the viscoplastic factor.
@@ -496,6 +491,10 @@ namespace Mat
      * @param[in]  concentration concentration at gauss point
      */
     void set_concentration_gp(double concentration);
+
+    [[nodiscard]] StressTemperatureModulus evaluate_stress_temperature_modulus(double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context,
+        const int gp, const int eleGID) override;
 
    private:
     /// Holder for anisotropy

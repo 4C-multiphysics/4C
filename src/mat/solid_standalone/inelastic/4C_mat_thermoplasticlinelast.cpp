@@ -740,12 +740,13 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
  | calculate stress-temperature modulus and thermal derivative          |
  |   for coupled thermomechanics                                        |
  *----------------------------------------------------------------------*/
-void Mat::ThermoPlasticLinElast::stress_temperature_modulus_and_deriv(
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp)
+Mat::StressTemperatureModulus Mat::ThermoPlasticLinElast::evaluate_stress_temperature_modulus(
+    double temperature, const DeformationState& deformation_state,
+    const EvaluationContext<3>& context, int gp, int eleGID)
 {
-  setup_cthermo(stm);
-  stm_dT = Core::LinAlg::TensorGenerators::full<3, 3>(0.0);
+  StressTemperatureModulus stress_temperature_modulus;
+  setup_cthermo(stress_temperature_modulus.value);
+  return stress_temperature_modulus;
 }
 
 /*----------------------------------------------------------------------*
@@ -1277,11 +1278,6 @@ bool Mat::ThermoPlasticLinElast::evaluate_output_data(
   }
 
   return false;
-}
-
-void Mat::ThermoPlasticLinElast::reinit(double temperature, unsigned gp)
-{
-  current_temperature_ = temperature;
 }
 
 FOUR_C_NAMESPACE_CLOSE

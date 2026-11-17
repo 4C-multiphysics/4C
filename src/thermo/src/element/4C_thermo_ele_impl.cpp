@@ -19,6 +19,7 @@
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_mat_multiplicative_split_defgrad_elasthyper.hpp"
 #include "4C_mat_multiplicative_split_defgrad_elasthyper_service.hpp"
 #include "4C_mat_so3_material.hpp"
@@ -652,7 +653,10 @@ void Discret::Elements::TemperImpl<distype>::evaluate_tang_capa_fint(
     if (la.size() > 1)
     {
       // coupled displacement dependent terms
-      linear_disp_contribution(ele, time, mydisp, myvel, etang, efint, params);
+      if constexpr (nsd_ == 3)
+        linear_disp_contribution(ele, time, mydisp, myvel, etang, efint, params);
+      else
+        FOUR_C_THROW("TSI is only implemented in 3D.");
 
       // if structural material is plastic --> calculate the mechanical dissipation terms
       // A_k * a_k - (d^2 psi / dT da_k) * a_k'
@@ -663,8 +667,13 @@ void Discret::Elements::TemperImpl<distype>::evaluate_tang_capa_fint(
   // geometrically nonlinear TSI problem
   else if (kintype == Solid::KinemType::nonlinearTotLag)
   {
-    nonlinear_thermo_disp_contribution(
-        ele, time, mydisp, myvel, etang, ecapa, ecapalin, efint, params);
+    if constexpr (nsd_ == 3)
+    {
+      nonlinear_thermo_disp_contribution(
+          ele, time, mydisp, myvel, etang, ecapa, ecapalin, efint, params);
+    }
+    else
+      FOUR_C_THROW("TSI is only implemented in 3D.");
 
     if (plasticmat_) nonlinear_dissipation_fint_tang(ele, mydisp, etang, efint, params);
   }  // TSI: (kintype_ == Solid::KinemType::nonlinearTotLag)
@@ -690,25 +699,31 @@ void Discret::Elements::TemperImpl<distype>::evaluate_coupled_tang(
     // if there is a strucutural vector available go on here
     // --> calculate coupling stiffness term in case of monolithic TSI
 
-    // geometrically linear TSI problem
-    if (kintype == Solid::KinemType::linear)
+    if constexpr (nsd_ == 3)
     {
-      linear_coupled_tang(ele, mydisp, myvel, etangcoupl, params);
+      // geometrically linear TSI problem
+      if (kintype == Solid::KinemType::linear)
+      {
+        linear_coupled_tang(ele, mydisp, myvel, etangcoupl, params);
 
-      // calculate Dmech_d
-      if (plasticmat_) linear_dissipation_coupled_tang(ele, etangcoupl, params);
-      // --> be careful: so far only implicit Euler for time integration
-      //                 of the evolution equation available!!!
-    }  // TSI: (kintype_ == Solid::KinemType::linear)
+        // calculate Dmech_d
+        if (plasticmat_) linear_dissipation_coupled_tang(ele, etangcoupl, params);
+        // --> be careful: so far only implicit Euler for time integration
+        //                 of the evolution equation available!!!
+      }  // TSI: (kintype_ == Solid::KinemType::linear)
 
-    // geometrically nonlinear TSI problem
-    if (kintype == Solid::KinemType::nonlinearTotLag)
-    {
-      nonlinear_coupled_tang(ele, mydisp, myvel, etangcoupl, params);
+      // geometrically nonlinear TSI problem
+      if (kintype == Solid::KinemType::nonlinearTotLag)
+      {
+        nonlinear_coupled_tang(ele, mydisp, myvel, etangcoupl, params);
 
-      // calculate Dmech_d
-      if (plasticmat_) nonlinear_dissipation_coupled_tang(ele, mydisp, myvel, etangcoupl, params);
+        // calculate Dmech_d
+        if (plasticmat_)
+          nonlinear_dissipation_coupled_tang(ele, mydisp, myvel, etangcoupl, params);
+      }
     }
+    else
+      FOUR_C_THROW("TSI is only implemented in 3D.");
   }
 }
 
@@ -853,6 +868,8 @@ void Discret::Elements::TemperImpl<distype>::linear_disp_contribution(
     Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>* econd,
     Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>* efint, const Teuchos::ParameterList& params)
 {
+  static_assert(nsd_ == 3, "TSI is only implemented in 3D.");
+
   // get node coordinates
   Core::Geo::fill_initial_position_array<distype, nsd_, Core::LinAlg::Matrix<nsd_, nen_>>(
       ele, xyze_);
@@ -879,6 +896,12 @@ void Discret::Elements::TemperImpl<distype>::linear_disp_contribution(
 
   // ------------------------------------------------ structural material
   std::shared_ptr<Core::Mat::Material> structmat = get_str_material(ele);
+  auto thermo_solid = std::dynamic_pointer_cast<Mat::Trait::ThermoSolid>(structmat);
+
+  const double stepsize = params.get<double>("delta time");
+  Mat::EvaluationContext<3> evaluation_context;
+  evaluation_context.total_time = &time;
+  evaluation_context.time_step_size = &stepsize;
 
   Core::LinAlg::Matrix<nen_, 1> Ndctemp_dTBvNT(Core::LinAlg::Initialization::zero);
 
@@ -908,14 +931,19 @@ void Discret::Elements::TemperImpl<distype>::linear_disp_contribution(
     // calculate scalar-valued temperature
     NT.multiply_tn(funct_, etempn_);
 
-    std::shared_ptr<Mat::Trait::ThermoSolid> thermoSolid =
-        std::dynamic_pointer_cast<Mat::Trait::ThermoSolid>(structmat);
-    if (thermoSolid != nullptr)
+    if (thermo_solid != nullptr)
     {
-      Core::LinAlg::SymmetricTensor<double, 3, 3> dctemp_dT_t{};
+      Core::LinAlg::Matrix<6, 1> strain(Core::LinAlg::Initialization::uninitialized);
+      strain.multiply(boplin, edisp);
+      const Mat::StressTemperatureModulus stress_temperature_modulus =
+          thermo_solid->evaluate_stress_temperature_modulus(NT(0),
+              Mat::DeformationState(
+                  Core::LinAlg::make_symmetric_tensor_from_strain_like_voigt_matrix(strain)),
+              evaluation_context, iquad, ele->id());
+      ctemp_t = stress_temperature_modulus.value;
+      Core::LinAlg::SymmetricTensor<double, 3, 3> dctemp_dT_t =
+          stress_temperature_modulus.derivative_wrt_temperature;
       Core::LinAlg::Matrix<6, 1> dctemp_dT = Core::LinAlg::make_stress_like_voigt_view(dctemp_dT_t);
-      thermoSolid->reinit(NT(0), iquad);
-      thermoSolid->stress_temperature_modulus_and_deriv(ctemp_t, dctemp_dT_t, iquad);
 
       Core::LinAlg::Matrix<nen_, 6> Ndctemp_dT(
           Core::LinAlg::Initialization::uninitialized);  // (8x1)(1x6)
@@ -970,6 +998,8 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
     Core::LinAlg::Matrix<nen_ * numdofpernode_, nsd_ * nen_ * numdofpernode_>* etangcoupl,  // k_Td
     const Teuchos::ParameterList& params)
 {
+  static_assert(nsd_ == 3, "TSI is only implemented in 3D.");
+
   // get node coordinates
   Core::Geo::fill_initial_position_array<distype, nsd_, Core::LinAlg::Matrix<nsd_, nen_>>(
       ele, xyze_);
@@ -997,6 +1027,7 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
 
   // ------------------------------------------------ structural material
   std::shared_ptr<Core::Mat::Material> structmat = get_str_material(ele);
+  auto thermo_solid = std::dynamic_pointer_cast<Mat::Trait::ThermoSolid>(structmat);
 
   // --------------------------------------------------- time integration
   // check the time integrator and add correct time factor
@@ -1052,6 +1083,11 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
     }
   }  // end of switch(timint)
 
+  const double total_time = params.get<double>("total time");
+  Mat::EvaluationContext<3> evaluation_context;
+  evaluation_context.total_time = &total_time;
+  evaluation_context.time_step_size = &stepsize;
+
   // ----------------------------------- integration loop for one element
 
   // integrations points and weights
@@ -1075,13 +1111,17 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
     NT.multiply_tn(funct_, etempn_);  // (1x8)(8x1)= (1x1)
 
 
-    std::shared_ptr<Mat::Trait::ThermoSolid> thermoSolid =
-        std::dynamic_pointer_cast<Mat::Trait::ThermoSolid>(structmat);
-    if (thermoSolid != nullptr)
+    if (thermo_solid != nullptr)
     {
-      Core::LinAlg::SymmetricTensor<double, 3, 3> dctemp_dT;
-      thermoSolid->reinit(NT(0), iquad);
-      thermoSolid->stress_temperature_modulus_and_deriv(ctemp_t, dctemp_dT, iquad);
+      Core::LinAlg::Matrix<6, 1> strain(Core::LinAlg::Initialization::uninitialized);
+      strain.multiply(boplin, edisp);
+      ctemp_t = thermo_solid
+                    ->evaluate_stress_temperature_modulus(NT(0),
+                        Mat::DeformationState(
+                            Core::LinAlg::make_symmetric_tensor_from_strain_like_voigt_matrix(
+                                strain)),
+                        evaluation_context, iquad, ele->id())
+                    .value;
     }
 
     // N_temp^T . N_temp . temp
@@ -1121,6 +1161,8 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
     Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>* efint,  // internal force
     Teuchos::ParameterList& params)
 {
+  static_assert(nsd_ == 3, "TSI is only implemented in 3D.");
+
   // update element geometry
   Core::LinAlg::Matrix<nen_, nsd_> xcurr;      // current  coord. of element
   Core::LinAlg::Matrix<nen_, nsd_> xcurrrate;  // current  coord. of element
@@ -1138,8 +1180,13 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
   // extract step size
   const double stepsize = params.get<double>("delta time");
 
+  Mat::EvaluationContext<3> evaluation_context;
+  evaluation_context.total_time = &time;
+  evaluation_context.time_step_size = &stepsize;
+
   // ------------------------------------------------ structural material
   std::shared_ptr<Core::Mat::Material> structmat = get_str_material(ele);
+  auto thermo_solid = std::dynamic_pointer_cast<Mat::Trait::ThermoSolid>(structmat);
 
   Core::LinAlg::Matrix<nen_, 1> Ndctemp_dTCrateNT(Core::LinAlg::Initialization::zero);
 
@@ -1207,14 +1254,19 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
     heatflux_.update(initialheatflux);
     // from here on heatflux_ == -Q
 
-    std::shared_ptr<Mat::Trait::ThermoSolid> thermoSolid =
-        std::dynamic_pointer_cast<Mat::Trait::ThermoSolid>(structmat);
-    if (thermoSolid != nullptr)
+    if (thermo_solid != nullptr)
     {
-      Core::LinAlg::SymmetricTensor<double, 3, 3> dctemp_dT_t{};
+      const auto F = Core::LinAlg::make_tensor_view(defgrd);
+      const Core::LinAlg::SymmetricTensor<double, 3, 3> strain =
+          0.5 * (Core::LinAlg::assume_symmetry(Core::LinAlg::transpose(F) * F) -
+                    Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
+      const Mat::StressTemperatureModulus stress_temperature_modulus =
+          thermo_solid->evaluate_stress_temperature_modulus(
+              NT(0), Mat::DeformationState(strain, F), evaluation_context, iquad, ele->id());
+      ctemp_t = stress_temperature_modulus.value;
+      Core::LinAlg::SymmetricTensor<double, 3, 3> dctemp_dT_t =
+          stress_temperature_modulus.derivative_wrt_temperature;
       Core::LinAlg::Matrix<6, 1> dctemp_dT = Core::LinAlg::make_stress_like_voigt_view(dctemp_dT_t);
-      thermoSolid->reinit(NT(0), iquad);
-      thermoSolid->stress_temperature_modulus_and_deriv(ctemp_t, dctemp_dT_t, iquad);
       // scalar product: dctemp_dTCdot = dC_T/dT : 1/2 C'
       double dctemp_dTCdot = 0.0;
       for (int i = 0; i < 6; ++i)
@@ -1369,6 +1421,8 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
     Teuchos::ParameterList& params  // parameter list
 )
 {
+  static_assert(nsd_ == 3, "TSI is only implemented in 3D.");
+
   // update element geometry
   Core::LinAlg::Matrix<nen_, nsd_> xcurr(
       Core::LinAlg::Initialization::uninitialized);  // current  coord. of element
@@ -1455,6 +1509,13 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
 
   // ------------------------------------------------ structural material
   std::shared_ptr<Core::Mat::Material> structmat = get_str_material(ele);
+
+  auto thermo_solid = std::dynamic_pointer_cast<Mat::Trait::ThermoSolid>(structmat);
+
+  const double total_time = params.get<double>("total time");
+  Mat::EvaluationContext<3> evaluation_context;
+  evaluation_context.total_time = &total_time;
+  evaluation_context.time_step_size = &stepsize;
 
   // build the deformation gradient w.r.t. material configuration
   Core::LinAlg::Matrix<nsd_, nsd_> defgrd(Core::LinAlg::Initialization::uninitialized);
@@ -1584,13 +1645,16 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
       }
     }  // end DCinv_dd
 
-    std::shared_ptr<Mat::Trait::ThermoSolid> thermoSolid =
-        std::dynamic_pointer_cast<Mat::Trait::ThermoSolid>(structmat);
-    if (thermoSolid != nullptr)
+    if (thermo_solid != nullptr)
     {
-      Core::LinAlg::SymmetricTensor<double, 3, 3> dctemp_dT;
-      thermoSolid->reinit(NT(0), iquad);
-      thermoSolid->stress_temperature_modulus_and_deriv(ctemp_t, dctemp_dT, iquad);
+      const auto F = Core::LinAlg::make_tensor_view(defgrd);
+      const Core::LinAlg::SymmetricTensor<double, 3, 3> strain =
+          0.5 * (Core::LinAlg::assume_symmetry(Core::LinAlg::transpose(F) * F) -
+                    Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
+      ctemp_t = thermo_solid
+                    ->evaluate_stress_temperature_modulus(NT(0), Mat::DeformationState(strain, F),
+                        evaluation_context, iquad, ele->id())
+                    .value;
     }
     if (structmat->material_type() == Core::Materials::m_thermoplhyperelast)
     {
