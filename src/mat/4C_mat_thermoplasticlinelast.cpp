@@ -10,7 +10,6 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
-#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_utils_enum.hpp"
@@ -747,6 +746,19 @@ Mat::StressTemperatureModulus Mat::ThermoPlasticLinElast::evaluate_stress_temper
   StressTemperatureModulus stress_temperature_modulus;
   setup_cthermo(stress_temperature_modulus.value);
   return stress_temperature_modulus;
+}
+
+Mat::AdditionalHeatSource Mat::ThermoPlasticLinElast::evaluate_additional_heat_source(
+    const double temperature, const DeformationState& deformation_state,
+    const EvaluationContext<3>& context, const int gp, const int eleGID)
+{
+  FOUR_C_ASSERT_ALWAYS(context.time_step_size != nullptr, "Time-step size is required.");
+  const double dt = *context.time_step_size;
+
+  AdditionalHeatSource source;
+  source.value = -1.0 / dt * dmech_[gp];
+  source.derivative_wrt_strain = -1.0 / dt * dmech_d_[gp];
+  return source;
 }
 
 /*----------------------------------------------------------------------*

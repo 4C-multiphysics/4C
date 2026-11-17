@@ -221,27 +221,6 @@ namespace Discret
 
       //! @}
 
-      //! @name linear, small strain thermoplasticity solved with TSI
-      //! @{
-
-      //! calculate internal dissipation arising when a thermo-elasto-plastic
-      //! material is used
-      //! Clausius-Duhem inequality is no longer = 0, but > 0:
-      //! mechanical energy dissipates as heat
-      void linear_dissipation_fint(
-          const Core::Elements::Element* ele,  //!< the element whose matrix is calculated
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>* efint,  //!< internal force
-          Teuchos::ParameterList& params);
-
-      //! calculate terms of dissipation for thermo-mechanical
-      //! system matrix k_Td used in case of plastic material
-      void linear_dissipation_coupled_tang(
-          const Core::Elements::Element* ele,  // the element whose matrix is calculated
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, nsd_ * nen_ * numdofpernode_>*
-              etangcoupl,  // k_Td
-          Teuchos::ParameterList& params);
-
-      //! @}
 
       //! @name geometrically nonlinear TSI analysis
       //! @{

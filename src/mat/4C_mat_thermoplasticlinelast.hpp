@@ -307,17 +307,6 @@ namespace Mat
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress  // flow vector
     );
 
-    //! return mechanical dissipation term due to kinematic hardening
-    //! \f$ D_{\rm mech,kin}\f$
-    double mechanical_kinematic_dissipation(int gp) const { return dmech_.at(gp); }
-
-    //! return linearisation of mechanical dissipation w.r.t. displacements
-    //! \f$ k_Td += \dfrac{\partial D_{\rm mech}}{\partial d_{n+1}}\f$
-    Core::LinAlg::Matrix<6, 1> dissipation_linearised_for_coupl_cond(int gp) const
-    {
-      return Core::LinAlg::make_strain_like_voigt_matrix(dmech_d_.at(gp));
-    }
-
     //@}
 
     /// Return names of visualization data
@@ -338,6 +327,10 @@ namespace Mat
     [[nodiscard]] StressTemperatureModulus evaluate_stress_temperature_modulus(double temperature,
         const DeformationState& deformation_state, const EvaluationContext<3>& context, int gp,
         int eleGID) override;
+
+    [[nodiscard]] AdditionalHeatSource evaluate_additional_heat_source(const double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context,
+        const int gp, const int eleGID) override;
 
    private:
     //! my material parameters
