@@ -361,7 +361,8 @@ void Mat::ThermoPlasticHyperElast::stress_temperature_modulus_and_deriv(
 
   setup_cthermo(stm, Core::LinAlg::det(defgrad), Cinv);
 
-  stm_dT = cmat_kd_t_->at(gp);
+  // the stress-temperature modulus does not depend on the temperature
+  stm_dT = {};
 }
 
 /*----------------------------------------------------------------------*
