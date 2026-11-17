@@ -208,10 +208,70 @@ void Core::LinAlg::matrix_put(const Core::LinAlg::SparseMatrix& A, const double 
   }
 }
 
+namespace Core::LinAlg
+{
+  namespace
+  {
+    std::unique_ptr<SparseMatrix> multiply_with_profile(const SparseMatrix& A, bool transA,
+        const SparseMatrix& B, bool transB, const Map& row_map, const Map& domain_map,
+        const Map& range_map, int initial_capacity, bool explicit_dirichlet, bool save_graph,
+        bool complete, SparseMatrix::StorageProfile profile)
+    {
+      std::unique_ptr<SparseMatrix> product;
+      if (profile == SparseMatrix::StorageProfile::dynamic_profile)
+        product = std::make_unique<SparseMatrix>(
+            row_map, initial_capacity, explicit_dirichlet, save_graph);
+      else
+      {
+        // The row-map constructor can be configured to force static storage; explicitly
+        // make this intermediate growable even when that configuration is in effect.
+        product =
+            std::make_unique<SparseMatrix>(std::make_shared<Epetra_CrsMatrix>(::Copy,
+                                               row_map.get_epetra_map(), initial_capacity, false),
+                DataAccess::Share, explicit_dirichlet, save_graph);
+      }
+
+      ASSERT_EPETRA_CALL(EpetraExt::MatrixMatrix::Multiply(
+          A.epetra_matrix(), transA, B.epetra_matrix(), transB, product->epetra_matrix(), false));
+
+      if (profile == SparseMatrix::StorageProfile::static_profile)
+      {
+        // Input row widths do not bound product row widths (e.g. a rank-one outer product).
+        // Copy the numerical product into static rows sized to their observed entries.
+        const Graph graph = product->get_current_graph();
+        std::vector<int> row_capacities(row_map.num_my_elements());
+        for (int row = 0; row < row_map.num_my_elements(); ++row)
+          row_capacities[row] = graph.num_local_indices(row);
+
+        auto static_product = std::make_unique<SparseMatrix>(row_map, row_capacities,
+            SparseMatrix::StorageProfile::static_profile, explicit_dirichlet, save_graph);
+        for (int row = 0; row < row_map.num_my_elements(); ++row)
+        {
+          const int capacity = row_capacities[row];
+          if (capacity == 0) continue;
+          std::vector<double> values(capacity);
+          std::vector<int> columns(capacity);
+          int count = 0;
+          product->extract_global_row_copy(
+              row_map.gid(row), capacity, count, values.data(), columns.data());
+          static_product->insert_global_values(
+              row_map.gid(row), count, values.data(), columns.data());
+        }
+        product = std::move(static_product);
+      }
+
+      // Epetra's multiplication does not always set the correct maps for rectangular results.
+      if (complete) product->complete(domain_map, range_map);
+      return product;
+    }
+  }  // namespace
+}  // namespace Core::LinAlg
+
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-std::unique_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_multiply(
-    const SparseMatrix& A, bool transA, const SparseMatrix& B, bool transB, bool complete)
+std::unique_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_multiply(const SparseMatrix& A,
+    bool transA, const SparseMatrix& B, bool transB, bool complete,
+    SparseMatrix::StorageProfile profile)
 {
   // make sure fill_complete was called on the matrices
   if (!A.filled()) FOUR_C_THROW("A has to be fill_complete");
@@ -221,33 +281,22 @@ std::unique_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_multiply(
   // imported rows can produce local output entries even on ranks with no local input entries.
   const int nnz = std::max(A.global_max_num_entries(), B.global_max_num_entries());
 
-  // now create resultmatrix C with correct rowmap
   auto rangemap = transA ? A.domain_map() : A.range_map();
   auto domainmap = transB ? B.range_map() : B.domain_map();
-  auto C = std::make_unique<SparseMatrix>(rangemap, nnz, A.explicit_dirichlet(), A.save_graph());
 
   FOUR_C_ASSERT(
       (transA ? A.range_map() : A.domain_map()).same_as(transB ? B.domain_map() : B.range_map()),
       "Matrix inner dimensions or distribution do not match for multiplication.");
 
-  ASSERT_EPETRA_CALL(EpetraExt::MatrixMatrix::Multiply(
-      A.epetra_matrix(), transA, B.epetra_matrix(), transB, C->epetra_matrix(), false));
-
-  // manually calling complete to make sure the maps are set correctly (The epetra internal method
-  // does not set the maps correctly for non-square sparse matrices)
-  if (complete)
-  {
-    C->complete(domainmap, rangemap);
-  }
-
-  return C;
+  return multiply_with_profile(A, transA, B, transB, rangemap, domainmap, rangemap, nnz,
+      A.explicit_dirichlet(), A.save_graph(), complete, profile);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::unique_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_multiply(const SparseMatrix& A,
     bool transA, const SparseMatrix& B, bool transB, bool explicitdirichlet, bool savegraph,
-    bool complete)
+    bool complete, SparseMatrix::StorageProfile profile)
 {
   // make sure fill_complete was called on the matrices
   if (!A.filled()) FOUR_C_THROW("A has to be fill_complete");
@@ -257,9 +306,7 @@ std::unique_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_multiply(const 
   // imported rows can produce local output entries even on ranks with no local input entries.
   const int nnz = std::max(A.global_max_num_entries(), B.global_max_num_entries());
 
-  // now create resultmatrix C with correct rowmap
   auto map = transA ? Map(A.domain_map()) : A.range_map();
-  auto C = std::make_unique<SparseMatrix>(map, nnz, explicitdirichlet, savegraph);
   auto A_trans = std::make_shared<Core::LinAlg::SparseMatrix>(A);
   auto B_trans = std::make_shared<Core::LinAlg::SparseMatrix>(B);
 
@@ -275,14 +322,8 @@ std::unique_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_multiply(const 
     transB = false;
   }
 
-  // First, assemble all entries. Then, complete using domain and range maps to safely work
-  // under the assumption of a static profile.
-  ASSERT_EPETRA_CALL(EpetraExt::MatrixMatrix::Multiply(A_trans->epetra_matrix(), transA,
-      B_trans->epetra_matrix(), transB, C->epetra_matrix(), false));
-
-  if (complete) C->complete(B_trans->domain_map(), A_trans->range_map());
-
-  return C;
+  return multiply_with_profile(*A_trans, transA, *B_trans, transB, map, B_trans->domain_map(),
+      A_trans->range_map(), nnz, explicitdirichlet, savegraph, complete, profile);
 }
 
 /*----------------------------------------------------------------------*
@@ -413,8 +454,10 @@ std::unique_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_rank_correction
   Core::LinAlg::multi_vector_to_linalg_sparse_matrix(
       orthonormal_basis, A.row_map(), coarse_map, basis_matrix);
 
-  // Build projection matrix
-  auto projection = Core::LinAlg::matrix_multiply(basis_matrix, false, basis_matrix, true);
+  // A rank-one projection can be dense even though each basis row has only one entry.
+  // Explicit static requests must size the result from its actual row structure.
+  auto projection = Core::LinAlg::matrix_multiply(
+      basis_matrix, false, basis_matrix, true, true, options.projection_profile);
 
   auto projected_A = std::make_unique<Core::LinAlg::SparseMatrix>(A);
   Core::LinAlg::matrix_add(*projection, false, options.alpha, *projected_A, 1.0);

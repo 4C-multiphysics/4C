@@ -86,10 +86,13 @@ namespace Core::LinAlg
    \param transB     (in) : flag indicating whether transposed of B should be used
    \param complete   (in) : flag indicating whether fill_complete should be called on C upon
                             exit, (defaults to true)
+   \param profile    (in) : output row-storage profile (defaults to dynamic); static output is
+                            sized from actual product rows using a growable temporary
    \return Matrix product A(^T)*B(^T)
    */
-  std::unique_ptr<SparseMatrix> matrix_multiply(
-      const SparseMatrix& A, bool transA, const SparseMatrix& B, bool transB, bool complete = true);
+  std::unique_ptr<SparseMatrix> matrix_multiply(const SparseMatrix& A, bool transA,
+      const SparseMatrix& B, bool transB, bool complete = true,
+      SparseMatrix::StorageProfile profile = SparseMatrix::StorageProfile::dynamic_profile);
 
   /*!
    \brief Multiply a (transposed) sparse matrix with another (transposed): C = A(^T)*B(^T)
@@ -113,11 +116,14 @@ namespace Core::LinAlg
    \param savegraph         (in) : flag deciding on savegraph flag of C
    \param complete          (in) : flag indicating whether fill_complete should be called on C upon
                                    exit, (defaults to true)
+   \param profile           (in) : output row-storage profile (defaults to dynamic); static output
+                                   uses an intermediate and an exactly sized per-row copy
    \return Matrix product A(^T)*B(^T)
    */
   std::unique_ptr<SparseMatrix> matrix_multiply(const SparseMatrix& A, bool transA,
       const SparseMatrix& B, bool transB, bool explicitdirichlet, bool savegraph,
-      bool complete = true);
+      bool complete = true,
+      SparseMatrix::StorageProfile profile = SparseMatrix::StorageProfile::dynamic_profile);
 
 
   /*!
@@ -181,6 +187,9 @@ namespace Core::LinAlg
 
     //! Flag indicating if the basis vectors should be orthonormalized during rank correction
     bool orthonormalize = true;
+
+    //! Storage profile of the intermediate projection; dynamic preserves existing behavior.
+    SparseMatrix::StorageProfile projection_profile = SparseMatrix::StorageProfile::dynamic_profile;
   };
 
   /**
@@ -206,7 +215,8 @@ namespace Core::LinAlg
    * @param basis   (in): Multi-vector whose columns define the basis used to construct the low-rank
    *                      correction.
    * @param options (in): Options controlling the rank correction, including the scaling factor
-   * \f$\alpha\f$ and whether the basis should be orthonormalized.
+   * \f$\alpha\f$, whether the basis should be orthonormalized, and the optional
+   * projection storage profile.
    *
    * @return A unique pointer to a new sparse matrix containing the corrected matrix
    */
