@@ -13,10 +13,8 @@
  *----------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
-#include "4C_fem_general_utils_local_connectivity_matrices.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_thermo_ele_impl_utils.hpp"
-#include "4C_thermo_input.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -186,7 +184,6 @@ namespace Discret
       //! Calculate element force vectors and a few matrices
       void linear_thermo_contribution(
           const Core::Elements::Element* ele,  //!< the element whose matrix is calculated
-          const double time,                   //!< current time
           Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>*
               econd,  //!< conductivity matrix
           Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>*
@@ -279,12 +276,6 @@ namespace Discret
           const Core::Elements::Element* ele  //!< the element whose matrix is calculated
       ) const;
 
-      //! calculate reactive term
-      void calculate_reactive_term(
-          const Core::LinAlg::Matrix<6, 1>* ctemp,     //!< temperature-dependent material tangent
-          const Core::LinAlg::Matrix<6, 1>* strainvel  //!< strain rate
-      ) const;
-
       //! determine heat flux and conductivity tensor
       //! based on material law
       virtual void materialize(const Core::Elements::Element* ele,  //!< current element
@@ -319,9 +310,6 @@ namespace Discret
       void calculate_lump_matrix(
           Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>* ecapa) const;
 
-      //! calculate characteristic element length
-      double calculate_char_ele_length() const;
-
       //! Compute the error compared to an analytical solution from input file
       virtual void compute_error(
           const Core::Elements::Element* ele,  //!< current element whose terms are calculated
@@ -344,18 +332,6 @@ namespace Discret
       void integrate_shape_functions(const Core::Elements::Element* ele,  //!< current element
           Core::LinAlg::SerialDenseVector& elevec1,         //!< result vector (to be assembled)
           const Core::LinAlg::IntSerialDenseVector& dofids  //!< for which dof we need to integrate?
-      );
-
-      //! extrapolate from Gauss points to nodes, needed for postprocessing
-      void extrapolate_from_gauss_points_to_nodes(
-          const Core::Elements::Element* ele,                    //!< the actual element
-          const Core::LinAlg::Matrix<nquad_, nsd_>& gpheatflux,  //!< heat flux at each Gauss Point
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>&
-              efluxx,  //!< element heat flux in x-direction
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>&
-              efluxy,  //!< element heat flux in y-direction
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>&
-              efluxz  //!< element heat flux in z-direction
       );
 
       //! extract displacement and velocity vector from discretization
