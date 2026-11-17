@@ -78,6 +78,9 @@ namespace Core::LinAlg
 
    \note that this is a true parallel multiplication, even in the transposed case!
 
+   \note Transposed operands are materialized before multiplication to avoid losing entries
+   in EpetraExt's distributed transpose-flag path.
+
    \note Does call complete on C upon exit by default.
 
    \param A          (in) : Matrix to multiply with B (must have Filled()==true)

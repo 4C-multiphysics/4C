@@ -16,6 +16,8 @@
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_unittest_utils_support_files_test.hpp"
 
+#include <vector>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace
@@ -29,6 +31,85 @@ namespace
    protected:
     SparseAlgebraMathTest() { comm_ = MPI_COMM_WORLD; }
   };
+
+  // A rectangular distributed product imports one B row from the other rank. The
+  // EpetraExt A^T*B^T transpose-flag path can return success but lose a column.
+  TEST_F(SparseAlgebraMathTest, DistributedRectangularProductWithTransposeFlags)
+  {
+    const int rank = Core::Communication::my_mpi_rank(comm_);
+    const int next_rank = (rank + 1) % Core::Communication::num_mpi_ranks(comm_);
+    const std::vector<int> row_gids{2 * rank, 2 * rank + 1};
+    const std::vector<int> inner_gids{3 * rank, 3 * rank + 1, 3 * rank + 2};
+    const std::vector<int> domain_gids{4 * rank, 4 * rank + 1, 4 * rank + 2, 4 * rank + 3};
+    Core::LinAlg::Map row_map(-1, 2, row_gids.data(), 0, comm_);
+    Core::LinAlg::Map inner_map(-1, 3, inner_gids.data(), 0, comm_);
+    Core::LinAlg::Map domain_map(-1, 4, domain_gids.data(), 0, comm_);
+    Core::LinAlg::SparseMatrix a(row_map, 2);
+    Core::LinAlg::SparseMatrix b(inner_map, 2);
+    for (const int row : row_gids)
+    {
+      a.assemble(2.0, row, inner_gids[0]);
+      a.assemble(3.0, row, 3 * next_rank + 1);
+    }
+    b.assemble(5.0, inner_gids[0], domain_gids[0]);
+    b.assemble(7.0, inner_gids[0], 4 * next_rank + 2);
+    b.assemble(11.0, inner_gids[1], domain_gids[1]);
+    b.assemble(13.0, inner_gids[1], 4 * next_rank + 3);
+    a.complete(inner_map, row_map);
+    b.complete(domain_map, inner_map);
+
+    const auto at = Core::LinAlg::matrix_transpose(a);
+    const auto bt = Core::LinAlg::matrix_transpose(b);
+    for (const bool trans_a : {false, true})
+      for (const bool trans_b : {false, true})
+        for (const bool explicit_flags : {false, true})
+          for (const bool complete : {false, true})
+          {
+            SCOPED_TRACE(testing::Message()
+                         << "trans_a=" << trans_a << ", trans_b=" << trans_b
+                         << ", explicit_flags=" << explicit_flags << ", complete=" << complete);
+            const auto& lhs = trans_a ? *at : a;
+            const auto& rhs = trans_b ? *bt : b;
+            auto product = explicit_flags ? Core::LinAlg::matrix_multiply(
+                                                lhs, trans_a, rhs, trans_b, false, true, complete)
+                                          : Core::LinAlg::matrix_multiply(
+                                                lhs, trans_a, rhs, trans_b, complete);
+            EXPECT_EQ(product->filled(), complete);
+            if (!complete) product->complete(domain_map, row_map);
+            EXPECT_TRUE(product->range_map().same_as(row_map));
+            EXPECT_TRUE(product->domain_map().same_as(domain_map));
+            for (const int row : row_gids)
+            {
+              int count = 0;
+              std::vector<double> values(4);
+              std::vector<int> columns(4);
+              product->extract_global_row_copy(row, 4, count, values.data(), columns.data());
+              EXPECT_EQ(count, 4);
+              if (count != 4) continue;
+              std::vector<bool> seen(8, false);
+              for (int i = 0; i < count; ++i)
+              {
+                EXPECT_GE(columns[i], 0);
+                EXPECT_LT(columns[i], 8);
+                if (columns[i] < 0 || columns[i] >= 8) continue;
+                EXPECT_FALSE(seen[columns[i]]);
+                seen[columns[i]] = true;
+                const int owner = columns[i] / 4;
+                const int col = columns[i] % 4;
+                if (owner == rank && col == 0)
+                  EXPECT_DOUBLE_EQ(values[i], 10.0);
+                else if (owner == next_rank && col == 2)
+                  EXPECT_DOUBLE_EQ(values[i], 14.0);
+                else if (owner == next_rank && col == 1)
+                  EXPECT_DOUBLE_EQ(values[i], 33.0);
+                else if (owner == rank && col == 3)
+                  EXPECT_DOUBLE_EQ(values[i], 39.0);
+                else
+                  ADD_FAILURE() << "Unexpected product column " << columns[i];
+              }
+            }
+          }
+  }
 
   /** The test setup is based on a simple 1d poisson problem with the given matrix "poisson1d.mm"
    * constructed with MATLAB, having the well known [1 -2 1] tri-diagonal entries.

@@ -288,8 +288,13 @@ std::unique_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_multiply(const 
       (transA ? A.range_map() : A.domain_map()).same_as(transB ? B.domain_map() : B.range_map()),
       "Matrix inner dimensions or distribution do not match for multiplication.");
 
-  return multiply_with_profile(A, transA, B, transB, rangemap, domainmap, rangemap, nnz,
-      A.explicit_dirichlet(), A.save_graph(), complete, profile);
+  // The EpetraExt transpose-flag path can silently omit entries in distributed products.
+  // Materialize the transposes first, as the overload with explicit constructor flags does.
+  const auto A_trans = transA ? matrix_transpose(A) : nullptr;
+  const auto B_trans = transB ? matrix_transpose(B) : nullptr;
+  return multiply_with_profile(A_trans ? *A_trans : A, false, B_trans ? *B_trans : B, false,
+      rangemap, domainmap, rangemap, nnz, A.explicit_dirichlet(), A.save_graph(), complete,
+      profile);
 }
 
 /*----------------------------------------------------------------------*
