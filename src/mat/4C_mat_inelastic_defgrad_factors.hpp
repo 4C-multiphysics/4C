@@ -24,7 +24,6 @@
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <boost/graph/visitors.hpp>
 #include <Teuchos_ParameterList.hpp>
 
 #include <memory>
