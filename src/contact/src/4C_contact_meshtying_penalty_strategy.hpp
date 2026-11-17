@@ -241,16 +241,16 @@ namespace CONTACT
     //! Initial penalty parameter
     double initialpenalty_;
 
-    //! Mortar matrix product \f$M^T M\f$
+    //! Mortar matrix product \f$M^T W^-1 M\f$
     std::shared_ptr<Core::LinAlg::SparseMatrix> mtm_;
 
-    //! Mortar matrix product \f$M^T D\f$
+    //! Mortar matrix product \f$M^T W^-1 D\f$
     std::shared_ptr<Core::LinAlg::SparseMatrix> mtd_;
 
-    //! Mortar matrix product \f$D^T M\f$
+    //! Mortar matrix product \f$D^T W^-1 M\f$
     std::shared_ptr<Core::LinAlg::SparseMatrix> dtm_;
 
-    //! Mortar matrix product \f$D^T D\f$
+    //! Mortar matrix product \f$D^T W^-1 D\f$
     std::shared_ptr<Core::LinAlg::SparseMatrix> dtd_;
 
 
@@ -262,6 +262,9 @@ namespace CONTACT
      * \todo Is this the residual or the right-hand side vector?
      */
     std::shared_ptr<Core::LinAlg::Vector<double>> force_;
+
+    //! Inverse of the interface scaling vector \f$W^-1\f$
+    std::shared_ptr<Core::LinAlg::Vector<double>> interface_scaling_inv_;
 
 
   };  // class MtPenaltyStrategy
