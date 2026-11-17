@@ -62,6 +62,7 @@ Core::IO::InputSpec CONTACT::valid_parameters()
                   {"LagrangianMultipliers", CONTACT::SolvingStrategy::lagmult},
                   {"lagrange", CONTACT::SolvingStrategy::lagmult},
                   {"Lagrange", CONTACT::SolvingStrategy::lagmult},
+                  {"augmented", CONTACT::SolvingStrategy::augmented},
                   {"penalty", CONTACT::SolvingStrategy::penalty},
                   {"Penalty", CONTACT::SolvingStrategy::penalty},
                   {"Uzawa", CONTACT::SolvingStrategy::uzawa},
