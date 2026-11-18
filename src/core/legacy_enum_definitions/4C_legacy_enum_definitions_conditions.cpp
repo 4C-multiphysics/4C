@@ -366,8 +366,8 @@ std::string_view Core::Conditions::to_string(const Core::Conditions::ConditionTy
       return "Scalar transport reaction coupling condition (Master:";
     case Core::Conditions::ScatraHeteroReactionCondSlave:
       return "Scalar transport reaction coupling condition (Slave:";
-    case Core::Conditions::ScatraPartitioning:
-      return "Scalar transport partitioning condition for block preconditioning";
+    case Core::Conditions::Partitioning:
+      return "Partitioning condition for block preconditioning";
     case Core::Conditions::ScatraRelError:
       return "Relative error to analytical solution";
     case Core::Conditions::SSICoupling:

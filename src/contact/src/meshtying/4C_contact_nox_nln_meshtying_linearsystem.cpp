@@ -218,6 +218,31 @@ Core::LinAlg::SolverParams NOX::Nln::MeshTying::LinearSystem::set_solver_options
 
             teko_parameters.set<std::shared_ptr<Core::LinAlg::Vector<double>>>(
                 "scaling vector", interface_scaling_inv);
+
+            if (teko_parameters.isParameter("reorder: maps"))
+            {
+              auto reorder_maps =
+                  teko_parameters.get<std::vector<std::shared_ptr<const Core::LinAlg::Map>>>(
+                      "reorder: maps");
+              auto lambda_map = strategy.lm_dof_row_map_ptr();
+
+              if (reorder_maps.size() == 2)
+              {
+                reorder_maps.emplace_back(lambda_map);
+              }
+              else if (reorder_maps.size() == 3)
+              {
+                reorder_maps[2] = lambda_map;
+              }
+              else
+              {
+                FOUR_C_THROW("Expected two or three meshtying reorder maps, but received {}.",
+                    reorder_maps.size());
+              }
+
+              teko_parameters.set<std::vector<std::shared_ptr<const Core::LinAlg::Map>>>(
+                  "reorder: maps", reorder_maps);
+            }
           }
         }
       }

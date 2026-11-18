@@ -1,0 +1,141 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+CONTACT DYNAMIC:
+  LINEAR_SOLVER: 1
+  STRATEGY: augmented
+  SYSTEM: "SaddlePoint"
+  PENALTYPARAM: 1e4
+IO:
+  VERBOSITY: "standard"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  ELEMENT_OWNER: true
+  ELEMENT_GID: true
+MESH PARTITIONING:
+  METHOD: "hypergraph"
+MORTAR COUPLING:
+  LM_SHAPEFCN: "Standard"
+MORTAR COUPLING/PARALLEL REDISTRIBUTION:
+  PARALLEL_REDIST: "None"
+PROBLEM SIZE:
+  DIM: 3
+SOLVER 1:
+  NAME: "Structure_Solver"
+  SOLVER: "Belos"
+  AZPREC: "Teko"
+  PRECONDITIONER_XML_FILE: "xml/block_preconditioner/meshtying_modified_AL.xml"
+STRUCTURAL DYNAMIC:
+  LINEAR_SOLVER: 1
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  NLNSOL: "fullnewton"
+  PREDICT: "ConstDis"
+  TIMESTEP: 1.0
+  NUMSTEP: 1
+  MAXTIME: 1.0
+  TOLRES: 1e-10
+  TOLDISP: 1e-10
+  MAXITER: 20
+STRUCTURE GEOMETRY:
+  FILE: "meshtying3D_nonconforming_beam_structure_new_augmented_coarse.exo"
+  SHOW_INFO: "detailed_summary"
+  ELEMENT_BLOCKS:
+    - ID: 1
+      SOLID:
+        HEX8:
+          MAT: 1
+          KINEM: "linear"
+    - ID: 2
+      SOLID:
+        HEX8:
+          MAT: 1
+          KINEM: "linear"
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 1000.0
+      NUE: 0.3
+      DENS: 0.0
+DESIGN SURF DIRICH CONDITIONS:
+  - ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [1.0, 1.0, 1.0]
+    FUNCT: [3, 3, 3]
+    E: 1
+  - ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [1, 0, 1]
+    VAL: [1.0, 0.0, 1.0]
+    FUNCT: [3, 0, 3]
+    E: 2
+  - ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0.0, 0.0, 1.0]
+    FUNCT: [0, 0, 3]
+    E: 3
+DESIGN SURF MORTAR COUPLING CONDITIONS 3D:
+  - ENTITY_TYPE: "node_set_id"
+    InterfaceID: 1
+    Side: "Master"
+    Initialization: "Inactive"
+    E: 6
+  - ENTITY_TYPE: "node_set_id"
+    InterfaceID: 1
+    Side: "Slave"
+    Initialization: "Active"
+    E: 7
+DESIGN SURF NEUMANN CONDITIONS:
+  - ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [1.0, 0.0, 0.0]
+    FUNCT: [2, 0, 0]
+    E: 4
+  - ENTITY_TYPE: "node_set_id"
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [1.0, 0.0, 0.0]
+    FUNCT: [1, 0, 0]
+    E: 5
+DESIGN STRUCTURE VOL CONDITIONS / PARTITIONING:
+  - ENTITY_TYPE: "node_set_id"
+    E: 8
+  - ENTITY_TYPE: "node_set_id"
+    E: 9
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "100*y"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-100*y"
+FUNCT3:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.1*x*y"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.05*(-x*x-0.3*y*y+0.3*z*z)"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-0.03*y*z"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1353
+      QUANTITY: "dispx"
+      VALUE: 0.0
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1353
+      QUANTITY: "dispy"
+      VALUE: -2.83708754777991221e-04
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1353
+      QUANTITY: "dispz"
+      VALUE: 0.0
+      TOLERANCE: 1e-08
