@@ -12,6 +12,7 @@
 #include <boost/geometry/geometries/multi_point.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/ring.hpp>
+#include <boost/geometry/strategies/strategies.hpp>
 
 FOUR_C_NAMESPACE_OPEN
 
