@@ -111,72 +111,7 @@
 0.000000000000000e+00 0.000000000000000e+00 0.000000000000000e+00
 0.000000000000000e+00 0.000000000000000e+00 0.000000000000000e+00
         </DataArray>
-		<DataArray type="Int32" Name="node_gid" format="ascii">
-0
-1
-2
-3
-4
-5
-6
-7
-1
-8
-9
-2
-5
-10
-11
-6
-8
-12
-13
-9
-10
-14
-15
-11
-12
-16
-17
-13
-14
-18
-19
-15
-20
-21
-22
-23
-24
-25
-26
-27
-        </DataArray>
-  </PointData>
-  <CellData>
-        <DataArray type="Float64" Name="element_ghosting" format="ascii">
-0.000000000000000e+00
-0.000000000000000e+00
-0.000000000000000e+00
-0.000000000000000e+00
-0.000000000000000e+00
-        </DataArray>
-        <DataArray type="Float64" Name="element_gid" format="ascii">
-0.000000000000000e+00
-1.000000000000000e+00
-2.000000000000000e+00
-3.000000000000000e+00
-4.000000000000000e+00
-        </DataArray>
-        <DataArray type="Float64" Name="element_owner" format="ascii">
-0.000000000000000e+00
-0.000000000000000e+00
-0.000000000000000e+00
-0.000000000000000e+00
-0.000000000000000e+00
-        </DataArray>
-      </CellData>
+      </PointData>
 
     </Piece>
   </UnstructuredGrid>

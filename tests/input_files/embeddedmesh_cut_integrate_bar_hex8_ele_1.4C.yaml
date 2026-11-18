@@ -1,11 +1,9 @@
 TITLE:
   - "Cut an structure element of a bar subjected to tension:"
-  - "In this problem, the displacement and stress afield are checked for the case"
+  - "In this problem, the displacement is checked for the case"
   - "of cutting the element on the tip of a discretized bar subjected to tension."
   - "The background element (element of the bar) is cut with a HEX8 element and"
   - "present a straight interface. The number of element in the cut mesh is 1x1x1."
-  - "The cut and background meshes ARE conforming."
-  - "The forces in the background element are distributed in a mortar manner."
 PROBLEM TYPE:
   PROBLEMTYPE: "Structure"
 IO/RUNTIME VTK OUTPUT:
@@ -13,10 +11,6 @@ IO/RUNTIME VTK OUTPUT:
 IO/RUNTIME VTK OUTPUT/STRUCTURE:
   OUTPUT_STRUCTURE: true
   DISPLACEMENT: true
-  ELEMENT_OWNER: true
-  ELEMENT_GID: true
-  ELEMENT_GHOSTING: true
-  NODE_GID: true
 STRUCTURAL DYNAMIC:
   DYNAMICTYPE: "Statics"
   TIMESTEP: 1
@@ -36,7 +30,7 @@ XFEM GENERAL:
   GMSH_CUT_OUT: true
 CONSTRAINT:
   CONSTRAINT_ENFORCEMENT: penalty
-  PENALTY_PARAM: 0
+  PENALTY_PARAM: 1e5
 CONSTRAINT/EMBEDDED MESH COUPLING:
   COUPLING_STRATEGY: mortar
   MORTAR_SHAPE_FUNCTION: quad4
@@ -49,7 +43,7 @@ CUT GENERAL:
 MATERIALS:
   - MAT: 1
     MAT_Struct_StVenantKirchhoff:
-      YOUNG: 20000
+      YOUNG: 2000
       NUE: 0
       DENS: 7.8e-07
 DESIGN EMBEDDED MESH SOLID SURF COUPLING CONDITIONS:
@@ -58,40 +52,47 @@ DESIGN EMBEDDED MESH SOLID SURF COUPLING CONDITIONS:
 DESIGN EMBEDDED SOLID VOL BACKGROUND CONDITIONS:
   - E: 1
     COUPLINGID: 1
-DESIGN SURF DIRICH CONDITIONS:
-  - E: 4
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 1
     NUMDOF: 3
     ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [1, 0, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
     VAL: [0, 0, 0]
     FUNCT: [0, 0, 0]
 DESIGN SURF NEUMANN CONDITIONS:
   - E: 2
     NUMDOF: 3
     ONOFF: [0, 0, 1]
-    VAL: [0, 0, 3]
+    VAL: [0, 0, 1]
     FUNCT: [0, 0, 0]
-  - E: 3
-    NUMDOF: 3
-    ONOFF: [0, 0, 1]
-    VAL: [0, 0, 7]
-    FUNCT: [0, 0, 0]
+DNODE-NODE TOPOLOGY:
+  - "NODE 17 DNODE 1"
+  - "NODE 19 DNODE 2"
+  - "NODE 18 DNODE 3"
+  - "NODE 20 DNODE 4"
 DSURF-NODE TOPOLOGY:
   - "NODE 22 DSURFACE 1"
   - "NODE 23 DSURFACE 1"
   - "NODE 26 DSURFACE 1"
   - "NODE 27 DSURFACE 1"
-  - "NODE 1 DSURFACE 2"
-  - "NODE 4 DSURFACE 2"
-  - "NODE 5 DSURFACE 2"
-  - "NODE 8 DSURFACE 2"
-  - "NODE 2 DSURFACE 3"
-  - "NODE 3 DSURFACE 3"
-  - "NODE 6 DSURFACE 3"
-  - "NODE 7 DSURFACE 3"
-  - "NODE 17 DSURFACE 4"
-  - "NODE 18 DSURFACE 4"
-  - "NODE 19 DSURFACE 4"
-  - "NODE 20 DSURFACE 4"
+  - "NODE 21 DSURFACE 2"
+  - "NODE 24 DSURFACE 2"
+  - "NODE 25 DSURFACE 2"
+  - "NODE 28 DSURFACE 2"
 DVOL-NODE TOPOLOGY:
   - "NODE 1 DVOL 1"
   - "NODE 2 DVOL 1"

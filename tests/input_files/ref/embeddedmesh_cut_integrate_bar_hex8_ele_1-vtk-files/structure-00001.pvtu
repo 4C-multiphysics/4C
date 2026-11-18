@@ -9,13 +9,7 @@
     </PPoints>
     <PPointData>
       <PDataArray type="Float64" Name="displacement" NumberOfComponents="3" format="ascii"/>
-      <PDataArray type="Int32" Name="node_gid" format="ascii"/>
     </PPointData>
-    <PCellData>
-      <PDataArray type="Float64" Name="element_ghosting" format="ascii"/>
-      <PDataArray type="Float64" Name="element_gid" format="ascii"/>
-      <PDataArray type="Float64" Name="element_owner" format="ascii"/>
-    </PCellData>
     <Piece Source="structure-00001-0.vtu"/>
   </PUnstructuredGrid>
 </VTKFile>
