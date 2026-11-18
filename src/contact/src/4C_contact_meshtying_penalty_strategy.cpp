@@ -89,11 +89,52 @@ void CONTACT::MtPenaltyStrategy::mortar_coupling(
           "strategy!");
   }
 
+  auto interface_scaling = interface_scaling_vector();
+  interface_scaling_inv_ =
+      std::make_shared<Core::LinAlg::Vector<double>>(interface_scaling->get_map(), true);
+
+  FOUR_C_ASSERT_ALWAYS(interface_scaling != nullptr, "Interface scaling vector is not available.");
+
+  for (int lid = 0; lid < interface_scaling->local_length(); ++lid)
+  {
+    const double interface_weight = interface_scaling->get_values()[lid];
+
+    if (interface_weight == 0.0)
+    {
+      interface_scaling_inv_->replace_local_value(lid, 0.0);
+    }
+    else
+    {
+      FOUR_C_ASSERT_ALWAYS(std::isfinite(interface_weight) && interface_weight > 0.0,
+          "Invalid interface scaling value {} at local index {}.", interface_weight, lid);
+
+      interface_scaling_inv_->replace_local_value(lid, 1.0 / interface_weight);
+    }
+  }
+
   // build mortar matrix products
-  mtm_ = Core::LinAlg::matrix_multiply(*mmatrix_, true, *mmatrix_, false, false, false, true);
-  mtd_ = Core::LinAlg::matrix_multiply(*mmatrix_, true, *dmatrix_, false, false, false, true);
-  dtm_ = Core::LinAlg::matrix_multiply(*dmatrix_, true, *mmatrix_, false, false, false, true);
-  dtd_ = Core::LinAlg::matrix_multiply(*dmatrix_, true, *dmatrix_, false, false, false, true);
+  auto inverse_scaled_mmatrix = std::make_shared<Core::LinAlg::SparseMatrix>(*mmatrix_);
+  auto inverse_scaled_dmatrix = std::make_shared<Core::LinAlg::SparseMatrix>(*dmatrix_);
+
+  // W^{-1} M and W^{-1} D
+  inverse_scaled_mmatrix->left_scale(*interface_scaling_inv_);
+  inverse_scaled_dmatrix->left_scale(*interface_scaling_inv_);
+
+  // M^T W^{-1} M
+  mtm_ = Core::LinAlg::matrix_multiply(
+      *mmatrix_, true, *inverse_scaled_mmatrix, false, false, false, true);
+
+  // M^T W^{-1} D
+  mtd_ = Core::LinAlg::matrix_multiply(
+      *mmatrix_, true, *inverse_scaled_dmatrix, false, false, false, true);
+
+  // D^T W^{-1} M
+  dtm_ = Core::LinAlg::matrix_multiply(
+      *dmatrix_, true, *inverse_scaled_mmatrix, false, false, false, true);
+
+  // D^T W^{-1} D
+  dtd_ = Core::LinAlg::matrix_multiply(
+      *dmatrix_, true, *inverse_scaled_dmatrix, false, false, false, true);
 
   // transform rows of mortar matrix products to parallel distribution
   // of the global problem (stored in the "p"-version of dof maps)
@@ -239,10 +280,11 @@ void CONTACT::MtPenaltyStrategy::evaluate_meshtying(
   mmatrix_->multiply(false, tempvec3, tempvec4);
   g_->update(1.0, tempvec4, 1.0);
 
-  // update LM vector
-  // (in the pure penalty case, zuzawa is zero)
+  // update LM vector (in the pure penalty case, zuzawa is zero)
+  Core::LinAlg::Vector<double> inverse_scaled_gap(*g_);
+  inverse_scaled_gap.multiply(1.0, *interface_scaling_inv_, *g_, 0.0);
   z_->update(1.0, *zuzawa_, 0.0);
-  z_->update(-pp, *g_, 1.0);
+  z_->update(-pp, inverse_scaled_gap, 1.0);
 
   // store updated LM into nodes
   store_nodal_quantities(Mortar::StrategyBase::lmupdate);
@@ -296,8 +338,10 @@ void CONTACT::MtPenaltyStrategy::initialize_uzawa(
 
   // update LM vector
   double pp = params().get<double>("PENALTYPARAM");
+  Core::LinAlg::Vector<double> inverse_scaled_gap(*g_);
+  inverse_scaled_gap.multiply(1.0, *interface_scaling_inv_, *g_, 0.0);
   z_->update(1.0, *zuzawa_, 0.0);
-  z_->update(-pp, *g_, 1.0);
+  z_->update(-pp, inverse_scaled_gap, 1.0);
 
   // add penalty meshtying force terms
   Core::LinAlg::Vector<double> fmnew(*gtdofrowmap_);

@@ -997,6 +997,8 @@ four_c_test(TEST_FILE meshtying2D_structure.4C.yaml NP 2 REQUIRED_DEPENDENCIES A
 four_c_test(TEST_FILE meshtying2D_structure_crosspoints.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE meshtying2D_structure_crosspoints_new_struct.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE meshtying2D_structure_new_struct.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
+four_c_test(TEST_FILE meshtying2D_sp_std_structure_new_struct.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
+four_c_test(TEST_FILE meshtying2D_penalty_std_structure_new_struct.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE meshtying3D_elebased.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE meshtying3D_elebased_new_struct.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE meshtying3D_nts.4C.yaml REQUIRED_DEPENDENCIES ArborX)

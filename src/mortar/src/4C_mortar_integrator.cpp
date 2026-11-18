@@ -1011,6 +1011,8 @@ void inline Mortar::IntegratorCalc<distype_s, distype_m>::gp_dm(Mortar::Element&
       if (cnode->owner() != Core::Communication::my_mpi_rank(comm)) continue;
       if (cnode->is_on_boundor_ce()) continue;
 
+      cnode->mo_data().interface_weight() += lmval(j) * jac * wgt;
+
       // integrate mseg
       for (int k = 0; k < ncol; ++k)
       {
@@ -1067,6 +1069,8 @@ void inline Mortar::IntegratorCalc<distype_s, distype_m>::gp_dm(Mortar::Element&
           ((shapefcn_ == Mortar::shape_dual || shapefcn_ == Mortar::shape_petrovgalerkin) &&
               cnode->is_on_bound()))
         continue;
+
+      cnode->mo_data().interface_weight() += lmval(j) * jac * wgt;
 
       // integrate mseg
       for (int k = 0; k < ncol; ++k)
@@ -1133,6 +1137,8 @@ void inline Mortar::IntegratorCalc<distype_s, distype_m>::gp_3d_dm_quad(Mortar::
     {
       Mortar::Node* cnode = dynamic_cast<Mortar::Node*>(snodes[j]);
 
+      cnode->mo_data().interface_weight() += lmval[j] * jac * wgt;
+
       // integrate mseg
       for (int k = 0; k < ncol; ++k)
       {
@@ -1170,6 +1176,8 @@ void inline Mortar::IntegratorCalc<distype_s, distype_m>::gp_3d_dm_quad(Mortar::
     for (int j = 0; j < nintrow; ++j)
     {
       Mortar::Node* cnode = dynamic_cast<Mortar::Node*>(sintnodes[j]);
+
+      cnode->mo_data().interface_weight() += lmintval[j] * jac * wgt;
 
       // integrate mseg
       for (int k = 0; k < ncol; ++k)
