@@ -33,6 +33,21 @@ jobs:
           build-targets: full
           build-directory: ${{ github.workspace }}/build
           use-ccache: "true"
+          # Avoid restoring the cache associated with the unresolved mixture symbols.
+          cache-key: kokkosopenmp-build-mixture-link-20261118
+      - name: Diagnose mixture symbols after build failure
+        if: failure()
+        run: |
+          object="${{ github.workspace }}/build/src/mixture/CMakeFiles/mixture_objs.dir/src/4C_mixture_growth_strategy.cpp.o"
+          library="${{ github.workspace }}/build/lib4C.so"
+          if [[ -f "$object" ]]; then
+            echo "Mixture object symbols:"
+            nm -C "$object" | grep 'MixtureGrowthStrategy::' || true
+          fi
+          if [[ -f "$library" ]]; then
+            echo "lib4C.so mixture symbols:"
+            nm -D -C "$library" | grep 'MixtureGrowthStrategy::' || true
+          fi
       - uses: ./.github/actions/upload_directory
         name: Upload 4C build
         with:
