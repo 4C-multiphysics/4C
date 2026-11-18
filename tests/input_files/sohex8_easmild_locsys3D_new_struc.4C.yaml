@@ -29,9 +29,6 @@ STRUCT NOX/Printing:
   Outer Iteration StatusTest: false
 SOLVER 1:
   SOLVER: "UMFPACK"
-  AZSOLVE: "CG"
-  PRECONDITIONER_XML_FILE: "xml/preconditioner/ifpack.xml"
-  AZSUB: 40
   NAME: "Structure_Solver"
 DESIGN POINT DIRICH CONDITIONS:
   - E: 1
