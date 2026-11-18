@@ -10,7 +10,6 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_comm_parobjectfactory.hpp"
 #include "4C_contact_input.hpp"
-#include "4C_contact_meshtying_noxinterface.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
@@ -56,7 +55,7 @@ CONTACT::MtAbstractStrategy::MtAbstractStrategy(const Core::LinAlg::Map* dof_row
   non_redist_gstdofrowmap_ = std::make_shared<Core::LinAlg::Map>(*gstdofrowmap_);
 
   // build the NOX::Nln::CONSTRAINT::Interface::Required object
-  noxinterface_ptr_ = std::make_shared<CONTACT::MtNoxInterface>();
+  noxinterface_ptr_ = std::make_shared<CONTACT::Meshtying::MtNoxInterface>();
 
   return;
 }

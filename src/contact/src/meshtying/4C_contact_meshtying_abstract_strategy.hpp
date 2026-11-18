@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_contact_meshtying_noxinterface.hpp"
 #include "4C_contact_utils.hpp"
 #include "4C_mortar_input.hpp"
 #include "4C_mortar_strategy_base.hpp"
@@ -516,7 +517,7 @@ namespace CONTACT
     //! @{
 
     //! Return the NOX::Nln::CONSTRAINT::Interface::Required member object
-    const std::shared_ptr<CONTACT::MtNoxInterface>& nox_interface_ptr()
+    const std::shared_ptr<CONTACT::Meshtying::MtNoxInterface>& nox_interface_ptr()
     {
       return noxinterface_ptr_;
     };
@@ -836,7 +837,7 @@ namespace CONTACT
 
    private:
     ///< pointer to the NOX::Nln::CONSTRAINT::Interface::Required object
-    std::shared_ptr<CONTACT::MtNoxInterface> noxinterface_ptr_;
+    std::shared_ptr<CONTACT::Meshtying::MtNoxInterface> noxinterface_ptr_;
 
   };  // class MtAbstractStrategy
 }  // namespace CONTACT

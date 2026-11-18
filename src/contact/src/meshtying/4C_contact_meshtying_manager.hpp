@@ -25,7 +25,7 @@ namespace Core::LinAlg
   class Vector;
 }
 
-namespace CONTACT
+namespace CONTACT::Meshtying
 {
   // forward declarations
 
@@ -147,7 +147,7 @@ namespace CONTACT
     MtManager(const MtManager& old) = delete;
 
   };  // class MtManager
-}  // namespace CONTACT
+}  // namespace CONTACT::Meshtying
 
 FOUR_C_NAMESPACE_CLOSE
 
