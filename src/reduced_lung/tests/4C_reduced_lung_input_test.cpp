@@ -145,10 +145,10 @@ reduced_dimensional_lung:
         "'restart_every' does not pass validation");
   }
 
-  TEST(ReducedLungInputTest, RejectsNonPositiveResultsEvery)
+  TEST(ReducedLungInputTest, RejectsNegativeResultsEvery)
   {
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-        match_input(input_with_dynamics_parameter("results_every", "0")), Core::Exception,
+        match_input(input_with_dynamics_parameter("results_every", "-1")), Core::Exception,
         "'results_every' does not pass validation");
   }
 

@@ -112,7 +112,7 @@ namespace ReducedLung
         model.solve_step(dynamics.time_increment);
         model.accept_step();
 
-        if (step % dynamics.results_every == 0)
+        if (dynamics.results_every > 0 && step % dynamics.results_every == 0)
         {
           model.write_output(step);
         }

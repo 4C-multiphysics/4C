@@ -559,9 +559,9 @@ Core::IO::InputSpec ReducedLung::valid_parameters()
                       }),
                   parameter<int>("results_every",
                       {
-                          .description = "Increment for writing solution.",
+                          .description = "Increment for writing results; 0 writes none.",
                           .default_value = 1,
-                          .validator = Validators::positive<int>(),
+                          .validator = Validators::positive_or_zero<int>(),
                           .store = in_struct(&ReducedLungParameters::Dynamics::results_every),
                       }),
                   parameter<int>("linear_solver",

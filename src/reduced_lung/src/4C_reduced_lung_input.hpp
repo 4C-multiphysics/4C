@@ -50,8 +50,8 @@ namespace ReducedLung
     {
       double time_increment;
       int number_of_steps;
-      int restart_every = 0;
-      int results_every = -1;
+      int restart_every;
+      int results_every;
       int linear_solver;
       int max_nonlinear_iterations;
       double nonlinear_residual_tolerance;
