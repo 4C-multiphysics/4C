@@ -64,6 +64,17 @@ namespace Particle
   //! shared pointer to particle container bundle
   using ParticleContainerBundleShrdPtr = std::shared_ptr<ParticleContainerBundle>;
 
+  //! array of state pointers from a particle container bundle
+  using ConstParticleContainerBundleStatePtrs =
+      const double *
+      [static_cast<int>(
+          ParticleType::Uninitialized)][static_cast<int>(ParticleStatus::Uninitialized)];
+
+  //! array of state pointers from a particle container bundle
+  using ParticleContainerBundleStatePtrs =
+      double * [static_cast<int>(
+                   ParticleType::Uninitialized)][static_cast<int>(ParticleStatus::Uninitialized)];
+
   /*!
    * \brief local index tuple of a particle
    *
