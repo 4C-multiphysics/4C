@@ -10,7 +10,7 @@
 #include "4C_cut_levelsetside.hpp"
 #include "4C_cut_tetmeshintersection.hpp"
 #include "4C_cut_volumecell.hpp"
-#include "4C_fem_geometry_delaunay_triangulation.hpp"
+#include "4C_fem_geometry_triangulation.hpp"
 
 #include <cstdio>
 #include <stack>
@@ -61,7 +61,7 @@ Cut::TetMesh::TetMesh(
     coordinates.push_back({point->x()[0], point->x()[1], point->x()[2]});
   }
 
-  const auto tetrahedra = Core::Geometry::delaunay_triangulation(
+  const auto tetrahedra = Core::Geometry::global_delaunay_triangulation(
       std::span<const Core::Geometry::Point<3>>(coordinates));
   tets_.reserve(tetrahedra.size());
 

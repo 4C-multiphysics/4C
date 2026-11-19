@@ -9,10 +9,12 @@
 
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_fem_geometry_convex_hull.hpp"
+#include "4C_fem_geometry_polygon_utils.hpp"
+#include "4C_fem_geometry_triangulation.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
+#include "4C_mortar_calc_utils.hpp"
 #include "4C_mortar_defines.hpp"
 #include "4C_mortar_integrator.hpp"
 #include "4C_mortar_node.hpp"
@@ -1531,6 +1533,8 @@ bool Mortar::Coupling3d::has_proj_status()
  *----------------------------------------------------------------------*/
 bool Mortar::Coupling3d::triangulation(std::map<int, double>& projpar, double tol)
 {
+  bool triangulation_success = true;
+
   // number of nodes
   const int nsrows = source_element().num_node();
   const int nmrows = target_element().num_node();
@@ -1542,6 +1546,66 @@ bool Mortar::Coupling3d::triangulation(std::map<int, double>& projpar, double to
 
   // get integration type
   auto tri_type = Teuchos::getIntegralValue<Mortar::Triangulation>(imortar_, "TRIANGULATION");
+
+  //**********************************************************************
+  // Local definition of center triangulation
+  //**********************************************************************
+  const auto center_triangulation = [this, &linvertex, tol]() -> bool
+  {
+    auto& integration_cells = cells();
+    integration_cells.clear();
+
+    const auto& clipping_polygon = clip();
+
+    std::vector<std::array<double, 3>> polygon;
+    polygon.reserve(clipping_polygon.size());
+
+    for (const auto& vertex : clipping_polygon)
+    {
+      const auto& coordinates = vertex.coord();
+      FOUR_C_ASSERT_ALWAYS(
+          coordinates.size() == 3, "Expected three coordinates per clipping vertex.");
+
+      polygon.push_back({
+          coordinates[0],
+          coordinates[1],
+          coordinates[2],
+      });
+    }
+
+    FOUR_C_ASSERT_ALWAYS(
+        polygon.size() == linvertex.size(), "Expected one linearization per clipping vertex.");
+
+    std::vector<Core::Gen::Pairedvector<int, double>> center_vertex_linearization;
+    if (polygon.size() > 3)
+    {
+      const int linearization_capacity =
+          3 * (source_element().num_node() + target_element().num_node());
+
+      center_vertex_linearization = std::vector<Core::Gen::Pairedvector<int, double>>(
+          3, Core::Gen::Pairedvector<int, double>(linearization_capacity));
+
+      if (!this->center_linearization(linvertex, center_vertex_linearization)) return false;
+    }
+
+    auto triangles = Core::Geometry::local_center_triangulation(
+        polygon, linvertex, center_vertex_linearization, tol);
+    if (!triangles) return false;
+
+    integration_cells.reserve(triangles->size());
+    std::size_t cell_id = 0;
+
+    for (auto& triangle : *triangles)
+    {
+      integration_cells.emplace_back(std::make_shared<IntCell>(static_cast<int>(cell_id), 3,
+          triangle.coordinates, auxn(), Core::FE::CellType::tri3, triangle.vertex_linearizations[0],
+          triangle.vertex_linearizations[1], triangle.vertex_linearizations[2], get_deriv_auxn()));
+
+      ++cell_id;
+    }
+
+    return true;
+  };
 
   //**********************************************************************
   // (1) Linearization of clip vertex coordinates (only for contact)
@@ -1556,21 +1620,23 @@ bool Mortar::Coupling3d::triangulation(std::map<int, double>& projpar, double to
     case Mortar::triangulation_delaunay:
       if (!delaunay_triangulation(linvertex, tol))
         // (3) Backup triangulation of clip polygon (CENTER-based (old))
-        center_triangulation(linvertex, tol);
+        triangulation_success = center_triangulation();
       break;
 
     //**********************************************************************
     // (3) Backup triangulation of clip polygon (CENTER-based (old))
     //**********************************************************************
     case Mortar::triangulation_center:
-      center_triangulation(linvertex, tol);
+    {
+      triangulation_success = center_triangulation();
       break;
-
+    }
     default:
       FOUR_C_THROW("unknown triangulation type");
       break;
   }
-  return true;
+
+  return triangulation_success;
 }
 
 /*----------------------------------------------------------------------*
@@ -2053,131 +2119,6 @@ bool Mortar::Coupling3d::delaunay_triangulation(
     // if Delaunay triangulation failed, use old center-based
     // triangulation as backup (therefore return false)
     return false;
-  }
-
-  // triangulation successful
-  return true;
-}
-
-
-/*----------------------------------------------------------------------*
- |  Triangulation of clip polygon (3D) - CENTER               popp 08/11|
- *----------------------------------------------------------------------*/
-bool Mortar::Coupling3d::center_triangulation(
-    std::vector<std::vector<Core::Gen::Pairedvector<int, double>>>& linvertex, double tol)
-{
-  // preparations
-  cells().resize(0);
-  int clipsize = (int)(clip().size());
-  std::vector<Core::Gen::Pairedvector<int, double>> lincenter(
-      3, (target_element().num_node() + source_element().num_node()) * 3);
-
-  //**********************************************************************
-  // (1) Trivial clipping polygon -> IntCells
-  //**********************************************************************
-  // clip polygon = triangle
-  // no triangulation necessary -> 1 IntCell
-  if (clipsize == 3)
-  {
-    // IntCell vertices = clip polygon vertices
-    Core::LinAlg::Matrix<3, 3> coords;
-    for (int i = 0; i < clipsize; ++i)
-      for (int k = 0; k < 3; ++k) coords(k, i) = clip()[i].coord()[k];
-
-    // create IntCell object and push back
-    cells().push_back(std::make_shared<IntCell>(0, 3, coords, auxn(), Core::FE::CellType::tri3,
-        linvertex[0], linvertex[1], linvertex[2], get_deriv_auxn()));
-
-    // get out of here
-    return true;
-  }
-
-  //**********************************************************************
-  // (2) Find center of clipping polygon (centroid formula)
-  //**********************************************************************
-  std::vector<double> clipcenter(3);
-  for (int k = 0; k < 3; ++k) clipcenter[k] = 0.0;
-  double fac = 0.0;
-
-  // first we need node averaged center
-  std::array<double, 3> nac = {0.0, 0.0, 0.0};
-  for (int i = 0; i < clipsize; ++i)
-    for (int k = 0; k < 3; ++k) nac[k] += (clip()[i].coord()[k] / clipsize);
-
-  // loop over all triangles of polygon
-  for (int i = 0; i < clipsize; ++i)
-  {
-    std::array<double, 3> xi_i = {0.0, 0.0, 0.0};
-    std::array<double, 3> xi_ip1 = {0.0, 0.0, 0.0};
-
-    // standard case
-    if (i < clipsize - 1)
-    {
-      for (int k = 0; k < 3; ++k) xi_i[k] = clip()[i].coord()[k];
-      for (int k = 0; k < 3; ++k) xi_ip1[k] = clip()[i + 1].coord()[k];
-    }
-    // last vertex of clip polygon
-    else
-    {
-      for (int k = 0; k < 3; ++k) xi_i[k] = clip()[clipsize - 1].coord()[k];
-      for (int k = 0; k < 3; ++k) xi_ip1[k] = clip()[0].coord()[k];
-    }
-
-    // triangle area
-    std::array<double, 3> diff1 = {0.0, 0.0, 0.0};
-    std::array<double, 3> diff2 = {0.0, 0.0, 0.0};
-    for (int k = 0; k < 3; ++k) diff1[k] = xi_ip1[k] - xi_i[k];
-    for (int k = 0; k < 3; ++k) diff2[k] = xi_i[k] - nac[k];
-
-    std::array<double, 3> cross = {0.0, 0.0, 0.0};
-    cross[0] = diff1[1] * diff2[2] - diff1[2] * diff2[1];
-    cross[1] = diff1[2] * diff2[0] - diff1[0] * diff2[2];
-    cross[2] = diff1[0] * diff2[1] - diff1[1] * diff2[0];
-
-    double Atri = 0.5 * sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
-
-    // add contributions to clipcenter and fac
-    fac += Atri;
-    for (int k = 0; k < 3; ++k) clipcenter[k] += 1.0 / 3.0 * (xi_i[k] + xi_ip1[k] + nac[k]) * Atri;
-  }
-
-  // final clipcenter
-  for (int k = 0; k < 3; ++k) clipcenter[k] /= fac;
-
-  //**********************************************************************
-  // (3) Linearization of clip center coordinates (only for contact)
-  //**********************************************************************
-  center_linearization(linvertex, lincenter);
-
-  //**********************************************************************
-  // (4) General clipping polygon: Triangulation -> IntCells
-  //**********************************************************************
-  // center-based triangulation if clip polygon > quadrilateral
-  // No. of IntCells is equal to no. of clip polygon vertices
-  for (int num = 0; num < clipsize; ++num)
-  {
-    // the first vertex is always the clip center
-    // the second vertex is always the current clip vertex
-    Core::LinAlg::Matrix<3, 3> coords;
-    for (int k = 0; k < 3; ++k)
-    {
-      coords(k, 0) = clipcenter[k];
-      coords(k, 1) = clip()[num].coord()[k];
-    }
-
-    // the third vertex is the next vertex on clip polygon
-    int numplus1 = num + 1;
-    if (num == clipsize - 1)
-    {
-      for (int k = 0; k < 3; ++k) coords(k, 2) = clip()[0].coord()[k];
-      numplus1 = 0;
-    }
-    else
-      for (int k = 0; k < 3; ++k) coords(k, 2) = clip()[num + 1].coord()[k];
-
-    // create IntCell object and push back
-    cells().push_back(std::make_shared<IntCell>(num, 3, coords, auxn(), Core::FE::CellType::tri3,
-        lincenter, linvertex[num], linvertex[numplus1], get_deriv_auxn()));
   }
 
   // triangulation successful
