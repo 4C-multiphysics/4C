@@ -329,6 +329,7 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
   const MPI_Comm comm = discret_ptr_->get_comm();
   const Core::LinAlg::Map& node_row_map = *discret_ptr_->node_row_map();
   const int num_dim = (rve_dim_ == Constraints::MultiPoint::RveDimension::rve2d) ? 2 : 3;
+  const Core::IO::Verbositylevel output_level = Core::IO::cout.requested_output_level();
 
   // filled by both reference-point definitions (automatic and manual):
   // the four nodes of every periodic relation u(n0) - u(n1) = u(n2) - u(n3) created on this rank,
@@ -568,10 +569,13 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
     Core::IO::cout(Core::IO::standard) << Core::IO::endl;
   }
 
-  const int num_candidate_relations =
-      Core::Communication::sum_all(static_cast<int>(periodic_relation_nodes.size()), comm);
-  Core::IO::cout(Core::IO::verbose)
-      << "Candidate periodic relations: " << num_candidate_relations << Core::IO::endl;
+  if (output_level >= Core::IO::verbose)
+  {
+    const int num_candidate_relations =
+        Core::Communication::sum_all(static_cast<int>(periodic_relation_nodes.size()), comm);
+    Core::IO::cout(Core::IO::verbose)
+        << "Candidate periodic relations: " << num_candidate_relations << Core::IO::endl;
+  }
 
   // Ensure no constraint is enforced twice (the automatic search already skips duplicates, the
   // manual definition relies on this check):
@@ -625,14 +629,20 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::build_perio
     pbc_labels.erase(pbc_labels.begin() + id);
   }
 
-  const int num_removed_duplicates =
-      Core::Communication::sum_all(static_cast<int>(idsToRemove.size()), comm);
-  const int num_unique_relations =
-      Core::Communication::sum_all(static_cast<int>(periodic_relation_nodes.size()), comm);
-  Core::IO::cout(Core::IO::verbose)
-      << "Removed duplicate relations: " << num_removed_duplicates << Core::IO::endl;
-  Core::IO::cout(Core::IO::standard)
-      << "Unique periodic relations: " << num_unique_relations << Core::IO::endl;
+  if (output_level >= Core::IO::verbose)
+  {
+    const int num_removed_duplicates =
+        Core::Communication::sum_all(static_cast<int>(idsToRemove.size()), comm);
+    Core::IO::cout(Core::IO::verbose)
+        << "Removed duplicate relations: " << num_removed_duplicates << Core::IO::endl;
+  }
+  if (output_level >= Core::IO::standard)
+  {
+    const int num_unique_relations =
+        Core::Communication::sum_all(static_cast<int>(periodic_relation_nodes.size()), comm);
+    Core::IO::cout(Core::IO::standard)
+        << "Unique periodic relations: " << num_unique_relations << Core::IO::endl;
+  }
 
   // every equation needs a unique global id: start counting where the lower ranks stop
   int num_my_constraint_equations = static_cast<int>(periodic_relation_nodes.size()) * num_dim;

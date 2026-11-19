@@ -84,8 +84,6 @@ void Constraints::SubmodelEvaluator::ConstraintBase::evaluate_coupling_terms(
   constraint_residual_ =
       std::make_shared<Core::LinAlg::Vector<double>>(*constraint_equation_map_, true);
   Q_Ld_ = std::make_shared<Core::LinAlg::SparseMatrix>(*constraint_equation_map_, 4);
-  // FE matrices (FE_MATRIX), since the dofs of an equation (and thus the rows of Q_dL and Q_dd)
-  // may be owned by other ranks
   Q_dL_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       stiff_ptr_->row_map(), 4, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
   Q_dd_ = std::make_shared<Core::LinAlg::SparseMatrix>(
