@@ -39,11 +39,11 @@ void CONTACT::MtAugmentedLagrangeStrategy::mortar_coupling(
   MtLagrangeStrategy::mortar_coupling(dis);
 
   const auto interface_weights = interface_scaling_vector();
-  augmentation_scaling_ =
-      std::make_shared<Core::LinAlg::Vector<double>>(interface_weights->get_map(), true);
-
   FOUR_C_ASSERT_ALWAYS(
       interface_weights != nullptr, "The meshtying interface weights are not available.");
+
+  augmentation_scaling_ =
+      std::make_shared<Core::LinAlg::Vector<double>>(interface_weights->get_map(), true);
 
   const double penalty_param = params().get<double>("PENALTYPARAM");
   FOUR_C_ASSERT_ALWAYS(
@@ -51,12 +51,19 @@ void CONTACT::MtAugmentedLagrangeStrategy::mortar_coupling(
 
   for (int lid = 0; lid < interface_weights->local_length(); ++lid)
   {
-    const double weight = interface_weights->get_values()[lid];
+    const double interface_weight = interface_weights->get_values()[lid];
 
-    FOUR_C_ASSERT_ALWAYS(std::isfinite(weight) && weight > 0.0,
-        "Invalid meshtying interface weight {} at local index {}.", weight, lid);
+    if (interface_weight == 0.0)
+    {
+      augmentation_scaling_->replace_local_value(lid, 0.0);
+    }
+    else
+    {
+      FOUR_C_ASSERT_ALWAYS(std::isfinite(interface_weight) && interface_weight > 0.0,
+          "Invalid interface scaling value {} at local index {}.", interface_weight, lid);
 
-    augmentation_scaling_->replace_local_value(lid, penalty_param / weight);
+      augmentation_scaling_->replace_local_value(lid, penalty_param / interface_weight);
+    }
   }
 
   // K_aug = penalty * [D^T; -M^T] * W^{-1} * [D, -M].
