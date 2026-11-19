@@ -103,12 +103,12 @@ void Constraints::EmbeddedMesh::SolidToSolidCouplingManager::collect_output_inte
     unsigned int n_segments = elepairptr->get_num_segments();
     for (size_t iter_segments = 0; iter_segments < n_segments; iter_segments++)
     {
-      elepairptr->get_projected_gauss_rule_on_interface(
+      elepairptr->get_projected_gauss_rule_on_interface_and_background_ele_for_visualization(
           background_integration_points_visualization_data,
           interface_integration_points_visualization_data);
     }
 
-    elepairptr->get_projected_gauss_rule_in_cut_element(
+    elepairptr->get_gauss_rule_in_cut_element_for_visualization(
         cut_element_integration_points_visualization_data);
   }
 }
