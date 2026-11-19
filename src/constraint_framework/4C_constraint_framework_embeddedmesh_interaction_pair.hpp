@@ -41,7 +41,7 @@ namespace GeometryPair
 
 namespace Constraints::EmbeddedMesh
 {
-  class SolidToSolidMortarManager;
+  class SolidToSolidCouplingManager;
 
   class SolidInteractionPair
   {
@@ -79,52 +79,50 @@ namespace Constraints::EmbeddedMesh
     inline unsigned int get_num_segments() { return boundary_cells_.size(); }
 
     //! @name Visualization methods
-    /*!
-    \brief Get the Gauss points of element2_ after cut for visualization.
-    */
-    virtual void get_projected_gauss_rule_in_cut_element(
+
+    /**
+     * \brief Write the Gauss points of the integration cells of a cut background element for
+     * visualization.
+     *
+     * The Gauss points of the integration cells, given by the cut library in the parameter space
+     * of the background element, are mapped to physical space using the reference nodal positions.
+     *
+     * @param cut_element_integration_points_visualization_data (in/out) Visualization data to which
+     * the Gauss points are appended
+     */
+    virtual void get_gauss_rule_in_cut_element_for_visualization(
         Core::IO::VisualizationData& cut_element_integration_points_visualization_data) = 0;
 
     /*!
-    \brief Get the Gauss points of element1_ and element2_ for the evaluation of mortar matrices.
+    \brief Get special visualization for a pair. In the case of the Mortar manager, the
+    vector_to_visualize is the vector of Lagrange multipliers.
     */
-    virtual void get_projected_gauss_rule_on_interface(
+    virtual void get_projected_gauss_rule_on_interface_and_background_ele_for_visualization(
         Core::IO::VisualizationData& background_integration_points_visualization_data,
         Core::IO::VisualizationData& interface_integration_points_visualization_data) = 0;
 
     /*!
-    \brief Get the Lagrange multiplier field evaluated on the interface nodes for visualization.
+    \brief Get special visualization for a pair.
     */
-    virtual void get_pair_visualization(
-        Core::IO::VisualizationData& lagrange_multipliers_visualization_data,
-        std::shared_ptr<Core::LinAlg::Vector<double>> lambda,
-        const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
+    virtual void get_pair_visualization(Core::IO::VisualizationData& visualization_data,
+        std::shared_ptr<Core::LinAlg::Vector<double>> vector_to_visualize,
+        const Constraints::EmbeddedMesh::SolidToSolidCouplingManager* coupling_manager,
         std::shared_ptr<std::unordered_set<int>> interface_tracker) = 0;
 
 
     //! @name Evaluation methods
     /**
-     * \brief Evaluate the global matrices and vectors resulting from mortar coupling.
+     * \brief Evaluate the global matrices and vectors resulting from the coupling method.
      * @param discret (in) Discretization, used to get the boundary layer GIDs.
-     * @param mortar_manager (in) Mortar manager, used to get the Lagrange multiplier GIDs.
-     * @param global_g_bl_ (in/out) Constraint equations derived w.r.t the boundary layer DOFs.
-     * @param global_g_bg_ (in/out) Constraint equations derived w.r.t the background mesh DOFs.
-     * @param global_fbl_l_ (in/out) Boundary layer force vector derived w.r.t the Lagrange
-     * multipliers.
-     * @param global_fbg_l_ (in/out) Background mesh force vector derived w.r.t the Lagrange
-     * multipliers.
-     * @param global_constraint (in/out) Global constraint vector.
-     * @param global_kappa (in/out) Global scaling matrix.
-     * @param global_lambda_active (in/out) Global vector with active Lagrange multipliers.
-     * @param displacement_vector (in) Global displacement vector.
+     * @param coupling_manager (in) Manager for the specific type of coupling technique
+     * @param global_matrices (in) A map of sparse matrices resulting from the coupling method.
+     * @param global_vectors (in) A map of FEVectors resulting from the coupling method.
      */
-    virtual void evaluate_and_assemble_mortar_contributions(const Core::FE::Discretization& discret,
-        const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
-        Core::LinAlg::SparseMatrix& global_g_bl_, Core::LinAlg::SparseMatrix& global_g_bg_,
-        Core::LinAlg::SparseMatrix& global_fbl_l_, Core::LinAlg::SparseMatrix& global_fbg_l_,
-        Core::LinAlg::FEVector<double>& global_constraint,
-        Core::LinAlg::FEVector<double>& global_kappa,
-        Core::LinAlg::FEVector<double>& global_lambda_active) = 0;
+    virtual void evaluate_and_assemble_coupling_contributions(
+        const Core::FE::Discretization& discret,
+        const Constraints::EmbeddedMesh::SolidToSolidCouplingManager* coupling_manager,
+        std::map<std::string, std::shared_ptr<Core::LinAlg::SparseMatrix>>& global_matrices,
+        std::map<std::string, std::shared_ptr<Core::LinAlg::FEVector<double>>>& global_vectors) = 0;
 
     /**
      * \brief Set the current element displacement.
