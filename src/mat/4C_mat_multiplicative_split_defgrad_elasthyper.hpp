@@ -73,7 +73,7 @@ namespace Mat
       const double density_;
 
       /// reference temperature for thermal expansion
-      const double ref_temperature_;
+      const double ref_temperature_thermal_expansion_;
 
       /// thermal expansion coefficient
       const double thermal_expansion_coefficient_;

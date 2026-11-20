@@ -48,7 +48,8 @@ Mat::PAR::MultiplicativeSplitDefgradElastHyper::MultiplicativeSplitDefgradElastH
       numfac_inel_(matdata.parameters.get<int>("NUMFACINEL")),
       inel_defgradfacids_(matdata.parameters.get<std::vector<int>>("INELDEFGRADFACIDS")),
       density_(matdata.parameters.get<double>("DENS")),
-      ref_temperature_(matdata.parameters.get<double>("REF_TEMPERATURE")),
+      ref_temperature_thermal_expansion_(
+          matdata.parameters.get<double>("REF_TEMPERATURE_THERMAL_EXPANSION")),
       thermal_expansion_coefficient_(
           matdata.parameters.get<double>("THERMAL_EXPANSION_COEFFICIENT"))
 {
@@ -250,7 +251,8 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate(
   double delta_temperature = 0.0;
   if (params.isParameter("temperature"))
   {
-    delta_temperature = params.get<double>("temperature") - params_->ref_temperature_;
+    delta_temperature =
+        params.get<double>("temperature") - params_->ref_temperature_thermal_expansion_;
   }
   auto thermoelastic_stress_contribution =
       Mat::ThermalExpansion::compute_thermoelastic_stress_contribution(
@@ -330,7 +332,8 @@ Mat::MultiplicativeSplitDefgradElastHyper::evaluate_d_stress_d_scalar(
   // compute thermal quantities from the absolute temperature stored in the parameter list
   if (params.isParameter("temperature"))
   {
-    delta_temperature = params.get<double>("temperature") - params_->ref_temperature_;
+    delta_temperature =
+        params.get<double>("temperature") - params_->ref_temperature_thermal_expansion_;
   }
 
   const auto thermoelastic_stress_contribution =

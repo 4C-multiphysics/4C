@@ -124,7 +124,6 @@ namespace
     viscoplastic_law_data.add("INIT_YIELD_STRENGTH", 792.0);
     viscoplastic_law_data.add("ISOTROP_HARDEN_PREFAC", 510.0);
     viscoplastic_law_data.add("ISOTROP_HARDEN_EXP", 0.26);
-    viscoplastic_law_data.add("REF_TEMPERATURE", ref_temperature);
     viscoplastic_law_data.add("MELT_TEMPERATURE", 1793.0);
     viscoplastic_law_data.add("TEMPERATURE_SENS", 1.03);
     problem.materials()->insert(matid_viscoplastic_law,
@@ -147,6 +146,7 @@ namespace
     viscoplastic_factor_data.add(
         "TIME_INTEGRATION_HIST_VARS", ViscoplastUtils::TimIntType::logarithmic);
     viscoplastic_factor_data.add("VISCOPLAST_LAW_ID", matid_viscoplastic_law);
+    viscoplastic_factor_data.add("REF_TEMPERATURE_VISCOPLAST_LAW", ref_temperature);
     viscoplastic_factor_data.add<std::optional<double>>("YIELD_COND_A", 1.0);
     viscoplastic_factor_data.add<std::optional<double>>("YIELD_COND_B", 2.0);
     viscoplastic_factor_data.add<std::optional<double>>("YIELD_COND_F", 2.5);
@@ -213,7 +213,7 @@ namespace
     multiplicative_split_data.add("NUMFACINEL", 1);
     multiplicative_split_data.add("INELDEFGRADFACIDS", std::vector<int>{matid_viscoplastic_factor});
     multiplicative_split_data.add("DENS", 1.0);
-    multiplicative_split_data.add("REF_TEMPERATURE", ref_temperature);
+    multiplicative_split_data.add("REF_TEMPERATURE_THERMAL_EXPANSION", ref_temperature);
     multiplicative_split_data.add("THERMAL_EXPANSION_COEFFICIENT",
         temperature_coupling == TemperatureCoupling::on ? 1.0e-5 : 0.0);
     problem.materials()->insert(matid_multiplicative_split,

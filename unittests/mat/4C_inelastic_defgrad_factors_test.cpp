@@ -59,7 +59,6 @@ namespace
     double init_yield_strength = 2.0e4;
     double isotrop_harden_prefac = 5.0e3;
     double isotrop_harden_exp = 0.2;
-    double ref_temperature = 293.0;
     double melt_temperature = 1793.0;
     double temperature_sens = 1.03;
   };
@@ -91,7 +90,8 @@ namespace
     int numgp = 1;
     double taylor_quinney_coefficient = 0.0;
     double thermal_expansion_coefficient = 0.1;
-    double ref_temperature = 293.0;
+    double ref_temperature_thermal_expansion = 293.0;
+    double ref_temperature_viscoplast_law = 293.0;
     ReformulatedJohnsonCookParameters viscoplastic_law_params{};
   };
 
@@ -173,6 +173,7 @@ namespace
     material_data.add("TIME_INTEGRATION_HIST_VARS",
         Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::TimIntType::logarithmic);
     material_data.add("VISCOPLAST_LAW_ID", viscoplastic_law_id);
+    material_data.add("REF_TEMPERATURE_VISCOPLAST_LAW", setup.ref_temperature_viscoplast_law);
     material_data.add<std::optional<double>>("YIELD_COND_A", setup.yield_cond_a);
     material_data.add<std::optional<double>>("YIELD_COND_B", setup.yield_cond_b);
     material_data.add<std::optional<double>>("YIELD_COND_F", setup.yield_cond_f);
@@ -240,7 +241,6 @@ namespace
         "ISOTROP_HARDEN_PREFAC", setup.viscoplastic_law_params.isotrop_harden_prefac);
     viscoplastic_law_data.add(
         "ISOTROP_HARDEN_EXP", setup.viscoplastic_law_params.isotrop_harden_exp);
-    viscoplastic_law_data.add("REF_TEMPERATURE", setup.viscoplastic_law_params.ref_temperature);
     viscoplastic_law_data.add("MELT_TEMPERATURE", setup.viscoplastic_law_params.melt_temperature);
     viscoplastic_law_data.add("TEMPERATURE_SENS", setup.viscoplastic_law_params.temperature_sens);
     problem.materials()->insert(viscoplastic_law_id,
@@ -248,7 +248,8 @@ namespace
             Core::Materials::MaterialType::mvl_reformulated_Johnson_Cook, viscoplastic_law_data));
 
     auto viscoplastic_law = std::make_shared<Mat::Viscoplastic::ReformulatedJohnsonCook>(
-        problem.materials()->parameter_by_id(viscoplastic_law_id), error_registration_settings);
+        problem.materials()->parameter_by_id(viscoplastic_law_id),
+        setup.ref_temperature_viscoplast_law, error_registration_settings);
 
     std::vector<std::shared_ptr<Mat::Elastic::Summand>> pot_sum_el;
     pot_sum_el.emplace_back(Mat::Elastic::Summand::factory(200));
@@ -260,7 +261,7 @@ namespace
     auto viscoplastic_material = std::shared_ptr<Mat::InelasticDefgradTransvIsotropElastViscoplast>(
         new Mat::InelasticDefgradTransvIsotropElastViscoplast(material_params.get(),
             viscoplastic_law, fiber_reader, pot_sum_el, pot_sum_el_transv_iso,
-            setup.thermal_expansion_coefficient, setup.ref_temperature),
+            setup.thermal_expansion_coefficient, setup.ref_temperature_thermal_expansion),
         [material_params](Mat::InelasticDefgradTransvIsotropElastViscoplast* material)
         { delete material; });
 
@@ -295,7 +296,6 @@ namespace
         .init_yield_strength = 792.0,
         .isotrop_harden_prefac = 510.0,
         .isotrop_harden_exp = 0.26,
-        .ref_temperature = 293.0,
         .melt_temperature = 1793.0,
         .temperature_sens = 1.03,
     };
@@ -1745,9 +1745,10 @@ namespace
         set_up_viscoplastic_material({.mat_behavior = ViscoplastUtils::MatBehavior::isotropic})
             .material;
 
-    // reference temperature with which the material was constructed.
+    // reference temperature for thermal expansion with which the material was constructed.
     auto default_setup = ViscoplasticMaterialSetup{};
-    const double ref_temperature = default_setup.ref_temperature;
+    const double ref_temperature_thermal_expansion =
+        default_setup.ref_temperature_thermal_expansion;
 
     Teuchos::ParameterList params_list{};
     double total_time = 1.0e-6;
@@ -1769,7 +1770,7 @@ namespace
     const double dummy_last_plastic_strain = 0.0;
 
     auto local_integration_input = ViscoplastUtils::LocalIntegrationInput{{.defgrad = FM_,
-        .temperature = ref_temperature,
+        .temperature = ref_temperature_thermal_expansion,
         .last_inv_inelastic_defgrad = dummy_last_iFinM,
         .last_plastic_strain = dummy_last_plastic_strain,
         .step = time_step_size}};
@@ -2357,7 +2358,6 @@ namespace
         .init_yield_strength = 792.0,
         .isotrop_harden_prefac = 510.0,
         .isotrop_harden_exp = 0.26,
-        .ref_temperature = 293.0,
         .melt_temperature = 1000.0,
         .temperature_sens = 0.1};
 
@@ -2565,7 +2565,6 @@ namespace
         .init_yield_strength = 792.0,
         .isotrop_harden_prefac = 510.0,
         .isotrop_harden_exp = 0.26,
-        .ref_temperature = 293.0,
         .melt_temperature = 1000.0,
         .temperature_sens = 0.1};
 
@@ -2641,7 +2640,8 @@ namespace
 
     // reference temperature with which the material was constructed.
     auto default_setup = ViscoplasticMaterialSetup{};
-    const double ref_temperature = default_setup.ref_temperature;
+    const double ref_temperature_thermal_expansion =
+        default_setup.ref_temperature_thermal_expansion;
 
     Teuchos::ParameterList params_list;
     double total_time = 1.0e-6;
@@ -2662,7 +2662,7 @@ namespace
     const double dummy_last_plastic_strain = 0.0;
 
     auto local_integration_input = ViscoplastUtils::LocalIntegrationInput{{.defgrad = FM_,
-        .temperature = ref_temperature,
+        .temperature = ref_temperature_thermal_expansion,
         .last_inv_inelastic_defgrad = dummy_last_iFinM,
         .last_plastic_strain = dummy_last_plastic_strain,
         .step = time_step_size}};
@@ -3152,7 +3152,6 @@ namespace
         .init_yield_strength = 792.0,
         .isotrop_harden_prefac = 510.0,
         .isotrop_harden_exp = 0.26,
-        .ref_temperature = 293.0,
         .melt_temperature = 1793.0,
         .temperature_sens = 1.03};
 

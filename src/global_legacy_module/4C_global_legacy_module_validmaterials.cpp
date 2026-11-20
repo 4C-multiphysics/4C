@@ -2544,7 +2544,7 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                         .default_value = std::vector{0},
                         .size = from_parameter<int>("NUMFACINEL")}),
                 parameter<double>("DENS", {.description = "material mass density"}),
-                parameter<double>("REF_TEMPERATURE",
+                parameter<double>("REF_TEMPERATURE_THERMAL_EXPANSION",
                     {.description = "reference temperature for thermoelastic expansion.",
                         .default_value = 0.0,
                         .validator = Validators::positive_or_zero<double>()}),
@@ -2729,6 +2729,10 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {parameter<int>(
              "VISCOPLAST_LAW_ID", {.description = "MAT ID of the corresponding viscoplastic law",
                                       .validator = positive<int>()}),
+            parameter<double>("REF_TEMPERATURE_VISCOPLAST_LAW",
+                {.description = "reference temperature for the material parameters specified "
+                                "within the viscoplastic law",
+                    .validator = positive<double>()}),
             parameter<int>(
                 "FIBER_READER_ID", {.description = "MAT ID of the used fiber direction reader for "
                                                    "transversely isotropic behavior",
@@ -3105,11 +3109,6 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("ISOTROP_HARDEN_EXP",
                 {.description = "exponent of the isotropic hardening stress $n$",
                     .validator = positive_or_zero<double>()}),
-            parameter<double>("REF_TEMPERATURE",
-                {.description = "reference temperature $T_0$ for evaluating the "
-                                "yield strength $A_0$ and the hardening "
-                                "modulus $B_0$. Has no effect for isothermal simulations.",
-                    .validator = positive<double>()}),
             parameter<double>(
                 "MELT_TEMPERATURE", {.description = "melting temperature $T_{\\mathrm{melt}}$. Has "
                                                     "no effect for isothermal simulations.",

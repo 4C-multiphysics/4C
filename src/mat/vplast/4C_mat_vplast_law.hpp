@@ -62,8 +62,9 @@ namespace Mat
     class Law
     {
      public:
-      /// construct viscoplastic laws with specific material params and error registration settings
-      explicit Law(Core::Mat::PAR::Parameter* params,
+      /// construct viscoplastic laws with specific material params, with a specific reference
+      /// temperature for these, and with specified error registration settings
+      explicit Law(Core::Mat::PAR::Parameter* params, double reference_temperature,
           const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
               error_registration_settings);
       /// construct empty viscoplastic law
@@ -80,12 +81,15 @@ namespace Mat
        *
        * @param[in] matnum  material ID
        * @param[in] error_registration_settings  error registration settings for plastic strain
+       * @param[in] reference_temperature  Reference temperature for the specified material
+       * parameters
        * increments and derivative increments
        * @return pointer to material that is defined by material ID
        */
       static std::shared_ptr<Law> factory(int matnum,
           const InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings&
-              error_registration_settings);
+              error_registration_settings,
+          double reference_temperature);
 
       /// provide material type
       [[nodiscard]] virtual Core::Materials::MaterialType material_type() const = 0;
@@ -172,7 +176,17 @@ namespace Mat
        *
        * @param[in] params  Various parameters, such as e.g. the temperature in TSI simulations
        */
-      virtual void pre_evaluate(const Teuchos::ParameterList& params) {};
+      virtual void pre_evaluate(const Teuchos::ParameterList& params)
+      {
+        temperature_ = params.isParameter("temperature") ? params.get<double>("temperature")
+                                                         : reference_temperature_;
+        update_temperature_dependent_factors();
+        reset_substep_state();
+      };
+
+      /// update method for internal temperature-related variables based on the current \ref
+      /// temperature_
+      virtual void update_temperature_dependent_factors() {};
 
       /*!
        * @brief Update history variables of the viscoplasticity law for next time step
@@ -241,6 +255,12 @@ namespace Mat
       const Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings
           error_registration_settings_;
 
+      /// reference temperature for the viscoplastic law parameters
+      const double reference_temperature_;
+
+      /// current temperature; set to \ref reference_temperature_ in \ref pre_evaluate if not
+      /// specified using the pre-evaluation parameters
+      double temperature_;
 
      private:
       /// material parameters

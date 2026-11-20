@@ -41,7 +41,8 @@ namespace
 
   ReformulatedJohnsonCookLaw set_up_reformulated_johnson_cook_law(
       const Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorRegistrationSettings
-          error_registration_settings)
+          error_registration_settings,
+      const double reference_temperature = 293.0)
   {
     const int viscoplastic_law_id = make_unique_viscoplastic_law_id();
 
@@ -51,7 +52,6 @@ namespace
     vplast_law_reformulated_JC_data.add("INIT_YIELD_STRENGTH", 792.0);
     vplast_law_reformulated_JC_data.add("ISOTROP_HARDEN_PREFAC", 510.0);
     vplast_law_reformulated_JC_data.add("ISOTROP_HARDEN_EXP", 0.26);
-    vplast_law_reformulated_JC_data.add("REF_TEMPERATURE", 293.0);
     vplast_law_reformulated_JC_data.add("MELT_TEMPERATURE", 1793.0);
     vplast_law_reformulated_JC_data.add("TEMPERATURE_SENS", 1.03);
     auto params = std::dynamic_pointer_cast<Mat::Viscoplastic::PAR::ReformulatedJohnsonCook>(
@@ -60,7 +60,7 @@ namespace
             vplast_law_reformulated_JC_data)));
 
     auto material = std::make_shared<Mat::Viscoplastic::ReformulatedJohnsonCook>(
-        params.get(), error_registration_settings);
+        params.get(), reference_temperature, error_registration_settings);
 
     // pre_evaluate
     Teuchos::ParameterList param_list{};
