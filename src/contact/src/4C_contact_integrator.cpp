@@ -1904,7 +1904,7 @@ void CONTACT::Integrator::integrate_deriv_cell_3d_aux_plane(Mortar::Element& sou
 
     // evaluate global GP coordinate derivative
     static Core::LinAlg::Matrix<3, 1> svalcell;
-    static Core::LinAlg::Matrix<3, 2> sderivcell;
+    static Core::LinAlg::Matrix<2, 3> sderivcell;
     cell->evaluate_shape(eta, svalcell, sderivcell);
 
     Core::Gen::Pairedvector<int, Core::LinAlg::Matrix<3, 1>> lingp((nrow + ncol) * ndof);
@@ -2162,7 +2162,7 @@ void CONTACT::Integrator::integrate_deriv_cell_3d_aux_plane_stl(Mortar::Element&
 
     // evaluate global GP coordinate derivative
     static Core::LinAlg::Matrix<3, 1> svalcell;
-    static Core::LinAlg::Matrix<3, 2> sderivcell;
+    static Core::LinAlg::Matrix<2, 3> sderivcell;
     cell->evaluate_shape(eta, svalcell, sderivcell);
 
     Core::Gen::Pairedvector<int, Core::LinAlg::Matrix<3, 1>> lingp(100 * (nrow + ncolP) * ndof);
@@ -2946,7 +2946,7 @@ void CONTACT::Integrator::integrate_deriv_cell_3d_aux_plane_lts(Mortar::Element&
 
     // evaluate global GP coordinate derivative
     static Core::LinAlg::Matrix<3, 1> svalcell;
-    static Core::LinAlg::Matrix<3, 2> sderivcell;
+    static Core::LinAlg::Matrix<2, 3> sderivcell;
     cell->evaluate_shape(eta, svalcell, sderivcell);
 
     Core::Gen::Pairedvector<int, Core::LinAlg::Matrix<3, 1>> lingp((nrowS + ncol) * ndof + linsize);
@@ -4110,7 +4110,7 @@ void CONTACT::Integrator::integrate_deriv_cell_3d_aux_plane_quad(Mortar::Element
 
     // evaluate global GP coordinate derivative
     Core::LinAlg::Matrix<3, 1> svalcell;
-    Core::LinAlg::Matrix<3, 2> sderivcell;
+    Core::LinAlg::Matrix<2, 3> sderivcell;
     cell->evaluate_shape(eta, svalcell, sderivcell);
 
     Core::Gen::Pairedvector<int, Core::LinAlg::Matrix<3, 1>> lingp((nrow + ncol) * ndof);

@@ -219,7 +219,7 @@ namespace Mortar
 
     // !\brief Evaluate shape functions and derivatives
     bool evaluate_shape(
-        const double* xi, Core::LinAlg::Matrix<3, 1>& val, Core::LinAlg::Matrix<3, 2>& deriv);
+        const double* xi, Core::LinAlg::Matrix<3, 1>& val, Core::LinAlg::Matrix<2, 3>& deriv);
 
     //! \brief Evaluate Jacobian determinant for parameter space integration
     double jacobian();

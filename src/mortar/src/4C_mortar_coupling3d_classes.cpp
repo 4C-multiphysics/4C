@@ -188,7 +188,7 @@ bool Mortar::IntCell::local_to_global(const double* xi, double* globcoord, int i
   {
     // collect fundamental data
     Core::LinAlg::Matrix<3, 1> val;
-    Core::LinAlg::Matrix<3, 2> deriv;
+    Core::LinAlg::Matrix<2, 3> deriv;
 
     // Evaluate shape, get nodal coords and interpolate global coords
     evaluate_shape(xi, val, deriv);
@@ -206,9 +206,9 @@ bool Mortar::IntCell::local_to_global(const double* xi, double* globcoord, int i
       else if (inttype == 1)
       {
         // use shape function derivatives xi for interpolation
-        globcoord[0] += deriv(i, 0) * coords()(0, i);
-        globcoord[1] += deriv(i, 0) * coords()(1, i);
-        globcoord[2] += deriv(i, 0) * coords()(2, i);
+        globcoord[0] += deriv(0, i) * coords()(0, i);
+        globcoord[1] += deriv(0, i) * coords()(1, i);
+        globcoord[2] += deriv(0, i) * coords()(2, i);
       }
       else if (inttype == 2)
       {
@@ -216,9 +216,9 @@ bool Mortar::IntCell::local_to_global(const double* xi, double* globcoord, int i
           FOUR_C_THROW("for line2 elements only 1 parameter space coordinate");
 
         // use shape function derivatives eta for interpolation
-        globcoord[0] += deriv(i, 1) * coords()(0, i);
-        globcoord[1] += deriv(i, 1) * coords()(1, i);
-        globcoord[2] += deriv(i, 1) * coords()(2, i);
+        globcoord[0] += deriv(1, i) * coords()(0, i);
+        globcoord[1] += deriv(1, i) * coords()(1, i);
+        globcoord[2] += deriv(1, i) * coords()(2, i);
       }
       else
         FOUR_C_THROW("Invalid interpolation type requested, only 0,1,2!");
@@ -233,32 +233,20 @@ bool Mortar::IntCell::local_to_global(const double* xi, double* globcoord, int i
  |  Evaluate shape functions (IntCell)                        popp 11/08|
  *----------------------------------------------------------------------*/
 bool Mortar::IntCell::evaluate_shape(
-    const double* xi, Core::LinAlg::Matrix<3, 1>& val, Core::LinAlg::Matrix<3, 2>& deriv)
+    const double* xi, Core::LinAlg::Matrix<3, 1>& val, Core::LinAlg::Matrix<2, 3>& deriv)
 {
   if (!xi) FOUR_C_THROW("evaluate_shape (IntCell) called with xi=nullptr");
 
-  // 3noded triangular element
   if (shape() == Core::FE::CellType::tri3)
   {
-    val(0) = 1.0 - xi[0] - xi[1];
-    val(1) = xi[0];
-    val(2) = xi[1];
-    deriv(0, 0) = -1.0;
-    deriv(0, 1) = -1.0;
-    deriv(1, 0) = 1.0;
-    deriv(1, 1) = 0.0;
-    deriv(2, 0) = 0.0;
-    deriv(2, 1) = 1.0;
+    Core::FE::shape_function_2d(val, xi[0], xi[1], shape());
+    Core::FE::shape_function_2d_deriv1(deriv, xi[0], xi[1], shape());
   }
   else if (shape() == Core::FE::CellType::line2)
   {
-    val(0) = 0.5 * (1 - xi[0]);
-    val(1) = 0.5 * (1 + xi[0]);
-    deriv(0, 0) = -0.5;
-    deriv(1, 0) = 0.5;
+    Core::FE::shape_function_1d(val, xi[0], shape());
+    Core::FE::shape_function_1d_deriv1(deriv, xi[0], shape());
   }
-
-  // unknown case
   else
     FOUR_C_THROW("evaluate_shape (IntCell) called for type != tri3/line2");
 
@@ -272,12 +260,10 @@ double Mortar::IntCell::jacobian()
 {
   double jac = 0.0;
 
-  // 2D linear case (2noded line element)
   if (shape() == Core::FE::CellType::tri3)
     jac = area() * 2.0;
   else if (shape() == Core::FE::CellType::line2)
     jac = area() * 0.5;
-  // unknown case
   else
     FOUR_C_THROW("Jacobian (IntCell) called for unknown ele type!");
 
