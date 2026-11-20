@@ -781,10 +781,12 @@ double Mortar::Element::compute_averaged_unit_normal_at_xi(const double* xi, dou
   // loop over all nodes of this element
   for (int i = 0; i < num_node(); ++i)
   {
-    const Node* mymrtrnode = dynamic_cast<const Node*>(nodes()[i]);
-    n[0] = val[i] * mymrtrnode->mo_data().n()[0];
-    n[1] = val[i] * mymrtrnode->mo_data().n()[1];
-    n[2] = val[i] * mymrtrnode->mo_data().n()[2];
+    const auto* mortar_node = dynamic_cast<const Mortar::Node*>(nodes()[i]);
+
+    FOUR_C_ASSERT_ALWAYS(mortar_node != nullptr,
+        "Expected node {} of mortar element {} to be a Mortar::Node.", i, id());
+
+    for (int dim = 0; dim < 3; ++dim) n[dim] += val[i] * mortar_node->mo_data().n()[dim];
   }
 
   const double length = sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
@@ -819,9 +821,9 @@ void Mortar::Element::deriv_unit_normal_at_xi(
 
   // n is cross product of gxi and geta
   std::array<double, 3> n = {0.0, 0.0, 0.0};
-  n[0] = gxi[1] * geta[2] - gxi[2] * geta[1] * normalfac_;
-  n[1] = gxi[2] * geta[0] - gxi[0] * geta[2] * normalfac_;
-  n[2] = gxi[0] * geta[1] - gxi[1] * geta[0] * normalfac_;
+  n[0] = (gxi[1] * geta[2] - gxi[2] * geta[1]) * normalfac_;
+  n[1] = (gxi[2] * geta[0] - gxi[0] * geta[2]) * normalfac_;
+  n[2] = (gxi[0] * geta[1] - gxi[1] * geta[0]) * normalfac_;
 
   // build unit normal
   const double length = sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
