@@ -272,7 +272,7 @@ Discret::Elements::Stress<celltype> Discret::Elements::evaluate_material_stress(
       // strain assumptions
       const Mat::StVenantKirchhoff& actmat =
           dynamic_cast<const Mat::StVenantKirchhoff&>(*base_material);
-      const double ym = actmat.youngs();
+      const double ym = actmat.youngs(eleGID);
       const double nu = actmat.poisson_ratio();
       const double lamb = element_properties.plane_assumption == PlaneAssumption::plane_stress
                               ? ym * nu / (1 - nu * nu)

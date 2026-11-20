@@ -104,7 +104,9 @@ namespace Discret
       //! Set advanced reaction terms and derivatives
       virtual void set_advanced_reaction_terms(const int k,          //!< index of current scalar
           const std::shared_ptr<Mat::MatListReactions> matreaclist,  //!< index of current scalar
-          const double* gpcoord  //!< current Gauss-point coordinates
+          const double* gpcoord,  //!< current Gauss-point coordinates
+          const double scale,     //!< scale factor for reaction body force (default is 1.0)
+          int element_id          //!< current element id
       );
 
       //! evaluate shape functions and their derivatives at element center

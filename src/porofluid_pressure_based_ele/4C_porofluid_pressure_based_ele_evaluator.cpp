@@ -3360,11 +3360,19 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
   if (nsd == 2) constants.push_back(std::pair<std::string, double>("y", coords[1]));
   if (nsd == 3) constants.push_back(std::pair<std::string, double>("z", coords[2]));
 
+  int element_id = phasemanager.element()->id();
+  
   // call the functions and integrate value (multiply with fac)
   for (unsigned int i = 0; i < domainint_funct_.size(); i++)
   {
+    const auto& funct = function(domainint_funct_[i]);
+    
+    double fval = 0.0;
+    const auto* func_sym =dynamic_cast<const Core::Utils::SymbolicFunctionOfAnything*>(&funct);
+      fval = func_sym->evaluate(variables, constants, 0, element_id); 
+
     // NOLINTNEXTLINE (bugprone-narrowing-conversions)
-    myvec[i] += function(domainint_funct_[i]).evaluate(variables, constants, 0) * fac;
+    myvec[i] += fval * fac;
   }
 }
 

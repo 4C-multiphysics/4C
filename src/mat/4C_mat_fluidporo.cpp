@@ -693,15 +693,15 @@ std::shared_ptr<Core::Mat::Material> Mat::PAR::FluidPoro::create_material()
   return std::make_shared<Mat::FluidPoro>(this);
 }
 
-void Mat::PAR::FluidPoro::set_initial_porosity(double initial_porosity)
+void Mat::PAR::FluidPoro::set_initial_porosity(Core::IO::InputField<double> initial_porosity, int eleGID)
 {
   initial_porosity_ = initial_porosity;
 
   if (permeability_func_ == Mat::PAR::kozeny_carman)
   {
     // c = (phi0^3 / (1 - phi0^2))
-    permeability_correction_factor_ = initial_porosity_ * initial_porosity_ * initial_porosity_ /
-                                      (1 - initial_porosity_ * initial_porosity_);
+    permeability_correction_factor_ = initial_porosity_.at(eleGID) * initial_porosity_.at(eleGID) *initial_porosity_.at(eleGID)/
+                                      (1 - initial_porosity_.at(eleGID) * initial_porosity_.at(eleGID));
   }
   else
   {

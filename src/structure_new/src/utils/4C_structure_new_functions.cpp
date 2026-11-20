@@ -213,10 +213,16 @@ Solid::WeaklyCompressibleEtienneFSIStructureForceFunction::
 double Solid::WeaklyCompressibleEtienneFSIStructureForceFunction::evaluate(
     std::span<const double> xp, const double t, const std::size_t component) const
 {
+  return evaluate(xp, t, component, 0);
+}
+// Case with spatially varying material properties (inputfield)
+double Solid::WeaklyCompressibleEtienneFSIStructureForceFunction::evaluate(
+    std::span<const double> xp, const double t, const std::size_t component, int eleGID) const
+{
   // ease notation
   double x = xp[0];
   double y = xp[1];
-  double E = youngmodulus_;
+  double E = youngmodulus_.at(eleGID);
   double v = poissonratio_;
   double r = strucdensity_;
 
@@ -266,11 +272,20 @@ Solid::WeaklyCompressibleEtienneFSIStructureForceFunction::evaluate_time_derivat
     std::span<const double> xp, const double t, const unsigned deg,
     const std::size_t component) const
 {
+  return evaluate_time_derivative(xp, t, deg, component, 0);
+}
+
+// Case with spatially varying material properties (inputfield)
+std::vector<double>
+Solid::WeaklyCompressibleEtienneFSIStructureForceFunction::evaluate_time_derivative(
+    std::span<const double> xp, const double t, const unsigned deg,
+    const std::size_t component, int eleGID) const
+{
   // resulting vector holding
   std::vector<double> res(deg + 1);
 
   // add the value at time t
-  res[0] = evaluate(xp, t, component);
+  res[0] = evaluate(xp, t, component, eleGID);
 
   // add the 1st time derivative at time t
   if (deg >= 1)

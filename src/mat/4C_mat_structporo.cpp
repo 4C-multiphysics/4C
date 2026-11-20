@@ -24,7 +24,7 @@ Mat::PAR::StructPoro::StructPoro(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
       matid_(matdata.parameters.get<int>("MATID")),
       poro_law_ID_(matdata.parameters.get<int>("POROLAWID")),
-      init_porosity_(matdata.parameters.get<double>("INITPOROSITY"))
+      init_porosity_(matdata.parameters.get<Core::IO::InputField<double>>("INITPOROSITY"))
 {
   // retrieve problem instance to read from
   const int probinst = Global::Problem::instance()->materials()->get_read_from_problem();
@@ -110,12 +110,28 @@ Mat::StructPoro::StructPoro(Mat::PAR::StructPoro* params)
 }
 
 void Mat::StructPoro::poro_setup(int numgp, const Discret::Elements::Fibers& fibers,
-    const std::optional<Discret::Elements::CoordinateSystem>& coord_system)
+    const std::optional<Discret::Elements::CoordinateSystem>& coord_system, int eleGID)
 {
-  porosity_ = std::make_shared<std::vector<double>>(numgp, params_->init_porosity_);
+  porosity_ = std::make_shared<std::vector<double>>(numgp, 0.0); // Placeholder values: mesh-based input fields are not available yet during mesh reading.
   surf_porosity_ = std::make_shared<std::map<int, std::vector<double>>>();
 
   is_initialized_ = true;
+}
+
+void Mat::StructPoro::initialize_porosity_values(int eleGID)
+{
+  reference_porosity_ = params_->init_porosity_.at(eleGID);
+  std::fill(porosity_->begin(), porosity_->end(), reference_porosity_);
+  porosity_values_initialized_ = true;
+}
+
+double Mat::StructPoro::reference_porosity(int eleGID) const
+{
+  if (porosity_values_initialized_) return reference_porosity_;
+
+  if (porosity_ != nullptr && !porosity_->empty()) return porosity_->front();
+
+  return params_->init_porosity_.at(eleGID);
 }
 
 inline Core::Materials::MaterialType Mat::StructPoro::poro_law_type() const
@@ -125,15 +141,16 @@ inline Core::Materials::MaterialType Mat::StructPoro::poro_law_type() const
 
 double Mat::StructPoro::inv_bulk_modulus() const { return params_->poro_law_->inv_bulk_modulus(); }
 
-double Mat::StructPoro::density() const
+double Mat::StructPoro::density(int eleGID) const
 {
-  if (params_->init_porosity_ == 1.0)
-    return mat_->density();
+  const double init_porosity = reference_porosity(eleGID);
+  if (init_porosity == 1.0)
+    return mat_->density(eleGID);
   else
-    return ((1.0 - params_->init_porosity_) * mat_->density());
+    return ((1.0 - init_porosity) * mat_->density(eleGID));
 }
 
-double Mat::StructPoro::density_solid_phase() const { return mat_->density(); }
+double Mat::StructPoro::density_solid_phase(int eleGID) const { return mat_->density(eleGID); }
 
 void Mat::StructPoro::pack(Core::Communication::PackBuffer& data) const
 {
@@ -209,6 +226,12 @@ void Mat::StructPoro::unpack(Core::Communication::UnpackBuffer& buffer)
   else
     mat_ = nullptr;
 
+  if (porosity_ != nullptr && !porosity_->empty())
+  {
+    reference_porosity_ = porosity_->front();
+    porosity_values_initialized_ = true;
+  }
+
   is_initialized_ = true;
 }
 
@@ -245,29 +268,28 @@ void Mat::StructPoro::compute_porosity(const double& refporosity, const double& 
 
 void Mat::StructPoro::compute_porosity(const Teuchos::ParameterList& params, double press, double J,
     int gp, double& porosity, double* dphi_dp, double* dphi_dJ, double* dphi_dJdp, double* dphi_dJJ,
-    double* dphi_dpp, bool save)
+    double* dphi_dpp, bool save, int eleGID)
 {
   compute_porosity(
-      params_
-          ->init_porosity_,  // reference porosity equals initial porosity for non reactive material
+      reference_porosity(eleGID),  // reference porosity equals initial porosity for non reactive material
       press, J, gp, porosity, dphi_dp, dphi_dJ, dphi_dJdp, dphi_dJJ, dphi_dpp,
       nullptr,  // reference porosity is constant (non reactive) -> derivative not needed
       save);
 }
 
 void Mat::StructPoro::compute_porosity(const Teuchos::ParameterList& params, double press, double J,
-    int gp, double& porosity, bool save)
+    int gp, double& porosity, bool save, int eleGID)
 {
   compute_porosity(
-      params, press, J, gp, porosity, nullptr, nullptr, nullptr, nullptr, nullptr, save);
+      params, press, J, gp, porosity, nullptr, nullptr, nullptr, nullptr, nullptr, save, eleGID);
 }
 
 void Mat::StructPoro::compute_surf_porosity(const Teuchos::ParameterList& params, double press,
     double J, const int surfnum, int gp, double& porosity, double* dphi_dp, double* dphi_dJ,
-    double* dphi_dJdp, double* dphi_dJJ, double* dphi_dpp, bool save)
+    double* dphi_dJdp, double* dphi_dJJ, double* dphi_dpp, bool save, int eleGID)
 {
   compute_porosity(
-      params, press, J, gp, porosity, dphi_dp, dphi_dJ, dphi_dJdp, dphi_dJJ, dphi_dpp, save);
+      params, press, J, gp, porosity, dphi_dp, dphi_dJ, dphi_dJdp, dphi_dJJ, dphi_dpp, save, eleGID);
 
   if (save)
   {
@@ -279,10 +301,10 @@ void Mat::StructPoro::compute_surf_porosity(const Teuchos::ParameterList& params
 }
 
 void Mat::StructPoro::compute_surf_porosity(const Teuchos::ParameterList& params, double press,
-    double J, const int surfnum, int gp, double& porosity, bool save)
+    double J, const int surfnum, int gp, double& porosity, bool save, int eleGID)
 {
   compute_surf_porosity(
-      params, press, J, surfnum, gp, porosity, nullptr, nullptr, nullptr, nullptr, nullptr, save);
+      params, press, J, surfnum, gp, porosity, nullptr, nullptr, nullptr, nullptr, nullptr, save, eleGID);
 }
 
 
@@ -302,12 +324,12 @@ double Mat::StructPoro::porosity_av() const
 
 void Mat::StructPoro::constitutive_derivatives(const Teuchos::ParameterList& params, double press,
     double J, double porosity, double* dW_dp, double* dW_dphi, double* dW_dJ, double* dW_dphiref,
-    double* W)
+    double* W, int eleGID)
 {
   if (porosity == 0.0) FOUR_C_THROW("porosity equals zero!! Wrong initial porosity?");
 
   constitutive_derivatives(
-      params, press, J, porosity, params_->init_porosity_, dW_dp, dW_dphi, dW_dJ, dW_dphiref, W);
+      params, press, J, porosity, reference_porosity(eleGID), dW_dp, dW_dphi, dW_dJ, dW_dphiref, W);
 }
 
 void Mat::StructPoro::constitutive_derivatives(const Teuchos::ParameterList& params, double press,

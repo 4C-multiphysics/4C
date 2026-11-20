@@ -21,7 +21,7 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------*/
 Mat::PAR::StVenantKirchhoff::StVenantKirchhoff(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
-      youngs_(matdata.parameters.get<double>("YOUNG")),
+      youngs_(matdata.parameters.get<Core::IO::InputField<double>>("YOUNG")),
       poissonratio_(matdata.parameters.get<double>("NUE")),
       density_(matdata.parameters.get<double>("DENS"))
 {
@@ -108,9 +108,10 @@ void Mat::StVenantKirchhoff::evaluate(const Core::LinAlg::Tensor<double, 3, 3>* 
     Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,
     Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, int gp, int eleGID)
 {
-  cmat = StVenantKirchhoff::evaluate_stress_linearization(params_->youngs_, params_->poissonratio_);
+  const double E = params_->youngs_.at(eleGID);
+  cmat = StVenantKirchhoff::evaluate_stress_linearization(E, params_->poissonratio_);
 
-  stress = StVenantKirchhoff::evaluate_stress(glstrain, params_->youngs_, params_->poissonratio_);
+  stress = StVenantKirchhoff::evaluate_stress(glstrain, E, params_->poissonratio_);
 }
 
 
@@ -121,8 +122,9 @@ double Mat::StVenantKirchhoff::strain_energy(
     const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
     const EvaluationContext<3>& context, const int gp, const int eleGID) const
 {
+  const double E = params_->youngs_.at(eleGID);
   auto stress =
-      StVenantKirchhoff::evaluate_stress(glstrain, params_->youngs_, params_->poissonratio_);
+      StVenantKirchhoff::evaluate_stress(glstrain, E, params_->poissonratio_);
 
   return 0.5 * Core::LinAlg::ddot(stress, glstrain);
 }

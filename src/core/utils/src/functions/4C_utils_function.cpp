@@ -148,13 +148,13 @@ namespace
   //! throw an error if a constant given in the input file is a primary variables
   template <typename T>
   void assert_valid_input(const std::map<std::string, T>& variable_values,
-      const std::vector<std::pair<std::string, double>>& constants_from_input)
+      const std::vector<std::pair<std::string, Core::IO::InputField<double>>>& parameter_fields)
   {
-    const bool all_constants_from_input_valid =
-        std::all_of(constants_from_input.begin(), constants_from_input.end(),
+    const bool all_parameter_fields_valid =
+        std::all_of(parameter_fields.begin(), parameter_fields.end(),
             [&](const auto& var_name) { return variable_values.count(var_name.first) == 0; });
 
-    if (!all_constants_from_input_valid)
+    if (!all_parameter_fields_valid)
     {
       const auto join_keys = [](const auto& map)
       {
@@ -168,7 +168,7 @@ namespace
           "VARFUNCTION.\n\n"
           "Variables passed to Evaluate: {} \n"
           "Constants from Input: {}",
-          join_keys(variable_values).c_str(), join_keys(constants_from_input).c_str());
+          join_keys(variable_values).c_str(), join_keys(parameter_fields).c_str());
     }
   }
 }  // namespace
@@ -187,12 +187,17 @@ Core::Utils::try_create_symbolic_function_of_anything(
 
   {
     std::string component = function_lin_def.get<std::string>("VARFUNCTION");
+    
+    std::vector<std::pair<std::string, Core::IO::InputField<double>>> constants; //"Constant" parameters from input
 
-    std::vector<std::pair<std::string, double>> constants;
-    if (auto* constants_map = function_lin_def.get_if<std::map<std::string, double>>("CONSTANTS");
-        constants_map)
+    if (auto* constants_list = function_lin_def.get_if<Core::IO::InputParameterContainer::List>("PARAMETERS"))
     {
-      constants.insert(constants.end(), constants_map->begin(), constants_map->end());
+      for (const auto& entry : *constants_list)
+        {
+          std::string name = entry.get<std::string>("NAME");
+          auto field = entry.get<Core::IO::InputField<double>>("value");
+          constants.emplace_back(name, field);
+        }
     }
 
     return std::make_shared<Core::Utils::SymbolicFunctionOfAnything>(component, constants);
@@ -380,6 +385,31 @@ std::vector<double> Core::Utils::FunctionOfSpaceTime::evaluate_time_derivative(
   FOUR_C_THROW("The evaluation of the time derivative is not implemented for this function");
 }
 
+// Case with spatially varying material properties (inputfield)
+double Core::Utils::FunctionOfSpaceTime::evaluate(
+    std::span<const double> x, double t, std::size_t component, int eleGID) const
+{
+  FOUR_C_THROW("The evaluation with 4 arguments is not implemented for this function");
+}
+
+void Core::Utils::FunctionOfSpaceTime::evaluate_vector(
+    std::span<const double> x, double t, std::span<double> values, int eleGID) const
+{
+  for (std::size_t i = 0; i < number_components(); ++i) values[i] = evaluate(x, t, i, eleGID);
+}
+
+std::vector<double> Core::Utils::FunctionOfSpaceTime::evaluate_spatial_derivative(
+    std::span<const double> x, double t, std::size_t component, int eleGID) const
+{
+  FOUR_C_THROW("The evaluation of the derivative (with 4 arguments) is not implemented for this function");
+}
+
+std::vector<double> Core::Utils::FunctionOfSpaceTime::evaluate_time_derivative(
+    std::span<const double> x, double t, unsigned deg, std::size_t component, int eleGID) const
+{
+  FOUR_C_THROW("The evaluation of the time derivative (with 4 arguments) is not implemented for this function");
+}
+
 Core::Utils::SymbolicFunctionOfSpaceTime::SymbolicFunctionOfSpaceTime(
     const std::vector<std::string>& expressions,
     std::vector<std::shared_ptr<FunctionVariable>> variables)
@@ -538,8 +568,8 @@ std::vector<double> Core::Utils::SymbolicFunctionOfSpaceTime::evaluate_time_deri
 
 
 Core::Utils::SymbolicFunctionOfAnything::SymbolicFunctionOfAnything(
-    const std::string& component, std::vector<std::pair<std::string, double>> constants)
-    : constants_from_input_(std::move(constants))
+    const std::string& component, std::vector<std::pair<std::string, Core::IO::InputField<double>>> constants)
+    : parameter_fields_(std::move(constants))
 {
   // build the parser for the function evaluation
   auto symbolicexpression = std::make_shared<Core::Utils::SymbolicExpression<double>>(component);
@@ -554,6 +584,15 @@ double Core::Utils::SymbolicFunctionOfAnything::evaluate(
     const std::vector<std::pair<std::string, double>>& variables,
     const std::vector<std::pair<std::string, double>>& constants, const std::size_t component) const
 {
+  return evaluate(variables, constants, component, 0); // We call for the new evaluate method and pass 0 as element_id
+}
+
+// Case with spatially varying material properties (inputfield)   
+double Core::Utils::SymbolicFunctionOfAnything::evaluate(
+    const std::vector<std::pair<std::string, double>>& variables,
+    const std::vector<std::pair<std::string, double>>& constants, const std::size_t component,
+    int element_id) const
+{
   // create map for variables
   std::map<std::string, double> variable_values;
 
@@ -561,20 +600,20 @@ double Core::Utils::SymbolicFunctionOfAnything::evaluate(
   std::copy(
       variables.begin(), variables.end(), std::inserter(variable_values, variable_values.begin()));
 
-  // add constants
+  // add global constants
   std::copy(
       constants.begin(), constants.end(), std::inserter(variable_values, variable_values.end()));
 
-  if (constants_from_input_.size() != 0)
+  // add "constants" from inputfield 
+  if (parameter_fields_.size() != 0)
   {
-    // check if constants_from_input are valid
-    assert_valid_input<double>(variable_values, constants_from_input_);
-
-    // add constants from input
-    std::copy(constants_from_input_.begin(), constants_from_input_.end(),
-        std::inserter(variable_values, variable_values.end()));
+    // check if constants from input are valid
+    assert_valid_input<double>(variable_values, parameter_fields_);
+    for (const auto& [name, field] : parameter_fields_)
+    {
+      variable_values[name] = field.at(element_id);
+    }
   }
-
   // evaluate the function and return the result
   return expr_[component]->value(variable_values);
 }
@@ -583,6 +622,15 @@ double Core::Utils::SymbolicFunctionOfAnything::evaluate(
 std::vector<double> Core::Utils::SymbolicFunctionOfAnything::evaluate_derivative(
     const std::vector<std::pair<std::string, double>>& variables,
     const std::vector<std::pair<std::string, double>>& constants, const std::size_t component) const
+{
+    return evaluate_derivative(variables, constants, component, 0); // We call for the new evaluate_derivative method and pass 0 as element_id
+}
+
+// Case with spatially varying material properties (inputfield)   
+std::vector<double> Core::Utils::SymbolicFunctionOfAnything::evaluate_derivative(
+    const std::vector<std::pair<std::string, double>>& variables,
+    const std::vector<std::pair<std::string, double>>& constants, const std::size_t component,
+    int element_id) const
 {
   auto variables_FAD = convert_variable_values_to_fad_objects(variables);
 
@@ -599,14 +647,17 @@ std::vector<double> Core::Utils::SymbolicFunctionOfAnything::evaluate_derivative
       constants.begin(), constants.end(), std::inserter(constant_values, constant_values.begin()));
 
 
-  if (constants_from_input_.size() != 0)
+  // add element-wise parameters from inputfield (defined as inputfields in VARFUNCTION)
+  if (parameter_fields_.size() != 0)
   {
-    // check if constants_from_input are valid
-    assert_valid_input<Sacado::Fad::DFad<double>>(variable_values, constants_from_input_);
-
-    // add constants from input
-    std::copy(constants_from_input_.begin(), constants_from_input_.end(),
-        std::inserter(constant_values, constant_values.end()));
+    // check if parameters from input file are valid
+    assert_valid_input<Sacado::Fad::DFad<double>>(variable_values, parameter_fields_);
+    
+    // add parameters from input file
+    for (const auto& [name, field] : parameter_fields_)
+    {
+      constant_values[name]=field.at(element_id);
+    }
   }
   return evaluate_and_assemble_expression_to_result_vector(
       variable_values, component, expr_, constant_values);

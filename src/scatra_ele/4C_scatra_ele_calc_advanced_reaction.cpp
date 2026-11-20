@@ -109,7 +109,9 @@ void Discret::Elements::ScaTraEleCalcAdvReac<distype, probdim>::get_material_par
       materials(singlemat, k, densn[k], densnp[k], densam[k], visc, iquad);
 
       set_advanced_reaction_terms(
-          k, actmat, get_gp_coord());  // every reaction calculation stuff happens in here!!
+          k, actmat, get_gp_coord(), 1.0, ele->id());  // every reaction calculation stuff happens in here!!
+          // by default scale is set to 1.0 (cf 4C_mat_list_reactions)
+
     }
   }
 
@@ -316,7 +318,9 @@ template <Core::FE::CellType distype, int probdim>
 void Discret::Elements::ScaTraEleCalcAdvReac<distype, probdim>::set_advanced_reaction_terms(
     const int k,                                               //!< index of current scalar
     const std::shared_ptr<Mat::MatListReactions> matreaclist,  //!< index of current scalar
-    const double* gpcoord                                      //!< current Gauss-point coordinates
+    const double* gpcoord,                                      //!< current Gauss-point coordinates
+    const double scale,                                         //!< scale factor for reaction body force (default is 1.0)
+    int element_id                                              //!< current element id
 )
 {
   const std::shared_ptr<ScaTraEleReaManagerAdvReac> remanager = rea_manager();
@@ -324,10 +328,10 @@ void Discret::Elements::ScaTraEleCalcAdvReac<distype, probdim>::set_advanced_rea
   auto time = my::scatraparatimint_->time();
 
   remanager->add_to_rea_body_force(
-      matreaclist->calc_rea_body_force_term(k, my::scatravarmanager_->phinp(), gpcoord, time), k);
+      matreaclist->calc_rea_body_force_term(k, my::scatravarmanager_->phinp(), gpcoord, time, scale, element_id), k);
 
   matreaclist->calc_rea_body_force_deriv_matrix(k, remanager->get_rea_body_force_deriv_vector(k),
-      my::scatravarmanager_->phinp(), gpcoord, time);
+      my::scatravarmanager_->phinp(), gpcoord, time, scale, element_id);
 }
 
 /*----------------------------------------------------------------------*

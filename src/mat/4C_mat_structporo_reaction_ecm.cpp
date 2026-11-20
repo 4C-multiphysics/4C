@@ -71,24 +71,30 @@ Mat::StructPoroReactionECM::StructPoroReactionECM(Mat::PAR::StructPoroReactionEC
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Mat::StructPoroReactionECM::setup(int numgp, const Discret::Elements::Fibers& fibers,
-    const std::optional<Discret::Elements::CoordinateSystem>& coord_system)
+    const std::optional<Discret::Elements::CoordinateSystem>& coord_system, int eleGID)
 {
-  StructPoroReaction::setup(numgp, fibers, coord_system);
-  refporosity_old_ = params_->init_porosity_;
+  StructPoroReaction::setup(numgp, fibers, coord_system, eleGID);
+}
+
+void Mat::StructPoroReactionECM::post_setup(const Teuchos::ParameterList& params, const int eleGID)
+{
+  StructPoroReaction::post_setup(params, eleGID);
+
+  refporosity_old_ = params_->init_porosity_.at(eleGID);
 
   double dpsidphiref = 0.0;
-  Teuchos::ParameterList params;
-  params_->poro_law_->constitutive_derivatives(params, 0.0, 1.0, params_->init_porosity_,
+  Teuchos::ParameterList poro_params;
+  params_->poro_law_->constitutive_derivatives(poro_params, 0.0, 1.0, params_->init_porosity_.at(eleGID),
       refporosity_, nullptr, nullptr, nullptr, &dpsidphiref, nullptr);
 
-  const double initphi = params_->init_porosity_;
+  const double initphi = params_->init_porosity_.at(eleGID);
   const double deltaphi = refporosity_ - initphi;
 
-  chempot_.resize(numgp, 0.0);
-  chempot_init_.resize(numgp, 0.0);
+  chempot_.resize(numgp_, 0.0);
+  chempot_init_.resize(numgp_, 0.0);
 
   for (std::vector<double>::size_type i = 0; i < chempot_init_.size(); i++)
-    chempot_init_[i] = -(1.0 - deltaphi / (1.0 - initphi)) / mat_->density() * dpsidphiref;
+    chempot_init_[i] = -(1.0 - deltaphi / (1.0 - initphi)) / mat_->density(eleGID) * dpsidphiref;
 }
 
 /*----------------------------------------------------------------------*/
@@ -153,7 +159,7 @@ void Mat::StructPoroReactionECM::unpack(Core::Communication::UnpackBuffer& buffe
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Mat::StructPoroReactionECM::reaction(const double porosity, const double J,
-    std::shared_ptr<std::vector<double>> scalars, const Teuchos::ParameterList& params)
+    std::shared_ptr<std::vector<double>> scalars, const Teuchos::ParameterList& params, int eleGID)
 {
   double dt = params.get<double>("delta time");
   // double time = params.get<double>("total time",-1.0);
@@ -233,7 +239,7 @@ void Mat::StructPoroReactionECM::chem_potential(
   params_->poro_law_->constitutive_derivatives(
       params, press, J, porosity, refporosity_, nullptr, nullptr, nullptr, &dpsidphiref, nullptr);
 
-  pot = 1.0 / density() * psi - 1.0 / mat_->density() * dpsidphiref - chempot_init_[gp];
+  pot = 1.0 / density(EleID) * psi - 1.0 / mat_->density(EleID) * dpsidphiref - chempot_init_[gp];
   chempot_[gp] = pot;
 
   return;

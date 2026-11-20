@@ -43,12 +43,12 @@ Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::SolidPoroPressureBas
 
 template <Core::FE::CellType celltype>
 void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::poro_setup(
-    Mat::StructPoro& porostructmat, const Core::IO::InputParameterContainer& container)
+    Mat::StructPoro& porostructmat, const Core::IO::InputParameterContainer& container, int eleGID)
 {
   // attention: Make sure to use the same gauss integration rule as in the solid elements in case
   // you use a material, in which the fluid terms are dependent on solid history terms
   porostructmat.poro_setup(
-      gauss_integration_.num_points(), read_fibers(container), read_coordinate_system(container));
+      gauss_integration_.num_points(), read_fibers(container), read_coordinate_system(container), eleGID);
 }
 
 template <Core::FE::CellType celltype>
@@ -283,6 +283,7 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::
           const JacobianMapping<celltype>& jacobian_mapping, double integration_factor, int gp)
       {
         // get fluid phase primary variables
+        int eleGID = ele.id();
         std::vector<double> fluid_phase_phi_at_gp =
             compute_fluid_phase_primary_variables_at_gp<celltype>(fluidmultiphase_ephi,
                 solidporo_fluid_properties.number_of_fluid_dofs_per_node_, shape_functions);
@@ -318,7 +319,7 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::
 
         const double volfrac_solid = 1.0 - porosity;
         double pre_factor_force_contribution_solid =
-            volfrac_solid * porostructmat.density_solid_phase();
+            volfrac_solid * porostructmat.density_solid_phase(eleGID);
 
         // get phase densities
         const std::vector<double> phase_densities = porofluidmat.get_phase_densities();
@@ -400,7 +401,7 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::
           Core::LinAlg::Matrix<num_dof_per_ele_, num_dof_per_ele_> dBodyforcedDisp;
 
           double dpre_factor_force_contribution_solid_dDetDefGrad =
-              -1.0 * dPorosity_dDetDefGrad * porostructmat.density_solid_phase();
+              -1.0 * dPorosity_dDetDefGrad * porostructmat.density_solid_phase(eleGID);
 
           double dprefactor_volfrac_dDetDefGrad{};
           if (solidporo_fluid_properties.number_of_volfracs_ &&
