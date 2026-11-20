@@ -94,6 +94,9 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingVisualizationOutputParams::setup
   write_unique_ids_ =
       beam_to_solid_volume_meshtying_visualization_output_paramslist.get<bool>("UNIQUE_IDS");
 
+  post_process_lambda_ = beam_to_solid_volume_meshtying_visualization_output_paramslist.get<bool>(
+      "POSTPROCESS_LAMBDA");
+
   // Set the setup flag.
   issetup_ = true;
 }
