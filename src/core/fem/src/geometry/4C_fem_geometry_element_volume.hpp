@@ -113,7 +113,6 @@ namespace Core::Geo
     Core::LinAlg::Matrix<numnode, 1> funct;
     Core::LinAlg::Matrix<2, numnode> deriv;
     Core::LinAlg::Matrix<2, 3> xjm;
-    Core::LinAlg::Matrix<2, 2> xjm_xjmt;
 
     double area = 0.0;
 
@@ -140,10 +139,19 @@ namespace Core::Geo
         for (int i = 0; i < 2; ++i)
           for (int j = 0; j < 3; ++j) xjm(i, j) += deriv(i, inode) * xyze(j, inode);
 
-      xjm_xjmt.multiply_nt<3>(xjm, xjm);
+      Core::LinAlg::Matrix<3, 1> tangent_xi;
+      Core::LinAlg::Matrix<3, 1> tangent_eta;
 
-      const double det = xjm_xjmt.determinant();
-      const double fac = intpoints.weight(iquad) * std::sqrt(det);
+      for (int dim = 0; dim < 3; ++dim)
+      {
+        tangent_xi(dim) = xjm(0, dim);
+        tangent_eta(dim) = xjm(1, dim);
+      }
+
+      Core::LinAlg::Matrix<3, 1> surface_normal;
+      surface_normal.cross_product(tangent_xi, tangent_eta);
+
+      const double fac = intpoints.weight(iquad) * surface_normal.norm2();
 
       area += fac;
     }

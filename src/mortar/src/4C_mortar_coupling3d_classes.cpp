@@ -166,6 +166,8 @@ Mortar::IntCell::IntCell(Core::LinAlg::Matrix<3, 3>& coords, double* auxn,
   for (int k = 0; k < 3; ++k) auxn_[k] = auxn[k];
 
   area_ = Core::Geo::element_volume(shape, coords);
+  FOUR_C_ASSERT_ALWAYS(std::isfinite(area_) && area_ > 0.0,
+      "The area of the integration cell has to be a finite positive value.");
 
   linvertex_.resize(3);
   linvertex_[0] = linv1;
