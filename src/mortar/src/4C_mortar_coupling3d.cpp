@@ -72,10 +72,10 @@ bool Mortar::Coupling3d::evaluate_coupling()
   if (!orient) return false;
 
   // project slave element nodes onto auxiliary plane
-  project_slave();
+  project_element_onto_auxiliary_plane(source_int_element(), source_vertices(), Vertex::source);
 
   // project master element nodes onto auxiliary plane
-  project_master();
+  project_element_onto_auxiliary_plane(target_int_element(), target_vertices(), Vertex::projtarget);
 
   // tolerance for polygon clipping
   const double sminedge = source_int_element().min_edge_size();
@@ -291,90 +291,32 @@ bool Mortar::Coupling3d::auxiliary_plane()
 
 
 /*----------------------------------------------------------------------*
- |  Project slave element onto auxiliary plane (public)       popp 11/08|
  *----------------------------------------------------------------------*/
-bool Mortar::Coupling3d::project_slave()
+void Mortar::Coupling3d::project_element_onto_auxiliary_plane(Mortar::Element& element,
+    std::vector<Vertex>& projected_vertices, const Vertex::VType vertex_type)
 {
-  // project slave nodes onto auxiliary plane
-  int nnodes = source_int_element().num_node();
-  Core::Nodes::Node** mynodes = source_int_element().nodes();
-  if (!mynodes) FOUR_C_THROW("project_slave: Null pointer!");
+  const auto nodes = element.nodes();
+  FOUR_C_ASSERT_ALWAYS(nodes != nullptr, "Element does not contain a node array.");
 
-  // initialize storage for slave coords + their ids
-  std::vector<double> vertices(3);
-  std::vector<int> snodeids(1);
+  projected_vertices.reserve(projected_vertices.size() + element.num_node());
 
-  for (int i = 0; i < nnodes; ++i)
+  for (int node_index = 0; node_index < element.num_node(); ++node_index)
   {
-    Node* mycnode = dynamic_cast<Node*>(mynodes[i]);
-    if (!mycnode) FOUR_C_THROW("project_slave: Null pointer!");
+    const auto* node = dynamic_cast<const Mortar::Node*>(nodes[node_index]);
+    FOUR_C_ASSERT_ALWAYS(node != nullptr, "Expected a Mortar::Node.");
 
-    // first build difference of point and element center
-    // and then dot product with unit normal at center
-    const double dist = (mycnode->xspatial()[0] - auxc()[0]) * auxn()[0] +
-                        (mycnode->xspatial()[1] - auxc()[1]) * auxn()[1] +
-                        (mycnode->xspatial()[2] - auxc()[2]) * auxn()[2];
+    const auto& position = node->xspatial();
+    const double distance = (position[0] - auxc()[0]) * auxn()[0] +
+                            (position[1] - auxc()[1]) * auxn()[1] +
+                            (position[2] - auxc()[2]) * auxn()[2];
 
-    // compute projection
-    for (int k = 0; k < 3; ++k) vertices[k] = mycnode->xspatial()[k] - dist * auxn()[k];
+    std::vector<double> projected_position(3);
+    for (int dim = 0; dim < 3; ++dim)
+      projected_position[dim] = position[dim] - distance * auxn()[dim];
 
-    // get node id, too
-    snodeids[0] = mycnode->id();
-
-    // store into vertex data structure
-    source_vertices().emplace_back(vertices, Vertex::source, snodeids, nullptr);
-
-    // std::cout << "->RealNode(S) " << mycnode->Id() << ": " << mycnode->xspatial()[0] << " " <<
-    // mycnode->xspatial()[1] << " " << mycnode->xspatial()[2] << std::endl; std::cout <<
-    // "->ProjNode(S) " << mycnode->Id() << ": " << vertices[0] << " " << vertices[1] << " " <<
-    // vertices[2] << std::endl;
+    projected_vertices.emplace_back(
+        projected_position, vertex_type, std::vector<int>{node->id()}, nullptr);
   }
-
-  return true;
-}
-
-
-/*----------------------------------------------------------------------*
- |  Project master element onto auxiliary plane (public)      popp 11/08|
- *----------------------------------------------------------------------*/
-bool Mortar::Coupling3d::project_master()
-{
-  // project master nodes onto auxiliary plane
-  int nnodes = target_int_element().num_node();
-  Core::Nodes::Node** mynodes = target_int_element().nodes();
-  if (!mynodes) FOUR_C_THROW("project_master: Null pointer!");
-
-  // initialize storage for master coords + their ids
-  std::vector<double> vertices(3);
-  std::vector<int> mnodeids(1);
-
-  for (int i = 0; i < nnodes; ++i)
-  {
-    Node* mycnode = dynamic_cast<Node*>(mynodes[i]);
-    if (!mycnode) FOUR_C_THROW("project_master: Null pointer!");
-
-    // first build difference of point and element center
-    // and then dot product with unit normal at center
-    const double dist = (mycnode->xspatial()[0] - auxc()[0]) * auxn()[0] +
-                        (mycnode->xspatial()[1] - auxc()[1]) * auxn()[1] +
-                        (mycnode->xspatial()[2] - auxc()[2]) * auxn()[2];
-
-    // compute projection
-    for (int k = 0; k < 3; ++k) vertices[k] = mycnode->xspatial()[k] - dist * auxn()[k];
-
-    // get node id, too
-    mnodeids[0] = mycnode->id();
-
-    // store into vertex data structure
-    target_vertices().emplace_back(vertices, Vertex::projtarget, mnodeids, nullptr);
-
-    // std::cout << "->RealNode(M) " << mycnode->Id() << ": " << mycnode->xspatial()[0] << " " <<
-    // mycnode->xspatial()[1] << " " << mycnode->xspatial()[2] << std::endl; std::cout <<
-    // "->ProjNode(M) " << mycnode->Id() << ": " << vertices[0] << " " << vertices[1] << " " <<
-    // vertices[2] << std::endl;
-  }
-
-  return true;
 }
 
 
