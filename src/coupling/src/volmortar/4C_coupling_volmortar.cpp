@@ -16,7 +16,7 @@
 #include "4C_cut_volumecell.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_dofset_predefineddofnumber.hpp"
-#include "4C_fem_geometry_convex_hull.hpp"
+#include "4C_fem_geometry_polygon_utils.hpp"
 #include "4C_fem_geometry_searchtree.hpp"
 #include "4C_fem_geometry_searchtree_service.hpp"
 #include "4C_linalg_mapextractor.hpp"

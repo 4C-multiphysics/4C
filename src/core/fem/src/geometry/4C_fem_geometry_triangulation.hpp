@@ -5,12 +5,14 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_FEM_GEOMETRY_DELAUNAY_TRIANGULATION_HPP
-#define FOUR_C_FEM_GEOMETRY_DELAUNAY_TRIANGULATION_HPP
+#ifndef FOUR_C_FEM_GEOMETRY_TRIANGULATION_HPP
+#define FOUR_C_FEM_GEOMETRY_TRIANGULATION_HPP
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_utils_pairedvector.hpp"
 
 #include <algorithm>
 #include <array>
@@ -147,7 +149,8 @@ namespace Core::Geometry
    * Every input point must be unique and must occur in the resulting
    * triangulation. Returned triangles have positive orientation.
    */
-  [[nodiscard]] std::vector<Simplex<2>> delaunay_triangulation(std::span<const Point<2>> points);
+  [[nodiscard]] std::vector<Simplex<2>> global_delaunay_triangulation(
+      std::span<const Point<2>> points);
 
   /**
    * Compute the Delaunay tetrahedralization of a full-dimensional 3D point set.
@@ -155,8 +158,36 @@ namespace Core::Geometry
    * Every input point must be unique and must occur in the resulting
    * tetrahedralization. Returned tetrahedra have positive orientation.
    */
-  [[nodiscard]] std::vector<Simplex<3>> delaunay_triangulation(std::span<const Point<3>> points);
+  [[nodiscard]] std::vector<Simplex<3>> global_delaunay_triangulation(
+      std::span<const Point<3>> points);
 
+
+  struct Triangle
+  {
+    LinAlg::Matrix<3, 3> coordinates;
+    std::array<std::vector<Gen::Pairedvector<int, double>>, 3> vertex_linearizations;
+  };
+
+  /**
+   * @brief Triangulates a planar convex polygon by connecting its vertices to its area-weighted
+   * center.
+   *
+   * For polygons with more than three vertices, the function creates one triangle per polygon edge.
+   * A triangular polygon is returned unchanged as a single triangle. The vertices must be ordered
+   * consecutively along the polygon boundary.
+   *
+   * @param polygon Coordinates of the polygon vertices in three-dimensional space.
+   * @param vertex_linearizations Linearizations of the three coordinates of each polygon vertex.
+   * @param center_linearization Linearization of the area-weighted polygon center.
+   * @param area_tolerance Minimum admissible polygon area.
+   * @return The generated triangles, or `std::nullopt` if the polygon area does not exceed
+   *         `area_tolerance`.
+   */
+  std::optional<std::vector<Triangle>> local_center_triangulation(
+      const std::vector<std::array<double, 3>>& polygon,
+      const std::vector<std::vector<Core::Gen::Pairedvector<int, double>>>& vertex_linearizations,
+      const std::vector<Core::Gen::Pairedvector<int, double>>& center_linearization,
+      const double area_tolerance);
 }  // namespace Core::Geometry
 
 FOUR_C_NAMESPACE_CLOSE

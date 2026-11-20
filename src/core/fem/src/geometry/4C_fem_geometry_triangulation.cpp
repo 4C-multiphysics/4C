@@ -5,7 +5,9 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_fem_geometry_delaunay_triangulation.hpp"
+#include "4C_fem_geometry_triangulation.hpp"
+
+#include "4C_fem_geometry_polygon_utils.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -211,16 +213,74 @@ namespace Core::Geometry
     }
   }  // namespace
 
-  std::vector<Simplex<2>> delaunay_triangulation(const std::span<const Point<2>> points)
+  std::vector<Simplex<2>> global_delaunay_triangulation(const std::span<const Point<2>> points)
   {
     return delaunay_triangulation_impl<2>(points);
   }
 
-  std::vector<Simplex<3>> delaunay_triangulation(const std::span<const Point<3>> points)
+  std::vector<Simplex<3>> global_delaunay_triangulation(const std::span<const Point<3>> points)
   {
     return delaunay_triangulation_impl<3>(points);
   }
 
+
+  /*----------------------------------------------------------------------*
+   *----------------------------------------------------------------------*/
+  std::optional<std::vector<Triangle>> local_center_triangulation(
+      const std::vector<std::array<double, 3>>& polygon,
+      const std::vector<std::vector<Core::Gen::Pairedvector<int, double>>>& vertex_linearizations,
+      const std::vector<Core::Gen::Pairedvector<int, double>>& center_linearization,
+      const double area_tolerance)
+  {
+    FOUR_C_ASSERT_ALWAYS(polygon.size() >= 3, "A polygon must contain at least three vertices.");
+
+    FOUR_C_ASSERT_ALWAYS(polygon.size() == vertex_linearizations.size(),
+        "Expected one linearization per polygon vertex.");
+
+    std::vector<Triangle> triangles;
+
+    if (polygon.size() == 3)
+    {
+      Triangle triangle;
+      for (std::size_t vertex = 0; vertex < 3; ++vertex)
+      {
+        for (std::size_t dimension = 0; dimension < 3; ++dimension)
+          triangle.coordinates(dimension, vertex) = polygon[vertex][dimension];
+
+        triangle.vertex_linearizations[vertex] = vertex_linearizations[vertex];
+      }
+
+      triangles.emplace_back(std::move(triangle));
+      return triangles;
+    }
+
+    FOUR_C_ASSERT_ALWAYS(center_linearization.size() == 3,
+        "Expected one center linearization per spatial coordinate.");
+
+    const auto center_coordinates = Core::Geo::compute_polygon_center(polygon, area_tolerance);
+    if (!center_coordinates) return std::nullopt;
+
+    triangles.reserve(polygon.size());
+    for (std::size_t vertex = 0; vertex < polygon.size(); ++vertex)
+    {
+      const std::size_t next_vertex = (vertex + 1) % polygon.size();
+
+      Triangle triangle;
+      for (std::size_t dimension = 0; dimension < 3; ++dimension)
+      {
+        triangle.coordinates(dimension, 0) = (*center_coordinates)[dimension];
+        triangle.coordinates(dimension, 1) = polygon[vertex][dimension];
+        triangle.coordinates(dimension, 2) = polygon[next_vertex][dimension];
+      }
+
+      triangle.vertex_linearizations = {
+          center_linearization, vertex_linearizations[vertex], vertex_linearizations[next_vertex]};
+
+      triangles.emplace_back(std::move(triangle));
+    }
+
+    return triangles;
+  }
 }  // namespace Core::Geometry
 
 FOUR_C_NAMESPACE_CLOSE

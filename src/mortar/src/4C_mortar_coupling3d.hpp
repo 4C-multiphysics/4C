@@ -319,8 +319,6 @@ namespace Mortar
     virtual bool triangulation(std::map<int, double>& projpar, double tol);
     virtual bool delaunay_triangulation(
         std::vector<std::vector<Core::Gen::Pairedvector<int, double>>>& linvertex, double tol);
-    virtual bool center_triangulation(
-        std::vector<std::vector<Core::Gen::Pairedvector<int, double>>>& linvertex, double tol);
 
     /*!
      \brief Check / set projection status of slave nodes (3D)
