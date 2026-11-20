@@ -1,0 +1,134 @@
+TITLE:
+  - "3 airways forming a bifurcation with 2 attached terminal units, covering every model with"
+  - "history for restart: viscoelastic airway walls with inertia, a 4-element Maxwell and a"
+  - "Kelvin-Voigt terminal unit, and recruitment with exponential relaxation."
+  - "The restart test restarts at step 9, where the hysteresis path has already switched and the"
+  - "two branches of the recruitment law still differ, and checks the same final results."
+PROBLEM TYPE:
+  PROBLEMTYPE: "Reduced_Lung"
+reduced_dimensional_lung:
+  air_properties:
+    density: 1.176e-06
+    dynamic_viscosity: 1.79105e-05
+  dynamics:
+    linear_solver: 1
+    number_of_steps: 20
+    output_verbosity: high
+    restart_every: 3
+    results_every: 5
+    time_increment: 0.1
+  geometry:
+    file: "vtu/reduced_lung_3_aw_2_tu.vtu"
+  lung_tree:
+    airways:
+      element_blocks: [1]
+      radius:
+        from_mesh: "radius"
+      flow_model:
+        resistance_type:
+          constant: Linear
+        include_inertia:
+          constant: true
+      wall_model_type:
+        constant: KelvinVoigt
+      wall_model:
+        kelvin_voigt:
+          elasticity:
+            wall_poisson_ratio:
+              constant: 0.3
+            wall_elasticity:
+              constant: 50.0
+            wall_thickness:
+              constant: 0.1
+          viscosity:
+            viscous_time_constant:
+              constant: 0.1
+            viscous_phase_shift:
+              constant: 0.1
+    terminal_units:
+      element_blocks: [2]
+      v0:
+        from_mesh: "v0"
+      rheological_model:
+        rheological_model_type:
+          from_file: "reduced_lung_3_aw_2_tu_4elemax_and_kv.json"
+        4_element_maxwell:
+          elasticity_maxwell_e_m:
+            constant: 1.0
+          viscosity_maxwell_eta_m:
+            constant: 0.1
+          viscosity_kelvin_voigt_eta:
+            constant: 0.01
+        kelvin_voigt:
+          viscosity_kelvin_voigt_eta:
+            constant: 0.01
+      elasticity_model:
+        elasticity_model_type:
+          constant: Linear
+        linear:
+          elasticity_e:
+            constant: 1.0
+      recruitment_model:
+        pressure_law_type:
+          constant: LinearPressure
+        time_law_type:
+          constant: ExponentialRelaxation
+        reference_volume_linearization:
+          constant: Frozen
+        linear_pressure:
+          v0_min:
+            constant: 3.0
+          v0_max:
+            constant: 6.0
+          p_closing_min:
+            constant: -0.1
+          p_opening_min:
+            constant: 0.3
+          delta_p_minmax:
+            constant: 0.4
+          epsilon_v0_switch:
+            constant: 0.05
+          initial_path:
+            constant: Opening
+        exponential_relaxation:
+          tau:
+            constant: 0.1
+  boundary_conditions:
+    pressure:
+      - id: 1
+        function_id: 1
+      - id: 2
+        function_id: 2
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Reduced_lung_solver"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "1.5*sin(pi*t)"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_TIME: "0"
+RESULT DESCRIPTION:
+  - REDUCED_LUNG:
+      ELEMENT: 2
+      QUANTITY: "p_in"
+      VALUE: -0.00024641205527048084
+      TOLERANCE: 1e-8
+  - REDUCED_LUNG:
+      ELEMENT: 3
+      QUANTITY: "q_in"
+      VALUE: 16.512425535717387
+      TOLERANCE: 1e-8
+  - REDUCED_LUNG:
+      ELEMENT: 4
+      QUANTITY: "volume"
+      VALUE: 2.0692019754047255
+      TOLERANCE: 1e-8
+  - REDUCED_LUNG:
+      ELEMENT: 5
+      QUANTITY: "volume"
+      VALUE: 2.85704622152224
+      TOLERANCE: 1e-8
+  - REDUCED_LUNG:
+      ELEMENT: 5
+      QUANTITY: "q_in"
+      VALUE: 13.768289218245085
+      TOLERANCE: 1e-8

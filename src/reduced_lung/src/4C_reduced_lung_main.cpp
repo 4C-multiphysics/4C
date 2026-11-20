@@ -48,6 +48,7 @@ namespace ReducedLung
           .linear_solver_parameters = problem.solver_params(parameters.dynamics.linear_solver),
           .solver_params_callback = problem.solver_params_callback(),
           .output_control_file = problem.output_control_file(),
+          .input_control_file = problem.input_control_file(),
           .function_manager = problem.function_manager(),
       };
     }
@@ -82,6 +83,12 @@ namespace ReducedLung
     const MPI_Comm comm = context.comm;
     const bool is_rank_zero = Core::Communication::my_mpi_rank(comm) == 0;
 
+    const int restart_step = problem.restart();
+    if (restart_step > 0)
+    {
+      model.read_restart(restart_step);
+    }
+
     if (is_rank_zero)
     {
       std::cout << "-------- Start Time Integration --------\n"
@@ -93,7 +100,7 @@ namespace ReducedLung
 
     {
       TEUCHOS_FUNC_TIME_MONITOR("TimeLoop");
-      for (int step = 1; step <= dynamics.number_of_steps; ++step)
+      for (int step = restart_step + 1; step <= dynamics.number_of_steps; ++step)
       {
         if (is_rank_zero)
         {
@@ -105,9 +112,13 @@ namespace ReducedLung
         model.solve_step(dynamics.time_increment);
         model.accept_step();
 
-        if (step % dynamics.results_every == 0)
+        if (dynamics.results_every > 0 && step % dynamics.results_every == 0)
         {
           model.write_output(step);
+        }
+        if (dynamics.restart_every > 0 && step % dynamics.restart_every == 0)
+        {
+          model.write_restart(step);
         }
       }
     }

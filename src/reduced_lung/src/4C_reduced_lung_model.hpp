@@ -27,8 +27,9 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO
 {
+  class InputControl;
   class OutputControl;
-}
+}  // namespace Core::IO
 
 namespace Core::Utils
 {
@@ -55,6 +56,8 @@ namespace ReducedLung
     const Teuchos::ParameterList& linear_solver_parameters;
     std::function<const Teuchos::ParameterList&(int)> solver_params_callback;
     std::shared_ptr<Core::IO::OutputControl> output_control_file;
+    //! Control file of the run to restart from; only needed by Model::read_restart().
+    std::shared_ptr<Core::IO::InputControl> input_control_file;
     const Core::Utils::FunctionManager& function_manager;
   };
 
@@ -110,6 +113,24 @@ namespace ReducedLung
      * solution.
      */
     void write_output(int step) const;
+
+    /**
+     * @brief Write the accepted state as restart data of @p step.
+     *
+     * Must not be called between solve_step() and accept_step(). The data goes into the output
+     * control file of the context, so a driver that couples the model to another field writes it
+     * together with the restart data of that field.
+     */
+    void write_restart(int step) const;
+
+    /**
+     * @brief Restore the accepted state and time() from the restart data of @p step.
+     *
+     * Reads from the input control file of the context. Only the airway and terminal-unit history
+     * and the dofs are restored; everything else is rebuilt from the input file, so the model setup
+     * must be the same as in the run that wrote the data.
+     */
+    void read_restart(int step);
 
     /**
      * @brief Create a result test that checks the model's current state.

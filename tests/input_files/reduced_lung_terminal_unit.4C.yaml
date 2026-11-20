@@ -9,7 +9,6 @@ reduced_dimensional_lung:
   dynamics:
     linear_solver: 1
     number_of_steps: 1
-    restart_every: 1
     results_every: 1
     time_increment: 1
   geometry:
