@@ -13,10 +13,8 @@
  *----------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
-#include "4C_fem_general_utils_local_connectivity_matrices.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_thermo_ele_impl_utils.hpp"
-#include "4C_thermo_input.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -186,7 +184,6 @@ namespace Discret
       //! Calculate element force vectors and a few matrices
       void linear_thermo_contribution(
           const Core::Elements::Element* ele,  //!< the element whose matrix is calculated
-          const double time,                   //!< current time
           Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>*
               econd,  //!< conductivity matrix
           Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>*
@@ -221,27 +218,6 @@ namespace Discret
 
       //! @}
 
-      //! @name linear, small strain thermoplasticity solved with TSI
-      //! @{
-
-      //! calculate internal dissipation arising when a thermo-elasto-plastic
-      //! material is used
-      //! Clausius-Duhem inequality is no longer = 0, but > 0:
-      //! mechanical energy dissipates as heat
-      void linear_dissipation_fint(
-          const Core::Elements::Element* ele,  //!< the element whose matrix is calculated
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>* efint,  //!< internal force
-          Teuchos::ParameterList& params);
-
-      //! calculate terms of dissipation for thermo-mechanical
-      //! system matrix k_Td used in case of plastic material
-      void linear_dissipation_coupled_tang(
-          const Core::Elements::Element* ele,  // the element whose matrix is calculated
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, nsd_ * nen_ * numdofpernode_>*
-              etangcoupl,  // k_Td
-          Teuchos::ParameterList& params);
-
-      //! @}
 
       //! @name geometrically nonlinear TSI analysis
       //! @{
@@ -280,54 +256,8 @@ namespace Discret
           const Core::LinAlg::Matrix<nsd_, nen_>* N_XYZ                //!< gradient-operator
       ) const;
 
-      //! build linearisation of Jacobian w.r.t. d: dJ_dd
-      void calculate_linearisation_of_jacobian(
-          Core::LinAlg::Matrix<1, nsd_ * nen_ * numdofpernode_>& dJ_dd,  //!<  [out] dJ_dd
-          const double J,                                                //!< Jacobian
-          const Core::LinAlg::Matrix<nsd_, nen_>& N_XYZ,  //!< linear gradient of shape functions
-          const Core::LinAlg::Matrix<nsd_, nsd_>& defgrd_inv  //!< inverse of F
-      ) const;
-
-      //! build derivatives of right Cauchy-Green deformation tensor C
-      //! build the inverse of C^{-1} and the time derivative C'
-      void calculate_cauchy_greens(
-          Core::LinAlg::Matrix<6, 1>& Cratevct,            //!< right Cauchy-Green rate vector
-          Core::LinAlg::Matrix<6, 1>& Cinvvct,             //!< inverse of right Cauchy-Green vector
-          Core::LinAlg::Matrix<nsd_, nsd_>& Cinv,          //!< inverse right Cauchy-Green tensor
-          const Core::LinAlg::Matrix<nsd_, nsd_>* defgrd,  //!< deformation gradient tensor
-          const Core::LinAlg::Matrix<nsd_, nsd_>* defgrdrate,  //!< velocity gradient tensor
-          const Core::LinAlg::Matrix<nsd_, nsd_>*
-              invdefgrd  //!< inverse deformation gradient tensor
-      ) const;
-
       /// @}
 
-      //! @name finite strain thermoplasticity solved with TSI
-      //! @{
-
-      //! calculate internal dissipation arising when a thermo-elasto-plastic
-      //! material is used within geometrically nonlinear analysis
-      //! Clausius-Duhem inequality is no longer = 0, but > 0:
-      //! mechanical energy dissipates as heat
-      void nonlinear_dissipation_fint_tang(
-          const Core::Elements::Element* ele,  //!< the element whose matrix is calculated
-          const std::vector<double>& disp,     //!< current displacements
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>*
-              econd,                                              //!< conductivity matrix
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>* efint,  //!< internal force
-          Teuchos::ParameterList& params);
-
-      //! calculate terms of dissipation for thermo-mechanical system matrix k_Td
-      //! used in case of plastic material within geometrically nonlinear analysis
-      void nonlinear_dissipation_coupled_tang(
-          const Core::Elements::Element* ele,  //!< the element whose matrix is calculated
-          const std::vector<double>& disp,     //!< current displacements
-          const std::vector<double>& vel,      //!< current velocities
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, nsd_ * nen_ * numdofpernode_>*
-              etangcoupl,  //!< k_Td
-          Teuchos::ParameterList& params);
-
-      /// @}
 
       //! get the body force
       virtual void radiation(
@@ -344,12 +274,6 @@ namespace Discret
       //! get corresponding structural material
       std::shared_ptr<Core::Mat::Material> get_str_material(
           const Core::Elements::Element* ele  //!< the element whose matrix is calculated
-      ) const;
-
-      //! calculate reactive term
-      void calculate_reactive_term(
-          const Core::LinAlg::Matrix<6, 1>* ctemp,     //!< temperature-dependent material tangent
-          const Core::LinAlg::Matrix<6, 1>* strainvel  //!< strain rate
       ) const;
 
       //! determine heat flux and conductivity tensor
@@ -386,9 +310,6 @@ namespace Discret
       void calculate_lump_matrix(
           Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_>* ecapa) const;
 
-      //! calculate characteristic element length
-      double calculate_char_ele_length() const;
-
       //! Compute the error compared to an analytical solution from input file
       virtual void compute_error(
           const Core::Elements::Element* ele,  //!< current element whose terms are calculated
@@ -411,18 +332,6 @@ namespace Discret
       void integrate_shape_functions(const Core::Elements::Element* ele,  //!< current element
           Core::LinAlg::SerialDenseVector& elevec1,         //!< result vector (to be assembled)
           const Core::LinAlg::IntSerialDenseVector& dofids  //!< for which dof we need to integrate?
-      );
-
-      //! extrapolate from Gauss points to nodes, needed for postprocessing
-      void extrapolate_from_gauss_points_to_nodes(
-          const Core::Elements::Element* ele,                    //!< the actual element
-          const Core::LinAlg::Matrix<nquad_, nsd_>& gpheatflux,  //!< heat flux at each Gauss Point
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>&
-              efluxx,  //!< element heat flux in x-direction
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>&
-              efluxy,  //!< element heat flux in y-direction
-          Core::LinAlg::Matrix<nen_ * numdofpernode_, 1>&
-              efluxz  //!< element heat flux in z-direction
       );
 
       //! extract displacement and velocity vector from discretization
@@ -469,8 +378,6 @@ namespace Discret
       //! @name material related stuff
       //! @{
 
-      //! flag plastic material is used
-      bool plasticmat_;
 
       //! nurbs specific: element knots
       std::vector<Core::LinAlg::SerialDenseVector> myknots_;

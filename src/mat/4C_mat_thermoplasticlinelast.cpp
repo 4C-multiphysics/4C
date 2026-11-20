@@ -10,7 +10,6 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
-#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_utils_enum.hpp"
@@ -740,12 +739,26 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
  | calculate stress-temperature modulus and thermal derivative          |
  |   for coupled thermomechanics                                        |
  *----------------------------------------------------------------------*/
-void Mat::ThermoPlasticLinElast::stress_temperature_modulus_and_deriv(
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp)
+Mat::StressTemperatureModulus Mat::ThermoPlasticLinElast::evaluate_stress_temperature_modulus(
+    double temperature, const DeformationState& deformation_state,
+    const EvaluationContext<3>& context, int gp, int eleGID)
 {
-  setup_cthermo(stm);
-  stm_dT = Core::LinAlg::TensorGenerators::full<3, 3>(0.0);
+  StressTemperatureModulus stress_temperature_modulus;
+  setup_cthermo(stress_temperature_modulus.value);
+  return stress_temperature_modulus;
+}
+
+Mat::AdditionalHeatSource Mat::ThermoPlasticLinElast::evaluate_additional_heat_source(
+    const double temperature, const DeformationState& deformation_state,
+    const EvaluationContext<3>& context, const int gp, const int eleGID)
+{
+  FOUR_C_ASSERT_ALWAYS(context.time_step_size != nullptr, "Time-step size is required.");
+  const double dt = *context.time_step_size;
+
+  AdditionalHeatSource source;
+  source.value = -1.0 / dt * dmech_[gp];
+  source.derivative_wrt_strain = -1.0 / dt * dmech_d_[gp];
+  return source;
 }
 
 /*----------------------------------------------------------------------*
@@ -1277,11 +1290,6 @@ bool Mat::ThermoPlasticLinElast::evaluate_output_data(
   }
 
   return false;
-}
-
-void Mat::ThermoPlasticLinElast::reinit(double temperature, unsigned gp)
-{
-  current_temperature_ = temperature;
 }
 
 FOUR_C_NAMESPACE_CLOSE

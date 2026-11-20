@@ -27,35 +27,6 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Mat
 {
-  /*!
-   * @brief Mechanical heat source contribution produced by the material and the linearizations
-   * needed by thermomechanical coupling. Default constructed with zero values.
-   */
-  struct HeatSource
-  {
-    double value = 0.0;
-    //! derivative of the mechanical dissipation heat source w.r.t. temperature
-    double derivative_wrt_temperature = 0.0;
-    //! derivative of the mechanical dissipation heat source w.r.t. the right Cauchy-Green tensor
-    //! (stress-form)
-    Core::LinAlg::Matrix<1, 6> derivative_wrt_cauchy_green{Core::LinAlg::Initialization::zero};
-
-    //! pack a vector of MechanicalDissipation
-    static void pack(
-        Core::Communication::PackBuffer& data, const std::vector<HeatSource>& heat_source)
-    {
-      Core::Communication::add_to_pack(data, static_cast<int>(heat_source.size()));
-
-      for (const auto& md : heat_source)
-      {
-        Core::Communication::add_to_pack(data, md.value);
-        Core::Communication::add_to_pack(data, md.derivative_wrt_temperature);
-        Core::Communication::add_to_pack(data, md.derivative_wrt_cauchy_green);
-      }
-    }
-  };
-
-
   /// Free-energy related stress factors, as presented in Holzapfel - Nonlinear Solid Mechanics.
   struct StressFactors
   {
