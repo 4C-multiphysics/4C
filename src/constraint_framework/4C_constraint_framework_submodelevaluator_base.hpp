@@ -64,8 +64,8 @@ namespace Constraints::SubmodelEvaluator
     [[nodiscard]] virtual std::map<Solid::EnergyType, double> get_energy() const = 0;
 
    private:
-    //! Column Map
-    std::shared_ptr<Core::LinAlg::Map> n_condition_map_;
+    //! Map of the constraint equations: one gid per equation, owned by the rank that created it
+    std::shared_ptr<Core::LinAlg::Map> constraint_equation_map_;
 
     //! Penalty parameter
     double penalty_parameter_;
