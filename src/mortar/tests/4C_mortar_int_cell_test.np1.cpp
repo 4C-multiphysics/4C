@@ -92,13 +92,15 @@ namespace
     {
       Core::LinAlg::Matrix<3, 3> coordinates(Core::LinAlg::Initialization::zero);
 
+      // x_0 = (1, 2, 3)
       coordinates(0, 0) = 1.0;
       coordinates(1, 0) = 2.0;
       coordinates(2, 0) = 3.0;
 
+      // x_1 = (4, 6, 15)
       coordinates(0, 1) = 4.0;
       coordinates(1, 1) = 6.0;
-      coordinates(2, 1) = 3.0;
+      coordinates(2, 1) = 15.0;
 
       return coordinates;
     }
@@ -212,8 +214,8 @@ namespace
   {
     auto cell = make_cell(segment_coordinates(), Core::FE::CellType::line2);
 
-    EXPECT_DOUBLE_EQ(cell->area(), 5.0);
-    EXPECT_DOUBLE_EQ(cell->jacobian(), 2.5);
+    EXPECT_DOUBLE_EQ(cell->area(), 13.0);
+    EXPECT_DOUBLE_EQ(cell->jacobian(), 6.5);
   }
 
   // Test that segment shape functions interpolate the physical coordinates
@@ -239,14 +241,14 @@ namespace
 
     EXPECT_DOUBLE_EQ(global_coordinate[0], 2.875);
     EXPECT_DOUBLE_EQ(global_coordinate[1], 4.5);
-    EXPECT_DOUBLE_EQ(global_coordinate[2], 3.0);
+    EXPECT_DOUBLE_EQ(global_coordinate[2], 10.5);
 
     std::array<double, 3> tangent{};
     ASSERT_TRUE(cell->local_to_global(local_coordinate.data(), tangent.data(), 1));
 
     EXPECT_DOUBLE_EQ(tangent[0], 1.5);
     EXPECT_DOUBLE_EQ(tangent[1], 2.0);
-    EXPECT_DOUBLE_EQ(tangent[2], 0.0);
+    EXPECT_DOUBLE_EQ(tangent[2], 6.0);
   }
 
   // Test that the analytical segment Jacobian linearization agrees with central finite
