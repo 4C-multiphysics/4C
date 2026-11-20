@@ -12,7 +12,6 @@
 
 #include "4C_coupling_adapter.hpp"
 #include "4C_elch_input.hpp"
-#include "4C_io_runtime_csv_writer.hpp"
 #include "4C_scatra_timint_elch.hpp"
 
 FOUR_C_NAMESPACE_OPEN
