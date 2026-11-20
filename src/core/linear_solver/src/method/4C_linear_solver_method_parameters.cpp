@@ -225,7 +225,7 @@ void Core::LinearSolver::Parameters::fix_coordinates(
   // The global number of elements is not known a priori, let the map derive it (-1).
   constexpr int invalid_global_size = -1;
   Core::LinAlg::Map node_map(
-      invalid_global_size, num_local_nodes, node_gids.data(), index_base, newmap.get_comm());
+      invalid_global_size, std::span<const int>(node_gids), index_base, newmap.get_comm());
 
   // Rebuild the coordinates if the maps do not match.
   if (node_map.same_as(coordinates->get_map())) return;

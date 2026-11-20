@@ -83,7 +83,7 @@ void BeamInteraction::BeamToSolidOutputWriterVisualization::
     }
   }
   node_gid_map_ = std::make_shared<Core::LinAlg::Map>(
-      -1, my_global_dof_ids.size(), my_global_dof_ids.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(my_global_dof_ids), 0, discret_->get_comm());
 }
 
 /**

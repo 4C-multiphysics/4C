@@ -107,19 +107,19 @@ void BeamInteraction::BeamToSolidMortarManager::setup()
   }
 
   // Rowmap for the additional GIDs used by the mortar contact discretization.
-  lambda_dof_rowmap_translations_ =
-      std::make_shared<Core::LinAlg::Map>(-1, my_lambda_gid_translational.size(),
-          my_lambda_gid_translational.data(), 0, discret_->get_comm());
-  lambda_dof_rowmap_rotations_ = std::make_shared<Core::LinAlg::Map>(-1,
-      my_lambda_gid_rotational.size(), my_lambda_gid_rotational.data(), 0, discret_->get_comm());
+  lambda_dof_rowmap_translations_ = std::make_shared<Core::LinAlg::Map>(
+      -1, std::span<const int>(my_lambda_gid_translational), 0, discret_->get_comm());
+  lambda_dof_rowmap_rotations_ = std::make_shared<Core::LinAlg::Map>(
+      -1, std::span<const int>(my_lambda_gid_rotational), 0, discret_->get_comm());
   lambda_dof_rowmap_ =
       Core::LinAlg::merge_map(lambda_dof_rowmap_translations_, lambda_dof_rowmap_rotations_, false);
   // We need to be able to get the global ids for a Lagrange multiplier DOF from the global id
   // of a node or element. To do so, we 'abuse' the Core::LinAlg::MultiVector<double> as map between
   // the global node / element ids and the global Lagrange multiplier DOF ids.
-  Core::LinAlg::Map node_gid_rowmap(-1, n_nodes, my_nodes_gid.data(), 0, discret_->get_comm());
+  Core::LinAlg::Map node_gid_rowmap(
+      -1, std::span<const int>(my_nodes_gid.data(), n_nodes), 0, discret_->get_comm());
   Core::LinAlg::Map element_gid_rowmap(
-      -1, n_element, my_elements_gid.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(my_elements_gid.data(), n_element), 0, discret_->get_comm());
 
   // Map from global node / element ids to global lagrange multiplier ids. Only create the
   // multivector if it hase one or more columns.
@@ -214,9 +214,9 @@ void BeamInteraction::BeamToSolidMortarManager::set_global_maps()
 
   // Create the beam and solid maps.
   beam_dof_rowmap_ = std::make_shared<Core::LinAlg::Map>(
-      -1, beam_dofs.size(), beam_dofs.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(beam_dofs), 0, discret_->get_comm());
   solid_dof_rowmap_ = std::make_shared<Core::LinAlg::Map>(
-      -1, solid_dofs.size(), solid_dofs.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(solid_dofs), 0, discret_->get_comm());
 
   // Reset the local maps.
   node_gid_to_lambda_gid_map_.clear();
@@ -279,9 +279,9 @@ void BeamInteraction::BeamToSolidMortarManager::set_local_maps(
 
   // Create the maps for the extraction of the values.
   Core::LinAlg::Map node_gid_needed_rowmap(
-      -1, node_gid_needed.size(), node_gid_needed.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(node_gid_needed), 0, discret_->get_comm());
   Core::LinAlg::Map element_gid_needed_rowmap(
-      -1, element_gid_needed.size(), element_gid_needed.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(element_gid_needed), 0, discret_->get_comm());
 
   // Create the Multivectors that will be filled with all values needed on this rank.
   std::shared_ptr<Core::LinAlg::MultiVector<double>> node_gid_to_lambda_gid_copy = nullptr;
@@ -333,7 +333,7 @@ void BeamInteraction::BeamToSolidMortarManager::set_local_maps(
 
   // Create the global lambda col map.
   lambda_dof_colmap_ = std::make_shared<Core::LinAlg::Map>(
-      -1, lambda_gid_for_col_map.size(), lambda_gid_for_col_map.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(lambda_gid_for_col_map), 0, discret_->get_comm());
 
   // Set flags for local maps.
   is_local_maps_build_ = true;

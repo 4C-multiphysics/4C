@@ -436,15 +436,13 @@ void XFEM::MultiFieldMapExtractor::build_slave_node_map_extractors()
 
     // slave sided interface node maps
     partial_maps[MultiField::block_interface] = nullptr;
-    partial_maps[MultiField::block_interface] =
-        std::make_shared<Core::LinAlg::Map>(-1, static_cast<int>(my_interface_row_node_gids.size()),
-            my_interface_row_node_gids.data(), 0, get_comm());
+    partial_maps[MultiField::block_interface] = std::make_shared<Core::LinAlg::Map>(
+        -1, std::span<const int>(my_interface_row_node_gids), 0, get_comm());
 
     // slave sided non-interface node maps
     partial_maps[MultiField::block_non_interface] = nullptr;
-    partial_maps[MultiField::block_non_interface] = std::make_shared<Core::LinAlg::Map>(-1,
-        static_cast<int>(my_non_interface_row_node_gids.size()),
-        my_non_interface_row_node_gids.data(), 0, get_comm());
+    partial_maps[MultiField::block_non_interface] = std::make_shared<Core::LinAlg::Map>(
+        -1, std::span<const int>(my_non_interface_row_node_gids), 0, get_comm());
 
     // setup node map extractor
     slave_map_extractors_[dis_count++][map_nodes]->setup(
@@ -497,14 +495,13 @@ void XFEM::MultiFieldMapExtractor::build_slave_dof_map_extractors()
     }
     // create slave interface dof row map
     partial_maps[MultiField::block_interface] = nullptr;
-    partial_maps[MultiField::block_interface] = std::make_shared<Core::LinAlg::Map>(-1,
-        static_cast<int>(my_sl_interface_dofs.size()), my_sl_interface_dofs.data(), 0, get_comm());
+    partial_maps[MultiField::block_interface] = std::make_shared<Core::LinAlg::Map>(
+        -1, std::span<const int>(my_sl_interface_dofs), 0, get_comm());
 
     // create slave non-interface dof row map
     partial_maps[MultiField::block_non_interface] = nullptr;
-    partial_maps[MultiField::block_non_interface] =
-        std::make_shared<Core::LinAlg::Map>(-1, static_cast<int>(my_sl_non_interface_dofs.size()),
-            my_sl_non_interface_dofs.data(), 0, get_comm());
+    partial_maps[MultiField::block_non_interface] = std::make_shared<Core::LinAlg::Map>(
+        -1, std::span<const int>(my_sl_non_interface_dofs), 0, get_comm());
 
     // setup dof map extractor
     slave_map_extractors_[dis_count++][map_dofs]->setup(*((*cit_dis)->dof_row_map()), partial_maps);
@@ -660,8 +657,8 @@ void XFEM::MultiFieldMapExtractor::build_master_dof_map_extractor()
       for (unsigned j = 0; j < numdof; ++j)
         my_ma_interface_dofs.push_back(i_discret().dof(inode, j));
     }
-    partial_maps.at(i) = std::shared_ptr<const Core::LinAlg::Map>(new Core::LinAlg::Map(-1,
-        static_cast<int>(my_ma_interface_dofs.size()), my_ma_interface_dofs.data(), 0, get_comm()));
+    partial_maps.at(i) = std::shared_ptr<const Core::LinAlg::Map>(
+        new Core::LinAlg::Map(-1, std::span<const int>(my_ma_interface_dofs), 0, get_comm()));
   }
 
   // --------------------------------------------------------------------------
@@ -1053,9 +1050,8 @@ void XFEM::MultiFieldMapExtractor::build_master_interface_node_maps(
 {
   for (unsigned i = 0; i < my_master_interface_node_gids.size(); ++i)
   {
-    master_interface_node_maps_.push_back(std::make_shared<Core::LinAlg::Map>(-1,
-        static_cast<int>(my_master_interface_node_gids[i].size()),
-        my_master_interface_node_gids[i].data(), 0, get_comm()));
+    master_interface_node_maps_.push_back(std::make_shared<Core::LinAlg::Map>(
+        -1, std::span<const int>(my_master_interface_node_gids[i]), 0, get_comm()));
   }
 }
 

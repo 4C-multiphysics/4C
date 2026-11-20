@@ -264,7 +264,7 @@ void PostVtuWriter::write_dof_result_step(std::ofstream& file,
     for (int i = 0; i < vecmap.num_my_elements(); ++i)
       gids[i] = vecmap.my_global_elements()[i] - offset;
     Core::LinAlg::Map rowmap(
-        vecmap.num_global_elements(), vecmap.num_my_elements(), gids.data(), 0, vecmap.get_comm());
+        vecmap.num_global_elements(), std::span<const int>(gids), 0, vecmap.get_comm());
     std::shared_ptr<Core::LinAlg::Vector<double>> dofvec =
         std::make_shared<Core::LinAlg::Vector<double>>(rowmap, false);
     for (int i = 0; i < vecmap.num_my_elements(); ++i)

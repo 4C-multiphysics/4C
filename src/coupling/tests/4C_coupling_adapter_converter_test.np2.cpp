@@ -77,12 +77,13 @@ namespace
     const int rank = Core::Communication::my_mpi_rank(comm);
     const std::array source_rows = {0, 1};
     auto source_map = std::make_shared<Core::LinAlg::Map>(
-        -1, rank == 0 ? 2 : 0, rank == 0 ? source_rows.data() : nullptr, 0, comm);
+        -1, rank == 0 ? std::span<const int>(source_rows) : std::span<const int>{}, 0, comm);
     const int destination_row = rank;
-    auto destination_map = std::make_shared<Core::LinAlg::Map>(-1, 1, &destination_row, 0, comm);
+    auto destination_map =
+        std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(&destination_row, 1), 0, comm);
     const std::array columns = {10, 11, 12};
     Core::LinAlg::Map domain_map(
-        -1, rank == 0 ? 3 : 0, rank == 0 ? columns.data() : nullptr, 0, comm);
+        -1, rank == 0 ? std::span<const int>(columns) : std::span<const int>{}, 0, comm);
 
     Core::LinAlg::SparseMatrix source(
         *source_map, 3, Core::LinAlg::SparseMatrix::StorageProfile::static_profile);

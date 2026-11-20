@@ -279,7 +279,7 @@ void XFEM::XFieldField::Coupling::build_min_dof_maps(const Core::FE::Discretizat
 
   // dof map is the original, unpermuted distribution of dofs
   min_dofmap = std::make_shared<Core::LinAlg::Map>(
-      -1, dofmapvec.size(), dofmapvec.data(), 0, min_dis.get_comm());
+      -1, std::span<const int>(dofmapvec), 0, min_dis.get_comm());
 
   dofmapvec.clear();
 
@@ -310,7 +310,7 @@ void XFEM::XFieldField::Coupling::build_min_dof_maps(const Core::FE::Discretizat
 
   // permuted dof map according to a given permuted node map
   min_permdofmap = std::make_shared<Core::LinAlg::Map>(
-      -1, dofmapvec.size(), dofmapvec.data(), 0, min_dis.get_comm());
+      -1, std::span<const int>(dofmapvec), 0, min_dis.get_comm());
 
   /* prepare communication plan to create a dofmap out of a permuted
    * dof map */
@@ -358,7 +358,7 @@ void XFEM::XFieldField::Coupling::build_max_dof_maps(const Core::FE::Discretizat
 
   // dof map is the original, unpermuted distribution of dofs
   max_dofmap = std::make_shared<Core::LinAlg::Map>(
-      -1, dofmapvec.size(), dofmapvec.data(), 0, max_dis.get_comm());
+      -1, std::span<const int>(dofmapvec), 0, max_dis.get_comm());
 
   dofmapvec.clear();
 
@@ -378,7 +378,7 @@ void XFEM::XFieldField::Coupling::build_max_dof_maps(const Core::FE::Discretizat
 
   // permuted dof map according to a given permuted node map
   max_permdofmap = std::make_shared<Core::LinAlg::Map>(
-      -1, dofmapvec.size(), dofmapvec.data(), 0, max_dis.get_comm());
+      -1, std::span<const int>(dofmapvec), 0, max_dis.get_comm());
 
   /* prepare communication plan to create a dofmap out of a permuted
    * dof map */

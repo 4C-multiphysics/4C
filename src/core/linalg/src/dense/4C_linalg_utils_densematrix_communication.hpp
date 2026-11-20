@@ -61,7 +61,7 @@ namespace Core::LinAlg
     std::map<int, std::vector<T>> datamap;
     datamap[myrank] = sdata;
     // build a source map
-    Core::LinAlg::Map source(numproc, 1, &myrank, 0, comm);
+    Core::LinAlg::Map source(numproc, std::span<const int>(&myrank, 1), 0, comm);
     // build a target map which is redundant on all target procs and zero everywhere else
     bool iamtarget = false;
     for (int i = 0; i < ntargetprocs; ++i)
@@ -77,7 +77,7 @@ namespace Core::LinAlg
       for (int i = 0; i < numproc; ++i) targetvec[i] = i;
     }
     const int tnummyelements = (int)targetvec.size();
-    Core::LinAlg::Map target(-1, tnummyelements, targetvec.data(), 0, comm);
+    Core::LinAlg::Map target(-1, std::span<const int>(targetvec.data(), tnummyelements), 0, comm);
     // build an exporter and export data
     Core::Communication::Exporter exporter(source, target, comm);
     exporter.do_export(datamap);
@@ -136,7 +136,7 @@ namespace Core::LinAlg
     std::map<int, std::set<T>> datamap;
     datamap[myrank] = sdata;
     // build a source map
-    Core::LinAlg::Map source(numproc, 1, &myrank, 0, comm);
+    Core::LinAlg::Map source(numproc, std::span<const int>(&myrank, 1), 0, comm);
     // build a target map which is redundant on all target procs and zero everywhere else
     bool iamtarget = false;
     for (int i = 0; i < ntargetprocs; ++i)
@@ -152,7 +152,7 @@ namespace Core::LinAlg
       for (int i = 0; i < numproc; ++i) targetvec[i] = i;
     }
     const int tnummyelements = (int)targetvec.size();
-    Core::LinAlg::Map target(-1, tnummyelements, targetvec.data(), 0, comm);
+    Core::LinAlg::Map target(-1, std::span<const int>(targetvec.data(), tnummyelements), 0, comm);
     // build an exporter and export data
     Core::Communication::Exporter exporter(source, target, comm);
     exporter.do_export(datamap);
@@ -211,7 +211,7 @@ namespace Core::LinAlg
     std::map<int, std::map<int, std::set<T>>> datamap;
     datamap[myrank] = sdata;
     // build a source map
-    Core::LinAlg::Map source(numproc, 1, &myrank, 0, comm);
+    Core::LinAlg::Map source(numproc, std::span<const int>(&myrank, 1), 0, comm);
     // build a target map which is redundant on all target procs and zero everywhere else
     bool iamtarget = false;
     for (int i = 0; i < ntargetprocs; ++i)
@@ -227,7 +227,7 @@ namespace Core::LinAlg
       for (int i = 0; i < numproc; ++i) targetvec[i] = i;
     }
     const int tnummyelements = (int)targetvec.size();
-    Core::LinAlg::Map target(-1, tnummyelements, targetvec.data(), 0, comm);
+    Core::LinAlg::Map target(-1, std::span<const int>(targetvec.data(), tnummyelements), 0, comm);
     // build an exporter and export data
     Core::Communication::Exporter exporter(source, target, comm);
     exporter.do_export(datamap);
@@ -286,7 +286,7 @@ namespace Core::LinAlg
     std::map<int, std::map<int, std::vector<T>>> datamap;
     datamap[myrank] = sdata;
     // build a source map
-    Core::LinAlg::Map source(numproc, 1, &myrank, 0, comm);
+    Core::LinAlg::Map source(numproc, std::span<const int>(&myrank, 1), 0, comm);
     // build a target map which is redundant on all target procs and zero everywhere else
     bool iamtarget = false;
     for (int i = 0; i < ntargetprocs; ++i)
@@ -302,7 +302,7 @@ namespace Core::LinAlg
       for (int i = 0; i < numproc; ++i) targetvec[i] = i;
     }
     const int tnummyelements = (int)targetvec.size();
-    Core::LinAlg::Map target(-1, tnummyelements, targetvec.data(), 0, comm);
+    Core::LinAlg::Map target(-1, std::span<const int>(targetvec.data(), tnummyelements), 0, comm);
     // build an exporter and export data
     Core::Communication::Exporter exporter(source, target, comm);
     exporter.do_export(datamap);
@@ -364,7 +364,7 @@ namespace Core::LinAlg
     datamap[myrank] = sdata;
 
     // build a source map
-    Core::LinAlg::Map source(numproc, 1, &myrank, 0, comm);
+    Core::LinAlg::Map source(numproc, std::span<const int>(&myrank, 1), 0, comm);
     // build a target map which is redundant on all target procs and zero everywhere else
     bool iamtarget = false;
     for (int i = 0; i < ntargetprocs; ++i)
@@ -380,7 +380,7 @@ namespace Core::LinAlg
       for (int i = 0; i < numproc; ++i) targetvec[i] = i;
     }
     const int tnummyelements = (int)targetvec.size();
-    Core::LinAlg::Map target(-1, tnummyelements, targetvec.data(), 0, comm);
+    Core::LinAlg::Map target(-1, std::span<const int>(targetvec.data(), tnummyelements), 0, comm);
     // build an exporter and export data
     Core::Communication::Exporter exporter(source, target, comm);
     exporter.do_export(datamap);

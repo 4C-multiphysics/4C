@@ -131,8 +131,7 @@ namespace
             global_ids.begin() + starting_index_on_this_rank, global_ids.end());
       }
 
-      return Core::LinAlg::Map(-1, static_cast<int>(global_ids_on_this_rank.size()),
-          global_ids_on_this_rank.data(), 0, comm);
+      return Core::LinAlg::Map(-1, std::span<const int>(global_ids_on_this_rank), 0, comm);
     };
 
     //// large contiguous map

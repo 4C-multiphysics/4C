@@ -27,9 +27,10 @@ namespace
     const std::array other_gids = {1, 2, 3, 4, 5, 6};
 
     auto first = std::make_shared<Core::LinAlg::Map>(
-        -1, rank == 0 ? 2 : 0, rank == 0 ? first_gids.data() : nullptr, 0, comm);
+        -1, rank == 0 ? std::span<const int>(first_gids) : std::span<const int>{}, 0, comm);
+
     auto others = std::make_shared<Core::LinAlg::Map>(
-        -1, rank == 1 ? 6 : 0, rank == 1 ? other_gids.data() : nullptr, 0, comm);
+        -1, rank == 1 ? std::span<const int>(other_gids) : std::span<const int>{}, 0, comm);
     std::vector<std::shared_ptr<const Core::LinAlg::Map>> maps = {first, others};
     auto full_map = Core::LinAlg::MultiMapExtractor::merge_maps(maps);
     Core::LinAlg::MultiMapExtractor extractor(*full_map, maps);

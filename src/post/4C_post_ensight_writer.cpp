@@ -44,7 +44,7 @@ EnsightWriter::EnsightWriter(PostField* field, const std::string& filename)
       proc0map_->my_global_elements() + proc0map_->num_my_elements());
   std::sort(sortmap.begin(), sortmap.end());
   proc0map_ = std::make_shared<Core::LinAlg::Map>(
-      -1, sortmap.size(), sortmap.data(), 0, proc0map_->get_comm());
+      -1, std::span<const int>(sortmap), 0, proc0map_->get_comm());
 
   // get the number of elements for each distype (global numbers)
   numElePerDisType_ = get_num_ele_per_dis_type(*dis);

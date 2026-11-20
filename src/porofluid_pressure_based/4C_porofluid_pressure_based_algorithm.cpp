@@ -1083,7 +1083,7 @@ void PoroPressureBased::PorofluidAlgorithm::apply_additional_dbc_for_vol_frac_pr
   // build map
   int nummydirichvals = mydirichdofs.size();
   std::shared_ptr<Core::LinAlg::Map> dirichmap = std::make_shared<Core::LinAlg::Map>(
-      -1, nummydirichvals, mydirichdofs.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(mydirichdofs.data(), nummydirichvals), 0, discret_->get_comm());
 
   // build vector of maps
   std::vector<std::shared_ptr<const Core::LinAlg::Map>> condmaps;
@@ -1143,7 +1143,7 @@ void PoroPressureBased::PorofluidAlgorithm::apply_starting_dbc()
 
   // build combined DBC map
   std::shared_ptr<Core::LinAlg::Map> additional_map = std::make_shared<Core::LinAlg::Map>(
-      -1, dirichlet_dofs.size(), dirichlet_dofs.data(), 0, discret_->get_comm());
+      -1, std::span<const int>(dirichlet_dofs), 0, discret_->get_comm());
 
   std::vector<std::shared_ptr<const Core::LinAlg::Map>> condition_maps;
   condition_maps.emplace_back(additional_map);

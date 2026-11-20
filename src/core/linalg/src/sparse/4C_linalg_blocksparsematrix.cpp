@@ -132,8 +132,8 @@ void Core::LinAlg::BlockSparseMatrixBase::complete(OptionsMatrixComplete options
     std::sort(colmapentries.begin(), colmapentries.end());
     colmapentries.erase(
         std::unique(colmapentries.begin(), colmapentries.end()), colmapentries.end());
-    fullcolmap_ = std::make_shared<Core::LinAlg::Map>(
-        -1, colmapentries.size(), colmapentries.data(), 0, get_comm());
+    fullcolmap_ =
+        std::make_shared<Core::LinAlg::Map>(-1, std::span<const int>(colmapentries), 0, get_comm());
   }
 }
 
