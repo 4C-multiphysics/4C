@@ -28,6 +28,9 @@ jobs:
           pre-commit clean
           pre-commit run --all-files --show-diff-on-failure
 
+      - name: Test Spack Python utilities
+        run: utilities/python-venv/bin/python -m unittest discover -s utilities/four_c_python/tests
+
   clang-tidy:
     runs-on: ubuntu-latest
     container:

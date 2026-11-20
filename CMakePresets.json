@@ -6,6 +6,7 @@
     "presets/lnm/workstation/CMakePresets.json",
     "presets/lnm/cluster/CMakePresets.json",
     "presets/imcs/workstation/CMakePresets.json",
-    "presets/imcs/cluster/CMakePresets.json"
+    "presets/imcs/cluster/CMakePresets.json",
+    "presets/spack/CMakePresets.json"
   ]
 }
