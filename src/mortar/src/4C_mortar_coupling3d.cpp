@@ -118,25 +118,13 @@ bool Mortar::Coupling3d::rough_check_centers()
   const double mme = target_int_element().max_edge_size();
   const double near = 2.0 * std::max(some, mme);
 
-  double loccs[2] = {0.0, 0.0};
-  Core::FE::CellType dts = source_int_element().shape();
-  if (dts == Core::FE::CellType::tri3 || dts == Core::FE::CellType::tri6)
-  {
-    loccs[0] = 1.0 / 3.0;
-    loccs[1] = 1.0 / 3.0;
-  }
-  double loccm[2] = {0.0, 0.0};
-  Core::FE::CellType dtm = target_int_element().shape();
-  if (dtm == Core::FE::CellType::tri3 || dtm == Core::FE::CellType::tri6)
-  {
-    loccm[0] = 1.0 / 3.0;
-    loccm[1] = 1.0 / 3.0;
-  }
+  const auto loccs = Core::FE::get_local_center_position<2>(source_int_element().shape());
+  const auto loccm = Core::FE::get_local_center_position<2>(target_int_element().shape());
 
-  double sc[3] = {0.0, 0.0, 0.0};
-  double mc[3] = {0.0, 0.0, 0.0};
-  source_int_element().local_to_global(loccs, sc, 0);
-  target_int_element().local_to_global(loccm, mc, 0);
+  std::array<double, 3> sc = {0.0, 0.0, 0.0};
+  std::array<double, 3> mc = {0.0, 0.0, 0.0};
+  source_int_element().local_to_global(loccs.data(), sc.data(), 0);
+  target_int_element().local_to_global(loccm.data(), mc.data(), 0);
 
   const double cdist = sqrt((mc[0] - sc[0]) * (mc[0] - sc[0]) + (mc[1] - sc[1]) * (mc[1] - sc[1]) +
                             (mc[2] - sc[2]) * (mc[2] - sc[2]));
@@ -191,29 +179,12 @@ bool Mortar::Coupling3d::rough_check_orient()
   // compute auxiliary plane for 3D coupling
   auxiliary_plane();
 
-  // we first need the master element center:
-  // for quad4, quad8, quad9 elements: xi = eta = 0.0
-  // for tri3, tri6 elements: xi = eta = 1/3
-  double loccenter[2] = {0.0, 0.0};
-
-  Core::FE::CellType dt = target_int_element().shape();
-  if (dt == Core::FE::CellType::tri3 || dt == Core::FE::CellType::tri6)
-  {
-    loccenter[0] = 1.0 / 3;
-    loccenter[1] = 1.0 / 3;
-  }
-  else if (dt == Core::FE::CellType::quad4 || dt == Core::FE::CellType::quad8 ||
-           dt == Core::FE::CellType::quad9)
-  {
-    loccenter[0] = 0.0;
-    loccenter[1] = 0.0;
-  }
-  else
-    FOUR_C_THROW("rough_check_orient called for unknown element type");
+  // we first need the master element center
+  const auto loccenter = Core::FE::get_local_center_position<2>(target_int_element().shape());
 
   // compute the unit normal vector at the master element center
-  double nmc[3] = {0.0, 0.0, 0.0};
-  target_int_element().compute_unit_normal_at_xi(loccenter, nmc);
+  std::array<double, 3> nmc = {0.0, 0.0, 0.0};
+  target_int_element().compute_unit_normal_at_xi(loccenter.data(), nmc.data());
 
   // check orientation with respect to slave element
   double dot = nmc[0] * auxn()[0] + nmc[1] * auxn()[1] + nmc[2] * auxn()[2];
@@ -229,62 +200,14 @@ bool Mortar::Coupling3d::rough_check_orient()
  *----------------------------------------------------------------------*/
 bool Mortar::Coupling3d::auxiliary_plane()
 {
-  // we first need the element center:
-  // for quad4, quad8, quad9 elements: xi = eta = 0.0
-  // for tri3, tri6 elements: xi = eta = 1/3
-  double loccenter[2] = {0.0, 0.0};
-
-  Core::FE::CellType dt = source_int_element().shape();
-  if (dt == Core::FE::CellType::tri3 || dt == Core::FE::CellType::tri6)
-  {
-    loccenter[0] = 1.0 / 3.0;
-    loccenter[1] = 1.0 / 3.0;
-  }
-  else if (dt == Core::FE::CellType::quad4 || dt == Core::FE::CellType::quad8 ||
-           dt == Core::FE::CellType::quad9)
-  {
-    loccenter[0] = 0.0;
-    loccenter[1] = 0.0;
-  }
-  else
-    FOUR_C_THROW("auxiliary_plane called for unknown element type");
+  // we first need the element center
+  const auto loccenter = Core::FE::get_local_center_position<2>(source_int_element().shape());
 
   // compute element center via shape fct. interpolation
-  source_int_element().local_to_global(loccenter, auxc(), 0);
+  source_int_element().local_to_global(loccenter.data(), auxc(), 0);
 
   // we then compute the unit normal vector at the element center
-  lauxn() = source_int_element().compute_unit_normal_at_xi(loccenter, auxn());
-
-
-  // calculate auxplane with cpp normal!
-  //  Core::LinAlg::SerialDenseVector val(SlaveIntElement().num_node());
-  //  Core::LinAlg::SerialDenseMatrix deriv(SlaveIntElement().num_node(),2,true);
-  //  SlaveIntElement().evaluate_shape(loccenter, val, deriv, SlaveIntElement().num_node(),false);
-  //  Auxn()[0] = 0.0;
-  //  Auxn()[1] = 0.0;
-  //  Auxn()[2] = 0.0;
-  //
-  //  // interpolate between nodal normals
-  //  for(int i=0;i<SlaveIntElement().num_node();++i)
-  //  {
-  //    Node* snode = dynamic_cast<Node*>(SlaveIntElement().Nodes()[i]);
-  //    Auxn()[0] += val[i]*snode->MoData().n()[0];
-  //    Auxn()[1] += val[i]*snode->MoData().n()[1];
-  //    Auxn()[2] += val[i]*snode->MoData().n()[2];
-  //  }
-  //
-  //  // get length (not used in the following)
-  //  Lauxn() = sqrt(Auxn()[0]*Auxn()[0] + Auxn()[1]*Auxn()[1] + Auxn()[2]*Auxn()[2]);
-  //
-  //  // create unit normal
-  //  Auxn()[0] /= Lauxn();
-  //  Auxn()[1] /= Lauxn();
-  //  Auxn()[2] /= Lauxn();
-
-  // std::cout << "Slave Element: " << SlaveIntElement().Id() << std::endl;
-  // std::cout << "->Center: " << Auxc()[0] << " " << Auxc()[1] << " " << Auxc()[2] << std::endl;
-  //  std::cout << "->Normal cpp: " << Auxn()[0] << " " << Auxn()[1] << " " << Auxn()[2] <<
-  //  std::endl;
+  lauxn() = source_int_element().compute_unit_normal_at_xi(loccenter.data(), auxn());
 
   return true;
 }
