@@ -15,6 +15,8 @@
 #include "4C_scatra_ele_calc.hpp"
 #include "4C_utils_enum.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 

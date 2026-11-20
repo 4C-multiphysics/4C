@@ -18,6 +18,8 @@
 #include "4C_utils_shared_ptr_from_ref.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
+#include <numbers>
+
 #define USE_PHIN_FOR_VEL
 
 FOUR_C_NAMESPACE_OPEN

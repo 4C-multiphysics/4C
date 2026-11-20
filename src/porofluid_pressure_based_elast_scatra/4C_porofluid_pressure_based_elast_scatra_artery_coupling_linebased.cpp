@@ -19,6 +19,7 @@
 #include "4C_porofluid_pressure_based_utils.hpp"
 #include "4C_structure_new_input.hpp"
 
+#include <numbers>
 #include <utility>
 
 FOUR_C_NAMESPACE_OPEN

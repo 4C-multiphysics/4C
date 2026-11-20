@@ -14,6 +14,7 @@
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_fem_geometry_intersection_math.hpp"
 #include "4C_linalg_gauss.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -1142,7 +1143,7 @@ namespace Core::Geo
           for (int inode = 0; inode < numNodes; ++inode)
             A(isd, jsd) += xyze(isd, inode) * deriv1(jsd, inode);
 
-      const double det = A_inv.invert(A);
+      const double det = Core::LinAlg::invert(A_inv, A);
 
       if (fabs(det) < Core::Geo::TOL14)
       {

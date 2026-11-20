@@ -29,6 +29,7 @@
 #include <Teuchos_TimeMonitor.hpp>
 
 #include <memory>
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 

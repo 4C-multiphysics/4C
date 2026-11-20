@@ -39,6 +39,7 @@
 
 #include <Teuchos_TimeMonitor.hpp>
 
+#include <numbers>
 #include <unordered_set>
 
 FOUR_C_NAMESPACE_OPEN

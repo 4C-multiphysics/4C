@@ -12,6 +12,7 @@
 #include "4C_cut_elementhandle.hpp"
 #include "4C_cut_integrationcell.hpp"
 #include "4C_cut_volumecell.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_xfem_dofset.hpp"
 #include "4C_xfem_input.hpp"
@@ -749,7 +750,7 @@ void XFEM::XfluidSemiLagrange::newton_iter(
   for (int i = 0; i < nsd; i++) sysmat(i, i) += 1.0;  // I + dt*velDerivXY
 
   // inverse system Matrix built
-  sysmat.invert();
+  Core::LinAlg::invert(sysmat);
 
 
   // solve Newton iteration

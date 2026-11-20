@@ -16,6 +16,7 @@
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
@@ -1076,7 +1077,7 @@ void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* 
   // determine inverse of deformation gradient
 
   Core::LinAlg::Matrix<3, 3> F_inv(defgrd->data(), false);
-  F_inv.invert();
+  Core::LinAlg::invert(F_inv);
 
   // convert to second Piola-Kirchhoff stresses and store them in
   // vector format

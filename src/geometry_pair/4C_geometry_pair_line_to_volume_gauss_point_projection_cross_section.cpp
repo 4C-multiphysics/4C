@@ -17,6 +17,8 @@
 
 #include <math.h>
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 /**

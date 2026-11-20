@@ -15,6 +15,8 @@
 #include "4C_scatra_ele_parameter_timint.hpp"
 #include "4C_utils_function.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*

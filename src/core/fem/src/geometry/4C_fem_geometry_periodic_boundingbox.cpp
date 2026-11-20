@@ -14,6 +14,7 @@
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_io_visualization_parameters.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -877,7 +878,7 @@ bool Core::Geo::MeshFree::BoundingBox::transform_from_global_to_undeformed_bound
     }
 
     // solve equation
-    double xjm_invert = xjm.invert();
+    double xjm_invert = Core::LinAlg::invert(xjm);
     if (abs(xjm_invert) < 1e-15) FOUR_C_THROW("ERROR: Singular Jacobian");
 
     // compute increment

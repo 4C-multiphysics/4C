@@ -11,6 +11,7 @@
 #include "4C_fluid_ele.hpp"
 #include "4C_fluid_ele_parameter_poro.hpp"
 #include "4C_fluid_rotsym_periodicbc.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_structporo.hpp"
 
@@ -636,7 +637,7 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
 
     // inverse deformation gradient F^-1
     static Core::LinAlg::Matrix<nsd_, nsd_> defgrd_inv(Core::LinAlg::Initialization::uninitialized);
-    defgrd_inv.invert(defgrd);
+    Core::LinAlg::invert(defgrd_inv, defgrd);
 
     // volume change (used for porosity law). Same as J in nonlinear theory.
     double volchange = 0.0;

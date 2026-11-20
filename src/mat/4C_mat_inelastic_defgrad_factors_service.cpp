@@ -16,6 +16,7 @@
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_four_tensor_generators.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_quaternion_interpolation.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
 #include "4C_linalg_utils_tensor_interpolation.hpp"
@@ -780,7 +781,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput::
     LocalIntegrationInput(const Config& cfg)
 {
   defgrad = cfg.defgrad;
-  inv_defgrad.invert(defgrad);
+  Core::LinAlg::invert(inv_defgrad, defgrad);
   right_cg.multiply_tn(1.0, defgrad, defgrad, 0.0);
   elastic_predictor_inverse_plastic_defgrad = cfg.last_inv_inelastic_defgrad;
   elastic_predictor_elastic_defgrad.multiply(

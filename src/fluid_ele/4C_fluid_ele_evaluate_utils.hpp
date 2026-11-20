@@ -20,8 +20,11 @@
 #include "4C_fluid_ele_action.hpp"
 #include "4C_fluid_ele_parameter_std.hpp"
 #include "4C_fluid_turbulence_input.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_newtonianfluid.hpp"
 #include "4C_mat_sutherland.hpp"
+
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -2094,7 +2097,7 @@ namespace FLD
       Core::LinAlg::Matrix<nsd, nsd> xjm;
       // Core::LinAlg::Matrix<NSD,NSD> xji;
       xjm.multiply_nt(deriv, xyze);
-      double det = xji.invert(xjm);
+      double det = Core::LinAlg::invert(xji, xjm);
       // check for degenerated elements
       if (det < 1E-16)
         FOUR_C_THROW(
@@ -2806,7 +2809,7 @@ namespace FLD
 
       // get Jacobian matrix and determinant
       xjm.multiply_nt(deriv, xyze);
-      double det = xji.invert(xjm);
+      double det = Core::LinAlg::invert(xji, xjm);
       // check for degenerated elements
       if (det < 1E-16)
         FOUR_C_THROW(
@@ -2837,7 +2840,7 @@ namespace FLD
 
         // get Jacobian matrix and determinant
         xjm.multiply_nt(deriv, xyze);
-        det = xji.invert(xjm);
+        det = Core::LinAlg::invert(xji, xjm);
         // check for degenerated elements
         if (det < 1E-16)
           FOUR_C_THROW(
@@ -3226,7 +3229,7 @@ namespace FLD
       xjm.multiply_nt(deriv, xyze);
 
       // determinant and inverse of jacobian
-      const double det = xji.invert(xjm);
+      const double det = Core::LinAlg::invert(xji, xjm);
 
       // check for degenerated elements
       if (det < 0.0)

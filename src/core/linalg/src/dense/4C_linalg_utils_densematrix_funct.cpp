@@ -17,6 +17,7 @@
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_four_tensor.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <iterator>
@@ -63,11 +64,11 @@ namespace
 
     // compute inverse of \f$ \boldsymbol{M}_k \f$
     Core::LinAlg::Matrix<dim, dim> invM_k{input};
-    invM_k.invert(M_k);
+    Core::LinAlg::invert(invM_k, M_k);
 
     // compute inverse of \f$ \boldsymbol{X}_k \f$
     Core::LinAlg::Matrix<dim, dim> invX_k{input};
-    invX_k.invert(X_k);
+    Core::LinAlg::invert(invX_k, X_k);
     double abs_invX_k = invX_k.norm2();
 
     // compute determinant of \f$ \boldsymbol{M}_k \f$
@@ -130,13 +131,13 @@ namespace
 
       // update relevant matrices and norms
       X_k = X_kp1;
-      invX_k.invert(X_k);
+      Core::LinAlg::invert(invX_k, X_k);
       abs_invX_k = invX_k.norm2();
       Y_k = Y_kp1;
       M_k = M_kp1;
       detM_k = M_k.determinant();
       inv_abs_detM_k = 1.0 / std::abs(detM_k);
-      invM_k.invert(M_k);
+      Core::LinAlg::invert(invM_k, M_k);
       mu_k = std::pow(inv_abs_detM_k, exponent);
     }
   }
@@ -220,7 +221,7 @@ namespace
     // get inverse of the eigenvector matrix
     Core::LinAlg::Matrix<dim, dim, std::complex<double>> inv_eigenvect_matrix(
         Core::LinAlg::Initialization::zero);
-    inv_eigenvect_matrix.invert(eigenvect_matrix);
+    Core::LinAlg::invert(inv_eigenvect_matrix, eigenvect_matrix);
 
     // construct the exponential function
     Core::LinAlg::Matrix<dim, dim, std::complex<double>> temp(Core::LinAlg::Initialization::zero);
@@ -591,7 +592,7 @@ namespace
       // compute \f$ \boldsymbol{I} + \beta_j^{(m)} x  \f$ and its
       // inverse
       id_pl_beta_x.update(1.0, id, trafo_point, X, 0.0);
-      inv_id_pl_beta_x.invert(id_pl_beta_x);
+      Core::LinAlg::invert(inv_id_pl_beta_x, id_pl_beta_x);
 
       // add contribution of the Gauss point to the output matrix
       output.multiply(trafo_weight, X, inv_id_pl_beta_x, 1.0);
@@ -888,7 +889,7 @@ namespace
     // get inverse of the eigenvector matrix
     Core::LinAlg::Matrix<dim, dim, std::complex<double>> inv_eigenvect_matrix(
         Core::LinAlg::Initialization::zero);
-    inv_eigenvect_matrix.invert(eigenvect_matrix);
+    Core::LinAlg::invert(inv_eigenvect_matrix, eigenvect_matrix);
 
     // construct the logarithm function
     Core::LinAlg::Matrix<dim, dim, std::complex<double>> tmp(Core::LinAlg::Initialization::zero);
@@ -979,7 +980,7 @@ namespace
       // compute \f$ \boldsymbol{K}  \f$ and its
       // inverse
       K.update(1.0, id_3x3, trafo_point, X, 0.0);
-      invK.invert(K);
+      Core::LinAlg::invert(invK, K);
 
       // compute \f$ \boldsymbol{I}_{AC} \boldsymbol{K}^{-1}_{DB}
       // \f$
@@ -1155,7 +1156,7 @@ namespace
 
     // \f$ \left( \bm{I} + \bm{A} \right)^{-1} \f$
     Core::LinAlg::Matrix<3, 3> inv_id_plus_A(Core::LinAlg::Initialization::zero);
-    inv_id_plus_A.invert(id_plus_A);
+    Core::LinAlg::invert(inv_id_plus_A, id_plus_A);
 
     // \f$ \frac{\partial  \left( \bm{I} + \bm{A} \right)^{-1}}{\partial \bm{A}}  \f$
     Core::LinAlg::Matrix<9, 9> dinv_id_plus_A_dA(Core::LinAlg::Initialization::zero);
@@ -1395,7 +1396,7 @@ Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_log(const Core::LinAlg::Matr
 
   // \f$ \left( \boldsymbol{I} + \boldsymbol{A} \right)^{-1} \f$
   Core::LinAlg::Matrix<dim, dim> inv_id_plus_A(Initialization::zero);
-  inv_id_plus_A.invert(id_plus_A);
+  Core::LinAlg::invert(inv_id_plus_A, id_plus_A);
 
   // update matrix: \f$ \left[ \left( \boldsymbol{I} - \boldsymbol{A} \right) \left(
   // \boldsymbol{I}

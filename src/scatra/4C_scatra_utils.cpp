@@ -13,6 +13,7 @@
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_fem_geometry_position_array.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_scatra_s2i_input.hpp"
 
@@ -444,7 +445,7 @@ Core::LinAlg::Matrix<dim, 1> ScaTra::ScaTraUtils::do_mean_value_averaging_of_ele
 
       // inverse of jacobian
       static Core::LinAlg::Matrix<dim, dim> xji_ele_XiToXYZ;
-      xji_ele_XiToXYZ.invert(xjm_ele_XiToXYZ);
+      Core::LinAlg::invert(xji_ele_XiToXYZ, xjm_ele_XiToXYZ);
 
       // set XYZ-derivatives of shapefunctions
       deriv3Dele_xyz.multiply(xji_ele_XiToXYZ, deriv3Dele);

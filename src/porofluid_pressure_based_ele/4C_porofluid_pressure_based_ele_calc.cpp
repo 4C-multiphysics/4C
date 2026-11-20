@@ -11,6 +11,7 @@
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_fem_general_utils_gder2.hpp"
 #include "4C_fem_geometry_position_array.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_fluidporo_multiphase.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_material_base.hpp"
@@ -636,7 +637,7 @@ double Discret::Elements::PoroFluidMultiPhaseEleCalc<
   */
 
   xjm_.multiply_nt(deriv_, xyze_);
-  det = xij_.invert(xjm_);
+  det = Core::LinAlg::invert(xij_, xjm_);
 
   return det;
 }

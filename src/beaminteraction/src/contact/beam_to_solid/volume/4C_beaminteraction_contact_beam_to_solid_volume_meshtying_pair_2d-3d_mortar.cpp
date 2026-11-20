@@ -30,6 +30,7 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <unordered_set>
 
 FOUR_C_NAMESPACE_OPEN

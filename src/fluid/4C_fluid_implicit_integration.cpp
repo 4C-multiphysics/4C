@@ -44,6 +44,7 @@
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_io_gmsh.hpp"
 #include "4C_linalg_krylov_projector.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
@@ -58,6 +59,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <numbers>
 #include <string>
 
 FOUR_C_NAMESPACE_OPEN
@@ -2786,7 +2788,7 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
 
           Core::LinAlg::Matrix<2, 2> inverseOfMatTimesmatTransposed(
               Core::LinAlg::Initialization::zero);
-          inverseOfMatTimesmatTransposed.invert(matTimesMatTransposed);
+          Core::LinAlg::invert(inverseOfMatTimesmatTransposed, matTimesMatTransposed);
 
           Core::LinAlg::Matrix<3, 2> pInvA(Core::LinAlg::Initialization::zero);
           pInvA.multiply_tn(A, inverseOfMatTimesmatTransposed);
@@ -2874,7 +2876,7 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
 
           // Calculate inverse of A (always possible due to linear independent rows)
           Core::LinAlg::Matrix<3, 3> invA(Core::LinAlg::Initialization::zero);
-          invA.invert(A);
+          Core::LinAlg::invert(invA, A);
 
           // Solve for grid velocities
           Core::LinAlg::Matrix<3, 1> sol(Core::LinAlg::Initialization::zero);

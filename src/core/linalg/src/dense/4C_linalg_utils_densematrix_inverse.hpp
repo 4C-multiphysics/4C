@@ -13,122 +13,168 @@
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_utils_densematrix_determinant.hpp"
 
+#if !defined(FOUR_C_LINALG_FIXEDSIZEMATRIX_HPP)
+// When included standalone, ensure Matrix is defined.
+#include "4C_linalg_fixedsizematrix.hpp"
+#endif
+
 #include <cmath>
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::LinAlg
 {
-  /**
-   * \brief Reorder the matrix entries for the inverse of a nonsymmetric NxN matrix.
+
+  /*!
+   * \brief Reorder the matrix entries into the adjugate matrix
    *
-   * @param A (in/out) Matrix A.
-   * @tparam T Scalar Type of matrix.
+   * This transforms the matrix into its adjugate form; divide by the determinant to obtain the
+   * inverse. Supported for 2x2, 3x3, and 4x4 matrices.
    */
-  template <typename T>
-  void inverse_reorder_matrix_entries(Core::LinAlg::Matrix<2, 2, T>& A)
+  template <unsigned int dim, typename T>
+  inline void compute_adjugate_matrix(Core::LinAlg::Matrix<dim, dim, T>& A)
   {
-    T b00 = A(0, 0);
-    T b01 = A(0, 1);
-    T b10 = A(1, 0);
-    T b11 = A(1, 1);
-    A(0, 0) = b11;
-    A(1, 0) = -b10;
-    A(0, 1) = -b01;
-    A(1, 1) = b00;
+    static_assert(dim == 2 || dim == 3 || dim == 4,
+        "compute_adjugate_matrix is only implemented for 2x2, 3x3, and 4x4 matrices.");
+
+    if constexpr (dim == 2)
+    {
+      T b00 = A(0, 0);
+      T b01 = A(0, 1);
+      T b10 = A(1, 0);
+      T b11 = A(1, 1);
+      A(0, 0) = b11;
+      A(1, 0) = -b10;
+      A(0, 1) = -b01;
+      A(1, 1) = b00;
+    }
+    else if constexpr (dim == 3)
+    {
+      T b00 = A(0, 0);
+      T b01 = A(0, 1);
+      T b02 = A(0, 2);
+      T b10 = A(1, 0);
+      T b11 = A(1, 1);
+      T b12 = A(1, 2);
+      T b20 = A(2, 0);
+      T b21 = A(2, 1);
+      T b22 = A(2, 2);
+      A(0, 0) = b11 * b22 - b21 * b12;
+      A(1, 0) = -b10 * b22 + b20 * b12;
+      A(2, 0) = b10 * b21 - b20 * b11;
+      A(0, 1) = -b01 * b22 + b21 * b02;
+      A(1, 1) = b00 * b22 - b20 * b02;
+      A(2, 1) = -b00 * b21 + b20 * b01;
+      A(0, 2) = b01 * b12 - b11 * b02;
+      A(1, 2) = -b00 * b12 + b10 * b02;
+      A(2, 2) = b00 * b11 - b10 * b01;
+    }
+    else  // dim == 4
+    {
+      T a00 = A(0, 0);
+      T a01 = A(0, 1);
+      T a02 = A(0, 2);
+      T a03 = A(0, 3);
+
+      T a10 = A(1, 0);
+      T a11 = A(1, 1);
+      T a12 = A(1, 2);
+      T a13 = A(1, 3);
+
+      T a20 = A(2, 0);
+      T a21 = A(2, 1);
+      T a22 = A(2, 2);
+      T a23 = A(2, 3);
+
+      T a30 = A(3, 0);
+      T a31 = A(3, 1);
+      T a32 = A(3, 2);
+      T a33 = A(3, 3);
+
+      A(0, 0) = a11 * a33 * a22 - a11 * a32 * a23 - a31 * a13 * a22 + a32 * a21 * a13 +
+                a31 * a12 * a23 - a33 * a21 * a12;
+      A(0, 1) = -(a31 * a02 * a23 + a33 * a22 * a01 - a33 * a21 * a02 - a31 * a03 * a22 -
+                  a32 * a23 * a01 + a32 * a21 * a03);
+      A(0, 2) = -a11 * a33 * a02 + a11 * a32 * a03 + a33 * a01 * a12 + a31 * a13 * a02 -
+                a32 * a01 * a13 - a31 * a12 * a03;
+      A(0, 3) = -(-a11 * a02 * a23 + a11 * a03 * a22 - a03 * a21 * a12 - a01 * a13 * a22 +
+                  a02 * a21 * a13 + a01 * a12 * a23);
+
+      A(1, 0) = -(a33 * a22 * a10 - a32 * a23 * a10 + a30 * a12 * a23 - a33 * a20 * a12 -
+                  a30 * a13 * a22 + a32 * a20 * a13);
+      A(1, 1) = a00 * a33 * a22 - a00 * a32 * a23 + a30 * a02 * a23 - a33 * a20 * a02 +
+                a32 * a20 * a03 - a30 * a03 * a22;
+      A(1, 2) = -(a00 * a33 * a12 - a00 * a32 * a13 - a33 * a10 * a02 - a30 * a03 * a12 +
+                  a32 * a10 * a03 + a30 * a02 * a13);
+      A(1, 3) = -a00 * a13 * a22 + a00 * a12 * a23 - a10 * a02 * a23 + a13 * a20 * a02 +
+                a10 * a03 * a22 - a12 * a20 * a03;
+
+      A(2, 0) = a11 * a30 * a23 - a11 * a33 * a20 - a31 * a10 * a23 + a33 * a21 * a10 +
+                a31 * a13 * a20 - a30 * a21 * a13;
+      A(2, 1) = -(-a00 * a31 * a23 + a00 * a33 * a21 - a30 * a03 * a21 + a31 * a20 * a03 +
+                  a30 * a01 * a23 - a33 * a20 * a01);
+      A(2, 2) = a33 * a00 * a11 - a33 * a10 * a01 - a30 * a03 * a11 - a31 * a00 * a13 +
+                a31 * a10 * a03 + a30 * a01 * a13;
+      A(2, 3) = -(a23 * a00 * a11 - a23 * a10 * a01 - a20 * a03 * a11 - a21 * a00 * a13 +
+                  a21 * a10 * a03 + a20 * a01 * a13);
+
+      A(3, 0) = -(a11 * a30 * a22 - a11 * a32 * a20 - a30 * a21 * a12 - a31 * a10 * a22 +
+                  a32 * a21 * a10 + a31 * a12 * a20);
+      A(3, 1) = -a00 * a31 * a22 + a00 * a32 * a21 + a31 * a20 * a02 + a30 * a01 * a22 -
+                a32 * a20 * a01 - a30 * a02 * a21;
+      A(3, 2) = -(a32 * a00 * a11 - a32 * a10 * a01 - a30 * a02 * a11 - a31 * a00 * a12 +
+                  a31 * a10 * a02 + a30 * a01 * a12);
+      A(3, 3) = a22 * a00 * a11 - a22 * a10 * a01 - a20 * a02 * a11 - a21 * a00 * a12 +
+                a21 * a10 * a02 + a20 * a01 * a12;
+    }
   }
 
-  /**
-   * \brief Reorder the matrix entries for the inverse of a nonsymmetric 3x3 matrix.
+  /*!
+   * \brief Invert a dense fixed-size matrix in place.
    *
-   * @param A (in/out) Matrix A.
+   * For 2x2, 3x3, and 4x4 matrices this uses the explicit inverse implementation; for larger
+   * matrices it delegates to DenseFunctions::invert.
+   *
+   * @return determinant of matrix before inversion
    */
-  template <typename T>
-  void inverse_reorder_matrix_entries(Core::LinAlg::Matrix<3, 3, T>& A)
+  template <unsigned int dim, typename T>
+  inline T invert(Core::LinAlg::Matrix<dim, dim, T>& A)
   {
-    T b00 = A(0, 0);
-    T b01 = A(0, 1);
-    T b02 = A(0, 2);
-    T b10 = A(1, 0);
-    T b11 = A(1, 1);
-    T b12 = A(1, 2);
-    T b20 = A(2, 0);
-    T b21 = A(2, 1);
-    T b22 = A(2, 2);
-    A(0, 0) = b11 * b22 - b21 * b12;
-    A(1, 0) = -b10 * b22 + b20 * b12;
-    A(2, 0) = b10 * b21 - b20 * b11;
-    A(0, 1) = -b01 * b22 + b21 * b02;
-    A(1, 1) = b00 * b22 - b20 * b02;
-    A(2, 1) = -b00 * b21 + b20 * b01;
-    A(0, 2) = b01 * b12 - b11 * b02;
-    A(1, 2) = -b00 * b12 + b10 * b02;
-    A(2, 2) = b00 * b11 - b10 * b01;
+    static_assert(dim == Core::LinAlg::Matrix<dim, dim, T>::num_rows(),
+        "Cannot compute inverse of non-square matrix");
+
+    if constexpr (dim == 2 || dim == 3 || dim == 4)
+    {
+      const T det = A.determinant();
+      if (det == 0.0) FOUR_C_THROW("determinant of {}x{} matrix is zero", dim, dim);
+      compute_adjugate_matrix(A);
+      A.scale(1.0 / det);
+      return det;
+    }
+    else
+    {
+      return DenseFunctions::invert<T, dim, dim>(A.data());
+    }
   }
 
-  /**
-   * \brief Reorder the matrix entries for the inverse of a nonsymmetric 4x4 matrix.
+  /*!
+   * \brief Invert a dense fixed-size matrix and store the result in another matrix.
    *
-   * @param A (in/out) Matrix A.
+   * @return determinant of the source matrix
    */
-  template <typename T>
-  void inverse_reorder_matrix_entries(Core::LinAlg::Matrix<4, 4, T>& A)
+  template <unsigned int dim, typename T>
+  inline T invert(
+      Core::LinAlg::Matrix<dim, dim, T>& out, const Core::LinAlg::Matrix<dim, dim, T>& in)
   {
-    T a00 = A(0, 0);
-    T a01 = A(0, 1);
-    T a02 = A(0, 2);
-    T a03 = A(0, 3);
-
-    T a10 = A(1, 0);
-    T a11 = A(1, 1);
-    T a12 = A(1, 2);
-    T a13 = A(1, 3);
-
-    T a20 = A(2, 0);
-    T a21 = A(2, 1);
-    T a22 = A(2, 2);
-    T a23 = A(2, 3);
-
-    T a30 = A(3, 0);
-    T a31 = A(3, 1);
-    T a32 = A(3, 2);
-    T a33 = A(3, 3);
-
-    A(0, 0) = a11 * a33 * a22 - a11 * a32 * a23 - a31 * a13 * a22 + a32 * a21 * a13 +
-              a31 * a12 * a23 - a33 * a21 * a12;
-    A(0, 1) = -(a31 * a02 * a23 + a33 * a22 * a01 - a33 * a21 * a02 - a31 * a03 * a22 -
-                a32 * a23 * a01 + a32 * a21 * a03);
-    A(0, 2) = -a11 * a33 * a02 + a11 * a32 * a03 + a33 * a01 * a12 + a31 * a13 * a02 -
-              a32 * a01 * a13 - a31 * a12 * a03;
-    A(0, 3) = -(-a11 * a02 * a23 + a11 * a03 * a22 - a03 * a21 * a12 - a01 * a13 * a22 +
-                a02 * a21 * a13 + a01 * a12 * a23);
-
-    A(1, 0) = -(a33 * a22 * a10 - a32 * a23 * a10 + a30 * a12 * a23 - a33 * a20 * a12 -
-                a30 * a13 * a22 + a32 * a20 * a13);
-    A(1, 1) = a00 * a33 * a22 - a00 * a32 * a23 + a30 * a02 * a23 - a33 * a20 * a02 +
-              a32 * a20 * a03 - a30 * a03 * a22;
-    A(1, 2) = -(a00 * a33 * a12 - a00 * a32 * a13 - a33 * a10 * a02 - a30 * a03 * a12 +
-                a32 * a10 * a03 + a30 * a02 * a13);
-    A(1, 3) = -a00 * a13 * a22 + a00 * a12 * a23 - a10 * a02 * a23 + a13 * a20 * a02 +
-              a10 * a03 * a22 - a12 * a20 * a03;
-
-    A(2, 0) = a11 * a30 * a23 - a11 * a33 * a20 - a31 * a10 * a23 + a33 * a21 * a10 +
-              a31 * a13 * a20 - a30 * a21 * a13;
-    A(2, 1) = -(-a00 * a31 * a23 + a00 * a33 * a21 - a30 * a03 * a21 + a31 * a20 * a03 +
-                a30 * a01 * a23 - a33 * a20 * a01);
-    A(2, 2) = a33 * a00 * a11 - a33 * a10 * a01 - a30 * a03 * a11 - a31 * a00 * a13 +
-              a31 * a10 * a03 + a30 * a01 * a13;
-    A(2, 3) = -(a23 * a00 * a11 - a23 * a10 * a01 - a20 * a03 * a11 - a21 * a00 * a13 +
-                a21 * a10 * a03 + a20 * a01 * a13);
-
-    A(3, 0) = -(a11 * a30 * a22 - a11 * a32 * a20 - a30 * a21 * a12 - a31 * a10 * a22 +
-                a32 * a21 * a10 + a31 * a12 * a20);
-    A(3, 1) = -a00 * a31 * a22 + a00 * a32 * a21 + a31 * a20 * a02 + a30 * a01 * a22 -
-              a32 * a20 * a01 - a30 * a02 * a21;
-    A(3, 2) = -(a32 * a00 * a11 - a32 * a10 * a01 - a30 * a02 * a11 - a31 * a00 * a12 +
-                a31 * a10 * a02 + a30 * a01 * a12);
-    A(3, 3) = a22 * a00 * a11 - a22 * a10 * a01 - a20 * a02 * a11 - a21 * a00 * a12 +
-              a21 * a10 * a02 + a20 * a01 * a12;
+    if constexpr (dim == 2 || dim == 3 || dim == 4)
+    {
+      out.set_copy(in);
+      return invert(out);
+    }
+    else
+    {
+      return DenseFunctions::invert<T, dim, dim>(out.data(), in.data());
+    }
   }
 
   /*!
@@ -145,31 +191,8 @@ namespace Core::LinAlg
   {
     T det = determinant(A);
     if (det == 0.0) FOUR_C_THROW("determinant of {}x{} matrix is exactly zero", dim, dim);
-    inverse_reorder_matrix_entries(A);
+    compute_adjugate_matrix(A);
     A.scale(1. / det);
-  }
-
-  /*!
-   * \brief Explicit inverse of a nonsymmetric matrix. If the matrix is singular no error will
-   * be thrown, and the original matrix will remain untouched.
-   *
-   * @param A (in/out) Matrix to be inverted. The inverse will be stored in this variable.
-   * @param eps (in) If the absolute value of the determinant is smaller than this value, the matrix
-   * is considered to be singular.
-   * @return True if matrix could be inverted, false if matrix is singular.
-   *
-   * @tparam T Scalar type of matrix.
-   * @tparam dim Dimension of matrix.
-   */
-  template <typename T, unsigned int dim>
-  bool inverse_do_not_throw_error_on_zero_determinant(
-      Core::LinAlg::Matrix<dim, dim, T>& A, double eps)
-  {
-    T det = determinant(A);
-    if (std::abs(det) < eps) return false;
-    inverse_reorder_matrix_entries(A);
-    A.scale(1. / det);
-    return true;
   }
 
   /**
@@ -196,13 +219,14 @@ namespace Core::LinAlg
       Core::LinAlg::Matrix<dim, dim, T>& A, Core::LinAlg::Matrix<dim, 1, T>& b,
       Core::LinAlg::Matrix<dim, 1, T>& x, double eps)
   {
+    using std::abs;
     T max_value = 0.0;
     for (unsigned int i_row = 0; i_row < dim; i_row++)
     {
       max_value = 0.0;
       for (unsigned int i_col = 0; i_col < dim; i_col++)
       {
-        if (std::abs(A(i_row, i_col)) > max_value) max_value = std::abs(A(i_row, i_col));
+        if (abs(A(i_row, i_col)) > max_value) max_value = abs(A(i_row, i_col));
       }
       if (max_value < 1e-12) continue;
       for (unsigned int i_col = 0; i_col < dim; i_col++)
@@ -211,8 +235,8 @@ namespace Core::LinAlg
     }
 
     T det = determinant(A);
-    if (std::abs(det) < eps) return false;
-    inverse_reorder_matrix_entries(A);
+    if (abs(det) < eps) return false;
+    compute_adjugate_matrix(A);
     A.scale(1. / det);
     x.multiply(A, b);
     return true;

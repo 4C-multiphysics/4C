@@ -31,6 +31,8 @@
 #include "4C_solid_ele.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace BeamInteraction

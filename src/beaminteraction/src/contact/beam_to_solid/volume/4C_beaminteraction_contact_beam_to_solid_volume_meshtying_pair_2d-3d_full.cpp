@@ -18,6 +18,8 @@
 #include "4C_geometry_pair_utility_classes.hpp"
 #include "4C_linalg_fevector.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 

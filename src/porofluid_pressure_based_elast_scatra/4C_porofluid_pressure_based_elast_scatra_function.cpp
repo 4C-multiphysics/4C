@@ -15,6 +15,7 @@
 #include "4C_utils_function_manager.hpp"
 
 #include <memory>
+#include <numbers>
 #include <string>
 
 FOUR_C_NAMESPACE_OPEN

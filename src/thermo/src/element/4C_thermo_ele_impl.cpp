@@ -19,6 +19,7 @@
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_multiplicative_split_defgrad_elasthyper.hpp"
 #include "4C_mat_multiplicative_split_defgrad_elasthyper_service.hpp"
 #include "4C_mat_so3_material.hpp"
@@ -1185,7 +1186,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
     // F' = d xcurr' / d xrefe = (xcurr')^T * N_XYZ^T
     defgrdrate.multiply_tt(xcurrrate, derxy_);
     // inverse of deformation gradient
-    invdefgrd.invert(defgrd);
+    Core::LinAlg::invert(invdefgrd, defgrd);
 
     // ----------- derivatives of right Cauchy-Green deformation tensor C
     // build the rate of C: C'= F^T . F' + (F')^T . F
@@ -1517,7 +1518,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
     // F' = d xcurr' / d xrefe = (xcurr')^T . N_XYZ^T
     defgrdrate.multiply_tt(xcurrrate, derxy_);
     // inverse of deformation gradient
-    invdefgrd.invert(defgrd);
+    Core::LinAlg::invert(invdefgrd, defgrd);
     // build the linear B-operator
     Core::LinAlg::Matrix<6, nsd_ * nen_ * numdofpernode_> boplin(
         Core::LinAlg::Initialization::uninitialized);
@@ -2360,7 +2361,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
     // F = d xcurr / d xrefe = xcurr^T * N_XYZ^T
     defgrd.multiply_tt(xcurr, derxy_);
     // inverse of deformation gradient
-    invdefgrd.invert(defgrd);
+    Core::LinAlg::invert(invdefgrd, defgrd);
 
     Core::LinAlg::Matrix<nsd_, nsd_> Cinv(Core::LinAlg::Initialization::uninitialized);
     // build the inverse of the right Cauchy-Green deformation gradient C^{-1}
@@ -2639,7 +2640,7 @@ void Discret::Elements::TemperImpl<distype>::eval_shape_func_and_derivs_at_int_p
   // xij_ = J^{-T}
   // det = J^{-T} *
   // J = (N_rst * X)^T (6.24 NiliFEM)
-  const double det = xij_.invert(xjm_);
+  const double det = Core::LinAlg::invert(xij_, xjm_);
 
   if (det < 1e-16)
     FOUR_C_THROW("GLOBAL ELEMENT NO.{}\nZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", eleid, det);

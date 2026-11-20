@@ -12,6 +12,7 @@
 #include "4C_global_data.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_list_reactions.hpp"
 #include "4C_mat_scatra.hpp"
 #include "4C_mat_scatra_poro_ecm.hpp"
@@ -149,7 +150,7 @@ double Discret::Elements::ScaTraEleCalcPoroReacECM<distype>::compute_struct_chem
 
   // inverse of transposed jacobian "ds/dX"
   Core::LinAlg::Matrix<nsd_, nsd_> xji0(Core::LinAlg::Initialization::zero);
-  xji0.invert(xjm0);
+  Core::LinAlg::invert(xji0, xjm0);
 
   // inverse of transposed jacobian "ds/dX"
   const double det0 = xjm0.determinant();

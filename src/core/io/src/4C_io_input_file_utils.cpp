@@ -27,6 +27,7 @@
 #include <Teuchos_Time.hpp>
 
 #include <cfenv>
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 

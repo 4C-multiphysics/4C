@@ -14,6 +14,7 @@
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_service.hpp"
 #include "4C_utils_enum.hpp"
@@ -455,7 +456,7 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
   defgrdcurr_->at(gp) = *defgrad;
   // get the inverse F^{-1}
   Core::LinAlg::Matrix<3, 3> invdefgrdcurr(defgrd_mat);
-  invdefgrdcurr.invert();
+  Core::LinAlg::invert(invdefgrdcurr);
   // calculate the Jacobi-determinant J = det(F_{n+1})
   double J = defgrd_mat.determinant();
   // determinant has to be >= 0
@@ -1005,7 +1006,7 @@ void Mat::ThermoPlasticHyperElast::setup_cmat_elasto_plastic(
   Core::LinAlg::Matrix<3, 3> RCG(Core::LinAlg::Initialization::uninitialized);
   RCG.multiply_tn(defgrd, defgrd);
   Core::LinAlg::Matrix<3, 3> invRCG;
-  invRCG.invert(RCG);
+  Core::LinAlg::invert(invRCG, RCG);
 
   // --------------------------------------- calculate plastic directions
   // pull-back of the spatial flow vector n to N
@@ -1327,7 +1328,7 @@ void Mat::ThermoPlasticHyperElast::fd_check(
       double detRCG_disturb = RCG_disturb.determinant();
       double J_disturb = sqrt(detRCG_disturb);
       Core::LinAlg::Matrix<3, 3> invRCG_disturb;
-      invRCG_disturb.invert(RCG_disturb);
+      Core::LinAlg::invert(invRCG_disturb, RCG_disturb);
       // use vector-notation
       Core::LinAlg::Matrix<6, 1> disturb_Cinv_vct(Core::LinAlg::Initialization::uninitialized);
       disturb_Cinv_vct(0) = invRCG_disturb(0, 0);

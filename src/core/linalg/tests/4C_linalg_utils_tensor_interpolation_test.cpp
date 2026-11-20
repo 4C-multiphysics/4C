@@ -10,6 +10,7 @@
 #include "4C_linalg_utils_tensor_interpolation.hpp"
 
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -21,6 +22,7 @@
 #include <cmath>
 #include <iomanip>
 #include <ios>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -401,7 +403,7 @@ namespace
     P(1, 1) = right_weight;
     // get inverse of the P-matrix
     Core::LinAlg::Matrix<2, 2> iP{Core::LinAlg::Initialization::zero};
-    iP.invert(P);
+    Core::LinAlg::invert(iP, P);
     // declare coefficient <a_i> vector and right-hand side <b_i> vector
     Core::LinAlg::Matrix<2, 1> a_i{Core::LinAlg::Initialization::zero};
     Core::LinAlg::Matrix<2, 1> b_i{Core::LinAlg::Initialization::zero};

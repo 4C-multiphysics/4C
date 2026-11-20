@@ -14,6 +14,7 @@
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_elasthyper.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_stvenantkirchhoff.hpp"
@@ -308,7 +309,7 @@ inline void Discret::Elements::Ale3Impl<distype>::element_node_normal(
     xjm.multiply_nt(deriv, xyze);
 
     // determinant and inverse of jacobian
-    const double det = xji.invert(xjm);
+    const double det = Core::LinAlg::invert(xji, xjm);
 
     // integrate shapefunction gradient over element
     const double fac = intpoints.qwgt[iquad] * det;
@@ -1453,7 +1454,7 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_nonlinear(Ale3* ele,
     */
     Core::LinAlg::Matrix<NUMDIM_ALE3, NUMDIM_ALE3> jac, jacinv;
     jac.multiply_nn(deriv, xrefe);
-    const double detJ = jac.invert();
+    const double detJ = Core::LinAlg::invert(jac);
 
     if (abs(detJ) < 1E-16)
       FOUR_C_THROW("ZERO JACOBIAN DETERMINANT");
@@ -1690,7 +1691,7 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_laplace(Ale3* ele,
     xjm.multiply_nt(deriv, xyze);
 
     // determinant and inverse of jacobian
-    const double det = xji.invert(xjm);
+    const double det = Core::LinAlg::invert(xji, xjm);
 
     // calculate element volume
     const double fac = intpoints.qwgt[iquad] * det;

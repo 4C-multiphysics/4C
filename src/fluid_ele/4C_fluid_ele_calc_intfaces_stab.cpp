@@ -12,6 +12,7 @@
 #include "4C_fem_general_utils_gder2.hpp"
 #include "4C_fluid_input.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_list.hpp"
 #include "4C_mat_newtonianfluid.hpp"
@@ -1668,7 +1669,7 @@ double Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
     }
   }
 
-  const double pdet = pxji_.invert(pxjm_);
+  const double pdet = Core::LinAlg::invert(pxji_, pxjm_);
 
   // check for degenerated elements
   if (pdet < 0.0)
@@ -1691,7 +1692,7 @@ double Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
     }
   }
 
-  const double ndet = nxji_.invert(nxjm_);
+  const double ndet = Core::LinAlg::invert(nxji_, nxjm_);
 
 
   // check for degenerated elements
@@ -2095,7 +2096,7 @@ double Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
     }
   }
 
-  const double pdet = pxji_.invert(pxjm_);
+  const double pdet = Core::LinAlg::invert(pxji_, pxjm_);
 
   // check for degenerated elements
   if (pdet < 0.0)
@@ -2118,7 +2119,7 @@ double Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
     }
   }
 
-  const double ndet = nxji_.invert(nxjm_);
+  const double ndet = Core::LinAlg::invert(nxji_, nxjm_);
 
 
   // check for degenerated elements

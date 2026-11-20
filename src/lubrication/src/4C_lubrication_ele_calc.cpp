@@ -13,6 +13,7 @@
 #include "4C_fem_general_utils_integration.hpp"
 #include "4C_fem_geometry_position_array.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_lubrication_ele_action.hpp"
 #include "4C_lubrication_ele_calc_utils.hpp"
 #include "4C_lubrication_ele_parameter.hpp"
@@ -1081,7 +1082,7 @@ double Discret::Elements::LubricationEleCalc<distype,
     */
 
     xjm_.multiply_nt(deriv_, xyze_);
-    det = xij_.invert(xjm_);
+    det = Core::LinAlg::invert(xij_, xjm_);
   }
   else  // element dimension is smaller than problem dimension -> mannifold
   {
@@ -1140,7 +1141,7 @@ double Discret::Elements::LubricationEleCalc<distype,
       for (int i = 0; i < nen_; i++) deriv_(2, i) = 0.0;
     }
 
-    xij_.invert(xjm_);
+    Core::LinAlg::invert(xij_, xjm_);
   }
 
   return det;

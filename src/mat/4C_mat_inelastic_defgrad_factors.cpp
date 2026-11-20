@@ -24,6 +24,7 @@
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_funct.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
 #include "4C_linalg_utils_tensor_interpolation.hpp"
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
@@ -1115,7 +1116,7 @@ void Mat::InelasticDefgradLinScalarAniso::evaluate_inverse_inelastic_def_grad(
   Fin += growth_factor * Core::LinAlg::get_full(parameter()->growth_dir_tensor());
 
   // calculate inverse of inelastic deformation gradient matrix
-  iFinM.invert(FinM);
+  Core::LinAlg::invert(iFinM, FinM);
 }
 
 /*--------------------------------------------------------------------*
@@ -1354,7 +1355,7 @@ void Mat::InelasticDefgradPolyIntercalFracAniso::evaluate_inverse_inelastic_def_
       Core::LinAlg::make_matrix(Core::LinAlg::get_full(parameter()->growth_dir_tensor())), 1.0);
 
   // calculate inverse of inelastic deformation gradient matrix
-  iFinM.invert(FinM);
+  Core::LinAlg::invert(iFinM, FinM);
 }
 
 /*--------------------------------------------------------------------*
@@ -1739,7 +1740,7 @@ void Mat::InelasticDefgradTimeFunctAniso::evaluate_inverse_inelastic_def_grad(
   Fin += Core::LinAlg::get_full(identity_);
   Fin += funct_value() * Core::LinAlg::get_full(parameter()->growth_dir_tensor());
 
-  iFinM.invert(FinM);
+  Core::LinAlg::invert(iFinM, FinM);
 }
 
 /*--------------------------------------------------------------------*
@@ -2251,7 +2252,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
 
   // inverse elastic right Cauchy-Green tensor
   Core::LinAlg::Matrix<3, 3> iCeM(Core::LinAlg::Initialization::zero);
-  iCeM.invert(CeM);
+  Core::LinAlg::invert(iCeM, CeM);
   Core::LinAlg::Matrix<6, 1> iCeV(Core::LinAlg::Initialization::zero);  // stress-form
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(iCeM, iCeV);
 
@@ -2297,7 +2298,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(iCinCiCinM, iCinCiCinV);
 
   Core::LinAlg::Matrix<3, 3> iCM(Core::LinAlg::Initialization::zero);
-  iCM.invert(right_cg);
+  Core::LinAlg::invert(iCM, right_cg);
   Core::LinAlg::Matrix<6, 1> iCV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(iCM, iCV);
 
@@ -3491,7 +3492,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_local_newton_residua
   {
     // calculate the tensor logarithm involved in the residual
     Core::LinAlg::Matrix<3, 3> last_FinM(Core::LinAlg::Initialization::zero);
-    last_FinM.invert(last_iFinM);
+    Core::LinAlg::invert(last_FinM, last_iFinM);
     Core::LinAlg::Matrix<3, 3> T(Core::LinAlg::Initialization::zero);
     T.multiply_nn(1.0, last_FinM, iFinM, 0.0);
     auto log_err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
@@ -3632,7 +3633,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_local_newton_jacobia
     // compute 9x9 north-west component block of the Jacobian (derivative of residual for
     // inelastic deformation gradient w.r.t. inelastic deformation gradient)
     Core::LinAlg::Matrix<3, 3> last_FinM(Core::LinAlg::Initialization::zero);
-    last_FinM.invert(last_iFinM);
+    Core::LinAlg::invert(last_FinM, last_iFinM);
     Core::LinAlg::Matrix<3, 3> T(Core::LinAlg::Initialization::zero);
     T.multiply_nn(1.0, last_FinM, iFinM, 0.0);
     auto log_err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
@@ -4275,7 +4276,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_additional_cmat
 
   // inverse of the reduced deformation gradient
   Core::LinAlg::Matrix<3, 3> iFredM(Core::LinAlg::Initialization::zero);
-  iFredM.invert(FredM);
+  Core::LinAlg::invert(iFredM, FredM);
 
   // Voigt representation of the inverse inelastic defgrad
   Core::LinAlg::Matrix<9, 1> iFinV(Core::LinAlg::Initialization::zero);
@@ -4431,7 +4432,7 @@ Mat::HeatSource Mat::InelasticDefgradTransvIsotropElastViscoplast::
   // Finite-difference linearization w.r.t. the right Cauchy-Green tensor.
   {
     Core::LinAlg::Matrix<3, 3> iFredM(Core::LinAlg::Initialization::zero);
-    iFredM.invert(FredM);
+    Core::LinAlg::invert(iFredM, FredM);
 
     Core::LinAlg::Matrix<3, 3> temp3x3(Core::LinAlg::Initialization::zero);
 

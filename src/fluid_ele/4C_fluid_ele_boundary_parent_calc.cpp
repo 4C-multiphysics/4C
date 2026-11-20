@@ -17,6 +17,7 @@
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_carreauyasuda.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_herschelbulkley.hpp"
@@ -764,7 +765,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
       // compute (inverse of) Jacobian matrix and determinant for parent element
       // and check its value
       pxjm.multiply_nt(pderiv, pxyze);
-      const double pdet = pxji.invert(pxjm);
+      const double pdet = Core::LinAlg::invert(pxji, pxjm);
       if (pdet < 1E-16)
         FOUR_C_THROW("GLOBAL ELEMENT NO.{}\nZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", pid, pdet);
 
@@ -1433,7 +1434,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::slip_supp_bc(
     // compute (inverse of) Jacobian matrix and determinant for parent element
     // and check its value
     pxjm.multiply_nt(pderiv, pxyze);
-    const double pdet = pxji.invert(pxjm);
+    const double pdet = Core::LinAlg::invert(pxji, pxjm);
     if (pdet < 1E-16)
       FOUR_C_THROW("GLOBAL ELEMENT NO.{}\nZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", pid, pdet);
 
@@ -1761,7 +1762,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::navier_slip_bc(
     // compute (inverse of) Jacobian matrix and determinant for parent element
     // and check its value
     pxjm.multiply_nt(pderiv, pxyze);
-    const double pdet = pxji.invert(pxjm);
+    const double pdet = Core::LinAlg::invert(pxji, pxjm);
     if (pdet < 1E-16)
       FOUR_C_THROW("GLOBAL ELEMENT NO.{}\nZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", pid, pdet);
 
@@ -2111,7 +2112,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
     // compute (inverse of) Jacobian matrix and determinant for parent element
     // and check its value
     pxjm.multiply_nt(pderiv, pxyze);
-    const double pdet = pxji.invert(pxjm);
+    const double pdet = Core::LinAlg::invert(pxji, pxjm);
     if (pdet < 1E-16)
       FOUR_C_THROW("GLOBAL ELEMENT NO.{}\nZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", pid, pdet);
 
@@ -3874,7 +3875,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::estimate_nitsche_trace_max
     // compute (inverse of) Jacobian matrix and determinant for parent element
     // and check its value
     pxjm.multiply_nt(pderiv, pxyze);
-    const double pdet = pxji.invert(pxjm);
+    const double pdet = Core::LinAlg::invert(pxji, pxjm);
     if (pdet < 1E-16)
       FOUR_C_THROW("GLOBAL ELEMENT NO.{}\nZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", pid, pdet);
 
@@ -4140,8 +4141,8 @@ void Discret::Elements::FluidBoundaryParent<distype>::estimate_nitsche_trace_max
     // compute (inverse of) Jacobian matrix and determinant for parent element
     // and check its value
     pxjm.multiply_nt(pderiv, pxyze);
-    //    const double pdet = pxji.invert(pxjm);
-    pdet = pxji.invert(pxjm);
+    //    const double pdet = Core::LinAlg::invert(pxji, pxjm);
+    pdet = Core::LinAlg::invert(pxji, pxjm);
     if (pdet < 1E-16)
       FOUR_C_THROW("GLOBAL ELEMENT NO.{}\nZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", pid, pdet);
 
@@ -4539,7 +4540,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
         +-            -+        +-            -+
       */
       pxjm.multiply_nt(pderiv, pxyze);
-      const double det = pxji.invert(pxjm);
+      const double det = Core::LinAlg::invert(pxji, pxjm);
 
       if (det < 1E-16)
         FOUR_C_THROW(
@@ -5151,7 +5152,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
         +-            -+        +-            -+
       */
       pxjm.multiply_nt(pderiv, pxyze);
-      const double det = pxji.invert(pxjm);
+      const double det = Core::LinAlg::invert(pxji, pxjm);
 
       if (det < 1E-16)
         FOUR_C_THROW(

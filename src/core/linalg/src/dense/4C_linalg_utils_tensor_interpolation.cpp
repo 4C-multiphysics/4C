@@ -13,6 +13,7 @@
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_serialdensesolver.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_fad.hpp"
@@ -615,7 +616,7 @@ void Core::LinAlg::matrix_3x3_polar_decomposition(const Core::LinAlg::Matrix<3, 
   // compute resulting stretch and rotation tensors, along with the eigenvalue matrix
   temp3x3.multiply_nn(1.0, eigenvectors_U, eigenvalues_U, 0.0);
   U_matrix.multiply_nt(1.0, temp3x3, eigenvectors_U, 0.0);
-  temp3x3.invert(U_matrix);
+  Core::LinAlg::invert(temp3x3, U_matrix);
   R_matrix.multiply_nn(1.0, inp_matrix, temp3x3, 0.0);
   eigenval_matrix = eigenvalues_U;
 
@@ -700,7 +701,7 @@ Core::LinAlg::Matrix<3, 3> Core::LinAlg::matrix_3x3_spatial_stretch(
   temp3x3.multiply_nn(1.0, eigenvectors_U, eigenvalues_U, 0.0);
   Core::LinAlg::Matrix<3, 3> U_matrix{Initialization::zero};
   U_matrix.multiply_nt(1.0, temp3x3, eigenvectors_U, 0.0);
-  temp3x3.invert(U_matrix);
+  Core::LinAlg::invert(temp3x3, U_matrix);
   Core::LinAlg::Matrix<3, 3> R_matrix{Initialization::zero};
   R_matrix.multiply_nn(1.0, inp_matrix, temp3x3, 0.0);
 

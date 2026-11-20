@@ -12,11 +12,14 @@
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_mat_service.hpp"
 #include "4C_material_parameter_base.hpp"
 
 #include <Teuchos_ParameterList.hpp>
+
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -141,7 +144,7 @@ void Mat::Elastic::CoupTransverselyIsotropic::set_fiber_vecs(const double newang
   // pull back in reference configuration
   Core::LinAlg::Tensor<double, 3> A_0;
   Core::LinAlg::Matrix<3, 3> idefgrd(Core::LinAlg::Initialization::zero);
-  idefgrd.invert(Core::LinAlg::make_matrix_view(defgrd));
+  Core::LinAlg::invert(idefgrd, Core::LinAlg::make_matrix_view(defgrd));
 
   A_0 = Core::LinAlg::inv(defgrd) * ca;
   a_ = 1. / Core::LinAlg::norm2(A_0) * A_0;

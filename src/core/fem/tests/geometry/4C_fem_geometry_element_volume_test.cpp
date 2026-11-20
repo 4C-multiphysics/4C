@@ -9,6 +9,8 @@
 
 #include "4C_fem_geometry_element_volume.hpp"
 
+#include <numbers>
+
 namespace
 {
   using namespace FourC;

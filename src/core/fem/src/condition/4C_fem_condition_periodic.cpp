@@ -17,6 +17,8 @@
 #include "4C_linalg_utils_sparse_algebra_io.hpp"
 #include "4C_rebalance_graph_based.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*

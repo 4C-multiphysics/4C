@@ -14,6 +14,7 @@
 #include "4C_linalg_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_anisotropy_extension.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_mat_elast_isoneohooke.hpp"
@@ -315,7 +316,7 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::
   iCin.multiply_nt(iFin, iFin);
 
   static Core::LinAlg::Matrix<3, 3> Fin(Core::LinAlg::Initialization::uninitialized);
-  Fin.invert(iFin);
+  Core::LinAlg::invert(Fin, iFin);
 
   // Compute radial structural tensor in grown configuration
   static Core::LinAlg::Matrix<3, 3> FinArad(Core::LinAlg::Initialization::uninitialized);
@@ -367,7 +368,7 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::
 {
   static Core::LinAlg::Matrix<3, 3> iAorthgrCeAorthgrArad(
       Core::LinAlg::Initialization::uninitialized);
-  iAorthgrCeAorthgrArad.invert(AorthgrCeAorthgrArad);
+  Core::LinAlg::invert(iAorthgrCeAorthgrArad, AorthgrCeAorthgrArad);
 
   static Core::LinAlg::Matrix<3, 3> AorthgriFin(Core::LinAlg::Initialization::uninitialized);
   AorthgriFin.multiply_nn(Aorthgr, iFin);

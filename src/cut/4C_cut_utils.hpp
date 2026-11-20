@@ -25,6 +25,7 @@
 #ifdef CUT_USE_SORTED_VECTOR
 
 #include "4C_cut_sorted_vector.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #else
 #include <vector>
 #endif
@@ -162,7 +163,7 @@ namespace Cut
       // compute the inverse Jacobian and the determinant
       if (xij)
       {
-        det = xij->invert(xjm);
+        det = Core::LinAlg::invert(*xij, xjm);
       }
       else
       {
@@ -238,7 +239,7 @@ namespace Cut
 
         for (unsigned i = 0; i < num_nodes_element; i++) deriv1(2, i) = 0.0;
       }
-      if (xij) xij->invert(xjm);
+      if (xij) Core::LinAlg::invert(*xij, xjm);
     }
 
     return det;

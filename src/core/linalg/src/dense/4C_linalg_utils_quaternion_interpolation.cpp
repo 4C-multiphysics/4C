@@ -10,6 +10,7 @@
 #include "4C_linalg_utils_quaternion_interpolation.hpp"
 
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_scalar_interpolation.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -284,7 +285,7 @@ Core::LinAlg::GeneralizedSphericalLinearInterpolator<loc_dim>::get_interpolated_
       }
     }
     inverse_hessian.put_scalar(0.);
-    inverse_hessian.invert(hessian);
+    Core::LinAlg::invert(inverse_hessian, hessian);
 
     x_disp_local.put_scalar(0.);
     x_disp_local.multiply(inverse_hessian, grad);  // Solve

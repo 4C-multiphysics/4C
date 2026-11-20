@@ -13,6 +13,7 @@
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_material_parameter_base.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -505,7 +506,7 @@ void Mat::Elastic::RemodelFiber::derivd_c(Core::LinAlg::Matrix<3, 3, T> const& C
       Core::LinAlg::make_tensor_view(CM) * Core::LinAlg::make_tensor_view(iFinM));
   static Core::LinAlg::Matrix<3, 3, T> FinM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3, T> CinM(Core::LinAlg::Initialization::zero);
-  FinM.invert(iFinM);
+  Core::LinAlg::invert(FinM, iFinM);
   CinM.multiply_tn(1.0, FinM, FinM, 0.0);
 
   // get derivatives of strain energy function w.r.t. I4
@@ -565,7 +566,7 @@ void Mat::Elastic::RemodelFiber::derivd_cd_c(Core::LinAlg::Matrix<3, 3, T> const
       Core::LinAlg::make_tensor_view(CM) * Core::LinAlg::make_tensor_view(iFinM));
   static Core::LinAlg::Matrix<3, 3, T> FinM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3, T> CinM(Core::LinAlg::Initialization::zero);
-  FinM.invert(iFinM);
+  Core::LinAlg::invert(FinM, iFinM);
   CinM.multiply_tn(1.0, FinM, FinM, 0.0);
 
   // get derivatives of strain energy function w.r.t. I4
@@ -632,7 +633,7 @@ void Mat::Elastic::RemodelFiber::evaluate_local_cauchy_stress(
   // Core::LinAlg::make_matrix(Core::LinAlg::get_full(Ce));
   static Core::LinAlg::Matrix<3, 3, T> FinM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3, T> CinM(Core::LinAlg::Initialization::zero);
-  FinM.invert(iFinM);
+  Core::LinAlg::invert(FinM, iFinM);
   CinM.multiply_tn(1.0, FinM, FinM, 0.0);
   const Core::LinAlg::SymmetricTensor<T, 3, 3> Ce = Core::LinAlg::assume_symmetry(
       Core::LinAlg::transpose(Core::LinAlg::make_tensor_view(iFinM)) *
@@ -673,7 +674,7 @@ void Mat::Elastic::RemodelFiber::evaluatedsigd_ce(Core::LinAlg::Matrix<3, 3, T> 
   static Core::LinAlg::Matrix<3, 3, T> iFinM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3, T> AgrM(Core::LinAlg::Initialization::zero);
   iFinM.multiply_nn(1.0, iFgM, iFrM, 0.0);
-  FinM.invert(iFinM);
+  Core::LinAlg::invert(FinM, iFinM);
   CinM.multiply_tn(1.0, FinM, FinM, 0.0);
   tmp.multiply_nn(1.0, FinM, AM, 0.0);
   AgrM.multiply_nt(1.0 / CinM.dot(AM), tmp, FinM, 0.0);
@@ -761,7 +762,7 @@ void Mat::Elastic::RemodelFiber::evaluatedsigd_ced_c(Core::LinAlg::Matrix<3, 3> 
   static Core::LinAlg::Matrix<3, 3> iFinM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> AgrM(Core::LinAlg::Initialization::zero);
   iFinM.multiply_nn(1.0, iFgM, iFrM, 0.0);
-  FinM.invert(iFinM);
+  Core::LinAlg::invert(FinM, iFinM);
   CinM.multiply_tn(1.0, FinM, FinM, 0.0);
   tmp.multiply_nn(1.0, FinM, AM, 0.0);
   AgrM.multiply_nt(1.0 / CinM.dot(AM), tmp, FinM, 0.0);
@@ -858,9 +859,9 @@ void Mat::Elastic::RemodelFiber::evaluate_derivatives_cauchy_growth(
   static Core::LinAlg::Matrix<3, 3> FinM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> CinM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> CinAM(Core::LinAlg::Initialization::zero);
-  FgM.invert(iFgM);
+  Core::LinAlg::invert(FgM, iFgM);
   iFinM.multiply_nn(1.0, iFgM, fiberdat.iFrM[gp], 0.0);
-  FinM.invert(iFinM);
+  Core::LinAlg::invert(FinM, iFinM);
   CinM.multiply_tn(1.0, FinM, FinM, 0.0);
   CinAM.multiply_tn(1.0, CinM, fiberdat.AM, 0.0);
   tmp.multiply_nn(1.0, CM, iFinM, 0.0);
@@ -910,7 +911,7 @@ void Mat::Elastic::RemodelFiber::evaluate_derivatives_cauchy_growth(
       AgrM, 0.0);
 
   static Core::LinAlg::Matrix<3, 3> FrM(Core::LinAlg::Initialization::zero);
-  FrM.invert(fiberdat.iFrM[gp]);
+  Core::LinAlg::invert(FrM, fiberdat.iFrM[gp]);
   static Core::LinAlg::Matrix<3, 3> FrdFgdrhoM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> dAgrdrhoM(Core::LinAlg::Initialization::zero);
   FrdFgdrhoM.multiply_nn(1.0, FrM, dFgdrhoM, 0.0);
@@ -991,10 +992,10 @@ void Mat::Elastic::RemodelFiber::evaluate_derivatives_cauchy_remodel(
   static Core::LinAlg::Matrix<3, 3> FinAFinTM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> CinM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> CinAM(Core::LinAlg::Initialization::zero);
-  FrM.invert(fiberdat.iFrM[gp]);
-  FgM.invert(iFgM);
+  Core::LinAlg::invert(FrM, fiberdat.iFrM[gp]);
+  Core::LinAlg::invert(FgM, iFgM);
   iFinM.multiply_nn(1.0, iFgM, fiberdat.iFrM[gp], 0.0);
-  FinM.invert(iFinM);
+  Core::LinAlg::invert(FinM, iFinM);
   AFinTM.multiply_nt(1.0, fiberdat.AM, FinM, 0.0);
   FinAFinTM.multiply_nn(1.0, FinM, AFinTM, 0.0);
   CAFinTM.multiply_nn(1.0, CM, AFinTM, 0.0);
@@ -1098,7 +1099,7 @@ void Mat::Elastic::RemodelFiber::evaluatedsigd_c(Core::LinAlg::Matrix<3, 3, T> c
   std::shared_ptr<Mat::Elastic::CoupAnisoExpoActive> t2;
 
   static Core::LinAlg::Matrix<3, 3, T> FinM(Core::LinAlg::Initialization::zero);
-  FinM.invert(iFinM);
+  Core::LinAlg::invert(FinM, iFinM);
   static Core::LinAlg::Matrix<3, 3, T> CinM(Core::LinAlg::Initialization::zero);
   CinM.multiply_tn(1.0, FinM, FinM, 0.0);
   const Core::LinAlg::SymmetricTensor<double, 3, 3> Ce = Core::LinAlg::assume_symmetry(
@@ -1393,9 +1394,9 @@ void Mat::Elastic::RemodelFiber::evaluate_derivatives2nd_piola_kirchhoff_growth_
   static Core::LinAlg::Matrix<3, 3> CinM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> CAFgTM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> CinAFgTM(Core::LinAlg::Initialization::zero);
-  FgM.invert(iFgM);
+  Core::LinAlg::invert(FgM, iFgM);
   iFinM.multiply_nn(1.0, iFgM, fiberdat.iFrM[gp], 0.0);
-  FinM.invert(iFinM);
+  Core::LinAlg::invert(FinM, iFinM);
   CinM.multiply_tn(1.0, FinM, FinM, 0.0);
   tmp.multiply_tn(1.0, CinM, fiberdat.AM, 0.0);
   CinAFgTM.multiply_nt(1.0, tmp, FgM, 0.0);
@@ -1441,7 +1442,7 @@ void Mat::Elastic::RemodelFiber::evaluate_derivatives2nd_piola_kirchhoff_growth_
   static Core::LinAlg::Matrix<3, 3> FrM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> AFinTM(Core::LinAlg::Initialization::zero);
   static Core::LinAlg::Matrix<3, 3> FrTFinAFinTM(Core::LinAlg::Initialization::zero);
-  FrM.invert(fiberdat.iFrM[gp]);
+  Core::LinAlg::invert(FrM, fiberdat.iFrM[gp]);
   AFinTM.multiply_nt(1.0, fiberdat.AM, FinM, 0.0);
   tmp.multiply_nn(1.0, FinM, AFinTM, 0.0);
   FrTFinAFinTM.multiply_tn(1.0, FrM, tmp, 0.0);

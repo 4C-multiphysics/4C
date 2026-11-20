@@ -12,6 +12,7 @@
 
 #include <Sacado.hpp>
 
+#include <numbers>
 #include <utility>
 
 FOUR_C_NAMESPACE_OPEN

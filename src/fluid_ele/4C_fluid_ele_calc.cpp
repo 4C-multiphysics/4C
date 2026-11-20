@@ -23,6 +23,7 @@
 #include "4C_fluid_rotsym_periodicbc.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io_input_parameter_container.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_carreauyasuda.hpp"
 #include "4C_mat_fluid_linear_density_viscosity.hpp"
 #include "4C_mat_fluid_murnaghantait.hpp"
@@ -37,6 +38,8 @@
 #include "4C_utils_function_of_time.hpp"
 
 #include <Sacado.hpp>
+
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -1695,7 +1698,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::eval_shape_func_and_deri
     +-            -+        +-            -+
   */
   xjm_.multiply_nt(deriv_, xyze_);
-  det_ = xji_.invert(xjm_);
+  det_ = Core::LinAlg::invert(xji_, xjm_);
 
   if (det_ < 1E-16)
     FOUR_C_THROW("GLOBAL ELEMENT NO.{}\nZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", eid_, det_);

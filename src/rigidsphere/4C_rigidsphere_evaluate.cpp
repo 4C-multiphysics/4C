@@ -21,6 +21,8 @@
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <numbers>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*-----------------------------------------------------------------------------------------------------------*

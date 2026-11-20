@@ -21,6 +21,7 @@
 #include "4C_cut_volumecell.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fluid_ele.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_newtonianfluid.hpp"
 #include "4C_mortar_element.hpp"
 #include "4C_solid_ele_surface.hpp"
@@ -372,8 +373,8 @@ void XFEM::XFluidContactComm::get_states(const int fluidele_id, const std::vecto
       // evaluate the derivatives of shape functions
       Core::FE::shape_function_deriv1<Core::FE::CellType::hex8>(fluidele_xsi, deriv);
       xjm.multiply_nt(deriv, xyze);
-      // double det = xji.invert(xjm); //if we need this at some point
-      xji.invert(xjm);
+      // double det = Core::LinAlg::invert(xji, xjm); //if we need this at some point
+      Core::LinAlg::invert(xji, xjm);
 
       // compute global first derivatives
       derxy.multiply(xji, deriv);

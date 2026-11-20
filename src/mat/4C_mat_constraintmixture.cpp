@@ -20,6 +20,7 @@
 #include "4C_linalg_tensor.hpp"
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_mat_constraintmixture_history.hpp"
 #include "4C_mat_par_bundle.hpp"
@@ -31,6 +32,7 @@
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
 #include <fstream>
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -2887,7 +2889,7 @@ void Mat::ConstraintMixture::evaluate_fiber_vecs(const int gp,
   Core::LinAlg::Matrix<3, 1> a3_0(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 1> a4_0(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 3> idefgrd(Core::LinAlg::Initialization::uninitialized);
-  idefgrd.invert(defgrd);
+  Core::LinAlg::invert(idefgrd, defgrd);
   a1_0.multiply(idefgrd, ca1);
   a2_0.multiply(idefgrd, ca2);
   a3_0.multiply(idefgrd, ca3);

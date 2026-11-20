@@ -17,6 +17,7 @@
 #include "4C_mat_stvenantkirchhoff.hpp"
 
 #include <memory>
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 

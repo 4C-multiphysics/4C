@@ -32,6 +32,8 @@ namespace Internal
 #include <boost/math/special_functions/ellint_1.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
 #include <boost/math/special_functions/ellint_3.hpp>
+
+#include <numbers>
 namespace Internal
 {
   using boost::math::ellint_1;

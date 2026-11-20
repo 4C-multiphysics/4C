@@ -21,6 +21,7 @@
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_gmsh.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_xfem_dofset.hpp"
@@ -571,7 +572,7 @@ void XFEM::XfluidTimeintBase::eval_shape_and_deriv(
     Core::LinAlg::Matrix<nsd, nsd> xjm(Core::LinAlg::Initialization::zero);  // jacobi matrix
     xjm.multiply_nt(shapeFcnDeriv, nodecoords);  // jacobian J = (dx/dxi)^T
     xji.clear();
-    xji.invert(xjm);  // jacobian inverted J^(-1) = dxi/dx
+    Core::LinAlg::invert(xji, xjm);  // jacobian inverted J^(-1) = dxi/dx
 
     shapeFcnDerivXY.multiply(xji, shapeFcnDeriv);  // (dN/dx)^T = (dN/dxi)^T * J^(-T)
   }
@@ -2726,7 +2727,7 @@ bool XFEM::XfluidStd::project_on_side(
 
 
 
-    sysmat.invert();
+    Core::LinAlg::invert(sysmat);
 
     // solve Newton iteration
     incr.clear();

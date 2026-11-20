@@ -11,6 +11,7 @@
 
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_unittest_utils_assertions_test.hpp"
 
@@ -127,7 +128,7 @@ namespace
     Core::LinAlg::Matrix<size, size, std::complex<double>> inv_eigenvectors(
         Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<size, size, std::complex<double>> temp(eigenvectors);
-    inv_eigenvectors.invert(temp);
+    Core::LinAlg::invert(inv_eigenvectors, temp);
     Core::LinAlg::Matrix<size, size, std::complex<double>> output_complex(
         Core::LinAlg::Initialization::zero);
     temp.multiply_nn(eigenvectors, eigenvalues);

@@ -17,6 +17,7 @@
 #include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_membrane_elasthyper.hpp"
 #include "4C_mat_membrane_material_interfaces.hpp"
@@ -1359,7 +1360,7 @@ void Discret::Elements::Membrane<distype>::mem_orthonormalbase(
   J.multiply_tn(1.0, G12, t12, 0.0);
 
   Core::LinAlg::Matrix<numdim_, numdim_> Jinv(Core::LinAlg::Initialization::zero);
-  Jinv.invert(J);
+  Core::LinAlg::invert(Jinv, J);
 
   // calclate derivatives of shape functions in orthonormal base, Gruttmann1992 equation (42)
   derivs_ortho.multiply(1.0, Jinv, derivs, 0.0);
@@ -1439,7 +1440,7 @@ void Discret::Elements::Membrane<distype>::mem_g_lto_ea(
 
   // inverse of deformation gradient
   Core::LinAlg::Matrix<noddof_, noddof_> invdefgrd(Core::LinAlg::Initialization::zero);
-  invdefgrd.invert(defgrd);
+  Core::LinAlg::invert(invdefgrd, defgrd);
 
   // determine the euler-almansi strains
   Core::LinAlg::Matrix<noddof_, noddof_> temp;

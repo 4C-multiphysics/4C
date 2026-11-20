@@ -10,6 +10,7 @@
 #include "4C_contact_element.hpp"
 #include "4C_contact_nitsche_integrator.hpp"  // for CONTACT::Utils:: functions
 #include "4C_contact_node.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -115,7 +116,7 @@ void CONTACT::IntegratorEhl::gp_weighted_surf_grad_and_deriv(Mortar::Element& so
     covariant_metric(i, 2) = n(i);
   }
   Core::LinAlg::Matrix<3, 3> contravariant_metric;
-  contravariant_metric.invert(covariant_metric);
+  Core::LinAlg::invert(contravariant_metric, covariant_metric);
 
   std::vector<std::vector<double>> gxi_contra(2, std::vector<double>(3, 0));
   for (int i = 0; i < n_dim() - 1; ++i)

@@ -16,6 +16,7 @@
 #include "4C_utils_function_of_time.hpp"
 
 #include <cstdio>
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 

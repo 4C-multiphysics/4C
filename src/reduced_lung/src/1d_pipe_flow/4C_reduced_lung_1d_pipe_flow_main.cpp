@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 namespace ReducedLung1dPipeFlow

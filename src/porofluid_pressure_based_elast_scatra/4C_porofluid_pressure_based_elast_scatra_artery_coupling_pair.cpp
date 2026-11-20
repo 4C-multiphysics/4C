@@ -14,6 +14,7 @@
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_fem_general_utils_integration.hpp"
 #include "4C_fem_geometry_coordinate_system_utils.hpp"
+#include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_cnst_1d_art.hpp"
 #include "4C_mat_fluidporo_multiphase.hpp"
 #include "4C_porofluid_pressure_based_ele_parameter.hpp"
@@ -21,6 +22,8 @@
 #include "4C_utils_enum.hpp"
 #include "4C_utils_fad.hpp"
 #include "4C_utils_function.hpp"
+
+#include <numbers>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -776,7 +779,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
         shape_functions_homogenized_deriv, gp_coords_homogenized_[i_gp]);
     inverse_jacobian_matrix_[i_gp].multiply_nt(
         shape_functions_homogenized_deriv, nodal_coords_homogenized_ele_);
-    inverse_jacobian_matrix_[i_gp].invert();
+    Core::LinAlg::invert(inverse_jacobian_matrix_[i_gp]);
   }
 }
 
@@ -1178,7 +1181,7 @@ double PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery
     +-            -+        +-            -+
   */
   jacobian_matrix.multiply_nt(shape_function_deriv, nodal_coords_homogenized_ele_);
-  double jacobian_determinant = inverse_jacobian_matrix.invert(jacobian_matrix);
+  double jacobian_determinant = Core::LinAlg::invert(inverse_jacobian_matrix, jacobian_matrix);
 
   if (jacobian_determinant < 1E-16)
     FOUR_C_THROW("GLOBAL ELEMENT ZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", jacobian_determinant);
@@ -1645,7 +1648,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
     variable_manager_->evaluate_gp_variables(
         shape_functions_homogenized_transpose, shape_functions_homogenized_deriv_xyz);
 
-    const double jacobian_determinant = inverse_jacobian_matrix.invert(jacobian_matrix);
+    const double jacobian_determinant =
+        Core::LinAlg::invert(inverse_jacobian_matrix, jacobian_matrix);
     // inverse of transposed jacobian "ds/dX"
     const double jacobian_determinant_ref = jacobian_matrix_ref.determinant();
     // determinant of deformation gradient
@@ -1714,14 +1718,14 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
         shape_functions_homogenized_deriv, current_gp_coords_homogenized);
 
     jacobian_matrix.multiply_nt(shape_functions_homogenized_deriv, nodal_coords_homogenized_ele_);
-    inverse_jacobian_matrix.invert(jacobian_matrix);
+    Core::LinAlg::invert(inverse_jacobian_matrix, jacobian_matrix);
 
     // dX/dpsi
     jacobian_matrix_ref.multiply_nt(
         shape_functions_homogenized_deriv, nodal_coords_homogenized_ele_ref_);
     // dpsi/dX
     // note: cannot use invJ_ here -> defined at original Gauss points
-    inverse_jacobian_matrix_ref.invert(jacobian_matrix_ref);
+    Core::LinAlg::invert(inverse_jacobian_matrix_ref, jacobian_matrix_ref);
     // dN/dX = dN/dxi * dxi/dX = dN/dxi * (dX/dxi)^-1
     shape_functions_homogenized_xyz.multiply(
         inverse_jacobian_matrix_ref, shape_functions_homogenized_deriv);
@@ -2454,7 +2458,7 @@ FAD PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery, d
 
     inverse_jacobian_matrix.multiply_nt(
         shape_functions_homogenized_deriv, homogenized_element_position_ref);
-    inverse_jacobian_matrix.invert();
+    Core::LinAlg::invert(inverse_jacobian_matrix);
 
     // dN/dX = dN/dxi * dxi/dX = dN/dxi * (dX/dxi)^-1
     shape_functions_homogenized_xyz.multiply(
@@ -3496,7 +3500,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
     // If det_J = 0, we assume that the artery and the surface edge are parallel. This projection
     // is not needed because the contact interval can also be identified by other projections.
     parallel = fabs(jacobian_determinant) < tol_collinear * first_residual;
-    if (!parallel) jacobian_determinant = jacobian_matrix.invert();
+    if (!parallel) jacobian_determinant = Core::LinAlg::invert(jacobian_matrix);
 
     // Check if the local Newton iteration has converged
     if (residual < tol_projection * first_residual && !parallel)
@@ -3760,7 +3764,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
     // projection is not needed because the contact interval can also be identified by two
     // contact interval borders found with the GetContactLines method.
     parallel = fabs(jacobian_determinant) < tol_collinear * first_residual;
-    if (!parallel) jacobian_matrix.invert();
+    if (!parallel) Core::LinAlg::invert(jacobian_matrix);
 
     // Check if the local Newton iteration has converged:
     // If the start point fulfills the orthogonality conditions (residual < newton_projection_tol *

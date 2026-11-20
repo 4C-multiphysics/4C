@@ -13,6 +13,8 @@
 
 #include <Teuchos_ParameterList.hpp>
 
+#include <numbers>
+
 
 namespace
 {
