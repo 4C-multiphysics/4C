@@ -968,18 +968,26 @@ Core::GeometricSearch::BoundingVolume Mortar::Element::create_bounding_volume(
 
     bounding_volume.add_point(point);
 
-    if (include_auxiliary_position)
+    if (include_auxiliary_position && is_source())
     {
-      double projection = 0.0;
-      for (int idim = 0; idim < n_dim(); ++idim)
-        projection += (node->x()[idim] + node->uold()[idim] - node->xspatial()[idim]) *
-                      node->mo_data().n()[idim];
+      double xi[2] = {0.0, 0.0};
+      double current_normal[3] = {0.0, 0.0, 0.0};
+      local_coordinates_of_node(inode, xi);
+      compute_unit_normal_at_xi(xi, current_normal);
 
-      auto auxiliary_point = point;
-      for (int idim = 0; idim < n_dim(); ++idim)
-        auxiliary_point(idim) += projection * node->mo_data().n()[idim];
+      Core::LinAlg::Matrix<3, 1> previous_position(Core::LinAlg::Initialization::zero);
+      for (int dim = 0; dim < n_dim(); ++dim)
+        previous_position(dim) = get_nodal_coords_old(dim, inode);
 
-      bounding_volume.add_point(auxiliary_point);
+      double scalar = 0.0;
+      for (int dim = 0; dim < n_dim(); ++dim)
+        scalar += (previous_position(dim) - point(dim)) * current_normal[dim];
+
+      Core::LinAlg::Matrix<3, 1> auxiliary_position = point;
+      for (int dim = 0; dim < n_dim(); ++dim)
+        auxiliary_position(dim) += scalar * current_normal[dim];
+
+      bounding_volume.add_point(auxiliary_position);
     }
   }
 
