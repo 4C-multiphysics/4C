@@ -1293,10 +1293,8 @@ void CONTACT::LineToSurfaceCoupling3d::create_integration_lines(
   }
 
   // create Integration Line
-  int_line() = std::make_shared<Mortar::IntCell>(parent_element().id(), 2, coords, auxn(),
-      Core::FE::CellType::line2, linvertex[0], linvertex[1],
-      linvertex[1],  // dummy
-      get_deriv_auxn());
+  int_line() = std::make_shared<Mortar::IntCell>(coords, auxn(), Core::FE::CellType::line2,
+      linvertex[0], linvertex[1], linvertex[1], get_deriv_auxn());
 }
 
 /*----------------------------------------------------------------------*

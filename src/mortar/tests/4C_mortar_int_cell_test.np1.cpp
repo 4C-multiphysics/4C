@@ -59,11 +59,9 @@ namespace
     std::unique_ptr<Mortar::IntCell> make_cell(
         Core::LinAlg::Matrix<3, 3> coordinates, const Core::FE::CellType shape)
     {
-      const int number_of_vertices = shape == Core::FE::CellType::tri3 ? 3 : 2;
-
-      return std::make_unique<Mortar::IntCell>(7, number_of_vertices, coordinates,
-          auxiliary_normal_.data(), shape, vertex_linearizations_[0], vertex_linearizations_[1],
-          vertex_linearizations_[2], auxiliary_normal_linearization_);
+      return std::make_unique<Mortar::IntCell>(coordinates, auxiliary_normal_.data(), shape,
+          vertex_linearizations_[0], vertex_linearizations_[1], vertex_linearizations_[2],
+          auxiliary_normal_linearization_);
     }
 
     static Core::LinAlg::Matrix<3, 3> triangle_coordinates()

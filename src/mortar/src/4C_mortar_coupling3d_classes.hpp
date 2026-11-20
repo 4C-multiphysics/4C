@@ -129,8 +129,8 @@ namespace Mortar
   class IntCell
   {
    public:
-    IntCell(int id, int nvertices, Core::LinAlg::Matrix<3, 3>& coords, double* auxn,
-        const Core::FE::CellType& shape, std::vector<Core::Gen::Pairedvector<int, double>>& linv1,
+    IntCell(Core::LinAlg::Matrix<3, 3>& coords, double* auxn, const Core::FE::CellType& shape,
+        std::vector<Core::Gen::Pairedvector<int, double>>& linv1,
         std::vector<Core::Gen::Pairedvector<int, double>>& linv2,
         std::vector<Core::Gen::Pairedvector<int, double>>& linv3,
         std::vector<Core::Gen::Pairedvector<int, double>>& linauxn);
@@ -141,9 +141,6 @@ namespace Mortar
     IntCell(const IntCell& old) = delete;
 
     //! @name Access methods
-
-    //! \brief Return ID of this intcell
-    int id() const { return id_; }
 
     //! \brief Return slave element ID of this intcell
     int get_slave_id() const
@@ -164,9 +161,6 @@ namespace Mortar
 
     //! \brief Set master element ID of this intcell
     void set_master_id(const int masterid) { masterId_ = masterid; }
-
-    //! \brief Return number of vertices of this intcell
-    int num_vertices() const { return nvertices_; }
 
     //! \brief Return current area
     double area() { return area_; }
@@ -190,18 +184,15 @@ namespace Mortar
     is addressed by an int-variable and checked internally.
 
     */
-    std::vector<Core::Gen::Pairedvector<int, double>>& get_deriv_vertex(int i)
+    const auto& get_deriv_vertex(const int vertex) const
     {
-      if (shape_ == Core::FE::CellType::line2)
-      {
-        if (i < 0 || i > 1) FOUR_C_THROW("int_line has 2 vertex linearizations only!");
-        return linvertex_[i];
-      }
-      else
-      {
-        if (i < 0 || i > 2) FOUR_C_THROW("IntCell has 3 vertex linearizations only!");
-        return linvertex_[i];
-      }
+      const int number_of_vertices = Core::FE::num_nodes(shape_);
+
+      FOUR_C_ASSERT_ALWAYS(vertex >= 0 && vertex < number_of_vertices,
+          "Vertex linearization index {} is invalid for a cell with {} vertices.", vertex,
+          number_of_vertices);
+
+      return linvertex_[vertex];
     }
 
     //! \brief Return the 'DerivAuxn' map (vector) of this intcell
@@ -226,9 +217,6 @@ namespace Mortar
     */
     bool local_to_global(const double* xi, double* globcoord, int inttype);
 
-    // output functionality
-    void print();
-
     // !\brief Evaluate shape functions and derivatives
     bool evaluate_shape(
         const double* xi, Core::LinAlg::Matrix<3, 1>& val, Core::LinAlg::Matrix<3, 2>& deriv);
@@ -246,15 +234,12 @@ namespace Mortar
     //@}
 
    protected:
-    int id_;                             // local ID of this intcell
     int slaveId_;                        // id of slave element
     int masterId_;                       // id of master element
-    int nvertices_;                      // number of vertices (always 3)
     double area_;                        // integration cell area
     Core::LinAlg::Matrix<3, 3> coords_;  // coords of cell vertices
     double auxn_[3];                     // normal of auxiliary plane (3D)
 
-    bool auxplane_;             // flag indicating coupling strategy (true = auxplane)
     Core::FE::CellType shape_;  // shape of this element (always tri3)
     std::vector<std::vector<Core::Gen::Pairedvector<int, double>>>
         linvertex_;  // derivatives of the 3 vertices

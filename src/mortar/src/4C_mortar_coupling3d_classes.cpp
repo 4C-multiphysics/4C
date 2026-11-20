@@ -9,6 +9,7 @@
 
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_fem_geometry_element_volume.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_mortar_coupling3d.hpp"
@@ -155,60 +156,22 @@ void Mortar::IntElement::node_linearization(
 /*----------------------------------------------------------------------*
  |  ctor (public)                                             popp 11/08|
  *----------------------------------------------------------------------*/
-Mortar::IntCell::IntCell(int id, int nvertices, Core::LinAlg::Matrix<3, 3>& coords, double* auxn,
+Mortar::IntCell::IntCell(Core::LinAlg::Matrix<3, 3>& coords, double* auxn,
     const Core::FE::CellType& shape, std::vector<Core::Gen::Pairedvector<int, double>>& linv1,
     std::vector<Core::Gen::Pairedvector<int, double>>& linv2,
     std::vector<Core::Gen::Pairedvector<int, double>>& linv3,
     std::vector<Core::Gen::Pairedvector<int, double>>& linauxn)
-    : id_(id), slaveId_(-1), masterId_(-1), nvertices_(nvertices), coords_(coords), shape_(shape)
+    : slaveId_(-1), masterId_(-1), coords_(coords), shape_(shape)
 {
-  // store auxiliary plane normal
-  for (int k = 0; k < 3; ++k) IntCell::auxn()[k] = auxn[k];
+  for (int k = 0; k < 3; ++k) auxn_[k] = auxn[k];
 
-  if (shape == Core::FE::CellType::tri3)
-  {
-    // compute area of IntCell
-    std::array<double, 3> t1 = {0.0, 0.0, 0.0};
-    std::array<double, 3> t2 = {0.0, 0.0, 0.0};
-    for (int k = 0; k < 3; ++k)
-    {
-      t1[k] = IntCell::coords()(k, 1) - IntCell::coords()(k, 0);
-      t2[k] = IntCell::coords()(k, 2) - IntCell::coords()(k, 0);
-    }
+  area_ = Core::Geo::element_volume(shape, coords);
 
-    std::array<double, 3> t1xt2 = {0.0, 0.0, 0.0};
-    t1xt2[0] = t1[1] * t2[2] - t1[2] * t2[1];
-    t1xt2[1] = t1[2] * t2[0] - t1[0] * t2[2];
-    t1xt2[2] = t1[0] * t2[1] - t1[1] * t2[0];
-    area_ = 0.5 * sqrt(t1xt2[0] * t1xt2[0] + t1xt2[1] * t1xt2[1] + t1xt2[2] * t1xt2[2]);
-  }
-  else if (shape == Core::FE::CellType::line2)
-  {
-    // compute length of int_line
-    std::array<double, 3> v = {0.0, 0.0, 0.0};
-    v[0] = IntCell::coords()(0, 0) - IntCell::coords()(0, 1);
-    v[1] = IntCell::coords()(1, 0) - IntCell::coords()(1, 1);
-    v[2] = IntCell::coords()(2, 0) - IntCell::coords()(2, 1);
-
-    area_ = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    if (area_ < 1e-12)
-    {
-      std::cout << "v0 = " << IntCell::coords()(0, 0) << "  " << IntCell::coords()(1, 0) << "  "
-                << IntCell::coords()(2, 0) << std::endl;
-      std::cout << "v1 = " << IntCell::coords()(0, 1) << "  " << IntCell::coords()(1, 1) << "  "
-                << IntCell::coords()(2, 1) << std::endl;
-      FOUR_C_THROW("INTCELL has no length!");
-    }
-  }
-
-  // store vertex linearizations and auxn linearization
   linvertex_.resize(3);
   linvertex_[0] = linv1;
   linvertex_[1] = linv2;
   linvertex_[2] = linv3;  // dummy for line2
   linauxn_ = linauxn;
-
-  return;
 }
 
 
@@ -231,7 +194,7 @@ bool Mortar::IntCell::local_to_global(const double* xi, double* globcoord, int i
     evaluate_shape(xi, val, deriv);
     for (int i = 0; i < 3; ++i) globcoord[i] = 0.0;
 
-    for (int i = 0; i < num_vertices(); ++i)
+    for (int i = 0; i < Core::FE::num_nodes(shape_); ++i)
     {
       if (inttype == 0)
       {
@@ -265,24 +228,6 @@ bool Mortar::IntCell::local_to_global(const double* xi, double* globcoord, int i
 
   return true;
 }
-
-/*----------------------------------------------------------------------*
- |  output for integration cell                              farah 01/16|
- *----------------------------------------------------------------------*/
-void Mortar::IntCell::print()
-{
-  std::cout << "Slave  ID= " << get_slave_id() << std::endl;
-  std::cout << "Master ID= " << get_master_id() << std::endl;
-  std::cout << "Coordinates for vertex 0 = " << coords()(0, 0) << " " << coords()(1, 0) << " "
-            << coords()(2, 0) << std::endl;
-  std::cout << "Coordinates for vertex 1 = " << coords()(0, 1) << " " << coords()(1, 1) << " "
-            << coords()(2, 1) << std::endl;
-  std::cout << "Coordinates for vertex 2 = " << coords()(0, 2) << " " << coords()(1, 2) << " "
-            << coords()(2, 2) << std::endl;
-
-  return;
-}
-
 
 /*----------------------------------------------------------------------*
  |  Evaluate shape functions (IntCell)                        popp 11/08|

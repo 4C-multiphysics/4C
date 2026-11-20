@@ -1463,7 +1463,7 @@ bool Mortar::Coupling3d::delaunay_triangulation(
       for (int k = 0; k < 3; ++k) coords(k, i) = clip()[i].coord()[k];
 
     // create IntCell object and push back
-    cells().push_back(std::make_shared<IntCell>(0, 3, coords, auxn(), Core::FE::CellType::tri3,
+    cells().push_back(std::make_shared<IntCell>(coords, auxn(), Core::FE::CellType::tri3,
         linvertex[0], linvertex[1], linvertex[2], get_deriv_auxn()));
 
     // get out of here
@@ -1904,7 +1904,7 @@ bool Mortar::Coupling3d::delaunay_triangulation(
     }
 
     // create IntCell object and push back
-    cells().push_back(std::make_shared<IntCell>(t, 3, coords, auxn(), Core::FE::CellType::tri3,
+    cells().push_back(std::make_shared<IntCell>(coords, auxn(), Core::FE::CellType::tri3,
         linvertex[idx0], linvertex[idx1], linvertex[idx2], get_deriv_auxn()));
   }
 
@@ -1950,7 +1950,7 @@ bool Mortar::Coupling3d::center_triangulation(
       for (int k = 0; k < 3; ++k) coords(k, i) = clip()[i].coord()[k];
 
     // create IntCell object and push back
-    cells().push_back(std::make_shared<IntCell>(0, 3, coords, auxn(), Core::FE::CellType::tri3,
+    cells().push_back(std::make_shared<IntCell>(coords, auxn(), Core::FE::CellType::tri3,
         linvertex[0], linvertex[1], linvertex[2], get_deriv_auxn()));
 
     // get out of here
@@ -2041,8 +2041,8 @@ bool Mortar::Coupling3d::center_triangulation(
       for (int k = 0; k < 3; ++k) coords(k, 2) = clip()[num + 1].coord()[k];
 
     // create IntCell object and push back
-    cells().push_back(std::make_shared<IntCell>(num, 3, coords, auxn(), Core::FE::CellType::tri3,
-        lincenter, linvertex[num], linvertex[numplus1], get_deriv_auxn()));
+    cells().push_back(std::make_shared<IntCell>(coords, auxn(), Core::FE::CellType::tri3, lincenter,
+        linvertex[num], linvertex[numplus1], get_deriv_auxn()));
   }
 
   // triangulation successful
