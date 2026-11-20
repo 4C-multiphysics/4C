@@ -1,0 +1,21 @@
+{% set input_file = "tsi_lincompression_iterstaggtemp.4C.yaml" %}
+{% set input_file_content = load_input_file(input_file) %}
+
+.. _coupling-materials:
+
+Material coupling
+==================
+
+One may use a single multiphysics element type for a multiphysics simulation with matching
+discretizations. However, since each discretization belongs to a single physics representation
+and can therefore be connected to only one material, the other material must be connected to the
+same discretization by cloning the discretization to the other physics.
+
+In |FOURC|, a material mapping section connects two material models to a single representation.
+The following example is taken from {{ input_file }}:
+
+{{ section_dump(input_file_content, ["MATERIALS", "CLONING MATERIAL MAP", "STRUCTURE ELEMENTS"]) }}
+
+.. todo::
+
+   Add a list of the discretizations that can be coupled.
