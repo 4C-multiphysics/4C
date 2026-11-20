@@ -75,19 +75,6 @@ namespace Mortar
     Mortar::Element* par_ele() const { return parele_; }
 
     /*!
-    \brief Affine map of IntElement coordinates to parent element
-
-    */
-    virtual bool map_to_parent(const double* xi, double* parxi);
-
-    /*!
-    \brief Affine map of IntElement coordinate derivatives to parent element
-
-    */
-    virtual bool map_to_parent(const std::vector<Core::Gen::Pairedvector<int, double>>& dxi,
-        std::vector<Core::Gen::Pairedvector<int, double>>& dparxi);
-
-    /*!
     \brief Get the linearization of the spatial position of the Nodes for this IntEle.
            For Lagrange finite elements, this is trivial, since the nodes are interpolatory.
            For NURBS elements, we generated pseudo-nodes as the corners of the parameter
