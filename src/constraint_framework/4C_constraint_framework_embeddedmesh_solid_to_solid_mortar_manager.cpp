@@ -8,6 +8,7 @@
 #include "4C_constraint_framework_embeddedmesh_solid_to_solid_mortar_manager.hpp"
 
 #include "4C_constraint_framework_embeddedmesh_interaction_pair.hpp"
+#include "4C_constraint_framework_embeddedmesh_interaction_pair_mortar.hpp"
 #include "4C_constraint_framework_embeddedmesh_params.hpp"
 #include "4C_constraint_framework_embeddedmesh_solid_to_solid_utils.hpp"
 #include "4C_cut_cutwizard.hpp"
@@ -119,7 +120,7 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::setup(
       }
   }
 
-  // Create the maps for boundary layer and background DOFs..
+  // Create the maps for interface and background DOFs.
   set_global_maps();
 
   // Create the global coupling matrices.
@@ -157,7 +158,7 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::set_global_maps()
       discret_->dof(node, boundary_layer_interface_dofs);
   }
 
-  // Create the beam and solid maps.
+  // Create the interface and solid maps.
   boundary_layer_interface_dof_rowmap_ =
       std::make_shared<Core::LinAlg::Map>(-1, boundary_layer_interface_dofs.size(),
           boundary_layer_interface_dofs.data(), 0, discret_->get_comm());
@@ -304,11 +305,23 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::evaluate_global_coupl
   global_kappa_->put_scalar(0.);
   global_active_lambda_->put_scalar(0.);
 
+  std::map<std::string, std::shared_ptr<Core::LinAlg::SparseMatrix>> global_matrices = {
+      {"global_g_bl_", global_g_bl_},
+      {"global_g_bg_", global_g_bg_},
+      {"global_fbl_l_", global_fbl_l_},
+      {"global_fbg_l_", global_fbg_l_},
+  };
+
+  std::map<std::string, std::shared_ptr<Core::LinAlg::FEVector<double>>> global_vectors = {
+      {"global_constraint_", global_constraint_},
+      {"global_kappa_", global_kappa_},
+      {"global_active_lambda_", global_active_lambda_},
+  };
+
   for (auto& elepairptr : embedded_mesh_solid_pairs_)
   {
-    elepairptr->evaluate_and_assemble_mortar_contributions(*discret_, this, *global_g_bl_,
-        *global_g_bg_, *global_fbl_l_, *global_fbg_l_, *global_constraint_, *global_kappa_,
-        *global_active_lambda_);
+    elepairptr->evaluate_and_assemble_coupling_contributions(
+        *discret_, this, global_matrices, global_vectors);
   }
 
   // Complete the global mortar matrices.

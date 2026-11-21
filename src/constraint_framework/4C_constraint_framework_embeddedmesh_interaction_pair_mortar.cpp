@@ -11,43 +11,12 @@
 #include "4C_constraint_framework_embeddedmesh_solid_to_solid_utils.hpp"
 #include "4C_cut_boundarycell.hpp"
 #include "4C_cut_cutwizard.hpp"
-#include "4C_cut_elementhandle.hpp"
-#include "4C_cut_sidehandle.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_geometry_pair_element.hpp"
-#include "4C_geometry_pair_element_evaluation_functions.hpp"
-#include "4C_geometry_pair_line_to_surface.hpp"
 #include "4C_geometry_pair_line_to_volume.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
-namespace
-{
-  //! Helper function to map a point from the element's parametric space to the
-  //! physical space
-  template <typename Pointtype>
-  void map_from_parametric_to_physical_space(
-      GeometryPair::ElementData<Pointtype, double> element_data,
-      Core::LinAlg::Matrix<Pointtype::element_dim_, 1>& point_param_space,
-      Core::LinAlg::Matrix<Pointtype::n_dof_, 1, double> nodal_values,
-      Core::LinAlg::Matrix<Pointtype::spatial_dim_, 1, double>& point_physical_space)
-  {
-    // Evaluate the shape functions on the given point
-    Core::LinAlg::Matrix<1, Pointtype::n_nodes_ * Pointtype::n_val_, double> shape_fun(
-        Core::LinAlg::Initialization::zero);
-
-    GeometryPair::EvaluateShapeFunction<Pointtype>::evaluate(
-        shape_fun, point_param_space, element_data.shape_function_data_);
-
-    // Map the point to the physical system by multiplying the shape
-    // functions with the element nodes
-    for (unsigned int node = 0; node < Pointtype::n_nodes_; node++)
-      for (unsigned int dim = 0; dim < Pointtype::spatial_dim_; dim++)
-        for (unsigned int val = 0; val < Pointtype::n_val_; val++)
-          point_physical_space(dim) += nodal_values(3 * Pointtype::n_val_ * node + 3 * val + dim) *
-                                       shape_fun(Pointtype::n_val_ * node + val);
-  }
-}  // namespace
 
 template <typename Interface, typename Background, typename Mortar>
 Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
@@ -84,7 +53,7 @@ Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Back
   }
 
   // For the surface elements, evaluate the normal vectors on the nodes
-  evaluate_interface_element_nodal_normals(ele1pos_);
+  Constraints::EmbeddedMesh::evaluate_interface_element_nodal_normals(ele1pos_);
 
   for (int node_ele2 = 0; node_ele2 < element_2().num_point(); node_ele2++)
   {
@@ -96,22 +65,25 @@ Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Back
 
   // From the gauss rule of the boundary cells related to this pair, set the gauss rule for the
   // interface and background element
-  set_gauss_rule_for_interface_and_background();
+  Constraints::EmbeddedMesh::set_gauss_rule_for_interface_and_background(get_boundary_cells(),
+      ele1pos_, ele2pos_, interface_integration_points_, num_gauss_points_boundary_cell_);
 }
 
 template <typename Interface, typename Background, typename Mortar>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
-    Mortar>::get_pair_visualization(Core::IO::VisualizationData&
-                                        lagrange_multipliers_visualization_data,
-    std::shared_ptr<Core::LinAlg::Vector<double>> lambda,
-    const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
+    Mortar>::get_pair_visualization(Core::IO::VisualizationData& visualization_data,
+    std::shared_ptr<Core::LinAlg::Vector<double>> vector_to_visualize,
+    const Constraints::EmbeddedMesh::SolidToSolidCouplingManager* coupling_manager,
     std::shared_ptr<std::unordered_set<int>> interface_tracker)
 {
+  // Cast coupling manager to mortar manager
+  const auto* mortar_manager =
+      dynamic_cast<const Constraints::EmbeddedMesh::SolidToSolidMortarManager*>(coupling_manager);
+  if (mortar_manager == nullptr) FOUR_C_THROW("This manager is not a SolidToSolidMortarManager.");
+
   // Get the visualization vectors.
-  std::vector<double>& point_coordinates =
-      lagrange_multipliers_visualization_data.get_point_coordinates();
-  std::vector<double>& lambda_vis =
-      lagrange_multipliers_visualization_data.get_point_data<double>("lambda");
+  std::vector<double>& point_coordinates = visualization_data.get_point_coordinates();
+  std::vector<double>& lambda_vis = visualization_data.get_point_data<double>("lambda");
 
   // Setup variables.
   Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> q_lambda;
@@ -120,7 +92,7 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
   // Get the lambda GIDs of this pair.
   std::vector<int> lambda_row;
   get_mortar_gid(mortar_manager, this, Mortar::n_dof_, &lambda_row);
-  std::vector<double> lambda_pair = Core::FE::extract_values(*lambda, lambda_row);
+  std::vector<double> lambda_pair = Core::FE::extract_values(*vector_to_visualize, lambda_row);
   for (unsigned int i_dof = 0; i_dof < Mortar::n_dof_; i_dof++)
     q_lambda(i_dof) = lambda_pair[i_dof];
 
@@ -145,10 +117,10 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
       xi_mortar_node(0) = node_coordinates(0);
       xi_mortar_node(1) = node_coordinates(1);
 
-      map_from_parametric_to_physical_space<Mortar>(
+      Constraints::EmbeddedMesh::map_from_parametric_to_physical_space<Mortar>(
           ele1pos_, xi_mortar_node, this->ele1pos_.element_position_, X);
 
-      map_from_parametric_to_physical_space<Mortar>(
+      Constraints::EmbeddedMesh::map_from_parametric_to_physical_space<Mortar>(
           ele1pos_, xi_mortar_node, q_lambda, lambda_discret);
 
       // Add to output data.
@@ -193,125 +165,26 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
   }
 }
 
-template <typename Surface, Core::FE::CellType boundarycell_distype>
-std::shared_ptr<Core::FE::GaussPoints> project_boundary_cell_gauss_rule_on_interface(
-    Cut::BoundaryCell* boundary_cell, GeometryPair::ElementData<Surface, double>& ele1pos)
-{
-  // Get the coordinates of the vertices of the boundary cell
-  const Core::LinAlg::SerialDenseMatrix vertices_boundary_cell = boundary_cell->coordinates();
-  const unsigned num_vertices = Core::FE::num_nodes(boundarycell_distype);
-  Core::LinAlg::Matrix<2, num_vertices> projected_vertices_xi;
-
-  for (unsigned i_vertex = 0; i_vertex < num_vertices; i_vertex++)
-  {
-    Core::LinAlg::Matrix<3, 1> vertex_to_project;
-    Core::LinAlg::Matrix<3, 1> xi_interface;
-
-    for (int i_dim = 0; i_dim < 3; i_dim++)
-      vertex_to_project(i_dim) = vertices_boundary_cell(i_dim, i_vertex);
-
-    GeometryPair::ProjectionResult temp_projection_result;
-    GeometryPair::project_point_to_surface(
-        vertex_to_project, ele1pos, xi_interface, temp_projection_result);
-
-    if (temp_projection_result == GeometryPair::ProjectionResult::projection_not_found)
-      FOUR_C_THROW("No projection was found. ");
-    else if (temp_projection_result == GeometryPair::ProjectionResult::projection_found_not_valid)
-      std::cout << "WARNING: a projection was found but it is not valid\n";
-
-    projected_vertices_xi(0, i_vertex) = xi_interface(0);
-    projected_vertices_xi(1, i_vertex) = xi_interface(1);
-  }
-
-  // Check if the points are arranged in a counterclockwise. This is to avoid
-  // getting negative gauss points weights in CreateProjected(..). This is the case if:
-  // (y3 - y1)(x2 - x1) > (y2 - y1)(x3 - x1). If this is not the case, the points
-  // should be rearranged
-  if ((projected_vertices_xi(1, 2) - projected_vertices_xi(1, 0)) *
-          (projected_vertices_xi(0, 1) - projected_vertices_xi(0, 0)) <
-      (projected_vertices_xi(1, 1) - projected_vertices_xi(1, 0)) *
-          (projected_vertices_xi(0, 2) - projected_vertices_xi(0, 0)))
-  {
-    Core::LinAlg::Matrix<2, num_vertices> temp_xie;
-
-    for (size_t i = 0; i < num_vertices; ++i)
-    {
-      temp_xie(0, i) = projected_vertices_xi(0, num_vertices - 1 - i);
-      temp_xie(1, i) = projected_vertices_xi(1, num_vertices - 1 - i);
-    }
-
-    projected_vertices_xi = temp_xie;
-  }
-
-  std::shared_ptr<Core::FE::GaussPoints> gp =
-      Core::FE::GaussIntegration::create_projected<boundarycell_distype>(
-          projected_vertices_xi, boundary_cell->get_cubature_degree());
-
-  // Check if the weights of the obtained Gauss Points are positive
-  for (int it_gp = 0; it_gp < gp->num_points(); it_gp++)
-  {
-    FOUR_C_ASSERT_ALWAYS(
-        gp->weight(it_gp) > 0.0, "The Gauss rule for this boundary cell has negative weights.");
-  }
-
-  return gp;
-}
 
 template <typename Interface, typename Background, typename Mortar>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
-    Mortar>::set_gauss_rule_for_interface_and_background()
+    Mortar>::evaluate_and_assemble_coupling_contributions(const Core::FE::Discretization& discret,
+    const Constraints::EmbeddedMesh::SolidToSolidCouplingManager* coupling_manager,
+    std::map<std::string, std::shared_ptr<Core::LinAlg::SparseMatrix>>& global_matrices,
+    std::map<std::string, std::shared_ptr<Core::LinAlg::FEVector<double>>>& global_vectors)
 {
-  // Variables before iterating over boundary cells
-  Core::LinAlg::Matrix<3, 1> interface_reference_position;
-  Core::LinAlg::Matrix<3, 1> interface_position;
-  Core::LinAlg::Matrix<3, 1> interface_displacement;
-  int current_numpoints = interface_integration_points_.size();
-
-  // Iterate over the boundary cells, get their gauss points and save them
-  auto boundary_cells = get_boundary_cells();
-  for (auto it_boundarycell = boundary_cells.begin(); it_boundarycell != boundary_cells.end();
-      ++it_boundarycell)
+  const auto* mortar_manager =
+      dynamic_cast<const Constraints::EmbeddedMesh::SolidToSolidMortarManager*>(coupling_manager);
+  if (mortar_manager == nullptr)
   {
-    // Check if the shape of the boundary cell is CellType::tri3
-    FOUR_C_ASSERT(it_boundarycell->get()->shape() == Core::FE::CellType::tri3,
-        "The current implementation only works for boundary cells with shape "
-        "Core::FE::CellType::tri3.");
-
-    // Project the gauss points of the boundary cell segment to the interface
-    const std::shared_ptr<Core::FE::GaussPoints> gps_boundarycell =
-        project_boundary_cell_gauss_rule_on_interface<Interface, Core::FE::CellType::tri3>(
-            it_boundarycell->get(), ele1pos_);
-
-    // Save the number of gauss points per boundary cell. The check is done only in
-    // the first boundary cell since all the boundary cells have the same cubature
-    // degree and have the same shape (tri3)
-    if (it_boundarycell == boundary_cells.begin())
-      num_gauss_points_boundary_cell_ = gps_boundarycell->num_points();
-
-    // Add the gauss points of the boundary cell to interface_integration_points
-    interface_integration_points_.resize(current_numpoints + gps_boundarycell->num_points());
-
-    for (int it_gp = 0; it_gp < gps_boundarycell->num_points(); it_gp++)
-    {
-      auto& [xi_interface, xi_background, weight] =
-          interface_integration_points_[current_numpoints + it_gp];
-
-      // Write the gauss points over the interface
-      xi_interface(0) = gps_boundarycell->point(it_gp)[0];
-      xi_interface(1) = gps_boundarycell->point(it_gp)[1];
-
-      // Project gauss points on the background element and write them
-      GeometryPair::evaluate_position(xi_interface, ele1pos_, interface_position);
-
-      GeometryPair::ProjectionResult temp_projection_result;
-      GeometryPair::project_point_to_volume(
-          interface_position, ele2pos_, xi_background, temp_projection_result);
-
-      // Write the weight
-      weight = gps_boundarycell->weight(it_gp);
-    }
-    current_numpoints += gps_boundarycell->num_points();
+    FOUR_C_THROW("This coupling manager is not a SolidToSolidMortarManager.");
   }
+
+  evaluate_and_assemble_mortar_contributions(discret, mortar_manager,
+      *global_matrices.at("global_g_bl_"), *global_matrices.at("global_g_bg_"),
+      *global_matrices.at("global_fbl_l_"), *global_matrices.at("global_fbg_l_"),
+      *global_vectors.at("global_constraint_"), *global_vectors.at("global_kappa_"),
+      *global_vectors.at("global_active_lambda_"));
 }
 
 template <typename Interface, typename Background, typename Mortar>
@@ -342,256 +215,30 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
       global_lambda_active, local_D, local_M, local_kappa, local_constraint);
 }
 
+
 template <typename Interface, typename Background, typename Mortar>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
-    Mortar>::get_projected_gauss_rule_in_cut_element(Core::IO::VisualizationData&
+    Mortar>::get_gauss_rule_in_cut_element_for_visualization(Core::IO::VisualizationData&
         cut_element_integration_points_visualization_data)
 {
-  // Get the vectors to be filled related to the integration of cut elements
-  std::vector<double>& cutelement_point_coordinates =
-      cut_element_integration_points_visualization_data.get_point_coordinates();
-  std::vector<double>& cutelement_weights =
-      cut_element_integration_points_visualization_data.get_point_data<double>("weights");
-  std::vector<int>& cutelement_integration_cell_id =
-      cut_element_integration_points_visualization_data.get_point_data<int>("integration_cell_id");
-
-  // Get the gauss rule of the background cut element
-  std::vector<Core::FE::GaussIntegration> gp_intpoints_cut;
-
-  Cut::ElementHandle* element_handle = get_cutwizard()->get_element(&element_2());
-
-  element_handle->get_gauss_rule_integration_cells(
-      gp_intpoints_cut, get_cutwizard()->do_inside_cells_have_physical_meaning());
-
-  for (auto& iter : gp_intpoints_cut)
-  {
-    for (Core::FE::GaussIntegration::iterator gp = iter.begin(); gp != iter.end(); ++gp)
-    {
-      Core::LinAlg::Matrix<3, 1> gp_projected_cutelement;
-
-      gp_projected_cutelement(0, 0) = gp.point()[0];
-      gp_projected_cutelement(1, 0) = gp.point()[1];
-      gp_projected_cutelement(2, 0) = gp.point()[2];
-
-      Core::LinAlg::Matrix<3, 1, double> point_coord(Core::LinAlg::Initialization::zero);
-
-      map_from_parametric_to_physical_space<Background>(
-          ele2pos_, gp_projected_cutelement, this->ele2pos_.element_position_, point_coord);
-
-      // Write gauss point coordinates
-      for (int i_dim = 0; i_dim < 3; ++i_dim)
-        cutelement_point_coordinates.push_back(point_coord(i_dim));
-
-      // Write the weight of the gauss point
-      cutelement_weights.push_back(gp.weight());
-
-      // Write an id() for this point for the background and the interface gauss points
-      int id = element_2().id();
-      cutelement_integration_cell_id.push_back(id);
-    }
-  }
+  Constraints::EmbeddedMesh::get_gauss_rule_in_cut_element_for_visualization<Background>(
+      element_2(), this->ele2pos_, *get_cutwizard(),
+      cut_element_integration_points_visualization_data);
 }
 
 template <typename Interface, typename Background, typename Mortar>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
     Mortar>::
-    get_projected_gauss_rule_on_interface(
+    get_projected_gauss_rule_on_interface_and_background_ele_for_visualization(
         Core::IO::VisualizationData& background_integration_points_visualization_data,
         Core::IO::VisualizationData& interface_integration_points_visualization_data)
 {
-  // Get the vectors to be filled related to the background integration rule
-  std::vector<double>& background_point_coordinates =
-      background_integration_points_visualization_data.get_point_coordinates();
-  std::vector<double>& background_weights =
-      background_integration_points_visualization_data.get_point_data<double>("weights");
-  std::vector<int>& background_integration_interface_id =
-      background_integration_points_visualization_data.get_point_data<int>("interface_id");
-  std::vector<int>& background_integration_background_id =
-      background_integration_points_visualization_data.get_point_data<int>("background_id");
-  std::vector<int>& background_integration_boundarycell_id =
-      background_integration_points_visualization_data.get_point_data<int>("boundary_cell_id");
-
-  // Get the vectors to be filled related to the interface integration rule
-  std::vector<double>& interface_point_coordinates =
-      interface_integration_points_visualization_data.get_point_coordinates();
-  std::vector<double>& interface_weights =
-      interface_integration_points_visualization_data.get_point_data<double>("weights");
-  std::vector<int>& interface_integration_interface_id =
-      interface_integration_points_visualization_data.get_point_data<int>("interface_id");
-  std::vector<int>& interface_integration_background_id =
-      interface_integration_points_visualization_data.get_point_data<int>("background_id");
-  std::vector<int>& interface_integration_boundarycell_id =
-      interface_integration_points_visualization_data.get_point_data<int>("boundary_cell_id");
-
-  // The interface_integration_points_ are stored in a sequential order for each boundary cell.
-  // To know from which boundary cell they were generated, we create an id for each boundary cell
-  // generated by counting the gauss points in the following loop.
-  int id_boundary_cell = 0;
-  int gps_count = 0;
-
-  // Start with the loop of the interface gauss points
-  for (size_t it_gp = 0; it_gp < interface_integration_points_.size(); it_gp++)
-  {
-    auto& [xi_interface, xi_background, weight] = interface_integration_points_[it_gp];
-
-    Core::LinAlg::Matrix<3, 1, double> interface_point_coord(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<3, 1, double> background_point_coord(Core::LinAlg::Initialization::zero);
-
-    map_from_parametric_to_physical_space<Interface>(
-        ele1pos_, xi_interface, this->ele1pos_.element_position_, interface_point_coord);
-
-    map_from_parametric_to_physical_space<Background>(
-        ele2pos_, xi_background, this->ele2pos_.element_position_, background_point_coord);
-
-    // Do check to see if the physical position of the gauss point of interface
-    // and background are the same
-    Core::LinAlg::Matrix<3, 1, double> vec(Core::LinAlg::Initialization::zero);
-    for (int i_dim = 0; i_dim < 3; ++i_dim)
-      vec(i_dim) = interface_point_coord(i_dim) - background_point_coord(i_dim);
-    double norm2 = vec.norm2();
-
-    if (norm2 > 1e-9)
-    {
-      FOUR_C_THROW(
-          "The physical coordinates of the gauss points of the "
-          "interface and background do not "
-          "coincide. The difference is {}.",
-          norm2);
-    }
-
-    // Write gauss point coordinates of interface
-    for (int i_dim = 0; i_dim < 3; ++i_dim)
-      interface_point_coordinates.push_back(interface_point_coord(i_dim));
-
-    // Write gauss point coordinates of background
-    for (int i_dim = 0; i_dim < 3; ++i_dim)
-      background_point_coordinates.push_back(background_point_coord(i_dim));
-
-    // Write the weight of the gauss point
-    interface_weights.push_back(weight);
-
-    // Write the weight of the gauss point
-    background_weights.push_back(weight);
-
-    // For the obtained Gauss points, write the global ids of the background and the interface
-    // elements they come from and the number of their boundary cell
-    const auto* face_element = dynamic_cast<const Core::Elements::FaceElement*>(&this->element_1());
-    if (!face_element) FOUR_C_THROW("Cast to FaceElement failed!");
-
-    background_integration_interface_id.push_back(face_element->parent_element_id());
-    background_integration_background_id.push_back(element_2().id());
-    background_integration_boundarycell_id.push_back(id_boundary_cell);
-
-    interface_integration_interface_id.push_back(face_element->parent_element_id());
-    interface_integration_background_id.push_back(element_2().id());
-    interface_integration_boundarycell_id.push_back(id_boundary_cell);
-
-    // Increase the gauss point count. If it's bigger than the number of gauss
-    // points per boundary cell, increase the boundary cell id.
-    gps_count += 1;
-    if (gps_count == num_gauss_points_boundary_cell_)
-    {
-      gps_count = 0;
-      id_boundary_cell += 1;
-    }
-  }
-}
-
-void get_nurbs_information(const Core::Elements::Element& interface_element,
-    Core::LinAlg::Matrix<9, 1, double>& cp_weights,
-    std::vector<Core::LinAlg::SerialDenseVector>& myknots,
-    std::vector<Core::LinAlg::SerialDenseVector>& mypknots)
-{
-  const auto* face_element = dynamic_cast<const Core::Elements::FaceElement*>(&interface_element);
-  if (!face_element) FOUR_C_THROW("Cast to FaceElement failed!");
-
-  // Factor for surface orientation.
-  double normalfac = 1.0;
-
-  // Get the knots and weights for this element.
-  const bool zero_size = Core::FE::Nurbs::get_knot_vector_and_weights_for_nurbs_boundary(
-      &interface_element, face_element->face_target_number(), face_element->parent_element_id(),
-      *(Global::Problem::instance()->get_dis("structure")), mypknots, myknots, cp_weights,
-      normalfac);
-  if (zero_size)
-    FOUR_C_THROW(
-        "get_knot_vector_and_weights_for_nurbs_boundary has to return a non "
-        "zero size.");
-}
-
-template <Core::FE::CellType celldistype>
-double calculate_determinant_interface_element(
-    const Core::LinAlg::Matrix<2, 1>& eta, const Core::Elements::Element& interface_element)
-{
-  const int numnodes = Core::FE::num_nodes(celldistype);
-  Core::LinAlg::Matrix<3, numnodes> xyze;
-
-  // Get the position of the nodes of the interface element
-  for (int i_dim = 0; i_dim < 3; ++i_dim)
-  {
-    for (int i_node = 0; i_node < numnodes; ++i_node)
-      xyze(i_dim, i_node) = (interface_element.nodes()[i_node])->x()[i_dim];
-  }
-
-  Core::LinAlg::Matrix<numnodes, 1> funct;
-  Core::LinAlg::Matrix<2, numnodes> deriv;
-
-  // Evaluate the shape functions and its derivatives on eta
-  if (celldistype == Core::FE::CellType::nurbs9)
-  {
-    Core::LinAlg::Matrix<9, 1, double> cp_weights(Core::LinAlg::Initialization::zero);
-    std::vector<Core::LinAlg::SerialDenseVector> myknots(2);
-    std::vector<Core::LinAlg::SerialDenseVector> mypknots(3);
-
-    get_nurbs_information(interface_element, cp_weights, myknots, mypknots);
-
-    Core::FE::Nurbs::nurbs_get_2d_funct_deriv(funct, deriv, eta, myknots, cp_weights, celldistype);
-  }
-  else
-  {
-    Core::FE::shape_function_2d(funct, eta(0), eta(1), celldistype);
-    Core::FE::shape_function_2d_deriv1(deriv, eta(0), eta(1), celldistype);
-  }
-
-  // Calculate the metric tensor and obtain its determinant
-  Core::LinAlg::Matrix<2, 2> metrictensor;
-  Core::LinAlg::Matrix<2, 3> dxyzdrs;
-  dxyzdrs.multiply_nt(deriv, xyze);
-  metrictensor.multiply_nt(dxyzdrs, dxyzdrs);
-  double determinant =
-      std::sqrt(metrictensor(0, 0) * metrictensor(1, 1) - metrictensor(0, 1) * metrictensor(1, 0));
-
-  return determinant;
-}
-
-double get_determinant_interface_element(
-    Core::LinAlg::Matrix<2, 1> eta, const Core::Elements::Element& element)
-{
-  double determinant_interface;
-
-  switch (element.shape())
-  {
-    case Core::FE::CellType::nurbs9:
-    {
-      determinant_interface =
-          calculate_determinant_interface_element<Core::FE::CellType::nurbs9>(eta, element);
-      break;
-    }
-    case Core::FE::CellType::quad4:
-    {
-      determinant_interface =
-          calculate_determinant_interface_element<Core::FE::CellType::quad4>(eta, element);
-      break;
-    }
-    default:
-      FOUR_C_THROW(
-          "The evaluation of the determinant hasn't been implemented "
-          "for other type of "
-          "elements. ");
-      break;
-  }
-
-  return determinant_interface;
+  Constraints::EmbeddedMesh::
+      get_projected_gauss_rule_on_interface_and_background_ele_for_visualization<Interface,
+          Background>(element_1(), element_2(), ele1pos_, ele2pos_,
+          background_integration_points_visualization_data,
+          interface_integration_points_visualization_data, interface_integration_points_,
+          num_gauss_points_boundary_cell_);
 }
 
 template <typename Interface, typename Background, typename Mortar>
@@ -621,8 +268,8 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
   {
     auto& [xi_interface, xi_background, weight] = interface_integration_points_[it_gp];
 
-    double determinant_interface =
-        get_determinant_interface_element(xi_interface, this->element_1());
+    double determinant_interface = Constraints::EmbeddedMesh::get_determinant_interface_element(
+        xi_interface, this->element_1());
 
     // Get the shape function matrices
     N_mortar.clear();
