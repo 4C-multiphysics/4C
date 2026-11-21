@@ -59,11 +59,9 @@ namespace
     std::unique_ptr<Mortar::IntCell> make_cell(
         Core::LinAlg::Matrix<3, 3> coordinates, const Core::FE::CellType shape)
     {
-      const int number_of_vertices = shape == Core::FE::CellType::tri3 ? 3 : 2;
-
-      return std::make_unique<Mortar::IntCell>(7, number_of_vertices, coordinates,
-          auxiliary_normal_.data(), shape, vertex_linearizations_[0], vertex_linearizations_[1],
-          vertex_linearizations_[2], auxiliary_normal_linearization_);
+      return std::make_unique<Mortar::IntCell>(coordinates, auxiliary_normal_.data(), shape,
+          vertex_linearizations_[0], vertex_linearizations_[1], vertex_linearizations_[2],
+          auxiliary_normal_linearization_);
     }
 
     static Core::LinAlg::Matrix<3, 3> triangle_coordinates()
@@ -132,7 +130,7 @@ namespace
     const std::array<double, 2> local_coordinate = {0.2, 0.3};
 
     Core::LinAlg::Matrix<3, 1> values(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<3, 2> derivatives(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<2, 3> derivatives(Core::LinAlg::Initialization::zero);
 
     ASSERT_TRUE(cell->evaluate_shape(local_coordinate.data(), values, derivatives));
 
@@ -142,11 +140,11 @@ namespace
     EXPECT_DOUBLE_EQ(values(0) + values(1) + values(2), 1.0);
 
     EXPECT_DOUBLE_EQ(derivatives(0, 0), -1.0);
-    EXPECT_DOUBLE_EQ(derivatives(0, 1), -1.0);
-    EXPECT_DOUBLE_EQ(derivatives(1, 0), 1.0);
+    EXPECT_DOUBLE_EQ(derivatives(1, 0), -1.0);
+    EXPECT_DOUBLE_EQ(derivatives(0, 1), 1.0);
     EXPECT_DOUBLE_EQ(derivatives(1, 1), 0.0);
-    EXPECT_DOUBLE_EQ(derivatives(2, 0), 0.0);
-    EXPECT_DOUBLE_EQ(derivatives(2, 1), 1.0);
+    EXPECT_DOUBLE_EQ(derivatives(0, 2), 0.0);
+    EXPECT_DOUBLE_EQ(derivatives(1, 2), 1.0);
 
     std::array<double, 3> global_coordinate{};
     ASSERT_TRUE(cell->local_to_global(local_coordinate.data(), global_coordinate.data(), 0));
@@ -225,7 +223,7 @@ namespace
     const std::array<double, 2> local_coordinate = {0.25, 0.0};
 
     Core::LinAlg::Matrix<3, 1> values(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<3, 2> derivatives(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<2, 3> derivatives(Core::LinAlg::Initialization::zero);
 
     ASSERT_TRUE(cell->evaluate_shape(local_coordinate.data(), values, derivatives));
 
@@ -234,7 +232,7 @@ namespace
     EXPECT_DOUBLE_EQ(values(0) + values(1), 1.0);
 
     EXPECT_DOUBLE_EQ(derivatives(0, 0), -0.5);
-    EXPECT_DOUBLE_EQ(derivatives(1, 0), 0.5);
+    EXPECT_DOUBLE_EQ(derivatives(0, 1), 0.5);
 
     std::array<double, 3> global_coordinate{};
     ASSERT_TRUE(cell->local_to_global(local_coordinate.data(), global_coordinate.data(), 0));

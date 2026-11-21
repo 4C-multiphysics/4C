@@ -1822,7 +1822,7 @@ void CONTACT::Coupling3dManager::consistent_dual_shape()
 
         // compute global GP coordinate derivative
         static Core::LinAlg::Matrix<3, 1> svalcell;
-        static Core::LinAlg::Matrix<3, 2> sderivcell;
+        static Core::LinAlg::Matrix<2, 3> sderivcell;
         currcell->evaluate_shape(eta, svalcell, sderivcell);
 
         for (int v = 0; v < 3; ++v)

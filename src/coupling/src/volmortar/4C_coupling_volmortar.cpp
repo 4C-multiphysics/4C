@@ -4496,8 +4496,8 @@ bool Coupling::VolMortar::VolMortarCoupl::center_triangulation(
       for (int k = 0; k < 3; ++k) coords(k, i) = clip[i].coord()[k];
 
     // create IntCell object and push back
-    cells.push_back(std::make_shared<Mortar::IntCell>(0, 3, coords, auxn(),
-        Core::FE::CellType::tri3, linvertex[0], linvertex[1], linvertex[2], derivauxn));
+    cells.push_back(std::make_shared<Mortar::IntCell>(coords, auxn(), Core::FE::CellType::tri3,
+        linvertex[0], linvertex[1], linvertex[2], derivauxn));
 
     // get out of here
     return true;
@@ -4582,8 +4582,8 @@ bool Coupling::VolMortar::VolMortarCoupl::center_triangulation(
       for (int k = 0; k < 3; ++k) coords(k, 2) = clip[num + 1].coord()[k];
 
     // create IntCell object and push back
-    cells.push_back(std::make_shared<Mortar::IntCell>(num, 3, coords, auxn(),
-        Core::FE::CellType::tri3, lincenter, linvertex[num], linvertex[numplus1], derivauxn));
+    cells.push_back(std::make_shared<Mortar::IntCell>(coords, auxn(), Core::FE::CellType::tri3,
+        lincenter, linvertex[num], linvertex[numplus1], derivauxn));
   }
 
   // triangulation successful
@@ -4618,8 +4618,8 @@ bool Coupling::VolMortar::VolMortarCoupl::delaunay_triangulation(
       for (int k = 0; k < 3; ++k) coords(k, i) = clip[i].coord()[k];
 
     // create IntCell object and push back
-    cells.push_back(std::make_shared<Mortar::IntCell>(0, 3, coords, auxn(),
-        Core::FE::CellType::tri3, linvertex[0], linvertex[1], linvertex[2], derivauxn));
+    cells.push_back(std::make_shared<Mortar::IntCell>(coords, auxn(), Core::FE::CellType::tri3,
+        linvertex[0], linvertex[1], linvertex[2], derivauxn));
 
     // get out of here
     return true;
@@ -5015,8 +5015,8 @@ bool Coupling::VolMortar::VolMortarCoupl::delaunay_triangulation(
     }
 
     // create IntCell object and push back
-    cells.push_back(std::make_shared<Mortar::IntCell>(t, 3, coords, auxn(),
-        Core::FE::CellType::tri3, linvertex[idx0], linvertex[idx1], linvertex[idx2], derivauxn));
+    cells.push_back(std::make_shared<Mortar::IntCell>(coords, auxn(), Core::FE::CellType::tri3,
+        linvertex[idx0], linvertex[idx1], linvertex[idx2], derivauxn));
   }
 
   // double check number of triangles

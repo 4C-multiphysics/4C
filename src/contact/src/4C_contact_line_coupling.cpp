@@ -301,7 +301,7 @@ void CONTACT::LineToSurfaceCoupling3d::consist_dual_shape()
 
     // compute global GP coordinate derivative
     static Core::LinAlg::Matrix<3, 1> svalcell;
-    static Core::LinAlg::Matrix<3, 2> sderivcell;
+    static Core::LinAlg::Matrix<2, 3> sderivcell;
     currcell->evaluate_shape(eta, svalcell, sderivcell);
 
     for (int v = 0; v < 2; ++v)
@@ -1293,10 +1293,8 @@ void CONTACT::LineToSurfaceCoupling3d::create_integration_lines(
   }
 
   // create Integration Line
-  int_line() = std::make_shared<Mortar::IntCell>(parent_element().id(), 2, coords, auxn(),
-      Core::FE::CellType::line2, linvertex[0], linvertex[1],
-      linvertex[1],  // dummy
-      get_deriv_auxn());
+  int_line() = std::make_shared<Mortar::IntCell>(coords, auxn(), Core::FE::CellType::line2,
+      linvertex[0], linvertex[1], linvertex[1], get_deriv_auxn());
 }
 
 /*----------------------------------------------------------------------*

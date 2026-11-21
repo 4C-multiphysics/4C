@@ -9,6 +9,7 @@
 
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_fem_geometry_element_volume.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_mortar_coupling3d.hpp"
@@ -155,60 +156,24 @@ void Mortar::IntElement::node_linearization(
 /*----------------------------------------------------------------------*
  |  ctor (public)                                             popp 11/08|
  *----------------------------------------------------------------------*/
-Mortar::IntCell::IntCell(int id, int nvertices, Core::LinAlg::Matrix<3, 3>& coords, double* auxn,
+Mortar::IntCell::IntCell(Core::LinAlg::Matrix<3, 3>& coords, double* auxn,
     const Core::FE::CellType& shape, std::vector<Core::Gen::Pairedvector<int, double>>& linv1,
     std::vector<Core::Gen::Pairedvector<int, double>>& linv2,
     std::vector<Core::Gen::Pairedvector<int, double>>& linv3,
     std::vector<Core::Gen::Pairedvector<int, double>>& linauxn)
-    : id_(id), slaveId_(-1), masterId_(-1), nvertices_(nvertices), coords_(coords), shape_(shape)
+    : slaveId_(-1), masterId_(-1), coords_(coords), shape_(shape)
 {
-  // store auxiliary plane normal
-  for (int k = 0; k < 3; ++k) IntCell::auxn()[k] = auxn[k];
+  for (int k = 0; k < 3; ++k) auxn_[k] = auxn[k];
 
-  if (shape == Core::FE::CellType::tri3)
-  {
-    // compute area of IntCell
-    std::array<double, 3> t1 = {0.0, 0.0, 0.0};
-    std::array<double, 3> t2 = {0.0, 0.0, 0.0};
-    for (int k = 0; k < 3; ++k)
-    {
-      t1[k] = IntCell::coords()(k, 1) - IntCell::coords()(k, 0);
-      t2[k] = IntCell::coords()(k, 2) - IntCell::coords()(k, 0);
-    }
+  area_ = Core::Geo::element_volume(shape, coords);
+  FOUR_C_ASSERT_ALWAYS(std::isfinite(area_) && area_ > 0.0,
+      "The area of the integration cell has to be a finite positive value.");
 
-    std::array<double, 3> t1xt2 = {0.0, 0.0, 0.0};
-    t1xt2[0] = t1[1] * t2[2] - t1[2] * t2[1];
-    t1xt2[1] = t1[2] * t2[0] - t1[0] * t2[2];
-    t1xt2[2] = t1[0] * t2[1] - t1[1] * t2[0];
-    area_ = 0.5 * sqrt(t1xt2[0] * t1xt2[0] + t1xt2[1] * t1xt2[1] + t1xt2[2] * t1xt2[2]);
-  }
-  else if (shape == Core::FE::CellType::line2)
-  {
-    // compute length of int_line
-    std::array<double, 3> v = {0.0, 0.0, 0.0};
-    v[0] = IntCell::coords()(0, 0) - IntCell::coords()(0, 1);
-    v[1] = IntCell::coords()(1, 0) - IntCell::coords()(1, 1);
-    v[2] = IntCell::coords()(2, 0) - IntCell::coords()(2, 1);
-
-    area_ = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    if (area_ < 1e-12)
-    {
-      std::cout << "v0 = " << IntCell::coords()(0, 0) << "  " << IntCell::coords()(1, 0) << "  "
-                << IntCell::coords()(2, 0) << std::endl;
-      std::cout << "v1 = " << IntCell::coords()(0, 1) << "  " << IntCell::coords()(1, 1) << "  "
-                << IntCell::coords()(2, 1) << std::endl;
-      FOUR_C_THROW("INTCELL has no length!");
-    }
-  }
-
-  // store vertex linearizations and auxn linearization
   linvertex_.resize(3);
   linvertex_[0] = linv1;
   linvertex_[1] = linv2;
   linvertex_[2] = linv3;  // dummy for line2
   linauxn_ = linauxn;
-
-  return;
 }
 
 
@@ -225,13 +190,13 @@ bool Mortar::IntCell::local_to_global(const double* xi, double* globcoord, int i
   {
     // collect fundamental data
     Core::LinAlg::Matrix<3, 1> val;
-    Core::LinAlg::Matrix<3, 2> deriv;
+    Core::LinAlg::Matrix<2, 3> deriv;
 
     // Evaluate shape, get nodal coords and interpolate global coords
     evaluate_shape(xi, val, deriv);
     for (int i = 0; i < 3; ++i) globcoord[i] = 0.0;
 
-    for (int i = 0; i < num_vertices(); ++i)
+    for (int i = 0; i < Core::FE::num_nodes(shape_); ++i)
     {
       if (inttype == 0)
       {
@@ -243,9 +208,9 @@ bool Mortar::IntCell::local_to_global(const double* xi, double* globcoord, int i
       else if (inttype == 1)
       {
         // use shape function derivatives xi for interpolation
-        globcoord[0] += deriv(i, 0) * coords()(0, i);
-        globcoord[1] += deriv(i, 0) * coords()(1, i);
-        globcoord[2] += deriv(i, 0) * coords()(2, i);
+        globcoord[0] += deriv(0, i) * coords()(0, i);
+        globcoord[1] += deriv(0, i) * coords()(1, i);
+        globcoord[2] += deriv(0, i) * coords()(2, i);
       }
       else if (inttype == 2)
       {
@@ -253,9 +218,9 @@ bool Mortar::IntCell::local_to_global(const double* xi, double* globcoord, int i
           FOUR_C_THROW("for line2 elements only 1 parameter space coordinate");
 
         // use shape function derivatives eta for interpolation
-        globcoord[0] += deriv(i, 1) * coords()(0, i);
-        globcoord[1] += deriv(i, 1) * coords()(1, i);
-        globcoord[2] += deriv(i, 1) * coords()(2, i);
+        globcoord[0] += deriv(1, i) * coords()(0, i);
+        globcoord[1] += deriv(1, i) * coords()(1, i);
+        globcoord[2] += deriv(1, i) * coords()(2, i);
       }
       else
         FOUR_C_THROW("Invalid interpolation type requested, only 0,1,2!");
@@ -267,53 +232,23 @@ bool Mortar::IntCell::local_to_global(const double* xi, double* globcoord, int i
 }
 
 /*----------------------------------------------------------------------*
- |  output for integration cell                              farah 01/16|
- *----------------------------------------------------------------------*/
-void Mortar::IntCell::print()
-{
-  std::cout << "Slave  ID= " << get_slave_id() << std::endl;
-  std::cout << "Master ID= " << get_master_id() << std::endl;
-  std::cout << "Coordinates for vertex 0 = " << coords()(0, 0) << " " << coords()(1, 0) << " "
-            << coords()(2, 0) << std::endl;
-  std::cout << "Coordinates for vertex 1 = " << coords()(0, 1) << " " << coords()(1, 1) << " "
-            << coords()(2, 1) << std::endl;
-  std::cout << "Coordinates for vertex 2 = " << coords()(0, 2) << " " << coords()(1, 2) << " "
-            << coords()(2, 2) << std::endl;
-
-  return;
-}
-
-
-/*----------------------------------------------------------------------*
  |  Evaluate shape functions (IntCell)                        popp 11/08|
  *----------------------------------------------------------------------*/
 bool Mortar::IntCell::evaluate_shape(
-    const double* xi, Core::LinAlg::Matrix<3, 1>& val, Core::LinAlg::Matrix<3, 2>& deriv)
+    const double* xi, Core::LinAlg::Matrix<3, 1>& val, Core::LinAlg::Matrix<2, 3>& deriv)
 {
   if (!xi) FOUR_C_THROW("evaluate_shape (IntCell) called with xi=nullptr");
 
-  // 3noded triangular element
   if (shape() == Core::FE::CellType::tri3)
   {
-    val(0) = 1.0 - xi[0] - xi[1];
-    val(1) = xi[0];
-    val(2) = xi[1];
-    deriv(0, 0) = -1.0;
-    deriv(0, 1) = -1.0;
-    deriv(1, 0) = 1.0;
-    deriv(1, 1) = 0.0;
-    deriv(2, 0) = 0.0;
-    deriv(2, 1) = 1.0;
+    Core::FE::shape_function_2d(val, xi[0], xi[1], shape());
+    Core::FE::shape_function_2d_deriv1(deriv, xi[0], xi[1], shape());
   }
   else if (shape() == Core::FE::CellType::line2)
   {
-    val(0) = 0.5 * (1 - xi[0]);
-    val(1) = 0.5 * (1 + xi[0]);
-    deriv(0, 0) = -0.5;
-    deriv(1, 0) = 0.5;
+    Core::FE::shape_function_1d(val, xi[0], shape());
+    Core::FE::shape_function_1d_deriv1(deriv, xi[0], shape());
   }
-
-  // unknown case
   else
     FOUR_C_THROW("evaluate_shape (IntCell) called for type != tri3/line2");
 
@@ -327,12 +262,10 @@ double Mortar::IntCell::jacobian()
 {
   double jac = 0.0;
 
-  // 2D linear case (2noded line element)
   if (shape() == Core::FE::CellType::tri3)
     jac = area() * 2.0;
   else if (shape() == Core::FE::CellType::line2)
     jac = area() * 0.5;
-  // unknown case
   else
     FOUR_C_THROW("Jacobian (IntCell) called for unknown ele type!");
 
