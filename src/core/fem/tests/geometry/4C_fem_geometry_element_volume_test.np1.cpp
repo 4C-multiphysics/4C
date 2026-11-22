@@ -174,6 +174,26 @@ namespace
     EXPECT_NEAR(area, correct_area, ElementVolumeTest::TOL);
   }
 
+  TEST_F(ElementVolumeTest, TestElementArea_tri3_extremely_slender)
+  {
+    Core::LinAlg::Matrix<3, 3> xyz(Core::LinAlg::Initialization::zero);
+
+    xyz(0, 0) = 0.0;
+    xyz(1, 0) = 0.0;
+    xyz(2, 0) = 0.0;
+    xyz(0, 1) = 1.0;
+    xyz(1, 1) = 0.0;
+    xyz(2, 1) = 0.0;
+    xyz(0, 2) = 1.0;
+    xyz(1, 2) = 1.0e-10;
+    xyz(2, 2) = 0.0;
+
+    const double area = Core::Geo::element_volume(Core::FE::CellType::tri3, xyz);
+
+    EXPECT_GT(area, 0.0);
+    EXPECT_NEAR(area, 5.0e-11, ElementVolumeTest::TOL);
+  }
+
   TEST_F(ElementVolumeTest, TestElementArea_tri6)
   {
     Core::LinAlg::Matrix<3, 6> xyz(Core::LinAlg::Initialization::zero);

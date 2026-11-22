@@ -129,103 +129,50 @@ namespace Mortar
   class IntCell
   {
    public:
-    /*!
-    \brief Standard constructor
-
-    Constructs an instance of this class.<br>
-    Note that this is \b not a collective call as coupling is
-    performed in parallel by individual processes.
-
-    */
-    IntCell(int id, int nvertices, Core::LinAlg::Matrix<3, 3>& coords, double* auxn,
-        const Core::FE::CellType& shape, std::vector<Core::Gen::Pairedvector<int, double>>& linv1,
+    IntCell(Core::LinAlg::Matrix<3, 3>& coords, double* auxn, const Core::FE::CellType& shape,
+        std::vector<Core::Gen::Pairedvector<int, double>>& linv1,
         std::vector<Core::Gen::Pairedvector<int, double>>& linv2,
         std::vector<Core::Gen::Pairedvector<int, double>>& linv3,
         std::vector<Core::Gen::Pairedvector<int, double>>& linauxn);
 
-    /*!
-    \brief Destructor
+    ~IntCell() = default;
 
-    */
-    virtual ~IntCell() = default;
+    IntCell operator=(const IntCell& old) = delete;
+    IntCell(const IntCell& old) = delete;
+
     //! @name Access methods
 
-    /*!
-    \brief Return ID of this intcell
-
-    */
-    const int& id() const { return id_; }
-
-    /*!
-    \brief Set slave element ID of this intcell
-
-    */
-    void set_slave_id(const int slaveid)
-    {
-      slaveId_ = slaveid;
-      return;
-    }
-
-    /*!
-    \brief Return slave element ID of this intcell
-
-    */
-    const int& get_slave_id() const
+    //! \brief Return slave element ID of this intcell
+    int get_slave_id() const
     {
       if (slaveId_ < 0) FOUR_C_THROW("Invalid slave element ID for this integration cell!");
-
       return slaveId_;
     }
 
-    /*!
-    \brief Set master element ID of this intcell
-
-    */
-    void set_master_id(const int masterid)
-    {
-      masterId_ = masterid;
-      return;
-    }
-    /*!
-    \brief Return master element ID of this intcell
-
-    */
-    const int& get_master_id() const
+    //! \brief Return master element ID of this intcell
+    int get_master_id() const
     {
       if (masterId_ < 0) FOUR_C_THROW("Invalid master element ID for this integration cell!");
-
       return masterId_;
     }
 
-    /*!
-    \brief Return number of vertices of this intcell
+    //! \brief Set slave element ID of this intcell
+    void set_slave_id(const int slaveid) { slaveId_ = slaveid; }
 
-    */
-    int num_vertices() const { return nvertices_; }
+    //! \brief Set master element ID of this intcell
+    void set_master_id(const int masterid) { masterId_ = masterid; }
 
-    /*!
-    \brief Return current area
+    //! \brief Return current area
+    double area() { return area_; }
 
-    */
-    virtual double& area() { return area_; }
+    //! \brief Return coordinates of intcell vertices
+    const Core::LinAlg::Matrix<3, 3>& coords() const { return coords_; }
 
-    /*!
-    \brief Return coordinates of intcell vertices
+    //! \brief Return normal of auxiliary plane of this intcell
+    double* auxn() { return auxn_; }
 
-    */
-    const Core::LinAlg::Matrix<3, 3>& coords() { return coords_; }
-
-    /*!
-    \brief Return normal of auxiliary plane of this intcell
-
-    */
-    virtual double* auxn() { return auxn_; }
-
-    /*!
-    \brief Get shape type of element
-
-    */
-    virtual Core::FE::CellType shape() const { return shape_; }
+    //! \brief Get shape type of element
+    Core::FE::CellType shape() const { return shape_; }
 
     /*!
     \brief Return one of the three 'DerivVertex' maps (vectors) of this node
@@ -237,25 +184,19 @@ namespace Mortar
     is addressed by an int-variable and checked internally.
 
     */
-    virtual std::vector<Core::Gen::Pairedvector<int, double>>& get_deriv_vertex(int i)
+    const auto& get_deriv_vertex(const int vertex) const
     {
-      if (shape_ == Core::FE::CellType::line2)
-      {
-        if (i < 0 || i > 1) FOUR_C_THROW("int_line has 2 vertex linearizations only!");
-        return linvertex_[i];
-      }
-      else
-      {
-        if (i < 0 || i > 2) FOUR_C_THROW("IntCell has 3 vertex linearizations only!");
-        return linvertex_[i];
-      }
+      const int number_of_vertices = Core::FE::num_nodes(shape_);
+
+      FOUR_C_ASSERT_ALWAYS(vertex >= 0 && vertex < number_of_vertices,
+          "Vertex linearization index {} is invalid for a cell with {} vertices.", vertex,
+          number_of_vertices);
+
+      return linvertex_[vertex];
     }
 
-    /*!
-    \brief Return the 'DerivAuxn' map (vector) of this intcell
-
-    */
-    virtual std::vector<Core::Gen::Pairedvector<int, double>>& get_deriv_auxn() { return linauxn_; }
+    //! \brief Return the 'DerivAuxn' map (vector) of this intcell
+    std::vector<Core::Gen::Pairedvector<int, double>>& get_deriv_auxn() { return linauxn_; }
 
     //@}
 
@@ -274,47 +215,31 @@ namespace Mortar
                             set to 2 for derivative eta usage
     \param globccord (out): interpolated global coordinates
     */
-    virtual bool local_to_global(const double* xi, double* globcoord, int inttype);
+    bool local_to_global(const double* xi, double* globcoord, int inttype);
 
-    // output functionality
-    virtual void print();
+    // !\brief Evaluate shape functions and derivatives
+    bool evaluate_shape(
+        const double* xi, Core::LinAlg::Matrix<3, 1>& val, Core::LinAlg::Matrix<2, 3>& deriv);
 
-    /*!
-    \brief Evaluate shape functions and derivatives
-
-    */
-    virtual bool evaluate_shape(
-        const double* xi, Core::LinAlg::Matrix<3, 1>& val, Core::LinAlg::Matrix<3, 2>& deriv);
-
-    /*!
-    \brief Evaluate Jacobian determinant for parameter space integration
-
-    */
-    virtual double jacobian();
+    //! \brief Evaluate Jacobian determinant for parameter space integration
+    double jacobian();
 
     /*!
     \brief Compute Jacobian determinant derivative
            Note that this is a linearization with respect to the intcell
            vertices, which themselves have to be linearized later, of course!
     */
-    virtual void deriv_jacobian(Core::Gen::Pairedvector<int, double>& derivjac);
+    void deriv_jacobian(Core::Gen::Pairedvector<int, double>& derivjac);
 
     //@}
 
    protected:
-    // don't want = operator and cctor
-    IntCell operator=(const IntCell& old);
-    IntCell(const IntCell& old);
-
-    int id_;                             // local ID of this intcell
     int slaveId_;                        // id of slave element
     int masterId_;                       // id of master element
-    int nvertices_;                      // number of vertices (always 3)
     double area_;                        // integration cell area
     Core::LinAlg::Matrix<3, 3> coords_;  // coords of cell vertices
     double auxn_[3];                     // normal of auxiliary plane (3D)
 
-    bool auxplane_;             // flag indicating coupling strategy (true = auxplane)
     Core::FE::CellType shape_;  // shape of this element (always tri3)
     std::vector<std::vector<Core::Gen::Pairedvector<int, double>>>
         linvertex_;  // derivatives of the 3 vertices
