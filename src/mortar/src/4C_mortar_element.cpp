@@ -9,6 +9,7 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_contact_nitsche_utils.hpp"
+#include "4C_fem_geometry_element_volume.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
@@ -1240,82 +1241,17 @@ void Mortar::Element::deriv_jacobian(
 }
 
 /*----------------------------------------------------------------------*
- |  Compute length / area of the element                      popp 12/07|
  *----------------------------------------------------------------------*/
 double Mortar::Element::compute_area() const
 {
-  double area = 0.0;
-  Core::FE::CellType dt = shape();
+  Core::LinAlg::SerialDenseMatrix coord(3, num_point());
+  get_nodal_coords(coord);
 
-  // 2D linear case (2noded line element)
-  if (dt == Core::FE::CellType::line2)
-  {
-    // no integration necessary (constant Jacobian)
-    Core::LinAlg::SerialDenseMatrix coord(3, num_point());
-    get_nodal_coords(coord);
+  Core::LinAlg::SerialDenseVector weights(num_node());
+  for (int inode = 0; inode < num_node(); ++inode)
+    weights(inode) = dynamic_cast<const Mortar::Node*>(nodes()[inode])->nurbs_w();
 
-    // build vector between the two nodes
-    std::array<double, 3> tang = {0.0, 0.0, 0.0};
-    for (int k = 0; k < 3; ++k)
-    {
-      tang[k] = coord(k, 1) - coord(k, 0);
-    }
-    area = sqrt(tang[0] * tang[0] + tang[1] * tang[1] + tang[2] * tang[2]);
-  }
-
-  // 3D linear case (3noded triangular element)
-  else if (dt == Core::FE::CellType::tri3)
-  {
-    // no integration necessary (constant Jacobian)
-    Core::LinAlg::SerialDenseMatrix coord(3, num_point());
-    get_nodal_coords(coord);
-
-    // build vectors between the three nodes
-    std::array<double, 3> t1 = {0.0, 0.0, 0.0};
-    std::array<double, 3> t2 = {0.0, 0.0, 0.0};
-    for (int k = 0; k < 3; ++k)
-    {
-      t1[k] = coord(k, 1) - coord(k, 0);
-      t2[k] = coord(k, 2) - coord(k, 0);
-    }
-
-    // cross product of t1 and t2
-    std::array<double, 3> t1xt2 = {0.0, 0.0, 0.0};
-    t1xt2[0] = t1[1] * t2[2] - t1[2] * t2[1];
-    t1xt2[1] = t1[2] * t2[0] - t1[0] * t2[2];
-    t1xt2[2] = t1[0] * t2[1] - t1[1] * t2[0];
-    area = 0.5 * sqrt(t1xt2[0] * t1xt2[0] + t1xt2[1] * t1xt2[1] + t1xt2[2] * t1xt2[2]);
-  }
-
-  // 2D quadratic case   (3noded line element)
-  // 3D bilinear case    (4noded quadrilateral element)
-  // 3D quadratic case   (6noded triangular element)
-  // 3D serendipity case (8noded quadrilateral element)
-  // 3D biquadratic case (9noded quadrilateral element)
-  else if (dt == Core::FE::CellType::line3 || dt == Core::FE::CellType::quad4 ||
-           dt == Core::FE::CellType::tri6 || dt == Core::FE::CellType::quad8 ||
-           dt == Core::FE::CellType::quad9 || dt == Core::FE::CellType::nurbs2 ||
-           dt == Core::FE::CellType::nurbs3 || dt == Core::FE::CellType::nurbs4 ||
-           dt == Core::FE::CellType::nurbs8 || dt == Core::FE::CellType::nurbs9)
-  {
-    // Gauss quadrature with correct num_gp and Dim
-    Mortar::ElementIntegrator integrator(dt);
-    double detg = 0.0;
-
-    // loop over all Gauss points, build Jacobian and compute area
-    for (int j = 0; j < integrator.n_gp(); ++j)
-    {
-      double gpc[2] = {integrator.coordinate(j, 0), integrator.coordinate(j, 1)};
-      detg = jacobian(gpc);
-      area += integrator.weight(j) * detg;
-    }
-  }
-
-  // other cases not implemented yet
-  else
-    FOUR_C_THROW("Area computation not implemented for this type of Mortar::Element");
-
-  return area;
+  return Core::Geo::element_volume(shape(), coord, knots(), weights);
 }
 
 
