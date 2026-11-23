@@ -28,6 +28,23 @@ namespace Core::Geo
    * degenerates to a line or a point)
    */
   std::vector<int> convex_hull_2d(std::span<const std::array<double, 2>> points);
+
+  /**
+   * @brief Computes the area of a planar polygon embedded in three-dimensional space.
+   *
+   * The polygon vertices must be ordered consecutively along the polygon boundary.
+   * The closing edge from the last vertex to the first is added automatically. The
+   * supplied normal must be a unit vector perpendicular to the polygon plane. Its
+   * orientation does not affect the result because the absolute area is returned.
+   *
+   * Polygons with fewer than three vertices have zero area.
+   *
+   * @param points Polygon vertices in consecutive boundary order.
+   * @param unit_normal Unit normal of the polygon plane.
+   * @return The non-negative polygon area.
+   */
+  double polygon_area(
+      std::span<const std::array<double, 3>> points, const std::array<double, 3>& unit_normal);
 }  // namespace Core::Geo
 
 FOUR_C_NAMESPACE_CLOSE

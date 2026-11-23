@@ -332,16 +332,6 @@ namespace Mortar
     virtual bool has_proj_status();
 
     /*!
-     \brief Compute and return area of clipping polygon (3D)
-
-     This method automatically returns the relevant(!) area of the
-     current clip polygon, depending on whether coupling is performed
-     in the auxiliary plane or in the slave parameter space.
-
-     */
-    virtual double polygon_area();
-
-    /*!
      \brief Clipping of slave and master element (3D) (NEW VERSION based on convex hull)
 
      Note that PolygonClipping3D can EITHER be done in physical space (this

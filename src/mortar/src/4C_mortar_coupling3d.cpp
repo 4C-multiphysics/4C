@@ -97,7 +97,16 @@ bool Mortar::Coupling3d::evaluate_coupling()
   if (clipsize < 3) return false;
 
   // proceed only if clipping polygon has non-zero area
-  if (polygon_area() < MORTARINTLIM * source_element_area()) return false;
+  std::vector<std::array<double, 3>> positions(clipsize);
+  for (int pos = 0; pos < clipsize; ++pos)
+  {
+    const auto coords = clip()[pos].coord();
+    positions[pos] = {coords[0], coords[1], coords[2]};
+  }
+  const auto auxiliary_normal = std::array<double, 3>{auxn()[0], auxn()[1], auxn()[2]};
+
+  const double polygon_area = Core::Geo::polygon_area(positions, auxiliary_normal);
+  if (polygon_area < MORTARINTLIM * source_element_area()) return false;
 
   // check / set  projection status of slave nodes
   has_proj_status();
@@ -1301,46 +1310,6 @@ bool Mortar::Coupling3d::polygon_clipping_convex_hull(std::vector<Vertex>& poly1
   }
 
   return true;
-}
-
-
-/*----------------------------------------------------------------------*
- |  Compute and return area of clipping polygon (3D)          popp 11/08|
- *----------------------------------------------------------------------*/
-double Mortar::Coupling3d::polygon_area()
-{
-  // initialize and check for trivial case
-  double area = 0.0;
-  int clipsize = (int)(clip().size());
-  if (clipsize < 3) return area;
-
-  // loop over all vertices to compute area
-  for (int k = 0; k < clipsize; ++k)
-  {
-    // current and next vertex vector
-    std::vector<double> vk = clip()[k].coord();
-    std::vector<double> vkp1;
-    if (k == clipsize - 1)
-      vkp1 = clip()[0].coord();
-    else
-      vkp1 = clip()[k + 1].coord();
-
-    // cross product
-    std::array<double, 3> cross = {0.0, 0.0, 0.0};
-    cross[0] = vk[1] * vkp1[2] - vk[2] * vkp1[1];
-    cross[1] = vk[2] * vkp1[0] - vk[0] * vkp1[2];
-    cross[2] = vk[0] * vkp1[1] - vk[1] * vkp1[0];
-
-    // add scalar product with negative(!) normal to area
-    // (because the clip polygon is oriented clockwise w.r.t. normal)
-    area -= 0.5 * (cross[0] * auxn()[0] + cross[1] * auxn()[1] + cross[2] * auxn()[2]);
-  }
-
-  // when areas are close to zero, we might get sign problems
-  // (as we do not want to check negative / positive orientation
-  // here anyway, but only close to zero areas, we simply return
-  // the absolute value!)
-  return abs(area);
 }
 
 
