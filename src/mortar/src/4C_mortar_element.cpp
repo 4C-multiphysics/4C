@@ -971,22 +971,19 @@ Core::GeometricSearch::BoundingVolume Mortar::Element::create_bounding_volume(
 
     if (include_auxiliary_position && is_source())
     {
-      double xi[2] = {0.0, 0.0};
-      double current_normal[3] = {0.0, 0.0, 0.0};
-      local_coordinates_of_node(inode, xi);
-      compute_unit_normal_at_xi(xi, current_normal);
+      std::array<double, 2> xi = {0.0, 0.0};
+      std::array<double, 3> current_normal = {0.0, 0.0, 0.0};
+      local_coordinates_of_node(inode, xi.data());
+      compute_unit_normal_at_xi(xi.data(), current_normal.data());
 
-      Core::LinAlg::Matrix<3, 1> previous_position(Core::LinAlg::Initialization::zero);
+      double projection = 0.0;
       for (int dim = 0; dim < n_dim(); ++dim)
-        previous_position(dim) = get_nodal_coords_old(dim, inode);
-
-      double scalar = 0.0;
-      for (int dim = 0; dim < n_dim(); ++dim)
-        scalar += (previous_position(dim) - point(dim)) * current_normal[dim];
+        projection +=
+            (node->x()[dim] + node->uold()[dim] - node->xspatial()[dim]) * current_normal[dim];
 
       Core::LinAlg::Matrix<3, 1> auxiliary_position = point;
       for (int dim = 0; dim < n_dim(); ++dim)
-        auxiliary_position(dim) += scalar * current_normal[dim];
+        auxiliary_position(dim) += projection * current_normal[dim];
 
       bounding_volume.add_point(auxiliary_position);
     }
