@@ -249,7 +249,11 @@ Solid::Predict::PythonWrapper::Implementation::Implementation(
   if (is_rank_zero())
   {
     // Initialize python interpreter once per process.
-    static pybind11::scoped_interpreter py_guard;
+    if (!Py_IsInitialized())
+    {
+      static auto* py_guard = new pybind11::scoped_interpreter();
+      (void)py_guard;
+    }
 
     // Add the directory where the python file is located to the PATH so that python finds it
     pybind11::module sys = pybind11::module::import("sys");
