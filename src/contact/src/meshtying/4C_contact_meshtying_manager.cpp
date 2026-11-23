@@ -31,7 +31,7 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  |  ctor (public)                                             popp 03/08|
  *----------------------------------------------------------------------*/
-CONTACT::Meshtying::MtManager::MtManager(Core::FE::Discretization& discret, double alphaf)
+CONTACT::Meshtying::Manager::Manager(Core::FE::Discretization& discret, double alphaf)
     : Mortar::ManagerBase()
 {
   // overwrite base class communicator
@@ -364,7 +364,7 @@ CONTACT::Meshtying::MtManager::MtManager(Core::FE::Discretization& discret, doub
 /*----------------------------------------------------------------------*
  |  read and check input parameters (public)                  popp 04/08|
  *----------------------------------------------------------------------*/
-bool CONTACT::Meshtying::MtManager::read_and_check_input(
+bool CONTACT::Meshtying::Manager::read_and_check_input(
     Teuchos::ParameterList& mtparams, const Core::FE::Discretization& discret)
 {
   // read parameter lists from Global::Problem
@@ -627,7 +627,7 @@ bool CONTACT::Meshtying::MtManager::read_and_check_input(
 /*----------------------------------------------------------------------*
  |  write restart information for meshtying (public)          popp 03/08|
  *----------------------------------------------------------------------*/
-void CONTACT::Meshtying::MtManager::write_restart(
+void CONTACT::Meshtying::Manager::write_restart(
     Core::IO::DiscretizationWriter& output, bool forcedrestart)
 {
   output.write_vector("mt_lagrmultold", get_strategy().lagrange_multiplier_old());
@@ -638,7 +638,7 @@ void CONTACT::Meshtying::MtManager::write_restart(
 /*----------------------------------------------------------------------*
  |  read restart information for meshtying (public)           popp 03/08|
  *----------------------------------------------------------------------*/
-void CONTACT::Meshtying::MtManager::read_restart(Core::IO::DiscretizationReader& reader,
+void CONTACT::Meshtying::Manager::read_restart(Core::IO::DiscretizationReader& reader,
     std::shared_ptr<Core::LinAlg::Vector<double>> dis,
     std::shared_ptr<Core::LinAlg::Vector<double>> zero)
 {
@@ -652,7 +652,7 @@ void CONTACT::Meshtying::MtManager::read_restart(Core::IO::DiscretizationReader&
 /*----------------------------------------------------------------------*
  |  write interface tractions for postprocessing (public)     popp 03/08|
  *----------------------------------------------------------------------*/
-void CONTACT::Meshtying::MtManager::postprocess_quantities(Core::IO::DiscretizationWriter& output)
+void CONTACT::Meshtying::Manager::postprocess_quantities(Core::IO::DiscretizationWriter& output)
 {
   // evaluate interface tractions
   std::shared_ptr<Core::LinAlg::Map> problem = get_strategy().problem_dofs();
@@ -686,7 +686,7 @@ void CONTACT::Meshtying::MtManager::postprocess_quantities(Core::IO::Discretizat
 
 /*-----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void CONTACT::Meshtying::MtManager::postprocess_quantities_per_interface(
+void CONTACT::Meshtying::Manager::postprocess_quantities_per_interface(
     std::shared_ptr<Teuchos::ParameterList> outputParams)
 {
   get_strategy().postprocess_quantities_per_interface(outputParams);

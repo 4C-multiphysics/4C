@@ -33,7 +33,7 @@ namespace CONTACT::Meshtying
   \brief 4C implementation of main class to control all meshtying
 
   */
-  class MtManager : public Mortar::ManagerBase
+  class Manager : public Mortar::ManagerBase
   {
    public:
     //! @name Construction/Destruction
@@ -58,7 +58,7 @@ namespace CONTACT::Meshtying
     \param alphaf (in): Generalized-alpha parameter (set to 0.0 by default)
 
     */
-    MtManager(Core::FE::Discretization& discret, double alphaf = 0.0);
+    Manager(Core::FE::Discretization& discret, double alphaf = 0.0);
 
 
 
@@ -143,8 +143,8 @@ namespace CONTACT::Meshtying
 
    protected:
     // don't want = operator and cctor
-    MtManager operator=(const MtManager& old) = delete;
-    MtManager(const MtManager& old) = delete;
+    Manager operator=(const Manager& old) = delete;
+    Manager(const Manager& old) = delete;
 
   };  // class MtManager
 }  // namespace CONTACT::Meshtying

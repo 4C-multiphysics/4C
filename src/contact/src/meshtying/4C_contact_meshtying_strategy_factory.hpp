@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_contact_input.hpp"
+#include "4C_contact_meshtying_abstract_strategy.hpp"
 #include "4C_mortar_element.hpp"
 #include "4C_mortar_strategy_factory.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
@@ -82,7 +83,7 @@ namespace Mortar
        * \todo ToDo Get rid of porosource and porotarget parameters.
        *
        * */
-      std::shared_ptr<CONTACT::MtAbstractStrategy> build_strategy(
+      std::shared_ptr<CONTACT::Meshtying::AbstractStrategy> build_strategy(
           const Teuchos::ParameterList& params, const bool& porosource, const bool& porotarget,
           const int& dof_offset, std::vector<std::shared_ptr<Mortar::Interface>>& interfaces) const;
 
@@ -104,7 +105,7 @@ namespace Mortar
        * access to the class members, use the alternative call.
        *
        * */
-      static std::shared_ptr<CONTACT::MtAbstractStrategy> build_strategy(
+      static std::shared_ptr<CONTACT::Meshtying::AbstractStrategy> build_strategy(
           CONTACT::SolvingStrategy stype, const Teuchos::ParameterList& params,
           const bool& porosource, const bool& porotarget, const int& dof_offset,
           std::vector<std::shared_ptr<Mortar::Interface>>& interfaces,

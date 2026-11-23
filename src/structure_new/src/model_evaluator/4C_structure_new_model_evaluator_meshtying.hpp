@@ -19,7 +19,10 @@ FOUR_C_NAMESPACE_OPEN
 namespace CONTACT
 {
   class Manager;
-  class MtAbstractStrategy;
+  namespace Meshtying
+  {
+    class AbstractStrategy;
+  }
 }  // namespace CONTACT
 
 namespace Mortar
@@ -206,24 +209,24 @@ namespace Solid
       //!@{
 
       //! Returns a pointer to the underlying meshtying strategy object
-      const std::shared_ptr<CONTACT::MtAbstractStrategy>& strategy_ptr();
+      const std::shared_ptr<CONTACT::Meshtying::AbstractStrategy>& strategy_ptr();
 
       //! Returns the underlying meshtying strategy object
-      CONTACT::MtAbstractStrategy& strategy();
-      const CONTACT::MtAbstractStrategy& strategy() const;
+      CONTACT::Meshtying::AbstractStrategy& strategy();
+      const CONTACT::Meshtying::AbstractStrategy& strategy() const;
 
       //!@}
 
      protected:
      private:
       /// correct time integration parameters within the meshtying strategy
-      void set_time_integration_info(CONTACT::MtAbstractStrategy& strategy) const;
+      void set_time_integration_info(CONTACT::Meshtying::AbstractStrategy& strategy) const;
 
       /// calculate the squared error of the lagrange multiplier field
       double evaluate_lagrange_multiplier_error_squared(int analytical_function_id, double time);
 
       //! meshtying strategy
-      std::shared_ptr<CONTACT::MtAbstractStrategy> strategy_ptr_;
+      std::shared_ptr<CONTACT::Meshtying::AbstractStrategy> strategy_ptr_;
 
       //! Mesh relocation for conservation of angular momentum
       std::shared_ptr<Core::LinAlg::Vector<double>> mesh_relocation_;

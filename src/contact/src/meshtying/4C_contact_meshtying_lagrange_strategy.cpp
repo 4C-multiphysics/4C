@@ -34,7 +34,7 @@ CONTACT::MtLagrangeStrategy::MtLagrangeStrategy(const Core::LinAlg::Map* dof_row
     const Core::LinAlg::Map* NodeRowMap, Teuchos::ParameterList params,
     std::vector<std::shared_ptr<Mortar::Interface>> interface, const int spatialDim,
     const MPI_Comm& comm, const double alphaf, const int maxdof)
-    : MtAbstractStrategy(
+    : Meshtying::AbstractStrategy(
           dof_row_map, NodeRowMap, params, interface, spatialDim, comm, alphaf, maxdof)
 {
   // empty constructor body
@@ -60,7 +60,7 @@ void CONTACT::MtLagrangeStrategy::mortar_coupling(
   const double t_start = Teuchos::Time::wallTime();
 
   // refer call to parent class
-  MtAbstractStrategy::mortar_coupling(dis);
+  Meshtying::AbstractStrategy::mortar_coupling(dis);
 
   //----------------------------------------------------------------------
   // Multiply Mortar matrices: m^ = inv(d) * m
@@ -296,7 +296,7 @@ CONTACT::MtLagrangeStrategy::mesh_initialization()
   // (3) perform mesh initialization node by node
   //**********************************************************************
   // this can be done in the AbstractStrategy now
-  MtAbstractStrategy::mesh_initialization(Xsourcemod);
+  Meshtying::AbstractStrategy::mesh_initialization(Xsourcemod);
 
   // time measurement
   Core::Communication::barrier(get_comm());

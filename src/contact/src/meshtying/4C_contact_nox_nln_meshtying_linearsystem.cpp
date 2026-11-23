@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_contact_nox_nln_meshtying_linearsystem.hpp"  // base class
+#include "4C_contact_nox_nln_meshtying_linearsystem.hpp"
 
 #include "4C_contact_input.hpp"
 #include "4C_contact_meshtying_abstract_strategy.hpp"
@@ -116,7 +116,7 @@ Core::LinAlg::SolverParams NOX::Nln::MeshTying::LinearSystem::set_solver_options
       auto precInterface = i_constr_prec_.begin();
 
       const auto& strategy =
-          dynamic_cast<const ::FourC::CONTACT::MtAbstractStrategy&>(*precInterface->second);
+          dynamic_cast<const CONTACT::Meshtying::AbstractStrategy&>(*precInterface->second);
 
       std::shared_ptr<Core::LinAlg::Map> targetDofMap, sourceDofMap, innerDofMap, activeDofMap;
       strategy.collect_maps_for_preconditioner(

@@ -26,7 +26,7 @@ namespace CONTACT
    For a more general documentation of the involved functions refer to MtAbstractStrategy.
 
    */
-  class MtPenaltyStrategy : public MtAbstractStrategy
+  class MtPenaltyStrategy : public Meshtying::AbstractStrategy
   {
    public:
     /*!

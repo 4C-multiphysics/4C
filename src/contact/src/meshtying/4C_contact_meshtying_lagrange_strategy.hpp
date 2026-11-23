@@ -26,7 +26,7 @@ namespace CONTACT
    \sa MtAbstractStrategy
 
    */
-  class MtLagrangeStrategy : public MtAbstractStrategy
+  class MtLagrangeStrategy : public Meshtying::AbstractStrategy
   {
    public:
     /*!
