@@ -157,7 +157,8 @@ Core::LinAlg::SolverParams NOX::Nln::MeshTying::LinearSystem::set_solver_options
       {
         const auto& sol_type = Teuchos::getIntegralValue<FourC::CONTACT::SolvingStrategy>(
             strategy.params(), "STRATEGY");
-        if (sol_type == FourC::CONTACT::SolvingStrategy::lagmult)
+        if (sol_type == FourC::CONTACT::SolvingStrategy::lagmult or
+            sol_type == FourC::CONTACT::SolvingStrategy::augmented)
         {
           // compute the nullspace vectors for the Lagrange multiplier field for MueLu
           if (solverPtr->params().isSublist("MueLu Parameters"))

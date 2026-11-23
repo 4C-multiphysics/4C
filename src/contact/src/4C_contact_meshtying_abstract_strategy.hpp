@@ -813,6 +813,9 @@ namespace CONTACT
      */
     double inttime_;
 
+    //! Additional stiffness based on the meshtying strategy
+    std::shared_ptr<Core::LinAlg::SparseMatrix> stiffness_ = nullptr;
+
     //! Structural force
     std::shared_ptr<Core::LinAlg::Vector<double>> f_;
 
