@@ -96,74 +96,14 @@ void CONTACT::MtAugmentedLagrangeStrategy::mortar_coupling(
     mtm = Core::LinAlg::matrix_row_transform(*mtm, *non_redist_gtdofrowmap_);
   }
 
-  augmentation_stiffness_ =
-      std::make_shared<Core::LinAlg::SparseMatrix>(*problem_dofs(), 100, false, true);
+  stiffness_ = std::make_shared<Core::LinAlg::SparseMatrix>(*problem_dofs(), 100, false, true);
 
-  Core::LinAlg::matrix_add(*dtd, false, 1.0, *augmentation_stiffness_, 1.0);
-  Core::LinAlg::matrix_add(*dtm, false, -1.0, *augmentation_stiffness_, 1.0);
-  Core::LinAlg::matrix_add(*mtd, false, -1.0, *augmentation_stiffness_, 1.0);
-  Core::LinAlg::matrix_add(*mtm, false, 1.0, *augmentation_stiffness_, 1.0);
+  Core::LinAlg::matrix_add(*dtd, false, 1.0, *stiffness_, 1.0);
+  Core::LinAlg::matrix_add(*dtm, false, -1.0, *stiffness_, 1.0);
+  Core::LinAlg::matrix_add(*mtd, false, -1.0, *stiffness_, 1.0);
+  Core::LinAlg::matrix_add(*mtm, false, 1.0, *stiffness_, 1.0);
 
-  augmentation_stiffness_->complete();
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-void CONTACT::MtAugmentedLagrangeStrategy::evaluate_force(
-    const std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
-{
-  // Adds B^T * lambda.
-  MtLagrangeStrategy::evaluate_force(dis);
-
-  FOUR_C_ASSERT_ALWAYS(
-      augmentation_stiffness_ != nullptr, "Augmentation stiffness is not available.");
-
-  Core::LinAlg::Vector<double> augmentation_force(*problem_dofs(), true);
-  augmentation_stiffness_->multiply(false, *dis, augmentation_force);
-
-  // Adds penalty * B^T * W^{-1} * B * u.
-  f_->update(1.0, augmentation_force, 1.0);
-}
-
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-void CONTACT::MtAugmentedLagrangeStrategy::evaluate_stiff(
-    const std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
-{
-  // Builds B^T, B and the zero multiplier block.
-  MtLagrangeStrategy::evaluate_stiff(dis);
-
-  FOUR_C_ASSERT_ALWAYS(
-      augmentation_stiffness_ != nullptr, "Augmentation stiffness is not available.");
-}
-
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-void CONTACT::MtAugmentedLagrangeStrategy::evaluate_force_stiff(
-    const std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
-{
-  evaluate_force(dis);
-  evaluate_stiff(dis);
-}
-
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-std::shared_ptr<Core::LinAlg::SparseMatrix>
-CONTACT::MtAugmentedLagrangeStrategy::get_matrix_block_ptr(
-    const CONTACT::MatBlockType& block_type) const
-{
-  if (block_type == CONTACT::MatBlockType::displ_displ)
-  {
-    FOUR_C_ASSERT_ALWAYS(
-        augmentation_stiffness_ != nullptr, "Augmentation stiffness is not available.");
-
-    return augmentation_stiffness_;
-  }
-
-  return MtLagrangeStrategy::get_matrix_block_ptr(block_type);
+  stiffness_->complete();
 }
 
 FOUR_C_NAMESPACE_CLOSE

@@ -36,20 +36,7 @@ namespace CONTACT
 
     void mortar_coupling(const std::shared_ptr<const Core::LinAlg::Vector<double>>& dis) override;
 
-    void evaluate_force(const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
-
-    void evaluate_stiff(const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
-
-    void evaluate_force_stiff(
-        const std::shared_ptr<const Core::LinAlg::Vector<double>> dis) override;
-
-    std::shared_ptr<Core::LinAlg::SparseMatrix> get_matrix_block_ptr(
-        const CONTACT::MatBlockType& block_type) const override;
-
    private:
-    //! Matrix penalty * B^T * W^{-1} * B on the displacement map.
-    std::shared_ptr<Core::LinAlg::SparseMatrix> augmentation_stiffness_;
-
     //! Inverse augmentation scaling matrix penalty * W^{-1}
     std::shared_ptr<Core::LinAlg::Vector<double>> augmentation_scaling_;
   };

@@ -1019,6 +1019,13 @@ void CONTACT::MtLagrangeStrategy::evaluate_force(
     Core::LinAlg::Vector<double> fmexp(*problem_dofs());
     Core::LinAlg::export_to(fm, fmexp);
     f_->update(-1.0, fmexp, 1.0);
+
+    if (stiffness_ != nullptr)
+    {
+      Core::LinAlg::Vector<double> additional_force(*problem_dofs(), true);
+      stiffness_->multiply(false, *dis, additional_force);
+      f_->update(1.0, additional_force, 1.0);
+    }
   }
 }
 
@@ -1116,7 +1123,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::MtLagrangeStrategy::get_mat
   switch (bt)
   {
     case CONTACT::MatBlockType::displ_displ:
-      mat_ptr = nullptr;
+      mat_ptr = stiffness_;
       break;
     case CONTACT::MatBlockType::displ_lm:
       if (!dm_matrix_) FOUR_C_THROW("matrix not available");
