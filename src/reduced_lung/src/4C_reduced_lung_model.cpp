@@ -21,6 +21,7 @@
 #include "4C_reduced_lung_newton_sparse.hpp"
 #include "4C_reduced_lung_newton_tree.hpp"
 #include "4C_reduced_lung_nonlinear_solver.hpp"
+#include "4C_reduced_lung_restart.hpp"
 #include "4C_reduced_lung_resulttest.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_reduced_lung_tree_linear_solver.hpp"
@@ -86,6 +87,54 @@ namespace ReducedLung
       trial_dt_.reset();
     }
 
+    [[nodiscard]] Restart::State restart_state()
+    {
+      return Restart::State{.discretization = *actdis_,
+          .airways = airways_,
+          .terminal_units = terminal_units_,
+          .first_global_dof_of_ele = first_global_dof_of_ele_,
+          .global_dof_per_ele = global_dof_per_ele_,
+          .locally_relevant_dofs = *locally_relevant_dofs_,
+          .x = *x_};
+    }
+
+    void write_restart(int step)
+    {
+      FOUR_C_ASSERT_ALWAYS(!trial_dt_.has_value(),
+          "Reduced lung write_restart() requires the trial solution to be accepted first.");
+
+      if (restart_writer_ == nullptr)
+      {
+        restart_writer_ = std::make_unique<Core::IO::DiscretizationWriter>(
+            *actdis_, *context_.output_control_file, Core::FE::ShapeFunctionType::polynomial);
+      }
+      restart_writer_->new_step(step, accepted_time_);
+      Restart::write(*restart_writer_, restart_state());
+    }
+
+    void read_restart(int step)
+    {
+      FOUR_C_ASSERT_ALWAYS(context_.input_control_file != nullptr,
+          "Reduced lung read_restart() requires the input control file in the model context.");
+
+      Core::IO::DiscretizationReader reader(*actdis_, context_.input_control_file, step);
+      Restart::State state = restart_state();
+      Restart::read(reader, state);
+      accepted_time_ = reader.read_double("time");
+      trial_dt_.reset();
+
+      // The visualization output continues the time series of the restarted run.
+      build_visualization_writer(accepted_time_);
+    }
+
+    void build_visualization_writer(double restart_time)
+    {
+      visualization_writer_ = std::make_unique<Core::IO::DiscretizationVisualizationWriterMesh>(
+          actdis_, Core::IO::visualization_parameters_factory(
+                       context_.io_parameters.sublist("RUNTIME VTK OUTPUT"),
+                       *context_.output_control_file, restart_time));
+    }
+
     void write_output(int step) const
     {
       FOUR_C_ASSERT_ALWAYS(visualization_writer_ != nullptr,
@@ -117,10 +166,7 @@ namespace ReducedLung
 
       actdis_->fill_complete();
 
-      visualization_writer_ = std::make_unique<Core::IO::DiscretizationVisualizationWriterMesh>(
-          actdis_, Core::IO::visualization_parameters_factory(
-                       context_.io_parameters.sublist("RUNTIME VTK OUTPUT"),
-                       *context_.output_control_file, 0));
+      build_visualization_writer(0.0);
       comm_ = actdis_->get_comm();
     }
 
@@ -299,6 +345,8 @@ namespace ReducedLung
     const ModelContext context_;
     std::shared_ptr<Core::FE::Discretization> actdis_;
     std::unique_ptr<Core::IO::DiscretizationVisualizationWriterMesh> visualization_writer_;
+    //! Created on the first write_restart(), so runs without restart output open no result files.
+    std::unique_ptr<Core::IO::DiscretizationWriter> restart_writer_;
     MPI_Comm comm_;
 
     Airways::AirwayContainer airways_;
@@ -342,6 +390,10 @@ namespace ReducedLung
   double Model::time() const { return pimpl_->accepted_time_; }
 
   void Model::write_output(int step) const { pimpl_->write_output(step); }
+
+  void Model::write_restart(int step) const { pimpl_->write_restart(step); }
+
+  void Model::read_restart(int step) { pimpl_->read_restart(step); }
 
   std::shared_ptr<Core::Utils::ResultTest> Model::create_result_test() const
   {

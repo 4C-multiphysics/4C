@@ -11,7 +11,6 @@ reduced_dimensional_lung:
     linear_solver: 1
     nonlinear_solver: NewtonTree
     number_of_steps: 70
-    restart_every: 1
     results_every: 1
     time_increment: 0.1
     output_verbosity: high
