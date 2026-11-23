@@ -1,0 +1,12 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c4024c298..2ba82150f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -18,6 +18,7 @@ PROJECT(${PROJECT_NAME} NONE)
+ # 4C uses Epetra-backed MueLu interfaces that require the Serial Tpetra node.
+ # Keep Kokkos CUDA enabled, but do not instantiate Tpetra for the CUDA node.
+ SET(Tpetra_INST_CUDA OFF CACHE BOOL "Disable CUDA Tpetra instantiation for 4C" FORCE)
++SET(NOX_ENABLE_LOCA OFF CACHE BOOL "Disable LOCA's CUDA-node Tpetra interfaces for 4C" FORCE)
+
+ # Set up to use ccache
+ include("${CMAKE_CURRENT_LIST_DIR}/cmake/UseCCache.cmake")
