@@ -99,31 +99,6 @@ namespace
     EXPECT_NEAR(normal[2], -6.0 / 7.0, 1.0e-14);
   }
 
-  // At the triangle center, the averaged normal contains equal contributions from all three nodes.
-  TEST_F(MortarElementNormal, InterpolatesAllNodalNormals)
-  {
-    const std::array<std::array<double, 3>, 3> nodal_normals{{
-        {1.0, 0.0, 0.0},
-        {0.0, 1.0, 0.0},
-        {0.0, 0.0, 1.0},
-    }};
-
-    for (std::size_t node = 0; node < nodes_.size(); ++node)
-      std::ranges::copy(nodal_normals[node], nodes_[node]->mo_data().n());
-
-    const std::array<double, 2> xi = {1.0 / 3.0, 1.0 / 3.0};
-    std::array<double, 3> normal = {0.0, 0.0, 0.0};
-
-    const double interpolated_length =
-        element_->compute_averaged_unit_normal_at_xi(xi.data(), normal.data());
-
-    const double expected_component = 1.0 / std::sqrt(3.0);
-
-    EXPECT_NEAR(interpolated_length, expected_component, 1.0e-14);
-    EXPECT_NEAR(normal[0], expected_component, 1.0e-14);
-    EXPECT_NEAR(normal[1], expected_component, 1.0e-14);
-    EXPECT_NEAR(normal[2], expected_component, 1.0e-14);
-  }
 
   // Test that the analytical normal linearization agrees with central finite differences.
   TEST_F(MortarElementNormal, UnitNormalLinearization)

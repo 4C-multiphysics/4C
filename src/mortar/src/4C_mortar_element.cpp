@@ -759,45 +759,6 @@ double Mortar::Element::compute_unit_normal_at_xi(const double* xi, double* n) c
 
 
 /*----------------------------------------------------------------------*
- |  Compute nodal averaged normal at xi                      farah 06/16|
- *----------------------------------------------------------------------*/
-double Mortar::Element::compute_averaged_unit_normal_at_xi(const double* xi, double* n) const
-{
-  // check input
-  if (!xi) FOUR_C_THROW("compute_unit_normal_at_xi called with xi=nullptr");
-  if (!n) FOUR_C_THROW("compute_unit_normal_at_xi called with n=nullptr");
-
-  int nnodes = num_point();
-  Core::LinAlg::SerialDenseVector val(nnodes);
-  Core::LinAlg::SerialDenseMatrix deriv(nnodes, 2, true);
-
-  // get shape function values and derivatives at xi
-  evaluate_shape(xi, val, deriv, nnodes, false);
-
-  // initialize n
-  n[0] = 0.0;
-  n[1] = 0.0;
-  n[2] = 0.0;
-
-  // loop over all nodes of this element
-  for (int i = 0; i < num_node(); ++i)
-  {
-    const auto* mortar_node = dynamic_cast<const Mortar::Node*>(nodes()[i]);
-
-    FOUR_C_ASSERT_ALWAYS(mortar_node != nullptr,
-        "Expected node {} of mortar element {} to be a Mortar::Node.", i, id());
-
-    for (int dim = 0; dim < 3; ++dim) n[dim] += val[i] * mortar_node->mo_data().n()[dim];
-  }
-
-  const double length = sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
-  if (length < 1e-12) FOUR_C_THROW("Normal of length zero!");
-  for (int i = 0; i < 3; ++i) n[i] /= length;
-
-  return length;
-}
-
-/*----------------------------------------------------------------------*
  |  Compute unit normal derivative at loc. coord. xi          popp 03/09|
  *----------------------------------------------------------------------*/
 void Mortar::Element::deriv_unit_normal_at_xi(
