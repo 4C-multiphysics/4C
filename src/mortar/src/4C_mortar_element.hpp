@@ -723,11 +723,6 @@ namespace Mortar
         const double* xi, int& i, Core::LinAlg::SerialDenseMatrix& elens) const;
 
     /*!
-    \brief Compute averaged nodal normal at local coordinate xi
-    */
-    virtual double compute_averaged_unit_normal_at_xi(const double* xi, double* n) const;
-
-    /*!
     \brief Compute unit element normal at local coordinate xi
            This function is a real stand-alone function to be called
            for a CElement in order to compute a unit normal at any point.
