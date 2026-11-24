@@ -1020,6 +1020,23 @@ void CONTACT::LagrangeStrategyTsi::update(std::shared_ptr<const Core::LinAlg::Ve
   CONTACT::Utils::add_vector(tmp4, *ftcnp_);
 
   ftcn_ = ftcnp_;
+
+  z_thermo_old_ = std::make_shared<Core::LinAlg::Vector<double>>(*z_thermo_);
+}
+
+void CONTACT::LagrangeStrategyTsi::reset_step_state(
+    const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_n)
+{
+  CONTACT::AbstractStrategy::reset_step_state(displacement_n);
+
+  // nothing evaluated yet
+  if (thermo_s_dofs_ == nullptr) return;
+
+  if (z_thermo_old_ != nullptr)
+    z_thermo_ = std::make_shared<Core::LinAlg::Vector<double>>(*z_thermo_old_);
+  else
+    z_thermo_ = std::make_shared<Core::LinAlg::Vector<double>>(*thermo_s_dofs_, true);
+  store_nodal_quantities(Mortar::StrategyBase::lmThermo, *structure_thermo_coupling_);
 }
 
 void CONTACT::LagrangeStrategyTsi::set_alphaf_thermo(const Teuchos::ParameterList& tdyn)

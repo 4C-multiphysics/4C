@@ -119,7 +119,7 @@ void TSI::Partitioned::setup_system() {}  // SetupSystem()
 /*----------------------------------------------------------------------*
  | non-linear solve, i.e. (multiple) corrector (public)      dano 12/09 |
  *----------------------------------------------------------------------*/
-void TSI::Partitioned::solve()
+TSI::StepStatus TSI::Partitioned::solve()
 {
   // switch TSI algorithm (synchronous)
   // only the one field knows the 2nd field, that contains the coupling
@@ -153,7 +153,7 @@ void TSI::Partitioned::solve()
       break;
   }  // end switch
 
-  return;
+  return TSI::StepStatus::no_errors;
 }  // Solve()
 
 /*----------------------------------------------------------------------*

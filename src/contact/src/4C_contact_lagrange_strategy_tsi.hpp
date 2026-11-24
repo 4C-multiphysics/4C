@@ -138,6 +138,10 @@ namespace CONTACT
     void update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis, double dt,
         double total_time) override;
 
+    //! reset to the last accepted step, including the thermal Lagrange multipliers
+    void reset_step_state(
+        const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_n) override;
+
     /*!
      \brief Set time integration parameter from Thermo time integration
 
@@ -197,6 +201,8 @@ namespace CONTACT
 
     std::shared_ptr<Core::LinAlg::Vector<double>>
         z_thermo_;  // current vector of Thermo-Lagrange multipliers at t_n+1
+    std::shared_ptr<Core::LinAlg::Vector<double>>
+        z_thermo_old_;  // Thermo-Lagrange multipliers of the last accepted step
     std::shared_ptr<Core::LinAlg::Map> thermo_act_dofs_;  // active thermo dofs
     std::shared_ptr<Core::LinAlg::Map> thermo_s_dofs_;    // source thermo dofs
 

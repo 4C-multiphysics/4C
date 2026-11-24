@@ -9,6 +9,7 @@
 
 #include "4C_contact_input.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_timestepping_time_step_control.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -137,7 +138,16 @@ std::vector<Core::IO::InputSpec> TSI::valid_parameters()
                   {"and", LineSearch::LS_and},
                   {"or", LineSearch::LS_or},
               },
-              {.description = "line-search strategy", .default_value = LineSearch::LS_none})},
+              {.description = "line-search strategy", .default_value = LineSearch::LS_none}),
+
+          parameter<DivContAct>("DIVERCONT",
+              {.description = "Action to be taken in case the nonlinear solver does not "
+                              "converge. If `adapt_step`, the time-step size is adapted "
+                              "according to the `time_step_control` settings. `ignore` ignores "
+                              "the non-convergence and continues anyway.",
+                  .default_value = DivContAct::stop}),
+
+          TimeStepping::TimeStepControlSettings::input_spec()},
       {.required = false}));
 
   /*----------------------------------------------------------------------*/

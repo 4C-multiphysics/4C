@@ -24,6 +24,7 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linear_solver_method.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
+#include "4C_material_step_reduction_request.hpp"
 #include "4C_mortar_multifield_coupling.hpp"
 #include "4C_structure_new_model_evaluator_structure.hpp"
 #include "4C_structure_new_timint_base.hpp"
@@ -34,6 +35,8 @@
 
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_TimeMonitor.hpp>
+
+#include <limits>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -67,6 +70,12 @@ TSI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& sdynpar
       iternorm_(Teuchos::getIntegralValue<TSI::VectorNorm>(tsidynmono_, "ITERNORM")),
       iter_(0),
       sdyn_(sdynparams),
+      time_step_control_settings_(
+          tsidynmono_.get<TimeStepping::TimeStepControlSettings::InputParameters>(
+              "time_step_control"),
+          dt(), tsidyn_.get<int>("ITEMAX")),
+      allow_material_time_step_reduction_(
+          sdynparams.get<bool>("ALLOW_MATERIAL_TIME_STEP_REDUCTION")),
       timernewton_("", true),
       dtsolve_(0.),
       ptcdt_(tsidynmono_.get<double>("PTCDT")),
@@ -197,6 +206,12 @@ void TSI::Monolithic::read_restart(int step)
  *----------------------------------------------------------------------*/
 void TSI::Monolithic::prepare_time_step()
 {
+  FOUR_C_ASSERT_ALWAYS(prepare_time_step_with_status() == TSI::StepStatus::no_errors,
+      "Preparing TSI time step failed.");
+}  // prepare_time_step()
+
+TSI::StepStatus TSI::Monolithic::prepare_time_step_with_status()
+{
   // counter and print header
   // increment time and step counter
   increment_time_and_step();
@@ -207,10 +222,121 @@ void TSI::Monolithic::prepare_time_step()
   apply_thermo_coupling_state(thermo_field()->tempnp());
 
   // call the predictor
-  structure_field()->prepare_time_step();
+  switch (structure_field()->prepare_time_step_with_status())
+  {
+    case Solid::StepStatus::no_errors:
+      break;
+    case Solid::StepStatus::time_step_reduction_requested:
+      return TSI::StepStatus::time_step_reduction_requested;
+    default:
+      FOUR_C_THROW("Unexpected status of the structural predictor.");
+  }
   thermo_field()->prepare_time_step();
 
-}  // prepare_time_step()
+  return TSI::StepStatus::no_errors;
+}
+
+TSI::StepAction TSI::Monolithic::perform_error_action(const TSI::StepStatus step_status)
+{
+  switch (step_status)
+  {
+    case TSI::StepStatus::no_errors:
+      return TSI::StepAction::accept_step;
+    case TSI::StepStatus::nonlinear_solver_failed:
+    {
+      const auto divergence_action =
+          Teuchos::getIntegralValue<TSI::DivContAct>(tsidynmono_, "DIVERCONT");
+      const bool write_cout = Core::Communication::my_mpi_rank(get_comm()) == 0;
+      if (write_cout)
+        std::cout << "Nonlinear TSI solver did not converge!\n"
+                  << "DIVERCONT is set to: " << EnumTools::enum_name(divergence_action) << "\n";
+      switch (divergence_action)
+      {
+        case TSI::DivContAct::stop:
+          FOUR_C_THROW(
+              "Nonlinear TSI solver did not converge. Aborting since DIVERCONT is set to {}.",
+              divergence_action);
+        case TSI::DivContAct::ignore:
+          if (write_cout)
+            std::cout << "WARNING: Nonlinear TSI solver non-convergence is ignored.\n";
+          return TSI::StepAction::accept_step;
+        case TSI::DivContAct::adapt_step:
+          prepare_retry_with_reduced_time_step();
+          return TSI::StepAction::retry_step;
+      }
+      FOUR_C_THROW("Unknown DIVERCONT action.");
+    }
+    case TSI::StepStatus::time_step_reduction_requested:
+      prepare_retry_with_reduced_time_step();
+      return TSI::StepAction::retry_step;
+    default:
+      FOUR_C_THROW("Detected an unexpected step status: {}.", step_status);
+  }
+}
+
+void TSI::Monolithic::prepare_retry_with_reduced_time_step()
+{
+  const double old_dt = dt();
+  const double new_dt =
+      TimeStepping::compute_reduced_time_step(old_dt, time_step_control_settings_);
+
+  if (Core::Communication::my_mpi_rank(get_comm()) == 0)
+    std::cout << "Retrying the current time-step with a reduced time-step size.\n";
+
+  structure_field()->reset_step();
+  thermo_field()->reset_step();
+  if (contact_strategy_lagrange_ != nullptr)
+    contact_strategy_lagrange_->reset_step_state(structure_field()->dispn());
+
+  // go back to the beginning of the step, it is incremented again in prepare_time_step()
+  set_time_step(time() - old_dt, step() - 1);
+  set_new_time_step_size(new_dt);
+}
+
+void TSI::Monolithic::finalize_successful_step()
+{
+  num_steps_at_current_dt_++;
+  nonlinear_iterations_per_step_.emplace_back(iter_);
+  if (nonlinear_iterations_per_step_.size() > time_step_control_settings_.steps_to_increase)
+    nonlinear_iterations_per_step_.pop_front();
+
+  const double new_dt = TimeStepping::compute_time_step_after_successful_step(dt(),
+      time_step_control_settings_, num_steps_at_current_dt_, nonlinear_iterations_per_step_,
+      max_time() - time(), n_step() - step());
+
+  if (std::abs(new_dt - dt()) > std::numeric_limits<double>::epsilon())
+  {
+    if (Core::Communication::my_mpi_rank(get_comm()) == 0)
+      std::cout << "Updating the time-step size for the next step:\n";
+    set_new_time_step_size(new_dt);
+  }
+}
+
+void TSI::Monolithic::set_new_time_step_size(const double new_dt)
+{
+  const double old_dt = dt();
+
+  FOUR_C_ASSERT_ALWAYS(new_dt > 0.0, "Time-step size must be positive.");
+  FOUR_C_ASSERT(std::abs(new_dt - old_dt) > std::numeric_limits<double>::epsilon(),
+      "New time-step size must be different from the current time-step size.");
+
+  set_dt(new_dt);
+
+  // the dt dependent constant contributions of the structural time integrators are recomputed in
+  // their set_state()
+  structure_field()->set_dt(new_dt);
+  structure_field()->set_timen(structure_field()->time_old() + new_dt);
+
+  thermo_field()->set_dt(new_dt);
+  thermo_field()->set_timen(thermo_field()->time_old() + new_dt);
+
+  num_steps_at_current_dt_ = 0;
+
+  if (Core::Communication::my_mpi_rank(get_comm()) == 0)
+    std::cout << "Old time-step size: " << old_dt << "\n"
+              << "New time-step size: " << new_dt << "\n"
+              << std::string(72, '*') << "\n";
+}
 
 
 /*----------------------------------------------------------------------*
@@ -290,24 +416,36 @@ void TSI::Monolithic::create_linear_solver()
 /*----------------------------------------------------------------------*
  | non-linear solve, i.e. (multiple) corrector (public)      dano 11/10 |
  *----------------------------------------------------------------------*/
-void TSI::Monolithic::solve()
+TSI::StepStatus TSI::Monolithic::solve()
 {
-  // choose solution technique according to input file
-  switch (soltech_)
+  const auto nonlinear_solve = [&]
   {
-    // Newton-Raphson iteration
-    case TSI::NlnSolTech::fullnewton:
-      newton_full();
-      break;
-    // Pseudo-transient continuation
-    case TSI::NlnSolTech::ptc:
-      ptc();
-      break;
-    // catch problems
-    default:
-      FOUR_C_THROW("Solution technique \"{}\" is not implemented", soltech_);
-      break;
-  }  // end switch (soltechnique_)
+    // choose solution technique according to input file
+    switch (soltech_)
+    {
+      // Newton-Raphson iteration
+      case TSI::NlnSolTech::fullnewton:
+        newton_full();
+        break;
+      // Pseudo-transient continuation
+      case TSI::NlnSolTech::ptc:
+        ptc();
+        break;
+      // catch problems
+      default:
+        FOUR_C_THROW("Solution technique \"{}\" is not implemented", soltech_);
+        break;
+    }  // end switch (soltechnique_)
+  };
+
+  const bool request_detected = Core::Mat::StepReduction::run_and_detect_synchronized_request(
+      allow_material_time_step_reduction_, nonlinear_solve);
+  if (request_detected) return TSI::StepStatus::time_step_reduction_requested;
+
+  // test whether max iterations was hit
+  if (iter_ >= itermax_ and not converged()) return TSI::StepStatus::nonlinear_solver_failed;
+
+  return TSI::StepStatus::no_errors;
 }  // Solve()
 
 
@@ -527,16 +665,6 @@ void TSI::Monolithic::newton_full()
 
   // correct iteration counter
   iter_ -= 1;
-
-  // test whether max iterations was hit
-  if (iter_ >= itermax_ and not converged())
-  {
-    if (Teuchos::getIntegralValue<Solid::DivContAct>(sdyn_, "DIVERCONT") ==
-        Solid::DivContAct::ignore)
-      ;  // do nothing
-    else
-      FOUR_C_THROW("Newton unconverged in {} iterations", iter_);
-  }
 }  // NewtonFull()
 
 
@@ -762,12 +890,6 @@ void TSI::Monolithic::ptc()
 
   // correct iteration counter
   iter_ -= 1;
-
-  // test whether max iterations was hit
-  if (iter_ >= itermax_ and not converged())
-  {
-    FOUR_C_THROW("PTC unconverged in {} iterations", iter_);
-  }
 }  // PTC()
 
 

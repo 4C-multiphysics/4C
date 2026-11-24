@@ -18,6 +18,7 @@ set(_dependencies
     mortar
     structure_new
     thermo
+    timestepping
     )
 
 four_c_add_internal_dependency(${AUTO_DEFINED_MODULE_NAME} ${_dependencies})
