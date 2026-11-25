@@ -1845,6 +1845,11 @@ namespace Mat
         const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
             local_integration_input);
 
+    [[nodiscard]] bool use_reformulated_residual() const
+    {
+      return parameter()->local_newton_params().use_reformulated_residual;
+    }
+
     /*!
      * @brief History variables computed by the constitutive update procedure.
      */

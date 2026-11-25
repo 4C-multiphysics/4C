@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <format>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -517,6 +518,9 @@ namespace Mat
       //! plastic velocity gradient tensor
       Core::LinAlg::Matrix<3, 3> curr_lpM{Core::LinAlg::Initialization::zero};
 
+      //! direction of the plastic velocity gradient tensor. Always has zero trace.
+      Core::LinAlg::Matrix<3, 3> curr_lp_directionM{Core::LinAlg::Initialization::zero};
+
       //! plastic update tensor
       Core::LinAlg::Matrix<3, 3> curr_EpM{Core::LinAlg::Initialization::zero};
 
@@ -607,6 +611,18 @@ namespace Mat
       //! derivative of the plastic velocity gradient tensor w.r.t. the temperature
       //! (Voigt notation)
       Core::LinAlg::Matrix<9, 1> curr_dlpdT{Core::LinAlg::Initialization::zero};
+
+      //! derivative of the direction of the plastic velocity gradient tensor w.r.t. the inverse
+      //! inelastic deformation gradient (Voigt notation)
+      Core::LinAlg::Matrix<9, 9> curr_dlp_direction_diFin{Core::LinAlg::Initialization::zero};
+      //! derivative of the direction of the plastic velocity gradient tensor w.r.t. the right
+      //! Cauchy-Green deformation tensor (Voigt stress form)
+      Core::LinAlg::Matrix<9, 6> curr_dlp_direction_dC{Core::LinAlg::Initialization::zero};
+
+      //! derivative of the inverse flow rule residual w.r.t. the equivalent stress
+      double curr_dinverse_flow_rule_residual_dequiv_stress{0.0};
+      //! derivative of the inverse flow rule residual w.r.t. the equivalent plastic strain
+      double curr_dinverse_flow_rule_residual_depsp{0.0};
 
       //! derivative of the plastic update tensor w.r.t. the inverse inelastic deformation
       //! gradient (Voigt notation)
@@ -883,6 +899,10 @@ namespace Mat
       //! employing the divergence management strategy for continuation with
       //! safeguard)
       double max_exceedance_fact_incr_tol;
+
+      bool use_reformulated_residual{false};
+
+      std::optional<double> scaling_youngs_modulus{};
     };
 
     //! class for managing the Local Newton loop, containing the utilized parameters and iteration
