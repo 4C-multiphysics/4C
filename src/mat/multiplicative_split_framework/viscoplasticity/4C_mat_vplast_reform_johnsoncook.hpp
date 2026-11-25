@@ -139,6 +139,19 @@ namespace Mat
           double dt, Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
           const override;
 
+      [[nodiscard]] double evaluate_inverse_flow_rule_residual(double equiv_stress,
+          double equiv_plastic_strain, double plastic_strain_increment, double dt,
+          double youngs_modulus,
+          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
+          const override;
+
+      [[nodiscard]] InverseFlowRuleResidualDerivs
+      evaluate_derivatives_of_inverse_flow_rule_residual(double equiv_stress,
+          double equiv_plastic_strain, double plastic_strain_increment, double dt,
+          double youngs_modulus,
+          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
+          const override;
+
       void pre_evaluate(const Teuchos::ParameterList& params) override;
 
      private:
