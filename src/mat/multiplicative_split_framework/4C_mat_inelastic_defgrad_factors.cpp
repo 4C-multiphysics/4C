@@ -3586,6 +3586,8 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_local_newton_residua
   // evaluate state variables
   state_quantities_ = evaluate_state_quantities(local_integration_input, iFinM, plastic_strain,
       err_status, ViscoplastUtils::StateQuantityEvalType::full_eval);
+  if (err_status != ViscoplastUtils::ErrorType::no_errors)
+    return Core::LinAlg::Matrix<10, 1>{Core::LinAlg::Initialization::zero};
 
   // declare residuals of the LNL
   Core::LinAlg::Matrix<3, 3> resFM(Core::LinAlg::Initialization::zero);
@@ -3637,8 +3639,6 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_local_newton_residua
 
     if (use_reformulated_residual())
     {
-      if (err_status != ViscoplastUtils::ErrorType::no_errors)
-        return Core::LinAlg::Matrix<10, 1>{Core::LinAlg::Initialization::zero};
       const double plastic_strain_increment = plastic_strain - last_plastic_strain;
 
       // calculate residual of the equation for inelastic defgrad
