@@ -5709,12 +5709,10 @@ void CONTACT::LagrangeStrategy::condense_friction(
   // add terms of linearization of slip condition to kteffnew and feffnew
   if (slipset) Core::LinAlg::matrix_add(*linslipDIS_, false, -1.0, kteffnew, +1.0);
 
-  // add diagonal entries to sparsity pattern for dbc
-  for (int i = 0; i < kteffnew.row_map().num_my_elements(); ++i)
-  {
-    int gid = kteffnew.row_map().gid(i);
-    kteffnew.assemble(0., gid, gid);
-  }
+  // the condensation leaves rows of slave Dirichlet DOFs empty, reserve their diagonal entries
+  if (Core::LinAlg::insert_my_row_diagonal_into_unfilled_matrix(
+          kteffnew, Core::LinAlg::Vector<double>(*problem_dofs(), true)))
+    FOUR_C_THROW("Could not reserve diagonal entries, kteffnew is already filled.");
 
   // fill_complete kteffnew (square)
   kteffnew.complete();
@@ -6363,6 +6361,11 @@ void CONTACT::LagrangeStrategy::condense_frictionless(
   if (aset && iset) Core::LinAlg::matrix_add(*kaimod, false, 1.0, kteffnew, 1.0);
   if (aset) Core::LinAlg::matrix_add(*kaamod, false, 1.0, kteffnew, 1.0);
   if (aset) Core::LinAlg::matrix_add(*tderivmatrix_, false, -1.0, kteffnew, 1.0);
+
+  // the condensation leaves rows of slave Dirichlet DOFs empty, reserve their diagonal entries
+  if (Core::LinAlg::insert_my_row_diagonal_into_unfilled_matrix(
+          kteffnew, Core::LinAlg::Vector<double>(*problem_dofs(), true)))
+    FOUR_C_THROW("Could not reserve diagonal entries, kteffnew is already filled.");
 
   // fill_complete kteffnew (square)
   kteffnew.complete();
