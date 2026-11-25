@@ -390,6 +390,11 @@ namespace Mat
       Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& dCedC,
       Core::LinAlg::Tensor<double, 3, 3, 3, 3>& dCediFin);
 
+  void elast_hyper_get_deriv_of_elastic_right_cg_tensor_wrt_inverse_inelastic_defgrad(
+      const Core::LinAlg::Tensor<double, 3, 3>& iFinM,
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& CM,
+      Core::LinAlg::Tensor<double, 3, 3, 3, 3>& dCediFin);
+
   /**
    * \brief Class for holding the summand formulation properties
    */

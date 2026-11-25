@@ -577,14 +577,26 @@ void Mat::elast_hyper_get_derivs_of_elastic_right_cg_tensor(
     Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& dCedC,
     Core::LinAlg::Tensor<double, 3, 3, 3, 3>& dCediFin)
 {
-  // F_in^{-T} and the 2nd order identity tensor
+  // F_in^{-T}
   const Core::LinAlg::Tensor<double, 3, 3> iFinT = Core::LinAlg::transpose(iFinM);
-  const Core::LinAlg::SymmetricTensor<double, 3, 3> id =
-      Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
 
   // \frac{\partial C^e}{\partial C}
   dCedC = Core::LinAlg::assume_symmetry(0.5 * (Core::LinAlg::einsum<"ik", "jl">(iFinT, iFinT) +
                                                   Core::LinAlg::einsum<"il", "jk">(iFinT, iFinT)));
+
+  elast_hyper_get_deriv_of_elastic_right_cg_tensor_wrt_inverse_inelastic_defgrad(
+      iFinM, CM, dCediFin);
+}
+
+void Mat::elast_hyper_get_deriv_of_elastic_right_cg_tensor_wrt_inverse_inelastic_defgrad(
+    const Core::LinAlg::Tensor<double, 3, 3>& iFinM,
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& CM,
+    Core::LinAlg::Tensor<double, 3, 3, 3, 3>& dCediFin)
+{
+  // F_in^{-T} and the 2nd order identity tensor
+  const Core::LinAlg::Tensor<double, 3, 3> iFinT = Core::LinAlg::transpose(iFinM);
+  const Core::LinAlg::SymmetricTensor<double, 3, 3> id =
+      Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
 
   const Core::LinAlg::Tensor<double, 3, 3> iFinTC = Core::LinAlg::dot(iFinT, CM);
 
