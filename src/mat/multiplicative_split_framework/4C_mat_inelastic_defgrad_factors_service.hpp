@@ -537,6 +537,8 @@ namespace Mat
                                         ///< evaluated
       equiv_stress_derivs_only,  ///< return in evaluate_state_quantities once the derivatives of
                                  ///< the equivalent stress has been evaluated
+      local_newton_jacobian,  ///< only the derivatives required for the local Newton Jacobian (no
+                              ///< derivatives w.r.t. right CG and temperature)
     };
 
 

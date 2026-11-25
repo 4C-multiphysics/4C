@@ -1810,7 +1810,10 @@ namespace Mat
         const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
             local_integration_input,
         const Core::LinAlg::Matrix<10, 1>& x,
-        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivEvalType
+            deriv_eval_type = InelasticDefgradTransvIsotropElastViscoplastUtils::
+                StateQuantityDerivEvalType::full_eval);
 
     /*!
      * @brief Performs the viscoplastic corrector step of the constitutive update.
