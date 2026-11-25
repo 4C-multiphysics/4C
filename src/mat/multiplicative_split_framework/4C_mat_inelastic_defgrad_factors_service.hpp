@@ -512,9 +512,6 @@ namespace Mat
       //! plastic flow direction tensor
       Core::LinAlg::Matrix<3, 3> curr_NpM{Core::LinAlg::Initialization::zero};
 
-      //! plastic stretching tensor
-      Core::LinAlg::Matrix<3, 3> curr_dpM{Core::LinAlg::Initialization::zero};
-
       //! plastic velocity gradient tensor
       Core::LinAlg::Matrix<3, 3> curr_lpM{Core::LinAlg::Initialization::zero};
 

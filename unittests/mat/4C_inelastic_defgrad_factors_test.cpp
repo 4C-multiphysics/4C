@@ -661,21 +661,14 @@ namespace
       iso.curr_NpM(1, 0) = 0.1781269316; iso.curr_NpM(1, 1) = -0.0051891147; iso.curr_NpM(1, 2) = 0.2381674072;
       iso.curr_NpM(2, 0) = 0.3357096136; iso.curr_NpM(2, 1) = 0.2381674072; iso.curr_NpM(2, 2) = 0.7434224338;
 
-      // curr_dpM_
-      transv.curr_dpM(0, 0) =  -949903.69838536996; transv.curr_dpM(0, 1) = 287004.94653194677; transv.curr_dpM(0, 2) = 270454.10492365930;
-      transv.curr_dpM(1, 0) = 287004.94653194677; transv.curr_dpM(1, 1) = 231205.24912650112; transv.curr_dpM(1, 2) = 191872.23222776141;
-      transv.curr_dpM(2, 0) = 270454.10492365930; transv.curr_dpM(2, 1) = 191872.23222776141; transv.curr_dpM(2, 2) = 718698.44925886812;
-
-      iso.curr_dpM(0, 0) = -234.4481121942; iso.curr_dpM(0, 1) = 56.5695448356; iso.curr_dpM(0, 2) = 106.6146475823;
-      iso.curr_dpM(1, 0) = 56.5695448356; iso.curr_dpM(1, 1) = -1.6479588543; iso.curr_dpM(1, 2) = 75.6371970230;
-      iso.curr_dpM(2, 0) = 106.6146475823; iso.curr_dpM(2, 1) = 75.6371970230; iso.curr_dpM(2, 2) = 236.0960710485;
-
       // curr_lpM_
       transv.curr_lpM(0, 0) = -949903.69838536996; transv.curr_lpM(0, 1) = 287004.94653194677; transv.curr_lpM(0, 2) = 0.0000000000;
       transv.curr_lpM(1, 0) = 287004.94653194677; transv.curr_lpM(1, 1) = 231205.24912650112; transv.curr_lpM(1, 2) = 0.0000000000;
       transv.curr_lpM(2, 0) = 540908.20984731859; transv.curr_lpM(2, 1) = 383744.46445552283; transv.curr_lpM(2, 2) = 718698.44925886812;
 
-      iso.curr_lpM = iso.curr_dpM;
+      iso.curr_lpM(0, 0) = -234.4481121942; iso.curr_lpM(0, 1) = 56.5695448356; iso.curr_lpM(0, 2) = 106.6146475823;
+      iso.curr_lpM(1, 0) = 56.5695448356; iso.curr_lpM(1, 1) = -1.6479588543; iso.curr_lpM(1, 2) = 75.6371970230;
+      iso.curr_lpM(2, 0) = 106.6146475823; iso.curr_lpM(2, 1) = 75.6371970230; iso.curr_lpM(2, 2) = 236.0960710485;
     }
 
     void set_up_state_quantity_derivatives_solution(){
@@ -1828,10 +1821,6 @@ namespace
         computed_state_quantities_transv_isotrop.curr_NpM, 1.0e-10);
     FOUR_C_EXPECT_NEAR(state_quantities_solution_isotrop_.curr_NpM,
         computed_state_quantities_isotrop.curr_NpM, 1.0e-10);
-    FOUR_C_EXPECT_NEAR(state_quantities_solution_transv_isotrop_.curr_dpM,
-        computed_state_quantities_transv_isotrop.curr_dpM, 1.0e-10);
-    FOUR_C_EXPECT_NEAR(state_quantities_solution_isotrop_.curr_dpM,
-        computed_state_quantities_isotrop.curr_dpM, 1.0e-10);
     FOUR_C_EXPECT_NEAR(state_quantities_solution_transv_isotrop_.curr_lpM,
         computed_state_quantities_transv_isotrop.curr_lpM, 1.0e-10);
     FOUR_C_EXPECT_NEAR(state_quantities_solution_isotrop_.curr_lpM,

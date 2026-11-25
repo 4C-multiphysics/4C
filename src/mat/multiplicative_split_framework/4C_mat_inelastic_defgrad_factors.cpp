@@ -2091,7 +2091,6 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
     Mtheta_dev_sym_A_dyad_A.multiply_nt(1.0, Mtheta_dev_sym_m, m_, 0.0);
 
     state_quantities.curr_NpM.clear();
-    state_quantities.curr_dpM.clear();
     if (state_quantities.curr_equiv_stress > 0.0)
     {
       // build the plastic flow direction from its tensor parts
@@ -2110,17 +2109,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
       state_quantities.curr_NpM.update(1.0 / (2.0 * state_quantities.curr_equiv_stress) *
                                            (5.0 * A + B - 2.0 * F) * 2.0 * mTMtheta_dev_sym_m,
           const_mat_tensors_.mm_dev, 1.0);
-
-      // calculate plastic stretching tensor (deformation rate tensor)
-      state_quantities.curr_dpM.update(
-          state_quantities.curr_equiv_plastic_strain_rate, state_quantities.curr_NpM, 0.0);
     }
-
-    // calculate plastic velocity gradient tensor
-    state_quantities.curr_lpM.multiply_nn(
-        1.0, const_mat_tensors_.id_plus_mm, state_quantities.curr_dpM, 0.0);
-    state_quantities.curr_lpM.multiply_nn(
-        -1.0, state_quantities.curr_dpM, const_mat_tensors_.mm, 1.0);
 
     // calculate plastic velocity gradient direction tensor
     state_quantities.curr_lp_directionM.multiply_nn(
@@ -2131,20 +2120,12 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
   else if (parameter()->mat_behavior() == ViscoplastUtils::MatBehavior::isotropic)
   {
     state_quantities.curr_NpM.clear();
-    state_quantities.curr_dpM.clear();
     if (state_quantities.curr_equiv_stress > 0.0)
     {
       // build the plastic flow direction from its tensor parts
       state_quantities.curr_NpM.update(3.0 / (2.0 * state_quantities.curr_equiv_stress),
           state_quantities.curr_Mtheta_dev_sym_M, 0.0);
-
-      // calculate plastic stretching tensor (deformation rate tensor)
-      state_quantities.curr_dpM.update(
-          state_quantities.curr_equiv_plastic_strain_rate, state_quantities.curr_NpM, 0.0);
     }
-
-    // calculate plastic velocity gradient tensor
-    state_quantities.curr_lpM.update(1.0, state_quantities.curr_dpM, 0.0);
 
     // calculate plastic velocity gradient direction tensor
     state_quantities.curr_lp_directionM.update(1.0, state_quantities.curr_NpM, 0.0);
@@ -2154,6 +2135,10 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
     FOUR_C_THROW("Inconsistent material behavior {} for evaluating plastic flow direction",
         EnumTools::enum_name(parameter()->mat_behavior()));
   }
+
+  // calculate plastic velocity gradient tensor
+  state_quantities.curr_lpM.update(
+      state_quantities.curr_equiv_plastic_strain_rate, state_quantities.curr_lp_directionM, 0.0);
 
   // calculate plastic update tensor (only required, and computed, for standard substepping)
   if (parameter()->timint_type() == ViscoplastUtils::TimIntType::standard)
@@ -2237,7 +2222,6 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
   const double equiv_stress = relevant_state_quantities.curr_equiv_stress;
   const double equiv_plastic_strain_rate = relevant_state_quantities.curr_equiv_plastic_strain_rate;
   const Core::LinAlg::Matrix<3, 3> NpM = relevant_state_quantities.curr_NpM;
-  const Core::LinAlg::Matrix<3, 3> dpM = relevant_state_quantities.curr_dpM;
   const Core::LinAlg::Matrix<3, 3> lpM = relevant_state_quantities.curr_lpM;
   const Core::LinAlg::Matrix<3, 3> EpM = relevant_state_quantities.curr_EpM;
   const TensorAndTemperatureDerivative ST = relevant_state_quantities.curr_ST;
