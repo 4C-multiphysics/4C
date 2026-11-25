@@ -319,11 +319,10 @@ double Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_inverse_flow_rule_re
       err_status == ViscoplastErrorType::no_errors, "Computation of the flow resistance failed");
 
   const double p_dt = const_pars_.p * dt;
-  const double inv_e = 1.0 / const_pars_.e;
   const double scaling = const_pars_.sigma_Y0 / youngs_modulus;
 
   return scaling * (equiv_stress / yield_strength - 1.0 -
-                       inv_e * std::log1p(plastic_strain_increment / p_dt));
+                       const_pars_.inv_e * std::log1p(plastic_strain_increment / p_dt));
 }
 
 Mat::Viscoplastic::InverseFlowRuleResidualDerivs
@@ -346,7 +345,6 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_inverse_flow
       err_status == ViscoplastErrorType::no_errors, "Computation of the flow resistance failed");
 
   const double p_dt = const_pars_.p * dt;
-  const double inv_e = 1.0 / const_pars_.e;
   const double scaling = const_pars_.sigma_Y0 / youngs_modulus;
   const double dyield_strength_dplastic_strain =
       const_pars_.is_perfect_plasticity
@@ -358,7 +356,7 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_inverse_flow
       .deriv_equiv_stress = scaling / yield_strength,
       .deriv_plastic_strain = scaling * (-equiv_stress * dyield_strength_dplastic_strain /
                                                 (yield_strength * yield_strength) -
-                                            inv_e / (p_dt + plastic_strain_increment)),
+                                            const_pars_.inv_e / (p_dt + plastic_strain_increment)),
   };
 }
 

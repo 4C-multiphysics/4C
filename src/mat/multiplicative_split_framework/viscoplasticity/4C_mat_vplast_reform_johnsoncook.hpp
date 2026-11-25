@@ -170,6 +170,9 @@ namespace Mat
         /// exponent \f$ E \f$ of the plastic strain rate
         double e;
 
+        /// \f$ 1 / E \f$
+        double inv_e;
+
         /// \f$ \log(P*E) \f$
         double log_p_e;
 
@@ -192,6 +195,7 @@ namespace Mat
               p(prefac),
               log_p(std::log(p)),
               e(expon),
+              inv_e(1.0 / expon),
               log_p_e(std::log(prefac * expon)),
               B(harden_prefac),
               N(harden_expon),
