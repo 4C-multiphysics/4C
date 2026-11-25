@@ -584,18 +584,6 @@ namespace Mat
       //! derivative of the plastic strain rate w.r.t. the temperature
       double curr_dpsr_dT{0.0};
 
-      //! derivative of the plastic stretching tensor w.r.t. the inverse inelastic deformation
-      //! gradient (Voigt stress form)
-      Core::LinAlg::Matrix<6, 9> curr_ddpdiFin{Core::LinAlg::Initialization::zero};
-      //! derivative of the plastic stretching tensor w.r.t. the equivalent plastic strain (Voigt
-      //! stress form)
-      Core::LinAlg::Matrix<6, 1> curr_ddpdepsp{Core::LinAlg::Initialization::zero};
-      //! derivative of the plastic stretching tensor w.r.t. the right Cauchy-Green deformation
-      //! tensor (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> curr_ddpdC{Core::LinAlg::Initialization::zero};
-      //! derivative of the plastic stretching tensor w.r.t. the temperature (Voigt stress form)
-      Core::LinAlg::Matrix<6, 1> curr_ddpdT{Core::LinAlg::Initialization::zero};
-
       //! derivative of the plastic velocity gradient tensor w.r.t. the inverse inelastic
       //! deformation gradient (Voigt notation)
       Core::LinAlg::Matrix<9, 9> curr_dlpdiFin{Core::LinAlg::Initialization::zero};
