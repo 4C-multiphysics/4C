@@ -17,6 +17,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_io.hpp"
+#include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
@@ -1042,6 +1043,26 @@ void CONTACT::LagrangeStrategyTsi::set_alphaf_thermo(const Teuchos::ParameterLis
   return;
 }
 
+
+void CONTACT::LagrangeStrategyTsi::append_runtime_output(
+    Core::IO::DiscretizationVisualizationWriterMesh& writer) const
+{
+  LagrangeStrategy::append_runtime_output(writer);
+
+  // the thermal Lagrange multiplier lives on the thermo dofs, the coupling maps each of them to the
+  // first displacement dof of the corresponding structural node
+  Core::LinAlg::Vector<double> thermo_lm(*structure_thermo_coupling_->source_dof_map(), true);
+  if (z_thermo_ != nullptr) Core::LinAlg::export_to(*z_thermo_, thermo_lm);
+
+  Core::LinAlg::Vector<double> thermo_lm_exported(*problem_dofs(), true);
+  Core::LinAlg::export_to(
+      *structure_thermo_coupling_->source_to_target(thermo_lm), thermo_lm_exported);
+
+  std::vector<std::optional<std::string>> context(n_dim(), std::nullopt);
+  context[0] = "thermo_lagrange_multiplier";
+  writer.append_result_data_vector_with_context(
+      thermo_lm_exported, Core::IO::OutputEntity::dof, context);
+}
 
 /*----------------------------------------------------------------------*
  |  write restart information for contact                     popp 03/08|

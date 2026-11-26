@@ -20,6 +20,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
+#include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_mortar_multifield_coupling.hpp"
 #include "4C_thermo_adapter.hpp"
 #include "4C_tsi_input.hpp"
@@ -161,6 +162,10 @@ void TSI::Algorithm::output(bool forced_writerestart)
 {
   thermo_field()->output(forced_writerestart);
   structure_field()->output(forced_writerestart);
+
+  // the Lagrange contact strategy is not part of the structure field, so its runtime output is
+  // written here
+  write_contact_runtime_output();
 }
 
 void TSI::Algorithm::time_loop()
@@ -343,7 +348,30 @@ void TSI::Algorithm::prepare_contact_strategy()
       contact_strategy_lagrange_->set_alphaf_thermo(problem_->thermal_dynamic_params());
       contact_strategy_lagrange_->set_coupling(structure_thermo_coupling_);
     }
+
+    const Teuchos::ParameterList& runtime_output_params =
+        problem_->io_params().sublist("RUNTIME VTK OUTPUT");
+    if (runtime_output_params.get<int>("INTERVAL_STEPS") != -1 and
+        runtime_output_params.sublist("STRUCTURE").get<bool>("OUTPUT_CONTACT"))
+    {
+      contact_vtu_writer_ = std::make_shared<Core::IO::DiscretizationVisualizationWriterMesh>(
+          structure_field()->discretization(),
+          Core::IO::visualization_parameters_factory(runtime_output_params,
+              *problem_->output_control_file(), structure_field()->time_old()),
+          [](const Core::Elements::Element*) { return true; }, "tsi-contact");
+    }
   }
+}
+
+void TSI::Algorithm::write_contact_runtime_output()
+{
+  const int results_every = problem_->tsi_dynamic_params().get<int>("RESULTSEVERY");
+  if (contact_vtu_writer_ == nullptr or results_every <= 0 or step() % results_every != 0) return;
+
+  contact_vtu_writer_->reset();
+  contact_strategy_lagrange_->compute_contact_tractions();
+  contact_strategy_lagrange_->append_runtime_output(*contact_vtu_writer_);
+  contact_vtu_writer_->write_to_disk(time(), step());
 }
 
 void TSI::Algorithm::post_setup()
