@@ -33,6 +33,11 @@ namespace Core::FE
   class Discretization;
 }  // namespace Core::FE
 
+namespace Core::IO
+{
+  class DiscretizationVisualizationWriterMesh;
+}  // namespace Core::IO
+
 namespace Core::LinAlg
 {
   class MultiMapExtractor;
@@ -889,6 +894,15 @@ namespace CONTACT
 
     //! Print summary of active set status to screen
     void print_active_set() const override;
+
+    /*!
+    \brief Append contact quantities to a runtime visualization writer
+
+    The writer has to be set up on the problem discretization. The contact tractions are expected
+    to be computed already (see compute_contact_tractions()).
+    */
+    virtual void append_runtime_output(
+        Core::IO::DiscretizationVisualizationWriterMesh& writer) const;
 
     /*!
     \brief Write results for visualization separately for each meshtying/contact interface

@@ -19,6 +19,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
+#include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
@@ -2156,6 +2157,92 @@ void CONTACT::AbstractStrategy::print(std::ostream& os) const
     std::cout << *(interface);
   }
   Core::Communication::barrier(get_comm());
+}
+
+void CONTACT::AbstractStrategy::append_runtime_output(
+    Core::IO::DiscretizationVisualizationWriterMesh& writer) const
+{
+  // evaluate active set and slip set
+  // TODO as soon as true int vectors are supported this should be changed to an int vector
+  Core::LinAlg::Vector<double> activeset(*active_row_nodes(), true);
+  activeset.put_scalar(1.0);
+  if (is_friction())
+  {
+    Core::LinAlg::Vector<double> slipset(*slip_row_nodes(), true);
+    slipset.put_scalar(1.0);
+    Core::LinAlg::Vector<double> slipsetexp(*active_row_nodes(), true);
+    Core::LinAlg::export_to(slipset, slipsetexp);
+    activeset.update(1.0, slipsetexp, 1.0);
+  }
+
+  // export to problem node row map
+  auto problemnodes = problem_nodes();
+  auto activesetexp = Core::LinAlg::Vector<double>(*problemnodes, true);
+  Core::LinAlg::export_to(activeset, activesetexp);
+
+  if (wear_both_discrete())
+  {
+    Core::LinAlg::Vector<double> mactiveset(*target_active_nodes(), true);
+    mactiveset.put_scalar(1.0);
+    Core::LinAlg::Vector<double> slipset(*target_slip_nodes(), true);
+    slipset.put_scalar(1.0);
+    Core::LinAlg::Vector<double> slipsetexp(*target_active_nodes(), true);
+    Core::LinAlg::export_to(slipset, slipsetexp);
+    mactiveset.update(1.0, slipsetexp, 1.0);
+
+    Core::LinAlg::Vector<double> mactivesetexp(*problemnodes, true);
+    Core::LinAlg::export_to(mactiveset, mactivesetexp);
+    activesetexp.update(1.0, mactivesetexp, 1.0);
+  }
+
+  writer.append_result_data_vector_with_context(
+      activesetexp, Core::IO::OutputEntity::node, {"activeset"});
+
+  // contact tractions
+  // export to problem dof row map
+  auto problemdofs = problem_dofs();
+
+  // normal direction
+  auto normal_traction = contact_normal_traction();
+  auto normal_traction_exported = Core::LinAlg::Vector<double>(*problemdofs, true);
+  Core::LinAlg::export_to(*normal_traction, normal_traction_exported);
+
+  // tangential plane
+  auto tangential_traction = contact_tangential_traction();
+  auto tangential_traction_exported = Core::LinAlg::Vector<double>(*problemdofs, true);
+  Core::LinAlg::export_to(*tangential_traction, tangential_traction_exported);
+
+  // write to output
+  // contact tractions in normal and tangential direction
+  {
+    std::vector<std::optional<std::string>> context(n_dim(), "normal_contact_traction");
+    writer.append_result_data_vector_with_context(
+        normal_traction_exported, Core::IO::OutputEntity::dof, context);
+  }
+  {
+    std::vector<std::optional<std::string>> context(n_dim(), "tangential_contact_traction");
+    writer.append_result_data_vector_with_context(
+        tangential_traction_exported, Core::IO::OutputEntity::dof, context);
+  }
+
+  if (auto gaps = contact_wgap(); gaps != nullptr)
+  {
+    auto gapsexp = Core::LinAlg::Vector<double>(*problemnodes, true);
+    Core::LinAlg::export_to(*gaps, gapsexp);
+    writer.append_result_data_vector_with_context(gapsexp, Core::IO::OutputEntity::node, {"gap"});
+  }
+
+  // wear with internal state variable approach
+  if (weighted_wear())
+  {
+    auto wearoutput = contact_wear();
+    auto wearoutputexp = Core::LinAlg::Vector<double>(*problemdofs, true);
+    Core::LinAlg::export_to(*wearoutput, wearoutputexp);
+
+    std::vector<std::optional<std::string>> context(n_dim(), "wear");
+    writer.append_result_data_vector_with_context(
+        wearoutputexp, Core::IO::OutputEntity::dof, context);
+  }
 }
 
 /*----------------------------------------------------------------------*

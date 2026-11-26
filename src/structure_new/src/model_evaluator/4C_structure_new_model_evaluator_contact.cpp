@@ -7,7 +7,7 @@
 
 #include "4C_structure_new_model_evaluator_contact.hpp"
 
-#include "4C_contact_lagrange_strategy_poro.hpp"
+#include "4C_contact_abstract_strategy.hpp"
 #include "4C_contact_strategy_factory.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
@@ -455,109 +455,7 @@ void Solid::ModelEvaluator::Contact::runtime_output_step_state() const
   // print summary of active set to screen
   strategy().print_active_set();
 
-  // evaluate active set and slip set
-  // TODO as soon as true int vectors are supported this should be changed to an int vector
-  Core::LinAlg::Vector<double> activeset(*strategy().active_row_nodes(), true);
-  activeset.put_scalar(1.0);
-  if (strategy().is_friction())
-  {
-    Core::LinAlg::Vector<double> slipset(*strategy().slip_row_nodes(), true);
-    slipset.put_scalar(1.0);
-    Core::LinAlg::Vector<double> slipsetexp(*strategy().active_row_nodes(), true);
-    Core::LinAlg::export_to(slipset, slipsetexp);
-    activeset.update(1.0, slipsetexp, 1.0);
-  }
-
-  // export to problem node row map
-  auto problemnodes = strategy().problem_nodes();
-  auto activesetexp = Core::LinAlg::Vector<double>(*problemnodes, true);
-  Core::LinAlg::export_to(activeset, activesetexp);
-
-  if (strategy().wear_both_discrete())
-  {
-    Core::LinAlg::Vector<double> mactiveset(*strategy().target_active_nodes(), true);
-    mactiveset.put_scalar(1.0);
-    Core::LinAlg::Vector<double> slipset(*strategy().target_slip_nodes(), true);
-    slipset.put_scalar(1.0);
-    Core::LinAlg::Vector<double> slipsetexp(*strategy().target_active_nodes(), true);
-    Core::LinAlg::export_to(slipset, slipsetexp);
-    mactiveset.update(1.0, slipsetexp, 1.0);
-
-    Core::LinAlg::Vector<double> mactivesetexp(*problemnodes, true);
-    Core::LinAlg::export_to(mactiveset, mactivesetexp);
-    activesetexp.update(1.0, mactivesetexp, 1.0);
-  }
-
-  contact_vtu_writer_ptr_->append_result_data_vector_with_context(
-      activesetexp, Core::IO::OutputEntity::node, {"activeset"});
-
-  // contact tractions
-  // export to problem dof row map
-  auto problemdofs = strategy().problem_dofs();
-
-  // normal direction
-  auto normal_traction = strategy().contact_normal_traction();
-  auto normal_traction_exported = Core::LinAlg::Vector<double>(*problemdofs, true);
-  Core::LinAlg::export_to(*normal_traction, normal_traction_exported);
-
-  // tangential plane
-  auto tangential_traction = strategy().contact_tangential_traction();
-  auto tangential_traction_exported = Core::LinAlg::Vector<double>(*problemdofs, true);
-  Core::LinAlg::export_to(*tangential_traction, tangential_traction_exported);
-
-  // write to output
-  // contact tractions in normal and tangential direction
-  {
-    std::vector<std::optional<std::string>> context(
-        global_state().get_dim(), "normal_contact_traction");
-    contact_vtu_writer_ptr_->append_result_data_vector_with_context(
-        normal_traction_exported, Core::IO::OutputEntity::dof, context);
-  }
-  {
-    std::vector<std::optional<std::string>> context(
-        global_state().get_dim(), "tangential_contact_traction");
-    contact_vtu_writer_ptr_->append_result_data_vector_with_context(
-        tangential_traction_exported, Core::IO::OutputEntity::dof, context);
-  }
-
-  if (auto gaps = strategy().contact_wgap(); gaps != nullptr)
-  {
-    auto gapnodes = strategy().problem_nodes();
-    auto gapsexp = Core::LinAlg::Vector<double>(*problemnodes, true);
-    Core::LinAlg::export_to(*gaps, gapsexp);
-    contact_vtu_writer_ptr_->append_result_data_vector_with_context(
-        gapsexp, Core::IO::OutputEntity::node, {"gap"});
-  }
-
-  // wear with internal state variable approach
-  if (strategy().weighted_wear())
-  {
-    // write output
-    auto wearoutput = strategy().contact_wear();
-    auto wearoutputexp = Core::LinAlg::Vector<double>(*problemdofs, true);
-    Core::LinAlg::export_to(*wearoutput, wearoutputexp);
-
-    {
-      std::vector<std::optional<std::string>> context(global_state().get_dim(), "wear");
-      contact_vtu_writer_ptr_->append_result_data_vector_with_context(
-          wearoutputexp, Core::IO::OutputEntity::dof, context);
-    }
-  }
-
-  // poro contact
-  if (strategy().has_poro_no_penetration())
-  {
-    // output of poro no penetration lagrange multiplier!
-    auto lambdaout = dynamic_cast<const CONTACT::LagrangeStrategyPoro&>(strategy()).lambda_no_pen();
-    auto lambdaoutexp = Core::LinAlg::Vector<double>(*problemdofs, true);
-    Core::LinAlg::export_to(*lambdaout, lambdaoutexp);
-
-    {
-      std::vector<std::optional<std::string>> context(global_state().get_dim(), "poronopen_lambda");
-      contact_vtu_writer_ptr_->append_result_data_vector_with_context(
-          lambdaoutexp, Core::IO::OutputEntity::dof, context);
-    }
-  }
+  strategy().append_runtime_output(*contact_vtu_writer_ptr_);
 
   contact_vtu_writer_ptr_->write_to_disk(global_state().get_time_n(), global_state().get_step_n());
 }
