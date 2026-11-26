@@ -1326,8 +1326,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
 
       std::vector<int> global_indices;
       global_indices.reserve(indices.size());
-      for (const int column : indices)
-        global_indices.push_back(node_graph.col_map().gid(column));
+      for (const int column : indices) global_indices.push_back(node_graph.col_map().gid(column));
 
       std::vector<double> values(indices.size(), 1.0);
       edge_weights->insert_global_values(
