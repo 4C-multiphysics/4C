@@ -1324,8 +1324,14 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       std::span<int> indices;
       node_graph.extract_local_row_view(i, indices);
 
+      std::vector<int> global_indices;
+      global_indices.reserve(indices.size());
+      for (const int column : indices)
+        global_indices.push_back(node_graph.col_map().gid(column));
+
       std::vector<double> values(indices.size(), 1.0);
-      edge_weights->insert_global_values(grow, indices.size(), values.data(), indices.data());
+      edge_weights->insert_global_values(
+          grow, global_indices.size(), values.data(), global_indices.data());
     }
 
     // loop all target nodes on this proc
