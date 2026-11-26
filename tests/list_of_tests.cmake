@@ -351,6 +351,7 @@ four_c_test(TEST_FILE contact3D_sp_std_simple.4C.yaml NP 3 REQUIRED_DEPENDENCIES
 four_c_test(TEST_FILE contact3D_sp_std_uzawa_new_struct_nbinterfaceagg.4C.yaml NP 3 REQUIRED_DEPENDENCIES ArborX Trilinos>=2025.5)
 four_c_test(TEST_FILE contact3D_sp_std_uzawa.4C.yaml NP 3 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE contact3D_symmetry_LM_cond.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
+four_c_test(TEST_FILE contact3D_symmetry_LM_cond_frictionless.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE contact3D_symmetry_LM_sp.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX)
 four_c_test(TEST_FILE contact3D_symmetry_penalty_new_struct.4C.yaml REQUIRED_DEPENDENCIES ArborX EXCLUDE_PLATFORM Darwin)
 four_c_test(TEST_FILE contact3D_symmetry_penalty.4C.yaml REQUIRED_DEPENDENCIES ArborX EXCLUDE_PLATFORM Darwin)
