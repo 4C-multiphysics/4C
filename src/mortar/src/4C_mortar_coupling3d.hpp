@@ -282,18 +282,32 @@ namespace Mortar
       return true;
     }
 
-    //@}
-   private:
     /*!
-     \brief Build auxiliary plane from slave element (3D)
+      \brief Build auxiliary plane from slave element (3D)
 
-     This method builds an auxiliary plane based on the possibly
-     warped slave element of this coupling class. This plane is
-     defined by the slave normal at the slave element center.
+      This method builds an auxiliary plane based on the possibly
+      warped slave element of this coupling class. This plane is
+      defined by the slave normal at the slave element center.
 
-     */
+      */
     virtual bool auxiliary_plane();
 
+    /**
+     * @brief Orthogonally projects all nodes of an element onto the auxiliary plane.
+     *
+     * The auxiliary plane is defined by the center and unit normal stored in this coupling object.
+     * For every element node, a projected mortar vertex with the given vertex type and the original
+     * node ID is appended to @p projected_vertices.
+     *
+     * @param element Element whose nodes are projected.
+     * @param projected_vertices Container to which the projected vertices are appended.
+     * @param vertex_type Type assigned to the generated vertices.
+     */
+    void project_element_onto_auxiliary_plane(Mortar::Element& element,
+        std::vector<Vertex>& projected_vertices, const Vertex::VType vertex_type);
+
+    //@}
+   private:
     /*!
      \brief Triangulation of clip polygon (3D)
 
@@ -376,20 +390,6 @@ namespace Mortar
      */
     virtual bool polygon_clipping_convex_hull(std::vector<Vertex>& poly1list,
         std::vector<Vertex>& poly2list, std::vector<Vertex>& respoly, double& tol);
-
-    /**
-     * @brief Orthogonally projects all nodes of an element onto the auxiliary plane.
-     *
-     * The auxiliary plane is defined by the center and unit normal stored in this coupling object.
-     * For every element node, a projected mortar vertex with the given vertex type and the original
-     * node ID is appended to @p projected_vertices.
-     *
-     * @param element Element whose nodes are projected.
-     * @param projected_vertices Container to which the projected vertices are appended.
-     * @param vertex_type Type assigned to the generated vertices.
-     */
-    void project_element_onto_auxiliary_plane(Mortar::Element& element,
-        std::vector<Vertex>& projected_vertices, const Vertex::VType vertex_type);
 
     /*!
      \brief Checks roughly whether the two elements are near (3D)
