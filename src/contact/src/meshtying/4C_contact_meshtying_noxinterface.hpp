@@ -18,13 +18,13 @@
 FOUR_C_NAMESPACE_OPEN
 
 
-namespace CONTACT
+namespace CONTACT::Meshtying
 {
-  class MtNoxInterface : public NOX::Nln::CONSTRAINT::Interface::Required
+  class NoxInterface : public NOX::Nln::CONSTRAINT::Interface::Required
   {
    public:
     /// constructor
-    MtNoxInterface();
+    NoxInterface();
 
     /// initialize important member variables
     void init(const std::shared_ptr<Solid::TimeInt::BaseDataGlobalState>& gstate_ptr);
@@ -90,7 +90,7 @@ namespace CONTACT
     std::shared_ptr<Solid::TimeInt::BaseDataGlobalState> gstate_ptr_;
   };
 
-}  // namespace CONTACT
+}  // namespace CONTACT::Meshtying
 
 
 FOUR_C_NAMESPACE_CLOSE

@@ -15,14 +15,15 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-CONTACT::MtNoxInterface::MtNoxInterface() : isinit_(false), issetup_(false), gstate_ptr_(nullptr)
+CONTACT::Meshtying::NoxInterface::NoxInterface()
+    : isinit_(false), issetup_(false), gstate_ptr_(nullptr)
 {
   // should stay empty
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void CONTACT::MtNoxInterface::init(
+void CONTACT::Meshtying::NoxInterface::init(
     const std::shared_ptr<Solid::TimeInt::BaseDataGlobalState>& gstate_ptr)
 {
   issetup_ = false;
@@ -35,7 +36,7 @@ void CONTACT::MtNoxInterface::init(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void CONTACT::MtNoxInterface::setup()
+void CONTACT::Meshtying::NoxInterface::setup()
 {
   check_init();
 
@@ -44,9 +45,9 @@ void CONTACT::MtNoxInterface::setup()
 }
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-double CONTACT::MtNoxInterface::get_constraint_rhs_norms(const Core::LinAlg::Vector<double>& F,
-    NOX::Nln::StatusTest::QuantityType checkQuantity, ::NOX::Abstract::Vector::NormType type,
-    bool isScaled) const
+double CONTACT::Meshtying::NoxInterface::get_constraint_rhs_norms(
+    const Core::LinAlg::Vector<double>& F, NOX::Nln::StatusTest::QuantityType checkQuantity,
+    ::NOX::Abstract::Vector::NormType type, bool isScaled) const
 {
   if (checkQuantity != NOX::Nln::StatusTest::quantity_meshtying) return -1.0;
 
@@ -61,7 +62,7 @@ double CONTACT::MtNoxInterface::get_constraint_rhs_norms(const Core::LinAlg::Vec
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-double CONTACT::MtNoxInterface::get_lagrange_multiplier_update_rms(
+double CONTACT::Meshtying::NoxInterface::get_lagrange_multiplier_update_rms(
     const Core::LinAlg::Vector<double>& xNew, const Core::LinAlg::Vector<double>& xOld, double aTol,
     double rTol, NOX::Nln::StatusTest::QuantityType checkQuantity,
     bool disable_implicit_weighting) const
@@ -86,7 +87,7 @@ double CONTACT::MtNoxInterface::get_lagrange_multiplier_update_rms(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-double CONTACT::MtNoxInterface::get_lagrange_multiplier_update_norms(
+double CONTACT::Meshtying::NoxInterface::get_lagrange_multiplier_update_norms(
     const Core::LinAlg::Vector<double>& xNew, const Core::LinAlg::Vector<double>& xOld,
     NOX::Nln::StatusTest::QuantityType checkQuantity, ::NOX::Abstract::Vector::NormType type,
     bool isScaled) const
@@ -106,7 +107,7 @@ double CONTACT::MtNoxInterface::get_lagrange_multiplier_update_norms(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-double CONTACT::MtNoxInterface::get_previous_lagrange_multiplier_norms(
+double CONTACT::Meshtying::NoxInterface::get_previous_lagrange_multiplier_norms(
     const Core::LinAlg::Vector<double>& xOld, NOX::Nln::StatusTest::QuantityType checkQuantity,
     ::NOX::Abstract::Vector::NormType type, bool isScaled) const
 {

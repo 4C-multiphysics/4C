@@ -10,7 +10,6 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_comm_parobjectfactory.hpp"
 #include "4C_contact_input.hpp"
-#include "4C_contact_meshtying_noxinterface.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
@@ -35,7 +34,7 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  | ctor (public)                                             popp 05/09 |
  *----------------------------------------------------------------------*/
-CONTACT::MtAbstractStrategy::MtAbstractStrategy(const Core::LinAlg::Map* dof_row_map,
+CONTACT::Meshtying::AbstractStrategy::AbstractStrategy(const Core::LinAlg::Map* dof_row_map,
     const Core::LinAlg::Map* NodeRowMap, Teuchos::ParameterList params,
     std::vector<std::shared_ptr<Mortar::Interface>> interface, const int spatialDim,
     const MPI_Comm& comm, const double alphaf, const int maxdof)
@@ -56,7 +55,7 @@ CONTACT::MtAbstractStrategy::MtAbstractStrategy(const Core::LinAlg::Map* dof_row
   non_redist_gstdofrowmap_ = std::make_shared<Core::LinAlg::Map>(*gstdofrowmap_);
 
   // build the NOX::Nln::CONSTRAINT::Interface::Required object
-  noxinterface_ptr_ = std::make_shared<CONTACT::MtNoxInterface>();
+  noxinterface_ptr_ = std::make_shared<CONTACT::Meshtying::NoxInterface>();
 
   return;
 }
@@ -64,7 +63,7 @@ CONTACT::MtAbstractStrategy::MtAbstractStrategy(const Core::LinAlg::Map* dof_row
 /*----------------------------------------------------------------------*
  |  << operator                                              mwgee 10/07|
  *----------------------------------------------------------------------*/
-std::ostream& operator<<(std::ostream& os, const CONTACT::MtAbstractStrategy& strategy)
+std::ostream& operator<<(std::ostream& os, const CONTACT::Meshtying::AbstractStrategy& strategy)
 {
   strategy.print(os);
   return os;
@@ -73,7 +72,7 @@ std::ostream& operator<<(std::ostream& os, const CONTACT::MtAbstractStrategy& st
 /*----------------------------------------------------------------------*
  | parallel redistribution                                   popp 09/10 |
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::redistribute_meshtying()
+void CONTACT::Meshtying::AbstractStrategy::redistribute_meshtying()
 {
   TEUCHOS_FUNC_TIME_MONITOR("CONTACT::MtAbstractStrategy::redistribute_meshtying");
 
@@ -129,7 +128,7 @@ void CONTACT::MtAbstractStrategy::redistribute_meshtying()
 /*----------------------------------------------------------------------*
  | setup this strategy object                                popp 08/10 |
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::setup(bool redistributed)
+void CONTACT::Meshtying::AbstractStrategy::setup(bool redistributed)
 {
   // ------------------------------------------------------------------------
   // setup global accessible Core::LinAlg::Maps
@@ -257,7 +256,7 @@ void CONTACT::MtAbstractStrategy::setup(bool redistributed)
 /*----------------------------------------------------------------------*
  | global evaluation method called from time integrator      popp 06/09 |
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::apply_force_stiff_cmt(
+void CONTACT::Meshtying::AbstractStrategy::apply_force_stiff_cmt(
     std::shared_ptr<Core::LinAlg::Vector<double>> dis,
     std::shared_ptr<Core::LinAlg::SparseOperator>& kt,
     std::shared_ptr<Core::LinAlg::Vector<double>>& f, const int step, const int iter,
@@ -275,7 +274,7 @@ void CONTACT::MtAbstractStrategy::apply_force_stiff_cmt(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::set_state(
+void CONTACT::Meshtying::AbstractStrategy::set_state(
     const Mortar::StateType& statetype, const Core::LinAlg::Vector<double>& vec)
 {
   switch (statetype)
@@ -301,7 +300,7 @@ void CONTACT::MtAbstractStrategy::set_state(
 /*----------------------------------------------------------------------*
  |  do mortar coupling in reference configuration             popp 12/09|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::mortar_coupling(
+void CONTACT::Meshtying::AbstractStrategy::mortar_coupling(
     const std::shared_ptr<const Core::LinAlg::Vector<double>>& dis)
 {
   //********************************************************************
@@ -362,7 +361,7 @@ void CONTACT::MtAbstractStrategy::mortar_coupling(
 /*----------------------------------------------------------------------*
  |  restrict source boundary to actual meshtying zone          popp 08/10|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::restrict_meshtying_zone()
+void CONTACT::Meshtying::AbstractStrategy::restrict_meshtying_zone()
 {
   // Step 1: detect tied source nodes on all interfaces
   int localfounduntied = 0;
@@ -466,7 +465,7 @@ void CONTACT::MtAbstractStrategy::restrict_meshtying_zone()
 /*----------------------------------------------------------------------*
  |  mesh initialization for rotational invariance              popp 12/09|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::mesh_initialization(
+void CONTACT::Meshtying::AbstractStrategy::mesh_initialization(
     std::shared_ptr<Core::LinAlg::Vector<double>> Xsourcemod)
 {
   //**********************************************************************
@@ -590,7 +589,8 @@ void CONTACT::MtAbstractStrategy::mesh_initialization(
 /*----------------------------------------------------------------------*
  | call appropriate evaluate for contact evaluation           popp 06/09|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::evaluate(std::shared_ptr<Core::LinAlg::SparseOperator>& kteff,
+void CONTACT::Meshtying::AbstractStrategy::evaluate(
+    std::shared_ptr<Core::LinAlg::SparseOperator>& kteff,
     std::shared_ptr<Core::LinAlg::Vector<double>>& feff,
     std::shared_ptr<Core::LinAlg::Vector<double>> dis)
 {
@@ -602,7 +602,8 @@ void CONTACT::MtAbstractStrategy::evaluate(std::shared_ptr<Core::LinAlg::SparseO
 /*----------------------------------------------------------------------*
  |  Store Lagrange multipliers into Mortar::Node                popp 06/08|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::QuantityType type)
+void CONTACT::Meshtying::AbstractStrategy::store_nodal_quantities(
+    Mortar::StrategyBase::QuantityType type)
 {
   // loop over all interfaces
   for (const auto& interface : interface_)
@@ -714,7 +715,7 @@ void CONTACT::MtAbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Q
 /*----------------------------------------------------------------------*
  |  Store dirichlet B.C. status into Mortar::Node               popp 06/09|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::store_dirichlet_status(
+void CONTACT::Meshtying::AbstractStrategy::store_dirichlet_status(
     std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmaps)
 {
   // loop over all interfaces
@@ -760,8 +761,9 @@ void CONTACT::MtAbstractStrategy::store_dirichlet_status(
 /*----------------------------------------------------------------------*
  | Update meshtying at end of time step                       popp 06/09|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::update(std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
-    const double dt, const double total_time)
+void CONTACT::Meshtying::AbstractStrategy::update(
+    std::shared_ptr<const Core::LinAlg::Vector<double>> dis, const double dt,
+    const double total_time)
 {
   // store Lagrange multipliers
   // (we need this for interpolation of the next generalized mid-point)
@@ -777,7 +779,7 @@ void CONTACT::MtAbstractStrategy::update(std::shared_ptr<const Core::LinAlg::Vec
 /*----------------------------------------------------------------------*
  |  read restart information for meshtying                    popp 03/08|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::do_read_restart(
+void CONTACT::Meshtying::AbstractStrategy::do_read_restart(
     Core::IO::DiscretizationReader& reader, const Core::LinAlg::Vector<double>& disp_n)
 {
   // check whether this is a restart with meshtying of a previously
@@ -809,7 +811,7 @@ void CONTACT::MtAbstractStrategy::do_read_restart(
 /*----------------------------------------------------------------------*
  |  print interfaces (public)                                mwgee 10/07|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::print(std::ostream& os) const
+void CONTACT::Meshtying::AbstractStrategy::print(std::ostream& os) const
 {
   if (Core::Communication::my_mpi_rank(get_comm()) == 0)
   {
@@ -830,11 +832,11 @@ void CONTACT::MtAbstractStrategy::print(std::ostream& os) const
 /*----------------------------------------------------------------------*
  | print active set information                               popp 06/08|
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::print_active_set() const { return; }
+void CONTACT::Meshtying::AbstractStrategy::print_active_set() const { return; }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::assemble_coords(
+void CONTACT::Meshtying::AbstractStrategy::assemble_coords(
     const std::string& sidename, bool ref, Core::LinAlg::Vector<double>& vec)
 {
   // NOTE:
@@ -899,7 +901,7 @@ void CONTACT::MtAbstractStrategy::assemble_coords(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::collect_maps_for_preconditioner(
+void CONTACT::Meshtying::AbstractStrategy::collect_maps_for_preconditioner(
     std::shared_ptr<Core::LinAlg::Map>& TargetDofMap,
     std::shared_ptr<Core::LinAlg::Map>& SourceDofMap,
     std::shared_ptr<Core::LinAlg::Map>& InnerDofMap,
@@ -930,7 +932,7 @@ void CONTACT::MtAbstractStrategy::collect_maps_for_preconditioner(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool CONTACT::MtAbstractStrategy::is_saddle_point_system() const
+bool CONTACT::Meshtying::AbstractStrategy::is_saddle_point_system() const
 {
   if (system_type() == CONTACT::SystemType::saddlepoint) return true;
 
@@ -939,7 +941,7 @@ bool CONTACT::MtAbstractStrategy::is_saddle_point_system() const
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool CONTACT::MtAbstractStrategy::is_condensed_system() const
+bool CONTACT::Meshtying::AbstractStrategy::is_condensed_system() const
 {
   if (system_type() != CONTACT::SystemType::saddlepoint) return true;
 
@@ -948,7 +950,7 @@ bool CONTACT::MtAbstractStrategy::is_condensed_system() const
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::fill_maps_for_preconditioner(
+void CONTACT::Meshtying::AbstractStrategy::fill_maps_for_preconditioner(
     std::vector<Teuchos::RCP<Core::LinAlg::Map>>& maps) const
 {
   /* FixMe This function replaces the deprecated collect_maps_for_preconditioner(),
@@ -985,7 +987,7 @@ void CONTACT::MtAbstractStrategy::fill_maps_for_preconditioner(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::postprocess_quantities_per_interface(
+void CONTACT::Meshtying::AbstractStrategy::postprocess_quantities_per_interface(
     std::shared_ptr<Teuchos::ParameterList> outputParams) const
 {
   // Evaluate source and target forces
@@ -1009,7 +1011,7 @@ void CONTACT::MtAbstractStrategy::postprocess_quantities_per_interface(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-double CONTACT::MtAbstractStrategy::evaluate_lagrange_multiplier_error_squared(
+double CONTACT::Meshtying::AbstractStrategy::evaluate_lagrange_multiplier_error_squared(
     int analytical_function_id, double time)
 {
   FOUR_C_ASSERT_ALWAYS(lagrange_multiplier() != nullptr,

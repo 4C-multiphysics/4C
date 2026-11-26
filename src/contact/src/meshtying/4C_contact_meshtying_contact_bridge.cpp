@@ -40,7 +40,7 @@ CONTACT::MeshtyingContactBridge::MeshtyingContactBridge(Core::FE::Discretization
   // create meshtying and contact manager
   if (onlymeshtying)
   {
-    mtman_ = std::make_shared<CONTACT::MtManager>(dis, timeIntegrationMidPoint);
+    mtman_ = std::make_shared<CONTACT::Meshtying::Manager>(dis, timeIntegrationMidPoint);
   }
   else if (onlycontact)
   {
@@ -48,7 +48,7 @@ CONTACT::MeshtyingContactBridge::MeshtyingContactBridge(Core::FE::Discretization
   }
   else if (meshtyingandcontact)
   {
-    mtman_ = std::make_shared<CONTACT::MtManager>(dis, timeIntegrationMidPoint);
+    mtman_ = std::make_shared<CONTACT::Meshtying::Manager>(dis, timeIntegrationMidPoint);
     cman_ = std::make_shared<CONTACT::Manager>(dis, timeIntegrationMidPoint);
   }
 

@@ -281,7 +281,8 @@ void Solid::ModelEvaluator::Meshtying::assemble_jacobian(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-const std::shared_ptr<CONTACT::MtAbstractStrategy>& Solid::ModelEvaluator::Meshtying::strategy_ptr()
+const std::shared_ptr<CONTACT::Meshtying::AbstractStrategy>&
+Solid::ModelEvaluator::Meshtying::strategy_ptr()
 {
   check_init_setup();
   return strategy_ptr_;
@@ -289,7 +290,7 @@ const std::shared_ptr<CONTACT::MtAbstractStrategy>& Solid::ModelEvaluator::Mesht
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-CONTACT::MtAbstractStrategy& Solid::ModelEvaluator::Meshtying::strategy()
+CONTACT::Meshtying::AbstractStrategy& Solid::ModelEvaluator::Meshtying::strategy()
 {
   check_init_setup();
   return *strategy_ptr_;
@@ -297,7 +298,7 @@ CONTACT::MtAbstractStrategy& Solid::ModelEvaluator::Meshtying::strategy()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-const CONTACT::MtAbstractStrategy& Solid::ModelEvaluator::Meshtying::strategy() const
+const CONTACT::Meshtying::AbstractStrategy& Solid::ModelEvaluator::Meshtying::strategy() const
 {
   check_init_setup();
   return *strategy_ptr_;
@@ -346,7 +347,7 @@ void Solid::ModelEvaluator::Meshtying::run_pre_apply_jacobian_inverse(
     const Core::LinAlg::Vector<double>& xold, const NOX::Nln::Group& grp)
 {
   std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd = global_state().jacobian_displ_block();
-  const_cast<CONTACT::MtAbstractStrategy&>(strategy())
+  const_cast<CONTACT::Meshtying::AbstractStrategy&>(strategy())
       .run_pre_apply_jacobian_inverse(jac_dd, const_cast<Core::LinAlg::Vector<double>&>(rhs));
 }
 
@@ -356,7 +357,8 @@ void Solid::ModelEvaluator::Meshtying::run_post_apply_jacobian_inverse(
     const Core::LinAlg::Vector<double>& rhs, Core::LinAlg::Vector<double>& result,
     const Core::LinAlg::Vector<double>& xold, const NOX::Nln::Group& grp)
 {
-  const_cast<CONTACT::MtAbstractStrategy&>(strategy()).run_post_apply_jacobian_inverse(result);
+  const_cast<CONTACT::Meshtying::AbstractStrategy&>(strategy())
+      .run_post_apply_jacobian_inverse(result);
 }
 
 /*----------------------------------------------------------------------------*
@@ -507,7 +509,7 @@ void Solid::ModelEvaluator::Meshtying::read_restart(Core::IO::DiscretizationRead
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Solid::ModelEvaluator::Meshtying::set_time_integration_info(
-    CONTACT::MtAbstractStrategy& strategy) const
+    CONTACT::Meshtying::AbstractStrategy& strategy) const
 {
   strategy.set_time_integration_info(integrator().get_int_param());
 }

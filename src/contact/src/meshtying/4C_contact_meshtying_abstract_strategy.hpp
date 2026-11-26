@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_contact_meshtying_noxinterface.hpp"
 #include "4C_contact_utils.hpp"
 #include "4C_mortar_input.hpp"
 #include "4C_mortar_strategy_base.hpp"
@@ -41,10 +42,10 @@ namespace NOX
   }  // namespace Nln
 }  // namespace NOX
 
-namespace CONTACT
+namespace CONTACT::Meshtying
 {
   // forward declarations
-  class MtNoxInterface;
+  class NoxInterface;
 
   /*! \brief Main abstract class for meshtying solution strategies
 
@@ -56,8 +57,8 @@ namespace CONTACT
   more abstract framework for any solution strategies involving mortar coupling.
 
   */
-  class MtAbstractStrategy : public Mortar::StrategyBase,
-                             public NOX::Nln::CONSTRAINT::Interface::Preconditioner
+  class AbstractStrategy : public Mortar::StrategyBase,
+                           public NOX::Nln::CONSTRAINT::Interface::Preconditioner
   {
    public:
     /*!
@@ -75,7 +76,7 @@ namespace CONTACT
     \param[in] alphaf Mid-point for Generalized-alpha time integration
     \param[in] maxdof Highest DOF number in global problem
     */
-    MtAbstractStrategy(const Core::LinAlg::Map* dof_row_map, const Core::LinAlg::Map* NodeRowMap,
+    AbstractStrategy(const Core::LinAlg::Map* dof_row_map, const Core::LinAlg::Map* NodeRowMap,
         Teuchos::ParameterList params, std::vector<std::shared_ptr<Mortar::Interface>> interface,
         const int spatialDim, const MPI_Comm& comm, const double alphaf, const int maxdof);
 
@@ -516,7 +517,7 @@ namespace CONTACT
     //! @{
 
     //! Return the NOX::Nln::CONSTRAINT::Interface::Required member object
-    const std::shared_ptr<CONTACT::MtNoxInterface>& nox_interface_ptr()
+    const std::shared_ptr<CONTACT::Meshtying::NoxInterface>& nox_interface_ptr()
     {
       return noxinterface_ptr_;
     };
@@ -687,7 +688,7 @@ namespace CONTACT
 
    protected:
     // don't want cctor (= operator impossible anyway for abstract class)
-    MtAbstractStrategy(const MtAbstractStrategy& old) = delete;
+    AbstractStrategy(const AbstractStrategy& old) = delete;
 
     //! Vector with all meshtying interfaces
     std::vector<std::shared_ptr<Mortar::Interface>> interface_;
@@ -836,13 +837,13 @@ namespace CONTACT
 
    private:
     ///< pointer to the NOX::Nln::CONSTRAINT::Interface::Required object
-    std::shared_ptr<CONTACT::MtNoxInterface> noxinterface_ptr_;
+    std::shared_ptr<CONTACT::Meshtying::NoxInterface> noxinterface_ptr_;
 
   };  // class MtAbstractStrategy
-}  // namespace CONTACT
+}  // namespace CONTACT::Meshtying
 
 // << operator
-std::ostream& operator<<(std::ostream& os, const CONTACT::MtAbstractStrategy& strategy);
+std::ostream& operator<<(std::ostream& os, const CONTACT::Meshtying::AbstractStrategy& strategy);
 
 FOUR_C_NAMESPACE_CLOSE
 

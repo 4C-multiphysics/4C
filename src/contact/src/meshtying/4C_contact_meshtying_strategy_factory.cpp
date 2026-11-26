@@ -569,7 +569,7 @@ void Mortar::STRATEGY::FactoryMT::build_interfaces(const Teuchos::ParameterList&
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-std::shared_ptr<CONTACT::MtAbstractStrategy> Mortar::STRATEGY::FactoryMT::build_strategy(
+std::shared_ptr<CONTACT::Meshtying::AbstractStrategy> Mortar::STRATEGY::FactoryMT::build_strategy(
     const Teuchos::ParameterList& params, const bool& porosource, const bool& porotarget,
     const int& dof_offset, std::vector<std::shared_ptr<Mortar::Interface>>& interfaces) const
 {
@@ -581,14 +581,14 @@ std::shared_ptr<CONTACT::MtAbstractStrategy> Mortar::STRATEGY::FactoryMT::build_
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-std::shared_ptr<CONTACT::MtAbstractStrategy> Mortar::STRATEGY::FactoryMT::build_strategy(
+std::shared_ptr<CONTACT::Meshtying::AbstractStrategy> Mortar::STRATEGY::FactoryMT::build_strategy(
     const CONTACT::SolvingStrategy stype, const Teuchos::ParameterList& params,
     const bool& porosource, const bool& porotarget, const int& dof_offset,
     std::vector<std::shared_ptr<Mortar::Interface>>& interfaces,
     const Core::LinAlg::Map* dof_row_map, const Core::LinAlg::Map* node_row_map, const int dim,
     const MPI_Comm& comm_ptr)
 {
-  std::shared_ptr<CONTACT::MtAbstractStrategy> strategy_ptr = nullptr;
+  std::shared_ptr<CONTACT::Meshtying::AbstractStrategy> strategy_ptr = nullptr;
 
   //**********************************************************************
   // create the solver strategy object
