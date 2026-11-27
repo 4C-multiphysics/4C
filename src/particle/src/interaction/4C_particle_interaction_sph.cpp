@@ -168,8 +168,8 @@ void Particle::ParticleInteractionSPH::setup(
 void Particle::ParticleInteractionSPH::check_open_boundaries() const
 {
   // types of particles to check
-  const std::unordered_map<Particle::Type, std::string> types_to_check{
-      {{Particle::Type::DirichletPhase, "Dirichlet"}, {Particle::Type::NeumannPhase, "Neumann"}}};
+  const std::unordered_map<ParticleType, std::string> types_to_check{
+      {{ParticleType::DirichletPhase, "Dirichlet"}, {ParticleType::NeumannPhase, "Neumann"}}};
 
   // get all available boundary ids
   std::vector<int> available_boundary_ids(openboundaries_.size());
@@ -186,7 +186,7 @@ void Particle::ParticleInteractionSPH::check_open_boundaries() const
 
     // get container of owned particles of open boundary phase
     Particle::ParticleContainer* container_i =
-        particlecontainerbundle_->get_specific_container(type_id, Particle::Status::Owned);
+        particlecontainerbundle_->get_specific_container(type_id, ParticleStatus::Owned);
 
     // get number of particles stored in container
     const int particlestored = container_i->particles_stored();
@@ -198,7 +198,7 @@ void Particle::ParticleInteractionSPH::check_open_boundaries() const
     for (int particle_i = 0; particle_i < particlestored; ++particle_i)
     {
       const auto particle_boundary_id = static_cast<int>(
-          *container_i->get_ptr_to_state(Particle::State::OpenBoundaryId, particle_i));
+          *container_i->get_ptr_to_state(ParticleState::OpenBoundaryId, particle_i));
 
       if (std::find(available_boundary_ids.begin(), available_boundary_ids.end(),
               particle_boundary_id) == available_boundary_ids.end())
@@ -236,35 +236,35 @@ void Particle::ParticleInteractionSPH::read_restart(
 }
 
 void Particle::ParticleInteractionSPH::insert_particle_states_of_particle_types(
-    std::map<Particle::Type, std::set<Particle::State>>& particlestatestotypes)
+    std::map<ParticleType, std::set<ParticleState>>& particlestatestotypes)
 {
   // iterate over particle types
   for (auto& typeIt : particlestatestotypes)
   {
     // get type of particles
-    Particle::Type type = typeIt.first;
+    ParticleType type = typeIt.first;
 
     // set of particle states for current particle type
-    std::set<Particle::State>& particlestates = typeIt.second;
+    std::set<ParticleState>& particlestates = typeIt.second;
 
-    if (type == Particle::Type::BoundaryPhase or type == Particle::Type::RigidPhase or
-        type == Particle::Type::PDPhase)
+    if (type == ParticleType::BoundaryPhase or type == ParticleType::RigidPhase or
+        type == ParticleType::PDPhase)
     {
       // insert states of boundary and rigid particles
-      particlestates.insert({Particle::State::Mass, Particle::State::Radius,
-          Particle::State::BoundaryPressure, Particle::State::BoundaryVelocity});
+      particlestates.insert({ParticleState::Mass, ParticleState::Radius,
+          ParticleState::BoundaryPressure, ParticleState::BoundaryVelocity});
     }
-    else if (type == Particle::Type::DirichletPhase or type == Particle::Type::NeumannPhase)
+    else if (type == ParticleType::DirichletPhase or type == ParticleType::NeumannPhase)
     {
       // insert states of open boundary particles
-      particlestates.insert({Particle::State::Mass, Particle::State::Radius,
-          Particle::State::Density, Particle::State::Pressure, Particle::State::OpenBoundaryId});
+      particlestates.insert({ParticleState::Mass, ParticleState::Radius, ParticleState::Density,
+          ParticleState::Pressure, ParticleState::OpenBoundaryId});
     }
     else
     {
       // insert states of regular phase particles
-      particlestates.insert({Particle::State::Mass, Particle::State::Radius,
-          Particle::State::Density, Particle::State::Pressure});
+      particlestates.insert({ParticleState::Mass, ParticleState::Radius, ParticleState::Density,
+          ParticleState::Pressure});
     }
   }
 
@@ -304,7 +304,7 @@ void Particle::ParticleInteractionSPH::set_initial_states()
   {
     // get container of owned particles of current particle type
     Particle::ParticleContainer* container =
-        particlecontainerbundle_->get_specific_container(type_i, Particle::Status::Owned);
+        particlecontainerbundle_->get_specific_container(type_i, ParticleStatus::Owned);
 
     // get number of particles stored in container
     const int particlestored = container->particles_stored();
@@ -329,15 +329,15 @@ void Particle::ParticleInteractionSPH::set_initial_states()
     initradius[0] = material->initRadius_;
 
     // set initial density for respective particles of current type
-    if (container->have_stored_state(Particle::State::Density))
-      container->set_state(initdensity, Particle::State::Density);
+    if (container->have_stored_state(ParticleState::Density))
+      container->set_state(initdensity, ParticleState::Density);
 
     // set initial mass and radius for all particles of current type
-    container->set_state(initmass, Particle::State::Mass);
-    container->set_state(initradius, Particle::State::Radius);
+    container->set_state(initmass, ParticleState::Mass);
+    container->set_state(initradius, ParticleState::Radius);
 
     // evaluate initial inertia for respective particles of current type
-    if (container->have_stored_state(Particle::State::Inertia))
+    if (container->have_stored_state(ParticleState::Inertia))
     {
       // (initial) inertia of current phase
       std::vector<double> initinertia(1);
@@ -365,7 +365,7 @@ void Particle::ParticleInteractionSPH::set_initial_states()
       }
 
       // set initial inertia for respective particles of current type
-      container->set_state(initinertia, Particle::State::Inertia);
+      container->set_state(initinertia, ParticleState::Inertia);
     }
 
     // initial states for temperature evaluation
@@ -381,15 +381,14 @@ void Particle::ParticleInteractionSPH::set_initial_states()
       inittemperature[0] = material->initTemperature_;
 
       // set initial temperature for all particles of current type
-      container->set_state(inittemperature, Particle::State::Temperature);
+      container->set_state(inittemperature, ParticleState::Temperature);
     }
 
     // set initial state for peridynamics
-    if (peridynamics_ && type_i == Particle::Type::PDPhase)
+    if (peridynamics_ && type_i == ParticleType::PDPhase)
     {
       // set particle reference position
-      container->update_state(
-          0.0, Particle::State::ReferencePosition, 1.0, Particle::State::Position);
+      container->update_state(0.0, ParticleState::ReferencePosition, 1.0, ParticleState::Position);
 
       // get material for current particle type
       const Mat::PAR::ParticleMaterialPD* material =
@@ -399,12 +398,12 @@ void Particle::ParticleInteractionSPH::set_initial_states()
       // set Young's modulus for all peridynamic phase particles
       std::vector<double> young(1);
       young[0] = material->young_;
-      container->set_state(young, Particle::State::Young);
+      container->set_state(young, ParticleState::Young);
 
       // set critical stretch for all peridynamic phase particles
       std::vector<double> stretch(1);
       stretch[0] = material->critical_stretch_;
-      container->set_state(stretch, Particle::State::CriticalStretch);
+      container->set_state(stretch, ParticleState::CriticalStretch);
 
       // initialize peridynamic bond list once at the beginning of the simulation
       peridynamics_->init_peridynamic_bondlist();
