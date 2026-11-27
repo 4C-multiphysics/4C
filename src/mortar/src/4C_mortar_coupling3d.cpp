@@ -1960,54 +1960,15 @@ bool Mortar::Coupling3d::center_triangulation(
   //**********************************************************************
   // (2) Find center of clipping polygon (centroid formula)
   //**********************************************************************
-  std::vector<double> clipcenter(3);
-  for (int k = 0; k < 3; ++k) clipcenter[k] = 0.0;
-  double fac = 0.0;
 
-  // first we need node averaged center
-  std::array<double, 3> nac = {0.0, 0.0, 0.0};
-  for (int i = 0; i < clipsize; ++i)
-    for (int k = 0; k < 3; ++k) nac[k] += (clip()[i].coord()[k] / clipsize);
-
-  // loop over all triangles of polygon
-  for (int i = 0; i < clipsize; ++i)
+  std::vector<std::array<double, 3>> positions(clipsize);
+  for (int pos = 0; pos < clipsize; ++pos)
   {
-    std::array<double, 3> xi_i = {0.0, 0.0, 0.0};
-    std::array<double, 3> xi_ip1 = {0.0, 0.0, 0.0};
-
-    // standard case
-    if (i < clipsize - 1)
-    {
-      for (int k = 0; k < 3; ++k) xi_i[k] = clip()[i].coord()[k];
-      for (int k = 0; k < 3; ++k) xi_ip1[k] = clip()[i + 1].coord()[k];
-    }
-    // last vertex of clip polygon
-    else
-    {
-      for (int k = 0; k < 3; ++k) xi_i[k] = clip()[clipsize - 1].coord()[k];
-      for (int k = 0; k < 3; ++k) xi_ip1[k] = clip()[0].coord()[k];
-    }
-
-    // triangle area
-    std::array<double, 3> diff1 = {0.0, 0.0, 0.0};
-    std::array<double, 3> diff2 = {0.0, 0.0, 0.0};
-    for (int k = 0; k < 3; ++k) diff1[k] = xi_ip1[k] - xi_i[k];
-    for (int k = 0; k < 3; ++k) diff2[k] = xi_i[k] - nac[k];
-
-    std::array<double, 3> cross = {0.0, 0.0, 0.0};
-    cross[0] = diff1[1] * diff2[2] - diff1[2] * diff2[1];
-    cross[1] = diff1[2] * diff2[0] - diff1[0] * diff2[2];
-    cross[2] = diff1[0] * diff2[1] - diff1[1] * diff2[0];
-
-    double Atri = 0.5 * sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
-
-    // add contributions to clipcenter and fac
-    fac += Atri;
-    for (int k = 0; k < 3; ++k) clipcenter[k] += 1.0 / 3.0 * (xi_i[k] + xi_ip1[k] + nac[k]) * Atri;
+    const auto coords = clip()[pos].coord();
+    positions[pos] = {coords[0], coords[1], coords[2]};
   }
 
-  // final clipcenter
-  for (int k = 0; k < 3; ++k) clipcenter[k] /= fac;
+  std::array<double, 3> clipcenter = Core::Geo::compute_polygon_center(positions);
 
   //**********************************************************************
   // (3) Linearization of clip center coordinates (only for contact)

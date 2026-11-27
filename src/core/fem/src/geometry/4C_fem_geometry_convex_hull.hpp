@@ -28,6 +28,17 @@ namespace Core::Geo
    * degenerates to a line or a point)
    */
   std::vector<int> convex_hull_2d(std::span<const std::array<double, 2>> points);
+
+  /**
+   * @brief Computes the area-weighted center of a planar convex polygon in three-dimensional space.
+   *
+   * The polygon is decomposed into triangles using the arithmetic mean of its vertices as a
+   * reference point. The polygon vertices must be ordered consecutively along its boundary.
+   *
+   * @param points Coordinates of the polygon vertices.
+   *
+   */
+  std::array<double, 3> compute_polygon_center(std::span<const std::array<double, 3>> points);
 }  // namespace Core::Geo
 
 FOUR_C_NAMESPACE_CLOSE
