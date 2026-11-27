@@ -850,6 +850,10 @@ namespace Mat
       //! ratio of solution increment to current solution: \f$ \frac{\left| \Delta
       //! \boldsymbol{s}^{l} \right|}{\left| \boldsymbol{s}^{l} \right|}  \f$
       double increment_norm;
+
+      //! whether the solution increment is at round-off, i.e., cannot change the solution anymore
+      //! (measured separately for the inverse plastic deformation gradient and the plastic strain)
+      bool increment_at_round_off;
     };
 
 
