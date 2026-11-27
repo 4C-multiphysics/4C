@@ -139,6 +139,19 @@ namespace Mat
           double dt, Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
           const override;
 
+      [[nodiscard]] double evaluate_inverse_flow_rule_residual(double equiv_stress,
+          double equiv_plastic_strain, double plastic_strain_increment, double dt,
+          double youngs_modulus,
+          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
+          const override;
+
+      [[nodiscard]] InverseFlowRuleResidualDerivs
+      evaluate_derivatives_of_inverse_flow_rule_residual(double equiv_stress,
+          double equiv_plastic_strain, double plastic_strain_increment, double dt,
+          double youngs_modulus,
+          Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status)
+          const override;
+
       void pre_evaluate(const Teuchos::ParameterList& params) override;
 
      private:
@@ -156,6 +169,9 @@ namespace Mat
 
         /// exponent \f$ E \f$ of the plastic strain rate
         double e;
+
+        /// \f$ 1 / E \f$
+        double inv_e;
 
         /// \f$ \log(P*E) \f$
         double log_p_e;
@@ -179,6 +195,7 @@ namespace Mat
               p(prefac),
               log_p(std::log(p)),
               e(expon),
+              inv_e(1.0 / expon),
               log_p_e(std::log(prefac * expon)),
               B(harden_prefac),
               N(harden_expon),

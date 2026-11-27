@@ -1810,7 +1810,10 @@ namespace Mat
         const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
             local_integration_input,
         const Core::LinAlg::Matrix<10, 1>& x,
-        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status);
+        InelasticDefgradTransvIsotropElastViscoplastUtils::ErrorType& err_status,
+        const InelasticDefgradTransvIsotropElastViscoplastUtils::StateQuantityDerivEvalType
+            deriv_eval_type = InelasticDefgradTransvIsotropElastViscoplastUtils::
+                StateQuantityDerivEvalType::full_eval);
 
     /*!
      * @brief Performs the viscoplastic corrector step of the constitutive update.
@@ -1841,6 +1844,11 @@ namespace Mat
     std::optional<Core::LinAlg::Matrix<10, 1>> local_newton_loop(
         const InelasticDefgradTransvIsotropElastViscoplastUtils::LocalIntegrationInput&
             local_integration_input);
+
+    [[nodiscard]] bool use_reformulated_residual() const
+    {
+      return parameter()->local_newton_params().use_reformulated_residual;
+    }
 
     /*!
      * @brief History variables computed by the constitutive update procedure.

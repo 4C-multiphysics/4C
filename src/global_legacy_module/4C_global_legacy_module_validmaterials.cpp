@@ -2844,6 +2844,19 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                 &ViscoplastUtils::LocalNewtonParams::max_exceedance_fact_incr_tol)
 
                         }),
+                    parameter<bool>("USE_REFORMULATED_RESIDUAL",
+                        {.description = "use the reformulated residual. It has the same roots as "
+                                        "the classical residual but removes a stiff exponential "
+                                        "term for the reformulated Johnson-Cook model.",
+                            .default_value = false,
+                            .store = in_struct(
+                                &ViscoplastUtils::LocalNewtonParams::use_reformulated_residual)}),
+                    parameter<std::optional<double>>("SCALING_YOUNGS_MODULUS",
+                        {.description = "Young's modulus scaling the plastic strain part of "
+                                        "the reformulated residual.",
+                            .validator = null_or(positive<double>()),
+                            .store = in_struct(
+                                &ViscoplastUtils::LocalNewtonParams::scaling_youngs_modulus)}),
                     parameter<ViscoplastUtils::LocalNewtonDiverCont>("DIVER_CONT",
                         {.description = "strategy to deal with divergence in the Local Newton Loop",
                             .default_value = ViscoplastUtils::LocalNewtonDiverCont::
