@@ -368,20 +368,14 @@ Mat::AdditionalHeatSource Mat::ThermoPlasticHyperElast::evaluate_additional_heat
     const double temperature, const DeformationState& deformation_state,
     const EvaluationContext<3>& context, const int gp, const int eleGID)
 {
-  FOUR_C_ASSERT_ALWAYS(context.time_step_size != nullptr, "Time-step size is required.");
-  const double dt = *context.time_step_size;
-
   AdditionalHeatSource source;
-  source.value = 1.0 / dt * (temperature * thrplheat_->at(gp) + mechdiss_->at(gp));
+  source.value = temperature * thrplheat_->at(gp) + mechdiss_->at(gp);
   source.derivative_wrt_temperature =
-      1.0 / dt *
-      (thrplheat_->at(gp) + temperature * thrplheat_k_tt_->at(gp) + mechdiss_k_tt_->at(gp));
+      thrplheat_->at(gp) + temperature * thrplheat_k_tt_->at(gp) + mechdiss_k_tt_->at(gp);
   source.derivative_wrt_strain =
-      1.0 / dt *
-      (temperature * Core::LinAlg::make_symmetric_tensor_from_stress_like_voigt_matrix(
-                         thrplheat_k_td_->at(gp)) +
-          Core::LinAlg::make_symmetric_tensor_from_stress_like_voigt_matrix(
-              mechdiss_k_td_->at(gp)));
+      temperature * Core::LinAlg::make_symmetric_tensor_from_stress_like_voigt_matrix(
+                        thrplheat_k_td_->at(gp)) +
+      Core::LinAlg::make_symmetric_tensor_from_stress_like_voigt_matrix(mechdiss_k_td_->at(gp));
   return source;
 }
 
@@ -715,6 +709,10 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
     {
       // ----------------------------------------- preliminary calculations
 
+      // the heat sources are powers, i.e. the increments are divided by the time step
+      FOUR_C_ASSERT_ALWAYS(context.time_step_size != nullptr, "Time-step size is required.");
+      const double dt = *context.time_step_size;
+
       // ------------------------------------- calculate plastic directions
 
       // pull-back of the spatial flow vector n to N
@@ -809,9 +807,7 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
       // --------------------------------------------------------- D_mech
       // D_mech = tau . [-1/2  Lie(b_e)] . b_e^{-1} - kappa . alpha'
       //        = sqrt(2/3) . sigma_y0(T_{n+1}) . Dgamma/Dt
-      // be aware: division by Dt is done in evaluate_additional_heat_source()
-      double mechdiss = sqrt(2.0 / 3.0) * Dgamma * sigma_y0_temp;
-      mechdiss_->at(gp) = mechdiss;
+      mechdiss_->at(gp) = sqrt(2.0 / 3.0) * Dgamma * sigma_y0_temp / dt;
 
       // -------------------------------------------- dD_mech/dT for k_TT
 
@@ -823,13 +819,13 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
       // calculate the derivative of sigma_y0(T_{n+1}) w.r.t. T_{n+1}
       // derivative of mechanical Dissipation w.r.t. temperatures
       mechdiss_k_tt_->at(gp) =
-          sqrt(2.0 / 3.0) * (dDgamma_dT * sigma_y0_temp + Dgamma * dsigma_y0_temp_dT);
+          sqrt(2.0 / 3.0) * (dDgamma_dT * sigma_y0_temp + Dgamma * dsigma_y0_temp_dT) / dt;
 
       // -------------------------------------------- dD_mech/dd for k_Td
       // k_Td += dD_mech/dd_{n+1}
       //      += 1/Dt . sqrt(2/3) . [ sigma_y0_temp . dDgamma/dE ]
       Core::LinAlg::Matrix<3, 3> mechdiss_kTd_matrix(Core::LinAlg::Initialization::uninitialized);
-      mechdiss_kTd_matrix.update((sqrt(2.0 / 3.0) * sigma_y0_temp), dDgamma_dg);
+      mechdiss_kTd_matrix.update((sqrt(2.0 / 3.0) * sigma_y0_temp / dt), dDgamma_dg);
       // Voigt notation
       Core::LinAlg::Matrix<6, 1> mechdiss_kTd_vct(Core::LinAlg::Initialization::uninitialized);
       mechdiss_kTd_vct(0) = mechdiss_kTd_matrix(0, 0);
@@ -846,11 +842,10 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
 
       // H_p = T . dkappa/dT . astrain'
       // with astrain' = sqrt(2/3) . Dgamma/Dt
-      // thrplheat_ = dkappa/dT . sqrt(2/3) . Dgamma
-      thrplheat_->at(gp) = dkappa_dT * sqrt(2.0 / 3.0) * Dgamma;
-      // H_p = T . thrplheat_ . 1/Dt
-      // be aware: multiplication with 1/Dt and T is done in
-      //           evaluate_additional_heat_source()
+      // thrplheat_ = dkappa/dT . sqrt(2/3) . Dgamma/Dt
+      thrplheat_->at(gp) = dkappa_dT * sqrt(2.0 / 3.0) * Dgamma / dt;
+      // H_p = T . thrplheat_
+      // be aware: multiplication with T is done in evaluate_additional_heat_source()
 
       // ----------------------------------------------- dH_p/dT for k_TT
 
@@ -859,10 +854,10 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
       //         + 1/Dt . T . [ d/dT(dkappa/dT) . astrain^p'
       //                        + dkappa/dT . dastrain^p'/dT ]
       //
-      //       = [ thrplheat_ . 1/Dt + T . thrplheat_kTT_ . 1/Dt ] . N_T
-      // be aware: multiplication with 1/Dt and T is done in evaluate_additional_heat_source()
+      //       = [ thrplheat_ + T . thrplheat_kTT_ ] . N_T
+      // be aware: multiplication with T is done in evaluate_additional_heat_source()
       thrplheat_k_tt_->at(gp) =
-          ddkappa_dTT * sqrt(2.0 / 3.0) * Dgamma + dkappa_dT * sqrt(2.0 / 3.0) * dDgamma_dT;
+          (ddkappa_dTT * sqrt(2.0 / 3.0) * Dgamma + dkappa_dT * sqrt(2.0 / 3.0) * dDgamma_dT) / dt;
 
       // ----------------------------------------------- dH_p/dd for k_Td
       // k_Td += ... dH_p/dE . dE/dd ...
@@ -876,9 +871,10 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
       //
       // dH_p/dE = [ dkappa_dTdastrain . (2/3) . dDgamma + dkappa/dT. sqrt{2/3} ]
       //           . 1/Dt . dDgamma/dE
-      // be aware: multiplication with 1/Dt is done in evaluate_additional_heat_source() and with
+      // be aware: multiplication with T is done in evaluate_additional_heat_source() and with
       //           dE/dd in the thermo element
-      double fac_thrpl_kTd = dkappa_dTdastrain * (2.0 / 3.0) * Dgamma + dkappa_dT * sqrt(2.0 / 3.0);
+      double fac_thrpl_kTd =
+          (dkappa_dTdastrain * (2.0 / 3.0) * Dgamma + dkappa_dT * sqrt(2.0 / 3.0)) / dt;
       Core::LinAlg::Matrix<3, 3> thrplheat_kTd_matrix(Core::LinAlg::Initialization::uninitialized);
       thrplheat_kTd_matrix.update(fac_thrpl_kTd, dDgamma_dg);
       // Voigt notation

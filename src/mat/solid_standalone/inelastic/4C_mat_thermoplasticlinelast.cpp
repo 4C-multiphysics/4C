@@ -719,7 +719,9 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
 
     // ------------------------------------------------ dissipation for r_T
     // calculate mechanical dissipation required for thermo balance equation
-    dissipation(gp, sigma_yiso, Dgamma, N, stress);
+    FOUR_C_ASSERT_ALWAYS(context.time_step_size != nullptr, "Time-step size is required.");
+    const double dt = *context.time_step_size;
+    dissipation(gp, sigma_yiso, Dgamma, N, stress, dt);
     // --------------------------------------- kinematic hardening for k_TT
     // temperature-dependent dissipated mechanical power
     // if (tr(strain^p) == 0) and (sigma_T(i,i)=const.) --> dot product of both is zero
@@ -729,7 +731,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
     if (tracestrainp > 1.0E-8) FOUR_C_THROW("trace of plastic strains is not equal to zero!");
 
     // ----------------------------------- linearisation of D_mech for k_Td
-    dissipation_coupl_cond(cmat, gp, G, Hiso, Hkin, etanorm, Dgamma, N, stress);
+    dissipation_coupl_cond(cmat, gp, G, Hiso, Hkin, etanorm, Dgamma, N, stress, dt);
 
   }  // plastic_step
 }  // evaluate()
@@ -751,12 +753,9 @@ Mat::AdditionalHeatSource Mat::ThermoPlasticLinElast::evaluate_additional_heat_s
     const double temperature, const DeformationState& deformation_state,
     const EvaluationContext<3>& context, const int gp, const int eleGID)
 {
-  FOUR_C_ASSERT_ALWAYS(context.time_step_size != nullptr, "Time-step size is required.");
-  const double dt = *context.time_step_size;
-
   AdditionalHeatSource source;
-  source.value = -1.0 / dt * dmech_[gp];
-  source.derivative_wrt_strain = -1.0 / dt * dmech_d_[gp];
+  source.value = dmech_[gp];
+  source.derivative_wrt_strain = dmech_d_[gp];
   return source;
 }
 
@@ -877,8 +876,9 @@ void Mat::ThermoPlasticLinElast::setup_cmat_elasto_plastic(
 void Mat::ThermoPlasticLinElast::dissipation(int gp,  // current Gauss point
     double sigma_yiso,                                // isotropic work hardening von Mises stress
     double Dgamma,                                    // plastic multiplier/increment
-    const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,      // flow vector
-    const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress  // total mechanical stress
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,       // flow vector
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,  // total mechanical stress
+    const double dt                                             // time-step size
 )
 {
   // D_mech = stress : strain^p' + beta : d(Phi)/d(beta) Dgamma
@@ -900,10 +900,8 @@ void Mat::ThermoPlasticLinElast::dissipation(int gp,  // current Gauss point
   // kappa(strainbar^p) . strainbar^p' = sigma_yiso . Dgamma/dt
   double isotropicdis = sigma_yiso * Dgamma;
 
-  // return mechanical dissipation term due to mixed hardening hardening
-  dmech_[gp] = -stressIncstrainpl + isotropicdis;
-  // time step not yet considered, i.e., Dmech_ is an energy, not a power
-  // accumulated plastic strain
+  // mechanical dissipation (power) due to mixed hardening, i.e. divided by the time step
+  dmech_[gp] = (stressIncstrainpl - isotropicdis) / dt;
 
 }  // Dissipation()
 
@@ -921,7 +919,8 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
     double etanorm,                                        // norm of eta^{trial}_{n+1}
     double Dgamma,                                         // plastic multiplier
     const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,  // flow vector
-    const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress  // flow vector
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,  // total mechanical stress
+    const double dt                                             // time-step size
 )
 {
   // ----------------------------------- linearisation of D_mech for k_Td
@@ -971,7 +970,7 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
   // calculate C_ep . Inc_strain^p_{n+1}
   Core::LinAlg::SymmetricTensor<double, 3, 3> cmatstrainpinc =
       Core::LinAlg::ddot(cmat, incstrainpl_[gp]);
-  // --> divide by dt in thermo_ele
+  // --> division by dt below
 
   // (sigma_d - beta) . [(dstrain^p')/ dstrain] = eta_{n+1} . [(dstrain^p')/ dstrain]
 
@@ -1015,7 +1014,7 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
   // dstrainbar^p/dstrain^{trial}_{n+1} = dDgamma/dstrain^{trial}_{n+1}
   //                                    = 2G/(3G + Hkin + Hiso) N_{n+1}
   // dstrainbar^p'/dstrain^{trial}_{n+1} = 1/Dt . 2G/(3G + Hkin + Hiso) N_{n+1}
-  // --> as usual: calculation with dt is done in thermo_ele
+  // --> division by dt below
 
   // dD_mech_iso/dstrain
   // = 2G/(3G + Hkin + Hiso) . (N_{n+1} . strainbar^p' + sigma_yiso . 1/Dt N_{n+1})
@@ -1031,8 +1030,8 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
   D_mech_d = -1.0 * Core::LinAlg::ddot(Dmech_kin_d, stress);
   D_mech_d -= cmatstrainpinc;
   D_mech_d += fac_liniso * N;
-  // update history
-  dmech_d_[gp] = D_mech_d;
+  // update history, the dissipation is a power, i.e. divided by the time step
+  dmech_d_[gp] = -1.0 / dt * D_mech_d;
 
 }  // dissipation_coupl_cond()
 

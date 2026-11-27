@@ -294,8 +294,9 @@ namespace Mat
     void dissipation(int gp,  // current Gauss point
         double sigma_yiso,    // isotropic work hardening von Mises stress
         double Dgamma,        // plastic multiplier/increment
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,      // flow vector
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress  // total mechanical stress
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,       // flow vector
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,  // total mechanical stress
+        double dt                                                   // time-step size
     );
 
     //! compute linearisation of internal dissipation for k_Td
@@ -307,8 +308,9 @@ namespace Mat
         double Hkin,                       // kinematic hardening modulus
         double etanorm,                    // norm of eta^{trial}_{n+1}
         double Dgamma,                     // plastic multiplier
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,      // flow vector
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress  // flow vector
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,       // flow vector
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,  // total mechanical stress
+        double dt                                                   // time-step size
     );
 
     //@}
@@ -361,7 +363,7 @@ namespace Mat
     //! @name specific methods for the combination TSI and plastic material
     //@{
 
-    //! mechanical dissipation term due to kinematic and isotropic hardening at t_n+1
+    //! mechanical dissipation term (power) due to kinematic and isotropic hardening at t_n+1
     std::vector<double> dmech_;
     //! linearisation of mechanical dissipation term w.r.t. to d_{n+1}
     std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> dmech_d_;

@@ -347,15 +347,16 @@ namespace Mat
 
     //! @name Linearisation terms for thermal equation
 
-    //! current (i.e. at t_n+1) mechanical dissipation
+    //! current (i.e. at t_n+1) mechanical dissipation (power)
     std::shared_ptr<std::vector<double>> mechdiss_;
     //! current (i.e. at t_n+1) linearised mechanical dissipation w.r.t. T_{n+1}
     std::shared_ptr<std::vector<double>> mechdiss_k_tt_;
     //! current (i.e. at t_n+1) linearised mechanical dissipation w.r.t. d_{n+1}
     std::shared_ptr<std::vector<Core::LinAlg::Matrix<6, 1>>> mechdiss_k_td_;
-    //! current (i.e. at t_n+1) thermoplastic heating term
+    //! current (i.e. at t_n+1) thermoplastic heating term divided by the temperature (power per
+    //! temperature)
     std::shared_ptr<std::vector<double>> thrplheat_;
-    //! current (i.e. at t_n+1) thermoplastic heating term
+    //! current (i.e. at t_n+1) thermoplastic heating term w.r.t. T_{n+1}
     std::shared_ptr<std::vector<double>> thrplheat_k_tt_;
     //! current (i.e. at t_n+1) thermoplastic heating term w.r.t. d_{n+1}
     std::shared_ptr<std::vector<Core::LinAlg::Matrix<6, 1>>> thrplheat_k_td_;
