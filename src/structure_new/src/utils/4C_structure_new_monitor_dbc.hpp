@@ -22,7 +22,7 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO
 {
-  class RuntimeCsvWriter;
+  class RuntimeCsvWriterWithTimeAndStep;
   class DiscretizationWriter;
 }  // namespace Core::IO
 namespace Core::FE
@@ -143,7 +143,7 @@ namespace Solid
     // dofset index for the structural dofs (assumed to be 0)
     constexpr static unsigned int structural_dof_set_ = 0;
     int os_precision_ = -1;
-    std::vector<std::unique_ptr<Core::IO::RuntimeCsvWriter>> dbc_monitor_csvwriter_;
+    std::vector<std::unique_ptr<Core::IO::RuntimeCsvWriterWithTimeAndStep>> dbc_monitor_csvwriter_;
     std::vector<ryml::Tree> dbc_monitor_yaml_file_trees_;
     IOMonitorStructureDBC::FileType file_type_;
 

@@ -39,7 +39,8 @@ void Solid::ErrorEvaluator::write_error(
     const Results& results, Core::FE::Discretization& discretization)
 {
   const int csv_precision = 16;
-  Core::IO::RuntimeCsvWriter csv_writer(Core::Communication::my_mpi_rank(discretization.get_comm()),
+  Core::IO::RuntimeCsvWriterWithTimeAndStep csv_writer(
+      Core::Communication::my_mpi_rank(discretization.get_comm()),
       *Global::Problem::instance()->output_control_file(), "error_evaluation_analytical_reference");
 
   if (results.number_of_degrees_of_freedom)

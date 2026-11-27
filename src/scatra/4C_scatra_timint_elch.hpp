@@ -411,8 +411,8 @@ namespace ScaTra
     std::shared_ptr<const Core::LinAlg::MultiMapExtractor> splitter_macro_;
 
     //! CSV writers for SOC, c-rate and cell voltage
-    std::map<int, std::optional<Core::IO::RuntimeCsvWriter>> runtime_csvwriter_soc_;
-    std::optional<Core::IO::RuntimeCsvWriter> runtime_csvwriter_cell_voltage_;
+    std::map<int, std::optional<Core::IO::RuntimeCsvWriterWithTimeAndStep>> runtime_csvwriter_soc_;
+    std::optional<Core::IO::RuntimeCsvWriterWithTimeAndStep> runtime_csvwriter_cell_voltage_;
   };  // class ScaTraTimIntElch
 
 

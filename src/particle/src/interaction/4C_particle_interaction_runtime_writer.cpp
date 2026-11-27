@@ -59,9 +59,9 @@ void Particle::InteractionWriter::register_specific_runtime_csv_writer(const std
     FOUR_C_THROW("a runtime csv writer for field '{}' is already stored!", fieldname);
 
   // set the csv writer object
-  runtime_csvwriters_[fieldname] =
-      std::make_shared<Core::IO::RuntimeCsvWriter>(Core::Communication::my_mpi_rank(comm_),
-          *Global::Problem::instance()->output_control_file(), fieldname);
+  runtime_csvwriters_[fieldname] = std::make_shared<Core::IO::RuntimeCsvWriterWithTimeAndStep>(
+      Core::Communication::my_mpi_rank(comm_), *Global::Problem::instance()->output_control_file(),
+      fieldname);
 }
 
 void Particle::InteractionWriter::write_particle_interaction_runtime_output(
@@ -81,7 +81,7 @@ void Particle::InteractionWriter::write_particle_interaction_runtime_output(
   // iterate over csv writer objects
   for (auto& writerIt : runtime_csvwriters_)
   {
-    std::shared_ptr<Core::IO::RuntimeCsvWriter> runtime_csvwriter = writerIt.second;
+    std::shared_ptr<Core::IO::RuntimeCsvWriterWithTimeAndStep> runtime_csvwriter = writerIt.second;
 
     // reset time and time step of the writer object
     runtime_csvwriter->reset_time_and_time_step(time, step);

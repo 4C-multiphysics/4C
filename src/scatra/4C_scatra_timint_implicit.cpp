@@ -1548,7 +1548,7 @@ void ScaTra::ScaTraTimIntImpl::time_loop()
 
     // output performance statistics associated with nonlinear solver into *.csv file if applicable
     if (params_->get<bool>("OUTPUTNONLINSOLVERSTATS"))
-      output_nonlin_solver_stats(iternum_, dtnonlinsolve, step(), discret_->get_comm());
+      output_nonlin_solver_stats(iternum_, dtnonlinsolve, step());
 
     // -------------------------------------------------------------------
     //                         update solution
