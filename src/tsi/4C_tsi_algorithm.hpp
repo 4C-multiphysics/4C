@@ -18,6 +18,9 @@
 #include "4C_coupling_adapter.hpp"
 #include "4C_coupling_adapter_volmortar.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_utils_enum.hpp"
+
+#include <cstdint>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -62,6 +65,21 @@ namespace Mortar
  *----------------------------------------------------------------------*/
 namespace TSI
 {
+  //! status of a time step operation (predictor or nonlinear solve)
+  enum class StepStatus : std::uint8_t
+  {
+    no_errors,                      //!< operation succeeded
+    nonlinear_solver_failed,        //!< nonlinear solver did not converge
+    time_step_reduction_requested,  //!< a material requested a smaller time step
+  };
+
+  //! action taken by the time loop after a time step operation
+  enum class StepAction : std::uint8_t
+  {
+    accept_step,  //!< continue with the step
+    retry_step,   //!< the step was reset, retry it
+  };
+
   //! TSI algorithm base
   //!
   //!
@@ -96,7 +114,7 @@ namespace TSI
     void post_setup();
 
     /// non-linear solve, i.e. (multiple) corrector
-    virtual void solve() = 0;
+    [[nodiscard]] virtual TSI::StepStatus solve() = 0;
 
     //! read restart data
     void read_restart(int step  //!< step number where the calculation is continued
@@ -123,8 +141,30 @@ namespace TSI
     //! start a new time step
     void prepare_time_step() override = 0;
 
+    //! start a new time step and report whether preparation succeeded
+    [[nodiscard]] virtual TSI::StepStatus prepare_time_step_with_status()
+    {
+      prepare_time_step();
+      return TSI::StepStatus::no_errors;
+    }
+
+    /**
+    @brief Converts the step status into a step action.
+
+    If this function returns retry_step, it is responsible for resetting the current step and
+    preparing the retry.
+     */
+    virtual TSI::StepAction perform_error_action(const TSI::StepStatus step_status)
+    {
+      if (step_status == TSI::StepStatus::no_errors) return TSI::StepAction::accept_step;
+      FOUR_C_THROW("TSI step failed with status {}.", step_status);
+    }
+
     //! take current results for converged and save for next time step
     void update() override = 0;
+
+    //! tasks after a step has been accepted, updated and written
+    virtual void finalize_successful_step() {}
 
     //@}
 

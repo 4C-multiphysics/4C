@@ -66,6 +66,14 @@ namespace TSI
     ptc,         //!< pseudo transient continuation nonlinear iteration
   };
 
+  //! action if the nonlinear solver does not converge
+  enum class DivContAct
+  {
+    stop,        //!< abort simulation
+    ignore,      //!< continue nevertheless
+    adapt_step,  //!< retry the step with a reduced time-step size
+  };
+
   //! type of line-search strategy
   enum class LineSearch
   {

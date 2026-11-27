@@ -169,10 +169,24 @@ void TSI::Algorithm::time_loop()
   while (not_finished())
   {
     // increment step, print header and apply coupling (only monolithic scheme)
-    prepare_time_step();
+    const TSI::StepStatus prepare_status = prepare_time_step_with_status();
+    switch (perform_error_action(prepare_status))
+    {
+      case TSI::StepAction::retry_step:
+        continue;
+      case TSI::StepAction::accept_step:
+        break;  // do nothing
+    }
 
     // integrate time step
-    solve();
+    const TSI::StepStatus solve_status = solve();
+    switch (perform_error_action(solve_status))
+    {
+      case TSI::StepAction::retry_step:
+        continue;
+      case TSI::StepAction::accept_step:
+        break;  // do nothing
+    }
 
     // calculate stresses, strains, energies
     prepare_output();
@@ -183,6 +197,7 @@ void TSI::Algorithm::time_loop()
     // write output to screen and files
     output();
 
+    finalize_successful_step();
   }  // not_finished
 }
 

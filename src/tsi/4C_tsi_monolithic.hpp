@@ -16,10 +16,13 @@
 
 #include "4C_structure_new_input.hpp"
 #include "4C_thermo_input.hpp"
+#include "4C_timestepping_time_step_control.hpp"
 #include "4C_tsi_algorithm.hpp"
 #include "4C_tsi_input.hpp"
 
 #include <Teuchos_Time.hpp>
+
+#include <deque>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -94,7 +97,7 @@ namespace TSI
     void setup_system() override;
 
     /// non-linear solve, i.e. (multiple) corrector
-    void solve() override;
+    [[nodiscard]] TSI::StepStatus solve() override;
 
     //! read restart data
     void read_restart(int step  //!< step number where the calculation is continued
@@ -196,7 +199,16 @@ namespace TSI
     //! @name Time loop building blocks
 
     //! start a new time step
-    void prepare_time_step() override;
+    void prepare_time_step() final;
+
+    //! start a new time step and report whether the predictors succeeded
+    [[nodiscard]] TSI::StepStatus prepare_time_step_with_status() override;
+
+    //! convert the step status into an action, preparing a retry with reduced time-step size
+    TSI::StepAction perform_error_action(TSI::StepStatus step_status) override;
+
+    //! possibly increase the time-step size after an accepted step
+    void finalize_successful_step() override;
 
     //! take current results for converged and save for next time step
     void update() override;
@@ -271,6 +283,12 @@ namespace TSI
     //! list need to be adapted accordingly
     void fix_time_integration_params();
 
+    //! reset all fields to the beginning of the step and reduce the time-step size
+    void prepare_retry_with_reduced_time_step();
+
+    //! set the time-step size of the algorithm and all fields for the current step
+    void set_new_time_step_size(double new_dt);
+
     const Teuchos::ParameterList& tsidyn_;      //!< TSI dynamic parameter list
     const Teuchos::ParameterList& tsidynmono_;  //!< monolithic TSI dynamic parameter list
 
@@ -340,6 +358,13 @@ namespace TSI
     int itermin_;  //!< minimally requested iteration
 
     const Teuchos::ParameterList& sdyn_;  //!< structural dynamic parameter list
+
+    //! @name time-step control
+    const TimeStepping::TimeStepControlSettings time_step_control_settings_;
+    const bool allow_material_time_step_reduction_;
+    size_t num_steps_at_current_dt_ = 0;
+    std::deque<size_t> nonlinear_iterations_per_step_;
+    //@}
 
     Teuchos::Time timernewton_;  //!< timer for measurement of solution time of newton iterations
     double dtsolve_;             //!< linear solver time

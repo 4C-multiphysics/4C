@@ -44,7 +44,7 @@ namespace TSI
     explicit Partitioned(MPI_Comm comm);
 
     //! non-linear solve, i.e. (multiple) corrector
-    void solve() override;
+    [[nodiscard]] TSI::StepStatus solve() override;
 
     //! initialise internal variables needed as guess for the partitioned TSI algorithm
     void setup_system() override;
