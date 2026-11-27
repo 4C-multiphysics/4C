@@ -29,7 +29,7 @@ namespace Core
     fluid,      ///< fluid problem
     fluid_ale,  ///< fluid on an ale mesh (no structure)
     fbi,        ///< 3D fluid interacting with a 1D beam
-    fluid_redmodels,  ///< fluid_redairways problem
+    fluid_redmodels,  ///< fluid coupled to reduced models such as 1D arteries
     fluid_xfem,       ///< fluid problem including XFEM interfaces
     fps3i,            ///< fluid porous structure scatra scatra interaction
     fpsi,             ///< fluid porous structure interaction problem
@@ -52,17 +52,16 @@ namespace Core
     porofluid_pressure_based_elast,         ///< pressure-based flow in elastic porous media
     porofluid_pressure_based_elast_scatra,  ///< pressure-based flow in elastic porous media with
                                             ///< transport of species
-    red_airways,                            ///< reduced dimensional airways
-    reduced_lung,     ///< New implementation of red_airways with Newton-iteration
-    one_d_pipe_flow,  ///< new implementation of arterial network
-    scatra,           ///< scalar transport problem (e.g. convection-diffusion)
-    ssi,              ///< scalar structure interaction
-    ssti,             ///< scalar structure thermo interaction
-    sti,              ///< scalar-thermo interaction
-    structure,        ///< structural problem
-    thermo,           ///< thermal problem
-    thermo_fsi,       ///< thermo-fluid-structure-interaction problem
-    tsi,              ///< thermal structure interaction
+    reduced_lung,                           ///< reduced dimensional lung
+    one_d_pipe_flow,                        ///< new implementation of arterial network
+    scatra,      ///< scalar transport problem (e.g. convection-diffusion)
+    ssi,         ///< scalar structure interaction
+    ssti,        ///< scalar structure thermo interaction
+    sti,         ///< scalar-thermo interaction
+    structure,   ///< structural problem
+    thermo,      ///< thermal problem
+    thermo_fsi,  ///< thermo-fluid-structure-interaction problem
+    tsi,         ///< thermal structure interaction
   };
 }  // namespace Core
 

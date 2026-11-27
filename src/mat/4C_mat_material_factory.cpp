@@ -84,11 +84,6 @@
 #include "4C_mat_list_reactions.hpp"
 #include "4C_mat_lubrication_law.hpp"
 #include "4C_mat_lubrication_mat.hpp"
-#include "4C_mat_maxwell_0d_acinus.hpp"
-#include "4C_mat_maxwell_0d_acinus_DoubleExponential.hpp"
-#include "4C_mat_maxwell_0d_acinus_Exponential.hpp"
-#include "4C_mat_maxwell_0d_acinus_NeoHookean.hpp"
-#include "4C_mat_maxwell_0d_acinus_Ogden.hpp"
 #include "4C_mat_membrane_active_strain.hpp"
 #include "4C_mat_membrane_elasthyper.hpp"
 #include "4C_mat_micromaterial.hpp"
@@ -891,26 +886,6 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     case Core::Materials::m_cnst_art:
     {
       return make_parameter_impl<Mat::PAR::Cnst1dArt>(id, type, input_data);
-    }
-    case Core::Materials::m_0d_maxwell_acinus:
-    {
-      return make_parameter_impl<Mat::PAR::Maxwell0dAcinus>(id, type, input_data);
-    }
-    case Core::Materials::m_0d_maxwell_acinus_neohookean:
-    {
-      return make_parameter_impl<Mat::PAR::Maxwell0dAcinusNeoHookean>(id, type, input_data);
-    }
-    case Core::Materials::m_0d_maxwell_acinus_exponential:
-    {
-      return make_parameter_impl<Mat::PAR::Maxwell0dAcinusExponential>(id, type, input_data);
-    }
-    case Core::Materials::m_0d_maxwell_acinus_doubleexponential:
-    {
-      return make_parameter_impl<Mat::PAR::Maxwell0dAcinusDoubleExponential>(id, type, input_data);
-    }
-    case Core::Materials::m_0d_maxwell_acinus_ogden:
-    {
-      return make_parameter_impl<Mat::PAR::Maxwell0dAcinusOgden>(id, type, input_data);
     }
     case Core::Materials::m_thermo_fourier:
     {

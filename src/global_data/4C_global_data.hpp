@@ -324,14 +324,6 @@ namespace Global
     {
       return parameters_->sublist("ARTERIAL DYNAMIC");
     }
-    const Teuchos::ParameterList& reduced_d_airway_dynamic_params() const
-    {
-      return parameters_->sublist("REDUCED DIMENSIONAL AIRWAYS DYNAMIC");
-    }
-    const Teuchos::ParameterList& red_airway_tissue_dynamic_params() const
-    {
-      return parameters_->sublist("COUPLED REDUCED-D AIRWAYS AND TISSUE DYNAMIC");
-    }
     const Teuchos::ParameterList& poroelast_dynamic_params() const
     {
       return parameters_->sublist("POROELASTICITY DYNAMIC");

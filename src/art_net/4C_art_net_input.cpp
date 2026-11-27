@@ -67,37 +67,6 @@ Core::IO::InputSpec ArtDyn::valid_parameters()
 
 
 
-Core::IO::InputSpec ArteryNetwork::valid_parameters()
-{
-  using namespace Core::IO::InputSpecBuilders;
-  Core::IO::InputSpec spec = group("COUPLED REDUCED-D AIRWAYS AND TISSUE DYNAMIC",
-      {
-
-          parameter<double>("CONVTOL_P",
-              {.description = "Coupled red_airway and tissue iteration convergence for pressure",
-                  .default_value = 1E-6}),
-          parameter<double>("CONVTOL_Q",
-              {.description = "Coupled red_airway and tissue iteration convergence for flux",
-                  .default_value = 1E-6}),
-          parameter<int>(
-              "MAXITER", {.description = "Maximum coupling iterations", .default_value = 5}),
-          parameter<Relaxtype3D0D>("RELAXTYPE",
-              {.description = "Dynamic Relaxation Type", .default_value = norelaxation}),
-
-          parameter<double>(
-              "TIMESTEP", {.description = "Time increment dt", .default_value = 0.01}),
-
-          parameter<int>("NUMSTEP", {.description = "Number of Time Steps", .default_value = 1}),
-
-          parameter<double>("MAXTIME", {.description = "", .default_value = 4.0}),
-
-          parameter<double>("NORMAL", {.description = "", .default_value = 1.0})},
-      {.required = false});
-  return spec;
-}
-
-
-
 void ArteryNetwork::set_valid_conditions(
     std::vector<Core::Conditions::ConditionDefinition>& condlist)
 {
@@ -224,6 +193,38 @@ void ArteryNetwork::set_valid_conditions(
   artscatracoup_ntp.add_component(parameter<double>("PENALTY"));
 
   condlist.push_back(artscatracoup_ntp);
+
+  /*--------------------------------------------------------------------*/
+  // 3-D/reduced-D coupling boundary condition
+  Core::Conditions::ConditionDefinition art_red_to_3d_bc(
+      "DESIGN NODE REDUCED D To 3D FLOW COUPLING CONDITIONS", "Art_redD_3D_CouplingCond",
+      "Artery reduced D 3D coupling condition", Core::Conditions::ArtRedTo3DCouplingCond, true,
+      Core::Conditions::geometry_type_point);
+
+  art_red_to_3d_bc.add_component(parameter<int>("ConditionID"));
+  art_red_to_3d_bc.add_component(deprecated_selection<std::string>("CouplingType",
+      {"forced", "absorbing"}, {.description = "coupling type", .default_value = "forced"}));
+  art_red_to_3d_bc.add_component(deprecated_selection<std::string>("ReturnedVariable",
+      {"pressure", "flow"}, {.description = "returned variable", .default_value = "pressure"}));
+  art_red_to_3d_bc.add_component(parameter<double>("Tolerance"));
+  art_red_to_3d_bc.add_component(parameter<int>("MaximumIterations"));
+
+  condlist.push_back(art_red_to_3d_bc);
+
+  /*--------------------------------------------------------------------*/
+  // 3-D/reduced-D coupling boundary condition
+  Core::Conditions::ConditionDefinition art_3d_to_red_bc(
+      "DESIGN SURF 3D To REDUCED D FLOW COUPLING CONDITIONS", "Art_3D_redD_CouplingCond",
+      "Artery 3D reduced D coupling condition", Core::Conditions::Art3DToRedCouplingCond, true,
+      Core::Conditions::geometry_type_surface);
+
+  art_3d_to_red_bc.add_component(parameter<int>("ConditionID"));
+  art_3d_to_red_bc.add_component(deprecated_selection<std::string>("ReturnedVariable",
+      {"pressure", "flow"}, {.description = "returned variable", .default_value = "flow"}));
+  art_3d_to_red_bc.add_component(parameter<double>("Tolerance"));
+  art_3d_to_red_bc.add_component(parameter<int>("MaximumIterations"));
+
+  condlist.push_back(art_3d_to_red_bc);
 }
 
 FOUR_C_NAMESPACE_CLOSE

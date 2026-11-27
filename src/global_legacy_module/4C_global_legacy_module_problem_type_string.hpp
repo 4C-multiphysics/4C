@@ -58,7 +58,6 @@ namespace Core
       string2prbtype["porofluid_pressure_based_elasticity_scatra"] =
           Core::ProblemType::porofluid_pressure_based_elast_scatra;
       string2prbtype["porofluid_pressure_based"] = Core::ProblemType::porofluid_pressure_based;
-      string2prbtype["ReducedDimensionalAirWays"] = Core::ProblemType::red_airways;
       string2prbtype["Reduced_Lung"] = Core::ProblemType::reduced_lung;
       string2prbtype["Reduced_Lung_1D_Pipe_Flow"] = Core::ProblemType::one_d_pipe_flow;
       string2prbtype["Scalar_Thermo_Interaction"] = Core::ProblemType::sti;

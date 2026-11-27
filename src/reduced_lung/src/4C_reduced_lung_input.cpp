@@ -9,7 +9,6 @@
 
 #include "4C_fem_condition_definition.hpp"
 #include "4C_io_input_spec_builders.hpp"
-#include "4C_red_airways_input.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 

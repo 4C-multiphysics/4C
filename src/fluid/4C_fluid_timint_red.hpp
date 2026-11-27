@@ -19,11 +19,6 @@ namespace Adapter
 {
   class ArtNet;
 }
-namespace Airway
-{
-  class RedAirwayImplicitTimeInt;
-}
-
 namespace FLD
 {
   namespace Utils
@@ -147,12 +142,6 @@ namespace FLD
 
     /// 1D arterial network time integration
     std::shared_ptr<Adapter::ArtNet> ART_timeInt_;
-
-    /// bio related, 3D to reduced-D coupling
-    std::shared_ptr<Utils::FluidCouplingWrapperBase> coupled3D_redDbc_airways_;
-
-    /// 1D arterial network time integration
-    std::shared_ptr<Airway::RedAirwayImplicitTimeInt> airway_imp_timeInt_;
 
     /// bio related special (in/outflow) boundaries
     std::shared_ptr<Utils::FluidVolumetricSurfaceFlowWrapper> vol_surf_flow_bc_;

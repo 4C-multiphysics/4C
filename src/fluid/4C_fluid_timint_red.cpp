@@ -31,8 +31,6 @@ FLD::TimIntRedModels::TimIntRedModels(const std::shared_ptr<Core::FE::Discretiza
       traction_vel_comp_adder_bc_(nullptr),
       coupled3D_redDbc_art_(nullptr),
       ART_timeInt_(nullptr),
-      coupled3D_redDbc_airways_(nullptr),
-      airway_imp_timeInt_(nullptr),
       vol_surf_flow_bc_(nullptr),
       vol_surf_flow_bc_maps_(nullptr),
       vol_flow_rates_bc_extractor_(nullptr),
@@ -89,26 +87,6 @@ void FLD::TimIntRedModels::init()
     }
 
 
-    airway_imp_timeInt_ = dyn_red_airways_drt(true);
-    // Check if one-dimensional artery network problem exist
-    if (airway_imp_timeInt_ != nullptr)
-    {
-      Core::IO::DiscretizationWriter output_redD(*airway_imp_timeInt_->discretization(),
-          *Global::Problem::instance()->output_control_file(),
-          Global::Problem::instance()->spatial_approximation_type());
-      discret_->clear_state();
-      discret_->set_state("velaf", *zeros_);
-      if (alefluid_)
-      {
-        discret_->set_state("dispnp", *dispnp_);
-      }
-      coupled3D_redDbc_airways_ =
-          std::make_shared<Utils::FluidCouplingWrapper<Airway::RedAirwayImplicitTimeInt>>(discret_,
-              airway_imp_timeInt_->discretization(), airway_imp_timeInt_, output_redD, dta_,
-              airway_imp_timeInt_->dt());
-    }
-
-
     zeros_->put_scalar(0.0);  // just in case of change
   }
 
@@ -122,10 +100,11 @@ void FLD::TimIntRedModels::init()
   if (locsysman_ != nullptr)
   {
     // Models
-    if ((ART_timeInt_ != nullptr) or (airway_imp_timeInt_ != nullptr))
+    if (ART_timeInt_ != nullptr)
     {
       FOUR_C_THROW(
-          "No problem types involving airways are supported for use with locsys conditions!");
+          "No problem types involving reduced models are supported for use with locsys "
+          "conditions!");
     }
   }
 }
@@ -146,12 +125,6 @@ void FLD::TimIntRedModels::do_problem_specific_boundary_conditions()
   if (ART_timeInt_ != nullptr)
   {
     coupled3D_redDbc_art_->evaluate_dirichlet(*velnp_, *(dbcmaps_->cond_map()), time_);
-  }
-  // update the 3D-to-reduced_D coupling data
-  // Check if one-dimensional artery network problem exist
-  if (airway_imp_timeInt_ != nullptr)
-  {
-    coupled3D_redDbc_airways_->evaluate_dirichlet(*velnp_, *(dbcmaps_->cond_map()), time_);
   }
 
   // Evaluate the womersley velocities
@@ -183,18 +156,6 @@ void FLD::TimIntRedModels::update_3d_to_reduced_mat_and_rhs()
       coupled3D_redDbc_art_->apply_boundary_conditions(time_, dta_, theta_);
     }
     coupled3D_redDbc_art_->update_residual(*residual_);
-  }
-  // update the 3D-to-reduced_D coupling data
-  // Check if one-dimensional artery network problem exist
-  if (airway_imp_timeInt_ != nullptr)
-  {
-    if (strong_redD_3d_coupling_)
-    {
-      coupled3D_redDbc_airways_->load_state();
-      coupled3D_redDbc_airways_->flow_rate_calculation(time_, dta_);
-      coupled3D_redDbc_airways_->apply_boundary_conditions(time_, dta_, theta_);
-    }
-    coupled3D_redDbc_airways_->update_residual(*residual_);
   }
 
   //----------------------------------------------------------------------
@@ -235,19 +196,6 @@ void FLD::TimIntRedModels::output_reduced_d()
 
     ART_timeInt_->output(true, redD_export_params);
   }
-
-  // Check if one-dimensional artery network problem exist
-  if (airway_imp_timeInt_ != nullptr)
-  {
-    const auto redD_export_params = std::make_shared<Teuchos::ParameterList>();
-
-    redD_export_params->set<int>("step", step_);
-    redD_export_params->set<int>("upres", upres_);
-    redD_export_params->set<int>("uprestart", uprestart_);
-    redD_export_params->set<double>("time", time_);
-
-    airway_imp_timeInt_->output(true, redD_export_params);
-  }
 }  // FLD::TimIntRedModels::OutputReducedD
 
 /*----------------------------------------------------------------------*
@@ -266,11 +214,6 @@ void FLD::TimIntRedModels::read_restart(const int step)
   {
     coupled3D_redDbc_art_->read_restart(reader);
   }
-  // Check if zero-dimensional airway network problem exist
-  if (airway_imp_timeInt_ != nullptr)
-  {
-    coupled3D_redDbc_airways_->read_restart(reader);
-  }
 
   read_restart_reduced_d(step);
 }
@@ -283,12 +226,6 @@ void FLD::TimIntRedModels::read_restart_reduced_d(const int step)
   if (ART_timeInt_ != nullptr)
   {
     ART_timeInt_->read_restart(step, true);
-  }
-
-  // Check if one-dimensional artery network problem exist
-  if (airway_imp_timeInt_ != nullptr)
-  {
-    airway_imp_timeInt_->read_restart(step, true);
   }
 }  // FLD::TimIntRedModels::ReadRestartReadRestart(int step)
 
@@ -324,11 +261,6 @@ void FLD::TimIntRedModels::write_restart() const
   if (ART_timeInt_ != nullptr)
   {
     coupled3D_redDbc_art_->write_restart(*output_);
-  }
-  // Check if zero-dimensional airway network problem exist
-  if (airway_imp_timeInt_ != nullptr)
-  {
-    coupled3D_redDbc_airways_->write_restart(*output_);
   }
 }
 
@@ -427,15 +359,6 @@ void FLD::TimIntRedModels::prepare_time_step()
     coupled3D_redDbc_art_->save_state();
     coupled3D_redDbc_art_->flow_rate_calculation(time_, dta_);
     coupled3D_redDbc_art_->apply_boundary_conditions(time_, dta_, theta_);
-  }
-
-
-  // Check if one-dimensional artery network problem exist
-  if (airway_imp_timeInt_ != nullptr)
-  {
-    coupled3D_redDbc_airways_->save_state();
-    coupled3D_redDbc_airways_->flow_rate_calculation(time_, dta_);
-    coupled3D_redDbc_airways_->apply_boundary_conditions(time_, dta_, theta_);
   }
 
   discret_->clear_state();

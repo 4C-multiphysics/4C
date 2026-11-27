@@ -70,11 +70,6 @@
 #include "4C_mat_list_chemoreac.hpp"
 #include "4C_mat_list_chemotaxis.hpp"
 #include "4C_mat_list_reactions.hpp"
-#include "4C_mat_maxwell_0d_acinus.hpp"
-#include "4C_mat_maxwell_0d_acinus_DoubleExponential.hpp"
-#include "4C_mat_maxwell_0d_acinus_Exponential.hpp"
-#include "4C_mat_maxwell_0d_acinus_NeoHookean.hpp"
-#include "4C_mat_maxwell_0d_acinus_Ogden.hpp"
 #include "4C_mat_membrane_active_strain.hpp"
 #include "4C_mat_membrane_elasthyper.hpp"
 #include "4C_mat_micromaterial.hpp"
@@ -109,7 +104,6 @@
 #include "4C_particle_engine_object.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_function.hpp"
 #include "4C_porofluid_pressure_based_ele.hpp"
-#include "4C_red_airways_elementbase.hpp"
 #include "4C_rigidsphere.hpp"
 #include "4C_scatra_ele.hpp"
 #include "4C_scatra_functions.hpp"
@@ -189,9 +183,6 @@ namespace
       << Discret::Elements::SolidScatraType<2>::instance().name() << " "
       << Discret::Elements::SolidScatraType<3>::instance().name() << " "
       << Discret::Elements::ArteryType::instance().name() << " "
-      << Discret::Elements::RedAirwayType::instance().name() << " "
-      << Discret::Elements::RedAcinusType::instance().name() << " "
-      << Discret::Elements::RedInterAcinarDepType::instance().name() << " "
       << Discret::Elements::ConstraintElement2Type::instance().name() << " "
       << Discret::Elements::ConstraintElement3Type::instance().name() << " "
       << Discret::Elements::LubricationType::instance().name() << " "
@@ -248,13 +239,8 @@ namespace
       << Mat::BeamElastHyperMaterialType<Sacado::Fad::DFad<double>>::instance().name() << " "
       << Discret::Elements::KirchhoffLoveShellNurbsType::instance().name() << " "
       << Mat::PlasticLinElastType::instance().name() << " " << Mat::RobinsonType::instance().name()
-      << " " << Mat::DamageType::instance().name() << " "
-      << Mat::Maxwell0dAcinusType::instance().name() << " "
-      << Mat::Maxwell0dAcinusNeoHookeanType::instance().name() << " "
-      << Mat::Maxwell0dAcinusExponentialType::instance().name() << " "
-      << Mat::Maxwell0dAcinusDoubleExponentialType::instance().name() << " "
-      << Mat::Maxwell0dAcinusOgdenType::instance().name() << " "
-      << Mortar::NodeType::instance().name() << " " << Mortar::ElementType::instance().name() << " "
+      << " " << Mat::DamageType::instance().name() << " " << Mortar::NodeType::instance().name()
+      << " " << Mortar::ElementType::instance().name() << " "
       << CONTACT::NodeType::instance().name() << " " << CONTACT::FriNodeType::instance().name()
       << " " << CONTACT::ElementType::instance().name() << " "
       << BeamInteraction::BeamLinkBeam3rLine2RigidJointedType::instance().name() << " "
@@ -400,18 +386,6 @@ namespace
         group("STI",
             {
                 parameter<bool>("SPECIAL"),
-                parameter<std::string>("QUANTITY"),
-                parameter<double>("VALUE"),
-                parameter<double>("TOLERANCE"),
-                parameter<std::optional<std::string>>("NAME"),
-            }),
-        group("RED_AIRWAY",
-            {
-                parameter<std::string>("DIS"),
-                one_of({
-                    parameter<int>("NODE"),
-                    parameter<int>("ELEMENT"),
-                }),
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),

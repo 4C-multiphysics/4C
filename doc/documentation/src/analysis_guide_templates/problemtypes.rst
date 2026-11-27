@@ -156,19 +156,6 @@ The element types are solely BEAM3R elements used, which can be found in the :re
 
 
 
-ReducedDimensionalAirWays
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**General**
-
-Similar to other network models, the *Reduced dimensional Airways* simulation considers a network of 1D elements in 3D space,
-namely here 1D pipe models of human airways.
-
-**Elements and Degrees of freedom**
-
-The element types used here are 1D elements given in the :ref:`Spatial Discretization reference<discretization_reference>`.
-
-
 Scalar_Transport
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

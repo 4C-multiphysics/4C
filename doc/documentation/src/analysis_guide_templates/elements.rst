@@ -12,4 +12,3 @@ Elements
    elementsale
    elementsthermo
    elementsartery
-   elementsreduceddairways

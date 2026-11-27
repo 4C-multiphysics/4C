@@ -396,59 +396,6 @@ void FluidMonWriter::write_result(
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void RedAirwayMonWriter::check_infield_type(std::string& infieldtype)
-{
-  if (infieldtype != "red_airway")
-    std::cout
-        << "\nPure red_airway problem, field option other than red_airway has been ignored!\n\n";
-}
-
-/*----------------------------------------------------------------------*/
-void RedAirwayMonWriter::field_error(int node)
-{
-  FOUR_C_THROW("Node {} does not belong to red_airway field!", node);
-}
-
-/*----------------------------------------------------------------------*/
-void RedAirwayMonWriter::write_header(std::ofstream& outfile)
-{
-  outfile << "# red_airway problem, writing nodal data of node ";
-}
-
-/*----------------------------------------------------------------------*/
-void RedAirwayMonWriter::write_table_head(std::ofstream& outfile, int dim)
-{
-  outfile << "# step   time     P\n";
-}
-
-/*----------------------------------------------------------------------*/
-void RedAirwayMonWriter::write_result(
-    std::ofstream& outfile, PostResult& result, std::vector<int>& gdof, int dim)
-{
-  // get actual result vector
-  auto resvec = result.read_result("PO2");
-  const Core::LinAlg::Map& pmap = resvec->get_map();
-  // do output of general time step data
-  outfile << std::right << std::setw(20) << result.step();
-  outfile << std::right << std::setw(20) << std::scientific << result.time();
-
-  // compute second part of offset
-  //  int offset2 = pmap.MinAllGID();
-
-  // do output for velocity and pressure
-  for (unsigned i = 0; i < gdof.size(); ++i)
-  {
-    const int lid = pmap.lid(gdof[i]);
-    outfile << std::right << std::setw(20) << resvec->local_values_as_span()[lid];
-  }
-  outfile << "\n";
-}
-
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
 void StructMonWriter::check_infield_type(std::string& infieldtype)
 {
   if (infieldtype != "structure")
@@ -1356,15 +1303,6 @@ int main(int argc, char** argv)
     case Core::ProblemType::thermo_fsi:
     {
       FOUR_C_THROW("not implemented yet");
-      break;
-    }
-    case Core::ProblemType::red_airways:
-    {
-      if (infieldtype == "red_airway")
-      {
-        RedAirwayMonWriter mymonwriter(problem, infieldtype, node);
-        mymonwriter.write_mon_file(problem, infieldtype, node);
-      }
       break;
     }
     case Core::ProblemType::poroelast:

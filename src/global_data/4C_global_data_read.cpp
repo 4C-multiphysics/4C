@@ -137,7 +137,6 @@ Core::IO::InputFile Global::set_up_input_file(MPI_Comm comm)
       "ALE ELEMENTS",
       "THERMO ELEMENTS",
       "ARTERY ELEMENTS",
-      "REDUCED D AIRWAYS ELEMENTS",
       "PARTICLES",
       "PERIODIC BOUNDINGBOX ELEMENTS",
       // general geometry
@@ -599,10 +598,7 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
       break;
     }
     case Core::ProblemType::reduced_lung:
-    case Core::ProblemType::red_airways:  // _reduced D airways
     {
-      // create empty discretizations
-      discretization_types["red_airway"] = {DiscretizationType::plain, "REDUCED D AIRWAYS"};
       break;
     }
     case Core::ProblemType::poroelast:
@@ -774,7 +770,7 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
       break;
   }
 
-  // add artery or airways discretizations only for the following problem types
+  // add artery discretizations only for the following problem types
   switch (problem.get_problem_type())
   {
     case Core::ProblemType::fsi_redmodels:
@@ -785,7 +781,6 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
       {
         // create empty discretizations
         discretization_types["artery"] = {DiscretizationType::plain, "ARTERY"};
-        discretization_types["red_airway"] = {DiscretizationType::plain, "REDUCED D AIRWAYS"};
       }
     }
     break;

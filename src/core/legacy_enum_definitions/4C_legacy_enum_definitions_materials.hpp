@@ -17,12 +17,7 @@ namespace Core::Materials
   /// type of material
   enum MaterialType
   {
-    m_none,                                 ///< undefined
-    m_0d_maxwell_acinus,                    ///< 0D acinar Maxwell material
-    m_0d_maxwell_acinus_doubleexponential,  ///< 0D acinar Maxwell DoubleExponential material
-    m_0d_maxwell_acinus_exponential,        ///< 0D acinar Maxwell Exponential material
-    m_0d_maxwell_acinus_neohookean,         ///< 0D acinar Maxwell NeoHookean material
-    m_0d_maxwell_acinus_ogden,              ///< 0D acinar Maxwell Ogden material
+    m_none,                       ///< undefined
     m_beam_elast_hyper_generic,   ///< material law for a beam: hyperelastic stored energy function
     m_beam_reissner_elast_hyper,  ///< material parameters for a Simo-Reissner beam: hyperelastic
                                   ///< stored energy function
