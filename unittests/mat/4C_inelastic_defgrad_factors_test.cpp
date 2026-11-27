@@ -2437,6 +2437,60 @@ namespace
         "The re-estimation procedure has failed!");
   }
 
+  /// A Gauss point that exceeds the initial yield strength only slightly (by about 0.1 MPa) in its
+  /// first plastic step: with a hardening exponent below 1, the plastic strain of the solution is
+  /// tiny (about 1e-14), which requires careful convergence checks.
+  TEST_F(InelasticDefgradFactorsTest, TestFirstPlasticStepWithSmallOvershootConverges)
+  {
+    // residual tolerance of the 4340 simulation; with the default tolerance, the Local Newton
+    // converges before it is wrongly considered stuck
+    auto local_newton_params = ViscoplasticMaterialSetup{}.local_newton_params;
+    local_newton_params.res_tol = 1.0e-10;
+    // 4340 steel
+    const ReformulatedJohnsonCookParameters ref_jc_params = {.strain_rate_exp_fac = 0.014,
+        .init_yield_strength = 792.0,
+        .isotrop_harden_prefac = 510.0,
+        .isotrop_harden_exp = 0.26};
+    const auto material =
+        set_up_viscoplastic_material({.local_newton_params = local_newton_params,
+                                         .adaptive_estimate_interp_params =
+                                             InelasticDefgradFactorsTestUtils::set_up_aei_params(),
+                                         .thermal_expansion_coefficient = 11.0e-6,
+                                         .viscoplastic_law_params = ref_jc_params})
+            .material;
+
+    Teuchos::ParameterList params_list;
+    params_list.set<double>("temperature", 293.0036160887634651);
+    double total_time = 0.032;
+    double time_step_size = 0.004;
+    Mat::EvaluationContext<3> context{.total_time = &total_time,
+        .time_step_size = &time_step_size,
+        .xi = {},
+        .ref_coords = nullptr};
+    material->pre_evaluate(params_list, context, 0, 0);
+
+    // deformation only slightly above identity
+    Core::LinAlg::Matrix<3, 3> FM(Core::LinAlg::Initialization::zero);
+    FM(0, 0) = 1.0039710576962237;
+    FM(0, 1) = 0.0002187758608132;
+    FM(0, 2) = 0.0000324519530263;
+    FM(1, 0) = -0.0002192754773899;
+    FM(1, 1) = 0.9990628287218052;
+    FM(1, 2) = 0.0000328869254292;
+    FM(2, 0) = 0.0001041285815749;
+    FM(2, 1) = 0.0000044216935478;
+    FM(2, 2) = 0.9986979763236912;
+
+    Core::LinAlg::Matrix<3, 3> iFin_result(Core::LinAlg::Initialization::zero);
+    material->evaluate_inverse_inelastic_def_grad(
+        &FM, Core::LinAlg::identity_matrix<3>(), iFin_result);
+
+    Core::LinAlg::SerialDenseMatrix plastic_strain(1, 1);
+    material->evaluate_output_data("plastic_strain", plastic_strain);
+    double expected_plastic_strain = 1.0185114e-14;
+    EXPECT_NEAR(plastic_strain(0, 0), expected_plastic_strain, 1e-6 * expected_plastic_strain);
+  }
+
   /// Tests two challenging local integration scenarios using the Adaptive Estimate Interpolation
   /// algorithm. In the first, numerically more tractable scenario, both hardening strategies
   /// converge: fixing the plastic state and performing consistent integration based on the
