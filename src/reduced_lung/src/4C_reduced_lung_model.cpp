@@ -28,6 +28,8 @@
 #include "4C_reduced_lung_tree_metadata.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <Teuchos_TimeMonitor.hpp>
+
 #include <map>
 #include <memory>
 #include <optional>
@@ -301,6 +303,7 @@ namespace ReducedLung
      */
     void build_newton_tree_solver()
     {
+      TEUCHOS_FUNC_TIME_MONITOR("ReducedLung::NewtonTree: 0) setup");
       const int comm_size = Core::Communication::num_mpi_ranks(comm_);
       FOUR_C_ASSERT_ALWAYS(row_map_ != nullptr && locally_relevant_dof_map_ != nullptr,
           "Reduced lung maps must be initialized before NewtonTree solver setup.");
