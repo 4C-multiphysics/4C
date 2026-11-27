@@ -32,7 +32,8 @@ Mat::PAR::ThermoPlasticLinElast::ThermoPlasticLinElast(
       kinhard_(matdata.parameters.get<double>("KINHARD")),
       sigma_y_((matdata.parameters.get<std::vector<double>>("SIGMA_Y"))),
       strainbar_p_ref_((matdata.parameters.get<std::vector<double>>("EPSBAR_P"))),
-      abstol_(matdata.parameters.get<double>("TOL"))
+      abstol_(matdata.parameters.get<double>("TOL")),
+      thermal_stress_coefficient_(-youngs_ * thermexpans_ / (1.0 - 2.0 * poissonratio_))
 {
 }
 
@@ -684,9 +685,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
 
   // temperature dependent stress
   // sigma = C_theta * Delta T = (m*I) * Delta T
-  Core::LinAlg::SymmetricTensor<double, 3, 3> ctemp{};
-  setup_cthermo(ctemp);
-  stress += deltaT(0, 0) * ctemp;
+  stress += deltaT(0, 0) * calculate_stress_temperature_modulus();
 
   //---------------------------------------------------------------------------
   // --------------------------------- consistent elastoplastic tangent modulus
@@ -744,7 +743,7 @@ Mat::StressTemperatureModulus Mat::ThermoPlasticLinElast::evaluate_stress_temper
     const EvaluationContext<3>& context, int gp, int eleGID)
 {
   StressTemperatureModulus stress_temperature_modulus;
-  setup_cthermo(stress_temperature_modulus.value);
+  stress_temperature_modulus.value = calculate_stress_temperature_modulus();
   return stress_temperature_modulus;
 }
 
@@ -769,11 +768,7 @@ Core::LinAlg::SymmetricTensor<double, 3, 3> Mat::ThermoPlasticLinElast::evaluate
     const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
     const Teuchos::ParameterList& params, const EvaluationContext<3>& context, int gp, int eleGID)
 {
-  // get the temperature-dependent material tangent
-  Core::LinAlg::SymmetricTensor<double, 3, 3> ctemp;
-  setup_cthermo(ctemp);
-
-  return ctemp;
+  return calculate_stress_temperature_modulus();
 }
 
 /*----------------------------------------------------------------------*
@@ -1050,7 +1045,7 @@ void Mat::ThermoPlasticLinElast::evaluate(
     Core::LinAlg::SymmetricTensor<double, 3, 3>& ctemp,
     Core::LinAlg::SymmetricTensor<double, 3, 3>& stresstemp)
 {
-  setup_cthermo(ctemp);
+  ctemp = calculate_stress_temperature_modulus();
 
   // calculate the temperature difference
   Core::LinAlg::Matrix<1, 1> init(Core::LinAlg::Initialization::uninitialized);
@@ -1078,65 +1073,13 @@ void Mat::ThermoPlasticLinElast::evaluate(
 }  // Evaluate
 
 
-/*----------------------------------------------------------------------*
- | computes temperature dependent isotropic                  dano 05/10 |
- | elasticity tensor in matrix notion for 3d, second(!) order tensor    |
- *----------------------------------------------------------------------*/
-void Mat::ThermoPlasticLinElast::setup_cthermo(
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& ctemp) const
+Core::LinAlg::SymmetricTensor<double, 3, 3>
+Mat::ThermoPlasticLinElast::calculate_stress_temperature_modulus() const
 {
-  double m = st_modulus();
+  return params_->thermal_stress_coefficient_ *
+         Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
+}
 
-  // isotropic elasticity tensor C_temp in Voigt matrix notation C_temp = m I
-  //
-  // Matrix-notation for 3D case
-  //              [ m      0      0 ]
-  //   C_temp =   [ 0      m      0 ]
-  //              [ 0      0      m ]
-  //
-  ctemp = m * Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
-}  // setup_cthermo()
-
-
-/*----------------------------------------------------------------------*
- | calculates stress-temperature modulus                     dano 08/11 |
- *----------------------------------------------------------------------*/
-double Mat::ThermoPlasticLinElast::st_modulus() const
-{
-  // initialise the parameters for the lame constants
-  const double ym = params_->youngs_;
-  const double pv = params_->poissonratio_;
-
-  // initialise the thermal expansion coefficient
-  const double thermexpans = params_->thermexpans_;
-
-  // plane strain, rotational symmetry
-  // E / (1+nu)
-  const double c1 = ym / (1.0 + pv);
-  // (E*nu) / ((1+nu)(1-2nu))
-  const double b1 = c1 * pv / (1.0 - 2.0 * pv);
-
-  // build the lame constants
-  //            E
-  //   mu = --------
-  //        2*(1+nu)
-  //                  E*nu
-  //   lambda = ----------------
-  //            (1+nu)*(1-2*nu)
-  //
-  //  \f \mu =  \frac{E}{2(1+\nu)} \f
-  const double mu = 0.5 * c1;
-  // lambda
-  // \f \frac{E\,\nu}{(1-2\nu)(1+\nu)} \f
-  const double lambda = b1;
-
-  // stress-temperature modulus
-  // \f m\, = \, -(2\,\cdot \mu \, +\, 3\cdot\lambda)\cdot\varalpha_T \f
-  const double stmodulus = (-1.0) * (2.0 * mu + 3.0 * lambda) * thermexpans;
-
-  return stmodulus;
-
-}  // st_modulus()
 
 
 /*----------------------------------------------------------------------*

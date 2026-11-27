@@ -37,7 +37,8 @@ Mat::PAR::ThermoPlasticHyperElast::ThermoPlasticHyperElast(
       hardexpo_(matdata.parameters.get<double>("HARDEXPO")),
       yieldsoft_(matdata.parameters.get<double>("YIELDSOFT")),
       hardsoft_(matdata.parameters.get<double>("HARDSOFT")),
-      abstol_(matdata.parameters.get<double>("TOL"))
+      abstol_(matdata.parameters.get<double>("TOL")),
+      thermal_stress_coefficient_(-youngs_ * cte_ / (1.0 - 2.0 * poissonratio_))
 {
   if (sathardening_ < yield_)
     FOUR_C_THROW("Saturation hardening must not be less than initial yield stress!");
@@ -354,9 +355,10 @@ Mat::StressTemperatureModulus Mat::ThermoPlasticHyperElast::evaluate_stress_temp
   const double jacobian = Core::LinAlg::det(defgrad);
 
   StressTemperatureModulus stress_temperature_modulus;
-  setup_cthermo(stress_temperature_modulus.value, jacobian, inverse_cauchy_green);
-  setup_cmat_thermo(
-      stress_temperature_modulus.derivative_wrt_strain, jacobian, inverse_cauchy_green);
+  stress_temperature_modulus.value =
+      calculate_stress_temperature_modulus(jacobian, inverse_cauchy_green);
+  stress_temperature_modulus.derivative_wrt_strain =
+      calculate_stress_temperature_modulus_derivative_wrt_strain(jacobian, inverse_cauchy_green);
 
   // derivative wrt to temperature is zero.
   return stress_temperature_modulus;
@@ -411,18 +413,15 @@ Mat::ThermoPlasticHyperElast::evaluate_d_stress_d_scalar(
   Core::LinAlg::SymmetricTensor<double, 3, 3> Cinv = Core::LinAlg::inv(cauchygreen);
 
   // get the temperature-dependent mechanical material tangent
-  Core::LinAlg::SymmetricTensor<double, 3, 3> dS_dT{};
-  Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3> cmat_T;
-  setup_cmat_thermo(cmat_T, Core::LinAlg::det(defgrad), Cinv);
+  const double J = Core::LinAlg::det(defgrad);
+  const Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3> cmat_T =
+      calculate_stress_temperature_modulus_derivative_wrt_strain(J, Cinv);
   // evaluate mechanical stress part
-  dS_dT = (temperature - params_->inittemp_) * Core::LinAlg::ddot(cmat_T, glstrain);
-
-  // get the temperature-dependent material tangent
-  Core::LinAlg::SymmetricTensor<double, 3, 3> ctemp{};
-  setup_cthermo(ctemp, Core::LinAlg::det(defgrad), Cinv);
+  Core::LinAlg::SymmetricTensor<double, 3, 3> dS_dT =
+      (temperature - params_->inittemp_) * Core::LinAlg::ddot(cmat_T, glstrain);
 
   // add the derivatives of thermal stress w.r.t temperature
-  dS_dT += ctemp;
+  dS_dT += calculate_stress_temperature_modulus(J, Cinv);
 
   return dS_dT;
 }
@@ -967,10 +966,8 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Tensor<double, 3
   Core::LinAlg::Matrix<1, 1> deltaT(Core::LinAlg::Initialization::uninitialized);
   deltaT(0, 0) = scalartemp - params_->inittemp_;
 
-  // get the temperature-dependent material tangent
-  Core::LinAlg::SymmetricTensor<double, 3, 3> ctemp;
-  ;
-  setup_cthermo(ctemp, defgrd_mat.determinant(), Cinv);
+  const Core::LinAlg::SymmetricTensor<double, 3, 3> ctemp =
+      calculate_stress_temperature_modulus(defgrd_mat.determinant(), Cinv);
 
   // calculate thermal stresses
   // tau = ctemp_AK . Delta T = m_0/2.0 . (J + 1/J) . I . Delta T
@@ -1169,56 +1166,23 @@ void Mat::ThermoPlasticHyperElast::calculate_current_bebar(
 }  // calculate_current_bebar()
 
 
-void Mat::ThermoPlasticHyperElast::setup_cmat_thermo(
-    Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat_T, const double J,
-    const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv) const
+Core::LinAlg::SymmetricTensor<double, 3, 3>
+Mat::ThermoPlasticHyperElast::calculate_stress_temperature_modulus(
+    const double J, const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv) const
 {
-  const double m_0 = st_modulus();
-  cmat_T = m_0 / 2.0 * (J - 1.0 / J) * Core::LinAlg::dyadic(Cinv, Cinv) -
-           m_0 * (J + 1.0 / J) * Core::LinAlg::FourTensorOperations::holzapfel_product(Cinv);
+  const double m_0 = params_->thermal_stress_coefficient_;
+  return m_0 / 2.0 * (J + 1.0 / J) * Cinv;
+}
 
 
-}  // SetupCmatThermo()
-
-
-/*----------------------------------------------------------------------*
- | computes temperature-dependent isotropic                  dano 09/13 |
- | elasticity tensor in matrix notion for 3d, second(!) order tensor    |
- *----------------------------------------------------------------------*/
-void Mat::ThermoPlasticHyperElast::setup_cthermo(Core::LinAlg::SymmetricTensor<double, 3, 3>& ctemp,
-    const double J, const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv_vct) const
+Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>
+Mat::ThermoPlasticHyperElast::calculate_stress_temperature_modulus_derivative_wrt_strain(
+    const double J, const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv) const
 {
-  // temperature-dependent material tangent
-  // C_T = m_0/2.0 . (J + 1/J) . Cinv
-
-  // temperature-dependent stress temperature modulus
-  // m = m(J) = m_0 .(J+1)/J = m_0 . (J + 1/J)
-  const double m_0 = st_modulus();
-  const double m = m_0 * (J + 1.0 / J);
-  ctemp = m / 2.0 * Cinv_vct;
-
-}  // setup_cthermo()
-
-
-/*----------------------------------------------------------------------*
- | calculates stress-temperature modulus m_0                 dano 09/13 |
- *----------------------------------------------------------------------*/
-double Mat::ThermoPlasticHyperElast::st_modulus() const
-{
-  // m_0 := -(2 . mu + 3 . lambda) . alpha_T = - 3 . bulk . alpha_T
-
-  // initialise the parameters for the lame constants
-  const double ym = params_->youngs_;                 // Young's modulus
-  const double nu = params_->poissonratio_;           // Poisson's ratio
-  const double bulk = ym / (3.0 * (1.0 - 2.0 * nu));  // bulk modulus
-  const double cte = params_->cte_;
-
-  // stress-temperature modulus
-  const double stmodulus = (-1.0) * 3.0 * bulk * cte;
-
-  return stmodulus;
-
-}  // st_modulus()
+  const double m_0 = params_->thermal_stress_coefficient_;
+  return m_0 / 2.0 * (J - 1.0 / J) * Core::LinAlg::dyadic(Cinv, Cinv) -
+         m_0 * (J + 1.0 / J) * Core::LinAlg::FourTensorOperations::holzapfel_product(Cinv);
+}
 
 
 /*---------------------------------------------------------------------*
@@ -1330,8 +1294,7 @@ void Mat::ThermoPlasticHyperElast::fd_check(
 
       // temperature-dependent stress temperature modulus
       // m = m(J) = m_0 .(J+1)/J = m_0 . (J + 1/J)
-      double m_0 = st_modulus();
-      double m = m_0 * (J_disturb + 1.0 / J_disturb);
+      double m = params_->thermal_stress_coefficient_ * (J_disturb + 1.0 / J_disturb);
       // in case of testing only the dJ/dd, use undisturbed m, but disturb_Cinv_vct
       // double J = defgrd.Determinant();
       // double m = m_0 * (J + 1.0 / J);

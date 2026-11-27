@@ -175,9 +175,6 @@ namespace Mat
         const Teuchos::ParameterList& params, const EvaluationContext<3>& context, int gp,
         int eleGID) override;
 
-    //! general thermal tangent of material law depending on stress-temperature modulus
-    static void fill_cthermo(Core::LinAlg::SymmetricTensor<double, 3, 3>& ctemp, double m);
-
     [[nodiscard]] StressTemperatureModulus evaluate_stress_temperature_modulus(double temperature,
         const DeformationState& deformation_state, const EvaluationContext<3>& context, int gp,
         int eleGID) override;
@@ -187,27 +184,17 @@ namespace Mat
     void setup_cmat(
         Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, double temperature) const;
 
-    //! computes temperature dependent isotropic elasticity tensor in matrix
-    //! notion for 3d
-    void setup_cthermo(
-        Core::LinAlg::SymmetricTensor<double, 3, 3>& ctemp, double temperature) const;
+    //! thermal stress coefficient \f$ m(T) = -E(T) \alpha_T / (1 - 2 \nu) \f$, i.e. the thermal
+    //! stress is \f$ \mathbf{S}_\text{th} = m(T) (T - T_0) \mathbf{I} \f$
+    [[nodiscard]] double thermal_stress_coefficient(double temperature) const;
 
-    //! calculates stress-temperature modulus
-    [[nodiscard]] double st_modulus(double temperature) const;
-
-    //! calculates stress-temperature modulus
-    [[nodiscard]] double get_st_modulus_t(double temperature) const;
+    //! derivative \f$ \mathrm{d} m / \mathrm{d} T \f$ of the thermal stress coefficient
+    [[nodiscard]] double thermal_stress_coefficient_derivative(double temperature) const;
 
     //! calculates derivative of Cmat with respect to current temperatures
     //! only in case of temperature-dependent material parameters
     void get_cmat_at_tempnp_t(
         Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& derivcmat, double temperature) const;
-
-    //! calculates derivative of Cmat with respect to current temperatures
-    //! only in case of temperature-dependent material parameters
-    void get_cthermo_at_tempnp_t(Core::LinAlg::SymmetricTensor<double, 3, 3>&
-                                     derivctemp,  //!< linearisation of ctemp w.r.t. T
-        double temperature) const;
 
     //! calculate temperature dependent material parameter and return value
     double get_mat_parameter_at_tempnp(

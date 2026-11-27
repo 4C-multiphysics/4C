@@ -63,6 +63,11 @@ namespace Mat
 
       //@}
 
+      //! thermal stress coefficient \f$ m = -(2 \mu + 3 \lambda) \alpha_T = -E \alpha_T / (1 - 2
+      //! \nu) \f$, i.e. the thermal stress is \f$ \mathbf{S}_\text{th} = m (T - T_0)
+      //! \mathbf{I} \f$
+      const double thermal_stress_coefficient_;
+
       //! create material instance of matching type with my parameters
       std::shared_ptr<Core::Mat::Material> create_material() override;
 
@@ -260,14 +265,15 @@ namespace Mat
             stresstemp  //!< temperature dependent stress term
     );
 
-    //! computes temperature dependent isotropic elasticity tensor in matrix
-    //! notion for 3d
-    void setup_cthermo(Core::LinAlg::SymmetricTensor<double, 3, 3>&
-            ctemp  //!< temperature dependent material tangent
-    ) const;
-
-    //! calculates stress-temperature modulus
-    double st_modulus() const;
+    /*!
+     * @brief Calculate the stress-temperature modulus
+     * \f$ \partial \mathbf{S} / \partial T = m \mathbf{I} \f$ with the constant thermal
+     * stress coefficient \f$ m \f$ (see PAR::ThermoPlasticLinElast::thermal_stress_coefficient_)
+     *
+     * @return Stress-temperature modulus \f$ \partial \mathbf{S} / \partial T \f$
+     */
+    [[nodiscard]] Core::LinAlg::SymmetricTensor<double, 3, 3> calculate_stress_temperature_modulus()
+        const;
 
     //! initial temperature
     double init_temp() const { return params_->thetainit_; }

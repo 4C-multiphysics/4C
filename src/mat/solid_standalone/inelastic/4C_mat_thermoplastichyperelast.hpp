@@ -60,6 +60,9 @@ namespace Mat
       const double hardsoft_;
       //! tolerance for local Newton iteration
       const double abstol_;
+      //! thermal stress coefficient at \f$ J = 1 \f$, \f$ m_0 = -(2 \mu + 3 \lambda) \alpha_T = -E
+      //! \alpha_T / (1 - 2 \nu) \f$; the thermal stress uses \f$ m(J) = m_0 (J + 1/J) \f$
+      const double thermal_stress_coefficient_;
 
       //@}
 
@@ -262,37 +265,41 @@ namespace Mat
     );
 
     /*!
-     * @brief Compute the stress-temperature modulus
+     * @brief Calculate the stress-temperature modulus
      * \f[
      *   \frac{\partial \mathbf{S}}{\partial T} = \frac{m_0}{2} \left(J + \frac{1}{J}\right)
      *   \mathbf{C}^{-1}
      * \f]
-     * with \f$J=\det(\mathbf{F})\f$ and the constant \f$m_0\f$ from \ref st_modulus().
+     * with the constant thermal stress coefficient \f$m_0\f$ (see
+     * PAR::ThermoPlasticHyperElast::thermal_stress_coefficient_).
+     *
+     * @param J Determinant \f$J = \det(\mathbf{F})\f$ of the deformation gradient
+     * @param Cinv Inverse \f$\mathbf{C}^{-1}\f$ of the right Cauchy-Green tensor
+     * @return Stress-temperature modulus \f$\partial \mathbf{S} / \partial T\f$
      */
-    void setup_cthermo(Core::LinAlg::SymmetricTensor<double, 3, 3>&
-                           ctemp,  //!< temperature dependent material tangent
-        const double J,            //!< determinant of deformation gradient
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv  //!< inverse of Cauchy-Green tensor
-    ) const;
+    [[nodiscard]] Core::LinAlg::SymmetricTensor<double, 3, 3> calculate_stress_temperature_modulus(
+        double J, const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv) const;
 
     /*!
-     * @brief Compute the derivative of the stress-temperature modulus (see setup_cthermo())
-     * w.r.t. the Green-Lagrange strain. With \f$\mathrm{d}J / \mathrm{d}\mathbf{E} = J
-     * \mathbf{C}^{-1}\f$ and \f$\mathrm{d}\mathbf{C}^{-1} / \mathrm{d}\mathbf{E} = -2
-     * \mathbf{C}^{-1} \odot \mathbf{C}^{-1}\f$, the product rule gives
+     * @brief Calculate the derivative of the stress-temperature modulus (see
+     * calculate_stress_temperature_modulus()) w.r.t. the Green-Lagrange strain. With
+     * \f$\mathrm{d}J / \mathrm{d}\mathbf{E} = J \mathbf{C}^{-1}\f$ and
+     * \f$\mathrm{d}\mathbf{C}^{-1} / \mathrm{d}\mathbf{E} = -2 \mathbf{C}^{-1} \odot
+     * \mathbf{C}^{-1}\f$, the product rule gives
      * \f[
      *   \frac{\mathrm{d}}{\mathrm{d} \mathbf{E}} \frac{\partial \mathbf{S}}{\partial T}
      *     = \frac{m_0}{2} \left(J - \frac{1}{J}\right) \mathbf{C}^{-1} \otimes \mathbf{C}^{-1}
      *       - m_0 \left(J + \frac{1}{J}\right) \mathbf{C}^{-1} \odot \mathbf{C}^{-1}
      * \f]
+     *
+     * @param J Determinant \f$J = \det(\mathbf{F})\f$ of the deformation gradient
+     * @param Cinv Inverse \f$\mathbf{C}^{-1}\f$ of the right Cauchy-Green tensor
+     * @return Derivative \f$\mathrm{d} (\partial \mathbf{S} / \partial T) / \mathrm{d}
+     * \mathbf{E}\f$
      */
-    void setup_cmat_thermo(Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat_T,
-        const double J,  //!< determinant of deformation gradient
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv  //!< inverse of Cauchy-Green tensor
-    ) const;
-
-    //! calculates stress-temperature modulus
-    double st_modulus() const;
+    [[nodiscard]] Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>
+    calculate_stress_temperature_modulus_derivative_wrt_strain(
+        double J, const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv) const;
 
     //! finite difference check of material tangent
     void fd_check(Core::LinAlg::Matrix<NUM_STRESS_3D, 1>& stress,  // updated stress sigma_n+1
