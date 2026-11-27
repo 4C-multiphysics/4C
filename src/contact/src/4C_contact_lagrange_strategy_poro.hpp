@@ -166,10 +166,6 @@ namespace CONTACT
     // Flag for Poro No Penetration Condition
     bool has_poro_no_penetration() const override { return no_penetration_; }
 
-    //! Append contact quantities and the no penetration Lagrange multiplier to the writer
-    void append_runtime_output(
-        Core::IO::DiscretizationVisualizationWriterMesh& writer) const override;
-
     // Return Lagrange Multiplier for No Penetration Condition!
     std::shared_ptr<Core::LinAlg::Vector<double>>& lambda_no_pen() { return lambda_; }
     std::shared_ptr<const Core::LinAlg::Vector<double>> lambda_no_pen() const { return lambda_; }

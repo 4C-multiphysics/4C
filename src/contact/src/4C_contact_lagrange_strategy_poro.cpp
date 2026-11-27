@@ -17,7 +17,6 @@
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
-#include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
@@ -1585,19 +1584,5 @@ void CONTACT::LagrangeStrategyPoro::poro_mt_update()
   mold_->complete(mmatrix_->domain_map(), mmatrix_->range_map());
   update_poro_contact();
 }  // CONTACT::LagrangeStrategyPoro::PoroMtUpdate()
-
-void CONTACT::LagrangeStrategyPoro::append_runtime_output(
-    Core::IO::DiscretizationVisualizationWriterMesh& writer) const
-{
-  MonoCoupledLagrangeStrategy::append_runtime_output(writer);
-
-  if (!has_poro_no_penetration()) return;
-
-  auto lambdaoutexp = Core::LinAlg::Vector<double>(*problem_dofs(), true);
-  Core::LinAlg::export_to(*lambda_no_pen(), lambdaoutexp);
-
-  std::vector<std::optional<std::string>> context(n_dim(), "poronopen_lambda");
-  writer.append_result_data_vector_with_context(lambdaoutexp, Core::IO::OutputEntity::dof, context);
-}
 
 FOUR_C_NAMESPACE_CLOSE
