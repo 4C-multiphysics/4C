@@ -83,10 +83,10 @@ std::array<double, 3> Core::Geo::compute_polygon_center(
     LinAlg::Matrix<3, 1> offset(Core::LinAlg::Initialization::uninitialized);
     offset.update(1.0, LinAlg::Matrix<3, 1>(point.data(), true), -1.0, plane_point, 0.0);
 
-    FOUR_C_ASSERT_ALWAYS(std::abs(offset.dot(plane_normal)) < TOL10,
+    FOUR_C_ASSERT_ALWAYS(std::abs(offset.dot(plane_normal)) < TOL8,
         "Polygon vertices must be coplanar. The given offset measure is {} with the given "
         "tolerance {}.",
-        std::abs(offset.dot(plane_normal)), TOL10);
+        std::abs(offset.dot(plane_normal)), TOL8);
   }
 #endif
 

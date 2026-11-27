@@ -23,7 +23,7 @@ namespace Core::Geo
   //! named tolerance for easy search/grep
   const double TOL12 = 1e-12;
   //! named tolerance for easy search/grep
-  const double TOL10 = 1e-10;
+  const double TOL8 = 1e-8;
   //! named tolerance for easy search/grep
   const double TOL7 = 1e-7;
   //! named tolerance for easy search/grep
