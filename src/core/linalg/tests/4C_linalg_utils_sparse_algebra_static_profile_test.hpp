@@ -15,6 +15,7 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -177,6 +178,79 @@ namespace
       }
   }
 
+  // The default multiplication route must agree with the default row-map constructor. An
+  // explicit dynamic request must still grow even if the configured CRS default is static.
+  TEST_F(SparseAlgebraStaticProfileTest, DefaultAndExplicitDynamicProductOfRankOneBasis)
+  {
+    const int rank = Core::Communication::my_mpi_rank(comm_);
+    const int num_ranks = Core::Communication::num_mpi_ranks(comm_);
+    std::vector<int> rows(8);
+    for (int i = 0; i < 8; ++i) rows[i] = 8 * rank + i;
+    Core::LinAlg::Map row_map(-1, 8, rows.data(), 0, comm_);
+    Core::LinAlg::Map coarse_map(1, 0, comm_);
+    Core::LinAlg::SparseMatrix basis(row_map, 1);
+    for (int i = 0; i < 7; ++i) basis.assemble(1.0, rows[i], 0);
+    basis.complete(coarse_map, row_map);
+
+    for (const bool explicit_flags : {false, true})
+      for (const bool explicit_dynamic : {false, true})
+        for (const bool complete : {false, true})
+        {
+          SCOPED_TRACE(testing::Message()
+                       << "explicit_flags=" << explicit_flags
+                       << ", explicit_dynamic=" << explicit_dynamic << ", complete=" << complete);
+          auto profile = explicit_dynamic
+                             ? StorageProfile::dynamic_profile
+                             : Core::LinAlg::SparseMatrix::default_crs_storage_profile();
+          std::unique_ptr<Core::LinAlg::SparseMatrix> product;
+          if (explicit_flags)
+            product = explicit_dynamic ? Core::LinAlg::matrix_multiply(basis, false, basis, true,
+                                             true, false, complete, profile)
+                                       : Core::LinAlg::matrix_multiply(
+                                             basis, false, basis, true, true, false, complete);
+          else
+            product =
+                explicit_dynamic
+                    ? Core::LinAlg::matrix_multiply(basis, false, basis, true, complete, profile)
+                    : Core::LinAlg::matrix_multiply(basis, false, basis, true, complete);
+          EXPECT_EQ(product->filled(), complete);
+          if (profile == StorageProfile::static_profile)
+          {
+            const auto graph = product->get_current_graph();
+            for (int row = 0; row < 8; ++row)
+              EXPECT_EQ(graph.num_allocated_local_indices(row), row == 7 ? 0 : 7 * num_ranks);
+          }
+          if (!complete) product->complete(row_map, row_map);
+          EXPECT_TRUE(product->range_map().same_as(row_map));
+          EXPECT_TRUE(product->domain_map().same_as(row_map));
+          for (int row = 0; row < 8; ++row)
+          {
+            int count = 0;
+            std::vector<int> columns(7 * num_ranks);
+            std::vector<double> values(7 * num_ranks);
+            product->extract_global_row_copy(
+                rows[row], columns.size(), count, values.data(), columns.data());
+            EXPECT_EQ(count, row == 7 ? 0 : 7 * num_ranks);
+            for (int i = 0; i < count; ++i) EXPECT_DOUBLE_EQ(values[i], 1.0);
+          }
+        }
+
+    // A caller asking for dynamic output must be able to insert new entries before completion,
+    // even when the configured CRS default is static and the initial row estimate is one.
+    for (const bool explicit_flags : {false, true})
+    {
+      auto product = explicit_flags ? Core::LinAlg::matrix_multiply(basis, false, basis, true, true,
+                                          false, false, StorageProfile::dynamic_profile)
+                                    : Core::LinAlg::matrix_multiply(basis, false, basis, true,
+                                          false, StorageProfile::dynamic_profile);
+      const std::array<int, 3> columns{rows[0], rows[1], rows[7]};
+      const std::array<double, 3> values{2.0, 3.0, 4.0};
+      product->insert_global_values(rows[7], 3, values.data(), columns.data());
+      product->complete(row_map, row_map);
+      EXPECT_EQ(product->num_my_entries(7), 3);
+    }
+  }
+
   // Rank zero owns both input rows; every rank owns one output row and one domain entry.
   // A^T B must contain contributions on all ranks, including those with no input rows.
   // Check every product entry and its action on an all-ones vector for both overloads
@@ -204,47 +278,56 @@ namespace
     a.complete(master_map, slave_map);
     b.complete(domain_map, slave_map);
 
-    for (const auto profile : {StorageProfile::dynamic_profile, StorageProfile::static_profile})
-      for (const bool explicit_flags : {false, true})
-        for (const bool complete : {false, true})
-        {
-          SCOPED_TRACE(testing::Message()
-                       << "static=" << (profile == StorageProfile::static_profile)
-                       << ", explicit_flags=" << explicit_flags << ", complete=" << complete);
-          auto product =
-              explicit_flags
-                  ? Core::LinAlg::matrix_multiply(a, true, b, false, true, false, complete, profile)
-                  : Core::LinAlg::matrix_multiply(a, true, b, false, complete, profile);
-          EXPECT_EQ(product->filled(), complete);
-          if (!complete) product->complete(domain_map, master_map);
-          EXPECT_TRUE(product->range_map().same_as(master_map));
-          EXPECT_TRUE(product->domain_map().same_as(domain_map));
-          EXPECT_EQ(product->num_my_nonzeros(), num_ranks);
-
-          int count = 0;
-          std::vector<int> columns(num_ranks);
-          std::vector<double> values(num_ranks);
-          product->extract_global_row_copy(
-              master_gid, num_ranks, count, values.data(), columns.data());
-          ASSERT_EQ(count, num_ranks);
-          for (int entry = 0; entry < count; ++entry)
+    for (const bool use_default : {false, true})
+      for (const auto profile : {StorageProfile::dynamic_profile, StorageProfile::static_profile})
+        for (const bool explicit_flags : {false, true})
+          for (const bool complete : {false, true})
           {
-            const int owner = columns[entry] - 20;
-            EXPECT_GE(owner, 0);
-            EXPECT_LT(owner, num_ranks);
-            EXPECT_DOUBLE_EQ(
-                values[entry], (1.0 + rank) * (5.0 + owner) + (3.0 + rank) * (7.0 + owner));
-          }
+            if (use_default && profile != Core::LinAlg::SparseMatrix::default_crs_storage_profile())
+              continue;
+            SCOPED_TRACE(testing::Message()
+                         << "default=" << use_default
+                         << ", static=" << (profile == StorageProfile::static_profile)
+                         << ", explicit_flags=" << explicit_flags << ", complete=" << complete);
+            auto product =
+                explicit_flags
+                    ? (use_default ? Core::LinAlg::matrix_multiply(
+                                         a, true, b, false, true, false, complete)
+                                   : Core::LinAlg::matrix_multiply(
+                                         a, true, b, false, true, false, complete, profile))
+                    : (use_default ? Core::LinAlg::matrix_multiply(a, true, b, false, complete)
+                                   : Core::LinAlg::matrix_multiply(
+                                         a, true, b, false, complete, profile));
+            EXPECT_EQ(product->filled(), complete);
+            if (!complete) product->complete(domain_map, master_map);
+            EXPECT_TRUE(product->range_map().same_as(master_map));
+            EXPECT_TRUE(product->domain_map().same_as(domain_map));
+            EXPECT_EQ(product->num_my_nonzeros(), num_ranks);
 
-          Core::LinAlg::Vector<double> x(domain_map, true);
-          x.put_scalar(1.0);
-          Core::LinAlg::Vector<double> y(master_map, true);
-          product->multiply(false, x, y);
-          double expected = 0.0;
-          for (int column = 0; column < num_ranks; ++column)
-            expected += (1.0 + rank) * (5.0 + column) + (3.0 + rank) * (7.0 + column);
-          EXPECT_DOUBLE_EQ(y.local_values_as_span()[0], expected);
-        }
+            int count = 0;
+            std::vector<int> columns(num_ranks);
+            std::vector<double> values(num_ranks);
+            product->extract_global_row_copy(
+                master_gid, num_ranks, count, values.data(), columns.data());
+            ASSERT_EQ(count, num_ranks);
+            for (int entry = 0; entry < count; ++entry)
+            {
+              const int owner = columns[entry] - 20;
+              EXPECT_GE(owner, 0);
+              EXPECT_LT(owner, num_ranks);
+              EXPECT_DOUBLE_EQ(
+                  values[entry], (1.0 + rank) * (5.0 + owner) + (3.0 + rank) * (7.0 + owner));
+            }
+
+            Core::LinAlg::Vector<double> x(domain_map, true);
+            x.put_scalar(1.0);
+            Core::LinAlg::Vector<double> y(master_map, true);
+            product->multiply(false, x, y);
+            double expected = 0.0;
+            for (int column = 0; column < num_ranks; ++column)
+              expected += (1.0 + rank) * (5.0 + column) + (3.0 + rank) * (7.0 + column);
+            EXPECT_DOUBLE_EQ(y.local_values_as_span()[0], expected);
+          }
   }
   // CRS matrices support both storage profiles; FE matrices support dynamic storage.
   // The storage-profile overload must also preserve the requested constructor flags.
@@ -314,7 +397,8 @@ namespace
     EXPECT_DOUBLE_EQ(diagonal.local_values_as_span()[0], 5.0);
   }
 
-  // The pre-existing constructor must still allow insertion beyond its initial row estimate.
+  // SparseMatrix::FE_MATRIX and explicitly dynamic CRS must still grow beyond the initial
+  // row estimate.
   TEST_F(SparseAlgebraStaticProfileTest, LegacyConstructorAllowsRowGrowth)
   {
     const int rank = Core::Communication::my_mpi_rank(comm_);
@@ -326,13 +410,26 @@ namespace
       SCOPED_TRACE(matrix_type);
       Core::LinAlg::SparseMatrix matrix(row_map, 1, true, false, matrix_type);
       matrix.set_value(2.0, gids[0], gids[0]);
-      matrix.set_value(1.0, gids[0], gids[1]);
+      if (matrix_type == Core::LinAlg::SparseMatrix::FE_MATRIX ||
+          Core::LinAlg::SparseMatrix::default_crs_storage_profile() ==
+              StorageProfile::dynamic_profile)
+        matrix.set_value(1.0, gids[0], gids[1]);
       matrix.set_value(3.0, gids[1], gids[1]);
       matrix.complete();
       EXPECT_TRUE(matrix.explicit_dirichlet());
       EXPECT_FALSE(matrix.save_graph());
-      EXPECT_EQ(matrix.num_my_nonzeros(), 3);
+      EXPECT_EQ(matrix.num_my_nonzeros(),
+          matrix_type == Core::LinAlg::SparseMatrix::FE_MATRIX ||
+                  Core::LinAlg::SparseMatrix::default_crs_storage_profile() ==
+                      StorageProfile::dynamic_profile
+              ? 3
+              : 2);
     }
+    Core::LinAlg::SparseMatrix explicitly_dynamic(row_map, 1, StorageProfile::dynamic_profile);
+    explicitly_dynamic.set_value(2.0, gids[0], gids[0]);
+    explicitly_dynamic.set_value(1.0, gids[0], gids[1]);
+    explicitly_dynamic.complete();
+    EXPECT_EQ(explicitly_dynamic.num_my_nonzeros(), 2);
   }
 }  // namespace
 
