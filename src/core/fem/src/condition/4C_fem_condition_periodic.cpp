@@ -17,6 +17,8 @@
 #include "4C_linalg_utils_sparse_algebra_io.hpp"
 #include "4C_rebalance_graph_based.hpp"
 
+#include <utility>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
@@ -1315,42 +1317,43 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       node_graph.get_comm());
 
   // 3. set graph edge weights
-  auto edge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(graph_rowmap, 15);
+  // Keep every insertion: Epetra sums duplicate row-column weights at completion.
+  std::vector<std::vector<std::pair<int, double>>> row_entries(graph_rowmap.num_my_elements());
+  for (int i = 0; i < node_graph.num_local_rows(); ++i)
   {
-    // set standard value of edge weight to 10.0
-    for (int i = 0; i < node_graph.num_local_rows(); ++i)
+    std::span<int> indices;
+    node_graph.extract_local_row_view(i, indices);
+    for (const int column : indices) row_entries[i].emplace_back(column, 1.0);
+  }
+
+  // loop all target nodes on this proc
+  for (const auto& targetsourcepair : *allcoupledcolnodes_)
+  {
+    Core::Nodes::Node* target = discret_->g_node(targetsourcepair.first);
+
+    if (target->owner() != myrank) continue;
+
+    for (int source_gid : targetsourcepair.second)
     {
-      const int grow = node_graph.row_map().gid(i);
-      std::span<int> indices;
-      node_graph.extract_local_row_view(i, indices);
+      Core::Nodes::Node* source = discret_->g_node(source_gid);
+      if (!graph_rowmap.my_gid(source->id()))
+        FOUR_C_THROW("Source node {} is not owned on rank {}", source->id(), myrank);
 
-      std::vector<double> values(indices.size(), 1.0);
-      edge_weights->insert_global_values(grow, indices.size(), values.data(), indices.data());
+      row_entries[graph_rowmap.lid(target->id())].emplace_back(source->id(), 100.0);
+      row_entries[graph_rowmap.lid(source->id())].emplace_back(target->id(), 100.0);
     }
+  }
 
-    // loop all target nodes on this proc
-    for (const auto& targetsourcepair : *allcoupledcolnodes_)
-    {
-      Core::Nodes::Node* target = discret_->g_node(targetsourcepair.first);
-
-      if (target->owner() != myrank) continue;
-
-      // loop sourcenodes
-      for (int source_gids : targetsourcepair.second)
-      {
-        Core::Nodes::Node* source = discret_->g_node(source_gids);
-
-        // connections between target and sourcenodes are very strong
-        // we do not want to partition between target and source nodes
-        std::vector<int> target_gid(1, target->id());
-        std::vector<int> source_gid(1, source->id());
-        // set cost of strong edges to 100.0
-        std::vector<double> value(1, 100.0);
-
-        edge_weights->insert_global_values(target->id(), 1, value.data(), source_gid.data());
-        edge_weights->insert_global_values(source->id(), 1, value.data(), target_gid.data());
-      }
-    }
+  std::vector<int> entries_per_row;
+  entries_per_row.reserve(row_entries.size());
+  for (const auto& row : row_entries) entries_per_row.push_back(static_cast<int>(row.size()));
+  auto edge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(
+      graph_rowmap, entries_per_row, Core::LinAlg::SparseMatrix::StorageProfile::static_profile);
+  for (int i = 0; i < graph_rowmap.num_my_elements(); ++i)
+  {
+    const int row = graph_rowmap.gid(i);
+    for (const auto& [column, weight] : row_entries[i])
+      edge_weights->insert_global_values(row, 1, &weight, &column);
   }
   edge_weights->complete();
 
