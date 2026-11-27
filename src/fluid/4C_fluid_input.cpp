@@ -1903,6 +1903,25 @@ void FLUID::set_valid_conditions(std::vector<Core::Conditions::ConditionDefiniti
       Core::Conditions::geometry_type_line);
 
   condlist.push_back(poropresint_line);
+
+  /*--------------------------------------------------------------------*/
+  // Impedance condition
+
+  Core::Conditions::ConditionDefinition impedancebc("DESIGN SURF IMPEDANCE CONDITIONS",
+      "ImpedanceCond", "Impedance boundary condition", Core::Conditions::ImpedanceCond, true,
+      Core::Conditions::geometry_type_surface);
+
+  impedancebc.add_component(parameter<int>("ConditionID"));
+  impedancebc.add_component(
+      deprecated_selection<std::string>("TYPE", {"windkessel", "resistive", "pressure_by_funct"},
+          {.description = "type", .default_value = "windkessel"}));
+  impedancebc.add_component(parameter<double>("R1"));
+  impedancebc.add_component(parameter<double>("R2"));
+  impedancebc.add_component(parameter<double>("C"));
+  impedancebc.add_component(parameter<double>("TIMEPERIOD"));
+  impedancebc.add_component(parameter<int>("FUNCT"));
+
+  condlist.push_back(impedancebc);
 }
 
 std::string FLUID::to_string(FLUID::StabType stabtype)

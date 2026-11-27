@@ -290,12 +290,6 @@ std::string_view Core::Conditions::to_string(const Core::Conditions::ConditionTy
       return "Artery reduced D 3D coupling condition";
     case Core::Conditions::Art3DToRedCouplingCond:
       return "Artery 3D reduced D coupling condition";
-    case Core::Conditions::RedAirwayPrescribedCond:
-      return "Reduced d airway prescribed boundary condition";
-    case Core::Conditions::RedAirwayPrescribedExternalPressure:
-      return "Reduced d airway prescribed external pressure boundary condition";
-    case Core::Conditions::RedAirwayPrescribedSwitchCond:
-      return "Reduced dim airway switch flow pressure condition";
     case Core::Conditions::VolumetricSurfaceFlowCond:
       return "Volumetric Surface Flow Profile";
     case Core::Conditions::VolumetricFlowBorderNodes:
@@ -352,10 +346,6 @@ std::string_view Core::Conditions::to_string(const Core::Conditions::ConditionTy
       return "AAA Surface";
     case Core::Conditions::LsContact:
       return "level-set condition for contact points";
-    case Core::Conditions::RedAirwayVolDependentPleuralPressureCond:
-      return "Reduced D airways evaluate lungs volume-dependent peural pressure condition";
-    case Core::Conditions::RedAirwayEvalLungVolCond:
-      return "Reduced D airways evaluate lung volume condition";
     case Core::Conditions::TransportRobin:
       return "Scalar transport Robin boundary condition";
     case Core::Conditions::ThermoRobin:

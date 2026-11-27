@@ -27,7 +27,6 @@
 #include "4C_mortar_input.hpp"
 #include "4C_particle_input.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
-#include "4C_red_airways_input.hpp"
 #include "4C_scatra_cardiac_monodomain_input.hpp"
 #include "4C_scatra_input.hpp"
 #include "4C_scatra_s2i_input.hpp"
@@ -842,7 +841,6 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   XFEM::set_valid_conditions(condlist);
   BioFilm::set_valid_conditions(condlist);
   ArteryNetwork::set_valid_conditions(condlist);
-  Airway::set_valid_conditions(condlist);
   Cardiovascular0DInput::set_valid_conditions(condlist);
   Solid::set_valid_conditions(condlist);
   Thermo::set_valid_conditions(condlist);

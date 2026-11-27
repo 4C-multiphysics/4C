@@ -432,17 +432,6 @@ namespace
 
         break;
       }
-      case Core::ProblemType::red_airways:
-      {
-        std::string basename = problem.outname();
-        PostField* field = problem.get_discretization(0);
-        // AnyFilter writer(field, problem.outname());
-        StructureFilter writer(field, basename, problem.stresstype(), problem.straintype());
-        writer.write_files();
-        //      writer.WriteFiles();
-
-        break;
-      }
       case Core::ProblemType::poroelast:
       {
         std::string basename = problem.outname();

@@ -21,7 +21,6 @@ set(_dependencies
     mat
     mortar
     poroelast
-    red_airways
     )
 
 four_c_add_internal_dependency(${AUTO_DEFINED_MODULE_NAME} ${_dependencies})

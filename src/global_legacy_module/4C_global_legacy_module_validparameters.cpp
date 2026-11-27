@@ -55,7 +55,6 @@
 #include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
 #include "4C_porofluid_pressure_based_input.hpp"
 #include "4C_rebalance_input.hpp"
-#include "4C_red_airways_input.hpp"
 #include "4C_reduced_lung_1d_pipe_flow_input.hpp"
 #include "4C_reduced_lung_input.hpp"
 #include "4C_scatra_cardiac_monodomain_input.hpp"
@@ -224,7 +223,7 @@ namespace CommonParameters
     };
 
     const std::vector known_fields = {"STRUCTURE", "FLUID", "LUBRICATION", "TRANSPORT",
-        "TRANSPORT2", "ALE", "ARTERY", "REDUCED D AIRWAYS", "THERMO", "PERIODIC BOUNDINGBOX"};
+        "TRANSPORT2", "ALE", "ARTERY", "THERMO", "PERIODIC BOUNDINGBOX"};
     for (const auto& field : known_fields)
     {
       add_geometry_section(specs, field);
@@ -347,9 +346,7 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
   push_specs(specs, ALE::valid_parameters());
 
   push_specs(specs, ArtDyn::valid_parameters());
-  push_specs(specs, ArteryNetwork::valid_parameters());
   push_specs(specs, BioFilm::valid_parameters());
-  push_specs(specs, Airway::valid_parameters());
   push_specs(specs, ReducedLung::valid_parameters());
   push_specs(specs, ReducedLung1dPipeFlow::valid_parameters());
   push_specs(specs, Cardiovascular0DInput::valid_parameters());

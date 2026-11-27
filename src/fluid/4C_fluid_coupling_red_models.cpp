@@ -12,6 +12,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <Teuchos_ParameterList.hpp>
 
 FOUR_C_NAMESPACE_OPEN
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//

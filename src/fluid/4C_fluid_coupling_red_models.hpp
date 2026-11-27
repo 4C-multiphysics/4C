@@ -15,7 +15,6 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
-#include "4C_red_airways_dyn_drt.hpp"
 
 #include <memory>
 

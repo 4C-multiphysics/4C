@@ -53,19 +53,6 @@ namespace ArtDyn
 
 namespace ArteryNetwork
 {
-  /*!----------------------------------------------------------------------
-  \brief enum of reduced dimensional relaxation type
-  This is the enumeration of all types of different relaxation types
-
-  *-----------------------------------------------------------------------*/
-  enum Relaxtype3D0D
-  {
-    norelaxation,
-    fixedrelaxation,
-    Aitken,
-    SD
-  };
-
   //! coupling between artery network and pressure-based porofluid-elasticity-scatra problem
   enum class ArteryPorofluidElastScatraCouplingMethod
   {
@@ -75,9 +62,6 @@ namespace ArteryNetwork
     mortar_penalty,          // mortar-penalty
     node_to_point            // 1D node-to-point in 2D/3D
   };
-
-  /// artnet parameters
-  Core::IO::InputSpec valid_parameters();
 
   /// set specific artnet conditions
   void set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist);

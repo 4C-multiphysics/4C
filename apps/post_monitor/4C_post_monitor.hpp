@@ -141,34 +141,6 @@ class FluidMonWriter : public FieldMonWriter
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-class RedAirwayMonWriter : public FieldMonWriter
-{
- public:
-  //! constructor
-  RedAirwayMonWriter(PostProblem& problem, std::string& infieldtype, int node)
-      : FieldMonWriter(problem, infieldtype, node)
-  {
-  }
-
- protected:
-  void check_infield_type(std::string& infieldtype) override;
-
-  void field_error(int node) override;
-
-  void write_header(std::ofstream& outfile) override;
-
-  void write_table_head(std::ofstream& outfile, int dim) override;
-
-  void write_result(
-      std::ofstream& outfile, PostResult& result, std::vector<int>& gdof, int dim) override;
-
- private:
-};  // end of class RedAirwayMonWriter
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
 class StructMonWriter : public FieldMonWriter
 {
  public:
