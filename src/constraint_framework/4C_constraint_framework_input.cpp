@@ -27,8 +27,9 @@ std::vector<Core::IO::InputSpec> Constraints::valid_parameters()
       {parameter<EnforcementStrategy>(
            "CONSTRAINT_ENFORCEMENT", {.description = "Type of constraint enforcement"}),
 
-          parameter<double>("PENALTY_PARAM",
-              {.description = "Value of the penalty parameter", .default_value = 1e5})},
+          parameter<double>("PENALTY_PARAM", {.description = "Value of the penalty parameter",
+                                                 .default_value = 1e5,
+                                                 .validator = Validators::positive<double>()})},
       {.required = false}));
 
   /*----------------------------------------------------------------------*/

@@ -178,7 +178,7 @@ namespace Constraints::EmbeddedMesh
      *
      * @param displacement_vector (in) global displacement vector.
      */
-    void set_local_maps(const Core::LinAlg::Vector<double>& displacement_vector) override;
+    void set_local_maps(const Core::LinAlg::Vector<double>& displacement_vector);
 
     /**
      * \brief Throw an error if setup was not called on the object prior to this function call.
@@ -191,7 +191,7 @@ namespace Constraints::EmbeddedMesh
     /**
      * \brief Throw an error if the local maps were not build.
      */
-    void check_local_maps() const override
+    void check_local_maps() const
     {
       if (!is_local_maps_build_)
         FOUR_C_THROW("Local maps are not built in the SolidToSolidCouplingManager!");
