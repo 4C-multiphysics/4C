@@ -350,9 +350,6 @@ namespace Mat
     //! check if history variables are already initialised
     bool initialized() const { return (isinit_ and (strainplcurr_ != nullptr)); }
 
-    void stress_temperature_modulus_and_deriv(Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-        Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp) override;
-
     Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_d_stress_d_scalar(
         const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
@@ -382,7 +379,9 @@ namespace Mat
 
     //@}
 
-    void reinit(double temperature, unsigned gp) override;
+    [[nodiscard]] StressTemperatureModulus evaluate_stress_temperature_modulus(double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context, int gp,
+        int eleGID) override;
 
    private:
     //! my material parameters
@@ -390,9 +389,6 @@ namespace Mat
 
     //! indicator if #Initialize routine has been called
     bool isinit_;
-
-    //! current temperature (set by Reinit())
-    double current_temperature_{};
 
     //! robinson's material requires the following internal variables:
     //! - visco-plastic strain vector (at t_n, t_n+1^i)

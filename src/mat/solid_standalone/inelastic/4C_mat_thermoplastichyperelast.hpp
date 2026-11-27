@@ -60,6 +60,9 @@ namespace Mat
       const double hardsoft_;
       //! tolerance for local Newton iteration
       const double abstol_;
+      //! thermal stress coefficient at \f$ J = 1 \f$, \f$ m_0 = -(2 \mu + 3 \lambda) \alpha_T = -E
+      //! \alpha_T / (1 - 2 \nu) \f$; the thermal stress uses \f$ m(J) = m_0 (J + 1/J) \f$
+      const double thermal_stress_coefficient_;
 
       //@}
 
@@ -194,9 +197,20 @@ namespace Mat
     //! initial, reference temperature
     virtual double init_temp() const { return params_->inittemp_; }
 
-    void stress_temperature_modulus_and_deriv(Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-        Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp) override;
-
+    /*!
+     * @brief Derivative of the 2nd Piola-Kirchhoff stress w.r.t. the temperature
+     * \f[
+     *   \mathbf{S} = \mathbf{S}_\text{ep}(\mathbf{E}, T)
+     *     + (T - T_0) \frac{m_0}{2} \left(J + \frac{1}{J}\right) \mathbf{C}^{-1}
+     * \f]
+     * \f[
+     *   \Rightarrow \quad
+     *   \frac{\mathrm{d} \mathbf{S}}{\mathrm{d} T}
+     *     = \frac{\mathrm{d} \mathbf{S}_\text{ep}}{\mathrm{d} T}
+     *       + \frac{m_0}{2} \left(J + \frac{1}{J}\right) \mathbf{C}^{-1}
+     * \f]
+     * with \f$\mathrm{d} \mathbf{S}_\text{ep} / \mathrm{d} T\f$ from the return mapping.
+     */
     Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_d_stress_d_scalar(
         const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
@@ -212,41 +226,6 @@ namespace Mat
     //! the old history vectors last_, while the current history vectors curr_
     //! are reset
     double accumulated_strain(int gp) const { return (accplstrainlast_->at(gp)); }
-
-    //! mechanical dissipation
-    double mech_diss(int gp) const { return (mechdiss_->at(gp)); }
-
-    //! linearisation of Dmech w.r.t. temperatures T_{n+1}
-    //! contribution to K_TT
-    double mech_diss_k_tt(int gp) const { return (mechdiss_k_tt_->at(gp)); }
-
-    //! linearisation of the mechanical dissipation w.r.t. displacements d_{n+1}
-    //! contribution to K_Td
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> mech_diss_k_td(int gp) const
-    {
-      return (mechdiss_k_td_->at(gp));
-    }
-
-    //! thermoplastic heating
-    double thermo_plast_heating(int gp) const { return (thrplheat_->at(gp)); }
-
-    //! linearisation of thermoplastic heating w.r.t. temperatures T_{n+1}
-    //! contribution to K_TT
-    double thermo_plast_heating_k_tt(int gp) const { return (thrplheat_k_tt_->at(gp)); }
-
-    //! linearisation of thermoplastic heating w.r.t. temperatures T_{n+1}
-    //! contribution to K_Td
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> thermo_plast_heating_k_td(int gp) const
-    {
-      return (thrplheat_k_td_->at(gp));
-    }
-
-    //! linearisation of material tangent w.r.t. temperatures T_{n+1}
-    //! contribution to K_dT
-    Core::LinAlg::SymmetricTensor<double, 3, 3> c_mat_kd_t(int gp) const
-    {
-      return (cmat_kd_t_->at(gp));
-    }
 
     //! check if history variables are already initialised
     bool initialized() const { return (isinit_ and (defgrdcurr_ != nullptr)); }
@@ -299,43 +278,56 @@ namespace Mat
         int gp                                  //!< current Gauss-point
     );
 
-    //! computes temperature-dependent isotropic thermal elasticity tensor in
-    //! matrix notion for 3d
-    void setup_cthermo(Core::LinAlg::SymmetricTensor<double, 3, 3>&
-                           ctemp,  //!< temperature dependent material tangent
-        const double J,            //!< determinant of deformation gradient
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv  //!< inverse of Cauchy-Green tensor
-    ) const;
+    /*!
+     * @brief Calculate the stress-temperature modulus
+     * \f[
+     *   \frac{\partial \mathbf{S}}{\partial T} = \frac{m_0}{2} \left(J + \frac{1}{J}\right)
+     *   \mathbf{C}^{-1}
+     * \f]
+     * with the constant thermal stress coefficient \f$m_0\f$ (see
+     * PAR::ThermoPlasticHyperElast::thermal_stress_coefficient_).
+     *
+     * @param J Determinant \f$J = \det(\mathbf{F})\f$ of the deformation gradient
+     * @param Cinv Inverse \f$\mathbf{C}^{-1}\f$ of the right Cauchy-Green tensor
+     * @return Stress-temperature modulus \f$\partial \mathbf{S} / \partial T\f$
+     */
+    [[nodiscard]] Core::LinAlg::SymmetricTensor<double, 3, 3> calculate_stress_temperature_modulus(
+        double J, const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv) const;
 
-    //! computes temperature-dependent isotropic mechanical elasticity tensor in
-    //! matrix notion for 3d
-    void setup_cmat_thermo(const double temperature,
-        Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat_T,
-        const Core::LinAlg::Tensor<double, 3, 3>& defgrd) const;
-
-    //! calculates stress-temperature modulus
-    double st_modulus() const;
-
-    //! finite difference check of material tangent
-    void fd_check(Core::LinAlg::Matrix<NUM_STRESS_3D, 1>& stress,  // updated stress sigma_n+1
-        Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D>&
-            cmat,  // material tangent calculated with FD of stresses
-        Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D>&
-            cmatFD,                           // material tangent calculated with FD of stresses
-        const double temperature,             // scalar-valued current temperature
-        const Teuchos::ParameterList& params  // parameter list including F,C^{-1},...
-    ) const;
+    /*!
+     * @brief Calculate the derivative of the stress-temperature modulus (see
+     * calculate_stress_temperature_modulus()) w.r.t. the Green-Lagrange strain. With
+     * \f$\mathrm{d}J / \mathrm{d}\mathbf{E} = J \mathbf{C}^{-1}\f$ and
+     * \f$\mathrm{d}\mathbf{C}^{-1} / \mathrm{d}\mathbf{E} = -2 \mathbf{C}^{-1} \odot
+     * \mathbf{C}^{-1}\f$, the product rule gives
+     * \f[
+     *   \frac{\mathrm{d}}{\mathrm{d} \mathbf{E}} \frac{\partial \mathbf{S}}{\partial T}
+     *     = \frac{m_0}{2} \left(J - \frac{1}{J}\right) \mathbf{C}^{-1} \otimes \mathbf{C}^{-1}
+     *       - m_0 \left(J + \frac{1}{J}\right) \mathbf{C}^{-1} \odot \mathbf{C}^{-1}
+     * \f]
+     *
+     * @param J Determinant \f$J = \det(\mathbf{F})\f$ of the deformation gradient
+     * @param Cinv Inverse \f$\mathbf{C}^{-1}\f$ of the right Cauchy-Green tensor
+     * @return Derivative \f$\mathrm{d} (\partial \mathbf{S} / \partial T) / \mathrm{d}
+     * \mathbf{E}\f$
+     */
+    [[nodiscard]] Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>
+    calculate_stress_temperature_modulus_derivative_wrt_strain(
+        double J, const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv) const;
 
     //@}
 
-    void reinit(double temperature, unsigned gp) override;
+    [[nodiscard]] StressTemperatureModulus evaluate_stress_temperature_modulus(double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context, int gp,
+        int eleGID) override;
+
+    [[nodiscard]] AdditionalHeatSource evaluate_additional_heat_source(const double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context,
+        const int gp, const int eleGID) override;
 
    private:
     //! my material parameters
     Mat::PAR::ThermoPlasticHyperElast* params_;
-
-    //! current temperature (set by Reinit())
-    double current_temperature_{};
 
     //! @name Internal / history variables
 
@@ -359,15 +351,16 @@ namespace Mat
 
     //! @name Linearisation terms for thermal equation
 
-    //! current (i.e. at t_n+1) mechanical dissipation
+    //! current (i.e. at t_n+1) mechanical dissipation (power)
     std::shared_ptr<std::vector<double>> mechdiss_;
     //! current (i.e. at t_n+1) linearised mechanical dissipation w.r.t. T_{n+1}
     std::shared_ptr<std::vector<double>> mechdiss_k_tt_;
     //! current (i.e. at t_n+1) linearised mechanical dissipation w.r.t. d_{n+1}
     std::shared_ptr<std::vector<Core::LinAlg::Matrix<6, 1>>> mechdiss_k_td_;
-    //! current (i.e. at t_n+1) thermoplastic heating term
+    //! current (i.e. at t_n+1) thermoplastic heating term divided by the temperature (power per
+    //! temperature)
     std::shared_ptr<std::vector<double>> thrplheat_;
-    //! current (i.e. at t_n+1) thermoplastic heating term
+    //! current (i.e. at t_n+1) thermoplastic heating term w.r.t. T_{n+1}
     std::shared_ptr<std::vector<double>> thrplheat_k_tt_;
     //! current (i.e. at t_n+1) thermoplastic heating term w.r.t. d_{n+1}
     std::shared_ptr<std::vector<Core::LinAlg::Matrix<6, 1>>> thrplheat_k_td_;
@@ -376,8 +369,11 @@ namespace Mat
 
     //! @name Linearisation terms for structural equation
 
-    //! current (i.e. at t_n+1) linearised material tangent w.r.t. T_{n+1}
-    std::shared_ptr<std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>> cmat_kd_t_;
+    //! derivative \f$ \mathrm{d} \mathbf{S}_\text{ep} / \mathrm{d} T \f$ of the elasto-plastic
+    //! stress w.r.t. the temperature at t_n+1 through the temperature-dependent yield stress in the
+    //! return mapping
+    std::shared_ptr<std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>>
+        d_elastoplastic_stress_d_temperature_;
 
     //@}
 

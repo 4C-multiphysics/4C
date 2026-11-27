@@ -63,6 +63,11 @@ namespace Mat
 
       //@}
 
+      //! thermal stress coefficient \f$ m = -(2 \mu + 3 \lambda) \alpha_T = -E \alpha_T / (1 - 2
+      //! \nu) \f$, i.e. the thermal stress is \f$ \mathbf{S}_\text{th} = m (T - T_0)
+      //! \mathbf{I} \f$
+      const double thermal_stress_coefficient_;
+
       //! create material instance of matching type with my parameters
       std::shared_ptr<Core::Mat::Material> create_material() override;
 
@@ -239,9 +244,6 @@ namespace Mat
     //! check if history variables are already initialised
     bool initialized() const { return (isinit_ and (!strainplcurr_.empty())); }
 
-    void stress_temperature_modulus_and_deriv(Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-        Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp) override;
-
     Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_d_stress_d_scalar(
         const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
@@ -263,14 +265,15 @@ namespace Mat
             stresstemp  //!< temperature dependent stress term
     );
 
-    //! computes temperature dependent isotropic elasticity tensor in matrix
-    //! notion for 3d
-    void setup_cthermo(Core::LinAlg::SymmetricTensor<double, 3, 3>&
-            ctemp  //!< temperature dependent material tangent
-    ) const;
-
-    //! calculates stress-temperature modulus
-    double st_modulus() const;
+    /*!
+     * @brief Calculate the stress-temperature modulus
+     * \f$ \partial \mathbf{S} / \partial T = m \mathbf{I} \f$ with the constant thermal
+     * stress coefficient \f$ m \f$ (see PAR::ThermoPlasticLinElast::thermal_stress_coefficient_)
+     *
+     * @return Stress-temperature modulus \f$ \partial \mathbf{S} / \partial T \f$
+     */
+    [[nodiscard]] Core::LinAlg::SymmetricTensor<double, 3, 3> calculate_stress_temperature_modulus()
+        const;
 
     //! initial temperature
     double init_temp() const { return params_->thetainit_; }
@@ -291,8 +294,9 @@ namespace Mat
     void dissipation(int gp,  // current Gauss point
         double sigma_yiso,    // isotropic work hardening von Mises stress
         double Dgamma,        // plastic multiplier/increment
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,      // flow vector
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress  // total mechanical stress
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,       // flow vector
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,  // total mechanical stress
+        double dt                                                   // time-step size
     );
 
     //! compute linearisation of internal dissipation for k_Td
@@ -304,20 +308,10 @@ namespace Mat
         double Hkin,                       // kinematic hardening modulus
         double etanorm,                    // norm of eta^{trial}_{n+1}
         double Dgamma,                     // plastic multiplier
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,      // flow vector
-        const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress  // flow vector
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,       // flow vector
+        const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,  // total mechanical stress
+        double dt                                                   // time-step size
     );
-
-    //! return mechanical dissipation term due to kinematic hardening
-    //! \f$ D_{\rm mech,kin}\f$
-    double mechanical_kinematic_dissipation(int gp) const { return dmech_.at(gp); }
-
-    //! return linearisation of mechanical dissipation w.r.t. displacements
-    //! \f$ k_Td += \dfrac{\partial D_{\rm mech}}{\partial d_{n+1}}\f$
-    Core::LinAlg::Matrix<6, 1> dissipation_linearised_for_coupl_cond(int gp) const
-    {
-      return Core::LinAlg::make_strain_like_voigt_matrix(dmech_d_.at(gp));
-    }
 
     //@}
 
@@ -336,14 +330,17 @@ namespace Mat
     bool evaluate_output_data(
         const std::string& name, Core::LinAlg::SerialDenseMatrix& data) const override;
 
-    void reinit(double temperature, unsigned gp) override;
+    [[nodiscard]] StressTemperatureModulus evaluate_stress_temperature_modulus(double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context, int gp,
+        int eleGID) override;
+
+    [[nodiscard]] AdditionalHeatSource evaluate_additional_heat_source(const double temperature,
+        const DeformationState& deformation_state, const EvaluationContext<3>& context,
+        const int gp, const int eleGID) override;
 
    private:
     //! my material parameters
     Mat::PAR::ThermoPlasticLinElast* params_;
-
-    //! current temperature (set by Reinit())
-    double current_temperature_{};
 
     //! plastic history vector
     //! old plastic strain at t_n
@@ -366,7 +363,7 @@ namespace Mat
     //! @name specific methods for the combination TSI and plastic material
     //@{
 
-    //! mechanical dissipation term due to kinematic and isotropic hardening at t_n+1
+    //! mechanical dissipation term (power) due to kinematic and isotropic hardening at t_n+1
     std::vector<double> dmech_;
     //! linearisation of mechanical dissipation term w.r.t. to d_{n+1}
     std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> dmech_d_;

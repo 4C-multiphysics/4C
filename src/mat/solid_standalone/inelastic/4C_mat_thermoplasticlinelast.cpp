@@ -10,7 +10,6 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
-#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_utils_enum.hpp"
@@ -33,7 +32,8 @@ Mat::PAR::ThermoPlasticLinElast::ThermoPlasticLinElast(
       kinhard_(matdata.parameters.get<double>("KINHARD")),
       sigma_y_((matdata.parameters.get<std::vector<double>>("SIGMA_Y"))),
       strainbar_p_ref_((matdata.parameters.get<std::vector<double>>("EPSBAR_P"))),
-      abstol_(matdata.parameters.get<double>("TOL"))
+      abstol_(matdata.parameters.get<double>("TOL")),
+      thermal_stress_coefficient_(-youngs_ * thermexpans_ / (1.0 - 2.0 * poissonratio_))
 {
 }
 
@@ -685,9 +685,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
 
   // temperature dependent stress
   // sigma = C_theta * Delta T = (m*I) * Delta T
-  Core::LinAlg::SymmetricTensor<double, 3, 3> ctemp{};
-  setup_cthermo(ctemp);
-  stress += deltaT(0, 0) * ctemp;
+  stress += deltaT(0, 0) * calculate_stress_temperature_modulus();
 
   //---------------------------------------------------------------------------
   // --------------------------------- consistent elastoplastic tangent modulus
@@ -721,7 +719,9 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
 
     // ------------------------------------------------ dissipation for r_T
     // calculate mechanical dissipation required for thermo balance equation
-    dissipation(gp, sigma_yiso, Dgamma, N, stress);
+    FOUR_C_ASSERT_ALWAYS(context.time_step_size != nullptr, "Time-step size is required.");
+    const double dt = *context.time_step_size;
+    dissipation(gp, sigma_yiso, Dgamma, N, stress, dt);
     // --------------------------------------- kinematic hardening for k_TT
     // temperature-dependent dissipated mechanical power
     // if (tr(strain^p) == 0) and (sigma_T(i,i)=const.) --> dot product of both is zero
@@ -731,7 +731,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
     if (tracestrainp > 1.0E-8) FOUR_C_THROW("trace of plastic strains is not equal to zero!");
 
     // ----------------------------------- linearisation of D_mech for k_Td
-    dissipation_coupl_cond(cmat, gp, G, Hiso, Hkin, etanorm, Dgamma, N, stress);
+    dissipation_coupl_cond(cmat, gp, G, Hiso, Hkin, etanorm, Dgamma, N, stress, dt);
 
   }  // plastic_step
 }  // evaluate()
@@ -740,12 +740,23 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Tensor<double, 3, 
  | calculate stress-temperature modulus and thermal derivative          |
  |   for coupled thermomechanics                                        |
  *----------------------------------------------------------------------*/
-void Mat::ThermoPlasticLinElast::stress_temperature_modulus_and_deriv(
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm,
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& stm_dT, int gp)
+Mat::StressTemperatureModulus Mat::ThermoPlasticLinElast::evaluate_stress_temperature_modulus(
+    double temperature, const DeformationState& deformation_state,
+    const EvaluationContext<3>& context, int gp, int eleGID)
 {
-  setup_cthermo(stm);
-  stm_dT = Core::LinAlg::TensorGenerators::full<3, 3>(0.0);
+  StressTemperatureModulus stress_temperature_modulus;
+  stress_temperature_modulus.value = calculate_stress_temperature_modulus();
+  return stress_temperature_modulus;
+}
+
+Mat::AdditionalHeatSource Mat::ThermoPlasticLinElast::evaluate_additional_heat_source(
+    const double temperature, const DeformationState& deformation_state,
+    const EvaluationContext<3>& context, const int gp, const int eleGID)
+{
+  AdditionalHeatSource source;
+  source.value = dmech_[gp];
+  source.derivative_wrt_strain = dmech_d_[gp];
+  return source;
 }
 
 /*----------------------------------------------------------------------*
@@ -756,11 +767,7 @@ Core::LinAlg::SymmetricTensor<double, 3, 3> Mat::ThermoPlasticLinElast::evaluate
     const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
     const Teuchos::ParameterList& params, const EvaluationContext<3>& context, int gp, int eleGID)
 {
-  // get the temperature-dependent material tangent
-  Core::LinAlg::SymmetricTensor<double, 3, 3> ctemp;
-  setup_cthermo(ctemp);
-
-  return ctemp;
+  return calculate_stress_temperature_modulus();
 }
 
 /*----------------------------------------------------------------------*
@@ -869,8 +876,9 @@ void Mat::ThermoPlasticLinElast::setup_cmat_elasto_plastic(
 void Mat::ThermoPlasticLinElast::dissipation(int gp,  // current Gauss point
     double sigma_yiso,                                // isotropic work hardening von Mises stress
     double Dgamma,                                    // plastic multiplier/increment
-    const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,      // flow vector
-    const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress  // total mechanical stress
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,       // flow vector
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,  // total mechanical stress
+    const double dt                                             // time-step size
 )
 {
   // D_mech = stress : strain^p' + beta : d(Phi)/d(beta) Dgamma
@@ -892,10 +900,8 @@ void Mat::ThermoPlasticLinElast::dissipation(int gp,  // current Gauss point
   // kappa(strainbar^p) . strainbar^p' = sigma_yiso . Dgamma/dt
   double isotropicdis = sigma_yiso * Dgamma;
 
-  // return mechanical dissipation term due to mixed hardening hardening
-  dmech_[gp] = -stressIncstrainpl + isotropicdis;
-  // time step not yet considered, i.e., Dmech_ is an energy, not a power
-  // accumulated plastic strain
+  // mechanical dissipation (power) due to mixed hardening, i.e. divided by the time step
+  dmech_[gp] = (stressIncstrainpl - isotropicdis) / dt;
 
 }  // Dissipation()
 
@@ -913,7 +919,8 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
     double etanorm,                                        // norm of eta^{trial}_{n+1}
     double Dgamma,                                         // plastic multiplier
     const Core::LinAlg::SymmetricTensor<double, 3, 3>& N,  // flow vector
-    const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress  // flow vector
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& stress,  // total mechanical stress
+    const double dt                                             // time-step size
 )
 {
   // ----------------------------------- linearisation of D_mech for k_Td
@@ -963,7 +970,7 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
   // calculate C_ep . Inc_strain^p_{n+1}
   Core::LinAlg::SymmetricTensor<double, 3, 3> cmatstrainpinc =
       Core::LinAlg::ddot(cmat, incstrainpl_[gp]);
-  // --> divide by dt in thermo_ele
+  // --> division by dt below
 
   // (sigma_d - beta) . [(dstrain^p')/ dstrain] = eta_{n+1} . [(dstrain^p')/ dstrain]
 
@@ -1007,7 +1014,7 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
   // dstrainbar^p/dstrain^{trial}_{n+1} = dDgamma/dstrain^{trial}_{n+1}
   //                                    = 2G/(3G + Hkin + Hiso) N_{n+1}
   // dstrainbar^p'/dstrain^{trial}_{n+1} = 1/Dt . 2G/(3G + Hkin + Hiso) N_{n+1}
-  // --> as usual: calculation with dt is done in thermo_ele
+  // --> division by dt below
 
   // dD_mech_iso/dstrain
   // = 2G/(3G + Hkin + Hiso) . (N_{n+1} . strainbar^p' + sigma_yiso . 1/Dt N_{n+1})
@@ -1023,8 +1030,8 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
   D_mech_d = -1.0 * Core::LinAlg::ddot(Dmech_kin_d, stress);
   D_mech_d -= cmatstrainpinc;
   D_mech_d += fac_liniso * N;
-  // update history
-  dmech_d_[gp] = D_mech_d;
+  // update history, the dissipation is a power, i.e. divided by the time step
+  dmech_d_[gp] = -1.0 / dt * D_mech_d;
 
 }  // dissipation_coupl_cond()
 
@@ -1037,7 +1044,7 @@ void Mat::ThermoPlasticLinElast::evaluate(
     Core::LinAlg::SymmetricTensor<double, 3, 3>& ctemp,
     Core::LinAlg::SymmetricTensor<double, 3, 3>& stresstemp)
 {
-  setup_cthermo(ctemp);
+  ctemp = calculate_stress_temperature_modulus();
 
   // calculate the temperature difference
   Core::LinAlg::Matrix<1, 1> init(Core::LinAlg::Initialization::uninitialized);
@@ -1065,65 +1072,13 @@ void Mat::ThermoPlasticLinElast::evaluate(
 }  // Evaluate
 
 
-/*----------------------------------------------------------------------*
- | computes temperature dependent isotropic                  dano 05/10 |
- | elasticity tensor in matrix notion for 3d, second(!) order tensor    |
- *----------------------------------------------------------------------*/
-void Mat::ThermoPlasticLinElast::setup_cthermo(
-    Core::LinAlg::SymmetricTensor<double, 3, 3>& ctemp) const
+Core::LinAlg::SymmetricTensor<double, 3, 3>
+Mat::ThermoPlasticLinElast::calculate_stress_temperature_modulus() const
 {
-  double m = st_modulus();
+  return params_->thermal_stress_coefficient_ *
+         Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
+}
 
-  // isotropic elasticity tensor C_temp in Voigt matrix notation C_temp = m I
-  //
-  // Matrix-notation for 3D case
-  //              [ m      0      0 ]
-  //   C_temp =   [ 0      m      0 ]
-  //              [ 0      0      m ]
-  //
-  ctemp = m * Core::LinAlg::TensorGenerators::identity<double, 3, 3>;
-}  // setup_cthermo()
-
-
-/*----------------------------------------------------------------------*
- | calculates stress-temperature modulus                     dano 08/11 |
- *----------------------------------------------------------------------*/
-double Mat::ThermoPlasticLinElast::st_modulus() const
-{
-  // initialise the parameters for the lame constants
-  const double ym = params_->youngs_;
-  const double pv = params_->poissonratio_;
-
-  // initialise the thermal expansion coefficient
-  const double thermexpans = params_->thermexpans_;
-
-  // plane strain, rotational symmetry
-  // E / (1+nu)
-  const double c1 = ym / (1.0 + pv);
-  // (E*nu) / ((1+nu)(1-2nu))
-  const double b1 = c1 * pv / (1.0 - 2.0 * pv);
-
-  // build the lame constants
-  //            E
-  //   mu = --------
-  //        2*(1+nu)
-  //                  E*nu
-  //   lambda = ----------------
-  //            (1+nu)*(1-2*nu)
-  //
-  //  \f \mu =  \frac{E}{2(1+\nu)} \f
-  const double mu = 0.5 * c1;
-  // lambda
-  // \f \frac{E\,\nu}{(1-2\nu)(1+\nu)} \f
-  const double lambda = b1;
-
-  // stress-temperature modulus
-  // \f m\, = \, -(2\,\cdot \mu \, +\, 3\cdot\lambda)\cdot\varalpha_T \f
-  const double stmodulus = (-1.0) * (2.0 * mu + 3.0 * lambda) * thermexpans;
-
-  return stmodulus;
-
-}  // st_modulus()
 
 
 /*----------------------------------------------------------------------*
@@ -1277,11 +1232,6 @@ bool Mat::ThermoPlasticLinElast::evaluate_output_data(
   }
 
   return false;
-}
-
-void Mat::ThermoPlasticLinElast::reinit(double temperature, unsigned gp)
-{
-  current_temperature_ = temperature;
 }
 
 FOUR_C_NAMESPACE_CLOSE

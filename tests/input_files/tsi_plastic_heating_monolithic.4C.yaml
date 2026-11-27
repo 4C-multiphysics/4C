@@ -209,7 +209,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 11
       QUANTITY: "dissipation"
-      VALUE: -148.5
+      VALUE: 4.95
       TOLERANCE: 1e-06
   - THERMAL:
       DIS: "thermo"
