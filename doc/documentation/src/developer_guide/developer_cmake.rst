@@ -79,6 +79,21 @@ Over time you might realize that you want to turn on additional dependencies or 
 To see which other options you can set, consult the console output of CMake or run ``ccmake .`` in the build folder.
 Alternatively, many options are also printed with their ``ON`` or ``OFF`` state whenever ``cmake`` runs.
 
+Testing static CRS storage profile
+..................................
+
+Set ``FOUR_C_ENABLE_STATIC_CRS_PROFILE_BY_DEFAULT=ON`` to exercise static row storage for
+default-constructed CRS matrices and the matching safe output path for sparse matrix
+multiplication. The option is ``OFF`` by default. Explicitly requested dynamic or static
+profiles still take precedence; ``FE_MATRIX`` matrices, backed by ``Epetra_FECrsMatrix``,
+retain dynamic storage. Both ``matrix_multiply``
+overloads build a static product through a growable temporary, then size each static output
+row from the actual product. Thus an input-row-width estimate cannot overflow the static
+*multiplication output*. Inputs and other static CRS matrices still need sufficient capacity
+during assembly, and callers cannot add new column entries to the exactly sized static result,
+even if they defer its completion. This is an experimental compatibility check, not a guarantee
+against unrelated Epetra errors.
+
 **Remark:** Variables either start with the prefix ``FOUR_C_`` indicating that this variable only affects |FOURC| itself,
 or they start with ``CMAKE_`` indicating that the variable (potentially) affects all dependent projects in a way
 specified directly in the CMake documentation.

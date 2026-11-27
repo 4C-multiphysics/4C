@@ -219,12 +219,12 @@ namespace Core::LinAlg
     {
       std::unique_ptr<SparseMatrix> product;
       if (profile == SparseMatrix::StorageProfile::dynamic_profile)
-        product = std::make_unique<SparseMatrix>(
-            row_map, initial_capacity, explicit_dirichlet, save_graph);
+        product = std::make_unique<SparseMatrix>(row_map, initial_capacity,
+            SparseMatrix::StorageProfile::dynamic_profile, explicit_dirichlet, save_graph);
       else
       {
-        // The row-map constructor can be configured to force static storage; explicitly
-        // make this intermediate growable even when that configuration is in effect.
+        // The default row-map constructor may use static storage; explicitly make this
+        // intermediate growable even when the configured default is static.
         product =
             std::make_unique<SparseMatrix>(std::make_shared<Epetra_CrsMatrix>(::Copy,
                                                row_map.get_epetra_map(), initial_capacity, false),

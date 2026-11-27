@@ -21,6 +21,9 @@
 
 #cmakedefine FOUR_C_ENABLE_FE_TRAPPING
 
+// Select the default CRS storage profile; explicit profile requests still take precedence.
+#cmakedefine FOUR_C_ENABLE_STATIC_CRS_PROFILE_BY_DEFAULT
+
 // The project namespace is added via the following two macros. This design allows
 // to treat the namespace as invisible within the project.
 #define FOUR_C_NAMESPACE_OPEN namespace FourC {

@@ -69,6 +69,15 @@ four_c_process_global_option(
   OFF
   )
 
+# Allow opt-in compatibility testing with static CRS storage as the default.
+four_c_process_global_option(
+  FOUR_C_ENABLE_STATIC_CRS_PROFILE_BY_DEFAULT
+  DESCRIPTION
+  "Use static CRS row storage by default (experimental, requires sufficient assembly capacity)"
+  DEFAULT
+  OFF
+  )
+
 # Enable all warnings that are supported by the compiler
 enable_compiler_flag_if_supported("-Wall")
 enable_compiler_flag_if_supported("-Wextra")

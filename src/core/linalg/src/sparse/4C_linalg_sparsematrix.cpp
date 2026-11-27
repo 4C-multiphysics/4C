@@ -35,8 +35,10 @@ Core::LinAlg::SparseMatrix::SparseMatrix(std::shared_ptr<Core::LinAlg::Graph> cr
  *----------------------------------------------------------------------*/
 Core::LinAlg::SparseMatrix::SparseMatrix(const Core::LinAlg::Map& rowmap, const int npr,
     bool explicitdirichlet, bool savegraph, MatrixType matrixtype)
-    : SparseMatrix(
-          rowmap, npr, StorageProfile::dynamic_profile, explicitdirichlet, savegraph, matrixtype)
+    : SparseMatrix(rowmap, npr,
+          matrixtype == CRS_MATRIX ? default_crs_storage_profile()
+                                   : StorageProfile::dynamic_profile,
+          explicitdirichlet, savegraph, matrixtype)
 {
 }
 

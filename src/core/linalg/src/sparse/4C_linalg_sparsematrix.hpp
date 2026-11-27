@@ -94,6 +94,17 @@ namespace Core::LinAlg
       static_profile
     };
 
+    /// Default for row-map/estimated-capacity CRS construction and matrix products.
+    /// Specialized constructors retain their own storage semantics; FE_MATRIX uses dynamic storage.
+    static constexpr StorageProfile default_crs_storage_profile()
+    {
+#ifdef FOUR_C_ENABLE_STATIC_CRS_PROFILE_BY_DEFAULT
+      return StorageProfile::static_profile;
+#else
+      return StorageProfile::dynamic_profile;
+#endif
+    }
+
     /// The following dummy templated constructors will catch all attempts to call any constructor
     /// with arguments that require implicit casting. Therefore you have to instantiate this class
     /// with exactly the types matching one of the constructors
@@ -104,7 +115,7 @@ namespace Core::LinAlg
     SparseMatrix(std::shared_ptr<Core::LinAlg::Graph> crsgraph,
         std::shared_ptr<Core::LinAlg::MultiMapExtractor> dbcmaps);
 
-    /// Construct a sparse matrix with dynamically growing row capacity.
+    /// Construct with the configured default CRS profile (FE_MATRIX uses dynamic storage).
     SparseMatrix(const Core::LinAlg::Map& rowmap, const int npr, bool explicitdirichlet = true,
         bool savegraph = false, MatrixType matrixtype = CRS_MATRIX);
 
@@ -114,7 +125,7 @@ namespace Core::LinAlg
      * With a static profile, @p npr is the fixed capacity of each local row; callers must
      * reserve enough space for every entry they will insert. Static profiles are supported
      * only for CRS_MATRIX; requesting one with FE_MATRIX throws because FE assembly must
-     * preserve nonlocal entries. Existing constructors retain their dynamic-profile behavior.
+     * preserve nonlocal entries. Explicit profiles are independent of the configured default.
      */
     SparseMatrix(const Core::LinAlg::Map& rowmap, int npr, StorageProfile profile,
         bool explicitdirichlet = true, bool savegraph = false, MatrixType matrixtype = CRS_MATRIX);

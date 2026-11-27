@@ -33,8 +33,11 @@ namespace
     std::vector<std::shared_ptr<const Core::LinAlg::Map>> maps = {first, others};
     auto full_map = Core::LinAlg::MultiMapExtractor::merge_maps(maps);
     Core::LinAlg::MultiMapExtractor extractor(*full_map, maps);
+    // Row 0 of input block (0, 1) gets one entry per other_gids column.
+    // Reserve exactly enough for that static input row; merge() sizes the
+    // merged output rows separately from their actual entries.
     Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy> blocks(
-        extractor, extractor, 2);
+        extractor, extractor, static_cast<int>(other_gids.size()));
 
     if (rank == 0)
     {
