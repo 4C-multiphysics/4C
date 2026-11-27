@@ -718,6 +718,29 @@ namespace Solid
     springdashpotcoupcond.add_component(parameter<int>("COUPLING"));
 
     condlist.push_back(springdashpotcoupcond);
+
+    /*--------------------------------------------------------------------*/
+    // structure domain partitioning for block preconditioning of global system matrix
+    // please note: this is currently only used in combination with meshtying interface coupling
+    // however the complete structure matrix is subdivided into blocks which necessarily must not
+    // be related to the interface coupling at all
+    {
+      // partitioning of 2D domain into 2D subdomains
+      Core::Conditions::ConditionDefinition structure_surf_partitioning(
+          "DESIGN STRUCTURE SURF CONDITIONS / PARTITIONING", "StructurePartitioning",
+          "Domain partitioning of structure field", Core::Conditions::Partitioning, false,
+          Core::Conditions::geometry_type_surface);
+
+      // partitioning of 3D domain into 3D subdomains
+      Core::Conditions::ConditionDefinition structure_vol_partitioning(
+          "DESIGN STRUCTURE VOL CONDITIONS / PARTITIONING", "StructurePartitioning",
+          "Domain partitioning of structure field", Core::Conditions::Partitioning, false,
+          Core::Conditions::geometry_type_volume);
+
+      // insert condition definitions into global list of valid condition definitions
+      condlist.emplace_back(structure_surf_partitioning);
+      condlist.emplace_back(structure_vol_partitioning);
+    }
   }
 }  // end of namespace Solid
 

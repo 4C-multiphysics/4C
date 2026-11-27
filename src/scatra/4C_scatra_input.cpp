@@ -640,13 +640,13 @@ void ScaTra::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinit
     // partitioning of 2D domain into 2D subdomains
     Core::Conditions::ConditionDefinition scatrasurfpartitioning(
         "DESIGN SCATRA SURF CONDITIONS / PARTITIONING", "ScatraPartitioning",
-        "Domain partitioning of scatra field", Core::Conditions::ScatraPartitioning, false,
+        "Domain partitioning of scatra field", Core::Conditions::Partitioning, false,
         Core::Conditions::geometry_type_surface);
 
     // partitioning of 3D domain into 3D subdomains
     Core::Conditions::ConditionDefinition scatravolpartitioning(
         "DESIGN SCATRA VOL CONDITIONS / PARTITIONING", "ScatraPartitioning",
-        "Domain partitioning of scatra field", Core::Conditions::ScatraPartitioning, false,
+        "Domain partitioning of scatra field", Core::Conditions::Partitioning, false,
         Core::Conditions::geometry_type_volume);
 
     // insert condition definitions into global list of valid condition definitions

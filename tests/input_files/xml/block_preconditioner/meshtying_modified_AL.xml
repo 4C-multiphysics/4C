@@ -1,0 +1,36 @@
+<ParameterList name="Teko">
+  <!--
+  For solid-solid meshtying problems in an augmented Lagrangian formulation, these are the recommended
+  settings for the modified augmented Lagrangian preconditioner consisting of a lower block triangular
+  preconditioner from Teko with a special Schur complement strategy, based on a mass-like interface matrix.
+  The preconditioner uses Amesos as a direct solver for both solid fields. The Schur complement is approximated
+  as a diagonal matrix, which is inverted directly in the preconditioner itself.
+  -->
+  <!-- ===========  BLOCK PRECONDITIONER ================ -->
+  <!-- Definition of the block preconditioner, which has to be defined under sub-list "Preconditioner",
+       which is used by Teko. The single field inverse approximation methods have to be given under
+       sub-lists "Inverse<1..n>". -->
+  <Parameter name="Inverse Type" type="string" value="Preconditioner"/>
+  <ParameterList name="Inverse Factory Library">
+    <ParameterList name="Preconditioner">
+      <!-- We need to reorder this operator -->
+      <Parameter name="Type" type="string" value="Modified Augmented Lagrangian Preconditioner"/>
+      <Parameter name="Inverse Type 1" type="string" value="Inverse1"/>
+      <Parameter name="Inverse Type 2" type="string" value="Inverse2"/>
+    </ParameterList>
+    <!-- =========== SINGLE FIELD PRECONDITIONER FOR SOLID ====================== -->
+    <ParameterList name="Inverse1">
+      <Parameter name="Type" type="string" value="Amesos"/>
+      <ParameterList name="Amesos Settings">
+        <Parameter name="Reindex" type="bool" value="true"/>
+      </ParameterList>
+    </ParameterList>
+    <!-- =========== SINGLE FIELD PRECONDITIONER FOR BEAM ======================= -->
+    <ParameterList name="Inverse2">
+      <Parameter name="Type" type="string" value="Amesos"/>
+      <ParameterList name="Amesos Settings">
+        <Parameter name="Reindex" type="bool" value="true"/>
+      </ParameterList>
+    </ParameterList>
+  </ParameterList>
+</ParameterList>

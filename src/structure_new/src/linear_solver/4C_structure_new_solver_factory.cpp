@@ -334,7 +334,8 @@ std::shared_ptr<Core::LinAlg::Solver> Solid::SOLVER::Factory::build_meshtying_co
             "this cannot be: no saddlepoint problem for beamcontact "
             "or pure structure problem.");
 
-      if (sol_type == CONTACT::SolvingStrategy::lagmult)
+      if (sol_type == CONTACT::SolvingStrategy::lagmult or
+          sol_type == CONTACT::SolvingStrategy::augmented)
       {
         // provide null space information
         if (prec == Core::LinearSolver::PreconditionerType::multigrid_muelu)
@@ -346,8 +347,63 @@ std::shared_ptr<Core::LinAlg::Solver> Solid::SOLVER::Factory::build_meshtying_co
         }
         else if (prec == Core::LinearSolver::PreconditionerType::block_teko)
         {
-          Core::LinearSolver::Parameters::compute_solver_parameters(
-              actdis, linsolver->params().sublist("Inverse1"));
+          // extract domain partitioning conditions from discretization
+          std::vector<const Core::Conditions::Condition*> partitioning_conditions;
+          actdis.get_condition("StructurePartitioning", partitioning_conditions);
+
+          if (partitioning_conditions.empty())
+          {
+            Core::LinearSolver::Parameters::compute_solver_parameters(
+                actdis, linsolver->params().sublist("Inverse1"));
+          }
+          else
+          {
+            // build maps associated with blocks of global system matrix
+            std::vector<std::shared_ptr<const Core::LinAlg::Map>> dof_block_maps;
+            std::vector<std::shared_ptr<Core::LinAlg::Map>> node_block_maps;
+
+            for (const auto& cond : partitioning_conditions)
+            {
+              // all dofs and nodes that form one block map
+              std::vector<int> dof_gids;
+              std::vector<int> node_gids;
+
+              for (const int node_gid : *cond->get_nodes())
+              {
+                if (actdis.have_global_node(node_gid) and
+                    actdis.g_node(node_gid)->owner() ==
+                        Core::Communication::my_mpi_rank(actdis.get_comm()))
+                {
+                  const std::vector<int> node_dofs = actdis.dof(0, actdis.g_node(node_gid));
+                  std::ranges::copy(node_dofs, std::inserter(dof_gids, dof_gids.end()));
+                  node_gids.push_back(node_gid);
+                }
+              }
+
+              dof_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
+                  -1, static_cast<int>(dof_gids.size()), dof_gids.data(), 0, actdis.get_comm()));
+              node_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
+                  -1, static_cast<int>(node_gids.size()), node_gids.data(), 0, actdis.get_comm()));
+            }
+
+            linsolver->params()
+                .sublist("Teko Parameters")
+                .set<std::vector<std::shared_ptr<const Core::LinAlg::Map>>>(
+                    "reorder: maps", dof_block_maps);
+
+            for (int block = 0; block < static_cast<int>(dof_block_maps.size()); block++)
+            {
+              const std::string inverse = "Inverse" + std::to_string(block + 1);
+
+              linsolver->params().sublist(inverse).set<std::shared_ptr<Core::LinAlg::Map>>(
+                  "null space: node map", node_block_maps[block]);
+              linsolver->params().sublist(inverse).set<std::shared_ptr<Core::LinAlg::Map>>(
+                  "null space: dof map",
+                  std::const_pointer_cast<Core::LinAlg::Map>(dof_block_maps[block]));
+              Core::LinearSolver::Parameters::compute_solver_parameters(
+                  actdis, linsolver->params().sublist(inverse));
+            }
+          }
         }
       }
     }

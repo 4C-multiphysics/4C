@@ -215,7 +215,7 @@ namespace Core::Conditions
     CellFocalAdhesion,
     ScatraHeteroReactionCondMaster,
     ScatraHeteroReactionCondSlave,
-    ScatraPartitioning,
+    Partitioning,
     ElementTag,
     NodeTag,
     Embedded_Mesh_Solid_Surf_Coupling,
