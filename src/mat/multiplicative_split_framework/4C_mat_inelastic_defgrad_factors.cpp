@@ -4434,7 +4434,8 @@ Mat::AdditionalHeatSource Mat::InelasticDefgradTransvIsotropElastViscoplast::
 
   // Finite-difference linearization w.r.t. the right Cauchy-Green tensor.
   {
-    Core::LinAlg::Matrix<6, 1> derivative_wrt_cauchy_green(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<6, 1> derivative_wrt_green_lagrange_strain(
+        Core::LinAlg::Initialization::zero);
 
     Core::LinAlg::Matrix<3, 3> iFredM(Core::LinAlg::Initialization::zero);
     iFredM.invert(FredM);
@@ -4468,14 +4469,13 @@ Mat::AdditionalHeatSource Mat::InelasticDefgradTransvIsotropElastViscoplast::
         // state_quantities_
         constitutive_update(perturbed_FM, temperature);
 
-        derivative_wrt_cauchy_green(i) +=
-            delta_sign / (4.0 * pert_fact) * evaluate_taylor_quinney(state_quantities_);
+        derivative_wrt_green_lagrange_strain(i) +=
+            delta_sign / (2.0 * pert_fact) * evaluate_taylor_quinney(state_quantities_);
       }
     }
 
-    // d/dE = 2 d/dC
     Core::LinAlg::make_stress_like_voigt_view(result.derivative_wrt_strain)
-        .update(2.0, derivative_wrt_cauchy_green);
+        .update(1.0, derivative_wrt_green_lagrange_strain);
   }
 
   // Finite-difference linearization w.r.t. temperature.

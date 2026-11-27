@@ -35,7 +35,7 @@ namespace Mat
    * \f]
    * i.e., the thermoelastic heating plus the additional heat source of the material (see
    * \ref AdditionalHeatSource). \f$\mathbf{E}\f$ is the Green-Lagrange strain for finite strains
-   * and the linear strain for small strains. Positive values heat the material.
+   * and the engineering strain for small strains. Positive values heat the material.
    */
   struct ThermoMechanicalHeatSource
   {
@@ -80,12 +80,11 @@ namespace Mat
   };
 
   /*!
-   * @brief Deformation state, storing the (Green-Lagrange) strain and optionally the deformation
+   * @brief Deformation state, storing the strain and optionally the deformation
    * gradient for finite strains.
    */
-  class DeformationState
+  struct DeformationState
   {
-   public:
     /*!
      * @brief Construct a deformation state for small strains.
      * @param strain The linear strain.
@@ -114,8 +113,8 @@ namespace Mat
     //! Deformation gradient, only available for finite strains
     [[nodiscard]] const Core::LinAlg::Tensor<double, 3, 3>& defgrad() const
     {
-      if (!defgrad_.has_value())
-        FOUR_C_THROW("The deformation gradient is only available for finite strains.");
+      FOUR_C_ASSERT_ALWAYS(
+          defgrad_.has_value(), "The deformation gradient is only available for finite strains.");
       return *defgrad_;
     }
 

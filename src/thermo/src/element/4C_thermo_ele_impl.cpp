@@ -1043,7 +1043,7 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
         timefac_d * mechanical_heat_source.derivative_wrt_strain_rate +
         mechanical_heat_source.derivative_wrt_strain;
     Core::LinAlg::Matrix<1, nsd_ * nen_ * numdofpernode_> derivative_wrt_displacement;
-    // (1x6 stress-like) . (6x24 strain-like)
+    // dQ/dd = dQ/dE (stress-like) . dE/dd (strain-like)
     derivative_wrt_displacement.multiply_tn(
         Core::LinAlg::make_stress_like_voigt_view(derivative_wrt_strain), boplin);
 
@@ -1419,7 +1419,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
     // -------------------------------- calculate linearisation of C^{-1}
 
     // dC^{-1}/dd = - C^{-1} . dC/dd . C^{-1} = -2 (C^{-1} odot C^{-1}) : B
-    // (6x24 stress-like) = (6x6 stress-like) . (6x24 strain-like)
+    // with (C^{-1} odot C^{-1}) stress-like and B strain-like, i.e. dC^{-1}/dd is stress-like
     const auto cinv_odot_cinv = Core::LinAlg::FourTensorOperations::holzapfel_product(
         Core::LinAlg::assume_symmetry(Core::LinAlg::make_tensor_view(Cinv)));
     Core::LinAlg::Matrix<6, nen_ * nsd_> dCinv_dd(Core::LinAlg::Initialization::uninitialized);
@@ -1443,7 +1443,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
       // C_mat = k_0 . I
 
       // k^e_Td += - timefac . N_T^T . dR_mech/dE' : dE'/dd . detJ . w(gp)
-      // (8x24)                (8x1)   (1x6 stress-like) (6x24 strain-like)
+      // with dR_mech/dE' stress-like and dE'/dd strain-like
       etangcoupl->multiply(-fac_, NNTC, boprate, 1.0);
       etangcoupl->multiply((-fac_ * timefac_d), NNTC, bop, 1.0);
       // k^e_Td += timefac . ( B_T^T . C_mat . dC^{-1}/dd . B_T . T . detJ . w(gp) )
@@ -1471,7 +1471,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
     }  // (etangcoupl != nullptr)
 
     Core::LinAlg::Matrix<1, nsd_ * nen_ * numdofpernode_> source_derivative_wrt_displacement;
-    // (1x6 stress-like) . (6x24 strain-like)
+    // dQ/dd = dQ/dE (stress-like) . dE/dd (strain-like)
     source_derivative_wrt_displacement.multiply_tn(
         Core::LinAlg::make_stress_like_voigt_view(mechanical_heat_source.derivative_wrt_strain),
         bop);
