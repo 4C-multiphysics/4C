@@ -17,6 +17,13 @@ import jinja2
 import pandas as pd
 import html
 
+# Layout of the plotly figure: the legend is placed below the plot and has a
+# fixed maximum height, after which it shows a vertical scrollbar. The figure
+# itself fills the available viewport height; the bottom margin is reserved
+# for the x-axis title and the legend.
+LEGEND_BOTTOM_MARGIN_PX = 220
+LEGEND_MAX_HEIGHT_PX = 150
+
 
 @dataclasses.dataclass
 class PerformanceItem:
@@ -154,6 +161,20 @@ def generate_plotly_report(
     fig.update_layout(
         xaxis_title="date of measurement",
         yaxis_title=f"runtime in {performance_result.unit}",
+        # Legend below the plot, spanning the full width, anchored to the bottom
+        # of the figure, with a fixed maximum height (in px) after which a
+        # vertical scrollbar is shown.
+        margin=dict(b=LEGEND_BOTTOM_MARGIN_PX),
+        legend=dict(
+            orientation="h",
+            xref="paper",
+            x=0,
+            xanchor="left",
+            yref="container",
+            y=0,
+            yanchor="bottom",
+            maxheight=LEGEND_MAX_HEIGHT_PX,
+        ),
     )
     fig.update_xaxes(range=[date_min_max[0], date_min_max[1]])
 
@@ -179,7 +200,10 @@ def generate_plotly_report(
         )
     )
 
-    fig.write_html(target_file)
+    # Scale the plot with the viewport height (the report embeds the page in an
+    # iframe). Slightly less than the full height, so the page does not need
+    # a second vertical scrollbar.
+    fig.write_html(target_file, default_width="100%", default_height="99%")
 
 
 def get_date_min_max(
