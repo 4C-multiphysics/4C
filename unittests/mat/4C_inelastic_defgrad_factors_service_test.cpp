@@ -172,7 +172,7 @@ namespace
     for (unsigned int i = 0; i < 10; ++i) one_10x1(i) = 1.0;
 
     local_newton_manager.reset_iter();
-    local_newton_manager.save_init_estimate_and_reset_convergence_quantities(one_10x1);
+    local_newton_manager.set_solution_vector(one_10x1);
     local_newton_manager.increment_solution_vector(one_10x1);
     local_newton_manager.increment_iter();
     local_newton_manager.increment_solution_vector(one_10x1);
@@ -183,7 +183,7 @@ namespace
     local_newton_manager.update_after_local_newton(1);
     EXPECT_EQ(local_newton_manager.curr_num_iters()[1], 3);
 
-    local_newton_manager.save_init_estimate_and_reset_convergence_quantities(one_10x1);
+    local_newton_manager.set_solution_vector(one_10x1);
     local_newton_manager.increment_solution_vector(one_10x1);
     local_newton_manager.increment_iter();
     EXPECT_EQ(local_newton_manager.iter(), 4);
@@ -235,14 +235,14 @@ namespace
 
     // with iteration counter reset
     local_newton_manager.reset_iter();
-    local_newton_manager.save_init_estimate_and_reset_convergence_quantities(one_10x1);
+    local_newton_manager.set_solution_vector(one_10x1);
     FOUR_C_EXPECT_NEAR(local_newton_manager.sol(), one_10x1, 1.0e-15);
     EXPECT_EQ(local_newton_manager.iter(), 0);
 
     // without iteration counter reset
     local_newton_manager.increment_solution_vector(one_10x1);
     local_newton_manager.increment_iter();  // increment the iteration counter
-    local_newton_manager.save_init_estimate_and_reset_convergence_quantities(one_10x1);
+    local_newton_manager.set_solution_vector(one_10x1);
     FOUR_C_EXPECT_NEAR(local_newton_manager.sol(), one_10x1, 1.0e-15);
     EXPECT_EQ(local_newton_manager.iter(), 1);
 
@@ -263,7 +263,7 @@ namespace
 
     // try out increment and residual vector exceeding the tolerance: no convergence!
     local_newton_manager.reset_iter();
-    local_newton_manager.save_init_estimate_and_reset_convergence_quantities(one_10x1);
+    local_newton_manager.set_solution_vector(one_10x1);
     local_newton_manager.increment_solution_vector(vector_over_tol);
     local_newton_manager.increment_iter();
     updated_sol_ref.update(1.0, one_10x1, 1.0, vector_over_tol, 0.0);
@@ -327,6 +327,46 @@ namespace
     EXPECT_TRUE(local_newton_manager.is_local_newton_stuck());
   }
 
+  /// tests that setting a new solution vector (as done after a re-estimation) restarts the
+  /// convergence checks of the LocalNewtonManager, i.e., the increment that led to the previous
+  /// solution vector is not used anymore
+  TEST_F(InelasticDefgradFactorsServiceTest, TestLocalNewtonManagerSetSolutionVectorRestarts)
+  {
+    Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager local_newton_manager(
+        {.res_tol = 1.0e-8,
+            .incr_tol = 1.0e-8,
+            .conv_check = ViscoplastUtils::LocalNewtonConvCheck::residual_and_increment_ratio,
+            .diver_cont = ViscoplastUtils::LocalNewtonDiverCont::stop_and_request_step_reduction,
+            .max_iter = 100,
+            .max_exceedance_fact_res_tol = 0.0,
+            .max_exceedance_fact_incr_tol = 0.0});
+
+    Core::LinAlg::Matrix<10, 1> one_10x1{Core::LinAlg::Initialization::zero};
+    for (unsigned int i = 0; i < 10; ++i) one_10x1(i) = 1.0;
+    Core::LinAlg::Matrix<10, 1> vector_under_tol{Core::LinAlg::Initialization::zero};
+    vector_under_tol(0) = 1.0e-9;
+    Core::LinAlg::Matrix<10, 1> vector_over_tol{Core::LinAlg::Initialization::zero};
+    vector_over_tol(0) = 1.0e-7;
+
+    // stuck: the increment is zero, but the residual is over the tolerance
+    local_newton_manager.reset_iter();
+    local_newton_manager.set_solution_vector(one_10x1);
+    local_newton_manager.increment_solution_vector(Core::LinAlg::Matrix<10, 1>{});
+    local_newton_manager.increment_iter();
+    local_newton_manager.set_residual_norm(vector_over_tol);
+    ASSERT_TRUE(local_newton_manager.is_local_newton_stuck());
+
+    // new solution vector: neither stuck nor converged before an increment from it
+    Core::LinAlg::Matrix<10, 1> new_sol(one_10x1);
+    new_sol.scale(2.0);
+    local_newton_manager.set_solution_vector(new_sol);
+    local_newton_manager.increment_iter();
+    local_newton_manager.set_residual_norm(vector_over_tol);
+    EXPECT_FALSE(local_newton_manager.is_local_newton_stuck());
+    local_newton_manager.set_residual_norm(vector_under_tol);
+    EXPECT_FALSE(local_newton_manager.is_local_newton_converged());
+  }
+
 
   /// tests the convergence of the LocalNewtonManager (for various settings) used within
   /// InelasticDefgradTransvIsotropElastViscoplast
@@ -359,7 +399,7 @@ namespace
           .max_exceedance_fact_incr_tol = local_newton_base_params.max_exceedance_fact_incr_tol,
       });
       manager.reset_iter();
-      manager.save_init_estimate_and_reset_convergence_quantities(one_10x1);
+      manager.set_solution_vector(one_10x1);
 
       return manager;
     };

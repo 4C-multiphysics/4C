@@ -3839,8 +3839,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::local_newton_loop(
       determine_local_newton_init_estimate(local_integration_input);
   if (init_estimate)
   {
-    local_newton_manager_.save_init_estimate_and_reset_convergence_quantities(
-        init_estimate.value());
+    local_newton_manager_.set_solution_vector(init_estimate.value());
   }
   else
   {

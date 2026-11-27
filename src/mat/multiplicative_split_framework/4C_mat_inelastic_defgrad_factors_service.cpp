@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -596,6 +597,7 @@ Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager::Loca
   sol_ = Core::LinAlg::Matrix<10, 1>(Core::LinAlg::Initialization::zero);
   convergence_quantities_.residual_norm = 0.0;
   convergence_quantities_.increment_norm = 0.0;
+  convergence_quantities_.increment_at_round_off = false;
 }
 
 /*--------------------------------------------------------------------*
@@ -644,13 +646,13 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager:
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager::
-    save_init_estimate_and_reset_convergence_quantities(
-        const Core::LinAlg::Matrix<10, 1>& init_estimate)
+    set_solution_vector(const Core::LinAlg::Matrix<10, 1>& sol)
 {
-  // --> set initial estimate
-  sol_ = init_estimate;
+  // --> set solution vector
+  sol_ = sol;
 
-  // --> set quantities used for convergence checks
+  // --> reset quantities used for convergence checks, since they belong to the previous solution
+  // vector
 
   // residual norm
   convergence_quantities_.residual_norm = 0.0;
@@ -673,6 +675,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager:
   {
     convergence_quantities_.increment_norm = 2.0 * params_.incr_tol;
   }
+  convergence_quantities_.increment_at_round_off = false;
 }
 
 /*--------------------------------------------------------------------*
@@ -689,14 +692,17 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager:
       "wrong, since such mechanical states are not expected!",
       iter_, sol_norm);
   convergence_quantities_.increment_norm = delta_sol_norm / sol_norm;
-}
 
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
-void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager::
-    set_solution_vector(const Core::LinAlg::Matrix<10, 1>& sol)
-{
-  sol_.update(1.0, sol, 0.0);
+  // The increment is at round-off if it cannot change the solution anymore. The inverse plastic
+  // deformation gradient (components 0-8) and the plastic strain (component 9) live on different
+  // scales (at the onset of yielding, the plastic strain is many orders of magnitude smaller), so
+  // round-off is measured for each of them separately.
+  constexpr double round_off_tol = 10.0 * std::numeric_limits<double>::epsilon();
+  const Core::LinAlg::Matrix<9, 1> iFin(sol_.data(), true);
+  const Core::LinAlg::Matrix<9, 1> delta_iFin(delta_sol.data(), true);
+  convergence_quantities_.increment_at_round_off =
+      delta_iFin.norm2() <= round_off_tol * iFin.norm2() &&
+      std::abs(delta_sol(9)) <= round_off_tol * std::abs(sol_(9));
 }
 
 /*--------------------------------------------------------------------*
@@ -728,9 +734,10 @@ bool Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager:
 bool Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager::
     is_local_newton_stuck() const
 {
-  // check for "stuck" Local Newton, i.e., the increment does not change much but there is not a
-  // converged state (check only feasible after the first iteration, since dx must be available)
-  if ((iter_ > 0) && (convergence_quantities_.increment_norm < 1.0e-15))
+  // check for "stuck" Local Newton, i.e., the increment cannot change the solution anymore but
+  // there is not a converged state (check only feasible after the first iteration, since dx must
+  // be available)
+  if ((iter_ > 0) && convergence_quantities_.increment_at_round_off)
   {
     // only in the case that the residual is verified, we set an
     // error status
