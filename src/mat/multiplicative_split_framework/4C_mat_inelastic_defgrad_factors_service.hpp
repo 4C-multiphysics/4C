@@ -922,13 +922,13 @@ namespace Mat
       void resize(const unsigned int numgp);
 
       /*!
-       * @brief Initialize the solution vector and the convergence quantities, for the
-       * subsequent Local Newton at the currently considered Gauss point
+       * @brief Set the solution vector \f$ \boldsymbol{s}^{(l)} \f$ (initial estimate, or a
+       * re-estimation) and restart the convergence checks for the subsequent Local Newton
+       * iterations at the currently considered Gauss point
        *
-       * @param[in] init_estimate initial estimate \f$ \boldsymbol{s}^{(0)} \f$
+       * @param[in] sol solution vector \f$ \boldsymbol{s}^{(l)}\f$
        */
-      void save_init_estimate_and_reset_convergence_quantities(
-          const Core::LinAlg::Matrix<10, 1>& init_estimate);
+      void set_solution_vector(const Core::LinAlg::Matrix<10, 1>& sol);
 
       /// reset iteration counter
       void reset_iter() { iter_ = 0; }
@@ -980,14 +980,6 @@ namespace Mat
        * \boldsymbol{s}^{(l+1)}\f$
        */
       void increment_solution_vector(const Core::LinAlg::Matrix<10, 1>& delta_sol);
-
-      /*!
-       * @brief Set the solution vector \f$ \boldsymbol{s}^{(l)} \f$
-       *
-       *
-       * @param[in] sol solution vector \f$ \boldsymbol{s}^{(l)}\f$
-       */
-      void set_solution_vector(const Core::LinAlg::Matrix<10, 1>& sol);
 
       /// getter for the solution vector
       [[nodiscard]] Core::LinAlg::Matrix<10, 1> sol() const { return sol_; }

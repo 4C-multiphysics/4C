@@ -646,13 +646,13 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager:
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager::
-    save_init_estimate_and_reset_convergence_quantities(
-        const Core::LinAlg::Matrix<10, 1>& init_estimate)
+    set_solution_vector(const Core::LinAlg::Matrix<10, 1>& sol)
 {
-  // --> set initial estimate
-  sol_ = init_estimate;
+  // --> set solution vector
+  sol_ = sol;
 
-  // --> set quantities used for convergence checks
+  // --> reset quantities used for convergence checks, since they belong to the previous solution
+  // vector
 
   // residual norm
   convergence_quantities_.residual_norm = 0.0;
@@ -703,14 +703,6 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager:
   convergence_quantities_.increment_at_round_off =
       delta_iFin.norm2() <= round_off_tol * iFin.norm2() &&
       std::abs(delta_sol(9)) <= round_off_tol * std::abs(sol_(9));
-}
-
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
-void Mat::InelasticDefgradTransvIsotropElastViscoplastUtils::LocalNewtonManager::
-    set_solution_vector(const Core::LinAlg::Matrix<10, 1>& sol)
-{
-  sol_.update(1.0, sol, 0.0);
 }
 
 /*--------------------------------------------------------------------*
