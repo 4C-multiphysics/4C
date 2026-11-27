@@ -26,19 +26,28 @@ namespace Constraints::SubmodelEvaluator
     //! Constructor
     ConstraintEquationBase() = default;
 
-    /*! \brief Add the penalty stiffness contribution to the constraint_vector and the
-     * coupling-stiffness
+    /*! \brief Evaluate this constraint equation and add its terms to the system
      *
-     * @param [in]  \f$Q_{dd}\f$ coupling-stiffnes matrix
-     * @param [in]  \f$Q_{dL}\f$ coupling-stiffnes matrix
-     * @param [in]  \f$Q_{Ld}\f$ coupling-stiffnes matrix
-     * @param [in] constraint_vector constraint vector
-     * @param [in] displacements \f$D_{n+1}\f$
+     * @param [in,out] Q_dd  \f$Q_{dd}\f$: second derivative of this constraint equation with
+     *                       respect to the displacements; zero for a linear equation
+     * @param [in,out] Q_dL  \f$Q_{dL}\f$: first derivative of this constraint equation with
+     *                       respect to the displacements, stored as a column
+     * @param [in,out] Q_Ld  \f$Q_{Ld}\f$: first derivative of this constraint equation with
+     *                       respect to the displacements, stored as a row
+     * @param [in,out] constraint_vector  \f$r_L\f$: value of this constraint equation at the
+     *                       current displacements, i.e., its violation
+     * @param [in]     D_np1  \f$D_{n+1}\f$: current displacements of the dofs from get_dof_gids()
      */
     virtual void evaluate_equation(Core::LinAlg::SparseMatrix& Q_dd,
         Core::LinAlg::SparseMatrix& Q_dL, Core::LinAlg::SparseMatrix& Q_Ld,
         Core::LinAlg::Vector<double>& constraint_vector,
         const Core::LinAlg::Vector<double>& D_np1) = 0;
+
+    /*! \brief Return the global ids of the dofs that appear in this constraint equation
+     *
+     * @return global dof ids; the displacements of at least these dofs are passed as D_np1
+     */
+    virtual std::vector<int> get_dof_gids() const = 0;
 
     /*! \brief Return the number of constraints the object contains
      *
@@ -85,6 +94,9 @@ namespace Constraints::SubmodelEvaluator
     void evaluate_equation(Core::LinAlg::SparseMatrix& Q_dd, Core::LinAlg::SparseMatrix& Q_dL,
         Core::LinAlg::SparseMatrix& Q_Ld, Core::LinAlg::Vector<double>& constraint_vector,
         const Core::LinAlg::Vector<double>& D_np1) override;
+
+    //! derived
+    std::vector<int> get_dof_gids() const override;
 
    private:
     //! Struct with Term data: Coef, RowID, DofID
