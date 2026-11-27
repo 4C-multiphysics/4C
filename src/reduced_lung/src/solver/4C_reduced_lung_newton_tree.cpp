@@ -29,6 +29,7 @@
 #include <NOX_StatusTest_MaxIters.H>
 #include <NOX_StatusTest_NormF.H>
 #include <Teuchos_ParameterList.hpp>
+#include <Teuchos_TimeMonitor.hpp>
 
 #include <algorithm>
 #include <format>
@@ -68,6 +69,7 @@ namespace ReducedLung
       {
         sync_state(x);
 
+        TEUCHOS_FUNC_TIME_MONITOR("ReducedLung::NewtonTree: 2) residual assembly");
         res.put_scalar(0.0);
         for (const auto& assemble_res : assembly_pipeline_.residual_assemblers)
         {
@@ -89,8 +91,11 @@ namespace ReducedLung
        */
       void evaluate_tree_linearization()
       {
+        TEUCHOS_FUNC_TIME_MONITOR("ReducedLung::NewtonTree: 3) tree linearization assembly");
         if (!tree_linearization_static_initialized_)
         {
+          TEUCHOS_FUNC_TIME_MONITOR(
+              "ReducedLung::NewtonTree: 3.1) static tree linearization assembly");
           for (const auto& static_assembler :
               assembly_pipeline_.tree_linearization_static_assemblers)
           {
@@ -112,6 +117,7 @@ namespace ReducedLung
       void solve_newton_direction(
           const Core::LinAlg::Vector<double>& res, Core::LinAlg::Vector<double>& direction)
       {
+        TEUCHOS_FUNC_TIME_MONITOR("ReducedLung::NewtonTree: 4) tree linear solve");
         tree_linear_solver_->solve(res, direction);
       }
 
@@ -124,6 +130,7 @@ namespace ReducedLung
        */
       void sync_state(const Core::LinAlg::Vector<double>& x)
       {
+        TEUCHOS_FUNC_TIME_MONITOR("ReducedLung::NewtonTree: 1) state update");
         locally_relevant_dofs_.update(1.0, x, 0.0);
 
         for (const auto& update_state : assembly_pipeline_.state_updaters)
