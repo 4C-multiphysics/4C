@@ -1,5 +1,13 @@
 List of major features that were removed from 4C, including date and revision where code was removed
 
+Reduced-dimensional airways (red_airways)
+- Removal of the red_airways module, the problem type ReducedDimensionalAirWays, the 0D acinus
+  materials (MAT_0D_MAXWELL_ACINUS*), the airway conditions, and the airway coupling of
+  Fluid_RedModels and Fluid_Structure_Interaction_RedModels
+- reasons: replaced by the reduced_lung module
+- removed in commit 36268915d1e9dbb4e19c4eab242253b0fd53b55f
+- removed by Benedikt Goderbauer
+
 Old beam contact framework
 - Removal of the old beam contact framework
 - reasons: last unported feature of enhanced gap function was implemented in the new beam interaction
