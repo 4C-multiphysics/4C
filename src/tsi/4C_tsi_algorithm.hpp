@@ -29,6 +29,11 @@ namespace Core::FE
   class Discretization;
 }  // namespace Core::FE
 
+namespace Core::IO
+{
+  class DiscretizationVisualizationWriterMesh;
+}  // namespace Core::IO
+
 namespace Global
 {
   class Problem;
@@ -142,6 +147,9 @@ namespace TSI
     //! store it in tsi and hand it to the thermal field
     void prepare_contact_strategy();
 
+    //! write the runtime output of the Lagrange contact strategy if this is an output step
+    void write_contact_runtime_output();
+
     //! Access to the dof coupling for matching grid TSI
     Coupling::Adapter::Coupling& structure_thermo_coupling() { return *structure_thermo_coupling_; }
     //@}
@@ -172,6 +180,9 @@ namespace TSI
 
     //! contact strategies
     std::shared_ptr<CONTACT::LagrangeStrategyTsi> contact_strategy_lagrange_;
+
+    //! runtime output of the Lagrange contact strategy
+    std::shared_ptr<Core::IO::DiscretizationVisualizationWriterMesh> contact_vtu_writer_;
     //@}
 
     //! @name Volume Mortar stuff

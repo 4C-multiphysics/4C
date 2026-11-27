@@ -2447,6 +2447,7 @@ four_c_test(TEST_FILE tsi_contact3D_multiple_interfaces.4C.yaml NP 2 REQUIRED_DE
 four_c_test(TEST_FILE tsi_contact3D_coulomb_friction.4C.yaml NP 2 REQUIRED_DEPENDENCIES ArborX GMSH)
 four_c_test(TEST_FILE tsi_contact3D_frictionless_first.4C.yaml RETURN_AS current NP 2 REQUIRED_DEPENDENCIES ArborX)
 __four_c_test_add_csv_yaml_comparison(BASED_ON ${current} RESULT_FILE xxx-10004_monitor_dbc.csv REFERENCE_FILE ref/tsi_contact3D_frictionless_first-10004_monitor_dbc.csv TOL_R 1e-10 TOL_A 1e-12)
+__four_c_test_vtk(BASED_ON ${current} PVD_RESULT_FILE xxx-tsi-contact.pvd PVD_REFERENCE_FILE ref/tsi_contact3D_frictionless_first_vtk_tsi_contact.pvd TOLERANCE 1e-08 TIME_STEPS 2.0)
 four_c_test(TEST_FILE tsi_geonln_heatconvection_fbar_genalpha_monolithic.4C.yaml NP 2)
 four_c_test(TEST_FILE tsi_geonln_heatconvection_fbar_monolithic.4C.yaml NP 2)
 four_c_test(TEST_FILE tsi_geonln_heatconvection_iterstagg.4C.yaml NP 2)

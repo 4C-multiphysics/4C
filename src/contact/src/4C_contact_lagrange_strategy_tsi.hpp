@@ -173,6 +173,10 @@ namespace CONTACT
       structure_thermo_coupling_ = coupST;
     };
 
+    //! Append contact quantities and the thermal Lagrange multiplier to the writer
+    void append_runtime_output(
+        Core::IO::DiscretizationVisualizationWriterMesh& writer) const override;
+
     //@}
 
     // residual and increment norms
