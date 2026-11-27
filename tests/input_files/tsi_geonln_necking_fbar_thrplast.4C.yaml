@@ -7,7 +7,7 @@ TITLE:
   - "- top force out: NODE 115 (6.413/0.0/13.3335)"
   - "nightly test case uses reduced end time MAXTIME = 1.0"
   - "2013-12-06"
-  - "- high yield stress, i.e. full hyperelastic behaviour can be shown, i.e. NO necking"
+  - "- temperature-dependent yield stress and hardening, i.e. plastic heating"
 PROBLEM TYPE:
   PROBLEMTYPE: "Thermo_Structure_Interaction"
 DISCRETISATION:
@@ -69,10 +69,12 @@ MATERIALS:
       DENS: 7.8e-06
       CTE: 1e-05
       INITTEMP: 293
-      YIELD: 4.5e+14
+      YIELD: 0.45
       ISOHARD: 0.12924
-      SATHARDENING: 7.15e+14
+      SATHARDENING: 0.715
       HARDEXPO: 16.93
+      YIELDSOFT: 0.002
+      HARDSOFT: 0.002
       TOL: 1e-06
   - MAT: 2
     MAT_Fourier:
@@ -620,7 +622,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 115
       QUANTITY: "dispx"
-      VALUE: -0.0782096658827689
+      VALUE: -0.10212090929981989
       TOLERANCE: 1e-08
       NAME: "ux_top_out"
   - STRUCTURE:
@@ -641,7 +643,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 82
       QUANTITY: "dispx"
-      VALUE: -0.08057243233007202
+      VALUE: -0.16594816310800586
       TOLERANCE: 1e-09
       NAME: "ux_neck"
   - STRUCTURE:
@@ -658,3 +660,17 @@ RESULT DESCRIPTION:
       VALUE: 0
       TOLERANCE: 1e-09
       NAME: "uz_neck"
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 82
+      QUANTITY: "temp"
+      VALUE: 297.26982606639308
+      TOLERANCE: 1e-06
+      NAME: "T_neck"
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 115
+      QUANTITY: "temp"
+      VALUE: 305.83995251671598
+      TOLERANCE: 1e-06
+      NAME: "T_top_out"

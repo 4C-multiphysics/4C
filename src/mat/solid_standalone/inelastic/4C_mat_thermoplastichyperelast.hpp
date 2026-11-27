@@ -197,6 +197,20 @@ namespace Mat
     //! initial, reference temperature
     virtual double init_temp() const { return params_->inittemp_; }
 
+    /*!
+     * @brief Derivative of the 2nd Piola-Kirchhoff stress w.r.t. the temperature
+     * \f[
+     *   \mathbf{S} = \mathbf{S}_\text{ep}(\mathbf{E}, T)
+     *     + (T - T_0) \frac{m_0}{2} \left(J + \frac{1}{J}\right) \mathbf{C}^{-1}
+     * \f]
+     * \f[
+     *   \Rightarrow \quad
+     *   \frac{\mathrm{d} \mathbf{S}}{\mathrm{d} T}
+     *     = \frac{\mathrm{d} \mathbf{S}_\text{ep}}{\mathrm{d} T}
+     *       + \frac{m_0}{2} \left(J + \frac{1}{J}\right) \mathbf{C}^{-1}
+     * \f]
+     * with \f$\mathrm{d} \mathbf{S}_\text{ep} / \mathrm{d} T\f$ from the return mapping.
+     */
     Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_d_stress_d_scalar(
         const Core::LinAlg::Tensor<double, 3, 3>& defgrad,
         const Core::LinAlg::SymmetricTensor<double, 3, 3>& glstrain,
@@ -301,16 +315,6 @@ namespace Mat
     calculate_stress_temperature_modulus_derivative_wrt_strain(
         double J, const Core::LinAlg::SymmetricTensor<double, 3, 3>& Cinv) const;
 
-    //! finite difference check of material tangent
-    void fd_check(Core::LinAlg::Matrix<NUM_STRESS_3D, 1>& stress,  // updated stress sigma_n+1
-        Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D>&
-            cmat,  // material tangent calculated with FD of stresses
-        Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D>&
-            cmatFD,                           // material tangent calculated with FD of stresses
-        const double temperature,             // scalar-valued current temperature
-        const Teuchos::ParameterList& params  // parameter list including F,C^{-1},...
-    ) const;
-
     //@}
 
     [[nodiscard]] StressTemperatureModulus evaluate_stress_temperature_modulus(double temperature,
@@ -365,8 +369,11 @@ namespace Mat
 
     //! @name Linearisation terms for structural equation
 
-    //! current (i.e. at t_n+1) linearised material tangent w.r.t. T_{n+1}
-    std::shared_ptr<std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>> cmat_kd_t_;
+    //! derivative \f$ \mathrm{d} \mathbf{S}_\text{ep} / \mathrm{d} T \f$ of the elasto-plastic
+    //! stress w.r.t. the temperature at t_n+1 through the temperature-dependent yield stress in the
+    //! return mapping
+    std::shared_ptr<std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>>>
+        d_elastoplastic_stress_d_temperature_;
 
     //@}
 
