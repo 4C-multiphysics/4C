@@ -11,6 +11,8 @@
         "CMAKE_LIBRARY_PATH": "/opt/homebrew/lib",
         "CMAKE_INSTALL_PREFIX": "$env{HOME}/opt/4C",
         "CMAKE_CXX_FLAGS": "-Wno-deprecated-declarations",
+        "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
         "FOUR_C_ENABLE_WARNINGS_AS_ERRORS": "ON",
         "FOUR_C_ENABLE_FE_TRAPPING": "OFF",
         "FOUR_C_TRILINOS_ROOT": "$env{HOME}/opt/trilinos",

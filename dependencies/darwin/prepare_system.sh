@@ -20,13 +20,18 @@ uname
 sysctl -n hw.physicalcpu
 sudo mkdir -p /usr/local/lib
 brew update
-sudo ln -sf $(brew --prefix gcc@14)/bin/gfortran-14 /opt/homebrew/bin/gfortran
-brew install jpeg-turbo python@3.14
 brew uninstall --cask --force firefox google-chrome microsoft-edge
-brew install openmpi hdf5 llvm boost cln metis netcdf lld scalapack fftw vtk gmsh qhull
-brew install suite-sparse
+brew uninstall --force ruby@3.4 maven gradle selenium-server openjdk ant kotlin node@24
+brew list --formula | grep '^aws-' | xargs -r brew uninstall --force
+brew cleanup
+brew install openmpi hdf5 llvm boost cln metis netcdf lld scalapack fftw vtk gmsh
+brew install jpeg-turbo qhull suite-sparse
+brew upgrade
+brew install python@3.14
 echo "DYLD_LIBRARY_PATH=/opt/homebrew/lib:${DYLD_LIBRARY_PATH}" >> $GITHUB_ENV
 echo "HOME=$HOME" >> $GITHUB_ENV
+
+sudo ln -sf $(brew --prefix gcc@14)/bin/gfortran-14 /opt/homebrew/bin/gfortran
 
 # There is a bug in macos-26 that dependencies of gmsh library are
 # installed to incorrect location. The lines below relinks it.
