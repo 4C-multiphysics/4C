@@ -10,6 +10,7 @@ reduced_dimensional_lung:
     dynamic_viscosity: 1.79105e-05
   dynamics:
     linear_solver: 1
+    nonlinear_solver: NewtonTree
     number_of_steps: 75
     restart_every: 76
     results_every: 76
@@ -57,9 +58,6 @@ reduced_dimensional_lung:
     flow:
       - id: 1
         function_id: 1
-SOLVER 1:
-  SOLVER: "UMFPACK"
-  NAME: "Reduced_lung_solver"
 FUNCT1:
   - SYMBOLIC_FUNCTION_OF_TIME: 1000*flow_ml_s
   - VARIABLE: 0
