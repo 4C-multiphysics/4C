@@ -182,10 +182,40 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::eval
 
         // evaluate switched pair contribution a second time for two-half-pass approach
         // interaction potential is averaged
+        // Note: force and stiffmat need to be initialized to zero, otherwise the first contribution
+        // gets scaled (analytic) or linearized (FAD) again
         // Note: the residual vectors and stiffness matrices need to be switched to correctly
         // account for the changed target/source role
-        evaluate_fpotand_stiffpot_single_length_specific_small_sep_approx(
-            force_pot2, force_pot1, stiffmat22, stiffmat21, stiffmat12, stiffmat11);
+        Core::LinAlg::Matrix<3 * numnodes * numnodalvalues, 1, T> force_pot1_second_pass(
+            Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<3 * numnodes * numnodalvalues, 1, T> force_pot2_second_pass(
+            Core::LinAlg::Initialization::zero);
+
+        if (stiffmat11 != nullptr and stiffmat12 != nullptr and stiffmat21 != nullptr and
+            stiffmat22 != nullptr)
+        {
+          Core::LinAlg::SerialDenseMatrix stiffmat11_second_pass(dim1, dim1);
+          Core::LinAlg::SerialDenseMatrix stiffmat12_second_pass(dim1, dim2);
+          Core::LinAlg::SerialDenseMatrix stiffmat21_second_pass(dim2, dim1);
+          Core::LinAlg::SerialDenseMatrix stiffmat22_second_pass(dim2, dim2);
+
+          evaluate_fpotand_stiffpot_single_length_specific_small_sep_approx(force_pot1_second_pass,
+              force_pot2_second_pass, &stiffmat11_second_pass, &stiffmat12_second_pass,
+              &stiffmat21_second_pass, &stiffmat22_second_pass);
+
+          *stiffmat11 += stiffmat22_second_pass;
+          *stiffmat12 += stiffmat21_second_pass;
+          *stiffmat21 += stiffmat12_second_pass;
+          *stiffmat22 += stiffmat11_second_pass;
+        }
+        else
+        {
+          evaluate_fpotand_stiffpot_single_length_specific_small_sep_approx(
+              force_pot1_second_pass, force_pot2_second_pass, nullptr, nullptr, nullptr, nullptr);
+        }
+
+        force_pot1.update(1.0, force_pot2_second_pass, 1.0);
+        force_pot2.update(1.0, force_pot1_second_pass, 1.0);
 
         // revert to original target/source allocation (necessary for next evaluation within same
         // time step)
