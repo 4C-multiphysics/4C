@@ -8,7 +8,7 @@
 ### Function to execute a process and check for errors
 function(_execute_process)
   set(options "")
-  set(oneValueArgs "")
+  set(oneValueArgs HINT)
   set(multiValueArgs PROCESS_COMMAND)
   cmake_parse_arguments(
     _parsed
@@ -40,7 +40,7 @@ function(_execute_process)
       )
     message(STATUS "Output: ${_command_output}")
     message(STATUS "Result: ${_command_result}")
-    message(FATAL_ERROR "Error: ${_command_error}")
+    message(FATAL_ERROR "Error: ${_command_error}\n${_parsed_HINT}")
   endif()
 endfunction()
 
@@ -66,20 +66,44 @@ set(FOUR_C_PYTHON_VENV_BUILD
     PARENT_SCOPE
     )
 
-_execute_process(
-  PROCESS_COMMAND
-  ${Python_EXECUTABLE}
-  -m
-  venv
-  ${FOUR_C_PYTHON_VENV_BUILD}
+four_c_process_global_option(
+  FOUR_C_PYTHON_SKIP_INSTALL
+  DESCRIPTION
+  "Reuse the existing virtual Python environment in the build directory without (re)installing packages, e.g., to reconfigure without Internet access"
+  DEFAULT
+  OFF
   )
-_execute_process(
-  PROCESS_COMMAND
-  ${FOUR_C_PYTHON_VENV_BUILD}/bin/pip
-  install
-  -e
-  ${PROJECT_SOURCE_DIR}/utilities/four_c_python[build]
-  )
+
+if(FOUR_C_PYTHON_SKIP_INSTALL)
+  if(NOT EXISTS "${FOUR_C_PYTHON_VENV_BUILD}/bin/python3")
+    message(
+      FATAL_ERROR
+        "FOUR_C_PYTHON_SKIP_INSTALL is enabled, but no virtual Python environment exists in ${FOUR_C_PYTHON_VENV_BUILD}. "
+        "Configure once with FOUR_C_PYTHON_SKIP_INSTALL=OFF to create it."
+      )
+  endif()
+  message(
+    STATUS
+      "FOUR_C_PYTHON_SKIP_INSTALL is enabled: reusing existing virtual Python environment in ${FOUR_C_PYTHON_VENV_BUILD} without installing packages"
+    )
+else()
+  _execute_process(
+    PROCESS_COMMAND
+    ${Python_EXECUTABLE}
+    -m
+    venv
+    ${FOUR_C_PYTHON_VENV_BUILD}
+    )
+  _execute_process(
+    PROCESS_COMMAND
+    ${FOUR_C_PYTHON_VENV_BUILD}/bin/pip
+    install
+    -e
+    ${PROJECT_SOURCE_DIR}/utilities/four_c_python[build]
+    HINT
+    "If you have no Internet access and the virtual Python environment was set up before, reconfigure with -DFOUR_C_PYTHON_SKIP_INSTALL=ON to reuse it."
+    )
+endif()
 
 # determine site-packages of build environment
 execute_process(
@@ -95,7 +119,9 @@ set(FOUR_C_PYTHON_VENV_BUILD_SITE_PACKAGES
     PARENT_SCOPE
     )
 
-message(
-  STATUS
-    "Successfully created Python virtual environment in ${FOUR_C_PYTHON_VENV_BUILD} and installed necessary requirements"
-  )
+if(NOT FOUR_C_PYTHON_SKIP_INSTALL)
+  message(
+    STATUS
+      "Successfully created Python virtual environment in ${FOUR_C_PYTHON_VENV_BUILD} and installed necessary requirements"
+    )
+endif()
